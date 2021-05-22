@@ -116,9 +116,10 @@ async def test_restore_state_climate(hass):
     """Run test for sensor restore state."""
 
     climate_name = "test_climate"
+    test_temp = 37
     entity_id = f"{CLIMATE_DOMAIN}.{climate_name}"
     test_value = State(entity_id, 35)
-    test_value.attributes = {ATTR_TEMPERATURE: 37}
+    test_value.attributes = {ATTR_TEMPERATURE: test_temp}
     config_sensor = {
         CONF_NAME: climate_name,
         CONF_TARGET_TEMP: 117,
@@ -137,4 +138,6 @@ async def test_restore_state_climate(hass):
         None,
         method_discovery=True,
     )
-    assert hass.states.get(entity_id).state == HVAC_MODE_AUTO
+    state = hass.states.get(entity_id)
+    assert state.state == HVAC_MODE_AUTO
+    assert state.attributes[ATTR_TEMPERATURE] == test_temp

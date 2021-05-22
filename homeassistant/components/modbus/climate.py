@@ -134,12 +134,10 @@ class ModbusThermostat(BasePlatform, RestoreEntity, ClimateEntity):
         await self.async_base_added_to_hass()
         state = await self.async_get_last_state()
         if state and state.attributes.get(ATTR_TEMPERATURE):
-            self._target_temp = float(state.attributes[ATTR_TEMPERATURE])
+            self._target_temperature = float(state.attributes[ATTR_TEMPERATURE])
         else:
-            self._target_temp = self.max_temp
-            _LOGGER.warning(
-                "No previously saved temperature, setting to %s", self._target_temp
-            )
+            self._target_temperature = None
+            _LOGGER.warning("No previously saved temperature, setting to none")
 
     @property
     def supported_features(self):
