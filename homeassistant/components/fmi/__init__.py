@@ -1,29 +1,17 @@
 """The FMI (Finnish Meteorological Institute) component."""
 
-import asyncio
-from datetime import date, datetime
-
 from async_timeout import timeout
-from dateutil import tz
 import fmi_weather_client as fmi
 from fmi_weather_client.errors import ClientError, ServerError
 
-from homeassistant.const import (
-    CONF_LATITUDE,
-    CONF_LONGITUDE,
-    CONF_OFFSET,
-    SUN_EVENT_SUNSET,
-)
-from homeassistant.core import Config, HomeAssistant
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_OFFSET
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.sun import get_astral_event_date
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
     _LOGGER,
     COORDINATOR,
     DOMAIN,
-    FMI_WEATHER_SYMBOL_MAP,
     MIN_TIME_BETWEEN_UPDATES,
     UNDO_UPDATE_LISTENER,
 )
@@ -31,14 +19,11 @@ from .const import (
 PLATFORMS = ["weather"]
 
 
-async def async_setup(hass: HomeAssistant, config: Config) -> bool:
-    """Set up configured FMI."""
-    hass.data.setdefault(DOMAIN, {})
-    return True
-
-
 async def async_setup_entry(hass, config_entry) -> bool:
     """Set up FMI as config entry."""
+
+    hass.data.setdefault(DOMAIN, {})
+
     latitude = config_entry.data[CONF_LATITUDE]
     longitude = config_entry.data[CONF_LONGITUDE]
     time_step = config_entry.options.get(CONF_OFFSET, 1)
@@ -58,24 +43,18 @@ async def async_setup_entry(hass, config_entry) -> bool:
         UNDO_UPDATE_LISTENER: undo_listener,
     }
 
-    for component in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, component)
-        )
+    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
 
     return True
 
 
 async def async_unload_entry(hass, config_entry):
     """Unload an FMI config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(config_entry, component)
-                for component in PLATFORMS
-            ]
-        )
+
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        config_entry, PLATFORMS
     )
+
     if unload_ok:
         hass.data[DOMAIN][config_entry.entry_id][UNDO_UPDATE_LISTENER]()
     hass.data[DOMAIN].pop(config_entry.entry_id)
@@ -120,19 +99,3 @@ class FMIDataUpdateCoordinator(DataUpdateCoordinator):
         except (ClientError, ServerError) as error:
             raise UpdateFailed(error) from error
         return {}
-
-
-def get_weather_symbol(symbol, hass=None):
-    """Get a weather symbol for the symbol value."""
-    ret_val = ""
-    if symbol in FMI_WEATHER_SYMBOL_MAP.keys():
-        ret_val = FMI_WEATHER_SYMBOL_MAP[symbol]
-        if hass is not None and ret_val == 1:  # Clear as per FMI
-            today = date.today()
-            sunset = get_astral_event_date(hass, SUN_EVENT_SUNSET, today)
-            sunset = sunset.astimezone(tz.tzlocal())
-
-            if datetime.now().astimezone(tz.tzlocal()) >= sunset:
-                # Clear night
-                ret_val = FMI_WEATHER_SYMBOL_MAP[0]
-    return ret_val

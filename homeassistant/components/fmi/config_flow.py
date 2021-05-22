@@ -58,13 +58,14 @@ class FMIConfigFlowHandler(config_entries.ConfigFlow, domain="fmi"):
         errors = {}
         if user_input is not None:
 
-            await self.async_set_unique_id(
-                f"{user_input[CONF_LATITUDE]}_{user_input[CONF_LONGITUDE]}"
-            )
-            self._abort_if_unique_id_configured()
-
             try:
                 valid = await validate_config_and_get_data(self.hass, user_input)
+
+                await self.async_set_unique_id(
+                    f"{user_input[CONF_LATITUDE]}_{user_input[CONF_LONGITUDE]}"
+                )
+                self._abort_if_unique_id_configured()
+
                 return self.async_create_entry(title=valid["place"], data=user_input)
             except (ClientError, ServerError):
                 _LOGGER.error("Configuration error.")

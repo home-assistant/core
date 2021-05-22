@@ -15,8 +15,8 @@ from homeassistant.components.weather import (
 from homeassistant.const import CONF_NAME
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import get_weather_symbol
 from .const import _LOGGER, ATTRIBUTION, COORDINATOR, DOMAIN, MANUFACTURER, NAME
+from .utils import get_weather_symbol
 
 PARALLEL_UPDATES = 1
 
