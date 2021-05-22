@@ -2,11 +2,11 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Mapping
+from collections.abc import Coroutine, Mapping
 from datetime import timedelta
 from ipaddress import IPv4Address, IPv6Address
 import logging
-from typing import Any
+from typing import Any, TypedDict
 
 import aiohttp
 from async_upnp_client.ssdp import (
@@ -23,9 +23,11 @@ from async_upnp_client.ssdp import (
 from defusedxml import ElementTree
 from netdisco import ssdp, util
 
+from homeassistant import config_entries
 from homeassistant.components import network
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.loader import async_get_ssdp, bind_hass
 
@@ -69,19 +71,51 @@ async def async_setup(hass, config):
 
     scanner = hass.data[DOMAIN] = Scanner(hass, await async_get_ssdp(hass))
 
-    async def _async_initialize(_):
-        await scanner.async_scan(None)
-        cancel_scan = async_track_time_interval(hass, scanner.async_scan, SCAN_INTERVAL)
-
-        async def _async_stop_scans(event):
-            cancel_scan()
-            await scanner.async_stop()
-
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_stop_scans)
-
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, _async_initialize)
+    asyncio.create_task(scanner.async_start())
 
     return True
+
+
+class SSDPFlow(TypedDict):
+    """A queued ssdp discovery flow."""
+
+    domain: str
+    context: dict[str, Any]
+    data: dict
+
+
+class FlowDispatcher:
+    """Dispatch discovery flows."""
+
+    def __init__(self, hass: HomeAssistant) -> None:
+        """Init the discovery dispatcher."""
+        self.hass = hass
+        self.pending_flows: list[SSDPFlow] = []
+        self.started = False
+
+    @callback
+    def async_start(self, *_) -> None:
+        """Start processing pending flows."""
+        self.started = True
+        self.hass.loop.call_soon(self._async_process_pending_flows)
+
+    def _async_process_pending_flows(self) -> None:
+        for flow in self.pending_flows:
+            self.hass.async_create_task(self._init_flow(flow))
+        self.pending_flows = []
+
+    def create(self, flow: SSDPFlow) -> None:
+        """Create and add or queue a flow."""
+        if self.started:
+            self.hass.create_task(self._init_flow(flow))
+        else:
+            self.pending_flows.append(flow)
+
+    def _init_flow(self, flow: SSDPFlow) -> Coroutine[None, None, FlowResult]:
+        """Create a flow."""
+        return self.hass.config_entries.flow.async_init(
+            flow["domain"], context=flow["context"], data=flow["data"]
+        )
 
 
 class SSDPListener:
@@ -150,8 +184,10 @@ class Scanner:
         self.seen = set()
         self._integration_matchers = integration_matchers
         self._description_cache = {}
+        self._cancel_scan = None
         self._ssdp_listeners = []
         self._callbacks = []
+        self.flow_dispatcher: FlowDispatcher | None = None
 
     async def _async_on_ssdp_response(self, data: Mapping[str, Any]) -> None:
         """Process an ssdp response."""
@@ -179,8 +215,10 @@ class Scanner:
         """Save an entry for later processing."""
         self._entries.append(entry)
 
-    async def async_stop(self):
+    @callback
+    def async_stop(self, *_):
         """Stop the scanner."""
+        self._cancel_scan()
         for listener in self._ssdp_listeners:
             listener.async_stop()
         self._ssdp_listeners = []
@@ -206,13 +244,17 @@ class Scanner:
 
         return sources
 
-    async def async_scan(self, *_):
+    @callback
+    def async_scan(self, *_):
         """Scan for new entries."""
         if self._ssdp_listeners:
             for listener in self._ssdp_listeners:
                 listener.async_search()
             return
 
+    async def async_start(self):
+        """Start the scanner."""
+        self.flow_dispatcher = FlowDispatcher(self.hass)
         for source_ip in await self._async_build_source_set():
             self._ssdp_listeners.append(
                 SSDPListener(
@@ -222,6 +264,14 @@ class Scanner:
 
         await asyncio.gather(
             *[listener.async_start() for listener in self._ssdp_listeners]
+        )
+
+        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.async_stop)
+        self.hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_STARTED, self.flow_dispatcher.async_start
+        )
+        self._cancel_scan = async_track_time_interval(
+            self.hass, self.async_scan, SCAN_INTERVAL
         )
 
     async def _async_process_entry(self, entry):
@@ -242,7 +292,6 @@ class Scanner:
             return
 
         for ssdp_callback, match_dict in self._callbacks:
-            _LOGGER.debug("ssdp_callback: %s - %s", ssdp_callback, match_dict)
             if all(item in info.items() for item in match_dict.items()):
                 try:
                     ssdp_callback(info)
@@ -257,9 +306,12 @@ class Scanner:
 
         for domain in domains:
             _LOGGER.debug("Discovered %s at %s", domain, entry.location)
-            await self.hass.config_entries.flow.async_init(
-                domain, context={"source": DOMAIN}, data=info
-            )
+            flow: SSDPFlow = {
+                "domain": domain,
+                "context": {"source": config_entries.SOURCE_SSDP},
+                "data": info,
+            }
+            self.flow_dispatcher.create(flow)
 
     def _info_domains(self, entry):
         """Process a single entry."""
