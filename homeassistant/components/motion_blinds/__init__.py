@@ -14,8 +14,10 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
     ATTR_AVAILABLE,
+    CONF_FAST_UPDATE,
     CONF_INTERFACE,
     CONF_WAIT_FOR_PUSH,
+    DEFAULT_FAST_UPDATE,
     DEFAULT_INTERFACE,
     DEFAULT_WAIT_FOR_PUSH,
     DOMAIN,
@@ -56,6 +58,7 @@ class DataUpdateCoordinatorMotionBlinds(DataUpdateCoordinator):
 
         self._gateway = coordinator_info[KEY_GATEWAY]
         self._wait_for_push = coordinator_info[CONF_WAIT_FOR_PUSH]
+        self._fast_update = coordinator_info[CONF_FAST_UPDATE]
 
         return None
 
@@ -96,7 +99,7 @@ class DataUpdateCoordinatorMotionBlinds(DataUpdateCoordinator):
                 all_available = False
                 break
 
-        if all_available and self._wait_for_push:
+        if all_available and not self._fast_update:
             self.update_interval = timedelta(seconds=UPDATE_INTERVAL)
         else:
             self.update_interval = timedelta(seconds=UPDATE_INTERVAL_FAST)
@@ -118,6 +121,7 @@ async def async_setup_entry(
     key = entry.data[CONF_API_KEY]
     multicast_interface = entry.data.get(CONF_INTERFACE, DEFAULT_INTERFACE)
     wait_for_push = entry.options.get(CONF_WAIT_FOR_PUSH, DEFAULT_WAIT_FOR_PUSH)
+    fast_update = entry.options.get(CONF_FAST_UPDATE, DEFAULT_FAST_UPDATE)
 
     entry.async_on_unload(entry.add_update_listener(update_listener))
 
@@ -142,7 +146,11 @@ async def async_setup_entry(
     if not await connect_gateway_class.async_connect_gateway(host, key):
         raise ConfigEntryNotReady
     motion_gateway = connect_gateway_class.gateway_device
-    coordinator_info = {KEY_GATEWAY: motion_gateway, CONF_WAIT_FOR_PUSH: wait_for_push}
+    coordinator_info = {
+        KEY_GATEWAY: motion_gateway,
+        CONF_WAIT_FOR_PUSH: wait_for_push,
+        CONF_FAST_UPDATE: fast_update,
+    }
 
     coordinator = DataUpdateCoordinatorMotionBlinds(
         hass,

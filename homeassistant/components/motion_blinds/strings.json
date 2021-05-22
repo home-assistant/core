@@ -40,7 +40,8 @@
         "title": "Motion Blinds",
         "description": "Specify optional settings",
         "data": {
-          "wait_for_push": "Wait for multicast push on update"
+          "wait_for_push": "Wait for multicast push on update",
+          "fast_update": "Use fast update interval"
         }
       }
     }
