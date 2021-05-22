@@ -74,13 +74,13 @@ async def test_hassio_success(hass: HomeAssistant) -> None:
     await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        data={"addon": "motionEye Add-on", "url": TEST_URL},
+        data={"addon": "motionEye", "url": TEST_URL},
         context={"source": config_entries.SOURCE_HASSIO},
     )
 
     assert result.get("type") == data_entry_flow.RESULT_TYPE_FORM
     assert result.get("step_id") == "hassio_confirm"
-    assert result.get("description_placeholders") == {"addon": "motionEye Add-on"}
+    assert result.get("description_placeholders") == {"addon": "motionEye"}
     assert "flow_id" in result
 
     result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
@@ -109,7 +109,7 @@ async def test_hassio_success(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result3.get("type") == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result3.get("title") == "motionEye Add-on"
+    assert result3.get("title") == "motionEye"
     assert result3.get("data") == {
         CONF_URL: TEST_URL,
         CONF_ADMIN_USERNAME: "admin-username",
@@ -350,7 +350,7 @@ async def test_hassio_already_configured(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        data={"addon": "motionEye Add-on", "url": TEST_URL},
+        data={"addon": "motionEye", "url": TEST_URL},
         context={"source": config_entries.SOURCE_HASSIO},
     )
     assert result.get("type") == data_entry_flow.RESULT_TYPE_ABORT
@@ -365,7 +365,7 @@ async def test_hassio_ignored(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        data={"addon": "motionEye Add-on", "url": TEST_URL},
+        data={"addon": "motionEye", "url": TEST_URL},
         context={"source": config_entries.SOURCE_HASSIO},
     )
     assert result.get("type") == data_entry_flow.RESULT_TYPE_ABORT
