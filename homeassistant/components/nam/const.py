@@ -164,7 +164,7 @@ SENSORS: Final[dict[str, SensorDescription]] = {
         ATTR_DEVICE_CLASS: DEVICE_CLASS_SIGNAL_STRENGTH,
         ATTR_ICON: None,
         ATTR_ENABLED: False,
-        ATTR_STATE_CLASS: None,
+        ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
     },
     ATTR_UPTIME: {
         ATTR_LABEL: f"{DEFAULT_NAME} Uptime",

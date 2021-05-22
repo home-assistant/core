@@ -182,7 +182,7 @@ async def test_sensor(hass):
     assert state
     assert state.state == "-72"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_SIGNAL_STRENGTH
-    assert state.attributes.get(ATTR_STATE_CLASS) is None
+    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
     assert (
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == SIGNAL_STRENGTH_DECIBELS_MILLIWATT
