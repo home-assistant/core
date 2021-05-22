@@ -258,9 +258,7 @@ class SamsungTVWSBridge(SamsungTVBridge):
         if not remote:
             return None
         with contextlib.suppress(HttpApiError):
-            ret = remote.rest_device_info()
-            LOGGER.critical("device_info: %s", ret)
-            return ret
+            return remote.rest_device_info()
 
     def _send_key(self, key):
         """Send the key using websocket protocol."""
