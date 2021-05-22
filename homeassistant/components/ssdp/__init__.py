@@ -9,6 +9,7 @@ import logging
 from typing import Any
 
 from netdisco import ssdp
+from ssdp.listener import SSDPListener
 
 from homeassistant import config_entries
 from homeassistant.components import network
@@ -19,7 +20,6 @@ from homeassistant.loader import async_get_ssdp, bind_hass
 
 from .descriptions import DescriptionManager
 from .flow import FlowDispatcher, SSDPFlow
-from .listener import SSDPListener
 
 DOMAIN = "ssdp"
 SCAN_INTERVAL = timedelta(seconds=60)
