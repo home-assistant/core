@@ -348,10 +348,11 @@ async def test_options_flow(hass):
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={const.CONF_WAIT_FOR_PUSH: False},
+        user_input={const.CONF_WAIT_FOR_PUSH: False, const.CONF_FAST_UPDATE: True},
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert config_entry.options == {
         const.CONF_WAIT_FOR_PUSH: False,
+        const.CONF_FAST_UPDATE: True,
     }
