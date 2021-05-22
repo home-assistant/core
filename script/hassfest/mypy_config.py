@@ -31,7 +31,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.bluetooth_tracker.*",
     "homeassistant.components.bmw_connected_drive.*",
     "homeassistant.components.bsblan.*",
-    "homeassistant.components.canary.*",
     "homeassistant.components.cast.*",
     "homeassistant.components.cert_expiry.*",
     "homeassistant.components.climacell.*",

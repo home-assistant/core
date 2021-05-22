@@ -9,13 +9,12 @@ from typing import Any, Dict, Mapping, Optional, Tuple, cast
 import jwt
 
 from homeassistant import data_entry_flow
-from homeassistant.auth.const import ACCESS_TOKEN_EXPIRATION
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.util import dt as dt_util
 
 from . import auth_store, models
-from .const import GROUP_ID_ADMIN
+from .const import ACCESS_TOKEN_EXPIRATION, GROUP_ID_ADMIN
 from .mfa_modules import MultiFactorAuthModule, auth_mfa_module_from_config
 from .providers import AuthProvider, LoginFlow, auth_provider_from_config
 
