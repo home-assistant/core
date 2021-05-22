@@ -17,6 +17,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_SCAN_INTERVAL,
     CONF_SLAVE,
+    STATE_ON,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
@@ -105,7 +106,9 @@ class ModbusBinarySensor(BasePlatform, RestoreEntity, BinarySensorEntity):
         await self.async_base_added_to_hass()
         state = await self.async_get_last_state()
         if state:
-            self._value = state.state
+            self._value = state.state == STATE_ON
+        else:
+            self._value = None
 
     @property
     def is_on(self):
