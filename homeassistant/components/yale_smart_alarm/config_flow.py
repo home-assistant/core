@@ -28,14 +28,8 @@ class YaleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, config: dict):
         """Import a configuration from config.yaml."""
-        if not config[CONF_NAME]:
-            config[CONF_NAME] = DEFAULT_NAME
-        if not config[CONF_AREA_ID]:
-            config[CONF_AREA_ID] = DEFAULT_AREA_ID
 
-        self.context.update(
-            {"title_placeholders": {"name": f"YAML import {config[CONF_NAME]}"}}
-        )
+        self.context.update({"title_placeholders": {"name": f"YAML import {DOMAIN}"}})
         return await self.async_step_user(user_input=config)
 
     async def async_step_user(self, user_input=None):
