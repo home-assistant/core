@@ -570,7 +570,7 @@ class LightEntity(ToggleEntity):
     _attr_rgb_color: tuple[int, int, int] | None = None
     _attr_rgbw_color: tuple[int, int, int, int] | None = None
     _attr_rgbww_color: tuple[int, int, int, int, int] | None = None
-    _attr_supported_color_modes: set | None = None
+    _attr_supported_color_modes: set[str] | None = None
     _attr_supported_features: int = 0
     _attr_xy_color: tuple[float, float] | None = None
 
@@ -821,7 +821,7 @@ class LightEntity(ToggleEntity):
         return supported_color_modes
 
     @property
-    def supported_color_modes(self) -> set | None:
+    def supported_color_modes(self) -> set[str] | None:
         """Flag supported color modes."""
         return self._attr_supported_color_modes
 
