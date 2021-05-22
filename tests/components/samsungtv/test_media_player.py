@@ -35,6 +35,7 @@ from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
     CONF_HOST,
     CONF_IP_ADDRESS,
+    CONF_MAC,
     CONF_METHOD,
     CONF_NAME,
     CONF_PORT,
@@ -95,6 +96,17 @@ MOCK_ENTRY_WS = {
     CONF_METHOD: "websocket",
     CONF_NAME: "fake",
     CONF_PORT: 8001,
+    CONF_TOKEN: "123456789",
+}
+
+
+MOCK_ENTRY_WS_WITH_MAC = {
+    CONF_IP_ADDRESS: "test",
+    CONF_HOST: "fake_host",
+    CONF_METHOD: "websocket",
+    CONF_MAC: "aa:bb:cc:dd:ee:ff",
+    CONF_NAME: "fake",
+    CONF_PORT: 8002,
     CONF_TOKEN: "123456789",
 }
 
@@ -591,6 +603,26 @@ async def test_turn_on_with_turnon(hass, remote, delay):
         DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, True
     )
     assert delay.call_count == 1
+
+
+async def test_turn_on_wol(hass, remotews):
+    """Test turn on."""
+    entry = MockConfigEntry(
+        domain=SAMSUNGTV_DOMAIN,
+        data=MOCK_ENTRY_WS_WITH_MAC,
+        unique_id="any",
+    )
+    entry.add_to_hass(hass)
+    assert await async_setup_component(hass, SAMSUNGTV_DOMAIN, {})
+    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.samsungtv.media_player.send_magic_packet"
+    ) as mock_send_magic_packet:
+        assert await hass.services.async_call(
+            DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, True
+        )
+        await hass.async_block_till_done()
+    assert mock_send_magic_packet.called
 
 
 async def test_turn_on_without_turnon(hass, remote):

@@ -3,6 +3,7 @@ import asyncio
 from datetime import timedelta
 
 import voluptuous as vol
+from wakeonlan import send_magic_packet
 
 from homeassistant.components.media_player import DEVICE_CLASS_TV, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
@@ -71,6 +72,7 @@ class SamsungTVDevice(MediaPlayerEntity):
     def __init__(self, bridge, config_entry, on_script):
         """Initialize the Samsung device."""
         self._config_entry = config_entry
+        self._host = config_entry.data[CONF_HOST]
         self._mac = config_entry.data.get(CONF_MAC)
         self._manufacturer = config_entry.data.get(CONF_MANUFACTURER)
         self._model = config_entry.data.get(CONF_MODEL)
@@ -146,7 +148,7 @@ class SamsungTVDevice(MediaPlayerEntity):
         """Return the availability of the device."""
         if self._auth_failed:
             return False
-        return self._state == STATE_ON or self._on_script
+        return self._state == STATE_ON or self._on_script or self._mac
 
     @property
     def device_info(self):
@@ -174,7 +176,7 @@ class SamsungTVDevice(MediaPlayerEntity):
     @property
     def supported_features(self):
         """Flag media player features that are supported."""
-        if self._on_script:
+        if self._on_script or self._mac:
             return SUPPORT_SAMSUNGTV | SUPPORT_TURN_ON
         return SUPPORT_SAMSUNGTV
 
@@ -246,10 +248,19 @@ class SamsungTVDevice(MediaPlayerEntity):
             await asyncio.sleep(KEY_PRESS_TIMEOUT, self.hass.loop)
         await self.hass.async_add_executor_job(self.send_key, "KEY_ENTER")
 
+    def _wake_on_lan(self):
+        """Wake the device via wake on lan."""
+        send_magic_packet(self._mac, ip_address=self._host)
+        # If the ip address changed since we last saw the device
+        # broadcast a packet as well
+        send_magic_packet(self._mac)
+
     async def async_turn_on(self):
         """Turn the media player on."""
         if self._on_script:
             await self._on_script.async_run(context=self._context)
+        elif self._mac:
+            await self.hass.async_add_executor_job(self._wake_on_lan)
 
     def select_source(self, source):
         """Select input source."""
