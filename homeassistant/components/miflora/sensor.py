@@ -202,7 +202,7 @@ class MiFloraSensor(SensorEntity):
         return self._device_class
 
     @property
-    def state_class(self) -> str | None:
+    def state_class(self):
         """Return the state class of this entity."""
         return STATE_CLASS_MEASUREMENT
 
