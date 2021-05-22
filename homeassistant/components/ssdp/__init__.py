@@ -333,8 +333,9 @@ class Scanner:
 class DescriptionManager:
     """Class to cache and manage fetching descriptions."""
 
-    def __init__(self):
+    def __init__(self, hass):
         """Init the manager."""
+        self.hass = hass
         self._description_cache = {}
 
     async def fetch_description(self, xml_location):
