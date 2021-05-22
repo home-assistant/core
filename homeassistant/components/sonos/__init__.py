@@ -196,7 +196,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
         _LOGGER.debug("Adding discovery job")
         entry.async_on_unload(
-            ssdp.async_register_callback(hass, _async_discovered_player)
+            ssdp.async_register_callback(
+                hass,
+                _async_discovered_player,
+                {ssdp.ATTR_SSDP_ST: "urn:schemas-upnp-org:device:ZonePlayer:1"},
+            )
         )
         await hass.async_add_executor_job(_discovery)
 
