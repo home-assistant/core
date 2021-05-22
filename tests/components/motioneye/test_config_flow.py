@@ -109,7 +109,7 @@ async def test_hassio_success(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result3.get("type") == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result3.get("title") == "motionEye"
+    assert result3.get("title") == "Add-on"
     assert result3.get("data") == {
         CONF_URL: TEST_URL,
         CONF_ADMIN_USERNAME: "admin-username",
