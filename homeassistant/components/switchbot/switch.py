@@ -13,7 +13,7 @@ from homeassistant.const import CONF_MAC, CONF_NAME, CONF_PASSWORD, CONF_SENSOR_
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from .const import ATTR_BOT, DEFAULT_NAME, DOMAIN
+from .const import ATTR_BOT, DEFAULT_NAME, DOMAIN, MANUFACTURER
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -122,3 +122,13 @@ class SwitchBot(SwitchEntity, RestoreEntity):
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return {"last_run_success": self._last_run_success}
+
+    @property
+    def device_info(self):
+        """Return the device_info of the device."""
+        return {
+            "identifiers": {(DOMAIN, self._mac.replace(":", ""))},
+            "name": self._name,
+            "model": "Bot",
+            "manufacturer": MANUFACTURER,
+        }
