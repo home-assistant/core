@@ -1,6 +1,6 @@
 """Tests for Sentry integration."""
 import logging
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -308,12 +308,6 @@ async def test_filter_log_events(hass: HomeAssistant, logger, options, event):
 )
 async def test_filter_handled_events(hass: HomeAssistant, handled, options, event):
     """Tests filtering of handled events based on configuration options."""
-
-    event_mock = MagicMock()
-    event_mock.__iter__ = ["tags"]
-    event_mock.__contains__ = lambda _, val: val == "tags"
-    event_mock.tags = {"handled": handled}
-
     result = process_before_send(
         hass,
         options=options,
@@ -321,7 +315,7 @@ async def test_filter_handled_events(hass: HomeAssistant, handled, options, even
         huuid="12345",
         system_info={"installation_type": "pytest"},
         custom_components=[],
-        event=event_mock,
+        event={"tags": {"handled": handled}},
         hint={},
     )
 
