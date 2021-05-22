@@ -36,7 +36,7 @@ mimetypes.add_type("application/javascript", ".js")
 
 DOMAIN = "frontend"
 CONF_THEMES = "themes"
-CONF_THEMES_STYLES = "styles"
+CONF_THEMES_MODES = "modes"
 CONF_THEMES_LIGHT = "light"
 CONF_THEMES_DARK = "dark"
 CONF_EXTRA_HTML_URL = "extra_html_url"
@@ -71,7 +71,10 @@ _LOGGER = logging.getLogger(__name__)
 
 EXTENDED_THEME_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_THEMES_STYLES): vol.Schema(
+        # Theme variables that apply to all modes
+        cv.string: cv.string,
+        # Mode specific theme variables
+        vol.Optional(CONF_THEMES_MODES): vol.Schema(
             {
                 vol.Optional(CONF_THEMES_LIGHT): vol.Schema({cv.string: cv.string}),
                 vol.Optional(CONF_THEMES_DARK): vol.Schema({cv.string: cv.string}),
@@ -86,7 +89,7 @@ THEME_SCHEMA = vol.Schema(
             vol.Any(
                 # Legacy theme scheme
                 {cv.string: cv.string},
-                # New extended schema with "dark styles" support
+                # New extended schema with mode support
                 EXTENDED_THEME_SCHEMA,
             )
         )

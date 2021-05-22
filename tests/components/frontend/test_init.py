@@ -27,20 +27,23 @@ MOCK_THEMES = {
     "happy": {"primary-color": "red", "app-header-background-color": "blue"},
     "dark": {"primary-color": "black"},
     "light_only": {
-        "styles": {
-            "light": {"primary-color": "red"},
-        }
+        "primary-color": "blue",
+        "modes": {
+            "light": {"secondary-color": "black"},
+        },
     },
     "dark_only": {
-        "styles": {
-            "dark": {"primary-color": "black"},
-        }
+        "primary-color": "blue",
+        "modes": {
+            "dark": {"secondary-color": "white"},
+        },
     },
     "light_and_dark": {
-        "styles": {
-            "light": {"primary-color": "red"},
-            "dark": {"primary-color": "black"},
-        }
+        "primary-color": "blue",
+        "modes": {
+            "light": {"secondary-color": "black"},
+            "dark": {"secondary-color": "white"},
+        },
     },
 }
 
