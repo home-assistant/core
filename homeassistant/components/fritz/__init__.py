@@ -53,6 +53,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_unload)
     )
+    entry.async_on_unload(entry.add_update_listener(update_listener))
+
     # Load the other platforms like switch
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
@@ -79,3 +81,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await async_unload_services(hass)
 
     return unload_ok
+
+
+async def update_listener(hass: HomeAssistant, entry: ConfigEntry):
+    """Update when config_entry options update."""
+    fritzbox_tools: FritzBoxTools = hass.data[DOMAIN][entry.entry_id]
+
+    if fritzbox_tools._options:
+        await hass.config_entries.async_reload(entry.entry_id)
