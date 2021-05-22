@@ -176,7 +176,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.script.*",
     "homeassistant.components.search.*",
     "homeassistant.components.sense.*",
-    "homeassistant.components.sentry.*",
     "homeassistant.components.sesame.*",
     "homeassistant.components.sharkiq.*",
     "homeassistant.components.sma.*",
