@@ -166,12 +166,12 @@ class Scanner:
             match_dict = {}
 
         callback_entry = (ssdp_callback, match_dict)
+        self._callbacks.append(callback_entry)
 
         @callback
         def _async_remove_callback():
             self._callbacks.remove(callback_entry)
 
-        self._callbacks.append(callback_entry)
         return _async_remove_callback
 
     @callback
