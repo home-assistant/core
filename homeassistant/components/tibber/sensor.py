@@ -196,7 +196,7 @@ class TibberSensorElPrice(TibberSensor):
             not self._tibber_home.last_data_timestamp
             or (self._tibber_home.last_data_timestamp - now).total_seconds()
             < 5 * 3600 + self._spread_load_constant
-            or not self._attr_available
+            or not self.available
         ):
             _LOGGER.debug("Asking for new data")
             await self._fetch_data()
