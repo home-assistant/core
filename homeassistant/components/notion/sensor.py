@@ -55,7 +55,7 @@ class NotionSensor(NotionEntity, SensorEntity):
         name: str,
         device_class: str,
         unit: str,
-    ):
+    ) -> None:
         """Initialize the entity."""
         super().__init__(
             coordinator, task_id, sensor_id, bridge_id, system_id, name, device_class

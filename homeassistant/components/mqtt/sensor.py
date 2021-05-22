@@ -7,7 +7,11 @@ import functools
 import voluptuous as vol
 
 from homeassistant.components import sensor
-from homeassistant.components.sensor import DEVICE_CLASSES_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    DEVICE_CLASSES_SCHEMA,
+    STATE_CLASSES_SCHEMA,
+    SensorEntity,
+)
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_FORCE_UPDATE,
@@ -33,6 +37,7 @@ from .mixins import (
 )
 
 CONF_EXPIRE_AFTER = "expire_after"
+CONF_STATE_CLASS = "state_class"
 
 DEFAULT_NAME = "MQTT Sensor"
 DEFAULT_FORCE_UPDATE = False
@@ -42,6 +47,7 @@ PLATFORM_SCHEMA = mqtt.MQTT_RO_PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_EXPIRE_AFTER): cv.positive_int,
         vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_STATE_CLASS): STATE_CLASSES_SCHEMA,
         vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
@@ -125,8 +131,11 @@ class MqttSensor(MqttEntity, SensorEntity):
 
             template = self._config.get(CONF_VALUE_TEMPLATE)
             if template is not None:
+                variables = {"entity_id": self.entity_id}
                 payload = template.async_render_with_possible_json_value(
-                    payload, self._state
+                    payload,
+                    self._state,
+                    variables=variables,
                 )
             self._state = payload
             self.async_write_ha_state()
@@ -169,6 +178,11 @@ class MqttSensor(MqttEntity, SensorEntity):
     def device_class(self) -> str | None:
         """Return the device class of the sensor."""
         return self._config.get(CONF_DEVICE_CLASS)
+
+    @property
+    def state_class(self) -> str | None:
+        """Return the state class of the sensor."""
+        return self._config.get(CONF_STATE_CLASS)
 
     @property
     def available(self) -> bool:

@@ -83,7 +83,7 @@ class Integration:
 
     @property
     def disabled(self) -> str | None:
-        """List of disabled."""
+        """Return if integration is disabled."""
         return self.manifest.get("disabled")
 
     @property

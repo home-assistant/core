@@ -10,7 +10,14 @@ from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_NAME, CONF_HOST
+from homeassistant.const import (
+    ATTR_IDENTIFIERS,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
+    ATTR_NAME,
+    ATTR_SW_VERSION,
+    CONF_HOST,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import DeviceInfo
@@ -20,13 +27,7 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
-from .const import (
-    ATTR_IDENTIFIERS,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    ATTR_SOFTWARE_VERSION,
-    DOMAIN,
-)
+from .const import DOMAIN
 
 SCAN_INTERVAL = timedelta(seconds=5)
 PLATFORMS = (LIGHT_DOMAIN, SENSOR_DOMAIN, SWITCH_DOMAIN)
@@ -101,7 +102,7 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
         hass: HomeAssistant,
         *,
         host: str,
-    ):
+    ) -> None:
         """Initialize global WLED data updater."""
         self.wled = WLED(host, session=async_get_clientsession(hass))
 
@@ -127,6 +128,8 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
 
 class WLEDEntity(CoordinatorEntity):
     """Defines a base WLED entity."""
+
+    coordinator: WLEDDataUpdateCoordinator
 
     def __init__(
         self,
@@ -172,5 +175,5 @@ class WLEDDeviceEntity(WLEDEntity):
             ATTR_NAME: self.coordinator.data.info.name,
             ATTR_MANUFACTURER: self.coordinator.data.info.brand,
             ATTR_MODEL: self.coordinator.data.info.product,
-            ATTR_SOFTWARE_VERSION: self.coordinator.data.info.version,
+            ATTR_SW_VERSION: self.coordinator.data.info.version,
         }

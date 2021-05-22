@@ -12,7 +12,9 @@ from .const import DOMAIN
 class XboxBaseSensorEntity(CoordinatorEntity):
     """Base Sensor for the Xbox Integration."""
 
-    def __init__(self, coordinator: XboxUpdateCoordinator, xuid: str, attribute: str):
+    def __init__(
+        self, coordinator: XboxUpdateCoordinator, xuid: str, attribute: str
+    ) -> None:
         """Initialize Xbox binary sensor."""
         super().__init__(coordinator)
         self.xuid = xuid

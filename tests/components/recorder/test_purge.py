@@ -104,7 +104,7 @@ async def test_purge_old_states_encounters_temporary_mysql_error(
     mysql_exception.orig = MagicMock(args=(1205, "retryable"))
 
     with patch(
-        "homeassistant.components.recorder.purge.time.sleep"
+        "homeassistant.components.recorder.util.time.sleep"
     ) as sleep_mock, patch(
         "homeassistant.components.recorder.purge._purge_old_recorder_runs",
         side_effect=[mysql_exception, None],
@@ -147,7 +147,7 @@ async def test_purge_old_states_encounters_operational_error(
         await async_wait_recording_done_without_instance(hass)
 
     assert "retrying" not in caplog.text
-    assert "Error purging history" in caplog.text
+    assert "Error executing purge" in caplog.text
 
 
 async def test_purge_old_events(

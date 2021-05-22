@@ -60,7 +60,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
 class PluggableAction:
     """A pluggable action handler."""
 
-    def __init__(self, update: Callable[[], None]):
+    def __init__(self, update: Callable[[], None]) -> None:
         """Initialize."""
         self._update = update
         self._actions: dict[Any, AutomationActionType] = {}

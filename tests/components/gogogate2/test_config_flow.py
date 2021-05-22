@@ -1,7 +1,7 @@
 """Tests for the GogoGate2 component."""
 from unittest.mock import MagicMock, patch
 
-from ismartgate import GogoGate2Api
+from ismartgate import GogoGate2Api, ISmartGateApi
 from ismartgate.common import ApiError
 from ismartgate.const import GogoGate2ApiErrorCode
 
@@ -19,7 +19,13 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import RESULT_TYPE_ABORT, RESULT_TYPE_FORM
+from homeassistant.data_entry_flow import (
+    RESULT_TYPE_ABORT,
+    RESULT_TYPE_CREATE_ENTRY,
+    RESULT_TYPE_FORM,
+)
+
+from . import _mocked_ismartgate_closed_door_response
 
 from tests.common import MockConfigEntry
 
@@ -59,6 +65,24 @@ async def test_auth_fail(
 
     api.reset_mock()
     api.async_info.side_effect = Exception("Generic connection error.")
+    result = await hass.config_entries.flow.async_init(
+        "gogogate2", context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_DEVICE: DEVICE_TYPE_GOGOGATE2,
+            CONF_IP_ADDRESS: "127.0.0.2",
+            CONF_USERNAME: "user0",
+            CONF_PASSWORD: "password0",
+        },
+    )
+    assert result
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["errors"] == {"base": "cannot_connect"}
+
+    api.reset_mock()
+    api.async_info.side_effect = ApiError(0, "blah")
     result = await hass.config_entries.flow.async_init(
         "gogogate2", context={"source": SOURCE_USER}
     )
@@ -145,3 +169,86 @@ async def test_form_homekit_ip_address(hass):
         CONF_PASSWORD: "password",
         CONF_USERNAME: "username",
     }
+
+
+@patch("homeassistant.components.gogogate2.async_setup_entry", return_value=True)
+@patch("homeassistant.components.gogogate2.common.ISmartGateApi")
+async def test_discovered_dhcp(
+    ismartgateapi_mock, async_setup_entry_mock, hass
+) -> None:
+    """Test we get the form with homekit and abort for dhcp source when we get both."""
+    api: ISmartGateApi = MagicMock(spec=ISmartGateApi)
+    ismartgateapi_mock.return_value = api
+
+    api.reset_mock()
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_DHCP},
+        data={"ip": "1.2.3.4", "macaddress": MOCK_MAC_ADDR},
+    )
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["errors"] == {}
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_DEVICE: DEVICE_TYPE_ISMARTGATE,
+            CONF_IP_ADDRESS: "1.2.3.4",
+            CONF_USERNAME: "user0",
+            CONF_PASSWORD: "password0",
+        },
+    )
+    assert result2
+    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["errors"] == {"base": "cannot_connect"}
+    api.reset_mock()
+
+    closed_door_response = _mocked_ismartgate_closed_door_response()
+    api.async_info.return_value = closed_door_response
+    result3 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"],
+        user_input={
+            CONF_DEVICE: DEVICE_TYPE_ISMARTGATE,
+            CONF_IP_ADDRESS: "1.2.3.4",
+            CONF_USERNAME: "user0",
+            CONF_PASSWORD: "password0",
+        },
+    )
+    assert result3
+    assert result3["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result3["data"] == {
+        "device": "ismartgate",
+        "ip_address": "1.2.3.4",
+        "password": "password0",
+        "username": "user0",
+    }
+
+
+async def test_discovered_by_homekit_and_dhcp(hass):
+    """Test we get the form with homekit and abort for dhcp source when we get both."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_HOMEKIT},
+        data={"host": "1.2.3.4", "properties": {"id": MOCK_MAC_ADDR}},
+    )
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["errors"] == {}
+
+    result2 = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_DHCP},
+        data={"ip": "1.2.3.4", "macaddress": MOCK_MAC_ADDR},
+    )
+    assert result2["type"] == RESULT_TYPE_ABORT
+    assert result2["reason"] == "already_in_progress"
+
+    result3 = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_DHCP},
+        data={"ip": "1.2.3.4", "macaddress": "00:00:00:00:00:00"},
+    )
+    assert result3["type"] == RESULT_TYPE_ABORT
+    assert result3["reason"] == "already_in_progress"

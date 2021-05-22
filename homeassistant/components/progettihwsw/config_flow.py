@@ -15,17 +15,6 @@ DATA_SCHEMA = vol.Schema(
 async def validate_input(hass: core.HomeAssistant, data):
     """Validate the user host input."""
 
-    confs = hass.config_entries.async_entries(DOMAIN)
-    same_entries = [
-        True
-        for entry in confs
-        if entry.data.get("host") == data["host"]
-        and entry.data.get("port") == data["port"]
-    ]
-
-    if same_entries:
-        raise ExistingEntry
-
     api_instance = ProgettiHWSWAPI(f'{data["host"]}:{data["port"]}')
     is_valid = await api_instance.check_board()
 
@@ -80,13 +69,14 @@ class ProgettiHWSWConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
+            self._async_abort_entries_match(
+                {"host": user_input["host"], "port": user_input["port"]}
+            )
 
             try:
                 info = await validate_input(self.hass, user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
-            except ExistingEntry:
-                return self.async_abort(reason="already_configured")
             except Exception:  # pylint: disable=broad-except
                 errors["base"] = "unknown"
             else:

@@ -86,7 +86,7 @@ async def test_hub_setup_failed(hass):
 
         await hass.config_entries.async_setup(config_entry.entry_id)
 
-        assert config_entry.state == config_entries.ENTRY_STATE_SETUP_RETRY
+        assert config_entry.state is config_entries.ConfigEntryState.SETUP_RETRY
 
     # error when username or password is invalid
     config_entry = MockConfigEntry(domain=mikrotik.DOMAIN, data=MOCK_DATA)

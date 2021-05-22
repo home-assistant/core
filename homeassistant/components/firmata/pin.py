@@ -15,7 +15,7 @@ class FirmataPinUsedException(Exception):
 class FirmataBoardPin:
     """Manages a single Firmata board pin."""
 
-    def __init__(self, board: FirmataBoard, pin: FirmataPinType, pin_mode: str):
+    def __init__(self, board: FirmataBoard, pin: FirmataPinType, pin_mode: str) -> None:
         """Initialize the pin."""
         self.board = board
         self._pin = pin
@@ -43,7 +43,7 @@ class FirmataBinaryDigitalOutput(FirmataBoardPin):
         pin_mode: str,
         initial: bool,
         negate: bool,
-    ):
+    ) -> None:
         """Initialize the digital output pin."""
         self._initial = initial
         self._negate = negate
@@ -98,7 +98,7 @@ class FirmataPWMOutput(FirmataBoardPin):
         initial: bool,
         minimum: int,
         maximum: int,
-    ):
+    ) -> None:
         """Initialize the PWM/analog output pin."""
         self._initial = initial
         self._min = minimum
@@ -139,7 +139,7 @@ class FirmataBinaryDigitalInput(FirmataBoardPin):
 
     def __init__(
         self, board: FirmataBoard, pin: FirmataPinType, pin_mode: str, negate: bool
-    ):
+    ) -> None:
         """Initialize the digital input pin."""
         self._negate = negate
         self._forward_callback = None
@@ -206,7 +206,7 @@ class FirmataAnalogInput(FirmataBoardPin):
 
     def __init__(
         self, board: FirmataBoard, pin: FirmataPinType, pin_mode: str, differential: int
-    ):
+    ) -> None:
         """Initialize the analog input pin."""
         self._differential = differential
         self._forward_callback = None

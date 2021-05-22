@@ -109,8 +109,7 @@ class AirlyAirQuality(CoordinatorEntity, AirQualityEntity):
             "identifiers": {
                 (
                     DOMAIN,
-                    str(self.coordinator.latitude),
-                    str(self.coordinator.longitude),
+                    f"{self.coordinator.latitude}-{self.coordinator.longitude}",
                 )
             },
             "name": DEFAULT_NAME,

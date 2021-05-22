@@ -70,6 +70,7 @@ homeassistant/components/blueprint/* @home-assistant/core
 homeassistant/components/bmp280/* @belidzs
 homeassistant/components/bmw_connected_drive/* @gerard33 @rikroe
 homeassistant/components/bond/* @prystupa
+homeassistant/components/bosch_shc/* @tschamm
 homeassistant/components/braviatv/* @bieniu
 homeassistant/components/broadlink/* @danielhiversen @felipediel
 homeassistant/components/brother/* @bieniu
@@ -169,6 +170,7 @@ homeassistant/components/fritz/* @mammuth @AaronDavidSchneider @chemelli74
 homeassistant/components/fritzbox/* @mib1185
 homeassistant/components/fronius/* @nielstron
 homeassistant/components/frontend/* @home-assistant/frontend
+homeassistant/components/garages_amsterdam/* @klaasnicolaas
 homeassistant/components/garmin_connect/* @cyberjunky
 homeassistant/components/gdacs/* @exxamalte
 homeassistant/components/geniushub/* @zxdavb
@@ -254,6 +256,7 @@ homeassistant/components/knx/* @Julius2342 @farmio @marvin-w
 homeassistant/components/kodi/* @OnFreund @cgtobi
 homeassistant/components/konnected/* @heythisisnate @kit-klein
 homeassistant/components/kostal_plenticore/* @stegm
+homeassistant/components/kraken/* @eifinger
 homeassistant/components/kulersky/* @emlove
 homeassistant/components/lametric/* @robbiet480
 homeassistant/components/launch_library/* @ludeeus
@@ -330,7 +333,6 @@ homeassistant/components/notify_events/* @matrozov @papajojo
 homeassistant/components/notion/* @bachya
 homeassistant/components/nsw_fuel_station/* @nickw444
 homeassistant/components/nsw_rural_fire_service_feed/* @exxamalte
-homeassistant/components/nuheat/* @bdraco
 homeassistant/components/nuki/* @pschmitt @pvizeli @pree
 homeassistant/components/numato/* @clssn
 homeassistant/components/number/* @home-assistant/core @Shulyaka
@@ -478,6 +480,7 @@ homeassistant/components/swiss_public_transport/* @fabaff
 homeassistant/components/switchbot/* @danielhiversen
 homeassistant/components/switcher_kis/* @tomerfi
 homeassistant/components/switchmate/* @danielhiversen
+homeassistant/components/syncthing/* @zhulik
 homeassistant/components/syncthru/* @nielstron
 homeassistant/components/synology_dsm/* @hacf-fr @Quentame @mib1185
 homeassistant/components/synology_srm/* @aerialls
@@ -558,6 +561,7 @@ homeassistant/components/xiaomi_aqara/* @danielhiversen @syssi
 homeassistant/components/xiaomi_miio/* @rytilahti @syssi @starkillerOG
 homeassistant/components/xiaomi_tv/* @simse
 homeassistant/components/xmpp/* @fabaff @flowolf
+homeassistant/components/yale_smart_alarm/* @gjohansson-ST
 homeassistant/components/yamaha_musiccast/* @jalmeroth
 homeassistant/components/yandex_transport/* @rishatik92 @devbis
 homeassistant/components/yeelight/* @rytilahti @zewelor @shenxn

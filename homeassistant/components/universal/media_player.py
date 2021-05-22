@@ -46,6 +46,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
+    SUPPORT_PLAY_MEDIA,
     SUPPORT_PREVIOUS_TRACK,
     SUPPORT_REPEAT_SET,
     SUPPORT_SELECT_SOUND_MODE,
@@ -485,6 +486,9 @@ class UniversalMediaPlayer(MediaPlayerEntity):
         ):
             flags |= SUPPORT_SELECT_SOURCE
 
+        if SERVICE_PLAY_MEDIA in self._cmds:
+            flags |= SUPPORT_PLAY_MEDIA
+
         if SERVICE_CLEAR_PLAYLIST in self._cmds:
             flags |= SUPPORT_CLEAR_PLAYLIST
 
@@ -538,23 +542,25 @@ class UniversalMediaPlayer(MediaPlayerEntity):
 
     async def async_media_play(self):
         """Send play command."""
-        await self._async_call_service(SERVICE_MEDIA_PLAY)
+        await self._async_call_service(SERVICE_MEDIA_PLAY, allow_override=True)
 
     async def async_media_pause(self):
         """Send pause command."""
-        await self._async_call_service(SERVICE_MEDIA_PAUSE)
+        await self._async_call_service(SERVICE_MEDIA_PAUSE, allow_override=True)
 
     async def async_media_stop(self):
         """Send stop command."""
-        await self._async_call_service(SERVICE_MEDIA_STOP)
+        await self._async_call_service(SERVICE_MEDIA_STOP, allow_override=True)
 
     async def async_media_previous_track(self):
         """Send previous track command."""
-        await self._async_call_service(SERVICE_MEDIA_PREVIOUS_TRACK)
+        await self._async_call_service(
+            SERVICE_MEDIA_PREVIOUS_TRACK, allow_override=True
+        )
 
     async def async_media_next_track(self):
         """Send next track command."""
-        await self._async_call_service(SERVICE_MEDIA_NEXT_TRACK)
+        await self._async_call_service(SERVICE_MEDIA_NEXT_TRACK, allow_override=True)
 
     async def async_media_seek(self, position):
         """Send seek command."""
@@ -564,7 +570,7 @@ class UniversalMediaPlayer(MediaPlayerEntity):
     async def async_play_media(self, media_type, media_id, **kwargs):
         """Play a piece of media."""
         data = {ATTR_MEDIA_CONTENT_TYPE: media_type, ATTR_MEDIA_CONTENT_ID: media_id}
-        await self._async_call_service(SERVICE_PLAY_MEDIA, data)
+        await self._async_call_service(SERVICE_PLAY_MEDIA, data, allow_override=True)
 
     async def async_volume_up(self):
         """Turn volume up for media player."""
@@ -576,7 +582,7 @@ class UniversalMediaPlayer(MediaPlayerEntity):
 
     async def async_media_play_pause(self):
         """Play or pause the media player."""
-        await self._async_call_service(SERVICE_MEDIA_PLAY_PAUSE)
+        await self._async_call_service(SERVICE_MEDIA_PLAY_PAUSE, allow_override=True)
 
     async def async_select_sound_mode(self, sound_mode):
         """Select sound mode."""
@@ -592,7 +598,7 @@ class UniversalMediaPlayer(MediaPlayerEntity):
 
     async def async_clear_playlist(self):
         """Clear players playlist."""
-        await self._async_call_service(SERVICE_CLEAR_PLAYLIST)
+        await self._async_call_service(SERVICE_CLEAR_PLAYLIST, allow_override=True)
 
     async def async_set_shuffle(self, shuffle):
         """Enable/disable shuffling."""
@@ -606,7 +612,7 @@ class UniversalMediaPlayer(MediaPlayerEntity):
 
     async def async_toggle(self):
         """Toggle the power on the media player."""
-        await self._async_call_service(SERVICE_TOGGLE)
+        await self._async_call_service(SERVICE_TOGGLE, allow_override=True)
 
     async def async_update(self):
         """Update state in HA."""

@@ -38,7 +38,9 @@ async def async_setup_entry(
 class BondSwitch(BondEntity, SwitchEntity):
     """Representation of a Bond generic device."""
 
-    def __init__(self, hub: BondHub, device: BondDevice, bpup_subs: BPUPSubscriptions):
+    def __init__(
+        self, hub: BondHub, device: BondDevice, bpup_subs: BPUPSubscriptions
+    ) -> None:
         """Create HA entity representing Bond generic device (switch)."""
         super().__init__(hub, device, bpup_subs)
 

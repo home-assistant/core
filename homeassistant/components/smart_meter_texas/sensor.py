@@ -33,7 +33,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class SmartMeterTexasSensor(CoordinatorEntity, RestoreEntity, SensorEntity):
     """Representation of an Smart Meter Texas sensor."""
 
-    def __init__(self, meter: Meter, coordinator: DataUpdateCoordinator):
+    def __init__(self, meter: Meter, coordinator: DataUpdateCoordinator) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
         self.meter = meter

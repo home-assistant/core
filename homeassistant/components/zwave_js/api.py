@@ -25,7 +25,7 @@ from homeassistant.components.websocket_api.const import (
     ERR_NOT_SUPPORTED,
     ERR_UNKNOWN_ERROR,
 )
-from homeassistant.config_entries import ENTRY_STATE_LOADED, ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
@@ -85,7 +85,7 @@ def async_get_entry(orig_func: Callable) -> Callable:
             )
             return
 
-        if entry.state != ENTRY_STATE_LOADED:
+        if entry.state is not ConfigEntryState.LOADED:
             connection.send_error(
                 msg[ID], ERR_NOT_LOADED, f"Config entry {entry_id} not loaded"
             )
@@ -142,14 +142,14 @@ def async_register_api(hass: HomeAssistant) -> None:
         hass, websocket_update_data_collection_preference
     )
     websocket_api.async_register_command(hass, websocket_data_collection_status)
-    hass.http.register_view(DumpView)  # type: ignore
+    hass.http.register_view(DumpView())
 
 
-@websocket_api.require_admin  # type: ignore
-@websocket_api.async_response
+@websocket_api.require_admin
 @websocket_api.websocket_command(
     {vol.Required(TYPE): "zwave_js/network_status", vol.Required(ENTRY_ID): str}
 )
+@websocket_api.async_response
 @async_get_entry
 async def websocket_network_status(
     hass: HomeAssistant,
@@ -177,7 +177,6 @@ async def websocket_network_status(
     )
 
 
-@websocket_api.async_response  # type: ignore
 @websocket_api.websocket_command(
     {
         vol.Required(TYPE): "zwave_js/node_status",
@@ -185,6 +184,7 @@ async def websocket_network_status(
         vol.Required(NODE_ID): int,
     }
 )
+@websocket_api.async_response
 @async_get_node
 async def websocket_node_status(
     hass: HomeAssistant,
@@ -206,8 +206,7 @@ async def websocket_node_status(
     )
 
 
-@websocket_api.require_admin  # type: ignore
-@websocket_api.async_response
+@websocket_api.require_admin
 @websocket_api.websocket_command(
     {
         vol.Required(TYPE): "zwave_js/add_node",
@@ -215,6 +214,7 @@ async def websocket_node_status(
         vol.Optional("secure", default=False): bool,
     }
 )
+@websocket_api.async_response
 @async_get_entry
 async def websocket_add_node(
     hass: HomeAssistant,
@@ -240,8 +240,23 @@ async def websocket_add_node(
         )
 
     @callback
+    def forward_stage(event: dict) -> None:
+        connection.send_message(
+            websocket_api.event_message(
+                msg[ID], {"event": event["event"], "stage": event["stageName"]}
+            )
+        )
+
+    @callback
     def node_added(event: dict) -> None:
         node = event["node"]
+        interview_unsubs = [
+            node.on("interview started", forward_event),
+            node.on("interview completed", forward_event),
+            node.on("interview stage completed", forward_stage),
+            node.on("interview failed", forward_event),
+        ]
+        unsubs.extend(interview_unsubs)
         node_details = {
             "node_id": node.node_id,
             "status": node.status,
@@ -255,7 +270,12 @@ async def websocket_add_node(
 
     @callback
     def device_registered(device: DeviceEntry) -> None:
-        device_details = {"name": device.name, "id": device.id}
+        device_details = {
+            "name": device.name,
+            "id": device.id,
+            "manufacturer": device.manufacturer,
+            "model": device.model,
+        }
         connection.send_message(
             websocket_api.event_message(
                 msg[ID], {"event": "device registered", "device": device_details}
@@ -280,14 +300,14 @@ async def websocket_add_node(
     )
 
 
-@websocket_api.require_admin  # type: ignore
-@websocket_api.async_response
+@websocket_api.require_admin
 @websocket_api.websocket_command(
     {
         vol.Required(TYPE): "zwave_js/stop_inclusion",
         vol.Required(ENTRY_ID): str,
     }
 )
+@websocket_api.async_response
 @async_get_entry
 async def websocket_stop_inclusion(
     hass: HomeAssistant,
@@ -305,14 +325,14 @@ async def websocket_stop_inclusion(
     )
 
 
-@websocket_api.require_admin  # type: ignore
-@websocket_api.async_response
+@websocket_api.require_admin
 @websocket_api.websocket_command(
     {
         vol.Required(TYPE): "zwave_js/stop_exclusion",
         vol.Required(ENTRY_ID): str,
     }
 )
+@websocket_api.async_response
 @async_get_entry
 async def websocket_stop_exclusion(
     hass: HomeAssistant,
@@ -330,14 +350,14 @@ async def websocket_stop_exclusion(
     )
 
 
-@websocket_api.require_admin  # type:ignore
-@websocket_api.async_response
+@websocket_api.require_admin
 @websocket_api.websocket_command(
     {
         vol.Required(TYPE): "zwave_js/remove_node",
         vol.Required(ENTRY_ID): str,
     }
 )
+@websocket_api.async_response
 @async_get_entry
 async def websocket_remove_node(
     hass: HomeAssistant,
@@ -389,8 +409,7 @@ async def websocket_remove_node(
     )
 
 
-@websocket_api.require_admin  # type: ignore
-@websocket_api.async_response
+@websocket_api.require_admin
 @websocket_api.websocket_command(
     {
         vol.Required(TYPE): "zwave_js/refresh_node_info",
@@ -398,6 +417,7 @@ async def websocket_remove_node(
         vol.Required(NODE_ID): int,
     },
 )
+@websocket_api.async_response
 @async_get_node
 async def websocket_refresh_node_info(
     hass: HomeAssistant,
@@ -439,8 +459,7 @@ async def websocket_refresh_node_info(
     connection.send_result(msg[ID], result)
 
 
-@websocket_api.require_admin  # type: ignore
-@websocket_api.async_response
+@websocket_api.require_admin
 @websocket_api.websocket_command(
     {
         vol.Required(TYPE): "zwave_js/refresh_node_values",
@@ -448,6 +467,7 @@ async def websocket_refresh_node_info(
         vol.Required(NODE_ID): int,
     },
 )
+@websocket_api.async_response
 @async_get_node
 async def websocket_refresh_node_values(
     hass: HomeAssistant,
@@ -460,8 +480,7 @@ async def websocket_refresh_node_values(
     connection.send_result(msg[ID])
 
 
-@websocket_api.require_admin  # type: ignore
-@websocket_api.async_response
+@websocket_api.require_admin
 @websocket_api.websocket_command(
     {
         vol.Required(TYPE): "zwave_js/refresh_node_cc_values",
@@ -470,6 +489,7 @@ async def websocket_refresh_node_values(
         vol.Required(COMMAND_CLASS_ID): int,
     },
 )
+@websocket_api.async_response
 @async_get_node
 async def websocket_refresh_node_cc_values(
     hass: HomeAssistant,
@@ -492,8 +512,7 @@ async def websocket_refresh_node_cc_values(
     connection.send_result(msg[ID])
 
 
-@websocket_api.require_admin  # type:ignore
-@websocket_api.async_response
+@websocket_api.require_admin
 @websocket_api.websocket_command(
     {
         vol.Required(TYPE): "zwave_js/set_config_parameter",
@@ -504,6 +523,7 @@ async def websocket_refresh_node_cc_values(
         vol.Required(VALUE): int,
     }
 )
+@websocket_api.async_response
 @async_get_node
 async def websocket_set_config_parameter(
     hass: HomeAssistant,
@@ -543,8 +563,7 @@ async def websocket_set_config_parameter(
     )
 
 
-@websocket_api.require_admin  # type: ignore
-@websocket_api.async_response
+@websocket_api.require_admin
 @websocket_api.websocket_command(
     {
         vol.Required(TYPE): "zwave_js/get_config_parameters",
@@ -552,6 +571,7 @@ async def websocket_set_config_parameter(
         vol.Required(NODE_ID): int,
     }
 )
+@websocket_api.async_response
 @async_get_node
 async def websocket_get_config_parameters(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict, node: Node
@@ -593,14 +613,14 @@ def filename_is_present_if_logging_to_file(obj: dict) -> dict:
     return obj
 
 
-@websocket_api.require_admin  # type: ignore
-@websocket_api.async_response
+@websocket_api.require_admin
 @websocket_api.websocket_command(
     {
         vol.Required(TYPE): "zwave_js/subscribe_logs",
         vol.Required(ENTRY_ID): str,
     }
 )
+@websocket_api.async_response
 @async_get_entry
 async def websocket_subscribe_logs(
     hass: HomeAssistant,
@@ -640,8 +660,7 @@ async def websocket_subscribe_logs(
     connection.send_result(msg[ID])
 
 
-@websocket_api.require_admin  # type: ignore
-@websocket_api.async_response
+@websocket_api.require_admin
 @websocket_api.websocket_command(
     {
         vol.Required(TYPE): "zwave_js/update_log_config",
@@ -668,6 +687,7 @@ async def websocket_subscribe_logs(
         ),
     },
 )
+@websocket_api.async_response
 @async_get_entry
 async def websocket_update_log_config(
     hass: HomeAssistant,
@@ -683,14 +703,14 @@ async def websocket_update_log_config(
     )
 
 
-@websocket_api.require_admin  # type: ignore
-@websocket_api.async_response
+@websocket_api.require_admin
 @websocket_api.websocket_command(
     {
         vol.Required(TYPE): "zwave_js/get_log_config",
         vol.Required(ENTRY_ID): str,
     },
 )
+@websocket_api.async_response
 @async_get_entry
 async def websocket_get_log_config(
     hass: HomeAssistant,
@@ -707,8 +727,7 @@ async def websocket_get_log_config(
     )
 
 
-@websocket_api.require_admin  # type: ignore
-@websocket_api.async_response
+@websocket_api.require_admin
 @websocket_api.websocket_command(
     {
         vol.Required(TYPE): "zwave_js/update_data_collection_preference",
@@ -716,6 +735,7 @@ async def websocket_get_log_config(
         vol.Required(OPTED_IN): bool,
     },
 )
+@websocket_api.async_response
 @async_get_entry
 async def websocket_update_data_collection_preference(
     hass: HomeAssistant,
@@ -738,14 +758,14 @@ async def websocket_update_data_collection_preference(
     )
 
 
-@websocket_api.require_admin  # type: ignore
-@websocket_api.async_response
+@websocket_api.require_admin
 @websocket_api.websocket_command(
     {
         vol.Required(TYPE): "zwave_js/data_collection_status",
         vol.Required(ENTRY_ID): str,
     },
 )
+@websocket_api.async_response
 @async_get_entry
 async def websocket_data_collection_status(
     hass: HomeAssistant,

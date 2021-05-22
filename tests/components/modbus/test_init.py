@@ -39,6 +39,7 @@ from homeassistant.const import (
     CONF_METHOD,
     CONF_NAME,
     CONF_PORT,
+    CONF_SCAN_INTERVAL,
     CONF_SENSORS,
     CONF_TIMEOUT,
     CONF_TYPE,
@@ -159,6 +160,12 @@ async def _config_helper(hass, do_config, caplog):
             CONF_NAME: TEST_MODBUS_NAME,
             CONF_TIMEOUT: 30,
             CONF_DELAY: 10,
+        },
+        {
+            CONF_TYPE: "tcp",
+            CONF_HOST: "modbusTestHost",
+            CONF_PORT: 5501,
+            CONF_DELAY: 5,
         },
     ],
 )
@@ -336,11 +343,14 @@ async def _read_helper(hass, do_group, do_type, do_return, do_exception, mock_py
                 CONF_HOST: "modbusTestHost",
                 CONF_PORT: 5501,
                 CONF_NAME: TEST_MODBUS_NAME,
-                do_group: {
-                    CONF_INPUT_TYPE: do_type,
-                    CONF_NAME: TEST_SENSOR_NAME,
-                    CONF_ADDRESS: 51,
-                },
+                do_group: [
+                    {
+                        CONF_INPUT_TYPE: do_type,
+                        CONF_NAME: TEST_SENSOR_NAME,
+                        CONF_ADDRESS: 51,
+                        CONF_SCAN_INTERVAL: 1,
+                    }
+                ],
             }
         ]
     }
@@ -467,3 +477,103 @@ async def test_pymodbus_connect_fail(hass, caplog, mock_pymodbus):
     await hass.async_block_till_done()
     assert len(caplog.records) == 1
     assert caplog.records[0].levelname == "ERROR"
+
+
+async def test_delay(hass, mock_pymodbus):
+    """Run test for startup delay."""
+
+    # the purpose of this test is to test startup delay
+    # We "hijiack" a binary_sensor to make a proper blackbox test.
+    test_delay = 15
+    test_scan_interval = 5
+    entity_id = f"{BINARY_SENSOR_DOMAIN}.{TEST_SENSOR_NAME}"
+    config = {
+        DOMAIN: [
+            {
+                CONF_TYPE: "tcp",
+                CONF_HOST: "modbusTestHost",
+                CONF_PORT: 5501,
+                CONF_NAME: TEST_MODBUS_NAME,
+                CONF_DELAY: test_delay,
+                CONF_BINARY_SENSORS: [
+                    {
+                        CONF_INPUT_TYPE: CALL_TYPE_COIL,
+                        CONF_NAME: f"{TEST_SENSOR_NAME}",
+                        CONF_ADDRESS: 52,
+                        CONF_SCAN_INTERVAL: test_scan_interval,
+                    },
+                ],
+            }
+        ]
+    }
+    mock_pymodbus.read_coils.return_value = ReadResult([0x01])
+    now = dt_util.utcnow()
+    with mock.patch("homeassistant.helpers.event.dt_util.utcnow", return_value=now):
+        assert await async_setup_component(hass, DOMAIN, config) is True
+        await hass.async_block_till_done()
+
+    # pass first scan_interval
+    start_time = now
+    now = now + timedelta(seconds=(test_scan_interval + 1))
+    with mock.patch("homeassistant.helpers.event.dt_util.utcnow", return_value=now):
+        async_fire_time_changed(hass, now)
+        await hass.async_block_till_done()
+        assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+    stop_time = start_time + timedelta(seconds=(test_delay + 1))
+    step_timedelta = timedelta(seconds=1)
+    while now < stop_time:
+        now = now + step_timedelta
+        with mock.patch("homeassistant.helpers.event.dt_util.utcnow", return_value=now):
+            async_fire_time_changed(hass, now)
+            await hass.async_block_till_done()
+            assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+    now = now + step_timedelta + timedelta(seconds=2)
+    with mock.patch("homeassistant.helpers.event.dt_util.utcnow", return_value=now):
+        async_fire_time_changed(hass, now)
+        await hass.async_block_till_done()
+        assert hass.states.get(entity_id).state == STATE_ON
+
+
+async def test_thread_lock(hass, mock_pymodbus):
+    """Run test for block of threads."""
+
+    # the purpose of this test is to test the threads are not being blocked
+    # We "hijiack" a binary_sensor to make a proper blackbox test.
+    test_scan_interval = 5
+    sensors = []
+    for i in range(200):
+        sensors.append(
+            {
+                CONF_INPUT_TYPE: CALL_TYPE_COIL,
+                CONF_NAME: f"{TEST_SENSOR_NAME}_{i}",
+                CONF_ADDRESS: 52 + i,
+                CONF_SCAN_INTERVAL: test_scan_interval,
+            }
+        )
+    config = {
+        DOMAIN: [
+            {
+                CONF_TYPE: "tcp",
+                CONF_HOST: "modbusTestHost",
+                CONF_PORT: 5501,
+                CONF_NAME: TEST_MODBUS_NAME,
+                CONF_BINARY_SENSORS: sensors,
+            }
+        ]
+    }
+    mock_pymodbus.read_coils.return_value = ReadResult([0x01])
+    now = dt_util.utcnow()
+    with mock.patch("homeassistant.helpers.event.dt_util.utcnow", return_value=now):
+        assert await async_setup_component(hass, DOMAIN, config) is True
+        await hass.async_block_till_done()
+    stop_time = now + timedelta(seconds=10)
+    step_timedelta = timedelta(seconds=1)
+    while now < stop_time:
+        now = now + step_timedelta
+        with mock.patch("homeassistant.helpers.event.dt_util.utcnow", return_value=now):
+            async_fire_time_changed(hass, now)
+            await hass.async_block_till_done()
+    for i in range(200):
+        entity_id = f"{BINARY_SENSOR_DOMAIN}.{TEST_SENSOR_NAME}_{i}"
+        assert hass.states.get(entity_id).state == STATE_ON

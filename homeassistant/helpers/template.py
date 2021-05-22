@@ -24,7 +24,7 @@ import weakref
 import jinja2
 from jinja2 import contextfilter, contextfunction
 from jinja2.sandbox import ImmutableSandboxedEnvironment
-from jinja2.utils import Namespace  # type: ignore
+from jinja2.utils import Namespace
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -175,7 +175,7 @@ class TupleWrapper(tuple, ResultWrapper):
 
     # pylint: disable=super-init-not-called
 
-    def __init__(self, value: tuple, *, render_result: str | None = None):
+    def __init__(self, value: tuple, *, render_result: str | None = None) -> None:
         """Initialize a new tuple class."""
         self.render_result = render_result
 
@@ -581,9 +581,8 @@ class Template:
         self._strict = strict
         env = self._env
 
-        self._compiled = cast(
-            jinja2.Template,
-            jinja2.Template.from_code(env, self._compiled_code, env.globals, None),
+        self._compiled = jinja2.Template.from_code(
+            env, self._compiled_code, env.globals, None
         )
 
         return self._compiled
