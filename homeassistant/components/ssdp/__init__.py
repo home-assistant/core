@@ -2,24 +2,23 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Coroutine, Mapping
+from collections.abc import Mapping
 from datetime import timedelta
 from ipaddress import IPv4Address, IPv6Address
 import logging
-from typing import Any, TypedDict
+from typing import Any
 
-import aiohttp
-from defusedxml import ElementTree
-from netdisco import ssdp, util
+from netdisco import ssdp
 
 from homeassistant import config_entries
 from homeassistant.components import network
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.core import callback
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.loader import async_get_ssdp, bind_hass
 
+from .descriptions import DescriptionManager
+from .flow import FlowDispatcher, SSDPFlow
 from .listener import SSDPListener
 
 DOMAIN = "ssdp"
@@ -65,48 +64,6 @@ async def async_setup(hass, config):
     asyncio.create_task(scanner.async_start())
 
     return True
-
-
-class SSDPFlow(TypedDict):
-    """A queued ssdp discovery flow."""
-
-    domain: str
-    context: dict[str, Any]
-    data: dict
-
-
-class FlowDispatcher:
-    """Dispatch discovery flows."""
-
-    def __init__(self, hass: HomeAssistant) -> None:
-        """Init the discovery dispatcher."""
-        self.hass = hass
-        self.pending_flows: list[SSDPFlow] = []
-        self.started = False
-
-    @callback
-    def async_start(self, *_) -> None:
-        """Start processing pending flows."""
-        self.started = True
-        self.hass.loop.call_soon(self._async_process_pending_flows)
-
-    def _async_process_pending_flows(self) -> None:
-        for flow in self.pending_flows:
-            self.hass.async_create_task(self._init_flow(flow))
-        self.pending_flows = []
-
-    def create(self, flow: SSDPFlow) -> None:
-        """Create and add or queue a flow."""
-        if self.started:
-            self.hass.create_task(self._init_flow(flow))
-        else:
-            self.pending_flows.append(flow)
-
-    def _init_flow(self, flow: SSDPFlow) -> Coroutine[None, None, FlowResult]:
-        """Create a flow."""
-        return self.hass.config_entries.flow.async_init(
-            flow["domain"], context=flow["context"], data=flow["data"]
-        )
 
 
 def _async_use_default_interface(adapters) -> bool:
@@ -263,54 +220,6 @@ class Scanner:
                     domains.add(domain)
 
         return info_from_entry(entry, info), domains
-
-
-class DescriptionManager:
-    """Class to cache and manage fetching descriptions."""
-
-    def __init__(self, hass):
-        """Init the manager."""
-        self.hass = hass
-        self._description_cache = {}
-
-    async def fetch_description(self, xml_location):
-        """Fetch the location or get it from the cache."""
-        if xml_location is None:
-            return
-        if xml_location not in self._description_cache:
-            try:
-                self._description_cache[xml_location] = await self._fetch_description(
-                    xml_location
-                )
-            except Exception:
-                # If it fails, cache the failure so we do not keep trying over and over
-                self._description_cache[xml_location] = None
-                _LOGGER.exception("Failed to fetch ssdp data from: %s", xml_location)
-
-        return self._description_cache[xml_location]
-
-    async def _fetch_description(self, xml_location):
-        """Fetch an XML description."""
-        session = self.hass.helpers.aiohttp_client.async_get_clientsession()
-        try:
-            for _ in range(2):
-                resp = await session.get(xml_location, timeout=5)
-                xml = await resp.text(errors="replace")
-                # Samsung Smart TV sometimes returns an empty document the
-                # first time. Retry once.
-                if xml:
-                    break
-        except (aiohttp.ClientError, asyncio.TimeoutError) as err:
-            _LOGGER.debug("Error fetching %s: %s", xml_location, err)
-            return None
-
-        try:
-            tree = ElementTree.fromstring(xml)
-        except ElementTree.ParseError as err:
-            _LOGGER.debug("Error parsing %s: %s", xml_location, err)
-            return None
-
-        return util.etree_to_dict(tree).get("root", {}).get("device", {})
 
 
 def info_from_entry(entry, device_info):
