@@ -82,10 +82,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                         client.async_get_network(),
                         client.async_get_os(),
                         client.async_get_processes(),
-                        client.async_get_settings(),
                         client.async_get_system(),
                     ]
                 )
+
+            await client.async_connect_websocket(
+                entry.data[CONF_HOST],
+                (await client.async_get_setting("network", "wsPort")).value,
+            )
+
             return client
         except BridgeAuthenticationException as exception:
             raise ConfigEntryAuthFailed from exception

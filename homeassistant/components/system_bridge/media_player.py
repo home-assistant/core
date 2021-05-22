@@ -7,7 +7,6 @@ import logging
 
 from systembridge import Bridge
 from systembridge.objects.events import Event
-from systembridge.objects.media import Media
 
 from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import (
@@ -24,10 +23,9 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_STEP,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, STATE_IDLE, STATE_PAUSED, STATE_PLAYING
+from homeassistant.const import STATE_IDLE, STATE_PAUSED, STATE_PLAYING
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
-import homeassistant.util.dt as dt_util
 
 from . import BridgeDeviceEntity
 from .const import DOMAIN
@@ -41,12 +39,6 @@ async def async_setup_entry(
     """Set up System Bridge media player based on a config entry."""
     coordinator: DataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     bridge: Bridge = coordinator.data
-
-    for setting in bridge.settings:
-        if setting.key == "wsPort":
-            ws_port = setting.value
-
-    await bridge.async_connect_websocket(entry.data[CONF_HOST], ws_port)
 
     async_add_entities(
         [BridgeAudio(coordinator, bridge), BridgeMediaPlayer(coordinator, bridge)]
@@ -112,13 +104,9 @@ class BridgeMediaPlayer(BridgeDeviceEntity, MediaPlayerEntity):
         super().__init__(
             coordinator, bridge, "media_player", "Media Player", None, True
         )
-        self._media_player_status: Media = None
-        self._media_player_last_updated: datetime | None = None
 
         async def handle_event(event: Event) -> None:
             if event.name == "player-status":
-                self._media_player_status = Media(event.data)
-                self._media_player_last_updated = dt_util.utcnow()
                 await self.async_update_ha_state()
 
         asyncio.ensure_future(bridge.listen_for_events(handle_event))
@@ -140,12 +128,10 @@ class BridgeMediaPlayer(BridgeDeviceEntity, MediaPlayerEntity):
     @property
     def state(self) -> str:
         """State of the player."""
-        if (
-            self._media_player_status is None
-            or self._media_player_status.attributes is None
-        ):
+        bridge: Bridge = self.coordinator.data
+        if bridge.media_status is None or bridge.media_status.attributes is None:
             return STATE_IDLE
-        if self._media_player_status.playing is True:
+        if bridge.media_status.playing is True:
             return STATE_PLAYING
         else:
             return STATE_PAUSED
@@ -153,97 +139,82 @@ class BridgeMediaPlayer(BridgeDeviceEntity, MediaPlayerEntity):
     @property
     def media_content_type(self) -> str | None:
         """Content type of current playing media."""
-        if (
-            self._media_player_status is None
-            or self._media_player_status.attributes is None
-        ):
+        bridge: Bridge = self.coordinator.data
+        if bridge.media_status is None or bridge.media_status.attributes is None:
             return None
-        if self._media_player_status.source["type"] == "audio":
+        if bridge.media_status.source["type"] == "audio":
             return MEDIA_TYPE_MUSIC
-        elif self._media_player_status.source["type"] == "video":
+        elif bridge.media_status.source["type"] == "video":
             return MEDIA_TYPE_VIDEO
         return None
 
     @property
     def media_duration(self) -> float | None:
         """Duration of current playing media in seconds."""
-        if (
-            self._media_player_status is None
-            or self._media_player_status.attributes is None
-        ):
+        bridge: Bridge = self.coordinator.data
+        if bridge.media_status is None or bridge.media_status.attributes is None:
             return None
-        return self._media_player_status.duration
+        return bridge.media_status.duration
 
     @property
     def media_position(self) -> float | None:
         """Position of current playing media in seconds."""
-        if (
-            self._media_player_status is None
-            or self._media_player_status.attributes is None
-        ):
+        bridge: Bridge = self.coordinator.data
+        if bridge.media_status is None or bridge.media_status.attributes is None:
             return None
-        return self._media_player_status.position
+        return bridge.media_status.position
 
     @property
     def media_position_updated_at(self) -> datetime | None:
         """When was the position of the current playing media valid."""
-        return self._media_player_last_updated
+        bridge: Bridge = self.coordinator.data
+        return bridge.media_status_last_updated
 
     @property
     def volume_level(self) -> float | None:
         """Volume level of the media player (0..1)."""
-        if (
-            self._media_player_status is None
-            or self._media_player_status.attributes is None
-        ):
+        bridge: Bridge = self.coordinator.data
+        if bridge.media_status is None or bridge.media_status.attributes is None:
             return None
-        return self._media_player_status.volume
+        return bridge.media_status.volume
 
     @property
     def is_volume_muted(self) -> bool | None:
         """Boolean if volume is currently muted."""
-        if (
-            self._media_player_status is None
-            or self._media_player_status.attributes is None
-        ):
+        bridge: Bridge = self.coordinator.data
+        if bridge.media_status is None or bridge.media_status.attributes is None:
             return None
-        return self._media_player_status.muted
+        return bridge.media_status.muted
 
     @property
     def media_image_url(self) -> str | None:
         """Image url of current playing media."""
-        # TODO: Add get cover method to package
-        return None
+        bridge: Bridge = self.coordinator.data
+        return bridge.media_cover_url
 
     @property
     def media_title(self) -> str | None:
         """Title of current playing media."""
-        if (
-            self._media_player_status is None
-            or self._media_player_status.attributes is None
-        ):
+        bridge: Bridge = self.coordinator.data
+        if bridge.media_status is None or bridge.media_status.attributes is None:
             return None
-        return self._media_player_status.source.get("title")
+        return bridge.media_status.source.get("title")
 
     @property
     def media_artist(self) -> str | None:
         """Artist of current playing media, music track only."""
-        if (
-            self._media_player_status is None
-            or self._media_player_status.attributes is None
-        ):
+        bridge: Bridge = self.coordinator.data
+        if bridge.media_status is None or bridge.media_status.attributes is None:
             return None
-        return self._media_player_status.source.get("artist")
+        return bridge.media_status.source.get("artist")
 
     @property
     def media_album_name(self) -> str | None:
         """Album name of current playing media, music track only."""
-        if (
-            self._media_player_status is None
-            or self._media_player_status.attributes is None
-        ):
+        bridge: Bridge = self.coordinator.data
+        if bridge.media_status is None or bridge.media_status.attributes is None:
             return None
-        return self._media_player_status.source.get("album")
+        return bridge.media_status.source.get("album")
 
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute the volume."""
