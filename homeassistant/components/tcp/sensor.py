@@ -29,7 +29,7 @@ from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.template import Template
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, StateType
 
 from .const import (
     CONF_BUFFER_SIZE,
@@ -112,7 +112,7 @@ class TcpSensor(SensorEntity):
         return self._config[CONF_NAME]
 
     @property
-    def state(self) -> str | None:
+    def state(self) -> StateType:
         """Return the state of the device."""
         return self._state
 
