@@ -128,53 +128,51 @@ class AlarmControlPanelEntity(Entity):
         """Whether the code is required for arm actions."""
         return True
 
-    def alarm_disarm(self, code: str | int | None = None) -> None:
+    def alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         raise NotImplementedError()
 
-    async def async_alarm_disarm(self, code: str | int | None = None) -> None:
+    async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         await self.hass.async_add_executor_job(self.alarm_disarm, code)
 
-    def alarm_arm_home(self, code: str | int | None = None) -> None:
+    def alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
         raise NotImplementedError()
 
-    async def async_alarm_arm_home(self, code: str | int | None = None) -> None:
+    async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
         await self.hass.async_add_executor_job(self.alarm_arm_home, code)
 
-    def alarm_arm_away(self, code: str | int | None = None) -> None:
+    def alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         raise NotImplementedError()
 
-    async def async_alarm_arm_away(self, code: str | int | None = None) -> None:
+    async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         await self.hass.async_add_executor_job(self.alarm_arm_away, code)
 
-    def alarm_arm_night(self, code: str | int | None = None) -> None:
+    def alarm_arm_night(self, code: str | None = None) -> None:
         """Send arm night command."""
         raise NotImplementedError()
 
-    async def async_alarm_arm_night(self, code: str | int | None = None) -> None:
+    async def async_alarm_arm_night(self, code: str | None = None) -> None:
         """Send arm night command."""
         await self.hass.async_add_executor_job(self.alarm_arm_night, code)
 
-    def alarm_trigger(self, code: str | int | None = None) -> None:
+    def alarm_trigger(self, code: str | None = None) -> None:
         """Send alarm trigger command."""
         raise NotImplementedError()
 
-    async def async_alarm_trigger(self, code: str | int | None = None) -> None:
+    async def async_alarm_trigger(self, code: str | None = None) -> None:
         """Send alarm trigger command."""
         await self.hass.async_add_executor_job(self.alarm_trigger, code)
 
-    def alarm_arm_custom_bypass(self, code: str | int | None = None) -> None:
+    def alarm_arm_custom_bypass(self, code: str | None = None) -> None:
         """Send arm custom bypass command."""
         raise NotImplementedError()
 
-    async def async_alarm_arm_custom_bypass(
-        self, code: str | int | None = None
-    ) -> None:
+    async def async_alarm_arm_custom_bypass(self, code: str | None = None) -> None:
         """Send arm custom bypass command."""
         await self.hass.async_add_executor_job(self.alarm_arm_custom_bypass, code)
 
