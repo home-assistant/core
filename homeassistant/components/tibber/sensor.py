@@ -12,6 +12,7 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_SIGNAL_STRENGTH,
     DEVICE_CLASS_VOLTAGE,
+    STATE_CLASS_MEASUREMENT,
     SensorEntity,
 )
 from homeassistant.const import (
@@ -335,6 +336,11 @@ class TibberSensorRT(TibberSensor):
     def device_class(self):
         """Return the device class of the sensor."""
         return self._device_class
+
+    @property
+    def state_class(self) -> str:
+        """Return the state class of this entity, from STATE_CLASSES, if any."""
+        return STATE_CLASS_MEASUREMENT
 
 
 class TibberRtDataHandler:
