@@ -222,10 +222,10 @@ class ClimateSchema:
                     CONF_ON_OFF_INVERT, default=DEFAULT_ON_OFF_INVERT
                 ): cv.boolean,
                 vol.Optional(CONF_OPERATION_MODES): vol.All(
-                    cv.ensure_list, [vol.In({**PRESET_MODES})]
+                    cv.ensure_list, [vol.In(PRESET_MODES)]
                 ),
                 vol.Optional(CONF_CONTROLLER_MODES): vol.All(
-                    cv.ensure_list, [vol.In({**CONTROLLER_MODES})]
+                    cv.ensure_list, [vol.In(CONTROLLER_MODES)]
                 ),
                 vol.Optional(CONF_MIN_TEMP): vol.Coerce(float),
                 vol.Optional(CONF_MAX_TEMP): vol.Coerce(float),
