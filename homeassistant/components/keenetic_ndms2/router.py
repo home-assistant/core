@@ -37,7 +37,7 @@ _LOGGER = logging.getLogger(__name__)
 class KeeneticRouter:
     """Keenetic client Object."""
 
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry):
+    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         """Initialize the Client."""
         self.hass = hass
         self.config_entry = config_entry

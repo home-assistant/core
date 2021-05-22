@@ -46,7 +46,6 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a UPnP/IGD config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     # Paths:
     # - ssdp(discovery_info) --> ssdp_confirm(None) --> ssdp_confirm({}) --> create_entry()
@@ -185,7 +184,7 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
         # Handle devices changing their UDN, only allow a single
-        existing_entries = self.hass.config_entries.async_entries(DOMAIN)
+        existing_entries = self._async_current_entries()
         for config_entry in existing_entries:
             entry_hostname = config_entry.data.get(CONFIG_ENTRY_HOSTNAME)
             if entry_hostname == discovery[DISCOVERY_HOSTNAME]:

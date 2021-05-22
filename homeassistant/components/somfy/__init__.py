@@ -1,13 +1,11 @@
 """Support for Somfy hubs."""
 from abc import abstractmethod
-import asyncio
 from datetime import timedelta
 import logging
 
 from pymfy.api.devices.category import Category
 import voluptuous as vol
 
-from homeassistant.components.somfy import config_flow
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_OPTIMISTIC
 from homeassistant.core import HomeAssistant, callback
@@ -22,7 +20,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from . import api
+from . import api, config_flow
 from .const import API, COORDINATOR, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -135,10 +133,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             model=hub.type,
         )
 
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, platform)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
@@ -146,13 +141,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
     hass.data[DOMAIN].pop(API, None)
-    await asyncio.gather(
-        *[
-            hass.config_entries.async_forward_entry_unload(entry, platform)
-            for platform in PLATFORMS
-        ]
-    )
-    return True
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 class SomfyEntity(CoordinatorEntity, Entity):

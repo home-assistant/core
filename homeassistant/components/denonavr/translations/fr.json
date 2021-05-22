@@ -37,6 +37,7 @@
             "init": {
                 "data": {
                     "show_all_sources": "Afficher tous les sources",
+                    "update_audyssey": "Mettre \u00e0 jour les param\u00e8tres Audyssey",
                     "zone2": "Configurer Zone 2",
                     "zone3": "Configurer Zone 3"
                 },

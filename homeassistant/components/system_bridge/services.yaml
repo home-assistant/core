@@ -1,0 +1,46 @@
+send_command:
+  name: Send Command
+  description: Sends a command to the server to run.
+  fields:
+    bridge:
+      name: Bridge
+      description: The server to send the command to.
+      example: ""
+      required: true
+      selector:
+        device:
+          integration: system_bridge
+    command:
+      name: Command
+      description: Command to send to the server.
+      required: true
+      example: "echo"
+      selector:
+        text:
+    arguments:
+      name: Arguments
+      description: Arguments to send to the server.
+      required: false
+      default: ""
+      example: "hello"
+      selector:
+        text:
+open:
+  name: Open Path/URL
+  description: Open a URL or file on the server using the default application.
+  fields:
+    bridge:
+      name: Bridge
+      description: The server to talk to.
+      example: ""
+      required: true
+      selector:
+        device:
+          integration: system_bridge
+    path:
+      name: Path/URL
+      description: Path/URL to open.
+      required: true
+      example: "https://www.home-assistant.io"
+      selector:
+        text:

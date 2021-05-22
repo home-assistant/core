@@ -4,7 +4,6 @@
             "addon_get_discovery_info_failed": "Nie uda\u0142o si\u0119 uzyska\u0107 informacji wykrywania dodatku Z-Wave JS",
             "addon_info_failed": "Nie uda\u0142o si\u0119 uzyska\u0107 informacji o dodatku Z-Wave JS",
             "addon_install_failed": "Nie uda\u0142o si\u0119 zainstalowa\u0107 dodatku Z-Wave JS",
-            "addon_missing_discovery_info": "Brak informacji wykrywania dodatku Z-Wave JS",
             "addon_set_config_failed": "Nie uda\u0142o si\u0119 skonfigurowa\u0107 Z-Wave JS",
             "addon_start_failed": "Nie uda\u0142o si\u0119 uruchomi\u0107 dodatku Z-Wave JS.",
             "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
@@ -48,12 +47,7 @@
                 "title": "Wybierz metod\u0119 po\u0142\u0105czenia"
             },
             "start_addon": {
-                "title": "Dodatek Z-Wave JS uruchamia si\u0119."
-            },
-            "user": {
-                "data": {
-                    "url": "URL"
-                }
+                "title": "Dodatek Z-Wave JS uruchamia si\u0119..."
             }
         }
     },

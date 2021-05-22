@@ -1,6 +1,6 @@
 {
   "config": {
-    "flow_title": "WLED: {name}",
+    "flow_title": "{name}",
     "step": {
       "user": {
         "description": "Set up your WLED to integrate with Home Assistant.",

@@ -1,5 +1,4 @@
 """Support for AlarmDecoder devices."""
-import asyncio
 from datetime import timedelta
 import logging
 
@@ -125,10 +124,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await open_connection()
 
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, platform)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+
     return True
 
 
@@ -136,14 +133,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a AlarmDecoder entry."""
     hass.data[DOMAIN][entry.entry_id][DATA_RESTART] = False
 
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, platform)
-                for platform in PLATFORMS
-            ]
-        )
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     if not unload_ok:
         return False

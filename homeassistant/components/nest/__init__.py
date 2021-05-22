@@ -1,6 +1,5 @@
 """Support for Nest devices."""
 
-import asyncio
 import logging
 
 from google_nest_sdm.event import EventMessage
@@ -107,7 +106,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
 class SignalUpdateCallback:
     """An EventCallback invoked when new events arrive from subscriber."""
 
-    def __init__(self, hass: HomeAssistant):
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize EventCallback."""
         self._hass = hass
 
@@ -191,10 +190,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     hass.data[DOMAIN].pop(DATA_NEST_UNAVAILABLE, None)
     hass.data[DOMAIN][DATA_SUBSCRIBER] = subscriber
 
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, platform)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
@@ -207,14 +203,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     _LOGGER.debug("Stopping nest subscriber")
     subscriber = hass.data[DOMAIN][DATA_SUBSCRIBER]
     subscriber.stop_async()
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, platform)
-                for platform in PLATFORMS
-            ]
-        )
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         hass.data[DOMAIN].pop(DATA_SUBSCRIBER)
         hass.data[DOMAIN].pop(DATA_NEST_UNAVAILABLE, None)

@@ -2,8 +2,8 @@
 from __future__ import annotations
 
 import asyncio
+from collections import OrderedDict
 import datetime
-from functools import partial
 import logging
 import socket
 
@@ -33,6 +33,7 @@ from .const import (
     SONOS_GROUP_UPDATE,
     SONOS_SEEN,
 )
+from .favorites import SonosFavorites
 from .speaker import SonosSpeaker
 
 _LOGGER = logging.getLogger(__name__)
@@ -64,14 +65,14 @@ CONFIG_SCHEMA = vol.Schema(
 class SonosData:
     """Storage class for platform global data."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the data."""
-        self.discovered = {}
-        self.media_player_entities = {}
+        # OrderedDict behavior used by SonosFavorites
+        self.discovered: OrderedDict[str, SonosSpeaker] = OrderedDict()
+        self.favorites: dict[str, SonosFavorites] = {}
         self.topology_condition = asyncio.Condition()
         self.discovery_thread = None
         self.hosts_heartbeat = None
-        self.platforms_ready = set()
 
 
 async def async_setup(hass, config):
@@ -90,7 +91,7 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Sonos from a config entry."""
     pysonos.config.EVENTS_MODULE = events_asyncio
 
@@ -125,10 +126,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
                 data = hass.data[DATA_SONOS]
 
                 if soco.uid not in data.discovered:
-                    _LOGGER.debug("Adding new speaker")
                     speaker_info = soco.get_speaker_info(True)
+                    _LOGGER.debug("Adding new speaker: %s", speaker_info)
                     speaker = SonosSpeaker(hass, soco, speaker_info)
                     data.discovered[soco.uid] = speaker
+                    if soco.household_id not in data.favorites:
+                        data.favorites[soco.household_id] = SonosFavorites(
+                            hass, soco.household_id
+                        )
+                        data.favorites[soco.household_id].update()
                     speaker.setup()
                 else:
                     dispatcher_send(hass, f"{SONOS_SEEN}-{soco.uid}", soco)
@@ -168,25 +174,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     def _async_signal_update_groups(event):
         async_dispatcher_send(hass, SONOS_GROUP_UPDATE)
 
-    @callback
-    def start_discovery():
+    async def setup_platforms_and_discovery():
+        await asyncio.gather(
+            *[
+                hass.config_entries.async_forward_entry_setup(entry, platform)
+                for platform in PLATFORMS
+            ]
+        )
+        entry.async_on_unload(
+            hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _stop_discovery)
+        )
+        entry.async_on_unload(
+            hass.bus.async_listen_once(
+                EVENT_HOMEASSISTANT_START, _async_signal_update_groups
+            )
+        )
         _LOGGER.debug("Adding discovery job")
-        hass.async_add_executor_job(_discovery)
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _stop_discovery)
-        hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_START, _async_signal_update_groups
-        )
+        await hass.async_add_executor_job(_discovery)
 
-    @callback
-    def platform_ready(platform, _):
-        hass.data[DATA_SONOS].platforms_ready.add(platform)
-        if hass.data[DATA_SONOS].platforms_ready == PLATFORMS:
-            start_discovery()
-
-    for platform in PLATFORMS:
-        task = hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, platform)
-        )
-        task.add_done_callback(partial(platform_ready, platform))
+    hass.async_create_task(setup_platforms_and_discovery())
 
     return True

@@ -80,7 +80,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.enphase_envoy.config_flow.EnvoyReader.getData",
-        side_effect=httpx.HTTPError("any", request=MagicMock()),
+        side_effect=httpx.HTTPError("any"),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],

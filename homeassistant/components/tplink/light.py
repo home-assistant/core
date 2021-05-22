@@ -43,6 +43,7 @@ ATTR_DAILY_ENERGY_KWH = "daily_energy_kwh"
 ATTR_MONTHLY_ENERGY_KWH = "monthly_energy_kwh"
 
 LIGHT_STATE_DFT_ON = "dft_on_state"
+LIGHT_STATE_DFT_IGNORE = "ignore_default"
 LIGHT_STATE_ON_OFF = "on_off"
 LIGHT_STATE_RELAY_STATE = "relay_state"
 LIGHT_STATE_BRIGHTNESS = "brightness"
@@ -117,6 +118,7 @@ class LightState(NamedTuple):
 
         return {
             LIGHT_STATE_ON_OFF: 1 if self.state else 0,
+            LIGHT_STATE_DFT_IGNORE: 1 if self.state else 0,
             LIGHT_STATE_BRIGHTNESS: brightness_to_percentage(self.brightness),
             LIGHT_STATE_COLOR_TEMP: color_temp,
             LIGHT_STATE_HUE: self.hs[0] if self.hs else 0,
@@ -354,7 +356,7 @@ class TPLinkSmartBulb(LightEntity):
         ):
             color_temp = kelvin_to_mired(light_state_params[LIGHT_STATE_COLOR_TEMP])
 
-        if light_features.supported_features & SUPPORT_COLOR:
+        if color_temp is None and light_features.supported_features & SUPPORT_COLOR:
             hue_saturation = (
                 light_state_params[LIGHT_STATE_HUE],
                 light_state_params[LIGHT_STATE_SATURATION],

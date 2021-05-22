@@ -17,7 +17,7 @@
             "unable_to_pair": "Ei saa siduda, proovi uuesti.",
             "unknown_error": "Seade teatas tundmatust t\u00f5rkest. Sidumine nurjus."
         },
-        "flow_title": "{name} HomeKitAccessory Protocol abil",
+        "flow_title": "{name}",
         "step": {
             "busy_error": {
                 "description": "Katkesta sidumine k\u00f5igis kontrollerites v\u00f5i proovi seade taask\u00e4ivitada ja j\u00e4tka sidumist.",

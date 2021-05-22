@@ -8,9 +8,8 @@ from sense_energy import (
     SenseAPITimeoutException,
     SenseAuthenticationException,
 )
-import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_EMAIL,
     CONF_PASSWORD,
@@ -20,41 +19,24 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
     ACTIVE_UPDATE_RATE,
-    DEFAULT_TIMEOUT,
     DOMAIN,
-    EVENT_STOP_REMOVE,
     SENSE_DATA,
     SENSE_DEVICE_UPDATE,
     SENSE_DEVICES_DATA,
     SENSE_DISCOVERED_DEVICES_DATA,
     SENSE_TIMEOUT_EXCEPTIONS,
     SENSE_TRENDS_COORDINATOR,
-    TRACK_TIME_REMOVE,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = ["binary_sensor", "sensor"]
-
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_EMAIL): cv.string,
-                vol.Required(CONF_PASSWORD): cv.string,
-                vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
 
 
 class SenseDevicesData:
@@ -66,34 +48,11 @@ class SenseDevicesData:
 
     def set_devices_data(self, devices):
         """Store a device update."""
-        self._data_by_device = {}
-        for device in devices:
-            self._data_by_device[device["id"]] = device
+        self._data_by_device = {device["id"]: device for device in devices}
 
     def get_device_by_id(self, sense_device_id):
         """Get the latest device data."""
         return self._data_by_device.get(sense_device_id)
-
-
-async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the Sense component."""
-    hass.data.setdefault(DOMAIN, {})
-    conf = config.get(DOMAIN)
-    if not conf:
-        return True
-
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data={
-                CONF_EMAIL: conf[CONF_EMAIL],
-                CONF_PASSWORD: conf[CONF_PASSWORD],
-                CONF_TIMEOUT: conf[CONF_TIMEOUT],
-            },
-        )
-    )
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
@@ -137,19 +96,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     # This can take longer than 60s and we already know
     # sense is online since get_discovered_device_data was
     # successful so we do it later.
-    hass.loop.create_task(trends_coordinator.async_request_refresh())
+    asyncio.create_task(trends_coordinator.async_request_refresh())
 
-    data = hass.data[DOMAIN][entry.entry_id] = {
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
         SENSE_DATA: gateway,
         SENSE_DEVICES_DATA: sense_devices_data,
         SENSE_TRENDS_COORDINATOR: trends_coordinator,
         SENSE_DISCOVERED_DEVICES_DATA: sense_discovered_devices,
     }
 
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, platform)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     async def async_sense_update(_):
         """Retrieve latest state."""
@@ -171,9 +127,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     def _remove_update_callback_at_stop(event):
         remove_update_callback()
 
-    data[TRACK_TIME_REMOVE] = remove_update_callback
-    data[EVENT_STOP_REMOVE] = hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_STOP, _remove_update_callback_at_stop
+    entry.async_on_unload(remove_update_callback)
+    entry.async_on_unload(
+        hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_STOP, _remove_update_callback_at_stop
+        )
     )
 
     return True
@@ -181,19 +139,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, platform)
-                for platform in PLATFORMS
-            ]
-        )
-    )
-    data = hass.data[DOMAIN][entry.entry_id]
-    data[EVENT_STOP_REMOVE]()
-    data[TRACK_TIME_REMOVE]()
-
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
-
     return unload_ok

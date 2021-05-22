@@ -10,13 +10,6 @@
             "location_not_found": "Konum bulunamad\u0131"
         },
         "step": {
-            "geography": {
-                "data": {
-                    "api_key": "API Anahtar\u0131",
-                    "latitude": "Enlem",
-                    "longitude": "Boylam"
-                }
-            },
             "geography_by_coords": {
                 "data": {
                     "api_key": "API Anahtar\u0131",

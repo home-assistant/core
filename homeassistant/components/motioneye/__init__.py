@@ -52,9 +52,9 @@ def create_motioneye_client(
 
 def get_motioneye_device_identifier(
     config_entry_id: str, camera_id: int
-) -> tuple[str, str, int]:
+) -> tuple[str, str]:
     """Get the identifiers for a motionEye device."""
-    return (DOMAIN, config_entry_id, camera_id)
+    return (DOMAIN, f"{config_entry_id}_{camera_id}")
 
 
 def get_motioneye_entity_unique_id(
@@ -65,10 +65,10 @@ def get_motioneye_entity_unique_id(
 
 
 def get_camera_from_cameras(
-    camera_id: int, data: dict[str, Any]
+    camera_id: int, data: dict[str, Any] | None
 ) -> dict[str, Any] | None:
     """Get an individual camera dict from a multiple cameras data response."""
-    for camera in data.get(KEY_CAMERAS) or []:
+    for camera in data.get(KEY_CAMERAS, []) if data else []:
         if camera.get(KEY_ID) == camera_id:
             val: dict[str, Any] = camera
             return val
@@ -105,7 +105,7 @@ def _add_camera(
     entry: ConfigEntry,
     camera_id: int,
     camera: dict[str, Any],
-    device_identifier: tuple[str, str, int],
+    device_identifier: tuple[str, str],
 ) -> None:
     """Add a motionEye camera to hass."""
 
@@ -164,14 +164,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         CONF_COORDINATOR: coordinator,
     }
 
-    current_cameras: set[tuple[str, str, int]] = set()
+    current_cameras: set[tuple[str, str]] = set()
     device_registry = await dr.async_get_registry(hass)
 
     @callback
     def _async_process_motioneye_cameras() -> None:
         """Process motionEye camera additions and removals."""
-        inbound_camera: set[tuple[str, str, int]] = set()
-        if KEY_CAMERAS not in coordinator.data:
+        inbound_camera: set[tuple[str, str]] = set()
+        if coordinator.data is None or KEY_CAMERAS not in coordinator.data:
             return
 
         for camera in coordinator.data[KEY_CAMERAS]:
@@ -225,14 +225,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, platform)
-                for platform in PLATFORMS
-            ]
-        )
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         config_data = hass.data[DOMAIN].pop(entry.entry_id)
         await config_data[CONF_CLIENT].async_client_close()

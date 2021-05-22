@@ -9,13 +9,7 @@ from zwave_js_server.model.node import Node
 from homeassistant.components.hassio.handler import HassioAPIError
 from homeassistant.components.zwave_js.const import DOMAIN
 from homeassistant.components.zwave_js.helpers import get_device_id
-from homeassistant.config_entries import (
-    CONN_CLASS_LOCAL_PUSH,
-    DISABLED_USER,
-    ENTRY_STATE_LOADED,
-    ENTRY_STATE_NOT_LOADED,
-    ENTRY_STATE_SETUP_RETRY,
-)
+from homeassistant.config_entries import DISABLED_USER, ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -40,12 +34,12 @@ async def test_entry_setup_unload(hass, client, integration):
     entry = integration
 
     assert client.connect.call_count == 1
-    assert entry.state == ENTRY_STATE_LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     await hass.config_entries.async_unload(entry.entry_id)
 
     assert client.disconnect.call_count == 1
-    assert entry.state == ENTRY_STATE_NOT_LOADED
+    assert entry.state is ConfigEntryState.NOT_LOADED
 
 
 async def test_home_assistant_stop(hass, client, integration):
@@ -63,7 +57,7 @@ async def test_initialized_timeout(hass, client, connect_timeout):
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entry.state == ENTRY_STATE_SETUP_RETRY
+    assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_enabled_statistics(hass, client):
@@ -131,7 +125,7 @@ async def test_listen_failure(hass, client, error):
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entry.state == ENTRY_STATE_SETUP_RETRY
+    assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_on_node_added_ready(
@@ -584,7 +578,6 @@ async def test_start_addon(
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Z-Wave JS",
-        connection_class=CONN_CLASS_LOCAL_PUSH,
         data={"use_addon": True, "usb_path": device, "network_key": network_key},
     )
     entry.add_to_hass(hass)
@@ -592,7 +585,7 @@ async def test_start_addon(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entry.state == ENTRY_STATE_SETUP_RETRY
+    assert entry.state is ConfigEntryState.SETUP_RETRY
     assert install_addon.call_count == 0
     assert set_addon_options.call_count == 1
     assert set_addon_options.call_args == call(
@@ -616,7 +609,6 @@ async def test_install_addon(
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Z-Wave JS",
-        connection_class=CONN_CLASS_LOCAL_PUSH,
         data={"use_addon": True, "usb_path": device, "network_key": network_key},
     )
     entry.add_to_hass(hass)
@@ -624,7 +616,7 @@ async def test_install_addon(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entry.state == ENTRY_STATE_SETUP_RETRY
+    assert entry.state is ConfigEntryState.SETUP_RETRY
     assert install_addon.call_count == 1
     assert install_addon.call_args == call(hass, "core_zwave_js")
     assert set_addon_options.call_count == 1
@@ -650,7 +642,6 @@ async def test_addon_info_failure(
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Z-Wave JS",
-        connection_class=CONN_CLASS_LOCAL_PUSH,
         data={"use_addon": True, "usb_path": device, "network_key": network_key},
     )
     entry.add_to_hass(hass)
@@ -658,7 +649,7 @@ async def test_addon_info_failure(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entry.state == ENTRY_STATE_SETUP_RETRY
+    assert entry.state is ConfigEntryState.SETUP_RETRY
     assert install_addon.call_count == 0
     assert start_addon.call_count == 0
 
@@ -700,7 +691,6 @@ async def test_update_addon(
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Z-Wave JS",
-        connection_class=CONN_CLASS_LOCAL_PUSH,
         data={
             "url": "ws://host1:3001",
             "use_addon": True,
@@ -713,7 +703,7 @@ async def test_update_addon(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entry.state == ENTRY_STATE_SETUP_RETRY
+    assert entry.state is ConfigEntryState.SETUP_RETRY
     assert create_shapshot.call_count == snapshot_calls
     assert update_addon.call_count == update_calls
 
@@ -721,8 +711,8 @@ async def test_update_addon(
 @pytest.mark.parametrize(
     "stop_addon_side_effect, entry_state",
     [
-        (None, ENTRY_STATE_NOT_LOADED),
-        (HassioAPIError("Boom"), ENTRY_STATE_LOADED),
+        (None, ConfigEntryState.NOT_LOADED),
+        (HassioAPIError("Boom"), ConfigEntryState.LOADED),
     ],
 )
 async def test_stop_addon(
@@ -742,7 +732,6 @@ async def test_stop_addon(
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Z-Wave JS",
-        connection_class=CONN_CLASS_LOCAL_PUSH,
         data={
             "url": "ws://host1:3001",
             "use_addon": True,
@@ -755,7 +744,7 @@ async def test_stop_addon(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entry.state == ENTRY_STATE_LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     await hass.config_entries.async_set_disabled_by(entry.entry_id, DISABLED_USER)
     await hass.async_block_till_done()
@@ -773,23 +762,21 @@ async def test_remove_entry(
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Z-Wave JS",
-        connection_class=CONN_CLASS_LOCAL_PUSH,
         data={"integration_created_addon": False},
     )
     entry.add_to_hass(hass)
-    assert entry.state == ENTRY_STATE_NOT_LOADED
+    assert entry.state is ConfigEntryState.NOT_LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
     await hass.config_entries.async_remove(entry.entry_id)
 
-    assert entry.state == ENTRY_STATE_NOT_LOADED
+    assert entry.state is ConfigEntryState.NOT_LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
 
     # test successful remove with created add-on
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Z-Wave JS",
-        connection_class=CONN_CLASS_LOCAL_PUSH,
         data={"integration_created_addon": True},
     )
     entry.add_to_hass(hass)
@@ -807,7 +794,7 @@ async def test_remove_entry(
     )
     assert uninstall_addon.call_count == 1
     assert uninstall_addon.call_args == call(hass, "core_zwave_js")
-    assert entry.state == ENTRY_STATE_NOT_LOADED
+    assert entry.state is ConfigEntryState.NOT_LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
     stop_addon.reset_mock()
     create_shapshot.reset_mock()
@@ -824,7 +811,7 @@ async def test_remove_entry(
     assert stop_addon.call_args == call(hass, "core_zwave_js")
     assert create_shapshot.call_count == 0
     assert uninstall_addon.call_count == 0
-    assert entry.state == ENTRY_STATE_NOT_LOADED
+    assert entry.state is ConfigEntryState.NOT_LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
     assert "Failed to stop the Z-Wave JS add-on" in caplog.text
     stop_addon.side_effect = None
@@ -848,7 +835,7 @@ async def test_remove_entry(
         partial=True,
     )
     assert uninstall_addon.call_count == 0
-    assert entry.state == ENTRY_STATE_NOT_LOADED
+    assert entry.state is ConfigEntryState.NOT_LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
     assert "Failed to create a snapshot of the Z-Wave JS add-on" in caplog.text
     create_shapshot.side_effect = None
@@ -873,7 +860,7 @@ async def test_remove_entry(
     )
     assert uninstall_addon.call_count == 1
     assert uninstall_addon.call_args == call(hass, "core_zwave_js")
-    assert entry.state == ENTRY_STATE_NOT_LOADED
+    assert entry.state is ConfigEntryState.NOT_LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
     assert "Failed to uninstall the Z-Wave JS add-on" in caplog.text
 

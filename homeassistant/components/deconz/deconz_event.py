@@ -15,17 +15,17 @@ from homeassistant.const import (
     CONF_EVENT,
     CONF_ID,
     CONF_UNIQUE_ID,
+    CONF_XY,
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_NIGHT,
     STATE_ALARM_DISARMED,
-    STATE_UNKNOWN,
 )
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util import slugify
 
-from .const import CONF_ANGLE, CONF_GESTURE, CONF_XY, LOGGER, NEW_SENSOR
+from .const import CONF_ANGLE, CONF_GESTURE, LOGGER, NEW_SENSOR
 from .deconz_device import DeconzBase
 
 CONF_DECONZ_EVENT = "deconz_event"
@@ -169,11 +169,14 @@ class DeconzAlarmEvent(DeconzEvent):
 
         state, code, _area = self._device.action.split(",")
 
+        if state not in DECONZ_TO_ALARM_STATE:
+            return
+
         data = {
             CONF_ID: self.event_id,
             CONF_UNIQUE_ID: self.serial,
             CONF_DEVICE_ID: self.device_id,
-            CONF_EVENT: DECONZ_TO_ALARM_STATE.get(state, STATE_UNKNOWN),
+            CONF_EVENT: DECONZ_TO_ALARM_STATE[state],
             CONF_CODE: code,
         }
 

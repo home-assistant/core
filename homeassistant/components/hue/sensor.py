@@ -6,7 +6,7 @@ from aiohue.sensors import (
     TYPE_ZLL_TEMPERATURE,
 )
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
 from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_ILLUMINANCE,
@@ -26,16 +26,16 @@ TEMPERATURE_NAME_FORMAT = "{} temperature"
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Defer sensor setup to the shared sensor module."""
-    await hass.data[HUE_DOMAIN][
-        config_entry.entry_id
-    ].sensor_manager.async_register_component("sensor", async_add_entities)
+    bridge = hass.data[HUE_DOMAIN][config_entry.entry_id]
+
+    if not bridge.sensor_manager:
+        return
+
+    await bridge.sensor_manager.async_register_component("sensor", async_add_entities)
 
 
 class GenericHueGaugeSensorEntity(GenericZLLSensor, SensorEntity):
     """Parent class for all 'gauge' Hue device sensors."""
-
-    async def _async_update_ha_state(self, *args, **kwargs):
-        await self.async_update_ha_state(self, *args, **kwargs)
 
 
 class HueLightLevel(GenericHueGaugeSensorEntity):
@@ -86,6 +86,11 @@ class HueTemperature(GenericHueGaugeSensorEntity):
             return None
 
         return self.sensor.temperature / 100
+
+    @property
+    def state_class(self):
+        """Return the state class of the sensor."""
+        return STATE_CLASS_MEASUREMENT
 
 
 class HueBattery(GenericHueSensor, SensorEntity):

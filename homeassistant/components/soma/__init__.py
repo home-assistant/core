@@ -1,5 +1,4 @@
 """Support for Soma Smartshades."""
-import asyncio
 
 from api.soma_api import SomaApi
 import voluptuous as vol
@@ -16,11 +15,14 @@ from .const import API, DOMAIN, HOST, PORT
 DEVICES = "devices"
 
 CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {vol.Required(CONF_HOST): cv.string, vol.Required(CONF_PORT): cv.string}
-        )
-    },
+    vol.All(
+        cv.deprecated(DOMAIN),
+        {
+            DOMAIN: vol.Schema(
+                {vol.Required(CONF_HOST): cv.string, vol.Required(CONF_PORT): cv.string}
+            )
+        },
+    ),
     extra=vol.ALLOW_EXTRA,
 )
 
@@ -50,26 +52,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     devices = await hass.async_add_executor_job(hass.data[DOMAIN][API].list_devices)
     hass.data[DOMAIN][DEVICES] = devices["shades"]
 
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, platform)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, platform)
-                for platform in PLATFORMS
-            ]
-        )
-    )
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 class SomaEntity(Entity):

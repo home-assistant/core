@@ -91,7 +91,9 @@ async def async_setup_entry(
     entities = []
     data = hass.data[DOMAIN][config_entry.entry_id]
     receiver = data[CONF_RECEIVER]
-    update_audyssey = data.get(CONF_UPDATE_AUDYSSEY, DEFAULT_UPDATE_AUDYSSEY)
+    update_audyssey = config_entry.options.get(
+        CONF_UPDATE_AUDYSSEY, DEFAULT_UPDATE_AUDYSSEY
+    )
     for receiver_zone in receiver.zones.values():
         if config_entry.data[CONF_SERIAL_NUMBER] is not None:
             unique_id = f"{config_entry.unique_id}-{receiver_zone.zone}"
@@ -111,7 +113,7 @@ async def async_setup_entry(
     )
 
     # Register additional services
-    platform = entity_platform.current_platform.get()
+    platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(
         SERVICE_GET_COMMAND,
         {vol.Required(ATTR_COMMAND): cv.string},
@@ -140,7 +142,7 @@ class DenonDevice(MediaPlayerEntity):
         unique_id: str,
         config_entry: config_entries.ConfigEntry,
         update_audyssey: bool,
-    ):
+    ) -> None:
         """Initialize the device."""
         self._receiver = receiver
         self._unique_id = unique_id
@@ -244,7 +246,6 @@ class DenonDevice(MediaPlayerEntity):
             "manufacturer": self._config_entry.data[CONF_MANUFACTURER],
             "name": self._config_entry.title,
             "model": f"{self._config_entry.data[CONF_MODEL]}-{self._config_entry.data[CONF_TYPE]}",
-            "serial_number": self._config_entry.data[CONF_SERIAL_NUMBER],
         }
 
         return device_info
@@ -482,13 +483,12 @@ class DenonDevice(MediaPlayerEntity):
     async def async_set_dynamic_eq(self, dynamic_eq: bool):
         """Turn DynamicEQ on or off."""
         if dynamic_eq:
-            result = await self._receiver.async_dynamic_eq_on()
+            await self._receiver.async_dynamic_eq_on()
         else:
-            result = await self._receiver.async_dynamic_eq_off()
+            await self._receiver.async_dynamic_eq_off()
 
         if self._update_audyssey:
             await self._receiver.async_update_audyssey()
-        return result
 
     # Decorator defined before is a staticmethod
     async_log_errors = staticmethod(  # pylint: disable=no-staticmethod-decorator

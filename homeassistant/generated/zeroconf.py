@@ -95,6 +95,22 @@ ZEROCONF = {
     ],
     "_http._tcp.local.": [
         {
+            "domain": "bosch_shc",
+            "name": "bosch shc*"
+        },
+        {
+            "domain": "nam",
+            "name": "nam-*"
+        },
+        {
+            "domain": "rachio",
+            "name": "rachio*"
+        },
+        {
+            "domain": "rainmachine",
+            "name": "rainmachine*"
+        },
+        {
             "domain": "shelly",
             "name": "shelly*"
         }
@@ -143,6 +159,11 @@ ZEROCONF = {
             "domain": "plugwise"
         }
     ],
+    "_powerview._tcp.local.": [
+        {
+            "domain": "hunterdouglas_powerview"
+        }
+    ],
     "_printer._tcp.local.": [
         {
             "domain": "brother",
@@ -166,6 +187,11 @@ ZEROCONF = {
         {
             "domain": "smappee",
             "name": "smappee50*"
+        }
+    ],
+    "_system-bridge._udp.local.": [
+        {
+            "domain": "system_bridge"
         }
     ],
     "_touch-able._tcp.local.": [
@@ -208,11 +234,14 @@ HOMEKIT = {
     "PowerView": "hunterdouglas_powerview",
     "Presence": "netatmo",
     "Rachio": "rachio",
+    "SPK5": "rainmachine",
     "Smart Bridge": "lutron_caseta",
     "Socket": "wemo",
     "TRADFRI": "tradfri",
+    "Touch HD": "rainmachine",
     "Welcome": "netatmo",
     "Wemo": "wemo",
+    "YLDP*": "yeelight",
     "iSmartGate": "gogogate2",
     "iZone": "izone",
     "tado": "tado"

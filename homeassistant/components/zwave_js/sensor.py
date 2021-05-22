@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Callable, cast
+from typing import cast
 
 from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.const import CommandClass, ConfigurationValueType
@@ -14,6 +14,7 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_POWER,
     DOMAIN as SENSOR_DOMAIN,
+    STATE_CLASS_MEASUREMENT,
     SensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -25,6 +26,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DATA_CLIENT, DATA_UNSUBSCRIBE, DOMAIN
 from .discovery import ZwaveDiscoveryInfo
@@ -34,7 +36,9 @@ LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities: Callable
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Z-Wave sensor from config entry."""
     client: ZwaveClient = hass.data[DOMAIN][config_entry.entry_id][DATA_CLIENT]
@@ -84,6 +88,7 @@ class ZwaveSensorBase(ZWaveBaseEntity, SensorEntity):
         super().__init__(config_entry, client, info)
         self._name = self.generate_name(include_value_name=True)
         self._device_class = self._get_device_class()
+        self._state_class = self._get_state_class()
 
     def _get_device_class(self) -> str | None:
         """
@@ -110,10 +115,28 @@ class ZwaveSensorBase(ZWaveBaseEntity, SensorEntity):
             return DEVICE_CLASS_ILLUMINANCE
         return None
 
+    def _get_state_class(self) -> str | None:
+        """
+        Get the state class of the sensor.
+
+        This should be run once during initialization so we don't have to calculate
+        this value on every state update.
+        """
+        if isinstance(self.info.primary_value.property_, str):
+            property_lower = self.info.primary_value.property_.lower()
+            if "temperature" in property_lower:
+                return STATE_CLASS_MEASUREMENT
+        return None
+
     @property
     def device_class(self) -> str | None:
         """Return the device class of the sensor."""
         return self._device_class
+
+    @property
+    def state_class(self) -> str | None:
+        """Return the state class of the sensor."""
+        return self._state_class
 
     @property
     def entity_registry_enabled_default(self) -> bool:
