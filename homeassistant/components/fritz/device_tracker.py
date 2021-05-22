@@ -202,11 +202,7 @@ class FritzBoxTracker(ScannerEntity):
         """Update device."""
         device: FritzDevice = self._router.devices[self._mac]
         self._active = device.is_connected
-
-        if device.last_activity:
-            self._attrs["last_time_reachable"] = device.last_activity.isoformat(
-                timespec="seconds"
-            )
+        self._last_activity = device.last_activity
 
     @callback
     def async_on_demand_update(self):
