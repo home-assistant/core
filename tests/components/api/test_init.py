@@ -1,6 +1,7 @@
 """The tests for the Home Assistant API component."""
 # pylint: disable=protected-access
 import json
+from unittest.mock import patch
 
 from aiohttp import web
 import pytest
@@ -11,7 +12,6 @@ from homeassistant.bootstrap import DATA_LOGGING
 import homeassistant.core as ha
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import patch
 from tests.common import async_mock_service
 
 
@@ -270,7 +270,6 @@ async def test_api_call_service_no_data(hass, mock_api_client):
 
 async def test_api_call_service_with_data(hass, mock_api_client):
     """Test if the API allows us to call a service."""
-    test_value = []
 
     @ha.callback
     def listener(service_call):
@@ -278,17 +277,24 @@ async def test_api_call_service_with_data(hass, mock_api_client):
 
         Also test if our data came through.
         """
-        if "test" in service_call.data:
-            test_value.append(1)
+        hass.states.async_set(
+            "test.data",
+            "on",
+            {"data": service_call.data["test"]},
+            context=service_call.context,
+        )
 
     hass.services.async_register("test_domain", "test_service", listener)
 
-    await mock_api_client.post(
+    resp = await mock_api_client.post(
         "/api/services/test_domain/test_service", json={"test": 1}
     )
-
-    await hass.async_block_till_done()
-    assert len(test_value) == 1
+    data = await resp.json()
+    assert len(data) == 1
+    state = data[0]
+    assert state["entity_id"] == "test.data"
+    assert state["state"] == "on"
+    assert state["attributes"] == {"data": 1}
 
 
 async def test_api_template(hass, mock_api_client):

@@ -1,6 +1,5 @@
 """Support for Somfy Thermostat."""
-
-from typing import List, Optional
+from __future__ import annotations
 
 from pymfy.api.devices.category import Category
 from pymfy.api.devices.thermostat import (
@@ -48,20 +47,17 @@ HVAC_MODES_MAPPING = {HvacState.COOL: HVAC_MODE_COOL, HvacState.HEAT: HVAC_MODE_
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Somfy climate platform."""
+    domain_data = hass.data[DOMAIN]
+    coordinator = domain_data[COORDINATOR]
+    api = domain_data[API]
 
-    def get_thermostats():
-        """Retrieve thermostats."""
-        domain_data = hass.data[DOMAIN]
-        coordinator = domain_data[COORDINATOR]
-        api = domain_data[API]
+    climates = [
+        SomfyClimate(coordinator, device_id, api)
+        for device_id, device in coordinator.data.items()
+        if SUPPORTED_CATEGORIES & set(device.categories)
+    ]
 
-        return [
-            SomfyClimate(coordinator, device_id, api)
-            for device_id, device in coordinator.data.items()
-            if SUPPORTED_CATEGORIES & set(device.categories)
-        ]
-
-    async_add_entities(await hass.async_add_executor_job(get_thermostats))
+    async_add_entities(climates)
 
 
 class SomfyClimate(SomfyEntity, ClimateEntity):
@@ -128,7 +124,7 @@ class SomfyClimate(SomfyEntity, ClimateEntity):
         return HVAC_MODES_MAPPING.get(self._climate.get_hvac_state())
 
     @property
-    def hvac_modes(self) -> List[str]:
+    def hvac_modes(self) -> list[str]:
         """Return the list of available hvac operation modes.
 
         HEAT and COOL mode are exclusive. End user has to enable a mode manually within the Somfy application.
@@ -147,13 +143,13 @@ class SomfyClimate(SomfyEntity, ClimateEntity):
             )
 
     @property
-    def preset_mode(self) -> Optional[str]:
+    def preset_mode(self) -> str | None:
         """Return the current preset mode."""
         mode = self._climate.get_target_mode()
         return PRESETS_MAPPING.get(mode)
 
     @property
-    def preset_modes(self) -> Optional[List[str]]:
+    def preset_modes(self) -> list[str] | None:
         """Return a list of available preset modes."""
         return list(PRESETS_MAPPING.values())
 

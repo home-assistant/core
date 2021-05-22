@@ -1,8 +1,10 @@
 """Support for Google Calendar event device sensors."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 import re
-from typing import Dict, List, cast
+from typing import cast, final
 
 from aiohttp import web
 
@@ -127,13 +129,14 @@ def is_offset_reached(event):
 
 
 class CalendarEventDevice(Entity):
-    """A calendar event device."""
+    """Base class for calendar event entities."""
 
     @property
     def event(self):
         """Return the next upcoming event."""
         raise NotImplementedError()
 
+    @final
     @property
     def state_attributes(self):
         """Return the entity state attributes."""
@@ -218,7 +221,7 @@ class CalendarListView(http.HomeAssistantView):
     async def get(self, request: web.Request) -> web.Response:
         """Retrieve calendar list."""
         hass = request.app["hass"]
-        calendar_list: List[Dict[str, str]] = []
+        calendar_list: list[dict[str, str]] = []
 
         for entity in self.component.entities:
             state = hass.states.get(entity.entity_id)

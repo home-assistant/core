@@ -1,5 +1,7 @@
 """Provides device automations for Device Tracker."""
-from typing import List
+from __future__ import annotations
+
+from typing import Final
 
 import voluptuous as vol
 
@@ -21,9 +23,9 @@ from homeassistant.helpers.typing import ConfigType
 
 from . import DOMAIN
 
-TRIGGER_TYPES = {"enters", "leaves"}
+TRIGGER_TYPES: Final[set[str]] = {"enters", "leaves"}
 
-TRIGGER_SCHEMA = TRIGGER_BASE_SCHEMA.extend(
+TRIGGER_SCHEMA: Final = TRIGGER_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_ENTITY_ID): cv.entity_id,
         vol.Required(CONF_TYPE): vol.In(TRIGGER_TYPES),
@@ -32,7 +34,7 @@ TRIGGER_SCHEMA = TRIGGER_BASE_SCHEMA.extend(
 )
 
 
-async def async_get_triggers(hass: HomeAssistant, device_id: str) -> List[dict]:
+async def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict]:
     """List device triggers for Device Tracker devices."""
     registry = await entity_registry.async_get_registry(hass)
     triggers = []
@@ -71,8 +73,6 @@ async def async_attach_trigger(
     automation_info: dict,
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
-    config = TRIGGER_SCHEMA(config)
-
     if config[CONF_TYPE] == "enters":
         event = zone.EVENT_ENTER
     else:
@@ -90,7 +90,9 @@ async def async_attach_trigger(
     )
 
 
-async def async_get_trigger_capabilities(hass: HomeAssistant, config: ConfigType):
+async def async_get_trigger_capabilities(
+    hass: HomeAssistant, config: ConfigType
+) -> dict[str, vol.Schema]:
     """List trigger capabilities."""
     zones = {
         ent.entity_id: ent.name

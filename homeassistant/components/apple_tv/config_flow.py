@@ -21,8 +21,7 @@ from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_CREDENTIALS, CONF_IDENTIFIER, CONF_START_OFF
-from .const import DOMAIN  # pylint: disable=unused-import
+from .const import CONF_CREDENTIALS, CONF_IDENTIFIER, CONF_START_OFF, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,7 +43,7 @@ async def device_scan(identifier, loop, cache=None):
             return True
         if identifier == dev.name:
             return True
-        return any([service.identifier == identifier for service in dev.services])
+        return any(service.identifier == identifier for service in dev.services)
 
     def _host_filter():
         try:
@@ -79,7 +78,6 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Apple TV."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
     @staticmethod
     @callback
@@ -101,10 +99,7 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(info[CONF_IDENTIFIER])
         self.target_device = info[CONF_IDENTIFIER]
 
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context["title_placeholders"] = {"name": info[CONF_NAME]}
-
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context["identifier"] = self.unique_id
         return await self.async_step_reconfigure()
 
@@ -170,7 +165,6 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(identifier)
         self._abort_if_unique_id_configured()
 
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context["identifier"] = self.unique_id
         self.context["title_placeholders"] = {"name": name}
         self.target_device = identifier

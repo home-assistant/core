@@ -1,12 +1,39 @@
 """Test the Logitech Harmony Hub config flow."""
 import asyncio
 import json
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 from homeassistant import config_entries, setup
 from homeassistant.components.hunterdouglas_powerview.const import DOMAIN
 
-from tests.async_mock import AsyncMock, MagicMock, patch
 from tests.common import MockConfigEntry, load_fixture
+
+HOMEKIT_DISCOVERY_INFO = {
+    "name": "Hunter Douglas Powerview Hub._hap._tcp.local.",
+    "host": "1.2.3.4",
+    "properties": {"id": "AA::BB::CC::DD::EE::FF"},
+}
+
+ZEROCONF_DISCOVERY_INFO = {
+    "name": "Hunter Douglas Powerview Hub._powerview._tcp.local.",
+    "host": "1.2.3.4",
+}
+
+DHCP_DISCOVERY_INFO = {"hostname": "Hunter Douglas Powerview Hub", "ip": "1.2.3.4"}
+
+DISCOVERY_DATA = [
+    (
+        config_entries.SOURCE_HOMEKIT,
+        HOMEKIT_DISCOVERY_INFO,
+    ),
+    (
+        config_entries.SOURCE_DHCP,
+        DHCP_DISCOVERY_INFO,
+    ),
+    (config_entries.SOURCE_ZEROCONF, ZEROCONF_DISCOVERY_INFO),
+]
 
 
 def _get_mock_powerview_userdata(userdata=None, get_resources=None):
@@ -36,9 +63,6 @@ async def test_user_form(hass):
         "homeassistant.components.hunterdouglas_powerview.UserData",
         return_value=mock_powerview_userdata,
     ), patch(
-        "homeassistant.components.hunterdouglas_powerview.async_setup",
-        return_value=True,
-    ) as mock_setup, patch(
         "homeassistant.components.hunterdouglas_powerview.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -53,7 +77,6 @@ async def test_user_form(hass):
     assert result2["data"] == {
         "host": "1.2.3.4",
     }
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
     result3 = await hass.config_entries.flow.async_init(
@@ -69,42 +92,41 @@ async def test_user_form(hass):
     assert result4["type"] == "abort"
 
 
-async def test_form_import(hass):
-    """Test we get the form with import source."""
+@pytest.mark.parametrize("source, discovery_info", DISCOVERY_DATA)
+async def test_form_homekit_and_dhcp_cannot_connect(hass, source, discovery_info):
+    """Test we get the form with homekit and dhcp source."""
     await setup.async_setup_component(hass, "persistent_notification", {})
 
-    mock_powerview_userdata = _get_mock_powerview_userdata()
+    ignored_config_entry = MockConfigEntry(
+        domain=DOMAIN, data={}, source=config_entries.SOURCE_IGNORE
+    )
+    ignored_config_entry.add_to_hass(hass)
+
+    mock_powerview_userdata = _get_mock_powerview_userdata(
+        get_resources=asyncio.TimeoutError
+    )
     with patch(
         "homeassistant.components.hunterdouglas_powerview.UserData",
         return_value=mock_powerview_userdata,
-    ), patch(
-        "homeassistant.components.hunterdouglas_powerview.async_setup",
-        return_value=True,
-    ) as mock_setup, patch(
-        "homeassistant.components.hunterdouglas_powerview.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data={"host": "1.2.3.4"},
+            context={"source": source},
+            data=discovery_info,
         )
-        await hass.async_block_till_done()
 
-    assert result["type"] == "create_entry"
-    assert result["title"] == "AlexanderHD"
-    assert result["data"] == {
-        "host": "1.2.3.4",
-    }
-    assert len(mock_setup.mock_calls) == 1
-    assert len(mock_setup_entry.mock_calls) == 1
+    assert result["type"] == "abort"
+    assert result["reason"] == "cannot_connect"
 
 
-async def test_form_homekit(hass):
-    """Test we get the form with homekit source."""
+@pytest.mark.parametrize("source, discovery_info", DISCOVERY_DATA)
+async def test_form_homekit_and_dhcp(hass, source, discovery_info):
+    """Test we get the form with homekit and dhcp source."""
     await setup.async_setup_component(hass, "persistent_notification", {})
 
-    ignored_config_entry = MockConfigEntry(domain=DOMAIN, data={}, source="ignore")
+    ignored_config_entry = MockConfigEntry(
+        domain=DOMAIN, data={}, source=config_entries.SOURCE_IGNORE
+    )
     ignored_config_entry.add_to_hass(hass)
 
     mock_powerview_userdata = _get_mock_powerview_userdata()
@@ -114,12 +136,8 @@ async def test_form_homekit(hass):
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": "homekit"},
-            data={
-                "host": "1.2.3.4",
-                "properties": {"id": "AA::BB::CC::DD::EE::FF"},
-                "name": "PowerViewHub._hap._tcp.local.",
-            },
+            context={"source": source},
+            data=discovery_info,
         )
 
     assert result["type"] == "form"
@@ -127,16 +145,13 @@ async def test_form_homekit(hass):
     assert result["errors"] is None
     assert result["description_placeholders"] == {
         "host": "1.2.3.4",
-        "name": "PowerViewHub",
+        "name": "Hunter Douglas Powerview Hub",
     }
 
     with patch(
         "homeassistant.components.hunterdouglas_powerview.UserData",
         return_value=mock_powerview_userdata,
     ), patch(
-        "homeassistant.components.hunterdouglas_powerview.async_setup",
-        return_value=True,
-    ) as mock_setup, patch(
         "homeassistant.components.hunterdouglas_powerview.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -144,23 +159,50 @@ async def test_form_homekit(hass):
         await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
-    assert result2["title"] == "PowerViewHub"
+    assert result2["title"] == "Hunter Douglas Powerview Hub"
     assert result2["data"] == {"host": "1.2.3.4"}
     assert result2["result"].unique_id == "ABC123"
 
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
     result3 = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": "homekit"},
-        data={
-            "host": "1.2.3.4",
-            "properties": {"id": "AA::BB::CC::DD::EE::FF"},
-            "name": "PowerViewHub._hap._tcp.local.",
-        },
+        context={"source": source},
+        data=discovery_info,
     )
     assert result3["type"] == "abort"
+
+
+async def test_discovered_by_homekit_and_dhcp(hass):
+    """Test we get the form with homekit and abort for dhcp source when we get both."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    mock_powerview_userdata = _get_mock_powerview_userdata()
+    with patch(
+        "homeassistant.components.hunterdouglas_powerview.UserData",
+        return_value=mock_powerview_userdata,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_HOMEKIT},
+            data=HOMEKIT_DISCOVERY_INFO,
+        )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "link"
+
+    with patch(
+        "homeassistant.components.hunterdouglas_powerview.UserData",
+        return_value=mock_powerview_userdata,
+    ):
+        result2 = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DHCP},
+            data=DHCP_DISCOVERY_INFO,
+        )
+
+    assert result2["type"] == "abort"
+    assert result2["reason"] == "already_in_progress"
 
 
 async def test_form_cannot_connect(hass):

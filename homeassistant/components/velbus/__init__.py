@@ -1,5 +1,4 @@
 """Support for Velbus devices."""
-import asyncio
 import logging
 
 import velbus
@@ -7,10 +6,10 @@ import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_ADDRESS, CONF_NAME, CONF_PORT
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import CONF_MEMO_TEXT, DOMAIN, SERVICE_SET_MEMO_TEXT
 
@@ -22,7 +21,7 @@ CONFIG_SCHEMA = vol.Schema(
     {DOMAIN: vol.Schema({vol.Required(CONF_PORT): cv.string})}, extra=vol.ALLOW_EXTRA
 )
 
-COMPONENT_TYPES = ["switch", "sensor", "binary_sensor", "cover", "climate", "light"]
+PLATFORMS = ["switch", "sensor", "binary_sensor", "cover", "climate", "light"]
 
 
 async def async_setup(hass, config):
@@ -44,26 +43,26 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Establish connection with velbus."""
     hass.data.setdefault(DOMAIN, {})
 
     def callback():
         modules = controller.get_modules()
         discovery_info = {"cntrl": controller}
-        for category in COMPONENT_TYPES:
-            discovery_info[category] = []
+        for platform in PLATFORMS:
+            discovery_info[platform] = []
         for module in modules:
             for channel in range(1, module.number_of_channels() + 1):
-                for category in COMPONENT_TYPES:
-                    if category in module.get_categories(channel):
-                        discovery_info[category].append(
+                for platform in PLATFORMS:
+                    if platform in module.get_categories(channel):
+                        discovery_info[platform].append(
                             (module.get_module_address(), channel)
                         )
         hass.data[DOMAIN][entry.entry_id] = discovery_info
 
-        for category in COMPONENT_TYPES:
-            hass.add_job(hass.config_entries.async_forward_entry_setup(entry, category))
+        for platform in PLATFORMS:
+            hass.add_job(hass.config_entries.async_forward_entry_setup(entry, platform))
 
     try:
         controller = velbus.Controller(entry.data[CONF_PORT])
@@ -109,19 +108,14 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     return True
 
 
-async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Remove the velbus connection."""
-    await asyncio.wait(
-        [
-            hass.config_entries.async_forward_entry_unload(entry, component)
-            for component in COMPONENT_TYPES
-        ]
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     hass.data[DOMAIN][entry.entry_id]["cntrl"].stop()
     hass.data[DOMAIN].pop(entry.entry_id)
     if not hass.data[DOMAIN]:
         hass.data.pop(DOMAIN)
-    return True
+    return unload_ok
 
 
 class VelbusEntity(Entity):

@@ -12,6 +12,11 @@ SSDP = {
             "manufacturer": "ARCAM"
         }
     ],
+    "axis": [
+        {
+            "manufacturer": "AXIS"
+        }
+    ],
     "control4": [
         {
             "st": "c4:director"
@@ -76,6 +81,11 @@ SSDP = {
         {
             "deviceType": "urn:schemas-upnp-org:device:MediaServer:1",
             "manufacturer": "DIRECTV"
+        }
+    ],
+    "fritz": [
+        {
+            "st": "urn:schemas-upnp-org:device:fritzbox:1"
         }
     ],
     "fritzbox": [
@@ -164,6 +174,18 @@ SSDP = {
         {
             "deviceType": "urn:schemas-upnp-org:device:Basic:1",
             "manufacturer": "Synology"
+        }
+    ],
+    "unifi": [
+        {
+            "deviceType": "urn:schemas-upnp-org:device:InternetGatewayDevice:1",
+            "manufacturer": "Ubiquiti Networks",
+            "modelDescription": "UniFi Dream Machine"
+        },
+        {
+            "deviceType": "urn:schemas-upnp-org:device:InternetGatewayDevice:1",
+            "manufacturer": "Ubiquiti Networks",
+            "modelDescription": "UniFi Dream Machine Pro"
         }
     ],
     "upnp": [

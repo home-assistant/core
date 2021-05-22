@@ -1,50 +1,129 @@
 """Test the roon config flow."""
+from unittest.mock import patch
+
 from homeassistant import config_entries, setup
 from homeassistant.components.roon.const import DOMAIN
-from homeassistant.const import CONF_HOST
-
-from tests.async_mock import patch
-from tests.common import MockConfigEntry
 
 
 class RoonApiMock:
-    """Mock to handle returning tokens for testing the RoonApi."""
-
-    def __init__(self, token):
-        """Initialize."""
-        self._token = token
+    """Class to mock the Roon API for testing."""
 
     @property
     def token(self):
-        """Return the auth token from the api."""
-        return self._token
+        """Return a good authentication key."""
+        return "good_token"
 
-    def stop(self):  # pylint: disable=no-self-use
-        """Close down the api."""
+    @property
+    def core_id(self):
+        """Return the roon host."""
+        return "core_id"
+
+    def stop(self):
+        """Stop socket and discovery."""
         return
 
 
-async def test_form_and_auth(hass):
-    """Test we get the form."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    assert result["type"] == "form"
-    assert result["errors"] == {}
+class RoonApiMockNoToken(RoonApiMock):
+    """Class to mock the Roon API for testing, with failed authorisation."""
 
-    with patch("homeassistant.components.roon.config_flow.TIMEOUT", 0,), patch(
-        "homeassistant.components.roon.const.AUTHENTICATE_TIMEOUT",
-        0,
-    ), patch(
+    @property
+    def token(self):
+        """Return a bad authentication key."""
+        return None
+
+
+class RoonApiMockException(RoonApiMock):
+    """Class to mock the Roon API for testing, throws an unexpected exception."""
+
+    @property
+    def token(self):
+        """Throw exception."""
+        raise Exception
+
+
+class RoonDiscoveryMock:
+    """Class to mock Roon Discovery for testing."""
+
+    def all(self):
+        """Return a discovered roon server."""
+        return ["2.2.2.2"]
+
+    def stop(self):
+        """Stop discovery running."""
+        return
+
+
+class RoonDiscoveryFailedMock(RoonDiscoveryMock):
+    """Class to mock Roon Discovery for testing, with no servers discovered."""
+
+    def all(self):
+        """Return no discovered roon servers."""
+        return []
+
+
+async def test_successful_discovery_and_auth(hass):
+    """Test when discovery and auth both work ok."""
+
+    await setup.async_setup_component(hass, "persistent_notification", {})
+    with patch(
         "homeassistant.components.roon.config_flow.RoonApi",
-        return_value=RoonApiMock("good_token"),
+        return_value=RoonApiMock(),
     ), patch(
-        "homeassistant.components.roon.async_setup", return_value=True
-    ) as mock_setup, patch(
+        "homeassistant.components.roon.config_flow.RoonDiscovery",
+        return_value=RoonDiscoveryMock(),
+    ), patch(
         "homeassistant.components.roon.async_setup_entry",
         return_value=True,
-    ) as mock_setup_entry:
+    ):
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        await hass.async_block_till_done()
+
+        # Should go straight to link if server was discovered
+        assert result["type"] == "form"
+        assert result["step_id"] == "link"
+        assert result["errors"] == {}
+
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+        await hass.async_block_till_done()
+
+    assert result2["title"] == "Roon Labs Music Player"
+    assert result2["data"] == {
+        "host": None,
+        "api_key": "good_token",
+        "roon_server_id": "core_id",
+    }
+
+
+async def test_unsuccessful_discovery_user_form_and_auth(hass):
+    """Test unsuccessful discover, user adding the host via the form and then successful auth."""
+
+    await setup.async_setup_component(hass, "persistent_notification", {})
+    with patch(
+        "homeassistant.components.roon.config_flow.RoonApi",
+        return_value=RoonApiMock(),
+    ), patch(
+        "homeassistant.components.roon.config_flow.RoonDiscovery",
+        return_value=RoonDiscoveryFailedMock(),
+    ), patch(
+        "homeassistant.components.roon.async_setup_entry",
+        return_value=True,
+    ):
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        await hass.async_block_till_done()
+
+        # Should show the form if server was not discovered
+        assert result["type"] == "form"
+        assert result["step_id"] == "user"
+        assert result["errors"] == {}
+
         await hass.config_entries.flow.async_configure(
             result["flow_id"], {"host": "1.1.1.1"}
         )
@@ -53,113 +132,81 @@ async def test_form_and_auth(hass):
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "create_entry"
     assert result2["title"] == "Roon Labs Music Player"
-    assert result2["data"] == {"host": "1.1.1.1", "api_key": "good_token"}
-    assert len(mock_setup.mock_calls) == 1
-    assert len(mock_setup_entry.mock_calls) == 1
+    assert result2["data"] == {
+        "host": "1.1.1.1",
+        "api_key": "good_token",
+        "roon_server_id": "core_id",
+    }
 
 
-async def test_form_no_token(hass):
-    """Test we handle no token being returned (timeout or not authorized)."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    with patch("homeassistant.components.roon.config_flow.TIMEOUT", 0,), patch(
-        "homeassistant.components.roon.const.AUTHENTICATE_TIMEOUT",
+async def test_successful_discovery_no_auth(hass):
+    """Test successful discover, but failed auth."""
+
+    await setup.async_setup_component(hass, "persistent_notification", {})
+    with patch(
+        "homeassistant.components.roon.config_flow.RoonApi",
+        return_value=RoonApiMockNoToken(),
+    ), patch(
+        "homeassistant.components.roon.config_flow.RoonDiscovery",
+        return_value=RoonDiscoveryMock(),
+    ), patch(
+        "homeassistant.components.roon.config_flow.TIMEOUT",
         0,
     ), patch(
-        "homeassistant.components.roon.config_flow.RoonApi",
-        return_value=RoonApiMock(None),
+        "homeassistant.components.roon.config_flow.AUTHENTICATE_TIMEOUT",
+        0.01,
+    ), patch(
+        "homeassistant.components.roon.async_setup_entry",
+        return_value=True,
     ):
-        await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"host": "1.1.1.1"}
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
+        await hass.async_block_till_done()
+
+        # Should go straight to link if server was discovered
+        assert result["type"] == "form"
+        assert result["step_id"] == "link"
+        assert result["errors"] == {}
 
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={}
         )
+        await hass.async_block_till_done()
 
-    assert result2["type"] == "form"
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
-async def test_form_unknown_exception(hass):
-    """Test we handle cannot connect error."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    with patch(
-        "homeassistant.components.roon.config_flow.RoonApi",
-        side_effect=Exception,
-    ):
-        await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"host": "1.1.1.1"}
-        )
-
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={}
-        )
-
-    assert result2["type"] == "form"
-    assert result2["errors"] == {"base": "unknown"}
-
-
-async def test_form_host_already_exists(hass):
-    """Test we add the host if the config exists and it isn't a duplicate."""
-
-    MockConfigEntry(domain=DOMAIN, data={CONF_HOST: "existing_host"}).add_to_hass(hass)
+async def test_unexpected_exception(hass):
+    """Test successful discover, and unexpected exception during auth."""
 
     await setup.async_setup_component(hass, "persistent_notification", {})
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    assert result["type"] == "form"
-    assert result["errors"] == {}
-
-    with patch("homeassistant.components.roon.config_flow.TIMEOUT", 0,), patch(
-        "homeassistant.components.roon.const.AUTHENTICATE_TIMEOUT",
-        0,
-    ), patch(
+    with patch(
         "homeassistant.components.roon.config_flow.RoonApi",
-        return_value=RoonApiMock("good_token"),
+        return_value=RoonApiMockException(),
     ), patch(
-        "homeassistant.components.roon.async_setup", return_value=True
-    ) as mock_setup, patch(
+        "homeassistant.components.roon.config_flow.RoonDiscovery",
+        return_value=RoonDiscoveryMock(),
+    ), patch(
         "homeassistant.components.roon.async_setup_entry",
         return_value=True,
-    ) as mock_setup_entry:
-        await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"host": "1.1.1.1"}
+    ):
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
+        await hass.async_block_till_done()
+
+        # Should go straight to link if server was discovered
+        assert result["type"] == "form"
+        assert result["step_id"] == "link"
+        assert result["errors"] == {}
+
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={}
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "create_entry"
-    assert result2["title"] == "Roon Labs Music Player"
-    assert result2["data"] == {"host": "1.1.1.1", "api_key": "good_token"}
-    assert len(mock_setup.mock_calls) == 1
-    assert len(mock_setup_entry.mock_calls) == 2
-
-
-async def test_form_duplicate_host(hass):
-    """Test we don't add the host if it's a duplicate."""
-
-    MockConfigEntry(domain=DOMAIN, data={CONF_HOST: "existing_host"}).add_to_hass(hass)
-
-    await setup.async_setup_component(hass, "persistent_notification", {})
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    assert result["type"] == "form"
-    assert result["errors"] == {}
-
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"host": "existing_host"}
-    )
-
-    assert result2["type"] == "form"
-    assert result2["errors"] == {"base": "duplicate_entry"}
+    assert result2["errors"] == {"base": "unknown"}

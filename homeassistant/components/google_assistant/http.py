@@ -135,11 +135,12 @@ class GoogleConfig(AbstractConfig):
 
     async def _async_request_sync_devices(self, agent_user_id: str):
         if CONF_SERVICE_ACCOUNT in self._config:
-            await self.async_call_homegraph_api(
+            return await self.async_call_homegraph_api(
                 REQUEST_SYNC_BASE_URL, {"agentUserId": agent_user_id}
             )
-        else:
-            _LOGGER.error("No configuration for request_sync available")
+
+        _LOGGER.error("No configuration for request_sync available")
+        return HTTP_INTERNAL_SERVER_ERROR
 
     async def _async_update_token(self, force=False):
         if CONF_SERVICE_ACCOUNT not in self._config:

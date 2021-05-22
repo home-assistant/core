@@ -1,6 +1,9 @@
 """General channels module for Zigbee Home Automation."""
+from __future__ import annotations
+
 import asyncio
-from typing import Any, Coroutine, List, Optional
+from collections.abc import Coroutine
+from typing import Any
 
 import zigpy.exceptions
 import zigpy.zcl.clusters.general as general
@@ -44,42 +47,42 @@ class AnalogOutput(ZigbeeChannel):
     REPORT_CONFIG = [{"attr": "present_value", "config": REPORT_CONFIG_DEFAULT}]
 
     @property
-    def present_value(self) -> Optional[float]:
+    def present_value(self) -> float | None:
         """Return cached value of present_value."""
         return self.cluster.get("present_value")
 
     @property
-    def min_present_value(self) -> Optional[float]:
+    def min_present_value(self) -> float | None:
         """Return cached value of min_present_value."""
         return self.cluster.get("min_present_value")
 
     @property
-    def max_present_value(self) -> Optional[float]:
+    def max_present_value(self) -> float | None:
         """Return cached value of max_present_value."""
         return self.cluster.get("max_present_value")
 
     @property
-    def resolution(self) -> Optional[float]:
+    def resolution(self) -> float | None:
         """Return cached value of resolution."""
         return self.cluster.get("resolution")
 
     @property
-    def relinquish_default(self) -> Optional[float]:
+    def relinquish_default(self) -> float | None:
         """Return cached value of relinquish_default."""
         return self.cluster.get("relinquish_default")
 
     @property
-    def description(self) -> Optional[str]:
+    def description(self) -> str | None:
         """Return cached value of description."""
         return self.cluster.get("description")
 
     @property
-    def engineering_units(self) -> Optional[int]:
+    def engineering_units(self) -> int | None:
         """Return cached value of engineering_units."""
         return self.cluster.get("engineering_units")
 
     @property
-    def application_type(self) -> Optional[int]:
+    def application_type(self) -> int | None:
         """Return cached value of application_type."""
         return self.cluster.get("application_type")
 
@@ -91,7 +94,7 @@ class AnalogOutput(ZigbeeChannel):
             self.error("Could not set value: %s", ex)
             return False
         if isinstance(res, list) and all(
-            [record.status == Status.SUCCESS for record in res[0]]
+            record.status == Status.SUCCESS for record in res[0]
         ):
             return True
         return False
@@ -135,6 +138,7 @@ class BasicChannel(ZigbeeChannel):
 
     UNKNOWN = 0
     BATTERY = 3
+    BIND: bool = False
 
     POWER_SOURCES = {
         UNKNOWN: "Unknown",
@@ -182,15 +186,21 @@ class DeviceTemperature(ZigbeeChannel):
 class GreenPowerProxy(ZigbeeChannel):
     """Green Power Proxy channel."""
 
+    BIND: bool = False
+
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(general.Groups.cluster_id)
 class Groups(ZigbeeChannel):
     """Groups channel."""
 
+    BIND: bool = False
+
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(general.Identify.cluster_id)
 class Identify(ZigbeeChannel):
     """Identify channel."""
+
+    BIND: bool = False
 
     @callback
     def cluster_command(self, tsn, command_id, args):
@@ -215,7 +225,7 @@ class LevelControlChannel(ZigbeeChannel):
     REPORT_CONFIG = ({"attr": "current_level", "config": REPORT_CONFIG_ASAP},)
 
     @property
-    def current_level(self) -> Optional[int]:
+    def current_level(self) -> int | None:
         """Return cached value of the current_level attribute."""
         return self.cluster.get("current_level")
 
@@ -293,7 +303,7 @@ class OnOffChannel(ZigbeeChannel):
         self._off_listener = None
 
     @property
-    def on_off(self) -> Optional[bool]:
+    def on_off(self) -> bool | None:
         """Return cached value of on/off attribute."""
         return self.cluster.get("on_off")
 
@@ -365,9 +375,11 @@ class OnOffConfiguration(ZigbeeChannel):
 class Ota(ZigbeeChannel):
     """OTA Channel."""
 
+    BIND: bool = False
+
     @callback
     def cluster_command(
-        self, tsn: int, command_id: int, args: Optional[List[Any]]
+        self, tsn: int, command_id: int, args: list[Any] | None
     ) -> None:
         """Handle OTA commands."""
         cmd_name = self.cluster.server_commands.get(command_id, [command_id])[0]
@@ -389,6 +401,9 @@ class PollControl(ZigbeeChannel):
     CHECKIN_INTERVAL = 55 * 60 * 4  # 55min
     CHECKIN_FAST_POLL_TIMEOUT = 2 * 4  # 2s
     LONG_POLL = 6 * 4  # 6s
+    _IGNORED_MANUFACTURER_ID = {
+        4476,
+    }  # IKEA
 
     async def async_configure_channel_specific(self) -> None:
         """Configure channel: set check-in interval."""
@@ -402,7 +417,7 @@ class PollControl(ZigbeeChannel):
 
     @callback
     def cluster_command(
-        self, tsn: int, command_id: int, args: Optional[List[Any]]
+        self, tsn: int, command_id: int, args: list[Any] | None
     ) -> None:
         """Handle commands received to this cluster."""
         cmd_name = self.cluster.client_commands.get(command_id, [command_id])[0]
@@ -414,7 +429,14 @@ class PollControl(ZigbeeChannel):
     async def check_in_response(self, tsn: int) -> None:
         """Respond to checkin command."""
         await self.checkin_response(True, self.CHECKIN_FAST_POLL_TIMEOUT, tsn=tsn)
-        await self.set_long_poll_interval(self.LONG_POLL)
+        if self._ch_pool.manufacturer_code not in self._IGNORED_MANUFACTURER_ID:
+            await self.set_long_poll_interval(self.LONG_POLL)
+        await self.fast_poll_stop()
+
+    @callback
+    def skip_manufacturer_id(self, manufacturer_code: int) -> None:
+        """Block a specific manufacturer id from changing default polling."""
+        self._IGNORED_MANUFACTURER_ID.add(manufacturer_code)
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(general.PowerConfiguration.cluster_id)

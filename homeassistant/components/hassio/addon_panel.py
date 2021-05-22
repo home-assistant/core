@@ -5,16 +5,16 @@ import logging
 from aiohttp import web
 
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.const import HTTP_BAD_REQUEST
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.const import ATTR_ICON, HTTP_BAD_REQUEST
+from homeassistant.core import HomeAssistant
 
-from .const import ATTR_ADMIN, ATTR_ENABLE, ATTR_ICON, ATTR_PANELS, ATTR_TITLE
+from .const import ATTR_ADMIN, ATTR_ENABLE, ATTR_PANELS, ATTR_TITLE
 from .handler import HassioAPIError
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_addon_panel(hass: HomeAssistantType, hassio):
+async def async_setup_addon_panel(hass: HomeAssistant, hassio):
     """Add-on Ingress Panel setup."""
     hassio_addon_panel = HassIOAddonPanel(hass, hassio)
     hass.http.register_view(hassio_addon_panel)

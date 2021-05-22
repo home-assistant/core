@@ -1,11 +1,13 @@
 """Tests for the Abode config flow."""
+from unittest.mock import patch
+
 from abodepy.exceptions import AbodeAuthenticationException
 from abodepy.helpers.errors import MFA_CODE_REQUIRED
 
 from homeassistant import data_entry_flow
 from homeassistant.components.abode import config_flow
 from homeassistant.components.abode.const import DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
+from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_REAUTH, SOURCE_USER
 from homeassistant.const import (
     CONF_PASSWORD,
     CONF_USERNAME,
@@ -13,7 +15,6 @@ from homeassistant.const import (
     HTTP_INTERNAL_SERVER_ERROR,
 )
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 CONF_POLLING = "polling"
@@ -189,7 +190,7 @@ async def test_step_reauth(hass):
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": "reauth"},
+            context={"source": SOURCE_REAUTH},
             data=conf,
         )
 

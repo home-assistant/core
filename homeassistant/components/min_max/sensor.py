@@ -3,7 +3,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_NAME,
@@ -13,7 +13,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.reload import async_setup_reload_service
 
@@ -85,9 +84,10 @@ def calc_min(sensor_values):
     val = None
     entity_id = None
     for sensor_id, sensor_value in sensor_values:
-        if sensor_value not in [STATE_UNKNOWN, STATE_UNAVAILABLE]:
-            if val is None or val > sensor_value:
-                entity_id, val = sensor_id, sensor_value
+        if sensor_value not in [STATE_UNKNOWN, STATE_UNAVAILABLE] and (
+            val is None or val > sensor_value
+        ):
+            entity_id, val = sensor_id, sensor_value
     return entity_id, val
 
 
@@ -96,30 +96,35 @@ def calc_max(sensor_values):
     val = None
     entity_id = None
     for sensor_id, sensor_value in sensor_values:
-        if sensor_value not in [STATE_UNKNOWN, STATE_UNAVAILABLE]:
-            if val is None or val < sensor_value:
-                entity_id, val = sensor_id, sensor_value
+        if sensor_value not in [STATE_UNKNOWN, STATE_UNAVAILABLE] and (
+            val is None or val < sensor_value
+        ):
+            entity_id, val = sensor_id, sensor_value
     return entity_id, val
 
 
 def calc_mean(sensor_values, round_digits):
     """Calculate mean value, honoring unknown states."""
-    result = []
-    for _, sensor_value in sensor_values:
-        if sensor_value not in [STATE_UNKNOWN, STATE_UNAVAILABLE]:
-            result.append(sensor_value)
-    if len(result) == 0:
+    result = [
+        sensor_value
+        for _, sensor_value in sensor_values
+        if sensor_value not in [STATE_UNKNOWN, STATE_UNAVAILABLE]
+    ]
+
+    if not result:
         return None
     return round(sum(result) / len(result), round_digits)
 
 
 def calc_median(sensor_values, round_digits):
     """Calculate median value, honoring unknown states."""
-    result = []
-    for _, sensor_value in sensor_values:
-        if sensor_value not in [STATE_UNKNOWN, STATE_UNAVAILABLE]:
-            result.append(sensor_value)
-    if len(result) == 0:
+    result = [
+        sensor_value
+        for _, sensor_value in sensor_values
+        if sensor_value not in [STATE_UNKNOWN, STATE_UNAVAILABLE]
+    ]
+
+    if not result:
         return None
     result.sort()
     if len(result) % 2 == 0:
@@ -131,7 +136,7 @@ def calc_median(sensor_values, round_digits):
     return round(median, round_digits)
 
 
-class MinMaxSensor(Entity):
+class MinMaxSensor(SensorEntity):
     """Representation of a min/max sensor."""
 
     def __init__(self, entity_ids, name, sensor_type, round_digits):
@@ -188,7 +193,7 @@ class MinMaxSensor(Entity):
         return False
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the sensor."""
         return {
             attr: getattr(self, attr)

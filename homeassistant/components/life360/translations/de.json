@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "invalid_auth": "Ung\u00fcltige Authentifizierung",
             "unknown": "Unerwarteter Fehler"
         },
         "create_entry": {
@@ -8,6 +9,7 @@
         },
         "error": {
             "already_configured": "Konto ist bereits konfiguriert",
+            "invalid_auth": "Ung\u00fcltige Authentifizierung",
             "invalid_username": "Ung\u00fcltiger Benutzername",
             "unknown": "Unerwarteter Fehler"
         },

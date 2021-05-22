@@ -1,0 +1,6 @@
+<MediaContainer size="2">
+<Playlist ratingKey="500" key="/playlists/500/items" guid="com.plexapp.agents.none://9a8f4a48-dd89-40e0-955b-286285350fdf" type="playlist" title="Playlist 1" summary="" smart="0" playlistType="video" composite="/playlists/500/composite/1597983847" viewCount="2" lastViewedAt="1568512403" duration="5054000" leafCount="1" addedAt="1505969338" updatedAt="1597983847">
+</Playlist>
+<Playlist ratingKey="501" key="/playlists/501/items" guid="com.plexapp.agents.none://9a8f4a48-dd89-40e0-955b-286285350fdf" type="playlist" title="Playlist 2" summary="" smart="0" playlistType="video" composite="/playlists/501/composite/1597983847" viewCount="5" lastViewedAt="1568512403" duration="5054000" leafCount="1" addedAt="1505969339" updatedAt="1597983847">
+</Playlist>
+</MediaContainer>

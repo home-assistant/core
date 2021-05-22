@@ -1,5 +1,6 @@
 """Test zha cover."""
 import asyncio
+from unittest.mock import AsyncMock, patch
 
 import pytest
 import zigpy.profiles.zha
@@ -32,7 +33,6 @@ from .common import (
     send_attributes_report,
 )
 
-from tests.async_mock import AsyncMock, patch
 from tests.common import async_capture_events, mock_coro, mock_restore_cache
 
 

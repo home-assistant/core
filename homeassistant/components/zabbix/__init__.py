@@ -1,4 +1,5 @@
 """Support for Zabbix."""
+from contextlib import suppress
 import json
 import logging
 import math
@@ -202,7 +203,7 @@ class ZabbixThread(threading.Thread):
 
         dropped = 0
 
-        try:
+        with suppress(queue.Empty):
             while len(metrics) < BATCH_BUFFER_SIZE and not self.shutdown:
                 timeout = None if count == 0 else BATCH_TIMEOUT
                 item = self.queue.get(timeout=timeout)
@@ -222,9 +223,6 @@ class ZabbixThread(threading.Thread):
                             metrics += event_metrics
                     else:
                         dropped += 1
-
-        except queue.Empty:
-            pass
 
         if dropped:
             _LOGGER.warning("Catching up, dropped %d old events", dropped)

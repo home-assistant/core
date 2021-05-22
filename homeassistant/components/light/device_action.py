@@ -1,5 +1,5 @@
 """Provides device actions for lights."""
-from typing import List
+from __future__ import annotations
 
 import voluptuous as vol
 
@@ -11,18 +11,19 @@ from homeassistant.components.light import (
     VALID_BRIGHTNESS_PCT,
     VALID_FLASH,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ATTR_SUPPORTED_FEATURES,
-    CONF_DOMAIN,
-    CONF_TYPE,
-    SERVICE_TURN_ON,
-)
-from homeassistant.core import Context, HomeAssistant
-from homeassistant.helpers import config_validation as cv, entity_registry
+from homeassistant.const import ATTR_ENTITY_ID, CONF_DOMAIN, CONF_TYPE, SERVICE_TURN_ON
+from homeassistant.core import Context, HomeAssistant, HomeAssistantError
+from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers.entity import get_supported_features
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
-from . import ATTR_BRIGHTNESS_PCT, ATTR_BRIGHTNESS_STEP_PCT, DOMAIN, SUPPORT_BRIGHTNESS
+from . import (
+    ATTR_BRIGHTNESS_PCT,
+    ATTR_BRIGHTNESS_STEP_PCT,
+    ATTR_SUPPORTED_COLOR_MODES,
+    DOMAIN,
+    brightness_supported,
+)
 
 TYPE_BRIGHTNESS_INCREASE = "brightness_increase"
 TYPE_BRIGHTNESS_DECREASE = "brightness_decrease"
@@ -40,6 +41,25 @@ ACTION_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
         vol.Optional(ATTR_FLASH): VALID_FLASH,
     }
 )
+
+
+def get_supported_color_modes(hass: HomeAssistant, entity_id: str) -> set | None:
+    """Get supported color modes for a light entity.
+
+    First try the statemachine, then entity registry.
+    """
+    state = hass.states.get(entity_id)
+    if state:
+        return state.attributes.get(ATTR_SUPPORTED_COLOR_MODES)
+
+    entity_registry = er.async_get(hass)
+    entry = entity_registry.async_get(entity_id)
+    if not entry:
+        raise HomeAssistantError(f"Unknown entity {entity_id}")
+    if not entry.capabilities:
+        return None
+
+    return entry.capabilities.get(ATTR_SUPPORTED_COLOR_MODES)
 
 
 async def async_call_action_from_config(
@@ -78,24 +98,20 @@ async def async_call_action_from_config(
     )
 
 
-async def async_get_actions(hass: HomeAssistant, device_id: str) -> List[dict]:
+async def async_get_actions(hass: HomeAssistant, device_id: str) -> list[dict]:
     """List device actions."""
     actions = await toggle_entity.async_get_actions(hass, device_id, DOMAIN)
 
-    registry = await entity_registry.async_get_registry(hass)
+    entity_registry = er.async_get(hass)
 
-    for entry in entity_registry.async_entries_for_device(registry, device_id):
+    for entry in er.async_entries_for_device(entity_registry, device_id):
         if entry.domain != DOMAIN:
             continue
 
-        state = hass.states.get(entry.entity_id)
+        supported_color_modes = get_supported_color_modes(hass, entry.entity_id)
+        supported_features = get_supported_features(hass, entry.entity_id)
 
-        if state:
-            supported_features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
-        else:
-            supported_features = entry.supported_features
-
-        if supported_features & SUPPORT_BRIGHTNESS:
+        if brightness_supported(supported_color_modes):
             actions.extend(
                 (
                     {
@@ -133,20 +149,19 @@ async def async_get_action_capabilities(hass: HomeAssistant, config: dict) -> di
     if config[CONF_TYPE] != toggle_entity.CONF_TURN_ON:
         return {}
 
-    registry = await entity_registry.async_get_registry(hass)
-    entry = registry.async_get(config[ATTR_ENTITY_ID])
-    state = hass.states.get(config[ATTR_ENTITY_ID])
+    try:
+        supported_color_modes = get_supported_color_modes(hass, config[ATTR_ENTITY_ID])
+    except HomeAssistantError:
+        supported_color_modes = None
 
-    supported_features = 0
-
-    if state:
-        supported_features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
-    elif entry:
-        supported_features = entry.supported_features
+    try:
+        supported_features = get_supported_features(hass, config[ATTR_ENTITY_ID])
+    except HomeAssistantError:
+        supported_features = 0
 
     extra_fields = {}
 
-    if supported_features & SUPPORT_BRIGHTNESS:
+    if brightness_supported(supported_color_modes):
         extra_fields[vol.Optional(ATTR_BRIGHTNESS_PCT)] = VALID_BRIGHTNESS_PCT
 
     if supported_features & SUPPORT_FLASH:

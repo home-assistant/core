@@ -14,7 +14,7 @@
         },
         "step": {
             "auth": {
-                "description": "Please follow this [link]({authorization_url}) and **Allow** access to your Ambiclimate account, then come back and press **Submit** below.\n(Make sure the specified callback url is {cb_url})",
+                "description": "Please follow this [link]({authorization_url}) and **Allow** access to your Ambiclimate account, then come back and press **Submit** below.\n(Make sure the specified callback URL is {cb_url})",
                 "title": "Authenticate Ambiclimate"
             }
         }

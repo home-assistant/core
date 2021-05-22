@@ -1,6 +1,7 @@
 """The tests for the Prometheus exporter."""
 from dataclasses import dataclass
 import datetime
+import unittest.mock as mock
 
 import pytest
 
@@ -18,8 +19,6 @@ from homeassistant.const import (
 from homeassistant.core import split_entity_id
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-import tests.async_mock as mock
 
 PROMETHEUS_PATH = "homeassistant.components.prometheus"
 
@@ -48,14 +47,14 @@ async def prometheus_client(hass, hass_client):
     )
 
     sensor1 = DemoSensor(
-        None, "Television Energy", 74, None, ENERGY_KILO_WATT_HOUR, None
+        None, "Television Energy", 74, None, None, ENERGY_KILO_WATT_HOUR, None
     )
     sensor1.hass = hass
     sensor1.entity_id = "sensor.television_energy"
     await sensor1.async_update_ha_state()
 
     sensor2 = DemoSensor(
-        None, "Radio Energy", 14, DEVICE_CLASS_POWER, ENERGY_KILO_WATT_HOUR, None
+        None, "Radio Energy", 14, DEVICE_CLASS_POWER, None, ENERGY_KILO_WATT_HOUR, None
     )
     sensor2.hass = hass
     sensor2.entity_id = "sensor.radio_energy"
@@ -66,13 +65,19 @@ async def prometheus_client(hass, hass_client):
         await sensor2.async_update_ha_state()
 
     sensor3 = DemoSensor(
-        None, "Electricity price", 0.123, None, f"SEK/{ENERGY_KILO_WATT_HOUR}", None
+        None,
+        "Electricity price",
+        0.123,
+        None,
+        None,
+        f"SEK/{ENERGY_KILO_WATT_HOUR}",
+        None,
     )
     sensor3.hass = hass
     sensor3.entity_id = "sensor.electricity_price"
     await sensor3.async_update_ha_state()
 
-    sensor4 = DemoSensor(None, "Wind Direction", 25, None, DEGREE, None)
+    sensor4 = DemoSensor(None, "Wind Direction", 25, None, None, DEGREE, None)
     sensor4.hass = hass
     sensor4.entity_id = "sensor.wind_direction"
     await sensor4.async_update_ha_state()
@@ -81,6 +86,7 @@ async def prometheus_client(hass, hass_client):
         None,
         "SPS30 PM <1µm Weight concentration",
         3.7069,
+        None,
         None,
         CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         None,
@@ -225,7 +231,7 @@ async def test_minimal_config(hass, mock_client):
     assert await async_setup_component(hass, prometheus.DOMAIN, config)
     await hass.async_block_till_done()
     assert hass.bus.listen.called
-    assert EVENT_STATE_CHANGED == hass.bus.listen.call_args_list[0][0][0]
+    assert hass.bus.listen.call_args_list[0][0][0] == EVENT_STATE_CHANGED
 
 
 @pytest.mark.usefixtures("mock_bus")
@@ -252,7 +258,7 @@ async def test_full_config(hass, mock_client):
     assert await async_setup_component(hass, prometheus.DOMAIN, config)
     await hass.async_block_till_done()
     assert hass.bus.listen.called
-    assert EVENT_STATE_CHANGED == hass.bus.listen.call_args_list[0][0][0]
+    assert hass.bus.listen.call_args_list[0][0][0] == EVENT_STATE_CHANGED
 
 
 def make_event(entity_id):

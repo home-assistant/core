@@ -50,9 +50,9 @@ async def test_setup(hass, requests_mock):
     assert sensor.name == "I90 EB"
     assert sensor.state == 11
     assert (
-        sensor.device_state_attributes[ATTR_DESCRIPTION]
+        sensor.extra_state_attributes[ATTR_DESCRIPTION]
         == "Downtown Seattle to Downtown Bellevue via I-90"
     )
-    assert sensor.device_state_attributes[ATTR_TIME_UPDATED] == datetime(
+    assert sensor.extra_state_attributes[ATTR_TIME_UPDATED] == datetime(
         2017, 1, 21, 15, 10, tzinfo=timezone(timedelta(hours=-8))
     )

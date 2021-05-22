@@ -4,6 +4,7 @@
             "already_configured": "Service is al geconfigureerd"
         },
         "error": {
+            "cannot_connect": "Kan geen verbinding maken",
             "invalid_access_token": "Ongeldig toegangstoken",
             "timeout": "Time-out om verbinding te maken met Tibber"
         },

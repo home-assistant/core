@@ -2,6 +2,7 @@
 from datetime import timedelta
 import functools as ft
 import logging
+from typing import final
 
 import voluptuous as vol
 
@@ -76,7 +77,7 @@ async def async_unload_entry(hass, entry):
 
 
 class LockEntity(Entity):
-    """Representation of a lock."""
+    """Base class for lock entities."""
 
     @property
     def changed_by(self):
@@ -117,6 +118,7 @@ class LockEntity(Entity):
         """Open the door latch."""
         await self.hass.async_add_executor_job(ft.partial(self.open, **kwargs))
 
+    @final
     @property
     def state_attributes(self):
         """Return the state attributes."""

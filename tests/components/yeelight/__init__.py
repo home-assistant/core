@@ -1,4 +1,6 @@
 """Tests for the Yeelight integration."""
+from unittest.mock import MagicMock, patch
+
 from yeelight import BulbException, BulbType
 from yeelight.main import _MODEL_SPECS
 
@@ -11,8 +13,6 @@ from homeassistant.components.yeelight import (
     YeelightScanner,
 )
 from homeassistant.const import CONF_DEVICES, CONF_ID, CONF_NAME
-
-from tests.async_mock import MagicMock, patch
 
 IP_ADDRESS = "192.168.1.239"
 MODEL = "color"

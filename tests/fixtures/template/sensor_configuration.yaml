@@ -21,3 +21,10 @@ sensor:
           == "Watch TV" or state_attr("remote.alexander_master_bedroom","current_activity")
           == "Watch Apple TV" %}on{% else %}off{% endif %}'
 
+template:
+  trigger:
+    platform: event
+    event_type: event_2
+  sensor:
+    name: top level 2
+    state: "{{ trigger.event.data.source }}"

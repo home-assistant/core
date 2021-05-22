@@ -12,7 +12,7 @@
         },
         "step": {
             "mfa": {
-                "description": "Kontrollige oma e-posti: link SimpliSafe-lt. P\u00e4rast lingi kontrollimist naase siia, et viia l\u00f5pule sidumise installimine.",
+                "description": "Kontrolli oma e-posti: link SimpliSafe-lt. P\u00e4rast lingi kontrollimist naase siia, et viia l\u00f5pule sidumise installimine.",
                 "title": "SimpliSafe mitmeastmeline autentimine"
             },
             "reauth_confirm": {

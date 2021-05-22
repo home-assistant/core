@@ -21,12 +21,12 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class StarlineDeviceTracker(StarlineEntity, TrackerEntity, RestoreEntity):
     """StarLine device tracker."""
 
-    def __init__(self, account: StarlineAccount, device: StarlineDevice):
+    def __init__(self, account: StarlineAccount, device: StarlineDevice) -> None:
         """Set up StarLine entity."""
         super().__init__(account, device, "location", "Location")
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return device specific attributes."""
         return self._account.gps_attrs(self._device)
 

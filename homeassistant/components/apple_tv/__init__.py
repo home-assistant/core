@@ -8,6 +8,7 @@ from pyatv.const import Protocol
 
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.components.remote import DOMAIN as REMOTE_DOMAIN
+from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import (
     CONF_ADDRESS,
     CONF_NAME,
@@ -34,17 +35,10 @@ BACKOFF_TIME_UPPER_LIMIT = 300  # Five minutes
 NOTIFICATION_TITLE = "Apple TV Notification"
 NOTIFICATION_ID = "apple_tv_notification"
 
-SOURCE_REAUTH = "reauth"
-
 SIGNAL_CONNECTED = "apple_tv_connected"
 SIGNAL_DISCONNECTED = "apple_tv_disconnected"
 
 PLATFORMS = [MP_DOMAIN, REMOTE_DOMAIN]
-
-
-async def async_setup(hass, config):
-    """Set up the Apple TV integration."""
-    return True
 
 
 async def async_setup_entry(hass, entry):
@@ -56,14 +50,16 @@ async def async_setup_entry(hass, entry):
         """Stop push updates when hass stops."""
         await manager.disconnect()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, on_hass_stop)
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, on_hass_stop)
+    )
 
     async def setup_platforms():
         """Set up platforms and initiate connection."""
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_setup(entry, component)
-                for component in PLATFORMS
+                hass.config_entries.async_forward_entry_setup(entry, platform)
+                for platform in PLATFORMS
             ]
         )
         await manager.init()
@@ -75,14 +71,8 @@ async def async_setup_entry(hass, entry):
 
 async def async_unload_entry(hass, entry):
     """Unload an Apple TV config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, platform)
-                for platform in PLATFORMS
-            ]
-        )
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
     if unload_ok:
         manager = hass.data[DOMAIN].pop(entry.unique_id)
         await manager.disconnect()
@@ -151,6 +141,13 @@ class AppleTVEntity(Entity):
         """No polling needed for Apple TV."""
         return False
 
+    @property
+    def device_info(self):
+        """Return the device info."""
+        return {
+            "identifiers": {(DOMAIN, self._identifier)},
+        }
+
 
 class AppleTVManager:
     """Connection and power manager for an Apple TV.
@@ -180,20 +177,23 @@ class AppleTVManager:
 
         This is a callback function from pyatv.interface.DeviceListener.
         """
-        _LOGGER.warning('Connection lost to Apple TV "%s"', self.atv.name)
-        if self.atv:
-            self.atv.close()
-            self.atv = None
+        _LOGGER.warning(
+            'Connection lost to Apple TV "%s"', self.config_entry.data[CONF_NAME]
+        )
         self._connection_was_lost = True
-        self._dispatch_send(SIGNAL_DISCONNECTED)
-        self._start_connect_loop()
+        self._handle_disconnect()
 
     def connection_closed(self):
         """Device connection was (intentionally) closed.
 
         This is a callback function from pyatv.interface.DeviceListener.
         """
+        self._handle_disconnect()
+
+    def _handle_disconnect(self):
+        """Handle that the device disconnected and restart connect loop."""
         if self.atv:
+            self.atv.listener = None
             self.atv.close()
             self.atv = None
         self._dispatch_send(SIGNAL_DISCONNECTED)
@@ -265,7 +265,7 @@ class AppleTVManager:
         """Problem to authenticate occurred that needs intervention."""
         _LOGGER.debug("Authentication error, reconfigure integration")
 
-        name = self.config_entry.data.get(CONF_NAME)
+        name = self.config_entry.data[CONF_NAME]
         identifier = self.config_entry.unique_id
 
         self.hass.components.persistent_notification.create(
@@ -334,7 +334,8 @@ class AppleTVManager:
         self._connection_attempts = 0
         if self._connection_was_lost:
             _LOGGER.info(
-                'Connection was re-established to Apple TV "%s"', self.atv.service.name
+                'Connection was re-established to Apple TV "%s"',
+                self.config_entry.data[CONF_NAME],
             )
             self._connection_was_lost = False
 
@@ -345,10 +346,16 @@ class AppleTVManager:
             "name": self.config_entry.data[CONF_NAME],
         }
 
+        area = attrs["name"]
+        name_trailer = f" {DEFAULT_NAME}"
+        if area.endswith(name_trailer):
+            area = area[: -len(name_trailer)]
+        attrs["suggested_area"] = area
+
         if self.atv:
             dev_info = self.atv.device_info
 
-            attrs["model"] = "Apple TV " + dev_info.model.name.replace("Gen", "")
+            attrs["model"] = DEFAULT_NAME + " " + dev_info.model.name.replace("Gen", "")
             attrs["sw_version"] = dev_info.version
 
             if dev_info.mac:

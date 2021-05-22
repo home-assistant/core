@@ -95,7 +95,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     async def startup():
         """Start hub socket after all climate entity is set up."""
         nonlocal hub_is_initialized
-        if not all([device.is_initialized for device in devices]):
+        if not all(device.is_initialized for device in devices):
             return
 
         if hub_is_initialized:

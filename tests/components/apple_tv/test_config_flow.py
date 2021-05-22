@@ -1,5 +1,7 @@
 """Test config flow."""
 
+from unittest.mock import patch
+
 from pyatv import exceptions
 from pyatv.const import Protocol
 import pytest
@@ -7,7 +9,6 @@ import pytest
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.apple_tv.const import CONF_START_OFF, DOMAIN
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 DMAP_SERVICE = {
@@ -518,7 +519,7 @@ async def test_reconfigure_update_credentials(hass, mrp_device, pairing):
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": "reauth"},
+        context={"source": config_entries.SOURCE_REAUTH},
         data={"identifier": "mrpid", "name": "apple tv"},
     )
 
@@ -551,11 +552,11 @@ async def test_reconfigure_ongoing_aborts(hass, mrp_device):
     }
 
     await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "reauth"}, data=data
+        DOMAIN, context={"source": config_entries.SOURCE_REAUTH}, data=data
     )
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "reauth"}, data=data
+        DOMAIN, context={"source": config_entries.SOURCE_REAUTH}, data=data
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "already_in_progress"

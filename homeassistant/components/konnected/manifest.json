@@ -10,5 +10,6 @@
     }
   ],
   "dependencies": ["http"],
-  "codeowners": ["@heythisisnate", "@kit-klein"]
+  "codeowners": ["@heythisisnate", "@kit-klein"],
+  "iot_class": "local_polling"
 }

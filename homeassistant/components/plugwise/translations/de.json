@@ -4,7 +4,8 @@
             "already_configured": "Service ist bereits konfiguriert"
         },
         "error": {
-            "cannot_connect": "Verbindung fehlgeschlagen, versuchen Sie es erneut",
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "invalid_auth": "Ung\u00fcltige Authentifizierung",
             "unknown": "Unerwarteter Fehler"
         },
         "flow_title": "Smile: {name}",
@@ -13,13 +14,18 @@
                 "data": {
                     "flow_type": "Verbindungstyp"
                 },
-                "description": "Details"
+                "description": "Details",
+                "title": "Plugwise Typ"
             },
             "user_gateway": {
                 "data": {
-                    "port": "Port"
+                    "host": "IP-Adresse",
+                    "password": "Smile ID",
+                    "port": "Port",
+                    "username": "Smile-Benutzername"
                 },
-                "description": "Bitte eingeben"
+                "description": "Bitte eingeben",
+                "title": "Stellen Sie eine Verbindung zu Smile her"
             }
         }
     },
@@ -28,7 +34,8 @@
             "init": {
                 "data": {
                     "scan_interval": "Scanintervall (Sekunden)"
-                }
+                },
+                "description": "Plugwise-Optionen einstellen"
             }
         }
     }

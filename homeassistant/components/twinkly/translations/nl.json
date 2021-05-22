@@ -1,5 +1,11 @@
 {
     "config": {
+        "abort": {
+            "device_exists": "Apparaat is al geconfigureerd"
+        },
+        "error": {
+            "cannot_connect": "Kan geen verbinding maken"
+        },
         "step": {
             "user": {
                 "data": {

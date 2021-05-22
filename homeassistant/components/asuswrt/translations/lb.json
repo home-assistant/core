@@ -1,0 +1,12 @@
+{
+    "config": {
+        "error": {
+            "ssh_not_file": "SSH Schl\u00ebssel Datei net fonnt"
+        },
+        "step": {
+            "user": {
+                "title": "AsusWRT"
+            }
+        }
+    }
+}

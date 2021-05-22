@@ -5,13 +5,12 @@ import voluptuous as vol
 
 from homeassistant.components import rpi_gpio
 from homeassistant.components.cover import PLATFORM_SCHEMA, CoverEntity
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_COVERS, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.reload import setup_reload_service
 
 from . import DOMAIN, PLATFORMS
 
-CONF_COVERS = "covers"
 CONF_RELAY_PIN = "relay_pin"
 CONF_RELAY_TIME = "relay_time"
 CONF_STATE_PIN = "state_pin"
@@ -49,7 +48,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the RPi cover platform."""
-
     setup_reload_service(hass, DOMAIN, PLATFORMS)
 
     relay_time = config.get(CONF_RELAY_TIME)

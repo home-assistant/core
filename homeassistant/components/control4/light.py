@@ -150,7 +150,7 @@ class Control4Light(Control4Entity, LightEntity):
         device_model: str,
         device_id: int,
         is_dimmer: bool,
-    ):
+    ) -> None:
         """Initialize Control4 light entity."""
         super().__init__(
             entry_data,

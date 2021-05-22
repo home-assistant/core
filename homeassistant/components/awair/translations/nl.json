@@ -2,14 +2,27 @@
     "config": {
         "abort": {
             "already_configured": "Account is al geconfigureerd",
-            "no_devices_found": "Geen apparaten op het netwerk gevonden"
+            "no_devices_found": "Geen apparaten op het netwerk gevonden",
+            "reauth_successful": "Herauthenticatie was succesvol"
         },
         "error": {
+            "invalid_access_token": "Ongeldig toegangstoken",
             "unknown": "Onverwachte fout"
         },
         "step": {
             "reauth": {
+                "data": {
+                    "access_token": "Toegangstoken",
+                    "email": "E-mail"
+                },
                 "description": "Voer uw Awair-ontwikkelaarstoegangstoken opnieuw in."
+            },
+            "user": {
+                "data": {
+                    "access_token": "Toegangstoken",
+                    "email": "E-mail"
+                },
+                "description": "U moet zich registreren voor een Awair-toegangstoken voor ontwikkelaars op: https://developer.getawair.com/onboard/login"
             }
         }
     }

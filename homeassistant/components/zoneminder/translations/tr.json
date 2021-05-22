@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "auth_fail": "Kullan\u0131c\u0131 ad\u0131 veya \u015fifre yanl\u0131\u015f.",
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama"
+        },
+        "error": {
+            "auth_fail": "Kullan\u0131c\u0131 ad\u0131 veya \u015fifre yanl\u0131\u015f.",
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Parola",
+                    "username": "Kullan\u0131c\u0131 Ad\u0131"
+                }
+            }
+        }
+    }
+}

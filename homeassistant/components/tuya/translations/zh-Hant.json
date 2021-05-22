@@ -40,8 +40,10 @@
                     "max_temp": "\u6700\u9ad8\u76ee\u6a19\u8272\u6eab\uff08\u4f7f\u7528\u6700\u4f4e\u8207\u6700\u9ad8 = 0 \u4f7f\u7528\u9810\u8a2d\uff09",
                     "min_kelvin": "Kelvin \u652f\u63f4\u6700\u4f4e\u8272\u6eab",
                     "min_temp": "\u6700\u4f4e\u76ee\u6a19\u8272\u6eab\uff08\u4f7f\u7528\u6700\u4f4e\u8207\u6700\u9ad8 = 0 \u4f7f\u7528\u9810\u8a2d\uff09",
+                    "set_temp_divided": "\u4f7f\u7528\u5206\u9694\u865f\u6eab\u5ea6\u503c\u4ee5\u57f7\u884c\u8a2d\u5b9a\u6eab\u5ea6\u6307\u4ee4",
                     "support_color": "\u5f37\u5236\u8272\u6eab\u652f\u63f4",
                     "temp_divider": "\u8272\u6eab\u503c\u5206\u914d\u5668\uff080 = \u4f7f\u7528\u9810\u8a2d\uff09",
+                    "temp_step_override": "\u76ee\u6a19\u6eab\u5ea6\u8a2d\u5b9a",
                     "tuya_max_coltemp": "\u88dd\u7f6e\u56de\u5831\u6700\u9ad8\u8272\u6eab",
                     "unit_of_measurement": "\u88dd\u7f6e\u6240\u4f7f\u7528\u4e4b\u6eab\u5ea6\u55ae\u4f4d"
                 },

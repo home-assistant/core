@@ -45,6 +45,7 @@
         "step": {
             "init": {
                 "data": {
+                    "effect_show_list": "Efectes d'Hyperion a mostrar",
                     "priority": "Prioritat Hyperion a utilitzar per als colors i efectes"
                 }
             }

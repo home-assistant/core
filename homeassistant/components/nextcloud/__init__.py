@@ -17,7 +17,7 @@ from homeassistant.helpers.event import track_time_interval
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "nextcloud"
-NEXTCLOUD_COMPONENTS = ("sensor", "binary_sensor")
+PLATFORMS = ("sensor", "binary_sensor")
 SCAN_INTERVAL = timedelta(seconds=60)
 
 # Validate user configuration
@@ -116,8 +116,8 @@ def setup(hass, config):
     # Update sensors on time interval
     track_time_interval(hass, nextcloud_update, conf[CONF_SCAN_INTERVAL])
 
-    for component in NEXTCLOUD_COMPONENTS:
-        discovery.load_platform(hass, component, DOMAIN, {}, config)
+    for platform in PLATFORMS:
+        discovery.load_platform(hass, platform, DOMAIN, {}, config)
 
     return True
 

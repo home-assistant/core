@@ -1,4 +1,6 @@
 """Tests songpal setup."""
+from unittest.mock import patch
+
 from homeassistant.components import songpal
 from homeassistant.setup import async_setup_component
 
@@ -9,7 +11,6 @@ from . import (
     _patch_media_player_device,
 )
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 

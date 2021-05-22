@@ -1,6 +1,7 @@
 """Helpers for the data entry flow."""
+from __future__ import annotations
 
-from typing import Any, Dict
+from typing import Any
 
 from aiohttp import web
 import voluptuous as vol
@@ -20,7 +21,9 @@ class _BaseFlowManagerView(HomeAssistantView):
         self._flow_mgr = flow_mgr
 
     # pylint: disable=no-self-use
-    def _prepare_result_json(self, result: Dict[str, Any]) -> Dict[str, Any]:
+    def _prepare_result_json(
+        self, result: data_entry_flow.FlowResult
+    ) -> data_entry_flow.FlowResult:
         """Convert result to JSON."""
         if result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY:
             data = result.copy()
@@ -58,7 +61,7 @@ class FlowManagerIndexView(_BaseFlowManagerView):
             extra=vol.ALLOW_EXTRA,
         )
     )
-    async def post(self, request: web.Request, data: Dict[str, Any]) -> web.Response:
+    async def post(self, request: web.Request, data: dict[str, Any]) -> web.Response:
         """Handle a POST request."""
         if isinstance(data["handler"], list):
             handler = tuple(data["handler"])
@@ -99,7 +102,7 @@ class FlowManagerResourceView(_BaseFlowManagerView):
 
     @RequestDataValidator(vol.Schema(dict), allow_empty=True)
     async def post(
-        self, request: web.Request, flow_id: str, data: Dict[str, Any]
+        self, request: web.Request, flow_id: str, data: dict[str, Any]
     ) -> web.Response:
         """Handle a POST request."""
         try:

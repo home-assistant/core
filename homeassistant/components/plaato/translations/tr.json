@@ -1,0 +1,43 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Hesap zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
+            "single_instance_allowed": "Zaten yap\u0131land\u0131r\u0131lm\u0131\u015f. Yaln\u0131zca tek bir konfig\u00fcrasyon m\u00fcmk\u00fcnd\u00fcr.",
+            "webhook_not_internet_accessible": "Webhook mesajlar\u0131n\u0131 alabilmek i\u00e7in Home Assistant \u00f6rne\u011finize internetten eri\u015filebilmelidir."
+        },
+        "error": {
+            "no_auth_token": "Bir kimlik do\u011frulama jetonu eklemeniz gerekiyor"
+        },
+        "step": {
+            "api_method": {
+                "data": {
+                    "use_webhook": "Webhook kullan"
+                },
+                "title": "API y\u00f6ntemini se\u00e7in"
+            },
+            "user": {
+                "data": {
+                    "device_name": "Cihaz\u0131n\u0131z\u0131 adland\u0131r\u0131n",
+                    "device_type": "Plaato cihaz\u0131n\u0131n t\u00fcr\u00fc"
+                }
+            },
+            "webhook": {
+                "title": "Webhook kullanmak i\u00e7in"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "user": {
+                "data": {
+                    "update_interval": "G\u00fcncelle\u015ftirme aral\u0131\u011f\u0131 (dakika)"
+                },
+                "description": "G\u00fcncelleme aral\u0131\u011f\u0131n\u0131 ayarlay\u0131n (dakika)",
+                "title": "Plaato i\u00e7in se\u00e7enekler"
+            },
+            "webhook": {
+                "title": "Plaato Airlock i\u00e7in se\u00e7enekler"
+            }
+        }
+    }
+}
