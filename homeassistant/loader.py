@@ -305,7 +305,7 @@ class Integration:
         pkg_path: str,
         file_path: pathlib.Path,
         manifest: Manifest,
-    ):
+    ) -> None:
         """Initialize an integration."""
         self.hass = hass
         self.pkg_path = pkg_path

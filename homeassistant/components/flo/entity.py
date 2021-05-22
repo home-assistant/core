@@ -19,7 +19,7 @@ class FloEntity(Entity):
         name: str,
         device: FloDeviceDataUpdateCoordinator,
         **kwargs,
-    ):
+    ) -> None:
         """Init Flo entity."""
         self._unique_id: str = f"{device.mac_address}_{entity_type}"
         self._name: str = name

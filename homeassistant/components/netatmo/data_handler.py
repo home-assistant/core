@@ -15,7 +15,15 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.event import async_track_time_interval
 
-from .const import AUTH, DOMAIN, MANUFACTURER
+from .const import (
+    AUTH,
+    DOMAIN,
+    MANUFACTURER,
+    WEBHOOK_ACTIVATION,
+    WEBHOOK_DEACTIVATION,
+    WEBHOOK_NACAMERA_CONNECTION,
+    WEBHOOK_PUSH_TYPE,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -108,15 +116,15 @@ class NetatmoDataHandler:
 
     async def handle_event(self, event):
         """Handle webhook events."""
-        if event["data"]["push_type"] == "webhook_activation":
+        if event["data"][WEBHOOK_PUSH_TYPE] == WEBHOOK_ACTIVATION:
             _LOGGER.info("%s webhook successfully registered", MANUFACTURER)
             self._webhook = True
 
-        elif event["data"]["push_type"] == "webhook_deactivation":
+        elif event["data"][WEBHOOK_PUSH_TYPE] == WEBHOOK_DEACTIVATION:
             _LOGGER.info("%s webhook unregistered", MANUFACTURER)
             self._webhook = False
 
-        elif event["data"]["push_type"] == "NACamera-connection":
+        elif event["data"][WEBHOOK_PUSH_TYPE] == WEBHOOK_NACAMERA_CONNECTION:
             _LOGGER.debug("%s camera reconnected", MANUFACTURER)
             self.async_force_update(CAMERA_DATA_CLASS_NAME)
 

@@ -44,6 +44,10 @@ from .const import (
     DOMAIN,
     OAUTH2_AUTHORIZE,
     OAUTH2_TOKEN,
+    PLATFORMS,
+    WEBHOOK_ACTIVATION,
+    WEBHOOK_DEACTIVATION,
+    WEBHOOK_PUSH_TYPE,
 )
 from .data_handler import NetatmoDataHandler
 from .webhook import async_handle_webhook
@@ -61,8 +65,6 @@ CONFIG_SCHEMA = vol.Schema(
     },
     extra=vol.ALLOW_EXTRA,
 )
-
-PLATFORMS = ["camera", "climate", "light", "sensor"]
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
@@ -126,7 +128,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         async_dispatcher_send(
             hass,
             f"signal-{DOMAIN}-webhook-None",
-            {"type": "None", "data": {"push_type": "webhook_deactivation"}},
+            {"type": "None", "data": {WEBHOOK_PUSH_TYPE: WEBHOOK_DEACTIVATION}},
         )
         webhook_unregister(hass, entry.data[CONF_WEBHOOK_ID])
         await hass.data[DOMAIN][entry.entry_id][AUTH].async_dropwebhook()
@@ -150,9 +152,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                 entry.data[CONF_WEBHOOK_ID]
             )
 
-        if entry.data["auth_implementation"] == "cloud" and not webhook_url.startswith(
-            "https://"
-        ):
+        if entry.data[
+            "auth_implementation"
+        ] == cloud.DOMAIN and not webhook_url.startswith("https://"):
             _LOGGER.warning(
                 "Webhook not registered - "
                 "https and port 443 is required to register the webhook"
@@ -170,7 +172,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
             async def handle_event(event):
                 """Handle webhook events."""
-                if event["data"]["push_type"] == "webhook_activation":
+                if event["data"][WEBHOOK_PUSH_TYPE] == WEBHOOK_ACTIVATION:
                     if activation_listener is not None:
                         activation_listener()
 

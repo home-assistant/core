@@ -151,6 +151,7 @@ class BlockAttributeDescription:
     unit: None | str | Callable[[dict], str] = None
     value: Callable[[Any], Any] = lambda val: val
     device_class: str | None = None
+    state_class: str | None = None
     default_enabled: bool = True
     available: Callable[[aioshelly.Block], bool] | None = None
     # Callable (settings, block), return true if entity should be removed

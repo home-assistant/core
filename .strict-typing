@@ -21,6 +21,7 @@ homeassistant.components.camera.*
 homeassistant.components.cover.*
 homeassistant.components.device_automation.*
 homeassistant.components.elgato.*
+homeassistant.components.fitbit.*
 homeassistant.components.fritzbox.*
 homeassistant.components.frontend.*
 homeassistant.components.geo_location.*

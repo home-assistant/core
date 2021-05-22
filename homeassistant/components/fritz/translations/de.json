@@ -8,6 +8,7 @@
         "error": {
             "already_configured": "Ger\u00e4t ist bereits konfiguriert",
             "already_in_progress": "Der Konfigurationsablauf wird bereits ausgef\u00fchrt",
+            "cannot_connect": "Verbindungsfehler",
             "connection_error": "Verbindung fehlgeschlagen",
             "invalid_auth": "Ung\u00fcltige Authentifizierung"
         },
@@ -38,6 +39,11 @@
                 },
                 "description": "Einrichten der FRITZ! Box Tools zur Steuerung Ihrer FRITZ! Box.\n Ben\u00f6tigt: Benutzername, Passwort.",
                 "title": "Setup FRITZ! Box Tools - obligatorisch"
+            },
+            "user": {
+                "data": {
+                    "username": "Nutzername"
+                }
             }
         }
     }

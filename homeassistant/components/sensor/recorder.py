@@ -6,14 +6,28 @@ import itertools
 from statistics import fmean
 
 from homeassistant.components.recorder import history, statistics
-from homeassistant.components.sensor import ATTR_STATE_CLASS, STATE_CLASS_MEASUREMENT
+from homeassistant.components.sensor import (
+    ATTR_STATE_CLASS,
+    DEVICE_CLASS_BATTERY,
+    DEVICE_CLASS_ENERGY,
+    DEVICE_CLASS_HUMIDITY,
+    DEVICE_CLASS_PRESSURE,
+    DEVICE_CLASS_TEMPERATURE,
+    STATE_CLASS_MEASUREMENT,
+)
 from homeassistant.const import ATTR_DEVICE_CLASS
 from homeassistant.core import HomeAssistant
 import homeassistant.util.dt as dt_util
 
 from . import DOMAIN
 
-DEVICE_CLASS_STATISTICS = {"temperature": {"mean", "min", "max"}, "energy": {"sum"}}
+DEVICE_CLASS_STATISTICS = {
+    DEVICE_CLASS_BATTERY: {"mean", "min", "max"},
+    DEVICE_CLASS_ENERGY: {"sum"},
+    DEVICE_CLASS_HUMIDITY: {"mean", "min", "max"},
+    DEVICE_CLASS_PRESSURE: {"mean", "min", "max"},
+    DEVICE_CLASS_TEMPERATURE: {"mean", "min", "max"},
+}
 
 
 def _get_entities(hass: HomeAssistant) -> list[tuple[str, str]]:
