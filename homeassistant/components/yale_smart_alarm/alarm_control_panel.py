@@ -21,6 +21,10 @@ from homeassistant.components.alarm_control_panel.const import (
 )
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
+    ATTR_IDENTIFIERS,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
+    ATTR_NAME,
     CONF_NAME,
     CONF_PASSWORD,
     CONF_USERNAME,
@@ -34,7 +38,17 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_AREA_ID, DEFAULT_AREA_ID, DEFAULT_NAME, DOMAIN, LOGGER
+from .const import (
+    ATTR_ONLINE,
+    ATTR_STATUS,
+    CONF_AREA_ID,
+    DEFAULT_AREA_ID,
+    DEFAULT_NAME,
+    DOMAIN,
+    LOGGER,
+    MANUFACTURER,
+    MODEL,
+)
 from .coordinator import YaleDataUpdateCoordinator
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -96,10 +110,10 @@ class YaleAlarmDevice(CoordinatorEntity, AlarmControlPanelEntity):
     def device_info(self) -> DeviceInfo:
         """Return device information about this entity."""
         return {
-            "name": self.coordinator.entry.data[CONF_NAME],
-            "manufacturer": "Yale",
-            "model": "main",
-            "identifiers": {(DOMAIN, self.coordinator.entry.data[CONF_USERNAME])},
+            ATTR_NAME: self.coordinator.entry.data[CONF_NAME],
+            ATTR_MANUFACTURER: MANUFACTURER,
+            ATTR_MODEL: MODEL,
+            ATTR_IDENTIFIERS: {(DOMAIN, self.coordinator.entry.data[CONF_USERNAME])},
         }
 
     @property
@@ -135,15 +149,15 @@ class YaleAlarmDevice(CoordinatorEntity, AlarmControlPanelEntity):
 
     async def async_alarm_disarm(self, code=None):
         """Send disarm command."""
-        await self._async_set_arm_state("disarm")
+        await self._async_set_arm_state(YALE_STATE_DISARM)
 
     async def async_alarm_arm_home(self, code=None):
         """Send arm home command."""
-        await self._async_set_arm_state("home")
+        await self._async_set_arm_state(YALE_STATE_ARM_PARTIAL)
 
     async def async_alarm_arm_away(self, code=None):
         """Send arm away command."""
-        await self._async_set_arm_state("arm")
+        await self._async_set_arm_state(YALE_STATE_ARM_FULL)
 
     @property
     def state_attributes(self):
@@ -152,8 +166,8 @@ class YaleAlarmDevice(CoordinatorEntity, AlarmControlPanelEntity):
             ATTR_CODE_FORMAT: self.code_format,
             ATTR_CHANGED_BY: self.changed_by,
             ATTR_CODE_ARM_REQUIRED: self.code_arm_required,
-            "online": self.coordinator.data["online"],
-            "status": self.coordinator.data["status"],
+            ATTR_ONLINE: self.coordinator.data["online"],
+            ATTR_STATUS: self.coordinator.data["status"],
         }
 
     @callback
