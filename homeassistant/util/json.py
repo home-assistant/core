@@ -27,7 +27,6 @@ def load_json(filename: str, default: list | dict | None = None) -> list | dict:
 
     Defaults to returning empty dict if file is not found.
     """
-    _LOGGER.warning("Load json: %s", filename)
     try:
         with open(filename, encoding="utf-8") as fdesc:
             return json.loads(fdesc.read())  # type: ignore
