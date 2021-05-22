@@ -45,7 +45,8 @@ class NAMSensor(CoordinatorEntity, SensorEntity):
         """Initialize."""
         super().__init__(coordinator)
         self.sensor_type = sensor_type
-        self._description = SENSORS[self.sensor_type]
+        self._description = SENSORS[sensor_type]
+        self._attr_state_class = SENSORS[sensor_type][ATTR_STATE_CLASS]
 
     @property
     def name(self) -> str:
@@ -56,11 +57,6 @@ class NAMSensor(CoordinatorEntity, SensorEntity):
     def state(self) -> Any:
         """Return the state."""
         return getattr(self.coordinator.data, self.sensor_type)
-
-    @property
-    def state_class(self) -> str | None:
-        """Return the state class of this entity."""
-        return self._description[ATTR_STATE_CLASS]
 
     @property
     def unit_of_measurement(self) -> str | None:
