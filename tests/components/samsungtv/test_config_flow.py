@@ -7,7 +7,7 @@ from samsungtvws.exceptions import ConnectionFailure
 from websocket import WebSocketException, WebSocketProtocolException
 
 from homeassistant import config_entries
-from homeassistant.components.dhcp import IP_ADDRESS
+from homeassistant.components.dhcp import IP_ADDRESS, MAC_ADDRESS
 from homeassistant.components.samsungtv.const import (
     ATTR_PROPERTIES,
     CONF_MANUFACTURER,
@@ -81,14 +81,12 @@ MOCK_SSDP_DATA_WRONGMODEL = {
     ATTR_UPNP_MODEL_NAME: "HW-Qfake",
     ATTR_UPNP_UDN: "uuid:0d1cef00-00dc-1000-9c80-4844f7b172df",
 }
-MOCK_DHCP_DATA = {
-    IP_ADDRESS: "fake_host",
-}
+MOCK_DHCP_DATA = {IP_ADDRESS: "fake_host", MAC_ADDRESS: "aa:bb:cc:dd:ee:ff"}
 MOCK_ZEROCONF_DATA = {
     CONF_HOST: "fake_host",
     CONF_PORT: 1234,
     ATTR_PROPERTIES: {
-        "deviceid": "fake_mac",
+        "deviceid": "aa:bb:cc:dd:ee:ff",
         "manufacturer": "fake_manufacturer",
         "model": "fake_model",
         "serialNumber": "fake_serial",
@@ -593,7 +591,7 @@ async def test_zeroconf(hass: HomeAssistant, remotews: Mock):
     assert result["title"] == "Living Room (82GXARRS)"
     assert result["data"][CONF_HOST] == "fake_host"
     assert result["data"][CONF_NAME] == "Living Room"
-    assert result["data"][CONF_MAC] == "fake_mac"
+    assert result["data"][CONF_MAC] == "aa:bb:cc:dd:ee:ff"
     assert result["data"][CONF_MANUFACTURER] == "Samsung"
     assert result["data"][CONF_MODEL] == "82GXARRS"
     assert result["result"].unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
@@ -804,6 +802,60 @@ async def test_update_old_entry(hass: HomeAssistant, remote: Mock):
         assert entry2.data.get(CONF_ID) is not None
         assert entry2.data.get(CONF_IP_ADDRESS) is not None
         assert entry2.unique_id == "0d1cef00-00dc-1000-9c80-4844f7b172de"
+
+
+async def test_update_missing_mac_unique_id_added_from_dhcp(hass, remotews: Mock):
+    """Test missing mac and unique id added."""
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_OLD_ENTRY, unique_id=None)
+    entry.add_to_hass(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_DHCP},
+        data=MOCK_DHCP_DATA,
+    )
+    await hass.async_block_till_done()
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_configured"
+    assert entry.data[CONF_MAC] == "aa:bb:cc:dd:ee:ff"
+    assert entry.unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
+
+
+async def test_update_missing_mac_unique_id_added_from_zeroconf(hass, remotews: Mock):
+    """Test missing mac and unique id added."""
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_OLD_ENTRY, unique_id=None)
+    entry.add_to_hass(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=MOCK_ZEROCONF_DATA,
+    )
+    await hass.async_block_till_done()
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_configured"
+    assert entry.data[CONF_MAC] == "aa:bb:cc:dd:ee:ff"
+    assert entry.unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
+
+
+async def test_update_missing_mac_added_unique_id_preserved_from_zeroconf(
+    hass, remotews: Mock
+):
+    """Test missing mac and unique id added."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_OLD_ENTRY,
+        unique_id="0d1cef00-00dc-1000-9c80-4844f7b172de",
+    )
+    entry.add_to_hass(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=MOCK_ZEROCONF_DATA,
+    )
+    await hass.async_block_till_done()
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_configured"
+    assert entry.data[CONF_MAC] == "aa:bb:cc:dd:ee:ff"
+    assert entry.unique_id == "0d1cef00-00dc-1000-9c80-4844f7b172de"
 
 
 async def test_form_reauth_legacy(hass, remote: Mock):

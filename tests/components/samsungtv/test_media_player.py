@@ -25,6 +25,7 @@ from homeassistant.components.media_player.const import (
 from homeassistant.components.samsungtv.const import (
     CONF_ON_ACTION,
     DOMAIN as SAMSUNGTV_DOMAIN,
+    TIMEOUT_WEBSOCKET,
 )
 from homeassistant.components.samsungtv.media_player import SUPPORT_SAMSUNGTV
 from homeassistant.const import (
@@ -37,6 +38,7 @@ from homeassistant.const import (
     CONF_METHOD,
     CONF_NAME,
     CONF_PORT,
+    CONF_TIMEOUT,
     CONF_TOKEN,
     SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PAUSE,
@@ -80,11 +82,11 @@ MOCK_CONFIGWS = {
     ]
 }
 MOCK_CALLS_WS = {
-    "host": "fake_host",
-    "port": 8001,
-    "token": "123456789",
-    "timeout": 5,
-    "name": "HomeAssistant",
+    CONF_HOST: "fake_host",
+    CONF_PORT: 8001,
+    CONF_TOKEN: "123456789",
+    CONF_TIMEOUT: TIMEOUT_WEBSOCKET,
+    CONF_NAME: "HomeAssistant",
 }
 
 MOCK_ENTRY_WS = {
@@ -93,14 +95,7 @@ MOCK_ENTRY_WS = {
     CONF_METHOD: "websocket",
     CONF_NAME: "fake",
     CONF_PORT: 8001,
-    CONF_TOKEN: "abcde",
-}
-MOCK_CALLS_ENTRY_WS = {
-    "host": "fake_host",
-    "name": "HomeAssistant",
-    "port": 8001,
-    "timeout": 5,
-    "token": "abcde",
+    CONF_TOKEN: "123456789",
 }
 
 ENTITY_ID_NOTURNON = f"{DOMAIN}.fake_noturnon"
@@ -189,7 +184,7 @@ async def test_setup_websocket_2(hass, mock_now):
     state = hass.states.get(entity_id)
     assert state
     assert remote.call_count == 1
-    assert remote.call_args_list == [call(**MOCK_CALLS_ENTRY_WS)]
+    assert remote.call_args_list == [call(**MOCK_CALLS_WS)]
 
 
 async def test_update_on(hass, remote, mock_now):
