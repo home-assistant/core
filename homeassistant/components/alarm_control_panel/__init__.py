@@ -21,11 +21,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.config_validation import (
-    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
-    PLATFORM_SCHEMA_BASE as PARENT_PLATFORM_SCHEMA_BASE,
-    make_entity_service_schema,
-)
+from homeassistant.helpers.config_validation import make_entity_service_schema
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
@@ -53,8 +49,8 @@ ALARM_SERVICE_SCHEMA: Final = make_entity_service_schema(
     {vol.Optional(ATTR_CODE): cv.string}
 )
 
-PLATFORM_SCHEMA: Final = PARENT_PLATFORM_SCHEMA
-PLATFORM_SCHEMA_BASE: Final = PARENT_PLATFORM_SCHEMA_BASE
+PLATFORM_SCHEMA: Final = cv.PLATFORM_SCHEMA
+PLATFORM_SCHEMA_BASE: Final = cv.PLATFORM_SCHEMA_BASE
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -102,14 +98,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> Any:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    return await hass.data[DOMAIN].async_setup_entry(entry)
+    component: EntityComponent = hass.data[DOMAIN]
+    return await component.async_setup_entry(entry)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> Any:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    return await hass.data[DOMAIN].async_unload_entry(entry)
+    component: EntityComponent = hass.data[DOMAIN]
+    return await component.async_unload_entry(entry)
 
 
 class AlarmControlPanelEntity(Entity):
