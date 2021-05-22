@@ -272,6 +272,7 @@ class BridgeMediaPlayer(BridgeDeviceEntity, MediaPlayerEntity):
     async def async_play_media(self, media_type: str, media_id: str, **kwargs):
         """Play a piece of media."""
         # TODO: Handle browse media urls
+        print(media_type, media_id, kwargs)
 
         bridge: Bridge = self.coordinator.data
         if media_type in [MEDIA_TYPE_MUSIC, MEDIA_TYPE_TRACK]:
@@ -279,10 +280,11 @@ class BridgeMediaPlayer(BridgeDeviceEntity, MediaPlayerEntity):
                 await bridge.async_create_media_player(
                     {"type": "audio", "url": media_id, "hidden": True}
                 )
-            else:
+            if "http" in media_id:
                 await bridge.async_create_media_player(
                     {"type": "audio", "url": media_id}
                 )
+            await bridge.async_create_media_player({"type": "audio", "path": media_id})
         elif media_type in [
             MEDIA_TYPE_EPISODE,
             MEDIA_TYPE_MOVIE,
