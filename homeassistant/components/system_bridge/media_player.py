@@ -140,8 +140,7 @@ class BridgeMediaPlayer(BridgeDeviceEntity, MediaPlayerEntity):
             return STATE_IDLE
         if bridge.media_status.playing is True:
             return STATE_PLAYING
-        else:
-            return STATE_PAUSED
+        return STATE_PAUSED
 
     @property
     def media_content_type(self) -> str | None:
@@ -151,7 +150,7 @@ class BridgeMediaPlayer(BridgeDeviceEntity, MediaPlayerEntity):
             return None
         if bridge.media_status.source["type"] == "audio":
             return MEDIA_TYPE_MUSIC
-        elif bridge.media_status.source["type"] == "video":
+        if bridge.media_status.source["type"] == "video":
             return MEDIA_TYPE_VIDEO
         return None
 
