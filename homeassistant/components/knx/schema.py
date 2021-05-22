@@ -9,6 +9,9 @@ from xknx.exceptions import CouldNotParseAddress
 from xknx.io import DEFAULT_MCAST_PORT
 from xknx.telegram.address import IndividualAddress, parse_device_group_address
 
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASSES as BINARY_SENSOR_DEVICE_CLASSES,
+)
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_ENTITY_ID,
@@ -119,7 +122,7 @@ class BinarySensorSchema:
                 vol.Optional(CONF_CONTEXT_TIMEOUT): vol.All(
                     vol.Coerce(float), vol.Range(min=0, max=10)
                 ),
-                vol.Optional(CONF_DEVICE_CLASS): cv.string,
+                vol.Optional(CONF_DEVICE_CLASS): vol.IN(BINARY_SENSOR_DEVICE_CLASSES),
                 vol.Optional(CONF_RESET_AFTER): cv.positive_float,
             }
         ),
