@@ -46,7 +46,7 @@ class DataUpdateCoordinatorMotionBlinds(DataUpdateCoordinator):
         name,
         update_interval=None,
         update_method=None,
-    ):
+    ) -> None:
         """Initialize global data updater."""
         super().__init__(
             hass,
@@ -59,8 +59,6 @@ class DataUpdateCoordinatorMotionBlinds(DataUpdateCoordinator):
         self._gateway = coordinator_info[KEY_GATEWAY]
         self._wait_for_push = coordinator_info[CONF_WAIT_FOR_PUSH]
         self._fast_update = coordinator_info[CONF_FAST_UPDATE]
-
-        return None
 
     def update_gateway(self):
         """Call all updates using one async_add_executor_job."""
