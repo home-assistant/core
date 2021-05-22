@@ -8,7 +8,7 @@ from ipaddress import IPv4Address, IPv6Address
 import logging
 from typing import Any
 
-from async_upnp_client.ssdp import SSDPListener
+from async_upnp_client.listener import SSDPListener
 from netdisco import ssdp
 
 from homeassistant import config_entries
