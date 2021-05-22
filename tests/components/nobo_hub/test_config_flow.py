@@ -4,8 +4,13 @@ from unittest.mock import Mock, PropertyMock, patch
 from pynobo import nobo
 
 from homeassistant import config_entries, setup
-from homeassistant.components.nobo_hub.const import DOMAIN, HUB
-from homeassistant.const import CONF_COMMAND_OFF, CONF_COMMAND_ON
+from homeassistant.components.nobo_hub.const import CONF_SERIAL, DOMAIN, HUB
+from homeassistant.const import (
+    CONF_COMMAND_OFF,
+    CONF_COMMAND_ON,
+    CONF_HOST,
+    CONF_IP_ADDRESS,
+)
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -233,3 +238,135 @@ async def test_options_flow(hass: HomeAssistant) -> None:
         "Kitchen": "Kitchen On",
         "Bedrooms": "Bedrooms On",
     }
+
+
+async def test_import_with_ip(hass: HomeAssistant) -> None:
+    """Test configuring with IP address."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    with patch(
+        "pynobo.nobo.async_discover_hubs",
+        return_value=[("1.1.1.1", "123456789012")],
+    ) as mock_discover, patch(
+        "pynobo.nobo.async_connect_hub", return_value=True
+    ) as mock_connect, patch(
+        "pynobo.nobo.hub_info",
+        new_callable=PropertyMock,
+        create=True,
+        return_value={"name": "My Nobø Ecohub"},
+    ), patch(
+        "homeassistant.components.nobo_hub.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={
+                CONF_HOST: "123456789012",
+                CONF_IP_ADDRESS: "1.1.1.1",
+                CONF_COMMAND_OFF: "Off",
+                CONF_COMMAND_ON: {
+                    "Kitchen": "Kitchen On",
+                    "Bedrooms": "Bedrooms On",
+                },
+            },
+        )
+        await hass.async_block_till_done()
+
+        assert result["type"] == "create_entry"
+        assert result["title"] == "My Nobø Ecohub"
+        assert result["data"] == {
+            CONF_SERIAL: "123456789012",
+            CONF_IP_ADDRESS: "1.1.1.1",
+            CONF_COMMAND_OFF: "Off",
+            CONF_COMMAND_ON: {
+                "Kitchen": "Kitchen On",
+                "Bedrooms": "Bedrooms On",
+            },
+        }
+        mock_discover.assert_awaited_once()
+        mock_connect.assert_awaited_once_with("1.1.1.1", "123456789012")
+        mock_setup_entry.assert_awaited_once()
+
+
+async def test_import_with_discover(hass: HomeAssistant) -> None:
+    """Test configuring with IP address."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    with patch(
+        "pynobo.nobo.async_discover_hubs",
+        return_value=[("1.1.1.1", "123456789012")],
+    ) as mock_discover, patch(
+        "pynobo.nobo.async_connect_hub", return_value=True
+    ) as mock_connect, patch(
+        "pynobo.nobo.hub_info",
+        new_callable=PropertyMock,
+        create=True,
+        return_value={"name": "My Nobø Ecohub"},
+    ), patch(
+        "homeassistant.components.nobo_hub.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={
+                CONF_HOST: "123456789012",
+                CONF_IP_ADDRESS: "discover",
+                CONF_COMMAND_OFF: "Off",
+                CONF_COMMAND_ON: {
+                    "Kitchen": "Kitchen On",
+                    "Bedrooms": "Bedrooms On",
+                },
+            },
+        )
+        await hass.async_block_till_done()
+
+        assert result["type"] == "create_entry"
+        assert result["title"] == "My Nobø Ecohub"
+        assert result["data"] == {
+            CONF_SERIAL: "123456789012",
+            CONF_IP_ADDRESS: None,
+            CONF_COMMAND_OFF: "Off",
+            CONF_COMMAND_ON: {
+                "Kitchen": "Kitchen On",
+                "Bedrooms": "Bedrooms On",
+            },
+        }
+        mock_discover.assert_awaited_once()
+        mock_connect.assert_awaited_once_with("1.1.1.1", "123456789012")
+        mock_setup_entry.assert_awaited_once()
+
+
+async def test_import_with_serial_suffix(hass: HomeAssistant) -> None:
+    """Test configuring with IP address."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    with patch(
+        "pynobo.nobo.async_discover_hubs",
+        return_value=[("1.1.1.1", "123456789012")],
+    ) as mock_discover, patch(
+        "pynobo.nobo.async_connect_hub", return_value=True
+    ) as mock_connect, patch(
+        "pynobo.nobo.hub_info",
+        new_callable=PropertyMock,
+        create=True,
+        return_value={"name": "My Nobø Ecohub"},
+    ), patch(
+        "homeassistant.components.nobo_hub.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={CONF_HOST: "012"},
+        )
+        await hass.async_block_till_done()
+
+        assert result["type"] == "create_entry"
+        assert result["title"] == "My Nobø Ecohub"
+        assert result["data"] == {CONF_SERIAL: "123456789012", CONF_IP_ADDRESS: None}
+
+        mock_discover.assert_awaited()
+        mock_connect.assert_awaited_once_with("1.1.1.1", "123456789012")
+        mock_setup_entry.assert_awaited_once()

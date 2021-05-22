@@ -21,7 +21,7 @@ from homeassistant.components.climate.const import (
     SUPPORT_PRESET_MODE,
     SUPPORT_TARGET_TEMPERATURE_RANGE,
 )
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_COMMAND_OFF,
     CONF_COMMAND_ON,
@@ -51,7 +51,7 @@ _LOGGER = logging.getLogger(__name__)
 
 _ZONE_NORMAL_WEEK_LIST_SCHEMA = vol.Schema({cv.string: cv.string})
 
-# For backwards compatibility of HACS version.
+# Legacy configuration to import from HACS version.
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
@@ -65,17 +65,33 @@ PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(
 async def async_setup_platform(
     hass: HomeAssistant, config, async_add_entities, discovery_info=None
 ) -> bool:
-    """Set up the Nobø Ecohub platform from configuration.yaml."""
+    """Import Nobø Ecohub configuration from YAML."""
 
-    serial = config.get(CONF_HOST)
-    ip_address = config.get(CONF_IP_ADDRESS)
-    if ip_address == "discover":
-        _LOGGER.debug("discovering and connecting to %s", serial)
-        hub = nobo(serial=serial, loop=hass.loop)
-    else:
-        _LOGGER.debug("connecting to %s:%s", ip_address, serial, loop=hass.loop)
-        hub = nobo(serial=serial, ip=ip_address, discover=False)
-    return await _setup(hass, config, async_add_entities, hub)
+    _LOGGER.warning(
+        "Loading Nobø Ecohub via platform setup is depreciated; Please remove it from your configuration"
+    )
+
+    # Only import if we haven't before.
+    config_entry = _async_find_matching_config_entry(hass)
+    if not config_entry:
+        _LOGGER.warning("Importing Nobø Ecohub from configuration.yaml")
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": SOURCE_IMPORT},
+                data=dict(config),
+            )
+        )
+        return True
+
+    return True
+
+
+@callback
+def _async_find_matching_config_entry(hass):
+    for entry in hass.config_entries.async_entries(DOMAIN):
+        if entry.source == SOURCE_IMPORT:
+            return entry
 
 
 async def async_setup_entry(
@@ -85,19 +101,10 @@ async def async_setup_entry(
 
     # Setup connection with hub
     hub = hass.data[DOMAIN][config_entry.entry_id][HUB]
-    return await _setup(hass, config_entry.options, async_add_devices, hub)
-
-
-async def _setup(
-    hass: HomeAssistant,
-    options,
-    async_add_devices,
-    hub: nobo,
-) -> bool:
     await hub.start()
 
     # Find OFF command (week profile) to use for all zones:
-    command_off_name = options.get(CONF_COMMAND_OFF)
+    command_off_name = config_entry.options.get(CONF_COMMAND_OFF)
     command_on_by_id: dict[str, str] = {}  # By default, nothing can be turned on
     if command_off_name is None or command_off_name == "":
         _LOGGER.debug(
@@ -119,7 +126,7 @@ async def _setup(
             )
 
             # Find ON command (week profile) for the different zones:
-            command_on_dict = options.get(CONF_COMMAND_ON)
+            command_on_dict = config_entry.options.get(CONF_COMMAND_ON)
             if command_on_dict is None or command_on_dict.keys().__len__ == 0:
                 _LOGGER.warning(
                     "Not possible to turn on any zone, because ON week profile was not specified"
