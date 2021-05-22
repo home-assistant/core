@@ -109,6 +109,7 @@ class BridgeMediaPlayer(BridgeDeviceEntity, MediaPlayerEntity):
             if event.name == "player-status":
                 await self.async_update_ha_state()
 
+        # TODO: Reconnect on disconnect/error (in package? / in refresh)
         asyncio.ensure_future(bridge.listen_for_events(handle_event))
 
     @property
