@@ -254,6 +254,7 @@ class Scanner:
 
     async def async_start(self):
         """Start the scanner."""
+        self.description_manager = DescriptionManager(self.hass)
         self.flow_dispatcher = FlowDispatcher(self.hass)
         for source_ip in await self._async_build_source_set():
             self._ssdp_listeners.append(
@@ -277,29 +278,22 @@ class Scanner:
     async def _async_process_entry(self, entry):
         """Process SSDP entries."""
         _LOGGER.debug("_async_process_entry: %s", entry)
+        key = (entry.st, entry.location)
+        info_req = await self.description_manager.fetch_description(entry.location)
 
-        if entry.location is not None and entry.location not in self._description_cache:
-            try:
-                result = await self._fetch_description(entry.location)
-            except Exception:
-                _LOGGER.exception("Failed to fetch ssdp data from: %s", entry.location)
-                return
-            else:
-                self._description_cache[entry.location] = result
-
-        info, domains = self._info_domains(entry)
+        info, domains = self._info_domains(entry, info_req)
         if info is None:
             return
 
         for ssdp_callback, match_dict in self._callbacks:
-            if all(item in info.items() for item in match_dict.items()):
-                try:
-                    ssdp_callback(info)
-                except Exception:
-                    _LOGGER.exception("Failed to callback info: %s", info)
-                    continue
+            if not all(item in info.items() for item in match_dict.items()):
+                continue
+            try:
+                ssdp_callback(info)
+            except Exception:
+                _LOGGER.exception("Failed to callback info: %s", info)
+                continue
 
-        key = (entry.st, entry.location)
         if key in self.seen:
             return
         self.seen.add(key)
@@ -313,7 +307,7 @@ class Scanner:
             }
             self.flow_dispatcher.create(flow)
 
-    def _info_domains(self, entry):
+    def _info_domains(self, entry, info_req):
         """Process a single entry."""
 
         info = {"st": entry.st}
@@ -321,13 +315,7 @@ class Scanner:
             if key in entry.values:
                 info[key] = entry.values[key]
 
-        if entry.location:
-            # Multiple entries usually share same location. Make sure
-            # we fetch it only once.
-            info_req = self._description_cache.get(entry.location)
-            if info_req is None:
-                return (None, [])
-
+        if info_req:
             info.update(info_req)
 
         domains = set()
@@ -340,6 +328,30 @@ class Scanner:
             return (info_from_entry(entry, info), domains)
 
         return (None, [])
+
+
+class DescriptionManager:
+    """Class to cache and manage fetching descriptions."""
+
+    def __init__(self):
+        """Init the manager."""
+        self._description_cache = {}
+
+    async def fetch_description(self, xml_location):
+        """Fetch the location or get it from the cache."""
+        if xml_location is None:
+            return
+        if xml_location not in self._description_cache:
+            try:
+                self._description_cache[xml_location] = await self._fetch_description(
+                    xml_location
+                )
+            except Exception:
+                # If it fails, cache the failure so we do not keep trying over and over
+                self._description_cache[xml_location] = None
+                _LOGGER.exception("Failed to fetch ssdp data from: %s", xml_location)
+
+        return self._description_cache[xml_location]
 
     async def _fetch_description(self, xml_location):
         """Fetch an XML description."""
