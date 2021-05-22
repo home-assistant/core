@@ -190,6 +190,8 @@ class BridgeMediaPlayer(BridgeDeviceEntity, MediaPlayerEntity):
     def media_image_url(self) -> str | None:
         """Image url of current playing media."""
         bridge: Bridge = self.coordinator.data
+        if bridge.media_status is None or bridge.media_status.attributes is None:
+            return None
         return bridge.media_cover_url
 
     @property
