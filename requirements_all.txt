@@ -2325,6 +2325,7 @@ vtjp==0.1.14
 # homeassistant.components.vultr
 vultr==0.1.2
 
+# homeassistant.components.samsungtv
 # homeassistant.components.wake_on_lan
 wakeonlan==2.0.1
 
