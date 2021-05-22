@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import timedelta
 from typing import Any
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_ICON
 from homeassistant.core import HomeAssistant
@@ -56,6 +56,11 @@ class NAMSensor(CoordinatorEntity, SensorEntity):
     def state(self) -> Any:
         """Return the state."""
         return getattr(self.coordinator.data, self.sensor_type)
+
+    @property
+    def state_class(self) -> str | None:
+        """Return the state class of this entity."""
+        return self._description[ATTR_STATE_CLASS]
 
     @property
     def unit_of_measurement(self) -> str | None:

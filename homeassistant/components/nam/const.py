@@ -4,6 +4,7 @@ from __future__ import annotations
 from datetime import timedelta
 from typing import Final
 
+from homeassistant.components.sensor import ATTR_STATE_CLASS, STATE_CLASS_MEASUREMENT
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ICON,
@@ -59,6 +60,7 @@ SENSORS: Final[dict[str, SensorDescription]] = {
         ATTR_DEVICE_CLASS: DEVICE_CLASS_HUMIDITY,
         ATTR_ICON: None,
         ATTR_ENABLED: True,
+        ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
     },
     ATTR_BME280_PRESSURE: {
         ATTR_LABEL: f"{DEFAULT_NAME} BME280 Pressure",
@@ -66,6 +68,7 @@ SENSORS: Final[dict[str, SensorDescription]] = {
         ATTR_DEVICE_CLASS: DEVICE_CLASS_PRESSURE,
         ATTR_ICON: None,
         ATTR_ENABLED: True,
+        ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
     },
     ATTR_BME280_TEMPERATURE: {
         ATTR_LABEL: f"{DEFAULT_NAME} BME280 Temperature",
@@ -73,6 +76,7 @@ SENSORS: Final[dict[str, SensorDescription]] = {
         ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
         ATTR_ICON: None,
         ATTR_ENABLED: True,
+        ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
     },
     ATTR_BMP280_PRESSURE: {
         ATTR_LABEL: f"{DEFAULT_NAME} BMP280 Pressure",
@@ -80,6 +84,7 @@ SENSORS: Final[dict[str, SensorDescription]] = {
         ATTR_DEVICE_CLASS: DEVICE_CLASS_PRESSURE,
         ATTR_ICON: None,
         ATTR_ENABLED: True,
+        ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
     },
     ATTR_BMP280_TEMPERATURE: {
         ATTR_LABEL: f"{DEFAULT_NAME} BMP280 Temperature",
@@ -87,6 +92,7 @@ SENSORS: Final[dict[str, SensorDescription]] = {
         ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
         ATTR_ICON: None,
         ATTR_ENABLED: True,
+        ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
     },
     ATTR_HECA_HUMIDITY: {
         ATTR_LABEL: f"{DEFAULT_NAME} HECA Humidity",
@@ -94,6 +100,7 @@ SENSORS: Final[dict[str, SensorDescription]] = {
         ATTR_DEVICE_CLASS: DEVICE_CLASS_HUMIDITY,
         ATTR_ICON: None,
         ATTR_ENABLED: True,
+        ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
     },
     ATTR_HECA_TEMPERATURE: {
         ATTR_LABEL: f"{DEFAULT_NAME} HECA Temperature",
@@ -101,6 +108,7 @@ SENSORS: Final[dict[str, SensorDescription]] = {
         ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
         ATTR_ICON: None,
         ATTR_ENABLED: True,
+        ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
     },
     ATTR_SHT3X_HUMIDITY: {
         ATTR_LABEL: f"{DEFAULT_NAME} SHT3X Humidity",
@@ -108,6 +116,7 @@ SENSORS: Final[dict[str, SensorDescription]] = {
         ATTR_DEVICE_CLASS: DEVICE_CLASS_HUMIDITY,
         ATTR_ICON: None,
         ATTR_ENABLED: True,
+        ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
     },
     ATTR_SHT3X_TEMPERATURE: {
         ATTR_LABEL: f"{DEFAULT_NAME} SHT3X Temperature",
@@ -115,6 +124,7 @@ SENSORS: Final[dict[str, SensorDescription]] = {
         ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
         ATTR_ICON: None,
         ATTR_ENABLED: True,
+        ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
     },
     ATTR_SPS30_P0: {
         ATTR_LABEL: f"{DEFAULT_NAME} SPS30 Particulate Matter 1.0",
@@ -122,6 +132,7 @@ SENSORS: Final[dict[str, SensorDescription]] = {
         ATTR_DEVICE_CLASS: None,
         ATTR_ICON: "mdi:blur",
         ATTR_ENABLED: True,
+        ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
     },
     ATTR_SPS30_P4: {
         ATTR_LABEL: f"{DEFAULT_NAME} SPS30 Particulate Matter 4.0",
@@ -129,6 +140,7 @@ SENSORS: Final[dict[str, SensorDescription]] = {
         ATTR_DEVICE_CLASS: None,
         ATTR_ICON: "mdi:blur",
         ATTR_ENABLED: True,
+        ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
     },
     ATTR_DHT22_HUMIDITY: {
         ATTR_LABEL: f"{DEFAULT_NAME} DHT22 Humidity",
@@ -136,6 +148,7 @@ SENSORS: Final[dict[str, SensorDescription]] = {
         ATTR_DEVICE_CLASS: DEVICE_CLASS_HUMIDITY,
         ATTR_ICON: None,
         ATTR_ENABLED: True,
+        ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
     },
     ATTR_DHT22_TEMPERATURE: {
         ATTR_LABEL: f"{DEFAULT_NAME} DHT22 Temperature",
@@ -143,6 +156,7 @@ SENSORS: Final[dict[str, SensorDescription]] = {
         ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
         ATTR_ICON: None,
         ATTR_ENABLED: True,
+        ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
     },
     ATTR_SIGNAL_STRENGTH: {
         ATTR_LABEL: f"{DEFAULT_NAME} Signal Strength",
@@ -150,6 +164,7 @@ SENSORS: Final[dict[str, SensorDescription]] = {
         ATTR_DEVICE_CLASS: DEVICE_CLASS_SIGNAL_STRENGTH,
         ATTR_ICON: None,
         ATTR_ENABLED: False,
+        ATTR_STATE_CLASS: None,
     },
     ATTR_UPTIME: {
         ATTR_LABEL: f"{DEFAULT_NAME} Uptime",
@@ -157,5 +172,6 @@ SENSORS: Final[dict[str, SensorDescription]] = {
         ATTR_DEVICE_CLASS: DEVICE_CLASS_TIMESTAMP,
         ATTR_ICON: None,
         ATTR_ENABLED: False,
+        ATTR_STATE_CLASS: None,
     },
 }
