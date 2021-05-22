@@ -154,7 +154,6 @@ class TibberSensor(SensorEntity):
             )
         self._model = None
 
-
     @property
     def device_id(self):
         """Return the ID of the physical device this sensor is part of."""
@@ -180,10 +179,21 @@ class TibberSensorElPrice(TibberSensor):
         """Initialize the sensor."""
         super().__init__(tibber_home)
         self._last_updated = None
-        self._attr_extra_state_attributes = {}
         self._spread_load_constant = randrange(5000)
 
         self._attr_available = False
+        self._attr_extra_state_attributes = {
+            "app_nickname": None,
+            "grid_company": None,
+            "estimated_annual_consumption": None,
+            "price_level": None,
+            "max_price": None,
+            "avg_price": None,
+            "min_price": None,
+            "off_peak_1": None,
+            "peak": None,
+            "off_peak_2": None,
+        }
         self._attr_icon = ICON
         self._attr_name = f"Electricity price {self._home_name}"
         self._attr_unique_id = f"{self._tibber_home.home_id}"
@@ -217,6 +227,7 @@ class TibberSensorElPrice(TibberSensor):
         self._attr_extra_state_attributes.update(attrs)
         self._attr_available = self._attr_state is not None
         self._attr_unit_of_measurement = self._tibber_home.price_unit
+        print(self._attr_extra_state_attributes)
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def _fetch_data(self):
@@ -238,6 +249,8 @@ class TibberSensorElPrice(TibberSensor):
 class TibberSensorRT(TibberSensor):
     """Representation of a Tibber sensor for real time consumption."""
 
+    _attr_should_poll = False
+
     def __init__(self, tibber_home, sensor_name, device_class, unit, initial_state):
         """Initialize the sensor."""
         super().__init__(tibber_home)
@@ -246,7 +259,6 @@ class TibberSensorRT(TibberSensor):
 
         self._attr_device_class = device_class
         self._attr_name = f"{self._sensor_name} {self._home_name}"
-        self._attr_should_poll = False
         self._attr_state = initial_state
         self._attr_unique_id = f"{self._tibber_home.home_id}_rt_{self._sensor_name}"
         self._attr_unit_of_measurement = unit
