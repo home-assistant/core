@@ -280,10 +280,7 @@ class Scanner:
         _LOGGER.debug("_async_process_entry: %s", entry)
         key = (entry.st, entry.location)
         info_req = await self.description_manager.fetch_description(entry.location)
-
         info, domains = self._info_domains(entry, info_req)
-        if info is None:
-            return
 
         for ssdp_callback, match_dict in self._callbacks:
             if not all(item in info.items() for item in match_dict.items()):
@@ -324,10 +321,7 @@ class Scanner:
                 if all(info.get(k) == v for (k, v) in matcher.items()):
                     domains.add(domain)
 
-        if domains:
-            return (info_from_entry(entry, info), domains)
-
-        return (None, [])
+        return info_from_entry(entry, info), domains
 
 
 class DescriptionManager:
