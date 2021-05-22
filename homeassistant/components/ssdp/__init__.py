@@ -67,8 +67,9 @@ def async_register_callback(hass, callback, match_dict=None):
 async def async_setup(hass, config):
     """Set up the SSDP integration."""
 
+    scanner = hass.data[DOMAIN] = Scanner(hass, await async_get_ssdp(hass))
+
     async def _async_initialize(_):
-        scanner = hass.data[DOMAIN] = Scanner(hass, await async_get_ssdp(hass))
         await scanner.async_scan(None)
         cancel_scan = async_track_time_interval(hass, scanner.async_scan, SCAN_INTERVAL)
 
