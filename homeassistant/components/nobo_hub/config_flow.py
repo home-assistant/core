@@ -48,9 +48,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if isinstance(serial, str) and len(serial) == 3:
             # For the new config we always store the entire serial number.
-            discovered_hubs = await nobo.async_discover_hubs(serial, ip_address)
-            if discovered_hubs:
-                (_, serial) = discovered_hubs[0]
+            # Look for all hubs right away so we can store the result on the flow object.
+            if self.discovered_hubs is None:
+                self.discovered_hubs = await nobo.async_discover_hubs(
+                    loop=self.hass.loop
+                )
+            for (discovered_ip, serial_prefix) in self.discovered_hubs:
+                if ip_address is None or ip_address == discovered_ip:
+                    serial = serial_prefix + serial
+                    break
 
         user_input = {
             CONF_SERIAL: serial,
@@ -92,6 +98,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                             break
                     if ip_address is None:
                         raise DeviceNotFound()
+
+                await self.async_set_unique_id(serial)
+                self._abort_if_unique_id_configured()
+
                 # Test connection
                 hub = nobo(
                     serial=serial, ip=ip_address, discover=False, loop=self.hass.loop

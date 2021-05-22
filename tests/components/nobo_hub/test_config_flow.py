@@ -246,7 +246,7 @@ async def test_import_with_ip(hass: HomeAssistant) -> None:
 
     with patch(
         "pynobo.nobo.async_discover_hubs",
-        return_value=[("1.1.1.1", "123456789012")],
+        return_value=[("1.1.1.1", "123456789")],
     ) as mock_discover, patch(
         "pynobo.nobo.async_connect_hub", return_value=True
     ) as mock_connect, patch(
@@ -295,7 +295,7 @@ async def test_import_with_discover(hass: HomeAssistant) -> None:
 
     with patch(
         "pynobo.nobo.async_discover_hubs",
-        return_value=[("1.1.1.1", "123456789012")],
+        return_value=[("1.1.1.1", "123456789")],
     ) as mock_discover, patch(
         "pynobo.nobo.async_connect_hub", return_value=True
     ) as mock_connect, patch(
@@ -344,7 +344,7 @@ async def test_import_with_serial_suffix(hass: HomeAssistant) -> None:
 
     with patch(
         "pynobo.nobo.async_discover_hubs",
-        return_value=[("1.1.1.1", "123456789012")],
+        return_value=[("1.1.1.1", "123456789")],
     ) as mock_discover, patch(
         "pynobo.nobo.async_connect_hub", return_value=True
     ) as mock_connect, patch(
