@@ -89,11 +89,6 @@ class WallboxHub:
         return self._coordinator
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the Wallbox component."""
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Wallbox from a config entry."""
     wallbox = WallboxHub(

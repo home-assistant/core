@@ -66,18 +66,6 @@ async def test_wallbox_unload_entry(hass: HomeAssistantType):
         await wallbox.async_unload_entry(hass, entry)
 
 
-async def test_wallbox_setup(hass: HomeAssistantType):
-    """Test wallbox setup."""
-    with requests_mock.Mocker() as m, raises(wallbox.InvalidAuth):
-        m.get(
-            "https://api.wall-box.com/chargers/status/12345",
-            text="data",
-            status_code=200,
-        )
-
-        assert await wallbox.async_setup(hass, entry)
-
-
 async def test_get_data(hass: HomeAssistantType):
     """Test hub class, get_data."""
 
