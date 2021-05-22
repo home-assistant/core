@@ -27,7 +27,7 @@ from homeassistant.components import network
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import callback
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.loader import async_get_ssdp
+from homeassistant.loader import async_get_ssdp, bind_hass
 
 DOMAIN = "ssdp"
 SCAN_INTERVAL = timedelta(seconds=60)
@@ -55,11 +55,20 @@ ATTR_UPNP_PRESENTATION_URL = "presentationURL"
 _LOGGER = logging.getLogger(__name__)
 
 
+@bind_hass
+def async_register_callback(hass, callback, match_dict=None):
+    """Register to receive a callback on ssdp broadcast.
+
+    Returns a callback that can be used to cancel the registration.
+    """
+    return hass.data[DOMAIN].async_register_callback(callback, match_dict)
+
+
 async def async_setup(hass, config):
     """Set up the SSDP integration."""
 
     async def _async_initialize(_):
-        scanner = Scanner(hass, await async_get_ssdp(hass))
+        scanner = hass.data[DOMAIN] = Scanner(hass, await async_get_ssdp(hass))
         await scanner.async_scan(None)
         cancel_scan = async_track_time_interval(hass, scanner.async_scan, SCAN_INTERVAL)
 
@@ -89,7 +98,8 @@ class SSDPListener:
     def async_search(self) -> None:
         """Start an SSDP search."""
         self._transport.sendto(
-            build_ssdp_search_packet(self._target_data, SSDP_MX, SSDP_ST_ALL), self._target
+            build_ssdp_search_packet(self._target_data, SSDP_MX, SSDP_ST_ALL),
+            self._target,
         )
 
     async def _async_on_data(self, request_line, headers) -> None:
@@ -102,9 +112,11 @@ class SSDPListener:
 
     async def async_start(self):
         """Start the listener."""
-        self._is_ipv4 = self._source_ip.version == 4 
+        self._is_ipv4 = self._source_ip.version == 4
         self._target_data = SSDP_TARGET_V4 if self._is_ipv4 else SSDP_TARGET_V6
-        target_ip = IPv4Address(SSDP_IP_V4) if self._is_ipv4 else IPv6Address(SSDP_IP_V6)
+        target_ip = (
+            IPv4Address(SSDP_IP_V4) if self._is_ipv4 else IPv6Address(SSDP_IP_V6)
+        )
         sock, source, self._target = get_ssdp_socket(self._source_ip, target_ip)
         sock.bind(source)
         loop = asyncio.get_running_loop()
@@ -138,12 +150,28 @@ class Scanner:
         self._integration_matchers = integration_matchers
         self._description_cache = {}
         self._ssdp_listeners = []
+        self._callbacks = []
 
     async def _async_on_ssdp_response(self, data: Mapping[str, Any]) -> None:
         """Process an ssdp response."""
         await self._async_process_entry(
             ssdp.UPNPEntry({key.lower(): item for key, item in data.items()})
         )
+
+    @callback
+    def async_register_callback(self, callback, match_dict=None):
+        """Register a callback."""
+        if match_dict is None:
+            match_dict = {}
+
+        callback_entry = (callback, match_dict)
+
+        @callback
+        def _async_remove_callback():
+            self._callbacks.remove(callback_entry)
+
+        self._callbacks.append(callback_entry)
+        return _async_remove_callback
 
     @callback
     def async_store_entry(self, entry):
@@ -198,10 +226,6 @@ class Scanner:
     async def _async_process_entry(self, entry):
         """Process SSDP entries."""
         _LOGGER.debug("_async_process_entry: %s", entry)
-        key = (entry.st, entry.location)
-        if key in self.seen:
-            return
-        self.seen.add(key)
 
         if entry.location is not None and entry.location not in self._description_cache:
             try:
@@ -214,6 +238,19 @@ class Scanner:
 
         info, domains = self._info_domains(entry)
         _LOGGER.debug("_info_domains: %s - %s", info, domains)
+
+        for ssdp_callback, match_dict in self._callbacks:
+            if all(item in info.items() for item in match_dict.items()):
+                try:
+                    ssdp_callback(info)
+                except Exception:
+                    _LOGGER.exception("Failed to callback info: %s", info)
+                    continue
+
+        key = (entry.st, entry.location)
+        if key in self.seen:
+            return
+        self.seen.add(key)
 
         for domain in domains:
             _LOGGER.debug("Discovered %s at %s", domain, entry.location)

@@ -14,6 +14,7 @@ from pysonos.exceptions import SoCoException
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components import ssdp
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -174,6 +175,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     def _async_signal_update_groups(event):
         async_dispatcher_send(hass, SONOS_GROUP_UPDATE)
 
+    @callback
+    def _async_discovered_player(info):
+        _LOGGER.critical("Sonos Discovery: %s", info)
+
     async def setup_platforms_and_discovery():
         await asyncio.gather(
             *[
@@ -190,6 +195,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             )
         )
         _LOGGER.debug("Adding discovery job")
+        entry.async_on_unload(
+            ssdp.async_register_callback(hass, _async_discovered_player)
+        )
         await hass.async_add_executor_job(_discovery)
 
     hass.async_create_task(setup_platforms_and_discovery())
