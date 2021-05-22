@@ -426,7 +426,7 @@ async def test_import(hass: HomeAssistant, fc_class_mock):
     assert mock_setup_entry.called
 
 
-async def test_optionsflow(hass: HomeAssistant, fc_class_mock):
+async def test_options_flow(hass: HomeAssistant, fc_class_mock):
     """Test options flow."""
 
     mock_config = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
