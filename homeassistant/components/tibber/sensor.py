@@ -154,7 +154,6 @@ class TibberSensor(SensorEntity):
             )
         self._model = None
 
-        self._attr_state = None
 
     @property
     def device_id(self):
