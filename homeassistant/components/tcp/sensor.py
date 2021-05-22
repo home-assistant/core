@@ -5,7 +5,7 @@ import logging
 import select
 import socket
 import ssl
-from typing import Final
+from typing import Any, Final
 
 import voluptuous as vol
 
@@ -29,7 +29,7 @@ from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.template import Template
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_BUFFER_SIZE,
@@ -65,7 +65,7 @@ def setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
     add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    discovery_info: dict[str, Any] | None = None,
 ) -> None:
     """Set up the TCP Sensor."""
     add_entities([TcpSensor(hass, config)])
