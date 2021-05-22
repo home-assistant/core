@@ -57,6 +57,8 @@ class DataUpdateCoordinatorMotionBlinds(DataUpdateCoordinator):
         self._gateway = coordinator_info[KEY_GATEWAY]
         self._wait_for_push = coordinator_info[CONF_WAIT_FOR_PUSH]
 
+        return None
+
     def update_gateway(self):
         """Call all updates using one async_add_executor_job."""
         data = {}
