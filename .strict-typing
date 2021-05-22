@@ -18,6 +18,7 @@ homeassistant.components.bond.*
 homeassistant.components.brother.*
 homeassistant.components.calendar.*
 homeassistant.components.camera.*
+homeassistant.components.canary.*
 homeassistant.components.cover.*
 homeassistant.components.device_automation.*
 homeassistant.components.elgato.*
