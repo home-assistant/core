@@ -11,8 +11,13 @@ from systembridge.objects.events import Event
 from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_APP,
+    MEDIA_TYPE_EPISODE,
+    MEDIA_TYPE_MOVIE,
     MEDIA_TYPE_MUSIC,
+    MEDIA_TYPE_TRACK,
+    MEDIA_TYPE_TVSHOW,
     MEDIA_TYPE_VIDEO,
+    SUPPORT_BROWSE_MEDIA,
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
     SUPPORT_PLAY_MEDIA,
@@ -116,7 +121,8 @@ class BridgeMediaPlayer(BridgeDeviceEntity, MediaPlayerEntity):
     def supported_features(self) -> int:
         """Flag media player features that are supported."""
         return (
-            SUPPORT_PAUSE
+            SUPPORT_BROWSE_MEDIA
+            | SUPPORT_PAUSE
             | SUPPORT_PLAY
             | SUPPORT_PLAY_MEDIA
             | SUPPORT_SEEK
@@ -253,7 +259,35 @@ class BridgeMediaPlayer(BridgeDeviceEntity, MediaPlayerEntity):
         bridge: Bridge = self.coordinator.data
         await bridge.async_update_media("seek", {"value": position})
 
-    async def async_play_media(self, media_type, media_id, **kwargs):
+    # TODO: Handle browse media
+    # async def async_browse_media(
+    #     self,
+    #     media_content_type: str | None = None,
+    #     media_content_id: str | None = None,
+    # ) -> BrowseMedia:
+    #     """Return a BrowseMedia instance."""
+    #     if media_content_id is None:
+    #         raise
+    #     return await media_source.async_browse_media(self.hass, media_content_id)
+
+    async def async_play_media(self, media_type: str, media_id: str, **kwargs):
         """Play a piece of media."""
-        # TODO: Implement
-        _LOGGER.warn(media_type, media_id, **kwargs)
+        # TODO: Handle browse media urls
+
+        bridge: Bridge = self.coordinator.data
+        if media_type in [MEDIA_TYPE_MUSIC, MEDIA_TYPE_TRACK]:
+            if "/tts" in media_id:
+                await bridge.async_create_media_player(
+                    {"type": "audio", "url": media_id, "hidden": True}
+                )
+            else:
+                await bridge.async_create_media_player(
+                    {"type": "audio", "url": media_id}
+                )
+        elif media_type in [
+            MEDIA_TYPE_EPISODE,
+            MEDIA_TYPE_MOVIE,
+            MEDIA_TYPE_TVSHOW,
+            MEDIA_TYPE_VIDEO,
+        ]:
+            await bridge.async_create_media_player({"type": "video", "url": media_id})
