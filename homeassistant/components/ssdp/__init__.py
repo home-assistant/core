@@ -160,12 +160,12 @@ class Scanner:
         )
 
     @callback
-    def async_register_callback(self, callback, match_dict=None):
+    def async_register_callback(self, ssdp_callback, match_dict=None):
         """Register a callback."""
         if match_dict is None:
             match_dict = {}
 
-        callback_entry = (callback, match_dict)
+        callback_entry = (ssdp_callback, match_dict)
 
         @callback
         def _async_remove_callback():
@@ -240,9 +240,9 @@ class Scanner:
         info, domains = self._info_domains(entry)
         if info is None:
             return
-        _LOGGER.debug("_info_domains: %s - %s", info, domains)
 
         for ssdp_callback, match_dict in self._callbacks:
+            _LOGGER.debug("ssdp_callback: %s - %s", ssdp_callback, match_dict)
             if all(item in info.items() for item in match_dict.items()):
                 try:
                     ssdp_callback(info)
