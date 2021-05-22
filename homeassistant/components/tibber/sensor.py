@@ -227,7 +227,6 @@ class TibberSensorElPrice(TibberSensor):
         self._attr_extra_state_attributes.update(attrs)
         self._attr_available = self._attr_state is not None
         self._attr_unit_of_measurement = self._tibber_home.price_unit
-        print(self._attr_extra_state_attributes)
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def _fetch_data(self):
