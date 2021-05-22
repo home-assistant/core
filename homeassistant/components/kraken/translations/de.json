@@ -1,0 +1,11 @@
+{
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "tracked_asset_pairs": "Verfolgte Asset-Paare"
+                }
+            }
+        }
+    }
+}
