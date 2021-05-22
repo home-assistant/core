@@ -48,7 +48,7 @@ class SmartDevices:
         """Get the switches."""
         return self._switches
 
-    def has_device_with_host(self, host: str):
+    def has_device_with_host(self, host: str) -> bool:
         """Check if a devices exists with a specific host."""
         for device in self.lights + self.switches:
             if device.host == host:
