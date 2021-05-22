@@ -1,7 +1,7 @@
 """Test Wallbox Switch component."""
 
 import json
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 import requests_mock
 
 from homeassistant.components.wallbox import sensor, WallboxHub

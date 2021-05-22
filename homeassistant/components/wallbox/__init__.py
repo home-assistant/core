@@ -25,31 +25,35 @@ class WallboxHub:
         self._station = station
         self._username = username
         self._password = password
+        self._wallbox = Wallbox(self._username, self._password)
 
-    async def async_authenticate(self, hass) -> bool:
+    def _authenticate(self):
         """Authenticate using Wallbox API."""
         try:
-            wallbox = Wallbox(self._username, self._password)
-            await hass.async_add_executor_job(wallbox.authenticate)
+            self._wallbox.authenticate()
             return True
         except requests.exceptions.HTTPError as wallbox_connection_error:
             if wallbox_connection_error.response.status_code == 403:
                 raise InvalidAuth from wallbox_connection_error
             raise ConnectionError from wallbox_connection_error
 
-    async def async_get_data(self, hass) -> bool:
+    def _get_data(self):
         """Get new sensor data for Wallbox component."""
         try:
-            wallbox = Wallbox(self._username, self._password)
-            await hass.async_add_executor_job(wallbox.authenticate)
-            data = await hass.async_add_executor_job(
-                wallbox.getChargerStatus, self._station
-            )
+            self._authenticate()
+            data = self._wallbox.getChargerStatus(self._station)
             return data
         except requests.exceptions.HTTPError as wallbox_connection_error:
-            if wallbox_connection_error.response.status_code == 403:
-                raise InvalidAuth from wallbox_connection_error
             raise ConnectionError from wallbox_connection_error
+
+    async def async_authenticate(self, hass) -> bool:
+        """Authenticate using Wallbox API."""
+        return await hass.async_add_executor_job(self._authenticate)
+
+    async def async_get_data(self, hass) -> bool:
+        """Get new sensor data for Wallbox component."""
+        data = await hass.async_add_executor_job(self._get_data)
+        return data
 
 
 async def async_setup(hass: HomeAssistant, config: dict):

@@ -1,7 +1,6 @@
 """Home Assistant component for accessing the Wallbox Portal API. The sensor component creates multiple sensors regarding wallbox performance."""
 
 from datetime import timedelta
-from homeassistant.const import CONF_UNIT_OF_MEASUREMENT
 import logging
 
 from homeassistant.helpers.entity import Entity

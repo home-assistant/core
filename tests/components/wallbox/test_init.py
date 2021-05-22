@@ -101,6 +101,19 @@ async def test_hub_class(hass: HomeAssistantType):
         assert await hub.async_get_data(hass)
 
     with requests_mock.Mocker() as m, raises(ConnectionError):
+        m.get(
+            "https://api.wall-box.com/auth/token/user",
+            text='{"jwt":"fakekeyhere","user_id":12345,"ttl":145656758,"error":false,"status":200}',
+            status_code=200,
+        )
+        m.get(
+            "https://api.wall-box.com/chargers/status/('12345',)",
+            text="data",
+            status_code=404,
+        )
+        assert await hub.async_get_data(hass)
+
+    with requests_mock.Mocker() as m, raises(ConnectionError):
         m.get("https://api.wall-box.com/auth/token/user", text="data", status_code=404)
         m.get(
             "https://api.wall-box.com/chargers/status/test",
