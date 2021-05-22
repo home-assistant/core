@@ -66,7 +66,6 @@ _LOGGER = logging.getLogger(__name__)
 
 SERVICE_PURGE = "purge"
 SERVICE_PURGE_ENTITIES = "purge_entities"
-SERVICE_STATISTICS = "statistics"
 SERVICE_ENABLE = "enable"
 SERVICE_DISABLE = "disable"
 
