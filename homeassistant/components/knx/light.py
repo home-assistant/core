@@ -395,7 +395,25 @@ class KNXLight(KnxEntity, LightEntity):
                 await self._device.set_tunable_white(relative_ct)
 
         if brightness is not None:
-            await self._device.set_brightness(brightness)
+            # brightness is > 1; 0 brightness will call async_turn_off()
+            if self._device.brightness.writable:
+                await self._device.set_brightness(brightness)
+                return
+            # brightness without color in kwargs; set via color - default to white
+            if self.color_mode == COLOR_MODE_RGBW:
+                rgbw = self.rgbw_color
+                if not rgbw or not any(rgbw):
+                    await self._device.set_color((0, 0, 0), brightness)
+                    return
+                await set_color(rgbw[:3], rgbw[3], brightness)
+                return
+            if self.color_mode == COLOR_MODE_RGB:
+                rgb = self.rgb_color
+                if not rgb or not any(rgb):
+                    await self._device.set_color((brightness, brightness, brightness))
+                    return
+                await set_color(rgb, None, brightness)
+                return
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
