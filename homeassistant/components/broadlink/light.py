@@ -63,6 +63,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_HOSTS): vol.All(cv.ensure_list, [cv.string])}
 )
 
+
 def color_rgb_to_int(red: int, green: int, blue: int) -> int:
     """Return a RGB color as an integer."""
     return red * 256 * 256 + green * 256 + blue
@@ -205,11 +206,13 @@ class BroadlinkLight(LightEntity):
         """Call when the light is added to hass."""
         if self._state is None:
             data = await self._device.async_request(self._device.api.get_state)
-            self._state = data['pwr']
-            self._brightness = round(data['brightness']*2.55)
-            self._hs_color = [data['hue'], data['saturation']]
-            self._colormode = COLOR_MODE_COLOR_TEMP if data['bulb_colormode'] == 1 else COLOR_MODE_HS
-            self._colortemp = (data['colortemp']-2700)/100+153
+            self._state = data["pwr"]
+            self._brightness = round(data["brightness"] * 2.55)
+            self._hs_color = [data["hue"], data["saturation"]]
+            self._colormode = (
+                COLOR_MODE_COLOR_TEMP if data["bulb_colormode"] == 1 else COLOR_MODE_HS
+            )
+            self._colortemp = (data["colortemp"] - 2700) / 100 + 153
         self.async_on_remove(self._coordinator.async_add_listener(self.update_data))
 
     async def async_update(self):
@@ -227,14 +230,14 @@ class BroadlinkLight(LightEntity):
             colormode = COLOR_MODE_HS
         else:
             colormode = self._colormode
-        
+
         data = {
-            "hue": hs_color[0], 
-            "saturation": hs_color[1], 
+            "hue": hs_color[0],
+            "saturation": hs_color[1],
             "bulb_colormode": 1 if colormode == COLOR_MODE_COLOR_TEMP else 0,
-            "colortemp": (colortemp-153)*100+2700,
-            "brightness": round(brightness/2.55),
-            "pwr": 1
+            "colortemp": (colortemp - 153) * 100 + 2700,
+            "brightness": round(brightness / 2.55),
+            "pwr": 1,
         }
 
         if await self._async_send_packet(data):
@@ -247,7 +250,7 @@ class BroadlinkLight(LightEntity):
 
     async def async_turn_off(self, **kwargs):
         """Turn off the light."""
-        if await self._async_send_packet({"pwr":0}):
+        if await self._async_send_packet({"pwr": 0}):
             self._state = False
             self.async_write_ha_state()
 
@@ -285,4 +288,3 @@ class BroadlinkLB1Light(BroadlinkLight):
             _LOGGER.error("Failed to send packet: %s", err)
             return False
         return True
-
