@@ -1,66 +1,26 @@
 """Home Assistant component for accessing the Wallbox Portal API. The sensor component creates multiple sensors regarding wallbox performance."""
 
-from datetime import timedelta
-import logging
-
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     CONF_CONNECTIONS,
-    DOMAIN,
-    CONF_SENSOR_TYPES,
-    CONF_ROUND,
     CONF_ICON,
     CONF_NAME,
+    CONF_SENSOR_TYPES,
     CONF_UNIT_OF_MEASUREMENT,
+    DOMAIN,
 )
 
 CONF_STATION = "station"
 UPDATE_INTERVAL = 30
 
 
-_LOGGER = logging.getLogger(__name__)
-
-
-async def wallbox_updater(wallbox, hass):
-    """Get new sensor data for Wallbox component."""
-    data = await wallbox.async_get_data(hass)
-
-    filtered_data = {k: data[k] for k in CONF_SENSOR_TYPES if k in data}
-
-    for key, value in filtered_data.items():
-        sensor_round = CONF_SENSOR_TYPES[key][CONF_ROUND]
-        if sensor_round:
-            try:
-                filtered_data[key] = round(value, sensor_round)
-            except TypeError:
-                _LOGGER.debug("Cannot format %s", key)
-
-    return filtered_data
-
-
 async def async_setup_entry(hass, config, async_add_entities):
     """Create wallbox sensor entities in HASS."""
     wallbox = hass.data[DOMAIN][CONF_CONNECTIONS][config.entry_id]
 
-    async def async_update_data():
-        return await wallbox_updater(wallbox, hass)
-
-    coordinator = DataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        # Name of the data. For logging purposes.
-        name="wallbox",
-        update_method=async_update_data,
-        # Polling interval. Will only be polled if there are subscribers.
-        update_interval=timedelta(seconds=UPDATE_INTERVAL),
-    )
-
-    await coordinator.async_config_entry_first_refresh()
+    coordinator = wallbox.coordinator
 
     async_add_entities(
         WallboxSensor(coordinator, idx, ent, config)

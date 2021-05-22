@@ -1,4 +1,5 @@
 """Test Wallbox Init Component."""
+import json
 import pytest
 import requests_mock
 from voluptuous.schema_builder import raises
@@ -20,6 +21,14 @@ entry = MockConfigEntry(
     entry_id="testEntry",
 )
 
+test_response = json.loads(
+    '{"charging_power": 0,"max_available_power": 25,"charging_speed": 0,"added_range": 372,"added_energy": 44.697}'
+)
+
+test_response_rounding_error = json.loads(
+    '{"charging_power": "XX","max_available_power": "xx","charging_speed": 0,"added_range": "xx","added_energy": "XX"}'
+)
+
 
 async def test_wallbox_setup_entry(hass: HomeAssistantType):
     """Test Wallbox Setup."""
@@ -27,6 +36,11 @@ async def test_wallbox_setup_entry(hass: HomeAssistantType):
         m.get(
             "https://api.wall-box.com/auth/token/user",
             text='{"jwt":"fakekeyhere","user_id":12345,"ttl":145656758,"error":false,"status":200}',
+            status_code=200,
+        )
+        m.get(
+            "https://api.wall-box.com/chargers/status/12345",
+            text='{"Temperature": 100, "Location": "Toronto", "Datetime": "2020-07-23", "Units": "Celsius"}',
             status_code=200,
         )
         assert await wallbox.async_setup_entry(hass, entry)
@@ -54,18 +68,24 @@ async def test_wallbox_unload_entry(hass: HomeAssistantType):
 
 async def test_wallbox_setup(hass: HomeAssistantType):
     """Test wallbox setup."""
+    with requests_mock.Mocker() as m, raises(wallbox.InvalidAuth):
+        m.get(
+            "https://api.wall-box.com/chargers/status/12345",
+            text="data",
+            status_code=200,
+        )
 
-    assert await wallbox.async_setup(hass, entry)
+        assert await wallbox.async_setup(hass, entry)
 
 
-async def test_hub_class(hass: HomeAssistantType):
-    """Test hub class."""
+async def test_get_data(hass: HomeAssistantType):
+    """Test hub class, get_data."""
 
     station = ("12345",)
     username = ("test-username",)
     password = "test-password"
 
-    hub = wallbox.WallboxHub(station, username, password)
+    hub = wallbox.WallboxHub(station, username, password, hass)
 
     with requests_mock.Mocker() as m:
         m.get(
@@ -75,30 +95,72 @@ async def test_hub_class(hass: HomeAssistantType):
         )
         m.get(
             "https://api.wall-box.com/chargers/status/('12345',)",
-            text='{"Temperature": 100, "Location": "Toronto", "Datetime": "2020-07-23", "Units": "Celsius"}',
+            json=test_response,
             status_code=200,
         )
-        assert await hub.async_authenticate(hass)
-        assert await hub.async_get_data(hass)
+        assert await hub.async_get_data()
+
+
+async def test_get_data_rounding_error(hass: HomeAssistantType):
+    """Test hub class, get_data with rouding error."""
+
+    station = ("12345",)
+    username = ("test-username",)
+    password = "test-password"
+
+    hub = wallbox.WallboxHub(station, username, password, hass)
+
+    with requests_mock.Mocker() as m:
+        m.get(
+            "https://api.wall-box.com/auth/token/user",
+            text='{"jwt":"fakekeyhere","user_id":12345,"ttl":145656758,"error":false,"status":200}',
+            status_code=200,
+        )
+        m.get(
+            "https://api.wall-box.com/chargers/status/('12345',)",
+            json=test_response_rounding_error,
+            status_code=200,
+        )
+        assert await hub.async_get_data()
+
+
+async def test_authentication_exception(hass: HomeAssistantType):
+    """Test hub class, authentication raises exception."""
+
+    station = ("12345",)
+    username = ("test-username",)
+    password = "test-password"
+
+    hub = wallbox.WallboxHub(station, username, password, hass)
 
     with requests_mock.Mocker() as m, raises(wallbox.InvalidAuth):
         m.get("https://api.wall-box.com/auth/token/user", text="data", status_code=403)
 
-        assert await hub.async_authenticate(hass)
+        assert await hub.async_authenticate()
 
     with requests_mock.Mocker() as m, raises(ConnectionError):
         m.get("https://api.wall-box.com/auth/token/user", text="data", status_code=404)
 
-        assert await hub.async_authenticate(hass)
+        assert await hub.async_authenticate()
 
     with requests_mock.Mocker() as m, raises(wallbox.InvalidAuth):
         m.get("https://api.wall-box.com/auth/token/user", text="data", status_code=403)
         m.get(
             "https://api.wall-box.com/chargers/status/test",
-            text="data",
+            json=test_response,
             status_code=403,
         )
-        assert await hub.async_get_data(hass)
+        assert await hub.async_get_data()
+
+
+async def test_get_data_exception(hass: HomeAssistantType):
+    """Test hub class, authentication raises exception."""
+
+    station = ("12345",)
+    username = ("test-username",)
+    password = "test-password"
+
+    hub = wallbox.WallboxHub(station, username, password, hass)
 
     with requests_mock.Mocker() as m, raises(ConnectionError):
         m.get(
@@ -111,13 +173,4 @@ async def test_hub_class(hass: HomeAssistantType):
             text="data",
             status_code=404,
         )
-        assert await hub.async_get_data(hass)
-
-    with requests_mock.Mocker() as m, raises(ConnectionError):
-        m.get("https://api.wall-box.com/auth/token/user", text="data", status_code=404)
-        m.get(
-            "https://api.wall-box.com/chargers/status/test",
-            text="data",
-            status_code=404,
-        )
-        assert await hub.async_get_data(hass)
+        assert await hub.async_get_data()
