@@ -238,6 +238,8 @@ class Scanner:
                 self._description_cache[entry.location] = result
 
         info, domains = self._info_domains(entry)
+        if info is None:
+            return
         _LOGGER.debug("_info_domains: %s - %s", info, domains)
 
         for ssdp_callback, match_dict in self._callbacks:
