@@ -154,7 +154,7 @@ class BinarySensorEntity(Entity):
     @property
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
-        return None
+        return self._attr_is_on
 
     @property
     def state(self) -> StateType:
