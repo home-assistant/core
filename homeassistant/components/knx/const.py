@@ -20,6 +20,9 @@ DOMAIN = "knx"
 # Address is used for configuration and services by the same functions so the key has to match
 KNX_ADDRESS = "address"
 
+CONF_KNX_ROUTING = "routing"
+CONF_KNX_TUNNELING = "tunneling"
+CONF_KNX_INDIVIDUAL_ADDRESS = "individual_address"
 CONF_INVERT = "invert"
 CONF_KNX_EXPOSE = "expose"
 CONF_STATE_ADDRESS = "state_address"

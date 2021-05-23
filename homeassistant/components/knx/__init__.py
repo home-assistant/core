@@ -9,12 +9,7 @@ from xknx import XKNX
 from xknx.core.telegram_queue import TelegramQueue
 from xknx.dpt import DPTArray, DPTBase, DPTBinary
 from xknx.exceptions import XKNXException
-from xknx.io import (
-    DEFAULT_MCAST_GRP,
-    DEFAULT_MCAST_PORT,
-    ConnectionConfig,
-    ConnectionType,
-)
+from xknx.io import ConnectionConfig, ConnectionType
 from xknx.telegram import AddressFilter, Telegram
 from xknx.telegram.address import parse_device_group_address
 from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWrite
@@ -34,7 +29,15 @@ from homeassistant.helpers.reload import async_integration_yaml_config
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_KNX_EXPOSE, DOMAIN, KNX_ADDRESS, SupportedPlatforms
+from .const import (
+    CONF_KNX_EXPOSE,
+    CONF_KNX_INDIVIDUAL_ADDRESS,
+    CONF_KNX_ROUTING,
+    CONF_KNX_TUNNELING,
+    DOMAIN,
+    KNX_ADDRESS,
+    SupportedPlatforms,
+)
 from .expose import KNXExposeSensor, KNXExposeTime, create_knx_exposure
 from .factory import create_knx_device
 from .schema import (
@@ -51,21 +54,14 @@ from .schema import (
     SwitchSchema,
     WeatherSchema,
     ga_validator,
-    ia_validator,
     sensor_type_validator,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_KNX_ROUTING = "routing"
-CONF_KNX_TUNNELING = "tunneling"
+
 CONF_KNX_FIRE_EVENT = "fire_event"
 CONF_KNX_EVENT_FILTER = "event_filter"
-CONF_KNX_INDIVIDUAL_ADDRESS = "individual_address"
-CONF_KNX_MCAST_GRP = "multicast_group"
-CONF_KNX_MCAST_PORT = "multicast_port"
-CONF_KNX_STATE_UPDATER = "state_updater"
-CONF_KNX_RATE_LIMIT = "rate_limit"
 
 SERVICE_KNX_SEND = "send"
 SERVICE_KNX_ATTR_PAYLOAD = "payload"
@@ -85,28 +81,10 @@ CONFIG_SCHEMA = vol.Schema(
             cv.deprecated("fire_event_filter", replacement_key=CONF_KNX_EVENT_FILTER),
             vol.Schema(
                 {
-                    vol.Exclusive(
-                        CONF_KNX_ROUTING, "connection_type"
-                    ): ConnectionSchema.ROUTING_SCHEMA,
-                    vol.Exclusive(
-                        CONF_KNX_TUNNELING, "connection_type"
-                    ): ConnectionSchema.TUNNELING_SCHEMA,
+                    **ConnectionSchema.SCHEMA,
                     vol.Optional(CONF_KNX_FIRE_EVENT): cv.boolean,
                     vol.Optional(CONF_KNX_EVENT_FILTER, default=[]): vol.All(
                         cv.ensure_list, [cv.string]
-                    ),
-                    vol.Optional(
-                        CONF_KNX_INDIVIDUAL_ADDRESS, default=XKNX.DEFAULT_ADDRESS
-                    ): ia_validator,
-                    vol.Optional(
-                        CONF_KNX_MCAST_GRP, default=DEFAULT_MCAST_GRP
-                    ): cv.string,
-                    vol.Optional(
-                        CONF_KNX_MCAST_PORT, default=DEFAULT_MCAST_PORT
-                    ): cv.port,
-                    vol.Optional(CONF_KNX_STATE_UPDATER, default=True): cv.boolean,
-                    vol.Optional(CONF_KNX_RATE_LIMIT, default=20): vol.All(
-                        vol.Coerce(int), vol.Range(min=1, max=100)
                     ),
                     **ExposeSchema.platform_node(),
                     **BinarySensorSchema.platform_node(),
@@ -297,11 +275,11 @@ class KNXModule:
         """Initialize XKNX object."""
         self.xknx = XKNX(
             own_address=self.config[DOMAIN][CONF_KNX_INDIVIDUAL_ADDRESS],
-            rate_limit=self.config[DOMAIN][CONF_KNX_RATE_LIMIT],
-            multicast_group=self.config[DOMAIN][CONF_KNX_MCAST_GRP],
-            multicast_port=self.config[DOMAIN][CONF_KNX_MCAST_PORT],
+            rate_limit=self.config[DOMAIN][ConnectionSchema.CONF_KNX_RATE_LIMIT],
+            multicast_group=self.config[DOMAIN][ConnectionSchema.CONF_KNX_MCAST_GRP],
+            multicast_port=self.config[DOMAIN][ConnectionSchema.CONF_KNX_MCAST_PORT],
             connection_config=self.connection_config(),
-            state_updater=self.config[DOMAIN][CONF_KNX_STATE_UPDATER],
+            state_updater=self.config[DOMAIN][ConnectionSchema.CONF_KNX_STATE_UPDATER],
         )
 
     async def start(self) -> None:

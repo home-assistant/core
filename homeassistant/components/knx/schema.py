@@ -5,10 +5,11 @@ from abc import ABC
 from typing import Any, ClassVar
 
 import voluptuous as vol
+from xknx import XKNX
 from xknx.devices.climate import SetpointShiftMode
 from xknx.dpt import DPTBase
 from xknx.exceptions import CouldNotParseAddress
-from xknx.io import DEFAULT_MCAST_PORT
+from xknx.io import DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT
 from xknx.telegram.address import IndividualAddress, parse_device_group_address
 
 from homeassistant.components.binary_sensor import (
@@ -28,6 +29,9 @@ import homeassistant.helpers.config_validation as cv
 from .const import (
     CONF_INVERT,
     CONF_KNX_EXPOSE,
+    CONF_KNX_INDIVIDUAL_ADDRESS,
+    CONF_KNX_ROUTING,
+    CONF_KNX_TUNNELING,
     CONF_RESET_AFTER,
     CONF_STATE_ADDRESS,
     CONF_SYNC_STATE,
@@ -89,7 +93,11 @@ class ConnectionSchema:
     """Voluptuous schema for KNX connection."""
 
     CONF_KNX_LOCAL_IP = "local_ip"
+    CONF_KNX_MCAST_GRP = "multicast_group"
+    CONF_KNX_MCAST_PORT = "multicast_port"
+    CONF_KNX_RATE_LIMIT = "rate_limit"
     CONF_KNX_ROUTE_BACK = "route_back"
+    CONF_KNX_STATE_UPDATER = "state_updater"
 
     TUNNELING_SCHEMA = vol.Schema(
         {
@@ -101,6 +109,20 @@ class ConnectionSchema:
     )
 
     ROUTING_SCHEMA = vol.Maybe(vol.Schema({vol.Optional(CONF_KNX_LOCAL_IP): cv.string}))
+
+    SCHEMA = {
+        vol.Exclusive(CONF_KNX_ROUTING, "connection_type"): ROUTING_SCHEMA,
+        vol.Exclusive(CONF_KNX_TUNNELING, "connection_type"): TUNNELING_SCHEMA,
+        vol.Optional(
+            CONF_KNX_INDIVIDUAL_ADDRESS, default=XKNX.DEFAULT_ADDRESS
+        ): ia_validator,
+        vol.Optional(CONF_KNX_MCAST_GRP, default=DEFAULT_MCAST_GRP): cv.string,
+        vol.Optional(CONF_KNX_MCAST_PORT, default=DEFAULT_MCAST_PORT): cv.port,
+        vol.Optional(CONF_KNX_STATE_UPDATER, default=True): cv.boolean,
+        vol.Optional(CONF_KNX_RATE_LIMIT, default=20): vol.All(
+            vol.Coerce(int), vol.Range(min=1, max=100)
+        ),
+    }
 
 
 #############
