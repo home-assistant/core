@@ -866,7 +866,7 @@ pylitejet==0.3.0
 pylitterbot==2021.3.1
 
 # homeassistant.components.lutron_caseta
-pylutron-caseta==0.9.0
+pylutron-caseta==0.10.0
 
 # homeassistant.components.mailgun
 pymailgunner==1.4
