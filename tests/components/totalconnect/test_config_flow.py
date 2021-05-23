@@ -2,7 +2,7 @@
 from unittest.mock import patch
 
 from homeassistant import data_entry_flow
-from homeassistant.components.totalconnect.const import DOMAIN
+from homeassistant.components.totalconnect.const import CONF_USERCODES, DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
 from homeassistant.const import CONF_PASSWORD
 
@@ -67,7 +67,7 @@ async def test_user_show_locations(hass):
         # user enters an invalid usercode
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input={"usercode": "bad"},
+            user_input={CONF_USERCODES: "bad"},
         )
         assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result2["step_id"] == "locations"
@@ -77,7 +77,7 @@ async def test_user_show_locations(hass):
         # user enters a valid usercode
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
-            user_input={"usercode": "7890"},
+            user_input={CONF_USERCODES: "7890"},
         )
         assert result3["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
         # client should have sent another request to validate usercode
