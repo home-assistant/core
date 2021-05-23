@@ -63,9 +63,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = "cannot_connect"
         except AlreadyConfigured:
             return self.async_abort(reason="already_configured")
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Unexpected exception")
-            errors["base"] = "unknown"
         else:
             return self.async_create_entry(
                 title=user_input[ACCOUNT_ID], data=user_input
