@@ -55,7 +55,6 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
             result["flow_id"],
             TEST_DATA,
         )
-    print(result2)
     assert result2["type"] == "form"
     assert result2["errors"] == {"base": "cannot_connect"}
 

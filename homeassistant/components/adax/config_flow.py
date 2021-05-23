@@ -35,7 +35,6 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
     token = await adax.get_adax_token(
         async_get_clientsession(hass), account_id, password
     )
-    print("----", token)
     if token is None:
         _LOGGER.info("Adax: Failed to login to retrieve token")
         raise CannotConnect
