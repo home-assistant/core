@@ -2,12 +2,14 @@
 import logging
 
 from smarttub import SpaReminder
+import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_CONNECTIVITY,
     DEVICE_CLASS_PROBLEM,
     BinarySensorEntity,
 )
+from homeassistant.helpers import entity_platform
 
 from .const import ATTR_REMINDERS, DOMAIN, SMARTTUB_CONTROLLER
 from .entity import SmartTubEntity, SmartTubSensorBase
@@ -16,6 +18,12 @@ _LOGGER = logging.getLogger(__name__)
 
 # whether the reminder has been snoozed (bool)
 ATTR_REMINDER_SNOOZED = "snoozed"
+
+# how many days to snooze the reminder for
+ATTR_SNOOZE_DAYS = "days"
+SNOOZE_REMINDER_SCHEMA = {
+    vol.Required(ATTR_SNOOZE_DAYS): vol.All(vol.Coerce(int), vol.Range(min=1, max=120))
+}
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -32,6 +40,14 @@ async def async_setup_entry(hass, entry, async_add_entities):
         )
 
     async_add_entities(entities)
+
+    platform = entity_platform.current_platform.get()
+
+    platform.async_register_entity_service(
+        "snooze_reminder",
+        SNOOZE_REMINDER_SCHEMA,
+        "async_snooze",
+    )
 
 
 class SmartTubOnline(SmartTubSensorBase, BinarySensorEntity):
@@ -98,3 +114,9 @@ class SmartTubReminder(SmartTubEntity, BinarySensorEntity):
     def device_class(self) -> str:
         """Return the device class for this entity."""
         return DEVICE_CLASS_PROBLEM
+
+    async def async_snooze(self, **kwargs):
+        """Snooze this reminder for the specified number of days."""
+        days = kwargs[ATTR_SNOOZE_DAYS]
+        await self.reminder.snooze(days)
+        await self.coordinator.async_request_refresh()
