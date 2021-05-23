@@ -158,9 +158,14 @@ class ProcessDataUpdateCoordinator(PlenticoreUpdateCoordinator):
         if not self._fetch or client is None:
             return {}
 
-        _LOGGER.debug("Fetching %s for %s", self.name, self._fetch)
+        # process id's might be started multiple times -> make it unique
+        unique_fetch = {
+            module_id: list(set(self._fetch[module_id])) for module_id in self._fetch
+        }
 
-        fetched_data = await client.get_process_data_values(self._fetch)
+        _LOGGER.debug("Fetching %s for %s", self.name, unique_fetch)
+
+        fetched_data = await client.get_process_data_values(unique_fetch)
         return {
             module_id: {
                 process_data.id: process_data.value
