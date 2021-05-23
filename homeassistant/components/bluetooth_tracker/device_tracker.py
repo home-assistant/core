@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import asyncio
-from asyncio.locks import Lock
 from datetime import datetime, timedelta
 import logging
 from typing import Any, Awaitable, Callable, Final
@@ -125,14 +124,14 @@ def lookup_name(mac: str) -> str | None:
 async def async_setup_scanner(
     hass: HomeAssistant,
     config: ConfigType,
-    async_see: Callable[..., None],
+    async_see: Callable[..., Awaitable[None]],
     discovery_info: dict[str, Any] | None = None,
 ) -> bool:
     """Set up the Bluetooth Scanner."""
     device_id: int = config[CONF_DEVICE_ID]
     interval: timedelta = config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL)
     request_rssi: bool = config.get(CONF_REQUEST_RSSI, False)
-    update_bluetooth_lock: Lock = asyncio.Lock()
+    update_bluetooth_lock = asyncio.Lock()
 
     # If track new devices is true discover new devices on startup.
     track_new: bool = config.get(CONF_TRACK_NEW, DEFAULT_TRACK_NEW)
