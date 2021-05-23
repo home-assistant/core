@@ -152,9 +152,12 @@ async def async_setup_scanner(
         try:
             if track_new:
                 devices = await hass.async_add_executor_job(discover_devices, device_id)
-                for mac, device_name in devices:
-                    if mac not in devices_to_track and mac not in devices_to_not_track:
-                        devices_to_track.add(mac)
+                for device in devices:
+                    if (
+                        device[1] not in devices_to_track
+                        and device[1] not in devices_to_not_track
+                    ):
+                        devices_to_track.add(device[1])
 
             for mac in devices_to_track:
                 device_lookuped_name: str | None = await hass.async_add_executor_job(
