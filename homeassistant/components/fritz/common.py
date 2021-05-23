@@ -210,7 +210,7 @@ class FritzDevice:
 
     def update(self, dev_info, dev_home, consider_home):
         """Update device info."""
-        utc_point_in_time = dt_util.now()
+        utc_point_in_time = dt_util.utcnow()
 
         if not self._name:
             self._name = dev_info.name or self._mac.replace(":", "_")
