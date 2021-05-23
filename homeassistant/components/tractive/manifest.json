@@ -9,5 +9,6 @@
   "codeowners": [
     "@zhulik"
   ],
-  "iot_class": "cloud_push"
+  "iot_class": "cloud_push",
+  "quality_scale": "silver"
 }
