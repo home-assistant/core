@@ -66,7 +66,7 @@ def find_existing_host(hass, serial):
             return entry
 
 
-def ensure_pin_format(pin):
+def ensure_pin_format(pin, allow_invalid_setup_codes=None):
     """
     Ensure a pin code is correctly formatted.
 
@@ -78,8 +78,8 @@ def ensure_pin_format(pin):
     if not match:
         raise aiohomekit.exceptions.MalformedPinError(f"Invalid PIN code f{pin}")
     pin_without_dashes = "".join(match.groups())
-    if pin_without_dashes in DISALLOWED_CODES:
-        raise aiohomekit.exceptions.MalformedPinError(f"Invalid PIN code f{pin}")
+    if not allow_invalid_setup_codes and pin_without_dashes in DISALLOWED_CODES:
+        raise InvalidSetupCode(f"Invalid PIN code f{pin}")
     return "-".join(match.groups())
 
 
@@ -310,7 +310,12 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if pair_info and self.finish_pairing:
             code = pair_info["pairing_code"]
             try:
-                code = ensure_pin_format(code)
+                code = ensure_pin_format(
+                    code,
+                    allow_invalid_setup_codes=pair_info.get(
+                        "allow_invalid_setup_codes"
+                    ),
+                )
                 pairing = await self.finish_pairing(code)
                 return await self._entry_from_accessory(pairing)
             except aiohomekit.exceptions.MalformedPinError:
@@ -336,6 +341,9 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             except aiohomekit.AccessoryNotFoundError:
                 # Can no longer find the device on the network
                 return self.async_abort(reason="accessory_not_found_error")
+            except InvalidSetupCode:
+                errors["pairing_code"] = "invalid_setup_code"
+                self.finish_pairing = None
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Pairing attempt failed with an unhandled exception")
                 self.finish_pairing = None
@@ -399,13 +407,15 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         placeholders = {"name": self.name}
         self.context["title_placeholders"] = {"name": self.name}
 
+        schema = {vol.Required("pairing_code"): vol.All(str, vol.Strip)}
+        if errors and errors.get("pairing_code") == "invalid_setup_code":
+            schema[vol.Optional("allow_invalid_setup_codes")] = bool
+
         return self.async_show_form(
             step_id="pair",
             errors=errors or {},
             description_placeholders=placeholders,
-            data_schema=vol.Schema(
-                {vol.Required("pairing_code"): vol.All(str, vol.Strip)}
-            ),
+            data_schema=vol.Schema(schema),
         )
 
     async def _entry_from_accessory(self, pairing):
@@ -428,3 +438,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         name = get_accessory_name(bridge_info)
 
         return self.async_create_entry(title=name, data=pairing_data)
+
+
+class InvalidSetupCode(Exception):
+    """An exception for invalid setup codes."""
