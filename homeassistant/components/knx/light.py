@@ -395,7 +395,7 @@ class KNXLight(KnxEntity, LightEntity):
                 await self._device.set_tunable_white(relative_ct)
 
         if brightness is not None:
-            # brightness is > 1; 0 brightness will call async_turn_off()
+            # brightness: 1..255; 0 brightness will call async_turn_off()
             if self._device.brightness.writable:
                 await self._device.set_brightness(brightness)
                 return
