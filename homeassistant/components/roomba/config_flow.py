@@ -2,7 +2,7 @@
 
 import asyncio
 
-from roombapy import Roomba
+from roombapy import RoombaFactory
 from roombapy.discovery import RoombaDiscovery
 from roombapy.getpassword import RoombaPassword
 import voluptuous as vol
@@ -40,7 +40,7 @@ async def validate_input(hass: core.HomeAssistant, data):
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
-    roomba = Roomba(
+    roomba = RoombaFactory.create_roomba(
         address=data[CONF_HOST],
         blid=data[CONF_BLID],
         password=data[CONF_PASSWORD],
@@ -63,7 +63,6 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Roomba configuration flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
     def __init__(self):
         """Initialize the roomba flow."""
@@ -80,8 +79,7 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_dhcp(self, discovery_info):
         """Handle dhcp discovery."""
-        if self._async_host_already_configured(discovery_info[IP_ADDRESS]):
-            return self.async_abort(reason="already_configured")
+        self._async_abort_entries_match({CONF_HOST: discovery_info[IP_ADDRESS]})
 
         if not discovery_info[HOSTNAME].startswith(("irobot-", "roomba-")):
             return self.async_abort(reason="not_irobot_device")
@@ -184,11 +182,7 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 ),
             )
 
-        if any(
-            user_input["host"] == entry.data.get("host")
-            for entry in self._async_current_entries()
-        ):
-            return self.async_abort(reason="already_configured")
+        self._async_abort_entries_match({CONF_HOST: user_input["host"]})
 
         self.host = user_input[CONF_HOST]
         self.blid = user_input[CONF_BLID].upper()
@@ -260,14 +254,6 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema({vol.Required(CONF_PASSWORD): str}),
             errors=errors,
         )
-
-    @callback
-    def _async_host_already_configured(self, host):
-        """See if we already have an entry matching the host."""
-        for entry in self._async_current_entries():
-            if entry.data.get(CONF_HOST) == host:
-                return True
-        return False
 
 
 class OptionsFlowHandler(config_entries.OptionsFlow):

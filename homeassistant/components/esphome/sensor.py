@@ -6,12 +6,19 @@ import math
 from aioesphomeapi import SensorInfo, SensorState, TextSensorInfo, TextSensorState
 import voluptuous as vol
 
-from homeassistant.components.sensor import DEVICE_CLASSES, SensorEntity
+from homeassistant.components.sensor import (
+    DEVICE_CLASS_TIMESTAMP,
+    DEVICE_CLASSES,
+    SensorEntity,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util import dt
 
 from . import EsphomeEntity, esphome_state_property, platform_async_setup_entry
+
+ICON_SCHEMA = vol.Schema(cv.icon)
 
 
 async def async_setup_entry(
@@ -58,7 +65,7 @@ class EsphomeSensor(EsphomeEntity, SensorEntity):
         """Return the icon."""
         if not self._static_info.icon or self._static_info.device_class:
             return None
-        return vol.Schema(cv.icon)(self._static_info.icon)
+        return ICON_SCHEMA(self._static_info.icon)
 
     @property
     def force_update(self) -> bool:
@@ -72,6 +79,8 @@ class EsphomeSensor(EsphomeEntity, SensorEntity):
             return None
         if self._state.missing_state:
             return None
+        if self.device_class == DEVICE_CLASS_TIMESTAMP:
+            return dt.utc_from_timestamp(self._state.state).isoformat()
         return f"{self._state.state:.{self._static_info.accuracy_decimals}f}"
 
     @property

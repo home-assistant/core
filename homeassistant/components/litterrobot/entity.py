@@ -10,6 +10,7 @@ from pylitterbot import Robot
 from pylitterbot.exceptions import InvalidCommandException
 
 from homeassistant.core import callback
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 import homeassistant.util.dt as dt_util
@@ -43,7 +44,7 @@ class LitterRobotEntity(CoordinatorEntity):
         return f"{self.robot.serial}-{self.entity_type}"
 
     @property
-    def device_info(self) -> dict[str, Any]:
+    def device_info(self) -> DeviceInfo:
         """Return the device information for a Litter-Robot."""
         return {
             "identifiers": {(DOMAIN, self.robot.serial)},

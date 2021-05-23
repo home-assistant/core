@@ -5,7 +5,7 @@ from unittest.mock import patch
 import pytest
 import voluptuous as vol
 
-from homeassistant import data_entry_flow
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import mqtt
 from homeassistant.setup import async_setup_component
 
@@ -33,7 +33,7 @@ async def test_user_connection_works(hass, mock_try_connection, mock_finish_setu
     mock_try_connection.return_value = True
 
     result = await hass.config_entries.flow.async_init(
-        "mqtt", context={"source": "user"}
+        "mqtt", context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == "form"
 
@@ -58,7 +58,7 @@ async def test_user_connection_fails(hass, mock_try_connection, mock_finish_setu
     mock_try_connection.return_value = False
 
     result = await hass.config_entries.flow.async_init(
-        "mqtt", context={"source": "user"}
+        "mqtt", context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == "form"
 
@@ -84,7 +84,7 @@ async def test_manual_config_set(hass, mock_try_connection, mock_finish_setup):
     mock_try_connection.return_value = True
 
     result = await hass.config_entries.flow.async_init(
-        "mqtt", context={"source": "user"}
+        "mqtt", context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == "abort"
 
@@ -94,7 +94,7 @@ async def test_user_single_instance(hass):
     MockConfigEntry(domain="mqtt").add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        "mqtt", context={"source": "user"}
+        "mqtt", context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == "abort"
     assert result["reason"] == "single_instance_allowed"
@@ -105,7 +105,7 @@ async def test_hassio_single_instance(hass):
     MockConfigEntry(domain="mqtt").add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        "mqtt", context={"source": "hassio"}
+        "mqtt", context={"source": config_entries.SOURCE_HASSIO}
     )
     assert result["type"] == "abort"
     assert result["reason"] == "single_instance_allowed"
@@ -125,7 +125,7 @@ async def test_hassio_confirm(hass, mock_try_connection, mock_finish_setup):
             "password": "mock-pass",
             "protocol": "3.1.1",
         },
-        context={"source": "hassio"},
+        context={"source": config_entries.SOURCE_HASSIO},
     )
     assert result["type"] == "form"
     assert result["step_id"] == "hassio_confirm"

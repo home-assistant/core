@@ -25,7 +25,14 @@ from homeassistant.util import location
 from homeassistant.util.json import load_json, save_json
 
 from .config_flow import PlayStation4FlowHandler  # noqa: F401
-from .const import ATTR_MEDIA_IMAGE_URL, COMMANDS, DOMAIN, GAMES_FILE, PS4_DATA
+from .const import (
+    ATTR_MEDIA_IMAGE_URL,
+    COMMANDS,
+    COUNTRYCODE_NAMES,
+    DOMAIN,
+    GAMES_FILE,
+    PS4_DATA,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,6 +44,8 @@ PS4_COMMAND_SCHEMA = vol.Schema(
         vol.Required(ATTR_COMMAND): vol.In(list(COMMANDS)),
     }
 )
+
+PLATFORMS = ["media_player"]
 
 
 class PS4Data:
@@ -59,18 +68,15 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass, config_entry):
+async def async_setup_entry(hass, entry):
     """Set up PS4 from a config entry."""
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(config_entry, "media_player")
-    )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
     return True
 
 
 async def async_unload_entry(hass, entry):
     """Unload a PS4 config entry."""
-    await hass.config_entries.async_forward_entry_unload(entry, "media_player")
-    return True
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 async def async_migrate_entry(hass, entry):
@@ -92,7 +98,7 @@ async def async_migrate_entry(hass, entry):
             hass.helpers.aiohttp_client.async_get_clientsession()
         )
         if loc:
-            country = loc.country_name
+            country = COUNTRYCODE_NAMES.get(loc.country_code)
             if country in COUNTRIES:
                 for device in data["devices"]:
                     device[CONF_REGION] = country

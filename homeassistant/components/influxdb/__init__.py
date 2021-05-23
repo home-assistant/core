@@ -326,7 +326,7 @@ class InfluxClient:
     close: Callable[[], None]
 
 
-def get_influx_connection(conf, test_write=False, test_read=False):
+def get_influx_connection(conf, test_write=False, test_read=False):  # noqa: C901
     """Create the correct influx connection for the API version."""
     kwargs = {
         CONF_TIMEOUT: TIMEOUT,

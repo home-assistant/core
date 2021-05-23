@@ -13,6 +13,7 @@ from hatasmota.discovery import (
 
 import homeassistant.components.sensor as sensor
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dev_reg
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity_registry import async_entries_for_device
 
@@ -136,7 +137,9 @@ async def async_start(
 
         device_registry = await hass.helpers.device_registry.async_get_registry()
         entity_registry = await hass.helpers.entity_registry.async_get_registry()
-        device = device_registry.async_get_device(set(), {("mac", mac)})
+        device = device_registry.async_get_device(
+            set(), {(dev_reg.CONNECTION_NETWORK_MAC, mac)}
+        )
 
         if device is None:
             _LOGGER.warning("Got sensors for unknown device mac: %s", mac)

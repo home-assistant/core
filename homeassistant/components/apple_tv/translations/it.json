@@ -16,7 +16,7 @@
             "no_usable_service": "\u00c8 stato trovato un dispositivo ma non \u00e8 stato possibile identificare alcun modo per stabilire una connessione ad esso. Se continui a vedere questo messaggio, prova a specificarne l'indirizzo IP o a riavviare l'Apple TV.",
             "unknown": "Errore imprevisto"
         },
-        "flow_title": "Apple TV: {name}",
+        "flow_title": "{name}",
         "step": {
             "confirm": {
                 "description": "Stai per aggiungere l'Apple TV denominata \"{name}\" a Home Assistant. \n\n **Per completare la procedura, potrebbe essere necessario inserire pi\u00f9 codici PIN.** \n\nTieni presente che *non* sarai in grado di spegnere la tua Apple TV con questa integrazione. Solo il lettore multimediale in Home Assistant si spegner\u00e0!",

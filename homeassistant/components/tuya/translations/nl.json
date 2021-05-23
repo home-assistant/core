@@ -17,7 +17,7 @@
                     "platform": "De app waar uw account is geregistreerd",
                     "username": "Gebruikersnaam"
                 },
-                "description": "Voer uw Tuya-referentie in.",
+                "description": "Voer uw Tuya-inloggegevens in.",
                 "title": "Tuya"
             }
         }
@@ -44,7 +44,7 @@
                     "support_color": "Forceer kleurenondersteuning",
                     "temp_divider": "Temperatuurwaarde deler (0 = standaardwaarde)",
                     "temp_step_override": "Doeltemperatuur stap",
-                    "tuya_max_coltemp": "Max. Kleurtemperatuur gerapporteerd door apparaat",
+                    "tuya_max_coltemp": "Max. kleurtemperatuur gerapporteerd door apparaat",
                     "unit_of_measurement": "Temperatuureenheid gebruikt door apparaat"
                 },
                 "description": "Configureer opties om weergegeven informatie aan te passen voor {device_type} apparaat `{device_name}`",

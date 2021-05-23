@@ -27,7 +27,8 @@ from .const import (
     DOMAIN,
     EVENT_SHELLY_CLICK,
     INPUTS_EVENTS_SUBTYPES,
-    SHBTN_1_INPUTS_EVENTS_TYPES,
+    SHBTN_INPUTS_EVENTS_TYPES,
+    SHBTN_MODELS,
     SUPPORTED_INPUTS_EVENTS_TYPES,
 )
 from .utils import get_device_wrapper, get_input_triggers
@@ -69,8 +70,8 @@ async def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict]:
     if not wrapper:
         raise InvalidDeviceAutomationConfig(f"Device not found: {device_id}")
 
-    if wrapper.model in ("SHBTN-1", "SHBTN-2"):
-        for trigger in SHBTN_1_INPUTS_EVENTS_TYPES:
+    if wrapper.model in SHBTN_MODELS:
+        for trigger in SHBTN_INPUTS_EVENTS_TYPES:
             triggers.append(
                 {
                     CONF_PLATFORM: "device",

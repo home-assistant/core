@@ -135,12 +135,15 @@ SENSORS = {
         unit=temperature_unit,
         value=lambda value: round(value, 1),
         device_class=sensor.DEVICE_CLASS_TEMPERATURE,
+        state_class=sensor.STATE_CLASS_MEASUREMENT,
+        available=lambda block: block.extTemp != 999,
     ),
     ("sensor", "humidity"): BlockAttributeDescription(
         name="Humidity",
         unit=PERCENTAGE,
         value=lambda value: round(value, 1),
         device_class=sensor.DEVICE_CLASS_HUMIDITY,
+        available=lambda block: block.extTemp != 999,
     ),
     ("sensor", "luminosity"): BlockAttributeDescription(
         name="Luminosity",
@@ -228,6 +231,11 @@ class ShellyRestSensor(ShellyRestAttributeEntity, SensorEntity):
     def state(self):
         """Return value of sensor."""
         return self.attribute_value
+
+    @property
+    def state_class(self):
+        """State class of sensor."""
+        return self.description.state_class
 
     @property
     def unit_of_measurement(self):

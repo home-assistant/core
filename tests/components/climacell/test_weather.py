@@ -7,7 +7,6 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
-import pytz
 
 from homeassistant.components.climacell.config_flow import (
     _get_config_schema,
@@ -46,6 +45,7 @@ from homeassistant.components.weather import (
 from homeassistant.const import ATTR_ATTRIBUTION, ATTR_FRIENDLY_NAME
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers.entity_registry import async_get
+from homeassistant.util import dt as dt_util
 
 from .const import API_V3_ENTRY_DATA, API_V4_ENTRY_DATA
 
@@ -70,7 +70,7 @@ async def _setup(hass: HomeAssistant, config: dict[str, Any]) -> State:
     """Set up entry and return entity state."""
     with patch(
         "homeassistant.util.dt.utcnow",
-        return_value=datetime(2021, 3, 6, 23, 59, 59, tzinfo=pytz.UTC),
+        return_value=datetime(2021, 3, 6, 23, 59, 59, tzinfo=dt_util.UTC),
     ):
         data = _get_config_schema(hass)(config)
         config_entry = MockConfigEntry(

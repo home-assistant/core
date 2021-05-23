@@ -5,7 +5,11 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components import number
+from homeassistant.components.mqtt.number import CONF_MAX, CONF_MIN
 from homeassistant.components.number import (
+    ATTR_MAX,
+    ATTR_MIN,
+    ATTR_STEP,
     ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
     SERVICE_SET_VALUE,
@@ -356,4 +360,104 @@ async def test_entity_debug_info_message(hass, mqtt_mock):
     """Test MQTT debug info."""
     await help_test_entity_debug_info_message(
         hass, mqtt_mock, number.DOMAIN, DEFAULT_CONFIG, payload=b"1"
+    )
+
+
+async def test_min_max_step_attributes(hass, mqtt_mock):
+    """Test min/max/step attributes."""
+    topic = "test/number"
+    await async_setup_component(
+        hass,
+        "number",
+        {
+            "number": {
+                "platform": "mqtt",
+                "state_topic": topic,
+                "command_topic": topic,
+                "name": "Test Number",
+                "min": 5,
+                "max": 110,
+                "step": 20,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("number.test_number")
+    assert state.attributes.get(ATTR_MIN) == 5
+    assert state.attributes.get(ATTR_MAX) == 110
+    assert state.attributes.get(ATTR_STEP) == 20
+
+
+async def test_invalid_min_max_attributes(hass, caplog, mqtt_mock):
+    """Test invalid min/max attributes."""
+    topic = "test/number"
+    await async_setup_component(
+        hass,
+        "number",
+        {
+            "number": {
+                "platform": "mqtt",
+                "state_topic": topic,
+                "command_topic": topic,
+                "name": "Test Number",
+                "min": 35,
+                "max": 10,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert f"'{CONF_MAX}'' must be > '{CONF_MIN}'" in caplog.text
+
+
+async def test_mqtt_payload_not_a_number_warning(hass, caplog, mqtt_mock):
+    """Test warning for MQTT payload which is not a number."""
+    topic = "test/number"
+    await async_setup_component(
+        hass,
+        "number",
+        {
+            "number": {
+                "platform": "mqtt",
+                "state_topic": topic,
+                "command_topic": topic,
+                "name": "Test Number",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    async_fire_mqtt_message(hass, topic, "not_a_number")
+
+    await hass.async_block_till_done()
+
+    assert "Payload 'not_a_number' is not a Number" in caplog.text
+
+
+async def test_mqtt_payload_out_of_range_error(hass, caplog, mqtt_mock):
+    """Test error when MQTT payload is out of min/max range."""
+    topic = "test/number"
+    await async_setup_component(
+        hass,
+        "number",
+        {
+            "number": {
+                "platform": "mqtt",
+                "state_topic": topic,
+                "command_topic": topic,
+                "name": "Test Number",
+                "min": 5,
+                "max": 110,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    async_fire_mqtt_message(hass, topic, "115.5")
+
+    await hass.async_block_till_done()
+
+    assert (
+        "Invalid value for number.test_number: 115.5 (range 5.0 - 110.0)" in caplog.text
     )

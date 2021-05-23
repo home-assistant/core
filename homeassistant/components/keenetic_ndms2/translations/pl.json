@@ -10,7 +10,6 @@
             "user": {
                 "data": {
                     "host": "Nazwa hosta lub adres IP",
-                    "name": "Nazwa",
                     "password": "Has\u0142o",
                     "port": "Port",
                     "username": "Nazwa u\u017cytkownika"

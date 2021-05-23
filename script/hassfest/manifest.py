@@ -1,14 +1,18 @@
 """Manifest validation."""
 from __future__ import annotations
 
+from pathlib import Path
 from urllib.parse import urlparse
 
+from awesomeversion import (
+    AwesomeVersion,
+    AwesomeVersionException,
+    AwesomeVersionStrategy,
+)
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
-from homeassistant.loader import validate_custom_integration_version
-
-from .model import Integration
+from .model import Config, Integration
 
 DOCUMENTATION_URL_SCHEMA = "https"
 DOCUMENTATION_URL_HOST = "www.home-assistant.io"
@@ -141,10 +145,19 @@ def verify_uppercase(value: str):
 
 def verify_version(value: str):
     """Verify the version."""
-    if not validate_custom_integration_version(value):
-        raise vol.Invalid(
-            f"'{value}' is not a valid version. This will cause a future version of Home Assistant to block this integration.",
+    try:
+        AwesomeVersion(
+            value,
+            [
+                AwesomeVersionStrategy.CALVER,
+                AwesomeVersionStrategy.SEMVER,
+                AwesomeVersionStrategy.SIMPLEVER,
+                AwesomeVersionStrategy.BUILDVER,
+                AwesomeVersionStrategy.PEP440,
+            ],
         )
+    except AwesomeVersionException:
+        raise vol.Invalid(f"'{value}' is not a valid version.")
     return value
 
 
@@ -220,14 +233,11 @@ def validate_version(integration: Integration):
     Will be removed when the version key is no longer optional for custom integrations.
     """
     if not integration.manifest.get("version"):
-        integration.add_error(
-            "manifest",
-            "No 'version' key in the manifest file. This will cause a future version of Home Assistant to block this integration.",
-        )
+        integration.add_error("manifest", "No 'version' key in the manifest file.")
         return
 
 
-def validate_manifest(integration: Integration):
+def validate_manifest(integration: Integration, core_components_dir: Path) -> None:
     """Validate manifest."""
     if not integration.manifest:
         return
@@ -246,6 +256,14 @@ def validate_manifest(integration: Integration):
         integration.add_error("manifest", "Domain does not match dir name")
 
     if (
+        not integration.core
+        and (core_components_dir / integration.manifest["domain"]).exists()
+    ):
+        integration.add_warning(
+            "manifest", "Domain collides with built-in core integration"
+        )
+
+    if (
         integration.manifest["domain"] in NO_IOT_CLASS
         and "iot_class" in integration.manifest
     ):
@@ -261,7 +279,8 @@ def validate_manifest(integration: Integration):
         validate_version(integration)
 
 
-def validate(integrations: dict[str, Integration], config):
+def validate(integrations: dict[str, Integration], config: Config) -> None:
     """Handle all integrations manifests."""
+    core_components_dir = config.root / "homeassistant/components"
     for integration in integrations.values():
-        validate_manifest(integration)
+        validate_manifest(integration, core_components_dir)

@@ -22,20 +22,22 @@ async def test_form(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["errors"] == {}
 
     await _setup(hass, result)
 
 
 @pytest.mark.credentials_invalid
-async def test_form_invalid_credentials(hass):
+async def test_form_invalid_credentials_user(hass):
     """Test if we get the error message on invalid credentials."""
     await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["errors"] == {}
 
     result = await hass.config_entries.flow.async_configure(
@@ -65,7 +67,8 @@ async def test_form_already_configured(hass):
 async def test_form_advanced_options(hass):
     """Test if we get the advanced options if user has enabled it."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user", "show_advanced_options": True}
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USER, "show_advanced_options": True},
     )
     assert result["type"] == "form"
     assert result["errors"] == {}
@@ -98,7 +101,7 @@ async def test_form_advanced_options(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_show_zeroconf_form(hass):
+async def test_form_zeroconf(hass):
     """Test that the zeroconf confirmation form is served."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -110,6 +113,27 @@ async def test_show_zeroconf_form(hass):
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
 
     await _setup(hass, result)
+
+
+@pytest.mark.credentials_invalid
+async def test_form_invalid_credentials_zeroconf(hass):
+    """Test if we get the error message on invalid credentials."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=DISCOVERY_INFO,
+    )
+
+    assert result["step_id"] == "zeroconf_confirm"
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"username": "test-username", "password": "test-password"},
+    )
+
+    assert result["errors"] == {"base": "invalid_auth"}
 
 
 async def test_zeroconf_wrong_device(hass):
