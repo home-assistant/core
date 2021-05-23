@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+from typing import Final
 
 import voluptuous as vol
 from xknx import XKNX
@@ -60,16 +61,16 @@ from .schema import (
 _LOGGER = logging.getLogger(__name__)
 
 
-CONF_KNX_FIRE_EVENT = "fire_event"
-CONF_KNX_EVENT_FILTER = "event_filter"
+CONF_KNX_FIRE_EVENT: Final = "fire_event"
+CONF_KNX_EVENT_FILTER: Final = "event_filter"
 
-SERVICE_KNX_SEND = "send"
-SERVICE_KNX_ATTR_PAYLOAD = "payload"
-SERVICE_KNX_ATTR_TYPE = "type"
-SERVICE_KNX_ATTR_REMOVE = "remove"
-SERVICE_KNX_EVENT_REGISTER = "event_register"
-SERVICE_KNX_EXPOSURE_REGISTER = "exposure_register"
-SERVICE_KNX_READ = "read"
+SERVICE_KNX_SEND: Final = "send"
+SERVICE_KNX_ATTR_PAYLOAD: Final = "payload"
+SERVICE_KNX_ATTR_TYPE: Final = "type"
+SERVICE_KNX_ATTR_REMOVE: Final = "remove"
+SERVICE_KNX_EVENT_REGISTER: Final = "event_register"
+SERVICE_KNX_EXPOSURE_REGISTER: Final = "exposure_register"
+SERVICE_KNX_READ: Final = "read"
 
 CONFIG_SCHEMA = vol.Schema(
     {
