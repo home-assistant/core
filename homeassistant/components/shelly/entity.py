@@ -9,6 +9,13 @@ from typing import Any, Callable
 import aioshelly
 import async_timeout
 
+from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT
+from homeassistant.const import (
+    DEVICE_CLASS_BATTERY,
+    DEVICE_CLASS_HUMIDITY,
+    DEVICE_CLASS_ILLUMINANCE,
+    DEVICE_CLASS_TEMPERATURE,
+)
 from homeassistant.core import callback
 from homeassistant.helpers import (
     device_registry,
@@ -105,6 +112,14 @@ async def async_restore_block_attribute_entities(
             device_class=entry.device_class,
         )
 
+        if description.device_class in [
+            DEVICE_CLASS_BATTERY,
+            DEVICE_CLASS_HUMIDITY,
+            DEVICE_CLASS_TEMPERATURE,
+            DEVICE_CLASS_ILLUMINANCE,
+        ]:
+            description.state_class = STATE_CLASS_MEASUREMENT
+
         entities.append(
             sensor_class(wrapper, None, attribute, description, entry, sensors)
         )
@@ -168,6 +183,7 @@ class RestAttributeDescription:
     unit: str | None = None
     value: Callable[[dict, Any], Any] | None = None
     device_class: str | None = None
+    state_class: str | None = None
     default_enabled: bool = True
     extra_state_attributes: Callable[[dict], dict | None] | None = None
 
