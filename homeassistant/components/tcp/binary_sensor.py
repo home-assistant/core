@@ -8,7 +8,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 
-from .common import TCP_PLATFORM_SCHEMA, TcpSensor
+from .common import TCP_PLATFORM_SCHEMA, TcpEntity
 from .const import CONF_VALUE_ON
 
 PLATFORM_SCHEMA: Final = TCP_PLATFORM_SCHEMA
@@ -24,7 +24,7 @@ def setup_platform(
     add_entities([TcpBinarySensor(hass, config)])
 
 
-class TcpBinarySensor(BinarySensorEntity, TcpSensor):
+class TcpBinarySensor(TcpEntity, BinarySensorEntity):
     """A binary sensor which is on when its state == CONF_VALUE_ON."""
 
     @property

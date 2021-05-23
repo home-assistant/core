@@ -9,10 +9,7 @@ from typing import Final
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
-    SensorEntity,
-)
+from homeassistant.components.sensor import PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -27,8 +24,9 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.template import Template
-from homeassistant.helpers.typing import ConfigType, StateType
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_BUFFER_SIZE,
@@ -61,8 +59,8 @@ TCP_PLATFORM_SCHEMA: Final = PARENT_PLATFORM_SCHEMA.extend(
 )
 
 
-class TcpSensor(SensorEntity):
-    """Implementation of a TCP socket based sensor."""
+class TcpEntity(Entity):
+    """Base entity class for TCP platform."""
 
     def __init__(self, hass: HomeAssistant, config: ConfigType) -> None:
         """Set all the config values if they exist and get initial state."""
@@ -100,16 +98,6 @@ class TcpSensor(SensorEntity):
     def name(self) -> str:
         """Return the name of this sensor."""
         return self._config[CONF_NAME]
-
-    @property
-    def state(self) -> StateType:
-        """Return the state of the device."""
-        return self._state
-
-    @property
-    def unit_of_measurement(self) -> str | None:
-        """Return the unit of measurement of this entity."""
-        return self._config[CONF_UNIT_OF_MEASUREMENT]
 
     def update(self) -> None:
         """Get the latest value for this sensor."""
