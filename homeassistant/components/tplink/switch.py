@@ -61,7 +61,6 @@ class SmartPlugSwitch(TPLinkEntity, SwitchEntity):
         """Initialize the switch."""
         super().__init__(smartplug)
         self.smartplug = smartplug
-        # It was already fetched by this point.
         self._sysinfo = smartplug.sys_info
         self._is_available = False
         # Set up emeter cache

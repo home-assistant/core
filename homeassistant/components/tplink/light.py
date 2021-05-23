@@ -120,8 +120,7 @@ class LightState(NamedTuple):
     def to_param(self) -> dict[str, Any]:
         """Return a version that we can send to the bulb."""
         color_temp: int | None = None
-        # Color temperature 0 doesn't make sense and can't be converted to kelvin.
-        if self.color_temp:
+        if self.color_temp is not None and self.color_temp != 0:
             color_temp = mired_to_kelvin(self.color_temp)
 
         brightness: int | None = None
