@@ -12,5 +12,6 @@
   "dependencies": [],
   "codeowners": [
     "@danielhiversen"
-  ]
+  ],
+  "iot_class": "cloud_polling"
 }
