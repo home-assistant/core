@@ -76,7 +76,7 @@ async def see_device(
     async_see: Callable[..., Awaitable[None]],
     mac: str,
     device_name: str,
-    rssi: tuple | None = None,
+    rssi: tuple[int] | None = None,
 ) -> None:
     """Mark a device as seen."""
     attributes = {}
