@@ -1,12 +1,18 @@
 """Support for TCP socket based sensors."""
+from __future__ import annotations
+
 import logging
 import select
 import socket
 import ssl
+from typing import Any, Final
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
+    SensorEntity,
+)
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -18,21 +24,27 @@ from homeassistant.const import (
     CONF_VALUE_TEMPLATE,
     CONF_VERIFY_SSL,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.template import Template
+from homeassistant.helpers.typing import ConfigType, StateType
 
-_LOGGER = logging.getLogger(__name__)
+from .const import (
+    CONF_BUFFER_SIZE,
+    CONF_VALUE_ON,
+    DEFAULT_BUFFER_SIZE,
+    DEFAULT_NAME,
+    DEFAULT_SSL,
+    DEFAULT_TIMEOUT,
+    DEFAULT_VERIFY_SSL,
+)
+from .model import TcpSensorConfig
 
-CONF_BUFFER_SIZE = "buffer_size"
-CONF_VALUE_ON = "value_on"
+_LOGGER: Final = logging.getLogger(__name__)
 
-DEFAULT_BUFFER_SIZE = 1024
-DEFAULT_NAME = "TCP Sensor"
-DEFAULT_TIMEOUT = 10
-DEFAULT_SSL = False
-DEFAULT_VERIFY_SSL = True
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA: Final = PARENT_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_PORT): cv.port,
@@ -49,7 +61,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: dict[str, Any] | None = None,
+) -> None:
     """Set up the TCP Sensor."""
     add_entities([TcpSensor(hass, config)])
 
@@ -57,55 +74,54 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class TcpSensor(SensorEntity):
     """Implementation of a TCP socket based sensor."""
 
-    required = ()
-
-    def __init__(self, hass, config):
+    def __init__(self, hass: HomeAssistant, config: ConfigType) -> None:
         """Set all the config values if they exist and get initial state."""
-        value_template = config.get(CONF_VALUE_TEMPLATE)
 
+        value_template: Template | None = config.get(CONF_VALUE_TEMPLATE)
         if value_template is not None:
             value_template.hass = hass
 
         self._hass = hass
-        self._config = {
-            CONF_NAME: config.get(CONF_NAME),
-            CONF_HOST: config.get(CONF_HOST),
-            CONF_PORT: config.get(CONF_PORT),
-            CONF_TIMEOUT: config.get(CONF_TIMEOUT),
-            CONF_PAYLOAD: config.get(CONF_PAYLOAD),
+        self._config: TcpSensorConfig = {
+            CONF_NAME: config[CONF_NAME],
+            CONF_HOST: config[CONF_HOST],
+            CONF_PORT: config[CONF_PORT],
+            CONF_TIMEOUT: config[CONF_TIMEOUT],
+            CONF_PAYLOAD: config[CONF_PAYLOAD],
             CONF_UNIT_OF_MEASUREMENT: config.get(CONF_UNIT_OF_MEASUREMENT),
             CONF_VALUE_TEMPLATE: value_template,
             CONF_VALUE_ON: config.get(CONF_VALUE_ON),
-            CONF_BUFFER_SIZE: config.get(CONF_BUFFER_SIZE),
+            CONF_BUFFER_SIZE: config[CONF_BUFFER_SIZE],
+            CONF_SSL: config[CONF_SSL],
+            CONF_VERIFY_SSL: config[CONF_VERIFY_SSL],
         }
 
-        if config[CONF_SSL]:
+        self._ssl_context: ssl.SSLContext | None = None
+        if self._config[CONF_SSL]:
             self._ssl_context = ssl.create_default_context()
-            if not config[CONF_VERIFY_SSL]:
+            if not self._config[CONF_VERIFY_SSL]:
                 self._ssl_context.check_hostname = False
                 self._ssl_context.verify_mode = ssl.CERT_NONE
-        else:
-            self._ssl_context = None
 
-        self._state = None
+        self._state: str | None = None
         self.update()
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of this sensor."""
         return self._config[CONF_NAME]
 
     @property
-    def state(self):
+    def state(self) -> StateType:
         """Return the state of the device."""
         return self._state
 
     @property
-    def unit_of_measurement(self):
+    def unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of this entity."""
         return self._config[CONF_UNIT_OF_MEASUREMENT]
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest value for this sensor."""
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
             sock.settimeout(self._config[CONF_TIMEOUT])
@@ -151,11 +167,10 @@ class TcpSensor(SensorEntity):
 
             value = sock.recv(self._config[CONF_BUFFER_SIZE]).decode()
 
-        if self._config[CONF_VALUE_TEMPLATE] is not None:
+        value_template = self._config[CONF_VALUE_TEMPLATE]
+        if value_template is not None:
             try:
-                self._state = self._config[CONF_VALUE_TEMPLATE].render(
-                    parse_result=False, value=value
-                )
+                self._state = value_template.render(parse_result=False, value=value)
                 return
             except TemplateError:
                 _LOGGER.error(

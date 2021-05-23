@@ -312,6 +312,34 @@ def _update_states_table_with_foreign_key_options(connection, engine):
             )
 
 
+def _drop_foreign_key_constraints(connection, engine, table, columns):
+    """Drop foreign key constraints for a table on specific columns."""
+    inspector = sqlalchemy.inspect(engine)
+    drops = []
+    for foreign_key in inspector.get_foreign_keys(table):
+        if (
+            foreign_key["name"]
+            and foreign_key["options"].get("ondelete")
+            and foreign_key["constrained_columns"] == columns
+        ):
+            drops.append(ForeignKeyConstraint((), (), name=foreign_key["name"]))
+
+    # Bind the ForeignKeyConstraints to the table
+    old_table = Table(  # noqa: F841 pylint: disable=unused-variable
+        table, MetaData(), *drops
+    )
+
+    for drop in drops:
+        try:
+            connection.execute(DropConstraint(drop))
+        except (InternalError, OperationalError):
+            _LOGGER.exception(
+                "Could not drop foreign constraints in %s table on %s",
+                TABLE_STATES,
+                columns,
+            )
+
+
 def _apply_update(engine, session, new_version, old_version):
     """Perform operations to bring schema up to date."""
     connection = session.connection()
@@ -420,6 +448,10 @@ def _apply_update(engine, session, new_version, old_version):
             # Recreate the statistics table
             Statistics.__table__.drop(engine)
             Statistics.__table__.create(engine)
+    elif new_version == 16:
+        _drop_foreign_key_constraints(
+            connection, engine, TABLE_STATES, ["old_state_id"]
+        )
     else:
         raise ValueError(f"No schema migration defined for version {new_version}")
 

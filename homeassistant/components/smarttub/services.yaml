@@ -1,0 +1,47 @@
+set_primary_filtration:
+  name: Update primary filtration settings
+  description: Updates the primary filtration settings
+  target:
+    entity:
+      integration: smarttub
+      domain: sensor
+  fields:
+    duration:
+      name: Duration
+      description: The desired duration of the primary filtration cycle
+      default: 8
+      selector:
+        number:
+          min: 1
+          max: 24
+          unit_of_measurement: "hours"
+          mode: slider
+      example: 8
+    start_hour:
+      description: The hour of the day at which to begin the primary filtration cycle
+      default: 0
+      example: 2
+      selector:
+        number:
+          min: 0
+          max: 23
+          unit_of_measurement: "hour"
+
+set_secondary_filtration:
+  name: Update secondary filtration settings
+  description: Updates the secondary filtration settings
+  target:
+    entity:
+      integration: smarttub
+      domain: sensor
+  fields:
+    mode:
+      description: The secondary filtration mode.
+      selector:
+        select:
+          options:
+            - "frequent"
+            - "infrequent"
+            - "away"
+      required: true
+      example: "frequent"

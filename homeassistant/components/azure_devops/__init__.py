@@ -6,17 +6,12 @@ import logging
 from aioazuredevops.client import DevOpsClient
 import aiohttp
 
-from homeassistant.components.azure_devops.const import (
-    CONF_ORG,
-    CONF_PAT,
-    CONF_PROJECT,
-    DATA_AZURE_DEVOPS_CLIENT,
-    DOMAIN,
-)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.entity import DeviceInfo, Entity
+
+from .const import CONF_ORG, CONF_PAT, CONF_PROJECT, DATA_AZURE_DEVOPS_CLIENT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 

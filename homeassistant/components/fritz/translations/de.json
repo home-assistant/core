@@ -8,7 +8,7 @@
         "error": {
             "already_configured": "Ger\u00e4t ist bereits konfiguriert",
             "already_in_progress": "Der Konfigurationsablauf wird bereits ausgef\u00fchrt",
-            "cannot_connect": "Verbindungsfehler",
+            "cannot_connect": "Verbindung fehlgeschlagen",
             "connection_error": "Verbindung fehlgeschlagen",
             "invalid_auth": "Ung\u00fcltige Authentifizierung"
         },
@@ -27,7 +27,7 @@
                     "password": "Passwort",
                     "username": "Benutzername"
                 },
-                "description": "Aktualisiere die Anmeldeinformationen von FRITZ! Box Tools f\u00fcr: {host} . \n\nFRITZ! Box Tools kann sich nicht bei deiner FRITZ! Box anmelden.",
+                "description": "Aktualisiere die Anmeldeinformationen von FRITZ! Box Tools f\u00fcr: {host}. \n\nFRITZ! Box Tools kann sich nicht bei deiner FRITZ! Box anmelden.",
                 "title": "Aktualisieren der FRITZ! Box Tools - Anmeldeinformationen"
             },
             "start_config": {
@@ -42,7 +42,10 @@
             },
             "user": {
                 "data": {
-                    "username": "Nutzername"
+                    "host": "Host",
+                    "password": "Passwort",
+                    "port": "Port",
+                    "username": "Benutzername"
                 }
             }
         }

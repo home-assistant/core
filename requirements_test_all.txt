@@ -112,7 +112,7 @@ aioguardian==1.0.4
 aioharmony==0.2.7
 
 # homeassistant.components.homekit_controller
-aiohomekit==0.2.61
+aiohomekit==0.2.64
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -140,7 +140,7 @@ aiopulse==0.4.2
 aiopvapi==1.6.14
 
 # homeassistant.components.pvpc_hourly_pricing
-aiopvpc==2.0.2
+aiopvpc==2.1.1
 
 # homeassistant.components.webostv
 aiopylgtv==0.4.0
@@ -348,7 +348,7 @@ garminconnect==0.1.19
 
 # homeassistant.components.geo_json_events
 # homeassistant.components.usgs_earthquakes_feed
-geojson_client==0.4
+geojson_client==0.6
 
 # homeassistant.components.aprs
 geopy==2.1.0
@@ -520,7 +520,7 @@ meteofrance-api==1.0.2
 mficlient==0.3.0
 
 # homeassistant.components.mill
-millheater==0.4.0
+millheater==0.4.1
 
 # homeassistant.components.minio
 minio==4.0.9
@@ -856,7 +856,7 @@ pylitejet==0.3.0
 pylitterbot==2021.3.1
 
 # homeassistant.components.lutron_caseta
-pylutron-caseta==0.9.0
+pylutron-caseta==0.10.0
 
 # homeassistant.components.mailgun
 pymailgunner==1.4
@@ -1249,6 +1249,7 @@ vsure==1.7.3
 # homeassistant.components.vultr
 vultr==0.1.2
 
+# homeassistant.components.samsungtv
 # homeassistant.components.wake_on_lan
 wakeonlan==2.0.1
 

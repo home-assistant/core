@@ -41,8 +41,8 @@ class GenericHueGaugeSensorEntity(GenericZLLSensor, SensorEntity):
 class HueLightLevel(GenericHueGaugeSensorEntity):
     """The light level sensor entity for a Hue motion sensor device."""
 
-    device_class = DEVICE_CLASS_ILLUMINANCE
-    unit_of_measurement = LIGHT_LUX
+    _attr_device_class = DEVICE_CLASS_ILLUMINANCE
+    _attr_unit_of_measurement = LIGHT_LUX
 
     @property
     def state(self):
@@ -76,8 +76,9 @@ class HueLightLevel(GenericHueGaugeSensorEntity):
 class HueTemperature(GenericHueGaugeSensorEntity):
     """The temperature sensor entity for a Hue motion sensor device."""
 
-    device_class = DEVICE_CLASS_TEMPERATURE
-    unit_of_measurement = TEMP_CELSIUS
+    _attr_device_class = DEVICE_CLASS_TEMPERATURE
+    _attr_state_class = STATE_CLASS_MEASUREMENT
+    _attr_unit_of_measurement = TEMP_CELSIUS
 
     @property
     def state(self):
@@ -87,14 +88,12 @@ class HueTemperature(GenericHueGaugeSensorEntity):
 
         return self.sensor.temperature / 100
 
-    @property
-    def state_class(self):
-        """Return the state class of the sensor."""
-        return STATE_CLASS_MEASUREMENT
-
 
 class HueBattery(GenericHueSensor, SensorEntity):
     """Battery class for when a batt-powered device is only represented as an event."""
+
+    _attr_device_class = DEVICE_CLASS_BATTERY
+    _attr_unit_of_measurement = PERCENTAGE
 
     @property
     def unique_id(self):
@@ -105,16 +104,6 @@ class HueBattery(GenericHueSensor, SensorEntity):
     def state(self):
         """Return the state of the battery."""
         return self.sensor.battery
-
-    @property
-    def device_class(self):
-        """Return the class of the sensor."""
-        return DEVICE_CLASS_BATTERY
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of this entity."""
-        return PERCENTAGE
 
 
 SENSOR_CONFIG_MAP.update(
