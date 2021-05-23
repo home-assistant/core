@@ -2,9 +2,10 @@
 from __future__ import annotations
 
 import asyncio
+from asyncio.locks import Lock
 from datetime import datetime, timedelta
 import logging
-from typing import Any, Callable, Final
+from typing import Any, Awaitable, Callable, Final
 
 import bluetooth  # pylint: disable=import-error
 from bt_proximity import BluetoothRSSI
@@ -29,6 +30,7 @@ from homeassistant.const import CONF_DEVICE_ID
 from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     BT_PREFIX,
@@ -122,15 +124,15 @@ def lookup_name(mac: str) -> str | None:
 
 async def async_setup_scanner(
     hass: HomeAssistant,
-    config: dict,
-    async_see: Callable,
+    config: ConfigType,
+    async_see: Callable[..., None],
     discovery_info: dict[str, Any] | None = None,
 ) -> bool:
     """Set up the Bluetooth Scanner."""
     device_id: int = config[CONF_DEVICE_ID]
-    interval = config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL)
-    request_rssi = config.get(CONF_REQUEST_RSSI, False)
-    update_bluetooth_lock = asyncio.Lock()
+    interval: timedelta = config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL)
+    request_rssi: bool = config.get(CONF_REQUEST_RSSI, False)
+    update_bluetooth_lock: Lock = asyncio.Lock()
 
     # If track new devices is true discover new devices on startup.
     track_new: bool = config.get(CONF_TRACK_NEW, DEFAULT_TRACK_NEW)
@@ -147,7 +149,7 @@ async def async_setup_scanner(
     async def perform_bluetooth_update() -> None:
         """Discover Bluetooth devices and update status."""
         _LOGGER.debug("Performing Bluetooth devices discovery and update")
-        tasks = []
+        tasks: list[Awaitable[None]] = []
 
         try:
             if track_new:
@@ -160,10 +162,10 @@ async def async_setup_scanner(
                         devices_to_track.add(device[1])
 
             for mac in devices_to_track:
-                device_lookuped_name: str | None = await hass.async_add_executor_job(
+                device_name: str | None = await hass.async_add_executor_job(
                     lookup_name, mac
                 )
-                if device_lookuped_name is None:
+                if device_name is None:
                     # Could not lookup device name
                     continue
 
@@ -173,9 +175,7 @@ async def async_setup_scanner(
                     rssi = await hass.async_add_executor_job(client.request_rssi)
                     client.close()
 
-                tasks.append(
-                    see_device(hass, async_see, mac, device_lookuped_name, rssi)
-                )
+                tasks.append(see_device(hass, async_see, mac, device_name, rssi))
 
             if tasks:
                 await asyncio.wait(tasks)
