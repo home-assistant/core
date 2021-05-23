@@ -76,7 +76,7 @@ homeassistant/components/bmw_connected_drive/* @gerard33 @rikroe
 homeassistant/components/bond/* @prystupa
 homeassistant/components/bosch_shc/* @tschamm
 homeassistant/components/braviatv/* @bieniu @Drafteed
-homeassistant/components/broadlink/* @danielhiversen @felipediel
+homeassistant/components/broadlink/* @danielhiversen @felipediel @L-I-Am
 homeassistant/components/brother/* @bieniu
 homeassistant/components/brunt/* @eavanvalkenburg
 homeassistant/components/bsblan/* @liudger

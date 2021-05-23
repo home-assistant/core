@@ -1,8 +1,8 @@
 """Constants for the Broadlink integration."""
+from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.remote import DOMAIN as REMOTE_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 
 DOMAIN = "broadlink"
 
