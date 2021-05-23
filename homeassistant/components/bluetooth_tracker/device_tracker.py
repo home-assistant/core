@@ -154,18 +154,13 @@ async def async_setup_scanner(
         try:
             if track_new:
                 devices = await hass.async_add_executor_job(discover_devices, device_id)
-                for device in devices:
-                    if (
-                        device[1] not in devices_to_track
-                        and device[1] not in devices_to_not_track
-                    ):
-                        devices_to_track.add(device[1])
+                for mac, _device_name in devices:
+                    if mac not in devices_to_track and mac not in devices_to_not_track:
+                        devices_to_track.add(mac)
 
             for mac in devices_to_track:
-                device_name: str | None = await hass.async_add_executor_job(
-                    lookup_name, mac
-                )
-                if device_name is None:
+                friendly_name = await hass.async_add_executor_job(lookup_name, mac)
+                if friendly_name is None:
                     # Could not lookup device name
                     continue
 
@@ -175,7 +170,7 @@ async def async_setup_scanner(
                     rssi = await hass.async_add_executor_job(client.request_rssi)
                     client.close()
 
-                tasks.append(see_device(hass, async_see, mac, device_name, rssi))
+                tasks.append(see_device(hass, async_see, mac, friendly_name, rssi))
 
             if tasks:
                 await asyncio.wait(tasks)
