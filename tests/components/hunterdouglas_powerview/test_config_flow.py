@@ -41,11 +41,9 @@ def _get_mock_powerview_userdata(userdata=None, get_resources=None):
     if not userdata:
         userdata = json.loads(load_fixture("hunterdouglas_powerview/userdata.json"))
     if get_resources:
-        type(mock_powerview_userdata).get_resources = AsyncMock(
-            side_effect=get_resources
-        )
+        mock_powerview_userdata.get_resources = AsyncMock(side_effect=get_resources)
     else:
-        type(mock_powerview_userdata).get_resources = AsyncMock(return_value=userdata)
+        mock_powerview_userdata.get_resources = AsyncMock(return_value=userdata)
     return mock_powerview_userdata
 
 
@@ -54,13 +52,11 @@ def _get_mock_powerview_legacy_userdata(userdata=None, get_resources=None):
     if not userdata:
         userdata = json.loads(load_fixture("hunterdouglas_powerview/userdata_v1.json"))
     if get_resources:
-        type(mock_powerview_userdata_legacy).get_resources = AsyncMock(
+        mock_powerview_userdata_legacy.get_resources = AsyncMock(
             side_effect=get_resources
         )
     else:
-        type(mock_powerview_userdata_legacy).get_resources = AsyncMock(
-            return_value=userdata
-        )
+        mock_powerview_userdata_legacy.get_resources = AsyncMock(return_value=userdata)
     return mock_powerview_userdata_legacy
 
 
@@ -69,11 +65,9 @@ def _get_mock_powerview_fwversion(fwversion=None, get_resources=None):
     if not fwversion:
         fwversion = json.loads(load_fixture("hunterdouglas_powerview/fwversion.json"))
     if get_resources:
-        type(mock_powerview_fwversion).get_resources = AsyncMock(
-            side_effect=get_resources
-        )
+        mock_powerview_fwversion.get_resources = AsyncMock(side_effect=get_resources)
     else:
-        type(mock_powerview_fwversion).get_resources = AsyncMock(return_value=fwversion)
+        mock_powerview_fwversion.get_resources = AsyncMock(return_value=fwversion)
     return mock_powerview_fwversion
 
 
