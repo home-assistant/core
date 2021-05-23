@@ -82,7 +82,7 @@ class IPPDataUpdateCoordinator(DataUpdateCoordinator[IPPPrinter]):
         base_path: str,
         tls: bool,
         verify_ssl: bool,
-    ):
+    ) -> None:
         """Initialize global IPP data updater."""
         self.ipp = IPP(
             host=host,

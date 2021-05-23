@@ -7,7 +7,7 @@ from aiopvapi.helpers.aiorequest import AioRequest
 import async_timeout
 import voluptuous as vol
 
-from homeassistant import config_entries, core, data_entry_flow, exceptions
+from homeassistant import config_entries, core, exceptions
 from homeassistant.components.dhcp import HOSTNAME, IP_ADDRESS
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -19,6 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str})
 HAP_SUFFIX = "._hap._tcp.local."
+POWERVIEW_SUFFIX = "._powerview._tcp.local."
 
 
 async def validate_input(hass: core.HomeAssistant, hub_address: str) -> dict[str, str]:
@@ -72,8 +73,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def _async_validate_or_error(self, host):
-        if self._host_already_configured(host):
-            raise data_entry_flow.AbortFlow("already_configured")
+        self._async_abort_entries_match({CONF_HOST: host})
 
         try:
             info = await validate_input(self.hass, host)
@@ -91,6 +91,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.discovered_name = discovery_info[HOSTNAME]
         return await self.async_step_discovery_confirm()
 
+    async def async_step_zeroconf(self, discovery_info):
+        """Handle zeroconf discovery."""
+        self.discovered_ip = discovery_info[CONF_HOST]
+        name = discovery_info[CONF_NAME]
+        if name.endswith(POWERVIEW_SUFFIX):
+            name = name[: -len(POWERVIEW_SUFFIX)]
+        self.discovered_name = name
+        return await self.async_step_discovery_confirm()
+
     async def async_step_homekit(self, discovery_info):
         """Handle HomeKit discovery."""
         self.discovered_ip = discovery_info[CONF_HOST]
@@ -104,12 +113,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Confirm dhcp or homekit discovery."""
         # If we already have the host configured do
         # not open connections to it if we can avoid it.
+        self.context[CONF_HOST] = self.discovered_ip
         for progress in self._async_in_progress():
             if progress.get("context", {}).get(CONF_HOST) == self.discovered_ip:
                 return self.async_abort(reason="already_in_progress")
 
-        if self._host_already_configured(self.discovered_ip):
-            return self.async_abort(reason="already_configured")
+        self._async_abort_entries_match({CONF_HOST: self.discovered_ip})
 
         info, error = await self._async_validate_or_error(self.discovered_ip)
         if error:
@@ -132,20 +141,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 data={CONF_HOST: self.powerview_config[CONF_HOST]},
             )
 
-        self.context[CONF_HOST] = self.discovered_ip
         self._set_confirm_only()
+        self.context["title_placeholders"] = self.powerview_config
         return self.async_show_form(
             step_id="link", description_placeholders=self.powerview_config
         )
-
-    def _host_already_configured(self, host):
-        """See if we already have a hub with the host address configured."""
-        existing_hosts = {
-            entry.data.get(CONF_HOST)
-            for entry in self._async_current_entries()
-            if CONF_HOST in entry.data
-        }
-        return host in existing_hosts
 
 
 class CannotConnect(exceptions.HomeAssistantError):

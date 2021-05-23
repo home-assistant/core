@@ -5,12 +5,7 @@ from pyownet.protocol import ConnError, OwnetError
 
 from homeassistant.components.onewire.const import CONF_TYPE_OWSERVER, DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.config_entries import (
-    ENTRY_STATE_LOADED,
-    ENTRY_STATE_NOT_LOADED,
-    ENTRY_STATE_SETUP_RETRY,
-    SOURCE_USER,
-)
+from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TYPE
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -35,7 +30,6 @@ async def test_owserver_connect_failure(hass):
             CONF_HOST: "1.2.3.4",
             CONF_PORT: "1234",
         },
-        unique_id=f"{CONF_TYPE_OWSERVER}:1.2.3.4:1234",
         options={},
         entry_id="2",
     )
@@ -49,7 +43,7 @@ async def test_owserver_connect_failure(hass):
         await hass.async_block_till_done()
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    assert config_entry_owserver.state == ENTRY_STATE_SETUP_RETRY
+    assert config_entry_owserver.state is ConfigEntryState.SETUP_RETRY
     assert not hass.data.get(DOMAIN)
 
 
@@ -63,7 +57,6 @@ async def test_failed_owserver_listing(hass):
             CONF_HOST: "1.2.3.4",
             CONF_PORT: "1234",
         },
-        unique_id=f"{CONF_TYPE_OWSERVER}:1.2.3.4:1234",
         options={},
         entry_id="2",
     )
@@ -83,15 +76,15 @@ async def test_unload_entry(hass):
     config_entry_sysbus = await setup_onewire_sysbus_integration(hass)
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 2
-    assert config_entry_owserver.state == ENTRY_STATE_LOADED
-    assert config_entry_sysbus.state == ENTRY_STATE_LOADED
+    assert config_entry_owserver.state is ConfigEntryState.LOADED
+    assert config_entry_sysbus.state is ConfigEntryState.LOADED
 
     assert await hass.config_entries.async_unload(config_entry_owserver.entry_id)
     assert await hass.config_entries.async_unload(config_entry_sysbus.entry_id)
     await hass.async_block_till_done()
 
-    assert config_entry_owserver.state == ENTRY_STATE_NOT_LOADED
-    assert config_entry_sysbus.state == ENTRY_STATE_NOT_LOADED
+    assert config_entry_owserver.state is ConfigEntryState.NOT_LOADED
+    assert config_entry_sysbus.state is ConfigEntryState.NOT_LOADED
     assert not hass.data.get(DOMAIN)
 
 

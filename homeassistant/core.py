@@ -163,7 +163,7 @@ class HassJob:
 
     __slots__ = ("job_type", "target")
 
-    def __init__(self, target: Callable):
+    def __init__(self, target: Callable) -> None:
         """Create a job object."""
         if asyncio.iscoroutine(target):
             raise ValueError("Coroutine not allowed to be passed to HassJob")
@@ -372,6 +372,13 @@ class HomeAssistant:
             self._pending_tasks.append(task)
 
         return task
+
+    def create_task(self, target: Coroutine) -> None:
+        """Add task to the executor pool.
+
+        target: target to call.
+        """
+        self.loop.call_soon_threadsafe(self.async_create_task, target)
 
     @callback
     def async_create_task(self, target: Coroutine) -> asyncio.tasks.Task:
@@ -1531,7 +1538,7 @@ class Config:
         self.longitude: float = 0
         self.elevation: int = 0
         self.location_name: str = "Home"
-        self.time_zone: datetime.tzinfo = dt_util.UTC
+        self.time_zone: str = "UTC"
         self.units: UnitSystem = METRIC_SYSTEM
         self.internal_url: str | None = None
         self.external_url: str | None = None
@@ -1621,17 +1628,13 @@ class Config:
 
         Async friendly.
         """
-        time_zone = dt_util.UTC.zone
-        if self.time_zone and getattr(self.time_zone, "zone"):
-            time_zone = getattr(self.time_zone, "zone")
-
         return {
             "latitude": self.latitude,
             "longitude": self.longitude,
             "elevation": self.elevation,
             "unit_system": self.units.as_dict(),
             "location_name": self.location_name,
-            "time_zone": time_zone,
+            "time_zone": self.time_zone,
             "components": self.components,
             "config_dir": self.config_dir,
             # legacy, backwards compat
@@ -1651,7 +1654,7 @@ class Config:
         time_zone = dt_util.get_time_zone(time_zone_str)
 
         if time_zone:
-            self.time_zone = time_zone
+            self.time_zone = time_zone_str
             dt_util.set_default_time_zone(time_zone)
         else:
             raise ValueError(f"Received invalid time zone {time_zone_str}")
@@ -1721,17 +1724,13 @@ class Config:
 
     async def async_store(self) -> None:
         """Store [homeassistant] core config."""
-        time_zone = dt_util.UTC.zone
-        if self.time_zone and getattr(self.time_zone, "zone"):
-            time_zone = getattr(self.time_zone, "zone")
-
         data = {
             "latitude": self.latitude,
             "longitude": self.longitude,
             "elevation": self.elevation,
             "unit_system": self.units.name,
             "location_name": self.location_name,
-            "time_zone": time_zone,
+            "time_zone": self.time_zone,
             "external_url": self.external_url,
             "internal_url": self.internal_url,
         }

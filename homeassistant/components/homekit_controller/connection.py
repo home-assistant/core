@@ -13,6 +13,7 @@ from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import ServicesTypes
 
 from homeassistant.core import callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.event import async_track_time_interval
 
 from .const import (
@@ -179,7 +180,8 @@ class HKDevice:
 
         return True
 
-    async def async_create_devices(self):
+    @callback
+    def async_create_devices(self):
         """
         Build device registry entries for all accessories paired with the bridge.
 
@@ -187,7 +189,7 @@ class HKDevice:
         might not have any entities attached to it. Secondly there are stateless
         entities like doorbells and remote controls.
         """
-        device_registry = await self.hass.helpers.device_registry.async_get_registry()
+        device_registry = dr.async_get(self.hass)
 
         devices = {}
 
@@ -248,7 +250,7 @@ class HKDevice:
 
         await self.async_load_platforms()
 
-        await self.async_create_devices()
+        self.async_create_devices()
 
         # Load any triggers for this config entry
         await async_setup_triggers_for_entry(self.hass, self.config_entry)
@@ -259,8 +261,6 @@ class HKDevice:
             await self.pairing.subscribe(self.watchable_characteristics)
 
         await self.async_update()
-
-        return True
 
     async def async_unload(self):
         """Stop interacting with device and prepare for removal from hass."""
@@ -365,17 +365,23 @@ class HKDevice:
 
     async def async_load_platforms(self):
         """Load any platforms needed by this HomeKit device."""
+        tasks = []
         for accessory in self.accessories:
             for service in accessory["services"]:
                 stype = ServicesTypes.get_short(service["type"].upper())
                 if stype in HOMEKIT_ACCESSORY_DISPATCH:
                     platform = HOMEKIT_ACCESSORY_DISPATCH[stype]
-                    await self.async_load_platform(platform)
+                    if platform not in self.platforms:
+                        tasks.append(self.async_load_platform(platform))
 
                 for char in service["characteristics"]:
                     if char["type"].upper() in CHARACTERISTIC_PLATFORMS:
                         platform = CHARACTERISTIC_PLATFORMS[char["type"].upper()]
-                        await self.async_load_platform(platform)
+                        if platform not in self.platforms:
+                            tasks.append(self.async_load_platform(platform))
+
+        if tasks:
+            await asyncio.gather(*tasks)
 
     async def async_update(self, now=None):
         """Poll state of all entities attached to this bridge/accessory."""

@@ -146,7 +146,7 @@ class GlobalDataUpdater:
         ring: Ring,
         update_method: str,
         update_interval: timedelta,
-    ):
+    ) -> None:
         """Initialize global data updater."""
         self.hass = hass
         self.data_type = data_type
@@ -219,7 +219,7 @@ class DeviceDataUpdater:
         ring: Ring,
         update_method: str,
         update_interval: timedelta,
-    ):
+    ) -> None:
         """Initialize device data updater."""
         self.data_type = data_type
         self.hass = hass

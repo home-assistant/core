@@ -31,7 +31,7 @@ class BondEntity(Entity):
         device: BondDevice,
         bpup_subs: BPUPSubscriptions,
         sub_device: str | None = None,
-    ):
+    ) -> None:
         """Initialize entity with API and device info."""
         self._hub = hub
         self._device = device

@@ -233,7 +233,7 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
         me: dict,
         user_id: str,
         name: str,
-    ):
+    ) -> None:
         """Initialize."""
         self._id = user_id
         self._me = me

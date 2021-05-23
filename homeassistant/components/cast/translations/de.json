@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "no_devices_found": "Keine Ger\u00e4te im Netzwerk gefunden.",
             "single_instance_allowed": "Bereits konfiguriert. Es ist nur eine Konfiguration m\u00f6glich."
         },
         "error": {
@@ -10,10 +9,10 @@
         "step": {
             "config": {
                 "data": {
-                    "known_hosts": "Optionale Liste bekannter Hosts, wenn die mDNS-Erkennung nicht funktioniert."
+                    "known_hosts": "Bekannte Hosts"
                 },
-                "description": "Bitte die Google Cast-Konfiguration eingeben.",
-                "title": "Google Cast"
+                "description": "Bekannte Hosts - Eine durch Kommas getrennte Liste von Hostnamen oder IP-Adressen von Cast-Ger\u00e4ten, die verwendet wird, wenn die mDNS-Erkennung nicht funktioniert.",
+                "title": "Google Cast-Konfiguration"
             },
             "confirm": {
                 "description": "M\u00f6chtest du Google Cast einrichten?"
@@ -25,13 +24,20 @@
             "invalid_known_hosts": "Bekannte Hosts m\u00fcssen eine durch Kommata getrennte Liste von Hosts sein."
         },
         "step": {
-            "options": {
+            "advanced_options": {
                 "data": {
-                    "ignore_cec": "Optionale Liste, die an pychromecast.IGNORE_CEC \u00fcbergeben wird.",
-                    "known_hosts": "Optionale Liste bekannter Hosts, wenn die mDNS-Erkennung nicht funktioniert.",
-                    "uuid": "Optionale Liste der UUIDs. Casts, die nicht aufgef\u00fchrt sind, werden nicht hinzugef\u00fcgt."
+                    "ignore_cec": "CEC ignorieren",
+                    "uuid": "Zul\u00e4ssige UUIDs"
                 },
-                "description": "Bitte die Google Cast-Konfiguration eingeben."
+                "description": "Erlaubte UUIDs - Eine kommagetrennte Liste von UUIDs von Cast-Ger\u00e4ten, die dem Home Assistant hinzugef\u00fcgt werden sollen. Nur verwenden, wenn Sie nicht alle verf\u00fcgbaren Cast-Ger\u00e4te hinzuf\u00fcgen m\u00f6chten.\nIgnore CEC - Eine kommagetrennte Liste von Chromecasts, die CEC-Daten zur Bestimmung des aktiven Eingangs ignorieren sollen. Dies wird an pychromecast.IGNORE_CEC \u00fcbergeben.",
+                "title": "Erweiterte Google Cast-Konfiguration"
+            },
+            "basic_options": {
+                "data": {
+                    "known_hosts": "Bekannte Hosts"
+                },
+                "description": "Bekannte Hosts - Eine durch Kommas getrennte Liste von Hostnamen oder IP-Adressen von Cast-Ger\u00e4ten, die verwendet wird, wenn die mDNS-Erkennung nicht funktioniert.",
+                "title": "Google Cast-Konfiguration"
             }
         }
     }

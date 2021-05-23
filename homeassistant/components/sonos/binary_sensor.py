@@ -12,7 +12,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import SONOS_CREATE_BATTERY
-from .entity import SonosSensorEntity
+from .entity import SonosEntity
 from .speaker import SonosSpeaker
 
 _LOGGER = logging.getLogger(__name__)
@@ -32,7 +32,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
 
-class SonosPowerEntity(SonosSensorEntity, BinarySensorEntity):
+class SonosPowerEntity(SonosEntity, BinarySensorEntity):
     """Representation of a Sonos power entity."""
 
     @property

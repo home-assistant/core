@@ -116,47 +116,39 @@ async def async_setup_entry(hass, entry, async_add_entities):
     )
     home_data = data_handler.data.get(HOMEDATA_DATA_CLASS_NAME)
 
+    if not home_data or home_data.raw_data == {}:
+        raise PlatformNotReady
+
     if HOMEDATA_DATA_CLASS_NAME not in data_handler.data:
         raise PlatformNotReady
 
-    async def get_entities():
-        """Retrieve Netatmo entities."""
-        entities = []
+    entities = []
+    for home_id in get_all_home_ids(home_data):
+        for room_id in home_data.rooms[home_id]:
+            signal_name = f"{HOMESTATUS_DATA_CLASS_NAME}-{home_id}"
+            await data_handler.register_data_class(
+                HOMESTATUS_DATA_CLASS_NAME, signal_name, None, home_id=home_id
+            )
+            home_status = data_handler.data.get(signal_name)
+            if home_status and room_id in home_status.rooms:
+                entities.append(NetatmoThermostat(data_handler, home_id, room_id))
 
-        for home_id in get_all_home_ids(home_data):
-            _LOGGER.debug("Setting up home %s", home_id)
-            for room_id in home_data.rooms[home_id].keys():
-                room_name = home_data.rooms[home_id][room_id]["name"]
-                _LOGGER.debug("Setting up room %s (%s)", room_name, room_id)
-                signal_name = f"{HOMESTATUS_DATA_CLASS_NAME}-{home_id}"
-                await data_handler.register_data_class(
-                    HOMESTATUS_DATA_CLASS_NAME, signal_name, None, home_id=home_id
-                )
-                home_status = data_handler.data.get(signal_name)
-                if home_status and room_id in home_status.rooms:
-                    entities.append(NetatmoThermostat(data_handler, home_id, room_id))
-
-            hass.data[DOMAIN][DATA_SCHEDULES][home_id] = {
-                schedule_id: schedule_data.get("name")
-                for schedule_id, schedule_data in (
-                    data_handler.data[HOMEDATA_DATA_CLASS_NAME]
-                    .schedules[home_id]
-                    .items()
-                )
-            }
-
-        hass.data[DOMAIN][DATA_HOMES] = {
-            home_id: home_data.get("name")
-            for home_id, home_data in (
-                data_handler.data[HOMEDATA_DATA_CLASS_NAME].homes.items()
+        hass.data[DOMAIN][DATA_SCHEDULES][home_id] = {
+            schedule_id: schedule_data.get("name")
+            for schedule_id, schedule_data in (
+                data_handler.data[HOMEDATA_DATA_CLASS_NAME].schedules[home_id].items()
             )
         }
 
-        return entities
+    hass.data[DOMAIN][DATA_HOMES] = {
+        home_id: home_data.get("name")
+        for home_id, home_data in (
+            data_handler.data[HOMEDATA_DATA_CLASS_NAME].homes.items()
+        )
+    }
 
-    async_add_entities(await get_entities(), True)
-
-    await data_handler.unregister_data_class(HOMEDATA_DATA_CLASS_NAME, None)
+    _LOGGER.debug("Adding climate devices %s", entities)
+    async_add_entities(entities, True)
 
     platform = entity_platform.async_get_current_platform()
 
@@ -164,7 +156,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
         platform.async_register_entity_service(
             SERVICE_SET_SCHEDULE,
             {vol.Required(ATTR_SCHEDULE_NAME): cv.string},
-            "_service_set_schedule",
+            "_async_service_set_schedule",
         )
 
 
@@ -205,7 +197,6 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
                 self._model = NA_THERM
                 break
 
-        self._state = None
         self._device_name = self._data.rooms[home_id][room_id]["name"]
         self._name = f"{MANUFACTURER} {self._device_name}"
         self._current_temperature = None
@@ -357,24 +348,24 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
             return CURRENT_HVAC_HEAT
         return CURRENT_HVAC_IDLE
 
-    def set_hvac_mode(self, hvac_mode: str) -> None:
+    async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set new target hvac mode."""
         if hvac_mode == HVAC_MODE_OFF:
-            self.turn_off()
+            await self.async_turn_off()
         elif hvac_mode == HVAC_MODE_AUTO:
             if self.hvac_mode == HVAC_MODE_OFF:
-                self.turn_on()
-            self.set_preset_mode(PRESET_SCHEDULE)
+                await self.async_turn_on()
+            await self.async_set_preset_mode(PRESET_SCHEDULE)
         elif hvac_mode == HVAC_MODE_HEAT:
-            self.set_preset_mode(PRESET_BOOST)
+            await self.async_set_preset_mode(PRESET_BOOST)
 
-    def set_preset_mode(self, preset_mode: str) -> None:
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         if self.hvac_mode == HVAC_MODE_OFF:
-            self.turn_on()
+            await self.async_turn_on()
 
         if self.target_temperature == 0:
-            self._home_status.set_room_thermpoint(
+            await self._home_status.async_set_room_thermpoint(
                 self._id,
                 STATE_NETATMO_HOME,
             )
@@ -384,14 +375,14 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
             and self._model == NA_VALVE
             and self.hvac_mode == HVAC_MODE_HEAT
         ):
-            self._home_status.set_room_thermpoint(
+            await self._home_status.async_set_room_thermpoint(
                 self._id,
                 STATE_NETATMO_HOME,
             )
         elif (
             preset_mode in [PRESET_BOOST, STATE_NETATMO_MAX] and self._model == NA_VALVE
         ):
-            self._home_status.set_room_thermpoint(
+            await self._home_status.async_set_room_thermpoint(
                 self._id,
                 STATE_NETATMO_MANUAL,
                 DEFAULT_MAX_TEMP,
@@ -400,13 +391,15 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
             preset_mode in [PRESET_BOOST, STATE_NETATMO_MAX]
             and self.hvac_mode == HVAC_MODE_HEAT
         ):
-            self._home_status.set_room_thermpoint(self._id, STATE_NETATMO_HOME)
+            await self._home_status.async_set_room_thermpoint(
+                self._id, STATE_NETATMO_HOME
+            )
         elif preset_mode in [PRESET_BOOST, STATE_NETATMO_MAX]:
-            self._home_status.set_room_thermpoint(
+            await self._home_status.async_set_room_thermpoint(
                 self._id, PRESET_MAP_NETATMO[preset_mode]
             )
         elif preset_mode in [PRESET_SCHEDULE, PRESET_FROST_GUARD, PRESET_AWAY]:
-            self._home_status.set_thermmode(PRESET_MAP_NETATMO[preset_mode])
+            await self._home_status.async_set_thermmode(PRESET_MAP_NETATMO[preset_mode])
         else:
             _LOGGER.error("Preset mode '%s' not available", preset_mode)
 
@@ -422,12 +415,14 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
         """Return a list of available preset modes."""
         return SUPPORT_PRESET
 
-    def set_temperature(self, **kwargs):
+    async def async_set_temperature(self, **kwargs):
         """Set new target temperature for 2 hours."""
         temp = kwargs.get(ATTR_TEMPERATURE)
         if temp is None:
             return
-        self._home_status.set_room_thermpoint(self._id, STATE_NETATMO_MANUAL, temp)
+        await self._home_status.async_set_room_thermpoint(
+            self._id, STATE_NETATMO_MANUAL, temp
+        )
 
         self.async_write_ha_state()
 
@@ -449,21 +444,23 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
 
         return attr
 
-    def turn_off(self):
+    async def async_turn_off(self):
         """Turn the entity off."""
         if self._model == NA_VALVE:
-            self._home_status.set_room_thermpoint(
+            await self._home_status.async_set_room_thermpoint(
                 self._id,
                 STATE_NETATMO_MANUAL,
                 DEFAULT_MIN_TEMP,
             )
         elif self.hvac_mode != HVAC_MODE_OFF:
-            self._home_status.set_room_thermpoint(self._id, STATE_NETATMO_OFF)
+            await self._home_status.async_set_room_thermpoint(
+                self._id, STATE_NETATMO_OFF
+            )
         self.async_write_ha_state()
 
-    def turn_on(self):
+    async def async_turn_on(self):
         """Turn the entity on."""
-        self._home_status.set_room_thermpoint(self._id, STATE_NETATMO_HOME)
+        await self._home_status.async_set_room_thermpoint(self._id, STATE_NETATMO_HOME)
         self.async_write_ha_state()
 
     @property
@@ -475,6 +472,11 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
     def async_update_callback(self):
         """Update the entity's state."""
         self._home_status = self.data_handler.data[self._home_status_class]
+        if self._home_status is None:
+            if self.available:
+                self._connected = False
+            return
+
         self._room_status = self._home_status.rooms.get(self._id)
         self._room_data = self._data.rooms.get(self._home_id, {}).get(self._id)
 
@@ -506,7 +508,7 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
         self._target_temperature = roomstatus["target_temperature"]
         self._preset = NETATMO_MAP_PRESET[roomstatus["setpoint_mode"]]
         self._hvac_mode = HVAC_MAP_NETATMO[self._preset]
-        self._battery_level = roomstatus.get("battery_level")
+        self._battery_level = roomstatus.get("battery_state")
         self._connected = True
 
         self._away = self._hvac_mode == HVAC_MAP_NETATMO[STATE_NETATMO_AWAY]
@@ -546,7 +548,7 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
                 roomstatus["heating_status"] = self._boilerstatus
                 batterylevel = self._home_status.thermostats[
                     roomstatus["module_id"]
-                ].get("battery_level")
+                ].get("battery_state")
             elif roomstatus["module_type"] == NA_VALVE:
                 roomstatus["heating_power_request"] = self._room_status[
                     "heating_power_request"
@@ -557,16 +559,11 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
                         self._boilerstatus and roomstatus["heating_status"]
                     )
                 batterylevel = self._home_status.valves[roomstatus["module_id"]].get(
-                    "battery_level"
+                    "battery_state"
                 )
 
             if batterylevel:
-                batterypct = interpolate(batterylevel, roomstatus["module_type"])
-                if (
-                    not roomstatus.get("battery_level")
-                    or batterypct < roomstatus["battery_level"]
-                ):
-                    roomstatus["battery_level"] = batterypct
+                roomstatus["battery_state"] = batterylevel
 
             return roomstatus
 
@@ -575,7 +572,7 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
 
         return {}
 
-    def _service_set_schedule(self, **kwargs):
+    async def _async_service_set_schedule(self, **kwargs):
         schedule_name = kwargs.get(ATTR_SCHEDULE_NAME)
         schedule_id = None
         for sid, name in self.hass.data[DOMAIN][DATA_SCHEDULES][self._home_id].items():
@@ -583,12 +580,12 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
                 schedule_id = sid
 
         if not schedule_id:
-            _LOGGER.error(
-                "%s is not a invalid schedule", kwargs.get(ATTR_SCHEDULE_NAME)
-            )
+            _LOGGER.error("%s is not a valid schedule", kwargs.get(ATTR_SCHEDULE_NAME))
             return
 
-        self._data.switch_home_schedule(home_id=self._home_id, schedule_id=schedule_id)
+        await self._data.async_switch_home_schedule(
+            home_id=self._home_id, schedule_id=schedule_id
+        )
         _LOGGER.debug(
             "Setting %s schedule to %s (%s)",
             self._home_id,
@@ -602,48 +599,6 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
         return {**super().device_info, "suggested_area": self._room_data["name"]}
 
 
-def interpolate(batterylevel: int, module_type: str) -> int:
-    """Interpolate battery level depending on device type."""
-    na_battery_levels = {
-        NA_THERM: {
-            "full": 4100,
-            "high": 3600,
-            "medium": 3300,
-            "low": 3000,
-            "empty": 2800,
-        },
-        NA_VALVE: {
-            "full": 3200,
-            "high": 2700,
-            "medium": 2400,
-            "low": 2200,
-            "empty": 2200,
-        },
-    }
-
-    levels = sorted(na_battery_levels[module_type].values())
-    steps = [20, 50, 80, 100]
-
-    na_battery_level = na_battery_levels[module_type]
-    if batterylevel >= na_battery_level["full"]:
-        return 100
-    if batterylevel >= na_battery_level["high"]:
-        i = 3
-    elif batterylevel >= na_battery_level["medium"]:
-        i = 2
-    elif batterylevel >= na_battery_level["low"]:
-        i = 1
-    else:
-        return 0
-
-    pct = steps[i - 1] + (
-        (steps[i] - steps[i - 1])
-        * (batterylevel - levels[i])
-        / (levels[i + 1] - levels[i])
-    )
-    return int(pct)
-
-
 def get_all_home_ids(home_data: pyatmo.HomeData) -> list[str]:
     """Get all the home ids returned by NetAtmo API."""
     if home_data is None:
@@ -651,8 +606,5 @@ def get_all_home_ids(home_data: pyatmo.HomeData) -> list[str]:
     return [
         home_data.homes[home_id]["id"]
         for home_id in home_data.homes
-        if (
-            "therm_schedules" in home_data.homes[home_id]
-            and "modules" in home_data.homes[home_id]
-        )
+        if "modules" in home_data.homes[home_id]
     ]

@@ -29,7 +29,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors = {}
 
-        config_entry = self.hass.config_entries.async_entries(DOMAIN)
+        config_entry = self._async_current_entries()
         if config_entry:
             return self.async_abort(reason="single_instance_allowed")
 

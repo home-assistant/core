@@ -23,7 +23,7 @@ from homeassistant.const import (
     HTTP_UNAUTHORIZED,
 )
 from homeassistant.core import callback
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.httpx_client import SERVER_SOFTWARE, USER_AGENT
 from homeassistant.helpers.update_coordinator import (
@@ -140,7 +140,7 @@ async def async_setup_entry(hass, config_entry):
     hass.data.setdefault(DOMAIN, {})
     config = config_entry.data
     # Because users can have multiple accounts, we always create a new session so they have separate cookies
-    async_client = httpx.AsyncClient(headers={USER_AGENT: SERVER_SOFTWARE})
+    async_client = httpx.AsyncClient(headers={USER_AGENT: SERVER_SOFTWARE}, timeout=60)
     email = config_entry.title
     if email in hass.data[DOMAIN] and CONF_SCAN_INTERVAL in hass.data[DOMAIN][email]:
         scan_interval = hass.data[DOMAIN][email][CONF_SCAN_INTERVAL]
@@ -170,6 +170,9 @@ async def async_setup_entry(hass, config_entry):
     except IncompleteCredentials as ex:
         await async_client.aclose()
         raise ConfigEntryAuthFailed from ex
+    except httpx.ConnectTimeout as ex:
+        await async_client.aclose()
+        raise ConfigEntryNotReady from ex
     except TeslaException as ex:
         await async_client.aclose()
         if ex.code == HTTP_UNAUTHORIZED:

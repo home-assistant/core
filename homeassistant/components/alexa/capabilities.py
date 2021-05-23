@@ -73,7 +73,7 @@ class AlexaCapability:
 
     supported_locales = {"en-US"}
 
-    def __init__(self, entity: State, instance: str | None = None):
+    def __init__(self, entity: State, instance: str | None = None) -> None:
         """Initialize an Alexa capability."""
         self.entity = entity
         self.instance = instance
@@ -1919,6 +1919,10 @@ class AlexaEqualizerController(AlexaCapability):
         Either bands, mode or both can be specified. Only mode is supported at this time.
         """
         return [{"name": "mode"}]
+
+    def properties_retrievable(self):
+        """Return True if properties can be retrieved."""
+        return True
 
     def get_property(self, name):
         """Read and return a property."""

@@ -10,7 +10,7 @@
             "unknown": "Unexpected error",
             "wrong_version": "Your powerwall uses a software version that is not supported. Please consider upgrading or reporting this issue so it can be resolved."
         },
-        "flow_title": "Tesla Powerwall ({ip_address})",
+        "flow_title": "{ip_address}",
         "step": {
             "user": {
                 "data": {
