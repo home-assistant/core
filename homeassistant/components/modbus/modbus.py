@@ -196,7 +196,7 @@ class ModbusHub:
         }
 
     @property
-    def name(self):
+    def name(self):  # pragma: no cover
         """Return the name of this hub."""
         return self._config_name
 
