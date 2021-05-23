@@ -6,6 +6,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
+from homeassistant.components.websocket_api.connection import ActiveConnection
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
@@ -46,12 +47,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-@websocket_api.require_admin  # type: ignore[arg-type]
-@websocket_api.async_response
+@websocket_api.require_admin
 @websocket_api.websocket_command({vol.Required("type"): "network"})
+@websocket_api.async_response
 async def websocket_network_adapters(
     hass: HomeAssistant,
-    connection: websocket_api.connection.ActiveConnection,
+    connection: ActiveConnection,
     msg: dict,
 ) -> None:
     """Return network preferences."""
@@ -65,17 +66,17 @@ async def websocket_network_adapters(
     )
 
 
-@websocket_api.require_admin  # type: ignore[arg-type]
-@websocket_api.async_response
+@websocket_api.require_admin
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "network/configure",
         vol.Required("config", default={}): NETWORK_CONFIG_SCHEMA,
     }
 )
+@websocket_api.async_response
 async def websocket_network_adapters_configure(
     hass: HomeAssistant,
-    connection: websocket_api.connection.ActiveConnection,
+    connection: ActiveConnection,
     msg: dict,
 ) -> None:
     """Update network config."""
