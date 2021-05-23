@@ -343,7 +343,6 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="accessory_not_found_error")
             except InvalidSetupCode:
                 errors["pairing_code"] = "invalid_setup_code"
-                self.finish_pairing = None
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Pairing attempt failed with an unhandled exception")
                 self.finish_pairing = None
