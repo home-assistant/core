@@ -56,7 +56,9 @@ def setup(hass, config):
     exchange_currencies = config[DOMAIN][CONF_EXCHANGE_CURRENCIES]
     native_currency = config[DOMAIN][CONF_NATIVE_CURRENCY]
 
-    hass.data[DATA_COINBASE] = coinbase_data = CoinbaseData(api_key, api_secret, native_currency)
+    hass.data[DATA_COINBASE] = coinbase_data = CoinbaseData(
+        api_key, api_secret, native_currency
+    )
 
     if not hasattr(coinbase_data, "accounts"):
         return False
@@ -107,7 +109,9 @@ class CoinbaseData:
 
             self.accounts = accounts
 
-            self.exchange_rates = self.client.get_exchange_rates(currency=native_currency)
+            self.exchange_rates = self.client.get_exchange_rates(
+                currency=native_currency
+            )
         except AuthenticationError as coinbase_error:
             _LOGGER.error(
                 "Authentication error connecting to coinbase: %s", coinbase_error
