@@ -21,6 +21,7 @@ DOMAIN = "knx"
 KNX_ADDRESS = "address"
 
 CONF_INVERT = "invert"
+CONF_KNX_EXPOSE = "expose"
 CONF_STATE_ADDRESS = "state_address"
 CONF_SYNC_STATE = "sync_state"
 CONF_RESET_AFTER = "reset_after"

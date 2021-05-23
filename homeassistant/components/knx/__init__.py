@@ -34,7 +34,7 @@ from homeassistant.helpers.reload import async_integration_yaml_config
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN, KNX_ADDRESS, SupportedPlatforms
+from .const import CONF_KNX_EXPOSE, DOMAIN, KNX_ADDRESS, SupportedPlatforms
 from .expose import KNXExposeSensor, KNXExposeTime, create_knx_exposure
 from .factory import create_knx_device
 from .schema import (
@@ -66,7 +66,6 @@ CONF_KNX_MCAST_GRP = "multicast_group"
 CONF_KNX_MCAST_PORT = "multicast_port"
 CONF_KNX_STATE_UPDATER = "state_updater"
 CONF_KNX_RATE_LIMIT = "rate_limit"
-CONF_KNX_EXPOSE = "expose"
 
 SERVICE_KNX_SEND = "send"
 SERVICE_KNX_ATTR_PAYLOAD = "payload"
@@ -109,39 +108,17 @@ CONFIG_SCHEMA = vol.Schema(
                     vol.Optional(CONF_KNX_RATE_LIMIT, default=20): vol.All(
                         vol.Coerce(int), vol.Range(min=1, max=100)
                     ),
-                    vol.Optional(CONF_KNX_EXPOSE): vol.All(
-                        cv.ensure_list, [ExposeSchema.SCHEMA]
-                    ),
-                    vol.Optional(SupportedPlatforms.COVER.value): vol.All(
-                        cv.ensure_list, [CoverSchema.SCHEMA]
-                    ),
-                    vol.Optional(SupportedPlatforms.BINARY_SENSOR.value): vol.All(
-                        cv.ensure_list, [BinarySensorSchema.SCHEMA]
-                    ),
-                    vol.Optional(SupportedPlatforms.LIGHT.value): vol.All(
-                        cv.ensure_list, [LightSchema.SCHEMA]
-                    ),
-                    vol.Optional(SupportedPlatforms.CLIMATE.value): vol.All(
-                        cv.ensure_list, [ClimateSchema.SCHEMA]
-                    ),
-                    vol.Optional(SupportedPlatforms.NOTIFY.value): vol.All(
-                        cv.ensure_list, [NotifySchema.SCHEMA]
-                    ),
-                    vol.Optional(SupportedPlatforms.SWITCH.value): vol.All(
-                        cv.ensure_list, [SwitchSchema.SCHEMA]
-                    ),
-                    vol.Optional(SupportedPlatforms.SENSOR.value): vol.All(
-                        cv.ensure_list, [SensorSchema.SCHEMA]
-                    ),
-                    vol.Optional(SupportedPlatforms.SCENE.value): vol.All(
-                        cv.ensure_list, [SceneSchema.SCHEMA]
-                    ),
-                    vol.Optional(SupportedPlatforms.WEATHER.value): vol.All(
-                        cv.ensure_list, [WeatherSchema.SCHEMA]
-                    ),
-                    vol.Optional(SupportedPlatforms.FAN.value): vol.All(
-                        cv.ensure_list, [FanSchema.SCHEMA]
-                    ),
+                    **ExposeSchema.platform_node(),
+                    **BinarySensorSchema.platform_node(),
+                    **ClimateSchema.platform_node(),
+                    **CoverSchema.platform_node(),
+                    **FanSchema.platform_node(),
+                    **LightSchema.platform_node(),
+                    **NotifySchema.platform_node(),
+                    **SceneSchema.platform_node(),
+                    **SensorSchema.platform_node(),
+                    **SwitchSchema.platform_node(),
+                    **WeatherSchema.platform_node(),
                 }
             ),
         )
