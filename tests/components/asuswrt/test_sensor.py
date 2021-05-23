@@ -44,9 +44,25 @@ MOCK_BYTES_TOTAL = [60000000000, 50000000000]
 MOCK_CURRENT_TRANSFER_RATES = [20000000, 10000000]
 
 
-def get_devices():
-    """Return mock devices for test."""
-    return MOCK_DEVICES.copy()
+class MockDevices:
+    """Mock AsusWrt devices."""
+
+    _mock_devices = MOCK_DEVICES
+
+    @staticmethod
+    def add_device(mac, device):
+        """Add a mock devices for test."""
+        MockDevices._mock_devices[mac] = device
+
+    @staticmethod
+    def remove_device(mac):
+        """Remove a mock devices for test."""
+        MockDevices._mock_devices.pop(mac)
+
+    @staticmethod
+    def get_devices():
+        """Return mock devices for test."""
+        return MockDevices._mock_devices.copy()
 
 
 @pytest.fixture(name="connect")
@@ -57,7 +73,7 @@ def mock_controller_connect():
         service_mock.return_value.is_connected = True
         service_mock.return_value.connection.disconnect = Mock()
         service_mock.return_value.async_get_connected_devices = AsyncMock(
-            side_effect=get_devices
+            side_effect=MockDevices.get_devices
         )
         service_mock.return_value.async_get_bytes_total = AsyncMock(
             return_value=MOCK_BYTES_TOTAL
@@ -139,9 +155,9 @@ async def test_sensors(hass, connect):
     assert hass.states.get(f"{sensor_prefix}_devices_connected").state == "2"
 
     # add one device and remove another
-    MOCK_DEVICES.pop("a1:b1:c1:d1:e1:f1")
-    MOCK_DEVICES["a3:b3:c3:d3:e3:f3"] = Device(
-        "a3:b3:c3:d3:e3:f3", "192.168.1.4", "TestThree"
+    MockDevices.remove_device("a1:b1:c1:d1:e1:f1")
+    MockDevices.add_device(
+        "a3:b3:c3:d3:e3:f3", Device("a3:b3:c3:d3:e3:f3", "192.168.1.4", "TestThree")
     )
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
     await hass.async_block_till_done()
