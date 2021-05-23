@@ -12,7 +12,7 @@
         "flow_title": "{name}",
         "step": {
             "confirm_discovery": {
-                "description": "Wilt u het {model} bij {host} instellen? Voordat apparaten op batterijen kunnen worden ingesteld, moet het worden gewekt door op de knop op het apparaat te drukken."
+                "description": "Wilt u het {model} bij {host} opzetten?\n\nApparaten, die op batterijen werken en met een wachtwoord zijn beveiligd, moeten worden gewekt voordat u verder kunt gaan met het instellen.\nApparaten, op batterijen die niet beveiligd zijn met een wachtwoord worden toegevoegd wanneer het apparaat wakker wordt. U kunt het apparaat nu handmatig wakker maken met een knop op het apparaat of wachten op de volgende gegevensupdate van het apparaat."
             },
             "credentials": {
                 "data": {

@@ -6,7 +6,7 @@ import pytest
 from homeassistant import config_entries
 from homeassistant.const import EVENT_HOMEASSISTANT_START, STATE_UNAVAILABLE
 from homeassistant.core import CoreState, callback, valid_entity_id
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import (
     MockConfigEntry,
@@ -686,7 +686,7 @@ async def test_remove_device_removes_entities(hass, registry):
 
     device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={("mac", "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
 
     entry = registry.async_get_or_create(
@@ -713,13 +713,13 @@ async def test_update_device_race(hass, registry):
     # Create device
     device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={("mac", "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
     # Update it
     device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         identifiers={("bridgeid", "0123")},
-        connections={("mac", "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
     # Add entity to the device
     entry = registry.async_get_or_create(
@@ -746,7 +746,7 @@ async def test_disable_device_disables_entities(hass, registry):
 
     device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={("mac", "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
 
     entry1 = registry.async_get_or_create(
@@ -811,7 +811,7 @@ async def test_disable_config_entry_disables_entities(hass, registry):
 
     device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={("mac", "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
 
     entry1 = registry.async_get_or_create(
@@ -877,7 +877,7 @@ async def test_disabled_entities_excluded_from_entity_list(hass, registry):
 
     device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={("mac", "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
 
     entry1 = registry.async_get_or_create(

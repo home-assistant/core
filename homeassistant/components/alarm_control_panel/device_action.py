@@ -1,6 +1,8 @@
 """Provides device automations for Alarm control panel."""
 from __future__ import annotations
 
+from typing import Final
+
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -21,6 +23,7 @@ from homeassistant.const import (
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import entity_registry
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 from . import ATTR_CODE_ARM_REQUIRED, DOMAIN
 from .const import (
@@ -30,9 +33,15 @@ from .const import (
     SUPPORT_ALARM_TRIGGER,
 )
 
-ACTION_TYPES = {"arm_away", "arm_home", "arm_night", "disarm", "trigger"}
+ACTION_TYPES: Final[set[str]] = {
+    "arm_away",
+    "arm_home",
+    "arm_night",
+    "disarm",
+    "trigger",
+}
 
-ACTION_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
+ACTION_SCHEMA: Final = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_TYPE): vol.In(ACTION_TYPES),
         vol.Required(CONF_ENTITY_ID): cv.entity_domain(DOMAIN),
@@ -41,7 +50,9 @@ ACTION_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
 )
 
 
-async def async_get_actions(hass: HomeAssistant, device_id: str) -> list[dict]:
+async def async_get_actions(
+    hass: HomeAssistant, device_id: str
+) -> list[dict[str, str]]:
     """List device actions for Alarm control panel devices."""
     registry = await entity_registry.async_get_registry(hass)
     actions = []
@@ -109,7 +120,7 @@ async def async_get_actions(hass: HomeAssistant, device_id: str) -> list[dict]:
 
 
 async def async_call_action_from_config(
-    hass: HomeAssistant, config: dict, variables: dict, context: Context | None
+    hass: HomeAssistant, config: ConfigType, variables: dict, context: Context | None
 ) -> None:
     """Execute a device action."""
     service_data = {ATTR_ENTITY_ID: config[CONF_ENTITY_ID]}
@@ -132,7 +143,9 @@ async def async_call_action_from_config(
     )
 
 
-async def async_get_action_capabilities(hass, config):
+async def async_get_action_capabilities(
+    hass: HomeAssistant, config: ConfigType
+) -> dict[str, vol.Schema]:
     """List action capabilities."""
     state = hass.states.get(config[CONF_ENTITY_ID])
     code_required = state.attributes.get(ATTR_CODE_ARM_REQUIRED) if state else False

@@ -1,0 +1,13 @@
+reconnect:
+  description: Reconnects your FRITZ!Box internet connection
+  target:
+    entity:
+      integration: fritz
+      domain: binary_sensor
+
+reboot:
+  description: Reboots your FRITZ!Box
+  target:
+    entity:
+      integration: fritz
+      domain: binary_sensor

@@ -1,5 +1,4 @@
 """Support for AVM Fritz!Box functions."""
-import asyncio
 import logging
 
 from fritzconnection.core.exceptions import FritzConnectionException, FritzSecurityError
@@ -14,10 +13,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers.typing import ConfigType
 
-from .common import FritzBoxTools
-from .const import DOMAIN, PLATFORMS
+from .common import FritzBoxTools, FritzData
+from .const import DATA_FRITZ, DOMAIN, PLATFORMS
+from .services import async_setup_services, async_unload_services
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,6 +43,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = fritz_tools
 
+    if DATA_FRITZ not in hass.data:
+        hass.data[DATA_FRITZ] = FritzData()
+
     @callback
     def _async_unload(event):
         fritz_tools.async_unload()
@@ -52,28 +54,28 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_unload)
     )
     # Load the other platforms like switch
-    for domain in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, domain)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+
+    await async_setup_services(hass)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigType) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload FRITZ!Box Tools config entry."""
     fritzbox: FritzBoxTools = hass.data[DOMAIN][entry.entry_id]
     fritzbox.async_unload()
 
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, platform)
-                for platform in PLATFORMS
-            ]
-        )
-    )
+    fritz_data = hass.data[DATA_FRITZ]
+    fritz_data.tracked.pop(fritzbox.unique_id)
+
+    if not bool(fritz_data.tracked):
+        hass.data.pop(DATA_FRITZ)
+
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
+
+    await async_unload_services(hass)
 
     return unload_ok

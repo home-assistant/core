@@ -6,7 +6,7 @@
         "error": {
             "cannot_connect": "\u9023\u7dda\u5931\u6557"
         },
-        "flow_title": "BSB-Lan\uff1a{name}",
+        "flow_title": "{name}",
         "step": {
             "user": {
                 "data": {

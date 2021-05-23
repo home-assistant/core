@@ -14,7 +14,7 @@ from homeassistant.components.waze_travel_time.const import (
     DEFAULT_NAME,
     DOMAIN,
 )
-from homeassistant.const import CONF_REGION, CONF_UNIT_SYSTEM_IMPERIAL
+from homeassistant.const import CONF_NAME, CONF_REGION, CONF_UNIT_SYSTEM_IMPERIAL
 
 from tests.common import MockConfigEntry
 
@@ -38,8 +38,9 @@ async def test_minimum_fields(hass, validate_config_entry, bypass_setup):
     await hass.async_block_till_done()
 
     assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result2["title"] == f"{DEFAULT_NAME}: location1 -> location2"
+    assert result2["title"] == DEFAULT_NAME
     assert result2["data"] == {
+        CONF_NAME: DEFAULT_NAME,
         CONF_ORIGIN: "location1",
         CONF_DESTINATION: "location2",
         CONF_REGION: "US",

@@ -55,7 +55,7 @@ BITMASK_SCHEMA = vol.All(
 class ZWaveServices:
     """Class that holds our services (Zwave Commands) that should be published to hass."""
 
-    def __init__(self, hass: HomeAssistant, ent_reg: EntityRegistry):
+    def __init__(self, hass: HomeAssistant, ent_reg: EntityRegistry) -> None:
         """Initialize with hass object."""
         self._hass = hass
         self._ent_reg = ent_reg

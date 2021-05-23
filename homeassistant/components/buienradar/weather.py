@@ -38,36 +38,42 @@ from homeassistant.components.weather import (
     PLATFORM_SCHEMA,
     WeatherEntity,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, TEMP_CELSIUS
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 # Reuse data and API logic from the sensor implementation
-from .const import DEFAULT_TIMEFRAME
+from .const import DEFAULT_TIMEFRAME, DOMAIN
 from .util import BrData
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_CONDITION = "buienradar_condition"
-
-
 CONF_FORECAST = "forecast"
 
+DATA_CONDITION = "buienradar_condition"
 
 CONDITION_CLASSES = {
-    ATTR_CONDITION_CLOUDY: ["c", "p"],
-    ATTR_CONDITION_FOG: ["d", "n"],
-    ATTR_CONDITION_HAIL: [],
-    ATTR_CONDITION_LIGHTNING: ["g"],
-    ATTR_CONDITION_LIGHTNING_RAINY: ["s"],
-    ATTR_CONDITION_PARTLYCLOUDY: ["b", "j", "o", "r"],
-    ATTR_CONDITION_POURING: ["l", "q"],
-    ATTR_CONDITION_RAINY: ["f", "h", "k", "m"],
-    ATTR_CONDITION_SNOWY: ["u", "i", "v", "t"],
-    ATTR_CONDITION_SNOWY_RAINY: ["w"],
-    ATTR_CONDITION_SUNNY: ["a"],
-    ATTR_CONDITION_WINDY: [],
-    ATTR_CONDITION_WINDY_VARIANT: [],
-    ATTR_CONDITION_EXCEPTIONAL: [],
+    ATTR_CONDITION_CLOUDY: ("c", "p"),
+    ATTR_CONDITION_FOG: ("d", "n"),
+    ATTR_CONDITION_HAIL: (),
+    ATTR_CONDITION_LIGHTNING: ("g",),
+    ATTR_CONDITION_LIGHTNING_RAINY: ("s",),
+    ATTR_CONDITION_PARTLYCLOUDY: (
+        "b",
+        "j",
+        "o",
+        "r",
+    ),
+    ATTR_CONDITION_POURING: ("l", "q"),
+    ATTR_CONDITION_RAINY: ("f", "h", "k", "m"),
+    ATTR_CONDITION_SNOWY: ("u", "i", "v", "t"),
+    ATTR_CONDITION_SNOWY_RAINY: ("w",),
+    ATTR_CONDITION_SUNNY: ("a",),
+    ATTR_CONDITION_WINDY: (),
+    ATTR_CONDITION_WINDY_VARIANT: (),
+    ATTR_CONDITION_EXCEPTIONAL: (),
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -81,13 +87,24 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    """Set up buienradar weather platform."""
+    _LOGGER.warning(
+        "Platform configuration is deprecated, will be removed in a future release"
+    )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up the buienradar platform."""
+    config = entry.data
+
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
 
     if None in (latitude, longitude):
         _LOGGER.error("Latitude or longitude not set in Home Assistant config")
-        return False
+        return
 
     coordinates = {CONF_LATITUDE: float(latitude), CONF_LONGITUDE: float(longitude)}
 
@@ -97,12 +114,12 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     _LOGGER.debug("Initializing buienradar weather: coordinates %s", coordinates)
 
     # create condition helper
-    if DATA_CONDITION not in hass.data:
+    if DATA_CONDITION not in hass.data[DOMAIN]:
         cond_keys = [str(chr(x)) for x in range(97, 123)]
-        hass.data[DATA_CONDITION] = dict.fromkeys(cond_keys)
+        hass.data[DOMAIN][DATA_CONDITION] = dict.fromkeys(cond_keys)
         for cond, condlst in CONDITION_CLASSES.items():
             for condi in condlst:
-                hass.data[DATA_CONDITION][condi] = cond
+                hass.data[DOMAIN][DATA_CONDITION][condi] = cond
 
     async_add_entities([BrWeather(data, config, coordinates)])
 
@@ -115,8 +132,7 @@ class BrWeather(WeatherEntity):
 
     def __init__(self, data, config, coordinates):
         """Initialise the platform with a data instance and station name."""
-        self._stationname = config.get(CONF_NAME)
-        self._forecast = config[CONF_FORECAST]
+        self._stationname = config.get(CONF_NAME, "Buienradar")
         self._data = data
 
         self._unique_id = "{:2.6f}{:2.6f}".format(
@@ -141,7 +157,7 @@ class BrWeather(WeatherEntity):
         if self._data and self._data.condition:
             ccode = self._data.condition.get(CONDCODE)
             if ccode:
-                conditions = self.hass.data.get(DATA_CONDITION)
+                conditions = self.hass.data[DOMAIN].get(DATA_CONDITION)
                 if conditions:
                     return conditions.get(ccode)
 
@@ -187,11 +203,8 @@ class BrWeather(WeatherEntity):
     @property
     def forecast(self):
         """Return the forecast array."""
-        if not self._forecast:
-            return None
-
         fcdata_out = []
-        cond = self.hass.data[DATA_CONDITION]
+        cond = self.hass.data[DOMAIN][DATA_CONDITION]
 
         if not self._data.forecast:
             return None

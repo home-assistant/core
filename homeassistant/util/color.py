@@ -417,12 +417,57 @@ def color_rgb_to_rgbw(r: int, g: int, b: int) -> tuple[int, int, int, int]:
 
 def color_rgbw_to_rgb(r: int, g: int, b: int, w: int) -> tuple[int, int, int]:
     """Convert an rgbw color to an rgb representation."""
-    # Add the white channel back into the rgb channels.
+    # Add the white channel to the rgb channels.
     rgb = (r + w, g + w, b + w)
 
     # Match the output maximum value to the input. This ensures the
     # output doesn't overflow.
     return _match_max_scale((r, g, b, w), rgb)  # type: ignore
+
+
+def color_rgb_to_rgbww(
+    r: int, g: int, b: int, min_mireds: int, max_mireds: int
+) -> tuple[int, int, int, int, int]:
+    """Convert an rgb color to an rgbww representation."""
+    # Find the color temperature when both white channels have equal brightness
+    mired_range = max_mireds - min_mireds
+    mired_midpoint = min_mireds + mired_range / 2
+    color_temp_kelvin = color_temperature_mired_to_kelvin(mired_midpoint)
+    w_r, w_g, w_b = color_temperature_to_rgb(color_temp_kelvin)
+
+    # Find the ratio of the midpoint white in the input rgb channels
+    white_level = min(r / w_r, g / w_g, b / w_b)
+
+    # Subtract the white portion from the rgb channels.
+    rgb = (r - w_r * white_level, g - w_g * white_level, b - w_b * white_level)
+    rgbww = (*rgb, round(white_level * 255), round(white_level * 255))
+
+    # Match the output maximum value to the input. This ensures the full
+    # channel range is used.
+    return _match_max_scale((r, g, b), rgbww)  # type: ignore
+
+
+def color_rgbww_to_rgb(
+    r: int, g: int, b: int, cw: int, ww: int, min_mireds: int, max_mireds: int
+) -> tuple[int, int, int]:
+    """Convert an rgbww color to an rgb representation."""
+    # Calculate color temperature of the white channels
+    mired_range = max_mireds - min_mireds
+    try:
+        ct_ratio = ww / (cw + ww)
+    except ZeroDivisionError:
+        ct_ratio = 0.5
+    color_temp_mired = min_mireds + ct_ratio * mired_range
+    color_temp_kelvin = color_temperature_mired_to_kelvin(color_temp_mired)
+    w_r, w_g, w_b = color_temperature_to_rgb(color_temp_kelvin)
+    white_level = max(cw, ww) / 255
+
+    # Add the white channels to the rgb channels.
+    rgb = (r + w_r * white_level, g + w_g * white_level, b + w_b * white_level)
+
+    # Match the output maximum value to the input. This ensures the
+    # output doesn't overflow.
+    return _match_max_scale((r, g, b, cw, ww), rgb)  # type: ignore
 
 
 def color_rgb_to_hex(r: int, g: int, b: int) -> str:
@@ -469,13 +514,12 @@ def color_temperature_to_rgb(
     return red, green, blue
 
 
-def _bound(color_component: float, minimum: float = 0, maximum: float = 255) -> float:
+def _clamp(color_component: float, minimum: float = 0, maximum: float = 255) -> float:
     """
-    Bound the given color component value between the given min and max values.
+    Clamp the given color component value between the given min and max values.
 
-    The minimum and maximum values will be included in the valid output.
-    i.e. Given a color_component of 0 and a minimum of 10, the returned value
-    will be 10.
+    The range defined by the minimum and maximum values is inclusive, i.e. given a
+    color_component of 0 and a minimum of 10, the returned value is 10.
     """
     color_component_out = max(color_component, minimum)
     return min(color_component_out, maximum)
@@ -486,7 +530,7 @@ def _get_red(temperature: float) -> float:
     if temperature <= 66:
         return 255
     tmp_red = 329.698727446 * math.pow(temperature - 60, -0.1332047592)
-    return _bound(tmp_red)
+    return _clamp(tmp_red)
 
 
 def _get_green(temperature: float) -> float:
@@ -495,7 +539,7 @@ def _get_green(temperature: float) -> float:
         green = 99.4708025861 * math.log(temperature) - 161.1195681661
     else:
         green = 288.1221695283 * math.pow(temperature - 60, -0.0755148492)
-    return _bound(green)
+    return _clamp(green)
 
 
 def _get_blue(temperature: float) -> float:
@@ -505,7 +549,7 @@ def _get_blue(temperature: float) -> float:
     if temperature <= 19:
         return 0
     blue = 138.5177312231 * math.log(temperature - 10) - 305.0447927307
-    return _bound(blue)
+    return _clamp(blue)
 
 
 def color_temperature_mired_to_kelvin(mired_temperature: float) -> int:

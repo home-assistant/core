@@ -75,7 +75,7 @@ class Store:
         private: bool = False,
         *,
         encoder: type[JSONEncoder] | None = None,
-    ):
+    ) -> None:
         """Initialize storage class."""
         self.version = version
         self.key = key

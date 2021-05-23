@@ -4,9 +4,11 @@ from __future__ import annotations
 from collections.abc import Generator
 from contextlib import contextmanager
 from datetime import timedelta
+import functools
 import logging
 import os
 import time
+from typing import TYPE_CHECKING
 
 from sqlalchemy.exc import OperationalError, SQLAlchemyError
 from sqlalchemy.orm.session import Session
@@ -19,9 +21,13 @@ from .models import (
     ALL_TABLES,
     TABLE_RECORDER_RUNS,
     TABLE_SCHEMA_CHANGES,
+    TABLE_STATISTICS,
     RecorderRuns,
     process_timestamp,
 )
+
+if TYPE_CHECKING:
+    from . import Recorder
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,6 +39,12 @@ SQLITE3_POSTFIXES = ["", "-wal", "-shm"]
 # before we no longer consider startup to be a "restart" and we
 # should do a check on the sqlite3 database.
 MAX_RESTART_TIME = timedelta(minutes=10)
+
+# Retry when one of the following MySQL errors occurred:
+RETRYABLE_MYSQL_ERRORS = (1205, 1206, 1213)
+# 1205: Lock wait timeout exceeded; try restarting transaction
+# 1206: The total number of locks exceeds the lock table size
+# 1213: Deadlock found when trying to get lock; try restarting transaction
 
 
 @contextmanager
@@ -167,6 +179,8 @@ def basic_sanity_check(cursor):
     """Check tables to make sure select does not fail."""
 
     for table in ALL_TABLES:
+        if table == TABLE_STATISTICS:
+            continue
         if table in (TABLE_RECORDER_RUNS, TABLE_SCHEMA_CHANGES):
             cursor.execute(f"SELECT * FROM {table};")  # nosec # not injection
         else:
@@ -240,25 +254,26 @@ def execute_on_connection(dbapi_connection, statement):
     cursor.close()
 
 
-def setup_connection_for_dialect(dialect_name, dbapi_connection):
+def setup_connection_for_dialect(dialect_name, dbapi_connection, first_connection):
     """Execute statements needed for dialect connection."""
     # Returns False if the the connection needs to be setup
     # on the next connection, returns True if the connection
     # never needs to be setup again.
     if dialect_name == "sqlite":
-        old_isolation = dbapi_connection.isolation_level
-        dbapi_connection.isolation_level = None
-        execute_on_connection(dbapi_connection, "PRAGMA journal_mode=WAL")
-        dbapi_connection.isolation_level = old_isolation
-        # WAL mode only needs to be setup once
-        # instead of every time we open the sqlite connection
-        # as its persistent and isn't free to call every time.
-        return True
+        if first_connection:
+            old_isolation = dbapi_connection.isolation_level
+            dbapi_connection.isolation_level = None
+            execute_on_connection(dbapi_connection, "PRAGMA journal_mode=WAL")
+            dbapi_connection.isolation_level = old_isolation
+            # WAL mode only needs to be setup once
+            # instead of every time we open the sqlite connection
+            # as its persistent and isn't free to call every time.
+
+        # approximately 8MiB of memory
+        execute_on_connection(dbapi_connection, "PRAGMA cache_size = -8192")
 
     if dialect_name == "mysql":
         execute_on_connection(dbapi_connection, "SET session wait_timeout=28800")
-
-    return False
 
 
 def end_incomplete_runs(session, start_time):
@@ -270,3 +285,48 @@ def end_incomplete_runs(session, start_time):
             "Ended unfinished session (id=%s from %s)", run.run_id, run.start
         )
         session.add(run)
+
+
+def retryable_database_job(description: str):
+    """Try to execute a database job.
+
+    The job should return True if it finished, and False if it needs to be rescheduled.
+    """
+
+    def decorator(job: callable):
+        @functools.wraps(job)
+        def wrapper(instance: Recorder, *args, **kwargs):
+            try:
+                return job(instance, *args, **kwargs)
+            except OperationalError as err:
+                if (
+                    instance.engine.dialect.name == "mysql"
+                    and err.orig.args[0] in RETRYABLE_MYSQL_ERRORS
+                ):
+                    _LOGGER.info(
+                        "%s; %s not completed, retrying", err.orig.args[1], description
+                    )
+                    time.sleep(instance.db_retry_wait)
+                    # Failed with retryable error
+                    return False
+
+                _LOGGER.warning("Error executing %s: %s", description, err)
+
+            # Failed with permanent error
+            return True
+
+        return wrapper
+
+    return decorator
+
+
+def perodic_db_cleanups(instance: Recorder):
+    """Run any database cleanups that need to happen perodiclly.
+
+    These cleanups will happen nightly or after any purge.
+    """
+
+    if instance.engine.dialect.name == "sqlite":
+        # Execute sqlite to create a wal checkpoint and free up disk space
+        _LOGGER.debug("WAL checkpoint")
+        instance.engine.execute("PRAGMA wal_checkpoint(TRUNCATE);")

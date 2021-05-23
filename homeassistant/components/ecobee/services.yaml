@@ -1,104 +1,211 @@
 create_vacation:
+  name: Create vacation
   description: >-
     Create a vacation on the selected thermostat. Note: start/end date and time must all be specified
     together for these parameters to have an effect. If start/end date and time are not specified, the
     vacation will start immediately and last 14 days (unless deleted earlier).
   fields:
     entity_id:
-      description: ecobee thermostat on which to create the vacation (required).
+      name: Entity
+      description: ecobee thermostat on which to create the vacation.
+      required: true
       example: "climate.kitchen"
+      selector:
+        entity:
+          integration: ecobee
+          domain: climate
     vacation_name:
-      description: Name of the vacation to create; must be unique on the thermostat (required).
+      name: Vacation name
+      description: Name of the vacation to create; must be unique on the thermostat.
+      required: true
       example: "Skiing"
+      selector:
+        text:
     cool_temp:
-      description: Cooling temperature during the vacation (required).
+      name: Cool temperature
+      description: Cooling temperature during the vacation.
+      required: true
       example: 23
+      selector:
+        number:
+          min: 7
+          max: 95
+          step: 0.5
+          unit_of_measurement: "°"
     heat_temp:
-      description: Heating temperature during the vacation (required).
+      name: Heat temperature
+      description: Heating temperature during the vacation.
+      required: true
       example: 25
+      selector:
+        number:
+          min: 7
+          max: 95
+          step: 0.5
+          unit_of_measurement: "°"
     start_date:
+      name: Start date
       description: >-
         Date the vacation starts in the YYYY-MM-DD format (optional, immediately if not provided along with
         start_time, end_date, and end_time).
       example: "2019-03-15"
+      selector:
+        text:
     start_time:
+      name: start time
       description: Time the vacation starts, in the local time of the thermostat, in the 24-hour format "HH:MM:SS"
       example: "20:00:00"
+      selector:
+        time:
     end_date:
+      name: End date
       description: >-
         Date the vacation ends in the YYYY-MM-DD format (optional, 14 days from now if not provided along with
         start_date, start_time, and end_time).
       example: "2019-03-20"
+      selector:
+        text:
     end_time:
+      name: End time
       description: Time the vacation ends, in the local time of the thermostat, in the 24-hour format "HH:MM:SS"
       example: "20:00:00"
+      selector:
+        time:
     fan_mode:
-      description: Fan mode of the thermostat during the vacation (auto or on) (optional, auto if not provided).
+      name: Fan mode
+      description: Fan mode of the thermostat during the vacation.
       example: "on"
+      default: "auto"
+      selector:
+        select:
+          options:
+            - "on"
+            - "auto"
     fan_min_on_time:
-      description: Minimum number of minutes to run the fan each hour (0 to 60) during the vacation (optional, 0 if not provided).
+      name: Fan minimum on time
+      description: Minimum number of minutes to run the fan each hour (0 to 60) during the vacation.
       example: 30
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 60
+          unit_of_measurement: minutes
 
 delete_vacation:
+  name: Delete vacation
   description: >-
     Delete a vacation on the selected thermostat.
   fields:
     entity_id:
-      description: ecobee thermostat on which to delete the vacation (required).
+      name: Entity
+      description: ecobee thermostat on which to delete the vacation.
+      required: true
       example: "climate.kitchen"
+      selector:
+        entity:
+          integration: ecobee
+          domain: climate
     vacation_name:
-      description: Name of the vacation to delete (required).
+      name: Vacation name
+      description: Name of the vacation to delete.
+      required: true
       example: "Skiing"
+      selector:
+        text:
 
 resume_program:
+  name: Resume program
   description: Resume the programmed schedule.
   fields:
     entity_id:
+      name: Entity
       description: Name(s) of entities to change.
       example: "climate.kitchen"
+      selector:
+        entity:
+          integration: ecobee
+          domain: climate
     resume_all:
-      description: Resume all events and return to the scheduled program. This default to false which removes only the top event.
+      name: Resume all
+      description: Resume all events and return to the scheduled program.
       example: true
+      default: false
+      selector:
+        boolean:
 
 set_fan_min_on_time:
+  name: Set fan minimum on time
   description: Set the minimum fan on time.
   fields:
     entity_id:
+      name: Entity
       description: Name(s) of entities to change.
       example: "climate.kitchen"
+      selector:
+        entity:
+          integration: ecobee
+          domain: climate
     fan_min_on_time:
+      name: Fan minimum on time
       description: New value of fan min on time.
+      required: true
       example: 5
+      selector:
+        number:
+          min: 0
+          max: 60
+          unit_of_measurement: minutes
 
 set_dst_mode:
+  name: Set Daylight savings time mode
   description: Enable/disable automatic daylight savings time.
+  target:
+    entity:
+      integration: ecobee
+      domain: climate
   fields:
-    entity_id:
-      description: Name(s) of entities to change.
-      example: "climate.kitchen"
     dst_enabled:
+      name: Daylight savings time enabled
       description: Enable automatic daylight savings time.
+      required: true
       example: "true"
+      selector:
+        boolean:
 
 set_mic_mode:
+  name: Set mic mode
   description: Enable/disable Alexa mic (only for Ecobee 4).
+  target:
+    entity:
+      integration: ecobee
+      domain: climate
   fields:
-    entity_id:
-      description: Name(s) of entities to change.
-      example: "climate.kitchen"
     mic_enabled:
+      name: Mic enabled
       description: Enable Alexa mic.
+      required: true
       example: "true"
+      selector:
+        boolean:
 
 set_occupancy_modes:
+  name: Set occupancy modes
   description: Enable/disable Smart Home/Away and Follow Me modes.
+  target:
+    entity:
+      integration: ecobee
+      domain: climate
   fields:
-    entity_id:
-      description: Name(s) of entities to change.
-      example: "climate.kitchen"
     auto_away:
+      name: Auto away
       description: Enable Smart Home/Away mode.
       example: "true"
+      selector:
+        boolean:
     follow_me:
+      name: Follow me
       description: Enable Follow Me mode.
       example: "true"
+      selector:
+        boolean:
