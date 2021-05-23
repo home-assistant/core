@@ -5,10 +5,9 @@ import logging
 import select
 import socket
 import ssl
-from typing import Final
+from typing import Any, Final
 
 import voluptuous as vol
-from voluptuous.schema_builder import Schema
 
 from homeassistant.const import (
     CONF_HOST,
@@ -42,7 +41,7 @@ from .model import TcpSensorConfig
 _LOGGER: Final = logging.getLogger(__name__)
 
 
-TCP_PLATFORM_SCHEMA: Final[Schema] = {
+TCP_PLATFORM_SCHEMA: Final[dict[vol.Marker, Any]] = {
     vol.Required(CONF_HOST): cv.string,
     vol.Required(CONF_PORT): cv.port,
     vol.Required(CONF_PAYLOAD): cv.string,
