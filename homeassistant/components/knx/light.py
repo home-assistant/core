@@ -176,40 +176,40 @@ def _create_light(xknx: XKNX, config: ConfigType) -> XknxLight:
             LightSchema.CONF_RED, LightSchema.CONF_BRIGHTNESS_STATE_ADDRESS
         ),
         group_address_switch_green=individual_color_addresses(
-            LightSchema.CONF_RED, KNX_ADDRESS
+            LightSchema.CONF_GREEN, KNX_ADDRESS
         ),
         group_address_switch_green_state=individual_color_addresses(
-            LightSchema.CONF_RED, LightSchema.CONF_STATE_ADDRESS
+            LightSchema.CONF_GREEN, LightSchema.CONF_STATE_ADDRESS
         ),
         group_address_brightness_green=individual_color_addresses(
-            LightSchema.CONF_RED, LightSchema.CONF_BRIGHTNESS_ADDRESS
+            LightSchema.CONF_GREEN, LightSchema.CONF_BRIGHTNESS_ADDRESS
         ),
         group_address_brightness_green_state=individual_color_addresses(
-            LightSchema.CONF_RED, LightSchema.CONF_BRIGHTNESS_STATE_ADDRESS
+            LightSchema.CONF_GREEN, LightSchema.CONF_BRIGHTNESS_STATE_ADDRESS
         ),
         group_address_switch_blue=individual_color_addresses(
-            LightSchema.CONF_RED, KNX_ADDRESS
+            LightSchema.CONF_BLUE, KNX_ADDRESS
         ),
         group_address_switch_blue_state=individual_color_addresses(
-            LightSchema.CONF_RED, LightSchema.CONF_STATE_ADDRESS
+            LightSchema.CONF_BLUE, LightSchema.CONF_STATE_ADDRESS
         ),
         group_address_brightness_blue=individual_color_addresses(
-            LightSchema.CONF_RED, LightSchema.CONF_BRIGHTNESS_ADDRESS
+            LightSchema.CONF_BLUE, LightSchema.CONF_BRIGHTNESS_ADDRESS
         ),
         group_address_brightness_blue_state=individual_color_addresses(
-            LightSchema.CONF_RED, LightSchema.CONF_BRIGHTNESS_STATE_ADDRESS
+            LightSchema.CONF_BLUE, LightSchema.CONF_BRIGHTNESS_STATE_ADDRESS
         ),
         group_address_switch_white=individual_color_addresses(
-            LightSchema.CONF_RED, KNX_ADDRESS
+            LightSchema.CONF_WHITE, KNX_ADDRESS
         ),
         group_address_switch_white_state=individual_color_addresses(
-            LightSchema.CONF_RED, LightSchema.CONF_STATE_ADDRESS
+            LightSchema.CONF_WHITE, LightSchema.CONF_STATE_ADDRESS
         ),
         group_address_brightness_white=individual_color_addresses(
-            LightSchema.CONF_RED, LightSchema.CONF_BRIGHTNESS_ADDRESS
+            LightSchema.CONF_WHITE, LightSchema.CONF_BRIGHTNESS_ADDRESS
         ),
         group_address_brightness_white_state=individual_color_addresses(
-            LightSchema.CONF_RED, LightSchema.CONF_BRIGHTNESS_STATE_ADDRESS
+            LightSchema.CONF_WHITE, LightSchema.CONF_BRIGHTNESS_STATE_ADDRESS
         ),
         min_kelvin=config[LightSchema.CONF_MIN_KELVIN],
         max_kelvin=config[LightSchema.CONF_MAX_KELVIN],
