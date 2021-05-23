@@ -3,10 +3,11 @@ from __future__ import annotations
 
 import logging
 import struct
+from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorEntity
 from homeassistant.const import (
     CONF_COUNT,
     CONF_NAME,
@@ -24,7 +25,6 @@ from .base_platform import BasePlatform
 from .const import (
     CONF_DATA_TYPE,
     CONF_PRECISION,
-    CONF_REGISTERS,
     CONF_SCALE,
     CONF_SWAP,
     CONF_SWAP_BYTE,
@@ -33,6 +33,7 @@ from .const import (
     DATA_TYPE_STRING,
     MODBUS_DOMAIN,
 )
+from .modbus import ModbusHub
 
 PARALLEL_UPDATES = 1
 _LOGGER = logging.getLogger(__name__)
@@ -40,8 +41,7 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = vol.All(
     # Deprecated in Home Assistant 2021.7
-    cv.deprecated(CONF_REGISTERS),
-    {CONF_REGISTERS: vol.Schema({})},
+    cv.deprecated(SENSOR_DOMAIN),
 )
 
 
@@ -60,7 +60,9 @@ async def async_setup_platform(
     for entry in discovery_info[CONF_SENSORS]:
         hub = hass.data[MODBUS_DOMAIN][discovery_info[CONF_NAME]]
         sensors.append(ModbusRegisterSensor(hub, entry))
-    async_add_entities(sensors)
+
+    if len(sensors) > 0:
+        async_add_entities(sensors)
 
 
 class ModbusRegisterSensor(BasePlatform, RestoreEntity, SensorEntity):
@@ -68,13 +70,11 @@ class ModbusRegisterSensor(BasePlatform, RestoreEntity, SensorEntity):
 
     def __init__(
         self,
-        hub,
-        entry,
-    ):
+        hub: ModbusHub,
+        entry: dict[str, Any],
+    ) -> None:
         """Initialize the modbus register sensor."""
         super().__init__(hub, entry)
-        self._register = self._address
-        self._register_type = self._input_type
         self._unit_of_measurement = entry.get(CONF_UNIT_OF_MEASUREMENT)
         self._count = int(entry[CONF_COUNT])
         self._swap = entry[CONF_SWAP]
@@ -121,7 +121,7 @@ class ModbusRegisterSensor(BasePlatform, RestoreEntity, SensorEntity):
         # remark "now" is a dummy parameter to avoid problems with
         # async_track_time_interval
         result = await self._hub.async_pymodbus_call(
-            self._slave, self._register, self._count, self._register_type
+            self._slave, self._address, self._count, self._input_type
         )
         if result is None:
             self._available = False

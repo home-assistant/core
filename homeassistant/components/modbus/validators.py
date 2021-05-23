@@ -34,7 +34,7 @@ def sensor_schema_validator(config):
         except KeyError:
             raise Invalid(
                 f"Unable to detect data type for {config[CONF_NAME]} sensor, try a custom type"
-            )
+            ) from KeyError
     else:
         structure = config.get(CONF_STRUCTURE)
 
@@ -47,7 +47,9 @@ def sensor_schema_validator(config):
     try:
         size = struct.calcsize(structure)
     except struct.error as err:
-        raise Invalid(f"Error in sensor {config[CONF_NAME]} structure: {str(err)}")
+        raise Invalid(
+            f"Error in sensor {config[CONF_NAME]} structure: {str(err)}"
+        ) from err
 
     bytecount = config[CONF_COUNT] * 2
     if bytecount != size:
