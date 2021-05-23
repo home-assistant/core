@@ -9,13 +9,13 @@
             "invalid_auth": "Ung\u00fcltige Authentifizierung",
             "unknown": "Unerwarteter Fehler"
         },
-        "flow_title": "{serial} ({host})",
         "step": {
+            "reauth_confirm": {
+                "title": "Integration erneut authentifizieren"
+            },
             "user": {
                 "data": {
-                    "host": "Host",
-                    "password": "Passwort",
-                    "username": "Benutzername"
+                    "host": "Host"
                 }
             }
         }
