@@ -5,7 +5,12 @@ from unittest.mock import patch
 import pytest
 from zwave_js_server.const import LogLevel
 from zwave_js_server.event import Event
-from zwave_js_server.exceptions import InvalidNewValue, NotFoundError, SetValueFailed
+from zwave_js_server.exceptions import (
+    FailedCommand,
+    InvalidNewValue,
+    NotFoundError,
+    SetValueFailed,
+)
 
 from homeassistant.components.websocket_api.const import ERR_NOT_FOUND
 from homeassistant.components.zwave_js.api import (
@@ -1138,6 +1143,22 @@ async def test_firmware_upload_view(
         )
         assert mock_cmd.call_args[0][1:4] == (multisensor_6, "file", bytes(10))
         assert json.loads(await resp.text()) is None
+
+
+async def test_firmware_upload_view_failed_command(
+    hass, multisensor_6, integration, hass_client, firmware_file
+):
+    """Test failed command for the HTTP firmware upload view."""
+    client = await hass_client()
+    with patch(
+        "homeassistant.components.zwave_js.api.begin_firmware_update",
+        side_effect=FailedCommand("test", "test"),
+    ):
+        resp = await client.post(
+            f"/api/zwave_js/firmware/upload/{integration.entry_id}/{multisensor_6.node_id}",
+            data={"file": firmware_file},
+        )
+        assert resp.status == 400
 
 
 async def test_firmware_upload_view_invalid_payload(
