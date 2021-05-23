@@ -175,7 +175,7 @@ aioguardian==1.0.4
 aioharmony==0.2.7
 
 # homeassistant.components.homekit_controller
-aiohomekit==0.2.62
+aiohomekit==0.2.63
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -218,7 +218,7 @@ aiopulse==0.4.2
 aiopvapi==1.6.14
 
 # homeassistant.components.pvpc_hourly_pricing
-aiopvpc==2.0.2
+aiopvpc==2.1.1
 
 # homeassistant.components.webostv
 aiopylgtv==0.4.0
@@ -645,7 +645,7 @@ geniushub-client==0.6.30
 
 # homeassistant.components.geo_json_events
 # homeassistant.components.usgs_earthquakes_feed
-geojson_client==0.4
+geojson_client==0.6
 
 # homeassistant.components.aprs
 geopy==2.1.0
@@ -958,7 +958,7 @@ mficlient==0.3.0
 miflora==0.7.0
 
 # homeassistant.components.mill
-millheater==0.4.0
+millheater==0.4.1
 
 # homeassistant.components.minio
 minio==4.0.9
