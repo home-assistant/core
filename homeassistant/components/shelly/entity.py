@@ -112,14 +112,6 @@ async def async_restore_block_attribute_entities(
             device_class=entry.device_class,
         )
 
-        # if description.device_class in [
-        #     DEVICE_CLASS_BATTERY,
-        #     DEVICE_CLASS_HUMIDITY,
-        #     DEVICE_CLASS_TEMPERATURE,
-        #     DEVICE_CLASS_ILLUMINANCE,
-        # ]:
-        #     description.state_class = STATE_CLASS_MEASUREMENT
-
         entities.append(
             sensor_class(wrapper, None, attribute, description, entry, sensors)
         )
