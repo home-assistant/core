@@ -207,9 +207,12 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             if not self.device_id:
                 try:
                     network_interfaces = await device_mgmt.GetNetworkInterfaces()
-                    for interface in network_interfaces:
-                        if interface.Enabled:
-                            self.device_id = interface.Info.HwAddress
+                    interface = next(
+                        filter(lambda interface: interface.Enabled, network_interfaces),
+                        None,
+                    )
+                    if interface:
+                        self.device_id = interface.Info.HwAddress
                 except Fault as fault:
                     if "not implemented" not in fault.message:
                         raise fault
