@@ -47,7 +47,7 @@ MOCK_CURRENT_TRANSFER_RATES = [20000000, 10000000]
 class MockDevices:
     """Mock AsusWrt devices."""
 
-    _mock_devices = MOCK_DEVICES
+    _mock_devices = dict(MOCK_DEVICES)
 
     @staticmethod
     def add_device(mac, device):
