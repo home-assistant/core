@@ -85,7 +85,5 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def update_listener(hass: HomeAssistant, entry: ConfigEntry):
     """Update when config_entry options update."""
-    fritzbox_tools: FritzBoxTools = hass.data[DOMAIN][entry.entry_id]
-
-    if fritzbox_tools._options:
+    if entry.options:
         await hass.config_entries.async_reload(entry.entry_id)
