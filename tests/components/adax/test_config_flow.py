@@ -1,69 +1,44 @@
 """Test the Adax config flow."""
 from unittest.mock import patch
 
-from homeassistant import config_entries, setup
-from homeassistant.components.adax.config_flow import CannotConnect, InvalidAuth
-from homeassistant.components.adax.const import DOMAIN
+from homeassistant import config_entries
+from homeassistant.components.adax.const import ACCOUNT_ID, DOMAIN
+from homeassistant.const import CONF_PASSWORD
 from homeassistant.core import HomeAssistant
+
+from tests.common import MockConfigEntry
+
+TEST_DATA = {
+    ACCOUNT_ID: 12345,
+    CONF_PASSWORD: "pswd",
+}
 
 
 async def test_form(hass: HomeAssistant) -> None:
     """Test we get the form."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == "form"
-    assert result["errors"] == {}
+    assert result["errors"] is None
 
-    with patch(
-        "homeassistant.components.adax.config_flow.PlaceholderHub.authenticate",
-        return_value=True,
-    ), patch(
+    with patch("adax.get_adax_token", return_value="test_token",), patch(
         "homeassistant.components.adax.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                "host": "1.1.1.1",
-                "username": "test-username",
-                "password": "test-password",
-            },
+            TEST_DATA,
         )
         await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
-    assert result2["title"] == "Name of the device"
+    assert result2["title"] == TEST_DATA["account_id"]
     assert result2["data"] == {
-        "host": "1.1.1.1",
-        "username": "test-username",
-        "password": "test-password",
+        "account_id": TEST_DATA["account_id"],
+        "password": TEST_DATA["password"],
     }
     assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_form_invalid_auth(hass: HomeAssistant) -> None:
-    """Test we handle invalid auth."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    with patch(
-        "homeassistant.components.adax.config_flow.PlaceholderHub.authenticate",
-        side_effect=InvalidAuth,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                "host": "1.1.1.1",
-                "username": "test-username",
-                "password": "test-password",
-            },
-        )
-
-    assert result2["type"] == "form"
-    assert result2["errors"] == {"base": "invalid_auth"}
 
 
 async def test_form_cannot_connect(hass: HomeAssistant) -> None:
@@ -73,17 +48,32 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.adax.config_flow.PlaceholderHub.authenticate",
-        side_effect=CannotConnect,
+        "adax.get_adax_token",
+        return_value=None,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                "host": "1.1.1.1",
-                "username": "test-username",
-                "password": "test-password",
-            },
+            TEST_DATA,
         )
-
+    print(result2)
     assert result2["type"] == "form"
     assert result2["errors"] == {"base": "cannot_connect"}
+
+
+async def test_flow_entry_already_exists(hass):
+    """Test user input for config_entry that already exists."""
+
+    first_entry = MockConfigEntry(
+        domain="adax",
+        data=TEST_DATA,
+        unique_id=TEST_DATA[ACCOUNT_ID],
+    )
+    first_entry.add_to_hass(hass)
+
+    with patch("adax.get_adax_token", return_value="token"):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}, data=TEST_DATA
+        )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_configured"

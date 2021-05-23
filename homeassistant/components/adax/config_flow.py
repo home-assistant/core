@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from adax import get_adax_token
+import adax
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -32,7 +32,10 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
         if entry.data[ACCOUNT_ID] == account_id:
             raise AlreadyConfigured
 
-    token = await get_adax_token(async_get_clientsession(hass), account_id, password)
+    token = await adax.get_adax_token(
+        async_get_clientsession(hass), account_id, password
+    )
+    print("----", token)
     if token is None:
         _LOGGER.info("Adax: Failed to login to retrieve token")
         raise CannotConnect
