@@ -645,7 +645,7 @@ geniushub-client==0.6.30
 
 # homeassistant.components.geo_json_events
 # homeassistant.components.usgs_earthquakes_feed
-geojson_client==0.4
+geojson_client==0.6
 
 # homeassistant.components.aprs
 geopy==2.1.0
