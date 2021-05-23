@@ -9,7 +9,7 @@ from typing import Any, Callable
 import aioshelly
 import async_timeout
 
-from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT
+from homeassistant.components.sensor import ATTR_STATE_CLASS, STATE_CLASS_MEASUREMENT
 from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_HUMIDITY,
@@ -112,13 +112,13 @@ async def async_restore_block_attribute_entities(
             device_class=entry.device_class,
         )
 
-        if description.device_class in [
-            DEVICE_CLASS_BATTERY,
-            DEVICE_CLASS_HUMIDITY,
-            DEVICE_CLASS_TEMPERATURE,
-            DEVICE_CLASS_ILLUMINANCE,
-        ]:
-            description.state_class = STATE_CLASS_MEASUREMENT
+        # if description.device_class in [
+        #     DEVICE_CLASS_BATTERY,
+        #     DEVICE_CLASS_HUMIDITY,
+        #     DEVICE_CLASS_TEMPERATURE,
+        #     DEVICE_CLASS_ILLUMINANCE,
+        # ]:
+        #     description.state_class = STATE_CLASS_MEASUREMENT
 
         entities.append(
             sensor_class(wrapper, None, attribute, description, entry, sensors)
@@ -445,6 +445,19 @@ class ShellySleepingBlockAttributeEntity(ShellyBlockAttributeEntity, RestoreEnti
 
         if last_state is not None:
             self.last_state = last_state.state
+            self.description.state_class = last_state.attributes.get(ATTR_STATE_CLASS)
+
+        if (
+            self.description.device_class
+            in [
+                DEVICE_CLASS_BATTERY,
+                DEVICE_CLASS_HUMIDITY,
+                DEVICE_CLASS_ILLUMINANCE,
+                DEVICE_CLASS_TEMPERATURE,
+            ]
+            and not self.description.state_class
+        ):
+            self.description.state_class = STATE_CLASS_MEASUREMENT
 
     @callback
     def _update_callback(self):
