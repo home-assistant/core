@@ -20,10 +20,6 @@ from .util import (
     enable_auto_detected_adapters,
 )
 
-ZC_CONF_DEFAULT_INTERFACE = (
-    "default_interface"  # cannot import from zeroconf due to circular dep
-)
-
 
 class Network:
     """Network helper class for the network integration."""
@@ -47,10 +43,14 @@ class Network:
 
     async def async_migrate_from_zeroconf(self, zc_config: dict[str, Any]) -> None:
         """Migrate configuration from zeroconf."""
-        if self._data:
+        if self._data or not zc_config:
             return
 
-        if zc_config.get(ZC_CONF_DEFAULT_INTERFACE) is False:
+        from homeassistant.components.zeroconf import (  # pylint: disable=import-outside-toplevel
+            CONF_DEFAULT_INTERFACE,
+        )
+
+        if zc_config.get(CONF_DEFAULT_INTERFACE) is False:
             self._data[ATTR_CONFIGURED_ADAPTERS] = adapters_with_exernal_addresses(
                 self.adapters
             )
