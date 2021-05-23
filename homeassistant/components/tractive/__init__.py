@@ -106,7 +106,7 @@ class TractiveClient:
             try:
                 async for event in self._client.events():
                     if server_was_unavailable:
-                        _LOGGER.info("Tractive is back online")
+                        _LOGGER.debug("Tractive is back online")
                         async_dispatcher_send(
                             self._hass, f"{SERVER_AVAILABLE}-{self._user_id}"
                         )
@@ -120,7 +120,7 @@ class TractiveClient:
                     if "position" in event:
                         self._send_position_update(event)
             except aiotractive.exceptions.TractiveError:
-                _LOGGER.info(
+                _LOGGER.debug(
                     "Tractive is not available. Internet connection is down? Sleeping %i seconds and retrying",
                     RECONNECT_INTERVAL.total_seconds(),
                 )
