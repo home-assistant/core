@@ -1,7 +1,6 @@
 """Support for Modbus switches."""
 from __future__ import annotations
 
-from datetime import timedelta
 import logging
 
 from homeassistant.components.switch import SwitchEntity
@@ -10,18 +9,18 @@ from homeassistant.const import (
     CONF_COMMAND_OFF,
     CONF_COMMAND_ON,
     CONF_NAME,
-    CONF_SCAN_INTERVAL,
-    CONF_SLAVE,
     CONF_SWITCHES,
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
 
+from .base_platform import BasePlatform
 from .const import (
     CALL_TYPE_COIL,
+    CALL_TYPE_WRITE_COIL,
+    CALL_TYPE_WRITE_REGISTER,
     CONF_INPUT_TYPE,
     CONF_STATE_OFF,
     CONF_STATE_ON,
@@ -47,19 +46,18 @@ async def async_setup_platform(
     async_add_entities(switches)
 
 
-class ModbusSwitch(SwitchEntity, RestoreEntity):
+class ModbusSwitch(BasePlatform, SwitchEntity, RestoreEntity):
     """Base class representing a Modbus switch."""
 
-    def __init__(self, hub: ModbusHub, config: dict):
+    def __init__(self, hub: ModbusHub, config: dict) -> None:
         """Initialize the switch."""
-        self._hub: ModbusHub = hub
-        self._name = config[CONF_NAME]
-        self._slave = config.get(CONF_SLAVE)
+        config[CONF_INPUT_TYPE] = ""
+        super().__init__(hub, config)
         self._is_on = None
-        self._available = True
-        self._scan_interval = timedelta(seconds=config[CONF_SCAN_INTERVAL])
-        self._address = config[CONF_ADDRESS]
-        self._write_type = config[CONF_WRITE_TYPE]
+        if config[CONF_WRITE_TYPE] == CALL_TYPE_COIL:
+            self._write_type = CALL_TYPE_WRITE_COIL
+        else:
+            self._write_type = CALL_TYPE_WRITE_REGISTER
         self._command_on = config[CONF_COMMAND_ON]
         self._command_off = config[CONF_COMMAND_OFF]
         if CONF_VERIFY in config:
@@ -79,31 +77,15 @@ class ModbusSwitch(SwitchEntity, RestoreEntity):
 
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
+        await self.async_base_added_to_hass()
         state = await self.async_get_last_state()
         if state:
             self._is_on = state.state == STATE_ON
-
-        async_track_time_interval(self.hass, self.async_update, self._scan_interval)
 
     @property
     def is_on(self):
         """Return true if switch is on."""
         return self._is_on
-
-    @property
-    def name(self):
-        """Return the name of the switch."""
-        return self._name
-
-    @property
-    def should_poll(self):
-        """Return True if entity has to be polled for state."""
-        return False
-
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self._available
 
     async def async_turn_on(self, **kwargs):
         """Set switch on."""
@@ -111,7 +93,7 @@ class ModbusSwitch(SwitchEntity, RestoreEntity):
         result = await self._hub.async_pymodbus_call(
             self._slave, self._address, self._command_on, self._write_type
         )
-        if result is False:
+        if result is None:
             self._available = False
             self.async_write_ha_state()
         else:
@@ -127,7 +109,7 @@ class ModbusSwitch(SwitchEntity, RestoreEntity):
         result = await self._hub.async_pymodbus_call(
             self._slave, self._address, self._command_off, self._write_type
         )
-        if result is False:
+        if result is None:
             self._available = False
             self.async_write_ha_state()
         else:

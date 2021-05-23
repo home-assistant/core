@@ -55,7 +55,7 @@ class ActiontecDeviceScanner(DeviceScanner):
         self._update_info()
         return [client.mac_address for client in self.last_results]
 
-    def get_device_name(self, device: str) -> str | None:  # type: ignore[override]
+    def get_device_name(self, device: str) -> str | None:
         """Return the name of the given device or None if we don't know."""
         for client in self.last_results:
             if client.mac_address == device:

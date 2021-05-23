@@ -53,7 +53,7 @@ def add_entities(account, async_add_entities, tracked):
 class IcloudDeviceBatterySensor(SensorEntity):
     """Representation of a iCloud device battery sensor."""
 
-    def __init__(self, account: IcloudAccount, device: IcloudDevice):
+    def __init__(self, account: IcloudAccount, device: IcloudDevice) -> None:
         """Initialize the battery sensor."""
         self._account = account
         self._device = device

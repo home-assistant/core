@@ -275,7 +275,7 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
 class SynologyDSMOptionsFlowHandler(OptionsFlow):
     """Handle a option flow."""
 
-    def __init__(self, config_entry: ConfigEntry):
+    def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize options flow."""
         self.config_entry = config_entry
 

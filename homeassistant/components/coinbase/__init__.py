@@ -57,7 +57,7 @@ def setup(hass, config):
 
     if not hasattr(coinbase_data, "accounts"):
         return False
-    for account in coinbase_data.accounts.data:
+    for account in coinbase_data.accounts:
         if account_currencies is None or account.currency in account_currencies:
             load_platform(hass, "sensor", DOMAIN, {"account": account}, config)
     for currency in exchange_currencies:
@@ -90,7 +90,21 @@ class CoinbaseData:
         """Get the latest data from coinbase."""
 
         try:
-            self.accounts = self.client.get_accounts()
+            response = self.client.get_accounts()
+            accounts = response["data"]
+
+            # Most of Coinbase's API seems paginated now (25 items per page, but first page has 24).
+            # This API gives a 'next_starting_after' property to send back as a 'starting_after' param.
+            # Their API documentation is not up to date when writing these lines (2021-05-20)
+            next_starting_after = response.pagination.next_starting_after
+
+            while next_starting_after:
+                response = self.client.get_accounts(starting_after=next_starting_after)
+                accounts = accounts + response["data"]
+                next_starting_after = response.pagination.next_starting_after
+
+            self.accounts = accounts
+
             self.exchange_rates = self.client.get_exchange_rates()
         except AuthenticationError as coinbase_error:
             _LOGGER.error(

@@ -488,6 +488,33 @@ async def test_homekit_match_partial_dash(hass, mock_zeroconf):
     assert mock_config_flow.mock_calls[0][1][0] == "rachio"
 
 
+async def test_homekit_match_partial_fnmatch(hass, mock_zeroconf):
+    """Test matching homekit devices with fnmatch."""
+    with patch.dict(
+        zc_gen.ZEROCONF,
+        {"_hap._tcp.local.": [{"domain": "homekit_controller"}]},
+        clear=True,
+    ), patch.dict(zc_gen.HOMEKIT, {"YLDP*": "yeelight"}, clear=True,), patch.object(
+        hass.config_entries.flow, "async_init"
+    ) as mock_config_flow, patch.object(
+        zeroconf,
+        "HaServiceBrowser",
+        side_effect=lambda *args, **kwargs: service_update_mock(
+            *args, **kwargs, limit_service="_hap._tcp.local."
+        ),
+    ) as mock_service_browser, patch(
+        "homeassistant.components.zeroconf.ServiceInfo",
+        side_effect=get_homekit_info_mock("YLDP13YL", HOMEKIT_STATUS_UNPAIRED),
+    ):
+        assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+    assert len(mock_service_browser.mock_calls) == 1
+    assert len(mock_config_flow.mock_calls) == 1
+    assert mock_config_flow.mock_calls[0][1][0] == "yeelight"
+
+
 async def test_homekit_match_full(hass, mock_zeroconf):
     """Test configured options for a device are loaded via config entry."""
     with patch.dict(

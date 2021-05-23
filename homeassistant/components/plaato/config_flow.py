@@ -171,7 +171,7 @@ class PlaatoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 class PlaatoOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle Plaato options."""
 
-    def __init__(self, config_entry: ConfigEntry):
+    def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize domain options flow."""
         super().__init__()
 

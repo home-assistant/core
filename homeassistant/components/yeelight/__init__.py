@@ -316,7 +316,7 @@ class YeelightScanner:
             cls._scanner = cls(hass)
         return cls._scanner
 
-    def __init__(self, hass: HomeAssistant):
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize class."""
         self._hass = hass
         self._seen = {}
@@ -573,7 +573,7 @@ class YeelightDevice:
 class YeelightEntity(Entity):
     """Represents single Yeelight entity."""
 
-    def __init__(self, device: YeelightDevice, entry: ConfigEntry):
+    def __init__(self, device: YeelightDevice, entry: ConfigEntry) -> None:
         """Initialize the entity."""
         self._device = device
         self._unique_id = entry.entry_id

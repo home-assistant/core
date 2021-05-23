@@ -212,7 +212,9 @@ DeviceType = TypeVar("DeviceType", bound=veraApi.VeraDevice)
 class VeraDevice(Generic[DeviceType], Entity):
     """Representation of a Vera device entity."""
 
-    def __init__(self, vera_device: DeviceType, controller_data: ControllerData):
+    def __init__(
+        self, vera_device: DeviceType, controller_data: ControllerData
+    ) -> None:
         """Initialize the device."""
         self.vera_device = vera_device
         self.controller = controller_data.controller

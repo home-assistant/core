@@ -309,7 +309,7 @@ omit =
     homeassistant/components/firmata/pin.py
     homeassistant/components/firmata/sensor.py
     homeassistant/components/firmata/switch.py
-    homeassistant/components/fitbit/sensor.py
+    homeassistant/components/fitbit/*
     homeassistant/components/fixer/sensor.py
     homeassistant/components/fleetgo/device_tracker.py
     homeassistant/components/flexit/climate.py
@@ -631,7 +631,6 @@ omit =
     homeassistant/components/mochad/*
     homeassistant/components/modbus/climate.py
     homeassistant/components/modbus/cover.py
-    homeassistant/components/modbus/switch.py
     homeassistant/components/modem_callerid/sensor.py
     homeassistant/components/motion_blinds/__init__.py
     homeassistant/components/motion_blinds/const.py
@@ -874,6 +873,7 @@ omit =
     homeassistant/components/russound_rnet/media_player.py
     homeassistant/components/sabnzbd/*
     homeassistant/components/saj/sensor.py
+    homeassistant/components/samsungtv/bridge.py
     homeassistant/components/satel_integra/*
     homeassistant/components/schluter/*
     homeassistant/components/scrape/sensor.py

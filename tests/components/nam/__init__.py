@@ -12,6 +12,7 @@ INCOMPLETE_NAM_DATA = {
 
 nam_data = {
     "software_version": "NAMF-2020-36",
+    "uptime": "456987",
     "sensordatavalues": [
         {"value_type": "SDS_P1", "value": "18.65"},
         {"value_type": "SDS_P2", "value": "11.03"},

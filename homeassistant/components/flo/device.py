@@ -21,7 +21,7 @@ class FloDeviceDataUpdateCoordinator(DataUpdateCoordinator):
 
     def __init__(
         self, hass: HomeAssistant, api_client: API, location_id: str, device_id: str
-    ):
+    ) -> None:
         """Initialize the device."""
         self.hass: HomeAssistant = hass
         self.api_client: API = api_client
