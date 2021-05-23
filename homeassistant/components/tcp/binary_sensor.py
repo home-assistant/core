@@ -3,7 +3,10 @@ from __future__ import annotations
 
 from typing import Any, Final
 
-from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
+    BinarySensorEntity,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
@@ -11,7 +14,7 @@ from homeassistant.helpers.typing import ConfigType
 from .common import TCP_PLATFORM_SCHEMA, TcpEntity
 from .const import CONF_VALUE_ON
 
-PLATFORM_SCHEMA: Final = TCP_PLATFORM_SCHEMA
+PLATFORM_SCHEMA: Final = PARENT_PLATFORM_SCHEMA.extend(TCP_PLATFORM_SCHEMA)
 
 
 def setup_platform(
