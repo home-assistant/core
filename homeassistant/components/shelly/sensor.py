@@ -183,7 +183,6 @@ SENSORS = {
         extra_state_attributes=lambda block: {
             "Operational hours": round(block.totalWorkTime / 3600, 1)
         },
-        state_class=sensor.STATE_CLASS_MEASUREMENT,
     ),
     ("adc", "adc"): BlockAttributeDescription(
         name="ADC",
