@@ -9,7 +9,7 @@
             "old_firmware": "Hi ha un programari antic i no compatible al dispositiu Bond - actualitza'l abans de continuar",
             "unknown": "Error inesperat"
         },
-        "flow_title": "Bond: {name} ({host})",
+        "flow_title": "{name} ({host})",
         "step": {
             "confirm": {
                 "data": {

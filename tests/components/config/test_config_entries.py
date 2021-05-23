@@ -64,7 +64,7 @@ async def test_get_entries(hass, client):
             domain="comp2",
             title="Test 2",
             source="bla2",
-            state=core_ce.ENTRY_STATE_SETUP_ERROR,
+            state=core_ce.ConfigEntryState.SETUP_ERROR,
             reason="Unsupported API",
         ).add_to_hass(hass)
         MockConfigEntry(
@@ -84,7 +84,7 @@ async def test_get_entries(hass, client):
                 "domain": "comp1",
                 "title": "Test 1",
                 "source": "bla",
-                "state": "not_loaded",
+                "state": core_ce.ConfigEntryState.NOT_LOADED.value,
                 "supports_options": True,
                 "supports_unload": True,
                 "disabled_by": None,
@@ -94,7 +94,7 @@ async def test_get_entries(hass, client):
                 "domain": "comp2",
                 "title": "Test 2",
                 "source": "bla2",
-                "state": "setup_error",
+                "state": core_ce.ConfigEntryState.SETUP_ERROR.value,
                 "supports_options": False,
                 "supports_unload": False,
                 "disabled_by": None,
@@ -104,7 +104,7 @@ async def test_get_entries(hass, client):
                 "domain": "comp3",
                 "title": "Test 3",
                 "source": "bla3",
-                "state": "not_loaded",
+                "state": core_ce.ConfigEntryState.NOT_LOADED.value,
                 "supports_options": False,
                 "supports_unload": False,
                 "disabled_by": core_ce.DISABLED_USER,
@@ -115,7 +115,7 @@ async def test_get_entries(hass, client):
 
 async def test_remove_entry(hass, client):
     """Test removing an entry via the API."""
-    entry = MockConfigEntry(domain="demo", state=core_ce.ENTRY_STATE_LOADED)
+    entry = MockConfigEntry(domain="demo", state=core_ce.ConfigEntryState.LOADED)
     entry.add_to_hass(hass)
     resp = await client.delete(f"/api/config/config_entries/entry/{entry.entry_id}")
     assert resp.status == 200
@@ -126,7 +126,7 @@ async def test_remove_entry(hass, client):
 
 async def test_reload_entry(hass, client):
     """Test reloading an entry via the API."""
-    entry = MockConfigEntry(domain="demo", state=core_ce.ENTRY_STATE_LOADED)
+    entry = MockConfigEntry(domain="demo", state=core_ce.ConfigEntryState.LOADED)
     entry.add_to_hass(hass)
     resp = await client.post(
         f"/api/config/config_entries/entry/{entry.entry_id}/reload"
@@ -146,7 +146,7 @@ async def test_reload_invalid_entry(hass, client):
 async def test_remove_entry_unauth(hass, client, hass_admin_user):
     """Test removing an entry via the API."""
     hass_admin_user.groups = []
-    entry = MockConfigEntry(domain="demo", state=core_ce.ENTRY_STATE_LOADED)
+    entry = MockConfigEntry(domain="demo", state=core_ce.ConfigEntryState.LOADED)
     entry.add_to_hass(hass)
     resp = await client.delete(f"/api/config/config_entries/entry/{entry.entry_id}")
     assert resp.status == 401
@@ -156,7 +156,7 @@ async def test_remove_entry_unauth(hass, client, hass_admin_user):
 async def test_reload_entry_unauth(hass, client, hass_admin_user):
     """Test reloading an entry via the API."""
     hass_admin_user.groups = []
-    entry = MockConfigEntry(domain="demo", state=core_ce.ENTRY_STATE_LOADED)
+    entry = MockConfigEntry(domain="demo", state=core_ce.ConfigEntryState.LOADED)
     entry.add_to_hass(hass)
     resp = await client.post(
         f"/api/config/config_entries/entry/{entry.entry_id}/reload"
@@ -167,7 +167,7 @@ async def test_reload_entry_unauth(hass, client, hass_admin_user):
 
 async def test_reload_entry_in_failed_state(hass, client, hass_admin_user):
     """Test reloading an entry via the API that has already failed to unload."""
-    entry = MockConfigEntry(domain="demo", state=core_ce.ENTRY_STATE_FAILED_UNLOAD)
+    entry = MockConfigEntry(domain="demo", state=core_ce.ConfigEntryState.FAILED_UNLOAD)
     entry.add_to_hass(hass)
     resp = await client.post(
         f"/api/config/config_entries/entry/{entry.entry_id}/reload"
@@ -287,7 +287,7 @@ async def test_abort(hass, client):
     }
 
 
-async def test_create_account(hass, client):
+async def test_create_account(hass, client, enable_custom_integrations):
     """Test a flow that creates an account."""
     mock_entity_platform(hass, "config_flow.test", None)
 
@@ -325,7 +325,7 @@ async def test_create_account(hass, client):
             "domain": "test",
             "entry_id": entries[0].entry_id,
             "source": core_ce.SOURCE_USER,
-            "state": "loaded",
+            "state": core_ce.ConfigEntryState.LOADED.value,
             "supports_options": False,
             "supports_unload": False,
             "title": "Test Entry",
@@ -333,10 +333,11 @@ async def test_create_account(hass, client):
         },
         "description": None,
         "description_placeholders": None,
+        "options": {},
     }
 
 
-async def test_two_step_flow(hass, client):
+async def test_two_step_flow(hass, client, enable_custom_integrations):
     """Test we can finish a two step flow."""
     mock_integration(
         hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
@@ -395,7 +396,7 @@ async def test_two_step_flow(hass, client):
                 "domain": "test",
                 "entry_id": entries[0].entry_id,
                 "source": core_ce.SOURCE_USER,
-                "state": "loaded",
+                "state": core_ce.ConfigEntryState.LOADED.value,
                 "supports_options": False,
                 "supports_unload": False,
                 "title": "user-title",
@@ -403,6 +404,7 @@ async def test_two_step_flow(hass, client):
             },
             "description": None,
             "description_placeholders": None,
+            "options": {},
         }
 
 
@@ -786,7 +788,7 @@ async def test_disable_entry(hass, hass_ws_client):
     assert await async_setup_component(hass, "config", {})
     ws_client = await hass_ws_client(hass)
 
-    entry = MockConfigEntry(domain="demo", state="loaded")
+    entry = MockConfigEntry(domain="demo", state=core_ce.ConfigEntryState.LOADED)
     entry.add_to_hass(hass)
     assert entry.disabled_by is None
 
@@ -804,7 +806,7 @@ async def test_disable_entry(hass, hass_ws_client):
     assert response["success"]
     assert response["result"] == {"require_restart": True}
     assert entry.disabled_by == core_ce.DISABLED_USER
-    assert entry.state == "failed_unload"
+    assert entry.state is core_ce.ConfigEntryState.FAILED_UNLOAD
 
     # Enable
     await ws_client.send_json(
@@ -820,7 +822,7 @@ async def test_disable_entry(hass, hass_ws_client):
     assert response["success"]
     assert response["result"] == {"require_restart": True}
     assert entry.disabled_by is None
-    assert entry.state == "failed_unload"
+    assert entry.state == core_ce.ConfigEntryState.FAILED_UNLOAD
 
     # Enable again -> no op
     await ws_client.send_json(
@@ -836,7 +838,7 @@ async def test_disable_entry(hass, hass_ws_client):
     assert response["success"]
     assert response["result"] == {"require_restart": False}
     assert entry.disabled_by is None
-    assert entry.state == "failed_unload"
+    assert entry.state == core_ce.ConfigEntryState.FAILED_UNLOAD
 
 
 async def test_disable_entry_nonexisting(hass, hass_ws_client):

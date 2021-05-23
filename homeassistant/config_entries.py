@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Iterable, Mapping
 from contextvars import ContextVar
+from enum import Enum
 import functools
 import logging
 from types import MappingProxyType, MethodType
@@ -63,20 +64,37 @@ PATH_CONFIG = ".config_entries.json"
 
 SAVE_DELAY = 1
 
-# The config entry has been set up successfully
-ENTRY_STATE_LOADED = "loaded"
-# There was an error while trying to set up this config entry
-ENTRY_STATE_SETUP_ERROR = "setup_error"
-# There was an error while trying to migrate the config entry to a new version
-ENTRY_STATE_MIGRATION_ERROR = "migration_error"
-# The config entry was not ready to be set up yet, but might be later
-ENTRY_STATE_SETUP_RETRY = "setup_retry"
-# The config entry has not been loaded
-ENTRY_STATE_NOT_LOADED = "not_loaded"
-# An error occurred when trying to unload the entry
-ENTRY_STATE_FAILED_UNLOAD = "failed_unload"
 
-UNRECOVERABLE_STATES = (ENTRY_STATE_MIGRATION_ERROR, ENTRY_STATE_FAILED_UNLOAD)
+class ConfigEntryState(Enum):
+    """Config entry state."""
+
+    LOADED = "loaded", True
+    """The config entry has been set up successfully"""
+    SETUP_ERROR = "setup_error", True
+    """There was an error while trying to set up this config entry"""
+    MIGRATION_ERROR = "migration_error", False
+    """There was an error while trying to migrate the config entry to a new version"""
+    SETUP_RETRY = "setup_retry", True
+    """The config entry was not ready to be set up yet, but might be later"""
+    NOT_LOADED = "not_loaded", True
+    """The config entry has not been loaded"""
+    FAILED_UNLOAD = "failed_unload", False
+    """An error occurred when trying to unload the entry"""
+
+    _recoverable: bool
+
+    def __new__(cls: type[object], value: str, recoverable: bool) -> ConfigEntryState:
+        """Create new ConfigEntryState."""
+        obj = object.__new__(cls)
+        obj._value_ = value
+        obj._recoverable = recoverable
+        return cast("ConfigEntryState", obj)
+
+    @property
+    def recoverable(self) -> bool:
+        """Get if the state is recoverable."""
+        return self._recoverable
+
 
 DEFAULT_DISCOVERY_UNIQUE_ID = "default_discovery_unique_id"
 DISCOVERY_NOTIFICATION_ID = "config_entry_discovery"
@@ -92,16 +110,19 @@ RECONFIGURE_NOTIFICATION_ID = "config_entry_reconfigure"
 
 EVENT_FLOW_DISCOVERED = "config_entry_discovered"
 
+DISABLED_USER = "user"
+
+RELOAD_AFTER_UPDATE_DELAY = 30
+
+# Deprecated: Connection classes
+# These aren't used anymore since 2021.6.0
+# Mainly here not to break custom integrations.
 CONN_CLASS_CLOUD_PUSH = "cloud_push"
 CONN_CLASS_CLOUD_POLL = "cloud_poll"
 CONN_CLASS_LOCAL_PUSH = "local_push"
 CONN_CLASS_LOCAL_POLL = "local_poll"
 CONN_CLASS_ASSUMED = "assumed"
 CONN_CLASS_UNKNOWN = "unknown"
-
-DISABLED_USER = "user"
-
-RELOAD_AFTER_UPDATE_DELAY = 30
 
 
 class ConfigError(HomeAssistantError):
@@ -150,10 +171,10 @@ class ConfigEntry:
         data: Mapping[str, Any],
         source: str,
         system_options: dict,
-        options: dict | None = None,
+        options: Mapping[str, Any] | None = None,
         unique_id: str | None = None,
         entry_id: str | None = None,
-        state: str = ENTRY_STATE_NOT_LOADED,
+        state: ConfigEntryState = ConfigEntryState.NOT_LOADED,
         disabled_by: str | None = None,
     ) -> None:
         """Initialize a config entry."""
@@ -234,7 +255,7 @@ class ConfigEntry:
                 err,
             )
             if self.domain == integration.domain:
-                self.state = ENTRY_STATE_SETUP_ERROR
+                self.state = ConfigEntryState.SETUP_ERROR
                 self.reason = "Import error"
             return
 
@@ -248,13 +269,13 @@ class ConfigEntry:
                     self.domain,
                     err,
                 )
-                self.state = ENTRY_STATE_SETUP_ERROR
+                self.state = ConfigEntryState.SETUP_ERROR
                 self.reason = "Import error"
                 return
 
             # Perform migration
             if not await self.async_migrate(hass):
-                self.state = ENTRY_STATE_MIGRATION_ERROR
+                self.state = ConfigEntryState.MIGRATION_ERROR
                 self.reason = None
                 return
 
@@ -285,7 +306,7 @@ class ConfigEntry:
             self.async_start_reauth(hass)
             result = False
         except ConfigEntryNotReady as ex:
-            self.state = ENTRY_STATE_SETUP_RETRY
+            self.state = ConfigEntryState.SETUP_RETRY
             self.reason = str(ex) or None
             wait_time = 2 ** min(tries, 4) * 5
             tries += 1
@@ -334,10 +355,10 @@ class ConfigEntry:
             return
 
         if result:
-            self.state = ENTRY_STATE_LOADED
+            self.state = ConfigEntryState.LOADED
             self.reason = None
         else:
-            self.state = ENTRY_STATE_SETUP_ERROR
+            self.state = ConfigEntryState.SETUP_ERROR
             self.reason = error_reason
 
     async def async_shutdown(self) -> None:
@@ -359,7 +380,7 @@ class ConfigEntry:
         Returns if unload is possible and was successful.
         """
         if self.source == SOURCE_IGNORE:
-            self.state = ENTRY_STATE_NOT_LOADED
+            self.state = ConfigEntryState.NOT_LOADED
             self.reason = None
             return True
 
@@ -371,20 +392,20 @@ class ConfigEntry:
                 # that was uninstalled, or an integration
                 # that has been renamed without removing the config
                 # entry.
-                self.state = ENTRY_STATE_NOT_LOADED
+                self.state = ConfigEntryState.NOT_LOADED
                 self.reason = None
                 return True
 
         component = integration.get_component()
 
         if integration.domain == self.domain:
-            if self.state in UNRECOVERABLE_STATES:
+            if not self.state.recoverable:
                 return False
 
-            if self.state != ENTRY_STATE_LOADED:
+            if self.state is not ConfigEntryState.LOADED:
                 self.async_cancel_retry_setup()
 
-                self.state = ENTRY_STATE_NOT_LOADED
+                self.state = ConfigEntryState.NOT_LOADED
                 self.reason = None
                 return True
 
@@ -392,7 +413,7 @@ class ConfigEntry:
 
         if not supports_unload:
             if integration.domain == self.domain:
-                self.state = ENTRY_STATE_FAILED_UNLOAD
+                self.state = ConfigEntryState.FAILED_UNLOAD
                 self.reason = "Unload not supported"
             return False
 
@@ -403,7 +424,7 @@ class ConfigEntry:
 
             # Only adjust state if we unloaded the component
             if result and integration.domain == self.domain:
-                self.state = ENTRY_STATE_NOT_LOADED
+                self.state = ConfigEntryState.NOT_LOADED
                 self.reason = None
 
             self._async_process_on_unload()
@@ -414,7 +435,7 @@ class ConfigEntry:
                 "Error unloading entry %s for %s", self.title, integration.domain
             )
             if integration.domain == self.domain:
-                self.state = ENTRY_STATE_FAILED_UNLOAD
+                self.state = ConfigEntryState.FAILED_UNLOAD
                 self.reason = "Unknown error"
             return False
 
@@ -566,7 +587,7 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
 
     def __init__(
         self, hass: HomeAssistant, config_entries: ConfigEntries, hass_config: dict
-    ):
+    ) -> None:
         """Initialize the config entry flow manager."""
         super().__init__(hass)
         self.config_entries = config_entries
@@ -617,10 +638,7 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
         # Unload the entry before setting up the new one.
         # We will remove it only after the other one is set up,
         # so that device customizations are not getting lost.
-        if (
-            existing_entry is not None
-            and existing_entry.state not in UNRECOVERABLE_STATES
-        ):
+        if existing_entry is not None and existing_entry.state.recoverable:
             await self.config_entries.async_unload(existing_entry.entry_id)
 
         entry = ConfigEntry(
@@ -628,7 +646,7 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
             domain=result["handler"],
             title=result["title"],
             data=result["data"],
-            options={},
+            options=result["options"],
             system_options={},
             source=flow.context["source"],
             unique_id=flow.unique_id,
@@ -767,8 +785,8 @@ class ConfigEntries:
         if entry is None:
             raise UnknownEntry
 
-        if entry.state in UNRECOVERABLE_STATES:
-            unload_success = entry.state != ENTRY_STATE_FAILED_UNLOAD
+        if not entry.state.recoverable:
+            unload_success = entry.state is not ConfigEntryState.FAILED_UNLOAD
         else:
             unload_success = await self.async_unload(entry_id)
 
@@ -852,7 +870,7 @@ class ConfigEntries:
         if entry is None:
             raise UnknownEntry
 
-        if entry.state != ENTRY_STATE_NOT_LOADED:
+        if entry.state is not ConfigEntryState.NOT_LOADED:
             raise OperationNotAllowed
 
         # Setup Component if not set up yet
@@ -867,7 +885,7 @@ class ConfigEntries:
             if not result:
                 return result
 
-        return entry.state == ENTRY_STATE_LOADED
+        return entry.state is ConfigEntryState.LOADED  # type: ignore[comparison-overlap] # mypy bug?
 
     async def async_unload(self, entry_id: str) -> bool:
         """Unload a config entry."""
@@ -876,7 +894,7 @@ class ConfigEntries:
         if entry is None:
             raise UnknownEntry
 
-        if entry.state in UNRECOVERABLE_STATES:
+        if not entry.state.recoverable:
             raise OperationNotAllowed
 
         return await entry.async_unload(self.hass)
@@ -1068,8 +1086,6 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         if domain is not None:
             HANDLERS.register(domain)(cls)
 
-    CONNECTION_CLASS = CONN_CLASS_UNKNOWN
-
     @property
     def unique_id(self) -> str | None:
         """Return unique ID if available."""
@@ -1083,6 +1099,17 @@ class ConfigFlow(data_entry_flow.FlowHandler):
     def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
         """Get the options flow for this handler."""
         raise data_entry_flow.UnknownHandler
+
+    @callback
+    def _async_abort_entries_match(
+        self, match_dict: dict[str, Any] | None = None
+    ) -> None:
+        """Abort if current entries match all data."""
+        if match_dict is None:
+            match_dict = {}  # Match any entry
+        for entry in self._async_current_entries(include_ignore=False):
+            if all(item in entry.data.items() for item in match_dict.items()):
+                raise data_entry_flow.AbortFlow("already_configured")
 
     @callback
     def _abort_if_unique_id_configured(
@@ -1103,7 +1130,8 @@ class ConfigFlow(data_entry_flow.FlowHandler):
                     if (
                         changed
                         and reload_on_update
-                        and entry.state in (ENTRY_STATE_LOADED, ENTRY_STATE_SETUP_RETRY)
+                        and entry.state
+                        in (ConfigEntryState.LOADED, ConfigEntryState.SETUP_RETRY)
                     ):
                         self.hass.async_create_task(
                             self.hass.config_entries.async_reload(entry.entry_id)
@@ -1295,6 +1323,28 @@ class ConfigFlow(data_entry_flow.FlowHandler):
     ) -> data_entry_flow.FlowResult:
         """Handle a flow initialized by DHCP discovery."""
         return await self.async_step_discovery(discovery_info)
+
+    @callback
+    def async_create_entry(  # pylint: disable=arguments-differ
+        self,
+        *,
+        title: str,
+        data: Mapping[str, Any],
+        description: str | None = None,
+        description_placeholders: dict | None = None,
+        options: Mapping[str, Any] | None = None,
+    ) -> data_entry_flow.FlowResult:
+        """Finish config flow and create a config entry."""
+        result = super().async_create_entry(
+            title=title,
+            data=data,
+            description=description,
+            description_placeholders=description_placeholders,
+        )
+
+        result["options"] = options or {}
+
+        return result
 
 
 class OptionsFlowManager(data_entry_flow.FlowManager):

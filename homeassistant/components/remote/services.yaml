@@ -4,6 +4,8 @@ turn_on:
   name: Turn On
   description: Sends the Power On Command.
   target:
+    entity:
+      domain: remote
   fields:
     activity:
       description: Activity ID or Activity Name to start.
@@ -15,16 +17,22 @@ toggle:
   name: Toggle
   description: Toggles a device.
   target:
+    entity:
+      domain: remote
 
 turn_off:
   name: Turn Off
   description: Sends the Power Off Command.
   target:
+    entity:
+      domain: remote
 
 send_command:
   name: Send Command
   description: Sends a command or a list of commands to a device.
   target:
+    entity:
+      domain: remote
   fields:
     device:
       name: Device
@@ -75,6 +83,8 @@ learn_command:
   name: Learn Command
   description: Learns a command or a list of commands from a device.
   target:
+    entity:
+      domain: remote
   fields:
     device:
       description: Device ID to learn command from.
@@ -116,6 +126,8 @@ delete_command:
   name: Delete Command
   description: Deletes a command or a list of commands from the database.
   target:
+    entity:
+      domain: remote
   fields:
     device:
       description: Name of the device from which commands will be deleted.

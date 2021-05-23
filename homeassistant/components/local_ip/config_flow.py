@@ -20,7 +20,3 @@ class SimpleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_show_form(step_id="user")
 
         return self.async_create_entry(title=DOMAIN, data=user_input)
-
-    async def async_step_import(self, import_info):
-        """Handle import from config file."""
-        return await self.async_step_user(import_info)

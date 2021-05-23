@@ -1,19 +1,22 @@
 """Test init of Airly integration."""
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant.components.airly import set_update_interval
 from homeassistant.components.airly.const import DOMAIN
-from homeassistant.config_entries import (
-    ENTRY_STATE_LOADED,
-    ENTRY_STATE_NOT_LOADED,
-    ENTRY_STATE_SETUP_RETRY,
-)
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.util.dt import utcnow
 
 from . import API_POINT_URL
 
-from tests.common import MockConfigEntry, async_fire_time_changed, load_fixture
+from tests.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    load_fixture,
+    mock_device_registry,
+)
 from tests.components.airly import init_integration
 
 
@@ -45,7 +48,7 @@ async def test_config_not_ready(hass, aioclient_mock):
     aioclient_mock.get(API_POINT_URL, exc=ConnectionError())
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
-    assert entry.state == ENTRY_STATE_SETUP_RETRY
+    assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_config_without_unique_id(hass, aioclient_mock):
@@ -64,7 +67,7 @@ async def test_config_without_unique_id(hass, aioclient_mock):
     aioclient_mock.get(API_POINT_URL, text=load_fixture("airly_valid_station.json"))
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
-    assert entry.state == ENTRY_STATE_LOADED
+    assert entry.state is ConfigEntryState.LOADED
     assert entry.unique_id == "123-456"
 
 
@@ -85,7 +88,7 @@ async def test_config_with_turned_off_station(hass, aioclient_mock):
     aioclient_mock.get(API_POINT_URL, text=load_fixture("airly_no_station.json"))
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
-    assert entry.state == ENTRY_STATE_SETUP_RETRY
+    assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_update_interval(hass, aioclient_mock):
@@ -120,7 +123,7 @@ async def test_update_interval(hass, aioclient_mock):
 
     assert aioclient_mock.call_count == 1
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    assert entry.state == ENTRY_STATE_LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     update_interval = set_update_interval(instances, REMAINING_RQUESTS)
     future = utcnow() + update_interval
@@ -157,7 +160,7 @@ async def test_update_interval(hass, aioclient_mock):
 
         assert aioclient_mock.call_count == 3
         assert len(hass.config_entries.async_entries(DOMAIN)) == 2
-        assert entry.state == ENTRY_STATE_LOADED
+        assert entry.state is ConfigEntryState.LOADED
 
         update_interval = set_update_interval(instances, REMAINING_RQUESTS)
         future = utcnow() + update_interval
@@ -174,10 +177,42 @@ async def test_unload_entry(hass, aioclient_mock):
     entry = await init_integration(hass, aioclient_mock)
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    assert entry.state == ENTRY_STATE_LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entry.state == ENTRY_STATE_NOT_LOADED
+    assert entry.state is ConfigEntryState.NOT_LOADED
     assert not hass.data.get(DOMAIN)
+
+
+@pytest.mark.parametrize("old_identifier", ((DOMAIN, 123, 456), (DOMAIN, "123", "456")))
+async def test_migrate_device_entry(hass, aioclient_mock, old_identifier):
+    """Test device_info identifiers migration."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Home",
+        unique_id="123-456",
+        data={
+            "api_key": "foo",
+            "latitude": 123,
+            "longitude": 456,
+            "name": "Home",
+        },
+    )
+
+    aioclient_mock.get(API_POINT_URL, text=load_fixture("airly_valid_station.json"))
+    config_entry.add_to_hass(hass)
+
+    device_reg = mock_device_registry(hass)
+    device_entry = device_reg.async_get_or_create(
+        config_entry_id=config_entry.entry_id, identifiers={old_identifier}
+    )
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    migrated_device_entry = device_reg.async_get_or_create(
+        config_entry_id=config_entry.entry_id, identifiers={(DOMAIN, "123-456")}
+    )
+    assert device_entry.id == migrated_device_entry.id

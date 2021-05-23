@@ -3,10 +3,16 @@
         "abort": {
             "already_configured": "Ger\u00e4t ist bereits konfiguriert",
             "cannot_connect": "Verbindung fehlgeschlagen",
+            "duplicate_persistence_file": "Persistenzdatei wird bereits verwendet",
+            "duplicate_topic": "Thema bereits in Verwendung",
             "invalid_auth": "Ung\u00fcltige Authentifizierung",
             "invalid_device": "Ung\u00fcltiges Ger\u00e4t",
             "invalid_ip": "Ung\u00fcltige IP-Adresse",
+            "invalid_persistence_file": "Ung\u00fcltige Persistenzdatei",
+            "invalid_port": "Ung\u00fcltige Portnummer",
+            "invalid_publish_topic": "Ung\u00fcltiges Ver\u00f6ffentlichungsthema",
             "invalid_serial": "Ung\u00fcltiger Serieller Port",
+            "invalid_subscribe_topic": "Ung\u00fcltiges Abonnementthema",
             "invalid_version": "Ung\u00fcltige MySensors Version",
             "not_a_number": "Bitte eine Nummer eingeben",
             "unknown": "Unerwarteter Fehler"
@@ -19,6 +25,7 @@
             "invalid_ip": "Ung\u00fcltige IP-Adresse",
             "invalid_serial": "Ung\u00fcltiger Serieller Port",
             "invalid_version": "Ung\u00fcltige MySensors Version",
+            "mqtt_required": "Die MQTT-Integration ist nicht eingerichtet",
             "not_a_number": "Bitte eine Nummer eingeben",
             "unknown": "Unerwarteter Fehler"
         },

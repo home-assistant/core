@@ -9,7 +9,6 @@ from tempfile import TemporaryDirectory
 from unittest.mock import MagicMock, Mock, PropertyMock, patch
 
 import pytest
-import pytz
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -44,7 +43,7 @@ from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from tests.common import async_capture_events, async_mock_service
 
-PST = pytz.timezone("America/Los_Angeles")
+PST = dt_util.get_time_zone("America/Los_Angeles")
 
 
 def test_split_entity_id():
@@ -221,6 +220,29 @@ async def test_async_add_job_pending_tasks_coro(hass):
 
     for _ in range(2):
         hass.add_job(test_coro())
+
+    async def wait_finish_callback():
+        """Wait until all stuff is scheduled."""
+        await asyncio.sleep(0)
+        await asyncio.sleep(0)
+
+    await wait_finish_callback()
+
+    assert len(hass._pending_tasks) == 2
+    await hass.async_block_till_done()
+    assert len(call_count) == 2
+
+
+async def test_async_create_task_pending_tasks_coro(hass):
+    """Add a coro to pending tasks."""
+    call_count = []
+
+    async def test_coro():
+        """Test Coro."""
+        call_count.append("call")
+
+    for _ in range(2):
+        hass.create_task(test_coro())
 
     async def wait_finish_callback():
         """Wait until all stuff is scheduled."""
@@ -877,7 +899,7 @@ def test_config_defaults():
     assert config.longitude == 0
     assert config.elevation == 0
     assert config.location_name == "Home"
-    assert config.time_zone == dt_util.UTC
+    assert config.time_zone == "UTC"
     assert config.internal_url is None
     assert config.external_url is None
     assert config.config_source == "default"

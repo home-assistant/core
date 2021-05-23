@@ -1,11 +1,17 @@
 """Light for Shelly."""
 from __future__ import annotations
 
+import asyncio
+import logging
+from typing import Any
+
 from aioshelly import Block
+import async_timeout
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
+    ATTR_EFFECT,
     ATTR_RGB_COLOR,
     ATTR_RGBW_COLOR,
     COLOR_MODE_BRIGHTNESS,
@@ -13,6 +19,7 @@ from homeassistant.components.light import (
     COLOR_MODE_ONOFF,
     COLOR_MODE_RGB,
     COLOR_MODE_RGBW,
+    SUPPORT_EFFECT,
     LightEntity,
     brightness_supported,
 )
@@ -24,15 +31,20 @@ from homeassistant.util.color import (
 
 from . import ShellyDeviceWrapper
 from .const import (
+    AIOSHELLY_DEVICE_TIMEOUT_SEC,
     COAP,
     DATA_CONFIG_ENTRY,
     DOMAIN,
     KELVIN_MAX_VALUE,
     KELVIN_MIN_VALUE_COLOR,
     KELVIN_MIN_VALUE_WHITE,
+    SHBLB_1_RGB_EFFECTS,
+    STANDARD_RGB_EFFECTS,
 )
 from .entity import ShellyBlockEntity
 from .utils import async_remove_shelly_entity
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -69,6 +81,7 @@ class ShellyLight(ShellyBlockEntity, LightEntity):
         self.control_result = None
         self.mode_result = None
         self._supported_color_modes = set()
+        self._supported_features = 0
         self._min_kelvin = KELVIN_MIN_VALUE_WHITE
         self._max_kelvin = KELVIN_MAX_VALUE
 
@@ -87,6 +100,14 @@ class ShellyLight(ShellyBlockEntity, LightEntity):
                 self._supported_color_modes.add(COLOR_MODE_BRIGHTNESS)
             else:
                 self._supported_color_modes.add(COLOR_MODE_ONOFF)
+
+        if hasattr(block, "effect"):
+            self._supported_features |= SUPPORT_EFFECT
+
+    @property
+    def supported_features(self) -> int:
+        """Supported features."""
+        return self._supported_features
 
     @property
     def is_on(self) -> bool:
@@ -196,16 +217,43 @@ class ShellyLight(ShellyBlockEntity, LightEntity):
         """Flag supported color modes."""
         return self._supported_color_modes
 
+    @property
+    def effect_list(self) -> list[str] | None:
+        """Return the list of supported effects."""
+        if not self.supported_features & SUPPORT_EFFECT:
+            return None
+
+        if self.wrapper.model == "SHBLB-1":
+            return list(SHBLB_1_RGB_EFFECTS.values())
+
+        return list(STANDARD_RGB_EFFECTS.values())
+
+    @property
+    def effect(self) -> str | None:
+        """Return the current effect."""
+        if not self.supported_features & SUPPORT_EFFECT:
+            return None
+
+        if self.control_result:
+            effect_index = self.control_result["effect"]
+        else:
+            effect_index = self.block.effect
+
+        if self.wrapper.model == "SHBLB-1":
+            return SHBLB_1_RGB_EFFECTS[effect_index]
+
+        return STANDARD_RGB_EFFECTS[effect_index]
+
     async def async_turn_on(self, **kwargs) -> None:
         """Turn on light."""
         if self.block.type == "relay":
-            self.control_result = await self.block.set_state(turn="on")
+            self.control_result = await self.set_state(turn="on")
             self.async_write_ha_state()
             return
 
         set_mode = None
         supported_color_modes = self._supported_color_modes
-        params = {"turn": "on"}
+        params: dict[str, Any] = {"turn": "on"}
 
         if ATTR_BRIGHTNESS in kwargs and brightness_supported(supported_color_modes):
             brightness_pct = int(100 * (kwargs[ATTR_BRIGHTNESS] + 1) / 255)
@@ -233,16 +281,54 @@ class ShellyLight(ShellyBlockEntity, LightEntity):
                 ATTR_RGBW_COLOR
             ]
 
-        if set_mode and self.mode != set_mode:
-            self.mode_result = await self.wrapper.device.switch_light_mode(set_mode)
+        if ATTR_EFFECT in kwargs:
+            # Color effect change - used only in color mode, switch device mode to color
+            set_mode = "color"
+            if self.wrapper.model == "SHBLB-1":
+                effect_dict = SHBLB_1_RGB_EFFECTS
+            else:
+                effect_dict = STANDARD_RGB_EFFECTS
+            if kwargs[ATTR_EFFECT] in effect_dict.values():
+                params["effect"] = [
+                    k for k, v in effect_dict.items() if v == kwargs[ATTR_EFFECT]
+                ][0]
+            else:
+                _LOGGER.error(
+                    "Effect '%s' not supported by device %s",
+                    kwargs[ATTR_EFFECT],
+                    self.wrapper.model,
+                )
 
-        self.control_result = await self.block.set_state(**params)
+        if await self.set_light_mode(set_mode):
+            self.control_result = await self.set_state(**params)
+
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs) -> None:
         """Turn off light."""
-        self.control_result = await self.block.set_state(turn="off")
+        self.control_result = await self.set_state(turn="off")
         self.async_write_ha_state()
+
+    async def set_light_mode(self, set_mode):
+        """Change device mode color/white if mode has changed."""
+        if set_mode is None or self.mode == set_mode:
+            return True
+
+        _LOGGER.debug("Setting light mode for entity %s, mode: %s", self.name, set_mode)
+        try:
+            async with async_timeout.timeout(AIOSHELLY_DEVICE_TIMEOUT_SEC):
+                self.mode_result = await self.wrapper.device.switch_light_mode(set_mode)
+        except (asyncio.TimeoutError, OSError) as err:
+            _LOGGER.error(
+                "Setting light mode for entity %s failed, state: %s, error: %s",
+                self.name,
+                set_mode,
+                repr(err),
+            )
+            self.wrapper.last_update_success = False
+            return False
+
+        return True
 
     @callback
     def _update_callback(self):

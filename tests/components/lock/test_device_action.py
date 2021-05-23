@@ -30,7 +30,9 @@ def entity_reg(hass):
     return mock_registry(hass)
 
 
-async def test_get_actions_support_open(hass, device_reg, entity_reg):
+async def test_get_actions_support_open(
+    hass, device_reg, entity_reg, enable_custom_integrations
+):
     """Test we get the expected actions from a lock which supports open."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
@@ -74,7 +76,9 @@ async def test_get_actions_support_open(hass, device_reg, entity_reg):
     assert_lists_same(actions, expected_actions)
 
 
-async def test_get_actions_not_support_open(hass, device_reg, entity_reg):
+async def test_get_actions_not_support_open(
+    hass, device_reg, entity_reg, enable_custom_integrations
+):
     """Test we get the expected actions from a lock which doesn't support open."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()

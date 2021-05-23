@@ -14,6 +14,7 @@ from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
 )
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -140,7 +141,7 @@ class NotionEntity(CoordinatorEntity):
         system_id: str,
         name: str,
         device_class: str,
-    ):
+    ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
         self._attrs = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
@@ -175,7 +176,7 @@ class NotionEntity(CoordinatorEntity):
         return self._attrs
 
     @property
-    def device_info(self) -> dict:
+    def device_info(self) -> DeviceInfo:
         """Return device registry information for this entity."""
         bridge = self.coordinator.data["bridges"].get(self._bridge_id, {})
         sensor = self.coordinator.data["sensors"][self._sensor_id]

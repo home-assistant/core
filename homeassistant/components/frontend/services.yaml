@@ -17,9 +17,10 @@ set_theme:
       default: "light"
       example: "dark"
       selector:
-        options:
-          - "dark"
-          - "light"
+        select:
+          options:
+            - "dark"
+            - "light"
 
 reload_themes:
   name: Reload themes

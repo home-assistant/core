@@ -27,6 +27,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -358,7 +359,7 @@ class ClimaCellEntity(CoordinatorEntity):
         return ATTRIBUTION
 
     @property
-    def device_info(self) -> dict[str, Any]:
+    def device_info(self) -> DeviceInfo:
         """Return device registry information."""
         return {
             "identifiers": {(DOMAIN, self._config_entry.data[CONF_API_KEY])},

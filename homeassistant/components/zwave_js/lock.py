@@ -68,10 +68,9 @@ async def async_setup_entry(
         )
     )
 
-    platform = entity_platform.current_platform.get()
-    assert platform
+    platform = entity_platform.async_get_current_platform()
 
-    platform.async_register_entity_service(  # type: ignore
+    platform.async_register_entity_service(
         SERVICE_SET_LOCK_USERCODE,
         {
             vol.Required(ATTR_CODE_SLOT): vol.Coerce(int),
@@ -80,7 +79,7 @@ async def async_setup_entry(
         "async_set_lock_usercode",
     )
 
-    platform.async_register_entity_service(  # type: ignore
+    platform.async_register_entity_service(
         SERVICE_CLEAR_LOCK_USERCODE,
         {
             vol.Required(ATTR_CODE_SLOT): vol.Coerce(int),

@@ -1,7 +1,7 @@
 """Shelly helpers functions."""
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 
 import aioshelly
@@ -9,16 +9,19 @@ import aioshelly
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import singleton
-from homeassistant.util.dt import parse_datetime, utcnow
+from homeassistant.util.dt import utcnow
 
 from .const import (
     BASIC_INPUTS_EVENTS_TYPES,
     COAP,
+    CONF_COAP_PORT,
     DATA_CONFIG_ENTRY,
+    DEFAULT_COAP_PORT,
     DOMAIN,
     SHBTN_INPUTS_EVENTS_TYPES,
     SHBTN_MODELS,
     SHIX3_1_INPUTS_EVENTS_TYPES,
+    UPTIME_DEVIATION,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -116,6 +119,8 @@ def is_momentary_input(settings: dict, block: aioshelly.Block) -> bool:
         return True
 
     button = settings.get("relays") or settings.get("lights") or settings.get("inputs")
+    if button is None:
+        return False
 
     # Shelly 1L has two button settings in the first channel
     if settings["device"]["type"] == "SHSW-L":
@@ -131,13 +136,14 @@ def is_momentary_input(settings: dict, block: aioshelly.Block) -> bool:
 
 def get_device_uptime(status: dict, last_uptime: str) -> str:
     """Return device uptime string, tolerate up to 5 seconds deviation."""
-    uptime = utcnow() - timedelta(seconds=status["uptime"])
+    delta_uptime = utcnow() - timedelta(seconds=status["uptime"])
 
-    if not last_uptime:
-        return uptime.replace(microsecond=0).isoformat()
-
-    if abs((uptime - parse_datetime(last_uptime)).total_seconds()) > 5:
-        return uptime.replace(microsecond=0).isoformat()
+    if (
+        not last_uptime
+        or abs((delta_uptime - datetime.fromisoformat(last_uptime)).total_seconds())
+        > UPTIME_DEVIATION
+    ):
+        return delta_uptime.replace(microsecond=0).isoformat()
 
     return last_uptime
 
@@ -190,7 +196,12 @@ def get_device_wrapper(hass: HomeAssistant, device_id: str):
 async def get_coap_context(hass):
     """Get CoAP context to be used in all Shelly devices."""
     context = aioshelly.COAP()
-    await context.initialize()
+    if DOMAIN in hass.data:
+        port = hass.data[DOMAIN].get(CONF_COAP_PORT, DEFAULT_COAP_PORT)
+    else:
+        port = DEFAULT_COAP_PORT
+    _LOGGER.info("Starting CoAP context with UDP port %s", port)
+    await context.initialize(port)
 
     @callback
     def shutdown_listener(ev):

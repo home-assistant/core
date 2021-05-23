@@ -27,7 +27,7 @@ class HomePlusControlOAuth2Implementation(
         self,
         hass: HomeAssistant,
         config_data: dict,
-    ):
+    ) -> None:
         """HomePlusControlOAuth2Implementation Constructor.
 
             Initialize the authentication implementation for the Legrand Home+ Control API.

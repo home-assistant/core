@@ -20,6 +20,16 @@
     },
     "options": {
         "step": {
+            "ha_to_risco": {
+                "data": {
+                    "armed_away": "Aktiv, abwesend",
+                    "armed_custom_bypass": "Aktiv, benutzerdefiniert",
+                    "armed_home": "Aktiv, zu Hause",
+                    "armed_night": "Aktiv, Nacht"
+                },
+                "description": "W\u00e4hlen Sie aus, in welchen Zustand Ihr Risco-Alarm versetzt werden soll, wenn Sie den Alarm des Home Assistant scharf schalten",
+                "title": "Home Assistant Zust\u00e4nde den Risco Zust\u00e4nden zuordnen"
+            },
             "init": {
                 "data": {
                     "code_arm_required": "PIN-Code zum Entsperren vorgeben",
@@ -31,8 +41,12 @@
                     "A": "Gruppe A",
                     "B": "Gruppe B",
                     "C": "Gruppe C",
-                    "D": "Gruppe D"
-                }
+                    "D": "Gruppe D",
+                    "arm": "Aktiv, abwesend",
+                    "partial_arm": "Teilweise aktiv (STAY)"
+                },
+                "description": "W\u00e4hlen Sie aus, welchen Zustand Ihr Home Assistant-Alarm f\u00fcr jeden von Risco gemeldeten Zustand melden soll",
+                "title": "Risco-Zust\u00e4nde den Home Assistant-Zust\u00e4nden zuordnen"
             }
         }
     }

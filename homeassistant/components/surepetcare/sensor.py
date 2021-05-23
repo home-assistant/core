@@ -49,7 +49,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class SurePetcareSensor(SensorEntity):
     """A binary sensor implementation for Sure Petcare Entities."""
 
-    def __init__(self, _id: int, spc: SurePetcareAPI):
+    def __init__(self, _id: int, spc: SurePetcareAPI) -> None:
         """Initialize a Sure Petcare sensor."""
 
         self._id = _id

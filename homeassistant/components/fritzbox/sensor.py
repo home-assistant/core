@@ -1,4 +1,6 @@
-"""Support for AVM Fritz!Box smarthome temperature sensor only devices."""
+"""Support for AVM FRITZ!SmartHome temperature sensor only devices."""
+from __future__ import annotations
+
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -20,13 +22,14 @@ from .const import (
     CONF_COORDINATOR,
     DOMAIN as FRITZBOX_DOMAIN,
 )
+from .model import SensorExtraAttributes
 
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    """Set up the Fritzbox smarthome sensor from ConfigEntry."""
-    entities = []
+    """Set up the FRITZ!SmartHome sensor from ConfigEntry."""
+    entities: list[FritzBoxEntity] = []
     coordinator = hass.data[FRITZBOX_DOMAIN][entry.entry_id][CONF_COORDINATOR]
 
     for ain, device in coordinator.data.items():
@@ -66,26 +69,26 @@ async def async_setup_entry(
 
 
 class FritzBoxBatterySensor(FritzBoxEntity, SensorEntity):
-    """The entity class for Fritzbox sensors."""
+    """The entity class for FRITZ!SmartHome sensors."""
 
     @property
-    def state(self):
+    def state(self) -> int | None:
         """Return the state of the sensor."""
-        return self.device.battery_level
+        return self.device.battery_level  # type: ignore [no-any-return]
 
 
 class FritzBoxTempSensor(FritzBoxEntity, SensorEntity):
-    """The entity class for Fritzbox temperature sensors."""
+    """The entity class for FRITZ!SmartHome temperature sensors."""
 
     @property
-    def state(self):
+    def state(self) -> float | None:
         """Return the state of the sensor."""
-        return self.device.temperature
+        return self.device.temperature  # type: ignore [no-any-return]
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> SensorExtraAttributes:
         """Return the state attributes of the device."""
-        attrs = {
+        attrs: SensorExtraAttributes = {
             ATTR_STATE_DEVICE_LOCKED: self.device.device_lock,
             ATTR_STATE_LOCKED: self.device.lock,
         }

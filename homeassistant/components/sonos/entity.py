@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
 
 from pysonos.core import SoCo
 
@@ -11,12 +10,13 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .const import (
     DOMAIN,
     SONOS_ENTITY_CREATED,
     SONOS_ENTITY_UPDATE,
+    SONOS_HOUSEHOLD_UPDATED,
     SONOS_STATE_UPDATED,
 )
 from .speaker import SonosSpeaker
@@ -49,6 +49,16 @@ class SonosEntity(Entity):
                 self.async_write_ha_state,
             )
         )
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{SONOS_HOUSEHOLD_UPDATED}-{self.soco.household_id}",
+                self.async_write_ha_state,
+            )
+        )
+        async_dispatcher_send(
+            self.hass, f"{SONOS_ENTITY_CREATED}-{self.soco.uid}", self.platform.domain
+        )
 
     @property
     def soco(self) -> SoCo:
@@ -56,7 +66,7 @@ class SonosEntity(Entity):
         return self.speaker.soco
 
     @property
-    def device_info(self) -> dict[str, Any]:
+    def device_info(self) -> DeviceInfo:
         """Return information about the device."""
         return {
             "identifiers": {(DOMAIN, self.soco.uid)},
@@ -77,14 +87,3 @@ class SonosEntity(Entity):
     def should_poll(self) -> bool:
         """Return that we should not be polled (we handle that internally)."""
         return False
-
-
-class SonosSensorEntity(SonosEntity):
-    """Representation of a Sonos sensor entity."""
-
-    async def async_added_to_hass(self) -> None:
-        """Handle common setup when added to hass."""
-        await super().async_added_to_hass()
-        async_dispatcher_send(
-            self.hass, f"{SONOS_ENTITY_CREATED}-{self.soco.uid}", self.platform.domain
-        )

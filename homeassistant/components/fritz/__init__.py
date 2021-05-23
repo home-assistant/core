@@ -13,10 +13,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers.typing import ConfigType
 
 from .common import FritzBoxTools, FritzData
 from .const import DATA_FRITZ, DOMAIN, PLATFORMS
+from .services import async_setup_services, async_unload_services
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -56,10 +56,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Load the other platforms like switch
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
+    await async_setup_services(hass)
+
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigType) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload FRITZ!Box Tools config entry."""
     fritzbox: FritzBoxTools = hass.data[DOMAIN][entry.entry_id]
     fritzbox.async_unload()
@@ -73,5 +75,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigType) -> bool:
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
+
+    await async_unload_services(hass)
 
     return unload_ok
