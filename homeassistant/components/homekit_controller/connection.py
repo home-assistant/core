@@ -107,7 +107,7 @@ class HKDevice:
         # Useful when routing events to triggers
         self.devices = {}
 
-        self.available = True
+        self.available = False
 
         self.signal_state_updated = "_".join((DOMAIN, self.unique_id, "state_updated"))
 
@@ -151,9 +151,11 @@ class HKDevice:
         ]
 
     @callback
-    def async_set_unavailable(self):
-        """Mark state of all entities on this connection as unavailable."""
-        self.available = False
+    def async_set_available_state(self, available):
+        """Mark state of all entities on this connection when it becomes available or unavailable."""
+        if self.available == available:
+            return
+        self.available = available
         self.hass.helpers.dispatcher.async_dispatcher_send(self.signal_state_updated)
 
     async def async_setup(self):
@@ -259,6 +261,8 @@ class HKDevice:
 
         if self.watchable_characteristics:
             await self.pairing.subscribe(self.watchable_characteristics)
+            if not self.pairing.connection.is_connected:
+                return
 
         await self.async_update()
 
@@ -386,6 +390,7 @@ class HKDevice:
     async def async_update(self, now=None):
         """Poll state of all entities attached to this bridge/accessory."""
         if not self.pollable_characteristics:
+            self.async_set_available_state(self.pairing.connection.is_connected)
             _LOGGER.debug("HomeKit connection not polling any characteristics")
             return
 
@@ -413,7 +418,7 @@ class HKDevice:
             except AccessoryNotFoundError:
                 # Not only did the connection fail, but also the accessory is not
                 # visible on the network.
-                self.async_set_unavailable()
+                self.async_set_available_state(False)
                 return
             except (AccessoryDisconnectedError, EncryptionError):
                 # Temporary connection failure. Device is still available but our
@@ -426,7 +431,7 @@ class HKDevice:
 
     def process_new_events(self, new_values_dict):
         """Process events from accessory into HA state."""
-        self.available = True
+        self.async_set_available_state(True)
 
         # Process any stateless events (via device_triggers)
         async_fire_triggers(self, new_values_dict)
