@@ -3,13 +3,13 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Mapping
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 import re
 import time
-from typing import Any, NamedTuple, cast
+from typing import Any, NamedTuple
 
-from pyHS100 import SmartBulb, SmartDeviceException
+from pyHS100 import SmartBulb, SmartDevice, SmartDeviceException
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -33,7 +33,7 @@ from homeassistant.util.color import (
 import homeassistant.util.dt as dt_util
 
 from . import CONF_LIGHT, DOMAIN as TPLINK_DOMAIN
-from .common import add_available_devices
+from .common import TPLinkEntity, add_available_devices
 
 PARALLEL_UPDATES = 0
 SCAN_INTERVAL = timedelta(seconds=5)
@@ -99,12 +99,12 @@ async def async_setup_entry(
         raise PlatformNotReady
 
 
-def brightness_to_percentage(byt):
+def brightness_to_percentage(brightness: int) -> int:
     """Convert brightness from absolute 0..255 to percentage."""
-    return round((byt * 100.0) / 255.0)
+    return round((brightness * 100.0) / 255.0)
 
 
-def brightness_from_percentage(percent):
+def brightness_from_percentage(percent: int) -> int:
     """Convert percentage to absolute value 0..255."""
     return round((percent * 255.0) / 100.0)
 
@@ -113,20 +113,25 @@ class LightState(NamedTuple):
     """Light state."""
 
     state: bool
-    brightness: int
-    color_temp: float
-    hs: tuple[int, int]
+    brightness: int | None
+    color_temp: int | None
+    hs: tuple[int, int] | None
 
-    def to_param(self):
+    def to_param(self) -> dict[str, Any]:
         """Return a version that we can send to the bulb."""
-        color_temp = None
+        color_temp: int | None = None
+        # Color temperature 0 doesn't make sense and can't be converted to kelvin.
         if self.color_temp:
             color_temp = mired_to_kelvin(self.color_temp)
+
+        brightness: int | None = None
+        if self.brightness is not None:
+            brightness = brightness_to_percentage(self.brightness)
 
         return {
             LIGHT_STATE_ON_OFF: 1 if self.state else 0,
             LIGHT_STATE_DFT_IGNORE: 1 if self.state else 0,
-            LIGHT_STATE_BRIGHTNESS: brightness_to_percentage(self.brightness),
+            LIGHT_STATE_BRIGHTNESS: brightness,
             LIGHT_STATE_COLOR_TEMP: color_temp,
             LIGHT_STATE_HUE: self.hs[0] if self.hs else 0,
             LIGHT_STATE_SATURATION: self.hs[1] if self.hs else 0,
@@ -141,27 +146,29 @@ class LightFeatures(NamedTuple):
     alias: str
     model: str
     supported_features: int
-    min_mireds: float
-    max_mireds: float
+    min_mireds: int
+    max_mireds: int
     has_emeter: bool
 
 
-class TPLinkSmartBulb(LightEntity):
+class TPLinkSmartBulb(TPLinkEntity, LightEntity):
     """Representation of a TPLink Smart Bulb."""
 
     def __init__(self, smartbulb: SmartBulb) -> None:
         """Initialize the bulb."""
+        super().__init__(smartbulb)
         self.smartbulb = smartbulb
-        self._light_features = cast(LightFeatures, None)
-        self._light_state = cast(LightState, None)
+        self._host: str = self.smartbulb.host
+        self._light_features = TPLinkSmartBulb._get_light_features(smartbulb)
+        self._light_state = TPLinkSmartBulb._light_state_from_params(
+            self._light_features.supported_features,
+            TPLinkSmartBulb._get_device_state(smartbulb),
+        )
         self._is_available = True
         self._is_setting_light_state = False
-        self._last_current_power_update = None
-        self._last_historical_power_update = None
-        self._emeter_params = {}
-
-        self._host = None
-        self._alias = None
+        self._last_current_power_update: datetime | None = None
+        self._last_historical_power_update: datetime | None = None
+        self._emeter_params: dict[str, float] = {}
 
     @property
     def unique_id(self) -> str | None:
@@ -204,13 +211,14 @@ class TPLinkSmartBulb(LightEntity):
             brightness = 255
 
         if ATTR_COLOR_TEMP in kwargs:
-            color_tmp = int(kwargs[ATTR_COLOR_TEMP])
+            color_tmp: int | None = kwargs[ATTR_COLOR_TEMP]
         else:
             color_tmp = self._light_state.color_temp
 
         if ATTR_HS_COLOR in kwargs:
             # TP-Link requires integers.
-            hue_sat = tuple(int(val) for val in kwargs[ATTR_HS_COLOR])
+            hs_color: tuple[float, float] = kwargs[ATTR_HS_COLOR]
+            hue_sat: tuple[int, int] | None = (int(hs_color[0]), int(hs_color[1]))
 
             # TP-Link cannot have both color temp and hue_sat
             color_tmp = 0
@@ -271,10 +279,6 @@ class TPLinkSmartBulb(LightEntity):
             return False
 
         try:
-            if not self._light_features:
-                self._light_features = self._get_light_features()
-                self._alias = self._light_features.alias
-                self._host = self.smartbulb.host
             self._light_state = self._get_light_state()
             return True
 
@@ -284,7 +288,7 @@ class TPLinkSmartBulb(LightEntity):
                     "Retrying in %s seconds for %s|%s due to: %s",
                     SLEEP_TIME,
                     self._host,
-                    self._alias,
+                    self._light_features.alias,
                     ex,
                 )
             return False
@@ -294,12 +298,13 @@ class TPLinkSmartBulb(LightEntity):
         """Flag supported features."""
         return self._light_features.supported_features
 
-    def _get_valid_temperature_range(self) -> tuple[int, int]:
+    @staticmethod
+    def _get_valid_temperature_range(sys_info: dict[str, Any]) -> tuple[int, int]:
         """Return the device-specific white temperature range (in Kelvin).
 
         :return: White temperature range in Kelvin (minimum, maximum)
         """
-        model = self.smartbulb.sys_info[LIGHT_SYSINFO_MODEL]
+        model = sys_info[LIGHT_SYSINFO_MODEL]
         for obj, temp_range in TPLINK_KELVIN.items():
             if re.match(obj, model):
                 return temp_range
@@ -307,23 +312,24 @@ class TPLinkSmartBulb(LightEntity):
         # use "safe" values for something that advertises color temperature
         return FALLBACK_MIN_COLOR, FALLBACK_MAX_COLOR
 
-    def _get_light_features(self) -> LightFeatures:
+    @staticmethod
+    def _get_light_features(smartbulb: SmartBulb) -> LightFeatures:
         """Determine all supported features in one go."""
-        sysinfo = self.smartbulb.sys_info
+        sysinfo = smartbulb.sys_info
         supported_features = 0
         # Calling api here as it reformats
-        mac = self.smartbulb.mac
+        mac = smartbulb.mac
         alias = sysinfo[LIGHT_SYSINFO_ALIAS]
         model = sysinfo[LIGHT_SYSINFO_MODEL]
-        min_mireds = None
-        max_mireds = None
-        has_emeter = self.smartbulb.has_emeter
+        min_mireds = 0
+        max_mireds = 0
+        has_emeter = smartbulb.has_emeter
 
         if sysinfo.get(LIGHT_SYSINFO_IS_DIMMABLE) or LIGHT_STATE_BRIGHTNESS in sysinfo:
             supported_features += SUPPORT_BRIGHTNESS
         if sysinfo.get(LIGHT_SYSINFO_IS_VARIABLE_COLOR_TEMP):
             supported_features += SUPPORT_COLOR_TEMP
-            max_range, min_range = self._get_valid_temperature_range()
+            max_range, min_range = TPLinkSmartBulb._get_valid_temperature_range(sysinfo)
             min_mireds = kelvin_to_mired(min_range)
             max_mireds = kelvin_to_mired(max_range)
         if sysinfo.get(LIGHT_SYSINFO_IS_COLOR):
@@ -340,30 +346,32 @@ class TPLinkSmartBulb(LightEntity):
             has_emeter=has_emeter,
         )
 
-    def _light_state_from_params(self, light_state_params: Any) -> LightState:
-        brightness = None
-        color_temp = None
-        hue_saturation = None
-        light_features = self._light_features
+    @staticmethod
+    def _light_state_from_params(
+        supported_features: int, light_state_params: dict[str, Any]
+    ) -> LightState:
+        brightness: int | None = None
+        color_temp: int | None = None
+        hue_saturation: tuple[int, int] | None = None
 
         state = bool(light_state_params[LIGHT_STATE_ON_OFF])
 
         if not state and LIGHT_STATE_DFT_ON in light_state_params:
             light_state_params = light_state_params[LIGHT_STATE_DFT_ON]
 
-        if light_features.supported_features & SUPPORT_BRIGHTNESS:
+        if supported_features & SUPPORT_BRIGHTNESS:
             brightness = brightness_from_percentage(
                 light_state_params[LIGHT_STATE_BRIGHTNESS]
             )
 
         if (
-            light_features.supported_features & SUPPORT_COLOR_TEMP
+            supported_features & SUPPORT_COLOR_TEMP
             and light_state_params.get(LIGHT_STATE_COLOR_TEMP) is not None
             and light_state_params[LIGHT_STATE_COLOR_TEMP] != 0
         ):
             color_temp = kelvin_to_mired(light_state_params[LIGHT_STATE_COLOR_TEMP])
 
-        if color_temp is None and light_features.supported_features & SUPPORT_COLOR:
+        if color_temp is None and supported_features & SUPPORT_COLOR:
             hue_saturation = (
                 light_state_params[LIGHT_STATE_HUE],
                 light_state_params[LIGHT_STATE_SATURATION],
@@ -379,7 +387,10 @@ class TPLinkSmartBulb(LightEntity):
     def _get_light_state(self) -> LightState:
         """Get the light state."""
         self._update_emeter()
-        return self._light_state_from_params(self._get_device_state())
+        return TPLinkSmartBulb._light_state_from_params(
+            self._light_features.supported_features,
+            TPLinkSmartBulb._get_device_state(self.smartbulb),
+        )
 
     def _update_emeter(self) -> None:
         if not self._light_features.has_emeter:
@@ -387,7 +398,7 @@ class TPLinkSmartBulb(LightEntity):
 
         now = dt_util.utcnow()
         if (
-            not self._last_current_power_update
+            self._last_current_power_update is None
             or self._last_current_power_update + CURRENT_POWER_UPDATE_INTERVAL < now
         ):
             self._last_current_power_update = now
@@ -396,7 +407,7 @@ class TPLinkSmartBulb(LightEntity):
             )
 
         if (
-            not self._last_historical_power_update
+            self._last_historical_power_update is None
             or self._last_historical_power_update + HISTORICAL_POWER_UPDATE_INTERVAL
             < now
         ):
@@ -432,7 +443,9 @@ class TPLinkSmartBulb(LightEntity):
             self._is_setting_light_state = False
             if LIGHT_STATE_ERROR_MSG in light_state_params:
                 raise HomeAssistantError(light_state_params[LIGHT_STATE_ERROR_MSG])
-            self._light_state = self._light_state_from_params(light_state_params)
+            self._light_state = TPLinkSmartBulb._light_state_from_params(
+                self._light_features.supported_features, light_state_params
+            )
             return
         except (SmartDeviceException, OSError):
             pass
@@ -445,7 +458,9 @@ class TPLinkSmartBulb(LightEntity):
             self._is_available = True
             if LIGHT_STATE_ERROR_MSG in light_state_params:
                 raise HomeAssistantError(light_state_params[LIGHT_STATE_ERROR_MSG])
-            self._light_state = self._light_state_from_params(light_state_params)
+            self._light_state = TPLinkSmartBulb._light_state_from_params(
+                self._light_features.supported_features, light_state_params
+            )
         except (SmartDeviceException, OSError) as ex:
             self._is_available = False
             _LOGGER.warning("Could not set data for %s: %s", self.smartbulb.host, ex)
@@ -454,21 +469,22 @@ class TPLinkSmartBulb(LightEntity):
 
     def _set_light_state(
         self, old_light_state: LightState, new_light_state: LightState
-    ) -> None:
+    ) -> dict[str, Any]:
         """Set the light state."""
         diff = _light_state_diff(old_light_state, new_light_state)
 
         if not diff:
-            return
+            return {}
 
         return self._set_device_state(diff)
 
-    def _get_device_state(self) -> dict:
+    @staticmethod
+    def _get_device_state(smartbulb: SmartDevice) -> dict[str, Any]:
         """State of the bulb or smart dimmer switch."""
-        if isinstance(self.smartbulb, SmartBulb):
-            return self.smartbulb.get_light_state()
+        if isinstance(smartbulb, SmartBulb):
+            return smartbulb.get_light_state()
 
-        sysinfo = self.smartbulb.sys_info
+        sysinfo = smartbulb.sys_info
         # Its not really a bulb, its a dimmable SmartPlug (aka Wall Switch)
         return {
             LIGHT_STATE_ON_OFF: sysinfo[LIGHT_STATE_RELAY_STATE],
@@ -478,7 +494,7 @@ class TPLinkSmartBulb(LightEntity):
             LIGHT_STATE_SATURATION: 0,
         }
 
-    def _set_device_state(self, state):
+    def _set_device_state(self, state) -> dict[str, Any]:
         """Set state of the bulb or smart dimmer switch."""
         if isinstance(self.smartbulb, SmartBulb):
             return self.smartbulb.set_light_state(state)
@@ -498,7 +514,7 @@ class TPLinkSmartBulb(LightEntity):
             else:
                 self.smartbulb.state = self.smartbulb.SWITCH_STATE_OFF
 
-        return self._get_device_state()
+        return TPLinkSmartBulb._get_device_state(self.smartbulb)
 
     async def async_update(self) -> None:
         """Update the TP-Link bulb's state."""
@@ -513,7 +529,7 @@ class TPLinkSmartBulb(LightEntity):
                     _LOGGER.debug(
                         "Device %s|%s responded after %s attempts",
                         self._host,
-                        self._alias,
+                        self._light_features.alias,
                         update_attempt,
                     )
                 break
@@ -523,7 +539,7 @@ class TPLinkSmartBulb(LightEntity):
                 _LOGGER.warning(
                     "Could not read state for %s|%s",
                     self._host,
-                    self._alias,
+                    self._light_features.alias,
                 )
             self._is_available = False
 

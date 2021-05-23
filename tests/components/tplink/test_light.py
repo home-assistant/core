@@ -605,10 +605,10 @@ async def test_get_light_state_retry(
         nonlocal get_sysinfo_call_count
         get_sysinfo_call_count += 1
 
-        # Need to fail on the 2nd call because the first call is used to
+        # Need to fail on the 4th call because the first 3 calls are used to
         # determine if the device is online during the light platform's
-        # setup hook.
-        if get_sysinfo_call_count == 2:
+        # setup hook and in smart bulb constructor.
+        if get_sysinfo_call_count == 4:
             raise SmartDeviceException()
 
         return light_mock_data.sys_info

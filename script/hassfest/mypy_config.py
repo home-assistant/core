@@ -205,7 +205,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.timer.*",
     "homeassistant.components.todoist.*",
     "homeassistant.components.toon.*",
-    "homeassistant.components.tplink.*",
     "homeassistant.components.trace.*",
     "homeassistant.components.tradfri.*",
     "homeassistant.components.tuya.*",

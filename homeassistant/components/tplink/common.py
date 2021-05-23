@@ -1,8 +1,8 @@
 """Common code for tplink."""
 from __future__ import annotations
 
+from abc import ABC, abstractmethod
 import logging
-from typing import Callable
 
 from pyHS100 import (
     Discover,
@@ -14,6 +14,7 @@ from pyHS100 import (
 )
 
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN as TPLINK_DOMAIN
 
@@ -55,6 +56,15 @@ class SmartDevices:
                 return True
 
         return False
+
+
+class TPLinkEntity(Entity, ABC):
+    """Common TPLink entity interface."""
+
+    @abstractmethod
+    def __init__(self, device: SmartDevice) -> None:
+        """Initialize entity."""
+        ...
 
 
 async def async_get_discoverable_devices(hass: HomeAssistant) -> dict[str, SmartDevice]:
@@ -133,17 +143,17 @@ def get_static_devices(config_data) -> SmartDevices:
 
 
 def add_available_devices(
-    hass: HomeAssistant, device_type: str, device_class: Callable
-) -> list:
+    hass: HomeAssistant, device_type: str, device_class: type[TPLinkEntity]
+) -> list[TPLinkEntity]:
     """Get sysinfo for all devices."""
 
-    devices = hass.data[TPLINK_DOMAIN][device_type]
+    devices: list[SmartDevice] = hass.data[TPLINK_DOMAIN][device_type]
 
     if f"{device_type}_remaining" in hass.data[TPLINK_DOMAIN]:
         devices = hass.data[TPLINK_DOMAIN][f"{device_type}_remaining"]
 
-    entities_ready = []
-    devices_unavailable = []
+    entities_ready: list[TPLinkEntity] = []
+    devices_unavailable: list[SmartDevice] = []
     for device in devices:
         try:
             device.get_sysinfo()

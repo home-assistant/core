@@ -24,7 +24,7 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import CONF_SWITCH, DOMAIN as TPLINK_DOMAIN
-from .common import add_available_devices
+from .common import TPLinkEntity, add_available_devices
 
 PARALLEL_UPDATES = 0
 
@@ -54,23 +54,33 @@ async def async_setup_entry(
         raise PlatformNotReady
 
 
-class SmartPlugSwitch(SwitchEntity):
+class SmartPlugSwitch(TPLinkEntity, SwitchEntity):
     """Representation of a TPLink Smart Plug switch."""
 
     def __init__(self, smartplug: SmartPlug) -> None:
         """Initialize the switch."""
+        super().__init__(smartplug)
         self.smartplug = smartplug
-        self._sysinfo = None
-        self._state = None
+        # It was already fetched by this point.
+        self._sysinfo = smartplug.sys_info
         self._is_available = False
         # Set up emeter cache
-        self._emeter_params = {}
+        self._emeter_params: dict[str, float] = {}
 
-        self._mac = None
-        self._alias = None
-        self._model = None
-        self._device_id = None
-        self._host = None
+        self._host: str = self.smartplug.host
+        self._mac: str = smartplug.mac
+        self._model: str = self._sysinfo["model"]
+
+        if self.smartplug.context is None:
+            self._device_id = self._mac
+            self._alias: str = self._sysinfo["alias"]
+            self._state = self.smartplug.state == self.smartplug.SWITCH_STATE_ON
+        else:
+            children = self.smartplug.sys_info["children"]
+            child = next(c for c in children if c["id"] == self.smartplug.context)
+            self._device_id = self.smartplug.context
+            self._alias = child["alias"]
+            self._state = child["state"] == 1
 
     @property
     def unique_id(self) -> str | None:
@@ -99,7 +109,7 @@ class SmartPlugSwitch(SwitchEntity):
         return self._is_available
 
     @property
-    def is_on(self) -> bool | None:
+    def is_on(self) -> bool:
         """Return true if switch is on."""
         return self._state
 
@@ -132,18 +142,6 @@ class SmartPlugSwitch(SwitchEntity):
     def attempt_update(self, update_attempt: int) -> bool:
         """Attempt to get details from the TP-Link switch."""
         try:
-            if not self._sysinfo:
-                self._sysinfo = self.smartplug.sys_info
-                self._mac = self._sysinfo["mac"]
-                self._model = self._sysinfo["model"]
-                self._host = self.smartplug.host
-                if self.smartplug.context is None:
-                    self._alias = self._sysinfo["alias"]
-                    self._device_id = self._mac
-                else:
-                    self._alias = self._plug_from_context["alias"]
-                    self._device_id = self.smartplug.context
-
             self.update_state()
 
             if self.smartplug.has_emeter:
