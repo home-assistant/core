@@ -37,7 +37,7 @@ PIN_FORMAT = re.compile(r"^(\d{3})-{0,1}(\d{2})-{0,1}(\d{3})$")
 _LOGGER = logging.getLogger(__name__)
 
 
-DISALLOWED_CODES = {
+INSECURE_CODES = {
     "00000000",
     "11111111",
     "22222222",
@@ -66,7 +66,7 @@ def find_existing_host(hass, serial):
             return entry
 
 
-def ensure_pin_format(pin, allow_invalid_setup_codes=None):
+def ensure_pin_format(pin, allow_insecure_setup_codes=None):
     """
     Ensure a pin code is correctly formatted.
 
@@ -78,8 +78,8 @@ def ensure_pin_format(pin, allow_invalid_setup_codes=None):
     if not match:
         raise aiohomekit.exceptions.MalformedPinError(f"Invalid PIN code f{pin}")
     pin_without_dashes = "".join(match.groups())
-    if not allow_invalid_setup_codes and pin_without_dashes in DISALLOWED_CODES:
-        raise InvalidSetupCode(f"Invalid PIN code f{pin}")
+    if not allow_insecure_setup_codes and pin_without_dashes in INSECURE_CODES:
+        raise InsecureSetupCode(f"Invalid PIN code f{pin}")
     return "-".join(match.groups())
 
 
@@ -312,8 +312,8 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 code = ensure_pin_format(
                     code,
-                    allow_invalid_setup_codes=pair_info.get(
-                        "allow_invalid_setup_codes"
+                    allow_insecure_setup_codes=pair_info.get(
+                        "allow_insecure_setup_codes"
                     ),
                 )
                 pairing = await self.finish_pairing(code)
@@ -341,8 +341,8 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             except aiohomekit.AccessoryNotFoundError:
                 # Can no longer find the device on the network
                 return self.async_abort(reason="accessory_not_found_error")
-            except InvalidSetupCode:
-                errors["pairing_code"] = "invalid_setup_code"
+            except InsecureSetupCode:
+                errors["pairing_code"] = "insecure_setup_code"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Pairing attempt failed with an unhandled exception")
                 self.finish_pairing = None
@@ -407,8 +407,8 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self.context["title_placeholders"] = {"name": self.name}
 
         schema = {vol.Required("pairing_code"): vol.All(str, vol.Strip)}
-        if errors and errors.get("pairing_code") == "invalid_setup_code":
-            schema[vol.Optional("allow_invalid_setup_codes")] = bool
+        if errors and errors.get("pairing_code") == "insecure_setup_code":
+            schema[vol.Optional("allow_insecure_setup_codes")] = bool
 
         return self.async_show_form(
             step_id="pair",
@@ -439,5 +439,5 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_create_entry(title=name, data=pairing_data)
 
 
-class InvalidSetupCode(Exception):
-    """An exception for invalid setup codes."""
+class InsecureSetupCode(Exception):
+    """An exception for insecure trivial setup codes."""
