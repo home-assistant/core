@@ -96,6 +96,7 @@ class BroadlinkLight(LightEntity, ABC):
 
     @property
     def color_temp(self):
+        """Return the color temperature property."""
         return self._color_temp
 
     @property
@@ -105,14 +106,17 @@ class BroadlinkLight(LightEntity, ABC):
 
     @property
     def supported_features(self):
+        """Return the supported features."""
         return SUPPORT_BRIGHTNESS | SUPPORT_COLOR | SUPPORT_COLOR_TEMP
 
     @property
     def color_mode(self):
+        """Return the current color mode property"""
         return self._color_mode
 
     @property
     def supported_color_modes(self):
+        """Return the supported color modes"""
         return [COLOR_MODE_COLOR_TEMP, COLOR_MODE_HS]
 
     @property
@@ -200,7 +204,7 @@ class BroadlinkLight(LightEntity, ABC):
             self.async_write_ha_state()
 
     @abstractmethod
-    async def _async_send_packet(self, packet):
+    async def _async_send_packet(self, request):
         """Send a packet to the device."""
 
 
