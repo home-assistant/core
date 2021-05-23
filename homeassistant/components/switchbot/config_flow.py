@@ -1,5 +1,6 @@
 """Config flow for Switchbot."""
 import logging
+import threading
 
 import pygatt
 import voluptuous as vol
@@ -9,6 +10,9 @@ from homeassistant.const import CONF_MAC, CONF_NAME, CONF_PASSWORD, CONF_SENSOR_
 
 from .const import ATTR_BOT, DOMAIN
 
+CONNECT_LOCK = threading.Lock()
+CONNECT_TIMEOUT = 15
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -17,8 +21,13 @@ def _btle_connect(mac):
     adapter = pygatt.GATTToolBackend()
 
     try:
-        adapter.start()
-        device = adapter.connect(mac, address_type=pygatt.BLEAddressType.random)
+        adapter.start(reset_on_start=False)
+        with CONNECT_LOCK:
+            device = adapter.connect(
+                mac, CONNECT_TIMEOUT, address_type=pygatt.BLEAddressType.random
+            )
+            device.disconnect()
+
     finally:
         adapter.stop()
 
