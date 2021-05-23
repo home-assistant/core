@@ -98,6 +98,7 @@ class ExchangeRateSensor(SensorEntity):
         self._name = f"{exchange_currency} Exchange Rate"
         self._state = None
         self._unit_of_measurement = native_currency
+        self._native_currency = native_currency
 
     @property
     def name(self):
@@ -126,6 +127,6 @@ class ExchangeRateSensor(SensorEntity):
 
     def update(self):
         """Get the latest state of the sensor."""
-        self._coinbase_data.update()
+        self._coinbase_data.update(self._native_currency)
         rate = self._coinbase_data.exchange_rates.rates[self.currency]
         self._state = round(1 / float(rate), 2)
