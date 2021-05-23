@@ -73,7 +73,7 @@ def discover_devices(device_id: int) -> list[tuple[str, str]]:
 
 async def see_device(
     hass: HomeAssistant,
-    async_see: Callable,
+    async_see: Callable[..., Awaitable[None]],
     mac: str,
     device_name: str,
     rssi: tuple | None = None,
