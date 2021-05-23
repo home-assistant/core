@@ -86,9 +86,9 @@ class TractiveClient:
         """Get list of trackable objects."""
         return await self._client.trackable_objects()
 
-    def tracker(self, id):
+    def tracker(self, tracker_id):
         """Get tracker by id."""
-        return self._client.tracker(id)
+        return self._client.tracker(tracker_id)
 
     def subscribe(self):
         """Start event listener coroutine."""
