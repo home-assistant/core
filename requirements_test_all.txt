@@ -520,7 +520,7 @@ meteofrance-api==1.0.2
 mficlient==0.3.0
 
 # homeassistant.components.mill
-millheater==0.4.0
+millheater==0.4.1
 
 # homeassistant.components.minio
 minio==4.0.9
