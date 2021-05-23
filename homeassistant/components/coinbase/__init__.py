@@ -18,6 +18,7 @@ DOMAIN = "coinbase"
 CONF_API_SECRET = "api_secret"
 CONF_ACCOUNT_CURRENCIES = "account_balance_currencies"
 CONF_EXCHANGE_CURRENCIES = "exchange_rate_currencies"
+CONF_NATIVE_CURRENCY = "native_currency"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 
@@ -29,6 +30,7 @@ CONFIG_SCHEMA = vol.Schema(
             {
                 vol.Required(CONF_API_KEY): cv.string,
                 vol.Required(CONF_API_SECRET): cv.string,
+                vol.Optional(CONF_NATIVE_CURRENCY, default="USD"): cv.string,
                 vol.Optional(CONF_ACCOUNT_CURRENCIES): vol.All(
                     cv.ensure_list, [cv.string]
                 ),
@@ -52,8 +54,9 @@ def setup(hass, config):
     api_secret = config[DOMAIN][CONF_API_SECRET]
     account_currencies = config[DOMAIN].get(CONF_ACCOUNT_CURRENCIES)
     exchange_currencies = config[DOMAIN][CONF_EXCHANGE_CURRENCIES]
+    native_currency = config[DOMAIN][CONF_NATIVE_CURRENCY]
 
-    hass.data[DATA_COINBASE] = coinbase_data = CoinbaseData(api_key, api_secret)
+    hass.data[DATA_COINBASE] = coinbase_data = CoinbaseData(api_key, api_secret, native_currency)
 
     if not hasattr(coinbase_data, "accounts"):
         return False
@@ -64,12 +67,11 @@ def setup(hass, config):
         if currency not in coinbase_data.exchange_rates.rates:
             _LOGGER.warning("Currency %s not found", currency)
             continue
-        native = coinbase_data.exchange_rates.currency
         load_platform(
             hass,
             "sensor",
             DOMAIN,
-            {"native_currency": native, "exchange_currency": currency},
+            {"native_currency": native_currency, "exchange_currency": currency},
             config,
         )
 
@@ -79,14 +81,14 @@ def setup(hass, config):
 class CoinbaseData:
     """Get the latest data and update the states."""
 
-    def __init__(self, api_key, api_secret):
+    def __init__(self, api_key, api_secret, native_currency):
         """Init the coinbase data object."""
 
         self.client = Client(api_key, api_secret)
-        self.update()
+        self.update(native_currency)
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self):
+    def update(self, native_currency):
         """Get the latest data from coinbase."""
 
         try:
@@ -105,7 +107,7 @@ class CoinbaseData:
 
             self.accounts = accounts
 
-            self.exchange_rates = self.client.get_exchange_rates()
+            self.exchange_rates = self.client.get_exchange_rates(currency=native_currency)
         except AuthenticationError as coinbase_error:
             _LOGGER.error(
                 "Authentication error connecting to coinbase: %s", coinbase_error
