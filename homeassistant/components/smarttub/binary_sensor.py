@@ -22,7 +22,7 @@ ATTR_REMINDER_SNOOZED = "snoozed"
 # how many days to snooze the reminder for
 ATTR_SNOOZE_DAYS = "days"
 SNOOZE_REMINDER_SCHEMA = {
-    vol.Required(ATTR_SNOOZE_DAYS): vol.All(vol.Coerce(int), vol.Range(min=1, max=120))
+    vol.Required(ATTR_SNOOZE_DAYS): vol.All(vol.Coerce(int), vol.Range(min=10, max=120))
 }
 
 
