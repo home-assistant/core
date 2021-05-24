@@ -153,7 +153,9 @@ class HKDevice:
     @callback
     def async_set_available_state(self, available):
         """Mark state of all entities on this connection when it becomes available or unavailable."""
-        _LOGGER.debug("Called async_set_available_state with %s", available)
+        _LOGGER.debug(
+            "Called async_set_available_state with %s for %s", available, self.unique_id
+        )
         if self.available == available:
             return
         self.available = available
@@ -392,25 +394,29 @@ class HKDevice:
         """Poll state of all entities attached to this bridge/accessory."""
         if not self.pollable_characteristics:
             self.async_set_available_state(self.pairing.connection.is_connected)
-            _LOGGER.debug("HomeKit connection not polling any characteristics")
+            _LOGGER.debug(
+                "HomeKit connection not polling any characteristics: %s", self.unique_id
+            )
             return
 
         if self._polling_lock.locked():
             if not self._polling_lock_warned:
                 _LOGGER.warning(
-                    "HomeKit controller update skipped as previous poll still in flight"
+                    "HomeKit controller update skipped as previous poll still in flight: %s",
+                    self.unique_id,
                 )
                 self._polling_lock_warned = True
             return
 
         if self._polling_lock_warned:
             _LOGGER.info(
-                "HomeKit controller no longer detecting back pressure - not skipping poll"
+                "HomeKit controller no longer detecting back pressure - not skipping poll: %s",
+                self.unique_id,
             )
             self._polling_lock_warned = False
 
         async with self._polling_lock:
-            _LOGGER.debug("Starting HomeKit controller update")
+            _LOGGER.debug("Starting HomeKit controller update: %s", self.unique_id)
 
             try:
                 new_values_dict = await self.get_characteristics(
@@ -428,7 +434,7 @@ class HKDevice:
 
             self.process_new_events(new_values_dict)
 
-            _LOGGER.debug("Finished HomeKit controller update")
+            _LOGGER.debug("Finished HomeKit controller update: %s", self.unique_id)
 
     def process_new_events(self, new_values_dict):
         """Process events from accessory into HA state."""
