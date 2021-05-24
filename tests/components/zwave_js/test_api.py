@@ -761,7 +761,7 @@ async def test_stop_healing_network(
     await ws_client.send_json(
         {
             ID: 4,
-            TYPE: "zwave_js/begin_healing_network",
+            TYPE: "zwave_js/stop_healing_network",
             ENTRY_ID: entry.entry_id,
         }
     )
