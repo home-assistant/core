@@ -3,15 +3,18 @@ from __future__ import annotations
 
 from typing import Any, Final
 
-from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
+    BinarySensorEntity,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 
+from .common import TCP_PLATFORM_SCHEMA, TcpEntity
 from .const import CONF_VALUE_ON
-from .sensor import PLATFORM_SCHEMA as TCP_PLATFORM_SCHEMA, TcpSensor
 
-PLATFORM_SCHEMA: Final = TCP_PLATFORM_SCHEMA
+PLATFORM_SCHEMA: Final = PARENT_PLATFORM_SCHEMA.extend(TCP_PLATFORM_SCHEMA)
 
 
 def setup_platform(
@@ -24,7 +27,7 @@ def setup_platform(
     add_entities([TcpBinarySensor(hass, config)])
 
 
-class TcpBinarySensor(BinarySensorEntity, TcpSensor):
+class TcpBinarySensor(TcpEntity, BinarySensorEntity):
     """A binary sensor which is on when its state == CONF_VALUE_ON."""
 
     @property
