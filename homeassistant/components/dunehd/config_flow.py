@@ -4,7 +4,7 @@ from __future__ import annotations
 import ipaddress
 import logging
 import re
-from typing import Any
+from typing import Any, Final
 
 from pdunehd import DuneHDPlayer
 import voluptuous as vol
@@ -15,7 +15,7 @@ from homeassistant.data_entry_flow import FlowResult
 
 from .const import DOMAIN
 
-_LOGGER = logging.getLogger(__name__)
+_LOGGER: Final = logging.getLogger(__name__)
 
 
 def host_valid(host: str) -> bool:
