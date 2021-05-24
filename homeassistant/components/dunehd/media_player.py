@@ -75,7 +75,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Add Dune HD entities from a config_entry."""
-    unique_id: str = entry.entry_id
+    unique_id = entry.entry_id
 
     player: str = hass.data[DOMAIN][entry.entry_id]
 
