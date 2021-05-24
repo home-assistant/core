@@ -12,7 +12,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import CONF_CONNECTIONS, CONF_STATION, DOMAIN, CONF_SENSOR_TYPES, CONF_ROUND
+from .const import CONF_CONNECTIONS, CONF_ROUND, CONF_SENSOR_TYPES, CONF_STATION, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -1,13 +1,13 @@
 """Constants for the Wallbox integration."""
 from homeassistant.const import (
+    CONF_ICON,
+    CONF_NAME,
+    CONF_UNIT_OF_MEASUREMENT,
     ELECTRICAL_CURRENT_AMPERE,
     ENERGY_KILO_WATT_HOUR,
     LENGTH_KILOMETERS,
     PERCENTAGE,
     POWER_KILO_WATT,
-    CONF_ICON,
-    CONF_NAME,
-    CONF_UNIT_OF_MEASUREMENT,
     STATE_UNAVAILABLE,
 )
 
