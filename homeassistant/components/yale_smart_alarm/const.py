@@ -12,7 +12,7 @@ DOMAIN = "yale_smart_alarm"
 
 DEFAULT_SCAN_INTERVAL = 15
 
-LOGGER = logging.getLogger(__package__)
+LOGGER = logging.getLogger(__name__)
 
 ATTR_ONLINE = "online"
 ATTR_STATUS = "status"
