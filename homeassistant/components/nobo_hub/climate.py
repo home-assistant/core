@@ -23,6 +23,8 @@ from homeassistant.components.climate.const import (
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
+    ATTR_MODE,
+    ATTR_NAME,
     CONF_COMMAND_OFF,
     CONF_COMMAND_ON,
     CONF_HOST,
@@ -35,7 +37,15 @@ from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 
-from .const import DOMAIN, HUB
+from .const import (
+    ATTR_OVERRIDE_ALLOWED,
+    ATTR_TARGET_ID,
+    ATTR_TARGET_TYPE,
+    ATTR_TEMP_COMFORT_C,
+    ATTR_TEMP_ECO_C,
+    DOMAIN,
+    HUB,
+)
 
 SUPPORT_FLAGS = SUPPORT_PRESET_MODE | SUPPORT_TARGET_TEMPERATURE_RANGE
 
@@ -134,7 +144,7 @@ async def async_setup_entry(
             else:
                 _set_on_commands(command_on_by_id, command_on_dict, hub)
 
-    # Add devices
+    # Add zones as entities
     async_add_devices(
         NoboZone(zones, hub, command_off_id, command_on_by_id.get(zones))
         for zones in hub.zones
@@ -147,7 +157,8 @@ async def async_setup_entry(
 
 def _set_on_commands(command_on_by_id, command_on_dict, hub):
     for zone_id, zone in hub.zones.items():
-        zone_name = zone["name"].replace("\xa0", " ")
+        # Replace unicode non-breaking space (used in Nobø Ecohub) with space
+        zone_name = zone[ATTR_NAME].replace("\xa0", " ")
         if zone_name in command_on_dict:
             command_on_name = command_on_dict[zone_name]
             if command_on_name is None or command_on_name == "":
@@ -177,7 +188,7 @@ def _set_on_commands(command_on_by_id, command_on_dict, hub):
 def _get_id_from_name(name, dictionary):
     for key in dictionary.keys():
         # Replace unicode non-breaking space (used in Nobø Ecohub) with space
-        if dictionary[key]["name"].replace("\xa0", " ") == name:
+        if dictionary[key][ATTR_NAME].replace("\xa0", " ") == name:
             return key
     return None
 
@@ -190,7 +201,7 @@ class NoboZone(ClimateEntity):
         self._id = zone_id
         self._nobo = hub
         self._unique_id = hub.hub_serial + ":" + zone_id
-        self._name = self._nobo.zones[self._id]["name"]
+        self._name = self._nobo.zones[self._id][ATTR_NAME]
         self._current_mode = HVAC_MODE_AUTO
         self._command_off_id = command_off_id
         self._command_on_id = command_on_id
@@ -326,7 +337,7 @@ class NoboZone(ClimateEntity):
 
     async def async_set_preset_mode(self, preset_mode):
         """Set new zone override."""
-        if self._nobo.zones[self._id]["override_allowed"] == "1":
+        if self._nobo.zones[self._id][ATTR_OVERRIDE_ALLOWED] == "1":
             if preset_mode == PRESET_ECO:
                 mode = self._nobo.API.OVERRIDE_MODE_ECO
             elif preset_mode == PRESET_AWAY:
@@ -347,10 +358,10 @@ class NoboZone(ClimateEntity):
         """Set new target temperature."""
         low = int(kwargs.get(ATTR_TARGET_TEMP_LOW))
         high = int(kwargs.get(ATTR_TARGET_TEMP_HIGH))
-        if low > int(self._nobo.zones[self._id]["temp_comfort_c"]):
-            low = int(self._nobo.zones[self._id]["temp_comfort_c"])
-        if high < int(self._nobo.zones[self._id]["temp_eco_c"]):
-            high = int(self._nobo.zones[self._id]["temp_eco_c"])
+        if low > int(self._nobo.zones[self._id][ATTR_TEMP_COMFORT_C]):
+            low = int(self._nobo.zones[self._id][ATTR_TEMP_COMFORT_C])
+        if high < int(self._nobo.zones[self._id][ATTR_TEMP_ECO_C]):
+            high = int(self._nobo.zones[self._id][ATTR_TEMP_ECO_C])
         await self._nobo.async_update_zone(
             self._id, temp_comfort_c=high, temp_eco_c=low
         )
@@ -373,22 +384,22 @@ class NoboZone(ClimateEntity):
         elif state == self._nobo.API.NAME_COMFORT:
             self._current_operation = PRESET_COMFORT
 
-        if self._nobo.zones[self._id]["override_allowed"] == "1":
+        if self._nobo.zones[self._id][ATTR_OVERRIDE_ALLOWED] == "1":
             for override in self._nobo.overrides:
-                if self._nobo.overrides[override]["mode"] == "0":
+                if self._nobo.overrides[override][ATTR_MODE] == "0":
                     continue  # "normal" overrides
                 if (
-                    self._nobo.overrides[override]["target_type"]
+                    self._nobo.overrides[override][ATTR_TARGET_TYPE]
                     == self._nobo.API.OVERRIDE_TARGET_ZONE
                 ):
-                    if self._nobo.overrides[override]["target_id"] == self._id:
+                    if self._nobo.overrides[override][ATTR_TARGET_ID] == self._id:
                         self._current_mode = HVAC_MODE_HEAT
 
         self._current_temperature = self._nobo.get_current_zone_temperature(self._id)
         self._target_temperature_high = int(
-            self._nobo.zones[self._id]["temp_comfort_c"]
+            self._nobo.zones[self._id][ATTR_TEMP_COMFORT_C]
         )
-        self._target_temperature_low = int(self._nobo.zones[self._id]["temp_eco_c"])
+        self._target_temperature_low = int(self._nobo.zones[self._id][ATTR_TEMP_ECO_C])
 
     @callback
     def _after_update(self, hub):
