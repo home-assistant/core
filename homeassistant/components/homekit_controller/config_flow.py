@@ -261,7 +261,12 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         # Set unique-id and error out if it's already configured
         await self.async_set_unique_id(normalize_hkid(hkid))
-        self._abort_if_unique_id_configured()
+        self._abort_if_unique_id_configured(
+            updates={
+                "AccessoryIP": discovery_info["host"],
+                "AccessoryPort": discovery_info["port"],
+            }
+        )
 
         self.context["hkid"] = hkid
 
