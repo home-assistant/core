@@ -12,7 +12,7 @@ from homeassistant.components.alarm_control_panel import (
     ATTR_CHANGED_BY,
     ATTR_CODE_ARM_REQUIRED,
     ATTR_CODE_FORMAT,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     AlarmControlPanelEntity,
 )
 from homeassistant.components.alarm_control_panel.const import (
@@ -51,7 +51,7 @@ from .const import (
 )
 from .coordinator import YaleDataUpdateCoordinator
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
