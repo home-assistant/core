@@ -35,7 +35,7 @@ class SIAHub:
         self,
         hass: HomeAssistant,
         entry: ConfigEntry,
-    ):
+    ) -> None:
         """Create the SIAHub."""
         self._hass: HomeAssistant = hass
         self._entry: ConfigEntry = entry
