@@ -274,6 +274,7 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         initial_state,
         variables,
         trigger_variables,
+        blueprint_config_inputs,
         raw_config,
         blueprint_inputs,
         trace_config,
@@ -293,6 +294,7 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         self._logger = LOGGER
         self._variables: ScriptVariables = variables
         self._trigger_variables: ScriptVariables = trigger_variables
+        self._blueprint_config_inputs = blueprint_config_inputs
         self._raw_config = raw_config
         self._blueprint_inputs = blueprint_inputs
         self._trace_config = trace_config
@@ -322,8 +324,17 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         }
         if self.action_script.supports_max:
             attrs[ATTR_MAX] = self.action_script.max_runs
-        if self._blueprint_inputs:
-            attrs[ATTR_INPUTS] = self._blueprint_inputs["use_blueprint"]["input"]
+        if self._blueprint_config_inputs:
+            allowed_selectors = ["text", "select", "number", "boolean", "time"]
+            inputs = self._blueprint_inputs["use_blueprint"]["input"]
+            attrs[ATTR_INPUTS] = {
+                i: inputs[i]
+                for i in inputs
+                if any(
+                    j in self._blueprint_config_inputs[i]["selector"]
+                    for j in allowed_selectors
+                )
+            }
         if self._id is not None:
             attrs[CONF_ID] = self._id
         return attrs
@@ -614,10 +625,13 @@ async def _async_process_config(
         conf: list[dict[str, Any] | blueprint.BlueprintInputs] = config[config_key]
 
         for list_no, config_block in enumerate(conf):
+            blueprint_config_inputs = None
+            blueprint_inputs = None
             raw_blueprint_inputs = None
             raw_config = None
             if isinstance(config_block, blueprint.BlueprintInputs):
                 blueprints_used = True
+                blueprint_config_inputs = config_block.blueprint.inputs
                 blueprint_inputs = config_block
                 raw_blueprint_inputs = blueprint_inputs.config_with_inputs
 
@@ -687,6 +701,7 @@ async def _async_process_config(
                 initial_state,
                 variables,
                 config_block.get(CONF_TRIGGER_VARIABLES),
+                blueprint_config_inputs,
                 raw_config,
                 raw_blueprint_inputs,
                 config_block[CONF_TRACE],
