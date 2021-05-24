@@ -255,8 +255,9 @@ async def test_invalid_characters(hass, aioclient_mock):
     }
 
 
-@patch("homeassistant.components.ssdp.SSDPListener")
-async def test_start_stop_scanner(async_search_mock, hass):
+@patch("homeassistant.components.ssdp.SSDPListener.async_start")
+@patch("homeassistant.components.ssdp.SSDPListener.async_search")
+async def test_start_stop_scanner(async_start_mock, async_search_mock, hass):
     """Test we start and stop the scanner."""
     assert await async_setup_component(hass, ssdp.DOMAIN, {ssdp.DOMAIN: {}})
 
@@ -264,13 +265,15 @@ async def test_start_stop_scanner(async_search_mock, hass):
     await hass.async_block_till_done()
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=200))
     await hass.async_block_till_done()
-    assert async_search_mock.call_count == 2
+    assert async_start_mock.call_count == 1
+    assert async_search_mock.call_count == 1
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=200))
     await hass.async_block_till_done()
-    assert async_search_mock.call_count == 2
+    assert async_start_mock.call_count == 1
+    assert async_search_mock.call_count == 1
 
 
 async def test_unexpected_exception_while_fetching(hass, aioclient_mock, caplog):
