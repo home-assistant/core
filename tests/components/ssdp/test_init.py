@@ -1,6 +1,7 @@
 """Test the SSDP integration."""
 import asyncio
 from datetime import timedelta
+from ipaddress import IPv4Address, IPv6Address
 from unittest.mock import patch
 
 import aiohttp
@@ -496,3 +497,83 @@ async def test_scan_second_hit(hass, aioclient_mock, caplog):
         ssdp.ATTR_SSDP_EXT: "",
     }
     assert "Failed to fetch ssdp data" not in caplog.text
+
+
+_ADAPTERS_WITH_MANUAL_CONFIG = [
+    {
+        "auto": True,
+        "default": False,
+        "enabled": True,
+        "ipv4": [],
+        "ipv6": [
+            {
+                "address": "2001:db8::",
+                "network_prefix": 8,
+                "flowinfo": 1,
+                "scope_id": 1,
+            }
+        ],
+        "name": "eth0",
+    },
+    {
+        "auto": True,
+        "default": False,
+        "enabled": True,
+        "ipv4": [{"address": "192.168.1.5", "network_prefix": 23}],
+        "ipv6": [],
+        "name": "eth1",
+    },
+    {
+        "auto": False,
+        "default": False,
+        "enabled": False,
+        "ipv4": [{"address": "169.254.3.2", "network_prefix": 16}],
+        "ipv6": [],
+        "name": "vtun0",
+    },
+]
+
+
+async def test_async_detect_interfaces_setting_empty_route(hass):
+    """Test without default interface config and the route returns nothing."""
+    mock_get_ssdp = {
+        "mock-domain": [
+            {
+                ssdp.ATTR_UPNP_DEVICE_TYPE: "ABC",
+            }
+        ]
+    }
+    create_args = []
+
+    def _generate_fake_ssdp_listener(*args, **kwargs):
+        create_args.append([args, kwargs])
+        listener = SSDPListener(*args, **kwargs)
+
+        async def _async_callback(*_):
+            pass
+
+        @callback
+        def _callback(*_):
+            pass
+
+        listener.async_start = _async_callback
+        listener.async_search = _callback
+        return listener
+
+    with patch(
+        "homeassistant.components.ssdp.async_get_ssdp",
+        return_value=mock_get_ssdp,
+    ), patch(
+        "homeassistant.components.ssdp.SSDPListener",
+        new=_generate_fake_ssdp_listener,
+    ), patch(
+        "homeassistant.components.ssdp.network.async_get_adapters",
+        return_value=_ADAPTERS_WITH_MANUAL_CONFIG,
+    ):
+        assert await async_setup_component(hass, ssdp.DOMAIN, {ssdp.DOMAIN: {}})
+        await hass.async_block_till_done()
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+    assert create_args[0][1]["source_ip"] == IPv6Address("2001:db8::")
+    assert create_args[1][1]["source_ip"] == IPv4Address("192.168.1.5")

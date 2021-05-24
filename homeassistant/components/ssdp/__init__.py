@@ -132,8 +132,12 @@ class Scanner:
                 sources.add(IPv4Address(ipv4["address"]))
             if not adapter["ipv6"]:
                 continue
-            for ipv6 in adapter["ipv6"]:
-                sources.add(IPv6Address(f"::%{ipv6['scope_id']}"))
+            if adapter["ipv6"]:
+                ipv6 = adapter["ipv6"][0]
+                # With python 3.9 add scope_ids can be
+                # added by enumerating adapter["ipv6"]s
+                # IPv6Address(f"::%{ipv6['scope_id']}")
+                sources.add(IPv6Address(ipv6["address"]))
 
         return sources
 
