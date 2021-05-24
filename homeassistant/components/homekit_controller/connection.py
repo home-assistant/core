@@ -153,6 +153,7 @@ class HKDevice:
     @callback
     def async_set_available_state(self, available):
         """Mark state of all entities on this connection when it becomes available or unavailable."""
+        _LOGGER.debug("Called async_set_available_state with %s", available)
         if self.available == available:
             return
         self.available = available
