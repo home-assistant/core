@@ -104,11 +104,6 @@ class StationPriceSensor(CoordinatorEntity, SensorEntity):
         return prices.get((self._station_id, self._fuel_type))
 
     @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self.state is not None
-
-    @property
     def extra_state_attributes(self) -> dict:
         """Return the state attributes of the device."""
         return {
@@ -136,4 +131,4 @@ class StationPriceSensor(CoordinatorEntity, SensorEntity):
     @property
     def unique_id(self) -> str | None:
         """Return a unique ID."""
-        return f"nsw_fuel_station_{self._station_id}_{self._fuel_type}"
+        return f"{self._station_id}_{self._fuel_type}"
