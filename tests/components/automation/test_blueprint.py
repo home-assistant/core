@@ -215,6 +215,7 @@ async def test_motion_light(hass):
 
 
 async def test_blueprint_inputs(hass):
+    """Test inputs added as attributes."""
     with patch_blueprint(
         "motion_light.yaml",
         BUILTIN_BLUEPRINT_FOLDER / "motion_light.yaml",
@@ -228,10 +229,11 @@ async def test_blueprint_inputs(hass):
                     "use_blueprint": {
                         "path": "motion_light.yaml",
                         "input": {
+                            "no_motion_wait": 120,
                             "light_target": {"entity_id": "light.kitchen"},
                             "motion_entity": "binary_sensor.kitchen",
                         },
-                    }
+                    },
                 }
             },
         )
@@ -253,18 +255,23 @@ async def test_blueprint_inputs(hass):
                             "zone_entity": "zone.school",
                             "notify_device": "abcdefgh",
                         },
-                    }
+                    },
                 }
             },
         )
 
     state = hass.states.async_get("automation.test_motion_light")
     assert state
-    assert state.attributes["inputs"]["light_target"] == {"entity_id": "light.kitchen"}
-    assert state.attributes["inputs"]["motion_entity"] == "binary_sensor.kitchen"
+    assert not state.attributes["inputs"]["no_motion_wait"] == {
+        "entity_id": "light.kitchen"
+    }
+    assert not state.attributes["inputs"]["light_target"] == {
+        "entity_id": "light.kitchen"
+    }
+    assert not state.attributes["inputs"]["motion_entity"] == "binary_sensor.kitchen"
 
     state = hass.states.async_get("automation.test_leaving_zone")
     assert state
-    assert state.attributes["inputs"]["person_entity"] == "person.test_person"
-    assert state.attributes["inputs"]["zone_entity"] == "zone.school"
-    assert state.attributes["inputs"]["notify_device"] == "abcdefgh"
+    assert not state.attributes["inputs"]["person_entity"] == "person.test_person"
+    assert not state.attributes["inputs"]["zone_entity"] == "zone.school"
+    assert not state.attributes["inputs"]["notify_device"] == "abcdefgh"
