@@ -6,7 +6,10 @@ from typing import Any, Final, cast
 from pdunehd import DuneHDPlayer
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
+from homeassistant.components.media_player import (
+    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
+    MediaPlayerEntity,
+)
 from homeassistant.components.media_player.const import (
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
@@ -34,7 +37,7 @@ from .const import ATTR_MANUFACTURER, DEFAULT_NAME, DOMAIN
 
 CONF_SOURCES: Final = "sources"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA: Final = PARENT_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_SOURCES): vol.Schema({cv.string: cv.string}),
