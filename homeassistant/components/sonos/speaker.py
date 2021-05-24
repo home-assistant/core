@@ -72,10 +72,9 @@ def fetch_alarms_for_speaker(soco: SoCo) -> tuple[set[Alarm], set[int]]:
 
     Returns a set of alarm instances that belong to a speaker and the list of all alarm ids
     """
-    alarms = get_alarms(soco)
     available_alarms = set()
     all_ids = set()
-    for alarm in alarms:
+    for alarm in get_alarms(soco):
         if alarm.zone.uid == soco.uid:
             available_alarms.add(alarm)
         all_ids.add(alarm.alarm_id)
