@@ -45,10 +45,9 @@ class DescriptionManager:
         try:
             for _ in range(2):
                 resp = await session.get(xml_location, timeout=5)
-                xml = await resp.text(errors="replace")
                 # Samsung Smart TV sometimes returns an empty document the
                 # first time. Retry once.
-                if xml:
+                if xml := await resp.text(errors="replace"):
                     break
         except (aiohttp.ClientError, asyncio.TimeoutError) as err:
             _LOGGER.debug("Error fetching %s: %s", xml_location, err)
