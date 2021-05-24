@@ -1,7 +1,6 @@
 """Support for Modbus Register sensors."""
 from __future__ import annotations
 
-from datetime import timedelta
 import logging
 import struct
 
@@ -26,11 +25,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import number
+from .base_platform import BasePlatform
 from .const import (
     CALL_TYPE_REGISTER_HOLDING,
     CALL_TYPE_REGISTER_INPUT,
@@ -59,6 +58,7 @@ from .const import (
     MODBUS_DOMAIN,
 )
 
+PARALLEL_UPDATES = 1
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -141,11 +141,13 @@ async def async_setup_platform(
             _LOGGER.error("Error in sensor %s structure: %s", entry[CONF_NAME], err)
             continue
 
-        if entry[CONF_COUNT] * 2 != size:
+        bytecount = entry[CONF_COUNT] * 2
+        if bytecount != size:
             _LOGGER.error(
-                "Structure size (%d bytes) mismatch registers count (%d words)",
+                "Structure request %d bytes, but %d registers have a size of %d bytes",
                 size,
                 entry[CONF_COUNT],
+                bytecount,
             )
             continue
 
@@ -191,7 +193,7 @@ async def async_setup_platform(
     async_add_entities(sensors)
 
 
-class ModbusRegisterSensor(RestoreEntity, SensorEntity):
+class ModbusRegisterSensor(BasePlatform, RestoreEntity, SensorEntity):
     """Modbus register sensor."""
 
     def __init__(
@@ -201,12 +203,9 @@ class ModbusRegisterSensor(RestoreEntity, SensorEntity):
         structure,
     ):
         """Initialize the modbus register sensor."""
-        self._hub = hub
-        self._name = entry[CONF_NAME]
-        slave = entry.get(CONF_SLAVE)
-        self._slave = int(slave) if slave else None
-        self._register = int(entry[CONF_ADDRESS])
-        self._register_type = entry[CONF_INPUT_TYPE]
+        super().__init__(hub, entry)
+        self._register = self._address
+        self._register_type = self._input_type
         self._unit_of_measurement = entry.get(CONF_UNIT_OF_MEASUREMENT)
         self._count = int(entry[CONF_COUNT])
         self._swap = entry[CONF_SWAP]
@@ -215,20 +214,13 @@ class ModbusRegisterSensor(RestoreEntity, SensorEntity):
         self._precision = entry[CONF_PRECISION]
         self._structure = structure
         self._data_type = entry[CONF_DATA_TYPE]
-        self._device_class = entry.get(CONF_DEVICE_CLASS)
-        self._value = None
-        self._available = True
-        self._scan_interval = timedelta(seconds=entry.get(CONF_SCAN_INTERVAL))
 
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
+        await self.async_base_added_to_hass()
         state = await self.async_get_last_state()
         if state:
             self._value = state.state
-
-        async_track_time_interval(
-            self.hass, lambda arg: self.update(), self._scan_interval
-        )
 
     @property
     def state(self):
@@ -236,34 +228,9 @@ class ModbusRegisterSensor(RestoreEntity, SensorEntity):
         return self._value
 
     @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def should_poll(self):
-        """Return True if entity has to be polled for state.
-
-        False if entity pushes its state to HA.
-        """
-
-        # Handle polling directly in this entity
-        return False
-
-    @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
         return self._unit_of_measurement
-
-    @property
-    def device_class(self) -> str | None:
-        """Return the device class of the sensor."""
-        return self._device_class
-
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self._available
 
     def _swap_registers(self, registers):
         """Do swap as needed."""
@@ -280,19 +247,16 @@ class ModbusRegisterSensor(RestoreEntity, SensorEntity):
             registers.reverse()
         return registers
 
-    def update(self):
+    async def async_update(self, now=None):
         """Update the state of the sensor."""
-        if self._register_type == CALL_TYPE_REGISTER_INPUT:
-            result = self._hub.read_input_registers(
-                self._slave, self._register, self._count
-            )
-        else:
-            result = self._hub.read_holding_registers(
-                self._slave, self._register, self._count
-            )
+        # remark "now" is a dummy parameter to avoid problems with
+        # async_track_time_interval
+        result = await self._hub.async_pymodbus_call(
+            self._slave, self._register, self._count, self._register_type
+        )
         if result is None:
             self._available = False
-            self.schedule_update_ha_state()
+            self.async_write_ha_state()
             return
 
         registers = self._swap_registers(result.registers)
@@ -332,4 +296,4 @@ class ModbusRegisterSensor(RestoreEntity, SensorEntity):
                     self._value = f"{float(val):.{self._precision}f}"
 
         self._available = True
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()

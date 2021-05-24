@@ -17,7 +17,13 @@ from homeassistant.const import (
 )
 from homeassistant.util import location
 
-from .const import CONFIG_ENTRY_VERSION, DEFAULT_ALIAS, DEFAULT_NAME, DOMAIN
+from .const import (
+    CONFIG_ENTRY_VERSION,
+    COUNTRYCODE_NAMES,
+    DEFAULT_ALIAS,
+    DEFAULT_NAME,
+    DOMAIN,
+)
 
 CONF_MODE = "Config Mode"
 CONF_AUTO = "Auto Discover"
@@ -178,7 +184,7 @@ class PlayStation4FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 self.hass.helpers.aiohttp_client.async_get_clientsession()
             )
         if self.location:
-            country = self.location.country_name
+            country = COUNTRYCODE_NAMES.get(self.location.country_code)
             if country in COUNTRIES:
                 default_region = country
 

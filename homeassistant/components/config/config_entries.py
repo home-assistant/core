@@ -385,7 +385,7 @@ def entry_json(entry: config_entries.ConfigEntry) -> dict:
         "domain": entry.domain,
         "title": entry.title,
         "source": entry.source,
-        "state": entry.state,
+        "state": entry.state.value,
         "supports_options": supports_options,
         "supports_unload": entry.supports_unload,
         "disabled_by": entry.disabled_by,

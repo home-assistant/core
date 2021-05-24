@@ -45,7 +45,7 @@ CONFIG_SCHEMA = vol.Schema({vol.Optional(CONF_HOST): str})
 class OptionsFlowHandler(config_entries.OptionsFlow):
     """Options for the component."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry):
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Init object."""
         self.config_entry = config_entry
 

@@ -5,7 +5,7 @@ from aiohue.sensors import TYPE_ZGP_SWITCH, TYPE_ZLL_ROTARY, TYPE_ZLL_SWITCH
 
 from homeassistant.const import CONF_EVENT, CONF_ID, CONF_UNIQUE_ID
 from homeassistant.core import callback
-from homeassistant.util import slugify
+from homeassistant.util import dt as dt_util, slugify
 
 from .sensor_device import GenericHueDevice
 
@@ -48,7 +48,13 @@ class HueEvent(GenericHueDevice):
     @callback
     def async_update_callback(self):
         """Fire the event if reason is that state is updated."""
-        if self.sensor.state == self._last_state:
+        if (
+            self.sensor.state == self._last_state
+            or
+            # Filter out old states. Can happen when events fire while refreshing
+            dt_util.parse_datetime(self.sensor.state["lastupdated"])
+            <= dt_util.parse_datetime(self._last_state["lastupdated"])
+        ):
             return
 
         # Extract the press code as state

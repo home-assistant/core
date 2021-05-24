@@ -480,11 +480,13 @@ async def test_pymodbus_connect_fail(hass, caplog, mock_pymodbus):
 
 
 async def test_delay(hass, mock_pymodbus):
-    """Run test for different read."""
+    """Run test for startup delay."""
 
     # the purpose of this test is to test startup delay
-    # We "hijiack" binary_sensor and sensor in order
-    # to make a proper blackbox test.
+    # We "hijiack" a binary_sensor to make a proper blackbox test.
+    test_delay = 15
+    test_scan_interval = 5
+    entity_id = f"{BINARY_SENSOR_DOMAIN}.{TEST_SENSOR_NAME}"
     config = {
         DOMAIN: [
             {
@@ -492,101 +494,86 @@ async def test_delay(hass, mock_pymodbus):
                 CONF_HOST: "modbusTestHost",
                 CONF_PORT: 5501,
                 CONF_NAME: TEST_MODBUS_NAME,
-                CONF_DELAY: 15,
+                CONF_DELAY: test_delay,
                 CONF_BINARY_SENSORS: [
                     {
                         CONF_INPUT_TYPE: CALL_TYPE_COIL,
-                        CONF_NAME: f"{TEST_SENSOR_NAME}_2",
+                        CONF_NAME: f"{TEST_SENSOR_NAME}",
                         CONF_ADDRESS: 52,
-                        CONF_SCAN_INTERVAL: 5,
-                    },
-                    {
-                        CONF_INPUT_TYPE: CALL_TYPE_DISCRETE,
-                        CONF_NAME: f"{TEST_SENSOR_NAME}_1",
-                        CONF_ADDRESS: 51,
-                        CONF_SCAN_INTERVAL: 5,
-                    },
-                ],
-                CONF_SENSORS: [
-                    {
-                        CONF_INPUT_TYPE: CALL_TYPE_REGISTER_HOLDING,
-                        CONF_NAME: f"{TEST_SENSOR_NAME}_3",
-                        CONF_ADDRESS: 53,
-                        CONF_SCAN_INTERVAL: 5,
-                    },
-                    {
-                        CONF_INPUT_TYPE: CALL_TYPE_REGISTER_INPUT,
-                        CONF_NAME: f"{TEST_SENSOR_NAME}_4",
-                        CONF_ADDRESS: 54,
-                        CONF_SCAN_INTERVAL: 5,
+                        CONF_SCAN_INTERVAL: test_scan_interval,
                     },
                 ],
             }
         ]
     }
     mock_pymodbus.read_coils.return_value = ReadResult([0x01])
-    mock_pymodbus.read_discrete_inputs.return_value = ReadResult([0x01])
-    mock_pymodbus.read_holding_registers.return_value = ReadResult([7])
-    mock_pymodbus.read_input_registers.return_value = ReadResult([7])
     now = dt_util.utcnow()
     with mock.patch("homeassistant.helpers.event.dt_util.utcnow", return_value=now):
         assert await async_setup_component(hass, DOMAIN, config) is True
         await hass.async_block_till_done()
 
-    now = now + timedelta(seconds=10)
+    # pass first scan_interval
+    start_time = now
+    now = now + timedelta(seconds=(test_scan_interval + 1))
     with mock.patch("homeassistant.helpers.event.dt_util.utcnow", return_value=now):
         async_fire_time_changed(hass, now)
         await hass.async_block_till_done()
+        assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
-    # Check states
-    entity_id = f"{BINARY_SENSOR_DOMAIN}.{TEST_SENSOR_NAME}_1"
-    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
-    entity_id = f"{BINARY_SENSOR_DOMAIN}.{TEST_SENSOR_NAME}_2"
-    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
-    entity_id = f"{SENSOR_DOMAIN}.{TEST_SENSOR_NAME}_3"
-    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
-    entity_id = f"{SENSOR_DOMAIN}.{TEST_SENSOR_NAME}_4"
-    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+    stop_time = start_time + timedelta(seconds=(test_delay + 1))
+    step_timedelta = timedelta(seconds=1)
+    while now < stop_time:
+        now = now + step_timedelta
+        with mock.patch("homeassistant.helpers.event.dt_util.utcnow", return_value=now):
+            async_fire_time_changed(hass, now)
+            await hass.async_block_till_done()
+            assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+    now = now + step_timedelta + timedelta(seconds=2)
+    with mock.patch("homeassistant.helpers.event.dt_util.utcnow", return_value=now):
+        async_fire_time_changed(hass, now)
+        await hass.async_block_till_done()
+        assert hass.states.get(entity_id).state == STATE_ON
 
-    mock_pymodbus.reset_mock()
-    data = {
-        ATTR_HUB: TEST_MODBUS_NAME,
-        ATTR_UNIT: 17,
-        ATTR_ADDRESS: 16,
-        ATTR_STATE: False,
+
+async def test_thread_lock(hass, mock_pymodbus):
+    """Run test for block of threads."""
+
+    # the purpose of this test is to test the threads are not being blocked
+    # We "hijiack" a binary_sensor to make a proper blackbox test.
+    test_scan_interval = 5
+    sensors = []
+    for i in range(200):
+        sensors.append(
+            {
+                CONF_INPUT_TYPE: CALL_TYPE_COIL,
+                CONF_NAME: f"{TEST_SENSOR_NAME}_{i}",
+                CONF_ADDRESS: 52 + i,
+                CONF_SCAN_INTERVAL: test_scan_interval,
+            }
+        )
+    config = {
+        DOMAIN: [
+            {
+                CONF_TYPE: "tcp",
+                CONF_HOST: "modbusTestHost",
+                CONF_PORT: 5501,
+                CONF_NAME: TEST_MODBUS_NAME,
+                CONF_BINARY_SENSORS: sensors,
+            }
+        ]
     }
-    await hass.services.async_call(DOMAIN, SERVICE_WRITE_COIL, data, blocking=True)
-    assert not mock_pymodbus.write_coil.called
-    await hass.services.async_call(DOMAIN, SERVICE_WRITE_COIL, data, blocking=True)
-    assert not mock_pymodbus.write_coil.called
-    data[ATTR_STATE] = [True, False, True]
-    await hass.services.async_call(DOMAIN, SERVICE_WRITE_COIL, data, blocking=True)
-    assert not mock_pymodbus.write_coils.called
-
-    del data[ATTR_STATE]
-    data[ATTR_VALUE] = 15
-    await hass.services.async_call(DOMAIN, SERVICE_WRITE_REGISTER, data, blocking=True)
-    assert not mock_pymodbus.write_register.called
-    data[ATTR_VALUE] = [1, 2, 3]
-    await hass.services.async_call(DOMAIN, SERVICE_WRITE_REGISTER, data, blocking=True)
-    assert not mock_pymodbus.write_registers.called
-
-    # 2 times fire_changed is needed to secure "normal" update is called.
-    now = now + timedelta(seconds=6)
+    mock_pymodbus.read_coils.return_value = ReadResult([0x01])
+    now = dt_util.utcnow()
     with mock.patch("homeassistant.helpers.event.dt_util.utcnow", return_value=now):
-        async_fire_time_changed(hass, now)
+        assert await async_setup_component(hass, DOMAIN, config) is True
         await hass.async_block_till_done()
-    now = now + timedelta(seconds=10)
-    with mock.patch("homeassistant.helpers.event.dt_util.utcnow", return_value=now):
-        async_fire_time_changed(hass, now)
-        await hass.async_block_till_done()
-
-    # Check states
-    entity_id = f"{BINARY_SENSOR_DOMAIN}.{TEST_SENSOR_NAME}_1"
-    assert not hass.states.get(entity_id).state == STATE_UNAVAILABLE
-    entity_id = f"{BINARY_SENSOR_DOMAIN}.{TEST_SENSOR_NAME}_2"
-    assert not hass.states.get(entity_id).state == STATE_UNAVAILABLE
-    entity_id = f"{SENSOR_DOMAIN}.{TEST_SENSOR_NAME}_3"
-    assert not hass.states.get(entity_id).state == STATE_UNAVAILABLE
-    entity_id = f"{SENSOR_DOMAIN}.{TEST_SENSOR_NAME}_4"
-    assert not hass.states.get(entity_id).state == STATE_UNAVAILABLE
+    stop_time = now + timedelta(seconds=10)
+    step_timedelta = timedelta(seconds=1)
+    while now < stop_time:
+        now = now + step_timedelta
+        with mock.patch("homeassistant.helpers.event.dt_util.utcnow", return_value=now):
+            async_fire_time_changed(hass, now)
+            await hass.async_block_till_done()
+    for i in range(200):
+        entity_id = f"{BINARY_SENSOR_DOMAIN}.{TEST_SENSOR_NAME}_{i}"
+        assert hass.states.get(entity_id).state == STATE_ON

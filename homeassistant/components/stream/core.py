@@ -53,7 +53,7 @@ class IdleTimer:
 
     def __init__(
         self, hass: HomeAssistant, timeout: int, idle_callback: Callable[[], None]
-    ):
+    ) -> None:
         """Initialize IdleTimer."""
         self._hass = hass
         self._timeout = timeout

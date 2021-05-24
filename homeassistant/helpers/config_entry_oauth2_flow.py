@@ -107,7 +107,7 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
         client_secret: str,
         authorize_url: str,
         token_url: str,
-    ):
+    ) -> None:
         """Initialize local auth implementation."""
         self.hass = hass
         self._domain = domain
@@ -316,7 +316,11 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
         """
         return self.async_create_entry(title=self.flow_impl.name, data=data)
 
-    async_step_user = async_step_pick_implementation
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle a flow start."""
+        return await self.async_step_pick_implementation(user_input)
 
     @classmethod
     def async_register_implementation(
@@ -433,7 +437,7 @@ class OAuth2Session:
         hass: HomeAssistant,
         config_entry: config_entries.ConfigEntry,
         implementation: AbstractOAuth2Implementation,
-    ):
+    ) -> None:
         """Initialize an OAuth2 session."""
         self.hass = hass
         self.config_entry = config_entry
