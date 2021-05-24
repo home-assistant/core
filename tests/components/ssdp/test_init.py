@@ -333,7 +333,8 @@ async def test_unexpected_exception_while_fetching(hass, aioclient_mock, caplog)
         )
 
     with patch(
-        "homeassistant.components.ssdp.ElementTree.fromstring", side_effect=ValueError
+        "homeassistant.components.ssdp.descriptions.ElementTree.fromstring",
+        side_effect=ValueError,
     ), patch(
         "homeassistant.components.ssdp.async_search",
         side_effect=_mock_async_scan,
