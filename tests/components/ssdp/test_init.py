@@ -314,7 +314,7 @@ async def test_unexpected_exception_while_fetching(hass, aioclient_mock, caplog)
     assert "Failed to fetch ssdp data from: http://1.1.1.1" in caplog.text
 
 
-async def test_scan_with_registered_callback(hass, aioclient_mock):
+async def test_scan_with_registered_callback(hass, aioclient_mock, caplog):
     """Test matching based on callback."""
     aioclient_mock.get(
         "http://1.1.1.1",
@@ -333,11 +333,25 @@ async def test_scan_with_registered_callback(hass, aioclient_mock):
         "server": "mock-server",
         "ext": "",
     }
+    not_matching_intergration_callbacks = []
     intergration_callbacks = []
+    match_any_callbacks = []
+
+    @callback
+    def _async_exception_callbacks(info):
+        raise ValueError
 
     @callback
     def _async_intergration_callbacks(info):
         intergration_callbacks.append(info)
+
+    @callback
+    def _async_not_matching_intergration_callbacks(info):
+        not_matching_intergration_callbacks.append(info)
+
+    @callback
+    def _async_match_any_callbacks(info):
+        match_any_callbacks.append(info)
 
     def _generate_fake_ssdp_listener(*args, **kwargs):
         listener = SSDPListener(*args, **kwargs)
@@ -359,10 +373,20 @@ async def test_scan_with_registered_callback(hass, aioclient_mock):
     ):
         assert await async_setup_component(hass, ssdp.DOMAIN, {ssdp.DOMAIN: {}})
         await hass.async_block_till_done()
+        ssdp.async_register_callback(hass, _async_exception_callbacks, {})
         ssdp.async_register_callback(
             hass,
             _async_intergration_callbacks,
             {ssdp.ATTR_SSDP_ST: "mock-st"},
+        )
+        ssdp.async_register_callback(
+            hass,
+            _async_not_matching_intergration_callbacks,
+            {ssdp.ATTR_SSDP_ST: "not-match-mock-st"},
+        )
+        ssdp.async_register_callback(
+            hass,
+            _async_match_any_callbacks,
         )
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
@@ -370,6 +394,8 @@ async def test_scan_with_registered_callback(hass, aioclient_mock):
         await hass.async_block_till_done()
 
     assert len(intergration_callbacks) == 1
+    assert len(match_any_callbacks) == 1
+    assert len(not_matching_intergration_callbacks) == 0
     assert intergration_callbacks[0] == {
         ssdp.ATTR_UPNP_DEVICE_TYPE: "Paulus",
         ssdp.ATTR_SSDP_EXT: "",
@@ -378,6 +404,7 @@ async def test_scan_with_registered_callback(hass, aioclient_mock):
         ssdp.ATTR_SSDP_ST: "mock-st",
         ssdp.ATTR_SSDP_USN: "mock-usn",
     }
+    assert "Failed to callback info" in caplog.text
 
 
 async def test_scan_second_hit(hass, aioclient_mock, caplog):
@@ -431,7 +458,7 @@ async def test_scan_second_hit(hass, aioclient_mock, caplog):
     ) as mock_init:
         assert await async_setup_component(hass, ssdp.DOMAIN, {ssdp.DOMAIN: {}})
         await hass.async_block_till_done()
-        ssdp.async_register_callback(
+        remove = ssdp.async_register_callback(
             hass,
             _async_intergration_callbacks,
             {ssdp.ATTR_SSDP_ST: "mock-st"},
@@ -440,8 +467,13 @@ async def test_scan_second_hit(hass, aioclient_mock, caplog):
         await hass.async_block_till_done()
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=200))
         await hass.async_block_till_done()
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=200))
+        await hass.async_block_till_done()
+        remove()
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=200))
+        await hass.async_block_till_done()
 
-    assert len(intergration_callbacks) == 1
+    assert len(intergration_callbacks) == 2
     assert intergration_callbacks[0] == {
         ssdp.ATTR_UPNP_DEVICE_TYPE: "Paulus",
         ssdp.ATTR_SSDP_EXT: "",

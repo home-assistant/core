@@ -109,11 +109,6 @@ class Scanner:
         return _async_remove_callback
 
     @callback
-    def async_store_entry(self, entry):
-        """Save an entry for later processing."""
-        self._entries.append(entry)
-
-    @callback
     def async_stop(self, *_):
         """Stop the scanner."""
         self._cancel_scan()
