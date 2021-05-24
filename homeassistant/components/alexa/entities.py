@@ -614,14 +614,14 @@ class MediaPlayerCapabilities(AlexaEntity):
         if supported & media_player.const.SUPPORT_PLAY_MEDIA:
             yield AlexaChannelController(self.entity)
 
-        if supported & media_player.const.SUPPORT_SELECT_SOUND_MODE:
+        # AlexaEqualizerController is disabled for denonavr
+        # since it blocks alexa from discovering any devices.
+        domain = entity_sources(self.hass)[self.entity_id]["domain"]
+        if supported & media_player.const.SUPPORT_SELECT_SOUND_MODE and domain not in ["denonavr"]:
             inputs = AlexaEqualizerController.get_valid_inputs(
                 self.entity.attributes.get(media_player.const.ATTR_SOUND_MODE_LIST, [])
             )
-            # AlexaEqualizerController is disabled for denonavr
-            # since it blocks alexa from discovering any devices.
-            domain = entity_sources(self.hass)[self.entity_id]["domain"]
-            if len(inputs) > 0 and domain not in ["denonavr"]:
+            if len(inputs) > 0:
                 yield AlexaEqualizerController(self.entity)
 
         yield AlexaEndpointHealth(self.hass, self.entity)
