@@ -433,6 +433,7 @@ homeassistant/components/shell_command/* @home-assistant/core
 homeassistant/components/shelly/* @balloob @bieniu @thecode @chemelli74
 homeassistant/components/shiftr/* @fabaff
 homeassistant/components/shodan/* @fabaff
+homeassistant/components/sia/* @eavanvalkenburg
 homeassistant/components/sighthound/* @robmarkcole
 homeassistant/components/signal_messenger/* @bbernhard
 homeassistant/components/simplisafe/* @bachya
@@ -544,6 +545,7 @@ homeassistant/components/vlc_telnet/* @rodripf @dmcc
 homeassistant/components/volkszaehler/* @fabaff
 homeassistant/components/volumio/* @OnFreund
 homeassistant/components/wake_on_lan/* @ntilley905
+homeassistant/components/wallbox/* @hesselonline
 homeassistant/components/waqi/* @andrey-git
 homeassistant/components/watson_tts/* @rutkai
 homeassistant/components/weather/* @fabaff

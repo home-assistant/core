@@ -1732,6 +1732,9 @@ pysesame2==1.0.1
 # homeassistant.components.goalfeed
 pysher==1.0.1
 
+# homeassistant.components.sia
+pysiaalarm==3.0.0b12
+
 # homeassistant.components.signal_messenger
 pysignalclirestapi==0.3.4
 
@@ -2335,6 +2338,9 @@ vultr==0.1.2
 # homeassistant.components.samsungtv
 # homeassistant.components.wake_on_lan
 wakeonlan==2.0.1
+
+# homeassistant.components.wallbox
+wallbox==0.4.4
 
 # homeassistant.components.waqi
 waqiasync==1.0.0

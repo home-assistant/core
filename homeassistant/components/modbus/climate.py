@@ -20,6 +20,7 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .base_platform import BasePlatform
@@ -98,7 +99,7 @@ async def async_setup_platform(
     async_add_entities(entities)
 
 
-class ModbusThermostat(BasePlatform, ClimateEntity):
+class ModbusThermostat(BasePlatform, RestoreEntity, ClimateEntity):
     """Representation of a Modbus Thermostat."""
 
     def __init__(
@@ -131,6 +132,9 @@ class ModbusThermostat(BasePlatform, ClimateEntity):
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
         await self.async_base_added_to_hass()
+        state = await self.async_get_last_state()
+        if state and state.attributes.get(ATTR_TEMPERATURE):
+            self._target_temperature = float(state.attributes[ATTR_TEMPERATURE])
 
     @property
     def supported_features(self):
