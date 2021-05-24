@@ -134,6 +134,8 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self.hass, self._bridge, self._host
         )
         if not info:
+            if not self._bridge:
+                raise data_entry_flow.AbortFlow(RESULT_NOT_SUPPORTED)
             return False
         dev_info = info.get("device", {})
         device_type = dev_info.get("type")
