@@ -5,8 +5,11 @@ from unittest.mock import MagicMock, patch
 from qbittorrent.client import LoginRequired
 from requests.exceptions import RequestException
 
+from homeassistant import setup
 from homeassistant.components import qbittorrent
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import CONF_PASSWORD, CONF_PLATFORM, CONF_URL, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -34,7 +37,33 @@ def _create_mocked_client(raise_request_exception=False, raise_login_exception=F
     return mocked_client
 
 
-async def test_unload_entry(hass):
+async def test_import_old_config_sensor(hass: HomeAssistant):
+    """Test import of old sensor platform config."""
+    config = {
+        "sensor": [
+            {
+                CONF_PLATFORM: qbittorrent.DOMAIN,
+                CONF_URL: test_url,
+                CONF_USERNAME: test_username,
+                CONF_PASSWORD: test_password,
+            }
+        ],
+    }
+    mocked_client = _create_mocked_client(False, False)
+    with patch(
+        "homeassistant.components.qbittorrent.client.Client",
+        return_value=mocked_client,
+    ):
+        with patch("homeassistant.core.ServiceRegistry.async_call", return_value=True):
+            assert await setup.async_setup_component(hass, "sensor", config)
+            await hass.async_block_till_done()
+
+            confflow_entries = hass.config_entries.flow.async_progress(True)
+
+            assert len(confflow_entries) == 1
+
+
+async def test_unload_entry(hass: HomeAssistant):
     """Test removing Qbittorrent client."""
     mocked_client = _create_mocked_client(False, False)
     with patch(
