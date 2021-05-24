@@ -121,7 +121,7 @@ class DuneHDPlayerEntity(MediaPlayerEntity):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return bool(self._state)
+        return len(self._state) > 0
 
     @property
     def unique_id(self) -> str:
