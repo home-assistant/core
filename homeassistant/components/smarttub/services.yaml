@@ -60,6 +60,6 @@ snooze_reminder:
       example: 7
       selector:
         number:
-          min: 0
+          min: 10
           max: 120
           unit_of_measurement: days
