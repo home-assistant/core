@@ -1,4 +1,7 @@
 """The tests for the Modbus switch component."""
+from datetime import timedelta
+from unittest import mock
+
 from pymodbus.exceptions import ModbusException
 import pytest
 
@@ -19,10 +22,12 @@ from homeassistant.const import (
     CONF_ADDRESS,
     CONF_COMMAND_OFF,
     CONF_COMMAND_ON,
+    CONF_DELAY,
     CONF_DEVICE_CLASS,
     CONF_HOST,
     CONF_NAME,
     CONF_PORT,
+    CONF_SCAN_INTERVAL,
     CONF_SLAVE,
     CONF_SWITCHES,
     CONF_TYPE,
@@ -32,10 +37,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import State
 from homeassistant.setup import async_setup_component
+import homeassistant.util.dt as dt_util
 
 from .conftest import ReadResult, base_config_test, base_test, prepare_service_update
 
-from tests.common import mock_restore_cache
+from tests.common import async_fire_time_changed, mock_restore_cache
 
 
 @pytest.mark.parametrize(
@@ -72,6 +78,7 @@ from tests.common import mock_restore_cache
                 CONF_ADDRESS: 1235,
                 CONF_STATE_OFF: 0,
                 CONF_STATE_ON: 1,
+                CONF_DELAY: 10,
             },
         },
         {
@@ -93,6 +100,7 @@ from tests.common import mock_restore_cache
             CONF_COMMAND_OFF: 0x00,
             CONF_COMMAND_ON: 0x01,
             CONF_DEVICE_CLASS: "switch",
+            CONF_SCAN_INTERVAL: 0,
             CONF_VERIFY: None,
         },
     ],
@@ -292,3 +300,46 @@ async def test_service_switch_update(hass, mock_pymodbus):
         "homeassistant", "update_entity", {"entity_id": entity_id}, blocking=True
     )
     assert hass.states.get(entity_id).state == STATE_OFF
+
+
+async def test_delay_switch(hass, mock_pymodbus):
+    """Run test for switch verify delay."""
+
+    switch_name = "test_switch"
+    entity_id = f"{SWITCH_DOMAIN}.{switch_name}"
+
+    config = {
+        MODBUS_DOMAIN: [
+            {
+                CONF_TYPE: "tcp",
+                CONF_HOST: "modbusTestHost",
+                CONF_PORT: 5501,
+                CONF_SWITCHES: [
+                    {
+                        CONF_NAME: switch_name,
+                        CONF_ADDRESS: 51,
+                        CONF_SCAN_INTERVAL: 0,
+                        CONF_VERIFY: {
+                            CONF_DELAY: 1,
+                            CONF_INPUT_TYPE: CALL_TYPE_REGISTER_HOLDING,
+                        },
+                    }
+                ],
+            }
+        ]
+    }
+    mock_pymodbus.read_holding_registers.return_value = ReadResult([0x01])
+    now = dt_util.utcnow()
+    with mock.patch("homeassistant.helpers.event.dt_util.utcnow", return_value=now):
+        assert await async_setup_component(hass, MODBUS_DOMAIN, config) is True
+        await hass.async_block_till_done()
+    await hass.services.async_call(
+        "switch", "turn_on", service_data={"entity_id": entity_id}
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == STATE_OFF
+    now = now + timedelta(seconds=2)
+    with mock.patch("homeassistant.helpers.event.dt_util.utcnow", return_value=now):
+        async_fire_time_changed(hass, now)
+        await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == STATE_ON
