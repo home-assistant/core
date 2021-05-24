@@ -158,8 +158,7 @@ class ModbusFan(BasePlatform, FanEntity, RestoreEntity):
                 self._is_on = False
             elif value is not None:
                 _LOGGER.error(
-                    "Unexpected response from hub %s, slave %s register %s, got 0x%2x",
-                    self._hub.name,
+                    "Unexpected response from modbus device slave %s register %s, got 0x%2x",
                     self._slave,
                     self._verify_address,
                     value,
