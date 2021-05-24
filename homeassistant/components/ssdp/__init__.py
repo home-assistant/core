@@ -145,10 +145,8 @@ class Scanner:
     @callback
     def async_scan(self, *_):
         """Scan for new entries."""
-        if self._ssdp_listeners:
-            for listener in self._ssdp_listeners:
-                listener.async_search()
-            return
+        for listener in self._ssdp_listeners:
+            listener.async_search()
 
     async def async_start(self):
         """Start the scanner."""
@@ -180,6 +178,7 @@ class Scanner:
         info, domains = self._info_domains(entry, info_req)
 
         for ssdp_callback, match_dict in self._callbacks:
+
             if not all(item in info.items() for item in match_dict.items()):
                 continue
             try:

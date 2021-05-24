@@ -10,6 +10,7 @@ import pytest
 from homeassistant import config_entries
 from homeassistant.components import ssdp
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import callback
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -19,7 +20,7 @@ from tests.common import async_fire_time_changed, mock_coro
 def _patched_ssdp_listener(info, *args, **kwargs):
     listener = SSDPListener(*args, **kwargs)
 
-    async def _async_callback():
+    async def _async_callback(*_):
         await listener.async_callback(info)
 
     listener.async_start = _async_callback
@@ -311,3 +312,155 @@ async def test_unexpected_exception_while_fetching(hass, aioclient_mock, caplog)
 
     assert len(mock_init.mock_calls) == 0
     assert "Failed to fetch ssdp data from: http://1.1.1.1" in caplog.text
+
+
+async def test_scan_with_registered_callback(hass, aioclient_mock):
+    """Test matching based on callback."""
+    aioclient_mock.get(
+        "http://1.1.1.1",
+        text="""
+<root>
+  <device>
+    <deviceType>Paulus</deviceType>
+  </device>
+</root>
+    """,
+    )
+    mock_ssdp_response = {
+        "st": "mock-st",
+        "location": "http://1.1.1.1",
+        "usn": "mock-usn",
+        "server": "mock-server",
+        "ext": "",
+    }
+    intergration_callbacks = []
+
+    @callback
+    def _async_intergration_callbacks(info):
+        intergration_callbacks.append(info)
+
+    def _generate_fake_ssdp_listener(*args, **kwargs):
+        listener = SSDPListener(*args, **kwargs)
+
+        async def _async_callback(*_):
+            await listener.async_callback(mock_ssdp_response)
+
+        @callback
+        def _callback(*_):
+            hass.async_create_task(listener.async_callback(mock_ssdp_response))
+
+        listener.async_start = _async_callback
+        listener.async_search = _callback
+        return listener
+
+    with patch(
+        "homeassistant.components.ssdp.SSDPListener",
+        new=_generate_fake_ssdp_listener,
+    ):
+        assert await async_setup_component(hass, ssdp.DOMAIN, {ssdp.DOMAIN: {}})
+        await hass.async_block_till_done()
+        ssdp.async_register_callback(
+            hass,
+            _async_intergration_callbacks,
+            {ssdp.ATTR_SSDP_ST: "mock-st"},
+        )
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=200))
+        await hass.async_block_till_done()
+
+    assert len(intergration_callbacks) == 1
+    assert intergration_callbacks[0] == {
+        ssdp.ATTR_UPNP_DEVICE_TYPE: "Paulus",
+        ssdp.ATTR_SSDP_EXT: "",
+        ssdp.ATTR_SSDP_LOCATION: "http://1.1.1.1",
+        ssdp.ATTR_SSDP_SERVER: "mock-server",
+        ssdp.ATTR_SSDP_ST: "mock-st",
+        ssdp.ATTR_SSDP_USN: "mock-usn",
+    }
+
+
+async def test_scan_second_hit(hass, aioclient_mock, caplog):
+    """Test matching on second scan."""
+    aioclient_mock.get(
+        "http://1.1.1.1",
+        text="""
+<root>
+  <device>
+    <deviceType>Paulus</deviceType>
+  </device>
+</root>
+    """,
+    )
+    mock_ssdp_response = {
+        "st": "mock-st",
+        "location": "http://1.1.1.1",
+        "usn": "mock-usn",
+        "server": "mock-server",
+        "ext": "",
+    }
+    mock_get_ssdp = {"mock-domain": [{"st": "mock-st"}]}
+    intergration_callbacks = []
+
+    @callback
+    def _async_intergration_callbacks(info):
+        intergration_callbacks.append(info)
+
+    def _generate_fake_ssdp_listener(*args, **kwargs):
+        listener = SSDPListener(*args, **kwargs)
+
+        async def _async_callback(*_):
+            pass
+
+        @callback
+        def _callback(*_):
+            hass.async_create_task(listener.async_callback(mock_ssdp_response))
+
+        listener.async_start = _async_callback
+        listener.async_search = _callback
+        return listener
+
+    with patch(
+        "homeassistant.components.ssdp.async_get_ssdp",
+        return_value=mock_get_ssdp,
+    ), patch(
+        "homeassistant.components.ssdp.SSDPListener",
+        new=_generate_fake_ssdp_listener,
+    ), patch.object(
+        hass.config_entries.flow, "async_init", return_value=mock_coro()
+    ) as mock_init:
+        assert await async_setup_component(hass, ssdp.DOMAIN, {ssdp.DOMAIN: {}})
+        await hass.async_block_till_done()
+        ssdp.async_register_callback(
+            hass,
+            _async_intergration_callbacks,
+            {ssdp.ATTR_SSDP_ST: "mock-st"},
+        )
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=200))
+        await hass.async_block_till_done()
+
+    assert len(intergration_callbacks) == 1
+    assert intergration_callbacks[0] == {
+        ssdp.ATTR_UPNP_DEVICE_TYPE: "Paulus",
+        ssdp.ATTR_SSDP_EXT: "",
+        ssdp.ATTR_SSDP_LOCATION: "http://1.1.1.1",
+        ssdp.ATTR_SSDP_SERVER: "mock-server",
+        ssdp.ATTR_SSDP_ST: "mock-st",
+        ssdp.ATTR_SSDP_USN: "mock-usn",
+    }
+    assert len(mock_init.mock_calls) == 1
+    assert mock_init.mock_calls[0][1][0] == "mock-domain"
+    assert mock_init.mock_calls[0][2]["context"] == {
+        "source": config_entries.SOURCE_SSDP
+    }
+    assert mock_init.mock_calls[0][2]["data"] == {
+        ssdp.ATTR_UPNP_DEVICE_TYPE: "Paulus",
+        ssdp.ATTR_SSDP_ST: "mock-st",
+        ssdp.ATTR_SSDP_LOCATION: "http://1.1.1.1",
+        ssdp.ATTR_SSDP_USN: "mock-usn",
+        ssdp.ATTR_SSDP_SERVER: "mock-server",
+        ssdp.ATTR_SSDP_EXT: "",
+    }
+    assert "Failed to fetch ssdp data" not in caplog.text
