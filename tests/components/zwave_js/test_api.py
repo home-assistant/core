@@ -711,7 +711,7 @@ async def test_begin_healing_network(
     client.driver.controller.receive_event(event)
     msg = await ws_client.receive_json()
     assert msg["event"]["event"] == "heal network progress"
-    assert msg["event"]["data"] == {"67": "pending"}
+    assert msg["event"]["heal_node_status"] == {"67": "pending"}
 
     # Test sending command with not loaded entry fails
     await hass.config_entries.async_unload(entry.entry_id)

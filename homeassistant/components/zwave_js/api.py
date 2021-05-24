@@ -675,7 +675,7 @@ async def websocket_begin_healing_network(
     def forward_event(key: str, event: dict) -> None:
         connection.send_message(
             websocket_api.event_message(
-                msg[ID], {"event": event["event"], "data": event[key]}
+                msg[ID], {"event": event["event"], "heal_node_status": event[key]}
             )
         )
 
