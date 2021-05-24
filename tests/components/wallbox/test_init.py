@@ -1,5 +1,6 @@
 """Test Wallbox Init Component."""
 import json
+
 import pytest
 import requests_mock
 from voluptuous.schema_builder import raises
@@ -51,7 +52,7 @@ async def test_wallbox_setup_entry(hass: HomeAssistantType):
             text='{"jwt":"fakekeyhere","user_id":12345,"ttl":145656758,"error":false,"status":404}',
             status_code=404,
         )
-        assert await wallbox.async_setup_entry(hass, entry) == False
+        assert await wallbox.async_setup_entry(hass, entry) is False
 
 
 async def test_wallbox_unload_entry(hass: HomeAssistantType):
@@ -90,7 +91,7 @@ async def test_get_data(hass: HomeAssistantType):
 
 
 async def test_get_data_rounding_error(hass: HomeAssistantType):
-    """Test hub class, get_data with rouding error."""
+    """Test hub class, get_data with rounding error."""
 
     station = ("12345",)
     username = ("test-username",)

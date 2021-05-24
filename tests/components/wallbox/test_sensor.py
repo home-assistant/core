@@ -2,12 +2,10 @@
 
 import json
 from unittest.mock import MagicMock
-import requests_mock
 
-from homeassistant.components.wallbox import sensor, WallboxHub
+from homeassistant.components.wallbox import sensor
 from homeassistant.components.wallbox.const import CONF_STATION, DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.helpers.typing import HomeAssistantType
 
 from tests.common import MockConfigEntry
 

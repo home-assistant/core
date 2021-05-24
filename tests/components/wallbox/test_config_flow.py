@@ -4,7 +4,7 @@ from unittest.mock import patch
 from voluptuous.schema_builder import raises
 
 from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.wallbox import config_flow, CannotConnect, InvalidAuth
+from homeassistant.components.wallbox import CannotConnect, InvalidAuth, config_flow
 from homeassistant.components.wallbox.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
