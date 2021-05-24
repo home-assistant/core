@@ -36,7 +36,7 @@ class BasePlatform(Entity):
         self._input_type = entry[CONF_INPUT_TYPE]
         self._value = None
         self._available = True
-        self._scan_interval = timedelta(seconds=entry[CONF_SCAN_INTERVAL])
+        self._scan_interval = int(entry[CONF_SCAN_INTERVAL])
 
     @abstractmethod
     async def async_update(self, now=None):
@@ -44,7 +44,10 @@ class BasePlatform(Entity):
 
     async def async_base_added_to_hass(self):
         """Handle entity which will be added."""
-        async_track_time_interval(self.hass, self.async_update, self._scan_interval)
+        if self._scan_interval > 0:
+            async_track_time_interval(
+                self.hass, self.async_update, timedelta(seconds=self._scan_interval)
+            )
 
     @property
     def name(self):

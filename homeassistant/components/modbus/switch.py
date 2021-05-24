@@ -8,11 +8,13 @@ from homeassistant.const import (
     CONF_ADDRESS,
     CONF_COMMAND_OFF,
     CONF_COMMAND_ON,
+    CONF_DELAY,
     CONF_NAME,
     CONF_SWITCHES,
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
 
@@ -64,6 +66,7 @@ class ModbusSwitch(BasePlatform, SwitchEntity, RestoreEntity):
             if config[CONF_VERIFY] is None:
                 config[CONF_VERIFY] = {}
             self._verify_active = True
+            self._verify_delay = config[CONF_VERIFY].get(CONF_DELAY, 0)
             self._verify_address = config[CONF_VERIFY].get(
                 CONF_ADDRESS, config[CONF_ADDRESS]
             )
@@ -87,38 +90,34 @@ class ModbusSwitch(BasePlatform, SwitchEntity, RestoreEntity):
         """Return true if switch is on."""
         return self._is_on
 
-    async def async_turn_on(self, **kwargs):
-        """Set switch on."""
-
+    async def _async_turn(self, command):
+        """Evaluate switch result."""
         result = await self._hub.async_pymodbus_call(
-            self._slave, self._address, self._command_on, self._write_type
+            self._slave, self._address, command, self._write_type
         )
         if result is None:
             self._available = False
             self.async_write_ha_state()
+            return
+
+        self._available = True
+        if not self._verify_active:
+            self._is_on = command == self._command_on
+            self.async_write_ha_state()
+            return
+
+        if self._verify_delay:
+            async_call_later(self.hass, self._verify_delay, self.async_update)
         else:
-            self._available = True
-            if self._verify_active:
-                await self.async_update()
-            else:
-                self._is_on = True
-                self.async_write_ha_state()
+            await self.async_update()
+
+    async def async_turn_on(self, **kwargs):
+        """Set switch on."""
+        await self._async_turn(self._command_on)
 
     async def async_turn_off(self, **kwargs):
         """Set switch off."""
-        result = await self._hub.async_pymodbus_call(
-            self._slave, self._address, self._command_off, self._write_type
-        )
-        if result is None:
-            self._available = False
-            self.async_write_ha_state()
-        else:
-            self._available = True
-            if self._verify_active:
-                await self.async_update()
-            else:
-                self._is_on = False
-                self.async_write_ha_state()
+        await self._async_turn(self._command_off)
 
     async def async_update(self, now=None):
         """Update the entity state."""
