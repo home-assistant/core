@@ -323,7 +323,7 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         if self.action_script.supports_max:
             attrs[ATTR_MAX] = self.action_script.max_runs
         if self._blueprint_inputs:
-            attrs[ATTR_INPUTS] = self._blueprint_inputs['use_blueprint']['input']
+            attrs[ATTR_INPUTS] = self._blueprint_inputs["use_blueprint"]["input"]
         if self._id is not None:
             attrs[CONF_ID] = self._id
         return attrs
