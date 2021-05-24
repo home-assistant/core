@@ -146,7 +146,7 @@ async def test_add_node(
     msg = await ws_client.receive_json()
     assert msg["event"]["event"] == "node added"
     node_details = {
-        "node_id": 53,
+        "node_id": 67,
         "status": 0,
         "ready": False,
     }
@@ -160,7 +160,7 @@ async def test_add_node(
     # Test receiving interview events
     event = Event(
         type="interview started",
-        data={"source": "node", "event": "interview started", "nodeId": 53},
+        data={"source": "node", "event": "interview started", "nodeId": 67},
     )
     client.driver.receive_event(event)
 
@@ -173,7 +173,7 @@ async def test_add_node(
             "source": "node",
             "event": "interview stage completed",
             "stageName": "NodeInfo",
-            "nodeId": 53,
+            "nodeId": 67,
         },
     )
     client.driver.receive_event(event)
@@ -184,7 +184,7 @@ async def test_add_node(
 
     event = Event(
         type="interview completed",
-        data={"source": "node", "event": "interview completed", "nodeId": 53},
+        data={"source": "node", "event": "interview completed", "nodeId": 67},
     )
     client.driver.receive_event(event)
 
@@ -193,7 +193,7 @@ async def test_add_node(
 
     event = Event(
         type="interview failed",
-        data={"source": "node", "event": "interview failed", "nodeId": 53},
+        data={"source": "node", "event": "interview failed", "nodeId": 67},
     )
     client.driver.receive_event(event)
 
@@ -318,6 +318,227 @@ async def test_remove_node(
 
     await ws_client.send_json(
         {ID: 4, TYPE: "zwave_js/remove_node", ENTRY_ID: entry.entry_id}
+    )
+    msg = await ws_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERR_NOT_LOADED
+
+
+async def test_replace_failed_node(
+    hass,
+    integration,
+    client,
+    hass_ws_client,
+    nortek_thermostat,
+    nortek_thermostat_added_event,
+    nortek_thermostat_removed_event,
+):
+    """Test the replace_failed_node websocket command."""
+    entry = integration
+    ws_client = await hass_ws_client(hass)
+
+    # Add mock node to controller
+    client.driver.controller.nodes[67] = nortek_thermostat
+
+    dev_reg = dr.async_get(hass)
+
+    # Create device registry entry for mock node
+    dev_reg.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, "3245146787-67")},
+        name="Node 67",
+    )
+
+    client.async_send_command.return_value = {"success": True}
+
+    # Order of events we receive for a successful replacement is `inclusion started`,
+    # `inclusion stopped`, `node removed`, `node added`, then interview stages.
+    await ws_client.send_json(
+        {
+            ID: 3,
+            TYPE: "zwave_js/replace_failed_node",
+            ENTRY_ID: entry.entry_id,
+            NODE_ID: 67,
+        }
+    )
+
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+
+    event = Event(
+        type="inclusion started",
+        data={
+            "source": "controller",
+            "event": "inclusion started",
+            "secure": False,
+        },
+    )
+    client.driver.receive_event(event)
+
+    msg = await ws_client.receive_json()
+    assert msg["event"]["event"] == "inclusion started"
+
+    event = Event(
+        type="inclusion stopped",
+        data={
+            "source": "controller",
+            "event": "inclusion stopped",
+            "secure": False,
+        },
+    )
+    client.driver.receive_event(event)
+
+    msg = await ws_client.receive_json()
+    assert msg["event"]["event"] == "inclusion stopped"
+
+    # Fire node removed event
+    client.driver.receive_event(nortek_thermostat_removed_event)
+    msg = await ws_client.receive_json()
+    assert msg["event"]["event"] == "node removed"
+
+    # Verify device was removed from device registry
+    device = dev_reg.async_get_device(
+        identifiers={(DOMAIN, "3245146787-67")},
+    )
+    assert device is None
+
+    client.driver.receive_event(nortek_thermostat_added_event)
+    msg = await ws_client.receive_json()
+    assert msg["event"]["event"] == "node added"
+    node_details = {
+        "node_id": 67,
+        "status": 0,
+        "ready": False,
+    }
+    assert msg["event"]["node"] == node_details
+
+    msg = await ws_client.receive_json()
+    assert msg["event"]["event"] == "device registered"
+    # Check the keys of the device item
+    assert list(msg["event"]["device"]) == ["name", "id", "manufacturer", "model"]
+
+    # Test receiving interview events
+    event = Event(
+        type="interview started",
+        data={"source": "node", "event": "interview started", "nodeId": 67},
+    )
+    client.driver.receive_event(event)
+
+    msg = await ws_client.receive_json()
+    assert msg["event"]["event"] == "interview started"
+
+    event = Event(
+        type="interview stage completed",
+        data={
+            "source": "node",
+            "event": "interview stage completed",
+            "stageName": "NodeInfo",
+            "nodeId": 67,
+        },
+    )
+    client.driver.receive_event(event)
+
+    msg = await ws_client.receive_json()
+    assert msg["event"]["event"] == "interview stage completed"
+    assert msg["event"]["stage"] == "NodeInfo"
+
+    event = Event(
+        type="interview completed",
+        data={"source": "node", "event": "interview completed", "nodeId": 67},
+    )
+    client.driver.receive_event(event)
+
+    msg = await ws_client.receive_json()
+    assert msg["event"]["event"] == "interview completed"
+
+    event = Event(
+        type="interview failed",
+        data={"source": "node", "event": "interview failed", "nodeId": 67},
+    )
+    client.driver.receive_event(event)
+
+    msg = await ws_client.receive_json()
+    assert msg["event"]["event"] == "interview failed"
+
+    # Test sending command with not loaded entry fails
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    await ws_client.send_json(
+        {
+            ID: 4,
+            TYPE: "zwave_js/replace_failed_node",
+            ENTRY_ID: entry.entry_id,
+            NODE_ID: 67,
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERR_NOT_LOADED
+
+
+async def test_remove_failed_node(
+    hass,
+    integration,
+    client,
+    hass_ws_client,
+    nortek_thermostat,
+    nortek_thermostat_removed_event,
+):
+    """Test the remove_failed_node websocket command."""
+    entry = integration
+    ws_client = await hass_ws_client(hass)
+
+    client.async_send_command.return_value = {"success": True}
+
+    await ws_client.send_json(
+        {
+            ID: 3,
+            TYPE: "zwave_js/remove_failed_node",
+            ENTRY_ID: entry.entry_id,
+            NODE_ID: 67,
+        }
+    )
+
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+
+    # Add mock node to controller
+    client.driver.controller.nodes[67] = nortek_thermostat
+
+    dev_reg = dr.async_get(hass)
+
+    # Create device registry entry for mock node
+    device = dev_reg.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, "3245146787-67")},
+        name="Node 67",
+    )
+
+    # Fire node removed event
+    client.driver.receive_event(nortek_thermostat_removed_event)
+    msg = await ws_client.receive_json()
+    assert msg["event"]["event"] == "node removed"
+
+    # Verify device was removed from device registry
+    device = dev_reg.async_get_device(
+        identifiers={(DOMAIN, "3245146787-67")},
+    )
+    assert device is None
+
+    # Test sending command with not loaded entry fails
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    await ws_client.send_json(
+        {
+            ID: 4,
+            TYPE: "zwave_js/remove_failed_node",
+            ENTRY_ID: entry.entry_id,
+            NODE_ID: 67,
+        }
     )
     msg = await ws_client.receive_json()
 
