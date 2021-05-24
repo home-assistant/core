@@ -112,15 +112,22 @@ def condition_trace_update_result(**kwargs: Any) -> None:
 @contextmanager
 def trace_condition(variables: TemplateVarsType) -> Generator:
     """Trace condition evaluation."""
-    trace_element = condition_trace_append(variables, trace_path_get())
-    trace_stack_push(trace_stack_cv, trace_element)
+    should_pop = True
+    trace_element = trace_stack_top(trace_stack_cv)
+    if trace_element and trace_element.reuse_by_child:
+        should_pop = False
+        trace_element.reuse_by_child = False
+    else:
+        trace_element = condition_trace_append(variables, trace_path_get())
+        trace_stack_push(trace_stack_cv, trace_element)
     try:
         yield trace_element
     except Exception as ex:
         trace_element.set_error(ex)
         raise ex
     finally:
-        trace_stack_pop(trace_stack_cv)
+        if should_pop:
+            trace_stack_pop(trace_stack_cv)
 
 
 def trace_condition_function(condition: ConditionCheckerType) -> ConditionCheckerType:
@@ -301,7 +308,7 @@ def numeric_state(
     ).result()
 
 
-def async_numeric_state(
+def async_numeric_state(  # noqa: C901
     hass: HomeAssistant,
     entity: None | str | State,
     below: float | str | None = None,

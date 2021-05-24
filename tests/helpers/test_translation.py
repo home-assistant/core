@@ -33,25 +33,18 @@ def test_recursive_flatten():
     }
 
 
-async def test_component_translation_path(hass):
+async def test_component_translation_path(hass, enable_custom_integrations):
     """Test the component translation file function."""
     assert await async_setup_component(
         hass,
         "switch",
         {"switch": [{"platform": "test"}, {"platform": "test_embedded"}]},
     )
-    assert await async_setup_component(hass, "test_standalone", {"test_standalone"})
     assert await async_setup_component(hass, "test_package", {"test_package"})
 
-    (
-        int_test,
-        int_test_embedded,
-        int_test_standalone,
-        int_test_package,
-    ) = await asyncio.gather(
+    (int_test, int_test_embedded, int_test_package,) = await asyncio.gather(
         async_get_integration(hass, "test"),
         async_get_integration(hass, "test_embedded"),
-        async_get_integration(hass, "test_standalone"),
         async_get_integration(hass, "test_package"),
     )
 
@@ -69,13 +62,6 @@ async def test_component_translation_path(hass):
         hass.config.path(
             "custom_components", "test_embedded", "translations", "switch.en.json"
         )
-    )
-
-    assert (
-        translation.component_translation_path(
-            "test_standalone", "en", int_test_standalone
-        )
-        is None
     )
 
     assert path.normpath(
@@ -105,7 +91,7 @@ def test_load_translations_files(hass):
     }
 
 
-async def test_get_translations(hass, mock_config_flows):
+async def test_get_translations(hass, mock_config_flows, enable_custom_integrations):
     """Test the get translations helper."""
     translations = await translation.async_get_translations(hass, "en", "state")
     assert translations == {}
@@ -376,9 +362,8 @@ async def test_caching(hass):
         assert len(mock_build.mock_calls) > 1
 
 
-async def test_custom_component_translations(hass):
+async def test_custom_component_translations(hass, enable_custom_integrations):
     """Test getting translation from custom components."""
-    hass.config.components.add("test_standalone")
     hass.config.components.add("test_embedded")
     hass.config.components.add("test_package")
     assert await translation.async_get_translations(hass, "en", "state") == {}

@@ -733,7 +733,7 @@ async def test_flow_reauth_works(hass):
 
     with patch(DEVICE_FACTORY, return_value=mock_api):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "reauth"}, data=data
+            DOMAIN, context={"source": config_entries.SOURCE_REAUTH}, data=data
         )
 
     assert result["type"] == "form"
@@ -769,7 +769,7 @@ async def test_flow_reauth_invalid_host(hass):
 
     with patch(DEVICE_FACTORY, return_value=mock_api):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "reauth"}, data=data
+            DOMAIN, context={"source": config_entries.SOURCE_REAUTH}, data=data
         )
 
     device.mac = get_device("Office").mac
@@ -803,7 +803,7 @@ async def test_flow_reauth_valid_host(hass):
 
     with patch(DEVICE_FACTORY, return_value=mock_api):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "reauth"}, data=data
+            DOMAIN, context={"source": config_entries.SOURCE_REAUTH}, data=data
         )
 
     device.host = "192.168.1.128"
@@ -834,7 +834,7 @@ async def test_dhcp_can_finish(hass):
     with patch(DEVICE_HELLO, return_value=mock_api):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": "dhcp"},
+            context={"source": config_entries.SOURCE_DHCP},
             data={
                 HOSTNAME: "broadlink",
                 IP_ADDRESS: "1.2.3.4",
@@ -868,7 +868,7 @@ async def test_dhcp_fails_to_connect(hass):
     with patch(DEVICE_HELLO, side_effect=blke.NetworkTimeoutError()):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": "dhcp"},
+            context={"source": config_entries.SOURCE_DHCP},
             data={
                 HOSTNAME: "broadlink",
                 IP_ADDRESS: "1.2.3.4",
@@ -887,7 +887,7 @@ async def test_dhcp_unreachable(hass):
     with patch(DEVICE_HELLO, side_effect=OSError(errno.ENETUNREACH, None)):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": "dhcp"},
+            context={"source": config_entries.SOURCE_DHCP},
             data={
                 HOSTNAME: "broadlink",
                 IP_ADDRESS: "1.2.3.4",
@@ -906,7 +906,7 @@ async def test_dhcp_connect_unknown_error(hass):
     with patch(DEVICE_HELLO, side_effect=OSError()):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": "dhcp"},
+            context={"source": config_entries.SOURCE_DHCP},
             data={
                 HOSTNAME: "broadlink",
                 IP_ADDRESS: "1.2.3.4",
@@ -928,7 +928,7 @@ async def test_dhcp_device_not_supported(hass):
     with patch(DEVICE_HELLO, return_value=mock_api):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": "dhcp"},
+            context={"source": config_entries.SOURCE_DHCP},
             data={
                 HOSTNAME: "broadlink",
                 IP_ADDRESS: device.host,
@@ -952,7 +952,7 @@ async def test_dhcp_already_exists(hass):
     with patch(DEVICE_HELLO, return_value=mock_api):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": "dhcp"},
+            context={"source": config_entries.SOURCE_DHCP},
             data={
                 HOSTNAME: "broadlink",
                 IP_ADDRESS: "1.2.3.4",
@@ -978,7 +978,7 @@ async def test_dhcp_updates_host(hass):
     with patch(DEVICE_HELLO, return_value=mock_api):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": "dhcp"},
+            context={"source": config_entries.SOURCE_DHCP},
             data={
                 HOSTNAME: "broadlink",
                 IP_ADDRESS: "4.5.6.7",

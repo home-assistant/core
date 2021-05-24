@@ -5,6 +5,13 @@
         },
         "error": {
             "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "name": "Jm\u00e9no"
+                }
+            }
         }
     }
 }

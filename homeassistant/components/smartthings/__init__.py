@@ -10,7 +10,7 @@ from aiohttp.client_exceptions import ClientConnectionError, ClientResponseError
 from pysmartapp.event import EVENT_TYPE_DEVICE
 from pysmartthings import Attribute, Capability, SmartThings
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
     CONF_CLIENT_ID,
@@ -75,7 +75,9 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry):
     flows = hass.config_entries.flow.async_progress()
     if not [flow for flow in flows if flow["handler"] == DOMAIN]:
         hass.async_create_task(
-            hass.config_entries.flow.async_init(DOMAIN, context={"source": "import"})
+            hass.config_entries.flow.async_init(
+                DOMAIN, context={"source": SOURCE_IMPORT}
+            )
         )
 
     # Return False because it could not be migrated.
@@ -182,15 +184,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         if not [flow for flow in flows if flow["handler"] == DOMAIN]:
             hass.async_create_task(
                 hass.config_entries.flow.async_init(
-                    DOMAIN, context={"source": "import"}
+                    DOMAIN, context={"source": SOURCE_IMPORT}
                 )
             )
         return False
 
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, platform)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
     return True
 
 
@@ -215,11 +214,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     if broker:
         broker.disconnect()
 
-    tasks = [
-        hass.config_entries.async_forward_entry_unload(entry, platform)
-        for platform in PLATFORMS
-    ]
-    return all(await asyncio.gather(*tasks))
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:

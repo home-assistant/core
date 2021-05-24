@@ -65,6 +65,7 @@ from .const import (
     UNKNOWN,
     UNKNOWN_MANUFACTURER,
     UNKNOWN_MODEL,
+    ZHA_OPTIONS,
 )
 from .helpers import LogMixin, async_get_zha_config_value
 
@@ -90,7 +91,7 @@ class ZHADevice(LogMixin):
         hass: HomeAssistant,
         zigpy_device: zha_typing.ZigpyDeviceType,
         zha_gateway: zha_typing.ZhaGatewayType,
-    ):
+    ) -> None:
         """Initialize the gateway."""
         self.hass = hass
         self._zigpy_device = zigpy_device
@@ -396,7 +397,10 @@ class ZHADevice(LogMixin):
     async def async_configure(self):
         """Configure the device."""
         should_identify = async_get_zha_config_value(
-            self._zha_gateway.config_entry, CONF_ENABLE_IDENTIFY_ON_JOIN, True
+            self._zha_gateway.config_entry,
+            ZHA_OPTIONS,
+            CONF_ENABLE_IDENTIFY_ON_JOIN,
+            True,
         )
         self.debug("started configuration")
         await self._channels.async_configure()

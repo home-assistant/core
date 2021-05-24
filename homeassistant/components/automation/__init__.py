@@ -74,6 +74,7 @@ from .config import PLATFORM_SCHEMA  # noqa: F401
 from .const import (
     CONF_ACTION,
     CONF_INITIAL_STATE,
+    CONF_TRACE,
     CONF_TRIGGER,
     CONF_TRIGGER_VARIABLES,
     DEFAULT_INITIAL_STATE,
@@ -274,6 +275,7 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         trigger_variables,
         raw_config,
         blueprint_inputs,
+        trace_config,
     ):
         """Initialize an automation entity."""
         self._id = automation_id
@@ -292,6 +294,7 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         self._trigger_variables: ScriptVariables = trigger_variables
         self._raw_config = raw_config
         self._blueprint_inputs = blueprint_inputs
+        self._trace_config = trace_config
 
     @property
     def name(self):
@@ -444,6 +447,7 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
             self._raw_config,
             self._blueprint_inputs,
             trigger_context,
+            self._trace_config,
         ) as automation_trace:
             if self._variables:
                 try:
@@ -604,14 +608,12 @@ async def _async_process_config(
     blueprints_used = False
 
     for config_key in extract_domain_configs(config, DOMAIN):
-        conf: list[dict[str, Any] | blueprint.BlueprintInputs] = config[  # type: ignore
-            config_key
-        ]
+        conf: list[dict[str, Any] | blueprint.BlueprintInputs] = config[config_key]
 
         for list_no, config_block in enumerate(conf):
             raw_blueprint_inputs = None
             raw_config = None
-            if isinstance(config_block, blueprint.BlueprintInputs):  # type: ignore
+            if isinstance(config_block, blueprint.BlueprintInputs):
                 blueprints_used = True
                 blueprint_inputs = config_block
                 raw_blueprint_inputs = blueprint_inputs.config_with_inputs
@@ -684,6 +686,7 @@ async def _async_process_config(
                 config_block.get(CONF_TRIGGER_VARIABLES),
                 raw_config,
                 raw_blueprint_inputs,
+                config_block[CONF_TRACE],
             )
 
             entities.append(entity)

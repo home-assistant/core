@@ -11,6 +11,7 @@
                 "data": {
                     "api_key": "Clau API",
                     "destination": "Destinaci\u00f3",
+                    "name": "Nom",
                     "origin": "Origen"
                 },
                 "description": "Quan especifiquis l'origen i la destinaci\u00f3, pots proporcionar m\u00e9s d'una ubicaci\u00f3 (les has de separar pel car\u00e0cter 'pipe'); poden ser en forma d'adre\u00e7a, coordenades de latitud/longitud o un identificador de lloc de Google. En especificar la ubicaci\u00f3 mitjan\u00e7ant un ID de lloc de Google, l'identificador ha de tenir el prefix `place_id:`."

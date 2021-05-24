@@ -255,7 +255,9 @@ class AlexaEntity:
     The API handlers should manipulate entities only through this interface.
     """
 
-    def __init__(self, hass: HomeAssistant, config: AbstractConfig, entity: State):
+    def __init__(
+        self, hass: HomeAssistant, config: AbstractConfig, entity: State
+    ) -> None:
         """Initialize Alexa Entity."""
         self.hass = hass
         self.config = config

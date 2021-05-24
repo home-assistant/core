@@ -10,7 +10,7 @@
         "error": {
             "discovery_error": "\u7121\u6cd5\u627e\u5230 Denon AVR \u7db2\u8def\u63a5\u6536\u5668"
         },
-        "flow_title": "Denon AVR \u7db2\u8def\u63a5\u6536\u5668\uff1a{name}",
+        "flow_title": "{name}",
         "step": {
             "confirm": {
                 "description": "\u8acb\u78ba\u8a8d\u65b0\u589e\u63a5\u6536\u5668",

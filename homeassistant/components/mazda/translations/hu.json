@@ -11,14 +11,6 @@
             "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
         },
         "step": {
-            "reauth": {
-                "data": {
-                    "email": "E-mail",
-                    "password": "Jelsz\u00f3",
-                    "region": "R\u00e9gi\u00f3"
-                },
-                "title": "Mazda Connected Services - A hiteles\u00edt\u00e9s sikertelen"
-            },
             "user": {
                 "data": {
                     "email": "E-mail",

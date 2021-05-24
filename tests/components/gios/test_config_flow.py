@@ -102,4 +102,4 @@ async def test_create_entry(hass):
         assert result["title"] == CONFIG[CONF_STATION_ID]
         assert result["data"][CONF_STATION_ID] == CONFIG[CONF_STATION_ID]
 
-        assert flow.context["unique_id"] == CONFIG[CONF_STATION_ID]
+        assert flow.context["unique_id"] == "123"

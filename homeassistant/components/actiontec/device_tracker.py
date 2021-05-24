@@ -1,30 +1,28 @@
 """Support for Actiontec MI424WR (Verizon FIOS) routers."""
-from collections import namedtuple
+from __future__ import annotations
+
 import logging
-import re
 import telnetlib
+from typing import Final
 
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
     DOMAIN,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as BASE_PLATFORM_SCHEMA,
     DeviceScanner,
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-import homeassistant.util.dt as dt_util
+from homeassistant.helpers.typing import ConfigType
 
-_LOGGER = logging.getLogger(__name__)
+from .const import LEASES_REGEX
+from .model import Device
 
-_LEASES_REGEX = re.compile(
-    r"(?P<ip>([0-9]{1,3}[\.]){3}[0-9]{1,3})"
-    + r"\smac:\s(?P<mac>([0-9a-f]{2}[:-]){5}([0-9a-f]{2}))"
-    + r"\svalid\sfor:\s(?P<timevalid>(-?\d+))"
-    + r"\ssec"
-)
+_LOGGER: Final = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA: Final = BASE_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
@@ -33,43 +31,38 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def get_scanner(hass, config):
+def get_scanner(hass: HomeAssistant, config: ConfigType) -> DeviceScanner | None:
     """Validate the configuration and return an Actiontec scanner."""
     scanner = ActiontecDeviceScanner(config[DOMAIN])
     return scanner if scanner.success_init else None
 
 
-Device = namedtuple("Device", ["mac", "ip", "last_update"])
-
-
 class ActiontecDeviceScanner(DeviceScanner):
     """This class queries an actiontec router for connected devices."""
 
-    def __init__(self, config):
+    def __init__(self, config: ConfigType) -> None:
         """Initialize the scanner."""
-        self.host = config[CONF_HOST]
-        self.username = config[CONF_USERNAME]
-        self.password = config[CONF_PASSWORD]
-        self.last_results = []
+        self.host: str = config[CONF_HOST]
+        self.username: str = config[CONF_USERNAME]
+        self.password: str = config[CONF_PASSWORD]
+        self.last_results: list[Device] = []
         data = self.get_actiontec_data()
         self.success_init = data is not None
         _LOGGER.info("Scanner initialized")
 
-    def scan_devices(self):
+    def scan_devices(self) -> list[str]:
         """Scan for new devices and return a list with found device IDs."""
         self._update_info()
-        return [client.mac for client in self.last_results]
+        return [client.mac_address for client in self.last_results]
 
-    def get_device_name(self, device):
+    def get_device_name(self, device: str) -> str | None:
         """Return the name of the given device or None if we don't know."""
-        if not self.last_results:
-            return None
         for client in self.last_results:
-            if client.mac == device:
-                return client.ip
+            if client.mac_address == device:
+                return client.ip_address
         return None
 
-    def _update_info(self):
+    def _update_info(self) -> bool:
         """Ensure the information from the router is up to date.
 
         Return boolean if scanning successful.
@@ -78,19 +71,16 @@ class ActiontecDeviceScanner(DeviceScanner):
         if not self.success_init:
             return False
 
-        now = dt_util.now()
         actiontec_data = self.get_actiontec_data()
-        if not actiontec_data:
+        if actiontec_data is None:
             return False
         self.last_results = [
-            Device(data["mac"], name, now)
-            for name, data in actiontec_data.items()
-            if data["timevalid"] > -60
+            device for device in actiontec_data if device.timevalid > -60
         ]
         _LOGGER.info("Scan successful")
         return True
 
-    def get_actiontec_data(self):
+    def get_actiontec_data(self) -> list[Device] | None:
         """Retrieve data from Actiontec MI424WR and return parsed result."""
         try:
             telnet = telnetlib.Telnet(self.host)
@@ -106,18 +96,20 @@ class ActiontecDeviceScanner(DeviceScanner):
             telnet.write(b"exit\n")
         except EOFError:
             _LOGGER.exception("Unexpected response from router")
-            return
+            return None
         except ConnectionRefusedError:
             _LOGGER.exception("Connection refused by router. Telnet enabled?")
             return None
 
-        devices = {}
+        devices: list[Device] = []
         for lease in leases_result:
-            match = _LEASES_REGEX.search(lease.decode("utf-8"))
+            match = LEASES_REGEX.search(lease.decode("utf-8"))
             if match is not None:
-                devices[match.group("ip")] = {
-                    "ip": match.group("ip"),
-                    "mac": match.group("mac").upper(),
-                    "timevalid": int(match.group("timevalid")),
-                }
+                devices.append(
+                    Device(
+                        match.group("ip"),
+                        match.group("mac").upper(),
+                        int(match.group("timevalid")),
+                    )
+                )
         return devices

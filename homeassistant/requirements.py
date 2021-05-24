@@ -81,7 +81,7 @@ async def async_get_integration_with_requirements(
 
     try:
         await _async_process_integration(hass, integration, done)
-    except Exception:  # pylint: disable=broad-except
+    except Exception:
         del cache[domain]
         event.set()
         raise

@@ -74,7 +74,7 @@ class WUSensorConfig:
         icon: str = "mdi:gauge",
         extra_state_attributes=None,
         device_class=None,
-    ):
+    ) -> None:
         """Initialize sensor configuration.
 
         :param friendly_name: Friendly name
@@ -106,7 +106,7 @@ class WUCurrentConditionsSensorConfig(WUSensorConfig):
         icon: str | None = "mdi:gauge",
         unit_of_measurement: str | None = None,
         device_class=None,
-    ):
+    ) -> None:
         """Initialize current conditions sensor configuration.
 
         :param friendly_name: Friendly name of sensor
@@ -133,7 +133,9 @@ class WUCurrentConditionsSensorConfig(WUSensorConfig):
 class WUDailyTextForecastSensorConfig(WUSensorConfig):
     """Helper for defining sensor configurations for daily text forecasts."""
 
-    def __init__(self, period: int, field: str, unit_of_measurement: str | None = None):
+    def __init__(
+        self, period: int, field: str, unit_of_measurement: str | None = None
+    ) -> None:
         """Initialize daily text forecast sensor configuration.
 
         :param period: forecast period number
@@ -170,7 +172,7 @@ class WUDailySimpleForecastSensorConfig(WUSensorConfig):
         ha_unit: str | None = None,
         icon=None,
         device_class=None,
-    ):
+    ) -> None:
         """Initialize daily simple forecast sensor configuration.
 
         :param friendly_name: friendly_name of the sensor
@@ -213,7 +215,7 @@ class WUDailySimpleForecastSensorConfig(WUSensorConfig):
 class WUHourlyForecastSensorConfig(WUSensorConfig):
     """Helper for defining sensor configurations for hourly text forecasts."""
 
-    def __init__(self, period: int, field: int):
+    def __init__(self, period: int, field: int) -> None:
         """Initialize hourly forecast sensor configuration.
 
         :param period: forecast period number
@@ -280,7 +282,7 @@ class WUAlmanacSensorConfig(WUSensorConfig):
         unit_of_measurement: str,
         icon: str,
         device_class=None,
-    ):
+    ) -> None:
         """Initialize almanac sensor configuration.
 
         :param friendly_name: Friendly name
@@ -303,7 +305,7 @@ class WUAlmanacSensorConfig(WUSensorConfig):
 class WUAlertsSensorConfig(WUSensorConfig):
     """Helper for defining field configuration for alerts."""
 
-    def __init__(self, friendly_name: str | Callable):
+    def __init__(self, friendly_name: str | Callable) -> None:
         """Initialiize alerts sensor configuration.
 
         :param friendly_name: Friendly name
@@ -1120,7 +1122,9 @@ async def async_setup_platform(
 class WUndergroundSensor(SensorEntity):
     """Implementing the WUnderground sensor."""
 
-    def __init__(self, hass: HomeAssistant, rest, condition, unique_id_base: str):
+    def __init__(
+        self, hass: HomeAssistant, rest, condition, unique_id_base: str
+    ) -> None:
         """Initialize the sensor."""
         self.rest = rest
         self._condition = condition
