@@ -2315,7 +2315,7 @@ uvcclient==0.11.0
 vallox-websocket-api==2.4.0
 
 # homeassistant.components.venstar
-venstarcolortouch==0.13
+venstarcolortouch==0.14
 
 # homeassistant.components.vilfo
 vilfo-api-client==0.3.2
