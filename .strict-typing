@@ -58,6 +58,7 @@ homeassistant.components.scene.*
 homeassistant.components.sensor.*
 homeassistant.components.slack.*
 homeassistant.components.sonos.media_player
+homeassistant.components.ssdp.*
 homeassistant.components.sun.*
 homeassistant.components.switch.*
 homeassistant.components.synology_dsm.*
