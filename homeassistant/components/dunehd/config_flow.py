@@ -24,11 +24,11 @@ def host_valid(host: str) -> bool:
         if ipaddress.ip_address(host).version in [4, 6]:
             return True
     except ValueError:
-        if len(host) > 253:
-            return False
-        allowed = re.compile(r"(?!-)[A-Z\d\-\_]{1,63}(?<!-)$", re.IGNORECASE)
-        return all(allowed.match(x) for x in host.split("."))
-    return False
+        pass
+    if len(host) > 253:
+        return False
+    allowed = re.compile(r"(?!-)[A-Z\d\-\_]{1,63}(?<!-)$", re.IGNORECASE)
+    return all(allowed.match(x) for x in host.split("."))
 
 
 class DuneHDConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
