@@ -12,8 +12,7 @@ from aiohttp.web_exceptions import HTTPBadGateway
 from multidict import CIMultiDict
 
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.core import callback
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant, callback
 
 from .const import X_HASSIO, X_INGRESS_PATH
 
@@ -21,7 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @callback
-def async_setup_ingress_view(hass: HomeAssistantType, host: str):
+def async_setup_ingress_view(hass: HomeAssistant, host: str):
     """Auth setup."""
     websession = hass.helpers.aiohttp_client.async_get_clientsession()
 
@@ -36,7 +35,7 @@ class HassIOIngress(HomeAssistantView):
     url = "/api/hassio_ingress/{token}/{path:.*}"
     requires_auth = False
 
-    def __init__(self, host: str, websession: aiohttp.ClientSession):
+    def __init__(self, host: str, websession: aiohttp.ClientSession) -> None:
         """Initialize a Hass.io ingress view."""
         self._host = host
         self._websession = websession

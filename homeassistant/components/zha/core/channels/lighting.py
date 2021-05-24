@@ -1,8 +1,8 @@
 """Lighting channels module for Zigbee Home Automation."""
 from __future__ import annotations
 
+from collections.abc import Coroutine
 from contextlib import suppress
-from typing import Coroutine
 
 import zigpy.zcl.clusters.lighting as lighting
 

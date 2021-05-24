@@ -1,7 +1,9 @@
 {
   "domain": "buienradar",
   "name": "Buienradar",
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/buienradar",
   "requirements": ["buienradar==1.0.4"],
-  "codeowners": ["@mjj4791", "@ties"]
+  "codeowners": ["@mjj4791", "@ties", "@Robbie1221"],
+  "iot_class": "cloud_polling"
 }

@@ -53,7 +53,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
             entities.append(HiveWaterHeater(hive, dev))
     async_add_entities(entities, True)
 
-    platform = entity_platform.current_platform.get()
+    platform = entity_platform.async_get_current_platform()
 
     platform.async_register_entity_service(
         SERVICE_BOOST_HOT_WATER,
@@ -139,11 +139,11 @@ class HiveWaterHeater(HiveEntity, WaterHeaterEntity):
     async def async_hot_water_boost(self, time_period, on_off):
         """Handle the service call."""
         if on_off == "on":
-            await self.hive.hotwater.turnBoostOn(self.device, time_period)
+            await self.hive.hotwater.setBoostOn(self.device, time_period)
         elif on_off == "off":
-            await self.hive.hotwater.turnBoostOff(self.device)
+            await self.hive.hotwater.setBoostOff(self.device)
 
     async def async_update(self):
         """Update all Node data from Hive."""
         await self.hive.session.updateData(self.device)
-        self.device = await self.hive.hotwater.getHotwater(self.device)
+        self.device = await self.hive.hotwater.getWaterHeater(self.device)

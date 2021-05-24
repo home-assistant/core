@@ -6,6 +6,7 @@
         "error": {
             "invalid_auth": "\u041e\u0448\u0438\u0431\u043a\u0430 \u0430\u0443\u0442\u0435\u043d\u0442\u0438\u0444\u0438\u043a\u0430\u0446\u0438\u0438."
         },
+        "flow_title": "{ip}",
         "step": {
             "user": {
                 "data": {

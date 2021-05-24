@@ -33,6 +33,7 @@
             "invalid_serial": "Ugyldig serieport",
             "invalid_subscribe_topic": "Ugyldig abonnementsemne",
             "invalid_version": "Ugyldig MySensors-versjon",
+            "mqtt_required": "MQTT-integrasjonen er ikke satt opp",
             "not_a_number": "Vennligst skriv inn et nummer",
             "port_out_of_range": "Portnummer m\u00e5 v\u00e6re minst 1 og maksimalt 65535",
             "same_topic": "Abonner og publiser emner er de samme",

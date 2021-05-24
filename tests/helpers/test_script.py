@@ -622,7 +622,7 @@ async def test_delay_template_invalid(hass, caplog):
     assert_action_trace(
         {
             "0": [{"result": {"event": "test_event", "event_data": {}}}],
-            "1": [{"error_type": script._StopScript}],
+            "1": [{"error_type": vol.MultipleInvalid}],
         },
         expected_script_execution="aborted",
     )
@@ -683,7 +683,7 @@ async def test_delay_template_complex_invalid(hass, caplog):
     assert_action_trace(
         {
             "0": [{"result": {"event": "test_event", "event_data": {}}}],
-            "1": [{"error_type": script._StopScript}],
+            "1": [{"error_type": vol.MultipleInvalid}],
         },
         expected_script_execution="aborted",
     )
@@ -1138,7 +1138,7 @@ async def test_wait_continue_on_timeout(
     }
     if continue_on_timeout is False:
         expected_trace["0"][0]["result"]["timeout"] = True
-        expected_trace["0"][0]["error_type"] = script._StopScript
+        expected_trace["0"][0]["error_type"] = asyncio.TimeoutError
         expected_script_execution = "aborted"
     else:
         expected_trace["1"] = [
@@ -1412,8 +1412,7 @@ async def test_condition_warning(hass, caplog):
         {
             "0": [{"result": {"event": "test_event", "event_data": {}}}],
             "1": [{"error_type": script._StopScript, "result": {"result": False}}],
-            "1/condition": [{"error_type": ConditionError}],
-            "1/condition/entity_id/0": [{"error_type": ConditionError}],
+            "1/entity_id/0": [{"error_type": ConditionError}],
         },
         expected_script_execution="aborted",
     )
@@ -1448,8 +1447,7 @@ async def test_condition_basic(hass, caplog):
     assert_action_trace(
         {
             "0": [{"result": {"event": "test_event", "event_data": {}}}],
-            "1": [{"result": {"result": True}}],
-            "1/condition": [{"result": {"result": True}}],
+            "1": [{"result": {"entities": ["test.entity"], "result": True}}],
             "2": [{"result": {"event": "test_event", "event_data": {}}}],
         }
     )
@@ -1465,8 +1463,12 @@ async def test_condition_basic(hass, caplog):
     assert_action_trace(
         {
             "0": [{"result": {"event": "test_event", "event_data": {}}}],
-            "1": [{"error_type": script._StopScript, "result": {"result": False}}],
-            "1/condition": [{"result": {"result": False}}],
+            "1": [
+                {
+                    "error_type": script._StopScript,
+                    "result": {"entities": ["test.entity"], "result": False},
+                }
+            ],
         },
         expected_script_execution="aborted",
     )
@@ -1764,9 +1766,9 @@ async def test_repeat_var_in_condition(hass, condition):
                 },
             ],
             "0/repeat/while/0": [
-                {"result": {"result": True}},
-                {"result": {"result": True}},
-                {"result": {"result": False}},
+                {"result": {"entities": [], "result": True}},
+                {"result": {"entities": [], "result": True}},
+                {"result": {"entities": [], "result": False}},
             ],
             "0/repeat/sequence/0": [
                 {"result": {"event": "test_event", "event_data": {}}}
@@ -1797,8 +1799,8 @@ async def test_repeat_var_in_condition(hass, condition):
                 },
             ],
             "0/repeat/until/0": [
-                {"result": {"result": False}},
-                {"result": {"result": True}},
+                {"result": {"entities": [], "result": False}},
+                {"result": {"entities": [], "result": True}},
             ],
         }
     assert_action_trace(expected_trace)
@@ -2058,10 +2060,14 @@ async def test_choose(hass, caplog, var, result):
     expected_trace = {"0": [{"result": {"choice": expected_choice}}]}
     if var >= 1:
         expected_trace["0/choose/0"] = [{"result": {"result": var == 1}}]
-        expected_trace["0/choose/0/conditions/0"] = [{"result": {"result": var == 1}}]
+        expected_trace["0/choose/0/conditions/0"] = [
+            {"result": {"entities": [], "result": var == 1}}
+        ]
     if var >= 2:
         expected_trace["0/choose/1"] = [{"result": {"result": var == 2}}]
-        expected_trace["0/choose/1/conditions/0"] = [{"result": {"result": var == 2}}]
+        expected_trace["0/choose/1/conditions/0"] = [
+            {"result": {"entities": [], "result": var == 2}}
+        ]
     if var == 1:
         expected_trace["0/choose/0/sequence/0"] = [
             {"result": {"event": "test_event", "event_data": {"choice": "first"}}}

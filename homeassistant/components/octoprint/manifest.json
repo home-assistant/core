@@ -3,5 +3,6 @@
   "name": "OctoPrint",
   "documentation": "https://www.home-assistant.io/integrations/octoprint",
   "after_dependencies": ["discovery"],
-  "codeowners": []
+  "codeowners": [],
+  "iot_class": "local_polling"
 }

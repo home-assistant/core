@@ -12,6 +12,7 @@ from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_POWER,
+    DEVICE_CLASS_TEMPERATURE,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
@@ -89,12 +90,16 @@ async def test_sensors(hass, aioclient_mock, mock_deconz_websocket):
     with patch.dict(DECONZ_WEB_REQUEST, data):
         config_entry = await setup_deconz_integration(hass, aioclient_mock)
 
-    assert len(hass.states.async_all()) == 5
+    assert len(hass.states.async_all()) == 6
 
     light_level_sensor = hass.states.get("sensor.light_level_sensor")
     assert light_level_sensor.state == "999.8"
     assert light_level_sensor.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_ILLUMINANCE
     assert light_level_sensor.attributes[ATTR_DAYLIGHT] == 6955
+
+    light_level_temp = hass.states.get("sensor.light_level_sensor_temperature")
+    assert light_level_temp.state == "0.1"
+    assert light_level_temp.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_TEMPERATURE
 
     assert not hass.states.get("sensor.presence_sensor")
     assert not hass.states.get("sensor.switch_1")
@@ -130,6 +135,19 @@ async def test_sensors(hass, aioclient_mock, mock_deconz_websocket):
 
     assert hass.states.get("sensor.light_level_sensor").state == "1.6"
 
+    # Event signals new temperature value
+
+    event_changed_sensor = {
+        "t": "event",
+        "e": "changed",
+        "r": "sensors",
+        "id": "1",
+        "config": {"temperature": 100},
+    }
+    await mock_deconz_websocket(data=event_changed_sensor)
+
+    assert hass.states.get("sensor.light_level_sensor_temperature").state == "1.0"
+
     # Event signals new battery level
 
     event_changed_sensor = {
@@ -148,7 +166,7 @@ async def test_sensors(hass, aioclient_mock, mock_deconz_websocket):
     await hass.config_entries.async_unload(config_entry.entry_id)
 
     states = hass.states.async_all()
-    assert len(states) == 5
+    assert len(states) == 6
     for state in states:
         assert state.state == STATE_UNAVAILABLE
 
@@ -187,7 +205,7 @@ async def test_allow_clip_sensors(hass, aioclient_mock):
             options={CONF_ALLOW_CLIP_SENSOR: True},
         )
 
-    assert len(hass.states.async_all()) == 2
+    assert len(hass.states.async_all()) == 3
     assert hass.states.get("sensor.clip_light_level_sensor").state == "999.8"
 
     # Disallow clip sensors
@@ -197,7 +215,7 @@ async def test_allow_clip_sensors(hass, aioclient_mock):
     )
     await hass.async_block_till_done()
 
-    assert len(hass.states.async_all()) == 1
+    assert len(hass.states.async_all()) == 2
     assert not hass.states.get("sensor.clip_light_level_sensor")
 
     # Allow clip sensors
@@ -207,7 +225,7 @@ async def test_allow_clip_sensors(hass, aioclient_mock):
     )
     await hass.async_block_till_done()
 
-    assert len(hass.states.async_all()) == 2
+    assert len(hass.states.async_all()) == 3
     assert hass.states.get("sensor.clip_light_level_sensor").state == "999.8"
 
 
@@ -235,7 +253,7 @@ async def test_add_new_sensor(hass, aioclient_mock, mock_deconz_websocket):
     await mock_deconz_websocket(data=event_added_sensor)
     await hass.async_block_till_done()
 
-    assert len(hass.states.async_all()) == 1
+    assert len(hass.states.async_all()) == 2
     assert hass.states.get("sensor.light_level_sensor").state == "999.8"
 
 

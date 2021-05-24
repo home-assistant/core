@@ -23,5 +23,15 @@
                 "title": "Axis Ger\u00e4t einrichten"
             }
         }
+    },
+    "options": {
+        "step": {
+            "configure_stream": {
+                "data": {
+                    "stream_profile": "Zu verwendendes Stream-Profil ausw\u00e4hlen"
+                },
+                "title": "Optionen des Axis Videostream-Ger\u00e4ts"
+            }
+        }
     }
 }

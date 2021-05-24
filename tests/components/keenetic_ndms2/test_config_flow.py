@@ -9,7 +9,7 @@ import pytest
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import keenetic_ndms2 as keenetic
 from homeassistant.components.keenetic_ndms2 import const
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
 
 from . import MOCK_DATA, MOCK_NAME, MOCK_OPTIONS
 
@@ -43,7 +43,7 @@ def mock_keenetic_connect_failed():
         yield
 
 
-async def test_flow_works(hass: HomeAssistantType, connect):
+async def test_flow_works(hass: HomeAssistant, connect):
     """Test config flow."""
 
     result = await hass.config_entries.flow.async_init(
@@ -53,8 +53,6 @@ async def test_flow_works(hass: HomeAssistantType, connect):
     assert result["step_id"] == "user"
 
     with patch(
-        "homeassistant.components.keenetic_ndms2.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.keenetic_ndms2.async_setup_entry", return_value=True
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
@@ -66,16 +64,13 @@ async def test_flow_works(hass: HomeAssistantType, connect):
     assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result2["title"] == MOCK_NAME
     assert result2["data"] == MOCK_DATA
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_import_works(hass: HomeAssistantType, connect):
+async def test_import_works(hass: HomeAssistant, connect):
     """Test config flow."""
 
     with patch(
-        "homeassistant.components.keenetic_ndms2.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.keenetic_ndms2.async_setup_entry", return_value=True
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
@@ -88,7 +83,6 @@ async def test_import_works(hass: HomeAssistantType, connect):
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == MOCK_NAME
     assert result["data"] == MOCK_DATA
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -97,14 +91,11 @@ async def test_options(hass):
     entry = MockConfigEntry(domain=keenetic.DOMAIN, data=MOCK_DATA)
     entry.add_to_hass(hass)
     with patch(
-        "homeassistant.components.keenetic_ndms2.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.keenetic_ndms2.async_setup_entry", return_value=True
     ) as mock_setup_entry:
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
     # fake router
@@ -145,7 +136,7 @@ async def test_host_already_configured(hass, connect):
     entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        keenetic.DOMAIN, context={"source": "user"}
+        keenetic.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -160,7 +151,7 @@ async def test_connection_error(hass, connect_error):
     """Test error when connection is unsuccessful."""
 
     result = await hass.config_entries.flow.async_init(
-        keenetic.DOMAIN, context={"source": "user"}
+        keenetic.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=MOCK_DATA

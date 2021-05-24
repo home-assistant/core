@@ -518,6 +518,36 @@ async def test_config_basic(hass):
     assert test_script.attributes["icon"] == "mdi:party"
 
 
+async def test_config_multiple_domains(hass):
+    """Test splitting configuration over multiple domains."""
+    assert await async_setup_component(
+        hass,
+        "script",
+        {
+            "script": {
+                "first_script": {
+                    "alias": "Main domain",
+                    "sequence": [],
+                }
+            },
+            "script second": {
+                "second_script": {
+                    "alias": "Secondary domain",
+                    "sequence": [],
+                }
+            },
+        },
+    )
+
+    test_script = hass.states.get("script.first_script")
+    assert test_script
+    assert test_script.name == "Main domain"
+
+    test_script = hass.states.get("script.second_script")
+    assert test_script
+    assert test_script.name == "Secondary domain"
+
+
 async def test_logbook_humanify_script_started_event(hass):
     """Test humanifying script started event."""
     hass.config.components.add("recorder")

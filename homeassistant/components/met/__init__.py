@@ -13,7 +13,6 @@ from homeassistant.const import (
     LENGTH_FEET,
     LENGTH_METERS,
 )
-from homeassistant.core import Config, HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.distance import convert as convert_distance
@@ -28,14 +27,9 @@ from .const import (
 
 URL = "https://aa015h6buqvih86i1.api.met.no/weatherapi/locationforecast/2.0/complete"
 
+PLATFORMS = ["weather"]
 
 _LOGGER = logging.getLogger(__name__)
-
-
-async def async_setup(hass: HomeAssistant, config: Config) -> bool:
-    """Set up configured Met."""
-    hass.data.setdefault(DOMAIN, {})
-    return True
 
 
 async def async_setup_entry(hass, config_entry):
@@ -60,22 +54,24 @@ async def async_setup_entry(hass, config_entry):
     if config_entry.data.get(CONF_TRACK_HOME, False):
         coordinator.track_home()
 
+    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][config_entry.entry_id] = coordinator
 
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(config_entry, "weather")
-    )
+    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
 
     return True
 
 
 async def async_unload_entry(hass, config_entry):
     """Unload a config entry."""
-    await hass.config_entries.async_forward_entry_unload(config_entry, "weather")
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        config_entry, PLATFORMS
+    )
+
     hass.data[DOMAIN][config_entry.entry_id].untrack_home()
     hass.data[DOMAIN].pop(config_entry.entry_id)
 
-    return True
+    return unload_ok
 
 
 class MetDataUpdateCoordinator(DataUpdateCoordinator):

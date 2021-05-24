@@ -3,5 +3,6 @@
   "name": "Universal Media Player",
   "documentation": "https://www.home-assistant.io/integrations/universal",
   "codeowners": [],
-  "quality_scale": "internal"
+  "quality_scale": "internal",
+  "iot_class": "calculated"
 }

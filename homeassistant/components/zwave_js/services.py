@@ -55,7 +55,7 @@ BITMASK_SCHEMA = vol.All(
 class ZWaveServices:
     """Class that holds our services (Zwave Commands) that should be published to hass."""
 
-    def __init__(self, hass: HomeAssistant, ent_reg: EntityRegistry):
+    def __init__(self, hass: HomeAssistant, ent_reg: EntityRegistry) -> None:
         """Initialize with hass object."""
         self._hass = hass
         self._ent_reg = ent_reg
@@ -94,15 +94,13 @@ class ZWaveServices:
                 {
                     vol.Optional(ATTR_DEVICE_ID): vol.All(cv.ensure_list, [cv.string]),
                     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-                    vol.Required(const.ATTR_CONFIG_PARAMETER): vol.Any(
-                        vol.Coerce(int), cv.string
-                    ),
+                    vol.Required(const.ATTR_CONFIG_PARAMETER): vol.Coerce(int),
                     vol.Required(const.ATTR_CONFIG_VALUE): vol.Any(
                         vol.Coerce(int),
                         {
-                            vol.Any(vol.Coerce(int), BITMASK_SCHEMA): vol.Any(
-                                vol.Coerce(int), cv.string
-                            )
+                            vol.Any(
+                                vol.Coerce(int), BITMASK_SCHEMA, cv.string
+                            ): vol.Any(vol.Coerce(int), cv.string)
                         },
                     ),
                 },

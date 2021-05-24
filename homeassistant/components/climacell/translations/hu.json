@@ -9,6 +9,7 @@
             "user": {
                 "data": {
                     "api_key": "API kulcs",
+                    "api_version": "API Verzi\u00f3",
                     "latitude": "Sz\u00e9less\u00e9g",
                     "longitude": "Hossz\u00fas\u00e1g",
                     "name": "N\u00e9v"

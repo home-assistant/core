@@ -1,6 +1,7 @@
 """Tests for Tradfri setup."""
 from unittest.mock import patch
 
+from homeassistant import config_entries
 from homeassistant.components import tradfri
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
@@ -34,7 +35,7 @@ async def test_config_yaml_host_imported(hass):
     progress = hass.config_entries.flow.async_progress()
     assert len(progress) == 1
     assert progress[0]["handler"] == "tradfri"
-    assert progress[0]["context"] == {"source": "import"}
+    assert progress[0]["context"] == {"source": config_entries.SOURCE_IMPORT}
 
 
 async def test_config_json_host_not_imported(hass):
@@ -71,7 +72,7 @@ async def test_config_json_host_imported(
 
     config_entry = mock_entry_setup.mock_calls[0][1][1]
     assert config_entry.domain == "tradfri"
-    assert config_entry.source == "import"
+    assert config_entry.source == config_entries.SOURCE_IMPORT
     assert config_entry.title == "mock-host"
 
 

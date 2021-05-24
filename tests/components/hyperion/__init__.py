@@ -7,10 +7,12 @@ from unittest.mock import AsyncMock, Mock, patch
 
 from hyperion import const
 
+from homeassistant.components.hyperion import get_hyperion_unique_id
 from homeassistant.components.hyperion.const import CONF_PRIORITY, DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry
 
@@ -20,7 +22,7 @@ TEST_PORT_UI = const.DEFAULT_PORT_UI + 1
 TEST_INSTANCE = 1
 TEST_ID = "default"
 TEST_SYSINFO_ID = "f9aab089-f85a-55cf-b7c1-222a72faebe9"
-TEST_SYSINFO_VERSION = "2.0.0-alpha.8"
+TEST_SYSINFO_VERSION = "2.0.0-alpha.9"
 TEST_PRIORITY = 180
 TEST_ENTITY_ID_1 = "light.test_instance_1"
 TEST_ENTITY_ID_2 = "light.test_instance_2"
@@ -118,7 +120,7 @@ def create_mock_client() -> Mock:
 
 
 def add_test_config_entry(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     data: dict[str, Any] | None = None,
     options: dict[str, Any] | None = None,
 ) -> ConfigEntry:
@@ -140,7 +142,7 @@ def add_test_config_entry(
 
 
 async def setup_test_config_entry(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     config_entry: ConfigEntry | None = None,
     hyperion_client: Mock | None = None,
     options: dict[str, Any] | None = None,
@@ -168,3 +170,20 @@ def call_registered_callback(
     for call in client.add_callbacks.call_args_list:
         if key in call[0][0]:
             call[0][0][key](*args, **kwargs)
+
+
+def register_test_entity(
+    hass: HomeAssistant, domain: str, type_name: str, entity_id: str
+) -> None:
+    """Register a test entity."""
+    unique_id = get_hyperion_unique_id(TEST_SYSINFO_ID, TEST_INSTANCE, type_name)
+    entity_id = entity_id.split(".")[1]
+
+    entity_registry = er.async_get(hass)
+    entity_registry.async_get_or_create(
+        domain,
+        DOMAIN,
+        unique_id,
+        suggested_object_id=entity_id,
+        disabled_by=None,
+    )

@@ -12,16 +12,19 @@
             "installation": {
                 "data": {
                     "giid": "Installation"
-                }
+                },
+                "description": "Home Assistant hat mehrere Verisure-Installationen in deinen My Pages-Konto gefunden. Bitte w\u00e4hle die Installation aus, die du zu Home Assistant hinzuf\u00fcgen m\u00f6chtest."
             },
             "reauth_confirm": {
                 "data": {
+                    "description": "Authentifiziere dich erneut mit deinem Verisure My Pages-Konto.",
                     "email": "E-Mail",
                     "password": "Passwort"
                 }
             },
             "user": {
                 "data": {
+                    "description": "Melde dich mit deinen Verisure My Pages-Konto an.",
                     "email": "E-Mail",
                     "password": "Passwort"
                 }

@@ -2,6 +2,8 @@ set_datetime:
   name: Set
   description: This can be used to dynamically set the date and/or time.
   target:
+    entity:
+      domain: input_datetime
   fields:
     date:
       name: Date

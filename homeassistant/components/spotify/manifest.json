@@ -7,5 +7,6 @@
   "dependencies": ["http"],
   "codeowners": ["@frenck"],
   "config_flow": true,
-  "quality_scale": "silver"
+  "quality_scale": "silver",
+  "iot_class": "cloud_polling"
 }

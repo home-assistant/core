@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from functools import partial
-from typing import Any, Callable
+from typing import Any
 
 import voluptuous as vol
 
@@ -22,13 +22,12 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_platform
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity_registry import (
     async_get_registry as async_get_entity_registry,
 )
-from homeassistant.helpers.typing import HomeAssistantType
 import homeassistant.util.color as color_util
 
 from . import WLEDDataUpdateCoordinator, WLEDDeviceEntity, wled_exception_handler
@@ -51,14 +50,14 @@ PARALLEL_UPDATES = 1
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: Callable[[list[Entity], bool], None],
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up WLED light based on a config entry."""
     coordinator: WLEDDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
-    platform = entity_platform.current_platform.get()
+    platform = entity_platform.async_get_current_platform()
 
     platform.async_register_entity_service(
         SERVICE_EFFECT,
@@ -97,7 +96,7 @@ async def async_setup_entry(
 class WLEDMasterLight(LightEntity, WLEDDeviceEntity):
     """Defines a WLED master light."""
 
-    def __init__(self, entry_id: str, coordinator: WLEDDataUpdateCoordinator):
+    def __init__(self, entry_id: str, coordinator: WLEDDataUpdateCoordinator) -> None:
         """Initialize WLED master light."""
         super().__init__(
             entry_id=entry_id,
@@ -129,7 +128,7 @@ class WLEDMasterLight(LightEntity, WLEDDeviceEntity):
     @wled_exception_handler
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the light."""
-        data = {ATTR_ON: False}
+        data: dict[str, bool | int] = {ATTR_ON: False}
 
         if ATTR_TRANSITION in kwargs:
             # WLED uses 100ms per unit, so 10 = 1 second.
@@ -140,7 +139,7 @@ class WLEDMasterLight(LightEntity, WLEDDeviceEntity):
     @wled_exception_handler
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
-        data = {ATTR_ON: True}
+        data: dict[str, bool | int] = {ATTR_ON: True}
 
         if ATTR_TRANSITION in kwargs:
             # WLED uses 100ms per unit, so 10 = 1 second.
@@ -178,7 +177,7 @@ class WLEDSegmentLight(LightEntity, WLEDDeviceEntity):
 
     def __init__(
         self, entry_id: str, coordinator: WLEDDataUpdateCoordinator, segment: int
-    ):
+    ) -> None:
         """Initialize WLED segment light."""
         self._rgbw = coordinator.data.info.leds.rgbw
         self._segment = segment
@@ -232,7 +231,7 @@ class WLEDSegmentLight(LightEntity, WLEDDeviceEntity):
         }
 
     @property
-    def hs_color(self) -> tuple[float, float] | None:
+    def hs_color(self) -> tuple[float, float]:
         """Return the hue and saturation color value [float, float]."""
         color = self.coordinator.data.state.segments[self._segment].color_primary
         return color_util.color_RGB_to_hs(*color[:3])
@@ -297,7 +296,7 @@ class WLEDSegmentLight(LightEntity, WLEDDeviceEntity):
     @wled_exception_handler
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the light."""
-        data = {ATTR_ON: False}
+        data: dict[str, bool | int] = {ATTR_ON: False}
 
         if ATTR_TRANSITION in kwargs:
             # WLED uses 100ms per unit, so 10 = 1 second.
@@ -314,7 +313,10 @@ class WLEDSegmentLight(LightEntity, WLEDDeviceEntity):
     @wled_exception_handler
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
-        data = {ATTR_ON: True, ATTR_SEGMENT_ID: self._segment}
+        data: dict[str, Any] = {
+            ATTR_ON: True,
+            ATTR_SEGMENT_ID: self._segment,
+        }
 
         if ATTR_COLOR_TEMP in kwargs:
             mireds = color_util.color_temperature_kelvin_to_mired(
@@ -387,7 +389,7 @@ class WLEDSegmentLight(LightEntity, WLEDDeviceEntity):
         speed: int | None = None,
     ) -> None:
         """Set the effect of a WLED light."""
-        data = {ATTR_SEGMENT_ID: self._segment}
+        data: dict[str, bool | int | str | None] = {ATTR_SEGMENT_ID: self._segment}
 
         if effect is not None:
             data[ATTR_EFFECT] = effect
@@ -421,7 +423,7 @@ class WLEDSegmentLight(LightEntity, WLEDDeviceEntity):
 def async_update_segments(
     entry: ConfigEntry,
     coordinator: WLEDDataUpdateCoordinator,
-    current: dict[int, WLEDSegmentLight],
+    current: dict[int, WLEDSegmentLight | WLEDMasterLight],
     async_add_entities,
 ) -> None:
     """Update segments."""
@@ -461,7 +463,7 @@ def async_update_segments(
 async def async_remove_entity(
     index: int,
     coordinator: WLEDDataUpdateCoordinator,
-    current: dict[int, WLEDSegmentLight],
+    current: dict[int, WLEDSegmentLight | WLEDMasterLight],
 ) -> None:
     """Remove WLED segment light from Home Assistant."""
     entity = current[index]

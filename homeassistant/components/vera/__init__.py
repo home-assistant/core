@@ -155,7 +155,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         controller.stop()
 
     await hass.async_add_executor_job(controller.start)
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_subscription)
+    config_entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_subscription)
+    )
 
     return True
 
@@ -210,7 +212,9 @@ DeviceType = TypeVar("DeviceType", bound=veraApi.VeraDevice)
 class VeraDevice(Generic[DeviceType], Entity):
     """Representation of a Vera device entity."""
 
-    def __init__(self, vera_device: DeviceType, controller_data: ControllerData):
+    def __init__(
+        self, vera_device: DeviceType, controller_data: ControllerData
+    ) -> None:
         """Initialize the device."""
         self.vera_device = vera_device
         self.controller = controller_data.controller
