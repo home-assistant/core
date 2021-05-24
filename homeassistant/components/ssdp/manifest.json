@@ -7,6 +7,7 @@
     "netdisco==2.8.3",
     "async-upnp-client==0.18.0"
   ],
+  "dependencies": ["network"],
   "after_dependencies": ["zeroconf"],
   "codeowners": [],
   "quality_scale": "internal",
