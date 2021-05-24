@@ -289,9 +289,6 @@ async def test_remove_node(
     msg = await ws_client.receive_json()
     assert msg["event"]["event"] == "exclusion started"
 
-    # Add mock node to controller
-    client.driver.controller.nodes[67] = nortek_thermostat
-
     dev_reg = dr.async_get(hass)
 
     # Create device registry entry for mock node
@@ -337,9 +334,6 @@ async def test_replace_failed_node(
     """Test the replace_failed_node websocket command."""
     entry = integration
     ws_client = await hass_ws_client(hass)
-
-    # Add mock node to controller
-    client.driver.controller.nodes[67] = nortek_thermostat
 
     dev_reg = dr.async_get(hass)
 
@@ -504,9 +498,6 @@ async def test_remove_failed_node(
 
     msg = await ws_client.receive_json()
     assert msg["success"]
-
-    # Add mock node to controller
-    client.driver.controller.nodes[67] = nortek_thermostat
 
     dev_reg = dr.async_get(hass)
 
