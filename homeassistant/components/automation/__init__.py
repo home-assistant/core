@@ -97,11 +97,11 @@ DEFAULT_STOP_ACTIONS = True
 EVENT_AUTOMATION_RELOADED = "automation_reloaded"
 EVENT_AUTOMATION_TRIGGERED = "automation_triggered"
 
+ATTR_INPUTS = "inputs"
 ATTR_LAST_TRIGGERED = "last_triggered"
 ATTR_SOURCE = "source"
 ATTR_VARIABLES = "variables"
 SERVICE_TRIGGER = "trigger"
-ATTR_INPUTS = "inputs"
 
 _LOGGER = logging.getLogger(__name__)
 AutomationActionType = Callable[[HomeAssistant, TemplateVarsType], Awaitable[None]]
