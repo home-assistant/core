@@ -52,6 +52,7 @@ DEFAULT_NAME = "Stats"
 DEFAULT_SIZE = 20
 DEFAULT_PRECISION = 2
 ICON = "mdi:calculator"
+UNIT_OF_MEASUREMENT_BINARY = "changes"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -175,7 +176,11 @@ class StatisticsSensor(SensorEntity):
     @property
     def unit_of_measurement(self):
         """Return the unit the value is expressed in."""
-        return self._unit_of_measurement if not self.is_binary else None
+        return (
+            self._unit_of_measurement
+            if not self.is_binary
+            else UNIT_OF_MEASUREMENT_BINARY
+        )
 
     @property
     def should_poll(self):
@@ -202,6 +207,12 @@ class StatisticsSensor(SensorEntity):
                 ATTR_AVERAGE_CHANGE: self.average_change,
                 ATTR_CHANGE_RATE: self.change_rate,
             }
+
+        return {
+            ATTR_SAMPLING_SIZE: self._sampling_size,
+            ATTR_MIN_AGE: self.min_age,
+            ATTR_MAX_AGE: self.max_age,
+        }
 
     @property
     def icon(self):
@@ -289,6 +300,13 @@ class StatisticsSensor(SensorEntity):
                 self.min_age = self.max_age = dt_util.utcnow()
                 self.change = self.average_change = STATE_UNKNOWN
                 self.change_rate = STATE_UNKNOWN
+
+        else:
+            if self.states:
+                self.min_age = self.ages[0]
+                self.max_age = self.ages[-1]
+            else:
+                self.min_age = self.max_age = dt_util.utcnow()
 
         # If max_age is set, ensure to update again after the defined interval.
         next_to_purge_timestamp = self._next_to_purge_timestamp()

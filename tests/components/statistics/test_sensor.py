@@ -40,6 +40,8 @@ class TestStatisticsSensor(unittest.TestCase):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.values = [17, 20, 15.2, 5, 3.8, 9.2, 6.7, 14, 6]
+        self.values_binary = ["on", "off", "on", "off", "on", "off", "on", "off", "on"]
+        self.count_binary = len(self.values_binary)
         self.count = len(self.values)
         self.min = min(self.values)
         self.max = max(self.values)
@@ -54,8 +56,7 @@ class TestStatisticsSensor(unittest.TestCase):
         self.addCleanup(self.hass.stop)
 
     def test_binary_sensor_source(self):
-        """Test if source is a sensor."""
-        values = ["on", "off", "on", "off", "on", "off", "on"]
+        """Test if source is a binary_sensor."""
         assert setup_component(
             self.hass,
             "sensor",
@@ -72,13 +73,197 @@ class TestStatisticsSensor(unittest.TestCase):
         self.hass.start()
         self.hass.block_till_done()
 
-        for value in values:
+        for value in self.values_binary:
             self.hass.states.set("binary_sensor.test_monitored", value)
             self.hass.block_till_done()
 
         state = self.hass.states.get("sensor.test")
 
-        assert str(len(values)) == state.state
+        assert str(self.count_binary) == state.state
+        assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "changes"
+
+    def test_binary_sensor_sampling_size(self):
+        """Test if source is a binary_sensor."""
+        assert setup_component(
+            self.hass,
+            "sensor",
+            {
+                "sensor": {
+                    "platform": "statistics",
+                    "name": "test",
+                    "entity_id": "binary_sensor.test_monitored",
+                    "sampling_size": 2,
+                }
+            },
+        )
+
+        self.hass.block_till_done()
+        self.hass.start()
+        self.hass.block_till_done()
+
+        for value in self.values_binary:
+            self.hass.states.set("binary_sensor.test_monitored", value)
+            self.hass.block_till_done()
+
+        state = self.hass.states.get("sensor.test")
+
+        assert str(2) == state.state
+
+    def test_binary_sensor_max_age(self):
+        """Test max_age if source is a binary_sensor."""
+
+        now = dt_util.utcnow()
+        mock_data = {
+            "return_time": datetime(now.year + 1, 8, 2, 12, 23, tzinfo=dt_util.UTC)
+        }
+        age_minutes = 4
+
+        def mock_now():
+            return mock_data["return_time"]
+
+        with patch(
+            "homeassistant.components.statistics.sensor.dt_util.utcnow", new=mock_now
+        ):
+            assert setup_component(
+                self.hass,
+                "sensor",
+                {
+                    "sensor": {
+                        "platform": "statistics",
+                        "name": "test",
+                        "entity_id": "binary_sensor.test_monitored",
+                        "max_age": {"minutes": age_minutes},
+                    }
+                },
+            )
+
+            self.hass.block_till_done()
+            self.hass.start()
+            self.hass.block_till_done()
+
+            for value in self.values_binary:
+                self.hass.states.set("binary_sensor.test_monitored", value)
+                self.hass.block_till_done()
+                # insert one value every minute
+                mock_data["return_time"] += timedelta(minutes=1)
+                fire_time_changed(self.hass, mock_data["return_time"])
+                self.hass.block_till_done()
+
+            last_tick = mock_data["return_time"]
+
+            state = self.hass.states.get("sensor.test")
+            assert str(age_minutes) == state.state
+
+            assert (last_tick - timedelta(minutes=1)) == state.attributes.get("max_age")
+            assert (last_tick - timedelta(minutes=age_minutes)) == state.attributes.get(
+                "min_age"
+            )
+
+    def test_binary_sensor_max_age_wait(self):
+        """Test if values fall off with max_age if source is a binary_sensor."""
+
+        now = dt_util.utcnow()
+        mock_data = {
+            "return_time": datetime(now.year + 1, 8, 2, 12, 23, tzinfo=dt_util.UTC)
+        }
+        age_minutes = 4
+
+        def mock_now():
+            return mock_data["return_time"]
+
+        with patch(
+            "homeassistant.components.statistics.sensor.dt_util.utcnow", new=mock_now
+        ):
+            assert setup_component(
+                self.hass,
+                "sensor",
+                {
+                    "sensor": {
+                        "platform": "statistics",
+                        "name": "test",
+                        "entity_id": "binary_sensor.test_monitored",
+                        "max_age": {"minutes": age_minutes},
+                    }
+                },
+            )
+
+            self.hass.block_till_done()
+            self.hass.start()
+            self.hass.block_till_done()
+
+            for value in self.values_binary:
+                self.hass.states.set("binary_sensor.test_monitored", value)
+                self.hass.block_till_done()
+                # insert one value every minute
+                mock_data["return_time"] += timedelta(minutes=1)
+                fire_time_changed(self.hass, mock_data["return_time"])
+                self.hass.block_till_done()
+
+            last_tick = mock_data["return_time"]
+
+            # wait for 1 minute 45 seconds and verify 2 values fall off
+            mock_data["return_time"] += timedelta(minutes=1, seconds=45)
+            fire_time_changed(self.hass, mock_data["return_time"])
+            self.hass.block_till_done()
+
+            state = self.hass.states.get("sensor.test")
+            assert str(age_minutes - 2) == state.state
+
+            assert (last_tick - timedelta(minutes=1)) == state.attributes.get("max_age")
+            assert (
+                last_tick - timedelta(minutes=age_minutes - 2)
+            ) == state.attributes.get("min_age")
+
+    def test_binary_sensor_max_age_expire_all(self):
+        """Test if all values fall off with max_age if source is a binary_sensor."""
+
+        now = dt_util.utcnow()
+        mock_data = {
+            "return_time": datetime(now.year + 1, 8, 2, 12, 23, tzinfo=dt_util.UTC)
+        }
+        age_minutes = 4
+
+        def mock_now():
+            return mock_data["return_time"]
+
+        with patch(
+            "homeassistant.components.statistics.sensor.dt_util.utcnow", new=mock_now
+        ):
+            assert setup_component(
+                self.hass,
+                "sensor",
+                {
+                    "sensor": {
+                        "platform": "statistics",
+                        "name": "test",
+                        "entity_id": "binary_sensor.test_monitored",
+                        "max_age": {"minutes": age_minutes},
+                    }
+                },
+            )
+
+            self.hass.block_till_done()
+            self.hass.start()
+            self.hass.block_till_done()
+
+            for value in self.values_binary:
+                self.hass.states.set("binary_sensor.test_monitored", value)
+                self.hass.block_till_done()
+                # insert one value every minute
+                mock_data["return_time"] += timedelta(minutes=1)
+                fire_time_changed(self.hass, mock_data["return_time"])
+                self.hass.block_till_done()
+
+            # wait for all values to fall off
+            mock_data["return_time"] += timedelta(minutes=age_minutes)
+            fire_time_changed(self.hass, mock_data["return_time"])
+            self.hass.block_till_done()
+
+            state = self.hass.states.get("sensor.test")
+            assert str(0) == state.state
+
+            assert mock_data["return_time"] == state.attributes.get("max_age")
+            assert mock_data["return_time"] == state.attributes.get("min_age")
 
     def test_sensor_source(self):
         """Test if source is a sensor."""
