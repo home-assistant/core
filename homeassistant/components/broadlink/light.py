@@ -180,14 +180,13 @@ class BroadlinkLight(LightEntity, ABC):
             "colortemp": (color_temp - 153) * 100 + 2700,
             "brightness": round(brightness / 2.55),
             "pwr": 1,
+            "bulb_colormode": BROADLINK_COLOR_MODE_SCENES,
         }
 
         if color_mode == COLOR_MODE_HS:
             data["bulb_colormode"] = BROADLINK_COLOR_MODE_RGB
         elif color_mode == COLOR_MODE_COLOR_TEMP:
-            data["bulb_colormode"] == BROADLINK_COLOR_MODE_WHITE
-        else:
-            data["bulb_colormode"] == BROADLINK_COLOR_MODE_SCENES
+            data["bulb_colormode"] = BROADLINK_COLOR_MODE_WHITE
 
         if await self._async_send_packet(data):
             self._hs_color = hs_color
