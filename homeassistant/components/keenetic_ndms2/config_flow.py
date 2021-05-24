@@ -89,7 +89,7 @@ class KeeneticFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 class KeeneticOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle options."""
 
-    def __init__(self, config_entry: ConfigEntry):
+    def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize options flow."""
         self.config_entry = config_entry
         self._interface_options = {}

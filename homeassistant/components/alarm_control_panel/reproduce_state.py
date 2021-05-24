@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Iterable
 import logging
-from typing import Any
+from typing import Any, Final
 
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -25,9 +25,9 @@ from homeassistant.core import Context, HomeAssistant, State
 
 from . import DOMAIN
 
-_LOGGER = logging.getLogger(__name__)
+_LOGGER: Final = logging.getLogger(__name__)
 
-VALID_STATES = {
+VALID_STATES: Final[set[str]] = {
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_CUSTOM_BYPASS,
     STATE_ALARM_ARMED_HOME,

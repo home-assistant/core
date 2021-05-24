@@ -5,7 +5,13 @@ from typing import Any, cast
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME, DEVICE_CLASS_TEMPERATURE
+from homeassistant.const import (
+    ATTR_ATTRIBUTION,
+    ATTR_DEVICE_CLASS,
+    ATTR_ICON,
+    CONF_NAME,
+    DEVICE_CLASS_TEMPERATURE,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -14,7 +20,13 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import AccuWeatherDataUpdateCoordinator
 from .const import (
+    API_IMPERIAL,
+    API_METRIC,
+    ATTR_ENABLED,
     ATTR_FORECAST,
+    ATTR_LABEL,
+    ATTR_UNIT_IMPERIAL,
+    ATTR_UNIT_METRIC,
     ATTRIBUTION,
     COORDINATOR,
     DOMAIN,
@@ -79,7 +91,7 @@ class AccuWeatherSensor(CoordinatorEntity, SensorEntity):
         else:
             self._description = FORECAST_SENSOR_TYPES[kind]
             self._sensor_data = coordinator.data[ATTR_FORECAST][forecast_day][kind]
-        self._unit_system = "Metric" if coordinator.is_metric else "Imperial"
+        self._unit_system = API_METRIC if coordinator.is_metric else API_IMPERIAL
         self._name = name
         self.kind = kind
         self._device_class = None
@@ -90,8 +102,8 @@ class AccuWeatherSensor(CoordinatorEntity, SensorEntity):
     def name(self) -> str:
         """Return the name."""
         if self.forecast_day is not None:
-            return f"{self._name} {self._description['label']} {self.forecast_day}d"
-        return f"{self._name} {self._description['label']}"
+            return f"{self._name} {self._description[ATTR_LABEL]} {self.forecast_day}d"
+        return f"{self._name} {self._description[ATTR_LABEL]}"
 
     @property
     def unique_id(self) -> str:
@@ -137,19 +149,19 @@ class AccuWeatherSensor(CoordinatorEntity, SensorEntity):
     @property
     def icon(self) -> str | None:
         """Return the icon."""
-        return self._description["icon"]
+        return self._description[ATTR_ICON]
 
     @property
     def device_class(self) -> str | None:
         """Return the device_class."""
-        return self._description["device_class"]
+        return self._description[ATTR_DEVICE_CLASS]
 
     @property
     def unit_of_measurement(self) -> str | None:
         """Return the unit the value is expressed in."""
         if self.coordinator.is_metric:
-            return self._description["unit_metric"]
-        return self._description["unit_imperial"]
+            return self._description[ATTR_UNIT_METRIC]
+        return self._description[ATTR_UNIT_IMPERIAL]
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
@@ -169,4 +181,4 @@ class AccuWeatherSensor(CoordinatorEntity, SensorEntity):
     @property
     def entity_registry_enabled_default(self) -> bool:
         """Return if the entity should be enabled when first added to the entity registry."""
-        return self._description["enabled"]
+        return self._description[ATTR_ENABLED]

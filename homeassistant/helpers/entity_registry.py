@@ -146,7 +146,7 @@ class RegistryEntry:
 class EntityRegistry:
     """Class to hold a registry of entities."""
 
-    def __init__(self, hass: HomeAssistant):
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the registry."""
         self.hass = hass
         self.entities: dict[str, RegistryEntry]

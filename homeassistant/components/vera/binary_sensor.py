@@ -37,7 +37,7 @@ class VeraBinarySensor(VeraDevice[veraApi.VeraBinarySensor], BinarySensorEntity)
 
     def __init__(
         self, vera_device: veraApi.VeraBinarySensor, controller_data: ControllerData
-    ):
+    ) -> None:
         """Initialize the binary_sensor."""
         self._state = False
         VeraDevice.__init__(self, vera_device, controller_data)

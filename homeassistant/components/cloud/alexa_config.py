@@ -42,7 +42,7 @@ class AlexaConfig(alexa_config.AbstractConfig):
         cloud_user: str,
         prefs: CloudPreferences,
         cloud: Cloud,
-    ):
+    ) -> None:
         """Initialize the Alexa config."""
         super().__init__(hass)
         self._config = config

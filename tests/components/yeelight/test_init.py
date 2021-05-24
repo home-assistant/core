@@ -11,7 +11,7 @@ from homeassistant.components.yeelight import (
     DOMAIN,
     NIGHTLIGHT_SWITCH_TYPE_LIGHT,
 )
-from homeassistant.config_entries import ENTRY_STATE_SETUP_RETRY
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     CONF_DEVICES,
     CONF_HOST,
@@ -110,7 +110,7 @@ async def test_ip_changes_id_missing_cannot_fallback(hass: HomeAssistant):
         assert not await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert config_entry.state == ENTRY_STATE_SETUP_RETRY
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_setup_discovery(hass: HomeAssistant):

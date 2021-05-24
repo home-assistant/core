@@ -42,7 +42,7 @@ class DataUpdateCoordinator(Generic[T]):
         update_interval: timedelta | None = None,
         update_method: Callable[[], Awaitable[T]] | None = None,
         request_refresh_debouncer: Debouncer | None = None,
-    ):
+    ) -> None:
         """Initialize global data updater."""
         self.hass = hass
         self.logger = logger

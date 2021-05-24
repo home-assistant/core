@@ -388,7 +388,7 @@ async def test_initial_api_error(
     assert len(mock_check.mock_calls) == 1
 
     # The component has been loaded
-    assert mock_config_entry.state == config_entries.ENTRY_STATE_LOADED
+    assert mock_config_entry.state is config_entries.ConfigEntryState.LOADED
 
     # Check the entities and devices - None have been configured
     entity_assertions(hass, num_exp_entities=0)
@@ -421,7 +421,7 @@ async def test_update_with_api_error(
     assert len(mock_check.mock_calls) == 1
 
     # The component has been loaded
-    assert mock_config_entry.state == config_entries.ENTRY_STATE_LOADED
+    assert mock_config_entry.state is config_entries.ConfigEntryState.LOADED
 
     # Check the entities and devices - all entities should be there
     entity_assertions(
