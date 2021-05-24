@@ -101,7 +101,7 @@ class SIAAlarmControlPanel(AlarmControlPanelEntity, RestoreEntity):
         entry: ConfigEntry,
         account_data: dict[str, Any],
         zone: int,
-    ):
+    ) -> None:
         """Create SIAAlarmControlPanel object."""
         self._entry: ConfigEntry = entry
         self._account_data: dict[str, Any] = account_data
