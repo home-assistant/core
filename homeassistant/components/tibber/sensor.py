@@ -1,6 +1,6 @@
 """Support for Tibber sensors."""
 import asyncio
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 from random import randrange
 
@@ -43,52 +43,89 @@ PARALLEL_UPDATES = 0
 SIGNAL_UPDATE_ENTITY = "tibber_rt_update_{}"
 
 RT_SENSOR_MAP = {
-    "averagePower": ["average power", DEVICE_CLASS_POWER, POWER_WATT],
-    "power": ["power", DEVICE_CLASS_POWER, POWER_WATT],
-    "minPower": ["min power", DEVICE_CLASS_POWER, POWER_WATT],
-    "maxPower": ["max power", DEVICE_CLASS_POWER, POWER_WATT],
+    "averagePower": ["average power", DEVICE_CLASS_POWER, POWER_WATT, None],
+    "power": ["power", DEVICE_CLASS_POWER, POWER_WATT, None],
+    "minPower": ["min power", DEVICE_CLASS_POWER, POWER_WATT, None],
+    "maxPower": ["max power", DEVICE_CLASS_POWER, POWER_WATT, None],
     "accumulatedConsumption": [
         "accumulated consumption",
         DEVICE_CLASS_ENERGY,
         ENERGY_KILO_WATT_HOUR,
+        STATE_CLASS_MEASUREMENT,
     ],
     "accumulatedConsumptionLastHour": [
         "accumulated consumption last hour",
         DEVICE_CLASS_ENERGY,
         ENERGY_KILO_WATT_HOUR,
+        STATE_CLASS_MEASUREMENT,
     ],
     "accumulatedProduction": [
         "accumulated production",
         DEVICE_CLASS_ENERGY,
         ENERGY_KILO_WATT_HOUR,
+        STATE_CLASS_MEASUREMENT,
     ],
     "accumulatedProductionLastHour": [
         "accumulated production last hour",
         DEVICE_CLASS_ENERGY,
         ENERGY_KILO_WATT_HOUR,
+        STATE_CLASS_MEASUREMENT,
     ],
     "lastMeterConsumption": [
         "last meter consumption",
         DEVICE_CLASS_ENERGY,
         ENERGY_KILO_WATT_HOUR,
+        STATE_CLASS_MEASUREMENT,
     ],
     "lastMeterProduction": [
         "last meter production",
         DEVICE_CLASS_ENERGY,
         ENERGY_KILO_WATT_HOUR,
+        STATE_CLASS_MEASUREMENT,
     ],
-    "voltagePhase1": ["voltage phase1", DEVICE_CLASS_VOLTAGE, VOLT],
-    "voltagePhase2": ["voltage phase2", DEVICE_CLASS_VOLTAGE, VOLT],
-    "voltagePhase3": ["voltage phase3", DEVICE_CLASS_VOLTAGE, VOLT],
-    "currentL1": ["current L1", DEVICE_CLASS_CURRENT, ELECTRICAL_CURRENT_AMPERE],
-    "currentL2": ["current L2", DEVICE_CLASS_CURRENT, ELECTRICAL_CURRENT_AMPERE],
-    "currentL3": ["current L3", DEVICE_CLASS_CURRENT, ELECTRICAL_CURRENT_AMPERE],
+    "voltagePhase1": [
+        "voltage phase1",
+        DEVICE_CLASS_VOLTAGE,
+        VOLT,
+        STATE_CLASS_MEASUREMENT,
+    ],
+    "voltagePhase2": [
+        "voltage phase2",
+        DEVICE_CLASS_VOLTAGE,
+        VOLT,
+        STATE_CLASS_MEASUREMENT,
+    ],
+    "voltagePhase3": [
+        "voltage phase3",
+        DEVICE_CLASS_VOLTAGE,
+        VOLT,
+        STATE_CLASS_MEASUREMENT,
+    ],
+    "currentL1": [
+        "current L1",
+        DEVICE_CLASS_CURRENT,
+        ELECTRICAL_CURRENT_AMPERE,
+        STATE_CLASS_MEASUREMENT,
+    ],
+    "currentL2": [
+        "current L2",
+        DEVICE_CLASS_CURRENT,
+        ELECTRICAL_CURRENT_AMPERE,
+        STATE_CLASS_MEASUREMENT,
+    ],
+    "currentL3": [
+        "current L3",
+        DEVICE_CLASS_CURRENT,
+        ELECTRICAL_CURRENT_AMPERE,
+        STATE_CLASS_MEASUREMENT,
+    ],
     "signalStrength": [
         "signal strength",
         DEVICE_CLASS_SIGNAL_STRENGTH,
         SIGNAL_STRENGTH_DECIBELS,
+        STATE_CLASS_MEASUREMENT,
     ],
-    "accumulatedCost": ["accumulated cost", None, None],
+    "accumulatedCost": ["accumulated cost", None, None, STATE_CLASS_MEASUREMENT],
 }
 
 
@@ -278,13 +315,23 @@ class TibberSensorElPrice(TibberSensor):
 class TibberSensorRT(TibberSensor):
     """Representation of a Tibber sensor for real time consumption."""
 
-    def __init__(self, tibber_home, sensor_name, device_class, unit, initial_state):
+    def __init__(
+        self, tibber_home, sensor_name, device_class, unit, initial_state, state_class
+    ):
         """Initialize the sensor."""
         super().__init__(tibber_home)
         self._sensor_name = sensor_name
         self._device_class = device_class
         self._unit = unit
         self._state = initial_state
+        self._attr_state_class = state_class
+        if sensor_name in [
+            "last meter consumption",
+            "last meter production",
+        ]:
+            self._attr_last_reset = datetime.fromtimestamp(0)
+        else:
+            self._attr_last_reset = None
 
     async def async_added_to_hass(self):
         """Start listen for real time data."""
@@ -312,8 +359,21 @@ class TibberSensorRT(TibberSensor):
         return f"{self._sensor_name} {self._name}"
 
     @callback
-    def _set_state(self, state):
+    def _set_state(self, state, timestamp):
         """Set sensor state."""
+        if state < self._state and self._sensor_name in [
+            "accumulated consumption",
+            "accumulated production",
+            "accumulated cost",
+        ]:
+            self._attr_last_reset = timestamp.replace(
+                hour=0, minute=0, second=0, microsecond=0
+            )
+        if state < self._state and self._sensor_name in [
+            "accumulated consumption last hour",
+            "accumulated production last hour",
+        ]:
+            self._attr_last_reset = timestamp.replace(minute=0, second=0, microsecond=0)
         self._state = state
         self.async_write_ha_state()
 
@@ -336,11 +396,6 @@ class TibberSensorRT(TibberSensor):
     def device_class(self):
         """Return the device class of the sensor."""
         return self._device_class
-
-    @property
-    def state_class(self) -> str:
-        """Return the state class of this entity, from STATE_CLASSES, if any."""
-        return STATE_CLASS_MEASUREMENT
 
 
 class TibberRtDataHandler:
@@ -366,6 +421,7 @@ class TibberRtDataHandler:
         if live_measurement is None:
             return
 
+        timestamp = datetime.fromisoformat(live_measurement.pop("timestamp"))
         new_entities = []
         for sensor_type, state in live_measurement.items():
             if state is None or sensor_type not in RT_SENSOR_MAP:
@@ -375,13 +431,21 @@ class TibberRtDataHandler:
                     self.hass,
                     SIGNAL_UPDATE_ENTITY.format(RT_SENSOR_MAP[sensor_type][0]),
                     state,
+                    timestamp,
                 )
             else:
-                sensor_name, device_class, unit = RT_SENSOR_MAP[sensor_type]
+                sensor_name, device_class, unit, state_class = RT_SENSOR_MAP[
+                    sensor_type
+                ]
                 if sensor_type == "accumulatedCost":
                     unit = self._tibber_home.currency
                 entity = TibberSensorRT(
-                    self._tibber_home, sensor_name, device_class, unit, state
+                    self._tibber_home,
+                    sensor_name,
+                    device_class,
+                    unit,
+                    state,
+                    state_class,
                 )
                 new_entities.append(entity)
                 self._entities.add(sensor_type)
