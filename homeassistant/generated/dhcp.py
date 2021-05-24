@@ -216,6 +216,11 @@ DHCP = [
         "macaddress": "D052A8*"
     },
     {
+        "domain": "smartthings",
+        "hostname": "hub*",
+        "macaddress": "286D97*"
+    },
+    {
         "domain": "solaredge",
         "hostname": "target",
         "macaddress": "002702*"
