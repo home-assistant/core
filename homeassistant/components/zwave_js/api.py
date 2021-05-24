@@ -127,6 +127,8 @@ def async_register_api(hass: HomeAssistant) -> None:
     """Register all of our api endpoints."""
     websocket_api.async_register_command(hass, websocket_network_status)
     websocket_api.async_register_command(hass, websocket_node_status)
+    websocket_api.async_register_command(hass, websocket_node_metadata)
+    websocket_api.async_register_command(hass, websocket_ping_node)
     websocket_api.async_register_command(hass, websocket_add_node)
     websocket_api.async_register_command(hass, websocket_stop_inclusion)
     websocket_api.async_register_command(hass, websocket_remove_node)
@@ -206,6 +208,60 @@ async def websocket_node_status(
     connection.send_result(
         msg[ID],
         data,
+    )
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "zwave_js/node_metadata",
+        vol.Required(ENTRY_ID): str,
+        vol.Required(NODE_ID): int,
+    }
+)
+@websocket_api.async_response
+@async_get_node
+async def websocket_node_metadata(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict,
+    node: Node,
+) -> None:
+    """Get the metadata of a Z-Wave JS node."""
+    data = {
+        "node_id": node.node_id,
+        "exclusion": node.device_config.metadata.exclusion,
+        "inclusion": node.device_config.metadata.inclusion,
+        "manual": node.device_config.metadata.manual,
+        "wakeup": node.device_config.metadata.wakeup,
+        "reset": node.device_config.metadata.reset,
+        "device_database_url": node.device_database_url,
+    }
+    connection.send_result(
+        msg[ID],
+        data,
+    )
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "zwave_js/ping_node",
+        vol.Required(ENTRY_ID): str,
+        vol.Required(NODE_ID): int,
+    }
+)
+@websocket_api.async_response
+@async_get_node
+async def websocket_ping_node(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict,
+    node: Node,
+) -> None:
+    """Ping a Z-Wave JS node."""
+    result = await node.async_ping()
+    connection.send_result(
+        msg[ID],
+        result,
     )
 
 
