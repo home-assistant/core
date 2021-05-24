@@ -821,6 +821,9 @@ ibmiotf==0.3.4
 # homeassistant.components.ping
 icmplib==2.1.1
 
+# homeassistant.components.network
+ifaddr==0.1.7
+
 # homeassistant.components.iglo
 iglo==1.2.7
 
@@ -1690,6 +1693,7 @@ pyrisco==0.3.1
 # homeassistant.components.rituals_perfume_genie
 pyrituals==0.0.3
 
+# homeassistant.components.network
 # homeassistant.components.zeroconf
 pyroute2==0.5.18
 

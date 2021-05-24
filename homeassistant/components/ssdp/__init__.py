@@ -4,18 +4,22 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Mapping
 from datetime import timedelta
+from ipaddress import IPv4Address, IPv6Address
 import logging
 from typing import Any
 
-import aiohttp
-from async_upnp_client.search import async_search
-from defusedxml import ElementTree
-from netdisco import ssdp, util
+from async_upnp_client.search import SSDPListener
+from netdisco import ssdp
 
+from homeassistant import config_entries
+from homeassistant.components import network
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import callback
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.loader import async_get_ssdp
+from homeassistant.loader import async_get_ssdp, bind_hass
+
+from .descriptions import DescriptionManager
+from .flow import FlowDispatcher, SSDPFlow
 
 DOMAIN = "ssdp"
 SCAN_INTERVAL = timedelta(seconds=60)
@@ -43,22 +47,29 @@ ATTR_UPNP_PRESENTATION_URL = "presentationURL"
 _LOGGER = logging.getLogger(__name__)
 
 
+@bind_hass
+def async_register_callback(hass, callback, match_dict=None):
+    """Register to receive a callback on ssdp broadcast.
+
+    Returns a callback that can be used to cancel the registration.
+    """
+    return hass.data[DOMAIN].async_register_callback(callback, match_dict)
+
+
 async def async_setup(hass, config):
     """Set up the SSDP integration."""
 
-    async def _async_initialize(_):
-        scanner = Scanner(hass, await async_get_ssdp(hass))
-        await scanner.async_scan(None)
-        cancel_scan = async_track_time_interval(hass, scanner.async_scan, SCAN_INTERVAL)
+    scanner = hass.data[DOMAIN] = Scanner(hass, await async_get_ssdp(hass))
 
-        @callback
-        def _async_stop_scans(event):
-            cancel_scan()
+    asyncio.create_task(scanner.async_start())
 
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_stop_scans)
+    return True
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, _async_initialize)
 
+def _async_use_default_interface(adapters) -> bool:
+    for adapter in adapters:
+        if adapter["enabled"] and not adapter["default"]:
+            return False
     return True
 
 
@@ -69,94 +80,126 @@ class Scanner:
         """Initialize class."""
         self.hass = hass
         self.seen = set()
-        self._entries = []
         self._integration_matchers = integration_matchers
         self._description_cache = {}
+        self._cancel_scan = None
+        self._ssdp_listeners = []
+        self._callbacks = []
+        self.flow_dispatcher: FlowDispatcher | None = None
 
-    async def _on_ssdp_response(self, data: Mapping[str, Any]) -> None:
+    async def _async_on_ssdp_response(self, data: Mapping[str, Any]) -> None:
         """Process an ssdp response."""
-        self.async_store_entry(
+        await self._async_process_entry(
             ssdp.UPNPEntry({key.lower(): item for key, item in data.items()})
         )
 
     @callback
-    def async_store_entry(self, entry):
-        """Save an entry for later processing."""
-        self._entries.append(entry)
+    def async_register_callback(self, ssdp_callback, match_dict=None):
+        """Register a callback."""
+        if match_dict is None:
+            match_dict = {}
 
-    async def async_scan(self, _):
+        callback_entry = (ssdp_callback, match_dict)
+        self._callbacks.append(callback_entry)
+
+        @callback
+        def _async_remove_callback():
+            self._callbacks.remove(callback_entry)
+
+        return _async_remove_callback
+
+    @callback
+    def async_stop(self, *_):
+        """Stop the scanner."""
+        self._cancel_scan()
+        for listener in self._ssdp_listeners:
+            listener.async_stop()
+        self._ssdp_listeners = []
+
+    async def _async_build_source_set(self):
+        """Build the list of ssdp sources."""
+        adapters = await network.async_get_adapters(self.hass)
+        sources = set()
+        if _async_use_default_interface(adapters):
+            sources.add(IPv4Address("0.0.0.0"))
+            return sources
+
+        for adapter in adapters:
+            if not adapter["enabled"]:
+                continue
+            if adapter["ipv4"]:
+                ipv4 = adapter["ipv4"][0]
+                sources.add(IPv4Address(ipv4["address"]))
+            if not adapter["ipv6"]:
+                continue
+            if adapter["ipv6"]:
+                ipv6 = adapter["ipv6"][0]
+                # With python 3.9 add scope_ids can be
+                # added by enumerating adapter["ipv6"]s
+                # IPv6Address(f"::%{ipv6['scope_id']}")
+                sources.add(IPv6Address(ipv6["address"]))
+
+        return sources
+
+    @callback
+    def async_scan(self, *_):
         """Scan for new entries."""
+        for listener in self._ssdp_listeners:
+            listener.async_search()
 
-        await async_search(async_callback=self._on_ssdp_response)
-        await self._process_entries()
-
-        # We clear the cache after each run. We track discovered entries
-        # so will never need a description twice.
-        self._description_cache.clear()
-        self._entries.clear()
-
-    async def _process_entries(self):
-        """Process SSDP entries."""
-        entries_to_process = []
-        unseen_locations = set()
-
-        for entry in self._entries:
-            key = (entry.st, entry.location)
-
-            if key in self.seen:
-                continue
-
-            self.seen.add(key)
-
-            entries_to_process.append(entry)
-
-            if (
-                entry.location is not None
-                and entry.location not in self._description_cache
-            ):
-                unseen_locations.add(entry.location)
-
-        if not entries_to_process:
-            return
-
-        if unseen_locations:
-            await self._fetch_descriptions(list(unseen_locations))
-
-        tasks = []
-
-        for entry in entries_to_process:
-            info, domains = self._process_entry(entry)
-            for domain in domains:
-                _LOGGER.debug("Discovered %s at %s", domain, entry.location)
-                tasks.append(
-                    self.hass.config_entries.flow.async_init(
-                        domain, context={"source": DOMAIN}, data=info
-                    )
+    async def async_start(self):
+        """Start the scanner."""
+        self.description_manager = DescriptionManager(self.hass)
+        self.flow_dispatcher = FlowDispatcher(self.hass)
+        for source_ip in await self._async_build_source_set():
+            self._ssdp_listeners.append(
+                SSDPListener(
+                    async_callback=self._async_on_ssdp_response, source_ip=source_ip
                 )
-
-        if tasks:
-            await asyncio.gather(*tasks)
-
-    async def _fetch_descriptions(self, locations):
-        """Fetch descriptions from locations."""
-
-        for idx, result in enumerate(
-            await asyncio.gather(
-                *[self._fetch_description(location) for location in locations],
-                return_exceptions=True,
             )
-        ):
-            location = locations[idx]
 
-            if isinstance(result, Exception):
-                _LOGGER.exception(
-                    "Failed to fetch ssdp data from: %s", location, exc_info=result
-                )
+        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.async_stop)
+        self.hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_STARTED, self.flow_dispatcher.async_start
+        )
+        await asyncio.gather(
+            *[listener.async_start() for listener in self._ssdp_listeners]
+        )
+        self._cancel_scan = async_track_time_interval(
+            self.hass, self.async_scan, SCAN_INTERVAL
+        )
+
+    async def _async_process_entry(self, entry):
+        """Process SSDP entries."""
+        _LOGGER.debug("_async_process_entry: %s", entry)
+        key = (entry.st, entry.location)
+        info_req = await self.description_manager.fetch_description(entry.location)
+        info, domains = self._info_domains(entry, info_req)
+
+        for ssdp_callback, match_dict in self._callbacks:
+
+            if not all(item in info.items() for item in match_dict.items()):
+                continue
+            try:
+                ssdp_callback(info)
+            except Exception:
+                _LOGGER.exception("Failed to callback info: %s", info)
                 continue
 
-            self._description_cache[location] = result
+        if key in self.seen:
+            return
+        self.seen.add(key)
 
-    def _process_entry(self, entry):
+        for domain in domains:
+            _LOGGER.debug("Discovered %s at %s", domain, entry.location)
+            flow: SSDPFlow = {
+                "domain": domain,
+                "context": {"source": config_entries.SOURCE_SSDP},
+                "data": info,
+            }
+            self.flow_dispatcher.create(flow)
+
+    def _info_domains(self, entry, info_req):
         """Process a single entry."""
 
         info = {"st": entry.st}
@@ -164,13 +207,7 @@ class Scanner:
             if key in entry.values:
                 info[key] = entry.values[key]
 
-        if entry.location:
-            # Multiple entries usually share same location. Make sure
-            # we fetch it only once.
-            info_req = self._description_cache.get(entry.location)
-            if info_req is None:
-                return (None, [])
-
+        if info_req:
             info.update(info_req)
 
         domains = set()
@@ -179,33 +216,7 @@ class Scanner:
                 if all(info.get(k) == v for (k, v) in matcher.items()):
                     domains.add(domain)
 
-        if domains:
-            return (info_from_entry(entry, info), domains)
-
-        return (None, [])
-
-    async def _fetch_description(self, xml_location):
-        """Fetch an XML description."""
-        session = self.hass.helpers.aiohttp_client.async_get_clientsession()
-        try:
-            for _ in range(2):
-                resp = await session.get(xml_location, timeout=5)
-                xml = await resp.text(errors="replace")
-                # Samsung Smart TV sometimes returns an empty document the
-                # first time. Retry once.
-                if xml:
-                    break
-        except (aiohttp.ClientError, asyncio.TimeoutError) as err:
-            _LOGGER.debug("Error fetching %s: %s", xml_location, err)
-            return {}
-
-        try:
-            tree = ElementTree.fromstring(xml)
-        except ElementTree.ParseError as err:
-            _LOGGER.debug("Error parsing %s: %s", xml_location, err)
-            return {}
-
-        return util.etree_to_dict(tree).get("root", {}).get("device", {})
+        return info_from_entry(entry, info), domains
 
 
 def info_from_entry(entry, device_info):
