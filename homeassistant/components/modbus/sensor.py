@@ -5,9 +5,7 @@ import logging
 import struct
 from typing import Any
 
-import voluptuous as vol
-
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorEntity
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     CONF_COUNT,
     CONF_NAME,
@@ -17,7 +15,6 @@ from homeassistant.const import (
     CONF_UNIT_OF_MEASUREMENT,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -37,12 +34,6 @@ from .modbus import ModbusHub
 
 PARALLEL_UPDATES = 1
 _LOGGER = logging.getLogger(__name__)
-
-
-PLATFORM_SCHEMA = vol.All(
-    # Deprecated in Home Assistant 2021.7
-    cv.deprecated(SENSOR_DOMAIN),
-)
 
 
 async def async_setup_platform(
