@@ -1722,6 +1722,9 @@ pysesame2==1.0.1
 # homeassistant.components.goalfeed
 pysher==1.0.1
 
+# homeassistant.components.sia
+pysiaalarm==3.0.0b12
+
 # homeassistant.components.signal_messenger
 pysignalclirestapi==0.3.4
 
