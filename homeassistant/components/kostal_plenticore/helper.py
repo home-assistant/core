@@ -146,7 +146,16 @@ class PlenticoreUpdateCoordinator(DataUpdateCoordinator):
 
     def stop_fetch_data(self, module_id: str, data_id: str) -> None:
         """Stop fetching the given data (module-id and data-id)."""
-        self._fetch[module_id].remove(data_id)
+        data_ids = self._fetch[module_id]
+        data_ids.remove(data_id)
+        if not data_ids:
+            del self._fetch[module_id]
+
+    def _get_fetch_ids(self) -> dict[str, list[str]]:
+        # process id's might be started multiple times -> make it unique
+        return {
+            module_id: list(set(self._fetch[module_id])) for module_id in self._fetch
+        }
 
 
 class ProcessDataUpdateCoordinator(PlenticoreUpdateCoordinator):
@@ -155,17 +164,13 @@ class ProcessDataUpdateCoordinator(PlenticoreUpdateCoordinator):
     async def _async_update_data(self) -> dict[str, dict[str, str]]:
         client = self._plenticore.client
 
-        if not self._fetch or client is None:
+        fetch_ids = self._get_fetch_ids()
+        if not fetch_ids or client is None:
             return {}
 
-        # process id's might be started multiple times -> make it unique
-        unique_fetch = {
-            module_id: list(set(self._fetch[module_id])) for module_id in self._fetch
-        }
+        _LOGGER.debug("Fetching %s for %s", self.name, fetch_ids)
 
-        _LOGGER.debug("Fetching %s for %s", self.name, unique_fetch)
-
-        fetched_data = await client.get_process_data_values(unique_fetch)
+        fetched_data = await client.get_process_data_values(fetch_ids)
         return {
             module_id: {
                 process_data.id: process_data.value
@@ -181,12 +186,13 @@ class SettingDataUpdateCoordinator(PlenticoreUpdateCoordinator):
     async def _async_update_data(self) -> dict[str, dict[str, str]]:
         client = self._plenticore.client
 
-        if not self._fetch or client is None:
+        fetch_ids = self._get_fetch_ids()
+        if not fetch_ids or client is None:
             return {}
 
-        _LOGGER.debug("Fetching %s for %s", self.name, self._fetch)
+        _LOGGER.debug("Fetching %s for %s", self.name, fetch_ids)
 
-        fetched_data = await client.get_setting_values(self._fetch)
+        fetched_data = await client.get_setting_values(fetch_ids)
 
         return fetched_data
 
