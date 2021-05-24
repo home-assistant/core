@@ -27,6 +27,7 @@ from .device_trigger import async_fire_triggers, async_setup_triggers_for_entry
 
 DEFAULT_SCAN_INTERVAL = datetime.timedelta(seconds=60)
 RETRY_INTERVAL = 60  # seconds
+MAX_POLL_FAILURES_TO_DECLARE_UNAVAILABLE = 3
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -124,6 +125,7 @@ class HKDevice:
         # Never allow concurrent polling of the same accessory or bridge
         self._polling_lock = asyncio.Lock()
         self._polling_lock_warned = False
+        self._poll_failures = 0
 
         self.watchable_characteristics = []
 
@@ -428,10 +430,14 @@ class HKDevice:
                 self.async_set_available_state(False)
                 return
             except (AccessoryDisconnectedError, EncryptionError):
-                # Temporary connection failure. Device is still available but our
-                # connection was dropped.
+                # Temporary connection failure. Device may still available but our
+                # connection was dropped or we are reconnecting
+                self._poll_failures += 1
+                if self._poll_failures >= MAX_POLL_FAILURES_TO_DECLARE_UNAVAILABLE:
+                    self.async_set_available_state(False)
                 return
 
+            self._poll_failures = 0
             self.process_new_events(new_values_dict)
 
             _LOGGER.debug("Finished HomeKit controller update: %s", self.unique_id)
