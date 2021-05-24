@@ -195,11 +195,6 @@ class ModbusHub:
             },
         }
 
-    @property
-    def name(self):  # pragma: no cover
-        """Return the name of this hub."""
-        return self._config_name
-
     def _log_error(self, exception_error: ModbusException, error_state=True):
         log_text = "Pymodbus: " + str(exception_error)
         if self._in_error:
