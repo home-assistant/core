@@ -82,7 +82,7 @@ async def async_setup_entry(
 class DuneHDPlayerEntity(MediaPlayerEntity):
     """Implementation of the Dune HD player."""
 
-    def __init__(self, player: DuneHDPlayer, name: str, unique_id: str):
+    def __init__(self, player: DuneHDPlayer, name: str, unique_id: str) -> None:
         """Initialize entity to control Dune HD."""
         self._player = player
         self._name = name
