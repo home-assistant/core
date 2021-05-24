@@ -22,10 +22,11 @@ from homeassistant.const import (
     SERVICE_HOMEASSISTANT_RESTART,
     SERVICE_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import DOMAIN as HASS_DOMAIN, Config, HomeAssistant, callback
+from homeassistant.core import DOMAIN as HASS_DOMAIN, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, recorder
 from homeassistant.helpers.device_registry import DeviceRegistry, async_get_registry
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.loader import bind_hass
 from homeassistant.util.dt import utcnow
@@ -338,7 +339,7 @@ def get_supervisor_ip():
     return os.environ["SUPERVISOR"].partition(":")[0]
 
 
-async def async_setup(hass: HomeAssistant, config: Config) -> bool:  # noqa: C901
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa: C901
     """Set up the Hass.io component."""
     # Check local setup
     for env in ("HASSIO", "HASSIO_TOKEN"):
