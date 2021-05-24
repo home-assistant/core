@@ -160,7 +160,7 @@ class DuneHDPlayerEntity(MediaPlayerEntity):
         """Volume down media player."""
         self._state = self._player.volume_down()
 
-    def mute_volume(self, mute: Any) -> None:
+    def mute_volume(self, mute: bool) -> None:
         """Mute/unmute player volume."""
         self._state = self._player.mute(mute)
 
