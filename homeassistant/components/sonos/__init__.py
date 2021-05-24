@@ -34,6 +34,7 @@ from .const import (
     PLATFORMS,
     SONOS_GROUP_UPDATE,
     SONOS_SEEN,
+    UPNP_ST,
 )
 from .favorites import SonosFavorites
 from .speaker import SonosSpeaker
@@ -199,14 +200,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.debug("Adding discovery job")
         if hosts:
             await hass.async_add_executor_job(_manual_hosts)
-        else:
-            entry.async_on_unload(
-                ssdp.async_register_callback(
-                    hass,
-                    _async_discovered_player,
-                    {ssdp.ATTR_SSDP_ST: "urn:schemas-upnp-org:device:ZonePlayer:1"},
-                )
+            return
+
+        entry.async_on_unload(
+            ssdp.async_register_callback(
+                hass, _async_discovered_player, {ssdp.ATTR_SSDP_ST: UPNP_ST}
             )
+        )
 
     hass.async_create_task(setup_platforms_and_discovery())
 
