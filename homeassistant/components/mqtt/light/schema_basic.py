@@ -878,12 +878,12 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
             should_update |= set_optimistic(ATTR_RGBWW_COLOR, rgbww, COLOR_MODE_RGBWW)
 
         if (
-            (xy := kwargs.get(ATTR_XY_COLOR))  # pylint: disable=invalid-name
+            (xy_color := kwargs.get(ATTR_XY_COLOR))
             and self._topic[CONF_XY_COMMAND_TOPIC] is not None
             and not self._legacy_mode
         ):
-            publish(CONF_XY_COMMAND_TOPIC, f"{xy[0]},{xy[1]}")
-            should_update |= set_optimistic(ATTR_XY_COLOR, xy, COLOR_MODE_XY)
+            publish(CONF_XY_COMMAND_TOPIC, f"{xy_color[0]},{xy_color[1]}")
+            should_update |= set_optimistic(ATTR_XY_COLOR, xy_color, COLOR_MODE_XY)
 
         if (
             ATTR_BRIGHTNESS in kwargs
