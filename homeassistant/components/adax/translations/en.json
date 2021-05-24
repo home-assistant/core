@@ -13,7 +13,7 @@
                 "data": {
                     "host": "Host",
                     "password": "Password",
-                    "username": "Username"
+                    "account_id": "Account ID"
                 }
             }
         }
