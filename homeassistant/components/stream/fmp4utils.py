@@ -1,8 +1,13 @@
 """Utilities to help convert mp4s to fmp4s."""
+from __future__ import annotations
+
+from collections.abc import Generator
 import io
 
 
-def find_box(segment: io.BytesIO, target_type: bytes, box_start: int = 0) -> int:
+def find_box(
+    segment: io.BytesIO, target_type: bytes, box_start: int = 0
+) -> Generator[int, None, None]:
     """Find location of first box (or sub_box if box_start provided) of given type."""
     if box_start == 0:
         box_end = segment.seek(0, io.SEEK_END)

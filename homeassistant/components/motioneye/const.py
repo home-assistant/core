@@ -3,7 +3,6 @@ from datetime import timedelta
 
 DOMAIN = "motioneye"
 
-CONF_CONFIG_ENTRY = "config_entry"
 CONF_CLIENT = "client"
 CONF_COORDINATOR = "coordinator"
 CONF_ADMIN_PASSWORD = "admin_password"

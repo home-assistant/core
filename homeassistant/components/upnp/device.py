@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Mapping
 from ipaddress import IPv4Address
+from typing import Any
 from urllib.parse import urlparse
 
 from async_upnp_client import UpnpFactory
@@ -162,7 +163,7 @@ class Device:
         """Get string representation."""
         return f"IGD Device: {self.name}/{self.udn}::{self.device_type}"
 
-    async def async_get_traffic_data(self) -> Mapping[str, any]:
+    async def async_get_traffic_data(self) -> Mapping[str, Any]:
         """
         Get all traffic data in one go.
 

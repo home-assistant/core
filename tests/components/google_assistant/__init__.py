@@ -380,4 +380,26 @@ DEMO_DEVICES = [
         "type": "action.devices.types.SECURITYSYSTEM",
         "willReportState": False,
     },
+    {
+        "id": "light.living_room_rgbww_lights",
+        "name": {"name": "Living Room RGBWW Lights"},
+        "traits": [
+            "action.devices.traits.OnOff",
+            "action.devices.traits.Brightness",
+            "action.devices.traits.ColorSetting",
+        ],
+        "type": "action.devices.types.LIGHT",
+        "willReportState": False,
+    },
+    {
+        "id": "light.office_rgbw_lights",
+        "name": {"name": "Office RGBW Lights"},
+        "traits": [
+            "action.devices.traits.OnOff",
+            "action.devices.traits.Brightness",
+            "action.devices.traits.ColorSetting",
+        ],
+        "type": "action.devices.types.LIGHT",
+        "willReportState": False,
+    },
 ]

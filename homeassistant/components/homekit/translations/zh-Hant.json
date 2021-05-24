@@ -4,29 +4,13 @@
             "port_name_in_use": "\u4f7f\u7528\u76f8\u540c\u540d\u7a31\u6216\u901a\u8a0a\u57e0\u7684\u914d\u4ef6\u6216 Bridge \u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210\u3002"
         },
         "step": {
-            "accessory_mode": {
-                "data": {
-                    "entity_id": "\u5be6\u9ad4"
-                },
-                "description": "\u9078\u64c7\u8981\u5305\u542b\u7684\u5be6\u9ad4\u3002\u65bc\u914d\u4ef6\u6a21\u5f0f\u4e0b\uff0c\u50c5\u80fd\u5305\u542b\u55ae\u4e00\u5be6\u9ad4\u3002",
-                "title": "\u9078\u64c7\u8981\u5305\u542b\u7684\u5be6\u9ad4"
-            },
-            "bridge_mode": {
-                "data": {
-                    "include_domains": "\u5305\u542b\u7db2\u57df"
-                },
-                "description": "\u9078\u64c7\u8981\u5305\u542b\u7684\u7db2\u57df\u3002\u6240\u6709\u7db2\u57df\u5167\u652f\u63f4\u7684\u5be6\u9ad4\u90fd\u6703\u5305\u542b\u3002",
-                "title": "\u9078\u64c7\u8981\u5305\u542b\u7684\u7db2\u57df"
-            },
             "pairing": {
                 "description": "\u6b32\u5b8c\u6210\u914d\u5c0d\u3001\u8acb\u8ddf\u96a8\u300c\u901a\u77e5\u300d\u5167\u7684\u300cHomekit \u914d\u5c0d\u300d\u6307\u5f15\u3002",
                 "title": "\u914d\u5c0d HomeKit"
             },
             "user": {
                 "data": {
-                    "auto_start": "\u81ea\u52d5\u555f\u52d5\uff08\u5047\u5982\u4f7f\u7528 Z-Wave \u6216\u5176\u4ed6\u5ef6\u9072\u555f\u52d5\u7cfb\u7d71\u6642\u3001\u8acb\u95dc\u9589\uff09",
-                    "include_domains": "\u5305\u542b\u7db2\u57df",
-                    "mode": "\u6a21\u5f0f"
+                    "include_domains": "\u5305\u542b\u7db2\u57df"
                 },
                 "description": "\u9078\u64c7\u6240\u8981\u5305\u542b\u7684\u7db2\u57df\uff0c\u6240\u6709\u8a72\u7db2\u57df\u5167\u652f\u63f4\u7684\u5be6\u9ad4\u90fd\u5c07\u6703\u88ab\u5305\u542b\u3002 \u5176\u4ed6 Homekit \u5a92\u9ad4\u64ad\u653e\u5668\u8207\u651d\u5f71\u6a5f\u5be6\u4f8b\uff0c\u5c07\u6703\u4ee5\u914d\u4ef6\u6a21\u5f0f\u65b0\u589e\u3002",
                 "title": "\u9078\u64c7\u8981\u5305\u542b\u7684\u7db2\u57df"
@@ -37,8 +21,7 @@
         "step": {
             "advanced": {
                 "data": {
-                    "auto_start": "\u81ea\u52d5\u555f\u52d5\uff08\u5047\u5982\u624b\u52d5\u4f7f\u7528  homekit.start \u670d\u52d9\u6642\u3001\u8acb\u95dc\u9589\uff09",
-                    "safe_mode": "\u5b89\u5168\u6a21\u5f0f\uff08\u50c5\u65bc\u914d\u5c0d\u5931\u6557\u6642\u4f7f\u7528\uff09"
+                    "auto_start": "\u81ea\u52d5\u555f\u52d5\uff08\u5047\u5982\u624b\u52d5\u4f7f\u7528  homekit.start \u670d\u52d9\u6642\u3001\u8acb\u95dc\u9589\uff09"
                 },
                 "description": "\u50c5\u65bc Homekit \u7121\u6cd5\u6b63\u5e38\u4f7f\u7528\u6642\uff0c\u8abf\u6574\u6b64\u4e9b\u8a2d\u5b9a\u3002",
                 "title": "\u9032\u968e\u8a2d\u5b9a"

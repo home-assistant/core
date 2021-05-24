@@ -31,6 +31,7 @@ from .const import (
     IS_WIRELESS,
     MIKROTIK_SERVICES,
     NAME,
+    PLATFORMS,
     WIRELESS,
 )
 from .errors import CannotConnect, LoginError
@@ -385,11 +386,7 @@ class MikrotikHub:
         await self.hass.async_add_executor_job(self._mk_data.get_hub_details)
         await self.hass.async_add_executor_job(self._mk_data.update)
 
-        self.hass.async_create_task(
-            self.hass.config_entries.async_forward_entry_setup(
-                self.config_entry, "device_tracker"
-            )
-        )
+        self.hass.config_entries.async_setup_platforms(self.config_entry, PLATFORMS)
         return True
 
 

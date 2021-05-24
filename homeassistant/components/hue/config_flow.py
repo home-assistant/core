@@ -14,7 +14,7 @@ from homeassistant import config_entries, core
 from homeassistant.components import ssdp
 from homeassistant.const import CONF_HOST, CONF_USERNAME
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResultDict
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client
 
 from .bridge import authenticate_bridge
@@ -37,7 +37,6 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a Hue config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     @staticmethod
     @callback
@@ -118,7 +117,7 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_manual(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResultDict:
+    ) -> FlowResult:
         """Handle manual bridge setup."""
         if user_input is None:
             return self.async_show_form(
@@ -126,12 +125,7 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 data_schema=vol.Schema({vol.Required(CONF_HOST): str}),
             )
 
-        if any(
-            user_input["host"] == entry.data.get("host")
-            for entry in self._async_current_entries()
-        ):
-            return self.async_abort(reason="already_configured")
-
+        self._async_abort_entries_match({"host": user_input["host"]})
         self.bridge = self._async_get_bridge(user_input[CONF_HOST])
         return await self.async_step_link()
 
@@ -234,11 +228,7 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         This flow is also triggered by `async_step_discovery`.
         """
         # Check if host exists, abort if so.
-        if any(
-            import_info["host"] == entry.data.get("host")
-            for entry in self._async_current_entries()
-        ):
-            return self.async_abort(reason="already_configured")
+        self._async_abort_entries_match({"host": import_info["host"]})
 
         self.bridge = self._async_get_bridge(import_info["host"])
         return await self.async_step_link()
@@ -253,7 +243,7 @@ class HueOptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResultDict:
+    ) -> FlowResult:
         """Manage Hue options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)

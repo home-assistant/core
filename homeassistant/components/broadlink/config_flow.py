@@ -27,7 +27,6 @@ _LOGGER = logging.getLogger(__name__)
 class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a Broadlink config flow."""
 
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
     VERSION = 1
 
     def __init__(self):
@@ -299,11 +298,7 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, import_info):
         """Import a device."""
-        if any(
-            import_info[CONF_HOST] == entry.data[CONF_HOST]
-            for entry in self._async_current_entries()
-        ):
-            return self.async_abort(reason="already_configured")
+        self._async_abort_entries_match({CONF_HOST: import_info[CONF_HOST]})
         return await self.async_step_user(import_info)
 
     async def async_step_reauth(self, data):

@@ -6,7 +6,7 @@ import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
     DOMAIN,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     DeviceScanner,
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD
@@ -14,7 +14,7 @@ import homeassistant.helpers.config_validation as cv
 
 DEFAULT_HOST = "192.168.178.1"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
@@ -33,7 +33,7 @@ def get_scanner(hass, config):
 class ArrisDeviceScanner(DeviceScanner):
     """This class queries a Arris TG2492LG router for connected devices."""
 
-    def __init__(self, connect_box: ConnectBox):
+    def __init__(self, connect_box: ConnectBox) -> None:
         """Initialize the scanner."""
         self.connect_box = connect_box
         self.last_results: list[Device] = []

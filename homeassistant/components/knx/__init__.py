@@ -403,7 +403,7 @@ class KNXModule:
         address_filters = list(
             map(AddressFilter, self.config[DOMAIN][CONF_KNX_EVENT_FILTER])
         )
-        return self.xknx.telegram_queue.register_telegram_received_cb(  # type: ignore[no-any-return]
+        return self.xknx.telegram_queue.register_telegram_received_cb(
             self.telegram_received_cb,
             address_filters=address_filters,
             group_addresses=[],

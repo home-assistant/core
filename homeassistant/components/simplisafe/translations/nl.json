@@ -12,7 +12,7 @@
         },
         "step": {
             "mfa": {
-                "description": "Controleer uw e-mail voor een link van SimpliSafe. Nadat u de link hebt geverifieerd, gaat u hier terug om de installatie van de integratie te voltooien.",
+                "description": "Controleer uw e-mail voor een link van SimpliSafe. Nadat u de link hebt geverifieerd, kom hier terug om de installatie van de integratie te voltooien.",
                 "title": "SimpliSafe Multi-Factor Authenticatie"
             },
             "reauth_confirm": {

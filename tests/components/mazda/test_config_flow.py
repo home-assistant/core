@@ -199,7 +199,10 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": "reauth", "entry_id": mock_config.entry_id},
+            context={
+                "source": config_entries.SOURCE_REAUTH,
+                "entry_id": mock_config.entry_id,
+            },
             data=FIXTURE_USER_INPUT,
         )
 
@@ -239,7 +242,10 @@ async def test_reauth_authorization_error(hass: HomeAssistant) -> None:
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": "reauth", "entry_id": mock_config.entry_id},
+            context={
+                "source": config_entries.SOURCE_REAUTH,
+                "entry_id": mock_config.entry_id,
+            },
             data=FIXTURE_USER_INPUT,
         )
 
@@ -275,7 +281,10 @@ async def test_reauth_account_locked(hass: HomeAssistant) -> None:
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": "reauth", "entry_id": mock_config.entry_id},
+            context={
+                "source": config_entries.SOURCE_REAUTH,
+                "entry_id": mock_config.entry_id,
+            },
             data=FIXTURE_USER_INPUT,
         )
 
@@ -311,7 +320,10 @@ async def test_reauth_connection_error(hass: HomeAssistant) -> None:
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": "reauth", "entry_id": mock_config.entry_id},
+            context={
+                "source": config_entries.SOURCE_REAUTH,
+                "entry_id": mock_config.entry_id,
+            },
             data=FIXTURE_USER_INPUT,
         )
 
@@ -347,7 +359,10 @@ async def test_reauth_unknown_error(hass: HomeAssistant) -> None:
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": "reauth", "entry_id": mock_config.entry_id},
+            context={
+                "source": config_entries.SOURCE_REAUTH,
+                "entry_id": mock_config.entry_id,
+            },
             data=FIXTURE_USER_INPUT,
         )
 
@@ -383,7 +398,10 @@ async def test_reauth_user_has_new_email_address(hass: HomeAssistant) -> None:
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": "reauth", "entry_id": mock_config.entry_id},
+            context={
+                "source": config_entries.SOURCE_REAUTH,
+                "entry_id": mock_config.entry_id,
+            },
             data=FIXTURE_USER_INPUT,
         )
 

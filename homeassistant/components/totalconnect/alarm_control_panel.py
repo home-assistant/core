@@ -42,6 +42,7 @@ class TotalConnectAlarm(alarm.AlarmControlPanelEntity):
         """Initialize the TotalConnect status."""
         self._name = name
         self._location_id = location_id
+        self._unique_id = str(location_id)
         self._client = client
         self._state = None
         self._extra_state_attributes = {}
@@ -50,6 +51,11 @@ class TotalConnectAlarm(alarm.AlarmControlPanelEntity):
     def name(self):
         """Return the name of the device."""
         return self._name
+
+    @property
+    def unique_id(self):
+        """Return the unique id."""
+        return self._unique_id
 
     @property
     def state(self):
@@ -83,10 +89,10 @@ class TotalConnectAlarm(alarm.AlarmControlPanelEntity):
 
         if self._client.locations[self._location_id].is_disarmed():
             state = STATE_ALARM_DISARMED
-        elif self._client.locations[self._location_id].is_armed_home():
-            state = STATE_ALARM_ARMED_HOME
         elif self._client.locations[self._location_id].is_armed_night():
             state = STATE_ALARM_ARMED_NIGHT
+        elif self._client.locations[self._location_id].is_armed_home():
+            state = STATE_ALARM_ARMED_HOME
         elif self._client.locations[self._location_id].is_armed_away():
             state = STATE_ALARM_ARMED_AWAY
         elif self._client.locations[self._location_id].is_armed_custom_bypass():

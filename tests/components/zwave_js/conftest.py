@@ -30,7 +30,12 @@ def mock_addon_info(addon_info_side_effect):
         "homeassistant.components.zwave_js.addon.async_get_addon_info",
         side_effect=addon_info_side_effect,
     ) as addon_info:
-        addon_info.return_value = {}
+        addon_info.return_value = {
+            "options": {},
+            "state": None,
+            "update_available": False,
+            "version": None,
+        }
         yield addon_info
 
 
@@ -52,7 +57,6 @@ def mock_addon_installed(addon_info):
 @pytest.fixture(name="addon_options")
 def mock_addon_options(addon_info):
     """Mock add-on options."""
-    addon_info.return_value["options"] = {}
     return addon_info.return_value["options"]
 
 
@@ -240,6 +244,12 @@ def climate_heatit_z_trm3_state_fixture():
     return json.loads(load_fixture("zwave_js/climate_heatit_z_trm3_state.json"))
 
 
+@pytest.fixture(name="climate_heatit_z_trm2fx_state", scope="session")
+def climate_heatit_z_trm2fx_state_fixture():
+    """Load the climate HEATIT Z-TRM2fx thermostat node state fixture data."""
+    return json.loads(load_fixture("zwave_js/climate_heatit_z_trm2fx_state.json"))
+
+
 @pytest.fixture(name="nortek_thermostat_state", scope="session")
 def nortek_thermostat_state_fixture():
     """Load the nortek thermostat node state fixture data."""
@@ -274,6 +284,12 @@ def motorized_barrier_cover_state_fixture():
 def iblinds_v2_state_fixture():
     """Load the iBlinds v2 node state fixture data."""
     return json.loads(load_fixture("zwave_js/cover_iblinds_v2_state.json"))
+
+
+@pytest.fixture(name="qubino_shutter_state", scope="session")
+def qubino_shutter_state_fixture():
+    """Load the Qubino Shutter node state fixture data."""
+    return json.loads(load_fixture("zwave_js/cover_qubino_shutter_state.json"))
 
 
 @pytest.fixture(name="aeon_smart_switch_6_state", scope="session")
@@ -335,6 +351,18 @@ def climate_radio_thermostat_ct100_mode_and_setpoint_on_different_endpoints_stat
             "zwave_js/climate_radio_thermostat_ct100_mode_and_setpoint_on_different_endpoints_state.json"
         )
     )
+
+
+@pytest.fixture(name="vision_security_zl7432_state", scope="session")
+def vision_security_zl7432_state_fixture():
+    """Load the vision security zl7432 switch node state fixture data."""
+    return json.loads(load_fixture("zwave_js/vision_security_zl7432_state.json"))
+
+
+@pytest.fixture(name="zen_31_state", scope="session")
+def zem_31_state_fixture():
+    """Load the zen_31 node state fixture data."""
+    return json.loads(load_fixture("zwave_js/zen_31_state.json"))
 
 
 @pytest.fixture(name="client")
@@ -472,6 +500,14 @@ def climate_heatit_z_trm3_fixture(client, climate_heatit_z_trm3_state):
     return node
 
 
+@pytest.fixture(name="climate_heatit_z_trm2fx")
+def climate_heatit_z_trm2fx_fixture(client, climate_heatit_z_trm2fx_state):
+    """Mock a climate radio HEATIT Z-TRM2fx node."""
+    node = Node(client, copy.deepcopy(climate_heatit_z_trm2fx_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
 @pytest.fixture(name="nortek_thermostat")
 def nortek_thermostat_fixture(client, nortek_thermostat_state):
     """Mock a nortek thermostat node."""
@@ -577,6 +613,14 @@ def iblinds_cover_fixture(client, iblinds_v2_state):
     return node
 
 
+@pytest.fixture(name="qubino_shutter")
+def qubino_shutter_cover_fixture(client, qubino_shutter_state):
+    """Mock a Qubino flush shutter node."""
+    node = Node(client, copy.deepcopy(qubino_shutter_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
 @pytest.fixture(name="aeon_smart_switch_6")
 def aeon_smart_switch_6_fixture(client, aeon_smart_switch_6_state):
     """Mock an AEON Labs (ZW096) Smart Switch 6 node."""
@@ -635,5 +679,21 @@ def climate_radio_thermostat_ct100_mode_and_setpoint_on_different_endpoints_fixt
             climate_radio_thermostat_ct100_mode_and_setpoint_on_different_endpoints_state
         ),
     )
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="vision_security_zl7432")
+def vision_security_zl7432_fixture(client, vision_security_zl7432_state):
+    """Mock a vision security zl7432 node."""
+    node = Node(client, copy.deepcopy(vision_security_zl7432_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="zen_31")
+def zen_31_fixture(client, zen_31_state):
+    """Mock a bulb 6 multi-color node."""
+    node = Node(client, copy.deepcopy(zen_31_state))
     client.driver.controller.nodes[node.node_id] = node
     return node

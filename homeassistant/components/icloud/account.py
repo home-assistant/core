@@ -4,6 +4,7 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 import operator
+from typing import Any
 
 from pyicloud import PyiCloudService
 from pyicloud.exceptions import (
@@ -84,7 +85,7 @@ class IcloudAccount:
         max_interval: int,
         gps_accuracy_threshold: int,
         config_entry: ConfigEntry,
-    ):
+    ) -> None:
         """Initialize an iCloud account."""
         self.hass = hass
         self._username = username
@@ -355,7 +356,7 @@ class IcloudAccount:
         return self._fetch_interval
 
     @property
-    def devices(self) -> dict[str, any]:
+    def devices(self) -> dict[str, Any]:
         """Return the account devices."""
         return self._devices
 
@@ -373,7 +374,7 @@ class IcloudAccount:
 class IcloudDevice:
     """Representation of a iCloud device."""
 
-    def __init__(self, account: IcloudAccount, device: AppleDevice, status):
+    def __init__(self, account: IcloudAccount, device: AppleDevice, status) -> None:
         """Initialize the iCloud device."""
         self._account = account
 
@@ -496,11 +497,11 @@ class IcloudDevice:
         return self._battery_status
 
     @property
-    def location(self) -> dict[str, any]:
+    def location(self) -> dict[str, Any]:
         """Return the Apple device location."""
         return self._location
 
     @property
-    def extra_state_attributes(self) -> dict[str, any]:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the attributes."""
         return self._attrs

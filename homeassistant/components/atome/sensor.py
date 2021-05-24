@@ -77,7 +77,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class AtomeData:
     """Stores data retrieved from Neurio sensor."""
 
-    def __init__(self, client: AtomeClient):
+    def __init__(self, client: AtomeClient) -> None:
         """Initialize the data."""
         self.atome_client = client
         self._live_power = None

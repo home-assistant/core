@@ -183,7 +183,6 @@ class OpenAlprLocalEntity(ImageProcessingAlprEntity):
 
         alpr = await asyncio.create_subprocess_exec(
             *self._cmd,
-            loop=self.hass.loop,
             stdin=asyncio.subprocess.PIPE,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.DEVNULL,

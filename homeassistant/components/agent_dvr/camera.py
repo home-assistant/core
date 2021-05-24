@@ -59,7 +59,7 @@ async def async_setup_entry(
 
     async_add_entities(cameras)
 
-    platform = entity_platform.current_platform.get()
+    platform = entity_platform.async_get_current_platform()
     for service, method in CAMERA_SERVICES.items():
         platform.async_register_entity_service(service, {}, method)
 

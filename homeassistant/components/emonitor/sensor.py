@@ -5,6 +5,7 @@ from aioemonitor.monitor import EmonitorChannel
 from homeassistant.components.sensor import DEVICE_CLASS_POWER, SensorEntity
 from homeassistant.const import POWER_WATT
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -36,7 +37,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class EmonitorPowerSensor(CoordinatorEntity, SensorEntity):
     """Representation of an Emonitor power sensor entity."""
 
-    def __init__(self, coordinator: DataUpdateCoordinator, channel_number: int):
+    def __init__(self, coordinator: DataUpdateCoordinator, channel_number: int) -> None:
         """Initialize the channel sensor."""
         self.channel_number = channel_number
         super().__init__(coordinator)
@@ -98,7 +99,7 @@ class EmonitorPowerSensor(CoordinatorEntity, SensorEntity):
         return self.coordinator.data.network.mac_address
 
     @property
-    def device_info(self) -> dict:
+    def device_info(self) -> DeviceInfo:
         """Return info about the emonitor device."""
         return {
             "name": name_short_mac(self.mac_address[-6:]),

@@ -9,7 +9,7 @@
             "invalid_auth": "\u9a57\u8b49\u78bc\u7121\u6548",
             "invalid_zone": "\u5340\u57df\u7121\u6548"
         },
-        "flow_title": "Cloudflare\uff1a{name}",
+        "flow_title": "{name}",
         "step": {
             "records": {
                 "data": {

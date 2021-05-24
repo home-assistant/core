@@ -17,7 +17,7 @@ class ConfigEntrySomfyApi(somfy_api.SomfyApi):
         hass: core.HomeAssistant,
         config_entry: config_entries.ConfigEntry,
         implementation: config_entry_oauth2_flow.AbstractOAuth2Implementation,
-    ):
+    ) -> None:
         """Initialize the Config Entry Somfy API."""
         self.hass = hass
         self.config_entry = config_entry
