@@ -212,3 +212,59 @@ async def test_motion_light(hass):
     for _ in range(25):
         await asyncio.sleep(0)
     assert len(turn_on_calls) == 4
+
+
+async def test_blueprint_inputs(hass):
+    with patch_blueprint(
+        "motion_light.yaml",
+        BUILTIN_BLUEPRINT_FOLDER / "motion_light.yaml",
+    ):
+        assert await async_setup_component(
+            hass,
+            "automation",
+            {
+                "automation": {
+                    "id": "test_motion_light",
+                    "use_blueprint": {
+                        "path": "motion_light.yaml",
+                        "input": {
+                            "light_target": {"entity_id": "light.kitchen"},
+                            "motion_entity": "binary_sensor.kitchen",
+                        },
+                    }
+                }
+            },
+        )
+
+    with patch_blueprint(
+        "notify_leaving_zone.yaml",
+        BUILTIN_BLUEPRINT_FOLDER / "notify_leaving_zone.yaml",
+    ):
+        assert await async_setup_component(
+            hass,
+            "automation",
+            {
+                "automation": {
+                    "id": "test_leaving_zone",
+                    "use_blueprint": {
+                        "path": "notify_leaving_zone.yaml",
+                        "input": {
+                            "person_entity": "person.test_person",
+                            "zone_entity": "zone.school",
+                            "notify_device": "abcdefgh",
+                        },
+                    }
+                }
+            },
+        )
+
+    state = hass.states.async_get("automation.test_motion_light")
+    assert state
+    assert state.attributes["inputs"]["light_target"] == {"entity_id": "light.kitchen"}
+    assert state.attributes["inputs"]["motion_entity"] == "binary_sensor.kitchen"
+
+    state = hass.states.async_get("automation.test_leaving_zone")
+    assert state
+    assert state.attributes["inputs"]["person_entity"] == "person.test_person"
+    assert state.attributes["inputs"]["zone_entity"] == "zone.school"
+    assert state.attributes["inputs"]["notify_device"] == "abcdefgh"
