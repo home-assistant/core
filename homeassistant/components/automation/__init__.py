@@ -101,6 +101,7 @@ ATTR_LAST_TRIGGERED = "last_triggered"
 ATTR_SOURCE = "source"
 ATTR_VARIABLES = "variables"
 SERVICE_TRIGGER = "trigger"
+ATTR_INPUTS = "inputs"
 
 _LOGGER = logging.getLogger(__name__)
 AutomationActionType = Callable[[HomeAssistant, TemplateVarsType], Awaitable[None]]
@@ -321,6 +322,8 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         }
         if self.action_script.supports_max:
             attrs[ATTR_MAX] = self.action_script.max_runs
+        if self._blueprint_inputs:
+            attrs[ATTR_INPUTS] = self._blueprint_inputs['use_blueprint']['input']
         if self._id is not None:
             attrs[CONF_ID] = self._id
         return attrs
