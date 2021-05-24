@@ -30,6 +30,10 @@ from homeassistant.components.modbus.const import (
     CALL_TYPE_DISCRETE,
     CALL_TYPE_REGISTER_HOLDING,
     CALL_TYPE_REGISTER_INPUT,
+    CALL_TYPE_WRITE_COIL,
+    CALL_TYPE_WRITE_COILS,
+    CALL_TYPE_WRITE_REGISTER,
+    CALL_TYPE_WRITE_REGISTERS,
     CONF_BAUDRATE,
     CONF_BYTESIZE,
     CONF_INPUT_TYPE,
@@ -195,67 +199,76 @@ async def test_config_modbus(hass, caplog, do_config, mock_pymodbus):
     assert len(caplog.records) == 0
 
 
-async def test_pb_service_write(hass, caplog, mock_modbus):
-    """Run test for service write_register."""
+VALUE = "value"
+FUNC = "func"
+DATA = "data"
+SERVICE = "service"
 
-    VALUE = "value"
-    FUNC = "func"
-    DATA = "data"
-    SERVICE = "service"
 
-    # Pymodbus write single, response OK.
-    for entry in [
+@pytest.mark.parametrize(
+    "do_write",
+    [
         {
             DATA: ATTR_VALUE,
             VALUE: 15,
             SERVICE: SERVICE_WRITE_REGISTER,
-            FUNC: mock_modbus.write_register,
+            FUNC: CALL_TYPE_WRITE_REGISTER,
         },
         {
             DATA: ATTR_VALUE,
             VALUE: [1, 2, 3],
             SERVICE: SERVICE_WRITE_REGISTER,
-            FUNC: mock_modbus.write_registers,
+            FUNC: CALL_TYPE_WRITE_REGISTERS,
         },
         {
             DATA: ATTR_STATE,
             VALUE: False,
             SERVICE: SERVICE_WRITE_COIL,
-            FUNC: mock_modbus.write_coil,
+            FUNC: CALL_TYPE_WRITE_COIL,
         },
         {
             DATA: ATTR_STATE,
             VALUE: [True, False, True],
             SERVICE: SERVICE_WRITE_COIL,
-            FUNC: mock_modbus.write_coils,
+            FUNC: CALL_TYPE_WRITE_COILS,
         },
-    ]:
-        data = {
-            ATTR_HUB: TEST_MODBUS_NAME,
-            ATTR_UNIT: 17,
-            ATTR_ADDRESS: 16,
-            entry[DATA]: entry[VALUE],
-        }
-        await hass.services.async_call(DOMAIN, entry[SERVICE], data, blocking=True)
-        assert entry[FUNC].called
-        assert entry[FUNC].call_args[0] == (
-            data[ATTR_ADDRESS],
-            data[entry[DATA]],
-        )
-        mock_modbus.reset_mock()
+    ],
+)
+async def test_pb_service_write(hass, do_write, caplog, mock_modbus):
+    """Run test for service write_register."""
 
-        # Pymodbus write single, response error or exception
-        for return_value in [
-            ExceptionResponse(0x06),
-            IllegalFunctionRequest(0x06),
-            ModbusException("fail write_"),
-        ]:
-            caplog.set_level(logging.DEBUG)
-            entry[FUNC].return_value = return_value
-            await hass.services.async_call(DOMAIN, entry[SERVICE], data, blocking=True)
-            assert entry[FUNC].called
-            assert caplog.messages[-1].startswith("Pymodbus:")
-            mock_modbus.reset_mock()
+    func_name = {
+        CALL_TYPE_WRITE_COIL: mock_modbus.write_coil,
+        CALL_TYPE_WRITE_COILS: mock_modbus.write_coils,
+        CALL_TYPE_WRITE_REGISTER: mock_modbus.write_register,
+        CALL_TYPE_WRITE_REGISTERS: mock_modbus.write_registers,
+    }
+
+    data = {
+        ATTR_HUB: TEST_MODBUS_NAME,
+        ATTR_UNIT: 17,
+        ATTR_ADDRESS: 16,
+        do_write[DATA]: do_write[VALUE],
+    }
+    await hass.services.async_call(DOMAIN, do_write[SERVICE], data, blocking=True)
+    assert func_name[do_write[FUNC]].called
+    assert func_name[do_write[FUNC]].call_args[0] == (
+        data[ATTR_ADDRESS],
+        data[do_write[DATA]],
+    )
+    mock_modbus.reset_mock()
+
+    for return_value in [
+        ExceptionResponse(0x06),
+        IllegalFunctionRequest(0x06),
+        ModbusException("fail write_"),
+    ]:
+        caplog.set_level(logging.DEBUG)
+        func_name[do_write[FUNC]].return_value = return_value
+        await hass.services.async_call(DOMAIN, do_write[SERVICE], data, blocking=True)
+        assert func_name[do_write[FUNC]].called
+        assert caplog.messages[-1].startswith("Pymodbus:")
+        mock_modbus.reset_mock()
 
 
 async def _read_helper(hass, do_group, do_type, do_return, do_exception, mock_pymodbus):
