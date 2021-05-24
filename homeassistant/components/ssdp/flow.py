@@ -39,7 +39,7 @@ class FlowDispatcher:
     def create(self, flow: SSDPFlow) -> None:
         """Create and add or queue a flow."""
         if self.started:
-            self.hass.create_task(self._init_flow(flow))
+            self.hass.async_create_task(self._init_flow(flow))
         else:
             self.pending_flows.append(flow)
 

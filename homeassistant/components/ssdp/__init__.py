@@ -161,13 +161,12 @@ class Scanner:
                 )
             )
 
-        await asyncio.gather(
-            *[listener.async_start() for listener in self._ssdp_listeners]
-        )
-
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.async_stop)
         self.hass.bus.async_listen_once(
             EVENT_HOMEASSISTANT_STARTED, self.flow_dispatcher.async_start
+        )
+        await asyncio.gather(
+            *[listener.async_start() for listener in self._ssdp_listeners]
         )
         self._cancel_scan = async_track_time_interval(
             self.hass, self.async_scan, SCAN_INTERVAL

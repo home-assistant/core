@@ -4,6 +4,7 @@ from datetime import timedelta
 from unittest.mock import patch
 
 import aiohttp
+from async_upnp_client.search import SSDPListener
 import pytest
 
 from homeassistant import config_entries
@@ -15,28 +16,52 @@ import homeassistant.util.dt as dt_util
 from tests.common import async_fire_time_changed, mock_coro
 
 
-async def test_scan_match_st(hass, caplog):
-    """Test matching based on ST."""
-    scanner = ssdp.Scanner(hass, {"mock-domain": [{"st": "mock-st"}]})
+def _patched_ssdp_listener(info, *args, **kwargs):
+    listener = SSDPListener(*args, **kwargs)
 
-    async def _mock_async_scan(*args, async_callback=None, **kwargs):
-        await async_callback(
-            {
-                "st": "mock-st",
-                "location": None,
-                "usn": "mock-usn",
-                "server": "mock-server",
-                "ext": "",
-            }
+    async def _async_callback():
+        await listener.async_callback(info)
+
+    listener.async_start = _async_callback
+    return listener
+
+
+async def _async_run_mocked_scan(hass, mock_ssdp_response, mock_get_ssdp):
+    def _generate_fake_ssdp_listener(*args, **kwargs):
+        return _patched_ssdp_listener(
+            mock_ssdp_response,
+            *args,
+            **kwargs,
         )
 
     with patch(
-        "homeassistant.components.ssdp.async_search",
-        side_effect=_mock_async_scan,
+        "homeassistant.components.ssdp.async_get_ssdp",
+        return_value=mock_get_ssdp,
+    ), patch(
+        "homeassistant.components.ssdp.SSDPListener",
+        new=_generate_fake_ssdp_listener,
     ), patch.object(
         hass.config_entries.flow, "async_init", return_value=mock_coro()
     ) as mock_init:
-        await scanner.async_scan(None)
+        assert await async_setup_component(hass, ssdp.DOMAIN, {ssdp.DOMAIN: {}})
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+        await hass.async_block_till_done()
+
+    return mock_init
+
+
+async def test_scan_match_st(hass, caplog):
+    """Test matching based on ST."""
+    mock_ssdp_response = {
+        "st": "mock-st",
+        "location": None,
+        "usn": "mock-usn",
+        "server": "mock-server",
+        "ext": "",
+    }
+    mock_get_ssdp = {"mock-domain": [{"st": "mock-st"}]}
+    mock_init = await _async_run_mocked_scan(hass, mock_ssdp_response, mock_get_ssdp)
 
     assert len(mock_init.mock_calls) == 1
     assert mock_init.mock_calls[0][1][0] == "mock-domain"
@@ -68,25 +93,12 @@ async def test_scan_match_upnp_devicedesc(hass, aioclient_mock, key):
 </root>
     """,
     )
-    scanner = ssdp.Scanner(hass, {"mock-domain": [{key: "Paulus"}]})
-
-    async def _mock_async_scan(*args, async_callback=None, **kwargs):
-        for _ in range(5):
-            await async_callback(
-                {
-                    "st": "mock-st",
-                    "location": "http://1.1.1.1",
-                }
-            )
-
-    with patch(
-        "homeassistant.components.ssdp.async_search",
-        side_effect=_mock_async_scan,
-    ), patch.object(
-        hass.config_entries.flow, "async_init", return_value=mock_coro()
-    ) as mock_init:
-        await scanner.async_scan(None)
-
+    mock_get_ssdp = {"mock-domain": [{key: "Paulus"}]}
+    mock_ssdp_response = {
+        "st": "mock-st",
+        "location": "http://1.1.1.1",
+    }
+    mock_init = await _async_run_mocked_scan(hass, mock_ssdp_response, mock_get_ssdp)
     # If we get duplicate respones, ensure we only look it up once
     assert len(aioclient_mock.mock_calls) == 1
     assert len(mock_init.mock_calls) == 1
@@ -108,8 +120,11 @@ async def test_scan_not_all_present(hass, aioclient_mock):
 </root>
     """,
     )
-    scanner = ssdp.Scanner(
-        hass,
+    mock_ssdp_response = {
+        "st": "mock-st",
+        "location": "http://1.1.1.1",
+    }
+    mock_get_ssdp = (
         {
             "mock-domain": [
                 {
@@ -119,22 +134,7 @@ async def test_scan_not_all_present(hass, aioclient_mock):
             ]
         },
     )
-
-    async def _mock_async_scan(*args, async_callback=None, **kwargs):
-        await async_callback(
-            {
-                "st": "mock-st",
-                "location": "http://1.1.1.1",
-            }
-        )
-
-    with patch(
-        "homeassistant.components.ssdp.async_search",
-        side_effect=_mock_async_scan,
-    ), patch.object(
-        hass.config_entries.flow, "async_init", return_value=mock_coro()
-    ) as mock_init:
-        await scanner.async_scan(None)
+    mock_init = await _async_run_mocked_scan(hass, mock_ssdp_response, mock_get_ssdp)
 
     assert not mock_init.mock_calls
 
@@ -152,8 +152,11 @@ async def test_scan_not_all_match(hass, aioclient_mock):
 </root>
     """,
     )
-    scanner = ssdp.Scanner(
-        hass,
+    mock_ssdp_response = {
+        "st": "mock-st",
+        "location": "http://1.1.1.1",
+    }
+    mock_get_ssdp = (
         {
             "mock-domain": [
                 {
@@ -163,22 +166,7 @@ async def test_scan_not_all_match(hass, aioclient_mock):
             ]
         },
     )
-
-    async def _mock_async_scan(*args, async_callback=None, **kwargs):
-        await async_callback(
-            {
-                "st": "mock-st",
-                "location": "http://1.1.1.1",
-            }
-        )
-
-    with patch(
-        "homeassistant.components.ssdp.async_search",
-        side_effect=_mock_async_scan,
-    ), patch.object(
-        hass.config_entries.flow, "async_init", return_value=mock_coro()
-    ) as mock_init:
-        await scanner.async_scan(None)
+    mock_init = await _async_run_mocked_scan(hass, mock_ssdp_response, mock_get_ssdp)
 
     assert not mock_init.mock_calls
 
@@ -187,21 +175,23 @@ async def test_scan_not_all_match(hass, aioclient_mock):
 async def test_scan_description_fetch_fail(hass, aioclient_mock, exc):
     """Test failing to fetch description."""
     aioclient_mock.get("http://1.1.1.1", exc=exc)
-    scanner = ssdp.Scanner(hass, {})
+    mock_ssdp_response = {
+        "st": "mock-st",
+        "location": "http://1.1.1.1",
+    }
+    mock_get_ssdp = (
+        {
+            "mock-domain": [
+                {
+                    ssdp.ATTR_UPNP_DEVICE_TYPE: "Paulus",
+                    ssdp.ATTR_UPNP_MANUFACTURER: "Paulus",
+                }
+            ]
+        },
+    )
+    mock_init = await _async_run_mocked_scan(hass, mock_ssdp_response, mock_get_ssdp)
 
-    async def _mock_async_scan(*args, async_callback=None, **kwargs):
-        await async_callback(
-            {
-                "st": "mock-st",
-                "location": "http://1.1.1.1",
-            }
-        )
-
-    with patch(
-        "homeassistant.components.ssdp.async_search",
-        side_effect=_mock_async_scan,
-    ):
-        await scanner.async_scan(None)
+    assert not mock_init.mock_calls
 
 
 async def test_scan_description_parse_fail(hass, aioclient_mock):
@@ -212,21 +202,24 @@ async def test_scan_description_parse_fail(hass, aioclient_mock):
 <root>INVALIDXML
     """,
     )
-    scanner = ssdp.Scanner(hass, {})
 
-    async def _mock_async_scan(*args, async_callback=None, **kwargs):
-        await async_callback(
-            {
-                "st": "mock-st",
-                "location": "http://1.1.1.1",
-            }
-        )
+    mock_ssdp_response = {
+        "st": "mock-st",
+        "location": "http://1.1.1.1",
+    }
+    mock_get_ssdp = (
+        {
+            "mock-domain": [
+                {
+                    ssdp.ATTR_UPNP_DEVICE_TYPE: "Paulus",
+                    ssdp.ATTR_UPNP_MANUFACTURER: "Paulus",
+                }
+            ]
+        },
+    )
+    mock_init = await _async_run_mocked_scan(hass, mock_ssdp_response, mock_get_ssdp)
 
-    with patch(
-        "homeassistant.components.ssdp.async_search",
-        side_effect=_mock_async_scan,
-    ):
-        await scanner.async_scan(None)
+    assert not mock_init.mock_calls
 
 
 async def test_invalid_characters(hass, aioclient_mock):
@@ -242,8 +235,12 @@ async def test_invalid_characters(hass, aioclient_mock):
 </root>
     """,
     )
-    scanner = ssdp.Scanner(
-        hass,
+
+    mock_ssdp_response = {
+        "st": "mock-st",
+        "location": "http://1.1.1.1",
+    }
+    mock_get_ssdp = (
         {
             "mock-domain": [
                 {
@@ -252,22 +249,7 @@ async def test_invalid_characters(hass, aioclient_mock):
             ]
         },
     )
-
-    async def _mock_async_scan(*args, async_callback=None, **kwargs):
-        await async_callback(
-            {
-                "st": "mock-st",
-                "location": "http://1.1.1.1",
-            }
-        )
-
-    with patch(
-        "homeassistant.components.ssdp.async_search",
-        side_effect=_mock_async_scan,
-    ), patch.object(
-        hass.config_entries.flow, "async_init", return_value=mock_coro()
-    ) as mock_init:
-        await scanner.async_scan(None)
+    mock_init = await _async_run_mocked_scan(hass, mock_ssdp_response, mock_get_ssdp)
 
     assert len(mock_init.mock_calls) == 1
     assert mock_init.mock_calls[0][1][0] == "mock-domain"
@@ -282,7 +264,7 @@ async def test_invalid_characters(hass, aioclient_mock):
     }
 
 
-@patch("homeassistant.components.ssdp.async_search")
+@patch("homeassistant.components.ssdp.SSDPListener")
 async def test_start_stop_scanner(async_search_mock, hass):
     """Test we start and stop the scanner."""
     assert await async_setup_component(hass, ssdp.DOMAIN, {ssdp.DOMAIN: {}})
@@ -313,8 +295,11 @@ async def test_unexpected_exception_while_fetching(hass, aioclient_mock, caplog)
 </root>
     """,
     )
-    scanner = ssdp.Scanner(
-        hass,
+    mock_ssdp_response = {
+        "st": "mock-st",
+        "location": "http://1.1.1.1",
+    }
+    mock_get_ssdp = (
         {
             "mock-domain": [
                 {
@@ -324,24 +309,13 @@ async def test_unexpected_exception_while_fetching(hass, aioclient_mock, caplog)
         },
     )
 
-    async def _mock_async_scan(*args, async_callback=None, **kwargs):
-        await async_callback(
-            {
-                "st": "mock-st",
-                "location": "http://1.1.1.1",
-            }
-        )
-
     with patch(
         "homeassistant.components.ssdp.descriptions.ElementTree.fromstring",
         side_effect=ValueError,
-    ), patch(
-        "homeassistant.components.ssdp.async_search",
-        side_effect=_mock_async_scan,
-    ), patch.object(
-        hass.config_entries.flow, "async_init", return_value=mock_coro()
-    ) as mock_init:
-        await scanner.async_scan(None)
+    ):
+        mock_init = await _async_run_mocked_scan(
+            hass, mock_ssdp_response, mock_get_ssdp
+        )
 
     assert len(mock_init.mock_calls) == 0
     assert "Failed to fetch ssdp data from: http://1.1.1.1" in caplog.text
