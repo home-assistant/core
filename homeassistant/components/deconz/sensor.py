@@ -303,6 +303,11 @@ class DeconzBattery(DeconzDevice, SensorEntity):
         return DEVICE_CLASS_BATTERY
 
     @property
+    def state_class(self):
+        """Return the state class of the sensor."""
+        return STATE_CLASS_MEASUREMENT
+
+    @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity."""
         return PERCENTAGE
