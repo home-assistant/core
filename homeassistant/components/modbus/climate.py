@@ -135,9 +135,6 @@ class ModbusThermostat(BasePlatform, RestoreEntity, ClimateEntity):
         state = await self.async_get_last_state()
         if state and state.attributes.get(ATTR_TEMPERATURE):
             self._target_temperature = float(state.attributes[ATTR_TEMPERATURE])
-        else:
-            self._target_temperature = None
-            _LOGGER.warning("No previously saved temperature, setting to none")
 
     @property
     def supported_features(self):
