@@ -34,13 +34,13 @@ from homeassistant.const import (
     CLOUD_NEVER_EXPOSED_ENTITIES,
     CONF_DESCRIPTION,
     CONF_NAME,
-    CONF_PLATFORM,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
     __version__,
 )
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import network
+from homeassistant.helpers.entity import entity_sources
 from homeassistant.util.decorator import Registry
 
 from .capabilities import (
@@ -618,9 +618,10 @@ class MediaPlayerCapabilities(AlexaEntity):
             inputs = AlexaEqualizerController.get_valid_inputs(
                 self.entity.attributes.get(media_player.const.ATTR_SOUND_MODE_LIST, [])
             )
-            if len(inputs) > 0 and self.entity_conf.get(CONF_PLATFORM) not in [
-                "denonavr"
-            ]:
+            # AlexaEqualizerController is disabled for denonavr
+            # since it blocks alexa from discovering any devices.
+            domain = entity_sources(self.hass)[self.entity_id]['domain']
+            if len(inputs) > 0 and domain not in ["denonavr"]:
                 yield AlexaEqualizerController(self.entity)
 
         yield AlexaEndpointHealth(self.hass, self.entity)
