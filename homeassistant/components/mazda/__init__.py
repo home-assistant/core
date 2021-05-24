@@ -15,8 +15,12 @@ from pymazda import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_REGION
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import aiohttp_client
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    HomeAssistantError,
+)
+from homeassistant.helpers import aiohttp_client, device_registry
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -24,7 +28,7 @@ from homeassistant.helpers.update_coordinator import (
 )
 from homeassistant.util.async_ import gather_with_concurrency
 
-from .const import DATA_CLIENT, DATA_COORDINATOR, DOMAIN
+from .const import DATA_CLIENT, DATA_COORDINATOR, DATA_VEHICLES, DOMAIN, SERVICES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -59,6 +63,53 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         _LOGGER.error("Error occurred during Mazda login request: %s", ex)
         raise ConfigEntryNotReady from ex
 
+    async def async_handle_service_call(service_call=None):
+        """Handle a service call."""
+        # Get device entry from device registry
+        dev_reg = device_registry.async_get(hass)
+        device_id = service_call.data.get("vehicle")
+        device_entry = dev_reg.async_get(device_id)
+
+        if device_entry is None:
+            raise HomeAssistantError("Invalid device ID")
+
+        # Get vehicle VIN from device identifiers
+        mazda_identifiers = [
+            identifier
+            for identifier in device_entry.identifiers
+            if identifier[0] == DOMAIN
+        ]
+        if len(mazda_identifiers) < 1:
+            raise HomeAssistantError("Device ID is not a Mazda vehicle")
+
+        vin_identifier = next(iter(mazda_identifiers))
+        vin = vin_identifier[1]
+
+        # Get vehicle ID and API client from hass.data
+        vehicle_id = 0
+        api_client = None
+        for entry_data in hass.data[DOMAIN].values():
+            for vehicle in entry_data[DATA_VEHICLES]:
+                if vehicle["vin"] == vin:
+                    vehicle_id = vehicle["id"]
+                    api_client = entry_data[DATA_CLIENT]
+
+        if vehicle_id == 0 or api_client is None:
+            raise HomeAssistantError("Vehicle ID not found")
+
+        api_method = getattr(api_client, service_call.service)
+        try:
+            if service_call.service == "send_poi":
+                latitude = service_call.data.get("latitude")
+                longitude = service_call.data.get("longitude")
+                poi_name = service_call.data.get("poi_name")
+                await api_method(vehicle_id, latitude, longitude, poi_name)
+            else:
+                await api_method(vehicle_id)
+        except Exception as ex:
+            _LOGGER.exception("Error occurred during Mazda service call: %s", ex)
+            raise HomeAssistantError(ex) from ex
+
     async def async_update_data():
         """Fetch data from Mazda API."""
         try:
@@ -72,6 +123,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
             for vehicle, status in zip(vehicles, statuses):
                 vehicle["status"] = status
+
+            hass.data[DOMAIN][entry.entry_id][DATA_VEHICLES] = vehicles
 
             return vehicles
         except MazdaAuthenticationException as ex:
@@ -94,6 +147,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     hass.data[DOMAIN][entry.entry_id] = {
         DATA_CLIENT: mazda_client,
         DATA_COORDINATOR: coordinator,
+        DATA_VEHICLES: [],
     }
 
     # Fetch initial data so we have data when entities subscribe
@@ -102,12 +156,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     # Setup components
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
+    # Register services
+    for service in SERVICES:
+        hass.services.async_register(DOMAIN, service, async_handle_service_call)
+
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+    # Only remove services if it is the last config entry
+    if len(hass.data[DOMAIN]) == 1:
+        for service in SERVICES:
+            hass.services.async_remove(DOMAIN, service)
+
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
 

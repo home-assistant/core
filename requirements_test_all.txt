@@ -862,7 +862,7 @@ pymailgunner==1.4
 pymata-express==1.19
 
 # homeassistant.components.mazda
-pymazda==0.1.5
+pymazda==0.1.6
 
 # homeassistant.components.melcloud
 pymelcloud==2.5.2
