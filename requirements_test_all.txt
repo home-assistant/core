@@ -868,7 +868,7 @@ pymata-express==1.19
 pymazda==0.1.5
 
 # homeassistant.components.melcloud
-pymelcloud==2.5.2
+pymelcloud==2.5.3
 
 # homeassistant.components.somfy
 pymfy==0.9.3
