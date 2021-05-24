@@ -124,16 +124,14 @@ async def test_scan_not_all_present(hass, aioclient_mock):
         "st": "mock-st",
         "location": "http://1.1.1.1",
     }
-    mock_get_ssdp = (
-        {
-            "mock-domain": [
-                {
-                    ssdp.ATTR_UPNP_DEVICE_TYPE: "Paulus",
-                    ssdp.ATTR_UPNP_MANUFACTURER: "Paulus",
-                }
-            ]
-        },
-    )
+    mock_get_ssdp = {
+        "mock-domain": [
+            {
+                ssdp.ATTR_UPNP_DEVICE_TYPE: "Paulus",
+                ssdp.ATTR_UPNP_MANUFACTURER: "Paulus",
+            }
+        ]
+    }
     mock_init = await _async_run_mocked_scan(hass, mock_ssdp_response, mock_get_ssdp)
 
     assert not mock_init.mock_calls
@@ -156,16 +154,14 @@ async def test_scan_not_all_match(hass, aioclient_mock):
         "st": "mock-st",
         "location": "http://1.1.1.1",
     }
-    mock_get_ssdp = (
-        {
-            "mock-domain": [
-                {
-                    ssdp.ATTR_UPNP_DEVICE_TYPE: "Paulus",
-                    ssdp.ATTR_UPNP_MANUFACTURER: "Not-Paulus",
-                }
-            ]
-        },
-    )
+    mock_get_ssdp = {
+        "mock-domain": [
+            {
+                ssdp.ATTR_UPNP_DEVICE_TYPE: "Paulus",
+                ssdp.ATTR_UPNP_MANUFACTURER: "Not-Paulus",
+            }
+        ]
+    }
     mock_init = await _async_run_mocked_scan(hass, mock_ssdp_response, mock_get_ssdp)
 
     assert not mock_init.mock_calls
@@ -179,16 +175,14 @@ async def test_scan_description_fetch_fail(hass, aioclient_mock, exc):
         "st": "mock-st",
         "location": "http://1.1.1.1",
     }
-    mock_get_ssdp = (
-        {
-            "mock-domain": [
-                {
-                    ssdp.ATTR_UPNP_DEVICE_TYPE: "Paulus",
-                    ssdp.ATTR_UPNP_MANUFACTURER: "Paulus",
-                }
-            ]
-        },
-    )
+    mock_get_ssdp = {
+        "mock-domain": [
+            {
+                ssdp.ATTR_UPNP_DEVICE_TYPE: "Paulus",
+                ssdp.ATTR_UPNP_MANUFACTURER: "Paulus",
+            }
+        ]
+    }
     mock_init = await _async_run_mocked_scan(hass, mock_ssdp_response, mock_get_ssdp)
 
     assert not mock_init.mock_calls
@@ -207,16 +201,14 @@ async def test_scan_description_parse_fail(hass, aioclient_mock):
         "st": "mock-st",
         "location": "http://1.1.1.1",
     }
-    mock_get_ssdp = (
-        {
-            "mock-domain": [
-                {
-                    ssdp.ATTR_UPNP_DEVICE_TYPE: "Paulus",
-                    ssdp.ATTR_UPNP_MANUFACTURER: "Paulus",
-                }
-            ]
-        },
-    )
+    mock_get_ssdp = {
+        "mock-domain": [
+            {
+                ssdp.ATTR_UPNP_DEVICE_TYPE: "Paulus",
+                ssdp.ATTR_UPNP_MANUFACTURER: "Paulus",
+            }
+        ]
+    }
     mock_init = await _async_run_mocked_scan(hass, mock_ssdp_response, mock_get_ssdp)
 
     assert not mock_init.mock_calls
@@ -240,15 +232,14 @@ async def test_invalid_characters(hass, aioclient_mock):
         "st": "mock-st",
         "location": "http://1.1.1.1",
     }
-    mock_get_ssdp = (
-        {
-            "mock-domain": [
-                {
-                    ssdp.ATTR_UPNP_DEVICE_TYPE: "ABC",
-                }
-            ]
-        },
-    )
+    mock_get_ssdp = {
+        "mock-domain": [
+            {
+                ssdp.ATTR_UPNP_DEVICE_TYPE: "ABC",
+            }
+        ]
+    }
+
     mock_init = await _async_run_mocked_scan(hass, mock_ssdp_response, mock_get_ssdp)
 
     assert len(mock_init.mock_calls) == 1
@@ -299,15 +290,13 @@ async def test_unexpected_exception_while_fetching(hass, aioclient_mock, caplog)
         "st": "mock-st",
         "location": "http://1.1.1.1",
     }
-    mock_get_ssdp = (
-        {
-            "mock-domain": [
-                {
-                    ssdp.ATTR_UPNP_DEVICE_TYPE: "ABC",
-                }
-            ]
-        },
-    )
+    mock_get_ssdp = {
+        "mock-domain": [
+            {
+                ssdp.ATTR_UPNP_DEVICE_TYPE: "ABC",
+            }
+        ]
+    }
 
     with patch(
         "homeassistant.components.ssdp.descriptions.ElementTree.fromstring",
