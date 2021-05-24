@@ -575,5 +575,7 @@ async def test_async_detect_interfaces_setting_empty_route(hass):
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
 
-    assert create_args[0][1]["source_ip"] == IPv6Address("2001:db8::")
-    assert create_args[1][1]["source_ip"] == IPv4Address("192.168.1.5")
+    assert {create_args[0][1]["source_ip"], create_args[1][1]["source_ip"]} == {
+        IPv4Address("192.168.1.5"),
+        IPv6Address("2001:db8::"),
+    }
