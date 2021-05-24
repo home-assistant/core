@@ -163,7 +163,7 @@ class HassJob:
 
     __slots__ = ("job_type", "target")
 
-    def __init__(self, target: Callable):
+    def __init__(self, target: Callable) -> None:
         """Create a job object."""
         if asyncio.iscoroutine(target):
             raise ValueError("Coroutine not allowed to be passed to HassJob")

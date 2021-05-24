@@ -174,6 +174,7 @@ homeassistant/components/garages_amsterdam/* @klaasnicolaas
 homeassistant/components/garmin_connect/* @cyberjunky
 homeassistant/components/gdacs/* @exxamalte
 homeassistant/components/geniushub/* @zxdavb
+homeassistant/components/geo_json_events/* @exxamalte
 homeassistant/components/geo_rss_events/* @exxamalte
 homeassistant/components/geonetnz_quakes/* @exxamalte
 homeassistant/components/geonetnz_volcano/* @exxamalte
@@ -206,7 +207,7 @@ homeassistant/components/home_connect/* @DavidMStraub
 homeassistant/components/home_plus_control/* @chemaaa
 homeassistant/components/homeassistant/* @home-assistant/core
 homeassistant/components/homekit/* @bdraco
-homeassistant/components/homekit_controller/* @Jc2k
+homeassistant/components/homekit_controller/* @Jc2k @bdraco
 homeassistant/components/homematic/* @pvizeli @danielperna84
 homeassistant/components/http/* @home-assistant/core
 homeassistant/components/huawei_lte/* @scop @fphammerle
@@ -412,7 +413,7 @@ homeassistant/components/rpi_power/* @shenxn @swetoast
 homeassistant/components/ruckus_unleashed/* @gabe565
 homeassistant/components/safe_mode/* @home-assistant/core
 homeassistant/components/saj/* @fredericvl
-homeassistant/components/samsungtv/* @escoand
+homeassistant/components/samsungtv/* @escoand @chemelli74
 homeassistant/components/scene/* @home-assistant/core
 homeassistant/components/schluter/* @prairieapps
 homeassistant/components/scrape/* @fabaff
@@ -430,6 +431,7 @@ homeassistant/components/shell_command/* @home-assistant/core
 homeassistant/components/shelly/* @balloob @bieniu @thecode @chemelli74
 homeassistant/components/shiftr/* @fabaff
 homeassistant/components/shodan/* @fabaff
+homeassistant/components/sia/* @eavanvalkenburg
 homeassistant/components/sighthound/* @robmarkcole
 homeassistant/components/signal_messenger/* @bbernhard
 homeassistant/components/simplisafe/* @bachya

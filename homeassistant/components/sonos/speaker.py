@@ -136,6 +136,7 @@ class SonosSpeaker:
 
         self._is_ready: bool = False
         self._subscriptions: list[SubscriptionBase] = []
+        self._resubscription_lock: asyncio.Lock | None = None
         self._poll_timer: Callable | None = None
         self._seen_timer: Callable | None = None
         self._platforms_ready: set[str] = set()
@@ -146,7 +147,7 @@ class SonosSpeaker:
 
         self.mac_address = speaker_info["mac_address"]
         self.model_name = speaker_info["model_name"]
-        self.version = speaker_info["software_version"]
+        self.version = speaker_info["display_version"]
         self.zone_name = speaker_info["zone_name"]
 
         self.battery_info: dict[str, Any] | None = None
@@ -198,6 +199,7 @@ class SonosSpeaker:
         """Listen to new entities to trigger first subscription."""
         self._platforms_ready.add(entity_type)
         if self._platforms_ready == PLATFORMS:
+            self._resubscription_lock = asyncio.Lock()
             await self.async_subscribe()
             self._is_ready = True
 
@@ -313,11 +315,27 @@ class SonosSpeaker:
 
         self.async_write_entity_states()
 
+    async def async_resubscribe(self, exception: Exception) -> None:
+        """Attempt to resubscribe when a renewal failure is detected."""
+        async with self._resubscription_lock:
+            if self.available:
+                if getattr(exception, "status", None) == 412:
+                    _LOGGER.warning(
+                        "Subscriptions for %s failed, speaker may have lost power",
+                        self.zone_name,
+                    )
+                else:
+                    _LOGGER.error(
+                        "Subscription renewals for %s failed",
+                        self.zone_name,
+                        exc_info=exception,
+                    )
+                await self.async_unseen()
+
     @callback
     def async_renew_failed(self, exception: Exception) -> None:
         """Handle a failed subscription renewal."""
-        if self.available:
-            self.hass.async_add_job(self.async_unseen)
+        self.hass.async_create_task(self.async_resubscribe(exception))
 
     async def async_unseen(self, now: datetime.datetime | None = None) -> None:
         """Make this player unavailable when it was not seen recently."""

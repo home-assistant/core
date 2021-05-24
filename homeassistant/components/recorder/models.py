@@ -8,6 +8,7 @@ from sqlalchemy import (
     DateTime,
     Float,
     ForeignKey,
+    Identity,
     Index,
     Integer,
     String,
@@ -28,7 +29,7 @@ import homeassistant.util.dt as dt_util
 # pylint: disable=invalid-name
 Base = declarative_base()
 
-SCHEMA_VERSION = 14
+SCHEMA_VERSION = 16
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,7 +39,6 @@ TABLE_EVENTS = "events"
 TABLE_STATES = "states"
 TABLE_RECORDER_RUNS = "recorder_runs"
 TABLE_SCHEMA_CHANGES = "schema_changes"
-
 TABLE_STATISTICS = "statistics"
 
 ALL_TABLES = [
@@ -62,7 +62,7 @@ class Events(Base):  # type: ignore
         "mysql_collate": "utf8mb4_unicode_ci",
     }
     __tablename__ = TABLE_EVENTS
-    event_id = Column(Integer, primary_key=True)
+    event_id = Column(Integer, Identity(), primary_key=True)
     event_type = Column(String(MAX_LENGTH_EVENT_TYPE))
     event_data = Column(Text().with_variant(mysql.LONGTEXT, "mysql"))
     origin = Column(String(32))
@@ -129,7 +129,7 @@ class States(Base):  # type: ignore
         "mysql_collate": "utf8mb4_unicode_ci",
     }
     __tablename__ = TABLE_STATES
-    state_id = Column(Integer, primary_key=True)
+    state_id = Column(Integer, Identity(), primary_key=True)
     domain = Column(String(64))
     entity_id = Column(String(255))
     state = Column(String(255))
@@ -140,9 +140,7 @@ class States(Base):  # type: ignore
     last_changed = Column(DATETIME_TYPE, default=dt_util.utcnow)
     last_updated = Column(DATETIME_TYPE, default=dt_util.utcnow, index=True)
     created = Column(DATETIME_TYPE, default=dt_util.utcnow)
-    old_state_id = Column(
-        Integer, ForeignKey("states.state_id", ondelete="NO ACTION"), index=True
-    )
+    old_state_id = Column(Integer, ForeignKey("states.state_id"), index=True)
     event = relationship("Events", uselist=False)
     old_state = relationship("States", remote_side=[state_id])
 
@@ -223,6 +221,9 @@ class Statistics(Base):  # type: ignore
     mean = Column(Float())
     min = Column(Float())
     max = Column(Float())
+    last_reset = Column(DATETIME_TYPE)
+    state = Column(Float())
+    sum = Column(Float())
 
     __table_args__ = (
         # Used for fetching statistics for a certain entity at a specific time
@@ -244,7 +245,7 @@ class RecorderRuns(Base):  # type: ignore
     """Representation of recorder run."""
 
     __tablename__ = TABLE_RECORDER_RUNS
-    run_id = Column(Integer, primary_key=True)
+    run_id = Column(Integer, Identity(), primary_key=True)
     start = Column(DateTime(timezone=True), default=dt_util.utcnow)
     end = Column(DateTime(timezone=True))
     closed_incorrect = Column(Boolean, default=False)
@@ -295,7 +296,7 @@ class SchemaChanges(Base):  # type: ignore
     """Representation of schema version changes."""
 
     __tablename__ = TABLE_SCHEMA_CHANGES
-    change_id = Column(Integer, primary_key=True)
+    change_id = Column(Integer, Identity(), primary_key=True)
     schema_version = Column(Integer)
     changed = Column(DateTime(timezone=True), default=dt_util.utcnow)
 

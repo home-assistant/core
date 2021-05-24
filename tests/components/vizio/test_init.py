@@ -94,14 +94,11 @@ async def test_coordinator_update_failure(
     assert len(hass.states.async_entity_ids(MP_DOMAIN)) == 1
     assert DOMAIN in hass.data
 
-    for days in range(1, 10):
+    # Failing 25 days in a row should result in a single log message
+    # (first one after 10 days, next one would be at 30 days)
+    for days in range(1, 25):
         async_fire_time_changed(hass, now + timedelta(days=days))
         await hass.async_block_till_done()
-        assert (
-            "Unable to retrieve the apps list from the external server"
-            not in caplog.text
-        )
 
-    async_fire_time_changed(hass, now + timedelta(days=10))
-    await hass.async_block_till_done()
-    assert "Unable to retrieve the apps list from the external server" in caplog.text
+    err_msg = "Unable to retrieve the apps list from the external server"
+    assert len([record for record in caplog.records if err_msg in record.msg]) == 1

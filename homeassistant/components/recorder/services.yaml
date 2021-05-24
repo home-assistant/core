@@ -18,8 +18,7 @@ purge:
 
     repack:
       name: Repack
-      description:
-        Attempt to save disk space by rewriting the entire database file.
+      description: Attempt to save disk space by rewriting the entire database file.
       example: true
       default: false
       selector:
@@ -32,6 +31,30 @@ purge:
       default: false
       selector:
         boolean:
+
+purge_entities:
+  name: Purge Entities
+  description: Start purge task to remove specific entities from your database.
+  target:
+    entity: {}
+  fields:
+    domains:
+      name: Domains to remove
+      description: List the domains that need to be removed from the recorder database.
+      example: "sun"
+      required: false
+      default: []
+      selector:
+        object:
+
+    entity_globs:
+      name: Entity Globs to remove
+      description: List the regular expressions to select entities for removal from the recorder database.
+      example: "domain*.object_id*"
+      required: false
+      default: []
+      selector:
+        object:
 
 disable:
   name: Disable

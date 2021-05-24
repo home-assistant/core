@@ -5,10 +5,17 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import ATTR_LAST_RESET, SensorEntity
+from homeassistant.components.sensor import (
+    ATTR_LAST_RESET,
+    STATE_CLASS_MEASUREMENT,
+    SensorEntity,
+)
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_NAME,
+    DEVICE_CLASS_ENERGY,
+    ENERGY_KILO_WATT_HOUR,
+    ENERGY_WATT_HOUR,
     EVENT_HOMEASSISTANT_START,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
@@ -52,6 +59,11 @@ ATTR_STATUS = "status"
 ATTR_PERIOD = "meter_period"
 ATTR_LAST_PERIOD = "last_period"
 ATTR_TARIFF = "tariff"
+
+DEVICE_CLASS_MAP = {
+    ENERGY_WATT_HOUR: DEVICE_CLASS_ENERGY,
+    ENERGY_KILO_WATT_HOUR: DEVICE_CLASS_ENERGY,
+}
 
 ICON = "mdi:counter"
 
@@ -312,6 +324,16 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
     def state(self):
         """Return the state of the sensor."""
         return self._state
+
+    @property
+    def device_class(self):
+        """Return the device class of the sensor."""
+        return DEVICE_CLASS_MAP.get(self.unit_of_measurement)
+
+    @property
+    def state_class(self):
+        """Return the device class of the sensor."""
+        return STATE_CLASS_MEASUREMENT
 
     @property
     def unit_of_measurement(self):

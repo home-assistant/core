@@ -148,7 +148,7 @@ class StationPriceData:
 class StationPriceSensor(SensorEntity):
     """Implementation of a sensor that reports the fuel price for a station."""
 
-    def __init__(self, station_data: StationPriceData, fuel_type: str):
+    def __init__(self, station_data: StationPriceData, fuel_type: str) -> None:
         """Initialize the sensor."""
         self._station_data = station_data
         self._fuel_type = fuel_type

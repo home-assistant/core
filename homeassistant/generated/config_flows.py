@@ -219,6 +219,7 @@ FLOWS = [
     "sharkiq",
     "shelly",
     "shopping_list",
+    "sia",
     "simplisafe",
     "sma",
     "smappee",

@@ -4,11 +4,13 @@
 
 homeassistant.components
 homeassistant.components.acer_projector.*
+homeassistant.components.accuweather.*
 homeassistant.components.actiontec.*
 homeassistant.components.aftership.*
 homeassistant.components.air_quality.*
 homeassistant.components.airly.*
 homeassistant.components.aladdin_connect.*
+homeassistant.components.alarm_control_panel.*
 homeassistant.components.amazon_polly.*
 homeassistant.components.ampio.*
 homeassistant.components.automation.*
@@ -17,9 +19,12 @@ homeassistant.components.bond.*
 homeassistant.components.brother.*
 homeassistant.components.calendar.*
 homeassistant.components.camera.*
+homeassistant.components.canary.*
 homeassistant.components.cover.*
 homeassistant.components.device_automation.*
+homeassistant.components.device_tracker.*
 homeassistant.components.elgato.*
+homeassistant.components.fitbit.*
 homeassistant.components.fritzbox.*
 homeassistant.components.frontend.*
 homeassistant.components.geo_location.*
@@ -55,6 +60,7 @@ homeassistant.components.sun.*
 homeassistant.components.switch.*
 homeassistant.components.synology_dsm.*
 homeassistant.components.systemmonitor.*
+homeassistant.components.tcp.*
 homeassistant.components.tts.*
 homeassistant.components.upcloud.*
 homeassistant.components.vacuum.*

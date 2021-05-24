@@ -73,7 +73,7 @@ class AlexaCapability:
 
     supported_locales = {"en-US"}
 
-    def __init__(self, entity: State, instance: str | None = None):
+    def __init__(self, entity: State, instance: str | None = None) -> None:
         """Initialize an Alexa capability."""
         self.entity = entity
         self.instance = instance
