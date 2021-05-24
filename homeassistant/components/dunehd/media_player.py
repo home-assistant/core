@@ -1,7 +1,7 @@
 """Dune HD implementation of the media player."""
 from __future__ import annotations
 
-from typing import Any, Final
+from typing import Any, Final, cast
 
 from pdunehd import DuneHDPlayer
 import voluptuous as vol
@@ -59,7 +59,7 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType = None,
 ) -> None:
     """Set up the Dune HD media player platform."""
-    host = config.get(CONF_HOST)
+    host = cast(str, config.get(CONF_HOST))
 
     hass.async_create_task(
         hass.config_entries.flow.async_init(

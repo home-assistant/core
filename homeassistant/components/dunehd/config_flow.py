@@ -12,7 +12,6 @@ import voluptuous as vol
 from homeassistant import config_entries, exceptions
 from homeassistant.const import CONF_HOST
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
 
@@ -74,7 +73,7 @@ class DuneHDConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_import(
-        self, user_input: ConfigType | None = None
+        self, user_input: dict[str, str] | None = None
     ) -> FlowResult:
         """Handle configuration by yaml file."""
         assert user_input is not None
