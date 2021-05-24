@@ -8,21 +8,25 @@ import aiohttp
 from defusedxml import ElementTree
 from netdisco import util
 
+from homeassistant.core import HomeAssistant
+
 _LOGGER = logging.getLogger(__name__)
 
 
 class DescriptionManager:
     """Class to cache and manage fetching descriptions."""
 
-    def __init__(self, hass):
+    def __init__(self, hass: HomeAssistant) -> None:
         """Init the manager."""
         self.hass = hass
-        self._description_cache = {}
+        self._description_cache: dict[str, None | dict[str, str]] = {}
 
-    async def fetch_description(self, xml_location):
+    async def fetch_description(
+        self, xml_location: str | None
+    ) -> None | dict[str, str]:
         """Fetch the location or get it from the cache."""
         if xml_location is None:
-            return
+            return None
         if xml_location not in self._description_cache:
             try:
                 self._description_cache[xml_location] = await self._fetch_description(
@@ -35,7 +39,7 @@ class DescriptionManager:
 
         return self._description_cache[xml_location]
 
-    async def _fetch_description(self, xml_location):
+    async def _fetch_description(self, xml_location: str) -> None | dict[str, str]:
         """Fetch an XML description."""
         session = self.hass.helpers.aiohttp_client.async_get_clientsession()
         try:
@@ -56,4 +60,7 @@ class DescriptionManager:
             _LOGGER.debug("Error parsing %s: %s", xml_location, err)
             return None
 
-        return util.etree_to_dict(tree).get("root", {}).get("device", {})
+        parsed: dict[str, str] = (
+            util.etree_to_dict(tree).get("root", {}).get("device", {})
+        )
+        return parsed

@@ -6,7 +6,7 @@ from collections.abc import Mapping
 from datetime import timedelta
 from ipaddress import IPv4Address, IPv6Address
 import logging
-from typing import Any
+from typing import Any, Callable
 
 from async_upnp_client.search import SSDPListener
 from netdisco import ssdp
@@ -14,8 +14,9 @@ from netdisco import ssdp
 from homeassistant import config_entries
 from homeassistant.components import network
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import callback as core_callback
+from homeassistant.core import HomeAssistant, callback as core_callback
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_ssdp, bind_hass
 
 from .descriptions import DescriptionManager
@@ -48,15 +49,20 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @bind_hass
-def async_register_callback(hass, callback, match_dict=None):
+def async_register_callback(
+    hass: HomeAssistant,
+    callback: Callable[[dict], None],
+    match_dict: None | dict[str, str] = None,
+) -> Callable[[], None]:
     """Register to receive a callback on ssdp broadcast.
 
     Returns a callback that can be used to cancel the registration.
     """
-    return hass.data[DOMAIN].async_register_callback(callback, match_dict)
+    scanner: Scanner = hass.data[DOMAIN]
+    return scanner.async_register_callback(callback, match_dict)
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the SSDP integration."""
 
     scanner = hass.data[DOMAIN] = Scanner(hass, await async_get_ssdp(hass))
@@ -66,7 +72,7 @@ async def async_setup(hass, config):
     return True
 
 
-def _async_use_default_interface(adapters) -> bool:
+def _async_use_default_interface(adapters: list[network.Adapter]) -> bool:
     for adapter in adapters:
         if adapter["enabled"] and not adapter["default"]:
             return False
@@ -76,14 +82,16 @@ def _async_use_default_interface(adapters) -> bool:
 class Scanner:
     """Class to manage SSDP scanning."""
 
-    def __init__(self, hass, integration_matchers):
+    def __init__(
+        self, hass: HomeAssistant, integration_matchers: dict[str, list[dict[str, str]]]
+    ) -> None:
         """Initialize class."""
         self.hass = hass
-        self.seen = set()
+        self.seen: set[tuple[str, str]] = set()
         self._integration_matchers = integration_matchers
-        self._cancel_scan = None
-        self._ssdp_listeners = []
-        self._callbacks = []
+        self._cancel_scan: Callable[[], None] | None = None
+        self._ssdp_listeners: list[SSDPListener] = []
+        self._callbacks: list[tuple[Callable[[dict], None], dict[str, str]]] = []
         self.flow_dispatcher: FlowDispatcher | None = None
         self.description_manager: DescriptionManager | None = None
 
@@ -94,32 +102,35 @@ class Scanner:
         )
 
     @core_callback
-    def async_register_callback(self, ssdp_callback, match_dict=None):
+    def async_register_callback(
+        self, callback: Callable[[dict], None], match_dict: None | dict[str, str] = None
+    ) -> Callable[[], None]:
         """Register a callback."""
         if match_dict is None:
             match_dict = {}
 
-        callback_entry = (ssdp_callback, match_dict)
+        callback_entry = (callback, match_dict)
         self._callbacks.append(callback_entry)
 
         @core_callback
-        def _async_remove_callback():
+        def _async_remove_callback() -> None:
             self._callbacks.remove(callback_entry)
 
         return _async_remove_callback
 
     @core_callback
-    def async_stop(self, *_):
+    def async_stop(self, *_: Any) -> None:
         """Stop the scanner."""
+        assert self._cancel_scan is not None
         self._cancel_scan()
         for listener in self._ssdp_listeners:
             listener.async_stop()
         self._ssdp_listeners = []
 
-    async def _async_build_source_set(self):
+    async def _async_build_source_set(self) -> set[IPv4Address | IPv6Address]:
         """Build the list of ssdp sources."""
         adapters = await network.async_get_adapters(self.hass)
-        sources = set()
+        sources: set[IPv4Address | IPv6Address] = set()
         if _async_use_default_interface(adapters):
             sources.add(IPv4Address("0.0.0.0"))
             return sources
@@ -140,12 +151,12 @@ class Scanner:
         return sources
 
     @core_callback
-    def async_scan(self, *_):
+    def async_scan(self, *_: Any) -> None:
         """Scan for new entries."""
         for listener in self._ssdp_listeners:
             listener.async_search()
 
-    async def async_start(self):
+    async def async_start(self) -> None:
         """Start the scanner."""
         self.description_manager = DescriptionManager(self.hass)
         self.flow_dispatcher = FlowDispatcher(self.hass)
@@ -167,15 +178,15 @@ class Scanner:
             self.hass, self.async_scan, SCAN_INTERVAL
         )
 
-    async def _async_process_entry(self, entry):
+    async def _async_process_entry(self, entry: ssdp.UPNPEntry) -> None:
         """Process SSDP entries."""
         _LOGGER.debug("_async_process_entry: %s", entry)
         key = (entry.st, entry.location)
+        assert self.description_manager is not None
         info_req = await self.description_manager.fetch_description(entry.location)
         info, domains = self._info_domains(entry, info_req)
 
         for ssdp_callback, match_dict in self._callbacks:
-
             if not all(item in info.items() for item in match_dict.items()):
                 continue
             try:
@@ -195,9 +206,12 @@ class Scanner:
                 "context": {"source": config_entries.SOURCE_SSDP},
                 "data": info,
             }
+            assert self.flow_dispatcher is not None
             self.flow_dispatcher.create(flow)
 
-    def _info_domains(self, entry, info_req):
+    def _info_domains(
+        self, entry: ssdp.UPNPEntry, info_req: None | dict[str, str]
+    ) -> tuple[dict[str, str], set[str]]:
         """Process a single entry."""
 
         info = {"st": entry.st}
@@ -217,7 +231,9 @@ class Scanner:
         return info_from_entry(entry, info), domains
 
 
-def info_from_entry(entry, device_info):
+def info_from_entry(
+    entry: ssdp.UPNPEntry, device_info: dict[str, str]
+) -> dict[str, str]:
     """Get info from an entry."""
     info = {
         ATTR_SSDP_LOCATION: entry.location,
