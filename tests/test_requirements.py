@@ -364,7 +364,7 @@ async def test_discovery_requirements_ssdp(hass):
     assert len(mock_process.mock_calls) == 4
     assert mock_process.mock_calls[0][1][2] == ssdp.requirements
     # Ensure zeroconf is a dep for ssdp
-    assert mock_process.mock_calls[1][1][1] == "zeroconf"
+    assert mock_process.mock_calls[1][1][1] == "network"
 
 
 @pytest.mark.parametrize(
