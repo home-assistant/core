@@ -130,8 +130,6 @@ class Scanner:
             if adapter["ipv4"]:
                 ipv4 = adapter["ipv4"][0]
                 sources.add(IPv4Address(ipv4["address"]))
-            if not adapter["ipv6"]:
-                continue
             if adapter["ipv6"]:
                 ipv6 = adapter["ipv6"][0]
                 # With python 3.9 add scope_ids can be
