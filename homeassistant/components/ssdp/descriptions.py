@@ -28,7 +28,7 @@ class DescriptionManager:
                 self._description_cache[xml_location] = await self._fetch_description(
                     xml_location
                 )
-            except Exception:
+            except Exception:  # pylint: disable=broad-except
                 # If it fails, cache the failure so we do not keep trying over and over
                 self._description_cache[xml_location] = None
                 _LOGGER.exception("Failed to fetch ssdp data from: %s", xml_location)

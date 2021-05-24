@@ -14,7 +14,7 @@ from netdisco import ssdp
 from homeassistant import config_entries
 from homeassistant.components import network
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import callback
+from homeassistant.core import callback as core_callback
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.loader import async_get_ssdp, bind_hass
 
@@ -81,11 +81,11 @@ class Scanner:
         self.hass = hass
         self.seen = set()
         self._integration_matchers = integration_matchers
-        self._description_cache = {}
         self._cancel_scan = None
         self._ssdp_listeners = []
         self._callbacks = []
         self.flow_dispatcher: FlowDispatcher | None = None
+        self.description_manager: DescriptionManager | None = None
 
     async def _async_on_ssdp_response(self, data: Mapping[str, Any]) -> None:
         """Process an ssdp response."""
@@ -93,7 +93,7 @@ class Scanner:
             ssdp.UPNPEntry({key.lower(): item for key, item in data.items()})
         )
 
-    @callback
+    @core_callback
     def async_register_callback(self, ssdp_callback, match_dict=None):
         """Register a callback."""
         if match_dict is None:
@@ -102,13 +102,13 @@ class Scanner:
         callback_entry = (ssdp_callback, match_dict)
         self._callbacks.append(callback_entry)
 
-        @callback
+        @core_callback
         def _async_remove_callback():
             self._callbacks.remove(callback_entry)
 
         return _async_remove_callback
 
-    @callback
+    @core_callback
     def async_stop(self, *_):
         """Stop the scanner."""
         self._cancel_scan()
@@ -141,7 +141,7 @@ class Scanner:
 
         return sources
 
-    @callback
+    @core_callback
     def async_scan(self, *_):
         """Scan for new entries."""
         for listener in self._ssdp_listeners:
@@ -182,7 +182,7 @@ class Scanner:
                 continue
             try:
                 ssdp_callback(info)
-            except Exception:
+            except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Failed to callback info: %s", info)
                 continue
 
