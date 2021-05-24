@@ -1,6 +1,6 @@
 """Support for Tibber sensors."""
 import asyncio
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import logging
 from random import randrange
 
@@ -335,15 +335,19 @@ class TibberSensorRT(TibberSensor):
             "accumulated production",
             "accumulated cost",
         ]:
-            self._attr_last_reset = dt_util.now().replace(
-                hour=0, minute=0, second=0, microsecond=0
+            self._attr_last_reset = (
+                dt_util.now()
+                .replace(hour=0, minute=0, second=0, microsecond=0)
+                .astimezone(timezone.utc)
             )
         elif self._sensor_name in [
             "accumulated consumption last hour",
             "accumulated production last hour",
         ]:
-            self._attr_last_reset = dt_util.now().replace(
-                minute=0, second=0, microsecond=0
+            self._attr_last_reset = (
+                dt_util.now()
+                .replace(minute=0, second=0, microsecond=0)
+                .astimezone(timezone.utc)
             )
         else:
             self._attr_last_reset = None
@@ -383,12 +387,14 @@ class TibberSensorRT(TibberSensor):
         ]:
             self._attr_last_reset = timestamp.replace(
                 hour=0, minute=0, second=0, microsecond=0
-            )
+            ).astimezone(timezone.utc)
         if state < self._state and self._sensor_name in [
             "accumulated consumption last hour",
             "accumulated production last hour",
         ]:
-            self._attr_last_reset = timestamp.replace(minute=0, second=0, microsecond=0)
+            self._attr_last_reset = timestamp.replace(
+                minute=0, second=0, microsecond=0
+            ).astimezone(timezone.utc)
         self._state = state
         self.async_write_ha_state()
 
