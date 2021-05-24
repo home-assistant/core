@@ -1,7 +1,7 @@
 """Support for KNX/IP lights."""
 from __future__ import annotations
 
-from typing import Any, cast
+from typing import Any, Tuple, cast
 
 from xknx import XKNX
 from xknx.devices import Light as XknxLight
@@ -366,7 +366,7 @@ class KNXLight(KnxEntity, LightEntity):
                     await self._device.set_brightness(brightness)
                     return
                 rgb = cast(
-                    tuple[int, int, int],
+                    Tuple[int, int, int],
                     tuple(color * brightness // 255 for color in rgb),
                 )
                 white = white * brightness // 255 if white is not None else None
