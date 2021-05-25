@@ -11,7 +11,7 @@ from typing import Any, Callable
 import urllib.parse
 
 import async_timeout
-from pysonos.alarms import Alarm, get_alarms
+from pysonos.alarms import get_alarms
 from pysonos.core import MUSIC_SRC_LINE_IN, MUSIC_SRC_RADIO, MUSIC_SRC_TV, SoCo
 from pysonos.data_structures import DidlAudioBroadcast
 from pysonos.events_base import Event as SonosEvent, SubscriptionBase
@@ -65,27 +65,6 @@ UNAVAILABLE_VALUES = {"", "NOT_IMPLEMENTED", None}
 
 
 _LOGGER = logging.getLogger(__name__)
-
-
-def update_alarms_for_speaker(soco: SoCo, alarms: dict[str, Alarm] = {}) -> set[str]:
-    """Update current alarm instances.
-
-    Updates hass.data[DATA_SONOS].alarms and returns a list of all alarms that are new.
-    """
-    new_alarms = set()
-
-    updated_alarms = get_alarms(soco)
-
-    for alarm in updated_alarms:
-        if alarm.zone.uid == soco.uid and alarm.alarm_id not in list(alarms.keys()):
-            new_alarms.add(alarm.alarm_id)
-            alarms[alarm.alarm_id] = alarm
-
-    for alarm_id, alarm in list(alarms.items()):
-        if alarm not in updated_alarms:
-            alarms.pop(alarm_id)
-
-    return new_alarms
 
 
 def fetch_battery_info_or_none(soco: SoCo) -> dict[str, Any] | None:
@@ -218,9 +197,7 @@ class SonosSpeaker:
         else:
             self._platforms_ready.update({BINARY_SENSOR_DOMAIN, SENSOR_DOMAIN})
 
-        if new_alarms := update_alarms_for_speaker(
-            self.soco, self.hass.data[DATA_SONOS].alarms
-        ):
+        if new_alarms := self.update_alarms_for_speaker():
             dispatcher_send(self.hass, SONOS_CREATE_ALARM, self, new_alarms)
         else:
             self._platforms_ready.add(SWITCH_DOMAIN)
@@ -403,13 +380,35 @@ class SonosSpeaker:
 
         self.async_write_entity_states()
 
+    def update_alarms_for_speaker(self) -> set[str]:
+        """Update current alarm instances.
+
+        Updates hass.data[DATA_SONOS].alarms and returns a list of all alarms that are new.
+        """
+        new_alarms = set()
+        stored_alarms = self.hass.data[DATA_SONOS].alarms
+        updated_alarms = get_alarms(self.soco)
+
+        for alarm in updated_alarms:
+            if alarm.zone.uid == self.soco.uid and alarm.alarm_id not in list(
+                stored_alarms.keys()
+            ):
+                new_alarms.add(alarm.alarm_id)
+                stored_alarms[alarm.alarm_id] = alarm
+
+        for alarm_id, alarm in list(stored_alarms.items()):
+            if alarm not in updated_alarms:
+                stored_alarms.pop(alarm_id)
+
+        return new_alarms
+
     async def async_update_alarms(self, event: SonosEvent = None) -> None:
         """Update device properties using the provided SonosEvent."""
         if event is None:
             return
 
         if new_alarms := await self.hass.async_add_executor_job(
-            update_alarms_for_speaker, self.soco, self.hass.data[DATA_SONOS].alarms
+            self.update_alarms_for_speaker
         ):
             async_dispatcher_send(self.hass, SONOS_CREATE_ALARM, self, new_alarms)
 
