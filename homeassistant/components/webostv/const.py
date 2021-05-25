@@ -1,6 +1,5 @@
 """Constants used for LG webOS Smart TV."""
 DOMAIN = "webostv"
-PLATFORMS = ["media_player"]
 DEFAULT_NAME = "LG webOS Smart TV"
 DEFAULT_SOURCES = ["LiveTV", "HDMI1", "HDMI2", "HDMI1"]
 ATTR_BUTTON = "button"

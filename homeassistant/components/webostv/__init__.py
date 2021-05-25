@@ -32,7 +32,6 @@ from .const import (
     CONF_SOURCES,
     DEFAULT_NAME,
     DOMAIN,
-    PLATFORMS,
     SERVICE_BUTTON,
     SERVICE_COMMAND,
     SERVICE_SELECT_SOUND_OUTPUT,
@@ -113,8 +112,7 @@ async def async_setup_entry(hass, config_entry):
         options[CONF_ON_ACTION] = config.get(CONF_ON_ACTION)
 
         # Get Preferred Sources
-        sources = config.get(CONF_CUSTOMIZE, {}).get(CONF_SOURCES)
-        if sources:
+        if sources := config.get(CONF_CUSTOMIZE, {}).get(CONF_SOURCES):
             options[CONF_SOURCES] = sources
             if isinstance(sources, list) is False:
                 options[CONF_SOURCES] = sources.split(",")
@@ -141,10 +139,9 @@ async def async_setup_entry(hass, config_entry):
 
     hass.data[DOMAIN][config_entry.entry_id] = client
 
-    for component in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, component)
-        )
+    hass.async_create_task(
+        hass.config_entries.async_forward_entry_setup(config_entry, "media_player")
+    )
 
     # set up notify platform, no entry support for notify component yet,
     # have to use discovery to load platform.
@@ -154,7 +151,6 @@ async def async_setup_entry(hass, config_entry):
             "notify",
             DOMAIN,
             {
-                CONF_ICON: config_entry.data.get(CONF_ICON),
                 CONF_NAME: config_entry.data[CONF_NAME],
                 ATTR_CONFIG_ENTRY_ID: config_entry.entry_id,
             },
@@ -187,7 +183,7 @@ async def async_unload_entry(hass, config_entry):
     """Unload a config entry."""
     client = hass.data[DOMAIN][config_entry.entry_id]
     unload_ok = await hass.config_entries.async_unload_platforms(
-        config_entry, PLATFORMS
+        config_entry, ["media_player"]
     )
 
     if unload_ok:
