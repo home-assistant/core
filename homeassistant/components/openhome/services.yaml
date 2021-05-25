@@ -12,7 +12,6 @@ invoke_pin:
       name: PIN
       description: Which pin to invoke
       required: true
-      example: 4
       selector:
         number:
           min: 0

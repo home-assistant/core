@@ -2,7 +2,7 @@
 
 add_tracking:
   name: Add tracking
-  description: Add new tracking to Aftership.
+  description: Add new tracking number to Aftership.
   fields:
     tracking_number:
       name: Tracking number
@@ -26,7 +26,7 @@ add_tracking:
 
 remove_tracking:
   name: Remove tracking
-  description: Remove a tracking from Aftership.
+  description: Remove a tracking number from Aftership.
   fields:
     tracking_number:
       name: Tracking number
