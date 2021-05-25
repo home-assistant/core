@@ -48,7 +48,7 @@ set_secondary_filtration:
 
 snooze_reminder:
   name: Snooze a reminder
-  description: Delay a reminder, so that it won't trigger again for a period of time
+  description: Delay a reminder, so that it won't trigger again for a period of time.
   target:
     entity:
       integration: smarttub
