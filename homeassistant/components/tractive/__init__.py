@@ -15,7 +15,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from .const import (
     DOMAIN,
     RECONNECT_INTERVAL,
-    SERVER_AVAILABLE,
     SERVER_UNAVAILABLE,
     TRACKER_HARDWARE_STATUS_UPDATED,
     TRACKER_POSITION_UPDATED,
@@ -107,9 +106,6 @@ class TractiveClient:
                 async for event in self._client.events():
                     if server_was_unavailable:
                         _LOGGER.debug("Tractive is back online")
-                        async_dispatcher_send(
-                            self._hass, f"{SERVER_AVAILABLE}-{self._user_id}"
-                        )
                         server_was_unavailable = False
                     if event["message"] != "tracker_status":
                         continue

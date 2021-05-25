@@ -120,6 +120,7 @@ class TractiveDeviceTracker(TrackerEntity):
         @callback
         def handle_hardware_status_update(event):
             self._battery_level = event["battery_level"]
+            self._attr_available = True
             self.async_write_ha_state()
 
         self.async_on_remove(
@@ -135,6 +136,7 @@ class TractiveDeviceTracker(TrackerEntity):
             self._latitude = event["latitude"]
             self._longitude = event["longitude"]
             self._accuracy = event["accuracy"]
+            self._attr_available = True
             self.async_write_ha_state()
 
         self.async_on_remove(
@@ -151,6 +153,7 @@ class TractiveDeviceTracker(TrackerEntity):
             self._longitude = None
             self._accuracy = None
             self._battery_level = None
+            self._attr_available = False
             self.async_write_ha_state()
 
         self.async_on_remove(
