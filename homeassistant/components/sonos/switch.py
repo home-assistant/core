@@ -36,10 +36,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     configured_alarms = set()
 
-    async def _async_create_entity(
-        speaker: SonosSpeaker, available_alarms: set
-    ) -> None:
-        for alarm_id in available_alarms:
+    async def _async_create_entity(speaker: SonosSpeaker, new_alarms: set) -> None:
+        for alarm_id in new_alarms:
             if alarm_id not in configured_alarms:
                 _LOGGER.debug("Creating alarm with id %s", alarm_id)
                 entity = SonosAlarmEntity(alarm_id, speaker)
