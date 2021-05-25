@@ -1236,7 +1236,6 @@ omit =
     homeassistant/components/supla/*
     homeassistant/components/zwave/util.py
     homeassistant/components/zwave_js/discovery.py
-    homeassistant/components/zwave_js/light.py
     homeassistant/components/zwave_js/sensor.py
 
 [report]
