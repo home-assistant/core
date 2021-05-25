@@ -95,7 +95,7 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
 
     async def async_check_if_available(self):
         """Check if alarm exists and remove alarm entity if not available."""
-        if self.alarm_id in self.hass.data[DATA_SONOS].alarms.keys():
+        if self.alarm_id in self.hass.data[DATA_SONOS].alarms:
             return True
 
         _LOGGER.debug("The alarm is removed from hass because it has been deleted")
