@@ -402,7 +402,7 @@ class SonosSpeaker:
 
         return new_alarms
 
-    async def async_update_alarms(self, event: SonosEvent = None) -> None:
+    async def async_update_alarms(self, event: SonosEvent | None = None) -> None:
         """Update device properties using the provided SonosEvent."""
         if event is None:
             return
