@@ -66,8 +66,6 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
         self._alarm_id = alarm_id
         self.entity_id = ENTITY_ID_FORMAT.format(f"sonos_alarm_{self.alarm_id}")
 
-        self._attributes = {}
-
     @property
     def alarm(self):
         """Return the ID of the alarm."""
@@ -152,15 +150,6 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
 
             self._update_device()
 
-        self._attributes[ATTR_ID] = str(self.alarm_id)
-        self._attributes[ATTR_TIME] = str(self.alarm.start_time)
-        self._attributes[ATTR_DURATION] = str(self.alarm.duration)
-        self._attributes[ATTR_RECURRENCE] = str(self.alarm.recurrence)
-        self._attributes[ATTR_VOLUME] = self.alarm.volume / 100
-        self._attributes[ATTR_PLAY_MODE] = str(self.alarm.play_mode)
-        self._attributes[ATTR_SCHEDULED_TODAY] = self._is_today
-        self._attributes[ATTR_INCLUDE_LINKED_ZONES] = self.alarm.include_linked_zones
-
         self.schedule_update_ha_state()
 
     @property
@@ -184,7 +173,16 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
     @property
     def extra_state_attributes(self):
         """Return attributes of Sonos alarm switch."""
-        return self._attributes
+        return {
+            ATTR_ID: str(self.alarm_id),
+            ATTR_TIME: str(self.alarm.start_time),
+            ATTR_DURATION: str(self.alarm.duration),
+            ATTR_RECURRENCE: str(self.alarm.recurrence),
+            ATTR_VOLUME: self.alarm.volume / 100,
+            ATTR_PLAY_MODE: str(self.alarm.play_mode),
+            ATTR_SCHEDULED_TODAY: self._is_today,
+            ATTR_INCLUDE_LINKED_ZONES: self.alarm.include_linked_zones,
+        }
 
     async def async_turn_on(self, **kwargs) -> None:
         """Turn alarm switch on."""
