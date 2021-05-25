@@ -65,3 +65,8 @@ class SonosPowerEntity(SonosEntity, BinarySensorEntity):
         return {
             ATTR_BATTERY_POWER_SOURCE: self.speaker.power_source,
         }
+
+    @property
+    def available(self) -> bool:
+        """Return whether this device is available."""
+        return self.speaker.available and (self.speaker.charging is not None)
