@@ -469,6 +469,9 @@ icmplib==3.0
 # homeassistant.components.nmap_tracker
 ifaddr==0.1.7
 
+# homeassistant.components.network
+ifaddr==0.1.7
+
 # homeassistant.components.influxdb
 influxdb-client==1.14.0
 
