@@ -123,8 +123,7 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
         """Initialize the webos device."""
         self._client = client
         self._name = name
-        self._uid = uid
-        self._unique_id = client.client_key
+        self._unique_id = uid
         self._sources = sources
         self._on_script = on_script
 
@@ -326,12 +325,12 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
         """Return device information."""
         if self._client.system_info is None and self.state == STATE_OFF:
             return {
-                "identifiers": {(DOMAIN, self._uid)},
+                "identifiers": {(DOMAIN, self._unique_id)},
             }
         maj_v = self._client.software_info.get("major_ver")
         min_v = self._client.software_info.get("minor_ver")
         return {
-            "identifiers": {(DOMAIN, self._uid)},
+            "identifiers": {(DOMAIN, self._unique_id)},
             "manufacturer": "LG",
             "name": self._name,
             "model": self._client.software_info.get("model_name"),
