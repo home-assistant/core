@@ -28,7 +28,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.azure_devops.*",
     "homeassistant.components.azure_event_hub.*",
     "homeassistant.components.blueprint.*",
-    "homeassistant.components.bluetooth_tracker.*",
     "homeassistant.components.bmw_connected_drive.*",
     "homeassistant.components.bsblan.*",
     "homeassistant.components.cast.*",
