@@ -1314,4 +1314,4 @@ zigpy-znp==0.5.1
 zigpy==0.33.0
 
 # homeassistant.components.zwave_js
-zwave-js-server-python==0.24.0
+zwave-js-server-python==0.25.0
