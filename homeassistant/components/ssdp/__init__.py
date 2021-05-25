@@ -63,9 +63,9 @@ def async_register_callback(
 
 
 @bind_hass
-def async_get_location_by_udn_st(
+def async_get_location_by_udn_st(  # pylint: disable=invalid-name
     hass: HomeAssistant, udn: str, st: str
-) -> str | None:  # pylint: disable=invalid-name
+) -> str | None:
     """Lookup a location by udn and st from previous scans."""
     scanner: Scanner = hass.data[DOMAIN]
     return scanner.cache.get((udn, st))

@@ -1,15 +1,14 @@
 """Network helper class for the network integration."""
 from __future__ import annotations
 
-from collections.abc import Iterable
 from ipaddress import IPv4Address, IPv6Address, ip_address
 import logging
+import socket
 from typing import cast
 
 import ifaddr
-from pyroute2 import IPRoute
 
-from homeassistant.core import HomeAssistant
+from homeassistant.core import callback
 
 from .const import MDNS_TARGET_IP
 from .models import Adapter, IPv4ConfiguredAddress, IPv6ConfiguredAddress
@@ -17,13 +16,13 @@ from .models import Adapter, IPv4ConfiguredAddress, IPv6ConfiguredAddress
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_load_adapters(hass: HomeAssistant) -> list[Adapter]:
+async def async_load_adapters() -> list[Adapter]:
     """Load adapters."""
-    next_hop = await _async_default_next_broadcast_hop(hass)
-    next_hop_address = ip_address(next_hop) if next_hop else None
+    source_ip = async_get_source_ip(MDNS_TARGET_IP)
+    source_ip_address = ip_address(source_ip) if source_ip else None
 
     ha_adapters: list[Adapter] = [
-        _ifaddr_adapter_to_ha(adapter, next_hop_address)
+        _ifaddr_adapter_to_ha(adapter, source_ip_address)
         for adapter in ifaddr.get_adapters()
     ]
 
@@ -141,39 +140,19 @@ def _ip_v4_from_adapter(ip_config: ifaddr.IP) -> IPv4ConfiguredAddress:
     }
 
 
-def _get_ip_route(dst_ip: str) -> Iterable:
-    """Get ip next hop."""
-    return cast(Iterable, IPRoute().route("get", dst=dst_ip))
-
-
-def _first_ip_nexthop_from_route(routes: Iterable) -> str | None:
-    """Find the first RTA_PREFSRC in the routes."""
-    _LOGGER.debug("Routes: %s", routes)
-    for route in routes:
-        for key, value in route["attrs"]:
-            if key == "RTA_PREFSRC":
-                return cast(str, value)
-    return None
-
-
-async def _async_default_next_broadcast_hop(hass: HomeAssistant) -> None | str:
-    """Auto detect the default next broadcast hop."""
+@callback
+def async_get_source_ip(target_ip: str) -> None | str:
+    """Return the source ip that will reach target_ip."""
+    test_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    test_sock.setblocking(False)  # must be non-blocking for async
     try:
-        routes: Iterable = await hass.async_add_executor_job(
-            _get_ip_route, MDNS_TARGET_IP
-        )
-    except Exception as ex:  # pylint: disable=broad-except
+        test_sock.connect((target_ip, 1))
+        return cast(str, test_sock.getsockname()[0])
+    except Exception:
         _LOGGER.debug(
-            "The system could not auto detect routing data on your operating system",
-            exc_info=ex,
+            "The system could not auto detect the source ip for %s on your operating system",
+            target_ip,
         )
         return None
-    else:
-        if first_ip := _first_ip_nexthop_from_route(routes):
-            return first_ip
-
-    _LOGGER.debug(
-        "The system could not auto detect the nexthop for %s on your operating system",
-        MDNS_TARGET_IP,
-    )
-    return None
+    finally:
+        test_sock.close()
