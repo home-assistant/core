@@ -1,10 +1,8 @@
 """Config flow to configure webostv component."""
-import functools
 import logging
 from urllib.parse import urlparse
 
 from aiopylgtv import PyLGTVPairException
-from getmac import get_mac_address
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -12,7 +10,6 @@ from homeassistant.components import ssdp
 from homeassistant.const import CONF_CLIENT_SECRET, CONF_HOST, CONF_NAME
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
-from homeassistant.util.network import is_ip_address
 
 from . import CannotConnect, async_control_connect
 from .const import CONF_ON_ACTION, CONF_SOURCES, DEFAULT_NAME, DEFAULT_SOURCES, DOMAIN
@@ -38,6 +35,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self):
         """Initialize workflow."""
         self._user_input = {}
+        self._force_pairing = False
 
     @staticmethod
     @callback
@@ -47,28 +45,20 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, import_info):
         """Set the config entry up from yaml."""
+        self._force_pairing = True
         return await self.async_step_user(import_info)
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
         errors = {}
         if user_input is not None:
-            if is_ip_address(user_input[CONF_HOST]):
-                unique_id = await self.hass.async_add_executor_job(
-                    functools.partial(get_mac_address, ip=user_input[CONF_HOST])
-                )
-            else:
-                unique_id = await self.hass.async_add_executor_job(
-                    functools.partial(get_mac_address, hostname=user_input[CONF_HOST])
-                )
-
-            await self.async_set_unique_id(unique_id)
-            self._abort_if_unique_id_configured()
-
             self._user_input = user_input
             self.context["title_placeholders"] = {
                 "name": user_input.get(CONF_NAME, CONF_HOST)
             }
+            if self._force_pairing:
+                """Test silent pairing."""
+                return await self.async_step_pairing({})
 
             return await self.async_step_pairing()
 
@@ -101,8 +91,13 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if client.is_registered():
             if client.client_key is None:
                 self.async_abort(reason="client_key_notfound")
+
+            await self.async_set_unique_id(client.software_info["device_id"])
+            self._abort_if_unique_id_configured()
+
             data = {
                 CONF_HOST: self._user_input[CONF_HOST],
+                CONF_NAME: self._user_input[CONF_NAME],
                 CONF_CLIENT_SECRET: client.client_key,
             }
             return self.async_create_entry(
@@ -118,7 +113,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_NAME: discovery_info[ssdp.ATTR_UPNP_FRIENDLY_NAME],
         }
         self.context["title_placeholders"] = {"name": user_input[CONF_NAME]}
-
+        self._force_pairing = True
         return await self.async_step_user(user_input)
 
 
@@ -141,8 +136,10 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             ):
                 errors["base"] = "script_notfound"
             elif (
-                self.hass.states.get(user_input.get(CONF_ON_ACTION))
-            ).domain != "script":
+                user_input.get(CONF_ON_ACTION)
+                and (self.hass.states.get(user_input.get(CONF_ON_ACTION))).domain
+                != "script"
+            ):
                 errors["base"] = "script_notfound"
             if "base" not in errors:
                 options_input = {
