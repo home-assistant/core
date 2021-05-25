@@ -11,7 +11,7 @@ import pytest
 from homeassistant import config_entries
 from homeassistant.components import ssdp
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import callback
+from homeassistant.core import CoreState, callback
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -336,6 +336,7 @@ async def test_scan_with_registered_callback(hass, aioclient_mock, caplog):
     }
     not_matching_intergration_callbacks = []
     intergration_callbacks = []
+    intergration_callbacks_from_cache = []
     match_any_callbacks = []
 
     @callback
@@ -345,6 +346,10 @@ async def test_scan_with_registered_callback(hass, aioclient_mock, caplog):
     @callback
     def _async_intergration_callbacks(info):
         intergration_callbacks.append(info)
+
+    @callback
+    def _async_intergration_callbacks_from_cache(info):
+        intergration_callbacks_from_cache.append(info)
 
     @callback
     def _async_not_matching_intergration_callbacks(info):
@@ -372,6 +377,7 @@ async def test_scan_with_registered_callback(hass, aioclient_mock, caplog):
         "homeassistant.components.ssdp.SSDPListener",
         new=_generate_fake_ssdp_listener,
     ):
+        hass.state = CoreState.stopped
         assert await async_setup_component(hass, ssdp.DOMAIN, {ssdp.DOMAIN: {}})
         await hass.async_block_till_done()
         ssdp.async_register_callback(hass, _async_exception_callbacks, {})
@@ -389,13 +395,24 @@ async def test_scan_with_registered_callback(hass, aioclient_mock, caplog):
             hass,
             _async_match_any_callbacks,
         )
+        await hass.async_block_till_done()
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=200))
+        ssdp.async_register_callback(
+            hass,
+            _async_intergration_callbacks_from_cache,
+            {ssdp.ATTR_SSDP_ST: "mock-st"},
+        )
+        await hass.async_block_till_done()
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        hass.state = CoreState.running
         await hass.async_block_till_done()
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=200))
         await hass.async_block_till_done()
+        assert hass.state == CoreState.running
 
-    assert len(intergration_callbacks) == 1
-    assert len(match_any_callbacks) == 1
+    assert len(intergration_callbacks) == 3
+    assert len(intergration_callbacks_from_cache) == 3
+    assert len(match_any_callbacks) == 3
     assert len(not_matching_intergration_callbacks) == 0
     assert intergration_callbacks[0] == {
         ssdp.ATTR_UPNP_DEVICE_TYPE: "Paulus",
@@ -503,7 +520,7 @@ async def test_scan_second_hit(hass, aioclient_mock, caplog):
     assert (
         ssdp.async_get_location_by_udn_st(
             hass, "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL", "mock-st"
-        )
+        )[ssdp.ATTR_SSDP_LOCATION]
         == "http://1.1.1.1"
     )
 
