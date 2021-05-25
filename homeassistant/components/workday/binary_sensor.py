@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import Any, Callable
+from typing import Any
 
 import holidays
 import voluptuous as vol
@@ -13,6 +13,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, WEEKDAYS
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt
 
 from .const import (
@@ -77,8 +78,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: Callable[[list], None],
-) -> bool:
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Workday sensor."""
     sensor_name = config_entry.data.get(CONF_NAME)
     country = config_entry.data[CONF_COUNTRY]
@@ -126,7 +127,7 @@ async def async_setup_entry(
         _LOGGER.debug("%s %s", date, name)
 
     async_add_entities(
-        [
+        new_entities=[
             IsWorkdaySensor(
                 obj_holidays,
                 workdays,
@@ -135,10 +136,9 @@ async def async_setup_entry(
                 sensor_name,
                 config_entry.unique_id,
             )
-        ]
+        ],
+        update_before_add=True,
     )
-
-    return True
 
 
 def day_to_string(day: int) -> str | None:

@@ -1,5 +1,4 @@
 """Config flow for workday integration."""
-import datetime
 import logging
 
 import holidays
@@ -11,6 +10,7 @@ from homeassistant.const import CONF_NAME
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import slugify
+import homeassistant.util.dt as dt
 
 from .const import (
     ALLOWED_DAYS,
@@ -67,7 +67,7 @@ async def validate_input(data, errors):
         errors[CONF_COUNTRY] = ERR_NO_COUNTRY
         return
 
-    year = datetime.datetime.now().year
+    year = dt.now().year
     obj_holidays = getattr(holidays, country)(years=year)
 
     if subcountry:
