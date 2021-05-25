@@ -36,7 +36,6 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, KNX_ADDRESS, SupportedPlatforms
 from .expose import KNXExposeSensor, KNXExposeTime, create_knx_exposure
-from .factory import create_knx_device
 from .schema import (
     BinarySensorSchema,
     ClimateSchema,
@@ -229,19 +228,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             )
 
     for platform in SupportedPlatforms:
-        if platform.value in config[DOMAIN]:
-            for device_config in config[DOMAIN][platform.value]:
-                create_knx_device(platform, knx_module.xknx, device_config)
-
-    # We need to wait until all entities are loaded into the device list since they could also be created from other platforms
-    for platform in SupportedPlatforms:
+        if platform.value not in config[DOMAIN]:
+            continue
         hass.async_create_task(
             discovery.async_load_platform(
                 hass,
                 platform.value,
                 DOMAIN,
                 {
-                    "platform_config": config[DOMAIN].get(platform.value),
+                    "platform_config": config[DOMAIN][platform.value],
                 },
                 config,
             )
