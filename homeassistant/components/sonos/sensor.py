@@ -58,3 +58,8 @@ class SonosBatteryEntity(SonosEntity, SensorEntity):
     def state(self) -> int | None:
         """Return the state of the sensor."""
         return self.speaker.battery_info.get("Level")
+
+    @property
+    def available(self) -> bool:
+        """Return whether this device is available."""
+        return self.speaker.available and self.speaker.power_source
