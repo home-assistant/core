@@ -95,8 +95,8 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
             str(self.alarm.start_time)[0:5],
         )
 
-    async def async_remove_if_not_available(self):
-        """Remove alarm entity if not available."""
+    async def async_check_if_available(self):
+        """Check if alarm exists and remove alarm entity if not available."""
         if self.alarm_id in self.hass.data[DATA_SONOS].alarms.keys():
             return True
 
@@ -110,8 +110,24 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
 
     async def async_update(self, now: datetime.datetime | None = None) -> None:
         """Poll the device for the current state."""
-        if await self.async_remove_if_not_available():
+        if await self.async_check_if_available():
             await self.hass.async_add_executor_job(self.update_alarm)
+
+    def update_alarm(self):
+        """Update the state of the alarm."""
+        _LOGGER.debug("Updating the state of the alarm")
+        if self.speaker.soco.uid != self.alarm.zone.uid:
+            self.speaker = self.hass.data[DATA_SONOS].discovered.get(
+                self.alarm.zone.uid
+            )
+            if self.speaker is None:
+                raise RuntimeError(
+                    "No configured Sonos speaker has been found to match the alarm."
+                )
+
+            self._update_device()
+
+        self.schedule_update_ha_state()
 
     def _update_device(self):
         """Update the device, since this alarm moved to a different player."""
@@ -135,22 +151,6 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
             entity_registry._async_update_entity(
                 self.entity_id, device_id=new_device.id
             )
-
-    def update_alarm(self):
-        """Update the state of the alarm."""
-        _LOGGER.debug("Updating the state of the alarm")
-        if self.speaker.soco.uid != self.alarm.zone.uid:
-            self.speaker = self.hass.data[DATA_SONOS].discovered.get(
-                self.alarm.zone.uid
-            )
-            if self.speaker is None:
-                raise RuntimeError(
-                    "No configured Sonos speaker has been found to match the alarm."
-                )
-
-            self._update_device()
-
-        self.schedule_update_ha_state()
 
     @property
     def _is_today(self):
@@ -192,15 +192,13 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
         """Turn alarm switch off."""
         await self.async_handle_switch_on_off(turn_on=False)
 
-    async def async_handle_switch_on_off(self, turn_on: bool) -> bool:
+    async def async_handle_switch_on_off(self, turn_on: bool) -> None:
         """Handle turn on/off of alarm switch."""
         try:
             _LOGGER.debug("Switching the state of the alarm")
             self.alarm.enabled = turn_on
             await self.hass.async_add_executor_job(self.alarm.save)
-            return True
         except SoCoUPnPException as exc:
             _LOGGER.warning(
                 "Home Assistant couldn't switch the alarm %s", exc, exc_info=True
             )
-            return False
