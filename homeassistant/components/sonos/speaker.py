@@ -67,19 +67,19 @@ UNAVAILABLE_VALUES = {"", "NOT_IMPLEMENTED", None}
 _LOGGER = logging.getLogger(__name__)
 
 
-def fetch_alarms_for_speaker(soco: SoCo) -> tuple[set[Alarm], set[int]]:
+def fetch_alarms_for_speaker(soco: SoCo) -> tuple[set[str], dict[str, Alarm]]:
     """Update current alarm instances.
 
     Returns a set of alarm instances that belong to a speaker and the list of all alarm ids
     """
+    all_alarms = {}
     available_alarms = set()
-    all_ids = set()
     for alarm in get_alarms(soco):
         if alarm.zone.uid == soco.uid:
-            available_alarms.add(alarm)
-        all_ids.add(alarm.alarm_id)
+            available_alarms.add(alarm.alarm_id)
+        all_alarms[alarm.alarm_id] = alarm
 
-    return available_alarms, all_ids
+    return available_alarms, all_alarms
 
 
 def fetch_battery_info_or_none(soco: SoCo) -> dict[str, Any] | None:
@@ -173,8 +173,6 @@ class SonosSpeaker:
         self._last_battery_event: datetime.datetime | None = None
         self._battery_poll_timer: Callable | None = None
 
-        self.available_alarms: set[Alarm] = set()
-
         self.volume: int | None = None
         self.muted: bool | None = None
         self.night_mode: bool | None = None
@@ -214,9 +212,11 @@ class SonosSpeaker:
         else:
             self._platforms_ready.update({BINARY_SENSOR_DOMAIN, SENSOR_DOMAIN})
 
-        self.available_alarms, _ = fetch_alarms_for_speaker(self.soco)
-        if bool(self.available_alarms):
-            dispatcher_send(self.hass, SONOS_CREATE_ALARM, self)
+        available_alarms, all_alarms = fetch_alarms_for_speaker(self.soco)
+        if bool(available_alarms):
+            for alarm_id in available_alarms:
+                self.hass.data[DATA_SONOS].alarms[alarm_id] = all_alarms[alarm_id]
+            dispatcher_send(self.hass, SONOS_CREATE_ALARM, self, available_alarms)
         else:
             self._platforms_ready.add(SWITCH_DOMAIN)
 
@@ -403,17 +403,20 @@ class SonosSpeaker:
         if event is None:
             return
 
-        self.available_alarms, all_alarm_ids = await self.hass.async_add_executor_job(
+        available_alarms, all_alarms = await self.hass.async_add_executor_job(
             fetch_alarms_for_speaker, self.soco
         )
 
-        for alarm_id in self.hass.data[DATA_SONOS].alarms:
-            if alarm_id not in all_alarm_ids:
-                self.hass.data[DATA_SONOS].alarms.remove(alarm_id)
+        for alarm_id in list(self.hass.data[DATA_SONOS].alarms.keys()):
+            if alarm_id not in all_alarms.keys():
+                self.hass.data[DATA_SONOS].alarms.pop(alarm_id)
 
-        for alarm in self.available_alarms:
-            if alarm.alarm_id not in self.hass.data[DATA_SONOS].alarms:
-                async_dispatcher_send(self.hass, SONOS_CREATE_ALARM, self)
+        for alarm_id in available_alarms:
+            if alarm_id not in self.hass.data[DATA_SONOS].alarms:
+                self.hass.data[DATA_SONOS].alarms[alarm_id] = all_alarms[alarm_id]
+                async_dispatcher_send(
+                    self.hass, SONOS_CREATE_ALARM, self, available_alarms
+                )
 
         async_dispatcher_send(self.hass, SONOS_ALARM_UPDATE, self)
 

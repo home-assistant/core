@@ -9,6 +9,7 @@ import socket
 
 import pysonos
 from pysonos import events_asyncio
+from pysonos.alarms import Alarm
 from pysonos.core import SoCo
 from pysonos.exceptions import SoCoException
 import voluptuous as vol
@@ -71,7 +72,7 @@ class SonosData:
         # OrderedDict behavior used by SonosFavorites
         self.discovered: OrderedDict[str, SonosSpeaker] = OrderedDict()
         self.favorites: dict[str, SonosFavorites] = {}
-        self.alarms: list[int] = []
+        self.alarms: dict[str, Alarm] = {}
         self.topology_condition = asyncio.Condition()
         self.discovery_thread = None
         self.hosts_heartbeat = None
