@@ -128,10 +128,9 @@ async def test_listen_failure(hass, client, error):
     assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_on_node_added_ready(
-    hass, multisensor_6_state, client, integration, device_registry
-):
+async def test_on_node_added_ready(hass, multisensor_6_state, client, integration):
     """Test we handle a ready node added event."""
+    dev_reg = dr.async_get(hass)
     node = Node(client, multisensor_6_state)
     event = {"node": node}
     air_temperature_device_id = f"{client.driver.controller.home_id}-{node.node_id}"
@@ -139,7 +138,7 @@ async def test_on_node_added_ready(
     state = hass.states.get(AIR_TEMPERATURE_SENSOR)
 
     assert not state  # entity and device not yet added
-    assert not device_registry.async_get_device(
+    assert not dev_reg.async_get_device(
         identifiers={(DOMAIN, air_temperature_device_id)}
     )
 
@@ -150,9 +149,7 @@ async def test_on_node_added_ready(
 
     assert state  # entity and device added
     assert state.state != STATE_UNAVAILABLE
-    assert device_registry.async_get_device(
-        identifiers={(DOMAIN, air_temperature_device_id)}
-    )
+    assert dev_reg.async_get_device(identifiers={(DOMAIN, air_temperature_device_id)})
 
 
 async def test_unique_id_migration_dupes(
@@ -473,10 +470,9 @@ async def test_old_entity_migration_notification_binary_sensor(
         )
 
 
-async def test_on_node_added_not_ready(
-    hass, multisensor_6_state, client, integration, device_registry
-):
+async def test_on_node_added_not_ready(hass, multisensor_6_state, client, integration):
     """Test we handle a non ready node added event."""
+    dev_reg = dr.async_get(hass)
     node_data = deepcopy(multisensor_6_state)  # Copy to allow modification in tests.
     node = Node(client, node_data)
     node.data["ready"] = False
@@ -486,7 +482,7 @@ async def test_on_node_added_not_ready(
     state = hass.states.get(AIR_TEMPERATURE_SENSOR)
 
     assert not state  # entity and device not yet added
-    assert not device_registry.async_get_device(
+    assert not dev_reg.async_get_device(
         identifiers={(DOMAIN, air_temperature_device_id)}
     )
 
@@ -496,9 +492,7 @@ async def test_on_node_added_not_ready(
     state = hass.states.get(AIR_TEMPERATURE_SENSOR)
 
     assert not state  # entity not yet added but device added in registry
-    assert device_registry.async_get_device(
-        identifiers={(DOMAIN, air_temperature_device_id)}
-    )
+    assert dev_reg.async_get_device(identifiers={(DOMAIN, air_temperature_device_id)})
 
     node.data["ready"] = True
     node.emit("ready", event)
@@ -510,10 +504,9 @@ async def test_on_node_added_not_ready(
     assert state.state != STATE_UNAVAILABLE
 
 
-async def test_existing_node_ready(
-    hass, client, multisensor_6, integration, device_registry
-):
+async def test_existing_node_ready(hass, client, multisensor_6, integration):
     """Test we handle a ready node that exists during integration setup."""
+    dev_reg = dr.async_get(hass)
     node = multisensor_6
     air_temperature_device_id = f"{client.driver.controller.home_id}-{node.node_id}"
 
@@ -521,9 +514,7 @@ async def test_existing_node_ready(
 
     assert state  # entity and device added
     assert state.state != STATE_UNAVAILABLE
-    assert device_registry.async_get_device(
-        identifiers={(DOMAIN, air_temperature_device_id)}
-    )
+    assert dev_reg.async_get_device(identifiers={(DOMAIN, air_temperature_device_id)})
 
 
 async def test_null_name(hass, client, null_name_check, integration):
@@ -532,8 +523,9 @@ async def test_null_name(hass, client, null_name_check, integration):
     assert hass.states.get(f"switch.node_{node.node_id}")
 
 
-async def test_existing_node_not_ready(hass, client, multisensor_6, device_registry):
+async def test_existing_node_not_ready(hass, client, multisensor_6):
     """Test we handle a non ready node that exists during integration setup."""
+    dev_reg = dr.async_get(hass)
     node = multisensor_6
     node.data = deepcopy(node.data)  # Copy to allow modification in tests.
     node.data["ready"] = False
@@ -548,7 +540,7 @@ async def test_existing_node_not_ready(hass, client, multisensor_6, device_regis
     state = hass.states.get(AIR_TEMPERATURE_SENSOR)
 
     assert not state  # entity not yet added
-    assert device_registry.async_get_device(  # device should be added
+    assert dev_reg.async_get_device(  # device should be added
         identifiers={(DOMAIN, air_temperature_device_id)}
     )
 
@@ -560,9 +552,7 @@ async def test_existing_node_not_ready(hass, client, multisensor_6, device_regis
 
     assert state  # entity and device added
     assert state.state != STATE_UNAVAILABLE
-    assert device_registry.async_get_device(
-        identifiers={(DOMAIN, air_temperature_device_id)}
-    )
+    assert dev_reg.async_get_device(identifiers={(DOMAIN, air_temperature_device_id)})
 
 
 async def test_start_addon(
