@@ -197,7 +197,7 @@ class Scanner:
         info, domains = self._info_domains(entry, info_req)
 
         if udn := info.get(ATTR_UPNP_UDN):
-            self.cache.setdefault((udn, entry.st), entry.location)
+            self.cache[(udn, entry.st)] = entry.location
 
         for ssdp_callback, match_dict in self._callbacks:
             if not all(item in info.items() for item in match_dict.items()):
