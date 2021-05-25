@@ -14,7 +14,7 @@ from netdisco import ssdp
 from homeassistant import config_entries
 from homeassistant.components import network
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import HomeAssistant, callback as core_callback
+from homeassistant.core import CoreState, HomeAssistant, callback as core_callback
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_ssdp, bind_hass
@@ -65,7 +65,7 @@ def async_register_callback(
 @bind_hass
 def async_get_location_by_udn_st(  # pylint: disable=invalid-name
     hass: HomeAssistant, udn: str, st: str
-) -> str | None:
+) -> dict[str, str] | None:
     """Lookup a location by udn and st from previous scans."""
     scanner: Scanner = hass.data[DOMAIN]
     return scanner.cache.get((udn, st))
@@ -88,6 +88,18 @@ def _async_use_default_interface(adapters: list[network.Adapter]) -> bool:
     return True
 
 
+def _callback_if_match(
+    callback: Callable[[dict], None], info: dict[str, str], match_dict: dict[str, str]
+) -> None:
+    """Fire a callback if info matches the match dict."""
+    if not all(item in info.items() for item in match_dict.items()):
+        return
+    try:
+        callback(info)
+    except Exception:  # pylint: disable=broad-except
+        _LOGGER.exception("Failed to callback info: %s", info)
+
+
 class Scanner:
     """Class to manage SSDP scanning."""
 
@@ -97,7 +109,7 @@ class Scanner:
         """Initialize class."""
         self.hass = hass
         self.seen: set[tuple[str, str]] = set()
-        self.cache: dict[tuple[str, str], str] = {}
+        self.cache: dict[tuple[str, str], dict[str, str]] = {}
         self._integration_matchers = integration_matchers
         self._cancel_scan: Callable[[], None] | None = None
         self._ssdp_listeners: list[SSDPListener] = []
@@ -118,6 +130,12 @@ class Scanner:
         """Register a callback."""
         if match_dict is None:
             match_dict = {}
+
+        # Make sure any entries that happened
+        # before the callback was registered are fired
+        if self.hass.state != CoreState.running:
+            for info in self.cache.values():
+                _callback_if_match(callback, info, match_dict)
 
         callback_entry = (callback, match_dict)
         self._callbacks.append(callback_entry)
@@ -197,16 +215,10 @@ class Scanner:
         info, domains = self._info_domains(entry, info_req)
 
         if udn := info.get(ATTR_UPNP_UDN):
-            self.cache[(udn, entry.st)] = entry.location
+            self.cache[(udn, entry.st)] = info
 
-        for ssdp_callback, match_dict in self._callbacks:
-            if not all(item in info.items() for item in match_dict.items()):
-                continue
-            try:
-                ssdp_callback(info)
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Failed to callback info: %s", info)
-                continue
+        for callback, match_dict in self._callbacks:
+            _callback_if_match(callback, info, match_dict)
 
         if key in self.seen:
             return
