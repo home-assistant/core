@@ -1,4 +1,6 @@
 """The tests for hls streams."""
+from __future__ import annotations
+
 import asyncio
 from collections import deque
 from datetime import timedelta
@@ -39,6 +41,7 @@ class SaveRecordWorkerSync:
         """Initialize SaveRecordWorkerSync."""
         self.reset()
         self._segments = None
+        self._save_thread = None
 
     def recorder_save_worker(self, file_out: str, segments: deque[Segment]):
         """Mock method for patch."""
