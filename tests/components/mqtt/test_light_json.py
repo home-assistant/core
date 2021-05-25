@@ -1281,6 +1281,7 @@ async def test_sending_xy_color(hass, mqtt_mock):
                 "command_topic": "test_light_rgb/set",
                 "brightness": True,
                 "xy": True,
+                "white_value": True,
             }
         },
     )
