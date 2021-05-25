@@ -104,8 +104,11 @@ class ONVIFDevice:
 
             # Fetch basic device info and capabilities
             self.info = await self.async_get_device_info()
+            LOGGER.debug("Camera %s info = %s", self.name, self.info)
             self.capabilities = await self.async_get_capabilities()
+            LOGGER.debug("Camera %s capabilities = %s", self.name, self.capabilities)
             self.profiles = await self.async_get_profiles()
+            LOGGER.debug("Camera %s profiles = %s", self.name, self.profiles)
 
             # No camera profiles to add
             if not self.profiles:
