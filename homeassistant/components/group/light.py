@@ -27,6 +27,8 @@ from homeassistant.components.light import (
     ATTR_TRANSITION,
     ATTR_WHITE_VALUE,
     ATTR_XY_COLOR,
+    COLOR_MODE_BRIGHTNESS,
+    COLOR_MODE_ONOFF,
     PLATFORM_SCHEMA,
     SUPPORT_EFFECT,
     SUPPORT_FLASH,
@@ -386,8 +388,12 @@ class LightGroup(GroupEntity, light.LightEntity):
         self._color_mode = None
         all_color_modes = list(_find_state_attributes(on_states, ATTR_COLOR_MODE))
         if all_color_modes:
-            # Report the most common color mode.
+            # Report the most common color mode, select brightness and onoff last
             color_mode_count = Counter(itertools.chain(all_color_modes))
+            if COLOR_MODE_ONOFF in color_mode_count:
+                color_mode_count[COLOR_MODE_ONOFF] = -1
+            if COLOR_MODE_BRIGHTNESS in color_mode_count:
+                color_mode_count[COLOR_MODE_BRIGHTNESS] = 0
             self._color_mode = color_mode_count.most_common(1)[0][0]
 
         self._supported_color_modes = None
