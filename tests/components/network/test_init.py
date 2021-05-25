@@ -12,26 +12,8 @@ from homeassistant.components.network.const import (
 )
 from homeassistant.setup import async_setup_component
 
-_ROUTE_NO_LOOPBACK = (
-    {
-        "attrs": [
-            ("RTA_TABLE", 254),
-            ("RTA_DST", "224.0.0.251"),
-            ("RTA_OIF", 4),
-            ("RTA_PREFSRC", "192.168.1.5"),
-        ],
-    },
-)
-_ROUTE_LOOPBACK = (
-    {
-        "attrs": [
-            ("RTA_TABLE", 254),
-            ("RTA_DST", "224.0.0.251"),
-            ("RTA_OIF", 4),
-            ("RTA_PREFSRC", "127.0.0.1"),
-        ],
-    },
-)
+_NO_LOOPBACK_IPADDR = "192.168.1.5"
+_LOOPBACK_IPADDR = "127.0.0.1"
 
 
 def _generate_mock_adapters():
@@ -53,8 +35,8 @@ def _generate_mock_adapters():
 async def test_async_detect_interfaces_setting_non_loopback_route(hass, hass_storage):
     """Test without default interface config and the route returns a non-loopback address."""
     with patch(
-        "homeassistant.components.network.util.IPRoute.route",
-        return_value=_ROUTE_NO_LOOPBACK,
+        "homeassistant.components.network.util.socket.socket.getsockname",
+        return_value=[_NO_LOOPBACK_IPADDR],
     ), patch(
         "homeassistant.components.network.util.ifaddr.get_adapters",
         return_value=_generate_mock_adapters(),
@@ -111,8 +93,8 @@ async def test_async_detect_interfaces_setting_non_loopback_route(hass, hass_sto
 async def test_async_detect_interfaces_setting_loopback_route(hass, hass_storage):
     """Test without default interface config and the route returns a loopback address."""
     with patch(
-        "homeassistant.components.network.util.IPRoute.route",
-        return_value=_ROUTE_LOOPBACK,
+        "homeassistant.components.network.util.socket.socket.getsockname",
+        return_value=[_LOOPBACK_IPADDR],
     ), patch(
         "homeassistant.components.network.util.ifaddr.get_adapters",
         return_value=_generate_mock_adapters(),
@@ -168,7 +150,7 @@ async def test_async_detect_interfaces_setting_loopback_route(hass, hass_storage
 async def test_async_detect_interfaces_setting_empty_route(hass, hass_storage):
     """Test without default interface config and the route returns nothing."""
     with patch(
-        "homeassistant.components.network.util.IPRoute.route",
+        "homeassistant.components.network.util.socket.socket.getsockname",
         return_value=[],
     ), patch(
         "homeassistant.components.network.util.ifaddr.get_adapters",
@@ -225,7 +207,7 @@ async def test_async_detect_interfaces_setting_empty_route(hass, hass_storage):
 async def test_async_detect_interfaces_setting_exception(hass, hass_storage):
     """Test without default interface config and the route throws an exception."""
     with patch(
-        "homeassistant.components.network.util.IPRoute.route",
+        "homeassistant.components.network.util.socket.socket.getsockname",
         side_effect=AttributeError,
     ), patch(
         "homeassistant.components.network.util.ifaddr.get_adapters",
@@ -287,8 +269,8 @@ async def test_interfaces_configured_from_storage(hass, hass_storage):
         "data": {ATTR_CONFIGURED_ADAPTERS: ["eth0", "eth1", "vtun0"]},
     }
     with patch(
-        "homeassistant.components.network.util.IPRoute.route",
-        return_value=_ROUTE_NO_LOOPBACK,
+        "homeassistant.components.network.util.socket.socket.getsockname",
+        return_value=[_NO_LOOPBACK_IPADDR],
     ), patch(
         "homeassistant.components.network.util.ifaddr.get_adapters",
         return_value=_generate_mock_adapters(),
@@ -352,8 +334,8 @@ async def test_interfaces_configured_from_storage_websocket_update(
         "data": {ATTR_CONFIGURED_ADAPTERS: ["eth0", "eth1", "vtun0"]},
     }
     with patch(
-        "homeassistant.components.network.util.IPRoute.route",
-        return_value=_ROUTE_NO_LOOPBACK,
+        "homeassistant.components.network.util.socket.socket.getsockname",
+        return_value=[_NO_LOOPBACK_IPADDR],
     ), patch(
         "homeassistant.components.network.util.ifaddr.get_adapters",
         return_value=_generate_mock_adapters(),
