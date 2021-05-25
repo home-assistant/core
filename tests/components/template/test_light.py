@@ -435,7 +435,6 @@ async def test_on_action_with_transition(hass, calls):
     )
 
     assert len(calls) == 1
-    print(calls[0].data)
     assert calls[0].data["transition"] == 5
 
 
