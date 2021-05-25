@@ -371,6 +371,12 @@ def zem_31_state_fixture():
     return json.loads(load_fixture("zwave_js/zen_31_state.json"))
 
 
+@pytest.fixture(name="wallmote_central_scene_state", scope="session")
+def wallmote_central_scene_state_fixture():
+    """Load the wallmote central scene node state fixture data."""
+    return json.loads(load_fixture("zwave_js/wallmote_central_scene_state.json"))
+
+
 @pytest.fixture(name="client")
 def mock_client_fixture(controller_state, version_state):
     """Mock a client."""
@@ -709,5 +715,13 @@ def vision_security_zl7432_fixture(client, vision_security_zl7432_state):
 def zen_31_fixture(client, zen_31_state):
     """Mock a bulb 6 multi-color node."""
     node = Node(client, copy.deepcopy(zen_31_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="wallmote_central_scene")
+def wallmote_central_scene_fixture(client, wallmote_central_scene_state):
+    """Mock a wallmote central scene node."""
+    node = Node(client, copy.deepcopy(wallmote_central_scene_state))
     client.driver.controller.nodes[node.node_id] = node
     return node
