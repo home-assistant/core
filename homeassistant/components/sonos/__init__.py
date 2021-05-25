@@ -146,7 +146,7 @@ async def async_setup_entry(  # noqa: C901
                 if player.is_visible:
                     # Make sure that the player is available
                     _ = player.volume
-                _discovered_player(player)
+                _discovered_player(player, include_invisible=True)
             except (OSError, SoCoException) as ex:
                 _LOGGER.debug("Exception %s", ex)
                 if now is None:
@@ -161,13 +161,14 @@ async def async_setup_entry(  # noqa: C901
     def _async_signal_update_groups(event):
         async_dispatcher_send(hass, SONOS_GROUP_UPDATE)
 
-    def _discovered_ip(ip_address):
+    def _discovered_ip(ip_address, include_invisible=False):
         try:
             player = pysonos.SoCo(ip_address)
         except (OSError, SoCoException):
             _LOGGER.debug("Failed to connect to discovered player '%s'", ip_address)
             return
-        _discovered_player(player)
+        if include_invisible or player.is_visible:
+            _discovered_player(player)
 
     async def _async_create_discovered_player(uid, discovered_ip):
         """Only create one player at a time."""
