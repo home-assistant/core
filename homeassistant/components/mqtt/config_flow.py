@@ -65,6 +65,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
             if can_connect:
+                user_input[CONF_DISCOVERY] = DEFAULT_DISCOVERY
                 return self.async_create_entry(
                     title=user_input[CONF_BROKER], data=user_input
                 )
@@ -76,7 +77,6 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         fields[vol.Required(CONF_PORT, default=1883)] = vol.Coerce(int)
         fields[vol.Optional(CONF_USERNAME)] = str
         fields[vol.Optional(CONF_PASSWORD)] = str
-        fields[vol.Optional(CONF_DISCOVERY, default=DEFAULT_DISCOVERY)] = bool
 
         return self.async_show_form(
             step_id="broker", data_schema=vol.Schema(fields), errors=errors
@@ -126,7 +126,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                         CONF_USERNAME: data.get(CONF_USERNAME),
                         CONF_PASSWORD: data.get(CONF_PASSWORD),
                         CONF_PROTOCOL: data.get(CONF_PROTOCOL),
-                        CONF_DISCOVERY: user_input[CONF_DISCOVERY],
+                        CONF_DISCOVERY: DEFAULT_DISCOVERY,
                     },
                 )
 
@@ -135,9 +135,6 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="hassio_confirm",
             description_placeholders={"addon": self._hassio_discovery["addon"]},
-            data_schema=vol.Schema(
-                {vol.Optional(CONF_DISCOVERY, default=DEFAULT_DISCOVERY): bool}
-            ),
             errors=errors,
         )
 

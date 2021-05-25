@@ -188,7 +188,7 @@ class TimerStorageCollection(collection.StorageCollection):
 class Timer(RestoreEntity):
     """Representation of a timer."""
 
-    def __init__(self, config: dict):
+    def __init__(self, config: dict) -> None:
         """Initialize a timer."""
         self._config: dict = config
         self.editable: bool = True

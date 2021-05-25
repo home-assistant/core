@@ -388,10 +388,11 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
             green = multi_color.get("green", green_val.value)
             blue = multi_color.get("blue", blue_val.value)
             self._supports_color = True
-            # convert to HS
-            self._hs_color = color_util.color_RGB_to_hs(red, green, blue)
-            # Light supports color, set color mode to hs
-            self._color_mode = COLOR_MODE_HS
+            if None not in (red, green, blue):
+                # convert to HS
+                self._hs_color = color_util.color_RGB_to_hs(red, green, blue)
+                # Light supports color, set color mode to hs
+                self._color_mode = COLOR_MODE_HS
 
         # color temperature support
         if ww_val and cw_val:

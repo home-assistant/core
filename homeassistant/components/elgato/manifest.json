@@ -1,6 +1,6 @@
 {
   "domain": "elgato",
-  "name": "Elgato Key Light",
+  "name": "Elgato Light",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/elgato",
   "requirements": ["elgato==2.1.0"],

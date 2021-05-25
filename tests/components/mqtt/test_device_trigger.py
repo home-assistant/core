@@ -1164,7 +1164,7 @@ async def test_trigger_debug_info(hass, mqtt_mock):
     """
     registry = dr.async_get(hass)
 
-    config = {
+    config1 = {
         "platform": "mqtt",
         "automation_type": "trigger",
         "topic": "test-topic",
@@ -1178,8 +1178,20 @@ async def test_trigger_debug_info(hass, mqtt_mock):
             "sw_version": "0.1-beta",
         },
     }
-    data = json.dumps(config)
-    async_fire_mqtt_message(hass, "homeassistant/device_automation/bla/config", data)
+    config2 = {
+        "platform": "mqtt",
+        "automation_type": "trigger",
+        "topic": "test-topic2",
+        "type": "foo",
+        "subtype": "bar",
+        "device": {
+            "connections": [[dr.CONNECTION_NETWORK_MAC, "02:5b:26:a8:dc:12"]],
+        },
+    }
+    data = json.dumps(config1)
+    async_fire_mqtt_message(hass, "homeassistant/device_automation/bla1/config", data)
+    data = json.dumps(config2)
+    async_fire_mqtt_message(hass, "homeassistant/device_automation/bla2/config", data)
     await hass.async_block_till_done()
 
     device = registry.async_get_device(
@@ -1189,9 +1201,31 @@ async def test_trigger_debug_info(hass, mqtt_mock):
 
     debug_info_data = await debug_info.info_for_device(hass, device.id)
     assert len(debug_info_data["entities"]) == 0
+    assert len(debug_info_data["triggers"]) == 2
+    topic_map = {
+        "homeassistant/device_automation/bla1/config": config1,
+        "homeassistant/device_automation/bla2/config": config2,
+    }
+    assert (
+        topic_map[debug_info_data["triggers"][0]["discovery_data"]["topic"]]
+        != topic_map[debug_info_data["triggers"][1]["discovery_data"]["topic"]]
+    )
+    assert (
+        debug_info_data["triggers"][0]["discovery_data"]["payload"]
+        == topic_map[debug_info_data["triggers"][0]["discovery_data"]["topic"]]
+    )
+    assert (
+        debug_info_data["triggers"][1]["discovery_data"]["payload"]
+        == topic_map[debug_info_data["triggers"][1]["discovery_data"]["topic"]]
+    )
+
+    async_fire_mqtt_message(hass, "homeassistant/device_automation/bla1/config", "")
+    await hass.async_block_till_done()
+    debug_info_data = await debug_info.info_for_device(hass, device.id)
+    assert len(debug_info_data["entities"]) == 0
     assert len(debug_info_data["triggers"]) == 1
     assert (
         debug_info_data["triggers"][0]["discovery_data"]["topic"]
-        == "homeassistant/device_automation/bla/config"
+        == "homeassistant/device_automation/bla2/config"
     )
-    assert debug_info_data["triggers"][0]["discovery_data"]["payload"] == config
+    assert debug_info_data["triggers"][0]["discovery_data"]["payload"] == config2

@@ -85,7 +85,7 @@ class RokuDataUpdateCoordinator(DataUpdateCoordinator[Device]):
         hass: HomeAssistant,
         *,
         host: str,
-    ):
+    ) -> None:
         """Initialize global Roku data updater."""
         self.roku = Roku(host=host, session=async_get_clientsession(hass))
 

@@ -41,7 +41,7 @@ UPDATE_FIELDS = {
 class TagIDExistsError(HomeAssistantError):
     """Raised when an item is not found."""
 
-    def __init__(self, item_id: str):
+    def __init__(self, item_id: str) -> None:
         """Initialize tag ID exists error."""
         super().__init__(f"Tag with ID {item_id} already exists.")
         self.item_id = item_id

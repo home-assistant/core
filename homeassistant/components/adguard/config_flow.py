@@ -65,13 +65,9 @@ class AdGuardHomeFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return await self._show_setup_form(user_input)
 
-        entries = self._async_current_entries()
-        for entry in entries:
-            if (
-                entry.data[CONF_HOST] == user_input[CONF_HOST]
-                and entry.data[CONF_PORT] == user_input[CONF_PORT]
-            ):
-                return self.async_abort(reason="already_configured")
+        self._async_abort_entries_match(
+            {CONF_HOST: user_input[CONF_HOST], CONF_PORT: user_input[CONF_PORT]}
+        )
 
         errors = {}
 

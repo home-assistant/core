@@ -2,8 +2,6 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Iterable
-from typing import Callable
 
 from homeassistant.components.alarm_control_panel import (
     FORMAT_NUMBER,
@@ -15,7 +13,8 @@ from homeassistant.components.alarm_control_panel.const import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import ALARM_STATE_TO_HA, CONF_GIID, DOMAIN, LOGGER
@@ -25,7 +24,7 @@ from .coordinator import VerisureDataUpdateCoordinator
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: Callable[[Iterable[Entity]], None],
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Verisure alarm control panel from a config entry."""
     async_add_entities([VerisureAlarm(coordinator=hass.data[DOMAIN][entry.entry_id])])
@@ -36,18 +35,10 @@ class VerisureAlarm(CoordinatorEntity, AlarmControlPanelEntity):
 
     coordinator: VerisureDataUpdateCoordinator
 
+    _attr_name = "Verisure Alarm"
+    _attr_supported_features = SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY
+
     _changed_by: str | None = None
-    _state: str | None = None
-
-    @property
-    def name(self) -> str:
-        """Return the name of the entity."""
-        return "Verisure Alarm"
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique ID for this entity."""
-        return self.coordinator.entry.data[CONF_GIID]
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -58,11 +49,6 @@ class VerisureAlarm(CoordinatorEntity, AlarmControlPanelEntity):
             "model": "VBox",
             "identifiers": {(DOMAIN, self.coordinator.entry.data[CONF_GIID])},
         }
-
-    @property
-    def state(self) -> str | None:
-        """Return the state of the entity."""
-        return self._state
 
     @property
     def supported_features(self) -> int:
@@ -110,7 +96,7 @@ class VerisureAlarm(CoordinatorEntity, AlarmControlPanelEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        self._state = ALARM_STATE_TO_HA.get(
+        self._attr_state = ALARM_STATE_TO_HA.get(
             self.coordinator.data["alarm"]["statusType"]
         )
         self._changed_by = self.coordinator.data["alarm"].get("name")

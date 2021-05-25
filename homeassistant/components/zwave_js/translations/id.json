@@ -4,7 +4,6 @@
             "addon_get_discovery_info_failed": "Gagal mendapatkan info penemuan add-on Z-Wave JS.",
             "addon_info_failed": "Gagal mendapatkan info add-on Z-Wave JS.",
             "addon_install_failed": "Gagal menginstal add-on Z-Wave JS.",
-            "addon_missing_discovery_info": "Info penemuan add-on Z-Wave JS tidak ada.",
             "addon_set_config_failed": "Gagal menyetel konfigurasi Z-Wave JS.",
             "addon_start_failed": "Gagal memulai add-on Z-Wave JS.",
             "already_configured": "Perangkat sudah dikonfigurasi",
@@ -49,11 +48,6 @@
             },
             "start_addon": {
                 "title": "Add-on Z-Wave JS sedang dimulai."
-            },
-            "user": {
-                "data": {
-                    "url": "URL"
-                }
             }
         }
     },

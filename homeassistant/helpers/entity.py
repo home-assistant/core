@@ -115,7 +115,7 @@ class DeviceInfo(TypedDict, total=False):
 
     name: str
     connections: set[tuple[str, str]]
-    identifiers: set[tuple[str, ...]]
+    identifiers: set[tuple[str, str]]
     manufacturer: str
     model: str
     suggested_area: str
@@ -138,7 +138,6 @@ class Entity(ABC):
     # Owning hass instance. Will be set by EntityPlatform
     # While not purely typed, it makes typehinting more useful for us
     # and removes the need for constant None checks or asserts.
-    # Ignore types: https://github.com/PyCQA/pylint/issues/3167
     hass: HomeAssistant = None  # type: ignore
 
     # Owning platform instance. Will be set by EntityPlatform
@@ -169,28 +168,46 @@ class Entity(ABC):
     # If entity is added to an entity platform
     _added = False
 
+    # Entity Properties
+    _attr_assumed_state: bool = False
+    _attr_available: bool = True
+    _attr_context_recent_time: timedelta = timedelta(seconds=5)
+    _attr_device_class: str | None = None
+    _attr_device_info: DeviceInfo | None = None
+    _attr_entity_picture: str | None = None
+    _attr_entity_registry_enabled_default: bool = True
+    _attr_extra_state_attributes: Mapping[str, Any] | None = None
+    _attr_force_update: bool = False
+    _attr_icon: str | None = None
+    _attr_name: str | None = None
+    _attr_should_poll: bool = True
+    _attr_state: StateType = STATE_UNKNOWN
+    _attr_supported_features: int | None = None
+    _attr_unique_id: str | None = None
+    _attr_unit_of_measurement: str | None = None
+
     @property
     def should_poll(self) -> bool:
         """Return True if entity has to be polled for state.
 
         False if entity pushes its state to HA.
         """
-        return True
+        return self._attr_should_poll
 
     @property
     def unique_id(self) -> str | None:
         """Return a unique ID."""
-        return None
+        return self._attr_unique_id
 
     @property
     def name(self) -> str | None:
         """Return the name of the entity."""
-        return None
+        return self._attr_name
 
     @property
     def state(self) -> StateType:
         """Return the state of the entity."""
-        return STATE_UNKNOWN
+        return self._attr_state
 
     @property
     def capability_attributes(self) -> Mapping[str, Any] | None:
@@ -228,7 +245,7 @@ class Entity(ABC):
         Implemented by platform classes. Convention for attribute names
         is lowercase snake_case.
         """
-        return None
+        return self._attr_extra_state_attributes
 
     @property
     def device_info(self) -> DeviceInfo | None:
@@ -236,37 +253,37 @@ class Entity(ABC):
 
         Implemented by platform classes.
         """
-        return None
+        return self._attr_device_info
 
     @property
     def device_class(self) -> str | None:
         """Return the class of this device, from component DEVICE_CLASSES."""
-        return None
+        return self._attr_device_class
 
     @property
     def unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of this entity, if any."""
-        return None
+        return self._attr_unit_of_measurement
 
     @property
     def icon(self) -> str | None:
         """Return the icon to use in the frontend, if any."""
-        return None
+        return self._attr_icon
 
     @property
     def entity_picture(self) -> str | None:
         """Return the entity picture to use in the frontend, if any."""
-        return None
+        return self._attr_entity_picture
 
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return True
+        return self._attr_available
 
     @property
     def assumed_state(self) -> bool:
         """Return True if unable to access real state of the entity."""
-        return False
+        return self._attr_assumed_state
 
     @property
     def force_update(self) -> bool:
@@ -275,22 +292,22 @@ class Entity(ABC):
         If True, a state change will be triggered anytime the state property is
         updated, not just when the value changes.
         """
-        return False
+        return self._attr_force_update
 
     @property
     def supported_features(self) -> int | None:
         """Flag supported features."""
-        return None
+        return self._attr_supported_features
 
     @property
     def context_recent_time(self) -> timedelta:
         """Time that a context is considered recent."""
-        return timedelta(seconds=5)
+        return self._attr_context_recent_time
 
     @property
     def entity_registry_enabled_default(self) -> bool:
         """Return if the entity should be enabled when first added to the entity registry."""
-        return True
+        return self._attr_entity_registry_enabled_default
 
     # DO NOT OVERWRITE
     # These properties and methods are either managed by Home Assistant or they
@@ -750,7 +767,7 @@ class ToggleEntity(Entity):
     """An abstract class for entities that can be turned on and off."""
 
     @property
-    def state(self) -> str:
+    def state(self) -> str | None:
         """Return the state."""
         return STATE_ON if self.is_on else STATE_OFF
 

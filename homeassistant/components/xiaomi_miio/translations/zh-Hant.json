@@ -9,7 +9,7 @@
             "no_device_selected": "\u672a\u9078\u64c7\u88dd\u7f6e\uff0c\u8acb\u9078\u64c7\u4e00\u9805\u88dd\u7f6e\u3002",
             "unknown_device": "\u88dd\u7f6e\u578b\u865f\u672a\u77e5\uff0c\u7121\u6cd5\u4f7f\u7528\u8a2d\u5b9a\u6d41\u7a0b\u3002"
         },
-        "flow_title": "Xiaomi Miio\uff1a{name}",
+        "flow_title": "{name}",
         "step": {
             "device": {
                 "data": {

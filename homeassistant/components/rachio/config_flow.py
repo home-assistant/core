@@ -79,14 +79,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_homekit(self, discovery_info):
         """Handle HomeKit discovery."""
-        if self._async_current_entries():
-            # We can see rachio on the network to tell them to configure
-            # it, but since the device will not give up the account it is
-            # bound to and there can be multiple rachio systems on a single
-            # account, we avoid showing the device as discovered once
-            # they already have one configured as they can always
-            # add a new one via "+"
-            return self.async_abort(reason="already_configured")
+        self._async_abort_entries_match()
         properties = {
             key.lower(): value for (key, value) in discovery_info["properties"].items()
         }
@@ -103,7 +96,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 class OptionsFlowHandler(config_entries.OptionsFlow):
     """Handle a option flow for Rachio."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry):
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize options flow."""
         self.config_entry = config_entry
 

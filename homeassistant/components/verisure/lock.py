@@ -2,8 +2,6 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Iterable
-from typing import Callable
 
 from verisure import Error as VerisureError
 
@@ -11,8 +9,11 @@ from homeassistant.components.lock import LockEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_CODE, STATE_LOCKED, STATE_UNLOCKED
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo, Entity
-from homeassistant.helpers.entity_platform import current_platform
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import (
+    AddEntitiesCallback,
+    async_get_current_platform,
+)
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
@@ -31,12 +32,12 @@ from .coordinator import VerisureDataUpdateCoordinator
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: Callable[[Iterable[Entity]], None],
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Verisure alarm control panel from a config entry."""
     coordinator: VerisureDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
-    platform = current_platform.get()
+    platform = async_get_current_platform()
     platform.async_register_entity_service(
         SERVICE_DISABLE_AUTOLOCK,
         {},
@@ -64,21 +65,15 @@ class VerisureDoorlock(CoordinatorEntity, LockEntity):
     ) -> None:
         """Initialize the Verisure lock."""
         super().__init__(coordinator)
+
+        self._attr_name = coordinator.data["locks"][serial_number]["area"]
+        self._attr_unique_id = serial_number
+
         self.serial_number = serial_number
         self._state = None
         self._digits = coordinator.entry.options.get(
             CONF_LOCK_CODE_DIGITS, DEFAULT_LOCK_CODE_DIGITS
         )
-
-    @property
-    def name(self) -> str:
-        """Return the name of this entity."""
-        return self.coordinator.data["locks"][self.serial_number]["area"]
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique ID for this entity."""
-        return self.serial_number
 
     @property
     def device_info(self) -> DeviceInfo:

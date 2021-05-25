@@ -47,9 +47,7 @@ class KeeneticFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by the user."""
         errors = {}
         if user_input is not None:
-            for entry in self.hass.config_entries.async_entries(DOMAIN):
-                if entry.data[CONF_HOST] == user_input[CONF_HOST]:
-                    return self.async_abort(reason="already_configured")
+            self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
 
             _client = Client(
                 TelnetConnection(
@@ -91,7 +89,7 @@ class KeeneticFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 class KeeneticOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle options."""
 
-    def __init__(self, config_entry: ConfigEntry):
+    def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize options flow."""
         self.config_entry = config_entry
         self._interface_options = {}

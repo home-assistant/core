@@ -622,7 +622,7 @@ async def test_delay_template_invalid(hass, caplog):
     assert_action_trace(
         {
             "0": [{"result": {"event": "test_event", "event_data": {}}}],
-            "1": [{"error_type": script._StopScript}],
+            "1": [{"error_type": vol.MultipleInvalid}],
         },
         expected_script_execution="aborted",
     )
@@ -683,7 +683,7 @@ async def test_delay_template_complex_invalid(hass, caplog):
     assert_action_trace(
         {
             "0": [{"result": {"event": "test_event", "event_data": {}}}],
-            "1": [{"error_type": script._StopScript}],
+            "1": [{"error_type": vol.MultipleInvalid}],
         },
         expected_script_execution="aborted",
     )
@@ -1138,7 +1138,7 @@ async def test_wait_continue_on_timeout(
     }
     if continue_on_timeout is False:
         expected_trace["0"][0]["result"]["timeout"] = True
-        expected_trace["0"][0]["error_type"] = script._StopScript
+        expected_trace["0"][0]["error_type"] = asyncio.TimeoutError
         expected_script_execution = "aborted"
     else:
         expected_trace["1"] = [
@@ -1412,8 +1412,7 @@ async def test_condition_warning(hass, caplog):
         {
             "0": [{"result": {"event": "test_event", "event_data": {}}}],
             "1": [{"error_type": script._StopScript, "result": {"result": False}}],
-            "1/condition": [{"error_type": ConditionError}],
-            "1/condition/entity_id/0": [{"error_type": ConditionError}],
+            "1/entity_id/0": [{"error_type": ConditionError}],
         },
         expected_script_execution="aborted",
     )
@@ -1448,8 +1447,7 @@ async def test_condition_basic(hass, caplog):
     assert_action_trace(
         {
             "0": [{"result": {"event": "test_event", "event_data": {}}}],
-            "1": [{"result": {"result": True}}],
-            "1/condition": [{"result": {"entities": ["test.entity"], "result": True}}],
+            "1": [{"result": {"entities": ["test.entity"], "result": True}}],
             "2": [{"result": {"event": "test_event", "event_data": {}}}],
         }
     )
@@ -1465,8 +1463,12 @@ async def test_condition_basic(hass, caplog):
     assert_action_trace(
         {
             "0": [{"result": {"event": "test_event", "event_data": {}}}],
-            "1": [{"error_type": script._StopScript, "result": {"result": False}}],
-            "1/condition": [{"result": {"entities": ["test.entity"], "result": False}}],
+            "1": [
+                {
+                    "error_type": script._StopScript,
+                    "result": {"entities": ["test.entity"], "result": False},
+                }
+            ],
         },
         expected_script_execution="aborted",
     )
