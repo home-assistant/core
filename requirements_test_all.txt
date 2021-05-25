@@ -112,7 +112,7 @@ aioguardian==1.0.4
 aioharmony==0.2.7
 
 # homeassistant.components.homekit_controller
-aiohomekit==0.2.64
+aiohomekit==0.2.65
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -149,7 +149,7 @@ aiopylgtv==0.4.0
 aiorecollect==1.0.4
 
 # homeassistant.components.shelly
-aioshelly==0.6.3
+aioshelly==0.6.4
 
 # homeassistant.components.switcher_kis
 aioswitcher==1.2.1
@@ -289,9 +289,6 @@ dsmr_parser==0.29
 
 # homeassistant.components.dynalite
 dynalite_devices==0.1.46
-
-# homeassistant.components.ee_brightbox
-eebrightbox==0.0.4
 
 # homeassistant.components.elgato
 elgato==2.1.0
@@ -873,6 +870,9 @@ pymazda==0.1.5
 # homeassistant.components.melcloud
 pymelcloud==2.5.2
 
+# homeassistant.components.meteoclimatic
+pymeteoclimatic==0.0.6
+
 # homeassistant.components.somfy
 pymfy==0.9.3
 
@@ -1294,7 +1294,7 @@ xmltodict==0.12.0
 yalexs==1.1.11
 
 # homeassistant.components.yeelight
-yeelight==0.6.2
+yeelight==0.6.3
 
 # homeassistant.components.onvif
 zeep[async]==4.0.0
@@ -1324,4 +1324,4 @@ zigpy-znp==0.5.1
 zigpy==0.33.0
 
 # homeassistant.components.zwave_js
-zwave-js-server-python==0.24.0
+zwave-js-server-python==0.25.0

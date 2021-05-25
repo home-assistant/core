@@ -10,6 +10,8 @@ from homeassistant.const import (
     VOLT,
 )
 
+PLATFORMS = ["binary_sensor", "climate", "cover", "light", "scene", "sensor", "switch"]
+
 DOMAIN = "lcn"
 DATA_LCN = "lcn"
 DEFAULT_NAME = "pchk"

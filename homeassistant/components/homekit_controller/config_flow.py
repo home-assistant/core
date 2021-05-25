@@ -238,6 +238,11 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         # (config_num) for changes. If it changes, we check for new entities
         if paired and hkid in self.hass.data.get(KNOWN_DEVICES, {}):
             conn = self.hass.data[KNOWN_DEVICES][hkid]
+            # When we rediscover the device, let aiohomekit know
+            # that the device is available and we should not wait
+            # to retry connecting any longer. reconnect_soon
+            # will do nothing if the device is already connected
+            await conn.pairing.connection.reconnect_soon()
             if conn.config_num != config_num:
                 _LOGGER.debug(
                     "HomeKit info %s: c# incremented, refreshing entities", hkid

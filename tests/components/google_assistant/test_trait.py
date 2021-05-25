@@ -26,6 +26,10 @@ from homeassistant.components.climate import const as climate
 from homeassistant.components.google_assistant import const, error, helpers, trait
 from homeassistant.components.google_assistant.error import SmartHomeError
 from homeassistant.components.humidifier import const as humidifier
+from homeassistant.components.media_player.const import (
+    MEDIA_TYPE_CHANNEL,
+    SERVICE_PLAY_MEDIA,
+)
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
@@ -2653,3 +2657,52 @@ async def test_media_state(hass, state):
         "activityState": trt.activity_lookup.get(state),
         "playbackState": trt.playback_lookup.get(state),
     }
+
+
+async def test_channel(hass):
+    """Test Channel trait support."""
+    assert helpers.get_google_type(media_player.DOMAIN, None) is not None
+    assert trait.ChannelTrait.supported(
+        media_player.DOMAIN,
+        media_player.SUPPORT_PLAY_MEDIA,
+        media_player.DEVICE_CLASS_TV,
+        None,
+    )
+    assert (
+        trait.ChannelTrait.supported(
+            media_player.DOMAIN, media_player.SUPPORT_PLAY_MEDIA, None, None
+        )
+        is False
+    )
+    assert trait.ChannelTrait.supported(media_player.DOMAIN, 0, None, None) is False
+
+    trt = trait.ChannelTrait(hass, State("media_player.demo", STATE_ON), BASIC_CONFIG)
+
+    assert trt.sync_attributes() == {
+        "availableChannels": [],
+        "commandOnlyChannels": True,
+    }
+    assert trt.query_attributes() == {}
+
+    media_player_calls = async_mock_service(
+        hass, media_player.DOMAIN, SERVICE_PLAY_MEDIA
+    )
+    await trt.execute(
+        trait.COMMAND_SELECT_CHANNEL, BASIC_DATA, {"channelNumber": "1"}, {}
+    )
+    assert len(media_player_calls) == 1
+    assert media_player_calls[0].data == {
+        ATTR_ENTITY_ID: "media_player.demo",
+        media_player.ATTR_MEDIA_CONTENT_ID: "1",
+        media_player.ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_CHANNEL,
+    }
+
+    with pytest.raises(SmartHomeError, match="Channel is not available"):
+        await trt.execute(
+            trait.COMMAND_SELECT_CHANNEL, BASIC_DATA, {"channelCode": "Channel 3"}, {}
+        )
+    assert len(media_player_calls) == 1
+
+    with pytest.raises(SmartHomeError, match="Unsupported command"):
+        await trt.execute("Unknown command", BASIC_DATA, {"channelNumber": "1"}, {})
+    assert len(media_player_calls) == 1

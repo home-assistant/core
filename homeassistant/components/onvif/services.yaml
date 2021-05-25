@@ -9,7 +9,6 @@ ptz:
     tilt:
       name: Tilt
       description: "Tilt direction."
-      example: "UP"
       selector:
         select:
           options:
@@ -18,7 +17,6 @@ ptz:
     pan:
       name: Pan
       description: "Pan direction."
-      example: "RIGHT"
       selector:
         select:
           options:
@@ -27,7 +25,6 @@ ptz:
     zoom:
       name: Zoom
       description: "Zoom."
-      example: "ZOOM_IN"
       selector:
         select:
           options:
@@ -37,7 +34,6 @@ ptz:
       name: Distance
       description: "Distance coefficient. Sets how much PTZ should be executed in one request."
       default: 0.1
-      example: 0.1
       selector:
         number:
           min: 0
@@ -47,7 +43,6 @@ ptz:
       name: Speed
       description: "Speed coefficient. Sets how fast PTZ will be executed."
       default: 0.5
-      example: 0.5
       selector:
         number:
           min: 0
@@ -57,7 +52,6 @@ ptz:
       name: Continuous duration
       description: "Set ContinuousMove delay in seconds before stopping the move"
       default: 0.5
-      example: 0.5
       selector:
         number:
           min: 0
@@ -74,7 +68,6 @@ ptz:
       name: Move Mode
       description: "PTZ moving mode."
       default: "RelativeMove"
-      example: "ContinuousMove"
       selector:
         select:
           options:

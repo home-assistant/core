@@ -8,7 +8,11 @@ from btlewrap import BluetoothBackendException
 from miflora import miflora_poller
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    STATE_CLASS_MEASUREMENT,
+    SensorEntity,
+)
 from homeassistant.const import (
     CONDUCTIVITY,
     CONF_FORCE_UPDATE,
@@ -196,6 +200,11 @@ class MiFloraSensor(SensorEntity):
     def device_class(self):
         """Return the device class."""
         return self._device_class
+
+    @property
+    def state_class(self):
+        """Return the state class of this entity."""
+        return STATE_CLASS_MEASUREMENT
 
     @property
     def unit_of_measurement(self):

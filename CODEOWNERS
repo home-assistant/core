@@ -290,6 +290,7 @@ homeassistant/components/met/* @danielhiversen @thimic
 homeassistant/components/met_eireann/* @DylanGore
 homeassistant/components/meteo_france/* @hacf-fr @oncleben31 @Quentame
 homeassistant/components/meteoalarm/* @rolfberkenbosch
+homeassistant/components/meteoclimatic/* @adrianmo
 homeassistant/components/metoffice/* @MrHarcombe
 homeassistant/components/miflora/* @danielhiversen @basnijholt
 homeassistant/components/mikrotik/* @engrbm87

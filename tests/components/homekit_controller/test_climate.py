@@ -1,4 +1,6 @@
 """Basic checks for HomeKitclimate."""
+from unittest.mock import patch
+
 from aiohomekit.model.characteristics import (
     ActivationStateValues,
     CharacteristicsTypes,
@@ -19,6 +21,7 @@ from homeassistant.components.climate.const import (
     SERVICE_SET_SWING_MODE,
     SERVICE_SET_TEMPERATURE,
 )
+from homeassistant.const import TEMP_FAHRENHEIT
 
 from tests.components.homekit_controller.common import setup_test_component
 
@@ -444,6 +447,11 @@ async def test_climate_read_thermostat_state(hass, utcnow):
 
     state = await helper.poll_and_get_state()
     assert state.state == HVAC_MODE_HEAT_COOL
+
+    # Ensure converted Fahrenheit precision is reported in tenths
+    with patch.object(hass.config.units, "temperature_unit", TEMP_FAHRENHEIT):
+        state = await helper.poll_and_get_state()
+        assert state.attributes["current_temperature"] == 69.8
 
 
 async def test_hvac_mode_vs_hvac_action(hass, utcnow):
