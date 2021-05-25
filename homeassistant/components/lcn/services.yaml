@@ -521,7 +521,7 @@ lock_keys:
     table:
       name: Table
       description: "Table with keys to lock (must be A for interval)."
-      example: "a5"
+      example: "a"
       default: a
       selector:
         text:
