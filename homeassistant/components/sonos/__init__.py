@@ -96,7 +96,9 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(  # noqa: C901
+    hass: HomeAssistant, entry: ConfigEntry
+) -> bool:
     """Set up Sonos from a config entry."""
     pysonos.config.EVENTS_MODULE = events_asyncio
 
@@ -184,7 +186,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         discovered_ip = urlparse(info[ssdp.ATTR_SSDP_LOCATION]).hostname
         hass.async_add_executor_job(_discovered_ip, discovered_ip)
-        
+
     @callback
     def _async_signal_update_alarms(event):
         async_dispatcher_send(hass, SONOS_ALARM_UPDATE)
