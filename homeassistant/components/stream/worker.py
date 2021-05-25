@@ -37,11 +37,10 @@ class SegmentBuffer:
         self._segment_start_pts = None
         self._memory_file: BytesIO = cast(BytesIO, None)
         self._av_output: av.container.OutputContainer = None
-        self._segment: Segment = cast(Segment, None)
         self._input_video_stream: av.video.VideoStream = None
-        self._input_audio_stream = None  # type=Optional[av.audio.AudioStream]
+        self._input_audio_stream = None  # av.audio.AudioStream | None
         self._output_video_stream: av.video.VideoStream = None
-        self._output_audio_stream = None  # type=Optional[av.audio.AudioStream]
+        self._output_audio_stream = None  # av.audio.AudioStream | None
 
     def reset_av(self) -> None:
         """Reset the av objects for this segment."""
