@@ -1,0 +1,37 @@
+{
+    "config": {
+        "abort": {
+            "reauth_successful": "Re-authentication was successful"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Password"
+                },
+                "description": "The password for {username} is no longer valid.",
+                "title": "Reauthenticate Integration"
+            },
+            "user": {
+                "data": {
+                    "name": "Name",
+                    "password": "Password",
+                    "username": "Username"
+                },
+                "title": "Setup SeventeenTrack"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Update frequency (minutes)"
+                }
+            }
+        }
+    }
+}

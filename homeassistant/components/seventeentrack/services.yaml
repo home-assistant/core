@@ -1,0 +1,25 @@
+add_package:
+  name: Add Package
+  description: Add a new oackage to track.
+  fields:
+    account:
+      name: 17Track account
+      description: Select 17Track account.
+      required: true
+      selector:
+        device:
+          integration: seventeentrack
+    tracking_number:
+      name: Tracking Number
+      description: Tracking number of the package.
+      required: true
+      example: ABC1234
+      selector:
+        text:
+    friendly_name:
+      name: Package friendly name
+      description: Set friendly name for the added package.
+      required: false
+      example: New Shipment
+      selector:
+        text:
