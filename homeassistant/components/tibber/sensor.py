@@ -54,7 +54,7 @@ RT_SENSOR_MAP = {
         STATE_CLASS_MEASUREMENT,
     ],
     "accumulatedConsumptionLastHour": [
-        "accumulated consumption last hour",
+        "accumulated consumption current hour",
         DEVICE_CLASS_ENERGY,
         ENERGY_KILO_WATT_HOUR,
         STATE_CLASS_MEASUREMENT,
@@ -66,7 +66,7 @@ RT_SENSOR_MAP = {
         STATE_CLASS_MEASUREMENT,
     ],
     "accumulatedProductionLastHour": [
-        "accumulated production last hour",
+        "accumulated production current hour",
         DEVICE_CLASS_ENERGY,
         ENERGY_KILO_WATT_HOUR,
         STATE_CLASS_MEASUREMENT,
@@ -339,8 +339,8 @@ class TibberSensorRT(TibberSensor):
                 dt_util.now().replace(hour=0, minute=0, second=0, microsecond=0)
             )
         elif self._sensor_name in [
-            "accumulated consumption last hour",
-            "accumulated production last hour",
+            "accumulated consumption current hour",
+            "accumulated production current hour",
         ]:
             self._attr_last_reset = dt_util.as_utc(
                 dt_util.now().replace(minute=0, second=0, microsecond=0)
@@ -385,8 +385,8 @@ class TibberSensorRT(TibberSensor):
                 timestamp.replace(hour=0, minute=0, second=0, microsecond=0)
             )
         if state < self._state and self._sensor_name in [
-            "accumulated consumption last hour",
-            "accumulated production last hour",
+            "accumulated consumption current hour",
+            "accumulated production current hour",
         ]:
             self._attr_last_reset = dt_util.as_utc(
                 timestamp.replace(minute=0, second=0, microsecond=0)
