@@ -621,6 +621,9 @@ omit =
     homeassistant/components/meteo_france/sensor.py
     homeassistant/components/meteo_france/weather.py
     homeassistant/components/meteoalarm/*
+    homeassistant/components/meteoclimatic/__init__.py
+    homeassistant/components/meteoclimatic/const.py
+    homeassistant/components/meteoclimatic/weather.py
     homeassistant/components/metoffice/sensor.py
     homeassistant/components/metoffice/weather.py
     homeassistant/components/microsoft/tts.py
@@ -1251,7 +1254,6 @@ omit =
     homeassistant/components/supla/*
     homeassistant/components/zwave/util.py
     homeassistant/components/zwave_js/discovery.py
-    homeassistant/components/zwave_js/light.py
     homeassistant/components/zwave_js/sensor.py
 
 [report]

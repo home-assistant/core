@@ -150,6 +150,7 @@ FLOWS = [
     "met",
     "met_eireann",
     "meteo_france",
+    "meteoclimatic",
     "metoffice",
     "mikrotik",
     "mill",

@@ -147,23 +147,12 @@ class TibberSensor(SensorEntity):
     def __init__(self, tibber_home):
         """Initialize the sensor."""
         self._tibber_home = tibber_home
-        self._state = None
-
-        self._name = tibber_home.info["viewer"]["home"]["appNickname"]
-        if self._name is None:
-            self._name = tibber_home.info["viewer"]["home"]["address"].get(
+        self._home_name = tibber_home.info["viewer"]["home"]["appNickname"]
+        if self._home_name is None:
+            self._home_name = tibber_home.info["viewer"]["home"]["address"].get(
                 "address1", ""
             )
-
-    @property
-    def model(self):
-        """Return the model of the sensor."""
-        return None
-
-    @property
-    def state(self):
-        """Return the state of the device."""
-        return self._state
+        self._model = None
 
     @property
     def device_id(self):
@@ -178,8 +167,8 @@ class TibberSensor(SensorEntity):
             "name": self.name,
             "manufacturer": MANUFACTURER,
         }
-        if self.model is not None:
-            device_info["model"] = self.model
+        if self._model is not None:
+            device_info["model"] = self._model
         return device_info
 
 
@@ -190,14 +179,25 @@ class TibberSensorElPrice(TibberSensor):
         """Initialize the sensor."""
         super().__init__(tibber_home)
         self._last_updated = None
-        self._is_available = False
-        self._extra_state_attributes = {}
         self._spread_load_constant = randrange(5000)
 
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
-        return self._extra_state_attributes
+        self._attr_available = False
+        self._attr_extra_state_attributes = {
+            "app_nickname": None,
+            "grid_company": None,
+            "estimated_annual_consumption": None,
+            "price_level": None,
+            "max_price": None,
+            "avg_price": None,
+            "min_price": None,
+            "off_peak_1": None,
+            "peak": None,
+            "off_peak_2": None,
+        }
+        self._attr_icon = ICON
+        self._attr_name = f"Electricity price {self._home_name}"
+        self._attr_unique_id = f"{self._tibber_home.home_id}"
+        self._model = "Price Sensor"
 
     async def async_update(self):
         """Get the latest data and updates the states."""
@@ -206,7 +206,7 @@ class TibberSensorElPrice(TibberSensor):
             not self._tibber_home.last_data_timestamp
             or (self._tibber_home.last_data_timestamp - now).total_seconds()
             < 5 * 3600 + self._spread_load_constant
-            or not self._is_available
+            or not self.available
         ):
             _LOGGER.debug("Asking for new data")
             await self._fetch_data()
@@ -220,42 +220,13 @@ class TibberSensorElPrice(TibberSensor):
             return
 
         res = self._tibber_home.current_price_data()
-        self._state, price_level, self._last_updated = res
-        self._extra_state_attributes["price_level"] = price_level
+        self._attr_state, price_level, self._last_updated = res
+        self._attr_extra_state_attributes["price_level"] = price_level
 
         attrs = self._tibber_home.current_attributes()
-        self._extra_state_attributes.update(attrs)
-        self._is_available = self._state is not None
-
-    @property
-    def available(self):
-        """Return True if entity is available."""
-        return self._is_available
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return f"Electricity price {self._name}"
-
-    @property
-    def model(self):
-        """Return the model of the sensor."""
-        return "Price Sensor"
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend."""
-        return ICON
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of this entity."""
-        return self._tibber_home.price_unit
-
-    @property
-    def unique_id(self):
-        """Return a unique ID."""
-        return self.device_id
+        self._attr_extra_state_attributes.update(attrs)
+        self._attr_available = self._attr_state is not None
+        self._attr_unit_of_measurement = self._tibber_home.price_unit
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def _fetch_data(self):
@@ -265,11 +236,11 @@ class TibberSensorElPrice(TibberSensor):
         except (asyncio.TimeoutError, aiohttp.ClientError):
             return
         data = self._tibber_home.info["viewer"]["home"]
-        self._extra_state_attributes["app_nickname"] = data["appNickname"]
-        self._extra_state_attributes["grid_company"] = data["meteringPointData"][
+        self._attr_extra_state_attributes["app_nickname"] = data["appNickname"]
+        self._attr_extra_state_attributes["grid_company"] = data["meteringPointData"][
             "gridCompany"
         ]
-        self._extra_state_attributes["estimated_annual_consumption"] = data[
+        self._attr_extra_state_attributes["estimated_annual_consumption"] = data[
             "meteringPointData"
         ]["estimatedAnnualConsumption"]
 
@@ -277,13 +248,19 @@ class TibberSensorElPrice(TibberSensor):
 class TibberSensorRT(TibberSensor):
     """Representation of a Tibber sensor for real time consumption."""
 
+    _attr_should_poll = False
+
     def __init__(self, tibber_home, sensor_name, device_class, unit, initial_state):
         """Initialize the sensor."""
         super().__init__(tibber_home)
         self._sensor_name = sensor_name
-        self._device_class = device_class
-        self._unit = unit
-        self._state = initial_state
+        self._model = "Tibber Pulse"
+
+        self._attr_device_class = device_class
+        self._attr_name = f"{self._sensor_name} {self._home_name}"
+        self._attr_state = initial_state
+        self._attr_unique_id = f"{self._tibber_home.home_id}_rt_{self._sensor_name}"
+        self._attr_unit_of_measurement = unit
 
     async def async_added_to_hass(self):
         """Start listen for real time data."""
@@ -300,41 +277,11 @@ class TibberSensorRT(TibberSensor):
         """Return True if entity is available."""
         return self._tibber_home.rt_subscription_running
 
-    @property
-    def model(self):
-        """Return the model of the sensor."""
-        return "Tibber Pulse"
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return f"{self._sensor_name} {self._name}"
-
     @callback
     def _set_state(self, state):
         """Set sensor state."""
-        self._state = state
+        self._attr_state = state
         self.async_write_ha_state()
-
-    @property
-    def should_poll(self):
-        """Return the polling state."""
-        return False
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of this entity."""
-        return self._unit
-
-    @property
-    def unique_id(self):
-        """Return a unique ID."""
-        return f"{self.device_id}_rt_{self._sensor_name}"
-
-    @property
-    def device_class(self):
-        """Return the device class of the sensor."""
-        return self._device_class
 
 
 class TibberRtDataHandler:

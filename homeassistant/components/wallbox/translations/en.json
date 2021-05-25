@@ -11,12 +11,12 @@
         "step": {
             "user": {
                 "data": {
-                    "station": "Station S/N",
                     "password": "Password",
+                    "station": "Station Serial Number",
                     "username": "Username"
                 }
             }
         }
     },
-    "title": "MyWallbox"
+    "title": "Wallbox"
 }

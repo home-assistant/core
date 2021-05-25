@@ -946,7 +946,6 @@ async def test_entity_info_added_to_entity_registry(hass):
     registry = er.async_get(hass)
 
     entry_default = registry.async_get_or_create(DOMAIN, DOMAIN, "default")
-    print(entry_default)
     assert entry_default.capabilities == {"max": 100}
     assert entry_default.supported_features == 5
     assert entry_default.device_class == "mock-device-class"

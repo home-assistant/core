@@ -20,7 +20,7 @@ from homeassistant.components.device_tracker.const import CONF_CONSIDER_HOME
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
-from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util import dt as dt_util
 
@@ -165,9 +165,9 @@ class FritzBoxTools:
                 self._devices[dev_mac] = device
                 new_device = True
 
-        async_dispatcher_send(self.hass, self.signal_device_update)
+        dispatcher_send(self.hass, self.signal_device_update)
         if new_device:
-            async_dispatcher_send(self.hass, self.signal_device_new)
+            dispatcher_send(self.hass, self.signal_device_new)
 
     async def service_fritzbox(self, service: str) -> None:
         """Define FRITZ!Box services."""

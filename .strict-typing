@@ -15,6 +15,7 @@ homeassistant.components.amazon_polly.*
 homeassistant.components.ampio.*
 homeassistant.components.automation.*
 homeassistant.components.binary_sensor.*
+homeassistant.components.bluetooth_tracker.*
 homeassistant.components.bond.*
 homeassistant.components.brother.*
 homeassistant.components.calendar.*
