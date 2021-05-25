@@ -59,7 +59,7 @@ async def test_network_status(hass, integration, hass_ws_client):
     assert msg["error"]["code"] == ERR_NOT_LOADED
 
 
-async def test_node_status(hass, integration, multisensor_6, hass_ws_client):
+async def test_node_status(hass, multisensor_6, integration, hass_ws_client):
     """Test the node status websocket command."""
     entry = integration
     ws_client = await hass_ws_client(hass)
@@ -113,7 +113,7 @@ async def test_node_status(hass, integration, multisensor_6, hass_ws_client):
     assert msg["error"]["code"] == ERR_NOT_LOADED
 
 
-async def test_node_metadata(hass, integration, wallmote_central_scene, hass_ws_client):
+async def test_node_metadata(hass, wallmote_central_scene, integration, hass_ws_client):
     """Test the node metadata websocket command."""
     entry = integration
     ws_client = await hass_ws_client(hass)
@@ -191,7 +191,7 @@ async def test_node_metadata(hass, integration, wallmote_central_scene, hass_ws_
 
 
 async def test_ping_node(
-    hass, integration, client, hass_ws_client, wallmote_central_scene
+    hass, wallmote_central_scene, integration, client, hass_ws_client
 ):
     """Test the ping_node websocket command."""
     entry = integration
@@ -245,7 +245,7 @@ async def test_ping_node(
 
 
 async def test_add_node(
-    hass, integration, client, hass_ws_client, nortek_thermostat_added_event
+    hass, nortek_thermostat_added_event, integration, client, hass_ws_client
 ):
     """Test the add_node websocket command."""
     entry = integration
@@ -455,10 +455,10 @@ async def test_remove_node(
 
 async def test_replace_failed_node(
     hass,
+    nortek_thermostat,
     integration,
     client,
     hass_ws_client,
-    nortek_thermostat,
     nortek_thermostat_added_event,
     nortek_thermostat_removed_event,
 ):
@@ -606,10 +606,10 @@ async def test_replace_failed_node(
 
 async def test_remove_failed_node(
     hass,
+    nortek_thermostat,
     integration,
     client,
     hass_ws_client,
-    nortek_thermostat,
     nortek_thermostat_removed_event,
 ):
     """Test the remove_failed_node websocket command."""
@@ -669,7 +669,7 @@ async def test_remove_failed_node(
 
 
 async def test_refresh_node_info(
-    hass, client, integration, hass_ws_client, multisensor_6
+    hass, client, multisensor_6, integration, hass_ws_client
 ):
     """Test that the refresh_node_info WS API call works."""
     entry = integration
@@ -768,7 +768,7 @@ async def test_refresh_node_info(
 
 
 async def test_refresh_node_values(
-    hass, client, integration, hass_ws_client, multisensor_6
+    hass, client, multisensor_6, integration, hass_ws_client
 ):
     """Test that the refresh_node_values WS API call works."""
     entry = integration
@@ -821,7 +821,7 @@ async def test_refresh_node_values(
 
 
 async def test_refresh_node_cc_values(
-    hass, client, integration, hass_ws_client, multisensor_6
+    hass, client, multisensor_6, integration, hass_ws_client
 ):
     """Test that the refresh_node_cc_values WS API call works."""
     entry = integration
@@ -1051,7 +1051,7 @@ async def test_set_config_parameter(
     assert msg["error"]["code"] == ERR_NOT_LOADED
 
 
-async def test_get_config_parameters(hass, integration, multisensor_6, hass_ws_client):
+async def test_get_config_parameters(hass, multisensor_6, integration, hass_ws_client):
     """Test the get config parameters websocket command."""
     entry = integration
     ws_client = await hass_ws_client(hass)
