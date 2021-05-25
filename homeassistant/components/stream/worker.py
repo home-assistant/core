@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections import deque
 from io import BytesIO
 import logging
-from typing import Any, cast
+from typing import cast
 
 import av
 
@@ -44,13 +44,10 @@ class SegmentBuffer:
 
     @staticmethod
     def make_new_av(
-        sequence: int, input_vstream: av.video.VideoStream, input_astream: Any
-    ) -> tuple[
-        BytesIO, av.container.OutputContainer, av.video.VideoStream, Any
-    ]:  # fix audio stream types later
-        """Reset the av objects for this segment."""
-        memory_file = BytesIO()
-        av_output = av.open(
+        memory_file, sequence: int, input_vstream: av.video.VideoStream
+    ) -> av.container.OutputContainer:
+        """Make a new av OutputContainer."""
+        return av.open(
             memory_file,
             mode="w",
             format=SEGMENT_CONTAINER_FORMAT,
@@ -63,12 +60,6 @@ class SegmentBuffer:
                 "video_track_timescale": str(int(1 / input_vstream.time_base)),
             },
         )
-        output_vstream = av_output.add_stream(template=input_vstream)
-        # Check if audio is requested
-        output_astream = None
-        if input_astream and input_astream.name in AUDIO_CODECS:
-            output_astream = av_output.add_stream(template=input_astream)
-        return memory_file, av_output, output_vstream, output_astream
 
     def set_streams(
         self,
@@ -89,16 +80,21 @@ class SegmentBuffer:
         # Fetch the latest StreamOutputs, which may have changed since the
         # worker started.
         self._outputs = self._outputs_callback().values()
-        (
-            self._memory_file,
-            self._av_output,
-            self._output_video_stream,
-            self._output_audio_stream,
-        ) = self.make_new_av(
+        self._memory_file = BytesIO()
+        self._av_output = self.make_new_av(
+            memory_file=self._memory_file,
             sequence=self._sequence,
             input_vstream=self._input_video_stream,
-            input_astream=self._input_audio_stream,
         )
+        self._output_video_stream = self._av_output.add_stream(
+            template=self._input_video_stream
+        )
+        # Check if audio is requested
+        self._output_audio_stream = None
+        if self._input_audio_stream and self._input_audio_stream.name in AUDIO_CODECS:
+            self._output_audio_stream = self._av_output.add_stream(
+                template=self._input_audio_stream
+            )
 
     def mux_packet(self, packet):
         """Mux a packet to the appropriate output stream."""
