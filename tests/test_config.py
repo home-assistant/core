@@ -218,7 +218,6 @@ def test_customize_dict_schema():
     values = ({ATTR_FRIENDLY_NAME: None}, {ATTR_ASSUMED_STATE: "2"})
 
     for val in values:
-        print(val)
         with pytest.raises(MultipleInvalid):
             config_util.CUSTOMIZE_DICT_SCHEMA(val)
 
