@@ -55,7 +55,8 @@ snooze_reminder:
       domain: binary_sensor
   fields:
     days:
-      description: The number of days to delay the reminder
+      name: Days
+      description: The number of days to delay the reminder.
       required: true
       example: 7
       selector:
