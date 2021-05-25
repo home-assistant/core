@@ -10,6 +10,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import (
@@ -33,7 +34,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if DOMAIN not in hass.data:
         hass.data[DOMAIN] = {}
 
-    client = aiotractive.Tractive(data[CONF_EMAIL], data[CONF_PASSWORD])
+    client = aiotractive.Tractive(
+        data[CONF_EMAIL], data[CONF_PASSWORD], session=async_get_clientsession(hass)
+    )
     try:
         creds = await client.authenticate()
     except aiotractive.exceptions.TractiveError as error:
