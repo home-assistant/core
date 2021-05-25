@@ -28,9 +28,9 @@ async def async_setup_entry(
     hass: HomeAssistantType, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Meteoclimatic weather platform."""
-    hass_data = hass.data[DOMAIN][entry.entry_id]
+    coordinator = hass.data[DOMAIN][entry.entry_id]
 
-    async_add_entities([MeteoclimaticWeather(hass_data)], False)
+    async_add_entities([MeteoclimaticWeather(coordinator)], False)
 
 
 class MeteoclimaticWeather(CoordinatorEntity, WeatherEntity):
