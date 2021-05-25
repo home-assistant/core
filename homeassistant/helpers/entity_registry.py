@@ -24,6 +24,8 @@ from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
     ATTR_UNIT_OF_MEASUREMENT,
     EVENT_HOMEASSISTANT_START,
+    MAX_LENGTH_STATE_DOMAIN,
+    MAX_LENGTH_STATE_ENTITY_ID,
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import (
@@ -33,6 +35,7 @@ from homeassistant.core import (
     split_entity_id,
     valid_entity_id,
 )
+from homeassistant.exceptions import MaxLengthExceeded
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import EVENT_DEVICE_REGISTRY_UPDATED
 from homeassistant.loader import bind_hass
@@ -201,6 +204,10 @@ class EntityRegistry:
         Conflicts checked against registered and currently existing entities.
         """
         preferred_string = f"{domain}.{slugify(suggested_object_id)}"
+
+        if len(domain) > MAX_LENGTH_STATE_DOMAIN:
+            raise MaxLengthExceeded(domain, "domain", MAX_LENGTH_STATE_DOMAIN)
+
         test_string = preferred_string
         if not known_object_ids:
             known_object_ids = {}
@@ -213,6 +220,11 @@ class EntityRegistry:
         ):
             tries += 1
             test_string = f"{preferred_string}_{tries}"
+
+        if len(test_string) > MAX_LENGTH_STATE_ENTITY_ID:
+            raise MaxLengthExceeded(
+                test_string, "generated_entity_id", MAX_LENGTH_STATE_ENTITY_ID
+            )
 
         return test_string
 

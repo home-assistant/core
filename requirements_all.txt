@@ -227,7 +227,7 @@ aiopylgtv==0.4.0
 aiorecollect==1.0.4
 
 # homeassistant.components.shelly
-aioshelly==0.6.3
+aioshelly==0.6.4
 
 # homeassistant.components.switcher_kis
 aioswitcher==1.2.1
@@ -810,7 +810,7 @@ iammeter==0.1.7
 iaqualink==0.3.4
 
 # homeassistant.components.watson_tts
-ibm-watson==4.0.1
+ibm-watson==5.1.0
 
 # homeassistant.components.watson_iot
 ibmiotf==0.3.4

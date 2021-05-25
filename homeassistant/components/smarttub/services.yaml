@@ -45,3 +45,22 @@ set_secondary_filtration:
             - "away"
       required: true
       example: "frequent"
+
+snooze_reminder:
+  name: Snooze a reminder
+  description: Delay a reminder, so that it won't trigger again for a period of time.
+  target:
+    entity:
+      integration: smarttub
+      domain: binary_sensor
+  fields:
+    days:
+      name: Days
+      description: The number of days to delay the reminder.
+      required: true
+      example: 7
+      selector:
+        number:
+          min: 10
+          max: 120
+          unit_of_measurement: days
