@@ -703,20 +703,24 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
     ) -> None:
         """After a flow is initialised trigger new flow notifications."""
         source = flow.context["source"]
+        pn = self.hass.components.persistent_notification
 
         # Create notification.
         if source in DISCOVERY_SOURCES:
             self.hass.bus.async_fire(EVENT_FLOW_DISCOVERED)
-            self.hass.components.persistent_notification.async_create(
-                title="New devices discovered",
-                message=(
-                    "We have discovered new devices on your network. "
-                    "[Check it out](/config/integrations)."
-                ),
-                notification_id=DISCOVERY_NOTIFICATION_ID,
-            )
-        elif source == SOURCE_REAUTH:
-            self.hass.components.persistent_notification.async_create(
+            if not pn.async_exists(DISCOVERY_NOTIFICATION_ID):
+                pn.async_create(
+                    title="New devices discovered",
+                    message=(
+                        "We have discovered new devices on your network. "
+                        "[Check it out](/config/integrations)."
+                    ),
+                    notification_id=DISCOVERY_NOTIFICATION_ID,
+                )
+            return
+
+        if source == SOURCE_REAUTH and not pn.async_exists(RECONFIGURE_NOTIFICATION_ID):
+            pn.async_create(
                 title="Integration requires reconfiguration",
                 message=(
                     "At least one of your integrations requires reconfiguration to "

@@ -187,3 +187,18 @@ async def test_ws_get_notifications(hass, hass_ws_client):
     msg = await client.receive_json()
     notifications = msg["result"]
     assert len(notifications) == 0
+
+
+async def test_exists(hass):
+    """Test we can check of a notification exists."""
+    await async_setup_component(hass, pn.DOMAIN, {})
+
+    assert hass.components.persistent_notification.async_exists("Beer 2") is False
+    hass.components.persistent_notification.async_create(
+        "test", notification_id="Beer 2"
+    )
+    await hass.async_block_till_done()
+    assert hass.components.persistent_notification.async_exists("Beer 2") is True
+    hass.components.persistent_notification.async_dismiss("Beer 2")
+    await hass.async_block_till_done()
+    assert hass.components.persistent_notification.async_exists("Beer 2") is False
