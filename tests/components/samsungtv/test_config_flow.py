@@ -728,7 +728,6 @@ async def test_autodetect_legacy(hass: HomeAssistant, remote: Mock):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}, data=MOCK_USER_DATA
         )
-        print(result)
         assert result["type"] == "create_entry"
         assert result["data"][CONF_METHOD] == "legacy"
         assert remote.call_count == 1
