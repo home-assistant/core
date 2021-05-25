@@ -578,8 +578,4 @@ toggle:
       name: Effect
       description: Light effect.
       selector:
-        select:
-          options:
-            - colorloop
-            - random
-            - white
+        text:

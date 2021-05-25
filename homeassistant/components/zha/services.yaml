@@ -86,6 +86,7 @@ set_zigbee_cluster_attribute:
         number:
           min: 1
           max: 65535
+          mode: box
     cluster_id:
       name: Cluster ID
       description: ZCL cluster to retrieve attributes for
