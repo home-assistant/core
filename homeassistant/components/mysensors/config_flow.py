@@ -27,6 +27,7 @@ from homeassistant.components.mysensors import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
 
 from . import CONF_RETAIN, CONF_VERSION, DEFAULT_VERSION
@@ -217,7 +218,7 @@ class MySensorsConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(step_id="gw_tcp", data_schema=schema, errors=errors)
 
     def _check_topic_exists(self, topic: str) -> bool:
-        for other_config in self.hass.config_entries.async_entries(DOMAIN):
+        for other_config in self._async_current_entries():
             if topic == other_config.data.get(
                 CONF_TOPIC_IN_PREFIX
             ) or topic == other_config.data.get(CONF_TOPIC_OUT_PREFIX):
@@ -281,7 +282,7 @@ class MySensorsConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     @callback
     def _async_create_entry(
         self, user_input: dict[str, str] | None = None
-    ) -> dict[str, Any]:
+    ) -> FlowResult:
         """Create the config entry."""
         return self.async_create_entry(
             title=f"{user_input[CONF_DEVICE]}",
@@ -323,10 +324,12 @@ class MySensorsConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 except vol.Invalid:
                     errors[CONF_PERSISTENCE_FILE] = "invalid_persistence_file"
                 else:
-                    real_persistence_path = self._normalize_persistence_file(
+                    real_persistence_path = user_input[
+                        CONF_PERSISTENCE_FILE
+                    ] = self._normalize_persistence_file(
                         user_input[CONF_PERSISTENCE_FILE]
                     )
-                    for other_entry in self.hass.config_entries.async_entries(DOMAIN):
+                    for other_entry in self._async_current_entries():
                         if CONF_PERSISTENCE_FILE not in other_entry.data:
                             continue
                         if real_persistence_path == self._normalize_persistence_file(
@@ -335,7 +338,7 @@ class MySensorsConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                             errors[CONF_PERSISTENCE_FILE] = "duplicate_persistence_file"
                             break
 
-            for other_entry in self.hass.config_entries.async_entries(DOMAIN):
+            for other_entry in self._async_current_entries():
                 if _is_same_device(gw_type, user_input, other_entry):
                     errors["base"] = "already_configured"
                     break

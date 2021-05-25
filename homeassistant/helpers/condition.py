@@ -97,7 +97,7 @@ def condition_trace_set_result(result: bool, **kwargs: Any) -> None:
     node.set_result(result=result, **kwargs)
 
 
-def condition_trace_update_result(result: bool, **kwargs: Any) -> None:
+def condition_trace_update_result(**kwargs: Any) -> None:
     """Update the result of TraceElement at the top of the stack."""
     node = trace_stack_top(trace_stack_cv)
 
@@ -106,21 +106,28 @@ def condition_trace_update_result(result: bool, **kwargs: Any) -> None:
     if not node:
         return
 
-    node.update_result(result=result, **kwargs)
+    node.update_result(**kwargs)
 
 
 @contextmanager
 def trace_condition(variables: TemplateVarsType) -> Generator:
     """Trace condition evaluation."""
-    trace_element = condition_trace_append(variables, trace_path_get())
-    trace_stack_push(trace_stack_cv, trace_element)
+    should_pop = True
+    trace_element = trace_stack_top(trace_stack_cv)
+    if trace_element and trace_element.reuse_by_child:
+        should_pop = False
+        trace_element.reuse_by_child = False
+    else:
+        trace_element = condition_trace_append(variables, trace_path_get())
+        trace_stack_push(trace_stack_cv, trace_element)
     try:
         yield trace_element
     except Exception as ex:
         trace_element.set_error(ex)
         raise ex
     finally:
-        trace_stack_pop(trace_stack_cv)
+        if should_pop:
+            trace_stack_pop(trace_stack_cv)
 
 
 def trace_condition_function(condition: ConditionCheckerType) -> ConditionCheckerType:
@@ -131,7 +138,7 @@ def trace_condition_function(condition: ConditionCheckerType) -> ConditionChecke
         """Trace condition."""
         with trace_condition(variables):
             result = condition(hass, variables)
-            condition_trace_update_result(result)
+            condition_trace_update_result(result=result)
             return result
 
     return wrapper
@@ -301,7 +308,7 @@ def numeric_state(
     ).result()
 
 
-def async_numeric_state(
+def async_numeric_state(  # noqa: C901
     hass: HomeAssistant,
     entity: None | str | State,
     below: float | str | None = None,
@@ -607,23 +614,37 @@ def sun(
 
     if sunrise is None and SUN_EVENT_SUNRISE in (before, after):
         # There is no sunrise today
+        condition_trace_set_result(False, message="no sunrise today")
         return False
 
     if sunset is None and SUN_EVENT_SUNSET in (before, after):
         # There is no sunset today
+        condition_trace_set_result(False, message="no sunset today")
         return False
 
-    if before == SUN_EVENT_SUNRISE and utcnow > cast(datetime, sunrise) + before_offset:
-        return False
+    if before == SUN_EVENT_SUNRISE:
+        wanted_time_before = cast(datetime, sunrise) + before_offset
+        condition_trace_update_result(wanted_time_before=wanted_time_before)
+        if utcnow > wanted_time_before:
+            return False
 
-    if before == SUN_EVENT_SUNSET and utcnow > cast(datetime, sunset) + before_offset:
-        return False
+    if before == SUN_EVENT_SUNSET:
+        wanted_time_before = cast(datetime, sunset) + before_offset
+        condition_trace_update_result(wanted_time_before=wanted_time_before)
+        if utcnow > wanted_time_before:
+            return False
 
-    if after == SUN_EVENT_SUNRISE and utcnow < cast(datetime, sunrise) + after_offset:
-        return False
+    if after == SUN_EVENT_SUNRISE:
+        wanted_time_after = cast(datetime, sunrise) + after_offset
+        condition_trace_update_result(wanted_time_after=wanted_time_after)
+        if utcnow < wanted_time_after:
+            return False
 
-    if after == SUN_EVENT_SUNSET and utcnow < cast(datetime, sunset) + after_offset:
-        return False
+    if after == SUN_EVENT_SUNSET:
+        wanted_time_after = cast(datetime, sunset) + after_offset
+        condition_trace_update_result(wanted_time_after=wanted_time_after)
+        if utcnow < wanted_time_after:
+            return False
 
     return True
 

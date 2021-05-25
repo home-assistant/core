@@ -88,7 +88,6 @@ class KodiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Kodi."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     def __init__(self):
         """Initialize flow."""

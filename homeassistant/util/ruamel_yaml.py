@@ -6,10 +6,10 @@ from contextlib import suppress
 import logging
 import os
 from os import O_CREAT, O_TRUNC, O_WRONLY, stat_result
-from typing import Dict, List, Union
+from typing import Union
 
 import ruamel.yaml
-from ruamel.yaml import YAML  # type: ignore
+from ruamel.yaml import YAML
 from ruamel.yaml.compat import StringIO
 from ruamel.yaml.constructor import SafeConstructor
 from ruamel.yaml.error import YAMLError
@@ -19,7 +19,7 @@ from homeassistant.util.yaml import secret_yaml
 
 _LOGGER = logging.getLogger(__name__)
 
-JSON_TYPE = Union[List, Dict, str]  # pylint: disable=invalid-name
+JSON_TYPE = Union[list, dict, str]  # pylint: disable=invalid-name
 
 
 class ExtSafeConstructor(SafeConstructor):
@@ -91,7 +91,7 @@ def load_yaml(fname: str, round_trip: bool = False) -> JSON_TYPE:
     """Load a YAML file."""
     if round_trip:
         yaml = YAML(typ="rt")
-        yaml.preserve_quotes = True
+        yaml.preserve_quotes = True  # type: ignore[assignment]
     else:
         if ExtSafeConstructor.name is None:
             ExtSafeConstructor.name = fname

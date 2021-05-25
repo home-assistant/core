@@ -80,7 +80,7 @@ async def async_setup(hass, config):
     return True
 
 
-async def activate_automation(
+async def activate_automation(  # noqa: C901
     hass, device_group, light_group, light_profile, disable_turn_off
 ):
     """Activate the automation."""

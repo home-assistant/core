@@ -4,7 +4,7 @@ from __future__ import annotations
 import dataclasses
 from datetime import timedelta
 import logging
-from typing import Dict
+from typing import Any, Dict
 
 import requests.exceptions
 import upcloud_api
@@ -21,14 +21,14 @@ from homeassistant.const import (
     STATE_ON,
     STATE_PROBLEM,
 )
-from homeassistant.core import CALLBACK_TYPE
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -81,7 +81,7 @@ class UpCloudDataUpdateCoordinator(
 
     def __init__(
         self,
-        hass: HomeAssistantType,
+        hass: HomeAssistant,
         *,
         cloud_manager: upcloud_api.CloudManager,
         update_interval: timedelta,
@@ -92,7 +92,6 @@ class UpCloudDataUpdateCoordinator(
             hass, _LOGGER, name=f"{username}@UpCloud", update_interval=update_interval
         )
         self.cloud_manager = cloud_manager
-        self.unsub_handlers: list[CALLBACK_TYPE] = []
 
     async def async_update_config(self, config_entry: ConfigEntry) -> None:
         """Handle config update."""
@@ -119,7 +118,7 @@ class UpCloudHassData:
     scan_interval_migrations: dict[str, int] = dataclasses.field(default_factory=dict)
 
 
-async def async_setup(hass: HomeAssistantType, config) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up UpCloud component."""
     domain_config = config.get(DOMAIN)
     if not domain_config:
@@ -155,7 +154,7 @@ def _config_entry_update_signal_name(config_entry: ConfigEntry) -> str:
 
 
 async def _async_signal_options_update(
-    hass: HomeAssistantType, config_entry: ConfigEntry
+    hass: HomeAssistant, config_entry: ConfigEntry
 ) -> None:
     """Signal config entry options update."""
     async_dispatcher_send(
@@ -163,7 +162,7 @@ async def _async_signal_options_update(
     )
 
 
-async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up the UpCloud config entry."""
 
     manager = upcloud_api.CloudManager(
@@ -211,10 +210,10 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) 
     await coordinator.async_config_entry_first_refresh()
 
     # Listen to config entry updates
-    coordinator.unsub_handlers.append(
+    config_entry.async_on_unload(
         config_entry.add_update_listener(_async_signal_options_update)
     )
-    coordinator.unsub_handlers.append(
+    config_entry.async_on_unload(
         async_dispatcher_connect(
             hass,
             _config_entry_update_signal_name(config_entry),
@@ -225,32 +224,30 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) 
     upcloud_data.coordinators[config_entry.data[CONF_USERNAME]] = coordinator
 
     # Forward entry setup
-    for domain in CONFIG_ENTRY_DOMAINS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, domain)
-        )
+    hass.config_entries.async_setup_platforms(config_entry, CONFIG_ENTRY_DOMAINS)
 
     return True
 
 
-async def async_unload_entry(hass, config_entry):
+async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload the config entry."""
-    for domain in CONFIG_ENTRY_DOMAINS:
-        await hass.config_entries.async_forward_entry_unload(config_entry, domain)
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        config_entry, CONFIG_ENTRY_DOMAINS
+    )
 
-    coordinator: UpCloudDataUpdateCoordinator = hass.data[
-        DATA_UPCLOUD
-    ].coordinators.pop(config_entry.data[CONF_USERNAME])
-    while coordinator.unsub_handlers:
-        coordinator.unsub_handlers.pop()()
+    hass.data[DATA_UPCLOUD].coordinators.pop(config_entry.data[CONF_USERNAME])
 
-    return True
+    return unload_ok
 
 
 class UpCloudServerEntity(CoordinatorEntity):
     """Entity class for UpCloud servers."""
 
-    def __init__(self, coordinator, uuid):
+    def __init__(
+        self,
+        coordinator: DataUpdateCoordinator[dict[str, upcloud_api.Server]],
+        uuid: str,
+    ) -> None:
         """Initialize the UpCloud server entity."""
         super().__init__(coordinator)
         self.uuid = uuid
@@ -265,7 +262,7 @@ class UpCloudServerEntity(CoordinatorEntity):
         return self.uuid
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the component."""
         try:
             return DEFAULT_COMPONENT_NAME.format(self._server.title)
@@ -273,12 +270,12 @@ class UpCloudServerEntity(CoordinatorEntity):
             return DEFAULT_COMPONENT_NAME.format(self.uuid)
 
     @property
-    def icon(self):
+    def icon(self) -> str:
         """Return the icon of this server."""
         return "mdi:server" if self.is_on else "mdi:server-off"
 
     @property
-    def state(self):
+    def state(self) -> str | None:
         """Return state of the server."""
         try:
             return STATE_MAP.get(self._server.state, self._server.state)
@@ -286,17 +283,17 @@ class UpCloudServerEntity(CoordinatorEntity):
             return None
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if the server is on."""
         return self.state == STATE_ON
 
     @property
-    def device_class(self):
+    def device_class(self) -> str:
         """Return the class of this server."""
         return DEFAULT_COMPONENT_DEVICE_CLASS
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the UpCloud server."""
         return {
             x: getattr(self._server, x, None)

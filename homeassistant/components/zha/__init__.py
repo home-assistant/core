@@ -8,10 +8,10 @@ from zhaquirks import setup as setup_quirks
 from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH
 
 from homeassistant import config_entries, const as ha_const
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.typing import HomeAssistantType
 
 from . import api
 from .core import ZHAGateway
@@ -156,7 +156,7 @@ async def async_unload_entry(hass, config_entry):
     return True
 
 
-async def async_load_entities(hass: HomeAssistantType) -> None:
+async def async_load_entities(hass: HomeAssistant) -> None:
     """Load entities after integration was setup."""
     await hass.data[DATA_ZHA][DATA_ZHA_GATEWAY].async_initialize_devices_and_entities()
     to_setup = hass.data[DATA_ZHA][DATA_ZHA_PLATFORM_LOADED]
@@ -168,7 +168,7 @@ async def async_load_entities(hass: HomeAssistantType) -> None:
 
 
 async def async_migrate_entry(
-    hass: HomeAssistantType, config_entry: config_entries.ConfigEntry
+    hass: HomeAssistant, config_entry: config_entries.ConfigEntry
 ):
     """Migrate old entry."""
     _LOGGER.debug("Migrating from version %s", config_entry.version)

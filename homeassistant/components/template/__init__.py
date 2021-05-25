@@ -6,7 +6,11 @@ import logging
 from typing import Callable
 
 from homeassistant import config as conf_util
-from homeassistant.const import EVENT_HOMEASSISTANT_START, SERVICE_RELOAD
+from homeassistant.const import (
+    CONF_UNIQUE_ID,
+    EVENT_HOMEASSISTANT_START,
+    SERVICE_RELOAD,
+)
 from homeassistant.core import CoreState, Event, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
@@ -84,7 +88,10 @@ async def _process_config(hass, hass_config):
                         hass,
                         platform_domain,
                         DOMAIN,
-                        {"entities": conf_section[platform_domain]},
+                        {
+                            "unique_id": conf_section.get(CONF_UNIQUE_ID),
+                            "entities": conf_section[platform_domain],
+                        },
                         hass_config,
                     )
                 )

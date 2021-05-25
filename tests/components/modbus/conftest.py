@@ -3,6 +3,7 @@ from datetime import timedelta
 import logging
 from unittest import mock
 
+from pymodbus.exceptions import ModbusException
 import pytest
 
 from homeassistant.components.modbus.const import DEFAULT_HUB, MODBUS_DOMAIN as DOMAIN
@@ -19,7 +20,41 @@ import homeassistant.util.dt as dt_util
 
 from tests.common import async_fire_time_changed
 
+TEST_MODBUS_NAME = "modbusTest"
 _LOGGER = logging.getLogger(__name__)
+
+
+@pytest.fixture
+def mock_pymodbus():
+    """Mock pymodbus."""
+    mock_pb = mock.MagicMock()
+    with mock.patch(
+        "homeassistant.components.modbus.modbus.ModbusTcpClient", return_value=mock_pb
+    ), mock.patch(
+        "homeassistant.components.modbus.modbus.ModbusSerialClient",
+        return_value=mock_pb,
+    ), mock.patch(
+        "homeassistant.components.modbus.modbus.ModbusUdpClient", return_value=mock_pb
+    ):
+        yield mock_pb
+
+
+@pytest.fixture
+async def mock_modbus(hass, mock_pymodbus):
+    """Load integration modbus using mocked pymodbus."""
+    config = {
+        DOMAIN: [
+            {
+                CONF_TYPE: "tcp",
+                CONF_HOST: "modbusTestHost",
+                CONF_PORT: 5501,
+                CONF_NAME: TEST_MODBUS_NAME,
+            }
+        ]
+    }
+    assert await async_setup_component(hass, DOMAIN, config) is True
+    await hass.async_block_till_done()
+    yield mock_pymodbus
 
 
 class ReadResult:
@@ -69,11 +104,23 @@ async def base_test(
     ):
 
         # Setup inputs for the sensor
-        read_result = ReadResult(register_words)
-        mock_sync.read_coils.return_value = read_result
-        mock_sync.read_discrete_inputs.return_value = read_result
-        mock_sync.read_input_registers.return_value = read_result
-        mock_sync.read_holding_registers.return_value = read_result
+        if register_words is None:
+            mock_sync.read_coils.side_effect = ModbusException("fail read_coils")
+            mock_sync.read_discrete_inputs.side_effect = ModbusException(
+                "fail read_coils"
+            )
+            mock_sync.read_input_registers.side_effect = ModbusException(
+                "fail read_coils"
+            )
+            mock_sync.read_holding_registers.side_effect = ModbusException(
+                "fail read_coils"
+            )
+        else:
+            read_result = ReadResult(register_words)
+            mock_sync.read_coils.return_value = read_result
+            mock_sync.read_discrete_inputs.return_value = read_result
+            mock_sync.read_input_registers.return_value = read_result
+            mock_sync.read_holding_registers.return_value = read_result
 
         # mock timer and add old/new config
         now = dt_util.utcnow()
@@ -104,7 +151,7 @@ async def base_test(
                 assert await async_setup_component(hass, entity_domain, config_device)
                 await hass.async_block_till_done()
 
-        assert DOMAIN in hass.data
+        assert DOMAIN in hass.config.components
         if config_device is not None:
             entity_id = f"{entity_domain}.{device_name}"
             device = hass.states.get(entity_id)
@@ -154,3 +201,21 @@ async def base_config_test(
         config_modbus=config_modbus,
         expect_init_to_fail=expect_init_to_fail,
     )
+
+
+async def prepare_service_update(hass, config):
+    """Run test for service write_coil."""
+
+    config_modbus = {
+        DOMAIN: {
+            CONF_NAME: DEFAULT_HUB,
+            CONF_TYPE: "tcp",
+            CONF_HOST: "modbusTest",
+            CONF_PORT: 5001,
+            **config,
+        },
+    }
+    assert await async_setup_component(hass, DOMAIN, config_modbus)
+    await hass.async_block_till_done()
+    assert await async_setup_component(hass, "homeassistant", {})
+    await hass.async_block_till_done()

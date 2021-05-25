@@ -3,7 +3,7 @@
   "name": "Pentair ScreenLogic",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/screenlogic",
-  "requirements": ["screenlogicpy==0.2.1"],
+  "requirements": ["screenlogicpy==0.4.1"],
   "codeowners": ["@dieselrabbit"],
   "dhcp": [
     {

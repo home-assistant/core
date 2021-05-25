@@ -5,9 +5,14 @@
             "already_in_progress": "El flux de configuraci\u00f3 ja est\u00e0 en curs",
             "auth_missing": "Home Assistant no est\u00e0 autenticat per connectar-se amb aquest televisor Samsung. V\u00e9s a la configuraci\u00f3 del televisor per autoritzar a Home Assistant.",
             "cannot_connect": "Ha fallat la connexi\u00f3",
-            "not_supported": "Actualment aquest televisor Samsung no \u00e9s compatible."
+            "not_supported": "Actualment aquest televisor Samsung no \u00e9s compatible.",
+            "reauth_successful": "Re-autenticaci\u00f3 realitzada correctament",
+            "unknown": "Error inesperat"
         },
-        "flow_title": "Televisor Samsung: {model}",
+        "error": {
+            "auth_missing": "Home Assistant no est\u00e0 autenticat per connectar-se amb aquest televisor Samsung. V\u00e9s a la configuraci\u00f3 del televisor per autoritzar a Home Assistant."
+        },
+        "flow_title": "{device}",
         "step": {
             "confirm": {
                 "description": "Vols configurar el televisior Samsung {model}? Si mai abans l'has connectat a Home Assistant haur\u00edes de veure una finestra emergent a la pantalla del televisor demanant autenticaci\u00f3. Les configuracions manuals d'aquest televisor es sobreescriuran.",

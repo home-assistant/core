@@ -1,23 +1,21 @@
 """The Minecraft Server integration."""
 from __future__ import annotations
 
-import asyncio
 from datetime import datetime, timedelta
 import logging
-from typing import Any
 
 from mcstatus.server import MinecraftServer as MCStatus
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.typing import ConfigType
 
 from . import helpers
 from .const import DOMAIN, MANUFACTURER, SCAN_INTERVAL, SIGNAL_NAME_PREFIX
@@ -27,7 +25,7 @@ PLATFORMS = ["binary_sensor", "sensor"]
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up Minecraft Server from a config entry."""
     domain_data = hass.data.setdefault(DOMAIN, {})
 
@@ -44,34 +42,26 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) 
     server.start_periodic_update()
 
     # Set up platforms.
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, platform)
-        )
+    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(
-    hass: HomeAssistantType, config_entry: ConfigEntry
-) -> bool:
+async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload Minecraft Server config entry."""
     unique_id = config_entry.unique_id
     server = hass.data[DOMAIN][unique_id]
 
     # Unload platforms.
-    await asyncio.gather(
-        *[
-            hass.config_entries.async_forward_entry_unload(config_entry, platform)
-            for platform in PLATFORMS
-        ]
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        config_entry, PLATFORMS
     )
 
     # Clean up.
     server.stop_periodic_update()
     hass.data[DOMAIN].pop(unique_id)
 
-    return True
+    return unload_ok
 
 
 class MinecraftServer:
@@ -81,7 +71,7 @@ class MinecraftServer:
     _MAX_RETRIES_STATUS = 3
 
     def __init__(
-        self, hass: HomeAssistantType, unique_id: str, config_data: ConfigType
+        self, hass: HomeAssistant, unique_id: str, config_data: ConfigType
     ) -> None:
         """Initialize server instance."""
         self._hass = hass
@@ -256,7 +246,7 @@ class MinecraftServerEntity(Entity):
         return self._unique_id
 
     @property
-    def device_info(self) -> dict[str, Any]:
+    def device_info(self) -> DeviceInfo:
         """Return device information."""
         return self._device_info
 

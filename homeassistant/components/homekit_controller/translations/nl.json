@@ -17,10 +17,10 @@
             "unable_to_pair": "Kan niet koppelen, probeer het opnieuw.",
             "unknown_error": "Apparaat meldde een onbekende fout. Koppelen mislukt."
         },
-        "flow_title": "{name} via HomeKit-accessoireprotocol",
+        "flow_title": "{name}",
         "step": {
             "busy_error": {
-                "description": "Onderbreek het koppelen op alle controllers, of probeer het apparaat opnieuw op te starten, en ga dan verder om het koppelen te hervatten.",
+                "description": "Onderbreek het koppelen op alle controllers, of probeer het apparaat opnieuw op te starten, ga dan verder om het koppelen te hervatten.",
                 "title": "Het apparaat is al aan het koppelen met een andere controller"
             },
             "max_tries_error": {

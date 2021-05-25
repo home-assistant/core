@@ -159,7 +159,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         return
 
     # Store platform for later.
-    platform = hass.data[DATA_PLATFORM] = entity_platform.current_platform.get()
+    platform = hass.data[DATA_PLATFORM] = entity_platform.async_get_current_platform()
 
     async def reload_config(call):
         """Reload the scene config."""
