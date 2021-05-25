@@ -19,3 +19,16 @@ start_irrigation:
           min: 1
           max: 1440
           unit_of_measurement: "minutes"
+delay_irrigation:
+  name: Delay irrigation
+  description: Delay the irrigation
+  fields:
+    days:
+      name: Days
+      description: Delay duration in days
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 10
+          unit_of_measurement: "days"
