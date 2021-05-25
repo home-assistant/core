@@ -788,7 +788,7 @@ def verify_domain_control(
 class ReloadServiceHelper:
     """Helper for reload services to minimize unnecessary reloads."""
 
-    def __init__(self, service_func: Callable[[ServiceCall], Awaitable]):
+    def __init__(self, service_func: Callable[[ServiceCall], Awaitable]) -> None:
         """Initialize ReloadServiceHelper."""
         self._service_func = service_func
         self._service_running = False
