@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections import deque
+from io import BytesIO
 import logging
 import os
 import threading
@@ -51,7 +52,11 @@ def recorder_save_worker(file_out: str, segments: deque[Segment]):
         last_sequence = segment.sequence
 
         # Open segment
-        source = av.open(segment.segment, "r", format=SEGMENT_CONTAINER_FORMAT)
+        source = av.open(
+            BytesIO(segment.init + segment.moof_data),
+            "r",
+            format=SEGMENT_CONTAINER_FORMAT,
+        )
         source_v = source.streams.video[0]
         source_a = source.streams.audio[0] if len(source.streams.audio) > 0 else None
 

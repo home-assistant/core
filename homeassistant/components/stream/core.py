@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import asyncio
 from collections import deque
-import io
 from typing import Callable
 
 from aiohttp import web
@@ -19,12 +18,13 @@ from .const import ATTR_STREAMS, DOMAIN
 PROVIDERS = Registry()
 
 
-@attr.s
+@attr.s(slots=True)
 class Segment:
     """Represent a segment."""
 
     sequence: int = attr.ib()
-    segment: io.BytesIO = attr.ib()
+    init: bytes = attr.ib()
+    moof_data: bytes = attr.ib()
     duration: float = attr.ib()
     # For detecting discontinuities across stream restarts
     stream_id: int = attr.ib(default=0)
