@@ -247,9 +247,48 @@ def preprocess_turn_on_alternatives(hass, params):
         params[ATTR_BRIGHTNESS] = round(255 * brightness_pct / 100)
 
 
-def filter_turn_off_params(params):
+def filter_turn_off_params(light, params):
     """Filter out params not used in turn off."""
+    supported_features = light.supported_features
+
+    if not supported_features & SUPPORT_FLASH:
+        params.pop(ATTR_FLASH, None)
+    if not supported_features & SUPPORT_TRANSITION:
+        params.pop(ATTR_TRANSITION, None)
+
     return {k: v for k, v in params.items() if k in (ATTR_TRANSITION, ATTR_FLASH)}
+
+
+def filter_turn_on_params(light, params):
+    """Filter out params not used in turn off."""
+    supported_features = light.supported_features
+
+    if not supported_features & SUPPORT_EFFECT:
+        params.pop(ATTR_EFFECT, None)
+    if not supported_features & SUPPORT_FLASH:
+        params.pop(ATTR_FLASH, None)
+    if not supported_features & SUPPORT_TRANSITION:
+        params.pop(ATTR_TRANSITION, None)
+    if not supported_features & SUPPORT_WHITE_VALUE:
+        params.pop(ATTR_WHITE_VALUE, None)
+
+    supported_color_modes = light._light_internal_supported_color_modes
+    if not brightness_supported(supported_color_modes):
+        params.pop(ATTR_BRIGHTNESS, None)
+    if COLOR_MODE_COLOR_TEMP not in supported_color_modes:
+        params.pop(ATTR_COLOR_TEMP, None)
+    if COLOR_MODE_HS not in supported_color_modes:
+        params.pop(ATTR_HS_COLOR, None)
+    if COLOR_MODE_RGB not in supported_color_modes:
+        params.pop(ATTR_RGB_COLOR, None)
+    if COLOR_MODE_RGBW not in supported_color_modes:
+        params.pop(ATTR_RGBW_COLOR, None)
+    if COLOR_MODE_RGBWW not in supported_color_modes:
+        params.pop(ATTR_RGBWW_COLOR, None)
+    if COLOR_MODE_XY not in supported_color_modes:
+        params.pop(ATTR_XY_COLOR, None)
+
+    return params
 
 
 async def async_setup(hass, config):  # noqa: C901
@@ -373,7 +412,7 @@ async def async_setup(hass, config):  # noqa: C901
         if params.get(ATTR_BRIGHTNESS) == 0:
             await async_handle_light_off_service(light, call)
         else:
-            await light.async_turn_on(**params)
+            await light.async_turn_on(**filter_turn_on_params(light, params))
 
     async def async_handle_light_off_service(light, call):
         """Handle turning off a light."""
@@ -382,7 +421,7 @@ async def async_setup(hass, config):  # noqa: C901
         if ATTR_TRANSITION not in params:
             profiles.apply_default(light.entity_id, True, params)
 
-        await light.async_turn_off(**filter_turn_off_params(params))
+        await light.async_turn_off(**filter_turn_off_params(light, params))
 
     async def async_handle_toggle_service(light, call):
         """Handle toggling a light."""
