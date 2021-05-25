@@ -1649,6 +1649,7 @@ async def test_subscribe_firmware_update_status(
 
     msg = await ws_client.receive_json()
     assert msg["event"] == {
+        "event": "firmware update progress",
         "sent_fragments": 1,
         "total_fragments": 10,
     }
@@ -1667,6 +1668,7 @@ async def test_subscribe_firmware_update_status(
 
     msg = await ws_client.receive_json()
     assert msg["event"] == {
+        "event": "firmware update finished",
         "status": 255,
         "wait_time": 10,
     }

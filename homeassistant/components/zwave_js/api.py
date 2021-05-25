@@ -1094,6 +1094,7 @@ async def websocket_subscribe_firmware_update_status(
             websocket_api.event_message(
                 msg[ID],
                 {
+                    "event": event["event"],
                     "sent_fragments": progress.sent_fragments,
                     "total_fragments": progress.total_fragments,
                 },
@@ -1107,6 +1108,7 @@ async def websocket_subscribe_firmware_update_status(
             websocket_api.event_message(
                 msg[ID],
                 {
+                    "event": event["event"],
                     "status": finished.status,
                     "wait_time": finished.wait_time,
                 },
