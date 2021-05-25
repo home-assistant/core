@@ -588,8 +588,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         """Set the alarm clock on the player."""
         alarm = None
         for one_alarm in alarms.get_alarms(self.coordinator.soco):
-            # pylint: disable=protected-access
-            if one_alarm._alarm_id == str(alarm_id):
+            if one_alarm.alarm_id == str(alarm_id):
                 alarm = one_alarm
         if alarm is None:
             _LOGGER.warning("Did not find alarm with id %s", alarm_id)

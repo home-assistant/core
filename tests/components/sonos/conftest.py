@@ -17,7 +17,9 @@ def config_entry_fixture():
 
 
 @pytest.fixture(name="soco")
-def soco_fixture(music_library, speaker_info, battery_info, dummy_soco_service):
+def soco_fixture(
+    music_library, speaker_info, battery_info, dummy_soco_service, alarmClock
+):
     """Create a mock pysonos SoCo fixture."""
     with patch("pysonos.SoCo", autospec=True) as mock, patch(
         "socket.gethostbyname", return_value="192.168.42.2"
@@ -32,12 +34,13 @@ def soco_fixture(music_library, speaker_info, battery_info, dummy_soco_service):
         mock_soco.zoneGroupTopology = dummy_soco_service
         mock_soco.contentDirectory = dummy_soco_service
         mock_soco.deviceProperties = dummy_soco_service
+        mock_soco.alarmClock = alarmClock
         mock_soco.mute = False
         mock_soco.night_mode = True
         mock_soco.dialog_mode = True
         mock_soco.volume = 19
         mock_soco.get_battery_info.return_value = battery_info
-
+        mock_soco.all_zones = [mock_soco]
         yield mock_soco
 
 
@@ -73,6 +76,26 @@ def music_library_fixture():
     music_library = Mock()
     music_library.get_sonos_favorites.return_value = []
     return music_library
+
+
+@pytest.fixture(name="alarmClock")
+def alarmClock_fixture():
+    """Create alarmClock fixture."""
+    alarmClock = Mock()
+    alarmClock.subscribe = AsyncMock()
+    alarmClock.ListAlarms.return_value = {
+        "CurrentAlarmList": "<Alarms>"
+        '<Alarm ID="14" StartTime="07:00:00" Duration="02:00:00" Recurrence="DAILY" '
+        'Enabled="1" RoomUUID="RINCON_test" ProgramURI="x-rincon-buzzer:0" '
+        'ProgramMetaData="" PlayMode="SHUFFLE_NOREPEAT" Volume="25" '
+        'IncludeLinkedZones="0"/>'
+        '<Alarm ID="15" StartTime="07:00:00" Duration="02:00:00" '
+        'Recurrence="DAILY" Enabled="1" RoomUUID="RINCON_test" '
+        'ProgramURI="x-rincon-buzzer:0" ProgramMetaData="" PlayMode="SHUFFLE_NOREPEAT" '
+        'Volume="25" IncludeLinkedZones="0"/>'
+        "</Alarms> "
+    }
+    return alarmClock
 
 
 @pytest.fixture(name="speaker_info")
