@@ -57,8 +57,7 @@ class MeteoclimaticFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="unknown")
 
         # Check if already configured
-        await self.async_set_unique_id(station_code)
-        self._abort_if_unique_id_configured()
+        await self.async_set_unique_id(station_code, raise_on_progress=False)
 
         return self.async_create_entry(
             title=weather.station.name, data={CONF_STATION_CODE: station_code}
