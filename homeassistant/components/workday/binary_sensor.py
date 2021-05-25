@@ -1,4 +1,6 @@
 """Sensor to indicate whether the current day is a workday."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 from typing import Any, Callable
@@ -99,22 +101,23 @@ async def async_setup_entry(
 
     # Remove holidays
     try:
-        for date in remove_holidays:
-            try:
-                # is this formatted as a date?
-                if dt.parse_date(date):
-                    # remove holiday by date
-                    removed = obj_holidays.pop(date)
-                    _LOGGER.debug("Removed %s", date)
-                else:
-                    # remove holiday by name
-                    _LOGGER.debug("Treating '%s' as named holiday", date)
-                    removed = obj_holidays.pop_named(date)
-                    for holiday in removed:
-                        _LOGGER.debug("Removed %s by name '%s'", holiday, date)
-            except KeyError as unmatched:
-                _LOGGER.warning("No holiday found matching %s", unmatched)
-            obj_holidays.pop(date, "Not found")
+        if remove_holidays:
+            for date in remove_holidays:
+                try:
+                    # is this formatted as a date?
+                    if dt.parse_date(date):
+                        # remove holiday by date
+                        removed = obj_holidays.pop(date)
+                        _LOGGER.debug("Removed %s", date)
+                    else:
+                        # remove holiday by name
+                        _LOGGER.debug("Treating '%s' as named holiday", date)
+                        removed = obj_holidays.pop_named(date)
+                        for holiday in removed:
+                            _LOGGER.debug("Removed %s by name '%s'", holiday, date)
+                except KeyError as unmatched:
+                    _LOGGER.warning("No holiday found matching %s", unmatched)
+                obj_holidays.pop(date, "Not found")
     except TypeError:
         _LOGGER.debug("No holidays to remove or invalid holidays")
 
@@ -132,12 +135,13 @@ async def async_setup_entry(
                 sensor_name,
                 config_entry.unique_id,
             )
-        ],
-        True,
+        ]
     )
 
+    return True
 
-def day_to_string(day: int) -> str:
+
+def day_to_string(day: int) -> str | None:
     """Convert day index 0 - 7 to string."""
     try:
         return ALLOWED_DAYS[day]
@@ -169,7 +173,7 @@ class IsWorkdaySensor(BinarySensorEntity):
         return self._name
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return the state of the device."""
         return self._state
 

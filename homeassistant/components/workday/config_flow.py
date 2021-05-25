@@ -34,13 +34,14 @@ from .const import DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
+ALLOWED_DAYS_DICT = {key: key for key in ALLOWED_DAYS}
 
 SCHEMA_ADVANCED = {
     vol.Optional(CONF_WORKDAYS, default=DEFAULT_WORKDAYS): cv.multi_select(
-        ALLOWED_DAYS
+        ALLOWED_DAYS_DICT
     ),
     vol.Optional(CONF_EXCLUDES, default=DEFAULT_EXCLUDES): cv.multi_select(
-        ALLOWED_DAYS
+        ALLOWED_DAYS_DICT
     ),
     vol.Optional(CONF_OFFSET, default=DEFAULT_OFFSET): vol.Coerce(int),
 }
