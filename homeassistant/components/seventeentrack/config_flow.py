@@ -137,7 +137,7 @@ class SeventeenTrackFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 class SeventeenTrackOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle SeventeenTrack options."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry):
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize options flow."""
         self.config_entry = config_entry
 
