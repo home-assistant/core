@@ -36,8 +36,6 @@ class VerisureAlarm(CoordinatorEntity, AlarmControlPanelEntity):
     coordinator: VerisureDataUpdateCoordinator
 
     _attr_name = "Verisure Alarm"
-    _attr_supported_features = SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY
-
     _changed_by: str | None = None
 
     @property
@@ -49,6 +47,11 @@ class VerisureAlarm(CoordinatorEntity, AlarmControlPanelEntity):
             "model": "VBox",
             "identifiers": {(DOMAIN, self.coordinator.entry.data[CONF_GIID])},
         }
+
+    @property
+    def supported_features(self) -> int:
+        """Return the list of supported features."""
+        return SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY
 
     @property
     def unique_id(self) -> str:
