@@ -26,7 +26,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.dispatcher import async_dispatcher_send, dispatcher_send
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import (
     DATA_SONOS,
@@ -108,6 +108,7 @@ async def async_setup_entry(  # noqa: C901
     data = hass.data[DATA_SONOS]
     config = hass.data[DOMAIN].get("media_player", {})
     hosts = config.get(CONF_HOSTS, [])
+    discovery_lock = asyncio.Lock()
     _LOGGER.debug("Reached async_setup_entry, config=%s", config)
 
     advertise_addr = config.get(CONF_ADVERTISE_ADDR)
@@ -123,20 +124,16 @@ async def async_setup_entry(  # noqa: C901
         """Handle a (re)discovered player."""
         try:
             _LOGGER.debug("Reached _discovered_player, soco=%s", soco)
-            if soco.uid not in data.discovered:
-                speaker_info = soco.get_speaker_info(True)
-                _LOGGER.debug("Adding new speaker: %s", speaker_info)
-                speaker = SonosSpeaker(hass, soco, speaker_info)
-                data.discovered[soco.uid] = speaker
-                if soco.household_id not in data.favorites:
-                    data.favorites[soco.household_id] = SonosFavorites(
-                        hass, soco.household_id
-                    )
-                    data.favorites[soco.household_id].update()
-                speaker.setup()
-            else:
-                dispatcher_send(hass, f"{SONOS_SEEN}-{soco.uid}", soco)
-
+            speaker_info = soco.get_speaker_info(True)
+            _LOGGER.debug("Adding new speaker: %s", speaker_info)
+            speaker = SonosSpeaker(hass, soco, speaker_info)
+            data.discovered[soco.uid] = speaker
+            if soco.household_id not in data.favorites:
+                data.favorites[soco.household_id] = SonosFavorites(
+                    hass, soco.household_id
+                )
+                data.favorites[soco.household_id].update()
+            speaker.setup()
         except SoCoException as ex:
             _LOGGER.debug("SoCoException, ex=%s", ex)
 
@@ -149,8 +146,7 @@ async def async_setup_entry(  # noqa: C901
                 if player.is_visible:
                     # Make sure that the player is available
                     _ = player.volume
-
-                    _discovered_player(player)
+                _discovered_player(player)
             except (OSError, SoCoException) as ex:
                 _LOGGER.debug("Exception %s", ex)
                 if now is None:
@@ -173,19 +169,23 @@ async def async_setup_entry(  # noqa: C901
             return
         _discovered_player(player)
 
+    async def _async_create_discovered_player(uid, discovered_ip):
+        """Only create one player at a time."""
+        async with discovery_lock:
+            if uid in data.discovered:
+                async_dispatcher_send(hass, f"{SONOS_SEEN}-{uid}")
+                return
+            await hass.async_add_executor_job(_discovered_ip, discovered_ip)
+
     @callback
     def _async_discovered_player(info):
         _LOGGER.critical("Sonos Discovery: %s", info)
         uid = info.get(ssdp.ATTR_UPNP_UDN)
         if uid.startswith("uuid:"):
             uid = uid[5:]
-        _LOGGER.debug("_async_discovered_player, uid=%s", uid)
-        if uid in data.discovered:
-            async_dispatcher_send(hass, f"{SONOS_SEEN}-{uid}")
-            return
-
         discovered_ip = urlparse(info[ssdp.ATTR_SSDP_LOCATION]).hostname
-        hass.async_add_executor_job(_discovered_ip, discovered_ip)
+        _LOGGER.debug("_async_discovered_player with ip=%s, uid=%s", discovered_ip, uid)
+        asyncio.create_task(_async_create_discovered_player(uid, discovered_ip))
 
     @callback
     def _async_signal_update_alarms(event):
