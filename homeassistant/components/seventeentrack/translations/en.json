@@ -29,7 +29,8 @@
         "step": {
             "init": {
                 "data": {
-                    "scan_interval": "Update frequency (minutes)"
+                    "scan_interval": "Update frequency (minutes)",
+                    "show_archived": "Include archived packages"
                 }
             }
         }

@@ -1,5 +1,5 @@
 """Config flow for SeventeenTrack."""
-from py17track import Client as SeventeenTrackClient
+from py17track import Client
 from py17track.errors import SeventeenTrackError
 import voluptuous as vol
 
@@ -13,7 +13,13 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import aiohttp_client
 
-from .const import DEFAULT_NAME, DEFAULT_SCAN_INTERVAL, DOMAIN
+from .const import (
+    CONF_SHOW_ARCHIVED,
+    DEFAULT_NAME,
+    DEFAULT_SCAN_INTERVAL,
+    DEFAULT_SHOW_ARCHIVED,
+    DOMAIN,
+)
 from .errors import AuthenticationError, UnknownError
 
 CONFIG_SCHEMA = vol.Schema(
@@ -29,7 +35,7 @@ async def get_client(hass: HomeAssistant, entry):
     """Return SeventeenTrack client."""
     session = aiohttp_client.async_get_clientsession(hass)
     try:
-        client = SeventeenTrackClient(session=session)
+        client = Client(session=session)
         login_result = await client.profile.login(
             entry[CONF_USERNAME], entry[CONF_PASSWORD]
         )
@@ -52,7 +58,7 @@ class SeventeenTrackFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Get the options flow for this handler."""
         return SeventeenTrackOptionsFlowHandler(config_entry)
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Start the config flow."""
         self._reauth_unique_id = None
 
@@ -147,5 +153,11 @@ class SeventeenTrackOptionsFlowHandler(config_entries.OptionsFlow):
                     CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
                 ),
             ): int,
+            vol.Optional(
+                CONF_SHOW_ARCHIVED,
+                default=self.config_entry.options.get(
+                    CONF_SHOW_ARCHIVED, DEFAULT_SHOW_ARCHIVED
+                ),
+            ): bool,
         }
         return self.async_show_form(step_id="init", data_schema=vol.Schema(options))

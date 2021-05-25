@@ -5,8 +5,10 @@ DOMAIN: Final = "seventeentrack"
 
 DEFAULT_NAME: Final = "SeventeenTrack"
 DEFAULT_SCAN_INTERVAL: Final = 10
+DEFAULT_SHOW_ARCHIVED: Final = False
 
-CONF_ACCOUNT = "account"
+CONF_SHOW_ARCHIVED: Final = "show_archived"
+CONF_ACCOUNT: Final = "account"
 CONF_TRACKING_NUMBER: Final = "tracking_number"
 
 SERVICE_ADD_PACKAGE: Final = "add_package"

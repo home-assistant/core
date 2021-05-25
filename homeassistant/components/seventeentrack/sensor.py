@@ -46,7 +46,9 @@ async def async_setup_entry(
 class SeventeenTrackSensor(CoordinatorEntity, SensorEntity):
     """Define packages summary sensor."""
 
-    def __init__(self, coordinator: SeventeenTrackDataCoordinator, sensor_type: str):
+    def __init__(
+        self, coordinator: SeventeenTrackDataCoordinator, sensor_type: str
+    ) -> None:
         """Pass coordinator to CoordinatorEntity."""
         super().__init__(coordinator)
         self.coordinator = coordinator

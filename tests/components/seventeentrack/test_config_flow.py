@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock
 from py17track.errors import SeventeenTrackError
 
 from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.seventeentrack.const import DOMAIN
+from homeassistant.components.seventeentrack.const import CONF_SHOW_ARCHIVED, DOMAIN
 from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
@@ -52,12 +52,13 @@ async def test_options(hass):
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={CONF_SCAN_INTERVAL: 30},
+        user_input={CONF_SCAN_INTERVAL: 30, CONF_SHOW_ARCHIVED: True},
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["data"] == {
         CONF_SCAN_INTERVAL: 30,
+        CONF_SHOW_ARCHIVED: True,
     }
 
 

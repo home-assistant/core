@@ -2,10 +2,10 @@
 from datetime import timedelta
 import logging
 
+from py17track.client import Client
 from py17track.errors import SeventeenTrackError
 import voluptuous as vol
 
-from homeassistant.components.seventeentrack.config_flow import get_client
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_FRIENDLY_NAME, CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant, ServiceCall
@@ -13,10 +13,13 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
+from .config_flow import get_client
 from .const import (
     CONF_ACCOUNT,
+    CONF_SHOW_ARCHIVED,
     CONF_TRACKING_NUMBER,
     DEFAULT_SCAN_INTERVAL,
+    DEFAULT_SHOW_ARCHIVED,
     DOMAIN,
     SERVICE_ADD_PACKAGE,
 )
@@ -66,11 +69,11 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry):
 class SeventeenTrackDataCoordinator(DataUpdateCoordinator):
     """Get the latest data from SeventeenTrack."""
 
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry):
+    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         """Initialize the data object."""
         self.hass = hass
         self.config_entry = config_entry
-        self.client = None
+        self.client: Client = None
         super().__init__(
             self.hass,
             _LOGGER,
@@ -83,22 +86,29 @@ class SeventeenTrackDataCoordinator(DataUpdateCoordinator):
             ),
         )
 
-    async def async_update(self):
+    @property
+    def show_archived(self) -> bool:
+        """Include archived packages when fetching data."""
+        return self.config_entry.options.get(CONF_SHOW_ARCHIVED, DEFAULT_SHOW_ARCHIVED)
+
+    async def async_update(self) -> dict:
         """Update SeventeenTrack data."""
         try:
             packages = await self.client.profile.packages(
-                show_archived=False, tz=str(self.hass.config.time_zone)
+                show_archived=self.show_archived, tz=str(self.hass.config.time_zone)
             )
-            summary = await self.client.profile.summary(show_archived=False)
+            summary = await self.client.profile.summary(
+                show_archived=self.show_archived
+            )
         except SeventeenTrackError as err:
-            raise UpdateFailed(f"Error communicating with API: {err}")
+            raise UpdateFailed(f"Error communicating with API: {err}") from err
 
         _LOGGER.debug("New package data received: %s", packages)
         _LOGGER.debug("New summary data received: %s", summary)
 
         return {"packages": packages, "summary": summary}
 
-    async def async_setup(self):
+    async def async_setup(self) -> bool:
         """Set up SeventeenTrack."""
         try:
             self.client = await get_client(self.hass, self.config_entry.data)
