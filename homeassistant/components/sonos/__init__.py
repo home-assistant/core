@@ -115,7 +115,11 @@ async def async_setup_entry(  # noqa: C901
     if advertise_addr:
         pysonos.config.EVENT_ADVERTISE_IP = advertise_addr
 
-    def _stop_discovery(event: Event) -> None:
+    async def _async_stop_event_listener(event: Event) -> None:
+        if events_asyncio.event_listener:
+            await events_asyncio.event_listener.async_stop()
+
+    def _stop_manual_heartbeat(event: Event) -> None:
         if data.hosts_heartbeat:
             data.hosts_heartbeat()
             data.hosts_heartbeat = None
@@ -200,9 +204,6 @@ async def async_setup_entry(  # noqa: C901
             ]
         )
         entry.async_on_unload(
-            hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _stop_discovery)
-        )
-        entry.async_on_unload(
             hass.bus.async_listen_once(
                 EVENT_HOMEASSISTANT_START, _async_signal_update_groups
             )
@@ -212,8 +213,18 @@ async def async_setup_entry(  # noqa: C901
                 EVENT_HOMEASSISTANT_START, _async_signal_update_alarms
             )
         )
+        entry.async_on_unload(
+            hass.bus.async_listen_once(
+                EVENT_HOMEASSISTANT_STOP, _async_stop_event_listener
+            )
+        )
         _LOGGER.debug("Adding discovery job")
         if hosts:
+            entry.async_on_unload(
+                hass.bus.async_listen_once(
+                    EVENT_HOMEASSISTANT_STOP, _stop_manual_heartbeat
+                )
+            )
             await hass.async_add_executor_job(_manual_hosts)
             return
 
