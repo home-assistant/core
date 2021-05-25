@@ -51,9 +51,9 @@ class VerisureAlarm(CoordinatorEntity, AlarmControlPanelEntity):
         }
 
     @property
-    def supported_features(self) -> int:
-        """Return the list of supported features."""
-        return SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY
+    def unique_id(self) -> str:
+        """Return the unique ID for this entity."""
+        return self.coordinator.entry.data[CONF_GIID]
 
     @property
     def code_format(self) -> str:
