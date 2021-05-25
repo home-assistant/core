@@ -36,7 +36,7 @@ async def async_setup_entry(
 class MeteoclimaticWeather(CoordinatorEntity, WeatherEntity):
     """Representation of a weather condition."""
 
-    def __init__(self, coordinator: DataUpdateCoordinator):
+    def __init__(self, coordinator: DataUpdateCoordinator) -> None:
         """Initialise the weather platform."""
         super().__init__(coordinator)
         self._unique_id = self.coordinator.data["station"].code
