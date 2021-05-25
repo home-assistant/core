@@ -11,6 +11,7 @@ from typing import Any, Callable
 import urllib.parse
 
 import async_timeout
+from pysonos.alarms import get_alarms
 from pysonos.core import MUSIC_SRC_LINE_IN, MUSIC_SRC_RADIO, MUSIC_SRC_TV, SoCo
 from pysonos.data_structures import DidlAudioBroadcast
 from pysonos.events_base import Event as SonosEvent, SubscriptionBase
@@ -21,6 +22,7 @@ from pysonos.snapshot import Snapshot
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as ent_reg
 from homeassistant.helpers.dispatcher import (
@@ -37,6 +39,8 @@ from .const import (
     PLATFORMS,
     SCAN_INTERVAL,
     SEEN_EXPIRE_TIME,
+    SONOS_ALARM_UPDATE,
+    SONOS_CREATE_ALARM,
     SONOS_CREATE_BATTERY,
     SONOS_CREATE_MEDIA_PLAYER,
     SONOS_ENTITY_CREATED,
@@ -193,12 +197,17 @@ class SonosSpeaker:
         else:
             self._platforms_ready.update({BINARY_SENSOR_DOMAIN, SENSOR_DOMAIN})
 
+        if new_alarms := self.update_alarms_for_speaker():
+            dispatcher_send(self.hass, SONOS_CREATE_ALARM, self, new_alarms)
+        else:
+            self._platforms_ready.add(SWITCH_DOMAIN)
+
         dispatcher_send(self.hass, SONOS_CREATE_MEDIA_PLAYER, self)
 
     async def async_handle_new_entity(self, entity_type: str) -> None:
         """Listen to new entities to trigger first subscription."""
         self._platforms_ready.add(entity_type)
-        if self._platforms_ready == PLATFORMS:
+        if self._platforms_ready == PLATFORMS and not self._subscriptions:
             self._resubscription_lock = asyncio.Lock()
             await self.async_subscribe()
             self._is_ready = True
@@ -244,6 +253,7 @@ class SonosSpeaker:
                 self._subscribe(
                     self.soco.deviceProperties, self.async_dispatch_properties
                 ),
+                self._subscribe(self.soco.alarmClock, self.async_dispatch_alarms),
             )
             return True
         except SoCoException as ex:
@@ -265,6 +275,11 @@ class SonosSpeaker:
     def async_dispatch_properties(self, event: SonosEvent | None = None) -> None:
         """Update properties from event."""
         self.hass.async_create_task(self.async_update_device_properties(event))
+
+    @callback
+    def async_dispatch_alarms(self, event: SonosEvent | None = None) -> None:
+        """Update alarms from event."""
+        self.hass.async_create_task(self.async_update_alarms(event))
 
     @callback
     def async_dispatch_groups(self, event: SonosEvent | None = None) -> None:
@@ -362,6 +377,42 @@ class SonosSpeaker:
         if (more_info := event.variables.get("more_info")) is not None:
             battery_dict = dict(x.split(":") for x in more_info.split(","))
             await self.async_update_battery_info(battery_dict)
+
+        self.async_write_entity_states()
+
+    def update_alarms_for_speaker(self) -> set[str]:
+        """Update current alarm instances.
+
+        Updates hass.data[DATA_SONOS].alarms and returns a list of all alarms that are new.
+        """
+        new_alarms = set()
+        stored_alarms = self.hass.data[DATA_SONOS].alarms
+        updated_alarms = get_alarms(self.soco)
+
+        for alarm in updated_alarms:
+            if alarm.zone.uid == self.soco.uid and alarm.alarm_id not in list(
+                stored_alarms.keys()
+            ):
+                new_alarms.add(alarm.alarm_id)
+                stored_alarms[alarm.alarm_id] = alarm
+
+        for alarm_id, alarm in list(stored_alarms.items()):
+            if alarm not in updated_alarms:
+                stored_alarms.pop(alarm_id)
+
+        return new_alarms
+
+    async def async_update_alarms(self, event: SonosEvent | None = None) -> None:
+        """Update device properties using the provided SonosEvent."""
+        if event is None:
+            return
+
+        if new_alarms := await self.hass.async_add_executor_job(
+            self.update_alarms_for_speaker
+        ):
+            async_dispatcher_send(self.hass, SONOS_CREATE_ALARM, self, new_alarms)
+
+        async_dispatcher_send(self.hass, SONOS_ALARM_UPDATE, self)
 
         self.async_write_entity_states()
 
