@@ -26,7 +26,6 @@ class Network:
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the Network class."""
-        self.hass = hass
         self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
         self._data: dict[str, Any] = {}
         self.adapters: list[Adapter] = []
@@ -39,7 +38,7 @@ class Network:
     async def async_setup(self) -> None:
         """Set up the network config."""
         await self.async_load()
-        self.adapters = await async_load_adapters(self.hass)
+        self.adapters = await async_load_adapters()
 
     async def async_migrate_from_zeroconf(self, zc_config: dict[str, Any]) -> None:
         """Migrate configuration from zeroconf."""

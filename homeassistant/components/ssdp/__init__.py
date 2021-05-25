@@ -62,6 +62,15 @@ def async_register_callback(
     return scanner.async_register_callback(callback, match_dict)
 
 
+@bind_hass
+def async_get_location_by_udn_st(  # pylint: disable=invalid-name
+    hass: HomeAssistant, udn: str, st: str
+) -> str | None:
+    """Lookup a location by udn and st from previous scans."""
+    scanner: Scanner = hass.data[DOMAIN]
+    return scanner.cache.get((udn, st))
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the SSDP integration."""
 
@@ -88,6 +97,7 @@ class Scanner:
         """Initialize class."""
         self.hass = hass
         self.seen: set[tuple[str, str]] = set()
+        self.cache: dict[tuple[str, str], str] = {}
         self._integration_matchers = integration_matchers
         self._cancel_scan: Callable[[], None] | None = None
         self._ssdp_listeners: list[SSDPListener] = []
@@ -186,6 +196,9 @@ class Scanner:
         info_req = await self.description_manager.fetch_description(entry.location)
         info, domains = self._info_domains(entry, info_req)
 
+        if udn := info.get(ATTR_UPNP_UDN):
+            self.cache[(udn, entry.st)] = entry.location
+
         for ssdp_callback, match_dict in self._callbacks:
             if not all(item in info.items() for item in match_dict.items()):
                 continue
@@ -248,5 +261,9 @@ def info_from_entry(
             info[ATTR_SSDP_EXT] = info.pop("ext")
         if "server" in info:
             info[ATTR_SSDP_SERVER] = info.pop("server")
+        if ATTR_UPNP_UDN not in info and str(info.get(ATTR_SSDP_USN)).startswith(
+            "uuid:"
+        ):
+            info[ATTR_UPNP_UDN] = str(info[ATTR_SSDP_USN]).split("::")[0]
 
     return info

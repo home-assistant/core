@@ -1693,10 +1693,6 @@ pyrisco==0.3.1
 # homeassistant.components.rituals_perfume_genie
 pyrituals==0.0.3
 
-# homeassistant.components.network
-# homeassistant.components.zeroconf
-pyroute2==0.5.18
-
 # homeassistant.components.ruckus_unleashed
 pyruckus==0.12
 
@@ -2312,7 +2308,7 @@ uvcclient==0.11.0
 vallox-websocket-api==2.4.0
 
 # homeassistant.components.venstar
-venstarcolortouch==0.13
+venstarcolortouch==0.14
 
 # homeassistant.components.vilfo
 vilfo-api-client==0.3.2

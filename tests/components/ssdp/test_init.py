@@ -330,7 +330,7 @@ async def test_scan_with_registered_callback(hass, aioclient_mock, caplog):
     mock_ssdp_response = {
         "st": "mock-st",
         "location": "http://1.1.1.1",
-        "usn": "mock-usn",
+        "usn": "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL::urn:mdx-netflix-com:service:target:3",
         "server": "mock-server",
         "ext": "",
     }
@@ -403,7 +403,8 @@ async def test_scan_with_registered_callback(hass, aioclient_mock, caplog):
         ssdp.ATTR_SSDP_LOCATION: "http://1.1.1.1",
         ssdp.ATTR_SSDP_SERVER: "mock-server",
         ssdp.ATTR_SSDP_ST: "mock-st",
-        ssdp.ATTR_SSDP_USN: "mock-usn",
+        ssdp.ATTR_SSDP_USN: "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL::urn:mdx-netflix-com:service:target:3",
+        ssdp.ATTR_UPNP_UDN: "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL",
     }
     assert "Failed to callback info" in caplog.text
 
@@ -423,7 +424,7 @@ async def test_scan_second_hit(hass, aioclient_mock, caplog):
     mock_ssdp_response = {
         "st": "mock-st",
         "location": "http://1.1.1.1",
-        "usn": "mock-usn",
+        "usn": "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL::urn:mdx-netflix-com:service:target:3",
         "server": "mock-server",
         "ext": "",
     }
@@ -481,7 +482,8 @@ async def test_scan_second_hit(hass, aioclient_mock, caplog):
         ssdp.ATTR_SSDP_LOCATION: "http://1.1.1.1",
         ssdp.ATTR_SSDP_SERVER: "mock-server",
         ssdp.ATTR_SSDP_ST: "mock-st",
-        ssdp.ATTR_SSDP_USN: "mock-usn",
+        ssdp.ATTR_SSDP_USN: "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL::urn:mdx-netflix-com:service:target:3",
+        ssdp.ATTR_UPNP_UDN: "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL",
     }
     assert len(mock_init.mock_calls) == 1
     assert mock_init.mock_calls[0][1][0] == "mock-domain"
@@ -492,11 +494,18 @@ async def test_scan_second_hit(hass, aioclient_mock, caplog):
         ssdp.ATTR_UPNP_DEVICE_TYPE: "Paulus",
         ssdp.ATTR_SSDP_ST: "mock-st",
         ssdp.ATTR_SSDP_LOCATION: "http://1.1.1.1",
-        ssdp.ATTR_SSDP_USN: "mock-usn",
         ssdp.ATTR_SSDP_SERVER: "mock-server",
         ssdp.ATTR_SSDP_EXT: "",
+        ssdp.ATTR_SSDP_USN: "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL::urn:mdx-netflix-com:service:target:3",
+        ssdp.ATTR_UPNP_UDN: "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL",
     }
     assert "Failed to fetch ssdp data" not in caplog.text
+    assert (
+        ssdp.async_get_location_by_udn_st(
+            hass, "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL", "mock-st"
+        )
+        == "http://1.1.1.1"
+    )
 
 
 _ADAPTERS_WITH_MANUAL_CONFIG = [
