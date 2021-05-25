@@ -11,6 +11,7 @@ from pymazda import (
     MazdaException,
     MazdaTokenExpiredException,
 )
+import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_REGION
@@ -21,6 +22,7 @@ from homeassistant.exceptions import (
     HomeAssistantError,
 )
 from homeassistant.helpers import aiohttp_client, device_registry
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -67,11 +69,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         """Handle a service call."""
         # Get device entry from device registry
         dev_reg = device_registry.async_get(hass)
-        device_id = service_call.data.get("vehicle")
+        device_id = service_call.data.get("device_id")
         device_entry = dev_reg.async_get(device_id)
-
-        if device_entry is None:
-            raise HomeAssistantError("Invalid device ID")
 
         # Get vehicle VIN from device identifiers
         mazda_identifiers = [
@@ -79,9 +78,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             for identifier in device_entry.identifiers
             if identifier[0] == DOMAIN
         ]
-        if len(mazda_identifiers) < 1:
-            raise HomeAssistantError("Device ID is not a Mazda vehicle")
-
         vin_identifier = next(iter(mazda_identifiers))
         vin = vin_identifier[1]
 
@@ -109,6 +105,36 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         except Exception as ex:
             _LOGGER.exception("Error occurred during Mazda service call: %s", ex)
             raise HomeAssistantError(ex) from ex
+
+    def validate_mazda_device_id(device_id):
+        """Check that a device ID exists in the registry and has at least one 'mazda' identifier."""
+        dev_reg = device_registry.async_get(hass)
+        device_entry = dev_reg.async_get(device_id)
+
+        if device_entry is None:
+            raise vol.Invalid("Invalid device ID")
+
+        mazda_identifiers = [
+            identifier
+            for identifier in device_entry.identifiers
+            if identifier[0] == DOMAIN
+        ]
+        if len(mazda_identifiers) < 1:
+            raise vol.Invalid("Device ID is not a Mazda vehicle")
+
+        return device_id
+
+    service_schema = vol.Schema(
+        {vol.Required("device_id"): vol.All(cv.string, validate_mazda_device_id)}
+    )
+
+    service_schema_send_poi = service_schema.extend(
+        {
+            vol.Required("latitude"): cv.latitude,
+            vol.Required("longitude"): cv.longitude,
+            vol.Required("poi_name"): cv.string,
+        }
+    )
 
     async def async_update_data():
         """Fetch data from Mazda API."""
@@ -158,7 +184,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     # Register services
     for service in SERVICES:
-        hass.services.async_register(DOMAIN, service, async_handle_service_call)
+        if service == "send_poi":
+            hass.services.async_register(
+                DOMAIN,
+                service,
+                async_handle_service_call,
+                schema=service_schema_send_poi,
+            )
+        else:
+            hass.services.async_register(
+                DOMAIN, service, async_handle_service_call, schema=service_schema
+            )
 
     return True
 

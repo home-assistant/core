@@ -2,7 +2,7 @@ start_engine:
   name: Start engine
   description: Start the vehicle engine.
   fields:
-    vehicle:
+    device_id:
       name: Vehicle
       description: The vehicle to start
       required: true
@@ -13,7 +13,7 @@ stop_engine:
   name: Stop engine
   description: Stop the vehicle engine.
   fields:
-    vehicle:
+    device_id:
       name: Vehicle
       description: The vehicle to stop
       required: true
@@ -24,7 +24,7 @@ turn_on_hazard_lights:
   name: Turn on hazard lights
   description: Turn on the vehicle hazard lights. The lights will flash briefly and then turn off.
   fields:
-    vehicle:
+    device_id:
       name: Vehicle
       description: The vehicle to turn hazard lights on
       required: true
@@ -35,7 +35,7 @@ turn_off_hazard_lights:
   name: Turn off hazard lights
   description: Turn off the vehicle hazard lights if they have been manually turned on from inside the vehicle.
   fields:
-    vehicle:
+    device_id:
       name: Vehicle
       description: The vehicle to turn hazard lights off
       required: true
@@ -46,7 +46,7 @@ send_poi:
   name: Send POI
   description: Send a GPS location to the vehicle's navigation system as a POI (Point of Interest). Requires a navigation SD card installed in the vehicle.
   fields:
-    vehicle:
+    device_id:
       name: Vehicle
       description: The vehicle to send the GPS location to
       required: true
@@ -86,7 +86,7 @@ start_charging:
   name: Start charging
   description: Start charging the vehicle. For electric vehicles only.
   fields:
-    vehicle:
+    device_id:
       name: Vehicle
       description: The vehicle to start charging
       required: true
@@ -97,7 +97,7 @@ stop_charging:
   name: Stop charging
   description: Stop charging the vehicle. For electric vehicles only.
   fields:
-    vehicle:
+    device_id:
       name: Vehicle
       description: The vehicle to stop charging
       required: true

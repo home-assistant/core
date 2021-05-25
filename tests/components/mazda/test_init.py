@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 from pymazda import MazdaAuthenticationException, MazdaException
 import pytest
+import voluptuous as vol
 
 from homeassistant.components.mazda.const import DOMAIN, SERVICES
 from homeassistant.config_entries import ConfigEntryState
@@ -196,7 +197,7 @@ async def test_services(hass):
     device_id = reg_device.id
 
     for service in SERVICES:
-        service_data = {"vehicle": device_id}
+        service_data = {"device_id": device_id}
         if service == "send_poi":
             service_data["latitude"] = 1.2345
             service_data["longitude"] = 2.3456
@@ -216,13 +217,13 @@ async def test_service_invalid_device_id(hass):
     """Test service call when the specified device ID is invalid."""
     await init_integration(hass)
 
-    with pytest.raises(HomeAssistantError) as err:
+    with pytest.raises(vol.error.MultipleInvalid) as err:
         await hass.services.async_call(
-            DOMAIN, "start_engine", {"vehicle": "invalid"}, blocking=True
+            DOMAIN, "start_engine", {"device_id": "invalid"}, blocking=True
         )
         await hass.async_block_till_done()
 
-    assert str(err.value) == "Invalid device ID"
+    assert "Invalid device ID" in str(err.value)
 
 
 async def test_service_device_id_not_mazda_vehicle(hass):
@@ -237,13 +238,13 @@ async def test_service_device_id_not_mazda_vehicle(hass):
         identifiers={("OTHER_INTEGRATION", "ID_FROM_OTHER_INTEGRATION")},
     )
 
-    with pytest.raises(HomeAssistantError) as err:
+    with pytest.raises(vol.error.MultipleInvalid) as err:
         await hass.services.async_call(
-            DOMAIN, "start_engine", {"vehicle": other_device.id}, blocking=True
+            DOMAIN, "start_engine", {"device_id": other_device.id}, blocking=True
         )
         await hass.async_block_till_done()
 
-    assert str(err.value) == "Device ID is not a Mazda vehicle"
+    assert "Device ID is not a Mazda vehicle" in str(err.value)
 
 
 async def test_service_vehicle_id_not_found(hass):
@@ -264,7 +265,7 @@ async def test_service_vehicle_id_not_found(hass):
 
     with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
-            DOMAIN, "start_engine", {"vehicle": device_id}, blocking=True
+            DOMAIN, "start_engine", {"device_id": device_id}, blocking=True
         )
         await hass.async_block_till_done()
 
@@ -305,7 +306,7 @@ async def test_service_mazda_api_error(hass):
         side_effect=MazdaException("Test error"),
     ), pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
-            DOMAIN, "start_engine", {"vehicle": device_id}, blocking=True
+            DOMAIN, "start_engine", {"device_id": device_id}, blocking=True
         )
         await hass.async_block_till_done()
 
