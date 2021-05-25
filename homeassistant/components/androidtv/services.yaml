@@ -7,7 +7,6 @@ adb_command:
     entity_id:
       description: Name(s) of Android TV / Fire TV entities.
       required: true
-      example: "media_player.android_tv_living_room"
       selector:
         entity:
           integration: androidtv
@@ -26,7 +25,6 @@ download:
     entity_id:
       description: Name of Android TV / Fire TV entity.
       required: true
-      example: "media_player.android_tv_living_room"
       selector:
         entity:
           integration: androidtv
@@ -52,7 +50,6 @@ upload:
     entity_id:
       description: Name(s) of Android TV / Fire TV entities.
       required: true
-      example: "media_player.android_tv_living_room"
       selector:
         entity:
           integration: androidtv
