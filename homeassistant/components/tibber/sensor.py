@@ -343,7 +343,7 @@ class TibberSensorRT(TibberSensor):
     @callback
     def _set_state(self, state, timestamp):
         """Set sensor state."""
-        if state < self._state and self._sensor_name in [
+        if state < self._attr_state and self._sensor_name in [
             "accumulated consumption",
             "accumulated production",
             "accumulated cost",
@@ -351,7 +351,7 @@ class TibberSensorRT(TibberSensor):
             self._attr_last_reset = dt_util.as_utc(
                 timestamp.replace(hour=0, minute=0, second=0, microsecond=0)
             )
-        if state < self._state and self._sensor_name in [
+        if state < self._attr_state and self._sensor_name in [
             "accumulated consumption current hour",
             "accumulated production current hour",
         ]:
