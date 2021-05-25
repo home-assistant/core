@@ -184,6 +184,12 @@ def bulb_6_multi_color_state_fixture():
     return json.loads(load_fixture("zwave_js/bulb_6_multi_color_state.json"))
 
 
+@pytest.fixture(name="light_color_null_values_state", scope="session")
+def light_color_null_values_state_fixture():
+    """Load the light color null values node state fixture data."""
+    return json.loads(load_fixture("zwave_js/light_color_null_values_state.json"))
+
+
 @pytest.fixture(name="eaton_rf9640_dimmer_state", scope="session")
 def eaton_rf9640_dimmer_state_fixture():
     """Load the eaton rf9640 dimmer node state fixture data."""
@@ -425,6 +431,14 @@ def hank_binary_switch_fixture(client, hank_binary_switch_state):
 def bulb_6_multi_color_fixture(client, bulb_6_multi_color_state):
     """Mock a bulb 6 multi-color node."""
     node = Node(client, copy.deepcopy(bulb_6_multi_color_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="light_color_null_values")
+def light_color_null_values_fixture(client, light_color_null_values_state):
+    """Mock a node with current color value item being null."""
+    node = Node(client, copy.deepcopy(light_color_null_values_state))
     client.driver.controller.nodes[node.node_id] = node
     return node
 
