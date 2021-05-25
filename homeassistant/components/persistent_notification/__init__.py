@@ -100,6 +100,15 @@ def async_dismiss(hass: HomeAssistant, notification_id: str) -> None:
     hass.async_create_task(hass.services.async_call(DOMAIN, SERVICE_DISMISS, data))
 
 
+@callback
+@bind_hass
+def async_exists(hass: HomeAssistant, notification_id: str) -> bool:
+    """Check if a notification is present."""
+    return (
+        hass.states.get(ENTITY_ID_FORMAT.format(slugify(notification_id))) is not None
+    )
+
+
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     """Set up the persistent notification component."""
     persistent_notifications: MutableMapping[str, MutableMapping] = OrderedDict()

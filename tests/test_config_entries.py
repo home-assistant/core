@@ -666,12 +666,20 @@ async def test_discovery_notification(hass):
         await hass.async_block_till_done()
         state = hass.states.get("persistent_notification.config_entry_discovery")
         assert state is not None
+        first_notification_updated_time = state.last_updated
 
         # Start a second discovery flow so we can finish the first and assert that
         # the discovery notification persists until the second one is complete
         flow2 = await hass.config_entries.flow.async_init(
             "test", context={"source": config_entries.SOURCE_DISCOVERY}
         )
+
+        await hass.async_block_till_done()
+        state = hass.states.get("persistent_notification.config_entry_discovery")
+        assert state is not None
+        # Ensure we do not fire the exact same notification a second time when
+        # it is already present
+        assert state.last_updated == first_notification_updated_time
 
         flow1 = await hass.config_entries.flow.async_configure(flow1["flow_id"], {})
         assert flow1["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
@@ -734,12 +742,20 @@ async def test_reauth_notification(hass):
         await hass.async_block_till_done()
         state = hass.states.get("persistent_notification.config_entry_reconfigure")
         assert state is not None
+        first_notification_updated_time = state.last_updated
 
         # Start a second reauth flow so we can finish the first and assert that
         # the reconfigure notification persists until the second one is complete
         flow2 = await hass.config_entries.flow.async_init(
             "test", context={"source": config_entries.SOURCE_REAUTH}
         )
+
+        await hass.async_block_till_done()
+        state = hass.states.get("persistent_notification.config_entry_reconfigure")
+        assert state is not None
+        # Ensure we do not fire the exact same notification a second time when
+        # it is already present
+        assert state.last_updated == first_notification_updated_time
 
         flow1 = await hass.config_entries.flow.async_configure(flow1["flow_id"], {})
         assert flow1["type"] == data_entry_flow.RESULT_TYPE_ABORT
