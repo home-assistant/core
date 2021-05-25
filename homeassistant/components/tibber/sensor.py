@@ -285,6 +285,7 @@ class TibberSensorElPrice(TibberSensor):
 
 class TibberSensorRT(TibberSensor):
     """Representation of a Tibber sensor for real time consumption."""
+
     _attr_should_poll = False
 
     def __init__(
