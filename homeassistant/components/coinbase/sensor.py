@@ -26,7 +26,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     if "account" in discovery_info:
         account = discovery_info["account"]
         sensor = AccountSensor(
-            hass.data[DATA_COINBASE], account["name"], account["balance"]["currency"]
+            hass.data[DATA_COINBASE],
+            account["name"],
+            account["balance"]["currency"],
+            discovery_info["native_currency"],
         )
     if "exchange_currency" in discovery_info:
         sensor = ExchangeRateSensor(
@@ -41,14 +44,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class AccountSensor(SensorEntity):
     """Representation of a Coinbase.com sensor."""
 
-    def __init__(self, coinbase_data, name, currency):
+    def __init__(self, coinbase_data, name, currency, native_currency):
         """Initialize the sensor."""
         self._coinbase_data = coinbase_data
         self._name = f"Coinbase {name}"
         self._state = None
         self._unit_of_measurement = currency
         self._native_balance = None
-        self._native_currency = None
+        self._native_currency = native_currency
 
     @property
     def name(self):
@@ -80,12 +83,11 @@ class AccountSensor(SensorEntity):
 
     def update(self):
         """Get the latest state of the sensor."""
-        self._coinbase_data.update()
+        self._coinbase_data.update(self._native_currency)
         for account in self._coinbase_data.accounts:
             if self._name == f"Coinbase {account['name']}":
                 self._state = account["balance"]["amount"]
                 self._native_balance = account["native_balance"]["amount"]
-                self._native_currency = account["native_balance"]["currency"]
 
 
 class ExchangeRateSensor(SensorEntity):

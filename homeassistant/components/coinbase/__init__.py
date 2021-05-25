@@ -64,7 +64,13 @@ def setup(hass, config):
         return False
     for account in coinbase_data.accounts:
         if account_currencies is None or account.currency in account_currencies:
-            load_platform(hass, "sensor", DOMAIN, {"account": account}, config)
+            load_platform(
+                hass,
+                "sensor",
+                DOMAIN,
+                {"account": account, "native_currency": native_currency},
+                config,
+            )
     for currency in exchange_currencies:
         if currency not in coinbase_data.exchange_rates.rates:
             _LOGGER.warning("Currency %s not found", currency)
