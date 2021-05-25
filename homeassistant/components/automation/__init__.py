@@ -54,7 +54,10 @@ from homeassistant.helpers.script import (
     Script,
 )
 from homeassistant.helpers.script_variables import ScriptVariables
-from homeassistant.helpers.service import async_register_admin_service
+from homeassistant.helpers.service import (
+    ReloadServiceHelper,
+    async_register_admin_service,
+)
 from homeassistant.helpers.trace import (
     TraceElement,
     script_execution_set,
@@ -253,8 +256,14 @@ async def async_setup(hass, config):
         await _async_process_config(hass, conf, component)
         hass.bus.async_fire(EVENT_AUTOMATION_RELOADED, context=service_call.context)
 
+    reload_helper = ReloadServiceHelper(reload_service_handler)
+
     async_register_admin_service(
-        hass, DOMAIN, SERVICE_RELOAD, reload_service_handler, schema=vol.Schema({})
+        hass,
+        DOMAIN,
+        SERVICE_RELOAD,
+        reload_helper.execute_service,
+        schema=vol.Schema({}),
     )
 
     return True
