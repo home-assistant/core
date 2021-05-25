@@ -128,7 +128,7 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
         coordinator: PhilipsTVDataUpdateCoordinator,
         system: dict[str, Any],
         unique_id: str,
-    ):
+    ) -> None:
         """Initialize the Philips TV."""
         self._tv = coordinator.api
         self._coordinator = coordinator

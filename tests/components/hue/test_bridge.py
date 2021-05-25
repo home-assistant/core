@@ -351,12 +351,11 @@ async def test_event_updates(hass, caplog):
     unsub = hue_bridge.listen_updates("lights", "2", obj_updated)
     unsub_false = hue_bridge.listen_updates("lights", "2", obj_updated_false)
 
-    assert "Overwriting update callback" in caplog.text
-
     events.put_nowait(Mock(ITEM_TYPE="lights", id="2"))
 
     await wait_empty_queue()
-    assert len(calls) == 2
+    assert len(calls) == 3
+    assert calls[-2] is True
     assert calls[-1] is False
 
     # Also call multiple times to make sure that works.
@@ -368,7 +367,7 @@ async def test_event_updates(hass, caplog):
     events.put_nowait(Mock(ITEM_TYPE="lights", id="2"))
 
     await wait_empty_queue()
-    assert len(calls) == 2
+    assert len(calls) == 3
 
     events.put_nowait(None)
     await subscription_task

@@ -57,19 +57,89 @@ send_node_command:
       selector:
         select:
           options:
-            - 'beep'
-            - 'brighten'
-            - 'dim'
-            - 'disable'
-            - 'enable'
-            - 'fade_down'
-            - 'fade_stop'
-            - 'fade_up'
-            - 'fast_off'
-            - 'fast_on'
-            - 'query'
+            - "beep"
+            - "brighten"
+            - "dim"
+            - "disable"
+            - "enable"
+            - "fade_down"
+            - "fade_stop"
+            - "fade_up"
+            - "fast_off"
+            - "fast_on"
+            - "query"
+get_zwave_parameter:
+  name: Get Z-Wave Parameter
+  description: >-
+    Request a Z-Wave Device parameter via the ISY. The parameter value will be returned as a entity extra state attribute with the name "ZW_#"
+    where "#" is the parameter number.
+  target:
+    entity:
+      integration: isy994
+  fields:
+    parameter:
+      name: Parameter
+      description: The parameter number to retrieve from the device.
+      example: 8
+      selector:
+        number:
+          min: 1
+          max: 255
+set_zwave_parameter:
+  name: Set Z-Wave Parameter
+  description: >-
+    Update a Z-Wave Device parameter via the ISY. The parameter value will also be returned as a entity extra state attribute with the name "ZW_#"
+    where "#" is the parameter number.
+  target:
+    entity:
+      integration: isy994
+  fields:
+    parameter:
+      name: Parameter
+      description: The parameter number to set on the end device.
+      required: true
+      example: 8
+      selector:
+        number:
+          min: 1
+          max: 255
+    value:
+      name: Value
+      description: The value to set for the parameter. May be an integer or byte string (e.g. "0xFFFF").
+      required: true
+      example: 33491663
+      selector:
+        text:
+    size:
+      name: Size
+      description: The size of the parameter, either 1, 2, or 4 bytes.
+      required: true
+      example: 4
+      selector:
+        select:
+          options:
+            - "1"
+            - "2"
+            - "4"
+rename_node:
+  name: Rename Node on ISY994
+  description: >-
+    Rename a node or group (scene) on the ISY994. Note: this will not automatically change the Home Assistant Entity Name or Entity ID to match.
+    The entity name and ID will only be updated after calling `isy994.reload` or restarting Home Assistant, and ONLY IF you have not already customized the
+    name within Home Assistant.
+  target:
+    entity:
+      integration: isy994
+  fields:
+    name:
+      name: New Name
+      description: The new name to use within the ISY994.
+      required: true
+      example: "Front Door Light"
+      selector:
+        text:
 set_on_level:
-  name: Set on level
+  name: Set On Level
   description: Send a ISY set_on_level command to a Node.
   target:
     entity:
@@ -188,14 +258,14 @@ send_program_command:
       selector:
         select:
           options:
-            - 'disable'
-            - 'disable_run_at_startup'
-            - 'enable'
-            - 'enable_run_at_startup'
-            - 'run'
-            - 'run_else'
-            - 'run_then'
-            - 'stop'
+            - "disable"
+            - "disable_run_at_startup"
+            - "enable"
+            - "enable_run_at_startup"
+            - "run"
+            - "run_else"
+            - "run_then"
+            - "stop"
     isy:
       name: ISY
       description: If you have more than one ISY connected, provide the name of the ISY to query (as shown on the Device Registry or as the top-first node in the ISY Admin Console).  If you have the same program name or address on multiple ISYs, omitting this will run the command on them all.

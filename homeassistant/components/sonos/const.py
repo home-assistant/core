@@ -147,3 +147,4 @@ BATTERY_SCAN_INTERVAL = datetime.timedelta(minutes=15)
 SCAN_INTERVAL = datetime.timedelta(seconds=10)
 DISCOVERY_INTERVAL = datetime.timedelta(seconds=60)
 SEEN_EXPIRE_TIME = 3.5 * DISCOVERY_INTERVAL
+SUBSCRIPTION_TIMEOUT = 1200

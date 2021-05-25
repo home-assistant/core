@@ -62,7 +62,7 @@ class SurePetcareBinarySensor(BinarySensorEntity):
         spc: SurePetcareAPI,
         device_class: str,
         sure_type: EntityType,
-    ):
+    ) -> None:
         """Initialize a Sure Petcare binary sensor."""
 
         self._id = _id

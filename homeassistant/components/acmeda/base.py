@@ -13,7 +13,7 @@ from .const import ACMEDA_ENTITY_REMOVE, DOMAIN, LOGGER
 class AcmedaBase(entity.Entity):
     """Base representation of an Acmeda roller."""
 
-    def __init__(self, roller: aiopulse.Roller):
+    def __init__(self, roller: aiopulse.Roller) -> None:
         """Initialize the roller."""
         self.roller = roller
 

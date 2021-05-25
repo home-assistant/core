@@ -31,9 +31,7 @@ PLATFORM_SCHEMA: Final = BASE_PLATFORM_SCHEMA.extend(
 )
 
 
-def get_scanner(
-    hass: HomeAssistant, config: ConfigType
-) -> ActiontecDeviceScanner | None:
+def get_scanner(hass: HomeAssistant, config: ConfigType) -> DeviceScanner | None:
     """Validate the configuration and return an Actiontec scanner."""
     scanner = ActiontecDeviceScanner(config[DOMAIN])
     return scanner if scanner.success_init else None
@@ -57,7 +55,7 @@ class ActiontecDeviceScanner(DeviceScanner):
         self._update_info()
         return [client.mac_address for client in self.last_results]
 
-    def get_device_name(self, device: str) -> str | None:  # type: ignore[override]
+    def get_device_name(self, device: str) -> str | None:
         """Return the name of the given device or None if we don't know."""
         for client in self.last_results:
             if client.mac_address == device:

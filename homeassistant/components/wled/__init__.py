@@ -102,7 +102,7 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
         hass: HomeAssistant,
         *,
         host: str,
-    ):
+    ) -> None:
         """Initialize global WLED data updater."""
         self.wled = WLED(host, session=async_get_clientsession(hass))
 

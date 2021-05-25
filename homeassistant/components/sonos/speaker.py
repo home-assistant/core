@@ -48,6 +48,7 @@ from .const import (
     SONOS_STATE_UPDATED,
     SOURCE_LINEIN,
     SOURCE_TV,
+    SUBSCRIPTION_TIMEOUT,
 )
 from .favorites import SonosFavorites
 from .helpers import soco_error
@@ -135,6 +136,7 @@ class SonosSpeaker:
 
         self._is_ready: bool = False
         self._subscriptions: list[SubscriptionBase] = []
+        self._resubscription_lock: asyncio.Lock | None = None
         self._poll_timer: Callable | None = None
         self._seen_timer: Callable | None = None
         self._platforms_ready: set[str] = set()
@@ -145,7 +147,7 @@ class SonosSpeaker:
 
         self.mac_address = speaker_info["mac_address"]
         self.model_name = speaker_info["model_name"]
-        self.version = speaker_info["software_version"]
+        self.version = speaker_info["display_version"]
         self.zone_name = speaker_info["zone_name"]
 
         self.battery_info: dict[str, Any] | None = None
@@ -197,6 +199,7 @@ class SonosSpeaker:
         """Listen to new entities to trigger first subscription."""
         self._platforms_ready.add(entity_type)
         if self._platforms_ready == PLATFORMS:
+            self._resubscription_lock = asyncio.Lock()
             await self.async_subscribe()
             self._is_ready = True
 
@@ -251,8 +254,11 @@ class SonosSpeaker:
         self, target: SubscriptionBase, sub_callback: Callable
     ) -> None:
         """Create a Sonos subscription."""
-        subscription = await target.subscribe(auto_renew=True)
+        subscription = await target.subscribe(
+            auto_renew=True, requested_timeout=SUBSCRIPTION_TIMEOUT
+        )
         subscription.callback = sub_callback
+        subscription.auto_renew_fail = self.async_renew_failed
         self._subscriptions.append(subscription)
 
     @callback
@@ -309,11 +315,35 @@ class SonosSpeaker:
 
         self.async_write_entity_states()
 
+    async def async_resubscribe(self, exception: Exception) -> None:
+        """Attempt to resubscribe when a renewal failure is detected."""
+        async with self._resubscription_lock:
+            if self.available:
+                if getattr(exception, "status", None) == 412:
+                    _LOGGER.warning(
+                        "Subscriptions for %s failed, speaker may have lost power",
+                        self.zone_name,
+                    )
+                else:
+                    _LOGGER.error(
+                        "Subscription renewals for %s failed",
+                        self.zone_name,
+                        exc_info=exception,
+                    )
+                await self.async_unseen()
+
+    @callback
+    def async_renew_failed(self, exception: Exception) -> None:
+        """Handle a failed subscription renewal."""
+        self.hass.async_create_task(self.async_resubscribe(exception))
+
     async def async_unseen(self, now: datetime.datetime | None = None) -> None:
         """Make this player unavailable when it was not seen recently."""
         self.async_write_entity_states()
 
-        self._seen_timer = None
+        if self._seen_timer:
+            self._seen_timer()
+            self._seen_timer = None
 
         if self._poll_timer:
             self._poll_timer()

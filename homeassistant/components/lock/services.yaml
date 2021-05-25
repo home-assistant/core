@@ -46,6 +46,8 @@ lock:
   name: Lock
   description: Lock all or specified locks.
   target:
+    entity:
+      domain: lock
   fields:
     code:
       name: Code
@@ -58,6 +60,8 @@ open:
   name: Open
   description: Open all or specified locks.
   target:
+    entity:
+      domain: lock
   fields:
     code:
       name: Code
@@ -95,6 +99,8 @@ unlock:
   name: Unlock
   description: Unlock all or specified locks.
   target:
+    entity:
+      domain: lock
   fields:
     code:
       name: Code

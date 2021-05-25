@@ -37,7 +37,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class EmonitorPowerSensor(CoordinatorEntity, SensorEntity):
     """Representation of an Emonitor power sensor entity."""
 
-    def __init__(self, coordinator: DataUpdateCoordinator, channel_number: int):
+    def __init__(self, coordinator: DataUpdateCoordinator, channel_number: int) -> None:
         """Initialize the channel sensor."""
         self.channel_number = channel_number
         super().__init__(coordinator)

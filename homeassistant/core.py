@@ -163,7 +163,7 @@ class HassJob:
 
     __slots__ = ("job_type", "target")
 
-    def __init__(self, target: Callable):
+    def __init__(self, target: Callable) -> None:
         """Create a job object."""
         if asyncio.iscoroutine(target):
             raise ValueError("Coroutine not allowed to be passed to HassJob")
@@ -372,6 +372,13 @@ class HomeAssistant:
             self._pending_tasks.append(task)
 
         return task
+
+    def create_task(self, target: Coroutine) -> None:
+        """Add task to the executor pool.
+
+        target: target to call.
+        """
+        self.loop.call_soon_threadsafe(self.async_create_task, target)
 
     @callback
     def async_create_task(self, target: Coroutine) -> asyncio.tasks.Task:

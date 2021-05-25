@@ -10,7 +10,7 @@ from pyvizio.util import gen_apps_list_from_url
 import voluptuous as vol
 
 from homeassistant.components.media_player import DEVICE_CLASS_TV
-from homeassistant.config_entries import ENTRY_STATE_LOADED, SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -80,7 +80,7 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     )
     # Exclude this config entry because its not unloaded yet
     if not any(
-        entry.state == ENTRY_STATE_LOADED
+        entry.state is ConfigEntryState.LOADED
         and entry.entry_id != config_entry.entry_id
         and entry.data[CONF_DEVICE_CLASS] == DEVICE_CLASS_TV
         for entry in hass.config_entries.async_entries(DOMAIN)
@@ -113,6 +113,9 @@ class VizioAppsDataUpdateCoordinator(DataUpdateCoordinator):
         """Update data via library."""
         data = await gen_apps_list_from_url(session=async_get_clientsession(self.hass))
         if not data:
+            # For every failure, increase the fail count until we reach the threshold.
+            # We then log a warning, increase the threshold, and reset the fail count.
+            # This is here to prevent silent failures but to reduce repeat logs.
             if self.fail_count == self.fail_threshold:
                 _LOGGER.warning(
                     (
@@ -126,6 +129,7 @@ class VizioAppsDataUpdateCoordinator(DataUpdateCoordinator):
             else:
                 self.fail_count += 1
             return self.data
+        # Reset the fail count and threshold when the data is successfully retrieved
         self.fail_count = 0
         self.fail_threshold = 10
         return sorted(data, key=lambda app: app["name"])
