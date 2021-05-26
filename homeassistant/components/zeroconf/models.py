@@ -1,6 +1,7 @@
 """Models for Zeroconf."""
 
 import asyncio
+import logging
 from typing import Any
 
 from zeroconf import (
@@ -14,6 +15,8 @@ from zeroconf import (
 from zeroconf.asyncio import AsyncZeroconf
 
 INTRESTED_RECORD_TYPES = (DNSAddress, DNSPointer, DNSText)
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class HaZeroconf(Zeroconf):
@@ -55,8 +58,9 @@ class HaServiceBrowser(ServiceBrowser):
         # To avoid overwhemling the system we pre-filter here and only process
         # DNSPointers for the configured record name (type)
         #
-        #if record.name not in self.types or not isinstance(
+        # if record.name not in self.types or not isinstance(
         #    record, INTRESTED_RECORD_TYPES
-        #):
+        # ):
         #    return
+        _LOGGER.debug("update_record: %s %s", record, now)
         super().update_record(zc, now, record)
