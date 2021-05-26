@@ -363,7 +363,7 @@ class CoverEntity(Entity):
             return fns["stop"]
         if self.is_closed:
             return fns["open"]
-        if self.is_last_toggle_direction_open:
+        if self._is_last_toggle_direction_open:
             return fns["close"]
         return fns["open"]
 
