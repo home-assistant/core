@@ -4,16 +4,8 @@ import asyncio
 import logging
 from typing import Any
 
-from zeroconf import (
-    DNSAddress,
-    DNSPointer,
-    DNSRecord,
-    DNSText,
-    ServiceBrowser,
-    Zeroconf,
-)
+from zeroconf import DNSAddress, DNSPointer, DNSRecord, ServiceBrowser, Zeroconf
 from zeroconf.asyncio import AsyncZeroconf
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,26 +42,34 @@ class HaServiceBrowser(ServiceBrowser):
         # To avoid overwhemling the system we pre-filter here and only process
         # INTRESTED_RECORD_TYPES for the configured record name (type)
         #
-        if isinstance(record, DNSPointer) and record.name not in self.types:
-            return
-        
-        if isinstance(record, DNSAddress):
-            has_match = False
+        has_match = False
+
+        if isinstance(record, DNSPointer):
+            if record.name in self.types:
+                has_match = True
+
+        elif isinstance(record, DNSAddress):
             for service in self.zc.cache.entries_with_server(record.name):
                 for type_ in self.types:
                     if service.name.endswith(type_):
                         has_match = True
                         break
-            if not has_match:
-                return
 
+        else:
+            for type_ in self.types:
+                if record.name.endswith(type_):
+                    has_match = True
+                    break
+
+        if not has_match:
+            return
         _LOGGER.debug("update_record: (name=%s) %s %s", record.name, record, now)
 
-            #return
-        #if isinstance(
+        # return
+        # if isinstance(
         #    record, INTRESTED_RECORD_TYPES
-        #):
+        # ):
         #    return
-        #_LOGGER.debug("update_record accepted: %s %s", record, now)
+        # _LOGGER.debug("update_record accepted: %s %s", record, now)
         super().update_record(zc, now, record)
-        #SERVICE_RECORD_TYPES = (DNSAddress, DNSText)
+        # SERVICE_RECORD_TYPES = (DNSAddress, DNSText)
