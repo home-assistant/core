@@ -28,9 +28,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
     account_id = data[ACCOUNT_ID]
     password = data[CONF_PASSWORD].replace(" ", "")
 
-    for entry in hass.config_entries.async_entries(DOMAIN):
-        if entry.data[ACCOUNT_ID] == account_id:
-            raise AlreadyConfigured
+    self._async_abort_entries_match({ACCOUNT_ID: account_id})
 
     token = await adax.get_adax_token(
         async_get_clientsession(hass), account_id, password
