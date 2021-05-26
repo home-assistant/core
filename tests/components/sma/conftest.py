@@ -1,9 +1,9 @@
 """Fixtures for sma tests."""
 from unittest.mock import patch
 
-from pysma import Sensors
 from pysma.const import DEVCLASS_INVERTER
 from pysma.definitions import sensor_map
+from pysma.sensor import Sensors
 import pytest
 
 from homeassistant import config_entries
