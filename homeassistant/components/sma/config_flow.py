@@ -20,7 +20,7 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
-from .const import CONF_CUSTOM, CONF_GROUP, DOMAIN, GROUPS
+from .const import CONF_CUSTOM, CONF_GROUP, DEVICE_INFO, DOMAIN, GROUPS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,7 +51,7 @@ async def validate_input(
 class SmaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for SMA."""
 
-    VERSION = 2
+    VERSION = 1
 
     def __init__(self) -> None:
         """Initialize."""
@@ -63,6 +63,7 @@ class SmaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_PASSWORD: vol.UNDEFINED,
             CONF_SENSORS: [],
             CONF_CUSTOM: {},
+            DEVICE_INFO: {},
         }
 
     async def async_step_user(
@@ -78,7 +79,7 @@ class SmaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._data[CONF_PASSWORD] = user_input[CONF_PASSWORD]
 
             try:
-                device_info = await validate_input(self.hass, user_input)
+                self._data[DEVICE_INFO] = await validate_input(self.hass, user_input)
             except aiohttp.ClientError:
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
@@ -90,7 +91,7 @@ class SmaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
 
             if not errors:
-                await self.async_set_unique_id(device_info["serial"])
+                await self.async_set_unique_id(self._data[DEVICE_INFO]["serial"])
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title=self._data[CONF_HOST], data=self._data
@@ -119,6 +120,7 @@ class SmaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Import a config flow from configuration."""
         device_info = await validate_input(self.hass, import_config)
+        import_config[DEVICE_INFO] = device_info
 
         # If unique is configured import was already run
         # This means remap was already done, so we can abort
