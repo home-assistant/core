@@ -2495,6 +2495,55 @@ async def test_default_discovery_abort_on_new_unique_flow(hass, manager):
     assert flows[0]["context"]["unique_id"] == "mock-unique-id"
 
 
+async def test_default_discovery_abort_on_user_flow_complete(hass, manager):
+    """Test that a flow using default discovery is aborted when a second flow completes."""
+    mock_integration(hass, MockModule("comp"))
+    mock_entity_platform(hass, "config_flow.comp", None)
+
+    class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
+        VERSION = 1
+
+        async def async_step_user(self, user_input=None):
+            """Test discovery step."""
+            if user_input is None:
+                return self.async_show_form(step_id="user")
+            return self.async_create_entry(title="title", data={"token": "supersecret"})
+
+        async def async_step_discovery(self, discovery_info=None):
+            """Test discovery step."""
+            await self._async_handle_discovery_without_unique_id()
+            return self.async_show_form(step_id="mock")
+
+    with patch.dict(config_entries.HANDLERS, {"comp": TestFlow}):
+        # First discovery with default, no unique ID
+        flow1 = await manager.flow.async_init(
+            "comp", context={"source": config_entries.SOURCE_DISCOVERY}, data={}
+        )
+        assert flow1["type"] == data_entry_flow.RESULT_TYPE_FORM
+
+        flows = hass.config_entries.flow.async_progress()
+        assert len(flows) == 1
+
+        # User sets up a manual flow
+        flow2 = await manager.flow.async_init(
+            "comp", context={"source": config_entries.SOURCE_USER}
+        )
+        assert flow2["type"] == data_entry_flow.RESULT_TYPE_FORM
+
+        flows = hass.config_entries.flow.async_progress()
+        assert len(flows) == 2
+
+        # Complete the manual flow
+        result = await hass.config_entries.flow.async_configure(flow2["flow_id"], {})
+        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+
+    # Ensure the first flow is gone now
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 0
+
+
 async def test_updating_entry_with_and_without_changes(manager):
     """Test that we can update an entry data."""
     entry = MockConfigEntry(
