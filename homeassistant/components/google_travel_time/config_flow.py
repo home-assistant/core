@@ -156,7 +156,7 @@ class GoogleOptionsFlow(config_entries.OptionsFlow):
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Google Maps Travel Time."""
 
-    VERSION = 2
+    VERSION = 1
 
     @staticmethod
     @callback

@@ -14,25 +14,8 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Load the saved entities."""
-    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
-    return True
-
-
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
-    """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
-
-
-async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry):
-    """Migrate an old config entry."""
-    version = config_entry.version
-
-    _LOGGER.debug("Migrating from version %s", version)
-
-    # 1 -> 2: Remove config entry unique ID
-    if version == 1:
+    if config_entry.unique_id is not None:
         hass.config_entries.async_update_entry(config_entry, unique_id=None)
-        version = config_entry.version = 2
 
         ent_reg = async_get(hass)
         for entity in async_entries_for_config_entry(ent_reg, config_entry.entry_id):
@@ -40,6 +23,10 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry):
                 entity.entity_id, new_unique_id=config_entry.entry_id
             )
 
-    _LOGGER.info("Migration to version %s successful", version)
-
+    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
     return True
+
+
+async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+    """Unload a config entry."""
+    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
