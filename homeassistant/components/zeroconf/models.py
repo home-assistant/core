@@ -53,10 +53,18 @@ class HaServiceBrowser(ServiceBrowser):
         if isinstance(record, DNSPointer) and record.name not in self.types:
             return
         
-        _LOGGER.debug("update_record: (name=%s) %s %s", record.name, record, now)
         if isinstance(record, DNSAddress):
-            for cache_entry in self.zc.cache.entries_with_server(record.name):
-                _LOGGER.debug("Entries with server (%s): %s - cache entry name:%s", record.name, cache_entry, cache_entry.name)
+            has_match = False
+            for service in self.zc.cache.entries_with_server(record.name):
+                for type_ in self.types:
+                    if service.name.endswith(type_):
+                        has_match = True
+                        break
+            if not has_match:
+                return
+
+        _LOGGER.debug("update_record: (name=%s) %s %s", record.name, record, now)
+
             #return
         #if isinstance(
         #    record, INTRESTED_RECORD_TYPES
