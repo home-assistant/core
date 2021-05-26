@@ -1,6 +1,8 @@
 """Support for Tasmota sensors."""
 from __future__ import annotations
 
+import logging
+
 from hatasmota import const as hc, status_sensor
 
 from homeassistant.components import sensor
@@ -40,10 +42,13 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.util import dt as dt_util
 
 from .const import DATA_REMOVE_DISCOVER_COMPONENT
 from .discovery import TASMOTA_DISCOVERY_ENTITY_NEW
 from .mixins import TasmotaAvailability, TasmotaDiscoveryUpdate
+
+_LOGGER = logging.getLogger(__name__)
 
 DEVICE_CLASS = "device_class"
 STATE_CLASS = "state_class"
@@ -166,6 +171,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class TasmotaSensor(TasmotaAvailability, TasmotaDiscoveryUpdate, SensorEntity):
     """Representation of a Tasmota sensor."""
 
+    _attr_last_reset = None
+
     def __init__(self, **kwds):
         """Initialize the Tasmota sensor."""
         self._state = None
@@ -178,6 +185,18 @@ class TasmotaSensor(TasmotaAvailability, TasmotaDiscoveryUpdate, SensorEntity):
     def state_updated(self, state, **kwargs):
         """Handle state updates."""
         self._state = state
+        if "last_reset" in kwargs:
+            try:
+                last_reset = dt_util.as_utc(
+                    dt_util.parse_datetime(kwargs["last_reset"])
+                )
+                if last_reset is None:
+                    raise ValueError
+                self._attr_last_reset = last_reset
+            except ValueError:
+                _LOGGER.warning(
+                    "Invalid last_reset timestamp '%s'", kwargs["last_reset"]
+                )
         self.async_write_ha_state()
 
     @property
