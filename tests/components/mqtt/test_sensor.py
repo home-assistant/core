@@ -254,6 +254,31 @@ async def test_setting_sensor_bad_last_reset_via_mqtt_message(
     assert "Invalid last_reset message" in caplog.text
 
 
+async def test_setting_sensor_empty_last_reset_via_mqtt_message(
+    hass, caplog, mqtt_mock
+):
+    """Test the setting of the last_reset property via MQTT."""
+    assert await async_setup_component(
+        hass,
+        sensor.DOMAIN,
+        {
+            sensor.DOMAIN: {
+                "platform": "mqtt",
+                "name": "test",
+                "state_topic": "test-topic",
+                "unit_of_measurement": "fav unit",
+                "last_reset_topic": "last-reset-topic",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    async_fire_mqtt_message(hass, "last-reset-topic", "")
+    state = hass.states.get("sensor.test")
+    assert state.attributes.get("last_reset") is None
+    assert "Ignoring empty last_reset message" in caplog.text
+
+
 async def test_setting_sensor_last_reset_via_mqtt_json_message(hass, mqtt_mock):
     """Test the setting of the value via MQTT with JSON payload."""
     assert await async_setup_component(
