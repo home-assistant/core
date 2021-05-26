@@ -22,14 +22,16 @@ SUMMARY = {
     "Returned": 0,
 }
 
-PACKAGE = Package(
-    "456",
-    206,
-    "friendly name 1",
-    "info text 1",
-    "location 1",
-    "2020-08-10 10:32",
-)
+PACKAGES = [
+    Package(
+        "456",
+        206,
+        "friendly name 1",
+        "info text 1",
+        "location 1",
+        "2020-08-10 10:32",
+    )
+]
 
 
 async def test_seventeentrack_sensors(hass, mock_api):
@@ -37,16 +39,18 @@ async def test_seventeentrack_sensors(hass, mock_api):
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG)
     entry.add_to_hass(hass)
 
-    mock_api.return_value.packages = AsyncMock(return_value=[PACKAGE])
+    mock_api.return_value.packages = AsyncMock(return_value=PACKAGES)
     mock_api.return_value.summary = AsyncMock(return_value=SUMMARY)
 
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == len(SUMMARY)
+    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == len(SUMMARY) + 1
 
     for sensor_type, state in SUMMARY.items():
         sensor = hass.states.get(
             f"sensor.{MOCK_CONFIG[CONF_NAME]}_packages_{slugify(sensor_type)}"
         )
         assert sensor.state == str(state)
+
+    assert hass.states.get(f"sensor.{MOCK_CONFIG[CONF_NAME]}_all_packages").state == "1"

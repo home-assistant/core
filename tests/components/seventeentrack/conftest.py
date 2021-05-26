@@ -12,4 +12,5 @@ def mock_api():
         mock_profile.return_value.login = AsyncMock(return_value=True)
         mock_profile.return_value.packages = AsyncMock(return_value=[])
         mock_profile.return_value.summary = AsyncMock(return_value={})
+        mock_profile.return_value.add_package = AsyncMock()
         yield mock_profile

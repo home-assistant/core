@@ -95,11 +95,20 @@ class SeventeenTrackDataCoordinator(DataUpdateCoordinator):
         """Update SeventeenTrack data."""
         try:
             packages = await self.client.profile.packages(
-                show_archived=self.show_archived, tz=str(self.hass.config.time_zone)
+                show_archived=False, tz=str(self.hass.config.time_zone)
             )
-            summary = await self.client.profile.summary(
-                show_archived=self.show_archived
-            )
+            summary = await self.client.profile.summary(show_archived=False)
+
+            if self.show_archived:
+                archived_packages = await self.client.profile.packages(
+                    show_archived=True, tz=str(self.hass.config.time_zone)
+                )
+                packages += archived_packages
+
+                archived_summary = await self.client.profile.summary(show_archived=True)
+                for status, qty in archived_summary.items():
+                    summary[status] += qty
+
         except SeventeenTrackError as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err
 

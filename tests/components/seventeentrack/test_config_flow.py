@@ -19,6 +19,7 @@ MOCK_CONFIG = {
     CONF_USERNAME: "user",
     CONF_PASSWORD: "pass",
 }
+MOCK_OPTIONS = {CONF_SCAN_INTERVAL: 10, CONF_SHOW_ARCHIVED: False}
 
 
 async def test_flow_works(hass):
@@ -42,6 +43,7 @@ async def test_options(hass):
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=MOCK_CONFIG,
+        options=MOCK_OPTIONS,
         unique_id="email@email.com",
     )
     entry.add_to_hass(hass)
