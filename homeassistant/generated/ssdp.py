@@ -136,6 +136,16 @@ SSDP = {
             "manufacturer": "Universal Devices Inc."
         }
     ],
+    "keenetic_ndms2": [
+        {
+            "deviceType": "urn:schemas-upnp-org:device:InternetGatewayDevice:1",
+            "manufacturer": "Keenetic Ltd."
+        },
+        {
+            "deviceType": "urn:schemas-upnp-org:device:InternetGatewayDevice:1",
+            "manufacturer": "ZyXEL Communications Corp."
+        }
+    ],
     "konnected": [
         {
             "manufacturer": "konnected.io"
