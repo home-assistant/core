@@ -1,6 +1,7 @@
 """Provide common Z-Wave JS fixtures."""
 import asyncio
 import copy
+import io
 import json
 from unittest.mock import AsyncMock, patch
 
@@ -717,3 +718,9 @@ def wallmote_central_scene_fixture(client, wallmote_central_scene_state):
     node = Node(client, copy.deepcopy(wallmote_central_scene_state))
     client.driver.controller.nodes[node.node_id] = node
     return node
+
+
+@pytest.fixture(name="firmware_file")
+def firmware_file_fixture():
+    """Return mock firmware file stream."""
+    return io.BytesIO(bytes(10))
