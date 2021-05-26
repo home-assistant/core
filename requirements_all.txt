@@ -632,7 +632,7 @@ fritzconnection==1.4.2
 gTTS==2.2.2
 
 # homeassistant.components.garages_amsterdam
-garages-amsterdam==2.0.5
+garages-amsterdam==2.1.1
 
 # homeassistant.components.garmin_connect
 garminconnect==0.1.19
