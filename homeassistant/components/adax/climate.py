@@ -34,10 +34,10 @@ async def _setup(hass, account_id, password, async_add_entities):
         account_id, password, websession=async_get_clientsession(hass)
     )
 
-    dev = []
-    for room in await adax_data_handler.get_rooms():
-        dev.append(AdaxDevice(room, adax_data_handler))
-    async_add_entities(dev)
+    async_add_entities(
+        AdaxDevice(room, adax_data_handler)
+        for room in await adax_data_handler.get_rooms()
+    )
 
 
 class AdaxDevice(ClimateEntity):
