@@ -304,7 +304,7 @@ class ClimateEntity(Entity):
         """Return the unit of measurement used by the platform."""
         if hasattr(self, "_attr_temperature_unit"):
             return self._attr_temperature_unit
-        raise NotImplementedError
+        raise AttributeError
 
     @property
     def current_humidity(self) -> int | None:
@@ -323,7 +323,7 @@ class ClimateEntity(Entity):
         Need to be one of HVAC_MODE_*.
         """
         if not hasattr(self, "_attr_hvac_mode"):
-            raise NotImplementedError
+            raise AttributeError
         return self._attr_hvac_mode
 
     @property
@@ -333,7 +333,7 @@ class ClimateEntity(Entity):
         Need to be a subset of HVAC_MODES.
         """
         if not hasattr(self, "_attr_hvac_modes"):
-            raise NotImplementedError
+            raise AttributeError
         return self._attr_hvac_modes
 
     @property
@@ -366,7 +366,7 @@ class ClimateEntity(Entity):
         Requires SUPPORT_TARGET_TEMPERATURE_RANGE.
         """
         if not hasattr(self, "_attr_target_temperature_high"):
-            raise NotImplementedError
+            raise AttributeError
         return self._attr_target_temperature_high
 
     @property
@@ -376,7 +376,7 @@ class ClimateEntity(Entity):
         Requires SUPPORT_TARGET_TEMPERATURE_RANGE.
         """
         if not hasattr(self, "_attr_target_temperature_low"):
-            raise NotImplementedError
+            raise AttributeError
         return self._attr_target_temperature_low
 
     @property
@@ -386,7 +386,7 @@ class ClimateEntity(Entity):
         Requires SUPPORT_PRESET_MODE.
         """
         if not hasattr(self, "_attr_preset_mode"):
-            raise NotImplementedError
+            raise AttributeError
         return self._attr_preset_mode
 
     @property
@@ -406,7 +406,7 @@ class ClimateEntity(Entity):
         Requires SUPPORT_AUX_HEAT.
         """
         if not hasattr(self, "_attr_is_aux_heat"):
-            raise NotImplementedError
+            raise AttributeError
         return self._attr_is_aux_heat
 
     @property
@@ -416,7 +416,7 @@ class ClimateEntity(Entity):
         Requires SUPPORT_FAN_MODE.
         """
         if not hasattr(self, "_attr_fan_mode"):
-            raise NotImplementedError
+            raise AttributeError
         return self._attr_fan_mode
 
     @property
@@ -426,7 +426,7 @@ class ClimateEntity(Entity):
         Requires SUPPORT_FAN_MODE.
         """
         if not hasattr(self, "_attr_fan_modes"):
-            raise NotImplementedError
+            raise AttributeError
         return self._attr_fan_modes
 
     @property
@@ -436,7 +436,7 @@ class ClimateEntity(Entity):
         Requires SUPPORT_SWING_MODE.
         """
         if not hasattr(self, "_attr_swing_mode"):
-            raise NotImplementedError
+            raise AttributeError
         return self._attr_swing_mode
 
     @property
@@ -446,7 +446,7 @@ class ClimateEntity(Entity):
         Requires SUPPORT_SWING_MODE.
         """
         if not hasattr(self, "_attr_swing_modes"):
-            raise NotImplementedError
+            raise AttributeError
         return self._attr_swing_modes
 
     def set_temperature(self, **kwargs) -> None:
@@ -544,7 +544,7 @@ class ClimateEntity(Entity):
     def supported_features(self) -> int:
         """Return the list of supported features."""
         if not hasattr(self, "_attr_supported_features"):
-            raise NotImplementedError()
+            raise AttributeError()
         return self._attr_supported_features
 
     @property
