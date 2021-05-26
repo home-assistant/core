@@ -1144,7 +1144,7 @@ class FirmwareUploadView(HomeAssistantView):
         client = hass.data[DOMAIN][config_entry_id][DATA_CLIENT]
         node = client.driver.controller.nodes.get(int(node_id))
         if not node:
-            raise web_exceptions.HTTPBadRequest
+            raise web_exceptions.HTTPNotFound
 
         # Increase max payload
         request._client_max_size = 1024 * 1024 * 10  # pylint: disable=protected-access

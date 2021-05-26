@@ -1194,7 +1194,7 @@ async def test_view_invalid_node_id(integration, hass_client, method, url):
     """Test an invalid config entry id parameter."""
     client = await hass_client()
     resp = await client.request(method, url.format(integration.entry_id))
-    assert resp.status == 400
+    assert resp.status == 404
 
 
 async def test_subscribe_logs(hass, integration, client, hass_ws_client):
