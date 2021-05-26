@@ -315,7 +315,8 @@ class ZWaveServices:
         broadcast: bool = service.data[const.ATTR_BROADCAST]
 
         # User must specify a node if they are attempting a broadcast and have more
-        # than one zwave-js network
+        # than one zwave-js network. We know its a broadcast if the nodes list is empty
+        # because of schema validation.
         if not nodes and len(self._hass.config_entries.async_entries(const.DOMAIN)) > 1:
             raise vol.Invalid(
                 "You must include at least one entity or device in the service call"
