@@ -46,9 +46,9 @@ class MotionEyeConfigFlow(ConfigFlow, domain=DOMAIN):
             url_schema: dict[vol.Required, type[str]] = {}
             if not self._hassio_discovery:
                 # Only ask for URL when not discovered
-                url_schema.update(
-                    {vol.Required(CONF_URL, default=user_input.get(CONF_URL, "")): str}
-                )
+                url_schema[
+                    vol.Required(CONF_URL, default=user_input.get(CONF_URL, ""))
+                ] = str
 
             return self.async_show_form(
                 step_id="user",
