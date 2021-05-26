@@ -158,7 +158,7 @@ async def async_setup_entry(
         config_entry,
     )
 
-    sensor = WazeTravelTime(config_entry.unique_id, name, origin, destination, data)
+    sensor = WazeTravelTime(config_entry.entry_id, name, origin, destination, data)
 
     async_add_entities([sensor], False)
 
