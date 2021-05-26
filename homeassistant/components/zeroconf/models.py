@@ -36,32 +36,31 @@ class HaAsyncZeroconf(AsyncZeroconf):
 class HaServiceBrowser(ServiceBrowser):
     """ServiceBrowser that only consumes DNSPointer records."""
 
+    def _record_has_browser_type(self, record: DNSRecord) -> bool:
+        """Check if the record is one of the types we are browsing."""
+        for type_ in self.types:
+            if record.name.endswith(type_):
+                return True
+
+        return False
+
     def update_record(self, zc: Zeroconf, now: float, record: DNSRecord) -> None:
         """Pre-Filter update_record to INTRESTED_RECORD_TYPES for the configured type."""
         #
-        # To avoid overwhemling the system we pre-filter here and only process
-        # INTRESTED_RECORD_TYPES for the configured record name (type)
+        # To avoid overwhemling the system we pre-filter here
         #
-        has_match = False
-
         if isinstance(record, DNSPointer):
-            if record.name in self.types:
-                has_match = True
-
+            if record.name not in self.types:
+                return
         elif isinstance(record, DNSAddress):
+            has_match = False
             for service in self.zc.cache.entries_with_server(record.name):
-                for type_ in self.types:
-                    if service.name.endswith(type_):
-                        has_match = True
-                        break
-
-        else:
-            for type_ in self.types:
-                if record.name.endswith(type_):
+                if self._record_has_browser_type(service):
                     has_match = True
                     break
-
-        if not has_match:
+            if not has_match:
+                return
+        elif not self._record_has_browser_type(record):
             return
         _LOGGER.debug("update_record: (name=%s) %s %s", record.name, record, now)
 
