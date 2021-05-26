@@ -9,8 +9,6 @@ from homeassistant.components.modbus.const import (
     CONF_DATA_TYPE,
     CONF_INPUT_TYPE,
     CONF_PRECISION,
-    CONF_REGISTER,
-    CONF_REGISTER_TYPE,
     CONF_REGISTERS,
     CONF_REVERSE_ORDER,
     CONF_SCALE,
@@ -45,115 +43,58 @@ from tests.common import mock_restore_cache
 
 
 @pytest.mark.parametrize(
-    "do_discovery, do_config",
+    "do_config",
     [
-        (
-            False,
-            {
-                CONF_REGISTER: 51,
-            },
-        ),
-        (
-            False,
-            {
-                CONF_REGISTER: 51,
-                CONF_SLAVE: 10,
-                CONF_COUNT: 1,
-                CONF_DATA_TYPE: "int",
-                CONF_PRECISION: 0,
-                CONF_SCALE: 1,
-                CONF_REVERSE_ORDER: False,
-                CONF_OFFSET: 0,
-                CONF_REGISTER_TYPE: CALL_TYPE_REGISTER_HOLDING,
-                CONF_DEVICE_CLASS: "battery",
-            },
-        ),
-        (
-            False,
-            {
-                CONF_REGISTER: 51,
-                CONF_SLAVE: 10,
-                CONF_COUNT: 1,
-                CONF_DATA_TYPE: "int",
-                CONF_PRECISION: 0,
-                CONF_SCALE: 1,
-                CONF_REVERSE_ORDER: False,
-                CONF_OFFSET: 0,
-                CONF_REGISTER_TYPE: CALL_TYPE_REGISTER_INPUT,
-                CONF_DEVICE_CLASS: "battery",
-            },
-        ),
-        (
-            True,
-            {
-                CONF_ADDRESS: 51,
-            },
-        ),
-        (
-            True,
-            {
-                CONF_ADDRESS: 51,
-                CONF_SLAVE: 10,
-                CONF_COUNT: 1,
-                CONF_DATA_TYPE: "int",
-                CONF_PRECISION: 0,
-                CONF_SCALE: 1,
-                CONF_REVERSE_ORDER: False,
-                CONF_OFFSET: 0,
-                CONF_INPUT_TYPE: CALL_TYPE_REGISTER_HOLDING,
-                CONF_DEVICE_CLASS: "battery",
-            },
-        ),
-        (
-            True,
-            {
-                CONF_ADDRESS: 51,
-                CONF_SLAVE: 10,
-                CONF_COUNT: 1,
-                CONF_DATA_TYPE: "int",
-                CONF_PRECISION: 0,
-                CONF_SCALE: 1,
-                CONF_REVERSE_ORDER: False,
-                CONF_OFFSET: 0,
-                CONF_INPUT_TYPE: CALL_TYPE_REGISTER_INPUT,
-                CONF_DEVICE_CLASS: "battery",
-            },
-        ),
-        (
-            True,
-            {
-                CONF_ADDRESS: 51,
-                CONF_COUNT: 1,
-                CONF_SWAP: CONF_SWAP_NONE,
-            },
-        ),
-        (
-            True,
-            {
-                CONF_ADDRESS: 51,
-                CONF_COUNT: 1,
-                CONF_SWAP: CONF_SWAP_BYTE,
-            },
-        ),
-        (
-            True,
-            {
-                CONF_ADDRESS: 51,
-                CONF_COUNT: 2,
-                CONF_SWAP: CONF_SWAP_WORD,
-            },
-        ),
-        (
-            True,
-            {
-                CONF_ADDRESS: 51,
-                CONF_COUNT: 2,
-                CONF_SWAP: CONF_SWAP_WORD_BYTE,
-            },
-        ),
+        {
+            CONF_ADDRESS: 51,
+        },
+        {
+            CONF_ADDRESS: 51,
+            CONF_SLAVE: 10,
+            CONF_COUNT: 1,
+            CONF_DATA_TYPE: "int",
+            CONF_PRECISION: 0,
+            CONF_SCALE: 1,
+            CONF_REVERSE_ORDER: False,
+            CONF_OFFSET: 0,
+            CONF_INPUT_TYPE: CALL_TYPE_REGISTER_HOLDING,
+            CONF_DEVICE_CLASS: "battery",
+        },
+        {
+            CONF_ADDRESS: 51,
+            CONF_SLAVE: 10,
+            CONF_COUNT: 1,
+            CONF_DATA_TYPE: "int",
+            CONF_PRECISION: 0,
+            CONF_SCALE: 1,
+            CONF_REVERSE_ORDER: False,
+            CONF_OFFSET: 0,
+            CONF_INPUT_TYPE: CALL_TYPE_REGISTER_INPUT,
+            CONF_DEVICE_CLASS: "battery",
+        },
+        {
+            CONF_ADDRESS: 51,
+            CONF_COUNT: 1,
+            CONF_SWAP: CONF_SWAP_NONE,
+        },
+        {
+            CONF_ADDRESS: 51,
+            CONF_COUNT: 1,
+            CONF_SWAP: CONF_SWAP_BYTE,
+        },
+        {
+            CONF_ADDRESS: 51,
+            CONF_COUNT: 2,
+            CONF_SWAP: CONF_SWAP_WORD,
+        },
+        {
+            CONF_ADDRESS: 51,
+            CONF_COUNT: 2,
+            CONF_SWAP: CONF_SWAP_WORD_BYTE,
+        },
     ],
 )
-async def test_config_sensor(hass, do_discovery, do_config):
+async def test_config_sensor(hass, do_config):
     """Run test for sensor."""
     sensor_name = "test_sensor"
     config_sensor = {
@@ -167,36 +108,87 @@ async def test_config_sensor(hass, do_discovery, do_config):
         SENSOR_DOMAIN,
         CONF_SENSORS,
         CONF_REGISTERS,
-        method_discovery=do_discovery,
+        method_discovery=True,
     )
 
 
 @pytest.mark.parametrize(
-    "do_config",
+    "do_config,error_message",
     [
-        {
-            CONF_ADDRESS: 1234,
-            CONF_COUNT: 8,
-            CONF_PRECISION: 2,
-            CONF_DATA_TYPE: DATA_TYPE_INT,
-        },
-        {
-            CONF_ADDRESS: 1234,
-            CONF_COUNT: 8,
-            CONF_PRECISION: 2,
-            CONF_DATA_TYPE: DATA_TYPE_CUSTOM,
-            CONF_STRUCTURE: ">no struct",
-        },
-        {
-            CONF_ADDRESS: 1234,
-            CONF_COUNT: 2,
-            CONF_PRECISION: 2,
-            CONF_DATA_TYPE: DATA_TYPE_CUSTOM,
-            CONF_STRUCTURE: ">4f",
-        },
+        (
+            {
+                CONF_ADDRESS: 1234,
+                CONF_COUNT: 8,
+                CONF_PRECISION: 2,
+                CONF_DATA_TYPE: DATA_TYPE_INT,
+            },
+            "Unable to detect data type for test_sensor sensor, try a custom type",
+        ),
+        (
+            {
+                CONF_ADDRESS: 1234,
+                CONF_COUNT: 8,
+                CONF_PRECISION: 2,
+                CONF_DATA_TYPE: DATA_TYPE_CUSTOM,
+                CONF_STRUCTURE: ">no struct",
+            },
+            "Error in sensor test_sensor structure: bad char in struct format",
+        ),
+        (
+            {
+                CONF_ADDRESS: 1234,
+                CONF_COUNT: 2,
+                CONF_PRECISION: 2,
+                CONF_DATA_TYPE: DATA_TYPE_CUSTOM,
+                CONF_STRUCTURE: ">4f",
+            },
+            "Structure request 16 bytes, but 2 registers have a size of 4 bytes",
+        ),
+        (
+            {
+                CONF_ADDRESS: 1234,
+                CONF_DATA_TYPE: DATA_TYPE_CUSTOM,
+                CONF_COUNT: 4,
+                CONF_SWAP: CONF_SWAP_NONE,
+                CONF_STRUCTURE: "invalid",
+            },
+            "Error in sensor test_sensor structure: bad char in struct format",
+        ),
+        (
+            {
+                CONF_ADDRESS: 1234,
+                CONF_DATA_TYPE: DATA_TYPE_CUSTOM,
+                CONF_COUNT: 4,
+                CONF_SWAP: CONF_SWAP_NONE,
+                CONF_STRUCTURE: "",
+            },
+            "Error in sensor test_sensor. The `structure` field can not be empty if the parameter `data_type` is set to the `custom`",
+        ),
+        (
+            {
+                CONF_ADDRESS: 1234,
+                CONF_DATA_TYPE: DATA_TYPE_CUSTOM,
+                CONF_COUNT: 4,
+                CONF_SWAP: CONF_SWAP_NONE,
+                CONF_STRUCTURE: "1s",
+            },
+            "Structure request 1 bytes, but 4 registers have a size of 8 bytes",
+        ),
+        (
+            {
+                CONF_ADDRESS: 1234,
+                CONF_DATA_TYPE: DATA_TYPE_CUSTOM,
+                CONF_COUNT: 1,
+                CONF_STRUCTURE: "2s",
+                CONF_SWAP: CONF_SWAP_WORD,
+            },
+            "Error in sensor test_sensor swap(word) not possible due to the registers count: 1, needed: 2",
+        ),
     ],
 )
-async def test_config_wrong_struct_sensor(hass, do_config):
+async def test_config_wrong_struct_sensor(
+    hass, caplog, do_config, error_message, mock_pymodbus
+):
     """Run test for sensor with wrong struct."""
 
     sensor_name = "test_sensor"
@@ -204,6 +196,9 @@ async def test_config_wrong_struct_sensor(hass, do_config):
         CONF_NAME: sensor_name,
         **do_config,
     }
+    caplog.set_level(logging.WARNING)
+    caplog.clear()
+
     await base_config_test(
         hass,
         config_sensor,
@@ -212,7 +207,10 @@ async def test_config_wrong_struct_sensor(hass, do_config):
         CONF_SENSORS,
         None,
         method_discovery=True,
+        expect_setup_to_fail=True,
     )
+
+    assert error_message in "".join(caplog.messages)
 
 
 @pytest.mark.parametrize(
@@ -592,10 +590,21 @@ async def test_restore_state_sensor(hass):
 
 
 @pytest.mark.parametrize(
-    "swap_type",
-    [CONF_SWAP_WORD, CONF_SWAP_WORD_BYTE],
+    "swap_type, error_message",
+    [
+        (
+            CONF_SWAP_WORD,
+            "Error in sensor modbus_test_sensor swap(word) not possible due to the registers count: 1, needed: 2",
+        ),
+        (
+            CONF_SWAP_WORD_BYTE,
+            "Error in sensor modbus_test_sensor swap(word_byte) not possible due to the registers count: 1, needed: 2",
+        ),
+    ],
 )
-async def test_swap_sensor_wrong_config(hass, caplog, swap_type):
+async def test_swap_sensor_wrong_config(
+    hass, caplog, swap_type, error_message, mock_pymodbus
+):
     """Run test for sensor swap."""
     sensor_name = "modbus_test_sensor"
     config = {
@@ -616,9 +625,9 @@ async def test_swap_sensor_wrong_config(hass, caplog, swap_type):
         CONF_SENSORS,
         None,
         method_discovery=True,
-        expect_init_to_fail=True,
+        expect_setup_to_fail=True,
     )
-    assert caplog.messages[-1].startswith("Error in sensor " + sensor_name + " swap")
+    assert error_message in "".join(caplog.messages)
 
 
 async def test_service_sensor_update(hass, mock_pymodbus):
