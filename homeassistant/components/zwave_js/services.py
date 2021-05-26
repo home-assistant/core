@@ -124,7 +124,7 @@ class ZWaveServices:
             const.DOMAIN,
             const.SERVICE_SET_VALUE,
             self.async_set_value,
-            schema=vol.Schema(
+            schema=vol.All(
                 {
                     vol.Optional(ATTR_DEVICE_ID): vol.All(cv.ensure_list, [cv.string]),
                     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
