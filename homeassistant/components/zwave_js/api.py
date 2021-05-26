@@ -1027,10 +1027,12 @@ async def websocket_subscribe_logs(
                 msg[ID],
                 {
                     "type": "log_message",
-                    "timestamp": log_msg.timestamp,
-                    "level": log_msg.level,
-                    "primary_tags": log_msg.primary_tags,
-                    "message": log_msg.formatted_message,
+                    "log_message": {
+                        "timestamp": log_msg.timestamp,
+                        "level": log_msg.level,
+                        "primary_tags": log_msg.primary_tags,
+                        "message": log_msg.formatted_message,
+                    },
                 },
             )
         )
@@ -1043,7 +1045,7 @@ async def websocket_subscribe_logs(
                 msg[ID],
                 {
                     "type": "log_config",
-                    "config": dataclasses.asdict(log_config),
+                    "log_config": dataclasses.asdict(log_config),
                 },
             )
         )

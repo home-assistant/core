@@ -1408,10 +1408,12 @@ async def test_subscribe_logs(hass, integration, client, hass_ws_client):
     msg = await ws_client.receive_json()
     assert msg["event"] == {
         "type": "log_message",
-        "message": ["test"],
-        "level": "debug",
-        "primary_tags": "tag",
-        "timestamp": "time",
+        "log_message": {
+            "message": ["test"],
+            "level": "debug",
+            "primary_tags": "tag",
+            "timestamp": "time",
+        },
     }
 
     event = Event(
@@ -1433,7 +1435,7 @@ async def test_subscribe_logs(hass, integration, client, hass_ws_client):
     msg = await ws_client.receive_json()
     assert msg["event"] == {
         "type": "log_config",
-        "config": {
+        "log_config": {
             "enabled": False,
             "level": "error",
             "log_to_file": True,
