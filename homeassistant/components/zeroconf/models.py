@@ -65,7 +65,7 @@ class HaServiceBrowser(ServiceBrowser):
                 _LOGGER.debug(
                     "REJECT update_record: (name=%s) %s %s", record.name, record, now
                 )
-                return
+        #                return
         elif not self._record_has_browser_type(record):
             _LOGGER.debug(
                 "REJECT update_record: (name=%s) %s %s", record.name, record, now
