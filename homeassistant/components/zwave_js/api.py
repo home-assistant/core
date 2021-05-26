@@ -1016,7 +1016,8 @@ async def websocket_subscribe_logs(
     def async_cleanup() -> None:
         """Remove signal listeners."""
         hass.async_create_task(driver.async_stop_listening_logs())
-        unsub()
+        for unsub in unsubs:
+            unsub()
 
     @callback
     def forward_event(event: dict) -> None:
@@ -1025,6 +1026,7 @@ async def websocket_subscribe_logs(
             websocket_api.event_message(
                 msg[ID],
                 {
+                    "type": "log_message",
                     "timestamp": log_msg.timestamp,
                     "level": log_msg.level,
                     "primary_tags": log_msg.primary_tags,
@@ -1033,7 +1035,23 @@ async def websocket_subscribe_logs(
             )
         )
 
-    unsub = driver.on("logging", forward_event)
+    @callback
+    def update_log_config(event: dict) -> None:
+        log_config: LogConfig = event["log_config"]
+        connection.send_message(
+            websocket_api.event_message(
+                msg[ID],
+                {
+                    "type": "log_config",
+                    "config": dataclasses.asdict(log_config),
+                },
+            )
+        )
+
+    unsubs = [
+        driver.on("logging", forward_event),
+        driver.on("log config updated", update_log_config),
+    ]
     connection.subscriptions[msg["id"]] = async_cleanup
 
     await driver.async_start_listening_logs()
@@ -1100,10 +1118,9 @@ async def websocket_get_log_config(
     client: Client,
 ) -> None:
     """Get log configuration for the Z-Wave JS driver."""
-    result = await client.driver.async_get_log_config()
     connection.send_result(
         msg[ID],
-        dataclasses.asdict(result),
+        dataclasses.asdict(client.driver.log_config),
     )
 
 
