@@ -6,12 +6,22 @@ from functools import wraps
 import json
 from typing import Callable
 
-from aiohttp import hdrs, web, web_exceptions
+from aiohttp import hdrs, web, web_exceptions, web_request
 import voluptuous as vol
 from zwave_js_server import dump
 from zwave_js_server.client import Client
 from zwave_js_server.const import CommandClass, LogLevel
-from zwave_js_server.exceptions import InvalidNewValue, NotFoundError, SetValueFailed
+from zwave_js_server.exceptions import (
+    BaseZwaveJSServerError,
+    InvalidNewValue,
+    NotFoundError,
+    SetValueFailed,
+)
+from zwave_js_server.firmware import begin_firmware_update
+from zwave_js_server.model.firmware import (
+    FirmwareUpdateFinished,
+    FirmwareUpdateProgress,
+)
 from zwave_js_server.model.log_config import LogConfig
 from zwave_js_server.model.log_message import LogMessage
 from zwave_js_server.model.node import Node
@@ -28,6 +38,7 @@ from homeassistant.components.websocket_api.const import (
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import Unauthorized
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceEntry
@@ -147,7 +158,12 @@ def async_register_api(hass: HomeAssistant) -> None:
         hass, websocket_update_data_collection_preference
     )
     websocket_api.async_register_command(hass, websocket_data_collection_status)
+    websocket_api.async_register_command(hass, websocket_abort_firmware_update)
+    websocket_api.async_register_command(
+        hass, websocket_subscribe_firmware_update_status
+    )
     hass.http.register_view(DumpView())
+    hass.http.register_view(FirmwareUploadView())
 
 
 @websocket_api.require_admin
@@ -1024,3 +1040,131 @@ class DumpView(HomeAssistantView):
                 hdrs.CONTENT_DISPOSITION: 'attachment; filename="zwave_js_dump.json"',
             },
         )
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "zwave_js/abort_firmware_update",
+        vol.Required(ENTRY_ID): str,
+        vol.Required(NODE_ID): int,
+    }
+)
+@websocket_api.async_response
+@async_get_node
+async def websocket_abort_firmware_update(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict,
+    node: Node,
+) -> None:
+    """Abort a firmware update."""
+    await node.async_abort_firmware_update()
+    connection.send_result(msg[ID])
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "zwave_js/subscribe_firmware_update_status",
+        vol.Required(ENTRY_ID): str,
+        vol.Required(NODE_ID): int,
+    }
+)
+@websocket_api.async_response
+@async_get_node
+async def websocket_subscribe_firmware_update_status(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict,
+    node: Node,
+) -> None:
+    """Subsribe to the status of a firmware update."""
+
+    @callback
+    def async_cleanup() -> None:
+        """Remove signal listeners."""
+        for unsub in unsubs:
+            unsub()
+
+    @callback
+    def forward_progress(event: dict) -> None:
+        progress: FirmwareUpdateProgress = event["firmware_update_progress"]
+        connection.send_message(
+            websocket_api.event_message(
+                msg[ID],
+                {
+                    "event": event["event"],
+                    "sent_fragments": progress.sent_fragments,
+                    "total_fragments": progress.total_fragments,
+                },
+            )
+        )
+
+    @callback
+    def forward_finished(event: dict) -> None:
+        finished: FirmwareUpdateFinished = event["firmware_update_finished"]
+        connection.send_message(
+            websocket_api.event_message(
+                msg[ID],
+                {
+                    "event": event["event"],
+                    "status": finished.status,
+                    "wait_time": finished.wait_time,
+                },
+            )
+        )
+
+    unsubs = [
+        node.on("firmware update progress", forward_progress),
+        node.on("firmware update finished", forward_finished),
+    ]
+    connection.subscriptions[msg["id"]] = async_cleanup
+
+    connection.send_result(msg[ID])
+
+
+class FirmwareUploadView(HomeAssistantView):
+    """View to upload firmware."""
+
+    url = r"/api/zwave_js/firmware/upload/{config_entry_id}/{node_id:\d+}"
+    name = "api:zwave_js:firmware:upload"
+
+    async def post(
+        self, request: web.Request, config_entry_id: str, node_id: str
+    ) -> web.Response:
+        """Handle upload."""
+        if not request["hass_user"].is_admin:
+            raise Unauthorized()
+        hass = request.app["hass"]
+        if config_entry_id not in hass.data[DOMAIN]:
+            raise web_exceptions.HTTPBadRequest
+
+        entry = hass.config_entries.async_get_entry(config_entry_id)
+        client = hass.data[DOMAIN][config_entry_id][DATA_CLIENT]
+        node = client.driver.controller.nodes.get(int(node_id))
+        if not node:
+            raise web_exceptions.HTTPNotFound
+
+        # Increase max payload
+        request._client_max_size = 1024 * 1024 * 10  # pylint: disable=protected-access
+
+        data = await request.post()
+
+        if "file" not in data or not isinstance(data["file"], web_request.FileField):
+            raise web_exceptions.HTTPBadRequest
+
+        uploaded_file: web_request.FileField = data["file"]
+
+        try:
+            await begin_firmware_update(
+                entry.data[CONF_URL],
+                node,
+                uploaded_file.filename,
+                await hass.async_add_executor_job(uploaded_file.file.read),
+                async_get_clientsession(hass),
+            )
+        except BaseZwaveJSServerError as err:
+            raise web_exceptions.HTTPBadRequest from err
+
+        return self.json(None)
