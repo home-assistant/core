@@ -7,7 +7,11 @@ import av
 import pytest
 
 from homeassistant.components.stream import create_stream
-from homeassistant.components.stream.const import MAX_SEGMENTS, NUM_PLAYLIST_SEGMENTS
+from homeassistant.components.stream.const import (
+    HLS_PROVIDER,
+    MAX_SEGMENTS,
+    NUM_PLAYLIST_SEGMENTS,
+)
 from homeassistant.components.stream.core import Segment
 from homeassistant.const import HTTP_NOT_FOUND
 from homeassistant.setup import async_setup_component
@@ -47,7 +51,7 @@ def hls_stream(hass, hass_client):
 
     async def create_client_for_stream(stream):
         http_client = await hass_client()
-        parsed_url = urlparse(stream.endpoint_url("hls"))
+        parsed_url = urlparse(stream.endpoint_url(HLS_PROVIDER))
         return HlsClient(http_client, parsed_url)
 
     return create_client_for_stream
@@ -93,7 +97,7 @@ async def test_hls_stream(hass, hls_stream, stream_worker_sync):
     stream = create_stream(hass, source)
 
     # Request stream
-    stream.add_provider("hls")
+    stream.add_provider(HLS_PROVIDER)
     stream.start()
 
     hls_client = await hls_stream(stream)
@@ -134,9 +138,9 @@ async def test_stream_timeout(hass, hass_client, stream_worker_sync):
     stream = create_stream(hass, source)
 
     # Request stream
-    stream.add_provider("hls")
+    stream.add_provider(HLS_PROVIDER)
     stream.start()
-    url = stream.endpoint_url("hls")
+    url = stream.endpoint_url(HLS_PROVIDER)
 
     http_client = await hass_client()
 
@@ -176,7 +180,7 @@ async def test_stream_timeout_after_stop(hass, hass_client, stream_worker_sync):
     stream = create_stream(hass, source)
 
     # Request stream
-    stream.add_provider("hls")
+    stream.add_provider(HLS_PROVIDER)
     stream.start()
 
     stream_worker_sync.resume()
@@ -196,7 +200,7 @@ async def test_stream_keepalive(hass):
     # Setup demo HLS track
     source = "test_stream_keepalive_source"
     stream = create_stream(hass, source)
-    track = stream.add_provider("hls")
+    track = stream.add_provider(HLS_PROVIDER)
     track.num_segments = 2
 
     cur_time = 0
@@ -231,7 +235,7 @@ async def test_hls_playlist_view_no_output(hass, hass_client, hls_stream):
     await async_setup_component(hass, "stream", {"stream": {}})
 
     stream = create_stream(hass, STREAM_SOURCE)
-    stream.add_provider("hls")
+    stream.add_provider(HLS_PROVIDER)
 
     hls_client = await hls_stream(stream)
 
@@ -246,7 +250,7 @@ async def test_hls_playlist_view(hass, hls_stream, stream_worker_sync):
 
     stream = create_stream(hass, STREAM_SOURCE)
     stream_worker_sync.pause()
-    hls = stream.add_provider("hls")
+    hls = stream.add_provider(HLS_PROVIDER)
 
     hls.put(Segment(1, INIT_BYTES, MOOF_BYTES, DURATION))
     await hass.async_block_till_done()
@@ -275,7 +279,7 @@ async def test_hls_max_segments(hass, hls_stream, stream_worker_sync):
 
     stream = create_stream(hass, STREAM_SOURCE)
     stream_worker_sync.pause()
-    hls = stream.add_provider("hls")
+    hls = stream.add_provider(HLS_PROVIDER)
 
     hls_client = await hls_stream(stream)
 
@@ -316,7 +320,7 @@ async def test_hls_playlist_view_discontinuity(hass, hls_stream, stream_worker_s
 
     stream = create_stream(hass, STREAM_SOURCE)
     stream_worker_sync.pause()
-    hls = stream.add_provider("hls")
+    hls = stream.add_provider(HLS_PROVIDER)
 
     hls.put(Segment(1, INIT_BYTES, MOOF_BYTES, DURATION, stream_id=0))
     hls.put(Segment(2, INIT_BYTES, MOOF_BYTES, DURATION, stream_id=0))
@@ -346,7 +350,7 @@ async def test_hls_max_segments_discontinuity(hass, hls_stream, stream_worker_sy
 
     stream = create_stream(hass, STREAM_SOURCE)
     stream_worker_sync.pause()
-    hls = stream.add_provider("hls")
+    hls = stream.add_provider(HLS_PROVIDER)
 
     hls_client = await hls_stream(stream)
 

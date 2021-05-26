@@ -15,6 +15,7 @@ import av
 import pytest
 
 from homeassistant.components.stream import create_stream
+from homeassistant.components.stream.const import HLS_PROVIDER, RECORDER_PROVIDER
 from homeassistant.components.stream.core import Segment
 from homeassistant.components.stream.fmp4utils import get_init_and_moof_data
 from homeassistant.components.stream.recorder import recorder_save_worker
@@ -119,7 +120,7 @@ async def test_record_lookback(
     stream = create_stream(hass, source)
 
     # Start an HLS feed to enable lookback
-    stream.add_provider("hls")
+    stream.add_provider(HLS_PROVIDER)
     stream.start()
 
     with patch.object(hass.config, "is_allowed_path", return_value=True):
@@ -148,7 +149,7 @@ async def test_recorder_timeout(hass, hass_client, stream_worker_sync):
         stream = create_stream(hass, source)
         with patch.object(hass.config, "is_allowed_path", return_value=True):
             await stream.async_record("/example/path")
-        recorder = stream.add_provider("recorder")
+        recorder = stream.add_provider(RECORDER_PROVIDER)
 
         await recorder.recv()
 
@@ -252,7 +253,7 @@ async def test_record_stream_audio(
         stream = create_stream(hass, source)
         with patch.object(hass.config, "is_allowed_path", return_value=True):
             await stream.async_record("/example/path")
-        recorder = stream.add_provider("recorder")
+        recorder = stream.add_provider(RECORDER_PROVIDER)
 
         while True:
             segment = await recorder.recv()

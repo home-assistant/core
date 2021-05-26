@@ -23,6 +23,7 @@ import av
 
 from homeassistant.components.stream import Stream
 from homeassistant.components.stream.const import (
+    HLS_PROVIDER,
     MAX_MISSING_DTS,
     MIN_SEGMENT_DURATION,
     PACKETS_TO_WAIT_FOR_AUDIO,
@@ -31,7 +32,7 @@ from homeassistant.components.stream.worker import SegmentBuffer, stream_worker
 
 STREAM_SOURCE = "some-stream-source"
 # Formats here are arbitrary, not exercised by tests
-STREAM_OUTPUT_FORMAT = "hls"
+STREAM_OUTPUT_FORMAT = HLS_PROVIDER
 AUDIO_STREAM_FORMAT = "mp3"
 VIDEO_STREAM_FORMAT = "h264"
 VIDEO_FRAME_RATE = 12
