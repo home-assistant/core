@@ -1,7 +1,6 @@
 """Component to interface with an alarm control panel."""
 from __future__ import annotations
 
-from abc import abstractmethod
 from datetime import timedelta
 import logging
 from typing import Any, Final, final
@@ -113,20 +112,25 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class AlarmControlPanelEntity(Entity):
     """An abstract class for alarm control entities."""
 
+    _attr_changed_by: str | None = None
+    _attr_code_arm_required: bool = True
+    _attr_code_format: str | None = None
+    _attr_supported_features: int
+
     @property
     def code_format(self) -> str | None:
         """Regex for code format or None if no code is required."""
-        return None
+        return self._attr_code_format
 
     @property
     def changed_by(self) -> str | None:
         """Last change triggered by."""
-        return None
+        return self._attr_changed_by
 
     @property
     def code_arm_required(self) -> bool:
         """Whether the code is required for arm actions."""
-        return True
+        return self._attr_code_arm_required
 
     def alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
@@ -177,9 +181,11 @@ class AlarmControlPanelEntity(Entity):
         await self.hass.async_add_executor_job(self.alarm_arm_custom_bypass, code)
 
     @property
-    @abstractmethod
     def supported_features(self) -> int:
         """Return the list of supported features."""
+        if not hasattr(self, "_attr_supported_features"):
+            raise AttributeError
+        return self._attr_supported_features
 
     @final
     @property
