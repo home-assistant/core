@@ -30,25 +30,3 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-
-async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry):
-    """Migrate an old config entry."""
-    version = config_entry.version
-
-    _LOGGER.debug("Migrating from version %s", version)
-
-    # 1 -> 2: Remove config entry unique ID
-    if version == 1:
-        hass.config_entries.async_update_entry(config_entry, unique_id=None)
-        version = config_entry.version = 2
-
-        ent_reg = async_get(hass)
-        for entity in async_entries_for_config_entry(ent_reg, config_entry.entry_id):
-            ent_reg.async_update_entity(
-                entity.entity_id, new_unique_id=config_entry.entry_id
-            )
-
-    _LOGGER.info("Migration to version %s successful", version)
-
-    return True
