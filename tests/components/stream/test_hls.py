@@ -297,11 +297,6 @@ async def test_hls_max_segments(hass, hls_stream, stream_worker_sync):
         segments=segments,
     )
 
-    # Fetch the actual segments with a fake byte payload
-    for segment in hls.get_segments():
-        segment.init = INIT_BYTES
-        segment.moof_data = MOOF_BYTES
-
     # The segment that fell off the buffer is not accessible
     segment_response = await hls_client.get("/segment/1.m4s")
     assert segment_response.status == 404

@@ -23,7 +23,9 @@ class Segment:
     """Represent a segment."""
 
     sequence: int = attr.ib()
+    # the init of the mp4
     init: bytes = attr.ib()
+    # the video data (moof + mddat)s of the mp4
     moof_data: bytes = attr.ib()
     duration: float = attr.ib()
     # For detecting discontinuities across stream restarts
