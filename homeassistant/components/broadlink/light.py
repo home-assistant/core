@@ -44,9 +44,6 @@ class BroadlinkLight(LightEntity, ABC):
         """Initialize the light."""
         self._device = device
         self._coordinator = device.update_manager.coordinator
-        self._red = self._coordinator.data["red"]
-        self._blue = self._coordinator.data["blue"]
-        self._green = self._coordinator.data["green"]
         self._brightness = round(self._coordinator.data["brightness"] * 2.55)
         if self._coordinator.data["bulb_colormode"] == BROADLINK_COLOR_MODE_RGB:
             self._color_mode = COLOR_MODE_HS
@@ -133,9 +130,6 @@ class BroadlinkLight(LightEntity, ABC):
     @callback
     def update_data(self):
         """Update data."""
-        self._red = self._coordinator.data["red"]
-        self._blue = self._coordinator.data["blue"]
-        self._green = self._coordinator.data["green"]
         self._brightness = round(self._coordinator.data["brightness"] * 2.55)
         if self._coordinator.data["bulb_colormode"] == BROADLINK_COLOR_MODE_RGB:
             self._color_mode = COLOR_MODE_HS
