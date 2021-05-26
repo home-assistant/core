@@ -53,7 +53,6 @@ def is_dupe_import(
         entry.data[key] != user_input[key]
         for key in (CONF_API_KEY, CONF_DESTINATION, CONF_ORIGIN)
     ):
-        _LOGGER.error("1")
         return False
 
     options = user_input.get(CONF_OPTIONS, {})
