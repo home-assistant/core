@@ -3,8 +3,17 @@
 import asyncio
 from typing import Any
 
-from zeroconf import DNSPointer, DNSRecord, ServiceBrowser, Zeroconf
+from zeroconf import (
+    DNSAddress,
+    DNSPointer,
+    DNSRecord,
+    DNSText,
+    ServiceBrowser,
+    Zeroconf,
+)
 from zeroconf.asyncio import AsyncZeroconf
+
+INTRESTED_RECORD_TYPES = (DNSAddress, DNSPointer, DNSText)
 
 
 class HaZeroconf(Zeroconf):
@@ -46,6 +55,8 @@ class HaServiceBrowser(ServiceBrowser):
         # To avoid overwhemling the system we pre-filter here and only process
         # DNSPointers for the configured record name (type)
         #
-        if record.name not in self.types or not isinstance(record, DNSPointer):
+        if record.name not in self.types or not isinstance(
+            record, INTRESTED_RECORD_TYPES
+        ):
             return
         super().update_record(zc, now, record)
