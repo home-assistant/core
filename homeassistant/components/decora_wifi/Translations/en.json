@@ -1,0 +1,22 @@
+{
+    "config": {
+        "step": {
+            "reauth": {
+                "data": {
+                    "password": "Password",
+                    "username": "Username"
+                },
+                "description": "Re-enter your myLeviton login information.",
+                "title": "myLeviton Login"
+            },
+            "user": {
+                "data": {
+                    "password": "Password",
+                    "username": "Username"
+                },
+                "description": "Enter your myLeviton login information and configuration.",
+                "title": "myLeviton Login"
+            }
+        }
+    }
+}
