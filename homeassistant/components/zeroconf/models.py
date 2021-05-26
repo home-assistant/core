@@ -51,9 +51,11 @@ class HaServiceBrowser(ServiceBrowser):
         # To avoid overwhemling the system we pre-filter here and only process
         # INTRESTED_RECORD_TYPES for the configured record name (type)
         #
+        _LOGGER.debug("update_record: %s %s", record, now)
+
         if record.name not in self.types or not isinstance(
             record, INTRESTED_RECORD_TYPES
         ):
             return
-        _LOGGER.debug("update_record: %s %s", record, now)
+        _LOGGER.debug("update_record accepted: %s %s", record, now)
         super().update_record(zc, now, record)
