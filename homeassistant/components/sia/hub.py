@@ -9,8 +9,9 @@ from pysiaalarm.aio import CommunicationsProtocol, SIAAccount, SIAClient, SIAEve
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PORT, CONF_PROTOCOL, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import Event, EventOrigin, HomeAssistant
+from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import (
     CONF_ACCOUNT,
@@ -24,6 +25,7 @@ from .const import (
     PLATFORMS,
     SIA_EVENT,
 )
+from .utils import get_event_data_from_sia_event
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,7 +41,7 @@ class SIAHub:
         """Create the SIAHub."""
         self._hass: HomeAssistant = hass
         self._entry: ConfigEntry = entry
-        self._port: int = int(entry.data[CONF_PORT])
+        self._port: int = entry.data[CONF_PORT]
         self._title: str = entry.title
         self._accounts: list[dict[str, Any]] = deepcopy(entry.data[CONF_ACCOUNTS])
         self._protocol: str = entry.data[CONF_PROTOCOL]
@@ -69,21 +71,23 @@ class SIAHub:
         await self.sia_client.stop()
 
     async def async_create_and_fire_event(self, event: SIAEvent) -> None:
-        """Create a event on HA's bus, with the data from the SIAEvent.
+        """Create a event on HA dispatcher and then on HA's bus, with the data from the SIAEvent.
 
         The created event is handled by default for only a small subset for each platform (there are about 320 SIA Codes defined, only 22 of those are used in the alarm_control_panel), a user can choose to build other automation or even entities on the same event for SIA codes not handled by the built-in platforms.
 
         """
         _LOGGER.debug(
-            "Adding event to bus for code %s for port %s and account %s",
+            "Adding event to dispatch and bus for code %s for port %s and account %s",
             event.code,
             self._port,
             event.account,
         )
+        async_dispatcher_send(
+            self._hass, SIA_EVENT.format(self._port, event.account), event
+        )
         self._hass.bus.async_fire(
             event_type=SIA_EVENT.format(self._port, event.account),
-            event_data=event.to_dict(encode_json=True),
-            origin=EventOrigin.remote,
+            event_data=get_event_data_from_sia_event(event),
         )
 
     def update_accounts(self):
@@ -115,7 +119,7 @@ class SIAHub:
         options = dict(self._entry.options)
         for acc in self._accounts:
             acc_id = acc[CONF_ACCOUNT]
-            if acc_id in options[CONF_ACCOUNTS].keys():
+            if acc_id in options[CONF_ACCOUNTS]:
                 acc[CONF_IGNORE_TIMESTAMPS] = options[CONF_ACCOUNTS][acc_id][
                     CONF_IGNORE_TIMESTAMPS
                 ]

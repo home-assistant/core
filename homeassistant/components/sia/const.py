@@ -29,10 +29,9 @@ PING_INTERVAL_MARGIN = 30
 DEFAULT_TIMEBAND = (80, 40)
 IGNORED_TIMEBAND = (3600, 1800)
 
-EVENT_CODE = "last_code"
-EVENT_ACCOUNT = "account"
-EVENT_ZONE = "zone"
-EVENT_PORT = "port"
-EVENT_MESSAGE = "last_message"
-EVENT_ID = "last_id"
-EVENT_TIMESTAMP = "last_timestamp"
+ATTR_CODE = "last_code"
+ATTR_ZONE = "zone"
+ATTR_PORT = "port"
+ATTR_MESSAGE = "last_message"
+ATTR_ID = "last_id"
+ATTR_TIMESTAMP = "last_timestamp"
