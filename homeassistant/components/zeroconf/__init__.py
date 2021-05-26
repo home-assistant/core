@@ -335,6 +335,13 @@ class ZeroconfDiscovery:
         state_change: ServiceStateChange,
     ) -> None:
         """Service state changed."""
+        _LOGGER.debug(
+            "service_update: type=%s name=%s state_change=%s",
+            service_type,
+            name,
+            state_change,
+        )
+
         if state_change == ServiceStateChange.Removed:
             return
 
