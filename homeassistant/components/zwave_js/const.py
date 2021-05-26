@@ -56,5 +56,8 @@ SERVICE_REFRESH_VALUE = "refresh_value"
 ATTR_REFRESH_ALL_VALUES = "refresh_all_values"
 
 SERVICE_SET_VALUE = "set_value"
+SERVICE_MULTICAST_SET_VALUE = "multicast_set_value"
+
+ATTR_BROADCAST = "broadcast"
 
 ADDON_SLUG = "core_zwave_js"

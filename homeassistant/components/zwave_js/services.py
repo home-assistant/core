@@ -2,12 +2,15 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 import voluptuous as vol
+from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.const import CommandStatus
 from zwave_js_server.exceptions import SetValueFailed
 from zwave_js_server.model.node import Node as ZwaveNode
 from zwave_js_server.model.value import get_value_id
+from zwave_js_server.util.multicast import async_multicast_set_value
 from zwave_js_server.util.node import (
     async_bulk_set_partial_config_parameters,
     async_set_config_parameter,
@@ -39,6 +42,16 @@ def parameter_name_does_not_need_bitmask(
     return val
 
 
+def broadcast_command(val: dict[str, Any]) -> dict[str, Any]:
+    """Validate that the service call is for a broadcast comomand."""
+    if val.get(const.ATTR_BROADCAST):
+        return val
+    raise vol.Invalid(
+        "Either `broadcast` must be set to True or multiple devices/entities must be "
+        "specified"
+    )
+
+
 # Validates that a bitmask is provided in hex form and converts it to decimal
 # int equivalent since that's what the library uses
 BITMASK_SCHEMA = vol.All(
@@ -50,6 +63,25 @@ BITMASK_SCHEMA = vol.All(
     ),
     lambda value: int(value, 16),
 )
+
+
+@callback
+def get_nodes_from_service_data(
+    hass: HomeAssistant, service: ServiceCall
+) -> set[ZwaveNode]:
+    """Get nodes set from service data."""
+    nodes: set[ZwaveNode] = set()
+    if ATTR_ENTITY_ID in service.data:
+        nodes |= {
+            async_get_node_from_entity_id(hass, entity_id)
+            for entity_id in service.data[ATTR_ENTITY_ID]
+        }
+    if ATTR_DEVICE_ID in service.data:
+        nodes |= {
+            async_get_node_from_device_id(hass, device_id)
+            for device_id in service.data[ATTR_DEVICE_ID]
+        }
+    return nodes
 
 
 class ZWaveServices:
@@ -157,19 +189,35 @@ class ZWaveServices:
             ),
         )
 
+        self._hass.services.async_register(
+            const.DOMAIN,
+            const.SERVICE_MULTICAST_SET_VALUE,
+            self.async_multicast_set_value,
+            schema=vol.All(
+                {
+                    vol.Optional(ATTR_DEVICE_ID): vol.All(cv.ensure_list, [cv.string]),
+                    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+                    vol.Optional(const.ATTR_BROADCAST, default=False): cv.boolean,
+                    vol.Required(const.ATTR_COMMAND_CLASS): vol.Coerce(int),
+                    vol.Required(const.ATTR_PROPERTY): vol.Any(vol.Coerce(int), str),
+                    vol.Optional(const.ATTR_PROPERTY_KEY): vol.Any(
+                        vol.Coerce(int), str
+                    ),
+                    vol.Optional(const.ATTR_ENDPOINT): vol.Coerce(int),
+                    vol.Required(const.ATTR_VALUE): vol.Any(
+                        bool, vol.Coerce(int), vol.Coerce(float), cv.string
+                    ),
+                },
+                vol.Any(
+                    cv.has_at_least_one_key(ATTR_DEVICE_ID, ATTR_ENTITY_ID),
+                    broadcast_command,
+                ),
+            ),
+        )
+
     async def async_set_config_parameter(self, service: ServiceCall) -> None:
         """Set a config value on a node."""
-        nodes: set[ZwaveNode] = set()
-        if ATTR_ENTITY_ID in service.data:
-            nodes |= {
-                async_get_node_from_entity_id(self._hass, entity_id)
-                for entity_id in service.data[ATTR_ENTITY_ID]
-            }
-        if ATTR_DEVICE_ID in service.data:
-            nodes |= {
-                async_get_node_from_device_id(self._hass, device_id)
-                for device_id in service.data[ATTR_DEVICE_ID]
-            }
+        nodes = get_nodes_from_service_data(self._hass, service)
         property_or_property_name = service.data[const.ATTR_CONFIG_PARAMETER]
         property_key = service.data.get(const.ATTR_CONFIG_PARAMETER_BITMASK)
         new_value = service.data[const.ATTR_CONFIG_VALUE]
@@ -196,17 +244,7 @@ class ZWaveServices:
         self, service: ServiceCall
     ) -> None:
         """Bulk set multiple partial config values on a node."""
-        nodes: set[ZwaveNode] = set()
-        if ATTR_ENTITY_ID in service.data:
-            nodes |= {
-                async_get_node_from_entity_id(self._hass, entity_id)
-                for entity_id in service.data[ATTR_ENTITY_ID]
-            }
-        if ATTR_DEVICE_ID in service.data:
-            nodes |= {
-                async_get_node_from_device_id(self._hass, device_id)
-                for device_id in service.data[ATTR_DEVICE_ID]
-            }
+        nodes = get_nodes_from_service_data(self._hass, service)
         property_ = service.data[const.ATTR_CONFIG_PARAMETER]
         new_value = service.data[const.ATTR_CONFIG_VALUE]
 
@@ -243,17 +281,7 @@ class ZWaveServices:
 
     async def async_set_value(self, service: ServiceCall) -> None:
         """Set a value on a node."""
-        nodes: set[ZwaveNode] = set()
-        if ATTR_ENTITY_ID in service.data:
-            nodes |= {
-                async_get_node_from_entity_id(self._hass, entity_id)
-                for entity_id in service.data[ATTR_ENTITY_ID]
-            }
-        if ATTR_DEVICE_ID in service.data:
-            nodes |= {
-                async_get_node_from_device_id(self._hass, device_id)
-                for device_id in service.data[ATTR_DEVICE_ID]
-            }
+        nodes = get_nodes_from_service_data(self._hass, service)
         command_class = service.data[const.ATTR_COMMAND_CLASS]
         property_ = service.data[const.ATTR_PROPERTY]
         property_key = service.data.get(const.ATTR_PROPERTY_KEY)
@@ -280,3 +308,62 @@ class ZWaveServices:
                     "https://zwave-js.github.io/node-zwave-js/#/api/node?id=setvalue "
                     "for possible reasons"
                 )
+
+    async def async_multicast_set_value(self, service: ServiceCall) -> None:
+        """Set a value via multicast to multiple nodes."""
+        nodes = get_nodes_from_service_data(self._hass, service)
+        broadcast: bool = service.data[const.ATTR_BROADCAST]
+
+        # User must specify a node if they are attempting a broadcast and have more
+        # than one zwave-js network
+        if not nodes and len(self._hass.config_entries.async_entries(const.DOMAIN)) > 1:
+            raise vol.Invalid(
+                "You must include at least one entity or device in the service call"
+            )
+
+        # When multicasting, user must specify at least two nodes
+        if not broadcast and len(nodes) < 2:
+            raise vol.Invalid(
+                "To set a value on a single node, use the zwave_js.set_value service"
+            )
+
+        first_node = next((node for node in nodes), None)
+
+        # If any nodes don't have matching home IDs, we can't run the command because
+        # we can't multicast across multiple networks
+        if first_node and any(
+            node.client.driver.controller.home_id
+            != first_node.client.driver.controller.home_id
+            for node in nodes
+        ):
+            raise vol.Invalid(
+                "Multicast commands only work on devices in the same network"
+            )
+
+        value = {
+            "commandClass": service.data[const.ATTR_COMMAND_CLASS],
+            "property": service.data[const.ATTR_PROPERTY],
+            "propertyKey": service.data.get(const.ATTR_PROPERTY_KEY),
+            "endpoint": service.data.get(const.ATTR_ENDPOINT),
+        }
+        new_value = service.data[const.ATTR_VALUE]
+
+        # If there are no nodes, we can assume there is only one config entry due to the
+        # earlier validation and can use that to get the client, otherwise we can just
+        # get the client from the node.
+        client: ZwaveClient = None
+        if first_node:
+            client = first_node.client
+        else:
+            entry_id = self._hass.config_entries.async_entries(const.DOMAIN)[0].entry_id
+            client = self._hass.data[const.DOMAIN][entry_id][const.DATA_CLIENT]
+
+        success = await async_multicast_set_value(
+            client,
+            new_value,
+            {k: v for k, v in value.items() if v is not None},
+            None if broadcast else list(nodes),
+        )
+
+        if success is False:
+            raise SetValueFailed("Unable to set value via multicast")

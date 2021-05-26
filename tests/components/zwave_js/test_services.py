@@ -4,6 +4,7 @@ import voluptuous as vol
 from zwave_js_server.exceptions import SetValueFailed
 
 from homeassistant.components.zwave_js.const import (
+    ATTR_BROADCAST,
     ATTR_COMMAND_CLASS,
     ATTR_CONFIG_PARAMETER,
     ATTR_CONFIG_PARAMETER_BITMASK,
@@ -14,6 +15,7 @@ from homeassistant.components.zwave_js.const import (
     ATTR_WAIT_FOR_RESULT,
     DOMAIN,
     SERVICE_BULK_SET_PARTIAL_CONFIG_PARAMETERS,
+    SERVICE_MULTICAST_SET_VALUE,
     SERVICE_REFRESH_VALUE,
     SERVICE_SET_CONFIG_PARAMETER,
     SERVICE_SET_VALUE,
@@ -634,3 +636,135 @@ async def test_set_value(hass, client, climate_danfoss_lc_13, integration):
             },
             blocking=True,
         )
+
+
+async def test_multicast_set_value(
+    hass,
+    client,
+    climate_danfoss_lc_13,
+    climate_radio_thermostat_ct100_plus_different_endpoints,
+    integration,
+):
+    """Test multicast_set_value service."""
+    # Test sending one node without broadcast fails
+    with pytest.raises(vol.Invalid):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_MULTICAST_SET_VALUE,
+            {
+                ATTR_ENTITY_ID: CLIMATE_DANFOSS_LC13_ENTITY,
+                ATTR_COMMAND_CLASS: 117,
+                ATTR_PROPERTY: "local",
+                ATTR_VALUE: 2,
+            },
+            blocking=True,
+        )
+
+    # Test no device, entity, or broadcast flag raises error
+    with pytest.raises(vol.Invalid):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_MULTICAST_SET_VALUE,
+            {
+                ATTR_COMMAND_CLASS: 117,
+                ATTR_PROPERTY: "local",
+                ATTR_VALUE: 2,
+            },
+            blocking=True,
+        )
+
+    # Test successful multicast call
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_MULTICAST_SET_VALUE,
+        {
+            ATTR_ENTITY_ID: [
+                CLIMATE_DANFOSS_LC13_ENTITY,
+                CLIMATE_RADIO_THERMOSTAT_ENTITY,
+            ],
+            ATTR_COMMAND_CLASS: 117,
+            ATTR_PROPERTY: "local",
+            ATTR_VALUE: 2,
+        },
+        blocking=True,
+    )
+
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args[0][0]
+    assert args["command"] == "multicast_group.set_value"
+    assert args["nodeIDs"] == [
+        climate_radio_thermostat_ct100_plus_different_endpoints.node_id,
+        climate_danfoss_lc_13.node_id,
+    ]
+    assert args["valueId"] == {
+        "commandClass": 117,
+        "property": "local",
+    }
+    assert args["value"] == 2
+
+    client.async_send_command.reset_mock()
+
+    # Test successful multicast call
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_MULTICAST_SET_VALUE,
+        {
+            ATTR_BROADCAST: True,
+            ATTR_COMMAND_CLASS: 117,
+            ATTR_PROPERTY: "local",
+            ATTR_VALUE: 2,
+        },
+        blocking=True,
+    )
+
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args[0][0]
+    assert args["command"] == "broadcast_node.set_value"
+    assert args["valueId"] == {
+        "commandClass": 117,
+        "property": "local",
+    }
+    assert args["value"] == 2
+
+    client.async_send_command.reset_mock()
+
+    # Test that when a command fails we raise an exception
+    client.async_send_command.return_value = {"success": False}
+
+    with pytest.raises(SetValueFailed):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_MULTICAST_SET_VALUE,
+            {
+                ATTR_ENTITY_ID: [
+                    CLIMATE_DANFOSS_LC13_ENTITY,
+                    CLIMATE_RADIO_THERMOSTAT_ENTITY,
+                ],
+                ATTR_COMMAND_CLASS: 117,
+                ATTR_PROPERTY: "local",
+                ATTR_VALUE: 2,
+            },
+            blocking=True,
+        )
+
+    # assert len(client.async_send_command.call_args_list) == 1
+    # args = client.async_send_command.call_args[0][0]
+    # assert args["command"] == "node.set_value"
+    # assert args["nodeId"] == 5
+    # assert args["valueId"] == {
+    #     "commandClassName": "Protection",
+    #     "commandClass": 117,
+    #     "endpoint": 0,
+    #     "property": "local",
+    #     "propertyName": "local",
+    #     "ccVersion": 2,
+    #     "metadata": {
+    #         "type": "number",
+    #         "readable": True,
+    #         "writeable": True,
+    #         "label": "Local protection state",
+    #         "states": {"0": "Unprotected", "2": "NoOperationPossible"},
+    #     },
+    #     "value": 0,
+    # }
+    # assert args["value"] == 2
