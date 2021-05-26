@@ -21,7 +21,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import ACCOUNT_ID
@@ -89,7 +88,7 @@ class AdaxDevice(ClimateEntity):
         """Return the list of available hvac operation modes."""
         return [HVAC_MODE_HEAT, HVAC_MODE_OFF]
 
-    async def async_set_hvac_mode(self, hvac_mode) -> None:
+    async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set hvac mode."""
         if hvac_mode == HVAC_MODE_HEAT:
             temperature = max(
