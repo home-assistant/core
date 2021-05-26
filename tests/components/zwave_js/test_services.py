@@ -753,9 +753,7 @@ async def test_multicast_set_value(
     # return of helper function to check the validation for two nodes having different
     # home IDs
     diff_network_node = MagicMock()
-    diff_network_node.client.driver.controller.home_id.return_value = (
-        "random different home id"
-    )
+    diff_network_node.client.driver.controller.home_id.return_value = "diff_home_id"
 
     with pytest.raises(vol.Invalid), patch(
         "homeassistant.components.zwave_js.services.get_nodes_from_service_data",
