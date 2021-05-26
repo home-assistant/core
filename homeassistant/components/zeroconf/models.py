@@ -46,21 +46,14 @@ class HaServiceBrowser(ServiceBrowser):
     """ServiceBrowser that only consumes DNSPointer records."""
 
     def update_record(self, zc: Zeroconf, now: float, record: DNSRecord) -> None:
-        """Pre-Filter update_record to DNSPointers for the configured type."""
-
-        #
-        # Each ServerBrowser currently runs in its own thread which
-        # processes every A or AAAA record update per instance.
-        #
-        # As the list of zeroconf names we watch for grows, each additional
-        # ServiceBrowser would process all the A and AAAA updates on the network.
+        """Pre-Filter update_record to INTRESTED_RECORD_TYPES for the configured type."""
         #
         # To avoid overwhemling the system we pre-filter here and only process
-        # DNSPointers for the configured record name (type)
+        # INTRESTED_RECORD_TYPES for the configured record name (type)
         #
-        # if record.name not in self.types or not isinstance(
-        #    record, INTRESTED_RECORD_TYPES
-        # ):
-        #    return
+        if record.name not in self.types or not isinstance(
+            record, INTRESTED_RECORD_TYPES
+        ):
+            return
         _LOGGER.debug("update_record: %s %s", record, now)
         super().update_record(zc, now, record)
