@@ -2506,7 +2506,7 @@ async def test_default_discovery_abort_on_user_flow_complete(hass, manager):
         VERSION = 1
 
         async def async_step_user(self, user_input=None):
-            """Test discovery step."""
+            """Test user step."""
             if user_input is None:
                 return self.async_show_form(step_id="user")
             return self.async_create_entry(title="title", data={"token": "supersecret"})
