@@ -1,10 +1,10 @@
 """Config flow for Wallbox integration."""
 import voluptuous as vol
 
-from homeassistant import config_entries, core
+from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
-from . import CannotConnect, InvalidAuth, WallboxHub
+from . import WallboxHub
 from .const import CONF_STATION, DOMAIN
 
 COMPONENT_DOMAIN = DOMAIN
@@ -46,9 +46,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=COMPONENT_DOMAIN):
 
         try:
             info = await validate_input(self.hass, user_input)
-        except CannotConnect:
+        except ConnectionError:
             errors["base"] = "cannot_connect"
-        except InvalidAuth:
+        except exceptions.Unauthorized:
             errors["base"] = "invalid_auth"
         else:
             return self.async_create_entry(title=info["title"], data=user_input)
