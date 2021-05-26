@@ -28,8 +28,6 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
     account_id = data[ACCOUNT_ID]
     password = data[CONF_PASSWORD].replace(" ", "")
 
-    self._async_abort_entries_match({ACCOUNT_ID: account_id})
-
     token = await adax.get_adax_token(
         async_get_clientsession(hass), account_id, password
     )
@@ -55,11 +53,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         try:
+            self._async_abort_entries_match({ACCOUNT_ID: user_input[ACCOUNT_ID]})
             await validate_input(self.hass, user_input)
         except CannotConnect:
             errors["base"] = "cannot_connect"
-        except AlreadyConfigured:
-            return self.async_abort(reason="already_configured")
         else:
             return self.async_create_entry(
                 title=user_input[ACCOUNT_ID], data=user_input
@@ -72,7 +69,3 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
 class CannotConnect(HomeAssistantError):
     """Error to indicate we cannot connect."""
-
-
-class AlreadyConfigured(HomeAssistantError):
-    """Error to indicate host is already configured."""

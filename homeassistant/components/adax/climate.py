@@ -1,5 +1,9 @@
 """Support for Adax wifi-enabled home heaters."""
+from __future__ import annotations
+
+from collections.abc import Iterable
 import logging
+from typing import Callable
 
 from adax import Adax
 
@@ -9,29 +13,32 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_OFF,
     SUPPORT_TARGET_TEMPERATURE,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_PASSWORD,
     PRECISION_WHOLE,
     TEMP_CELSIUS,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.entity import Entity
 
 from .const import ACCOUNT_ID
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: Callable[[Iterable[Entity]], None],
+) -> None:
     """Set up the Adax thermostat with config flow."""
-    await _setup(
-        hass, entry.data[ACCOUNT_ID], entry.data[CONF_PASSWORD], async_add_entities
-    )
-
-
-async def _setup(hass, account_id, password, async_add_entities):
     adax_data_handler = Adax(
-        account_id, password, websession=async_get_clientsession(hass)
+        entry.data[ACCOUNT_ID],
+        entry.data[CONF_PASSWORD],
+        websession=async_get_clientsession(hass),
     )
 
     async_add_entities(
@@ -43,46 +50,46 @@ async def _setup(hass, account_id, password, async_add_entities):
 class AdaxDevice(ClimateEntity):
     """Representation of a heater."""
 
-    def __init__(self, heater_data, adax_data_handler):
+    def __init__(self, heater_data: dict, adax_data_handler: Adax) -> None:
         """Initialize the heater."""
         self._heater_data = heater_data
         self._adax_data_handler = adax_data_handler
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> int:
         """Return the list of supported features."""
         return SUPPORT_TARGET_TEMPERATURE
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str:
         """Return a unique ID."""
         return f"{self._heater_data['homeId']}_{self._heater_data['id']}"
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the device, if any."""
         return self._heater_data["name"]
 
     @property
-    def hvac_mode(self):
+    def hvac_mode(self) -> str:
         """Return hvac operation ie. heat, cool mode."""
         if self._heater_data["heatingEnabled"]:
             return HVAC_MODE_HEAT
         return HVAC_MODE_OFF
 
     @property
-    def icon(self):
+    def icon(self) -> str:
         """Return nice icon for heater."""
         if self.hvac_mode == HVAC_MODE_HEAT:
             return "mdi:radiator"
         return "mdi:radiator-off"
 
     @property
-    def hvac_modes(self):
+    def hvac_modes(self) -> list[str]:
         """Return the list of available hvac operation modes."""
         return [HVAC_MODE_HEAT, HVAC_MODE_OFF]
 
-    async def async_set_hvac_mode(self, hvac_mode):
+    async def async_set_hvac_mode(self, hvac_mode) -> None:
         """Set hvac mode."""
         if hvac_mode == HVAC_MODE_HEAT:
             temperature = max(
@@ -100,36 +107,36 @@ class AdaxDevice(ClimateEntity):
         await self._adax_data_handler.update()
 
     @property
-    def temperature_unit(self):
+    def temperature_unit(self) -> str:
         """Return the unit of measurement which this device uses."""
         return TEMP_CELSIUS
 
     @property
-    def min_temp(self):
+    def min_temp(self) -> int:
         """Return the minimum temperature."""
         return 5
 
     @property
-    def max_temp(self):
+    def max_temp(self) -> int:
         """Return the maximum temperature."""
         return 35
 
     @property
-    def current_temperature(self):
+    def current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self._heater_data.get("temperature")
 
     @property
-    def target_temperature(self):
+    def target_temperature(self) -> int | None:
         """Return the temperature we try to reach."""
         return self._heater_data.get("targetTemperature")
 
     @property
-    def target_temperature_step(self):
+    def target_temperature_step(self) -> int:
         """Return the supported step of target temperature."""
         return PRECISION_WHOLE
 
-    async def async_set_temperature(self, **kwargs):
+    async def async_set_temperature(self, **kwargs) -> None:
         """Set new target temperature."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
         if temperature is None:
@@ -138,7 +145,7 @@ class AdaxDevice(ClimateEntity):
             self._heater_data["id"], temperature, True
         )
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Get the latest data."""
         for room in await self._adax_data_handler.get_rooms():
             if room["id"] == self._heater_data["id"]:
