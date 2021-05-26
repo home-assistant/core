@@ -296,7 +296,6 @@ async def test_trusted_group_login(manager_with_user, provider_with_user):
 
     schema = step["data_schema"]
     # only user listed
-    print(user.id)
     assert schema({"user": user.id})
     with pytest.raises(vol.Invalid):
         assert schema({"user": owner.id})

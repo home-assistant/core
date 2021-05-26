@@ -290,6 +290,7 @@ homeassistant/components/met/* @danielhiversen @thimic
 homeassistant/components/met_eireann/* @DylanGore
 homeassistant/components/meteo_france/* @hacf-fr @oncleben31 @Quentame
 homeassistant/components/meteoalarm/* @rolfberkenbosch
+homeassistant/components/meteoclimatic/* @adrianmo
 homeassistant/components/metoffice/* @MrHarcombe
 homeassistant/components/miflora/* @danielhiversen @basnijholt
 homeassistant/components/mikrotik/* @engrbm87
@@ -431,6 +432,7 @@ homeassistant/components/shell_command/* @home-assistant/core
 homeassistant/components/shelly/* @balloob @bieniu @thecode @chemelli74
 homeassistant/components/shiftr/* @fabaff
 homeassistant/components/shodan/* @fabaff
+homeassistant/components/sia/* @eavanvalkenburg
 homeassistant/components/sighthound/* @robmarkcole
 homeassistant/components/signal_messenger/* @bbernhard
 homeassistant/components/simplisafe/* @bachya
@@ -543,6 +545,7 @@ homeassistant/components/vlc_telnet/* @rodripf @dmcc
 homeassistant/components/volkszaehler/* @fabaff
 homeassistant/components/volumio/* @OnFreund
 homeassistant/components/wake_on_lan/* @ntilley905
+homeassistant/components/wallbox/* @hesselonline
 homeassistant/components/waqi/* @andrey-git
 homeassistant/components/watson_tts/* @rutkai
 homeassistant/components/weather/* @fabaff

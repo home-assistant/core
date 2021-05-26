@@ -62,7 +62,6 @@ volume:
     down:
       name: Down
       description: Decreases volume x levels.
-      example: 3
       selector:
         number:
           min: 1
@@ -70,7 +69,6 @@ volume:
     mute:
       name: Mute
       description: Mutes audio system.
-      example: toggle
       selector:
         select:
           options:
@@ -80,7 +78,6 @@ volume:
     up:
       name: Up
       description: Increases volume x levels.
-      example: 3
       selector:
         number:
           min: 1

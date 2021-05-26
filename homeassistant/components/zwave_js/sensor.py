@@ -122,9 +122,11 @@ class ZwaveSensorBase(ZWaveBaseEntity, SensorEntity):
         This should be run once during initialization so we don't have to calculate
         this value on every state update.
         """
+        if self.info.primary_value.command_class == CommandClass.BATTERY:
+            return STATE_CLASS_MEASUREMENT
         if isinstance(self.info.primary_value.property_, str):
             property_lower = self.info.primary_value.property_.lower()
-            if "temperature" in property_lower:
+            if "humidity" in property_lower or "temperature" in property_lower:
                 return STATE_CLASS_MEASUREMENT
         return None
 

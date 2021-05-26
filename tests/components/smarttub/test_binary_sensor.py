@@ -61,3 +61,23 @@ async def test_error(spa, hass, config_entry, mock_error):
 
     assert state.state == STATE_ON
     assert state.attributes["error_code"] == 11
+
+
+async def test_snooze(spa, setup_entry, hass):
+    """Test snoozing a reminder."""
+
+    entity_id = f"binary_sensor.{spa.brand}_{spa.model}_myfilter_reminder"
+    reminder = spa.get_reminders.return_value[0]
+    days = 30
+
+    await hass.services.async_call(
+        "smarttub",
+        "snooze_reminder",
+        {
+            "entity_id": entity_id,
+            "days": 30,
+        },
+        blocking=True,
+    )
+
+    reminder.snooze.assert_called_with(days)

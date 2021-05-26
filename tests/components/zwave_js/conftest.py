@@ -10,8 +10,6 @@ from zwave_js_server.model.driver import Driver
 from zwave_js_server.model.node import Node
 from zwave_js_server.version import VersionInfo
 
-from homeassistant.helpers.device_registry import async_get as async_get_device_registry
-
 from tests.common import MockConfigEntry, load_fixture
 
 # Add-on fixtures
@@ -137,12 +135,6 @@ def create_snapshot_fixture():
         yield create_shapshot
 
 
-@pytest.fixture(name="device_registry")
-async def device_registry_fixture(hass):
-    """Return the device registry."""
-    return async_get_device_registry(hass)
-
-
 @pytest.fixture(name="controller_state", scope="session")
 def controller_state_fixture():
     """Load the controller state fixture data."""
@@ -182,6 +174,12 @@ def binary_switch_state_fixture():
 def bulb_6_multi_color_state_fixture():
     """Load the bulb 6 multi-color node state fixture data."""
     return json.loads(load_fixture("zwave_js/bulb_6_multi_color_state.json"))
+
+
+@pytest.fixture(name="light_color_null_values_state", scope="session")
+def light_color_null_values_state_fixture():
+    """Load the light color null values node state fixture data."""
+    return json.loads(load_fixture("zwave_js/light_color_null_values_state.json"))
 
 
 @pytest.fixture(name="eaton_rf9640_dimmer_state", scope="session")
@@ -365,6 +363,12 @@ def zem_31_state_fixture():
     return json.loads(load_fixture("zwave_js/zen_31_state.json"))
 
 
+@pytest.fixture(name="wallmote_central_scene_state", scope="session")
+def wallmote_central_scene_state_fixture():
+    """Load the wallmote central scene node state fixture data."""
+    return json.loads(load_fixture("zwave_js/wallmote_central_scene_state.json"))
+
+
 @pytest.fixture(name="client")
 def mock_client_fixture(controller_state, version_state):
     """Mock a client."""
@@ -425,6 +429,14 @@ def hank_binary_switch_fixture(client, hank_binary_switch_state):
 def bulb_6_multi_color_fixture(client, bulb_6_multi_color_state):
     """Mock a bulb 6 multi-color node."""
     node = Node(client, copy.deepcopy(bulb_6_multi_color_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="light_color_null_values")
+def light_color_null_values_fixture(client, light_color_null_values_state):
+    """Mock a node with current color value item being null."""
+    node = Node(client, copy.deepcopy(light_color_null_values_state))
     client.driver.controller.nodes[node.node_id] = node
     return node
 
@@ -695,5 +707,13 @@ def vision_security_zl7432_fixture(client, vision_security_zl7432_state):
 def zen_31_fixture(client, zen_31_state):
     """Mock a bulb 6 multi-color node."""
     node = Node(client, copy.deepcopy(zen_31_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="wallmote_central_scene")
+def wallmote_central_scene_fixture(client, wallmote_central_scene_state):
+    """Mock a wallmote central scene node."""
+    node = Node(client, copy.deepcopy(wallmote_central_scene_state))
     client.driver.controller.nodes[node.node_id] = node
     return node
