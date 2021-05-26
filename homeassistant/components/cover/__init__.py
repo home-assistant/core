@@ -167,6 +167,8 @@ async def async_unload_entry(hass, entry):
 class CoverEntity(Entity):
     """Base class for cover entities."""
 
+    _is_last_toggle_direction_open = True
+
     @property
     def current_cover_position(self):
         """Return current position of cover.
@@ -261,17 +263,23 @@ class CoverEntity(Entity):
 
     def toggle(self, **kwargs: Any) -> None:
         """Toggle the entity."""
-        if self.is_closed:
-            self.open_cover(**kwargs)
-        else:
-            self.close_cover(**kwargs)
+        fns = {
+            "open": self.open_cover,
+            "close": self.close_cover,
+            "stop": self.stop_cover,
+        }
+        function = self._get_toggle_function(fns)
+        function(**kwargs)
 
     async def async_toggle(self, **kwargs):
         """Toggle the entity."""
-        if self.is_closed:
-            await self.async_open_cover(**kwargs)
-        else:
-            await self.async_close_cover(**kwargs)
+        fns = {
+            "open": self.async_open_cover,
+            "close": self.async_close_cover,
+            "stop": self.async_stop_cover,
+        }
+        function = self._get_toggle_function(fns)
+        await function(**kwargs)
 
     def set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
@@ -338,6 +346,26 @@ class CoverEntity(Entity):
             await self.async_open_cover_tilt(**kwargs)
         else:
             await self.async_close_cover_tilt(**kwargs)
+
+    def async_write_ha_state(self) -> None:
+        """Set last toggle direction when writing ha state."""
+        super().async_write_ha_state()
+        if self.state == STATE_OPENING:
+            self._is_last_toggle_direction_open = True
+        elif self.state == STATE_CLOSING:
+            self._is_last_toggle_direction_open = False
+        # do nothing on all other states
+
+    def _get_toggle_function(self, fns):
+        if SUPPORT_STOP | self.supported_features and (
+            self.is_closing or self.is_opening
+        ):
+            return fns["stop"]
+        if self.is_closed:
+            return fns["open"]
+        if self.is_last_toggle_direction_open:
+            return fns["close"]
+        return fns["open"]
 
 
 class CoverDevice(CoverEntity):
