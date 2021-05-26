@@ -52,6 +52,12 @@ class HaServiceBrowser(ServiceBrowser):
                 )
                 return
         elif isinstance(record, DNSAddress):
+            _LOGGER.debug(
+                "EXISTING updates_record: (name=%s) %s: cache -> %s",
+                record.name,
+                record,
+                zc.cache.entries_with_name(record.name),
+            )
             if not any(
                 self._record_has_browser_type(service)
                 for service in self.zc.cache.entries_with_server(record.name)
