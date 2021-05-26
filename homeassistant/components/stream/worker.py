@@ -32,7 +32,9 @@ class SegmentBuffer:
         self._stream_id = 0
         self._outputs_callback = outputs_callback
         self._outputs: list[StreamOutput] = []
-        self._sequence = 0
+        # sequence gets incremented before the first segment so the first segment
+        # has a sequence number of 0.
+        self._sequence = -1
         self._segment_start_pts = None
         self._memory_file: BytesIO = cast(BytesIO, None)
         self._av_output: av.container.OutputContainer = None
