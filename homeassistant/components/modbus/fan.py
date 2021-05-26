@@ -20,7 +20,7 @@ async def async_setup_platform(
     hass: HomeAssistant, config: ConfigType, async_add_entities, discovery_info=None
 ):
     """Read configuration and create Modbus fans."""
-    if discovery_info is None:
+    if discovery_info is None:  # pragma: no cover
         return
     fans = []
 
