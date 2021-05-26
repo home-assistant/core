@@ -1,8 +1,9 @@
 """Support for KNX/IP lights."""
 from __future__ import annotations
 
-from typing import Any, cast
+from typing import Any, Tuple, cast
 
+from xknx import XKNX
 from xknx.devices import Light as XknxLight
 from xknx.telegram.address import parse_device_group_address
 
@@ -18,13 +19,14 @@ from homeassistant.components.light import (
     COLOR_MODE_RGBW,
     LightEntity,
 )
+from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.color as color_util
 
-from .const import DOMAIN, KNX_ADDRESS
+from .const import DOMAIN, KNX_ADDRESS, ColorTempModes
 from .knx_entity import KnxEntity
 from .schema import LightSchema
 
@@ -36,24 +38,26 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up lights for KNX platform."""
-    _async_migrate_unique_id(hass, discovery_info)
+    if not discovery_info or not discovery_info["platform_config"]:
+        return
+    platform_config = discovery_info["platform_config"]
+    _async_migrate_unique_id(hass, platform_config)
+
+    xknx: XKNX = hass.data[DOMAIN].xknx
+
     entities = []
-    for device in hass.data[DOMAIN].xknx.devices:
-        if isinstance(device, XknxLight):
-            entities.append(KNXLight(device))
+    for entity_config in platform_config:
+        entities.append(KNXLight(xknx, entity_config))
+
     async_add_entities(entities)
 
 
 @callback
 def _async_migrate_unique_id(
-    hass: HomeAssistant, discovery_info: DiscoveryInfoType | None
+    hass: HomeAssistant, platform_config: list[ConfigType]
 ) -> None:
     """Change unique_ids used in 2021.4 to exchange individual color switch address for brightness address."""
     entity_registry = er.async_get(hass)
-    if not discovery_info or not discovery_info["platform_config"]:
-        return
-
-    platform_config = discovery_info["platform_config"]
     for entity_config in platform_config:
         individual_colors_config = entity_config.get(LightSchema.CONF_INDIVIDUAL_COLORS)
         if individual_colors_config is None:
@@ -115,16 +119,113 @@ def _async_migrate_unique_id(
         entity_registry.async_update_entity(entity_id, new_unique_id=new_uid)
 
 
+def _create_light(xknx: XKNX, config: ConfigType) -> XknxLight:
+    """Return a KNX Light device to be used within XKNX."""
+
+    def individual_color_addresses(color: str, feature: str) -> Any | None:
+        """Load individual color address list from configuration structure."""
+        if (
+            LightSchema.CONF_INDIVIDUAL_COLORS not in config
+            or color not in config[LightSchema.CONF_INDIVIDUAL_COLORS]
+        ):
+            return None
+        return config[LightSchema.CONF_INDIVIDUAL_COLORS][color].get(feature)
+
+    group_address_tunable_white = None
+    group_address_tunable_white_state = None
+    group_address_color_temp = None
+    group_address_color_temp_state = None
+    if config[LightSchema.CONF_COLOR_TEMP_MODE] == ColorTempModes.ABSOLUTE:
+        group_address_color_temp = config.get(LightSchema.CONF_COLOR_TEMP_ADDRESS)
+        group_address_color_temp_state = config.get(
+            LightSchema.CONF_COLOR_TEMP_STATE_ADDRESS
+        )
+    elif config[LightSchema.CONF_COLOR_TEMP_MODE] == ColorTempModes.RELATIVE:
+        group_address_tunable_white = config.get(LightSchema.CONF_COLOR_TEMP_ADDRESS)
+        group_address_tunable_white_state = config.get(
+            LightSchema.CONF_COLOR_TEMP_STATE_ADDRESS
+        )
+
+    return XknxLight(
+        xknx,
+        name=config[CONF_NAME],
+        group_address_switch=config.get(KNX_ADDRESS),
+        group_address_switch_state=config.get(LightSchema.CONF_STATE_ADDRESS),
+        group_address_brightness=config.get(LightSchema.CONF_BRIGHTNESS_ADDRESS),
+        group_address_brightness_state=config.get(
+            LightSchema.CONF_BRIGHTNESS_STATE_ADDRESS
+        ),
+        group_address_color=config.get(LightSchema.CONF_COLOR_ADDRESS),
+        group_address_color_state=config.get(LightSchema.CONF_COLOR_STATE_ADDRESS),
+        group_address_rgbw=config.get(LightSchema.CONF_RGBW_ADDRESS),
+        group_address_rgbw_state=config.get(LightSchema.CONF_RGBW_STATE_ADDRESS),
+        group_address_tunable_white=group_address_tunable_white,
+        group_address_tunable_white_state=group_address_tunable_white_state,
+        group_address_color_temperature=group_address_color_temp,
+        group_address_color_temperature_state=group_address_color_temp_state,
+        group_address_switch_red=individual_color_addresses(
+            LightSchema.CONF_RED, KNX_ADDRESS
+        ),
+        group_address_switch_red_state=individual_color_addresses(
+            LightSchema.CONF_RED, LightSchema.CONF_STATE_ADDRESS
+        ),
+        group_address_brightness_red=individual_color_addresses(
+            LightSchema.CONF_RED, LightSchema.CONF_BRIGHTNESS_ADDRESS
+        ),
+        group_address_brightness_red_state=individual_color_addresses(
+            LightSchema.CONF_RED, LightSchema.CONF_BRIGHTNESS_STATE_ADDRESS
+        ),
+        group_address_switch_green=individual_color_addresses(
+            LightSchema.CONF_GREEN, KNX_ADDRESS
+        ),
+        group_address_switch_green_state=individual_color_addresses(
+            LightSchema.CONF_GREEN, LightSchema.CONF_STATE_ADDRESS
+        ),
+        group_address_brightness_green=individual_color_addresses(
+            LightSchema.CONF_GREEN, LightSchema.CONF_BRIGHTNESS_ADDRESS
+        ),
+        group_address_brightness_green_state=individual_color_addresses(
+            LightSchema.CONF_GREEN, LightSchema.CONF_BRIGHTNESS_STATE_ADDRESS
+        ),
+        group_address_switch_blue=individual_color_addresses(
+            LightSchema.CONF_BLUE, KNX_ADDRESS
+        ),
+        group_address_switch_blue_state=individual_color_addresses(
+            LightSchema.CONF_BLUE, LightSchema.CONF_STATE_ADDRESS
+        ),
+        group_address_brightness_blue=individual_color_addresses(
+            LightSchema.CONF_BLUE, LightSchema.CONF_BRIGHTNESS_ADDRESS
+        ),
+        group_address_brightness_blue_state=individual_color_addresses(
+            LightSchema.CONF_BLUE, LightSchema.CONF_BRIGHTNESS_STATE_ADDRESS
+        ),
+        group_address_switch_white=individual_color_addresses(
+            LightSchema.CONF_WHITE, KNX_ADDRESS
+        ),
+        group_address_switch_white_state=individual_color_addresses(
+            LightSchema.CONF_WHITE, LightSchema.CONF_STATE_ADDRESS
+        ),
+        group_address_brightness_white=individual_color_addresses(
+            LightSchema.CONF_WHITE, LightSchema.CONF_BRIGHTNESS_ADDRESS
+        ),
+        group_address_brightness_white_state=individual_color_addresses(
+            LightSchema.CONF_WHITE, LightSchema.CONF_BRIGHTNESS_STATE_ADDRESS
+        ),
+        min_kelvin=config[LightSchema.CONF_MIN_KELVIN],
+        max_kelvin=config[LightSchema.CONF_MAX_KELVIN],
+    )
+
+
 class KNXLight(KnxEntity, LightEntity):
     """Representation of a KNX light."""
 
-    def __init__(self, device: XknxLight) -> None:
+    def __init__(self, xknx: XKNX, config: ConfigType) -> None:
         """Initialize of KNX light."""
         self._device: XknxLight
-        super().__init__(device)
+        super().__init__(_create_light(xknx, config))
         self._unique_id = self._device_unique_id()
-        self._min_kelvin = device.min_kelvin or LightSchema.DEFAULT_MIN_KELVIN
-        self._max_kelvin = device.max_kelvin or LightSchema.DEFAULT_MAX_KELVIN
+        self._min_kelvin: int = config[LightSchema.CONF_MIN_KELVIN]
+        self._max_kelvin: int = config[LightSchema.CONF_MAX_KELVIN]
         self._min_mireds = color_util.color_temperature_kelvin_to_mired(
             self._max_kelvin
         )
@@ -265,7 +366,7 @@ class KNXLight(KnxEntity, LightEntity):
                     await self._device.set_brightness(brightness)
                     return
                 rgb = cast(
-                    tuple[int, int, int],
+                    Tuple[int, int, int],
                     tuple(color * brightness // 255 for color in rgb),
                 )
                 white = white * brightness // 255 if white is not None else None
@@ -294,7 +395,25 @@ class KNXLight(KnxEntity, LightEntity):
                 await self._device.set_tunable_white(relative_ct)
 
         if brightness is not None:
-            await self._device.set_brightness(brightness)
+            # brightness: 1..255; 0 brightness will call async_turn_off()
+            if self._device.brightness.writable:
+                await self._device.set_brightness(brightness)
+                return
+            # brightness without color in kwargs; set via color - default to white
+            if self.color_mode == COLOR_MODE_RGBW:
+                rgbw = self.rgbw_color
+                if not rgbw or not any(rgbw):
+                    await self._device.set_color((0, 0, 0), brightness)
+                    return
+                await set_color(rgbw[:3], rgbw[3], brightness)
+                return
+            if self.color_mode == COLOR_MODE_RGB:
+                rgb = self.rgb_color
+                if not rgb or not any(rgb):
+                    await self._device.set_color((brightness, brightness, brightness))
+                    return
+                await set_color(rgb, None, brightness)
+                return
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""

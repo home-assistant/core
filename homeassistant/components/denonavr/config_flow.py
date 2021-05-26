@@ -45,7 +45,7 @@ CONFIG_SCHEMA = vol.Schema({vol.Optional(CONF_HOST): str})
 class OptionsFlowHandler(config_entries.OptionsFlow):
     """Options for the component."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry):
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Init object."""
         self.config_entry = config_entry
 
@@ -199,9 +199,7 @@ class DenonAvrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 "unique_id's will not be available",
                 self.host,
             )
-            for entry in self._async_current_entries():
-                if entry.data[CONF_HOST] == self.host:
-                    return self.async_abort(reason="already_configured")
+            self._async_abort_entries_match({CONF_HOST: self.host})
 
         return self.async_create_entry(
             title=receiver.name,

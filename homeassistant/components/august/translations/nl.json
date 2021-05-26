@@ -17,16 +17,6 @@
                 "description": "Voer het wachtwoord in voor {username}.",
                 "title": "Verifieer opnieuw een August-account"
             },
-            "user": {
-                "data": {
-                    "login_method": "Aanmeldmethode",
-                    "password": "Wachtwoord",
-                    "timeout": "Time-out (seconden)",
-                    "username": "Gebruikersnaam"
-                },
-                "description": "Als de aanmeldingsmethode 'e-mail' is, is gebruikersnaam het e-mailadres. Als de aanmeldingsmethode 'telefoon' is, is gebruikersnaam het telefoonnummer in de indeling '+ NNNNNNNNN'.",
-                "title": "Stel een augustus-account in"
-            },
             "user_validate": {
                 "data": {
                     "login_method": "Inlogmethode",

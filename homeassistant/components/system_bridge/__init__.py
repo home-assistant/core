@@ -77,6 +77,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                         client.async_get_battery(),
                         client.async_get_cpu(),
                         client.async_get_filesystem(),
+                        client.async_get_memory(),
                         client.async_get_network(),
                         client.async_get_os(),
                         client.async_get_processes(),

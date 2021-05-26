@@ -11,7 +11,7 @@
                 "data": {
                     "known_hosts": "Known hosts"
                 },
-                "description": "### Known Hosts \n A comma-separated list of hostnames or IP-addresses of cast devices, use if mDNS discovery is not working.",
+                "description": "Known Hosts - A comma-separated list of hostnames or IP-addresses of cast devices, use if mDNS discovery is not working.",
                 "title": "Google Cast configuration"
             },
             "confirm": {
@@ -29,14 +29,14 @@
                     "ignore_cec": "Ignore CEC",
                     "uuid": "Allowed UUIDs"
                 },
-                "description": "### Allowed UUIDs\n A comma-separated list of UUIDs of Cast devices to add to Home Assistant. **Use only if you don\u2019t want to add all available cast devices.** \n ### Ignore CEC \n A comma-separated list of Chromecasts that should ignore CEC data for determining the active input. This will be will be passed to pychromecast.IGNORE_CEC. [See the upstream documentation for more information](https://github.com/balloob/pychromecast#ignoring-cec-data).",
+                "description": "Allowed UUIDs - A comma-separated list of UUIDs of Cast devices to add to Home Assistant. Use only if you don\u2019t want to add all available cast devices.\nIgnore CEC - A comma-separated list of Chromecasts that should ignore CEC data for determining the active input. This will be passed to pychromecast.IGNORE_CEC.",
                 "title": "Advanced Google Cast configuration"
             },
             "basic_options": {
                 "data": {
                     "known_hosts": "Known hosts"
                 },
-                "description": "### Known Hosts \n A comma-separated list of hostnames or IP-addresses of cast devices, use if mDNS discovery is not working.",
+                "description": "Known Hosts - A comma-separated list of hostnames or IP-addresses of cast devices, use if mDNS discovery is not working.",
                 "title": "Google Cast configuration"
             }
         }

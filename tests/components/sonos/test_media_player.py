@@ -1,7 +1,7 @@
 """Tests for the Sonos Media Player platform."""
 import pytest
 
-from homeassistant.components.sonos import DOMAIN, media_player
+from homeassistant.components.sonos import DATA_SONOS, DOMAIN, media_player
 from homeassistant.const import STATE_IDLE
 from homeassistant.core import Context
 from homeassistant.exceptions import Unauthorized
@@ -20,18 +20,24 @@ async def test_async_setup_entry_hosts(hass, config_entry, config, soco):
     """Test static setup."""
     await setup_platform(hass, config_entry, config)
 
-    entities = list(hass.data[media_player.DATA_SONOS].media_player_entities.values())
-    entity = entities[0]
-    assert entity.soco == soco
+    speakers = list(hass.data[DATA_SONOS].discovered.values())
+    speaker = speakers[0]
+    assert speaker.soco == soco
+
+    media_player = hass.states.get("media_player.zone_a")
+    assert media_player.state == STATE_IDLE
 
 
 async def test_async_setup_entry_discover(hass, config_entry, discover):
     """Test discovery setup."""
     await setup_platform(hass, config_entry, {})
 
-    entities = list(hass.data[media_player.DATA_SONOS].media_player_entities.values())
-    entity = entities[0]
-    assert entity.unique_id == "RINCON_test"
+    speakers = list(hass.data[DATA_SONOS].discovered.values())
+    speaker = speakers[0]
+    assert speaker.soco.uid == "RINCON_test"
+
+    media_player = hass.states.get("media_player.zone_a")
+    assert media_player.state == STATE_IDLE
 
 
 async def test_services(hass, config_entry, config, hass_read_only_user):
@@ -57,7 +63,7 @@ async def test_device_registry(hass, config_entry, config, soco):
         identifiers={("sonos", "RINCON_test")}
     )
     assert reg_device.model == "Model Name"
-    assert reg_device.sw_version == "49.2-64250"
+    assert reg_device.sw_version == "13.1"
     assert reg_device.connections == {(dr.CONNECTION_NETWORK_MAC, "00:11:22:33:44:55")}
     assert reg_device.manufacturer == "Sonos"
     assert reg_device.suggested_area == "Zone A"

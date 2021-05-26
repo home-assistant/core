@@ -9,7 +9,7 @@
             "old_firmware": "Unsupported old firmware on the Bond device - please upgrade before continuing",
             "unknown": "Unexpected error"
         },
-        "flow_title": "Bond: {name} ({host})",
+        "flow_title": "{name} ({host})",
         "step": {
             "confirm": {
                 "data": {

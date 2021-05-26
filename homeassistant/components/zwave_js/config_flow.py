@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import Any, cast
+from typing import Any
 
 import aiohttp
 from async_timeout import timeout
@@ -17,7 +17,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import AbortFlow, FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .addon import AddonError, AddonManager, get_addon_manager
+from .addon import AddonError, AddonInfo, AddonManager, AddonState, get_addon_manager
 from .const import (
     CONF_ADDON_DEVICE,
     CONF_ADDON_NETWORK_KEY,
@@ -187,13 +187,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         self.use_addon = True
 
-        if await self._async_is_addon_running():
-            addon_config = await self._async_get_addon_config()
+        addon_info = await self._async_get_addon_info()
+
+        if addon_info.state == AddonState.RUNNING:
+            addon_config = addon_info.options
             self.usb_path = addon_config[CONF_ADDON_DEVICE]
             self.network_key = addon_config.get(CONF_ADDON_NETWORK_KEY, "")
             return await self.async_step_finish_addon_setup()
 
-        if await self._async_is_addon_installed():
+        if addon_info.state == AddonState.NOT_RUNNING:
             return await self.async_step_configure_addon()
 
         return await self.async_step_install_addon()
@@ -228,7 +230,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Ask for config for Z-Wave JS add-on."""
-        addon_config = await self._async_get_addon_config()
+        addon_info = await self._async_get_addon_info()
+        addon_config = addon_info.options
 
         errors: dict[str, str] = {}
 
@@ -345,31 +348,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
         return self._async_create_entry_from_vars()
 
-    async def _async_get_addon_info(self) -> dict:
+    async def _async_get_addon_info(self) -> AddonInfo:
         """Return and cache Z-Wave JS add-on info."""
         addon_manager: AddonManager = get_addon_manager(self.hass)
         try:
-            addon_info: dict = await addon_manager.async_get_addon_info()
+            addon_info: AddonInfo = await addon_manager.async_get_addon_info()
         except AddonError as err:
             _LOGGER.error(err)
             raise AbortFlow("addon_info_failed") from err
 
         return addon_info
-
-    async def _async_is_addon_running(self) -> bool:
-        """Return True if Z-Wave JS add-on is running."""
-        addon_info = await self._async_get_addon_info()
-        return bool(addon_info["state"] == "started")
-
-    async def _async_is_addon_installed(self) -> bool:
-        """Return True if Z-Wave JS add-on is installed."""
-        addon_info = await self._async_get_addon_info()
-        return addon_info["version"] is not None
-
-    async def _async_get_addon_config(self) -> dict:
-        """Get Z-Wave JS add-on config."""
-        addon_info = await self._async_get_addon_info()
-        return cast(dict, addon_info["options"])
 
     async def _async_set_addon_config(self, config: dict) -> None:
         """Set Z-Wave JS add-on config."""

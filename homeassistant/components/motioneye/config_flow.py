@@ -121,9 +121,7 @@ class MotionEyeConfigFlow(ConfigFlow, domain=DOMAIN):
 
         # Search for duplicates: there isn't a useful unique_id, but
         # at least prevent entries with the same motionEye URL.
-        for existing_entry in self._async_current_entries(include_ignore=False):
-            if existing_entry.data.get(CONF_URL) == user_input[CONF_URL]:
-                return self.async_abort(reason="already_configured")
+        self._async_abort_entries_match({CONF_URL: user_input[CONF_URL]})
 
         return self.async_create_entry(
             title=f"{user_input[CONF_URL]}",

@@ -40,7 +40,7 @@ class VeraSwitch(VeraDevice[veraApi.VeraSwitch], SwitchEntity):
 
     def __init__(
         self, vera_device: veraApi.VeraSwitch, controller_data: ControllerData
-    ):
+    ) -> None:
         """Initialize the Vera device."""
         self._state = False
         VeraDevice.__init__(self, vera_device, controller_data)

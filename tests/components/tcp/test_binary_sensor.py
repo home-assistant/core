@@ -20,9 +20,9 @@ TEST_ENTITY = "binary_sensor.test_name"
 def mock_socket_fixture():
     """Mock the socket."""
     with patch(
-        "homeassistant.components.tcp.sensor.socket.socket"
+        "homeassistant.components.tcp.common.socket.socket"
     ) as mock_socket, patch(
-        "homeassistant.components.tcp.sensor.select.select",
+        "homeassistant.components.tcp.common.select.select",
         return_value=(True, False, False),
     ):
         # yield the return value of the socket context manager

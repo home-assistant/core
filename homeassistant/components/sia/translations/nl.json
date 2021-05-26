@@ -1,0 +1,44 @@
+{
+    "config": {
+        "error": {
+            "unknown": "Onverwachte fout"
+        },
+        "step": {
+            "additional_account": {
+                "data": {
+                    "account": "Account ID",
+                    "additional_account": "Extra accounts",
+                    "encryption_key": "Encryptiesleutel",
+                    "ping_interval": "Ping Interval (min)",
+                    "zones": "Aantal zones voor het account"
+                },
+                "title": "Voeg nog een account toe aan de huidige poort."
+            },
+            "user": {
+                "data": {
+                    "account": "Account ID",
+                    "additional_account": "Extra accounts",
+                    "encryption_key": "Encryptiesleutel",
+                    "ping_interval": "Ping Interval (min)",
+                    "port": "Port",
+                    "protocol": "Protocol",
+                    "zones": "Aantal zones voor het account"
+                },
+                "title": "Maak een verbinding voor SIA gebaseerde alarmsystemen."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "options": {
+                "data": {
+                    "ignore_timestamps": "Negeer de tijdstempelcontrole van de SIA-gebeurtenissen",
+                    "zones": "Aantal zones voor het account"
+                },
+                "description": "Stel de opties voor account in: {account}",
+                "title": "Opties voor de SIA Setup."
+            }
+        }
+    },
+    "title": "SIA Alarm Systems"
+}

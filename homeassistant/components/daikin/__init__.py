@@ -86,7 +86,7 @@ async def daikin_api_setup(hass, host, key, uuid, password):
 class DaikinApi:
     """Keep the Daikin instance in one place and centralize the update."""
 
-    def __init__(self, device: Appliance):
+    def __init__(self, device: Appliance) -> None:
         """Initialize the Daikin Handle."""
         self.device = device
         self.name = device.values.get("name", "Daikin AC")
