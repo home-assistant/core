@@ -38,11 +38,7 @@ class HaServiceBrowser(ServiceBrowser):
 
     def _record_has_browser_type(self, record: DNSRecord) -> bool:
         """Check if the record is one of the types we are browsing."""
-        for type_ in self.types:
-            if record.name.endswith(type_):
-                return True
-
-        return False
+        return any(record.name.endswith(type_) for type_ in self.types)
 
     def update_record(self, zc: Zeroconf, now: float, record: DNSRecord) -> None:
         """Pre-Filter update_record to INTRESTED_RECORD_TYPES for the configured type."""
@@ -53,12 +49,10 @@ class HaServiceBrowser(ServiceBrowser):
             if record.name not in self.types:
                 return
         elif isinstance(record, DNSAddress):
-            has_match = False
-            for service in self.zc.cache.entries_with_server(record.name):
-                if self._record_has_browser_type(service):
-                    has_match = True
-                    break
-            if not has_match:
+            if not any(
+                self._record_has_browser_type(service)
+                for service in self.zc.cache.entries_with_server(record.name)
+            ):
                 return
         elif not self._record_has_browser_type(record):
             return
