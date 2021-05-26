@@ -14,7 +14,6 @@ from zeroconf import (
 )
 from zeroconf.asyncio import AsyncZeroconf
 
-INTRESTED_RECORD_TYPES = (DNSAddress, DNSPointer, DNSText)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,11 +50,17 @@ class HaServiceBrowser(ServiceBrowser):
         # To avoid overwhemling the system we pre-filter here and only process
         # INTRESTED_RECORD_TYPES for the configured record name (type)
         #
-        _LOGGER.debug("update_record: (name=%s) %s %s", record.name, record, now)
-
-        if record.name not in self.types or not isinstance(
-            record, INTRESTED_RECORD_TYPES
-        ):
+        if isinstance(record, DNSPointer) and record.name not in self.types:
             return
-        _LOGGER.debug("update_record accepted: %s %s", record, now)
+        
+        _LOGGER.debug("update_record: (name=%s) %s %s", record.name, record, now)
+        if isinstance(record, DNSAddress):
+            _LOGGER.debug("Entries with server (%s): %s", record.name, self.zc.cache.entries_with_server(record.name))
+            #return
+        #if isinstance(
+        #    record, INTRESTED_RECORD_TYPES
+        #):
+        #    return
+        #_LOGGER.debug("update_record accepted: %s %s", record, now)
         super().update_record(zc, now, record)
+        #SERVICE_RECORD_TYPES = (DNSAddress, DNSText)
