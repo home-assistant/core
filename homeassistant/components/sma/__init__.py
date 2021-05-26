@@ -42,7 +42,9 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-def _parse_legacy_options(entry: ConfigEntry, sensor_def: pysma.Sensors) -> list[str]:
+def _parse_legacy_options(
+    entry: ConfigEntry, sensor_def: pysma.sensor.Sensors
+) -> list[str]:
     """Parse legacy configuration options.
 
     This will parse the legacy CONF_SENSORS and CONF_CUSTOM configuration options
@@ -52,7 +54,9 @@ def _parse_legacy_options(entry: ConfigEntry, sensor_def: pysma.Sensors) -> list
     # Add sensors from the custom config
     sensor_def.add(
         [
-            pysma.Sensor(o[CONF_KEY], n, o[CONF_UNIT], o[CONF_FACTOR], o.get(CONF_PATH))
+            pysma.sensor.Sensor(
+                o[CONF_KEY], n, o[CONF_UNIT], o[CONF_FACTOR], o.get(CONF_PATH)
+            )
             for n, o in entry.data.get(CONF_CUSTOM).items()
         ]
     )
@@ -90,7 +94,7 @@ def _parse_legacy_options(entry: ConfigEntry, sensor_def: pysma.Sensors) -> list
 def _migrate_old_unique_ids(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    sensor_def: pysma.Sensors,
+    sensor_def: pysma.sensor.Sensors,
     config_sensors: list[str],
 ) -> None:
     """Migrate legacy sensor entity_id format to new format."""
