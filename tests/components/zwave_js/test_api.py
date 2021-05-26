@@ -496,6 +496,7 @@ async def test_replace_failed_node(
 
     msg = await ws_client.receive_json()
     assert msg["success"]
+    assert msg["result"]
 
     event = Event(
         type="inclusion started",
@@ -664,6 +665,180 @@ async def test_remove_failed_node(
         {
             ID: 4,
             TYPE: "zwave_js/remove_failed_node",
+            ENTRY_ID: entry.entry_id,
+            NODE_ID: 67,
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERR_NOT_LOADED
+
+
+async def test_begin_healing_network(
+    hass,
+    integration,
+    client,
+    hass_ws_client,
+):
+    """Test the begin_healing_network websocket command."""
+    entry = integration
+    ws_client = await hass_ws_client(hass)
+
+    client.async_send_command.return_value = {"success": True}
+
+    await ws_client.send_json(
+        {
+            ID: 3,
+            TYPE: "zwave_js/begin_healing_network",
+            ENTRY_ID: entry.entry_id,
+        }
+    )
+
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+    assert msg["result"]
+
+    # Test sending command with not loaded entry fails
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    await ws_client.send_json(
+        {
+            ID: 4,
+            TYPE: "zwave_js/begin_healing_network",
+            ENTRY_ID: entry.entry_id,
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERR_NOT_LOADED
+
+
+async def test_subscribe_heal_network_progress(
+    hass, integration, client, hass_ws_client
+):
+    """Test the subscribe_heal_network_progress command."""
+    entry = integration
+    ws_client = await hass_ws_client(hass)
+
+    await ws_client.send_json(
+        {
+            ID: 3,
+            TYPE: "zwave_js/subscribe_heal_network_progress",
+            ENTRY_ID: entry.entry_id,
+        }
+    )
+
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+
+    # Fire heal network progress
+    event = Event(
+        "heal network progress",
+        {
+            "source": "controller",
+            "event": "heal network progress",
+            "progress": {67: "pending"},
+        },
+    )
+    client.driver.controller.receive_event(event)
+    msg = await ws_client.receive_json()
+    assert msg["event"]["event"] == "heal network progress"
+    assert msg["event"]["heal_node_status"] == {"67": "pending"}
+
+    # Test sending command with not loaded entry fails
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    await ws_client.send_json(
+        {
+            ID: 4,
+            TYPE: "zwave_js/subscribe_heal_network_progress",
+            ENTRY_ID: entry.entry_id,
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERR_NOT_LOADED
+
+
+async def test_stop_healing_network(
+    hass,
+    integration,
+    client,
+    hass_ws_client,
+):
+    """Test the stop_healing_network websocket command."""
+    entry = integration
+    ws_client = await hass_ws_client(hass)
+
+    client.async_send_command.return_value = {"success": True}
+
+    await ws_client.send_json(
+        {
+            ID: 3,
+            TYPE: "zwave_js/stop_healing_network",
+            ENTRY_ID: entry.entry_id,
+        }
+    )
+
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+    assert msg["result"]
+
+    # Test sending command with not loaded entry fails
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    await ws_client.send_json(
+        {
+            ID: 4,
+            TYPE: "zwave_js/stop_healing_network",
+            ENTRY_ID: entry.entry_id,
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERR_NOT_LOADED
+
+
+async def test_heal_node(
+    hass,
+    integration,
+    client,
+    hass_ws_client,
+):
+    """Test the heal_node websocket command."""
+    entry = integration
+    ws_client = await hass_ws_client(hass)
+
+    client.async_send_command.return_value = {"success": True}
+
+    await ws_client.send_json(
+        {
+            ID: 3,
+            TYPE: "zwave_js/heal_node",
+            ENTRY_ID: entry.entry_id,
+            NODE_ID: 67,
+        }
+    )
+
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+    assert msg["result"]
+
+    # Test sending command with not loaded entry fails
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    await ws_client.send_json(
+        {
+            ID: 4,
+            TYPE: "zwave_js/heal_node",
             ENTRY_ID: entry.entry_id,
             NODE_ID: 67,
         }
