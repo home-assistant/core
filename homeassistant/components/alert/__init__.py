@@ -39,6 +39,7 @@ CONF_ALERT_MESSAGE = "message"
 CONF_DONE_MESSAGE = "done_message"
 CONF_TITLE = "title"
 CONF_DATA = "data"
+CONF_IGNORE_STATES = "ignore_states"
 
 DEFAULT_CAN_ACK = True
 DEFAULT_SKIP_FIRST = False
@@ -56,6 +57,7 @@ ALERT_SCHEMA = vol.Schema(
         vol.Optional(CONF_TITLE): cv.template,
         vol.Optional(CONF_DATA): dict,
         vol.Required(CONF_NOTIFIERS): cv.ensure_list,
+        vol.Optional(CONF_IGNORE_STATES): vol.All(cv.ensure_list, [cv.string]),
     }
 )
 
@@ -90,6 +92,7 @@ async def async_setup(hass, config):
         can_ack = cfg[CONF_CAN_ACK]
         title_template = cfg.get(CONF_TITLE)
         data = cfg.get(CONF_DATA)
+        ignore_states = cfg.get(CONF_IGNORE_STATES, [])
 
         entities.append(
             Alert(
@@ -106,6 +109,7 @@ async def async_setup(hass, config):
                 can_ack,
                 title_template,
                 data,
+                ignore_states,
             )
         )
 
@@ -167,6 +171,7 @@ class Alert(ToggleEntity):
         can_ack,
         title_template,
         data,
+        ignore_states,
     ):
         """Initialize the alert."""
         self.hass = hass
@@ -174,6 +179,7 @@ class Alert(ToggleEntity):
         self._alert_state = state
         self._skip_first = skip_first
         self._data = data
+        self._ignore_states = ignore_states
 
         self._message_template = message_template
         if self._message_template is not None:
@@ -230,7 +236,11 @@ class Alert(ToggleEntity):
         _LOGGER.debug("Watched entity (%s) has changed", ev.data.get("entity_id"))
         if to_state.state == self._alert_state and not self._firing:
             await self.begin_alerting()
-        if to_state.state != self._alert_state and self._firing:
+        if (
+            to_state.state != self._alert_state
+            and to_state.state not in self._ignore_states
+            and self._firing
+        ):
             await self.end_alerting()
 
     async def begin_alerting(self):
