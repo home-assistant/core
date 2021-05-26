@@ -747,24 +747,19 @@ async def test_multicast_set_value(
             blocking=True,
         )
 
-    # assert len(client.async_send_command.call_args_list) == 1
-    # args = client.async_send_command.call_args[0][0]
-    # assert args["command"] == "node.set_value"
-    # assert args["nodeId"] == 5
-    # assert args["valueId"] == {
-    #     "commandClassName": "Protection",
-    #     "commandClass": 117,
-    #     "endpoint": 0,
-    #     "property": "local",
-    #     "propertyName": "local",
-    #     "ccVersion": 2,
-    #     "metadata": {
-    #         "type": "number",
-    #         "readable": True,
-    #         "writeable": True,
-    #         "label": "Local protection state",
-    #         "states": {"0": "Unprotected", "2": "NoOperationPossible"},
-    #     },
-    #     "value": 0,
-    # }
-    # assert args["value"] == 2
+    # Test that when there are multiple zwave_js config entries, service will fail
+    # without devices or entities
+    new_entry = MockConfigEntry(domain=DOMAIN)
+    new_entry.add_to_hass(hass)
+    with pytest.raises(vol.Invalid):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_MULTICAST_SET_VALUE,
+            {
+                ATTR_BROADCAST: True,
+                ATTR_COMMAND_CLASS: 117,
+                ATTR_PROPERTY: "local",
+                ATTR_VALUE: 2,
+            },
+            blocking=True,
+        )
