@@ -45,6 +45,7 @@ class HaServiceBrowser(ServiceBrowser):
         #
         # To avoid overwhemling the system we pre-filter here
         #
+        return super().update_record(zc, now, record)
         if isinstance(record, DNSPointer):
             if record.name not in self.types:
                 _LOGGER.debug(
