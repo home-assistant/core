@@ -370,3 +370,64 @@ async def test_hassio_ignored(hass: HomeAssistant) -> None:
     )
     assert result.get("type") == data_entry_flow.RESULT_TYPE_ABORT
     assert result.get("reason") == "already_configured"
+
+
+async def test_hassio_abort_if_already_in_progress(hass: HomeAssistant) -> None:
+    """Test Supervisor discovered flow aborts if user flow in progress."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result.get("type") == data_entry_flow.RESULT_TYPE_FORM
+
+    result2 = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        data={"addon": "motionEye", "url": TEST_URL},
+        context={"source": config_entries.SOURCE_HASSIO},
+    )
+    assert result2.get("type") == data_entry_flow.RESULT_TYPE_ABORT
+    assert result2.get("reason") == "already_in_progress"
+
+
+async def test_hassio_clean_up_on_user_flow(hass: HomeAssistant) -> None:
+    """Test Supervisor discovered flow is clean up when doing user flow."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        data={"addon": "motionEye", "url": TEST_URL},
+        context={"source": config_entries.SOURCE_HASSIO},
+    )
+    assert result.get("type") == data_entry_flow.RESULT_TYPE_FORM
+
+    result2 = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result2.get("type") == data_entry_flow.RESULT_TYPE_FORM
+    assert "flow_id" in result2
+
+    mock_client = create_mock_motioneye_client()
+
+    with patch(
+        "homeassistant.components.motioneye.MotionEyeClient",
+        return_value=mock_client,
+    ), patch(
+        "homeassistant.components.motioneye.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {
+                CONF_URL: TEST_URL,
+                CONF_ADMIN_USERNAME: "admin-username",
+                CONF_ADMIN_PASSWORD: "admin-password",
+                CONF_SURVEILLANCE_USERNAME: "surveillance-username",
+                CONF_SURVEILLANCE_PASSWORD: "surveillance-password",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result3.get("type") == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert len(mock_setup_entry.mock_calls) == 1
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 0
