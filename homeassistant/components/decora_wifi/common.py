@@ -12,7 +12,7 @@ from decora_wifi.models.residential_account import ResidentialAccount
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
-from .const import CONF_LIGHT, DOMAIN
+from .const import CONF_FAN, CONF_LIGHT, DOMAIN, MODELS_FAN, PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -74,9 +74,7 @@ class DecoraWifiPlatform:
         if session is None:
             raise DecoraWifiSessionNotFound
 
-        iot_switches = {
-            CONF_LIGHT: [],
-        }
+        iot_switches = {platform: [] for platform in PLATFORMS}
 
         try:
             # Gather all the available devices into the iot_switches dictionary...
@@ -110,7 +108,10 @@ class DecoraWifiPlatform:
     @staticmethod
     def classifydevice(dev):
         """Sort devices by device type."""
-        return CONF_LIGHT
+        if any(dev.model in word for word in MODELS_FAN):
+            return CONF_FAN
+        else:
+            return CONF_LIGHT
 
 
 class DecoraWifiEntity(Entity):
