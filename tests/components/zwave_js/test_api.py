@@ -1372,15 +1372,15 @@ async def test_view_invalid_node_id(integration, hass_client, method, url):
     assert resp.status == 404
 
 
-async def test_subscribe_logs(hass, integration, client, hass_ws_client):
-    """Test the subscribe_logs websocket command."""
+async def test_subscribe_log_updates(hass, integration, client, hass_ws_client):
+    """Test the subscribe_log_updates websocket command."""
     entry = integration
     ws_client = await hass_ws_client(hass)
 
     client.async_send_command.return_value = {}
 
     await ws_client.send_json(
-        {ID: 1, TYPE: "zwave_js/subscribe_logs", ENTRY_ID: entry.entry_id}
+        {ID: 1, TYPE: "zwave_js/subscribe_log_updates", ENTRY_ID: entry.entry_id}
     )
 
     msg = await ws_client.receive_json()
@@ -1449,7 +1449,7 @@ async def test_subscribe_logs(hass, integration, client, hass_ws_client):
     await hass.async_block_till_done()
 
     await ws_client.send_json(
-        {ID: 2, TYPE: "zwave_js/subscribe_logs", ENTRY_ID: entry.entry_id}
+        {ID: 2, TYPE: "zwave_js/subscribe_log_updates", ENTRY_ID: entry.entry_id}
     )
     msg = await ws_client.receive_json()
 
