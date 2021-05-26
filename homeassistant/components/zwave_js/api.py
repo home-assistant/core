@@ -162,6 +162,8 @@ def async_register_api(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(
         hass, websocket_subscribe_firmware_update_status
     )
+    websocket_api.async_register_command(hass, websocket_check_for_config_updates)
+    websocket_api.async_register_command(hass, websocket_install_config_update)
     hass.http.register_view(DumpView())
     hass.http.register_view(FirmwareUploadView())
 
@@ -1168,3 +1170,51 @@ class FirmwareUploadView(HomeAssistantView):
             raise web_exceptions.HTTPBadRequest from err
 
         return self.json(None)
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "zwave_js/check_for_config_updates",
+        vol.Required(ENTRY_ID): str,
+    }
+)
+@websocket_api.async_response
+@async_get_entry
+async def websocket_check_for_config_updates(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict,
+    entry: ConfigEntry,
+    client: Client,
+) -> None:
+    """Check for config updates."""
+    config_update = await client.driver.async_check_for_config_updates()
+    connection.send_result(
+        msg[ID],
+        {
+            "update_available": config_update.update_available,
+            "new_version": config_update.new_version,
+        },
+    )
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "zwave_js/install_config_update",
+        vol.Required(ENTRY_ID): str,
+    }
+)
+@websocket_api.async_response
+@async_get_entry
+async def websocket_install_config_update(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict,
+    entry: ConfigEntry,
+    client: Client,
+) -> None:
+    """Check for config updates."""
+    success = await client.driver.async_install_config_update()
+    connection.send_result(msg[ID], success)
