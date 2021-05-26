@@ -1,4 +1,6 @@
 """Test the Z-Wave JS services."""
+from unittest.mock import MagicMock, patch
+
 import pytest
 import voluptuous as vol
 from zwave_js_server.exceptions import SetValueFailed
@@ -646,33 +648,6 @@ async def test_multicast_set_value(
     integration,
 ):
     """Test multicast_set_value service."""
-    # Test sending one node without broadcast fails
-    with pytest.raises(vol.Invalid):
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_MULTICAST_SET_VALUE,
-            {
-                ATTR_ENTITY_ID: CLIMATE_DANFOSS_LC13_ENTITY,
-                ATTR_COMMAND_CLASS: 117,
-                ATTR_PROPERTY: "local",
-                ATTR_VALUE: 2,
-            },
-            blocking=True,
-        )
-
-    # Test no device, entity, or broadcast flag raises error
-    with pytest.raises(vol.Invalid):
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_MULTICAST_SET_VALUE,
-            {
-                ATTR_COMMAND_CLASS: 117,
-                ATTR_PROPERTY: "local",
-                ATTR_VALUE: 2,
-            },
-            blocking=True,
-        )
-
     # Test successful multicast call
     await hass.services.async_call(
         DOMAIN,
@@ -704,7 +679,7 @@ async def test_multicast_set_value(
 
     client.async_send_command.reset_mock()
 
-    # Test successful multicast call
+    # Test successful broadcast call
     await hass.services.async_call(
         DOMAIN,
         SERVICE_MULTICAST_SET_VALUE,
@@ -728,10 +703,64 @@ async def test_multicast_set_value(
 
     client.async_send_command.reset_mock()
 
+    # Test sending one node without broadcast fails
+    with pytest.raises(vol.Invalid):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_MULTICAST_SET_VALUE,
+            {
+                ATTR_ENTITY_ID: CLIMATE_DANFOSS_LC13_ENTITY,
+                ATTR_COMMAND_CLASS: 117,
+                ATTR_PROPERTY: "local",
+                ATTR_VALUE: 2,
+            },
+            blocking=True,
+        )
+
+    # Test no device, entity, or broadcast flag raises error
+    with pytest.raises(vol.Invalid):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_MULTICAST_SET_VALUE,
+            {
+                ATTR_COMMAND_CLASS: 117,
+                ATTR_PROPERTY: "local",
+                ATTR_VALUE: 2,
+            },
+            blocking=True,
+        )
+
     # Test that when a command fails we raise an exception
     client.async_send_command.return_value = {"success": False}
 
     with pytest.raises(SetValueFailed):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_MULTICAST_SET_VALUE,
+            {
+                ATTR_ENTITY_ID: [
+                    CLIMATE_DANFOSS_LC13_ENTITY,
+                    CLIMATE_RADIO_THERMOSTAT_ENTITY,
+                ],
+                ATTR_COMMAND_CLASS: 117,
+                ATTR_PROPERTY: "local",
+                ATTR_VALUE: 2,
+            },
+            blocking=True,
+        )
+
+    # Create a fake node with a different home ID from a real node and patch it into
+    # return of helper function to check the validation for two nodes having different
+    # home IDs
+    diff_network_node = MagicMock()
+    diff_network_node.client.driver.controller.home_id.return_value = (
+        "random different home id"
+    )
+
+    with pytest.raises(vol.Invalid), patch(
+        "homeassistant.components.zwave_js.services.get_nodes_from_service_data",
+        return_value={diff_network_node, climate_danfoss_lc_13},
+    ):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_MULTICAST_SET_VALUE,
