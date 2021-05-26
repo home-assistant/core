@@ -148,8 +148,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         device_info = await sma.device_info()
         # Get all device sensors
         sensor_def = await sma.get_sensors()
-    except aiohttp.client_exceptions.ClientError:
-        raise ConfigEntryNotReady("Unable to connect to device")
+    except aiohttp.client_exceptions.ClientError as client_error:
+        raise ConfigEntryNotReady("Unable to connect to device") from client_error
 
     # Parse legacy options if initial setup was done from yaml
     if entry.source == SOURCE_IMPORT:
