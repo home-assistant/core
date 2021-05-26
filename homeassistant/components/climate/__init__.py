@@ -342,7 +342,7 @@ class ClimateEntity(Entity):
 
         Need to be one of CURRENT_HVAC_*.
         """
-        return self.hvac_action
+        return self._attr_hvac_action
 
     @property
     def current_temperature(self) -> float | None:
