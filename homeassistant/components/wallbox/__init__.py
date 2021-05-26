@@ -47,7 +47,7 @@ class WallboxHub:
             return True
         except requests.exceptions.HTTPError as wallbox_connection_error:
             if wallbox_connection_error.response.status_code == 403:
-                raise exceptions.Unauthorized from wallbox_connection_error
+                raise InvalidAuth from wallbox_connection_error
             raise ConnectionError from wallbox_connection_error
 
     def _get_data(self):
@@ -127,3 +127,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         hass.data[DOMAIN]["connections"].pop(entry.entry_id)
 
     return unload_ok
+
+
+class InvalidAuth(exceptions.HomeAssistantError):
+    """Error to indicate there is invalid auth."""

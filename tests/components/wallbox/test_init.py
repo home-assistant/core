@@ -4,7 +4,7 @@ import json
 import requests_mock
 from voluptuous.schema_builder import raises
 
-from homeassistant import exceptions
+from homeassistant.components.wallbox import InvalidAuth
 from homeassistant.components.wallbox.const import (
     CONF_CONNECTIONS,
     CONF_STATION,
@@ -91,7 +91,7 @@ async def test_authentication_exception(hass: HomeAssistantType):
 
     await setup_integration(hass)
 
-    with requests_mock.Mocker() as m, raises(exceptions.Unauthorized):
+    with requests_mock.Mocker() as m, raises(InvalidAuth):
         m.get(
             "https://api.wall-box.com/auth/token/user",
             text='{"jwt":"fakekeyhere","user_id":12345,"ttl":145656758,"error":false,"status":403}',

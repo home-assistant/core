@@ -4,8 +4,8 @@ from unittest.mock import patch
 
 import requests_mock
 
-from homeassistant import config_entries, data_entry_flow, exceptions
-from homeassistant.components.wallbox import config_flow
+from homeassistant import config_entries, data_entry_flow
+from homeassistant.components.wallbox import InvalidAuth, config_flow
 from homeassistant.components.wallbox.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
@@ -32,7 +32,7 @@ async def test_form_invalid_auth(hass):
 
     with patch(
         "homeassistant.components.wallbox.config_flow.WallboxHub.async_authenticate",
-        side_effect=exceptions.Unauthorized,
+        side_effect=InvalidAuth,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
