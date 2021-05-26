@@ -115,8 +115,7 @@ class SmartTubReminder(SmartTubEntity, BinarySensorEntity):
         """Return the device class for this entity."""
         return DEVICE_CLASS_PROBLEM
 
-    async def async_snooze(self, **kwargs):
+    async def async_snooze(self, days):
         """Snooze this reminder for the specified number of days."""
-        days = kwargs[ATTR_SNOOZE_DAYS]
         await self.reminder.snooze(days)
         await self.coordinator.async_request_refresh()
