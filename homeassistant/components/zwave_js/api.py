@@ -147,6 +147,9 @@ def async_register_api(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_remove_failed_node)
     websocket_api.async_register_command(hass, websocket_replace_failed_node)
     websocket_api.async_register_command(hass, websocket_begin_healing_network)
+    websocket_api.async_register_command(
+        hass, websocket_subscribe_heal_network_progress
+    )
     websocket_api.async_register_command(hass, websocket_stop_healing_network)
     websocket_api.async_register_command(hass, websocket_refresh_node_info)
     websocket_api.async_register_command(hass, websocket_refresh_node_values)
@@ -183,6 +186,7 @@ async def websocket_network_status(
     client: Client,
 ) -> None:
     """Get the status of the Z-Wave JS network."""
+    controller = client.driver.controller
     data = {
         "client": {
             "ws_server_url": client.ws_server_url,
@@ -191,7 +195,24 @@ async def websocket_network_status(
             "server_version": client.version.server_version,
         },
         "controller": {
-            "home_id": client.driver.controller.data["homeId"],
+            "home_id": controller.home_id,
+            "library_version": controller.library_version,
+            "type": controller.controller_type,
+            "own_node_id": controller.own_node_id,
+            "is_secondary": controller.is_secondary,
+            "is_using_home_id_from_other_network": controller.is_using_home_id_from_other_network,
+            "is_sis_present": controller.is_SIS_present,
+            "was_real_primary": controller.was_real_primary,
+            "is_static_update_controller": controller.is_static_update_controller,
+            "is_slave": controller.is_slave,
+            "serial_api_version": controller.serial_api_version,
+            "manufacturer_id": controller.manufacturer_id,
+            "product_id": controller.product_id,
+            "product_type": controller.product_type,
+            "supported_function_types": controller.supported_function_types,
+            "suc_node_id": controller.suc_node_id,
+            "supports_timers": controller.supports_timers,
+            "is_heal_network_active": controller.is_heal_network_active,
             "nodes": list(client.driver.controller.nodes),
         },
     }
@@ -665,6 +686,32 @@ async def websocket_begin_healing_network(
     """Begin healing the Z-Wave network."""
     controller = client.driver.controller
 
+    result = await controller.async_begin_healing_network()
+    connection.send_result(
+        msg[ID],
+        result,
+    )
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "zwave_js/subscribe_heal_network_progress",
+        vol.Required(ENTRY_ID): str,
+    }
+)
+@websocket_api.async_response
+@async_get_entry
+async def websocket_subscribe_heal_network_progress(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict,
+    entry: ConfigEntry,
+    client: Client,
+) -> None:
+    """Subscribe to heal Z-Wave network status updates."""
+    controller = client.driver.controller
+
     @callback
     def async_cleanup() -> None:
         """Remove signal listeners."""
@@ -685,11 +732,7 @@ async def websocket_begin_healing_network(
         controller.on("heal network done", partial(forward_event, "result")),
     ]
 
-    result = await controller.async_begin_healing_network()
-    connection.send_result(
-        msg[ID],
-        result,
-    )
+    connection.send_result(msg[ID])
 
 
 @websocket_api.require_admin

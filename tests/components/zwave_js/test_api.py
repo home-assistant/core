@@ -699,6 +699,41 @@ async def test_begin_healing_network(
     assert msg["success"]
     assert msg["result"]
 
+    # Test sending command with not loaded entry fails
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    await ws_client.send_json(
+        {
+            ID: 4,
+            TYPE: "zwave_js/begin_healing_network",
+            ENTRY_ID: entry.entry_id,
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERR_NOT_LOADED
+
+
+async def test_subscribe_heal_network_progress(
+    hass, integration, client, hass_ws_client
+):
+    """Test the subscribe_heal_network_progress command."""
+    entry = integration
+    ws_client = await hass_ws_client(hass)
+
+    await ws_client.send_json(
+        {
+            ID: 3,
+            TYPE: "zwave_js/subscribe_heal_network_progress",
+            ENTRY_ID: entry.entry_id,
+        }
+    )
+
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+
     # Fire heal network progress
     event = Event(
         "heal network progress",
@@ -720,7 +755,7 @@ async def test_begin_healing_network(
     await ws_client.send_json(
         {
             ID: 4,
-            TYPE: "zwave_js/begin_healing_network",
+            TYPE: "zwave_js/subscribe_heal_network_progress",
             ENTRY_ID: entry.entry_id,
         }
     )
