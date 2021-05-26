@@ -47,16 +47,25 @@ class HaServiceBrowser(ServiceBrowser):
         #
         if isinstance(record, DNSPointer):
             if record.name not in self.types:
+                _LOGGER.debug(
+                    "REJECT update_record: (name=%s) %s %s", record.name, record, now
+                )
                 return
         elif isinstance(record, DNSAddress):
             if not any(
                 self._record_has_browser_type(service)
                 for service in self.zc.cache.entries_with_server(record.name)
             ):
+                _LOGGER.debug(
+                    "REJECT update_record: (name=%s) %s %s", record.name, record, now
+                )
                 return
         elif not self._record_has_browser_type(record):
+            _LOGGER.debug(
+                "REJECT update_record: (name=%s) %s %s", record.name, record, now
+            )
             return
-        _LOGGER.debug("update_record: (name=%s) %s %s", record.name, record, now)
+        _LOGGER.debug("ACCEPT update_record: (name=%s) %s %s", record.name, record, now)
 
         # return
         # if isinstance(
