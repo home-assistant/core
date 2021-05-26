@@ -18,7 +18,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from . import MOCK_CONFIG, FritzDeviceSwitchMock, setup_config_entry
+from . import FritzDeviceSwitchMock, setup_config_entry
+from .const import CONF_FAKE_NAME, MOCK_CONFIG
 
 from tests.common import MockConfigEntry
 
@@ -74,7 +75,7 @@ async def test_coordinator_update_after_password_change(
 async def test_unload_remove(hass: HomeAssistant, fritz: Mock):
     """Test unload and remove of integration."""
     fritz().get_devices.return_value = [FritzDeviceSwitchMock()]
-    entity_id = f"{SWITCH_DOMAIN}.fake_name"
+    entity_id = f"{SWITCH_DOMAIN}.{CONF_FAKE_NAME}"
 
     entry = MockConfigEntry(
         domain=FB_DOMAIN,
