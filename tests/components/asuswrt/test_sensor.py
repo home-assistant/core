@@ -56,6 +56,13 @@ def mock_controller_connect(mock_devices):
         service_mock.return_value.connection.async_connect = AsyncMock()
         service_mock.return_value.is_connected = True
         service_mock.return_value.connection.disconnect = Mock()
+        service_mock.return_value.async_get_nvram = AsyncMock(
+            return_value={
+                "model": "abcd",
+                "firmver": "efg",
+                "buildno": "123",
+            }
+        )
         service_mock.return_value.async_get_connected_devices = AsyncMock(
             return_value=mock_devices
         )
