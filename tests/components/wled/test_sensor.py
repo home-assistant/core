@@ -6,6 +6,8 @@ import pytest
 
 from homeassistant.components.sensor import (
     DEVICE_CLASS_CURRENT,
+    DEVICE_CLASS_SIGNAL_STRENGTH,
+    DEVICE_CLASS_TIMESTAMP,
     DOMAIN as SENSOR_DOMAIN,
 )
 from homeassistant.components.wled.const import (
@@ -108,7 +110,7 @@ async def test_sensors(
 
     state = hass.states.get("sensor.wled_rgb_light_uptime")
     assert state
-    assert state.attributes.get(ATTR_ICON) == "mdi:clock-outline"
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_TIMESTAMP
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
     assert state.state == "2019-11-11T09:10:00+00:00"
 
@@ -138,7 +140,7 @@ async def test_sensors(
 
     state = hass.states.get("sensor.wled_rgb_light_wifi_rssi")
     assert state
-    assert state.attributes.get(ATTR_ICON) == "mdi:wifi"
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_SIGNAL_STRENGTH
     assert (
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == SIGNAL_STRENGTH_DECIBELS_MILLIWATT
