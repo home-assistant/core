@@ -55,7 +55,8 @@ class HaServiceBrowser(ServiceBrowser):
         
         _LOGGER.debug("update_record: (name=%s) %s %s", record.name, record, now)
         if isinstance(record, DNSAddress):
-            _LOGGER.debug("Entries with server (%s): %s", record.name, self.zc.cache.entries_with_server(record.name))
+            for cache_entry in self.zc.cache.entries_with_server(record.name):
+                _LOGGER.debug("Entries with server (%s): %s - cache entry name:%s", record.name, cache_entry, cache_entry.name)
             #return
         #if isinstance(
         #    record, INTRESTED_RECORD_TYPES
