@@ -1,9 +1,8 @@
 """Support for Adax wifi-enabled home heaters."""
 from __future__ import annotations
 
-from collections.abc import Iterable
 import logging
-from typing import Callable
+from typing import Any
 
 from adax import Adax
 
@@ -23,6 +22,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import ACCOUNT_ID
 
@@ -32,7 +32,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: Callable[[Iterable[Entity]], None],
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Adax thermostat with config flow."""
     adax_data_handler = Adax(
@@ -136,7 +136,7 @@ class AdaxDevice(ClimateEntity):
         """Return the supported step of target temperature."""
         return PRECISION_WHOLE
 
-    async def async_set_temperature(self, **kwargs) -> None:
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
         if temperature is None:
