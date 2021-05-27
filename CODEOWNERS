@@ -436,7 +436,7 @@ homeassistant/components/sisyphus/* @jkeljo
 homeassistant/components/sky_hub/* @rogerselwyn
 homeassistant/components/slack/* @bachya
 homeassistant/components/slide/* @ualex73
-homeassistant/components/sma/* @rklomp @kellerza
+homeassistant/components/sma/* @kellerza @rklomp
 homeassistant/components/smappee/* @bsmappee
 homeassistant/components/smart_meter_texas/* @grahamwetzler
 homeassistant/components/smarthab/* @outadoc
