@@ -231,7 +231,7 @@ def _async_update_config_entry_if_from_yaml(hass, entries_by_name, conf):
     return False
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up HomeKit from a config entry."""
     _async_import_options_from_data_if_missing(hass, entry)
 
