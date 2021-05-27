@@ -92,13 +92,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType):
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up UPnP/IGD device from a config entry."""
-    _LOGGER.debug("Setting up config entry: %s", config_entry.unique_id)
+    _LOGGER.debug("Setting up config entry: %s", entry.unique_id)
 
     # Discover and construct.
-    udn = config_entry.data[CONFIG_ENTRY_UDN]
-    st = config_entry.data[CONFIG_ENTRY_ST]  # pylint: disable=invalid-name
+    udn = entry.data[CONFIG_ENTRY_UDN]
+    st = entry.data[CONFIG_ENTRY_ST]  # pylint: disable=invalid-name
     try:
         device = await async_construct_device(hass, udn, st)
     except asyncio.TimeoutError as err:
@@ -112,31 +112,31 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     hass.data[DOMAIN][DOMAIN_DEVICES][device.udn] = device
 
     # Ensure entry has a unique_id.
-    if not config_entry.unique_id:
+    if not entry.unique_id:
         _LOGGER.debug(
             "Setting unique_id: %s, for config_entry: %s",
             device.unique_id,
-            config_entry,
+            entry,
         )
         hass.config_entries.async_update_entry(
-            entry=config_entry,
+            entry=entry,
             unique_id=device.unique_id,
         )
 
     # Ensure entry has a hostname, for older entries.
     if (
-        CONFIG_ENTRY_HOSTNAME not in config_entry.data
-        or config_entry.data[CONFIG_ENTRY_HOSTNAME] != device.hostname
+        CONFIG_ENTRY_HOSTNAME not in entry.data
+        or entry.data[CONFIG_ENTRY_HOSTNAME] != device.hostname
     ):
         hass.config_entries.async_update_entry(
-            entry=config_entry,
-            data={CONFIG_ENTRY_HOSTNAME: device.hostname, **config_entry.data},
+            entry=entry,
+            data={CONFIG_ENTRY_HOSTNAME: device.hostname, **entry.data},
         )
 
     # Create device registry entry.
     device_registry = await dr.async_get_registry(hass)
     device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
+        config_entry_id=entry.entry_id,
         connections={(dr.CONNECTION_UPNP, device.udn)},
         identifiers={(DOMAIN, device.udn)},
         name=device.name,
@@ -146,7 +146,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     # Create sensors.
     _LOGGER.debug("Enabling sensors")
-    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     # Start device updater.
     await device.async_start()
