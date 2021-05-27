@@ -66,7 +66,7 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
 
     @property
     def alarm(self):
-        """Return the ID of the alarm."""
+        """Return the alarm instance."""
         return self.hass.data[DATA_SONOS].alarms[self.alarm_id]
 
     @property

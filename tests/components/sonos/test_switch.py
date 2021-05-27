@@ -1,5 +1,6 @@
 """Tests for the Sonos Alarm switch platform."""
 from homeassistant.components.sonos import DOMAIN
+from homeassistant.components.sonos.const import DATA_SONOS
 from homeassistant.components.sonos.switch import (
     ATTR_DURATION,
     ATTR_ID,
@@ -19,7 +20,7 @@ async def setup_platform(hass, config_entry, config):
     await hass.async_block_till_done()
 
 
-async def test_entity_registry(hass, config_entry, config, soco):
+async def test_entity_registry(hass, config_entry, config):
     """Test sonos device with alarm registered in the device registry."""
     await setup_platform(hass, config_entry, config)
 
@@ -29,7 +30,7 @@ async def test_entity_registry(hass, config_entry, config, soco):
     assert "switch.sonos_alarm_14" in entity_registry.entities
 
 
-async def test_alarm_attributes(hass, config_entry, config, soco):
+async def test_alarm_attributes(hass, config_entry, config):
     """Test for correct sonos alarm state."""
     await setup_platform(hass, config_entry, config)
 
@@ -45,3 +46,31 @@ async def test_alarm_attributes(hass, config_entry, config, soco):
     assert alarm_state.attributes.get(ATTR_VOLUME) == 0.25
     assert alarm_state.attributes.get(ATTR_PLAY_MODE) == "SHUFFLE_NOREPEAT"
     assert not alarm_state.attributes.get(ATTR_INCLUDE_LINKED_ZONES)
+
+
+async def test_alarm_create_delete(
+    hass, config_entry, config, soco, alarm_clock, alarm_clock_extended, alarm_event
+):
+    """Test for correct creation and deletion of alarms during runtime."""
+    await setup_platform(hass, config_entry, config)
+
+    soco.alarmClock = alarm_clock_extended
+    speaker = hass.data[DATA_SONOS].discovered[soco.uid]
+    speaker.async_dispatch_alarms(event=alarm_event)
+    await hass.async_block_till_done()
+
+    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+
+    assert "15" in hass.data[DATA_SONOS].alarms
+    assert "14" in hass.data[DATA_SONOS].alarms
+    assert "switch.sonos_alarm_14" in entity_registry.entities
+    assert "switch.sonos_alarm_15" in entity_registry.entities
+
+    soco.alarmClock = alarm_clock
+    speaker.async_dispatch_alarms(event=alarm_event)
+    await hass.async_block_till_done()
+
+    assert "15" not in hass.data[DATA_SONOS].alarms
+    assert "14" in hass.data[DATA_SONOS].alarms
+    assert "switch.sonos_alarm_14" in entity_registry.entities
+    assert "switch.sonos_alarm_15" not in entity_registry.entities
