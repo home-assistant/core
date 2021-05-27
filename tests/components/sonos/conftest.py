@@ -22,12 +22,12 @@ class SonosMockService:
 class SonosMockEvent:
     """Mock a sonos Event used in callbacks."""
 
-    def __init__(self, soco, service_type, variables):
+    def __init__(self, soco, service, variables):
         """Initialize the instance."""
         self.sid = f"{soco.uid}_sub0000000001"
         self.seq = "0"
         self.timestamp = 1621000000.0
-        self.service = SonosMockService(service_type)
+        self.service = service
         self.variables = variables
 
 
@@ -155,7 +155,7 @@ def battery_event_fixture(soco):
         "zone_name": "Zone A",
         "more_info": "BattChg:NOT_CHARGING,RawBattPct:100,BattPct:100,BattTmp:25",
     }
-    return SonosMockEvent(soco, "DeviceProperties", variables)
+    return SonosMockEvent(soco, soco.deviceProperties, variables)
 
 
 @pytest.fixture(name="alarm_event")
@@ -171,4 +171,4 @@ def alarm_event_fixture(soco):
         "daily_index_refresh_time": None,
     }
 
-    return SonosMockEvent(soco, "AlarmClock", variables)
+    return SonosMockEvent(soco, soco.alarmClock, variables)
