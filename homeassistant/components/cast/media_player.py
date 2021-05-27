@@ -505,7 +505,7 @@ class CastDevice(MediaPlayerEntity):
 
             app_name = app_data.pop("app_name")
             try:
-                quick_play(self._chromecast, app_name, app_data)
+                quick_play(self._chromecast, app_name, app_data, **kwargs.get(ATTR_MEDIA_EXTRA, {}))
             except NotImplementedError:
                 _LOGGER.error("App %s not supported", app_name)
         # Handle plex
