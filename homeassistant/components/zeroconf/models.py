@@ -1,13 +1,12 @@
 """Models for Zeroconf."""
 
 import asyncio
-import logging
 from typing import Any
 
-from zeroconf import ServiceBrowser, Zeroconf
+from zeroconf import DNSAddress, DNSRecord, ServiceBrowser, Zeroconf
 from zeroconf.asyncio import AsyncZeroconf
 
-_LOGGER = logging.getLogger(__name__)
+TYPE_AAAA = 28
 
 
 class HaZeroconf(Zeroconf):
@@ -35,3 +34,18 @@ class HaAsyncZeroconf(AsyncZeroconf):
 
 class HaServiceBrowser(ServiceBrowser):
     """ServiceBrowser that only consumes DNSPointer records."""
+
+    def __init__(self, ipv6: bool, *args: Any, **kwargs: Any) -> None:
+        """Create service browser that filters ipv6 if it is disabled."""
+        self.ipv6 = ipv6
+        super().__init__(*args, **kwargs)
+
+    def update_record(self, zc: Zeroconf, now: float, record: DNSRecord) -> None:
+        """Pre-Filter AAAA records if IPv6 is not enabled."""
+        if (
+            not self.ipv6
+            and isinstance(record, DNSAddress)
+            and record.type == TYPE_AAAA
+        ):
+            return
+        super().update_record(zc, now, record)
