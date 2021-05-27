@@ -160,4 +160,9 @@ async def test_reauth(hass):
         assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
         assert result["reason"] == "reauth_successful"
 
+    with patch(
+        "homeassistant.components.totalconnect.async_setup_entry", return_value=True
+    ):
+        await hass.async_block_till_done()
+
     assert len(hass.config_entries.async_entries()) == 1
