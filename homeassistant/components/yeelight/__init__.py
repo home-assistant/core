@@ -16,6 +16,7 @@ from homeassistant.const import (
     CONF_ID,
     CONF_NAME,
     CONF_SCAN_INTERVAL,
+    EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
@@ -203,7 +204,7 @@ async def _async_initialize(
     entry_data[DATA_DEVICE] = device
 
     # start listening for local pushes
-    listen_thread = Thread(target=device.bulb.listen, args=(device.update_callback))
+    listen_thread = Thread(target=device.bulb.listen, args=(device.update_callback,))
     listen_thread.daemon = True
     listen_thread.start()
     
