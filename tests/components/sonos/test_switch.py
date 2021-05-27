@@ -14,7 +14,7 @@ from homeassistant.setup import async_setup_component
 
 
 async def setup_platform(hass, config_entry, config):
-    """Set up the media player platform for testing."""
+    """Set up the switch platform for testing."""
     config_entry.add_to_hass(hass)
     assert await async_setup_component(hass, DOMAIN, config)
     await hass.async_block_till_done()
