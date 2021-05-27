@@ -9,6 +9,7 @@ from homeassistant.components.sonos.switch import (
     ATTR_VOLUME,
 )
 from homeassistant.const import ATTR_TIME, STATE_ON
+from homeassistant.helpers.entity_registry import async_get as async_get_entity_registry
 from homeassistant.setup import async_setup_component
 
 
@@ -61,7 +62,7 @@ async def test_alarm_create_delete(
     sub_callback(event=alarm_event)
     await hass.async_block_till_done()
 
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    entity_registry = async_get_entity_registry(hass)
 
     assert "switch.sonos_alarm_14" in entity_registry.entities
     assert "switch.sonos_alarm_15" in entity_registry.entities
