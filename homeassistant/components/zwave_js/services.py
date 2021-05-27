@@ -193,24 +193,30 @@ class ZWaveServices:
             const.DOMAIN,
             const.SERVICE_MULTICAST_SET_VALUE,
             self.async_multicast_set_value,
-            schema=vol.All(
-                {
-                    vol.Optional(ATTR_DEVICE_ID): vol.All(cv.ensure_list, [cv.string]),
-                    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-                    vol.Optional(const.ATTR_BROADCAST, default=False): cv.boolean,
-                    vol.Required(const.ATTR_COMMAND_CLASS): vol.Coerce(int),
-                    vol.Required(const.ATTR_PROPERTY): vol.Any(vol.Coerce(int), str),
-                    vol.Optional(const.ATTR_PROPERTY_KEY): vol.Any(
-                        vol.Coerce(int), str
+            schema=vol.Schema(
+                vol.All(
+                    {
+                        vol.Optional(ATTR_DEVICE_ID): vol.All(
+                            cv.ensure_list, [cv.string]
+                        ),
+                        vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+                        vol.Optional(const.ATTR_BROADCAST, default=False): cv.boolean,
+                        vol.Required(const.ATTR_COMMAND_CLASS): vol.Coerce(int),
+                        vol.Required(const.ATTR_PROPERTY): vol.Any(
+                            vol.Coerce(int), str
+                        ),
+                        vol.Optional(const.ATTR_PROPERTY_KEY): vol.Any(
+                            vol.Coerce(int), str
+                        ),
+                        vol.Optional(const.ATTR_ENDPOINT): vol.Coerce(int),
+                        vol.Required(const.ATTR_VALUE): vol.Any(
+                            bool, vol.Coerce(int), vol.Coerce(float), cv.string
+                        ),
+                    },
+                    vol.Any(
+                        cv.has_at_least_one_key(ATTR_DEVICE_ID, ATTR_ENTITY_ID),
+                        broadcast_command,
                     ),
-                    vol.Optional(const.ATTR_ENDPOINT): vol.Coerce(int),
-                    vol.Required(const.ATTR_VALUE): vol.Any(
-                        bool, vol.Coerce(int), vol.Coerce(float), cv.string
-                    ),
-                },
-                vol.Any(
-                    cv.has_at_least_one_key(ATTR_DEVICE_ID, ATTR_ENTITY_ID),
-                    broadcast_command,
                 ),
             ),
         )
