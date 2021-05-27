@@ -31,9 +31,9 @@ def test_compile_hourly_statistics(hass_recorder):
             {
                 "statistic_id": "sensor.test1",
                 "start": process_timestamp_to_utc_isoformat(zero),
-                "mean": 15.0,
+                "mean": 16.440677966101696,
                 "min": 10.0,
-                "max": 20.0,
+                "max": 30.0,
                 "last_reset": None,
                 "state": None,
                 "sum": None,
@@ -243,9 +243,9 @@ def test_compile_hourly_statistics_unchanged(hass_recorder):
             {
                 "statistic_id": "sensor.test1",
                 "start": process_timestamp_to_utc_isoformat(four),
-                "mean": 20.0,
-                "min": 20.0,
-                "max": 20.0,
+                "mean": 30.0,
+                "min": 30.0,
+                "max": 30.0,
                 "last_reset": None,
                 "state": None,
                 "sum": None,
@@ -271,7 +271,7 @@ def test_compile_hourly_statistics_partially_unavailable(hass_recorder):
             {
                 "statistic_id": "sensor.test1",
                 "start": process_timestamp_to_utc_isoformat(zero),
-                "mean": 17.5,
+                "mean": 21.1864406779661,
                 "min": 10.0,
                 "max": 25.0,
                 "last_reset": None,
@@ -318,9 +318,9 @@ def record_states(hass):
 
     zero = dt_util.utcnow()
     one = zero + timedelta(minutes=1)
-    two = one + timedelta(minutes=15)
-    three = two + timedelta(minutes=30)
-    four = three + timedelta(minutes=15)
+    two = one + timedelta(minutes=10)
+    three = two + timedelta(minutes=40)
+    four = three + timedelta(minutes=10)
 
     states = {mp: [], sns1: [], sns2: [], sns3: []}
     with patch("homeassistant.components.recorder.dt_util.utcnow", return_value=one):
@@ -340,9 +340,9 @@ def record_states(hass):
         states[sns3].append(set_state(sns3, "15", attributes=sns3_attr))
 
     with patch("homeassistant.components.recorder.dt_util.utcnow", return_value=three):
-        states[sns1].append(set_state(sns1, "20", attributes=sns1_attr))
-        states[sns2].append(set_state(sns2, "20", attributes=sns2_attr))
-        states[sns3].append(set_state(sns3, "20", attributes=sns3_attr))
+        states[sns1].append(set_state(sns1, "30", attributes=sns1_attr))
+        states[sns2].append(set_state(sns2, "30", attributes=sns2_attr))
+        states[sns3].append(set_state(sns3, "30", attributes=sns3_attr))
 
     return zero, four, states
 
