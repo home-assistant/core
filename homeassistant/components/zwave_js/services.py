@@ -67,22 +67,26 @@ class ZWaveServices:
             const.DOMAIN,
             const.SERVICE_SET_CONFIG_PARAMETER,
             self.async_set_config_parameter,
-            schema=vol.All(
-                {
-                    vol.Optional(ATTR_DEVICE_ID): vol.All(cv.ensure_list, [cv.string]),
-                    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-                    vol.Required(const.ATTR_CONFIG_PARAMETER): vol.Any(
-                        vol.Coerce(int), cv.string
-                    ),
-                    vol.Optional(const.ATTR_CONFIG_PARAMETER_BITMASK): vol.Any(
-                        vol.Coerce(int), BITMASK_SCHEMA
-                    ),
-                    vol.Required(const.ATTR_CONFIG_VALUE): vol.Any(
-                        vol.Coerce(int), cv.string
-                    ),
-                },
-                cv.has_at_least_one_key(ATTR_DEVICE_ID, ATTR_ENTITY_ID),
-                parameter_name_does_not_need_bitmask,
+            schema=vol.Schema(
+                vol.All(
+                    {
+                        vol.Optional(ATTR_DEVICE_ID): vol.All(
+                            cv.ensure_list, [cv.string]
+                        ),
+                        vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+                        vol.Required(const.ATTR_CONFIG_PARAMETER): vol.Any(
+                            vol.Coerce(int), cv.string
+                        ),
+                        vol.Optional(const.ATTR_CONFIG_PARAMETER_BITMASK): vol.Any(
+                            vol.Coerce(int), BITMASK_SCHEMA
+                        ),
+                        vol.Required(const.ATTR_CONFIG_VALUE): vol.Any(
+                            vol.Coerce(int), cv.string
+                        ),
+                    },
+                    cv.has_at_least_one_key(ATTR_DEVICE_ID, ATTR_ENTITY_ID),
+                    parameter_name_does_not_need_bitmask,
+                ),
             ),
         )
 
@@ -90,21 +94,25 @@ class ZWaveServices:
             const.DOMAIN,
             const.SERVICE_BULK_SET_PARTIAL_CONFIG_PARAMETERS,
             self.async_bulk_set_partial_config_parameters,
-            schema=vol.All(
-                {
-                    vol.Optional(ATTR_DEVICE_ID): vol.All(cv.ensure_list, [cv.string]),
-                    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-                    vol.Required(const.ATTR_CONFIG_PARAMETER): vol.Coerce(int),
-                    vol.Required(const.ATTR_CONFIG_VALUE): vol.Any(
-                        vol.Coerce(int),
-                        {
-                            vol.Any(
-                                vol.Coerce(int), BITMASK_SCHEMA, cv.string
-                            ): vol.Any(vol.Coerce(int), cv.string)
-                        },
-                    ),
-                },
-                cv.has_at_least_one_key(ATTR_DEVICE_ID, ATTR_ENTITY_ID),
+            schema=vol.Schema(
+                vol.All(
+                    {
+                        vol.Optional(ATTR_DEVICE_ID): vol.All(
+                            cv.ensure_list, [cv.string]
+                        ),
+                        vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+                        vol.Required(const.ATTR_CONFIG_PARAMETER): vol.Coerce(int),
+                        vol.Required(const.ATTR_CONFIG_VALUE): vol.Any(
+                            vol.Coerce(int),
+                            {
+                                vol.Any(
+                                    vol.Coerce(int), BITMASK_SCHEMA, cv.string
+                                ): vol.Any(vol.Coerce(int), cv.string)
+                            },
+                        ),
+                    },
+                    cv.has_at_least_one_key(ATTR_DEVICE_ID, ATTR_ENTITY_ID),
+                ),
             ),
         )
 
@@ -124,22 +132,28 @@ class ZWaveServices:
             const.DOMAIN,
             const.SERVICE_SET_VALUE,
             self.async_set_value,
-            schema=vol.All(
-                {
-                    vol.Optional(ATTR_DEVICE_ID): vol.All(cv.ensure_list, [cv.string]),
-                    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-                    vol.Required(const.ATTR_COMMAND_CLASS): vol.Coerce(int),
-                    vol.Required(const.ATTR_PROPERTY): vol.Any(vol.Coerce(int), str),
-                    vol.Optional(const.ATTR_PROPERTY_KEY): vol.Any(
-                        vol.Coerce(int), str
-                    ),
-                    vol.Optional(const.ATTR_ENDPOINT): vol.Coerce(int),
-                    vol.Required(const.ATTR_VALUE): vol.Any(
-                        bool, vol.Coerce(int), vol.Coerce(float), cv.string
-                    ),
-                    vol.Optional(const.ATTR_WAIT_FOR_RESULT): vol.Coerce(bool),
-                },
-                cv.has_at_least_one_key(ATTR_DEVICE_ID, ATTR_ENTITY_ID),
+            schema=vol.Schema(
+                vol.All(
+                    {
+                        vol.Optional(ATTR_DEVICE_ID): vol.All(
+                            cv.ensure_list, [cv.string]
+                        ),
+                        vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+                        vol.Required(const.ATTR_COMMAND_CLASS): vol.Coerce(int),
+                        vol.Required(const.ATTR_PROPERTY): vol.Any(
+                            vol.Coerce(int), str
+                        ),
+                        vol.Optional(const.ATTR_PROPERTY_KEY): vol.Any(
+                            vol.Coerce(int), str
+                        ),
+                        vol.Optional(const.ATTR_ENDPOINT): vol.Coerce(int),
+                        vol.Required(const.ATTR_VALUE): vol.Any(
+                            bool, vol.Coerce(int), vol.Coerce(float), cv.string
+                        ),
+                        vol.Optional(const.ATTR_WAIT_FOR_RESULT): vol.Coerce(bool),
+                    },
+                    cv.has_at_least_one_key(ATTR_DEVICE_ID, ATTR_ENTITY_ID),
+                ),
             ),
         )
 
