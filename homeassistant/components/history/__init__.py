@@ -25,7 +25,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.deprecation import deprecated_function
+from homeassistant.helpers.deprecation import deprecated_class, deprecated_function
 from homeassistant.helpers.entityfilter import (
     CONF_ENTITY_GLOBS,
     INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA,
@@ -109,10 +109,10 @@ async def async_setup(hass, config):
     return True
 
 
+@deprecated_class("homeassistant.components.recorder.models.LazyState")
 class LazyState(history_models.LazyState):
     """A lazy version of core State."""
 
-    @deprecated_function("homeassistant.components.recorder.models.LazyState")
     def __init__(self, *args, **kwargs):
         """Init the lazy state."""
         super().__init__(*args, **kwargs)
