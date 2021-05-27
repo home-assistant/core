@@ -210,7 +210,7 @@ async def test_config_wrong_struct_sensor(
         expect_setup_to_fail=True,
     )
 
-    assert error_message in "".join(caplog.messages)
+    assert error_message in caplog.text
 
 
 @pytest.mark.parametrize(
