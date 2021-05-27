@@ -31,8 +31,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up tractive from a config entry."""
     data = entry.data
 
-    if DOMAIN not in hass.data:
-        hass.data[DOMAIN] = {}
+    hass.data.setdefault(DOMAIN, {})
 
     client = aiotractive.Tractive(
         data[CONF_EMAIL], data[CONF_PASSWORD], session=async_get_clientsession(hass)
