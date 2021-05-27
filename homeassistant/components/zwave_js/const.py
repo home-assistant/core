@@ -44,6 +44,8 @@ ATTR_DATA_TYPE = "data_type"
 ATTR_WAIT_FOR_RESULT = "wait_for_result"
 
 # service constants
+ATTR_NODES = "nodes"
+
 SERVICE_SET_CONFIG_PARAMETER = "set_config_parameter"
 SERVICE_BULK_SET_PARTIAL_CONFIG_PARAMETERS = "bulk_set_partial_config_parameters"
 

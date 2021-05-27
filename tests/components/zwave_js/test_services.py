@@ -216,8 +216,8 @@ async def test_set_config_parameter(hass, client, multisensor_6, integration):
     }
     assert args["value"] == 1
 
-    # Test that an invalid entity ID raises a ValueError
-    with pytest.raises(ValueError):
+    # Test that an invalid entity ID raises a MultipleInvalid
+    with pytest.raises(vol.MultipleInvalid):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SET_CONFIG_PARAMETER,
@@ -229,8 +229,8 @@ async def test_set_config_parameter(hass, client, multisensor_6, integration):
             blocking=True,
         )
 
-    # Test that an invalid device ID raises a ValueError
-    with pytest.raises(ValueError):
+    # Test that an invalid device ID raises a MultipleInvalid
+    with pytest.raises(vol.MultipleInvalid):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SET_CONFIG_PARAMETER,
@@ -263,8 +263,8 @@ async def test_set_config_parameter(hass, client, multisensor_6, integration):
         identifiers={("test", "test")},
     )
 
-    # Test that a non Z-Wave JS device raises a ValueError
-    with pytest.raises(ValueError):
+    # Test that a non Z-Wave JS device raises a MultipleInvalid
+    with pytest.raises(vol.MultipleInvalid):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SET_CONFIG_PARAMETER,
@@ -280,8 +280,8 @@ async def test_set_config_parameter(hass, client, multisensor_6, integration):
         config_entry_id=integration.entry_id, identifiers={(DOMAIN, "500-500")}
     )
 
-    # Test that a Z-Wave JS device with an invalid node ID raises a ValueError
-    with pytest.raises(ValueError):
+    # Test that a Z-Wave JS device with an invalid node ID raises a MultipleInvalid
+    with pytest.raises(vol.MultipleInvalid):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SET_CONFIG_PARAMETER,
@@ -301,8 +301,8 @@ async def test_set_config_parameter(hass, client, multisensor_6, integration):
         config_entry=non_zwave_js_config_entry,
     )
 
-    # Test that a non Z-Wave JS entity raises a ValueError
-    with pytest.raises(ValueError):
+    # Test that a non Z-Wave JS entity raises a MultipleInvalid
+    with pytest.raises(vol.MultipleInvalid):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SET_CONFIG_PARAMETER,
@@ -755,9 +755,9 @@ async def test_multicast_set_value(
     diff_network_node = MagicMock()
     diff_network_node.client.driver.controller.home_id.return_value = "diff_home_id"
 
-    with pytest.raises(vol.Invalid), patch(
-        "homeassistant.components.zwave_js.services.get_nodes_from_service_data",
-        return_value={diff_network_node, climate_danfoss_lc_13},
+    with pytest.raises(vol.MultipleInvalid), patch(
+        "homeassistant.components.zwave_js.services.async_get_node_from_device_id",
+        return_value=diff_network_node,
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -765,8 +765,8 @@ async def test_multicast_set_value(
             {
                 ATTR_ENTITY_ID: [
                     CLIMATE_DANFOSS_LC13_ENTITY,
-                    CLIMATE_RADIO_THERMOSTAT_ENTITY,
                 ],
+                ATTR_DEVICE_ID: "fake_device_id",
                 ATTR_COMMAND_CLASS: 117,
                 ATTR_PROPERTY: "local",
                 ATTR_VALUE: 2,
