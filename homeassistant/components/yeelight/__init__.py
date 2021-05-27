@@ -422,7 +422,6 @@ class YeelightDevice:
         self._available = False
         self._remove_time_tracker = None
         self._initialized = False
-        self._registered_callbacks = {}
 
         self._name = host  # Default name is host
         if capabilities:
@@ -593,21 +592,11 @@ class YeelightDevice:
             self._hass, _async_update, self._hass.data[DOMAIN][DATA_SCAN_INTERVAL]
         )
 
-    def register_callback(self, id, callback):
-        """Register a callback function for updates of the device."""
-        if id in self._registered_callbacks:
-            _LOGGER.error("A callback with id '%s' was already registed, overwriting previous callback", id)
-        self._registered_callbacks[id] = callback
-
-    def remove_callback(self, id):
-        """Remove a callback using its id."""
-        self._registered_callbacks.pop(id)
-
     @callback
     def update_callback(self, data):
         """Update push from device."""
-        for callback in self._registered_callbacks.values():
-            callback()
+        self._available = True
+        dispatcher_send(self._hass, DATA_UPDATED.format(self._host))
 
     @callback
     def async_unload(self):
@@ -655,22 +644,6 @@ class YeelightEntity(Entity):
     def update(self) -> None:
         """Update the entity."""
         self._device.update()
-
-    @callback
-    def update_callback(self):
-        """Update push from device."""
-        self._device._available = True
-        dispatcher_send(self._device._hass, DATA_UPDATED.format(self._device._host))
-
-    async def async_added_to_hass(self):
-        """Subscribe to multicast pushes and register signal handler."""
-        self._device.register_callback(self.unique_id, self.update_callback)
-        await super().async_added_to_hass()
-
-    async def async_will_remove_from_hass(self):
-        """Unsubscribe when removed."""
-        self._device.remove_callback(self.unique_id)
-        await super().async_will_remove_from_hass()
 
 
 async def _async_get_device(
