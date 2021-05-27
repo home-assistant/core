@@ -421,8 +421,6 @@ class SonosSpeaker:
 
         async_dispatcher_send(self.hass, SONOS_ALARM_UPDATE)
 
-        self.async_write_entity_states()
-
     async def async_update_battery_info(self, battery_dict: dict[str, Any]) -> None:
         """Update battery info using the decoded SonosEvent."""
         self._last_battery_event = dt_util.utcnow()
