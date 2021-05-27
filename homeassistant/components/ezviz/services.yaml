@@ -1,49 +1,98 @@
-ezviz_alarm_sound:
-  description: 'Set movement warning sounds.'
+alarm_sound:
+  name: 'Set warning sound level'
+  description: 'Set movement warning sound level.'
+  target:
+    entity:
+      domain: camera
   fields:
-    entity_id:
-      description: 'Name(s) of entities to move.'
-      example: 'camera.living_room_camera'
     level:
+      name: 'Sound level'
       description: 'Sound level (2 is disabled, 1 intensive, 0 soft).'
       example: '0'
-ezviz_ptz:
+      default: '0'
+      selector:
+        number:
+          min: '0'
+          max: '2'
+          step: '1'
+          mode: 'box'
+ptz:
+  name: "PTZ"
   description: 'Moves the camera to the direction, with defined speed'
+  target:
+    entity:
+      domain: camera
   fields:
     direction:
+      name: 'Direction'
       description: 'Direction (up, down, left, right).'
       example: 'up'
-    entity_id:
-      description: 'Name(s) of entities to move.'
-      example: 'camera.living_room_camera'
+      default: 'up'
+      selector:
+        select:
+          options:
+            - 'up'
+            - 'down'
+            - 'left'
+            - 'right'
     speed:
+      name: 'Speed'
       description: 'Speed of the movement (from 1 to 9).'
       example: '5'
-ezviz_set_alarm_detection_sensibility:
+      default: '5'
+      selector:
+        number:
+          min: '1'
+          max: '9'
+          step: '1'
+          mode: 'box'
+set_alarm_detection_sensibility:
+  name: 'Detection sensitivity'
   description: 'Sets the detection sensibility level.'
+  target:
+    entity:
+      domain: camera
   fields:
-    entity_id:
-      description: 'Name(s) of entities to perform action on.'
-      example: 'camera.living_room_camera'
     level:
-      description: 'Sensibility level (1-6) for device (type 0)
-      or (1-100) for cameras (type 3).'
+      name: 'Sensitivity Level'
+      description: 'Sensibility level (1-6) for type 0 (Normal camera)
+      or (1-100) for type 3 (PIR sensor camera).'
       example: '0'
+      default: '0'
+      selector:
+        number:
+          min: '1'
+          max: '100'
+          step: '1'
+          mode: 'box'
     type_value:
-      description: 'Type of detection. Options : 0 - Device or 3 - Camera'
+      name: 'Detection type'
+      description: 'Type of detection. Options : 0 - Camera or 3 - PIR Sensor Camera'
       example: '3'
-ezviz_sound_alarm:
+      default: '3'
+      selector:
+        select:
+          options:
+            - '0'
+            - '3'
+sound_alarm:
   description: 'Sounds the alarm on your camera.'
+  target:
+    entity:
+      domain: camera
   fields:
     enable:
       description: 'Enter 1 or 2 (1=disable, 2=enable).'
       example: '1'
-    entity_id:
-      description: 'Name(s) of entities to perform action on.'
-      example: 'camera.living_room_camera'
-ezviz_wake_device:
+      default: '1'
+      selector:
+        number:
+          min: '1'
+          max: '2'
+          step: '1'
+          mode: 'box'
+wake_device:
   description: 'This can also be used to wake device from hibernation.'
-  fields:
-    entity_id:
-      description: 'Name(s) of entities to perform action on.'
-      example: 'camera.living_room_camera'
+  target:
+    entity:
+      domain: camera

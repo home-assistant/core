@@ -169,41 +169,39 @@ async def async_setup_entry(hass, entry, async_add_entities):
     platform = entity_platform.current_platform.get()
 
     platform.async_register_entity_service(
-        "ezviz_ptz",
+        "ptz",
         {
             vol.Required(ATTR_DIRECTION): vol.In(
                 [DIR_UP, DIR_DOWN, DIR_LEFT, DIR_RIGHT]
             ),
             vol.Required(ATTR_SPEED): cv.positive_int,
         },
-        "perform_ezviz_ptz",
+        "perform_ptz",
     )
 
     platform.async_register_entity_service(
-        "ezviz_sound_alarm",
+        "sound_alarm",
         {
             vol.Required(ATTR_ENABLE): cv.positive_int,
         },
-        "perform_ezviz_sound_alarm",
+        "perform_sound_alarm",
     )
 
-    platform.async_register_entity_service(
-        "ezviz_wake_device", {}, "perform_ezviz_wake_device"
-    )
+    platform.async_register_entity_service("wake_device", {}, "perform_wake_device")
 
     platform.async_register_entity_service(
-        "ezviz_alarm_sound",
+        "alarm_sound",
         {vol.Required(ATTR_LEVEL): cv.positive_int},
-        "perform_ezviz_alarm_sound",
+        "perform_alarm_sound",
     )
 
     platform.async_register_entity_service(
-        "ezviz_set_alarm_detection_sensibility",
+        "set_alarm_detection_sensibility",
         {
             vol.Required(ATTR_LEVEL): cv.positive_int,
             vol.Required(ATTR_TYPE): cv.positive_int,
         },
-        "perform_ezviz_set_alarm_detection_sensibility",
+        "perform_set_alarm_detection_sensibility",
     )
 
 
@@ -337,7 +335,7 @@ class EzvizCamera(CoordinatorEntity, Camera, RestoreEntity):
             return rtsp_stream_source
         return None
 
-    def perform_ezviz_ptz(self, direction, speed):
+    def perform_ptz(self, direction, speed):
         """Perform a PTZ action on the camera."""
         _LOGGER.debug("PTZ action '%s' on %s", direction, self._name)
 
@@ -348,25 +346,25 @@ class EzvizCamera(CoordinatorEntity, Camera, RestoreEntity):
             str(direction).upper(), self._serial, "STOP", speed
         )
 
-    def perform_ezviz_sound_alarm(self, enable):
+    def perform_sound_alarm(self, enable):
         """Sound the alarm on a camera."""
         _LOGGER.debug("EZVIZ Alarm Switch to %s", enable)
 
         self.coordinator.ezviz_client.sound_alarm(self._serial, enable)
 
-    def perform_ezviz_wake_device(self):
+    def perform_wake_device(self):
         """Basically wakes the camera by querying the device."""
         _LOGGER.debug("Wake camera '%s' with serial %s", self._name, self._serial)
 
         self.coordinator.ezviz_client.get_detection_sensibility(self._serial)
 
-    def perform_ezviz_alarm_sound(self, level):
+    def perform_alarm_sound(self, level):
         """Enable/Disable movement sound alarm."""
         _LOGGER.debug("Set alarm sound on camera '%s' on %s", self._name, level)
 
         self.coordinator.ezviz_client.alarm_sound(self._serial, level, 1)
 
-    def perform_ezviz_set_alarm_detection_sensibility(self, level, type_value):
+    def perform_set_alarm_detection_sensibility(self, level, type_value):
         """Set camera detection sensibility level service."""
         _LOGGER.debug(
             "Set detection sensibility level '%s' on camera '%s' using type %s",
