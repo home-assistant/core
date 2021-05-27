@@ -819,7 +819,9 @@ class SonosSpeaker:
 
         if variables and "transport_state" in variables:
             self.media.play_mode = variables["current_play_mode"]
-            track_uri = variables["enqueued_transport_uri"]
+            track_uri = (
+                variables["enqueued_transport_uri"] or variables["current_track_uri"]
+            )
             music_source = self.soco.music_source_from_uri(track_uri)
         else:
             self.media.play_mode = self.soco.play_mode
