@@ -11,9 +11,11 @@ from aiohttp import web
 from sqlalchemy import not_, or_
 import voluptuous as vol
 
+from homeassistant.components import websocket_api
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.recorder import history
 from homeassistant.components.recorder.models import States
+from homeassistant.components.recorder.statistics import statistics_during_period
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.const import (
     CONF_DOMAINS,
@@ -101,8 +103,54 @@ async def async_setup(hass, config):
     hass.components.frontend.async_register_built_in_panel(
         "history", "history", "hass:poll-box"
     )
+    hass.components.websocket_api.async_register_command(
+        ws_get_statistics_during_period
+    )
 
     return True
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "history/statistics_during_period",
+        vol.Required("start_time"): str,
+        vol.Optional("end_time"): str,
+        vol.Optional("statistic_id"): str,
+    }
+)
+@websocket_api.async_response
+async def ws_get_statistics_during_period(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+) -> None:
+    """Handle statistics websocket command."""
+    start_time_str = msg["start_time"]
+    end_time_str = msg.get("end_time")
+
+    start_time = dt_util.parse_datetime(start_time_str)
+    if start_time:
+        start_time = dt_util.as_utc(start_time)
+    else:
+        connection.send_error(msg["id"], "invalid_start_time", "Invalid start_time")
+        return
+
+    if end_time_str:
+        end_time = dt_util.parse_datetime(end_time_str)
+        if end_time:
+            end_time = dt_util.as_utc(end_time)
+        else:
+            connection.send_error(msg["id"], "invalid_end_time", "Invalid end_time")
+            return
+    else:
+        end_time = None
+
+    statistics = await hass.async_add_executor_job(
+        statistics_during_period,
+        hass,
+        start_time,
+        end_time,
+        msg.get("statistic_id"),
+    )
+    connection.send_result(msg["id"], {"statistics": statistics})
 
 
 class HistoryPeriodView(HomeAssistantView):

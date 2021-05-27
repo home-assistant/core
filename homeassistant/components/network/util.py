@@ -141,7 +141,7 @@ def _ip_v4_from_adapter(ip_config: ifaddr.IP) -> IPv4ConfiguredAddress:
 
 
 @callback
-def async_get_source_ip(target_ip: str) -> None | str:
+def async_get_source_ip(target_ip: str) -> str | None:
     """Return the source ip that will reach target_ip."""
     test_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     test_sock.setblocking(False)  # must be non-blocking for async
