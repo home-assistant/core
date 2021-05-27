@@ -656,9 +656,15 @@ class YeelightEntity(Entity):
         """Update the entity."""
         self._device.update()
 
+    @callback
+    def update_callback(self):
+        """Update push from device."""
+        self._device._available = True
+        dispatcher_send(self._device._hass, DATA_UPDATED.format(self._device._host))
+
     async def async_added_to_hass(self):
         """Subscribe to multicast pushes and register signal handler."""
-        self._device.register_callback(self.unique_id, self.schedule_update_ha_state)
+        self._device.register_callback(self.unique_id, self.update_callback)
         await super().async_added_to_hass()
 
     async def async_will_remove_from_hass(self):
