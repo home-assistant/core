@@ -10,15 +10,24 @@ from homeassistant.const import CONF_HOSTS
 from tests.common import MockConfigEntry
 
 
+class SonosMockService:
+    """Mock a Sonos Service used in callbacks."""
+
+    def __init__(self, service_type="Unknown"):
+        """Initialize the instance."""
+        self.service_type = service_type
+        self.subscribe = AsyncMock()
+
+
 class SonosMockEvent:
     """Mock a sonos Event used in callbacks."""
 
-    def __init__(self, soco, variables):
+    def __init__(self, soco, service_type, variables):
         """Initialize the instance."""
         self.sid = f"{soco.uid}_sub0000000001"
         self.seq = "0"
         self.timestamp = 1621000000.0
-        self.service = dummy_soco_service_fixture
+        self.service = SonosMockService(service_type)
         self.variables = variables
 
 
@@ -77,9 +86,7 @@ def config_fixture():
 @pytest.fixture(name="dummy_soco_service")
 def dummy_soco_service_fixture():
     """Create dummy_soco_service fixture."""
-    service = Mock()
-    service.subscribe = AsyncMock()
-    return service
+    return SonosMockService()
 
 
 @pytest.fixture(name="music_library")
@@ -156,7 +163,7 @@ def battery_event_fixture(soco):
         "zone_name": "Zone A",
         "more_info": "BattChg:NOT_CHARGING,RawBattPct:100,BattPct:100,BattTmp:25",
     }
-    return SonosMockEvent(soco, variables)
+    return SonosMockEvent(soco, "DeviceProperties", variables)
 
 
 @pytest.fixture(name="alarm_event")
@@ -172,4 +179,4 @@ def alarm_event_fixture(soco):
         "daily_index_refresh_time": None,
     }
 
-    return SonosMockEvent(soco, variables)
+    return SonosMockEvent(soco, "AlarmClock", variables)

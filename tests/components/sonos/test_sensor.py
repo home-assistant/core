@@ -75,7 +75,7 @@ async def test_battery_on_S1(hass, config_entry, config, soco, battery_event):
 
     # Update the speaker with a callback event
     speaker = hass.data[DATA_SONOS].discovered[soco.uid]
-    speaker.async_dispatch_properties(battery_event)
+    speaker.async_dispatch_event(battery_event)
     await hass.async_block_till_done()
 
     battery_state = hass.states.get(battery.entity_id)
