@@ -13,7 +13,7 @@ from tests.common import MockConfigEntry
 class SonosMockService:
     """Mock a Sonos Service used in callbacks."""
 
-    def __init__(self, service_type="Unknown"):
+    def __init__(self, service_type):
         """Initialize the instance."""
         self.service_type = service_type
         self.subscribe = AsyncMock()
@@ -38,9 +38,7 @@ def config_entry_fixture():
 
 
 @pytest.fixture(name="soco")
-def soco_fixture(
-    music_library, speaker_info, battery_info, dummy_soco_service, alarm_clock
-):
+def soco_fixture(music_library, speaker_info, battery_info, alarm_clock):
     """Create a mock pysonos SoCo fixture."""
     with patch("pysonos.SoCo", autospec=True) as mock, patch(
         "socket.gethostbyname", return_value="192.168.42.2"
@@ -50,11 +48,11 @@ def soco_fixture(
         mock_soco.play_mode = "NORMAL"
         mock_soco.music_library = music_library
         mock_soco.get_speaker_info.return_value = speaker_info
-        mock_soco.avTransport = dummy_soco_service
-        mock_soco.renderingControl = dummy_soco_service
-        mock_soco.zoneGroupTopology = dummy_soco_service
-        mock_soco.contentDirectory = dummy_soco_service
-        mock_soco.deviceProperties = dummy_soco_service
+        mock_soco.avTransport = SonosMockService("AVTransport")
+        mock_soco.renderingControl = SonosMockService("RenderingControl")
+        mock_soco.zoneGroupTopology = SonosMockService("ZoneGroupTopology")
+        mock_soco.contentDirectory = SonosMockService("ContentDirectory")
+        mock_soco.deviceProperties = SonosMockService("DeviceProperties")
         mock_soco.alarmClock = alarm_clock
         mock_soco.mute = False
         mock_soco.night_mode = True
@@ -83,12 +81,6 @@ def config_fixture():
     return {DOMAIN: {MP_DOMAIN: {CONF_HOSTS: ["192.168.42.1"]}}}
 
 
-@pytest.fixture(name="dummy_soco_service")
-def dummy_soco_service_fixture():
-    """Create dummy_soco_service fixture."""
-    return SonosMockService()
-
-
 @pytest.fixture(name="music_library")
 def music_library_fixture():
     """Create music_library fixture."""
@@ -100,8 +92,8 @@ def music_library_fixture():
 @pytest.fixture(name="alarm_clock")
 def alarm_clock_fixture():
     """Create alarmClock fixture."""
-    alarm_clock = Mock()
-    alarm_clock.subscribe = AsyncMock()
+    alarm_clock = SonosMockService("AlarmClock")
+    alarm_clock.ListAlarms = Mock()
     alarm_clock.ListAlarms.return_value = {
         "CurrentAlarmList": "<Alarms>"
         '<Alarm ID="14" StartTime="07:00:00" Duration="02:00:00" Recurrence="DAILY" '
@@ -116,8 +108,8 @@ def alarm_clock_fixture():
 @pytest.fixture(name="alarm_clock_extended")
 def alarm_clock_fixture_extended():
     """Create alarmClock fixture."""
-    alarm_clock = Mock()
-    alarm_clock.subscribe = AsyncMock()
+    alarm_clock = SonosMockService("AlarmClock")
+    alarm_clock.ListAlarms = Mock()
     alarm_clock.ListAlarms.return_value = {
         "CurrentAlarmList": "<Alarms>"
         '<Alarm ID="14" StartTime="07:00:00" Duration="02:00:00" Recurrence="DAILY" '
