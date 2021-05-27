@@ -623,6 +623,9 @@ freebox-api==0.0.10
 # homeassistant.components.free_mobile
 freesms==0.2.0
 
+# homeassistant.components.frigidaire
+frigidaire==0.8
+
 # homeassistant.components.fritz
 # homeassistant.components.fritzbox_callmonitor
 # homeassistant.components.fritzbox_netmonitor

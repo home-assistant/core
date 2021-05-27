@@ -78,6 +78,7 @@ FLOWS = [
     "forked_daapd",
     "foscam",
     "freebox",
+    "frigidaire",
     "fritz",
     "fritzbox",
     "fritzbox_callmonitor",

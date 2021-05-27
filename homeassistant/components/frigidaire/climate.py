@@ -1,0 +1,253 @@
+"""ClimateEntity for frigidaire integration."""
+from __future__ import annotations
+
+import logging
+
+import frigidaire
+
+from homeassistant.components.climate import ClimateEntity
+from homeassistant.components.climate.const import (
+    FAN_AUTO,
+    FAN_HIGH,
+    FAN_LOW,
+    FAN_MEDIUM,
+    FAN_OFF,
+    HVAC_MODE_AUTO,
+    HVAC_MODE_COOL,
+    HVAC_MODE_FAN_ONLY,
+    HVAC_MODE_OFF,
+    SUPPORT_FAN_MODE,
+    SUPPORT_TARGET_TEMPERATURE,
+)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.core import HomeAssistant
+
+from .const import DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
+
+
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
+) -> None:
+    """Set up frigidaire from a config entry."""
+    hass.data.setdefault(DOMAIN, {})
+
+    def get_entities(username: str, password: str) -> frigidaire.Frigidaire:
+        client = frigidaire.Frigidaire(username, password)
+        appliances = client.get_appliances()
+        return [FrigidaireClimate(client, appliance) for appliance in appliances]
+
+    entities = await hass.async_add_executor_job(
+        get_entities, entry.data["username"], entry.data["password"]
+    )
+
+    async_add_entities(entities)
+
+
+class FrigidaireClimate(ClimateEntity):
+    """Representation of a Frigidaire appliance."""
+
+    def __init__(self, client, appliance):
+        """Build FrigidaireClimate.
+
+        data: initially-fetched data.
+        """
+
+        self._client = client
+        self._appliance = appliance
+        self._details = None
+        self._available = False
+        self.update()
+
+    @property
+    def supported_features(self):
+        """Return the list of supported features."""
+        return SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE
+
+    @property
+    def temperature_unit(self):
+        """Return the unit of measurement which this thermostat uses."""
+        convert = {
+            frigidaire.Unit.FAHRENHEIT.value: TEMP_FAHRENHEIT,
+            frigidaire.Unit.CELSIUS.value: TEMP_CELSIUS,
+        }
+
+        unit = self._details.for_code(
+            frigidaire.HaclCode.TEMPERATURE_REPRESENTATION
+        ).string_value
+
+        return convert[unit]
+
+    @property
+    def available(self):
+        """Return True if entity is available."""
+        return self._available
+
+    @property
+    def target_temperature(self):
+        """Return the temperature we try to reach."""
+        return (
+            self._details.for_code(frigidaire.HaclCode.TARGET_TEMPERATURE)
+            .containers.for_id(frigidaire.ContainerId.TEMPERATURE)
+            .number_value
+        )
+
+    @property
+    def target_temperature_step(self):
+        """Return the supported step of target temperature."""
+        return 1
+
+    @property
+    def hvac_mode(self):
+        """Return current operation ie. heat, cool, idle."""
+        convert = {
+            frigidaire.Mode.OFF.value: HVAC_MODE_OFF,
+            frigidaire.Mode.COOL.value: HVAC_MODE_COOL,
+            frigidaire.Mode.FAN.value: HVAC_MODE_FAN_ONLY,
+            frigidaire.Mode.ECO.value: HVAC_MODE_AUTO,
+        }
+
+        frigidaire_mode = self._details.for_code(
+            frigidaire.HaclCode.AC_MODE
+        ).number_value
+
+        return convert[frigidaire_mode]
+
+    @property
+    def current_temperature(self):
+        """Return the current temperature."""
+        return (
+            self._details.for_code(frigidaire.HaclCode.AMBIENT_TEMPERATURE)
+            .containers.for_id(frigidaire.ContainerId.TEMPERATURE)
+            .number_value
+        )
+
+    @property
+    def hvac_modes(self):
+        """List of available operation modes."""
+        return [
+            HVAC_MODE_OFF,
+            HVAC_MODE_COOL,
+            HVAC_MODE_AUTO,
+            HVAC_MODE_FAN_ONLY,
+        ]
+
+    @property
+    def fan_mode(self):
+        """Return the fan setting."""
+        convert = {
+            frigidaire.FanSpeed.OFF.value: FAN_OFF,  # when the AC is off
+            frigidaire.FanSpeed.AUTO.value: FAN_AUTO,
+            frigidaire.FanSpeed.LOW.value: FAN_LOW,
+            frigidaire.FanSpeed.MEDIUM.value: FAN_MEDIUM,
+            frigidaire.FanSpeed.HIGH.value: FAN_HIGH,
+        }
+        fan_speed = self._details.for_code(frigidaire.HaclCode.AC_FAN_SPEED_SETTING)
+
+        if not fan_speed:
+            return FAN_OFF
+
+        return convert[fan_speed.number_value]
+
+    @property
+    def fan_modes(self):
+        """List of available fan modes."""
+        return [
+            FAN_AUTO,
+            FAN_LOW,
+            FAN_MEDIUM,
+            FAN_HIGH,
+        ]
+
+    @property
+    def name(self):
+        """Return the name of the entity."""
+        return self._appliance.nickname
+
+    @property
+    def min_temp(self):
+        """Return the minimum temperature."""
+        if self.temperature_unit == TEMP_FAHRENHEIT:
+            return 60
+        else:
+            return 16
+
+    @property
+    def max_temp(self):
+        """Return the maximum temperature."""
+        if self.temperature_unit == TEMP_FAHRENHEIT:
+            return 90
+        else:
+            return 32
+
+    @property
+    def unique_id(self):
+        """Return unique ID based on Frigidaire ID."""
+        return self._appliance.appliance_id
+
+    def set_temperature(self, **kwargs):
+        """Set new target temperature."""
+        temperature = kwargs.get(ATTR_TEMPERATURE)
+        if temperature is None:
+            return
+        temperature = int(temperature)
+
+        self._client.execute_action(
+            self._appliance, frigidaire.Action.set_temperature(temperature)
+        )
+
+    def set_fan_mode(self, fan_mode):
+        """Set new target fan mode."""
+        convert = {
+            FAN_AUTO: frigidaire.FanSpeed.AUTO,
+            FAN_LOW: frigidaire.FanSpeed.LOW,
+            FAN_MEDIUM: frigidaire.FanSpeed.MEDIUM,
+            FAN_HIGH: frigidaire.FanSpeed.HIGH,
+        }
+
+        # Guard against unexpected fan modes
+        if fan_mode not in convert:
+            return
+
+        action = frigidaire.Action.set_fan_speed(convert[fan_mode])
+        self._client.execute_action(self._appliance, action)
+
+    def set_hvac_mode(self, hvac_mode):
+        """Set new target operation mode."""
+        if hvac_mode == HVAC_MODE_OFF:
+            self._client.execute_action(
+                self._appliance, frigidaire.Action.set_power(frigidaire.Power.OFF)
+            )
+            return
+
+        convert = {
+            HVAC_MODE_AUTO: frigidaire.Mode.ECO,
+            HVAC_MODE_FAN_ONLY: frigidaire.Mode.FAN,
+            HVAC_MODE_COOL: frigidaire.Mode.COOL,
+        }
+
+        # Guard against unexpected hvac modes
+        if hvac_mode not in convert:
+            return
+
+        # Turn on if not currently on.
+        if self._details.for_code(frigidaire.HaclCode.AC_MODE) == 0:
+            self._client.execute_action(
+                self._appliance, frigidaire.Action.set_power(frigidaire.Power.ON)
+            )
+
+        self._client.execute_action(
+            self._appliance, frigidaire.Action.set_mode(convert[hvac_mode])
+        )
+
+    def update(self):
+        """Retrieve latest state and updates the details."""
+        try:
+            details = self._client.get_appliance_details(self._appliance)
+            self._details = details
+            self._available = True
+        except (frigidaire.FrigidaireException):
+            _LOGGER.error("Failed to connect to Frigidaire servers")
+            self._available = False
