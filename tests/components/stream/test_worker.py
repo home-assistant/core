@@ -25,8 +25,8 @@ from homeassistant.components.stream import Stream
 from homeassistant.components.stream.const import (
     HLS_PROVIDER,
     MAX_MISSING_DTS,
-    MIN_SEGMENT_DURATION,
     PACKETS_TO_WAIT_FOR_AUDIO,
+    TARGET_SEGMENT_DURATION,
 )
 from homeassistant.components.stream.worker import SegmentBuffer, stream_worker
 
@@ -38,7 +38,7 @@ VIDEO_FRAME_RATE = 12
 AUDIO_SAMPLE_RATE = 11025
 PACKET_DURATION = fractions.Fraction(1, VIDEO_FRAME_RATE)  # in seconds
 SEGMENT_DURATION = (
-    math.ceil(MIN_SEGMENT_DURATION / PACKET_DURATION) * PACKET_DURATION
+    math.ceil(TARGET_SEGMENT_DURATION / PACKET_DURATION) * PACKET_DURATION
 )  # in seconds
 TEST_SEQUENCE_LENGTH = 5 * VIDEO_FRAME_RATE
 LONGER_TEST_SEQUENCE_LENGTH = 20 * VIDEO_FRAME_RATE
@@ -102,7 +102,8 @@ class PacketSequence:
             pts = self.packet * PACKET_DURATION / time_base
             duration = PACKET_DURATION / time_base
             stream = VIDEO_STREAM
-            is_keyframe = True
+            # Pretend we get 1 keyframe every second
+            is_keyframe = not (self.packet - 1) % VIDEO_FRAME_RATE
             size = 3
 
         return FakePacket()
@@ -335,7 +336,11 @@ async def test_skip_initial_bad_packets(hass):
     assert all(segments[i].sequence == i for i in range(len(segments)))
     # Check segment durations
     assert all(s.duration == SEGMENT_DURATION for s in segments)
-    assert len(decoded_stream.video_packets) == num_packets - num_bad_packets
+    assert (
+        len(decoded_stream.video_packets)
+        == num_packets
+        - math.ceil(num_bad_packets / VIDEO_FRAME_RATE) * VIDEO_FRAME_RATE
+    )
     assert len(decoded_stream.audio_packets) == 0
 
 
@@ -363,6 +368,9 @@ async def test_skip_missing_dts(hass):
     bad_packet_start = int(LONGER_TEST_SEQUENCE_LENGTH / 2)
     num_bad_packets = MAX_MISSING_DTS - 1
     for i in range(bad_packet_start, bad_packet_start + num_bad_packets):
+        if packets[i].is_keyframe:
+            num_bad_packets -= 1
+            continue
         packets[i].dts = None
 
     decoded_stream = await async_decode_stream(hass, iter(packets))
@@ -450,6 +458,7 @@ async def test_audio_is_first_packet(hass):
     packets[0].stream = AUDIO_STREAM
     packets[0].dts = packets[1].dts / VIDEO_FRAME_RATE * AUDIO_SAMPLE_RATE
     packets[0].pts = packets[1].pts / VIDEO_FRAME_RATE * AUDIO_SAMPLE_RATE
+    packets[1].is_keyframe = True  # Move the video keyframe from packet 0 to packet 1
     packets[2].stream = AUDIO_STREAM
     packets[2].dts = packets[3].dts / VIDEO_FRAME_RATE * AUDIO_SAMPLE_RATE
     packets[2].pts = packets[3].pts / VIDEO_FRAME_RATE * AUDIO_SAMPLE_RATE
