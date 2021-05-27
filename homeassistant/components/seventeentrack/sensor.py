@@ -1,5 +1,5 @@
 """Support for package tracking sensors from 17track.net."""
-from typing import List
+from __future__ import annotations
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.components.seventeentrack import SeventeenTrackDataCoordinator
@@ -38,7 +38,7 @@ async def async_setup_entry(
 
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
 
-    entities: List[SeventeenTrackBaseSensor] = []
+    entities: list[SeventeenTrackBaseSensor] = []
     for sensor_type in coordinator.data["summary"]:
         entities.append(SeventeenTrackSummarySensor(coordinator, sensor_type))
     entities.append(SeventeenTrackPackagesSensor(coordinator))

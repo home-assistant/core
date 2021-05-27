@@ -11,6 +11,7 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_USERNAME,
 )
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -22,7 +23,7 @@ MOCK_CONFIG = {
 MOCK_OPTIONS = {CONF_SCAN_INTERVAL: 10, CONF_SHOW_ARCHIVED: False}
 
 
-async def test_flow_works(hass):
+async def test_flow_works(hass: HomeAssistant) -> None:
     """Test user config."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -38,7 +39,7 @@ async def test_flow_works(hass):
     assert result["data"] == MOCK_CONFIG
 
 
-async def test_options(hass):
+async def test_options(hass: HomeAssistant) -> None:
     """Test updating options."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -47,6 +48,7 @@ async def test_options(hass):
         unique_id="email@email.com",
     )
     entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -64,7 +66,7 @@ async def test_options(hass):
     }
 
 
-async def test_form_invalid_auth(hass, mock_api):
+async def test_form_invalid_auth(hass: HomeAssistant, mock_api) -> None:
     """Test we handle invalid auth."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -80,7 +82,7 @@ async def test_form_invalid_auth(hass, mock_api):
     assert result["errors"] == {"base": "invalid_auth"}
 
 
-async def test_form_unknwon_error(hass, mock_api):
+async def test_form_unknwon_error(hass: HomeAssistant, mock_api) -> None:
     """Test we handle SeventeenTrackError."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -95,7 +97,7 @@ async def test_form_unknwon_error(hass, mock_api):
     assert result["errors"] == {"base": "cannot_connect"}
 
 
-async def test_reauth_success(hass):
+async def test_reauth_success(hass: HomeAssistant) -> None:
     """Test we can reauth."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -126,7 +128,7 @@ async def test_reauth_success(hass):
     assert result2["reason"] == "reauth_successful"
 
 
-async def test_reauth_failed(hass, mock_api):
+async def test_reauth_failed(hass: HomeAssistant, mock_api) -> None:
     """Test we can reauth."""
     entry = MockConfigEntry(
         domain=DOMAIN,

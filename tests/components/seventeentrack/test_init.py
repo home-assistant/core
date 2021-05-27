@@ -19,13 +19,13 @@ from .test_config_flow import MOCK_CONFIG
 from tests.common import MockConfigEntry
 
 
-async def test_setup_with_no_config(hass):
+async def test_setup_with_no_config(hass: HomeAssistant) -> None:
     """Test that we do not discover anything or try to set up a controller."""
     assert await async_setup_component(hass, DOMAIN, {})
     assert DOMAIN not in hass.data
 
 
-async def test_successful_config_entry(hass, mock_api):
+async def test_successful_config_entry(hass: HomeAssistant, mock_api) -> None:
     """Test that Seventeentrack is configured successfully."""
 
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG)
@@ -61,7 +61,7 @@ async def test_add_package(hass: HomeAssistant, mock_api) -> None:
     mock_api.assert_called_once()
 
 
-async def test_setup_failed(hass, mock_api):
+async def test_setup_failed(hass: HomeAssistant, mock_api) -> None:
     """Test Seventeentrack failed due to failed authentication."""
 
     entry = MockConfigEntry(
@@ -76,7 +76,7 @@ async def test_setup_failed(hass, mock_api):
     assert entry.state == ConfigEntryState.SETUP_ERROR
 
 
-async def test_setup_retry(hass, mock_api):
+async def test_setup_retry(hass: HomeAssistant, mock_api) -> None:
     """Test Seventeentrack setup retry due to unknown error."""
 
     entry = MockConfigEntry(
@@ -92,7 +92,7 @@ async def test_setup_retry(hass, mock_api):
     assert entry.state == ConfigEntryState.SETUP_RETRY
 
 
-async def test_unload_entry(hass):
+async def test_unload_entry(hass: HomeAssistant) -> None:
     """Test removing Seventeentrack."""
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG)
     entry.add_to_hass(hass)

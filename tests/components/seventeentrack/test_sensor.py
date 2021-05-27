@@ -6,6 +6,7 @@ from py17track.package import Package
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.seventeentrack.const import DOMAIN
 from homeassistant.const import CONF_NAME
+from homeassistant.core import HomeAssistant
 from homeassistant.util import slugify
 
 from .test_config_flow import MOCK_CONFIG
@@ -34,7 +35,7 @@ PACKAGES = [
 ]
 
 
-async def test_seventeentrack_sensors(hass, mock_api):
+async def test_seventeentrack_sensors(hass: HomeAssistant, mock_api) -> None:
     """Test sensors created for seventeentrack integration."""
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG)
     entry.add_to_hass(hass)
@@ -47,10 +48,10 @@ async def test_seventeentrack_sensors(hass, mock_api):
 
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == len(SUMMARY) + 1
 
-    for sensor_type, state in SUMMARY.items():
+    for sensor_type, qty in SUMMARY.items():
         sensor = hass.states.get(
             f"sensor.{MOCK_CONFIG[CONF_NAME]}_packages_{slugify(sensor_type)}"
         )
-        assert sensor.state == str(state)
+        assert sensor.state == str(qty)
 
     assert hass.states.get(f"sensor.{MOCK_CONFIG[CONF_NAME]}_all_packages").state == "1"
