@@ -11,12 +11,12 @@
         "step": {
             "user": {
                 "data": {
-                    "brand": "Marka",
                     "password": "Has\u0142o",
+                    "station": "Numer seryjny stacji",
                     "username": "Nazwa u\u017cytkownika"
-                },
-                "title": "Po\u0142\u0105czenie z mynexia.com"
+                }
             }
         }
-    }
+    },
+    "title": "Wallbox"
 }
