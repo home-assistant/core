@@ -950,6 +950,6 @@ class SonosSpeaker:
     def subscription_address(self) -> str | None:
         """Return the current subscription callback address if any."""
         if self._subscriptions:
-            ip, port = self._subscriptions[0].event_listener.address
-            return ":".join([ip, str(port)])
+            addr, port = self._subscriptions[0].event_listener.address
+            return ":".join([addr, str(port)])
         return None

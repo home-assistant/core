@@ -65,7 +65,7 @@ class SonosEntity(Entity):
         """Poll the entity if subscriptions fail."""
         if self.speaker.is_first_poll:
             _LOGGER.warning(
-                "%s cannot reach [%s], falling back to polling. Functionality may be limited.",
+                "%s cannot reach [%s], falling back to polling, functionality may be limited",
                 self.speaker.zone_name,
                 self.speaker.subscription_address,
             )
