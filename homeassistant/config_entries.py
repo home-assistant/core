@@ -615,16 +615,21 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
         # Check if config entry exists with unique ID. Unload it.
         existing_entry = None
 
-        if flow.unique_id is not None:
-            # Abort all flows in progress with same unique ID.
-            for progress_flow in self.async_progress():
-                if (
-                    progress_flow["handler"] == flow.handler
-                    and progress_flow["flow_id"] != flow.flow_id
-                    and progress_flow["context"].get("unique_id") == flow.unique_id
-                ):
-                    self.async_abort(progress_flow["flow_id"])
+        # Abort all flows in progress with same unique ID
+        # or the default discovery ID
+        for progress_flow in self.async_progress():
+            progress_unique_id = progress_flow["context"].get("unique_id")
+            if (
+                progress_flow["handler"] == flow.handler
+                and progress_flow["flow_id"] != flow.flow_id
+                and (
+                    (flow.unique_id and progress_unique_id == flow.unique_id)
+                    or progress_unique_id == DEFAULT_DISCOVERY_UNIQUE_ID
+                )
+            ):
+                self.async_abort(progress_flow["flow_id"])
 
+        if flow.unique_id is not None:
             # Reset unique ID when the default discovery ID has been used
             if flow.unique_id == DEFAULT_DISCOVERY_UNIQUE_ID:
                 await flow.async_set_unique_id(None)

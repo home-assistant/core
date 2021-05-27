@@ -100,7 +100,7 @@ aioeafm==0.1.2
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==2.7.0
+aioesphomeapi==2.8.0
 
 # homeassistant.components.flo
 aioflo==0.4.1
@@ -338,7 +338,7 @@ fritzconnection==1.4.2
 gTTS==2.2.2
 
 # homeassistant.components.garages_amsterdam
-garages-amsterdam==2.0.5
+garages-amsterdam==2.1.1
 
 # homeassistant.components.garmin_connect
 garminconnect==0.1.19
@@ -411,7 +411,7 @@ hangups==0.4.11
 hass-nabucasa==0.43.0
 
 # homeassistant.components.tasmota
-hatasmota==0.2.13
+hatasmota==0.2.14
 
 # homeassistant.components.jewish_calendar
 hdate==0.10.2
@@ -429,7 +429,7 @@ hole==0.5.1
 holidays==0.11.1
 
 # homeassistant.components.frontend
-home-assistant-frontend==20210518.0
+home-assistant-frontend==20210526.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -460,13 +460,10 @@ hyperion-py==0.7.4
 iaqualink==0.3.4
 
 # homeassistant.components.ping
-icmplib==3.0
+icmplib==3.0.0
 
 # homeassistant.components.network
 # homeassistant.components.nmap_tracker
-ifaddr==0.1.7
-
-# homeassistant.components.network
 ifaddr==0.1.7
 
 # homeassistant.components.influxdb
@@ -875,7 +872,7 @@ pymailgunner==1.4
 pymata-express==1.19
 
 # homeassistant.components.mazda
-pymazda==0.1.5
+pymazda==0.1.6
 
 # homeassistant.components.melcloud
 pymelcloud==2.5.2
@@ -972,13 +969,13 @@ pyserial-asyncio==0.5
 pyserial==3.5
 
 # homeassistant.components.sia
-pysiaalarm==3.0.0b12
+pysiaalarm==3.0.0
 
 # homeassistant.components.signal_messenger
 pysignalclirestapi==0.3.4
 
 # homeassistant.components.sma
-pysma==0.4.3
+pysma==0.5.0
 
 # homeassistant.components.smappee
 pysmappee==0.2.25
@@ -993,7 +990,7 @@ pysmartthings==0.7.6
 pysoma==0.0.10
 
 # homeassistant.components.sonos
-pysonos==0.0.49
+pysonos==0.0.50
 
 # homeassistant.components.spc
 pyspcwebgw==0.4.0
@@ -1337,4 +1334,4 @@ zigpy-znp==0.5.1
 zigpy==0.33.0
 
 # homeassistant.components.zwave_js
-zwave-js-server-python==0.25.0
+zwave-js-server-python==0.25.1
