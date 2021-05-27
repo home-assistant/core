@@ -3,6 +3,10 @@ import logging
 
 from fritzconnection.core.exceptions import FritzConnectionException, FritzSecurityError
 
+from homeassistant.components.device_tracker.const import (
+    CONF_CONSIDER_HOME,
+    DEFAULT_CONSIDER_HOME,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
@@ -59,6 +63,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     await async_setup_services(hass)
+
+    return True
+
+
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+    """Migrate config entry."""
+    _LOGGER.debug("Migrating from version %s", config_entry.version)
+
+    if config_entry.version == 1:
+        config_entry.version = 2
+        hass.config_entries.async_update_entry(
+            config_entry,
+            options={CONF_CONSIDER_HOME: DEFAULT_CONSIDER_HOME.total_seconds()},
+        )
+
+    _LOGGER.info("Migration to version %s successful", config_entry.version)
 
     return True
 
