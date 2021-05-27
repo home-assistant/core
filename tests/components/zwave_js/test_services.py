@@ -598,6 +598,29 @@ async def test_set_value(hass, client, climate_danfoss_lc_13, integration):
             blocking=True,
         )
 
+    assert len(client.async_send_command.call_args_list) == 1
+
+    args = client.async_send_command.call_args[0][0]
+    assert args["command"] == "node.set_value"
+    assert args["nodeId"] == 5
+    assert args["valueId"] == {
+        "commandClassName": "Protection",
+        "commandClass": 117,
+        "endpoint": 0,
+        "property": "local",
+        "propertyName": "local",
+        "ccVersion": 2,
+        "metadata": {
+            "type": "number",
+            "readable": True,
+            "writeable": True,
+            "label": "Local protection state",
+            "states": {"0": "Unprotected", "2": "NoOperationPossible"},
+        },
+        "value": 0,
+    }
+    assert args["value"] == 2
+
     # Test missing device and entities keys
     with pytest.raises(vol.MultipleInvalid):
         await hass.services.async_call(
