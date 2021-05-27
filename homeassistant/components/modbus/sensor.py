@@ -52,8 +52,7 @@ async def async_setup_platform(
         hub = hass.data[MODBUS_DOMAIN][discovery_info[CONF_NAME]]
         sensors.append(ModbusRegisterSensor(hub, entry))
 
-    if len(sensors) > 0:
-        async_add_entities(sensors)
+    async_add_entities(sensors)
 
 
 class ModbusRegisterSensor(BasePlatform, RestoreEntity, SensorEntity):
