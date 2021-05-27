@@ -61,7 +61,7 @@ SENSORS_TYPE_RATES = "sensors_rates"
 _LOGGER = logging.getLogger(__name__)
 
 
-def _get_dict(keys: list, values: list):
+def _get_dict(keys: list, values: list) -> dict[str, Any]:
     """Create a dict from a list of keys and values."""
     ret_dict: dict[str, Any] = dict.fromkeys(keys)
     if not values:
