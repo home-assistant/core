@@ -117,7 +117,7 @@ class FritzBoxTools:
 
         self.fritz_status = FritzStatus(fc=self.connection)
         info = self.connection.call_action("DeviceInfo:1", "GetInfo")
-        if len(self._unique_id) == 0:
+        if not self._unique_id:
             self._unique_id = info["NewSerialNumber"]
 
         self._model = info.get("NewModelName")
@@ -174,6 +174,21 @@ class FritzBoxTools:
         """Return device Mac address."""
         if not self._unique_id:
             raise ClassSetupMissing()
+        return self._unique_id
+
+    @property
+    def model(self) -> str:
+        """Return device model."""
+        return self._model
+
+    @property
+    def sw_version(self) -> str:
+        """Return SW version."""
+        return self._sw_version
+
+    @property
+    def mac(self) -> str:
+        """Return device Mac address."""
         return self._unique_id
 
     @property
