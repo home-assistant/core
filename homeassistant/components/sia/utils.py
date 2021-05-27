@@ -6,14 +6,9 @@ from typing import Any
 
 from pysiaalarm import SIAEvent
 
-from .const import (
-    ATTR_CODE,
-    ATTR_ID,
-    ATTR_MESSAGE,
-    ATTR_TIMESTAMP,
-    ATTR_ZONE,
-    PING_INTERVAL_MARGIN,
-)
+from .const import ATTR_CODE, ATTR_ID, ATTR_MESSAGE, ATTR_TIMESTAMP, ATTR_ZONE
+
+PING_INTERVAL_MARGIN = 30
 
 
 def get_unavailability_interval(ping: int) -> float:

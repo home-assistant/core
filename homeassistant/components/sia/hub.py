@@ -19,15 +19,17 @@ from .const import (
     CONF_ENCRYPTION_KEY,
     CONF_IGNORE_TIMESTAMPS,
     CONF_ZONES,
-    DEFAULT_TIMEBAND,
     DOMAIN,
-    IGNORED_TIMEBAND,
     PLATFORMS,
     SIA_EVENT,
 )
 from .utils import get_event_data_from_sia_event
 
 _LOGGER = logging.getLogger(__name__)
+
+
+DEFAULT_TIMEBAND = (80, 40)
+IGNORED_TIMEBAND = (3600, 1800)
 
 
 class SIAHub:

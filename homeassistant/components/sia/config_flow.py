@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from copy import deepcopy
 import logging
-from typing import Any, Coroutine
+from typing import Any
 
 from pysiaalarm import (
     InvalidAccountFormatError,
