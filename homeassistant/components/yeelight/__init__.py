@@ -50,6 +50,7 @@ DATA_CONFIG_ENTRIES = "config_entries"
 DATA_CUSTOM_EFFECTS = "custom_effects"
 DATA_SCAN_INTERVAL = "scan_interval"
 DATA_DEVICE = "device"
+DATA_LISTENER = "listener"
 DATA_REMOVE_INIT_DISPATCHER = "remove_init_dispatcher"
 DATA_PLATFORMS_LOADED = "platforms_loaded"
 
@@ -67,7 +68,7 @@ ACTIVE_COLOR_FLOWING = "1"
 
 NIGHTLIGHT_SWITCH_TYPE_LIGHT = "light"
 
-SCAN_INTERVAL = timedelta(seconds=30)
+SCAN_INTERVAL = timedelta(seconds=600)
 DISCOVERY_INTERVAL = timedelta(seconds=60)
 
 YEELIGHT_RGB_TRANSITION = "RGBTransition"
@@ -207,14 +208,17 @@ async def _async_initialize(
     listen_thread = Thread(target=device.bulb.listen, args=(device.update_callback,))
     listen_thread.daemon = True
     listen_thread.start()
+    entry_data[DATA_LISTENER] = listen_thread
     
     # register stop callback to shutdown listening for local pushes
     def stop_listen_thread(event):
         """Stop listen thread."""
-        _LOGGER.debug("Shutting down Yeelight Listener")
-        device.bulb.stop_listening()
-        listen_thread.join()
-        _LOGGER.debug("Yeelight Listener stopped")
+        thread = hass.data[DOMAIN][DATA_CONFIG_ENTRIES].get(entry.entry_id, {}).get(DATA_LISTENER)
+        if thread is not None:
+            _LOGGER.debug("Shutting down Yeelight Listener")
+            device.bulb.stop_listening()
+            thread.join()
+            _LOGGER.debug("Yeelight Listener stopped")
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_listen_thread)
 
@@ -301,6 +305,13 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         # discovery
         scanner = YeelightScanner.async_get(hass)
         scanner.async_unregister_callback(entry.data[CONF_ID])
+
+    thread = entry_data[DATA_LISTENER]
+    device = entry_data[DATA_DEVICE]
+    _LOGGER.debug("Shutting down Yeelight Listener")
+    device.bulb.stop_listening()
+    thread.join()
+    _LOGGER.debug("Yeelight Listener stopped")
 
     data_config_entries.pop(entry.entry_id)
 
