@@ -19,6 +19,7 @@ from zwave_js_server.util.node import (
 from homeassistant.const import ATTR_DEVICE_ID, ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity_registry import EntityRegistry
 
@@ -68,10 +69,13 @@ BITMASK_SCHEMA = vol.All(
 class ZWaveServices:
     """Class that holds our services (Zwave Commands) that should be published to hass."""
 
-    def __init__(self, hass: HomeAssistant, ent_reg: EntityRegistry) -> None:
+    def __init__(
+        self, hass: HomeAssistant, ent_reg: EntityRegistry, dev_reg: DeviceRegistry
+    ) -> None:
         """Initialize with hass object."""
         self._hass = hass
         self._ent_reg = ent_reg
+        self._dev_reg = dev_reg
 
     @callback
     def get_nodes_from_service_data(self, val: dict[str, Any]) -> dict[str, Any]:
@@ -80,13 +84,15 @@ class ZWaveServices:
         try:
             if ATTR_ENTITY_ID in val:
                 nodes |= {
-                    async_get_node_from_entity_id(self._hass, entity_id)
+                    async_get_node_from_entity_id(
+                        self._hass, entity_id, self._ent_reg, self._dev_reg
+                    )
                     for entity_id in val[ATTR_ENTITY_ID]
                 }
                 val.pop(ATTR_ENTITY_ID)
             if ATTR_DEVICE_ID in val:
                 nodes |= {
-                    async_get_node_from_device_id(self._hass, device_id)
+                    async_get_node_from_device_id(self._hass, device_id, self._dev_reg)
                     for device_id in val[ATTR_DEVICE_ID]
                 }
                 val.pop(ATTR_DEVICE_ID)
@@ -128,6 +134,18 @@ class ZWaveServices:
             raise vol.Invalid(
                 "Multicast commands only work on devices in the same network"
             )
+
+        return val
+
+    @callback
+    def validate_entities(self, val: dict[str, Any]) -> dict[str, Any]:
+        """Validate entities exist and are from the zwave_js platform."""
+        for entity_id in val[ATTR_ENTITY_ID]:
+            entry = self._ent_reg.async_get(entity_id)
+            if entry is None or entry.platform != const.DOMAIN:
+                raise vol.Invalid(
+                    f"Entity {entity_id} is not a valid {const.DOMAIN} entity."
+                )
 
         return val
 
@@ -194,10 +212,15 @@ class ZWaveServices:
             const.SERVICE_REFRESH_VALUE,
             self.async_poll_value,
             schema=vol.Schema(
-                {
-                    vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
-                    vol.Optional(const.ATTR_REFRESH_ALL_VALUES, default=False): bool,
-                }
+                vol.All(
+                    {
+                        vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
+                        vol.Optional(
+                            const.ATTR_REFRESH_ALL_VALUES, default=False
+                        ): bool,
+                    },
+                    self.validate_entities,
+                )
             ),
         )
 
@@ -320,10 +343,7 @@ class ZWaveServices:
         """Poll value on a node."""
         for entity_id in service.data[ATTR_ENTITY_ID]:
             entry = self._ent_reg.async_get(entity_id)
-            if entry is None or entry.platform != const.DOMAIN:
-                raise ValueError(
-                    f"Entity {entity_id} is not a valid {const.DOMAIN} entity."
-                )
+            assert entry  # Schema validation would have failed if we can't do this
             async_dispatcher_send(
                 self._hass,
                 f"{const.DOMAIN}_{entry.unique_id}_poll_value",

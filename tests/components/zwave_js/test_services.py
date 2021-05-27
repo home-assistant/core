@@ -534,8 +534,8 @@ async def test_poll_value(
     )
     assert len(client.async_send_command.call_args_list) == 8
 
-    # Test polling against an invalid entity raises ValueError
-    with pytest.raises(ValueError):
+    # Test polling against an invalid entity raises MultipleInvalid
+    with pytest.raises(vol.MultipleInvalid):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_REFRESH_VALUE,
