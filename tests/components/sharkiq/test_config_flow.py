@@ -73,7 +73,9 @@ async def test_reauth_success(hass: HomeAssistant):
         mock_config.add_to_hass(hass)
 
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "reauth", "unique_id": UNIQUE_ID}, data=CONFIG
+            DOMAIN,
+            context={"source": config_entries.SOURCE_REAUTH, "unique_id": UNIQUE_ID},
+            data=CONFIG,
         )
 
         assert result["type"] == "abort"
@@ -99,7 +101,7 @@ async def test_reauth(
     with patch("sharkiqpy.AylaApi.async_sign_in", side_effect=side_effect):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": "reauth", "unique_id": UNIQUE_ID},
+            context={"source": config_entries.SOURCE_REAUTH, "unique_id": UNIQUE_ID},
             data=CONFIG,
         )
 

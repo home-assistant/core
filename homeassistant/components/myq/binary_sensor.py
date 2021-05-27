@@ -26,7 +26,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     for device in myq.gateways.values():
         entities.append(MyQBinarySensorEntity(coordinator, device))
 
-    async_add_entities(entities, True)
+    async_add_entities(entities)
 
 
 class MyQBinarySensorEntity(CoordinatorEntity, BinarySensorEntity):

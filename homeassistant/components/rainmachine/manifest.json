@@ -5,5 +5,14 @@
   "documentation": "https://www.home-assistant.io/integrations/rainmachine",
   "requirements": ["regenmaschine==3.0.0"],
   "codeowners": ["@bachya"],
-  "iot_class": "local_polling"
+  "iot_class": "local_polling",
+  "homekit": {
+    "models": ["Touch HD", "SPK5"]
+  },  
+  "zeroconf": [
+    {
+      "type": "_http._tcp.local.",
+      "name": "rainmachine*"
+    }
+  ]
 }

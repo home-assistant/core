@@ -10,12 +10,12 @@ import voluptuous as vol
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import CONF_DEVICE_ID, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.typing import EventType, HomeAssistantType
+from homeassistant.helpers.typing import EventType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,7 +46,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass: HomeAssistantType, config: dict) -> bool:
+async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     """Set up the switcher component."""
     phone_id = config[DOMAIN][CONF_PHONE_ID]
     device_id = config[DOMAIN][CONF_DEVICE_ID]

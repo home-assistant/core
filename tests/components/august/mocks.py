@@ -77,7 +77,7 @@ async def _mock_setup_august(
     return entry
 
 
-async def _create_august_with_devices(
+async def _create_august_with_devices(  # noqa: C901
     hass, devices, api_call_side_effects=None, activities=None, pubnub=None
 ):
     if api_call_side_effects is None:

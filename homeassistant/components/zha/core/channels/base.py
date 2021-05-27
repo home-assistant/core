@@ -11,6 +11,7 @@ import zigpy.exceptions
 
 from homeassistant.const import ATTR_COMMAND
 from homeassistant.core import callback
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .. import typing as zha_typing
 from ..const import (
@@ -18,10 +19,15 @@ from ..const import (
     ATTR_ATTRIBUTE_ID,
     ATTR_ATTRIBUTE_NAME,
     ATTR_CLUSTER_ID,
+    ATTR_TYPE,
     ATTR_UNIQUE_ID,
     ATTR_VALUE,
     CHANNEL_ZDO,
     SIGNAL_ATTR_UPDATED,
+    ZHA_CHANNEL_MSG,
+    ZHA_CHANNEL_MSG_BIND,
+    ZHA_CHANNEL_MSG_CFG_RPT,
+    ZHA_CHANNEL_MSG_DATA,
 )
 from ..helpers import LogMixin, safe_read
 
@@ -82,6 +88,7 @@ class ZigbeeChannel(LogMixin):
     """Base channel for a Zigbee cluster."""
 
     REPORT_CONFIG = ()
+    BIND: bool = True
 
     def __init__(
         self, cluster: zha_typing.ZigpyClusterType, ch_pool: zha_typing.ChannelPoolType
@@ -148,9 +155,33 @@ class ZigbeeChannel(LogMixin):
         try:
             res = await self.cluster.bind()
             self.debug("bound '%s' cluster: %s", self.cluster.ep_attribute, res[0])
+            async_dispatcher_send(
+                self._ch_pool.hass,
+                ZHA_CHANNEL_MSG,
+                {
+                    ATTR_TYPE: ZHA_CHANNEL_MSG_BIND,
+                    ZHA_CHANNEL_MSG_DATA: {
+                        "cluster_name": self.cluster.name,
+                        "cluster_id": self.cluster.cluster_id,
+                        "success": res[0] == 0,
+                    },
+                },
+            )
         except (zigpy.exceptions.ZigbeeException, asyncio.TimeoutError) as ex:
             self.debug(
                 "Failed to bind '%s' cluster: %s", self.cluster.ep_attribute, str(ex)
+            )
+            async_dispatcher_send(
+                self._ch_pool.hass,
+                ZHA_CHANNEL_MSG,
+                {
+                    ATTR_TYPE: ZHA_CHANNEL_MSG_BIND,
+                    ZHA_CHANNEL_MSG_DATA: {
+                        "cluster_name": self.cluster.name,
+                        "cluster_id": self.cluster.cluster_id,
+                        "success": False,
+                    },
+                },
             )
 
     async def configure_reporting(self) -> None:
@@ -159,6 +190,7 @@ class ZigbeeChannel(LogMixin):
         This also swallows ZigbeeException exceptions that are thrown when
         devices are unreachable.
         """
+        event_data = {}
         kwargs = {}
         if self.cluster.cluster_id >= 0xFC00 and self._ch_pool.manufacturer_code:
             kwargs["manufacturer"] = self._ch_pool.manufacturer_code
@@ -167,6 +199,14 @@ class ZigbeeChannel(LogMixin):
             attr = report["attr"]
             attr_name = self.cluster.attributes.get(attr, [attr])[0]
             min_report_int, max_report_int, reportable_change = report["config"]
+            event_data[attr_name] = {
+                "min": min_report_int,
+                "max": max_report_int,
+                "id": attr,
+                "name": attr_name,
+                "change": reportable_change,
+            }
+
             try:
                 res = await self.cluster.configure_reporting(
                     attr, min_report_int, max_report_int, reportable_change, **kwargs
@@ -180,6 +220,9 @@ class ZigbeeChannel(LogMixin):
                     reportable_change,
                     res,
                 )
+                event_data[attr_name]["success"] = (
+                    res[0][0].status == 0 or res[0][0].status == 134
+                )
             except (zigpy.exceptions.ZigbeeException, asyncio.TimeoutError) as ex:
                 self.debug(
                     "failed to set reporting for '%s' attr on '%s' cluster: %s",
@@ -187,11 +230,26 @@ class ZigbeeChannel(LogMixin):
                     self.cluster.ep_attribute,
                     str(ex),
                 )
+                event_data[attr_name]["success"] = False
+
+        async_dispatcher_send(
+            self._ch_pool.hass,
+            ZHA_CHANNEL_MSG,
+            {
+                ATTR_TYPE: ZHA_CHANNEL_MSG_CFG_RPT,
+                ZHA_CHANNEL_MSG_DATA: {
+                    "cluster_name": self.cluster.name,
+                    "cluster_id": self.cluster.cluster_id,
+                    "attributes": event_data,
+                },
+            },
+        )
 
     async def async_configure(self) -> None:
         """Set cluster binding and attribute reporting."""
         if not self._ch_pool.skip_configuration:
-            await self.bind()
+            if self.BIND:
+                await self.bind()
             if self.cluster.is_server:
                 await self.configure_reporting()
             ch_specific_cfg = getattr(self, "async_configure_channel_specific", None)

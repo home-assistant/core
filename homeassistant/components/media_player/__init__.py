@@ -1161,7 +1161,7 @@ class BrowseMedia:
         children: list[BrowseMedia] | None = None,
         children_media_class: str | None = None,
         thumbnail: str | None = None,
-    ):
+    ) -> None:
         """Initialize browse media item."""
         self.media_class = media_class
         self.media_content_id = media_content_id

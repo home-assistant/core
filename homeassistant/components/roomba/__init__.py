@@ -3,7 +3,7 @@ import asyncio
 import logging
 
 import async_timeout
-from roombapy import Roomba, RoombaConnectionError
+from roombapy import RoombaConnectionError, RoombaFactory
 
 from homeassistant import exceptions
 from homeassistant.const import (
@@ -40,7 +40,7 @@ async def async_setup_entry(hass, config_entry):
             },
         )
 
-    roomba = Roomba(
+    roomba = RoombaFactory.create_roomba(
         address=config_entry.data[CONF_HOST],
         blid=config_entry.data[CONF_BLID],
         password=config_entry.data[CONF_PASSWORD],
@@ -68,10 +68,7 @@ async def async_setup_entry(hass, config_entry):
         CANCEL_STOP: cancel_stop,
     }
 
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, platform)
-        )
+    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
 
     if not config_entry.update_listeners:
         config_entry.add_update_listener(async_update_options)
@@ -119,13 +116,8 @@ async def async_update_options(hass, config_entry):
 
 async def async_unload_entry(hass, config_entry):
     """Unload a config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(config_entry, platform)
-                for platform in PLATFORMS
-            ]
-        )
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        config_entry, PLATFORMS
     )
     if unload_ok:
         domain_data = hass.data[DOMAIN][config_entry.entry_id]

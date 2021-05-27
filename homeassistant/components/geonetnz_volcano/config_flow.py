@@ -29,8 +29,6 @@ def configured_instances(hass):
 class GeonetnzVolcanoFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a GeoNet NZ Volcano config flow."""
 
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
-
     async def _show_form(self, errors=None):
         """Show the form to the user."""
         data_schema = vol.Schema(

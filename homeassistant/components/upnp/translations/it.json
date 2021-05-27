@@ -9,7 +9,7 @@
             "one": "Vuoto",
             "other": "Vuoto"
         },
-        "flow_title": "UPnP/IGD: {name}",
+        "flow_title": "{name}",
         "step": {
             "ssdp_confirm": {
                 "description": "Vuoi configurare questo dispositivo UPnP/IGD?"
@@ -17,7 +17,17 @@
             "user": {
                 "data": {
                     "scan_interval": "Intervallo di aggiornamento (secondi, minimo 30)",
+                    "unique_id": "Dispositivo",
                     "usn": "Dispositivo"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Intervallo di aggiornamento (secondi, minimo 30)"
                 }
             }
         }

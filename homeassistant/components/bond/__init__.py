@@ -1,5 +1,4 @@
 """The Bond integration."""
-import asyncio
 from asyncio import TimeoutError as AsyncIOTimeoutError
 
 from aiohttp import ClientError, ClientTimeout
@@ -75,24 +74,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     _async_remove_old_device_identifiers(config_entry_id, device_registry, hub)
 
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, platform)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, platform)
-                for platform in PLATFORMS
-            ]
-        )
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     data = hass.data[DOMAIN][entry.entry_id]
     data[_STOP_CANCEL]()

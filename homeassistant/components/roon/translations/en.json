@@ -4,7 +4,6 @@
             "already_configured": "Device is already configured"
         },
         "error": {
-            "duplicate_entry": "That host has already been added.",
             "invalid_auth": "Invalid authentication",
             "unknown": "Unexpected error"
         },

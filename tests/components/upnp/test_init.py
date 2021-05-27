@@ -15,7 +15,7 @@ from homeassistant.components.upnp.const import (
     DOMAIN,
 )
 from homeassistant.components.upnp.device import Device
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from .mock_device import MockDevice
@@ -23,7 +23,7 @@ from .mock_device import MockDevice
 from tests.common import MockConfigEntry
 
 
-async def test_async_setup_entry_default(hass: HomeAssistantType):
+async def test_async_setup_entry_default(hass: HomeAssistant):
     """Test async_setup_entry."""
     udn = "uuid:device_1"
     location = "http://192.168.1.1/desc.xml"
@@ -69,7 +69,7 @@ async def test_async_setup_entry_default(hass: HomeAssistantType):
         async_create_device.assert_called_with(hass, discoveries[0][DISCOVERY_LOCATION])
 
 
-async def test_sync_setup_entry_multiple_discoveries(hass: HomeAssistantType):
+async def test_sync_setup_entry_multiple_discoveries(hass: HomeAssistant):
     """Test async_setup_entry."""
     udn_0 = "uuid:device_1"
     location_0 = "http://192.168.1.1/desc.xml"

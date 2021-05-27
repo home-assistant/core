@@ -1,9 +1,14 @@
 """The keenetic_ndms2 component."""
+from __future__ import annotations
 
-from homeassistant.components import binary_sensor, device_tracker
+import logging
+
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
+from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry, entity_registry
 
 from .const import (
     CONF_CONSIDER_HOME,
@@ -20,7 +25,8 @@ from .const import (
 )
 from .router import KeeneticRouter
 
-PLATFORMS = [device_tracker.DOMAIN, binary_sensor.DOMAIN]
+PLATFORMS = [BINARY_SENSOR_DOMAIN, DEVICE_TRACKER_DOMAIN]
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
@@ -38,10 +44,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         UNDO_UPDATE_LISTENER: undo_listener,
     }
 
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, platform)
-        )
+    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
 
     return True
 
@@ -50,8 +53,9 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     """Unload a config entry."""
     hass.data[DOMAIN][config_entry.entry_id][UNDO_UPDATE_LISTENER]()
 
-    for platform in PLATFORMS:
-        await hass.config_entries.async_forward_entry_unload(config_entry, platform)
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        config_entry, PLATFORMS
+    )
 
     router: KeeneticRouter = hass.data[DOMAIN][config_entry.entry_id][ROUTER]
 
@@ -59,7 +63,38 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
 
     hass.data[DOMAIN].pop(config_entry.entry_id)
 
-    return True
+    new_tracked_interfaces: set[str] = set(config_entry.options[CONF_INTERFACES])
+
+    if router.tracked_interfaces - new_tracked_interfaces:
+        _LOGGER.debug(
+            "Cleaning device_tracker entities since some interfaces are now untracked:"
+        )
+        ent_reg = entity_registry.async_get(hass)
+        dev_reg = device_registry.async_get(hass)
+        # We keep devices currently connected to new_tracked_interfaces
+        keep_devices: set[str] = {
+            mac
+            for mac, device in router.last_devices.items()
+            if device.interface in new_tracked_interfaces
+        }
+        for entity_entry in list(ent_reg.entities.values()):
+            if (
+                entity_entry.config_entry_id == config_entry.entry_id
+                and entity_entry.domain == DEVICE_TRACKER_DOMAIN
+            ):
+                mac = entity_entry.unique_id.partition("_")[0]
+                if mac not in keep_devices:
+                    _LOGGER.debug("Removing entity %s", entity_entry.entity_id)
+
+                    ent_reg.async_remove(entity_entry.entity_id)
+                    dev_reg.async_update_device(
+                        entity_entry.device_id,
+                        remove_config_entry_id=config_entry.entry_id,
+                    )
+
+        _LOGGER.debug("Finished cleaning device_tracker entities")
+
+    return unload_ok
 
 
 async def update_listener(hass, config_entry):

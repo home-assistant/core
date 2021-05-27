@@ -1,7 +1,6 @@
 """Support for Hass.io."""
 from __future__ import annotations
 
-import asyncio
 from datetime import timedelta
 import logging
 import os
@@ -10,7 +9,10 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.auth.const import GROUP_ID_ADMIN
-from homeassistant.components.homeassistant import SERVICE_CHECK_CONFIG
+from homeassistant.components.homeassistant import (
+    SERVICE_CHECK_CONFIG,
+    SHUTDOWN_SERVICES,
+)
 import homeassistant.config as conf_util
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -20,11 +22,11 @@ from homeassistant.const import (
     SERVICE_HOMEASSISTANT_RESTART,
     SERVICE_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import DOMAIN as HASS_DOMAIN, Config, HomeAssistant, callback
+from homeassistant.core import DOMAIN as HASS_DOMAIN, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, recorder
 from homeassistant.helpers.device_registry import DeviceRegistry, async_get_registry
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.loader import bind_hass
 from homeassistant.util.dt import utcnow
@@ -152,7 +154,7 @@ MAP_SERVICE_API = {
 
 
 @bind_hass
-async def async_get_addon_info(hass: HomeAssistantType, slug: str) -> dict:
+async def async_get_addon_info(hass: HomeAssistant, slug: str) -> dict:
     """Return add-on info.
 
     The caller of the function should handle HassioAPIError.
@@ -162,7 +164,7 @@ async def async_get_addon_info(hass: HomeAssistantType, slug: str) -> dict:
 
 
 @bind_hass
-async def async_update_diagnostics(hass: HomeAssistantType, diagnostics: bool) -> dict:
+async def async_update_diagnostics(hass: HomeAssistant, diagnostics: bool) -> dict:
     """Update Supervisor diagnostics toggle.
 
     The caller of the function should handle HassioAPIError.
@@ -173,7 +175,7 @@ async def async_update_diagnostics(hass: HomeAssistantType, diagnostics: bool) -
 
 @bind_hass
 @api_data
-async def async_install_addon(hass: HomeAssistantType, slug: str) -> dict:
+async def async_install_addon(hass: HomeAssistant, slug: str) -> dict:
     """Install add-on.
 
     The caller of the function should handle HassioAPIError.
@@ -185,7 +187,7 @@ async def async_install_addon(hass: HomeAssistantType, slug: str) -> dict:
 
 @bind_hass
 @api_data
-async def async_uninstall_addon(hass: HomeAssistantType, slug: str) -> dict:
+async def async_uninstall_addon(hass: HomeAssistant, slug: str) -> dict:
     """Uninstall add-on.
 
     The caller of the function should handle HassioAPIError.
@@ -197,7 +199,7 @@ async def async_uninstall_addon(hass: HomeAssistantType, slug: str) -> dict:
 
 @bind_hass
 @api_data
-async def async_update_addon(hass: HomeAssistantType, slug: str) -> dict:
+async def async_update_addon(hass: HomeAssistant, slug: str) -> dict:
     """Update add-on.
 
     The caller of the function should handle HassioAPIError.
@@ -209,7 +211,7 @@ async def async_update_addon(hass: HomeAssistantType, slug: str) -> dict:
 
 @bind_hass
 @api_data
-async def async_start_addon(hass: HomeAssistantType, slug: str) -> dict:
+async def async_start_addon(hass: HomeAssistant, slug: str) -> dict:
     """Start add-on.
 
     The caller of the function should handle HassioAPIError.
@@ -221,7 +223,7 @@ async def async_start_addon(hass: HomeAssistantType, slug: str) -> dict:
 
 @bind_hass
 @api_data
-async def async_stop_addon(hass: HomeAssistantType, slug: str) -> dict:
+async def async_stop_addon(hass: HomeAssistant, slug: str) -> dict:
     """Stop add-on.
 
     The caller of the function should handle HassioAPIError.
@@ -234,7 +236,7 @@ async def async_stop_addon(hass: HomeAssistantType, slug: str) -> dict:
 @bind_hass
 @api_data
 async def async_set_addon_options(
-    hass: HomeAssistantType, slug: str, options: dict
+    hass: HomeAssistant, slug: str, options: dict
 ) -> dict:
     """Set add-on options.
 
@@ -246,9 +248,7 @@ async def async_set_addon_options(
 
 
 @bind_hass
-async def async_get_addon_discovery_info(
-    hass: HomeAssistantType, slug: str
-) -> dict | None:
+async def async_get_addon_discovery_info(hass: HomeAssistant, slug: str) -> dict | None:
     """Return discovery data for an add-on."""
     hassio = hass.data[DOMAIN]
     data = await hassio.retrieve_discovery_messages()
@@ -259,7 +259,7 @@ async def async_get_addon_discovery_info(
 @bind_hass
 @api_data
 async def async_create_snapshot(
-    hass: HomeAssistantType, payload: dict, partial: bool = False
+    hass: HomeAssistant, payload: dict, partial: bool = False
 ) -> dict:
     """Create a full or partial snapshot.
 
@@ -339,7 +339,7 @@ def get_supervisor_ip():
     return os.environ["SUPERVISOR"].partition(":")[0]
 
 
-async def async_setup(hass: HomeAssistant, config: Config) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa: C901
     """Set up the Hass.io component."""
     # Check local setup
     for env in ("HASSIO", "HASSIO_TOKEN"):
@@ -473,23 +473,40 @@ async def async_setup(hass: HomeAssistant, config: Config) -> bool:
 
     async def async_handle_core_service(call):
         """Service handler for handling core services."""
+        if (
+            call.service in SHUTDOWN_SERVICES
+            and await recorder.async_migration_in_progress(hass)
+        ):
+            _LOGGER.error(
+                "The system cannot %s while a database upgrade is in progress",
+                call.service,
+            )
+            raise HomeAssistantError(
+                f"The system cannot {call.service} "
+                "while a database upgrade is in progress."
+            )
+
         if call.service == SERVICE_HOMEASSISTANT_STOP:
             await hassio.stop_homeassistant()
             return
 
-        try:
-            errors = await conf_util.async_check_ha_config_file(hass)
-        except HomeAssistantError:
-            return
+        errors = await conf_util.async_check_ha_config_file(hass)
 
         if errors:
-            _LOGGER.error(errors)
+            _LOGGER.error(
+                "The system cannot %s because the configuration is not valid: %s",
+                call.service,
+                errors,
+            )
             hass.components.persistent_notification.async_create(
                 "Config error. See [the logs](/config/logs) for details.",
                 "Config validating",
                 f"{HASS_DOMAIN}.check_config",
             )
-            return
+            raise HomeAssistantError(
+                f"The system cannot {call.service} "
+                f"because the configuration is not valid: {errors}"
+            )
 
         if call.service == SERVICE_HOMEASSISTANT_RESTART:
             await hassio.restart_homeassistant()
@@ -521,33 +538,21 @@ async def async_setup(hass: HomeAssistant, config: Config) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
     dev_reg = await async_get_registry(hass)
-    coordinator = HassioDataUpdateCoordinator(hass, config_entry, dev_reg)
+    coordinator = HassioDataUpdateCoordinator(hass, entry, dev_reg)
     hass.data[ADDONS_COORDINATOR] = coordinator
     await coordinator.async_refresh()
 
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, platform)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(
-    hass: HomeAssistantType, config_entry: ConfigEntry
-) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(config_entry, platform)
-                for platform in PLATFORMS
-            ]
-        )
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     # Pop add-on data
     hass.data.pop(ADDONS_COORDINATOR, None)

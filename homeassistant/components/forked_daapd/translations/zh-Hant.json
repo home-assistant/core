@@ -12,7 +12,7 @@
             "wrong_password": "\u5bc6\u78bc\u932f\u8aa4\u3002",
             "wrong_server_type": "forked-daapd \u6574\u5408\u9700\u8981\u7248\u6b21 >= 27.0 \u7248\u4e4b forked-daapd \u4f3a\u670d\u5668\u3002"
         },
-        "flow_title": "forked-daapd \u4f3a\u670d\u5668\uff1a{name} ({host})",
+        "flow_title": "{name} ({host})",
         "step": {
             "user": {
                 "data": {

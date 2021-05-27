@@ -500,10 +500,10 @@ def _generate_events_query(session):
 def _generate_events_query_without_states(session):
     return session.query(
         *EVENT_COLUMNS,
-        literal(None).label("state"),
-        literal(None).label("entity_id"),
-        literal(None).label("domain"),
-        literal(None).label("attributes"),
+        literal(value=None, type_=sqlalchemy.String).label("state"),
+        literal(value=None, type_=sqlalchemy.String).label("entity_id"),
+        literal(value=None, type_=sqlalchemy.String).label("domain"),
+        literal(value=None, type_=sqlalchemy.Text).label("attributes"),
     )
 
 
@@ -647,7 +647,7 @@ def _augment_data_with_context(
         return
 
     attr_entity_id = event_data.get(ATTR_ENTITY_ID)
-    if not attr_entity_id or (
+    if not isinstance(attr_entity_id, str) or (
         event_type in SCRIPT_AUTOMATION_EVENTS and attr_entity_id == entity_id
     ):
         return
