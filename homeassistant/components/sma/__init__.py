@@ -32,6 +32,7 @@ from .const import (
     DOMAIN,
     PLATFORMS,
     PYSMA_COORDINATOR,
+    PYSMA_DEVICE_INFO,
     PYSMA_OBJECT,
     PYSMA_REMOVE_LISTENER,
     PYSMA_SENSORS,
@@ -141,6 +142,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     session = async_get_clientsession(hass, verify_ssl=verify_ssl)
     sma = pysma.SMA(session, url, password, group)
 
+    # Get updated device info
+    device_info = await sma.device_info()
     # Get all device sensors
     sensor_def = await sma.get_sensors()
 
@@ -189,6 +192,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         PYSMA_COORDINATOR: coordinator,
         PYSMA_SENSORS: sensor_def,
         PYSMA_REMOVE_LISTENER: remove_stop_listener,
+        PYSMA_DEVICE_INFO: device_info,
     }
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
@@ -205,3 +209,19 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         data[PYSMA_REMOVE_LISTENER]()
 
     return unload_ok
+
+
+async def async_migrate_entry(hass, config_entry: ConfigEntry):
+    """Migrate old entry."""
+    _LOGGER.debug("Migrating from version %s", config_entry.version)
+
+    if config_entry.version == 1:
+        new = {**config_entry.data}
+        new.pop(PYSMA_DEVICE_INFO)
+
+        config_entry.data = {**new}
+        config_entry.version = 2
+
+    _LOGGER.info("Migration to version %s successful", config_entry.version)
+
+    return True

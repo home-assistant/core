@@ -33,10 +33,10 @@ from .const import (
     CONF_GROUP,
     CONF_KEY,
     CONF_UNIT,
-    DEVICE_INFO,
     DOMAIN,
     GROUPS,
     PYSMA_COORDINATOR,
+    PYSMA_DEVICE_INFO,
     PYSMA_SENSORS,
 )
 
@@ -124,6 +124,7 @@ async def async_setup_entry(
 
     coordinator = sma_data[PYSMA_COORDINATOR]
     used_sensors = sma_data[PYSMA_SENSORS]
+    device_info = sma_data[PYSMA_DEVICE_INFO]
 
     entities = []
     for sensor in used_sensors:
@@ -131,7 +132,7 @@ async def async_setup_entry(
             SMAsensor(
                 coordinator,
                 config_entry.unique_id,
-                config_entry.data[DEVICE_INFO],
+                device_info,
                 sensor,
             )
         )
@@ -185,11 +186,15 @@ class SMAsensor(CoordinatorEntity, SensorEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device information."""
+        if not self._device_info:
+            return None
+
         return {
             "identifiers": {(DOMAIN, self._config_entry_unique_id)},
             "name": self._device_info["name"],
             "manufacturer": self._device_info["manufacturer"],
             "model": self._device_info["type"],
+            "sw_version": self._device_info["sw_version"],
         }
 
     @property

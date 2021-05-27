@@ -19,6 +19,7 @@ def mock_config_entry():
     """Return the default mocked config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
+        version=2,
         title=MOCK_DEVICE["name"],
         unique_id=MOCK_DEVICE["serial"],
         data=MOCK_CUSTOM_SETUP_DATA,
