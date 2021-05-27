@@ -78,80 +78,86 @@ class ZWaveServices:
         self._dev_reg = dev_reg
 
     @callback
-    def get_nodes_from_service_data(self, val: dict[str, Any]) -> dict[str, Any]:
-        """Get nodes set from service data."""
-        nodes: set[ZwaveNode] = set()
-        try:
-            if ATTR_ENTITY_ID in val:
-                nodes |= {
-                    async_get_node_from_entity_id(
-                        self._hass, entity_id, self._ent_reg, self._dev_reg
-                    )
-                    for entity_id in val[ATTR_ENTITY_ID]
-                }
-                val.pop(ATTR_ENTITY_ID)
-            if ATTR_DEVICE_ID in val:
-                nodes |= {
-                    async_get_node_from_device_id(self._hass, device_id, self._dev_reg)
-                    for device_id in val[ATTR_DEVICE_ID]
-                }
-                val.pop(ATTR_DEVICE_ID)
-        except ValueError as err:
-            raise vol.Invalid(err.args[0]) from err
-
-        val[const.ATTR_NODES] = nodes
-        return val
-
-    @callback
-    def validate_multicast_nodes(self, val: dict[str, Any]) -> dict[str, Any]:
-        """Validate the input nodes for multicast."""
-        nodes: set[ZwaveNode] = val[const.ATTR_NODES]
-        broadcast: bool = val[const.ATTR_BROADCAST]
-
-        # User must specify a node if they are attempting a broadcast and have more
-        # than one zwave-js network. We know its a broadcast if the nodes list is empty
-        # because of schema validation.
-        if not nodes and len(self._hass.config_entries.async_entries(const.DOMAIN)) > 1:
-            raise vol.Invalid(
-                "You must include at least one entity or device in the service call"
-            )
-
-        # When multicasting, user must specify at least two nodes
-        if not broadcast and len(nodes) < 2:
-            raise vol.Invalid(
-                "To set a value on a single node, use the zwave_js.set_value service"
-            )
-
-        first_node = next((node for node in nodes), None)
-
-        # If any nodes don't have matching home IDs, we can't run the command because
-        # we can't multicast across multiple networks
-        if first_node and any(
-            node.client.driver.controller.home_id
-            != first_node.client.driver.controller.home_id
-            for node in nodes
-        ):
-            raise vol.Invalid(
-                "Multicast commands only work on devices in the same network"
-            )
-
-        return val
-
-    @callback
-    def validate_entities(self, val: dict[str, Any]) -> dict[str, Any]:
-        """Validate entities exist and are from the zwave_js platform."""
-        for entity_id in val[ATTR_ENTITY_ID]:
-            entry = self._ent_reg.async_get(entity_id)
-            if entry is None or entry.platform != const.DOMAIN:
-                raise vol.Invalid(
-                    f"Entity {entity_id} is not a valid {const.DOMAIN} entity."
-                )
-
-        return val
-
-    @callback
     def async_register(self) -> None:
         """Register all our services."""
+
+        @callback
+        def get_nodes_from_service_data(val: dict[str, Any]) -> dict[str, Any]:
+            """Get nodes set from service data."""
+            nodes: set[ZwaveNode] = set()
+            try:
+                if ATTR_ENTITY_ID in val:
+                    nodes |= {
+                        async_get_node_from_entity_id(
+                            self._hass, entity_id, self._ent_reg, self._dev_reg
+                        )
+                        for entity_id in val[ATTR_ENTITY_ID]
+                    }
+                    val.pop(ATTR_ENTITY_ID)
+                if ATTR_DEVICE_ID in val:
+                    nodes |= {
+                        async_get_node_from_device_id(
+                            self._hass, device_id, self._dev_reg
+                        )
+                        for device_id in val[ATTR_DEVICE_ID]
+                    }
+                    val.pop(ATTR_DEVICE_ID)
+            except ValueError as err:
+                raise vol.Invalid(err.args[0]) from err
+
+            val[const.ATTR_NODES] = nodes
+            return val
+
+        @callback
+        def validate_multicast_nodes(val: dict[str, Any]) -> dict[str, Any]:
+            """Validate the input nodes for multicast."""
+            nodes: set[ZwaveNode] = val[const.ATTR_NODES]
+            broadcast: bool = val[const.ATTR_BROADCAST]
+
+            # User must specify a node if they are attempting a broadcast and have more
+            # than one zwave-js network. We know its a broadcast if the nodes list is
+            # empty because of schema validation.
+            if (
+                not nodes
+                and len(self._hass.config_entries.async_entries(const.DOMAIN)) > 1
+            ):
+                raise vol.Invalid(
+                    "You must include at least one entity or device in the service call"
+                )
+
+            # When multicasting, user must specify at least two nodes
+            if not broadcast and len(nodes) < 2:
+                raise vol.Invalid(
+                    "To set a value on a single node, use the zwave_js.set_value service"
+                )
+
+            first_node = next((node for node in nodes), None)
+
+            # If any nodes don't have matching home IDs, we can't run the command because
+            # we can't multicast across multiple networks
+            if first_node and any(
+                node.client.driver.controller.home_id
+                != first_node.client.driver.controller.home_id
+                for node in nodes
+            ):
+                raise vol.Invalid(
+                    "Multicast commands only work on devices in the same network"
+                )
+
+            return val
+
+        @callback
+        def validate_entities(val: dict[str, Any]) -> dict[str, Any]:
+            """Validate entities exist and are from the zwave_js platform."""
+            for entity_id in val[ATTR_ENTITY_ID]:
+                entry = self._ent_reg.async_get(entity_id)
+                if entry is None or entry.platform != const.DOMAIN:
+                    raise vol.Invalid(
+                        f"Entity {entity_id} is not a valid {const.DOMAIN} entity."
+                    )
+
+            return val
+
         self._hass.services.async_register(
             const.DOMAIN,
             const.SERVICE_SET_CONFIG_PARAMETER,
@@ -175,7 +181,7 @@ class ZWaveServices:
                     },
                     cv.has_at_least_one_key(ATTR_DEVICE_ID, ATTR_ENTITY_ID),
                     parameter_name_does_not_need_bitmask,
-                    self.get_nodes_from_service_data,
+                    get_nodes_from_service_data,
                 ),
             ),
         )
@@ -202,7 +208,7 @@ class ZWaveServices:
                         ),
                     },
                     cv.has_at_least_one_key(ATTR_DEVICE_ID, ATTR_ENTITY_ID),
-                    self.get_nodes_from_service_data,
+                    get_nodes_from_service_data,
                 ),
             ),
         )
@@ -219,7 +225,7 @@ class ZWaveServices:
                             const.ATTR_REFRESH_ALL_VALUES, default=False
                         ): bool,
                     },
-                    self.validate_entities,
+                    validate_entities,
                 )
             ),
         )
@@ -249,7 +255,7 @@ class ZWaveServices:
                         vol.Optional(const.ATTR_WAIT_FOR_RESULT): vol.Coerce(bool),
                     },
                     cv.has_at_least_one_key(ATTR_DEVICE_ID, ATTR_ENTITY_ID),
-                    self.get_nodes_from_service_data,
+                    get_nodes_from_service_data,
                 ),
             ),
         )
@@ -282,8 +288,8 @@ class ZWaveServices:
                         cv.has_at_least_one_key(ATTR_DEVICE_ID, ATTR_ENTITY_ID),
                         broadcast_command,
                     ),
-                    self.get_nodes_from_service_data,
-                    self.validate_multicast_nodes,
+                    get_nodes_from_service_data,
+                    validate_multicast_nodes,
                 ),
                 extra=vol.ALLOW_EXTRA,
             ),
