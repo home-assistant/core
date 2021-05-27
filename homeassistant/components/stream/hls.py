@@ -36,7 +36,7 @@ class HlsMasterPlaylistView(StreamView):
         # Need to calculate max bandwidth as input_container.bit_rate doesn't seem to work
         # Calculate file size / duration and use a small multiplier to account for variation
         # hls spec already allows for 25% variation
-        segment = track.get_segment(track.segments[-1])
+        segment = track.get_segment(track.sequences[-1])
         bandwidth = round(
             (len(segment.init) + len(segment.moof_data)) * 8 / segment.duration * 1.2
         )
@@ -53,7 +53,7 @@ class HlsMasterPlaylistView(StreamView):
         track = stream.add_provider(HLS_PROVIDER)
         stream.start()
         # Wait for a segment to be ready
-        if not track.segments and not await track.recv():
+        if not track.sequences and not await track.recv():
             return web.HTTPNotFound()
         headers = {"Content-Type": FORMAT_CONTENT_TYPE[HLS_PROVIDER]}
         return web.Response(body=self.render(track).encode("utf-8"), headers=headers)
@@ -112,7 +112,7 @@ class HlsPlaylistView(StreamView):
         track = stream.add_provider(HLS_PROVIDER)
         stream.start()
         # Wait for a segment to be ready
-        if not track.segments and not await track.recv():
+        if not track.sequences and not await track.recv():
             return web.HTTPNotFound()
         headers = {"Content-Type": FORMAT_CONTENT_TYPE[HLS_PROVIDER]}
         return web.Response(body=self.render(track).encode("utf-8"), headers=headers)
