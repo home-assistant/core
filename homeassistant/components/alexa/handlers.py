@@ -1374,10 +1374,7 @@ async def async_api_seek(hass, config, directive, context):
         msg = f"{entity} did not return the current media position."
         raise AlexaVideoActionNotPermittedForContentError(msg)
 
-    seek_position = int(current_position) + int(position_delta / 1000)
-
-    if seek_position < 0:
-        seek_position = 0
+    seek_position = max(int(current_position) + int(position_delta / 1000), 0)
 
     media_duration = entity.attributes.get(media_player.ATTR_MEDIA_DURATION)
     if media_duration and 0 < int(media_duration) < seek_position:

@@ -183,10 +183,14 @@ class MotionSignalStrengthSensor(CoordinatorEntity, SensorEntity):
         if self.coordinator.data is None:
             return False
 
-        if not self.coordinator.data[KEY_GATEWAY][ATTR_AVAILABLE]:
-            return False
+        gateway_available = self.coordinator.data[KEY_GATEWAY][ATTR_AVAILABLE]
+        if self._device_type == TYPE_GATEWAY:
+            return gateway_available
 
-        return self.coordinator.data[self._device.mac][ATTR_AVAILABLE]
+        return (
+            gateway_available
+            and self.coordinator.data[self._device.mac][ATTR_AVAILABLE]
+        )
 
     @property
     def unit_of_measurement(self):

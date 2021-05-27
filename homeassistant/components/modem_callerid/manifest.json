@@ -3,5 +3,6 @@
   "name": "Modem Caller ID",
   "documentation": "https://www.home-assistant.io/integrations/modem_callerid",
   "requirements": ["basicmodem==0.7"],
-  "codeowners": []
+  "codeowners": [],
+  "iot_class": "local_polling"
 }

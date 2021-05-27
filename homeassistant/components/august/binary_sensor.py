@@ -2,7 +2,7 @@
 from datetime import datetime, timedelta
 import logging
 
-from yalexs.activity import ACTION_DOORBELL_CALL_MISSED, ActivityType
+from yalexs.activity import ACTION_DOORBELL_CALL_MISSED, SOURCE_PUBNUB, ActivityType
 from yalexs.lock import LockDoorStatus
 from yalexs.util import update_lock_detail_from_activity
 
@@ -21,8 +21,10 @@ from .entity import AugustEntityMixin
 
 _LOGGER = logging.getLogger(__name__)
 
-TIME_TO_DECLARE_DETECTION = timedelta(seconds=ACTIVITY_UPDATE_INTERVAL.seconds)
-TIME_TO_RECHECK_DETECTION = timedelta(seconds=ACTIVITY_UPDATE_INTERVAL.seconds * 3)
+TIME_TO_DECLARE_DETECTION = timedelta(seconds=ACTIVITY_UPDATE_INTERVAL.total_seconds())
+TIME_TO_RECHECK_DETECTION = timedelta(
+    seconds=ACTIVITY_UPDATE_INTERVAL.total_seconds() * 3
+)
 
 
 def _retrieve_online_state(data, detail):
@@ -95,7 +97,7 @@ SENSOR_TYPES_DOORBELL = {
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the August binary sensors."""
     data = hass.data[DOMAIN][config_entry.entry_id][DATA_AUGUST]
-    devices = []
+    entities = []
 
     for door in data.locks:
         detail = data.get_device_detail(door.device_id)
@@ -107,7 +109,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             continue
 
         _LOGGER.debug("Adding sensor class door for %s", door.device_name)
-        devices.append(AugustDoorBinarySensor(data, "door_open", door))
+        entities.append(AugustDoorBinarySensor(data, "door_open", door))
 
     for doorbell in data.doorbells:
         for sensor_type in SENSOR_TYPES_DOORBELL:
@@ -116,9 +118,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 SENSOR_TYPES_DOORBELL[sensor_type][SENSOR_DEVICE_CLASS],
                 doorbell.device_name,
             )
-            devices.append(AugustDoorbellBinarySensor(data, sensor_type, doorbell))
+            entities.append(AugustDoorbellBinarySensor(data, sensor_type, doorbell))
 
-    async_add_entities(devices, True)
+    async_add_entities(entities)
 
 
 class AugustDoorBinarySensor(AugustEntityMixin, BinarySensorEntity):
@@ -161,6 +163,9 @@ class AugustDoorBinarySensor(AugustEntityMixin, BinarySensorEntity):
 
         if door_activity is not None:
             update_lock_detail_from_activity(self._detail, door_activity)
+            # If the source is pubnub the lock must be online since its a live update
+            if door_activity.source == SOURCE_PUBNUB:
+                self._detail.set_online(True)
 
         bridge_activity = self._data.activity_stream.get_latest_device_activity(
             self._device_id, {ActivityType.BRIDGE_OPERATION}
@@ -257,7 +262,7 @@ class AugustDoorbellBinarySensor(AugustEntityMixin, BinarySensorEntity):
                 self.async_write_ha_state()
 
         self._check_for_off_update_listener = async_call_later(
-            self.hass, TIME_TO_RECHECK_DETECTION.seconds, _scheduled_update
+            self.hass, TIME_TO_RECHECK_DETECTION.total_seconds(), _scheduled_update
         )
 
     def _cancel_any_pending_updates(self):

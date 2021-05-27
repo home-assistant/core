@@ -3,19 +3,16 @@ from __future__ import annotations
 
 from abc import abstractmethod
 from datetime import date, datetime, timedelta
-import logging
-from typing import Any, Callable, Iterable
+from typing import Any
 
-from requests.exceptions import ConnectTimeout, HTTPError
 from solaredge import Solaredge
 from stringcase import snakecase
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY, DEVICE_CLASS_BATTERY, DEVICE_CLASS_POWER
+from homeassistant.const import DEVICE_CLASS_BATTERY, DEVICE_CLASS_POWER
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -24,41 +21,26 @@ from homeassistant.helpers.update_coordinator import (
 
 from .const import (
     CONF_SITE_ID,
+    DATA_API_CLIENT,
     DETAILS_UPDATE_DELAY,
+    DOMAIN,
     ENERGY_DETAILS_DELAY,
     INVENTORY_UPDATE_DELAY,
+    LOGGER,
     OVERVIEW_UPDATE_DELAY,
     POWER_FLOW_UPDATE_DELAY,
     SENSOR_TYPES,
 )
 
-_LOGGER = logging.getLogger(__name__)
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: Callable[[Iterable[Entity]], None],
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Add an solarEdge entry."""
     # Add the needed sensors to hass
-    api = Solaredge(entry.data[CONF_API_KEY])
-
-    # Check if api can be reached and site is active
-    try:
-        response = await hass.async_add_executor_job(
-            api.get_details, entry.data[CONF_SITE_ID]
-        )
-        if response["details"]["status"].lower() != "active":
-            _LOGGER.error("SolarEdge site is not active")
-            return
-        _LOGGER.debug("Credentials correct and site is active")
-    except KeyError as ex:
-        _LOGGER.error("Missing details data in SolarEdge response")
-        raise ConfigEntryNotReady from ex
-    except (ConnectTimeout, HTTPError) as ex:
-        _LOGGER.error("Could not retrieve details from SolarEdge API")
-        raise ConfigEntryNotReady from ex
+    api: Solaredge = hass.data[DOMAIN][entry.entry_id][DATA_API_CLIENT]
 
     sensor_factory = SolarEdgeSensorFactory(
         hass, entry.title, entry.data[CONF_SITE_ID], api
@@ -153,7 +135,7 @@ class SolarEdgeSensor(CoordinatorEntity, SensorEntity):
     @property
     def name(self) -> str:
         """Return the name."""
-        return "{} ({})".format(self.platform_name, SENSOR_TYPES[self.sensor_key][1])
+        return f"{self.platform_name} ({SENSOR_TYPES[self.sensor_key][1]})"
 
     @property
     def icon(self) -> str | None:
@@ -313,7 +295,7 @@ class SolarEdgeDataService:
         """Coordinator creation."""
         self.coordinator = DataUpdateCoordinator(
             self.hass,
-            _LOGGER,
+            LOGGER,
             name=str(self),
             update_method=self.async_update_data,
             update_interval=self.update_interval,
@@ -360,7 +342,7 @@ class SolarEdgeOverviewDataService(SolarEdgeDataService):
                 data = value
             self.data[key] = data
 
-        _LOGGER.debug("Updated SolarEdge overview: %s", self.data)
+        LOGGER.debug("Updated SolarEdge overview: %s", self.data)
 
 
 class SolarEdgeDetailsDataService(SolarEdgeDataService):
@@ -406,7 +388,7 @@ class SolarEdgeDetailsDataService(SolarEdgeDataService):
             elif key == "status":
                 self.data = value
 
-        _LOGGER.debug("Updated SolarEdge details: %s, %s", self.data, self.attributes)
+        LOGGER.debug("Updated SolarEdge details: %s, %s", self.data, self.attributes)
 
 
 class SolarEdgeInventoryDataService(SolarEdgeDataService):
@@ -432,7 +414,7 @@ class SolarEdgeInventoryDataService(SolarEdgeDataService):
             self.data[key] = len(value)
             self.attributes[key] = {key: value}
 
-        _LOGGER.debug("Updated SolarEdge inventory: %s, %s", self.data, self.attributes)
+        LOGGER.debug("Updated SolarEdge inventory: %s, %s", self.data, self.attributes)
 
 
 class SolarEdgeEnergyDetailsService(SolarEdgeDataService):
@@ -467,7 +449,7 @@ class SolarEdgeEnergyDetailsService(SolarEdgeDataService):
             raise UpdateFailed("Missing power flow data, skipping update") from ex
 
         if "meters" not in energy_details:
-            _LOGGER.debug(
+            LOGGER.debug(
                 "Missing meters in energy details data. Assuming site does not have any"
             )
             return
@@ -491,7 +473,7 @@ class SolarEdgeEnergyDetailsService(SolarEdgeDataService):
                 self.data[meter["type"]] = meter["values"][0]["value"]
                 self.attributes[meter["type"]] = {"date": meter["values"][0]["date"]}
 
-        _LOGGER.debug(
+        LOGGER.debug(
             "Updated SolarEdge energy details: %s, %s", self.data, self.attributes
         )
 
@@ -522,7 +504,7 @@ class SolarEdgePowerFlowDataService(SolarEdgeDataService):
         power_to = []
 
         if "connections" not in power_flow:
-            _LOGGER.debug(
+            LOGGER.debug(
                 "Missing connections in power flow data. Assuming site does not have any"
             )
             return
@@ -551,6 +533,4 @@ class SolarEdgePowerFlowDataService(SolarEdgeDataService):
                 self.attributes[key]["flow"] = "charge" if charge else "discharge"
                 self.attributes[key]["soc"] = value["chargeLevel"]
 
-        _LOGGER.debug(
-            "Updated SolarEdge power flow: %s, %s", self.data, self.attributes
-        )
+        LOGGER.debug("Updated SolarEdge power flow: %s, %s", self.data, self.attributes)

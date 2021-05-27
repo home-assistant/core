@@ -31,9 +31,17 @@ def validate_config_entry_fixture():
 def bypass_setup_fixture():
     """Bypass entry setup."""
     with patch(
-        "homeassistant.components.google_travel_time.async_setup", return_value=True
-    ), patch(
         "homeassistant.components.google_travel_time.async_setup_entry",
+        return_value=True,
+    ):
+        yield
+
+
+@pytest.fixture(name="bypass_platform_setup")
+def bypass_platform_setup_fixture():
+    """Bypass platform setup."""
+    with patch(
+        "homeassistant.components.google_travel_time.sensor.async_setup_entry",
         return_value=True,
     ):
         yield

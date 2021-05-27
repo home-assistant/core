@@ -1,6 +1,7 @@
 """Test different accessory types: Lights."""
 
 from pyhap.const import HAP_REPR_AID, HAP_REPR_CHARS, HAP_REPR_IID, HAP_REPR_VALUE
+import pytest
 
 from homeassistant.components.homekit.const import ATTR_VALUE
 from homeassistant.components.homekit.type_lights import Light
@@ -9,10 +10,8 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS_PCT,
     ATTR_COLOR_TEMP,
     ATTR_HS_COLOR,
+    ATTR_SUPPORTED_COLOR_MODES,
     DOMAIN,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR,
-    SUPPORT_COLOR_TEMP,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -98,14 +97,17 @@ async def test_light_basic(hass, hk_driver, events):
     assert events[-1].data[ATTR_VALUE] == "Set state to 0"
 
 
-async def test_light_brightness(hass, hk_driver, events):
+@pytest.mark.parametrize(
+    "supported_color_modes", [["brightness"], ["hs"], ["color_temp"]]
+)
+async def test_light_brightness(hass, hk_driver, events, supported_color_modes):
     """Test light with brightness."""
     entity_id = "light.demo"
 
     hass.states.async_set(
         entity_id,
         STATE_ON,
-        {ATTR_SUPPORTED_FEATURES: SUPPORT_BRIGHTNESS, ATTR_BRIGHTNESS: 255},
+        {ATTR_SUPPORTED_COLOR_MODES: supported_color_modes, ATTR_BRIGHTNESS: 255},
     )
     await hass.async_block_till_done()
     acc = Light(hass, hk_driver, "Light", entity_id, 1, None)
@@ -223,7 +225,7 @@ async def test_light_color_temperature(hass, hk_driver, events):
     hass.states.async_set(
         entity_id,
         STATE_ON,
-        {ATTR_SUPPORTED_FEATURES: SUPPORT_COLOR_TEMP, ATTR_COLOR_TEMP: 190},
+        {ATTR_SUPPORTED_COLOR_MODES: ["color_temp"], ATTR_COLOR_TEMP: 190},
     )
     await hass.async_block_till_done()
     acc = Light(hass, hk_driver, "Light", entity_id, 1, None)
@@ -263,7 +265,12 @@ async def test_light_color_temperature(hass, hk_driver, events):
     assert events[-1].data[ATTR_VALUE] == "color temperature at 250"
 
 
-async def test_light_color_temperature_and_rgb_color(hass, hk_driver, events):
+@pytest.mark.parametrize(
+    "supported_color_modes", [["ct", "hs"], ["ct", "rgb"], ["ct", "xy"]]
+)
+async def test_light_color_temperature_and_rgb_color(
+    hass, hk_driver, events, supported_color_modes
+):
     """Test light with color temperature and rgb color not exposing temperature."""
     entity_id = "light.demo"
 
@@ -271,7 +278,7 @@ async def test_light_color_temperature_and_rgb_color(hass, hk_driver, events):
         entity_id,
         STATE_ON,
         {
-            ATTR_SUPPORTED_FEATURES: SUPPORT_COLOR_TEMP | SUPPORT_COLOR,
+            ATTR_SUPPORTED_COLOR_MODES: supported_color_modes,
             ATTR_COLOR_TEMP: 190,
             ATTR_HS_COLOR: (260, 90),
         },
@@ -298,14 +305,15 @@ async def test_light_color_temperature_and_rgb_color(hass, hk_driver, events):
     assert acc.char_saturation.value == 61
 
 
-async def test_light_rgb_color(hass, hk_driver, events):
+@pytest.mark.parametrize("supported_color_modes", [["hs"], ["rgb"], ["xy"]])
+async def test_light_rgb_color(hass, hk_driver, events, supported_color_modes):
     """Test light with rgb_color."""
     entity_id = "light.demo"
 
     hass.states.async_set(
         entity_id,
         STATE_ON,
-        {ATTR_SUPPORTED_FEATURES: SUPPORT_COLOR, ATTR_HS_COLOR: (260, 90)},
+        {ATTR_SUPPORTED_COLOR_MODES: supported_color_modes, ATTR_HS_COLOR: (260, 90)},
     )
     await hass.async_block_till_done()
     acc = Light(hass, hk_driver, "Light", entity_id, 1, None)
@@ -362,7 +370,7 @@ async def test_light_restore(hass, hk_driver, events):
         "hue",
         "9012",
         suggested_object_id="all_info_set",
-        capabilities={"max": 100},
+        capabilities={"supported_color_modes": ["brightness"], "max": 100},
         supported_features=5,
         device_class="mock-device-class",
     )
@@ -391,7 +399,7 @@ async def test_light_set_brightness_and_color(hass, hk_driver, events):
         entity_id,
         STATE_ON,
         {
-            ATTR_SUPPORTED_FEATURES: SUPPORT_BRIGHTNESS | SUPPORT_COLOR,
+            ATTR_SUPPORTED_COLOR_MODES: ["hs"],
             ATTR_BRIGHTNESS: 255,
         },
     )
@@ -467,7 +475,7 @@ async def test_light_set_brightness_and_color_temp(hass, hk_driver, events):
         entity_id,
         STATE_ON,
         {
-            ATTR_SUPPORTED_FEATURES: SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP,
+            ATTR_SUPPORTED_COLOR_MODES: ["color_temp"],
             ATTR_BRIGHTNESS: 255,
         },
     )

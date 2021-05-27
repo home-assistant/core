@@ -9,8 +9,6 @@ ConfigType = Dict[str, Any]
 ContextType = homeassistant.core.Context
 DiscoveryInfoType = Dict[str, Any]
 EventType = homeassistant.core.Event
-HomeAssistantType = homeassistant.core.HomeAssistant
-ServiceCallType = homeassistant.core.ServiceCall
 ServiceDataType = Dict[str, Any]
 StateType = Union[None, str, int, float]
 TemplateVarsType = Optional[Mapping[str, Any]]
@@ -26,3 +24,11 @@ class UndefinedType(Enum):
 
 
 UNDEFINED = UndefinedType._singleton  # pylint: disable=protected-access
+
+# The following types should not used and
+# are not present in the core code base.
+# They are kept in order not to break custom integrations
+# that may rely on them.
+# In due time they will be removed.
+HomeAssistantType = homeassistant.core.HomeAssistant
+ServiceCallType = homeassistant.core.ServiceCall

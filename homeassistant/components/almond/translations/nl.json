@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "cannot_connect": "Kan geen verbinding maken",
-            "missing_configuration": "De Netatmo-component is niet geconfigureerd. Gelieve de documentatie volgen.",
+            "missing_configuration": "De component is niet geconfigureerd. Gelieve de documentatie volgen.",
             "no_url_available": "Geen URL beschikbaar. Voor informatie over deze fout, [check de helpsectie]({docs_url})",
             "single_instance_allowed": "Al geconfigureerd. Slechts \u00e9\u00e9n configuratie mogelijk."
         },

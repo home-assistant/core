@@ -36,7 +36,7 @@ async def async_setup_entry(
 class FlickPricingSensor(SensorEntity):
     """Entity object for Flick Electric sensor."""
 
-    def __init__(self, api: FlickAPI):
+    def __init__(self, api: FlickAPI) -> None:
         """Entity object for Flick Electric sensor."""
         self._api: FlickAPI = api
         self._price: FlickPrice = None

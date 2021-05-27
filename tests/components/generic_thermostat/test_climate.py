@@ -4,7 +4,6 @@ from os import path
 from unittest.mock import patch
 
 import pytest
-import pytz
 import voluptuous as vol
 
 from homeassistant import config as hass_config
@@ -37,6 +36,7 @@ import homeassistant.core as ha
 from homeassistant.core import DOMAIN as HASS_DOMAIN, CoreState, State, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from tests.common import (
@@ -125,7 +125,7 @@ async def test_heater_input_boolean(hass, setup_comp_1):
     assert hass.states.get(heater_switch).state == STATE_ON
 
 
-async def test_heater_switch(hass, setup_comp_1):
+async def test_heater_switch(hass, setup_comp_1, enable_custom_integrations):
     """Test heater switching test switch."""
     platform = getattr(hass.components, "test.switch")
     platform.init()
@@ -331,9 +331,18 @@ async def test_sensor_bad_value(hass, setup_comp_2):
 
     _setup_sensor(hass, None)
     await hass.async_block_till_done()
-
     state = hass.states.get(ENTITY)
-    assert temp == state.attributes.get("current_temperature")
+    assert state.attributes.get("current_temperature") == temp
+
+    _setup_sensor(hass, "inf")
+    await hass.async_block_till_done()
+    state = hass.states.get(ENTITY)
+    assert state.attributes.get("current_temperature") == temp
+
+    _setup_sensor(hass, "nan")
+    await hass.async_block_till_done()
+    state = hass.states.get(ENTITY)
+    assert state.attributes.get("current_temperature") == temp
 
 
 async def test_sensor_unknown(hass):
@@ -682,9 +691,7 @@ async def test_temp_change_ac_trigger_on_not_long_enough(hass, setup_comp_4):
 
 async def test_temp_change_ac_trigger_on_long_enough(hass, setup_comp_4):
     """Test if temperature change turn ac on."""
-    fake_changed = datetime.datetime(
-        1918, 11, 11, 11, 11, 11, tzinfo=datetime.timezone.utc
-    )
+    fake_changed = datetime.datetime(1918, 11, 11, 11, 11, 11, tzinfo=dt_util.UTC)
     with patch(
         "homeassistant.helpers.condition.dt_util.utcnow", return_value=fake_changed
     ):
@@ -710,9 +717,7 @@ async def test_temp_change_ac_trigger_off_not_long_enough(hass, setup_comp_4):
 
 async def test_temp_change_ac_trigger_off_long_enough(hass, setup_comp_4):
     """Test if temperature change turn ac on."""
-    fake_changed = datetime.datetime(
-        1918, 11, 11, 11, 11, 11, tzinfo=datetime.timezone.utc
-    )
+    fake_changed = datetime.datetime(1918, 11, 11, 11, 11, 11, tzinfo=dt_util.UTC)
     with patch(
         "homeassistant.helpers.condition.dt_util.utcnow", return_value=fake_changed
     ):
@@ -792,9 +797,7 @@ async def test_temp_change_ac_trigger_on_not_long_enough_2(hass, setup_comp_5):
 
 async def test_temp_change_ac_trigger_on_long_enough_2(hass, setup_comp_5):
     """Test if temperature change turn ac on."""
-    fake_changed = datetime.datetime(
-        1918, 11, 11, 11, 11, 11, tzinfo=datetime.timezone.utc
-    )
+    fake_changed = datetime.datetime(1918, 11, 11, 11, 11, 11, tzinfo=dt_util.UTC)
     with patch(
         "homeassistant.helpers.condition.dt_util.utcnow", return_value=fake_changed
     ):
@@ -820,9 +823,7 @@ async def test_temp_change_ac_trigger_off_not_long_enough_2(hass, setup_comp_5):
 
 async def test_temp_change_ac_trigger_off_long_enough_2(hass, setup_comp_5):
     """Test if temperature change turn ac on."""
-    fake_changed = datetime.datetime(
-        1918, 11, 11, 11, 11, 11, tzinfo=datetime.timezone.utc
-    )
+    fake_changed = datetime.datetime(1918, 11, 11, 11, 11, 11, tzinfo=dt_util.UTC)
     with patch(
         "homeassistant.helpers.condition.dt_util.utcnow", return_value=fake_changed
     ):
@@ -910,9 +911,7 @@ async def test_temp_change_heater_trigger_on_not_long_enough(hass, setup_comp_6)
 
 async def test_temp_change_heater_trigger_on_long_enough(hass, setup_comp_6):
     """Test if temperature change turn heater on after min cycle."""
-    fake_changed = datetime.datetime(
-        1918, 11, 11, 11, 11, 11, tzinfo=datetime.timezone.utc
-    )
+    fake_changed = datetime.datetime(1918, 11, 11, 11, 11, 11, tzinfo=dt_util.UTC)
     with patch(
         "homeassistant.helpers.condition.dt_util.utcnow", return_value=fake_changed
     ):
@@ -929,9 +928,7 @@ async def test_temp_change_heater_trigger_on_long_enough(hass, setup_comp_6):
 
 async def test_temp_change_heater_trigger_off_long_enough(hass, setup_comp_6):
     """Test if temperature change turn heater off after min cycle."""
-    fake_changed = datetime.datetime(
-        1918, 11, 11, 11, 11, 11, tzinfo=datetime.timezone.utc
-    )
+    fake_changed = datetime.datetime(1918, 11, 11, 11, 11, 11, tzinfo=dt_util.UTC)
     with patch(
         "homeassistant.helpers.condition.dt_util.utcnow", return_value=fake_changed
     ):
@@ -1010,7 +1007,7 @@ async def test_temp_change_ac_trigger_on_long_enough_3(hass, setup_comp_7):
     _setup_sensor(hass, 30)
     await hass.async_block_till_done()
     await common.async_set_temperature(hass, 25)
-    test_time = datetime.datetime.now(pytz.UTC)
+    test_time = datetime.datetime.now(dt_util.UTC)
     async_fire_time_changed(hass, test_time)
     await hass.async_block_till_done()
     assert len(calls) == 0
@@ -1033,7 +1030,7 @@ async def test_temp_change_ac_trigger_off_long_enough_3(hass, setup_comp_7):
     _setup_sensor(hass, 20)
     await hass.async_block_till_done()
     await common.async_set_temperature(hass, 25)
-    test_time = datetime.datetime.now(pytz.UTC)
+    test_time = datetime.datetime.now(dt_util.UTC)
     async_fire_time_changed(hass, test_time)
     await hass.async_block_till_done()
     assert len(calls) == 0
@@ -1081,7 +1078,7 @@ async def test_temp_change_heater_trigger_on_long_enough_2(hass, setup_comp_8):
     _setup_sensor(hass, 20)
     await hass.async_block_till_done()
     await common.async_set_temperature(hass, 25)
-    test_time = datetime.datetime.now(pytz.UTC)
+    test_time = datetime.datetime.now(dt_util.UTC)
     async_fire_time_changed(hass, test_time)
     await hass.async_block_till_done()
     assert len(calls) == 0
@@ -1104,7 +1101,7 @@ async def test_temp_change_heater_trigger_off_long_enough_2(hass, setup_comp_8):
     _setup_sensor(hass, 30)
     await hass.async_block_till_done()
     await common.async_set_temperature(hass, 25)
-    test_time = datetime.datetime.now(pytz.UTC)
+    test_time = datetime.datetime.now(dt_util.UTC)
     async_fire_time_changed(hass, test_time)
     await hass.async_block_till_done()
     assert len(calls) == 0

@@ -2,7 +2,8 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Any, Iterable
+from collections.abc import Iterable
+from typing import Any
 
 from homeassistant.const import ATTR_TEMPERATURE
 from homeassistant.core import Context, HomeAssistant, State

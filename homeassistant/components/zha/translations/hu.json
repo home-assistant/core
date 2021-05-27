@@ -6,6 +6,7 @@
         "error": {
             "cannot_connect": "Sikertelen csatlakoz\u00e1s"
         },
+        "flow_title": "ZHA: {n\u00e9v}",
         "step": {
             "port_config": {
                 "data": {

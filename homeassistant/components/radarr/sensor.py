@@ -3,7 +3,6 @@ from datetime import datetime, timedelta
 import logging
 import time
 
-from pytz import timezone
 import requests
 import voluptuous as vol
 
@@ -26,6 +25,7 @@ from homeassistant.const import (
     HTTP_OK,
 )
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -112,7 +112,6 @@ class RadarrSensor(SensorEntity):
         self.ssl = "https" if conf.get(CONF_SSL) else "http"
         self._state = None
         self.data = []
-        self._tz = timezone(str(hass.config.time_zone))
         self.type = sensor_type
         self._name = SENSOR_TYPES[self.type][0]
         if self.type == "diskspace":
@@ -177,8 +176,9 @@ class RadarrSensor(SensorEntity):
 
     def update(self):
         """Update the data for the sensor."""
-        start = get_date(self._tz)
-        end = get_date(self._tz, self.days)
+        time_zone = dt_util.get_time_zone(self.hass.config.time_zone)
+        start = get_date(time_zone)
+        end = get_date(time_zone, self.days)
         try:
             res = requests.get(
                 ENDPOINTS[self.type].format(

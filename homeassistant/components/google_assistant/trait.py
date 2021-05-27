@@ -23,6 +23,7 @@ from homeassistant.components import (
 )
 from homeassistant.components.climate import const as climate
 from homeassistant.components.humidifier import const as humidifier
+from homeassistant.components.media_player.const import MEDIA_TYPE_CHANNEL
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_CODE,
@@ -71,6 +72,7 @@ from .const import (
     ERR_ALREADY_DISARMED,
     ERR_ALREADY_STOPPED,
     ERR_CHALLENGE_NOT_SETUP,
+    ERR_NO_AVAILABLE_CHANNEL,
     ERR_NOT_SUPPORTED,
     ERR_UNSUPPORTED_INPUT,
     ERR_VALUE_OUT_OF_RANGE,
@@ -88,6 +90,7 @@ TRAIT_BRIGHTNESS = f"{PREFIX_TRAITS}Brightness"
 TRAIT_COLOR_SETTING = f"{PREFIX_TRAITS}ColorSetting"
 TRAIT_SCENE = f"{PREFIX_TRAITS}Scene"
 TRAIT_TEMPERATURE_SETTING = f"{PREFIX_TRAITS}TemperatureSetting"
+TRAIT_TEMPERATURE_CONTROL = f"{PREFIX_TRAITS}TemperatureControl"
 TRAIT_LOCKUNLOCK = f"{PREFIX_TRAITS}LockUnlock"
 TRAIT_FANSPEED = f"{PREFIX_TRAITS}FanSpeed"
 TRAIT_MODES = f"{PREFIX_TRAITS}Modes"
@@ -98,6 +101,7 @@ TRAIT_ARMDISARM = f"{PREFIX_TRAITS}ArmDisarm"
 TRAIT_HUMIDITY_SETTING = f"{PREFIX_TRAITS}HumiditySetting"
 TRAIT_TRANSPORT_CONTROL = f"{PREFIX_TRAITS}TransportControl"
 TRAIT_MEDIA_STATE = f"{PREFIX_TRAITS}MediaState"
+TRAIT_CHANNEL = f"{PREFIX_TRAITS}Channel"
 
 PREFIX_COMMANDS = "action.devices.commands."
 COMMAND_ONOFF = f"{PREFIX_COMMANDS}OnOff"
@@ -136,7 +140,7 @@ COMMAND_MEDIA_SEEK_TO_POSITION = f"{PREFIX_COMMANDS}mediaSeekToPosition"
 COMMAND_MEDIA_SHUFFLE = f"{PREFIX_COMMANDS}mediaShuffle"
 COMMAND_MEDIA_STOP = f"{PREFIX_COMMANDS}mediaStop"
 COMMAND_SET_HUMIDITY = f"{PREFIX_COMMANDS}SetHumidity"
-
+COMMAND_SELECT_CHANNEL = f"{PREFIX_COMMANDS}selectChannel"
 
 TRAITS = []
 
@@ -212,10 +216,11 @@ class BrightnessTrait(_Trait):
     commands = [COMMAND_BRIGHTNESS_ABSOLUTE]
 
     @staticmethod
-    def supported(domain, features, device_class):
+    def supported(domain, features, device_class, attributes):
         """Test if state is supported."""
         if domain == light.DOMAIN:
-            return features & light.SUPPORT_BRIGHTNESS
+            color_modes = attributes.get(light.ATTR_SUPPORTED_COLOR_MODES)
+            return light.brightness_supported(color_modes)
 
         return False
 
@@ -267,7 +272,7 @@ class CameraStreamTrait(_Trait):
     stream_info = None
 
     @staticmethod
-    def supported(domain, features, device_class):
+    def supported(domain, features, device_class, _):
         """Test if state is supported."""
         if domain == camera.DOMAIN:
             return features & camera.SUPPORT_STREAM
@@ -308,7 +313,7 @@ class OnOffTrait(_Trait):
     commands = [COMMAND_ONOFF]
 
     @staticmethod
-    def supported(domain, features, device_class):
+    def supported(domain, features, device_class, _):
         """Test if state is supported."""
         return domain in (
             group.DOMAIN,
@@ -362,23 +367,26 @@ class ColorSettingTrait(_Trait):
     commands = [COMMAND_COLOR_ABSOLUTE]
 
     @staticmethod
-    def supported(domain, features, device_class):
+    def supported(domain, features, device_class, attributes):
         """Test if state is supported."""
         if domain != light.DOMAIN:
             return False
 
-        return features & light.SUPPORT_COLOR_TEMP or features & light.SUPPORT_COLOR
+        color_modes = attributes.get(light.ATTR_SUPPORTED_COLOR_MODES)
+        return light.color_temp_supported(color_modes) or light.color_supported(
+            color_modes
+        )
 
     def sync_attributes(self):
         """Return color temperature attributes for a sync request."""
         attrs = self.state.attributes
-        features = attrs.get(ATTR_SUPPORTED_FEATURES, 0)
+        color_modes = attrs.get(light.ATTR_SUPPORTED_COLOR_MODES)
         response = {}
 
-        if features & light.SUPPORT_COLOR:
+        if light.color_supported(color_modes):
             response["colorModel"] = "hsv"
 
-        if features & light.SUPPORT_COLOR_TEMP:
+        if light.color_temp_supported(color_modes):
             # Max Kelvin is Min Mireds K = 1000000 / mireds
             # Min Kelvin is Max Mireds K = 1000000 / mireds
             response["colorTemperatureRange"] = {
@@ -394,10 +402,10 @@ class ColorSettingTrait(_Trait):
 
     def query_attributes(self):
         """Return color temperature query attributes."""
-        features = self.state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        color_modes = self.state.attributes.get(light.ATTR_SUPPORTED_COLOR_MODES)
         color = {}
 
-        if features & light.SUPPORT_COLOR:
+        if light.color_supported(color_modes):
             color_hs = self.state.attributes.get(light.ATTR_HS_COLOR)
             brightness = self.state.attributes.get(light.ATTR_BRIGHTNESS, 1)
             if color_hs is not None:
@@ -407,7 +415,7 @@ class ColorSettingTrait(_Trait):
                     "value": brightness / 255,
                 }
 
-        if features & light.SUPPORT_COLOR_TEMP:
+        if light.color_temp_supported(color_modes):
             temp = self.state.attributes.get(light.ATTR_COLOR_TEMP)
             # Some faulty integrations might put 0 in here, raising exception.
             if temp == 0:
@@ -495,7 +503,7 @@ class SceneTrait(_Trait):
     commands = [COMMAND_ACTIVATE_SCENE]
 
     @staticmethod
-    def supported(domain, features, device_class):
+    def supported(domain, features, device_class, _):
         """Test if state is supported."""
         return domain in (scene.DOMAIN, script.DOMAIN)
 
@@ -531,7 +539,7 @@ class DockTrait(_Trait):
     commands = [COMMAND_DOCK]
 
     @staticmethod
-    def supported(domain, features, device_class):
+    def supported(domain, features, device_class, _):
         """Test if state is supported."""
         return domain == vacuum.DOMAIN
 
@@ -565,7 +573,7 @@ class StartStopTrait(_Trait):
     commands = [COMMAND_STARTSTOP, COMMAND_PAUSEUNPAUSE]
 
     @staticmethod
-    def supported(domain, features, device_class):
+    def supported(domain, features, device_class, _):
         """Test if state is supported."""
         if domain == vacuum.DOMAIN:
             return True
@@ -680,6 +688,52 @@ class StartStopTrait(_Trait):
 
 
 @register_trait
+class TemperatureControlTrait(_Trait):
+    """Trait for devices (other than thermostats) that support controlling temperature. Workaround for Temperature sensors.
+
+    https://developers.google.com/assistant/smarthome/traits/temperaturecontrol
+    """
+
+    name = TRAIT_TEMPERATURE_CONTROL
+
+    @staticmethod
+    def supported(domain, features, device_class, _):
+        """Test if state is supported."""
+        return (
+            domain == sensor.DOMAIN and device_class == sensor.DEVICE_CLASS_TEMPERATURE
+        )
+
+    def sync_attributes(self):
+        """Return temperature attributes for a sync request."""
+        return {
+            "temperatureUnitForUX": _google_temp_unit(
+                self.hass.config.units.temperature_unit
+            ),
+            "queryOnlyTemperatureSetting": True,
+            "temperatureRange": {
+                "minThresholdCelsius": -100,
+                "maxThresholdCelsius": 100,
+            },
+        }
+
+    def query_attributes(self):
+        """Return temperature states."""
+        response = {}
+        unit = self.hass.config.units.temperature_unit
+        current_temp = self.state.state
+        if current_temp not in (STATE_UNKNOWN, STATE_UNAVAILABLE):
+            temp = round(temp_util.convert(float(current_temp), unit, TEMP_CELSIUS), 1)
+            response["temperatureSetpointCelsius"] = temp
+            response["temperatureAmbientCelsius"] = temp
+
+        return response
+
+    async def execute(self, command, data, params, challenge):
+        """Unsupported."""
+        raise SmartHomeError(ERR_NOT_SUPPORTED, "Execute is not supported by sensor")
+
+
+@register_trait
 class TemperatureSettingTrait(_Trait):
     """Trait to offer handling both temperature point and modes functionality.
 
@@ -709,14 +763,9 @@ class TemperatureSettingTrait(_Trait):
     google_to_preset = {value: key for key, value in preset_to_google.items()}
 
     @staticmethod
-    def supported(domain, features, device_class):
+    def supported(domain, features, device_class, _):
         """Test if state is supported."""
-        if domain == climate.DOMAIN:
-            return True
-
-        return (
-            domain == sensor.DOMAIN and device_class == sensor.DEVICE_CLASS_TEMPERATURE
-        )
+        return domain == climate.DOMAIN
 
     @property
     def climate_google_modes(self):
@@ -739,32 +788,24 @@ class TemperatureSettingTrait(_Trait):
     def sync_attributes(self):
         """Return temperature point and modes attributes for a sync request."""
         response = {}
-        attrs = self.state.attributes
-        domain = self.state.domain
         response["thermostatTemperatureUnit"] = _google_temp_unit(
             self.hass.config.units.temperature_unit
         )
 
-        if domain == sensor.DOMAIN:
-            device_class = attrs.get(ATTR_DEVICE_CLASS)
-            if device_class == sensor.DEVICE_CLASS_TEMPERATURE:
-                response["queryOnlyTemperatureSetting"] = True
+        modes = self.climate_google_modes
 
-        elif domain == climate.DOMAIN:
-            modes = self.climate_google_modes
+        # Some integrations don't support modes (e.g. opentherm), but Google doesn't
+        # support changing the temperature if we don't have any modes. If there's
+        # only one Google doesn't support changing it, so the default mode here is
+        # only cosmetic.
+        if len(modes) == 0:
+            modes.append("heat")
 
-            # Some integrations don't support modes (e.g. opentherm), but Google doesn't
-            # support changing the temperature if we don't have any modes. If there's
-            # only one Google doesn't support changing it, so the default mode here is
-            # only cosmetic.
-            if len(modes) == 0:
-                modes.append("heat")
-
-            if "off" in modes and any(
-                mode in modes for mode in ("heatcool", "heat", "cool")
-            ):
-                modes.append("on")
-            response["availableThermostatModes"] = modes
+        if "off" in modes and any(
+            mode in modes for mode in ("heatcool", "heat", "cool")
+        ):
+            modes.append("on")
+        response["availableThermostatModes"] = modes
 
         return response
 
@@ -772,76 +813,60 @@ class TemperatureSettingTrait(_Trait):
         """Return temperature point and modes query attributes."""
         response = {}
         attrs = self.state.attributes
-        domain = self.state.domain
         unit = self.hass.config.units.temperature_unit
-        if domain == sensor.DOMAIN:
-            device_class = attrs.get(ATTR_DEVICE_CLASS)
-            if device_class == sensor.DEVICE_CLASS_TEMPERATURE:
-                current_temp = self.state.state
-                if current_temp not in (STATE_UNKNOWN, STATE_UNAVAILABLE):
-                    response["thermostatTemperatureAmbient"] = round(
-                        temp_util.convert(float(current_temp), unit, TEMP_CELSIUS), 1
-                    )
 
-        elif domain == climate.DOMAIN:
-            operation = self.state.state
-            preset = attrs.get(climate.ATTR_PRESET_MODE)
-            supported = attrs.get(ATTR_SUPPORTED_FEATURES, 0)
+        operation = self.state.state
+        preset = attrs.get(climate.ATTR_PRESET_MODE)
+        supported = attrs.get(ATTR_SUPPORTED_FEATURES, 0)
 
-            if preset in self.preset_to_google:
-                response["thermostatMode"] = self.preset_to_google[preset]
-            else:
-                response["thermostatMode"] = self.hvac_to_google.get(operation)
+        if preset in self.preset_to_google:
+            response["thermostatMode"] = self.preset_to_google[preset]
+        else:
+            response["thermostatMode"] = self.hvac_to_google.get(operation, "none")
 
-            current_temp = attrs.get(climate.ATTR_CURRENT_TEMPERATURE)
-            if current_temp is not None:
-                response["thermostatTemperatureAmbient"] = round(
-                    temp_util.convert(current_temp, unit, TEMP_CELSIUS), 1
+        current_temp = attrs.get(climate.ATTR_CURRENT_TEMPERATURE)
+        if current_temp is not None:
+            response["thermostatTemperatureAmbient"] = round(
+                temp_util.convert(current_temp, unit, TEMP_CELSIUS), 1
+            )
+
+        current_humidity = attrs.get(climate.ATTR_CURRENT_HUMIDITY)
+        if current_humidity is not None:
+            response["thermostatHumidityAmbient"] = current_humidity
+
+        if operation in (climate.HVAC_MODE_AUTO, climate.HVAC_MODE_HEAT_COOL):
+            if supported & climate.SUPPORT_TARGET_TEMPERATURE_RANGE:
+                response["thermostatTemperatureSetpointHigh"] = round(
+                    temp_util.convert(
+                        attrs[climate.ATTR_TARGET_TEMP_HIGH], unit, TEMP_CELSIUS
+                    ),
+                    1,
                 )
-
-            current_humidity = attrs.get(climate.ATTR_CURRENT_HUMIDITY)
-            if current_humidity is not None:
-                response["thermostatHumidityAmbient"] = current_humidity
-
-            if operation in (climate.HVAC_MODE_AUTO, climate.HVAC_MODE_HEAT_COOL):
-                if supported & climate.SUPPORT_TARGET_TEMPERATURE_RANGE:
-                    response["thermostatTemperatureSetpointHigh"] = round(
-                        temp_util.convert(
-                            attrs[climate.ATTR_TARGET_TEMP_HIGH], unit, TEMP_CELSIUS
-                        ),
-                        1,
-                    )
-                    response["thermostatTemperatureSetpointLow"] = round(
-                        temp_util.convert(
-                            attrs[climate.ATTR_TARGET_TEMP_LOW], unit, TEMP_CELSIUS
-                        ),
-                        1,
-                    )
-                else:
-                    target_temp = attrs.get(ATTR_TEMPERATURE)
-                    if target_temp is not None:
-                        target_temp = round(
-                            temp_util.convert(target_temp, unit, TEMP_CELSIUS), 1
-                        )
-                        response["thermostatTemperatureSetpointHigh"] = target_temp
-                        response["thermostatTemperatureSetpointLow"] = target_temp
+                response["thermostatTemperatureSetpointLow"] = round(
+                    temp_util.convert(
+                        attrs[climate.ATTR_TARGET_TEMP_LOW], unit, TEMP_CELSIUS
+                    ),
+                    1,
+                )
             else:
                 target_temp = attrs.get(ATTR_TEMPERATURE)
                 if target_temp is not None:
-                    response["thermostatTemperatureSetpoint"] = round(
+                    target_temp = round(
                         temp_util.convert(target_temp, unit, TEMP_CELSIUS), 1
                     )
+                    response["thermostatTemperatureSetpointHigh"] = target_temp
+                    response["thermostatTemperatureSetpointLow"] = target_temp
+        else:
+            target_temp = attrs.get(ATTR_TEMPERATURE)
+            if target_temp is not None:
+                response["thermostatTemperatureSetpoint"] = round(
+                    temp_util.convert(target_temp, unit, TEMP_CELSIUS), 1
+                )
 
         return response
 
     async def execute(self, command, data, params, challenge):
         """Execute a temperature point or mode command."""
-        domain = self.state.domain
-        if domain == sensor.DOMAIN:
-            raise SmartHomeError(
-                ERR_NOT_SUPPORTED, "Execute is not supported by sensor"
-            )
-
         # All sent in temperatures are always in Celsius
         unit = self.hass.config.units.temperature_unit
         min_temp = self.state.attributes[climate.ATTR_MIN_TEMP]
@@ -976,7 +1001,7 @@ class HumiditySettingTrait(_Trait):
     commands = [COMMAND_SET_HUMIDITY]
 
     @staticmethod
-    def supported(domain, features, device_class):
+    def supported(domain, features, device_class, _):
         """Test if state is supported."""
         if domain == humidifier.DOMAIN:
             return True
@@ -1059,7 +1084,7 @@ class LockUnlockTrait(_Trait):
     commands = [COMMAND_LOCKUNLOCK]
 
     @staticmethod
-    def supported(domain, features, device_class):
+    def supported(domain, features, device_class, _):
         """Test if state is supported."""
         return domain == lock.DOMAIN
 
@@ -1120,7 +1145,7 @@ class ArmDisArmTrait(_Trait):
     }
 
     @staticmethod
-    def supported(domain, features, device_class):
+    def supported(domain, features, device_class, _):
         """Test if state is supported."""
         return domain == alarm_control_panel.DOMAIN
 
@@ -1236,7 +1261,7 @@ class FanSpeedTrait(_Trait):
     }
 
     @staticmethod
-    def supported(domain, features, device_class):
+    def supported(domain, features, device_class, _):
         """Test if state is supported."""
         if domain == fan.DOMAIN:
             return features & fan.SUPPORT_SET_SPEED
@@ -1349,7 +1374,7 @@ class ModesTrait(_Trait):
     }
 
     @staticmethod
-    def supported(domain, features, device_class):
+    def supported(domain, features, device_class, _):
         """Test if state is supported."""
         if domain == input_select.DOMAIN:
             return True
@@ -1518,7 +1543,7 @@ class InputSelectorTrait(_Trait):
     SYNONYMS = {}
 
     @staticmethod
-    def supported(domain, features, device_class):
+    def supported(domain, features, device_class, _):
         """Test if state is supported."""
         if domain == media_player.DOMAIN and (
             features & media_player.SUPPORT_SELECT_SOURCE
@@ -1591,7 +1616,7 @@ class OpenCloseTrait(_Trait):
     commands = [COMMAND_OPENCLOSE, COMMAND_OPENCLOSE_RELATIVE]
 
     @staticmethod
-    def supported(domain, features, device_class):
+    def supported(domain, features, device_class, _):
         """Test if state is supported."""
         if domain == cover.DOMAIN:
             return True
@@ -1727,7 +1752,7 @@ class VolumeTrait(_Trait):
     commands = [COMMAND_SET_VOLUME, COMMAND_VOLUME_RELATIVE, COMMAND_MUTE]
 
     @staticmethod
-    def supported(domain, features, device_class):
+    def supported(domain, features, device_class, _):
         """Test if trait is supported."""
         if domain == media_player.DOMAIN:
             return features & (
@@ -1915,7 +1940,7 @@ class TransportControlTrait(_Trait):
     ]
 
     @staticmethod
-    def supported(domain, features, device_class):
+    def supported(domain, features, device_class, _):
         """Test if state is supported."""
         if domain == media_player.DOMAIN:
             for feature in MEDIA_COMMAND_SUPPORT_MAPPING.values():
@@ -2034,7 +2059,7 @@ class MediaStateTrait(_Trait):
     }
 
     @staticmethod
-    def supported(domain, features, device_class):
+    def supported(domain, features, device_class, _):
         """Test if state is supported."""
         return domain == media_player.DOMAIN
 
@@ -2048,3 +2073,59 @@ class MediaStateTrait(_Trait):
             "activityState": self.activity_lookup.get(self.state.state, "INACTIVE"),
             "playbackState": self.playback_lookup.get(self.state.state, "STOPPED"),
         }
+
+
+@register_trait
+class ChannelTrait(_Trait):
+    """Trait to get media playback state.
+
+    https://developers.google.com/actions/smarthome/traits/channel
+    """
+
+    name = TRAIT_CHANNEL
+    commands = [COMMAND_SELECT_CHANNEL]
+
+    @staticmethod
+    def supported(domain, features, device_class, _):
+        """Test if state is supported."""
+        if (
+            domain == media_player.DOMAIN
+            and (features & media_player.SUPPORT_PLAY_MEDIA)
+            and device_class == media_player.DEVICE_CLASS_TV
+        ):
+            return True
+
+        return False
+
+    def sync_attributes(self):
+        """Return attributes for a sync request."""
+        return {"availableChannels": [], "commandOnlyChannels": True}
+
+    def query_attributes(self):
+        """Return channel query attributes."""
+        return {}
+
+    async def execute(self, command, data, params, challenge):
+        """Execute an setChannel command."""
+        if command == COMMAND_SELECT_CHANNEL:
+            channel_number = params.get("channelNumber")
+        else:
+            raise SmartHomeError(ERR_NOT_SUPPORTED, "Unsupported command")
+
+        if not channel_number:
+            raise SmartHomeError(
+                ERR_NO_AVAILABLE_CHANNEL,
+                "Channel is not available",
+            )
+
+        await self.hass.services.async_call(
+            media_player.DOMAIN,
+            media_player.SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: self.state.entity_id,
+                media_player.ATTR_MEDIA_CONTENT_ID: channel_number,
+                media_player.ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_CHANNEL,
+            },
+            blocking=True,
+            context=data.context,
+        )

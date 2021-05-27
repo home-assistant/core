@@ -8,7 +8,7 @@
             "cannot_connect": "Failed to connect",
             "unknown_device": "The device model is not known, not able to setup the device using config flow."
         },
-        "flow_title": "Xiaomi Miio: {name}",
+        "flow_title": "{name}",
         "step": {
             "device": {
                 "data": {
