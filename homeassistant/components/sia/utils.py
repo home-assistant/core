@@ -6,19 +6,9 @@ from typing import Any
 
 from pysiaalarm import SIAEvent
 
-from homeassistant.const import DEVICE_CLASS_TIMESTAMP
+from .const import ATTR_CODE, ATTR_ID, ATTR_MESSAGE, ATTR_TIMESTAMP, ATTR_ZONE
 
-from .const import (
-    EVENT_ACCOUNT,
-    EVENT_CODE,
-    EVENT_ID,
-    EVENT_MESSAGE,
-    EVENT_TIMESTAMP,
-    EVENT_ZONE,
-    HUB_SENSOR_NAME,
-    HUB_ZONE,
-    PING_INTERVAL_MARGIN,
-)
+PING_INTERVAL_MARGIN = 30
 
 
 def get_unavailability_interval(ping: int) -> float:
@@ -26,32 +16,55 @@ def get_unavailability_interval(ping: int) -> float:
     return timedelta(minutes=ping, seconds=PING_INTERVAL_MARGIN).total_seconds()
 
 
-def get_name(port: int, account: str, zone: int, entity_type: str) -> str:
-    """Give back a entity_id and name according to the variables."""
-    if zone == HUB_ZONE:
-        return f"{port} - {account} - {'Last Heartbeat' if entity_type == DEVICE_CLASS_TIMESTAMP else 'Power'}"
-    return f"{port} - {account} - zone {zone} - {entity_type}"
-
-
-def get_entity_id(port: int, account: str, zone: int, entity_type: str) -> str:
-    """Give back a entity_id according to the variables."""
-    if zone == HUB_ZONE:
-        return f"{port}_{account}_{HUB_SENSOR_NAME if entity_type == DEVICE_CLASS_TIMESTAMP else entity_type}"
-    return f"{port}_{account}_{zone}_{entity_type}"
-
-
-def get_unique_id(entry_id: str, account: str, zone: int, domain: str) -> str:
-    """Return the unique id."""
-    return f"{entry_id}_{account}_{zone}_{domain}"
-
-
 def get_attr_from_sia_event(event: SIAEvent) -> dict[str, Any]:
     """Create the attributes dict from a SIAEvent."""
     return {
-        EVENT_ACCOUNT: event.account,
-        EVENT_ZONE: event.ri,
-        EVENT_CODE: event.code,
-        EVENT_MESSAGE: event.message,
-        EVENT_ID: event.id,
-        EVENT_TIMESTAMP: event.timestamp,
+        ATTR_ZONE: event.ri,
+        ATTR_CODE: event.code,
+        ATTR_MESSAGE: event.message,
+        ATTR_ID: event.id,
+        ATTR_TIMESTAMP: event.timestamp.isoformat(),
+    }
+
+
+def get_event_data_from_sia_event(event: SIAEvent) -> dict[str, Any]:
+    """Create a dict from the SIA Event for the HA Event."""
+    return {
+        "message_type": event.message_type,
+        "receiver": event.receiver,
+        "line": event.line,
+        "account": event.account,
+        "sequence": event.sequence,
+        "content": event.content,
+        "ti": event.ti,
+        "id": event.id,
+        "ri": event.ri,
+        "code": event.code,
+        "message": event.message,
+        "x_data": event.x_data,
+        "timestamp": event.timestamp.isoformat(),
+        "event_qualifier": event.qualifier,
+        "event_type": event.event_type,
+        "partition": event.partition,
+        "extended_data": [
+            {
+                "identifier": xd.identifier,
+                "name": xd.name,
+                "description": xd.description,
+                "length": xd.length,
+                "characters": xd.characters,
+                "value": xd.value,
+            }
+            for xd in event.extended_data
+        ]
+        if event.extended_data is not None
+        else None,
+        "sia_code": {
+            "code": event.sia_code.code,
+            "type": event.sia_code.type,
+            "description": event.sia_code.description,
+            "concerns": event.sia_code.concerns,
+        }
+        if event.sia_code is not None
+        else None,
     }
