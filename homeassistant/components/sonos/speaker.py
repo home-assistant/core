@@ -44,8 +44,8 @@ from .const import (
     SONOS_CREATE_BATTERY,
     SONOS_CREATE_MEDIA_PLAYER,
     SONOS_ENTITY_CREATED,
-    SONOS_ENTITY_UPDATE,
     SONOS_GROUP_UPDATE,
+    SONOS_POLL_UPDATE,
     SONOS_SEEN,
     SONOS_STATE_PLAYING,
     SONOS_STATE_TRANSITIONING,
@@ -138,6 +138,7 @@ class SonosSpeaker:
         self.household_id: str = soco.household_id
         self.media = SonosMedia(soco)
 
+        self.is_first_poll: bool = True
         self._is_ready: bool = False
         self._subscriptions: list[SubscriptionBase] = []
         self._resubscription_lock: asyncio.Lock | None = None
@@ -322,7 +323,7 @@ class SonosSpeaker:
             partial(
                 async_dispatcher_send,
                 self.hass,
-                f"{SONOS_ENTITY_UPDATE}-{self.soco.uid}",
+                f"{SONOS_POLL_UPDATE}-{self.soco.uid}",
             ),
             SCAN_INTERVAL,
         )
@@ -418,7 +419,7 @@ class SonosSpeaker:
         ):
             async_dispatcher_send(self.hass, SONOS_CREATE_ALARM, self, new_alarms)
 
-        async_dispatcher_send(self.hass, SONOS_ALARM_UPDATE, self)
+        async_dispatcher_send(self.hass, SONOS_ALARM_UPDATE)
 
         self.async_write_entity_states()
 
@@ -840,11 +841,13 @@ class SonosSpeaker:
                 self.media.artist = track_info.get("artist")
                 self.media.album_name = track_info.get("album")
                 self.media.title = track_info.get("title")
+                self.media.image_url = track_info.get("album_art")
+                playlist_position = int(track_info.get("playlist_position"))  # type: ignore
+                if playlist_position > 0:
+                    self.media.queue_position = playlist_position - 1
 
                 if music_source == MUSIC_SRC_RADIO:
                     self.update_media_radio(variables)
-                else:
-                    self.update_media_music(track_info)
                 self.update_media_position(update_position, track_info)
 
         self.write_entity_states()
@@ -877,7 +880,7 @@ class SonosSpeaker:
         if not self.media.artist:
             try:
                 self.media.artist = variables["current_track_meta_data"].creator
-            except (KeyError, AttributeError):
+            except (TypeError, KeyError, AttributeError):
                 pass
 
         # Radios without tagging can have part of the radio URI as title.
@@ -907,14 +910,6 @@ class SonosSpeaker:
         for fav in self.favorites:
             if fav.reference.get_uri() == media_info["uri"]:
                 self.media.source_name = fav.title
-
-    def update_media_music(self, track_info: dict) -> None:
-        """Update state when playing music tracks."""
-        self.media.image_url = track_info.get("album_art")
-
-        playlist_position = int(track_info.get("playlist_position"))  # type: ignore
-        if playlist_position > 0:
-            self.media.queue_position = playlist_position - 1
 
     def update_media_position(
         self, update_media_position: bool, track_info: dict
@@ -950,3 +945,11 @@ class SonosSpeaker:
         elif update_media_position:
             self.media.position = current_position
             self.media.position_updated_at = dt_util.utcnow()
+
+    @property
+    def subscription_address(self) -> str | None:
+        """Return the current subscription callback address if any."""
+        if self._subscriptions:
+            ip, port = self._subscriptions[0].event_listener.address
+            return ":".join([ip, str(port)])
+        return None
