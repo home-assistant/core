@@ -31,8 +31,6 @@ CONF_STATION = ("12345",)
 CONF_USERNAME = ("test-username",)
 CONF_PASSWORD = "test-password"
 
-# wallbox = WallboxHub(CONF_STATION, CONF_USERNAME, CONF_PASSWORD, hass)
-
 
 async def test_wallbox_sensor_class():
     """Test wallbox sensor class."""
@@ -47,35 +45,3 @@ async def test_wallbox_sensor_class():
     assert wallboxSensor.unit_of_measurement == "kW"
     assert wallboxSensor.name == "Mock Title Charging Power"
     assert wallboxSensor.state
-
-
-# async def test_wallbox_updater(hass: HomeAssistantType):
-#     """Test wallbox updater."""
-#     with requests_mock.Mocker() as m:
-#         m.get(
-#             "https://api.wall-box.com/auth/token/user",
-#             text='{"jwt":"fakekeyhere","user_id":12345,"ttl":145656758,"error":false,"status":200}',
-#             status_code=200,
-#         )
-#         m.get(
-#             "https://api.wall-box.com/chargers/status/('12345',)",
-#             json=test_response,
-#             status_code=200,
-#         )
-#         await sensor.wallbox_updater(wallbox, hass)
-
-
-# async def test_wallbox_updater_rounding_error(hass: HomeAssistantType):
-#     """Test wallbox updater rounding error."""
-#     with requests_mock.Mocker() as m:
-#         m.get(
-#             "https://api.wall-box.com/auth/token/user",
-#             text='{"jwt":"fakekeyhere","user_id":12345,"ttl":145656758,"error":false,"status":200}',
-#             status_code=200,
-#         )
-#         m.get(
-#             "https://api.wall-box.com/chargers/status/('12345',)",
-#             json=test_response_rounding_error,
-#             status_code=200,
-#         )
-#         await sensor.wallbox_updater(wallbox, hass)
