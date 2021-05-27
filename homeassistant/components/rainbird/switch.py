@@ -9,7 +9,6 @@ from homeassistant.helpers import config_validation as cv
 from . import CONF_ZONES, DATA_RAINBIRD, DOMAIN, RAINBIRD_CONTROLLER
 
 ATTR_DURATION = "duration"
-ATTR_DAYS = "days"
 
 SERVICE_START_IRRIGATION = "start_irrigation"
 
@@ -17,14 +16,6 @@ SERVICE_SCHEMA_IRRIGATION = vol.Schema(
     {
         vol.Required(ATTR_ENTITY_ID): cv.entity_id,
         vol.Required(ATTR_DURATION): cv.positive_float,
-    }
-)
-
-SERVICE_DELAY_IRRIGATION = "delay_irrigation"
-
-SERVICE_SCHEMA_DELAY_IRRIGATION = vol.Schema(
-    {
-        vol.Required(ATTR_DAYS): cv.positive_float,
     }
 )
 
@@ -71,18 +62,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         SERVICE_START_IRRIGATION,
         start_irrigation,
         schema=SERVICE_SCHEMA_IRRIGATION,
-    )
-
-    def delay_irrigation(service):
-        days = service.data[ATTR_DAYS]
-
-        controller.set_rain_delay(days=days)
-
-    hass.services.register(
-        DOMAIN,
-        SERVICE_DELAY_IRRIGATION,
-        delay_irrigation,
-        schema=SERVICE_SCHEMA_DELAY_IRRIGATION,
     )
 
 

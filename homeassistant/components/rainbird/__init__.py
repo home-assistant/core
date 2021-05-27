@@ -55,14 +55,38 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
+ATTR_DAYS = "days"
+SERVICE_DELAY_IRRIGATION = "delay_irrigation"
+SERVICE_SCHEMA_DELAY_IRRIGATION = vol.Schema(
+    {
+        vol.Required(ATTR_DAYS): cv.positive_int,
+    }
+)
+
 
 def setup(hass, config):
     """Set up the Rain Bird component."""
 
     hass.data[DATA_RAINBIRD] = []
     success = False
+
     for controller_config in config[DOMAIN]:
         success = success or _setup_controller(hass, controller_config, config)
+
+    controller = None
+    if success:
+        controller = hass.data[DATA_RAINBIRD][0]
+
+    def delay_irrigation(service):
+        days = service.data[ATTR_DAYS]
+        controller.set_rain_delay(days=days)
+
+    hass.services.register(
+        DOMAIN,
+        SERVICE_DELAY_IRRIGATION,
+        delay_irrigation,
+        schema=SERVICE_SCHEMA_DELAY_IRRIGATION,
+    )
 
     return success
 
