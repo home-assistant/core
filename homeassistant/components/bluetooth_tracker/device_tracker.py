@@ -2,13 +2,18 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Awaitable
+from datetime import datetime, timedelta
 import logging
+from typing import Any, Callable, Final
 
 import bluetooth  # pylint: disable=import-error
 from bt_proximity import BluetoothRSSI
 import voluptuous as vol
 
-from homeassistant.components.device_tracker import PLATFORM_SCHEMA
+from homeassistant.components.device_tracker import (
+    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
+)
 from homeassistant.components.device_tracker.const import (
     CONF_SCAN_INTERVAL,
     CONF_TRACK_NEW,
@@ -18,24 +23,26 @@ from homeassistant.components.device_tracker.const import (
 )
 from homeassistant.components.device_tracker.legacy import (
     YAML_DEVICES,
+    Device,
     async_load_config,
 )
 from homeassistant.const import CONF_DEVICE_ID
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN, SERVICE_UPDATE
+from .const import (
+    BT_PREFIX,
+    CONF_REQUEST_RSSI,
+    DEFAULT_DEVICE_ID,
+    DOMAIN,
+    SERVICE_UPDATE,
+)
 
-_LOGGER = logging.getLogger(__name__)
+_LOGGER: Final = logging.getLogger(__name__)
 
-BT_PREFIX = "BT_"
-
-CONF_REQUEST_RSSI = "request_rssi"
-
-DEFAULT_DEVICE_ID = -1
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA: Final = PARENT_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_TRACK_NEW): cv.boolean,
         vol.Optional(CONF_REQUEST_RSSI): cv.boolean,
@@ -46,9 +53,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def is_bluetooth_device(device) -> bool:
+def is_bluetooth_device(device: Device) -> bool:
     """Check whether a device is a bluetooth device by its mac."""
-    return device.mac and device.mac[:3].upper() == BT_PREFIX
+    return device.mac is not None and device.mac[:3].upper() == BT_PREFIX
 
 
 def discover_devices(device_id: int) -> list[tuple[str, str]]:
@@ -61,11 +68,15 @@ def discover_devices(device_id: int) -> list[tuple[str, str]]:
         device_id=device_id,
     )
     _LOGGER.debug("Bluetooth devices discovered = %d", len(result))
-    return result
+    return result  # type: ignore[no-any-return]
 
 
 async def see_device(
-    hass: HomeAssistant, async_see, mac: str, device_name: str, rssi=None
+    hass: HomeAssistant,
+    async_see: Callable[..., Awaitable[None]],
+    mac: str,
+    device_name: str,
+    rssi: tuple[int] | None = None,
 ) -> None:
     """Mark a device as seen."""
     attributes = {}
@@ -88,14 +99,18 @@ async def get_tracking_devices(hass: HomeAssistant) -> tuple[set[str], set[str]]
     """
     yaml_path: str = hass.config.path(YAML_DEVICES)
 
-    devices = await async_load_config(yaml_path, hass, 0)
+    devices = await async_load_config(yaml_path, hass, timedelta(0))
     bluetooth_devices = [device for device in devices if is_bluetooth_device(device)]
 
     devices_to_track: set[str] = {
-        device.mac[3:] for device in bluetooth_devices if device.track
+        device.mac[3:]
+        for device in bluetooth_devices
+        if device.track and device.mac is not None
     }
     devices_to_not_track: set[str] = {
-        device.mac[3:] for device in bluetooth_devices if not device.track
+        device.mac[3:]
+        for device in bluetooth_devices
+        if not device.track and device.mac is not None
     }
 
     return devices_to_track, devices_to_not_track
@@ -104,16 +119,19 @@ async def get_tracking_devices(hass: HomeAssistant) -> tuple[set[str], set[str]]
 def lookup_name(mac: str) -> str | None:
     """Lookup a Bluetooth device name."""
     _LOGGER.debug("Scanning %s", mac)
-    return bluetooth.lookup_name(mac, timeout=5)
+    return bluetooth.lookup_name(mac, timeout=5)  # type: ignore[no-any-return]
 
 
 async def async_setup_scanner(
-    hass: HomeAssistant, config: dict, async_see, discovery_info=None
-):
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_see: Callable[..., Awaitable[None]],
+    discovery_info: dict[str, Any] | None = None,
+) -> bool:
     """Set up the Bluetooth Scanner."""
     device_id: int = config[CONF_DEVICE_ID]
-    interval = config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL)
-    request_rssi = config.get(CONF_REQUEST_RSSI, False)
+    interval: timedelta = config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL)
+    request_rssi: bool = config.get(CONF_REQUEST_RSSI, False)
     update_bluetooth_lock = asyncio.Lock()
 
     # If track new devices is true discover new devices on startup.
@@ -128,21 +146,21 @@ async def async_setup_scanner(
     if request_rssi:
         _LOGGER.debug("Detecting RSSI for devices")
 
-    async def perform_bluetooth_update():
+    async def perform_bluetooth_update() -> None:
         """Discover Bluetooth devices and update status."""
         _LOGGER.debug("Performing Bluetooth devices discovery and update")
-        tasks = []
+        tasks: list[Awaitable[None]] = []
 
         try:
             if track_new:
                 devices = await hass.async_add_executor_job(discover_devices, device_id)
-                for mac, device_name in devices:
+                for mac, _device_name in devices:
                     if mac not in devices_to_track and mac not in devices_to_not_track:
                         devices_to_track.add(mac)
 
             for mac in devices_to_track:
-                device_name = await hass.async_add_executor_job(lookup_name, mac)
-                if device_name is None:
+                friendly_name = await hass.async_add_executor_job(lookup_name, mac)
+                if friendly_name is None:
                     # Could not lookup device name
                     continue
 
@@ -152,7 +170,7 @@ async def async_setup_scanner(
                     rssi = await hass.async_add_executor_job(client.request_rssi)
                     client.close()
 
-                tasks.append(see_device(hass, async_see, mac, device_name, rssi))
+                tasks.append(see_device(hass, async_see, mac, friendly_name, rssi))
 
             if tasks:
                 await asyncio.wait(tasks)
@@ -160,7 +178,7 @@ async def async_setup_scanner(
         except bluetooth.BluetoothError:
             _LOGGER.exception("Error looking up Bluetooth device")
 
-    async def update_bluetooth(now=None):
+    async def update_bluetooth(now: datetime | None = None) -> None:
         """Lookup Bluetooth devices and update status."""
         # If an update is in progress, we don't do anything
         if update_bluetooth_lock.locked():
@@ -173,7 +191,7 @@ async def async_setup_scanner(
         async with update_bluetooth_lock:
             await perform_bluetooth_update()
 
-    async def handle_manual_update_bluetooth(call):
+    async def handle_manual_update_bluetooth(call: ServiceCall) -> None:
         """Update bluetooth devices on demand."""
         await update_bluetooth()
 

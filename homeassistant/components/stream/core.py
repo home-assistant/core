@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import asyncio
 from collections import deque
-import io
 from typing import Callable
 
 from aiohttp import web
@@ -19,12 +18,15 @@ from .const import ATTR_STREAMS, DOMAIN
 PROVIDERS = Registry()
 
 
-@attr.s
+@attr.s(slots=True)
 class Segment:
     """Represent a segment."""
 
     sequence: int = attr.ib()
-    segment: io.BytesIO = attr.ib()
+    # the init of the mp4
+    init: bytes = attr.ib()
+    # the video data (moof + mddat)s of the mp4
+    moof_data: bytes = attr.ib()
     duration: float = attr.ib()
     # For detecting discontinuities across stream restarts
     stream_id: int = attr.ib(default=0)
@@ -96,6 +98,13 @@ class StreamOutput:
         return self._idle_timer.idle
 
     @property
+    def last_sequence(self) -> int:
+        """Return the last sequence number without iterating."""
+        if self._segments:
+            return self._segments[-1].sequence
+        return -1
+
+    @property
     def segments(self) -> list[int]:
         """Return current sequence from segments."""
         return [s.sequence for s in self._segments]
@@ -125,8 +134,7 @@ class StreamOutput:
 
     async def recv(self) -> Segment | None:
         """Wait for and retrieve the latest segment."""
-        last_segment = max(self.segments, default=0)
-        if self._cursor is None or self._cursor <= last_segment:
+        if self._cursor is None or self._cursor <= self.last_sequence:
             await self._event.wait()
 
         if not self._segments:

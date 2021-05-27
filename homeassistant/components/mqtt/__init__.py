@@ -7,7 +7,6 @@ import inspect
 from itertools import groupby
 import logging
 from operator import attrgetter
-import os
 import ssl
 import time
 from typing import Any, Callable, Union
@@ -633,18 +632,7 @@ class MQTT:
 
         certificate = self.conf.get(CONF_CERTIFICATE)
 
-        # For cloudmqtt.com, secured connection, auto fill in certificate
-        if (
-            certificate is None
-            and 19999 < self.conf[CONF_PORT] < 30000
-            and self.conf[CONF_BROKER].endswith(".cloudmqtt.com")
-        ):
-            certificate = os.path.join(
-                os.path.dirname(__file__), "addtrustexternalcaroot.crt"
-            )
-
-        # When the certificate is set to auto, use bundled certs from certifi
-        elif certificate == "auto":
+        if certificate == "auto":
             certificate = certifi.where()
 
         client_key = self.conf.get(CONF_CLIENT_KEY)
