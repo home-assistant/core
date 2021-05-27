@@ -23,7 +23,7 @@ PLATFORMS = ["sensor"]
 MIN_SCAN_INTERVAL = timedelta(minutes=10)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Garmin Connect from a config entry."""
     username = entry.data[CONF_USERNAME]
     password = entry.data[CONF_PASSWORD]

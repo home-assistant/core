@@ -51,7 +51,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType):
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up config entry."""
     entries = hass.data[DOMAIN_DATA_ENTRIES]
     tasks = hass.data[DOMAIN_DATA_TASKS]

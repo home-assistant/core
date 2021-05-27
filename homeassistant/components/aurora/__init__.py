@@ -35,7 +35,7 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = ["binary_sensor", "sensor"]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Aurora from a config entry."""
 
     conf = entry.data
