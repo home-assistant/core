@@ -36,9 +36,10 @@ AUDIO_STREAM_FORMAT = "mp3"
 VIDEO_STREAM_FORMAT = "h264"
 VIDEO_FRAME_RATE = 12
 AUDIO_SAMPLE_RATE = 11025
+KEYFRAME_RATE = 1  # 1 keyframe per second
 PACKET_DURATION = fractions.Fraction(1, VIDEO_FRAME_RATE)  # in seconds
 SEGMENT_DURATION = (
-    math.ceil(TARGET_SEGMENT_DURATION / PACKET_DURATION) * PACKET_DURATION
+    math.ceil(TARGET_SEGMENT_DURATION * KEYFRAME_RATE) / KEYFRAME_RATE
 )  # in seconds
 TEST_SEQUENCE_LENGTH = 5 * VIDEO_FRAME_RATE
 LONGER_TEST_SEQUENCE_LENGTH = 20 * VIDEO_FRAME_RATE
@@ -103,7 +104,7 @@ class PacketSequence:
             duration = PACKET_DURATION / time_base
             stream = VIDEO_STREAM
             # Pretend we get 1 keyframe every second
-            is_keyframe = not (self.packet - 1) % VIDEO_FRAME_RATE
+            is_keyframe = not (self.packet - 1) % (VIDEO_FRAME_RATE / KEYFRAME_RATE)
             size = 3
 
         return FakePacket()
@@ -339,7 +340,9 @@ async def test_skip_initial_bad_packets(hass):
     assert (
         len(decoded_stream.video_packets)
         == num_packets
-        - math.ceil(num_bad_packets / VIDEO_FRAME_RATE) * VIDEO_FRAME_RATE
+        - math.ceil(num_bad_packets * KEYFRAME_RATE / VIDEO_FRAME_RATE)
+        * VIDEO_FRAME_RATE
+        / KEYFRAME_RATE
     )
     assert len(decoded_stream.audio_packets) == 0
 
