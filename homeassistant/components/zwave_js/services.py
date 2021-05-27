@@ -43,7 +43,7 @@ def parameter_name_does_not_need_bitmask(
 
 
 def broadcast_command(val: dict[str, Any]) -> dict[str, Any]:
-    """Validate that the service call is for a broadcast comomand."""
+    """Validate that the service call is for a broadcast command."""
     if val.get(const.ATTR_BROADCAST):
         return val
     raise vol.Invalid(
