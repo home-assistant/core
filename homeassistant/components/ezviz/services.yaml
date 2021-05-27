@@ -117,6 +117,11 @@ sound_alarm:
 wake_device:
   name: Wake Camera
   description: This can be used to wake camera/device from hibernation.
-  target:
-    entity:
-      domain: camera
+  fields:
+    entity_id:
+      description: Name(s) of Ezviz Camera entities.
+      required: true
+      selector:
+        entity:
+          integration: ezviz
+          domain: camera
