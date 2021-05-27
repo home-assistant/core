@@ -41,7 +41,7 @@ async def validate_projector(
     return epson_proj
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up epson from a config entry."""
     projector = await validate_projector(
         hass=hass,
