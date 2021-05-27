@@ -60,7 +60,7 @@ async def async_setup_entry(
 class RakoLight(LightEntity):
     """Representation of a Rako Light."""
 
-    def __init__(self, bridge: RakoBridge, light: python_rako.Light):
+    def __init__(self, bridge: RakoBridge, light: python_rako.Light) -> None:
         """Initialize a RakoLight."""
         self.bridge = bridge
         self._light = light
@@ -140,7 +140,7 @@ class RakoLight(LightEntity):
 class RakoRoomLight(RakoLight):
     """Representation of a Rako Room Light."""
 
-    def __init__(self, bridge: RakoBridge, light: python_rako.RoomLight):
+    def __init__(self, bridge: RakoBridge, light: python_rako.RoomLight) -> None:
         """Initialize a RakoLight."""
         super().__init__(bridge, light)
         self._light: python_rako.RoomLight = light
@@ -176,7 +176,7 @@ class RakoRoomLight(RakoLight):
 class RakoChannelLight(RakoLight):
     """Representation of a Rako Channel Light."""
 
-    def __init__(self, bridge: RakoBridge, light: python_rako.ChannelLight):
+    def __init__(self, bridge: RakoBridge, light: python_rako.ChannelLight) -> None:
         """Initialize a RakoLight."""
         super().__init__(bridge, light)
         self._light: python_rako.ChannelLight = light

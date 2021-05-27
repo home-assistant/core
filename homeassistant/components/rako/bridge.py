@@ -30,7 +30,7 @@ class RakoBridge(Bridge):
         mac: str,
         entry_id: str,
         hass: HomeAssistant,
-    ):
+    ) -> None:
         """Init subclass of python_rako Bridge."""
         super().__init__(host, port, name, mac)
         self.entry_id = entry_id
