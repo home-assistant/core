@@ -4,13 +4,16 @@ DOMAIN = "stream"
 ATTR_ENDPOINTS = "endpoints"
 ATTR_STREAMS = "streams"
 
-OUTPUT_FORMATS = ["hls"]
+HLS_PROVIDER = "hls"
+RECORDER_PROVIDER = "recorder"
+
+OUTPUT_FORMATS = [HLS_PROVIDER]
 
 SEGMENT_CONTAINER_FORMAT = "mp4"  # format for segments
 RECORDER_CONTAINER_FORMAT = "mp4"  # format for recorder output
 AUDIO_CODECS = {"aac", "mp3"}
 
-FORMAT_CONTENT_TYPE = {"hls": "application/vnd.apple.mpegurl"}
+FORMAT_CONTENT_TYPE = {HLS_PROVIDER: "application/vnd.apple.mpegurl"}
 
 OUTPUT_IDLE_TIMEOUT = 300  # Idle timeout due to inactivity
 

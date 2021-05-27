@@ -12,7 +12,11 @@ from av.container import OutputContainer
 
 from homeassistant.core import HomeAssistant, callback
 
-from .const import RECORDER_CONTAINER_FORMAT, SEGMENT_CONTAINER_FORMAT
+from .const import (
+    RECORDER_CONTAINER_FORMAT,
+    RECORDER_PROVIDER,
+    SEGMENT_CONTAINER_FORMAT,
+)
 from .core import PROVIDERS, IdleTimer, Segment, StreamOutput
 
 _LOGGER = logging.getLogger(__name__)
@@ -110,7 +114,7 @@ def recorder_save_worker(file_out: str, segments: deque[Segment]):
         output.close()
 
 
-@PROVIDERS.register("recorder")
+@PROVIDERS.register(RECORDER_PROVIDER)
 class RecorderOutput(StreamOutput):
     """Represents HLS Output formats."""
 
@@ -122,7 +126,7 @@ class RecorderOutput(StreamOutput):
     @property
     def name(self) -> str:
         """Return provider name."""
-        return "recorder"
+        return RECORDER_PROVIDER
 
     def prepend(self, segments: list[Segment]) -> None:
         """Prepend segments to existing list."""
