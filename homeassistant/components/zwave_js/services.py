@@ -291,7 +291,6 @@ class ZWaveServices:
                     get_nodes_from_service_data,
                     validate_multicast_nodes,
                 ),
-                extra=vol.ALLOW_EXTRA,
             ),
         )
 
