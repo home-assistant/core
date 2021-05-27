@@ -115,7 +115,7 @@ class ZWaveServices:
             broadcast: bool = val[const.ATTR_BROADCAST]
 
             # User must specify a node if they are attempting a broadcast and have more
-            # than one zwave-js network. We know its a broadcast if the nodes list is
+            # than one zwave-js network. We know it's a broadcast if the nodes list is
             # empty because of schema validation.
             if (
                 not nodes
