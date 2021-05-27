@@ -70,6 +70,7 @@ CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.All(
             cv.deprecated(CONF_DEFAULT_INTERFACE),
+            cv.deprecated(CONF_IPV6),
             vol.Schema(
                 {
                     vol.Optional(CONF_DEFAULT_INTERFACE): cv.boolean,
@@ -143,7 +144,6 @@ def _async_use_default_interface(adapters: list[Adapter]) -> bool:
 
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     """Set up Zeroconf and make Home Assistant discoverable."""
-    zc_config = config.get(DOMAIN, {})
     zc_args: dict = {}
 
     adapters = await network.async_get_adapters(hass)
@@ -158,7 +158,10 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
                 interfaces.append(ipv4s[0]["address"])
             elif ipv6s := adapter["ipv6"]:
                 interfaces.append(ipv6s[0]["scope_id"])
-    if not zc_config.get(CONF_IPV6, DEFAULT_IPV6):
+
+    ipv6 = True
+    if not any(adapter["enabled"] and adapter["ipv6"] for adapter in adapters):
+        ipv6 = False
         zc_args["ip_version"] = IPVersion.V4Only
 
     aio_zc = await _async_get_instance(hass, **zc_args)
@@ -167,7 +170,7 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     zeroconf_types, homekit_models = await asyncio.gather(
         async_get_zeroconf(hass), async_get_homekit(hass)
     )
-    discovery = ZeroconfDiscovery(hass, zeroconf, zeroconf_types, homekit_models)
+    discovery = ZeroconfDiscovery(hass, zeroconf, zeroconf_types, homekit_models, ipv6)
     await discovery.async_setup()
 
     async def _async_zeroconf_hass_start(_event: Event) -> None:
@@ -291,12 +294,14 @@ class ZeroconfDiscovery:
         zeroconf: Zeroconf,
         zeroconf_types: dict[str, list[dict[str, str]]],
         homekit_models: dict[str, str],
+        ipv6: bool,
     ) -> None:
         """Init discovery."""
         self.hass = hass
         self.zeroconf = zeroconf
         self.zeroconf_types = zeroconf_types
         self.homekit_models = homekit_models
+        self.ipv6 = ipv6
 
         self.flow_dispatcher: FlowDispatcher | None = None
         self.service_browser: HaServiceBrowser | None = None
@@ -313,7 +318,7 @@ class ZeroconfDiscovery:
                 types.append(hk_type)
         _LOGGER.debug("Starting Zeroconf browser")
         self.service_browser = HaServiceBrowser(
-            self.zeroconf, types, handlers=[self.service_update]
+            self.ipv6, self.zeroconf, types, handlers=[self.service_update]
         )
 
     async def async_stop(self) -> None:
