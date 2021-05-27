@@ -39,6 +39,7 @@ class HaServiceBrowser(ServiceBrowser):
         """Create service browser that filters ipv6 if it is disabled."""
         self.ipv6 = ipv6
         super().__init__(*args, **kwargs)
+        self.name = self.__class__.__name__
 
     def update_record(self, zc: Zeroconf, now: float, record: DNSRecord) -> None:
         """Pre-Filter AAAA records if IPv6 is not enabled."""
