@@ -56,7 +56,9 @@ DATA_DEVICES = "zwave-mqtt-devices"
 DATA_STOP_MQTT_CLIENT = "ozw_stop_mqtt_client"
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):  # noqa: C901
+async def async_setup_entry(  # noqa: C901
+    hass: HomeAssistant, entry: ConfigEntry
+) -> bool:
     """Set up ozw from a config entry."""
     hass.data.setdefault(DOMAIN, {})
     ozw_data = hass.data[DOMAIN][entry.entry_id] = {}
@@ -298,7 +300,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):  # noqa: C
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     # cleanup platforms
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
