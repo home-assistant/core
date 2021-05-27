@@ -419,7 +419,7 @@ class AsusWrtRouter:
         return self._api
 
 
-async def _get_nvram_info(api: AsusWrt, info_type):
+async def _get_nvram_info(api: AsusWrt, info_type: str) -> dict[str, Any]:
     """Get AsusWrt router info from nvram."""
     info = {}
     try:
