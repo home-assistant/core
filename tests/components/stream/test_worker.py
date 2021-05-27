@@ -36,10 +36,10 @@ AUDIO_STREAM_FORMAT = "mp3"
 VIDEO_STREAM_FORMAT = "h264"
 VIDEO_FRAME_RATE = 12
 AUDIO_SAMPLE_RATE = 11025
-KEYFRAME_RATE = 1  # 1 keyframe per second
+KEYFRAME_INTERVAL = 1  # in seconds
 PACKET_DURATION = fractions.Fraction(1, VIDEO_FRAME_RATE)  # in seconds
 SEGMENT_DURATION = (
-    math.ceil(TARGET_SEGMENT_DURATION * KEYFRAME_RATE) / KEYFRAME_RATE
+    math.ceil(TARGET_SEGMENT_DURATION / KEYFRAME_INTERVAL) * KEYFRAME_INTERVAL
 )  # in seconds
 TEST_SEQUENCE_LENGTH = 5 * VIDEO_FRAME_RATE
 LONGER_TEST_SEQUENCE_LENGTH = 20 * VIDEO_FRAME_RATE
@@ -104,7 +104,7 @@ class PacketSequence:
             duration = PACKET_DURATION / time_base
             stream = VIDEO_STREAM
             # Pretend we get 1 keyframe every second
-            is_keyframe = not (self.packet - 1) % (VIDEO_FRAME_RATE / KEYFRAME_RATE)
+            is_keyframe = not (self.packet - 1) % (VIDEO_FRAME_RATE * KEYFRAME_INTERVAL)
             size = 3
 
         return FakePacket()
@@ -249,8 +249,12 @@ async def test_stream_worker_success(hass):
 async def test_skip_out_of_order_packet(hass):
     """Skip a single out of order packet."""
     packets = list(PacketSequence(TEST_SEQUENCE_LENGTH))
+    # for this test, make sure the out of order index doesn't happen on a keyframe
+    out_of_order_index = OUT_OF_ORDER_PACKET_INDEX
+    if packets[out_of_order_index].is_keyframe:
+        out_of_order_index += 1
     # This packet is out of order
-    packets[OUT_OF_ORDER_PACKET_INDEX].dts = -9090
+    packets[out_of_order_index].dts = -9090
 
     decoded_stream = await async_decode_stream(hass, iter(packets))
     segments = decoded_stream.segments
@@ -259,11 +263,9 @@ async def test_skip_out_of_order_packet(hass):
     # If skipped packet would have been the first packet of a segment, the previous
     # segment will be longer by a packet duration
     # We also may possibly lose a segment due to the shifting pts boundary
-    if OUT_OF_ORDER_PACKET_INDEX % PACKETS_PER_SEGMENT == 0:
+    if out_of_order_index % PACKETS_PER_SEGMENT == 0:
         # Check duration of affected segment and remove it
-        longer_segment_index = int(
-            (OUT_OF_ORDER_PACKET_INDEX - 1) * SEGMENTS_PER_PACKET
-        )
+        longer_segment_index = int((out_of_order_index - 1) * SEGMENTS_PER_PACKET)
         assert (
             segments[longer_segment_index].duration
             == SEGMENT_DURATION + PACKET_DURATION
@@ -329,10 +331,6 @@ async def test_skip_initial_bad_packets(hass):
 
     decoded_stream = await async_decode_stream(hass, iter(packets))
     segments = decoded_stream.segments
-    # Check number of segments
-    assert len(segments) == int(
-        (num_packets - num_bad_packets - 1) * SEGMENTS_PER_PACKET
-    )
     # Check sequence numbers
     assert all(segments[i].sequence == i for i in range(len(segments)))
     # Check segment durations
@@ -340,9 +338,13 @@ async def test_skip_initial_bad_packets(hass):
     assert (
         len(decoded_stream.video_packets)
         == num_packets
-        - math.ceil(num_bad_packets * KEYFRAME_RATE / VIDEO_FRAME_RATE)
+        - math.ceil(num_bad_packets / (VIDEO_FRAME_RATE * KEYFRAME_INTERVAL))
         * VIDEO_FRAME_RATE
-        / KEYFRAME_RATE
+        * KEYFRAME_INTERVAL
+    )
+    # Check number of segments
+    assert len(segments) == int(
+        (len(decoded_stream.video_packets) - 1) * SEGMENTS_PER_PACKET
     )
     assert len(decoded_stream.audio_packets) == 0
 
