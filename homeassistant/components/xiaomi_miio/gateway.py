@@ -44,9 +44,9 @@ class ConnectXiaomiGateway:
         _LOGGER.debug("Initializing with host %s (token %s...)", host, token[:5])
 
         use_cloud = self._config_entry.options.get(CONF_CLOUD_SUBDEVICES, False)
-        cloud_username = self._config_entry.options.get(CONF_CLOUD_USERNAME)
-        cloud_password = self._config_entry.options.get(CONF_CLOUD_PASSWORD)
-        cloud_country = self._config_entry.options.get(CONF_CLOUD_COUNTRY)
+        cloud_username = self._config_entry.data.get(CONF_CLOUD_USERNAME)
+        cloud_password = self._config_entry.data.get(CONF_CLOUD_PASSWORD)
+        cloud_country = self._config_entry.data.get(CONF_CLOUD_COUNTRY)
 
         try:
             self._gateway_device = gateway.Gateway(host, token)
