@@ -183,8 +183,6 @@ class AlarmControlPanelEntity(Entity):
     @property
     def supported_features(self) -> int:
         """Return the list of supported features."""
-        if not hasattr(self, "_attr_supported_features"):
-            raise AttributeError
         return self._attr_supported_features
 
     @final
