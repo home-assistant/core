@@ -456,6 +456,7 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
                 self._schedule_immediate_update,
             )
         )
+        await super().async_added_to_hass()
 
     @property
     def supported_features(self) -> int:

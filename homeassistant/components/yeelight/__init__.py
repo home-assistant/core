@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 from datetime import timedelta
 import logging
+from threading import Thread
 
 import voluptuous as vol
 from yeelight import Bulb, BulbException, discover_bulbs
@@ -201,6 +202,21 @@ async def _async_initialize(
         device = await _async_get_device(hass, host, entry)
     entry_data[DATA_DEVICE] = device
 
+    # start listening for local pushes
+    listen_thread = Thread(target=device.bulb.listen, args=(device.update_callback))
+    listen_thread.daemon = True
+    listen_thread.start()
+    
+    # register stop callback to shutdown listening for local pushes
+    def stop_listen_thread(event):
+        """Stop listen thread."""
+        _LOGGER.debug("Shutting down Yeelight Listener")
+        device.bulb.stop_listening()
+        listen_thread.join()
+        _LOGGER.debug("Yeelight Listener stopped")
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_listen_thread)
+
     entry.async_on_unload(
         async_dispatcher_connect(
             hass,
@@ -394,6 +410,7 @@ class YeelightDevice:
         self._available = False
         self._remove_time_tracker = None
         self._initialized = False
+        self._registered_callbacks = {}
 
         self._name = host  # Default name is host
         if capabilities:
@@ -564,6 +581,22 @@ class YeelightDevice:
             self._hass, _async_update, self._hass.data[DOMAIN][DATA_SCAN_INTERVAL]
         )
 
+    def register_callback(self, id, callback):
+        """Register a callback function for updates of the device."""
+        if id in self._registered_callbacks:
+            _LOGGER.error("A callback with id '%s' was already registed, overwriting previous callback", id)
+        self._registered_callbacks[id] = callback
+
+    def remove_callback(self, id):
+        """Remove a callback using its id."""
+        self._registered_callbacks.pop(id)
+
+    @callback
+    def update_callback(self, data):
+        """Update push from device."""
+        for callback in self._registered_callbacks.values():
+            callback()
+
     @callback
     def async_unload(self):
         """Unload the device."""
@@ -610,6 +643,16 @@ class YeelightEntity(Entity):
     def update(self) -> None:
         """Update the entity."""
         self._device.update()
+
+    async def async_added_to_hass(self):
+        """Subscribe to multicast pushes and register signal handler."""
+        self._device.register_callback(self.unique_id, self.schedule_update_ha_state)
+        await super().async_added_to_hass()
+
+    async def async_will_remove_from_hass(self):
+        """Unsubscribe when removed."""
+        self._device.remove_callback(self.unique_id)
+        await super().async_will_remove_from_hass()
 
 
 async def _async_get_device(
