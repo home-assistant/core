@@ -259,7 +259,9 @@ async def test_bulb_off_while_adding_in_ha(hass: HomeAssistant):
     type(mocked_bulb).get_properties = MagicMock(None)
 
     hass.data[DOMAIN][DATA_CONFIG_ENTRIES][config_entry.entry_id][DATA_DEVICE].update()
-    hass.data[DOMAIN][DATA_CONFIG_ENTRIES][config_entry.entry_id][DATA_DEVICE].update_callback({})
+    hass.data[DOMAIN][DATA_CONFIG_ENTRIES][config_entry.entry_id][
+        DATA_DEVICE
+    ].update_callback({})
     await hass.async_block_till_done()
     await hass.async_block_till_done()
 
