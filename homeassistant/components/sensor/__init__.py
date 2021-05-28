@@ -96,15 +96,18 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class SensorEntity(Entity):
     """Base class for sensor entities."""
 
+    _attr_state_class: str | None = None
+    _attr_last_reset: datetime | None = None
+
     @property
     def state_class(self) -> str | None:
         """Return the state class of this entity, from STATE_CLASSES, if any."""
-        return None
+        return self._attr_state_class
 
     @property
     def last_reset(self) -> datetime | None:
         """Return the time when the sensor was last reset, if any."""
-        return None
+        return self._attr_last_reset
 
     @property
     def capability_attributes(self) -> Mapping[str, Any] | None:

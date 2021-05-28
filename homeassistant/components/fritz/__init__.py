@@ -3,6 +3,10 @@ import logging
 
 from fritzconnection.core.exceptions import FritzConnectionException, FritzSecurityError
 
+from homeassistant.components.device_tracker.const import (
+    CONF_CONSIDER_HOME,
+    DEFAULT_CONSIDER_HOME,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
@@ -34,7 +38,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         await fritz_tools.async_setup()
-        await fritz_tools.async_start()
+        await fritz_tools.async_start(entry.options)
     except FritzSecurityError as ex:
         raise ConfigEntryAuthFailed from ex
     except FritzConnectionException as ex:
@@ -53,10 +57,28 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_unload)
     )
+    entry.async_on_unload(entry.add_update_listener(update_listener))
+
     # Load the other platforms like switch
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     await async_setup_services(hass)
+
+    return True
+
+
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+    """Migrate config entry."""
+    _LOGGER.debug("Migrating from version %s", config_entry.version)
+
+    if config_entry.version == 1:
+        config_entry.version = 2
+        hass.config_entries.async_update_entry(
+            config_entry,
+            options={CONF_CONSIDER_HOME: DEFAULT_CONSIDER_HOME.total_seconds()},
+        )
+
+    _LOGGER.info("Migration to version %s successful", config_entry.version)
 
     return True
 
@@ -79,3 +101,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await async_unload_services(hass)
 
     return unload_ok
+
+
+async def update_listener(hass: HomeAssistant, entry: ConfigEntry):
+    """Update when config_entry options update."""
+    if entry.options:
+        await hass.config_entries.async_reload(entry.entry_id)

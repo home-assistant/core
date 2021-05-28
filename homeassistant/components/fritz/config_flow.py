@@ -2,19 +2,25 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 from urllib.parse import urlparse
 
 from fritzconnection.core.exceptions import FritzConnectionException, FritzSecurityError
 import voluptuous as vol
 
+from homeassistant.components.device_tracker.const import (
+    CONF_CONSIDER_HOME,
+    DEFAULT_CONSIDER_HOME,
+)
 from homeassistant.components.ssdp import (
     ATTR_SSDP_LOCATION,
     ATTR_UPNP_FRIENDLY_NAME,
     ATTR_UPNP_UDN,
 )
-from homeassistant.config_entries import ConfigEntry, ConfigFlow
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import FlowResult
 
 from .common import FritzBoxTools
 from .const import (
@@ -32,7 +38,13 @@ _LOGGER = logging.getLogger(__name__)
 class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a FRITZ!Box Tools config flow."""
 
-    VERSION = 1
+    VERSION = 2
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry):
+        """Get the options flow for this handler."""
+        return FritzBoxToolsOptionsFlowHandler(config_entry)
 
     def __init__(self):
         """Initialize FRITZ!Box Tools flow."""
@@ -84,6 +96,9 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
                 CONF_PASSWORD: self.fritz_tools.password,
                 CONF_PORT: self.fritz_tools.port,
                 CONF_USERNAME: self.fritz_tools.username,
+            },
+            options={
+                CONF_CONSIDER_HOME: DEFAULT_CONSIDER_HOME.total_seconds(),
             },
         )
 
@@ -244,3 +259,31 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
                 CONF_PORT: import_config.get(CONF_PORT, DEFAULT_PORT),
             }
         )
+
+
+class FritzBoxToolsOptionsFlowHandler(OptionsFlow):
+    """Handle a option flow."""
+
+    def __init__(self, config_entry: ConfigEntry) -> None:
+        """Initialize options flow."""
+        self.config_entry = config_entry
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle options flow."""
+
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        data_schema = vol.Schema(
+            {
+                vol.Optional(
+                    CONF_CONSIDER_HOME,
+                    default=self.config_entry.options.get(
+                        CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME.total_seconds()
+                    ),
+                ): vol.All(vol.Coerce(int), vol.Clamp(min=0, max=900)),
+            }
+        )
+        return self.async_show_form(step_id="init", data_schema=data_schema)

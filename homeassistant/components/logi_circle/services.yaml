@@ -7,7 +7,6 @@ set_config:
     entity_id:
       name: Entity
       description: Name(s) of entities to apply the operation mode to.
-      example: "camera.living_room_camera"
       selector:
         entity:
           integration: logi_circle
@@ -16,7 +15,6 @@ set_config:
       name: Mode
       description: "Operation mode. Allowed values: LED, RECORDING_MODE."
       required: true
-      example: "RECORDING_MODE"
       selector:
         select:
           options:
@@ -26,7 +24,6 @@ set_config:
       name: Value
       description: "Operation value."
       required: true
-      example: true
       selector:
         boolean:
 
@@ -37,7 +34,6 @@ livestream_snapshot:
     entity_id:
       name: Entity
       description: Name(s) of entities to create snapshots from.
-      example: "camera.living_room_camera"
       selector:
         entity:
           integration: logi_circle
@@ -57,7 +53,6 @@ livestream_record:
     entity_id:
       name: Entity
       description: Name(s) of entities to create recordings from.
-      example: "camera.living_room_camera"
       selector:
         entity:
           integration: logi_circle
@@ -73,7 +68,6 @@ livestream_record:
       name: Duration
       description: Recording duration.
       required: true
-      example: 60
       selector:
         number:
           min: 1

@@ -49,12 +49,7 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ):
     """Read configuration and create Modbus cover."""
-    if discovery_info is None:
-        _LOGGER.warning(
-            "You're trying to init Modbus Cover in an unsupported way."
-            " Check https://www.home-assistant.io/integrations/modbus/#configuring-platform-cover"
-            " and fix your configuration"
-        )
+    if discovery_info is None:  # pragma: no cover
         return
 
     covers = []
@@ -147,7 +142,7 @@ class ModbusCover(BasePlatform, CoverEntity, RestoreEntity):
             self._slave, self._register, self._state_open, self._write_type
         )
         self._available = result is not None
-        self.async_update()
+        await self.async_update()
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
@@ -155,7 +150,7 @@ class ModbusCover(BasePlatform, CoverEntity, RestoreEntity):
             self._slave, self._register, self._state_closed, self._write_type
         )
         self._available = result is not None
-        self.async_update()
+        await self.async_update()
 
     async def async_update(self, now=None):
         """Update the state of the cover."""

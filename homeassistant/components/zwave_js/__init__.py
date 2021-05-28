@@ -51,6 +51,8 @@ from .const import (
     ATTR_TYPE,
     ATTR_VALUE,
     ATTR_VALUE_RAW,
+    CONF_ADDON_DEVICE,
+    CONF_ADDON_NETWORK_KEY,
     CONF_DATA_COLLECTION_OPTED_IN,
     CONF_INTEGRATION_CREATED_ADDON,
     CONF_NETWORK_KEY,
@@ -360,7 +362,7 @@ async def async_setup_entry(  # noqa: C901
         entry_hass_data[DATA_CONNECT_FAILED_LOGGED] = False
         entry_hass_data[DATA_INVALID_SERVER_VERSION_LOGGED] = False
 
-    services = ZWaveServices(hass, ent_reg)
+    services = ZWaveServices(hass, ent_reg, dev_reg)
     services.async_register()
 
     # Set up websocket API
@@ -579,6 +581,17 @@ async def async_ensure_addon_running(hass: HomeAssistant, entry: ConfigEntry) ->
             usb_path, network_key, catch_error=True
         )
         raise ConfigEntryNotReady
+
+    addon_options = addon_info.options
+    addon_device = addon_options[CONF_ADDON_DEVICE]
+    addon_network_key = addon_options[CONF_ADDON_NETWORK_KEY]
+    updates = {}
+    if usb_path != addon_device:
+        updates[CONF_USB_PATH] = addon_device
+    if network_key != addon_network_key:
+        updates[CONF_NETWORK_KEY] = addon_network_key
+    if updates:
+        hass.config_entries.async_update_entry(entry, data={**entry.data, **updates})
 
 
 @callback

@@ -1,6 +1,8 @@
 """Provides device automations for Alarm control panel."""
 from __future__ import annotations
 
+from typing import Final
+
 import voluptuous as vol
 
 from homeassistant.components.alarm_control_panel.const import (
@@ -32,10 +34,14 @@ from homeassistant.helpers.typing import ConfigType
 
 from . import DOMAIN
 
-BASIC_TRIGGER_TYPES = {"triggered", "disarmed", "arming"}
-TRIGGER_TYPES = BASIC_TRIGGER_TYPES | {"armed_home", "armed_away", "armed_night"}
+BASIC_TRIGGER_TYPES: Final[set[str]] = {"triggered", "disarmed", "arming"}
+TRIGGER_TYPES: Final[set[str]] = BASIC_TRIGGER_TYPES | {
+    "armed_home",
+    "armed_away",
+    "armed_night",
+}
 
-TRIGGER_SCHEMA = TRIGGER_BASE_SCHEMA.extend(
+TRIGGER_SCHEMA: Final = TRIGGER_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_ENTITY_ID): cv.entity_id,
         vol.Required(CONF_TYPE): vol.In(TRIGGER_TYPES),
@@ -44,10 +50,12 @@ TRIGGER_SCHEMA = TRIGGER_BASE_SCHEMA.extend(
 )
 
 
-async def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict]:
+async def async_get_triggers(
+    hass: HomeAssistant, device_id: str
+) -> list[dict[str, str]]:
     """List device triggers for Alarm control panel devices."""
     registry = await entity_registry.async_get_registry(hass)
-    triggers = []
+    triggers: list[dict[str, str]] = []
 
     # Get all the integrations entities for this device
     for entry in entity_registry.async_entries_for_device(registry, device_id):
@@ -102,7 +110,9 @@ async def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict]:
     return triggers
 
 
-async def async_get_trigger_capabilities(hass: HomeAssistant, config: dict) -> dict:
+async def async_get_trigger_capabilities(
+    hass: HomeAssistant, config: ConfigType
+) -> dict[str, vol.Schema]:
     """List trigger capabilities."""
     return {
         "extra_fields": vol.Schema(

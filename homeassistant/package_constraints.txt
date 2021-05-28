@@ -4,7 +4,7 @@ aiodiscover==1.4.2
 aiohttp==3.7.4.post0
 aiohttp_cors==0.7.0
 astral==2.2
-async-upnp-client==0.17.0
+async-upnp-client==0.18.0
 async_timeout==3.0.1
 attrs==21.2.0
 awesomeversion==21.4.0
@@ -17,14 +17,14 @@ defusedxml==0.7.1
 distro==1.5.0
 emoji==1.2.0
 hass-nabucasa==0.43.0
-home-assistant-frontend==20210518.0
+home-assistant-frontend==20210526.0
 httpx==0.18.0
-jinja2>=2.11.3
+ifaddr==0.1.7
+jinja2>=3.0.1
 netdisco==2.8.3
 paho-mqtt==1.5.1
 pillow==8.1.2
 pip>=8.0.3,<20.3
-pyroute2==0.5.18
 python-slugify==4.0.1
 pyyaml==5.4.1
 requests==2.25.1

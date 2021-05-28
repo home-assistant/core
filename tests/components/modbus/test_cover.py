@@ -1,6 +1,6 @@
 """The tests for the Modbus cover component."""
-import logging
 
+from pymodbus.exceptions import ModbusException
 import pytest
 
 from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
@@ -24,6 +24,7 @@ from homeassistant.const import (
     STATE_CLOSING,
     STATE_OPEN,
     STATE_OPENING,
+    STATE_UNAVAILABLE,
 )
 from homeassistant.core import State
 
@@ -156,35 +157,6 @@ async def test_register_cover(hass, regs, expected):
     assert state == expected
 
 
-@pytest.mark.parametrize("read_type", [CALL_TYPE_COIL, CONF_REGISTER])
-async def test_unsupported_config_cover(hass, read_type, caplog):
-    """
-    Run test for cover.
-
-    Initialize the Cover in the legacy manner via platform.
-    This test expects that the Cover won't be initialized, and that we get a config warning.
-    """
-    device_name = "test_cover"
-    device_config = {CONF_NAME: device_name, read_type: 1234}
-
-    caplog.set_level(logging.WARNING)
-    caplog.clear()
-
-    await base_config_test(
-        hass,
-        device_config,
-        device_name,
-        COVER_DOMAIN,
-        CONF_COVERS,
-        None,
-        method_discovery=False,
-        expect_init_to_fail=True,
-    )
-
-    assert len(caplog.records) == 1
-    assert caplog.records[0].levelname == "WARNING"
-
-
 async def test_service_cover_update(hass, mock_pymodbus):
     """Run test for service homeassistant.update_entity."""
 
@@ -246,3 +218,50 @@ async def test_restore_state_cover(hass, state):
         method_discovery=True,
     )
     assert hass.states.get(entity_id).state == state
+
+
+async def test_service_cover_move(hass, mock_pymodbus):
+    """Run test for service homeassistant.update_entity."""
+
+    entity_id = "cover.test"
+    entity_id2 = "cover.test2"
+    config = {
+        CONF_COVERS: [
+            {
+                CONF_NAME: "test",
+                CONF_REGISTER: 1234,
+                CONF_STATUS_REGISTER_TYPE: CALL_TYPE_REGISTER_HOLDING,
+            },
+            {
+                CONF_NAME: "test2",
+                CALL_TYPE_COIL: 1234,
+            },
+        ]
+    }
+    mock_pymodbus.read_holding_registers.return_value = ReadResult([0x01])
+    await prepare_service_update(
+        hass,
+        config,
+    )
+    await hass.services.async_call(
+        "cover", "open_cover", {"entity_id": entity_id}, blocking=True
+    )
+    assert hass.states.get(entity_id).state == STATE_OPEN
+
+    mock_pymodbus.read_holding_registers.return_value = ReadResult([0x00])
+    await hass.services.async_call(
+        "cover", "close_cover", {"entity_id": entity_id}, blocking=True
+    )
+    assert hass.states.get(entity_id).state == STATE_CLOSED
+
+    mock_pymodbus.read_holding_registers.side_effect = ModbusException("fail write_")
+    await hass.services.async_call(
+        "cover", "close_cover", {"entity_id": entity_id}, blocking=True
+    )
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+    mock_pymodbus.read_coils.side_effect = ModbusException("fail write_")
+    await hass.services.async_call(
+        "cover", "close_cover", {"entity_id": entity_id2}, blocking=True
+    )
+    assert hass.states.get(entity_id2).state == STATE_UNAVAILABLE

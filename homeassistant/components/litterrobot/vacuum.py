@@ -71,7 +71,7 @@ async def async_setup_entry(
     )
     platform.async_register_entity_service(
         SERVICE_SET_WAIT_TIME,
-        {vol.Required("minutes"): vol.In(VALID_WAIT_TIMES)},
+        {vol.Required("minutes"): vol.All(vol.Coerce(int), vol.In(VALID_WAIT_TIMES))},
         "async_set_wait_time",
     )
 

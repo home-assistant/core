@@ -116,7 +116,7 @@ class TradfriLight(TradfriBaseDevice, LightEntity):
         if device.light_control.can_set_dimmer:
             _features |= SUPPORT_BRIGHTNESS
         if device.light_control.can_set_color:
-            _features |= SUPPORT_COLOR
+            _features |= SUPPORT_COLOR | SUPPORT_COLOR_TEMP
         if device.light_control.can_set_temp:
             _features |= SUPPORT_COLOR_TEMP
         self._features = _features
