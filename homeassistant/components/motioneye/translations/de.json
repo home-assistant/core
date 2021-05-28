@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Der Dienst ist bereits konfiguriert",
+            "reauth_successful": "Die erneute Authentifizierung war erfolgreich"
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "invalid_auth": "Ung\u00fcltige Authentifizierung",
+            "invalid_url": "Ung\u00fcltige URL",
+            "unknown": "Unerwarteter Fehler"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "admin_password": "Admin Passwort",
+                    "admin_username": "Admin Benutzername",
+                    "surveillance_password": "Surveillance Passwort",
+                    "surveillance_username": "Surveillance Benutzername",
+                    "url": "URL"
+                }
+            }
+        }
+    }
+}

@@ -1,10 +1,10 @@
 """Support for KNX/IP covers."""
 from __future__ import annotations
 
-from collections.abc import Iterable
 from datetime import datetime
 from typing import Any, Callable
 
+from xknx import XKNX
 from xknx.devices import Cover as XknxCover, Device as XknxDevice
 from xknx.telegram.address import parse_device_group_address
 
@@ -12,7 +12,6 @@ from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
     DEVICE_CLASS_BLIND,
-    DEVICE_CLASSES,
     SUPPORT_CLOSE,
     SUPPORT_CLOSE_TILT,
     SUPPORT_OPEN,
@@ -23,9 +22,10 @@ from homeassistant.components.cover import (
     SUPPORT_STOP_TILT,
     CoverEntity,
 )
+from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_utc_time_change
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -37,28 +37,30 @@ from .schema import CoverSchema
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    async_add_entities: Callable[[Iterable[Entity]], None],
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up cover(s) for KNX platform."""
-    _async_migrate_unique_id(hass, discovery_info)
+    if not discovery_info or not discovery_info["platform_config"]:
+        return
+    platform_config = discovery_info["platform_config"]
+    _async_migrate_unique_id(hass, platform_config)
+
+    xknx: XKNX = hass.data[DOMAIN].xknx
+
     entities = []
-    for device in hass.data[DOMAIN].xknx.devices:
-        if isinstance(device, XknxCover):
-            entities.append(KNXCover(device))
+    for entity_config in platform_config:
+        entities.append(KNXCover(xknx, entity_config))
+
     async_add_entities(entities)
 
 
 @callback
 def _async_migrate_unique_id(
-    hass: HomeAssistant, discovery_info: DiscoveryInfoType | None
+    hass: HomeAssistant, platform_config: list[ConfigType]
 ) -> None:
     """Change unique_ids used in 2021.4 to include position_target GA."""
     entity_registry = er.async_get(hass)
-    if not discovery_info or not discovery_info["platform_config"]:
-        return
-
-    platform_config = discovery_info["platform_config"]
     for entity_config in platform_config:
         # normalize group address strings - ga_updown was the old uid but is optional
         updown_addresses = entity_config.get(CoverSchema.CONF_MOVE_LONG_ADDRESS)
@@ -83,12 +85,34 @@ def _async_migrate_unique_id(
 class KNXCover(KnxEntity, CoverEntity):
     """Representation of a KNX cover."""
 
-    def __init__(self, device: XknxCover):
+    def __init__(self, xknx: XKNX, config: ConfigType) -> None:
         """Initialize the cover."""
         self._device: XknxCover
-        super().__init__(device)
+        super().__init__(
+            device=XknxCover(
+                xknx,
+                name=config[CONF_NAME],
+                group_address_long=config.get(CoverSchema.CONF_MOVE_LONG_ADDRESS),
+                group_address_short=config.get(CoverSchema.CONF_MOVE_SHORT_ADDRESS),
+                group_address_stop=config.get(CoverSchema.CONF_STOP_ADDRESS),
+                group_address_position_state=config.get(
+                    CoverSchema.CONF_POSITION_STATE_ADDRESS
+                ),
+                group_address_angle=config.get(CoverSchema.CONF_ANGLE_ADDRESS),
+                group_address_angle_state=config.get(
+                    CoverSchema.CONF_ANGLE_STATE_ADDRESS
+                ),
+                group_address_position=config.get(CoverSchema.CONF_POSITION_ADDRESS),
+                travel_time_down=config[CoverSchema.CONF_TRAVELLING_TIME_DOWN],
+                travel_time_up=config[CoverSchema.CONF_TRAVELLING_TIME_UP],
+                invert_position=config[CoverSchema.CONF_INVERT_POSITION],
+                invert_angle=config[CoverSchema.CONF_INVERT_ANGLE],
+            )
+        )
+        self._device_class: str | None = config.get(CONF_DEVICE_CLASS)
         self._unique_id = (
-            f"{device.updown.group_address}_{device.position_target.group_address}"
+            f"{self._device.updown.group_address}_"
+            f"{self._device.position_target.group_address}"
         )
         self._unsubscribe_auto_updater: Callable[[], None] | None = None
 
@@ -102,8 +126,8 @@ class KNXCover(KnxEntity, CoverEntity):
     @property
     def device_class(self) -> str | None:
         """Return the class of this device, from component DEVICE_CLASSES."""
-        if self._device.device_class in DEVICE_CLASSES:
-            return self._device.device_class
+        if self._device_class:
+            return self._device_class
         if self._device.supports_angle:
             return DEVICE_CLASS_BLIND
         return None

@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import Any
 
 from aiohttp import ClientError
 
@@ -14,6 +13,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
 
 from .const import (
     ATTR_HOST,
@@ -47,7 +47,7 @@ class TwinklyLight(LightEntity):
         self,
         conf: ConfigEntry,
         hass: HomeAssistant,
-    ):
+    ) -> None:
         """Initialize a TwinklyLight entity."""
         self._id = conf.data[CONF_ENTRY_ID]
         self._hass = hass
@@ -105,7 +105,7 @@ class TwinklyLight(LightEntity):
         return "mdi:string-lights"
 
     @property
-    def device_info(self) -> dict[str, Any] | None:
+    def device_info(self) -> DeviceInfo | None:
         """Get device specific attributes."""
         return (
             {

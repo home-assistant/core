@@ -43,7 +43,7 @@ class StarlineSensor(StarlineEntity, BinarySensorEntity):
         key: str,
         name: str,
         device_class: str,
-    ):
+    ) -> None:
         """Initialize sensor."""
         super().__init__(account, device, key, name)
         self._device_class = device_class

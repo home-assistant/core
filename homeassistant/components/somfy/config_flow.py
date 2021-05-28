@@ -1,18 +1,17 @@
 """Config flow for Somfy."""
 import logging
 
-from homeassistant import config_entries
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from .const import DOMAIN
 
 
-@config_entries.HANDLERS.register(DOMAIN)
-class SomfyFlowHandler(config_entry_oauth2_flow.AbstractOAuth2FlowHandler):
+class SomfyFlowHandler(
+    config_entry_oauth2_flow.AbstractOAuth2FlowHandler, domain=DOMAIN
+):
     """Config flow to handle Somfy OAuth2 authentication."""
 
     DOMAIN = DOMAIN
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     @property
     def logger(self) -> logging.Logger:
@@ -21,7 +20,7 @@ class SomfyFlowHandler(config_entry_oauth2_flow.AbstractOAuth2FlowHandler):
 
     async def async_step_user(self, user_input=None):
         """Handle a flow start."""
-        if self.hass.config_entries.async_entries(DOMAIN):
+        if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
 
         return await super().async_step_user(user_input)

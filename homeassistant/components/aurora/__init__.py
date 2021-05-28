@@ -95,7 +95,7 @@ class AuroraDataUpdateCoordinator(DataUpdateCoordinator):
         latitude: float,
         longitude: float,
         threshold: float,
-    ):
+    ) -> None:
         """Initialize the data updater."""
 
         super().__init__(
@@ -128,7 +128,7 @@ class AuroraEntity(CoordinatorEntity):
         coordinator: AuroraDataUpdateCoordinator,
         name: str,
         icon: str,
-    ):
+    ) -> None:
         """Initialize the Aurora Entity."""
 
         super().__init__(coordinator=coordinator)

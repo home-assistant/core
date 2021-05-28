@@ -8,7 +8,7 @@
         "error": {
             "cannot_connect": "Tilkobling mislyktes"
         },
-        "flow_title": "Lutron Cas\u00e9ta {name} ({host})",
+        "flow_title": "{name} ({host})",
         "step": {
             "import_failed": {
                 "description": "Kunne ikke konfigurere bridge (host: {host} ) importert fra configuration.yaml.",

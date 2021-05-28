@@ -3,7 +3,8 @@
         "abort": {
             "already_configured": "Ger\u00e4t ist bereits konfiguriert",
             "cannot_connect": "Verbindung fehlgeschlagen",
-            "not_irobot_device": "Das erkannte Ger\u00e4t ist kein iRobot-Ger\u00e4t"
+            "not_irobot_device": "Das erkannte Ger\u00e4t ist kein iRobot-Ger\u00e4t",
+            "short_blid": "Das BLID wurde abgeschnitten"
         },
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen"

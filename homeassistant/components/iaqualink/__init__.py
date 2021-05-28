@@ -4,7 +4,6 @@ from __future__ import annotations
 import asyncio
 from functools import wraps
 import logging
-from typing import Any
 
 import aiohttp.client_exceptions
 from iaqualink import (
@@ -35,7 +34,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 
@@ -55,19 +54,22 @@ PLATFORMS = [
 ]
 
 CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_USERNAME): cv.string,
-                vol.Required(CONF_PASSWORD): cv.string,
-            }
-        )
-    },
+    vol.All(
+        cv.deprecated(DOMAIN),
+        {
+            DOMAIN: vol.Schema(
+                {
+                    vol.Required(CONF_USERNAME): cv.string,
+                    vol.Required(CONF_PASSWORD): cv.string,
+                }
+            )
+        },
+    ),
     extra=vol.ALLOW_EXTRA,
 )
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> None:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Aqualink component."""
     conf = config.get(DOMAIN)
 
@@ -199,7 +201,7 @@ class AqualinkEntity(Entity):
     class.
     """
 
-    def __init__(self, dev: AqualinkDevice):
+    def __init__(self, dev: AqualinkDevice) -> None:
         """Initialize the entity."""
         self.dev = dev
 
@@ -234,7 +236,7 @@ class AqualinkEntity(Entity):
         return self.dev.system.online
 
     @property
-    def device_info(self) -> dict[str, Any]:
+    def device_info(self) -> DeviceInfo:
         """Return the device info."""
         return {
             "identifiers": {(DOMAIN, self.unique_id)},
