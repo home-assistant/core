@@ -132,11 +132,11 @@ class NetatmoDataHandler:
 
     async def async_fetch_data(self, data_class_entry):
         """Fetch data and notify."""
+        if self.data[data_class_entry] is None:
+            return
+
         try:
             await self.data[data_class_entry].async_update()
-
-        except AttributeError as err:
-            _LOGGER.debug("%s (%s)", data_class_entry, err)
 
         except pyatmo.NoDevice as err:
             _LOGGER.debug(err)
