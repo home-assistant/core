@@ -139,7 +139,10 @@ class TadoHomeSensor(TadoHomeEntity, SensorEntity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        if self.home_variable == "temperature":
+        if (
+            self.home_variable == "temperature"
+            or self.home_variable == "outdoor temperature"
+        ):
             return TEMP_CELSIUS
         if self.home_variable == "solar percentage":
             return PERCENTAGE
