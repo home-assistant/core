@@ -115,12 +115,9 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
 
     async def async_update(self) -> None:
         """Poll the device for the current state."""
-        if await self.async_check_if_available():
-            self.async_update_alarm()
+        if not await self.async_check_if_available():
+            return
 
-    @callback
-    def async_update_alarm(self):
-        """Update the state of the alarm."""
         _LOGGER.debug("Updating the state of the alarm")
         if self.speaker.soco.uid != self.alarm.zone.uid:
             self.speaker = self.hass.data[DATA_SONOS].discovered.get(
