@@ -160,3 +160,53 @@ set_value:
       required: false
       selector:
         boolean:
+
+multicast_set_value:
+  name: Set a value on multiple Z-Wave devices via multicast (Advanced)
+  description: Allow for changing any value that Z-Wave JS recognizes on multiple Z-Wave devices using multicast, so all devices receive the message simultaneously. This service has minimal validation so only use this service if you know what you are doing.
+  target:
+    entity:
+      integration: zwave_js
+  fields:
+    broadcast:
+      name: Broadcast?
+      description: Whether command should be broadcast to all devices on the networrk.
+      example: true
+      required: false
+      selector:
+        boolean:
+    command_class:
+      name: Command Class
+      description: The ID of the command class for the value.
+      example: 117
+      required: true
+      selector:
+        text:
+    endpoint:
+      name: Endpoint
+      description: The endpoint for the value.
+      example: 1
+      required: false
+      selector:
+        text:
+    property:
+      name: Property
+      description: The ID of the property for the value.
+      example: currentValue
+      required: true
+      selector:
+        text:
+    property_key:
+      name: Property Key
+      description: The ID of the property key for the value
+      example: 1
+      required: false
+      selector:
+        text:
+    value:
+      name: Value
+      description: The new value to set.
+      example: "ffbb99"
+      required: true
+      selector:
+        object:
