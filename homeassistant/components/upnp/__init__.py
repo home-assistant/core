@@ -18,9 +18,6 @@ from .const import (
     CONFIG_ENTRY_HOSTNAME,
     CONFIG_ENTRY_ST,
     CONFIG_ENTRY_UDN,
-    DISCOVERY_LOCATION,
-    DISCOVERY_ST,
-    DISCOVERY_UDN,
     DOMAIN,
     DOMAIN_CONFIG,
     DOMAIN_DEVICES,
@@ -50,13 +47,15 @@ async def async_construct_device(hass: HomeAssistant, udn: str, st: str) -> Devi
     """Discovery devices and construct a Device for one."""
     # pylint: disable=invalid-name
     _LOGGER.debug("Constructing device: %s::%s", udn, st)
-    location = ssdp.async_get_location_by_udn_st(hass, udn, st)
+    discovery_info = ssdp.async_get_discovery_info_by_udn_st(hass, udn, st)
 
-    if not location:
+    if not discovery_info:
         _LOGGER.info("Device not discovered")
         return None
 
-    return await Device.async_create_device(hass, location)
+    return await Device.async_create_device(
+        hass, discovery_info[ssdp.ATTR_SSDP_LOCATION]
+    )
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType):
