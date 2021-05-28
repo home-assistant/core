@@ -372,37 +372,37 @@ class MediaPlayerEntity(Entity):
 
     _access_token: str | None = None
 
-    _attr_state: str | None = None
-    _attr_volume_level: float | None = None
+    _attr_app_id: str | None = None
+    _attr_app_name: str | None = None
+    _attr_group_members: list[str] | None = None
     _attr_is_volume_muted: bool | None = None
+    _attr_media_album_artist: str | None = None
+    _attr_media_album_name: str | None = None
+    _attr_media_artist: str | None = None
+    _attr_media_channel: str | None = None
     _attr_media_content_id: str | None = None
     _attr_media_content_type: str | None = None
     _attr_media_duration: int | None = None
-    _attr_media_position: int | None = None
-    _attr_media_position_updated_at: dt.datetime | None = None
-    _attr_media_image_url: str | None = None
-    _attr_media_image_remotely_accessible: bool = False
-    _attr_media_image_hash: str | None
-    _attr_media_title: str | None = None
-    _attr_media_artist: str | None = None
-    _attr_media_album_name: str | None = None
-    _attr_media_album_artist: str | None = None
-    _attr_media_track: int | None = None
-    _attr_media_series_title: str | None = None
-    _attr_media_season: str | None = None
     _attr_media_episode: str | None = None
-    _attr_media_channel: str | None = None
+    _attr_media_image_hash: str | None
+    _attr_media_image_remotely_accessible: bool = False
+    _attr_media_image_url: str | None = None
     _attr_media_playlist: str | None = None
-    _attr_app_id: str | None = None
-    _attr_app_name: str | None = None
-    _attr_source: str | None = None
-    _attr_source_list: list[str] | None = None
-    _attr_sound_mode: str | None = None
-    _attr_sound_mode_list: list[str] | None = None
-    _attr_shuffle: bool | None = None
+    _attr_media_position_updated_at: dt.datetime | None = None
+    _attr_media_position: int | None = None
+    _attr_media_season: str | None = None
+    _attr_media_series_title: str | None = None
+    _attr_media_title: str | None = None
+    _attr_media_track: int | None = None
     _attr_repeat: str | None = None
-    _attr_group_members: list[str] | None = None
+    _attr_shuffle: bool | None = None
+    _attr_sound_mode_list: list[str] | None = None
+    _attr_sound_mode: str | None = None
+    _attr_source_list: list[str] | None = None
+    _attr_source: str | None = None
+    _attr_state: str | None = None
     _attr_supported_features: int = 0
+    _attr_volume_level: float | None = None
 
     # Implement these for your media player
     @property
