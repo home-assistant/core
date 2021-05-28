@@ -11,8 +11,10 @@ from pyhomepilot.auth import (  # pylint:disable=redefined-builtin
 )
 import voluptuous as vol
 
-from homeassistant import config_entries, core, exceptions
+from homeassistant.config_entries import CONN_CLASS_LOCAL_POLL, ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_PASSWORD
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 
 from .const import DOMAIN
 
@@ -23,7 +25,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-async def validate_input(hass: core.HomeAssistant, data):
+async def validate_input(hass: HomeAssistant, data):
     """Validate the user input allows us to connect."""
     async with aiohttp.ClientSession() as session:
         auth = Auth(session, data[CONF_HOST], data.get(CONF_PASSWORD))
@@ -42,11 +44,11 @@ async def validate_input(hass: core.HomeAssistant, data):
             return {"title": name}
 
 
-class HomepilotConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class HomepilotConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Rademacher HomePilot."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
+    CONNECTION_CLASS = CONN_CLASS_LOCAL_POLL
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
@@ -74,9 +76,9 @@ class HomepilotConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
 
-class CannotConnect(exceptions.HomeAssistantError):
+class CannotConnect(HomeAssistantError):
     """Error to indicate we cannot connect."""
 
 
-class InvalidAuth(exceptions.HomeAssistantError):
+class InvalidAuth(HomeAssistantError):
     """Error to indicate there is invalid auth."""
