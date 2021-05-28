@@ -66,9 +66,6 @@ class ZwaveFan(ZWaveBaseEntity, FanEntity):
         """Initialize a ZwaveFan entity."""
         super().__init__(config_entry, client, info)
 
-        # Entity class attributes
-        self._attr_supported_features = SUPPORTED_FEATURES
-
     async def async_set_percentage(self, percentage: int | None) -> None:
         """Set the speed percentage of the fan."""
         target_value = self.get_zwave_value("targetValue")
@@ -118,3 +115,8 @@ class ZwaveFan(ZWaveBaseEntity, FanEntity):
     def speed_count(self) -> int:
         """Return the number of speeds the fan supports."""
         return int_states_in_range(SPEED_RANGE)
+
+    @property
+    def supported_features(self) -> int:
+        """Return supported features."""
+        return SUPPORTED_FEATURES

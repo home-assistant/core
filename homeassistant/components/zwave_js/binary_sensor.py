@@ -315,7 +315,7 @@ class ZWaveNotificationBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
             additional_info=[self.info.primary_value.metadata.states[self.state_key]],
         )
         self._attr_device_class = self._mapping_info.get("device_class")
-        self._attr_unique_id = f"{super()._attr_unique_id}.{self.state_key}"
+        self._attr_unique_id = f"{self._attr_unique_id}.{self.state_key}"
         self._attr_entity_registry_enabled_default = (
             True if not self._mapping_info else self._mapping_info.get("enabled", True)
         )
