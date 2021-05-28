@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 import aiohttp
 from async_upnp_client.search import SSDPListener
+from async_upnp_client.utils import CaseInsensitiveDict
 import pytest
 
 from homeassistant import config_entries
@@ -438,13 +439,16 @@ async def test_scan_second_hit(hass, aioclient_mock, caplog):
 </root>
     """,
     )
-    mock_ssdp_response = {
-        "st": "mock-st",
-        "location": "http://1.1.1.1",
-        "usn": "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL::urn:mdx-netflix-com:service:target:3",
-        "server": "mock-server",
-        "ext": "",
-    }
+
+    mock_ssdp_response = CaseInsensitiveDict(
+        **{
+            "ST": "mock-st",
+            "LOCATION": "http://1.1.1.1",
+            "USN": "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL::urn:mdx-netflix-com:service:target:3",
+            "SERVER": "mock-server",
+            "EXT": "",
+        }
+    )
     mock_get_ssdp = {"mock-domain": [{"st": "mock-st"}]}
     intergration_callbacks = []
 

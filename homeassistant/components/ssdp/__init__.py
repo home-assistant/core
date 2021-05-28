@@ -9,6 +9,7 @@ import logging
 from typing import Any, Callable
 
 from async_upnp_client.search import SSDPListener
+from async_upnp_client.utils import CaseInsensitiveDict
 
 from homeassistant import config_entries
 from homeassistant.components import network
@@ -242,11 +243,10 @@ class Scanner:
             return
         assert self.description_manager is not None
 
-        info_with_req = dict(headers)
-        info_req = await self.description_manager.fetch_description(headers["location"])
-        if info_req:
-            info_with_req.update(info_req)
-
+        info_req = (
+            await self.description_manager.fetch_description(headers["location"]) or {}
+        )
+        info_with_req = CaseInsensitiveDict(**headers, **info_req)
         discovery_info = discovery_info_from_headers_and_request(info_with_req)
 
         if udn := discovery_info.get(ATTR_UPNP_UDN):
@@ -277,16 +277,11 @@ class Scanner:
             self.flow_dispatcher.create(flow)
 
 
-def discovery_info_from_headers_and_request(data: dict[str, str]) -> dict[str, str]:
-    """Get info from an entry."""
-    info = {
-        **{k: v for k, v in data.items() if k not in DISCOVERY_MAPPING},
-        **{
-            discovery_key: data[header]
-            for header, discovery_key in DISCOVERY_MAPPING.items()
-            if header in data
-        },
-    }
+def discovery_info_from_headers_and_request(
+    info_with_req: CaseInsensitiveDict,
+) -> dict[str, str]:
+    """Convert headers and description to discovery_info."""
+    info = {DISCOVERY_MAPPING.get(k.lower(), k): v for k, v in info_with_req.items()}
 
     if ATTR_UPNP_UDN not in info and str(info.get(ATTR_SSDP_USN)).startswith("uuid:"):
         info[ATTR_UPNP_UDN] = str(info[ATTR_SSDP_USN]).split("::")[0]
