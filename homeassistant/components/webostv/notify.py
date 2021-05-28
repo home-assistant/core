@@ -17,32 +17,27 @@ async def async_get_service(hass, config, discovery_info=None):
     """Return the notify service."""
     if discovery_info is None:
         return None
-    icon_path = discovery_info.get(CONF_ICON, "")
     name = discovery_info.get(CONF_NAME)
     client = hass.data[DOMAIN][discovery_info[ATTR_CONFIG_ENTRY_ID]]
 
-    return LgWebOSNotificationService(client, name, icon_path)
+    return LgWebOSNotificationService(client, name)
 
 
 class LgWebOSNotificationService(BaseNotificationService):
     """Implement the notification service for LG WebOS TV."""
 
-    def __init__(self, client, name, icon_path):
+    def __init__(self, client, name):
         """Initialize the service."""
         self._name = name
         self._client = client
-        self._icon_path = icon_path
 
     async def async_send_message(self, message="", **kwargs):
         """Send a message to the tv."""
         try:
+            data = kwargs.get(ATTR_DATA)
+            icon_path = data.get(CONF_ICON, "") if data else None
             if not self._client.is_connected():
                 await self._client.connect()
-
-            data = kwargs.get(ATTR_DATA)
-            icon_path = (
-                data.get(CONF_ICON, self._icon_path) if data else self._icon_path
-            )
             await self._client.send_message(message, icon_path=icon_path)
         except PyLGTVPairException:
             _LOGGER.error("Pairing with TV failed")
