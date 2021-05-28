@@ -79,14 +79,21 @@ def percent_to_zwave_position(value: int) -> int:
 class ZWaveCover(ZWaveBaseEntity, CoverEntity):
     """Representation of a Z-Wave Cover device."""
 
-    @property
-    def device_class(self) -> str | None:
-        """Return the class of this device, from component DEVICE_CLASSES."""
+    def __init__(
+        self,
+        config_entry: ConfigEntry,
+        client: ZwaveClient,
+        info: ZwaveDiscoveryInfo,
+    ) -> None:
+        """Initialize a ZWaveCover entity."""
+        super().__init__(config_entry, client, info)
+
+        # Entity class attributes
+        self._attr_device_class = DEVICE_CLASS_WINDOW
         if self.info.platform_hint == "window_shutter":
-            return DEVICE_CLASS_SHUTTER
+            self._attr_device_class = DEVICE_CLASS_SHUTTER
         if self.info.platform_hint == "window_blind":
-            return DEVICE_CLASS_BLIND
-        return DEVICE_CLASS_WINDOW
+            self._attr_device_class = DEVICE_CLASS_BLIND
 
     @property
     def is_closed(self) -> bool | None:
@@ -146,15 +153,9 @@ class ZwaveMotorizedBarrier(ZWaveBaseEntity, CoverEntity):
             "targetState", add_to_watched_value_ids=False
         )
 
-    @property
-    def supported_features(self) -> int | None:
-        """Flag supported features."""
-        return SUPPORT_OPEN | SUPPORT_CLOSE
-
-    @property
-    def device_class(self) -> str | None:
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        return DEVICE_CLASS_GARAGE
+        # Entity class attributees
+        self._attr_device_class = DEVICE_CLASS_GARAGE
+        self._attr_supported_features = SUPPORT_OPEN | SUPPORT_CLOSE
 
     @property
     def is_opening(self) -> bool | None:
