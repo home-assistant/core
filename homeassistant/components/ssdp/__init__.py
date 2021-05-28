@@ -74,9 +74,35 @@ def async_register_callback(
 def async_get_discovery_info_by_udn_st(  # pylint: disable=invalid-name
     hass: HomeAssistant, udn: str, st: str
 ) -> dict[str, str] | None:
-    """Lookup info by udn and st from previous scans."""
+    """Fetch the discovery info cache."""
     scanner: Scanner = hass.data[DOMAIN]
     return scanner.cache.get((udn, st))
+
+
+@bind_hass
+def async_get_discovery_info_by_st(  # pylint: disable=invalid-name
+    hass: HomeAssistant, st: str
+) -> dict[str, dict[str, str]]:
+    """Fetch all the udns for the st."""
+    scanner: Scanner = hass.data[DOMAIN]
+    return {
+        udn_st[0]: discovery_info
+        for udn_st, discovery_info in scanner.cache.items()
+        if udn_st[1] == st
+    }
+
+
+@bind_hass
+def async_get_discovery_info_by_udn(
+    hass: HomeAssistant, udn: str
+) -> dict[str, dict[str, str]]:
+    """Fetch all the sts for the udn."""
+    scanner: Scanner = hass.data[DOMAIN]
+    return {
+        udn_st[1]: discovery_info
+        for udn_st, discovery_info in scanner.cache.items()
+        if udn_st[0] == udn
+    }
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
