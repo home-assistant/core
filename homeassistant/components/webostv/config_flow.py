@@ -57,7 +57,6 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 "name": user_input.get(CONF_NAME, CONF_HOST)
             }
             if self._force_pairing:
-                """Test silent pairing."""
                 return await self.async_step_pairing({})
 
             return await self.async_step_pairing()
