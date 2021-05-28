@@ -19,6 +19,9 @@
                 "description": "Wilt u Samsung TV {model} instellen?  Als u nooit eerder Home Assistant hebt verbonden dan zou u een popup op uw TV moeten zien waarin u om toestemming wordt vraagt. Handmatige configuraties voor deze TV worden overschreven",
                 "title": "Samsung TV"
             },
+            "reauth_confirm": {
+                "description": "Na het indienen, accepteer binnen 30 seconden de pop-up op {device} om autorisatie toe te staan."
+            },
             "user": {
                 "data": {
                     "host": "Host",

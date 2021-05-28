@@ -271,7 +271,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     data_config_entries = hass.data[DOMAIN][DATA_CONFIG_ENTRIES]
     entry_data = data_config_entries[entry.entry_id]

@@ -765,7 +765,7 @@ hole==0.5.1
 holidays==0.11.1
 
 # homeassistant.components.frontend
-home-assistant-frontend==20210526.0
+home-assistant-frontend==20210528.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -1556,7 +1556,7 @@ pymazda==0.1.6
 pymediaroom==0.6.4.1
 
 # homeassistant.components.melcloud
-pymelcloud==2.5.2
+pymelcloud==2.5.3
 
 # homeassistant.components.meteoclimatic
 pymeteoclimatic==0.0.6
@@ -2014,7 +2014,7 @@ rokuecp==0.8.1
 roombapy==1.6.3
 
 # homeassistant.components.roon
-roonapi==0.0.36
+roonapi==0.0.37
 
 # homeassistant.components.rova
 rova==0.2.1

@@ -31,7 +31,7 @@ def config_entry_fixture():
 
 @pytest.fixture(name="soco")
 def soco_fixture(
-    music_library, speaker_info, battery_info, dummy_soco_service, alarmClock
+    music_library, speaker_info, battery_info, dummy_soco_service, alarm_clock
 ):
     """Create a mock pysonos SoCo fixture."""
     with patch("pysonos.SoCo", autospec=True) as mock, patch(
@@ -48,7 +48,7 @@ def soco_fixture(
         mock_soco.zoneGroupTopology = dummy_soco_service
         mock_soco.contentDirectory = dummy_soco_service
         mock_soco.deviceProperties = dummy_soco_service
-        mock_soco.alarmClock = alarmClock
+        mock_soco.alarmClock = alarm_clock
         mock_soco.mute = False
         mock_soco.night_mode = True
         mock_soco.dialog_mode = True
@@ -99,12 +99,28 @@ def music_library_fixture():
     return music_library
 
 
-@pytest.fixture(name="alarmClock")
-def alarmClock_fixture():
+@pytest.fixture(name="alarm_clock")
+def alarm_clock_fixture():
     """Create alarmClock fixture."""
-    alarmClock = Mock()
-    alarmClock.subscribe = AsyncMock()
-    alarmClock.ListAlarms.return_value = {
+    alarm_clock = Mock()
+    alarm_clock.subscribe = AsyncMock()
+    alarm_clock.ListAlarms.return_value = {
+        "CurrentAlarmList": "<Alarms>"
+        '<Alarm ID="14" StartTime="07:00:00" Duration="02:00:00" Recurrence="DAILY" '
+        'Enabled="1" RoomUUID="RINCON_test" ProgramURI="x-rincon-buzzer:0" '
+        'ProgramMetaData="" PlayMode="SHUFFLE_NOREPEAT" Volume="25" '
+        'IncludeLinkedZones="0"/>'
+        "</Alarms> "
+    }
+    return alarm_clock
+
+
+@pytest.fixture(name="alarm_clock_extended")
+def alarm_clock_fixture_extended():
+    """Create alarmClock fixture."""
+    alarm_clock = Mock()
+    alarm_clock.subscribe = AsyncMock()
+    alarm_clock.ListAlarms.return_value = {
         "CurrentAlarmList": "<Alarms>"
         '<Alarm ID="14" StartTime="07:00:00" Duration="02:00:00" Recurrence="DAILY" '
         'Enabled="1" RoomUUID="RINCON_test" ProgramURI="x-rincon-buzzer:0" '
@@ -116,7 +132,7 @@ def alarmClock_fixture():
         'Volume="25" IncludeLinkedZones="0"/>'
         "</Alarms> "
     }
-    return alarmClock
+    return alarm_clock
 
 
 @pytest.fixture(name="speaker_info")
@@ -149,4 +165,20 @@ def battery_event_fixture(soco):
         "zone_name": "Zone A",
         "more_info": "BattChg:NOT_CHARGING,RawBattPct:100,BattPct:100,BattTmp:25",
     }
+    return SonosMockEvent(soco, variables)
+
+
+@pytest.fixture(name="alarm_event")
+def alarm_event_fixture(soco):
+    """Create alarm_event fixture."""
+    variables = {
+        "time_zone": "ffc40a000503000003000502ffc4",
+        "time_server": "0.sonostime.pool.ntp.org,1.sonostime.pool.ntp.org,2.sonostime.pool.ntp.org,3.sonostime.pool.ntp.org",
+        "time_generation": "20000001",
+        "alarm_list_version": "RINCON_test",
+        "time_format": "INV",
+        "date_format": "INV",
+        "daily_index_refresh_time": None,
+    }
+
     return SonosMockEvent(soco, variables)

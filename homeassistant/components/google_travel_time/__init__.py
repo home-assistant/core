@@ -12,7 +12,7 @@ PLATFORMS = ["sensor"]
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Google Maps Travel Time from a config entry."""
     if entry.unique_id is not None:
         hass.config_entries.async_update_entry(entry, unique_id=None)

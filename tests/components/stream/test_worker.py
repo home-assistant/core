@@ -25,8 +25,8 @@ from homeassistant.components.stream import Stream
 from homeassistant.components.stream.const import (
     HLS_PROVIDER,
     MAX_MISSING_DTS,
-    MIN_SEGMENT_DURATION,
     PACKETS_TO_WAIT_FOR_AUDIO,
+    TARGET_SEGMENT_DURATION,
 )
 from homeassistant.components.stream.worker import SegmentBuffer, stream_worker
 
@@ -36,9 +36,10 @@ AUDIO_STREAM_FORMAT = "mp3"
 VIDEO_STREAM_FORMAT = "h264"
 VIDEO_FRAME_RATE = 12
 AUDIO_SAMPLE_RATE = 11025
+KEYFRAME_INTERVAL = 1  # in seconds
 PACKET_DURATION = fractions.Fraction(1, VIDEO_FRAME_RATE)  # in seconds
 SEGMENT_DURATION = (
-    math.ceil(MIN_SEGMENT_DURATION / PACKET_DURATION) * PACKET_DURATION
+    math.ceil(TARGET_SEGMENT_DURATION / KEYFRAME_INTERVAL) * KEYFRAME_INTERVAL
 )  # in seconds
 TEST_SEQUENCE_LENGTH = 5 * VIDEO_FRAME_RATE
 LONGER_TEST_SEQUENCE_LENGTH = 20 * VIDEO_FRAME_RATE
@@ -102,7 +103,8 @@ class PacketSequence:
             pts = self.packet * PACKET_DURATION / time_base
             duration = PACKET_DURATION / time_base
             stream = VIDEO_STREAM
-            is_keyframe = True
+            # Pretend we get 1 keyframe every second
+            is_keyframe = not (self.packet - 1) % (VIDEO_FRAME_RATE * KEYFRAME_INTERVAL)
             size = 3
 
         return FakePacket()
@@ -247,8 +249,13 @@ async def test_stream_worker_success(hass):
 async def test_skip_out_of_order_packet(hass):
     """Skip a single out of order packet."""
     packets = list(PacketSequence(TEST_SEQUENCE_LENGTH))
+    # for this test, make sure the out of order index doesn't happen on a keyframe
+    out_of_order_index = OUT_OF_ORDER_PACKET_INDEX
+    if packets[out_of_order_index].is_keyframe:
+        out_of_order_index += 1
     # This packet is out of order
-    packets[OUT_OF_ORDER_PACKET_INDEX].dts = -9090
+    assert not packets[out_of_order_index].is_keyframe
+    packets[out_of_order_index].dts = -9090
 
     decoded_stream = await async_decode_stream(hass, iter(packets))
     segments = decoded_stream.segments
@@ -257,11 +264,9 @@ async def test_skip_out_of_order_packet(hass):
     # If skipped packet would have been the first packet of a segment, the previous
     # segment will be longer by a packet duration
     # We also may possibly lose a segment due to the shifting pts boundary
-    if OUT_OF_ORDER_PACKET_INDEX % PACKETS_PER_SEGMENT == 0:
+    if out_of_order_index % PACKETS_PER_SEGMENT == 0:
         # Check duration of affected segment and remove it
-        longer_segment_index = int(
-            (OUT_OF_ORDER_PACKET_INDEX - 1) * SEGMENTS_PER_PACKET
-        )
+        longer_segment_index = int((out_of_order_index - 1) * SEGMENTS_PER_PACKET)
         assert (
             segments[longer_segment_index].duration
             == SEGMENT_DURATION + PACKET_DURATION
@@ -327,15 +332,21 @@ async def test_skip_initial_bad_packets(hass):
 
     decoded_stream = await async_decode_stream(hass, iter(packets))
     segments = decoded_stream.segments
-    # Check number of segments
-    assert len(segments) == int(
-        (num_packets - num_bad_packets - 1) * SEGMENTS_PER_PACKET
-    )
     # Check sequence numbers
     assert all(segments[i].sequence == i for i in range(len(segments)))
     # Check segment durations
     assert all(s.duration == SEGMENT_DURATION for s in segments)
-    assert len(decoded_stream.video_packets) == num_packets - num_bad_packets
+    assert (
+        len(decoded_stream.video_packets)
+        == num_packets
+        - math.ceil(num_bad_packets / (VIDEO_FRAME_RATE * KEYFRAME_INTERVAL))
+        * VIDEO_FRAME_RATE
+        * KEYFRAME_INTERVAL
+    )
+    # Check number of segments
+    assert len(segments) == int(
+        (len(decoded_stream.video_packets) - 1) * SEGMENTS_PER_PACKET
+    )
     assert len(decoded_stream.audio_packets) == 0
 
 
@@ -363,6 +374,9 @@ async def test_skip_missing_dts(hass):
     bad_packet_start = int(LONGER_TEST_SEQUENCE_LENGTH / 2)
     num_bad_packets = MAX_MISSING_DTS - 1
     for i in range(bad_packet_start, bad_packet_start + num_bad_packets):
+        if packets[i].is_keyframe:
+            num_bad_packets -= 1
+            continue
         packets[i].dts = None
 
     decoded_stream = await async_decode_stream(hass, iter(packets))
@@ -450,6 +464,7 @@ async def test_audio_is_first_packet(hass):
     packets[0].stream = AUDIO_STREAM
     packets[0].dts = packets[1].dts / VIDEO_FRAME_RATE * AUDIO_SAMPLE_RATE
     packets[0].pts = packets[1].pts / VIDEO_FRAME_RATE * AUDIO_SAMPLE_RATE
+    packets[1].is_keyframe = True  # Move the video keyframe from packet 0 to packet 1
     packets[2].stream = AUDIO_STREAM
     packets[2].dts = packets[3].dts / VIDEO_FRAME_RATE * AUDIO_SAMPLE_RATE
     packets[2].pts = packets[3].pts / VIDEO_FRAME_RATE * AUDIO_SAMPLE_RATE

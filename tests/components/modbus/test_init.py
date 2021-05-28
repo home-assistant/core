@@ -19,7 +19,6 @@ import pytest
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.components.modbus import number
 from homeassistant.components.modbus.const import (
     ATTR_ADDRESS,
     ATTR_HUB,
@@ -44,6 +43,7 @@ from homeassistant.components.modbus.const import (
     SERVICE_WRITE_COIL,
     SERVICE_WRITE_REGISTER,
 )
+from homeassistant.components.modbus.validators import number_validator
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
     CONF_ADDRESS,
@@ -85,13 +85,13 @@ async def test_number_validator():
         ("-15", int),
         ("-15.1", float),
     ]:
-        assert isinstance(number(value), value_type)
+        assert isinstance(number_validator(value), value_type)
 
     try:
-        number("x15.1")
+        number_validator("x15.1")
     except (vol.Invalid):
         return
-    pytest.fail("Number not throwing exception")
+    pytest.fail("Number_validator not throwing exception")
 
 
 @pytest.mark.parametrize(
