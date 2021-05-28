@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 import collections
 from collections import OrderedDict
+from collections.abc import Mapping
 from contextlib import contextmanager
 from datetime import datetime, timedelta
 import functools as ft
@@ -19,7 +20,9 @@ import types
 from typing import Any, Awaitable, Collection
 from unittest.mock import AsyncMock, Mock, patch
 
+from _pytest.python_api import ApproxMapping
 from aiohttp.test_utils import unused_port as get_test_instance_port  # noqa: F401
+import pytest
 
 from homeassistant import auth, config_entries, core as ha, loader
 from homeassistant.auth import (
@@ -1195,3 +1198,32 @@ def assert_lists_same(a, b):
     assert collections.Counter([hashdict(i) for i in a]) == collections.Counter(
         [hashdict(i) for i in b]
     )
+
+
+# From https://stackoverflow.com/a/56048692
+
+
+def nested_approx(expected, rel=None, abs=None, nan_ok=False):
+    """pytest.approx extended to support nested dicts."""
+    if isinstance(expected, Mapping):
+        return ApproxNestedMapping(expected, rel, abs, nan_ok)
+    return pytest.approx(expected, rel, abs, nan_ok)
+
+
+class ApproxNestedMapping(ApproxMapping):
+    """Helper for nested_approx."""
+
+    def _yield_comparisons(self, actual):
+        for k in self.expected.keys():
+            if isinstance(actual[k], type(self.expected)):
+                gen = ApproxNestedMapping(
+                    self.expected[k], rel=self.rel, abs=self.abs, nan_ok=self.nan_ok
+                )._yield_comparisons(actual[k])
+                yield from gen
+            else:
+                yield actual[k], self.expected[k]
+
+    def _check_type(self):
+        for key, value in self.expected.items():
+            if not isinstance(value, type(self.expected)):
+                super()._check_type()
