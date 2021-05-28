@@ -106,7 +106,7 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
 
         return False
 
-    async def async_update(self, now: datetime.datetime | None = None) -> None:
+    async def async_update(self) -> None:
         """Poll the device for the current state."""
         if await self.async_check_if_available():
             await self.hass.async_add_executor_job(self.update_alarm)
