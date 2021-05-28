@@ -88,6 +88,7 @@ async def test_setup(get_fuel_prices, hass):
 
 
 def raise_fuel_check_error():
+    """Raise fuel check error for testing error cases."""
     raise FuelCheckError()
 
 
