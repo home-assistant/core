@@ -482,10 +482,15 @@ class CastDevice(MediaPlayerEntity):
 
     def play_media(self, media_type, media_id, **kwargs):
         """Play media from a URL."""
+        extra = kwargs.get(ATTR_MEDIA_EXTRA, {})
+        metadata = extra.get("metadata")
+
         # We do not want this to be forwarded to a group
         if media_type == CAST_DOMAIN:
             try:
                 app_data = json.loads(media_id)
+                if metadata is not None:
+                    app_data["metadata"] = extra.get("metadata")
             except json.JSONDecodeError:
                 _LOGGER.error("Invalid JSON in media_content_id")
                 raise
@@ -505,7 +510,7 @@ class CastDevice(MediaPlayerEntity):
 
             app_name = app_data.pop("app_name")
             try:
-                quick_play(self._chromecast, app_name, app_data, **kwargs.get(ATTR_MEDIA_EXTRA, {}))
+                quick_play(self._chromecast, app_name, app_data)
             except NotImplementedError:
                 _LOGGER.error("App %s not supported", app_name)
         # Handle plex
