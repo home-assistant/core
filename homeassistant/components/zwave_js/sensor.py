@@ -27,7 +27,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DATA_CLIENT, DATA_UNSUBSCRIBE, DOMAIN
@@ -328,16 +327,18 @@ class ZWaveNodeStatusSensor(SensorEntity):
             or self.node.device_config.description
             or f"Node {self.node.node_id}"
         )
+        # Entity class attributes
         self._attr_name = f"{name}: Node Status"
-        self._unique_id = (
+        self._attr_unique_id = (
             f"{self.client.driver.controller.home_id}.{node.node_id}.node_status"
         )
-        self._status: str = node.status.name.lower()
-
-    @property
-    def state(self) -> str:
-        """Return state of the sensor."""
-        return self._status
+        self._attr_entity_registry_enabled_default = False
+        self._attr_should_poll = False
+        # device is precreated in main handler
+        self._attr_device_info = {
+            "identifiers": {get_device_id(self.client, self.node)},
+        }
+        self._attr_state: str = node.status.name.lower()
 
     async def async_poll_value(self, _: bool) -> None:
         """Poll a value."""
@@ -345,7 +346,7 @@ class ZWaveNodeStatusSensor(SensorEntity):
 
     def _status_changed(self, _: dict) -> None:
         """Call when status event is received."""
-        self._status = self.node.status.name.lower()
+        self._attr_state = self.node.status.name.lower()
         self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
@@ -363,29 +364,6 @@ class ZWaveNodeStatusSensor(SensorEntity):
         self.async_write_ha_state()
 
     @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information for the device registry."""
-        # device is precreated in main handler
-        return {
-            "identifiers": {get_device_id(self.client, self.node)},
-        }
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique_id of the entity."""
-        return self._unique_id
-
-    @property
     def available(self) -> bool:
         """Return entity availability."""
         return self.client.connected and bool(self.node.ready)
-
-    @property
-    def should_poll(self) -> bool:
-        """No polling needed."""
-        return False
-
-    @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Return if the entity should be enabled when first added to the entity registry."""
-        return False
