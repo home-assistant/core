@@ -11,7 +11,7 @@ from .const import CONF_ENTRY_HOST, CONF_ENTRY_ID, DOMAIN
 PLATFORMS = ["light"]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up entries from config flow."""
 
     # We setup the client here so if at some point we add any other entity for this device,
@@ -28,7 +28,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Remove a twinkly entry."""
 
     # For now light entries don't have unload method, so we don't have to async_forward_entry_unload

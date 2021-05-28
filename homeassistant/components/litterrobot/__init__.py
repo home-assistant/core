@@ -12,7 +12,7 @@ from .hub import LitterRobotHub
 PLATFORMS = ["sensor", "switch", "vacuum"]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Litter-Robot from a config entry."""
     hass.data.setdefault(DOMAIN, {})
     hub = hass.data[DOMAIN][entry.entry_id] = LitterRobotHub(hass, entry.data)

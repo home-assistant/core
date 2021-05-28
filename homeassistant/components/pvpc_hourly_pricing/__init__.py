@@ -43,7 +43,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up pvpc hourly pricing from a config entry."""
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
     return True

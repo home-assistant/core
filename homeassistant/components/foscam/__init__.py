@@ -13,7 +13,7 @@ from .const import CONF_RTSP_PORT, DOMAIN, LOGGER, SERVICE_PTZ, SERVICE_PTZ_PRES
 PLATFORMS = ["camera"]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up foscam from a config entry."""
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 

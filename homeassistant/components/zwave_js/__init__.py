@@ -362,7 +362,7 @@ async def async_setup_entry(  # noqa: C901
         entry_hass_data[DATA_CONNECT_FAILED_LOGGED] = False
         entry_hass_data[DATA_INVALID_SERVER_VERSION_LOGGED] = False
 
-    services = ZWaveServices(hass, ent_reg)
+    services = ZWaveServices(hass, ent_reg, dev_reg)
     services.async_register()
 
     # Set up websocket API

@@ -22,7 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = ["sensor", "weather"]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a Met Office entry."""
 
     latitude = entry.data[CONF_LATITUDE]
