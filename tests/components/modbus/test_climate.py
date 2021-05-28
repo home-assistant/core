@@ -5,12 +5,12 @@ from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.components.climate.const import HVAC_MODE_AUTO
 from homeassistant.components.modbus.const import (
     CONF_CLIMATES,
-    CONF_CURRENT_TEMP,
     CONF_DATA_COUNT,
     CONF_TARGET_TEMP,
 )
 from homeassistant.const import (
     ATTR_TEMPERATURE,
+    CONF_ADDRESS,
     CONF_NAME,
     CONF_SCAN_INTERVAL,
     CONF_SLAVE,
@@ -38,7 +38,7 @@ async def test_config_climate(hass, do_options):
     device_config = {
         CONF_NAME: device_name,
         CONF_TARGET_TEMP: 117,
-        CONF_CURRENT_TEMP: 117,
+        CONF_ADDRESS: 117,
         CONF_SLAVE: 10,
         **do_options,
     }
@@ -72,7 +72,7 @@ async def test_temperature_climate(hass, regs, expected):
             CONF_NAME: climate_name,
             CONF_SLAVE: 1,
             CONF_TARGET_TEMP: 117,
-            CONF_CURRENT_TEMP: 117,
+            CONF_ADDRESS: 117,
             CONF_DATA_COUNT: 2,
         },
         climate_name,
@@ -96,7 +96,7 @@ async def test_service_climate_update(hass, mock_pymodbus):
             {
                 CONF_NAME: "test",
                 CONF_TARGET_TEMP: 117,
-                CONF_CURRENT_TEMP: 117,
+                CONF_ADDRESS: 117,
                 CONF_SLAVE: 10,
             }
         ]
@@ -123,7 +123,7 @@ async def test_restore_state_climate(hass):
     config_sensor = {
         CONF_NAME: climate_name,
         CONF_TARGET_TEMP: 117,
-        CONF_CURRENT_TEMP: 117,
+        CONF_ADDRESS: 117,
     }
     mock_restore_cache(
         hass,
