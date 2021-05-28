@@ -32,7 +32,7 @@ async def validate_input(hass: HomeAssistant, data):
         api = HomePilotAPI(auth)
 
         try:
-            if CONF_PASSWORD in data:
+            if data.get(CONF_PASSWORD) is not None:
                 await auth.async_login()
 
             name = await api.async_get_system_name()
