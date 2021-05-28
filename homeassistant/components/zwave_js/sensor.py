@@ -315,6 +315,8 @@ class ZWaveConfigParameterSensor(ZwaveSensorBase):
 class ZWaveNodeStatusSensor(SensorEntity):
     """Representation of a node status sensor."""
 
+    _attr_entity_registry_enabled_default = False
+    _attr_should_poll = False
     def __init__(
         self, config_entry: ConfigEntry, client: ZwaveClient, node: ZwaveNode
     ) -> None:
