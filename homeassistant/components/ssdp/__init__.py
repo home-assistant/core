@@ -9,6 +9,7 @@ import logging
 from typing import Any, Callable
 
 from async_upnp_client.search import SSDPListener
+from async_upnp_client.utils import CaseInsensitiveDict
 
 from homeassistant import config_entries
 from homeassistant.components import network
@@ -245,7 +246,7 @@ class Scanner:
         info_req = (
             await self.description_manager.fetch_description(headers["location"]) or {}
         )
-        info_with_req = {**headers, **info_req}
+        info_with_req = CaseInsensitiveDict(**headers, **info_req)
         discovery_info = discovery_info_from_headers_and_request(info_with_req)
 
         if udn := discovery_info.get(ATTR_UPNP_UDN):
@@ -277,10 +278,10 @@ class Scanner:
 
 
 def discovery_info_from_headers_and_request(
-    info_with_req: dict[str, str]
+    info_with_req: CaseInsensitiveDict,
 ) -> dict[str, str]:
     """Convert headers and description to discovery_info."""
-    info = {DISCOVERY_MAPPING.get(k, k): v for k, v in info_with_req.items()}
+    info = {DISCOVERY_MAPPING.get(k.lower(), k): v for k, v in info_with_req.items()}
 
     if ATTR_UPNP_UDN not in info and str(info.get(ATTR_SSDP_USN)).startswith("uuid:"):
         info[ATTR_UPNP_UDN] = str(info[ATTR_SSDP_USN]).split("::")[0]
