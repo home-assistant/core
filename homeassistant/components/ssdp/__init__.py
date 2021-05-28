@@ -283,12 +283,18 @@ def discovery_info_from_headers_and_request(
     info_with_req: dict[str, str]
 ) -> dict[str, str]:
     """Convert headers and description to discovery_info."""
-    info = {k: v for k, v in info_with_req.items() if k not in DISCOVERY_MAPPING}
+    discovery_info = {
+        k: v for k, v in info_with_req.items() if k not in DISCOVERY_MAPPING
+    }
     for upnp_key, hass_key in DISCOVERY_MAPPING.items():
         if upnp_key in info_with_req:
-            info[hass_key] = info_with_req[upnp_key]
+            discovery_info[hass_key] = info_with_req[upnp_key]
 
-    if ATTR_UPNP_UDN not in info and str(info.get(ATTR_SSDP_USN)).startswith("uuid:"):
-        info[ATTR_UPNP_UDN] = str(info[ATTR_SSDP_USN]).split("::")[0]
+    if ATTR_UPNP_UDN not in discovery_info and str(
+        discovery_info.get(ATTR_SSDP_USN)
+    ).startswith("uuid:"):
+        discovery_info[ATTR_UPNP_UDN] = str(discovery_info[ATTR_SSDP_USN]).split("::")[
+            0
+        ]
 
-    return info
+    return discovery_info
