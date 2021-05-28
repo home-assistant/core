@@ -922,9 +922,11 @@ omit =
     homeassistant/components/slack/notify.py
     homeassistant/components/sia/__init__.py
     homeassistant/components/sia/alarm_control_panel.py
+    homeassistant/components/sia/binary_sensor.py
     homeassistant/components/sia/const.py
     homeassistant/components/sia/hub.py
     homeassistant/components/sia/utils.py
+    homeassistant/components/sia/sia_entity_base.py
     homeassistant/components/sinch/*
     homeassistant/components/slide/*
     homeassistant/components/sma/__init__.py
