@@ -153,10 +153,6 @@ class ZwaveMotorizedBarrier(ZWaveBaseEntity, CoverEntity):
             "targetState", add_to_watched_value_ids=False
         )
 
-        # Entity class attributees
-        self._attr_device_class = DEVICE_CLASS_GARAGE
-        self._attr_supported_features = SUPPORT_OPEN | SUPPORT_CLOSE
-
     @property
     def is_opening(self) -> bool | None:
         """Return if the cover is opening or not."""
@@ -192,3 +188,13 @@ class ZwaveMotorizedBarrier(ZWaveBaseEntity, CoverEntity):
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the garage door."""
         await self.info.node.async_set_value(self._target_state, BARRIER_TARGET_CLOSE)
+
+    @property
+    def supported_features(self) -> int | None:
+        """Flag supported features."""
+        return SUPPORT_OPEN | SUPPORT_CLOSE
+
+    @property
+    def device_class(self) -> str | None:
+        """Return the class of this device, from component DEVICE_CLASSES."""
+        return DEVICE_CLASS_GARAGE
