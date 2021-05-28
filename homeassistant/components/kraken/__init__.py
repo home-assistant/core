@@ -30,15 +30,13 @@ PLATFORMS = ["sensor"]
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up kraken from a config entry."""
-    kraken_data = KrakenData(hass, config_entry)
+    kraken_data = KrakenData(hass, entry)
     await kraken_data.async_setup()
     hass.data[DOMAIN] = kraken_data
-    config_entry.async_on_unload(
-        config_entry.add_update_listener(async_options_updated)
-    )
-    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
+    entry.async_on_unload(entry.add_update_listener(async_options_updated))
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
     return True
 
 

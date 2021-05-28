@@ -1,6 +1,7 @@
 """Provide common Z-Wave JS fixtures."""
 import asyncio
 import copy
+import io
 import json
 from unittest.mock import AsyncMock, patch
 
@@ -149,6 +150,18 @@ def version_state_fixture():
         "driverVersion": "6.0.0-beta.0",
         "serverVersion": "1.0.0",
         "homeId": 1234567890,
+    }
+
+
+@pytest.fixture(name="log_config_state")
+def log_config_state_fixture():
+    """Return log config state fixture data."""
+    return {
+        "enabled": True,
+        "level": "info",
+        "logToFile": False,
+        "filename": "",
+        "forceConsole": False,
     }
 
 
@@ -370,7 +383,7 @@ def wallmote_central_scene_state_fixture():
 
 
 @pytest.fixture(name="client")
-def mock_client_fixture(controller_state, version_state):
+def mock_client_fixture(controller_state, version_state, log_config_state):
     """Mock a client."""
 
     with patch(
@@ -393,7 +406,7 @@ def mock_client_fixture(controller_state, version_state):
         client.connect = AsyncMock(side_effect=connect)
         client.listen = AsyncMock(side_effect=listen)
         client.disconnect = AsyncMock(side_effect=disconnect)
-        client.driver = Driver(client, controller_state)
+        client.driver = Driver(client, controller_state, log_config_state)
 
         client.version = VersionInfo.from_message(version_state)
         client.ws_server_url = "ws://test:3000/zjs"
@@ -717,3 +730,9 @@ def wallmote_central_scene_fixture(client, wallmote_central_scene_state):
     node = Node(client, copy.deepcopy(wallmote_central_scene_state))
     client.driver.controller.nodes[node.node_id] = node
     return node
+
+
+@pytest.fixture(name="firmware_file")
+def firmware_file_fixture():
+    """Return mock firmware file stream."""
+    return io.BytesIO(bytes(10))

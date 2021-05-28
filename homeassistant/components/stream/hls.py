@@ -1,13 +1,16 @@
 """Provide functionality to stream HLS."""
-import io
-
 from aiohttp import web
 
 from homeassistant.core import callback
 
-from .const import FORMAT_CONTENT_TYPE, MAX_SEGMENTS, NUM_PLAYLIST_SEGMENTS
+from .const import (
+    FORMAT_CONTENT_TYPE,
+    HLS_PROVIDER,
+    MAX_SEGMENTS,
+    NUM_PLAYLIST_SEGMENTS,
+)
 from .core import PROVIDERS, HomeAssistant, IdleTimer, StreamOutput, StreamView
-from .fmp4utils import get_codec_string, get_init, get_m4s
+from .fmp4utils import get_codec_string
 
 
 @callback
@@ -35,9 +38,9 @@ class HlsMasterPlaylistView(StreamView):
         # hls spec already allows for 25% variation
         segment = track.get_segment(track.segments[-1])
         bandwidth = round(
-            segment.segment.seek(0, io.SEEK_END) * 8 / segment.duration * 1.2
+            (len(segment.init) + len(segment.moof_data)) * 8 / segment.duration * 1.2
         )
-        codecs = get_codec_string(segment.segment)
+        codecs = get_codec_string(segment.init)
         lines = [
             "#EXTM3U",
             f'#EXT-X-STREAM-INF:BANDWIDTH={bandwidth},CODECS="{codecs}"',
@@ -47,12 +50,12 @@ class HlsMasterPlaylistView(StreamView):
 
     async def handle(self, request, stream, sequence):
         """Return m3u8 playlist."""
-        track = stream.add_provider("hls")
+        track = stream.add_provider(HLS_PROVIDER)
         stream.start()
         # Wait for a segment to be ready
         if not track.segments and not await track.recv():
             return web.HTTPNotFound()
-        headers = {"Content-Type": FORMAT_CONTENT_TYPE["hls"]}
+        headers = {"Content-Type": FORMAT_CONTENT_TYPE[HLS_PROVIDER]}
         return web.Response(body=self.render(track).encode("utf-8"), headers=headers)
 
 
@@ -106,12 +109,12 @@ class HlsPlaylistView(StreamView):
 
     async def handle(self, request, stream, sequence):
         """Return m3u8 playlist."""
-        track = stream.add_provider("hls")
+        track = stream.add_provider(HLS_PROVIDER)
         stream.start()
         # Wait for a segment to be ready
         if not track.segments and not await track.recv():
             return web.HTTPNotFound()
-        headers = {"Content-Type": FORMAT_CONTENT_TYPE["hls"]}
+        headers = {"Content-Type": FORMAT_CONTENT_TYPE[HLS_PROVIDER]}
         return web.Response(body=self.render(track).encode("utf-8"), headers=headers)
 
 
@@ -124,12 +127,12 @@ class HlsInitView(StreamView):
 
     async def handle(self, request, stream, sequence):
         """Return init.mp4."""
-        track = stream.add_provider("hls")
+        track = stream.add_provider(HLS_PROVIDER)
         segments = track.get_segments()
         if not segments:
             return web.HTTPNotFound()
         headers = {"Content-Type": "video/mp4"}
-        return web.Response(body=get_init(segments[0].segment), headers=headers)
+        return web.Response(body=segments[0].init, headers=headers)
 
 
 class HlsSegmentView(StreamView):
@@ -141,18 +144,18 @@ class HlsSegmentView(StreamView):
 
     async def handle(self, request, stream, sequence):
         """Return fmp4 segment."""
-        track = stream.add_provider("hls")
+        track = stream.add_provider(HLS_PROVIDER)
         segment = track.get_segment(int(sequence))
         if not segment:
             return web.HTTPNotFound()
         headers = {"Content-Type": "video/iso.segment"}
         return web.Response(
-            body=get_m4s(segment.segment, int(sequence)),
+            body=segment.moof_data,
             headers=headers,
         )
 
 
-@PROVIDERS.register("hls")
+@PROVIDERS.register(HLS_PROVIDER)
 class HlsStreamOutput(StreamOutput):
     """Represents HLS Output formats."""
 
@@ -163,4 +166,4 @@ class HlsStreamOutput(StreamOutput):
     @property
     def name(self) -> str:
         """Return provider name."""
-        return "hls"
+        return HLS_PROVIDER

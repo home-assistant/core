@@ -162,11 +162,11 @@ async def _async_signal_options_update(
     )
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the UpCloud config entry."""
 
     manager = upcloud_api.CloudManager(
-        config_entry.data[CONF_USERNAME], config_entry.data[CONF_PASSWORD]
+        entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD]
     )
 
     try:
@@ -182,20 +182,19 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     # Handle pre config entry (0.117) scan interval migration to options
     migrated_scan_interval = upcloud_data.scan_interval_migrations.pop(
-        config_entry.data[CONF_USERNAME], None
+        entry.data[CONF_USERNAME], None
     )
     if migrated_scan_interval and (
-        not config_entry.options.get(CONF_SCAN_INTERVAL)
-        or config_entry.options[CONF_SCAN_INTERVAL]
-        == DEFAULT_SCAN_INTERVAL.total_seconds()
+        not entry.options.get(CONF_SCAN_INTERVAL)
+        or entry.options[CONF_SCAN_INTERVAL] == DEFAULT_SCAN_INTERVAL.total_seconds()
     ):
         update_interval = migrated_scan_interval
         hass.config_entries.async_update_entry(
-            config_entry,
+            entry,
             options={CONF_SCAN_INTERVAL: update_interval.total_seconds()},
         )
-    elif config_entry.options.get(CONF_SCAN_INTERVAL):
-        update_interval = timedelta(seconds=config_entry.options[CONF_SCAN_INTERVAL])
+    elif entry.options.get(CONF_SCAN_INTERVAL):
+        update_interval = timedelta(seconds=entry.options[CONF_SCAN_INTERVAL])
     else:
         update_interval = DEFAULT_SCAN_INTERVAL
 
@@ -203,28 +202,26 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         hass,
         update_interval=update_interval,
         cloud_manager=manager,
-        username=config_entry.data[CONF_USERNAME],
+        username=entry.data[CONF_USERNAME],
     )
 
     # Call the UpCloud API to refresh data
     await coordinator.async_config_entry_first_refresh()
 
     # Listen to config entry updates
-    config_entry.async_on_unload(
-        config_entry.add_update_listener(_async_signal_options_update)
-    )
-    config_entry.async_on_unload(
+    entry.async_on_unload(entry.add_update_listener(_async_signal_options_update))
+    entry.async_on_unload(
         async_dispatcher_connect(
             hass,
-            _config_entry_update_signal_name(config_entry),
+            _config_entry_update_signal_name(entry),
             coordinator.async_update_config,
         )
     )
 
-    upcloud_data.coordinators[config_entry.data[CONF_USERNAME]] = coordinator
+    upcloud_data.coordinators[entry.data[CONF_USERNAME]] = coordinator
 
     # Forward entry setup
-    hass.config_entries.async_setup_platforms(config_entry, CONFIG_ENTRY_DOMAINS)
+    hass.config_entries.async_setup_platforms(entry, CONFIG_ENTRY_DOMAINS)
 
     return True
 

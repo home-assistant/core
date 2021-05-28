@@ -819,7 +819,9 @@ class SonosSpeaker:
 
         if variables and "transport_state" in variables:
             self.media.play_mode = variables["current_play_mode"]
-            track_uri = variables["enqueued_transport_uri"]
+            track_uri = (
+                variables["enqueued_transport_uri"] or variables["current_track_uri"]
+            )
             music_source = self.soco.music_source_from_uri(track_uri)
         else:
             self.media.play_mode = self.soco.play_mode
@@ -842,7 +844,8 @@ class SonosSpeaker:
                 if music_source == MUSIC_SRC_RADIO:
                     self.update_media_radio(variables)
                 else:
-                    self.update_media_music(update_position, track_info)
+                    self.update_media_music(track_info)
+                self.update_media_position(update_position, track_info)
 
         self.write_entity_states()
 
@@ -905,10 +908,24 @@ class SonosSpeaker:
             if fav.reference.get_uri() == media_info["uri"]:
                 self.media.source_name = fav.title
 
-    def update_media_music(self, update_media_position: bool, track_info: dict) -> None:
+    def update_media_music(self, track_info: dict) -> None:
+        """Update state when playing music tracks."""
+        self.media.image_url = track_info.get("album_art")
+
+        playlist_position = int(track_info.get("playlist_position"))  # type: ignore
+        if playlist_position > 0:
+            self.media.queue_position = playlist_position - 1
+
+    def update_media_position(
+        self, update_media_position: bool, track_info: dict
+    ) -> None:
         """Update state when playing music tracks."""
         self.media.duration = _timespan_secs(track_info.get("duration"))
         current_position = _timespan_secs(track_info.get("position"))
+
+        if self.media.duration == 0:
+            self.media.clear_position()
+            return
 
         # player started reporting position?
         if current_position is not None and self.media.position is None:
@@ -933,9 +950,3 @@ class SonosSpeaker:
         elif update_media_position:
             self.media.position = current_position
             self.media.position_updated_at = dt_util.utcnow()
-
-        self.media.image_url = track_info.get("album_art")
-
-        playlist_position = int(track_info.get("playlist_position"))  # type: ignore
-        if playlist_position > 0:
-            self.media.queue_position = playlist_position - 1

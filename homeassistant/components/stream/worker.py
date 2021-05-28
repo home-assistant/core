@@ -19,6 +19,7 @@ from .const import (
     STREAM_TIMEOUT,
 )
 from .core import Segment, StreamOutput
+from .fmp4utils import get_init_and_moof_data
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,11 +30,11 @@ class SegmentBuffer:
     def __init__(self, outputs_callback) -> None:
         """Initialize SegmentBuffer."""
         self._stream_id = 0
-        self._video_stream = None
-        self._audio_stream = None
         self._outputs_callback = outputs_callback
         self._outputs: list[StreamOutput] = []
-        self._sequence = 0
+        # sequence gets incremented before the first segment so the first segment
+        # has a sequence number of 0.
+        self._sequence = -1
         self._segment_start_pts = None
         self._memory_file: BytesIO = cast(BytesIO, None)
         self._av_output: av.container.OutputContainer = None
@@ -41,10 +42,11 @@ class SegmentBuffer:
         self._input_audio_stream = None  # av.audio.AudioStream | None
         self._output_video_stream: av.video.VideoStream = None
         self._output_audio_stream = None  # av.audio.AudioStream | None
+        self._segment: Segment = cast(Segment, None)
 
     @staticmethod
     def make_new_av(
-        memory_file, sequence: int, input_vstream: av.video.VideoStream
+        memory_file: BytesIO, sequence: int, input_vstream: av.video.VideoStream
     ) -> av.container.OutputContainer:
         """Make a new av OutputContainer."""
         return av.open(
@@ -120,7 +122,13 @@ class SegmentBuffer:
     def flush(self, duration):
         """Create a segment from the buffered packets and write to output."""
         self._av_output.close()
-        segment = Segment(self._sequence, self._memory_file, duration, self._stream_id)
+        segment = Segment(
+            self._sequence,
+            *get_init_and_moof_data(self._memory_file.getbuffer()),
+            duration,
+            self._stream_id,
+        )
+        self._memory_file.close()
         for stream_output in self._outputs:
             stream_output.put(segment)
 
@@ -134,6 +142,7 @@ class SegmentBuffer:
     def close(self):
         """Close stream buffer."""
         self._av_output.close()
+        self._memory_file.close()
 
 
 def stream_worker(source, options, segment_buffer, quit_event):  # noqa: C901

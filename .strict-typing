@@ -24,6 +24,7 @@ homeassistant.components.canary.*
 homeassistant.components.cover.*
 homeassistant.components.device_automation.*
 homeassistant.components.device_tracker.*
+homeassistant.components.dnsip.*
 homeassistant.components.dunehd.*
 homeassistant.components.elgato.*
 homeassistant.components.fitbit.*
@@ -41,6 +42,7 @@ homeassistant.components.integration.*
 homeassistant.components.knx.*
 homeassistant.components.kraken.*
 homeassistant.components.light.*
+homeassistant.components.local_ip.*
 homeassistant.components.lock.*
 homeassistant.components.mailbox.*
 homeassistant.components.media_player.*

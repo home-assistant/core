@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 import aiohttp
 from async_upnp_client.search import SSDPListener
+from async_upnp_client.utils import CaseInsensitiveDict
 import pytest
 
 from homeassistant import config_entries
@@ -438,13 +439,16 @@ async def test_scan_second_hit(hass, aioclient_mock, caplog):
 </root>
     """,
     )
-    mock_ssdp_response = {
-        "st": "mock-st",
-        "location": "http://1.1.1.1",
-        "usn": "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL::urn:mdx-netflix-com:service:target:3",
-        "server": "mock-server",
-        "ext": "",
-    }
+
+    mock_ssdp_response = CaseInsensitiveDict(
+        **{
+            "ST": "mock-st",
+            "LOCATION": "http://1.1.1.1",
+            "USN": "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL::urn:mdx-netflix-com:service:target:3",
+            "SERVER": "mock-server",
+            "EXT": "",
+        }
+    )
     mock_get_ssdp = {"mock-domain": [{"st": "mock-st"}]}
     intergration_callbacks = []
 
@@ -517,11 +521,46 @@ async def test_scan_second_hit(hass, aioclient_mock, caplog):
         ssdp.ATTR_UPNP_UDN: "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL",
     }
     assert "Failed to fetch ssdp data" not in caplog.text
+    udn_discovery_info = ssdp.async_get_discovery_info_by_st(hass, "mock-st")
+    discovery_info = udn_discovery_info["uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL"]
+    assert discovery_info[ssdp.ATTR_SSDP_LOCATION] == "http://1.1.1.1"
+    assert discovery_info[ssdp.ATTR_SSDP_ST] == "mock-st"
     assert (
-        ssdp.async_get_location_by_udn_st(
-            hass, "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL", "mock-st"
-        )[ssdp.ATTR_SSDP_LOCATION]
-        == "http://1.1.1.1"
+        discovery_info[ssdp.ATTR_UPNP_UDN]
+        == "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL"
+    )
+    assert (
+        discovery_info[ssdp.ATTR_SSDP_USN]
+        == "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL::urn:mdx-netflix-com:service:target:3"
+    )
+
+    st_discovery_info = ssdp.async_get_discovery_info_by_udn(
+        hass, "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL"
+    )
+    discovery_info = st_discovery_info["mock-st"]
+    assert discovery_info[ssdp.ATTR_SSDP_LOCATION] == "http://1.1.1.1"
+    assert discovery_info[ssdp.ATTR_SSDP_ST] == "mock-st"
+    assert (
+        discovery_info[ssdp.ATTR_UPNP_UDN]
+        == "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL"
+    )
+    assert (
+        discovery_info[ssdp.ATTR_SSDP_USN]
+        == "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL::urn:mdx-netflix-com:service:target:3"
+    )
+
+    discovery_info = ssdp.async_get_discovery_info_by_udn_st(
+        hass, "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL", "mock-st"
+    )
+    assert discovery_info[ssdp.ATTR_SSDP_LOCATION] == "http://1.1.1.1"
+    assert discovery_info[ssdp.ATTR_SSDP_ST] == "mock-st"
+    assert (
+        discovery_info[ssdp.ATTR_UPNP_UDN]
+        == "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL"
+    )
+    assert (
+        discovery_info[ssdp.ATTR_SSDP_USN]
+        == "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL::urn:mdx-netflix-com:service:target:3"
     )
 
 
