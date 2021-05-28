@@ -97,9 +97,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         api_method = getattr(api_client, service_call.service)
         try:
             if service_call.service == "send_poi":
-                latitude = service_call.data.get("latitude")
-                longitude = service_call.data.get("longitude")
-                poi_name = service_call.data.get("poi_name")
+                latitude = service_call.data["latitude"]
+                longitude = service_call.data["longitude"]
+                poi_name = service_call.data["poi_name"]
                 await api_method(vehicle_id, latitude, longitude, poi_name)
             else:
                 await api_method(vehicle_id)
