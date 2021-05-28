@@ -173,7 +173,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
         except socket.gaierror as err:
             raise data_entry_flow.AbortFlow(RESULT_UNKNOWN_HOST) from err
-        self._name = user_input[CONF_NAME]
+        self._name = user_input.get(CONF_NAME, self._host)
         self._title = self._name
 
     async def async_step_user(self, user_input=None):
