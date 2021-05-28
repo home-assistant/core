@@ -101,8 +101,7 @@ class NetatmoDataHandler:
                     time() + data_class["interval"]
                 )
 
-                if self.data_classes[data_class_name]["subscriptions"]:
-                    await self.async_fetch_data(data_class_name)
+                await self.async_fetch_data(data_class_name)
 
         self._queue.rotate(BATCH_SIZE)
 
@@ -135,6 +134,9 @@ class NetatmoDataHandler:
         """Fetch data and notify."""
         try:
             await self.data[data_class_entry].async_update()
+
+        except AttributeError as err:
+            _LOGGER.debug("%s (%s)", data_class_entry, err)
 
         except pyatmo.NoDevice as err:
             _LOGGER.debug(err)
