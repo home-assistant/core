@@ -11,7 +11,7 @@ from homeassistant.const import (
 )
 
 DOMAIN = "garmin_connect"
-ATTRIBUTION = "garmin.com"
+ATTRIBUTION = "connect.garmin.com"
 DEFAULT_UPDATE_INTERVAL = timedelta(minutes=10)
 
 GARMIN_ENTITY_LIST = {

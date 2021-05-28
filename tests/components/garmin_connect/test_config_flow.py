@@ -1,7 +1,7 @@
 """Test the Garmin Connect config flow."""
 from unittest.mock import patch
 
-from garminconnect_ha import (
+from garminconnect_aio import (
     GarminConnectAuthenticationError,
     GarminConnectConnectionError,
     GarminConnectTooManyRequestsError,
