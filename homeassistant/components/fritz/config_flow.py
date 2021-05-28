@@ -38,7 +38,7 @@ _LOGGER = logging.getLogger(__name__)
 class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a FRITZ!Box Tools config flow."""
 
-    VERSION = 1
+    VERSION = 2
 
     @staticmethod
     @callback
