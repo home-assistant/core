@@ -148,8 +148,12 @@ class SonosSpeaker:
 
         self.is_first_poll: bool = True
         self._is_ready: bool = False
+
+        # Subscriptions and events
         self._subscriptions: list[SubscriptionBase] = []
         self._resubscription_lock: asyncio.Lock | None = None
+        self._event_dispatchers: dict[str, Callable] = {}
+
         self._poll_timer: Callable | None = None
         self._seen_timer: Callable | None = None
         self._platforms_ready: set[str] = set()
@@ -217,6 +221,15 @@ class SonosSpeaker:
         else:
             self._platforms_ready.add(SWITCH_DOMAIN)
 
+        self._event_dispatchers = {
+            "AlarmClock": self.async_dispatch_alarms,
+            "AVTransport": self.async_dispatch_media_update,
+            "ContentDirectory": self.favorites.async_delayed_update,
+            "DeviceProperties": self.async_dispatch_device_properties,
+            "RenderingControl": self.async_update_volume,
+            "ZoneGroupTopology": self.async_update_groups,
+        }
+
         dispatcher_send(self.hass, SONOS_CREATE_MEDIA_PLAYER, self)
 
     async def async_handle_new_entity(self, entity_type: str) -> None:
@@ -282,18 +295,6 @@ class SonosSpeaker:
         subscription.auto_renew_fail = self.async_renew_failed
         self._subscriptions.append(subscription)
 
-    @property
-    def event_dispatchers(self) -> dict[str, Callable]:
-        """Return a dispatching dict for event routing."""
-        return {
-            "AlarmClock": self.async_dispatch_alarms,
-            "AVTransport": self.async_dispatch_media_update,
-            "ContentDirectory": self.favorites.async_delayed_update,
-            "DeviceProperties": self.async_dispatch_device_properties,
-            "RenderingControl": self.async_update_volume,
-            "ZoneGroupTopology": self.async_update_groups,
-        }
-
     @callback
     def async_dispatch_event(self, event: SonosEvent) -> None:
         """Handle callback event and route as needed."""
@@ -304,7 +305,7 @@ class SonosSpeaker:
             self._poll_timer()
             self._poll_timer = None
 
-        dispatcher = self.event_dispatchers[event.service.service_type]
+        dispatcher = self._event_dispatchers[event.service.service_type]
         dispatcher(event)
 
     @callback
