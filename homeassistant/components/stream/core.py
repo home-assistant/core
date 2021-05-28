@@ -105,7 +105,7 @@ class StreamOutput:
         return -1
 
     @property
-    def segments(self) -> list[int]:
+    def sequences(self) -> list[int]:
         """Return current sequence from segments."""
         return [s.sequence for s in self._segments]
 
