@@ -328,7 +328,7 @@ class ZWaveNodeStatusSensor(SensorEntity):
             or self.node.device_config.description
             or f"Node {self.node.node_id}"
         )
-        self._name = f"{name}: Node Status"
+        self._attr_name = f"{name}: Node Status"
         self._unique_id = (
             f"{self.client.driver.controller.home_id}.{node.node_id}.node_status"
         )
@@ -369,11 +369,6 @@ class ZWaveNodeStatusSensor(SensorEntity):
         return {
             "identifiers": {get_device_id(self.client, self.node)},
         }
-
-    @property
-    def name(self) -> str:
-        """Return default name from device name and value name combination."""
-        return self._name
 
     @property
     def unique_id(self) -> str:
