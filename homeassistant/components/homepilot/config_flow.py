@@ -41,7 +41,7 @@ async def validate_input(hass: core.HomeAssistant, data):
             return {"title": name}
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class HomepilotConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Rademacher HomePilot."""
 
     VERSION = 1
