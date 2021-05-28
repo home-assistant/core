@@ -26,7 +26,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     session = aiohttp_client.async_create_clientsession(hass)
     auth = Auth(session, entry.data["host"], entry.data.get("password"))
 
-    if "password" in entry.data:
+    if entry.data.get("password") is not None:
         await auth.async_login()
 
     api = HomePilotAPI(auth)
