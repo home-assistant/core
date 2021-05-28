@@ -253,15 +253,13 @@ class PhilipsTVLightEntity(CoordinatorEntity, LightEntity):
                 color["saturation"] * 100.0 / 255.0,
             )
             self._brightness = color["brightness"]
+        elif data := self._tv.ambilight_cached:
+            hsv_h, hsv_s, hsv_v = color_RGB_to_hsv(*_average_pixels(data))
+            self._hs = hsv_h, hsv_s
+            self._brightness = hsv_v * 255.0 / 100.0
         else:
-            data = self._tv.ambilight_cached
-            if data:
-                hsv_h, hsv_s, hsv_v = color_RGB_to_hsv(*_average_pixels(data))
-                self._hs = hsv_h, hsv_s
-                self._brightness = hsv_v * 255.0 / 100.0
-            else:
-                self._hsv = None
-                self._brightness = None
+            self._hs = None
+            self._brightness = None
 
     @callback
     def _handle_coordinator_update(self) -> None:
