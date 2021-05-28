@@ -344,7 +344,7 @@ gTTS==2.2.2
 garages-amsterdam==2.0.5
 
 # homeassistant.components.garmin_connect
-garminconnect_ha==0.1.3
+garminconnect_aio==0.1.0
 
 # homeassistant.components.geo_json_events
 # homeassistant.components.usgs_earthquakes_feed

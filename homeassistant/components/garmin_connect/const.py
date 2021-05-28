@@ -1,14 +1,18 @@
 """Constants for the Garmin Connect integration."""
+from datetime import timedelta
+
 from homeassistant.const import (
     DEVICE_CLASS_TIMESTAMP,
     LENGTH_METERS,
     MASS_KILOGRAMS,
     PERCENTAGE,
     TIME_MINUTES,
+    TIME_YEARS,
 )
 
 DOMAIN = "garmin_connect"
-ATTRIBUTION = "Data provided by garmin.com"
+ATTRIBUTION = "garmin.com"
+DEFAULT_UPDATE_INTERVAL = timedelta(minutes=10)
 
 GARMIN_ENTITY_LIST = {
     "totalSteps": ["Total Steps", "steps", "mdi:walk", None, True],
@@ -136,8 +140,8 @@ GARMIN_ENTITY_LIST = {
         None,
         False,
     ],
-    "averageStressLevel": ["Avg Stress Level", "", "mdi:flash-alert", None, True],
-    "maxStressLevel": ["Max Stress Level", "", "mdi:flash-alert", None, True],
+    "averageStressLevel": ["Avg Stress Level", "lvl", "mdi:flash-alert", None, True],
+    "maxStressLevel": ["Max Stress Level", "lvl", "mdi:flash-alert", None, True],
     "stressQualifier": ["Stress Qualifier", "", "mdi:flash-alert", None, False],
     "stressDuration": ["Stress Duration", TIME_MINUTES, "mdi:flash-alert", None, False],
     "restStressDuration": [
@@ -340,13 +344,13 @@ GARMIN_ENTITY_LIST = {
         False,
     ],
     "weight": ["Weight", MASS_KILOGRAMS, "mdi:weight-kilogram", None, False],
-    "bmi": ["BMI", "", "mdi:food", None, False],
+    "bmi": ["BMI", "BMI", "mdi:food", None, False],
     "bodyFat": ["Body Fat", PERCENTAGE, "mdi:food", None, False],
     "bodyWater": ["Body Water", PERCENTAGE, "mdi:water-percent", None, False],
     "bodyMass": ["Body Mass", MASS_KILOGRAMS, "mdi:food", None, False],
     "muscleMass": ["Muscle Mass", MASS_KILOGRAMS, "mdi:dumbbell", None, False],
     "physiqueRating": ["Physique Rating", "", "mdi:numeric", None, False],
     "visceralFat": ["Visceral Fat", "", "mdi:food", None, False],
-    "metabolicAge": ["Metabolic Age", "", "mdi:calendar-heart", None, False],
+    "metabolicAge": ["Metabolic Age", TIME_YEARS, "mdi:calendar-heart", None, False],
     "nextAlarm": ["Next Alarm Time", None, "mdi:alarm", DEVICE_CLASS_TIMESTAMP, True],
 }

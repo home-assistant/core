@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import logging
 
-from garminconnect_ha import (
+from garminconnect_aio import (
     GarminConnectAuthenticationError,
     GarminConnectConnectionError,
     GarminConnectTooManyRequestsError,
@@ -181,9 +181,13 @@ class GarminConnectSensor(SensorEntity):
             self._state = data[self._type] // 60
         elif "Mass" in self._type or self._type == "weight":
             self._state = round((data[self._type] / 1000), 2)
-        elif (
-            self._type == "bodyFat" or self._type == "bodyWater" or self._type == "bmi"
-        ):
+        elif self._type in [
+            "bodyFat",
+            "bodyWater",
+            "bmi",
+            "floorsAscended",
+            "floorsDescended",
+        ]:
             self._state = round(data[self._type], 2)
         elif self._type == "nextAlarm":
             active_alarms = calculate_next_active_alarms(data[self._type])
