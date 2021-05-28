@@ -30,7 +30,7 @@ def test_compile_hourly_statistics(hass_recorder):
             {
                 "statistic_id": "sensor.test1",
                 "start": process_timestamp_to_utc_isoformat(zero),
-                "mean": 15.0,
+                "mean": 14.915254237288135,
                 "min": 10.0,
                 "max": 20.0,
                 "last_reset": None,
