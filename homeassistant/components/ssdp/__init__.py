@@ -5,7 +5,7 @@ import asyncio
 from datetime import timedelta
 from ipaddress import IPv4Address, IPv6Address
 import logging
-from typing import Any, Callable, MutableMapping
+from typing import Any, Callable, Mapping
 
 from async_upnp_client.search import SSDPListener
 
@@ -193,7 +193,7 @@ class Scanner:
         for source_ip in await self._async_build_source_set():
             self._ssdp_listeners.append(
                 SSDPListener(
-                    async_callback=self._async_process_entry, source_ip=source_ip  # type: ignore
+                    async_callback=self._async_process_entry, source_ip=source_ip
                 )
             )
 
@@ -208,7 +208,7 @@ class Scanner:
             self.hass, self.async_scan, SCAN_INTERVAL
         )
 
-    async def _async_process_entry(self, headers: MutableMapping[str, str]) -> None:
+    async def _async_process_entry(self, headers: Mapping[str, str]) -> None:
         """Process SSDP entries."""
         _LOGGER.debug("_async_process_entry: %s", headers)
         if "st" not in headers or "location" not in headers:
@@ -216,11 +216,13 @@ class Scanner:
         st = headers["st"]
         location = headers["location"]
         assert self.description_manager is not None
+
+        info_with_req = dict(headers)
         info_req = await self.description_manager.fetch_description(location)
         if info_req:
-            headers.update(info_req)
+            info_with_req.update(info_req)
 
-        discovery_info = discovery_info_from_headers_and_request(headers)
+        discovery_info = discovery_info_from_headers_and_request(info_with_req)
 
         if udn := discovery_info.get(ATTR_UPNP_UDN):
             self.cache[(udn, st)] = discovery_info
@@ -236,7 +238,7 @@ class Scanner:
         domains = set()
         for domain, matchers in self._integration_matchers.items():
             for matcher in matchers:
-                if all(headers.get(k) == v for (k, v) in matcher.items()):
+                if all(info_with_req.get(k) == v for (k, v) in matcher.items()):
                     domains.add(domain)
 
         for domain in domains:
@@ -250,9 +252,7 @@ class Scanner:
             self.flow_dispatcher.create(flow)
 
 
-def discovery_info_from_headers_and_request(
-    data: MutableMapping[str, str]
-) -> dict[str, str]:
+def discovery_info_from_headers_and_request(data: dict[str, str]) -> dict[str, str]:
     """Get info from an entry."""
     info = {
         **{k: v for k, v in data.items() if k not in DISCOVERY_MAPPING},
