@@ -118,5 +118,5 @@ class ZwaveFan(ZWaveBaseEntity, FanEntity):
 
     @property
     def supported_features(self) -> int:
-        """Return supported features."""
+        """Flag supported features."""
         return SUPPORTED_FEATURES
