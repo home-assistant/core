@@ -19,15 +19,10 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = ["cover"]
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the Rademacher HomePilot component."""
-    hass.data.setdefault(DOMAIN, {})
-
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Rademacher HomePilot from a config entry."""
+    hass.data.setdefault(DOMAIN, {})
+
     session = aiohttp_client.async_create_clientsession(hass)
     auth = Auth(session, entry.data["host"], entry.data.get("password"))
 
