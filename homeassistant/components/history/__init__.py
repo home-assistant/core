@@ -113,10 +113,6 @@ async def async_setup(hass, config):
 class LazyState(history_models.LazyState):
     """A lazy version of core State."""
 
-    def __init__(self, *args, **kwargs):
-        """Init the lazy state."""
-        super().__init__(*args, **kwargs)
-
 
 @websocket_api.websocket_command(
     {

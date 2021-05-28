@@ -87,12 +87,12 @@ def deprecated_class(replacement: str) -> Any:
         """Decorate class as deprecated."""
 
         @functools.wraps(cls)
-        def deprecated_class(*args: tuple, **kwargs: dict[str, Any]) -> Any:
+        def deprecated_cls(*args: tuple, **kwargs: dict[str, Any]) -> Any:
             """Wrap for the original class."""
             _print_deprecation_warning(cls, replacement, "class")
             return cls(*args, **kwargs)
 
-        return deprecated_class
+        return deprecated_cls
 
     return deprecated_decorator
 
