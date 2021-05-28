@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections import deque
 from collections.abc import Coroutine
 import contextlib
 import datetime
@@ -238,6 +239,11 @@ class SonosSpeaker:
         """Return whether this speaker is available."""
         return self._seen_timer is not None
 
+    @property
+    def processed_alarm_events(self) -> deque[str]:
+        """Return the container of processed alarm events."""
+        return self.hass.data[DATA_SONOS].processed_alarm_events
+
     async def async_subscribe(self) -> bool:
         """Initiate event subscriptions."""
         _LOGGER.debug("Creating subscriptions for %s", self.zone_name)
@@ -286,6 +292,10 @@ class SonosSpeaker:
     @callback
     def async_dispatch_alarms(self, event: SonosEvent | None = None) -> None:
         """Update alarms from event."""
+        update_id = event.variables["alarm_list_version"]
+        if update_id in self.processed_alarm_events:
+            return
+        self.processed_alarm_events.append(update_id)
         self.hass.async_create_task(self.async_update_alarms(event))
 
     @callback
