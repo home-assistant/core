@@ -56,6 +56,10 @@ from .const import (
     CLUSTER_TYPE_IN,
     CLUSTER_TYPE_OUT,
     CONF_ENABLE_IDENTIFY_ON_JOIN,
+    CONF_CONSIDER_UNAVAILABLE_MAINS,
+    CONF_DEFAULT_CONSIDER_UNAVAILABLE_MAINS,
+    CONF_CONSIDER_UNAVAILABLE_BATTERY,
+    CONF_DEFAULT_CONSIDER_UNAVAILABLE_BATTERY,
     EFFECT_DEFAULT_VARIANT,
     EFFECT_OKAY,
     POWER_BATTERY_OR_UNKNOWN,
@@ -70,8 +74,6 @@ from .const import (
 from .helpers import LogMixin, async_get_zha_config_value
 
 _LOGGER = logging.getLogger(__name__)
-CONSIDER_UNAVAILABLE_MAINS = 60 * 60 * 2  # 2 hours
-CONSIDER_UNAVAILABLE_BATTERY = 60 * 60 * 6  # 6 hours
 _UPDATE_ALIVE_INTERVAL = (60, 90)
 _CHECKIN_GRACE_PERIODS = 2
 
@@ -107,9 +109,20 @@ class ZHADevice(LogMixin):
         )
 
         if self.is_mains_powered:
-            self._consider_unavailable_time = CONSIDER_UNAVAILABLE_MAINS
+            self.consider_unavailable_time = async_get_zha_config_value(
+                    self._zha_gateway.config_entry,
+                    ZHA_OPTIONS,
+                    CONF_CONSIDER_UNAVAILABLE_MAINS,
+                    CONF_DEFAULT_CONSIDER_UNAVAILABLE_MAINS,
+                )
         else:
-            self._consider_unavailable_time = CONSIDER_UNAVAILABLE_BATTERY
+            self.consider_unavailable_time = async_get_zha_config_value(
+                    self._zha_gateway.config_entry,
+                    ZHA_OPTIONS,
+                    CONF_CONSIDER_UNAVAILABLE_BATTERY,
+                    CONF_DEFAULT_CONSIDER_UNAVAILABLE_BATTERY,
+                )
+
         keep_alive_interval = random.randint(*_UPDATE_ALIVE_INTERVAL)
         self.unsubs.append(
             async_track_time_interval(
@@ -320,7 +333,7 @@ class ZHADevice(LogMixin):
             return
 
         difference = time.time() - self.last_seen
-        if difference < self._consider_unavailable_time:
+        if difference < self.consider_unavailable_time:
             self.update_available(True)
             self._checkins_missed_count = 0
             return

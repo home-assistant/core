@@ -78,8 +78,6 @@ from .const import (
     RadioType,
 )
 from .device import (
-    CONSIDER_UNAVAILABLE_BATTERY,
-    CONSIDER_UNAVAILABLE_MAINS,
     DeviceStatus,
     ZHADevice,
 )
@@ -185,17 +183,15 @@ class ZHAGateway:
             delta_msg = "not known"
             if zha_dev_entry and zha_dev_entry.last_seen is not None:
                 delta = round(time.time() - zha_dev_entry.last_seen)
-                if zha_device.is_mains_powered:
-                    zha_device.available = delta < CONSIDER_UNAVAILABLE_MAINS
-                else:
-                    zha_device.available = delta < CONSIDER_UNAVAILABLE_BATTERY
+                zha_device.available = delta < zha_device.consider_unavailable_time
                 delta_msg = f"{str(timedelta(seconds=delta))} ago"
             _LOGGER.debug(
-                "[%s](%s) restored as '%s', last seen: %s",
+                "[%s](%s) restored as '%s', last seen: %s, consider_unavailable_time: %s seconds",
                 zha_device.nwk,
                 zha_device.name,
                 "available" if zha_device.available else "unavailable",
                 delta_msg,
+                zha_device.consider_unavailable_time,
             )
         # update the last seen time for devices every 10 minutes to avoid thrashing
         # writes and shutdown issues where storage isn't updated
