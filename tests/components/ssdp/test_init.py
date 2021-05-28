@@ -517,11 +517,21 @@ async def test_scan_second_hit(hass, aioclient_mock, caplog):
         ssdp.ATTR_UPNP_UDN: "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL",
     }
     assert "Failed to fetch ssdp data" not in caplog.text
-    cache = ssdp.async_get_discovery_info_cache(hass)
+    udn_discovery_info = ssdp.async_get_discovery_info_by_st(hass, "mock-st")
     assert (
-        cache[("uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL", "mock-st")][
+        udn_discovery_info["uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL"][
             ssdp.ATTR_SSDP_LOCATION
         ]
+        == "http://1.1.1.1"
+    )
+    st_discovery_info = ssdp.async_get_discovery_info_by_udn(
+        hass, "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL"
+    )
+    assert st_discovery_info["mock-st"][ssdp.ATTR_SSDP_LOCATION] == "http://1.1.1.1"
+    assert (
+        ssdp.async_get_discovery_info_by_udn_st(
+            hass, "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL", "mock-st"
+        )[ssdp.ATTR_SSDP_LOCATION]
         == "http://1.1.1.1"
     )
 
