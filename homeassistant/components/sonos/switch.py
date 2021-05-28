@@ -100,7 +100,8 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
             str(self.alarm.start_time)[0:5],
         )
 
-    async def async_check_if_available(self):
+    @callback
+    def async_check_if_available(self):
         """Check if alarm exists and remove alarm entity if not available."""
         if self.alarm_id in self.hass.data[DATA_SONOS].alarms:
             return True
@@ -115,7 +116,7 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
 
     async def async_update(self) -> None:
         """Poll the device for the current state."""
-        if not await self.async_check_if_available():
+        if not self.async_check_if_available():
             return
 
         _LOGGER.debug("Updating the state of the alarm")
