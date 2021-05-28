@@ -254,6 +254,7 @@ async def test_skip_out_of_order_packet(hass):
     if packets[out_of_order_index].is_keyframe:
         out_of_order_index += 1
     # This packet is out of order
+    assert not packets[out_of_order_index].is_keyframe
     packets[out_of_order_index].dts = -9090
 
     decoded_stream = await async_decode_stream(hass, iter(packets))
