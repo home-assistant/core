@@ -1,5 +1,4 @@
 """The tests for the Modbus cover component."""
-import logging
 
 from pymodbus.exceptions import ModbusException
 import pytest
@@ -156,35 +155,6 @@ async def test_register_cover(hass, regs, expected):
         scan_interval=5,
     )
     assert state == expected
-
-
-@pytest.mark.parametrize("read_type", [CALL_TYPE_COIL, CONF_REGISTER])
-async def test_unsupported_config_cover(hass, read_type, caplog):
-    """
-    Run test for cover.
-
-    Initialize the Cover in the legacy manner via platform.
-    This test expects that the Cover won't be initialized, and that we get a config warning.
-    """
-    device_name = "test_cover"
-    device_config = {CONF_NAME: device_name, read_type: 1234}
-
-    caplog.set_level(logging.WARNING)
-    caplog.clear()
-
-    await base_config_test(
-        hass,
-        device_config,
-        device_name,
-        COVER_DOMAIN,
-        CONF_COVERS,
-        None,
-        method_discovery=False,
-        expect_init_to_fail=True,
-    )
-
-    assert len(caplog.records) == 1
-    assert caplog.records[0].levelname == "WARNING"
 
 
 async def test_service_cover_update(hass, mock_pymodbus):

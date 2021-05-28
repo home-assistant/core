@@ -49,12 +49,7 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ):
     """Read configuration and create Modbus cover."""
-    if discovery_info is None:
-        _LOGGER.warning(
-            "You're trying to init Modbus Cover in an unsupported way."
-            " Check https://www.home-assistant.io/integrations/modbus/#configuring-platform-cover"
-            " and fix your configuration"
-        )
+    if discovery_info is None:  # pragma: no cover
         return
 
     covers = []
