@@ -6,11 +6,11 @@ import voluptuous as vol
 from homeassistant.components import frontend
 from homeassistant.config import async_hass_config_yaml, async_process_component_config
 from homeassistant.const import CONF_FILENAME, CONF_MODE, CONF_RESOURCES
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import collection, config_validation as cv
 from homeassistant.helpers.service import async_register_admin_service
-from homeassistant.helpers.typing import ConfigType, ServiceCallType
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_integration
 
 from . import dashboard, resources, websocket
@@ -56,8 +56,7 @@ CONFIG_SCHEMA = vol.Schema(
                     vol.Lower, vol.In([MODE_YAML, MODE_STORAGE])
                 ),
                 vol.Optional(CONF_DASHBOARDS): cv.schema_with_slug_keys(
-                    YAML_DASHBOARD_SCHEMA,
-                    slug_validator=url_slug,
+                    YAML_DASHBOARD_SCHEMA, slug_validator=url_slug
                 ),
                 vol.Optional(CONF_RESOURCES): [RESOURCE_SCHEMA],
             }
@@ -96,7 +95,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType):
         # 3. copy lovelace_dashboards
         shutil.copy(ais_dom_dashboards_path, storage_path + "lovelace_dashboards")
 
-    async def reload_resources_service_handler(service_call: ServiceCallType) -> None:
+    async def reload_resources_service_handler(service_call: ServiceCall) -> None:
         """Reload yaml resources."""
         try:
             conf = await async_hass_config_yaml(hass)

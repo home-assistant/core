@@ -49,7 +49,6 @@ class AlarmDecoderFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a AlarmDecoder config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
     def __init__(self):
         """Initialize AlarmDecoder ConfigFlow."""
@@ -141,7 +140,7 @@ class AlarmDecoderFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 class AlarmDecoderOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle AlarmDecoder options."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry):
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize AlarmDecoder options flow."""
         self.arm_options = config_entry.options.get(OPTIONS_ARM, DEFAULT_ARM_OPTIONS)
         self.zone_options = config_entry.options.get(

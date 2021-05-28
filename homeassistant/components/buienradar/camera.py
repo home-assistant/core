@@ -9,14 +9,22 @@ import aiohttp
 import voluptuous as vol
 
 from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
-from homeassistant.const import CONF_NAME
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import dt as dt_util
 
-CONF_DIMENSION = "dimension"
-CONF_DELTA = "delta"
-CONF_COUNTRY = "country_code"
+from .const import (
+    CONF_COUNTRY,
+    CONF_DELTA,
+    CONF_DIMENSION,
+    DEFAULT_COUNTRY,
+    DEFAULT_DELTA,
+    DEFAULT_DIMENSION,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,13 +49,27 @@ PLATFORM_SCHEMA = vol.All(
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up buienradar radar-loop camera component."""
-    dimension = config[CONF_DIMENSION]
-    delta = config[CONF_DELTA]
-    name = config[CONF_NAME]
-    country = config[CONF_COUNTRY]
+    """Set up buienradar camera platform."""
+    _LOGGER.warning(
+        "Platform configuration is deprecated, will be removed in a future release"
+    )
 
-    async_add_entities([BuienradarCam(name, dimension, delta, country)])
+
+async def async_setup_entry(
+    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
+    """Set up buienradar radar-loop camera component."""
+    config = entry.data
+    options = entry.options
+
+    country = options.get(CONF_COUNTRY, config.get(CONF_COUNTRY, DEFAULT_COUNTRY))
+
+    delta = options.get(CONF_DELTA, config.get(CONF_DELTA, DEFAULT_DELTA))
+
+    latitude = config.get(CONF_LATITUDE, hass.config.latitude)
+    longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
+
+    async_add_entities([BuienradarCam(latitude, longitude, delta, country)])
 
 
 class BuienradarCam(Camera):
@@ -59,7 +81,9 @@ class BuienradarCam(Camera):
     [0]: https://www.buienradar.nl/overbuienradar/gratis-weerdata
     """
 
-    def __init__(self, name: str, dimension: int, delta: float, country: str):
+    def __init__(
+        self, latitude: float, longitude: float, delta: float, country: str
+    ) -> None:
         """
         Initialize the component.
 
@@ -67,10 +91,10 @@ class BuienradarCam(Camera):
         """
         super().__init__()
 
-        self._name = name
+        self._name = "Buienradar"
 
         # dimension (x and y) of returned radar image
-        self._dimension = dimension
+        self._dimension = DEFAULT_DIMENSION
 
         # time a cached image stays valid for
         self._delta = delta
@@ -94,7 +118,7 @@ class BuienradarCam(Camera):
         # deadline for image refresh - self.delta after last successful load
         self._deadline: datetime | None = None
 
-        self._unique_id = f"{self._dimension}_{self._country}"
+        self._unique_id = f"{latitude:2.6f}{longitude:2.6f}"
 
     @property
     def name(self) -> str:
@@ -192,3 +216,8 @@ class BuienradarCam(Camera):
     def unique_id(self):
         """Return the unique id."""
         return self._unique_id
+
+    @property
+    def entity_registry_enabled_default(self) -> bool:
+        """Disable entity by default."""
+        return False

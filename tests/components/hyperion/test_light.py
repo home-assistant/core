@@ -25,10 +25,10 @@ from homeassistant.components.light import (
     DOMAIN as LIGHT_DOMAIN,
 )
 from homeassistant.config_entries import (
-    ENTRY_STATE_SETUP_ERROR,
     RELOAD_AFTER_UPDATE_DELAY,
     SOURCE_REAUTH,
     ConfigEntry,
+    ConfigEntryState,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -900,7 +900,7 @@ async def test_setup_entry_no_token_reauth(hass: HomeAssistant) -> None:
             },
             data=config_entry.data,
         )
-        assert config_entry.state == ENTRY_STATE_SETUP_ERROR
+        assert config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
 async def test_setup_entry_bad_token_reauth(hass: HomeAssistant) -> None:
@@ -928,7 +928,7 @@ async def test_setup_entry_bad_token_reauth(hass: HomeAssistant) -> None:
             },
             data=config_entry.data,
         )
-        assert config_entry.state == ENTRY_STATE_SETUP_ERROR
+        assert config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
 async def test_priority_light_async_updates(

@@ -29,7 +29,6 @@ def test_conditionerror_format():
     )
 
     error_container1 = ConditionErrorContainer("box", errors=[error_pos1, error_pos2])
-    print(error_container1)
     assert (
         str(error_container1)
         == """In 'box' (item 1 of 2):

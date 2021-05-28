@@ -159,6 +159,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_subscription)
     )
 
+    config_entry.async_on_unload(
+        config_entry.add_update_listener(_async_update_listener)
+    )
     return True
 
 
@@ -174,6 +177,11 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     await asyncio.gather(*tasks)
 
     return True
+
+
+async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry):
+    """Handle options update."""
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 def map_vera_device(vera_device: veraApi.VeraDevice, remap: list[int]) -> str:
@@ -212,7 +220,9 @@ DeviceType = TypeVar("DeviceType", bound=veraApi.VeraDevice)
 class VeraDevice(Generic[DeviceType], Entity):
     """Representation of a Vera device entity."""
 
-    def __init__(self, vera_device: DeviceType, controller_data: ControllerData):
+    def __init__(
+        self, vera_device: DeviceType, controller_data: ControllerData
+    ) -> None:
         """Initialize the device."""
         self.vera_device = vera_device
         self.controller = controller_data.controller

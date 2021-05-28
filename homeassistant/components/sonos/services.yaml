@@ -6,7 +6,7 @@ join:
       name: Master
       description:
         Entity ID of the player that should become the coordinator of the group.
-      example: "media_player.living_room_sonos"
+      required: true
       selector:
         entity:
           integration: sonos
@@ -14,7 +14,7 @@ join:
     entity_id:
       name: Entity
       description: Name of entity that will join the master.
-      example: "media_player.living_room_sonos"
+      required: true
       selector:
         entity:
           integration: sonos
@@ -23,15 +23,10 @@ join:
 unjoin:
   name: Unjoin group
   description: Unjoin the player from a group.
-  fields:
-    entity_id:
-      name: Entity
-      description: Name of entity that will be unjoined from their group.
-      example: "media_player.living_room_sonos"
-      selector:
-        entity:
-          integration: sonos
-          domain: media_player
+  target:
+    entity:
+      integration: sonos
+      domain: media_player
 
 snapshot:
   name: Snapshot
@@ -40,7 +35,6 @@ snapshot:
     entity_id:
       name: Entity
       description: Name of entity that will be snapshot.
-      example: "media_player.living_room_sonos"
       selector:
         entity:
           integration: sonos
@@ -48,7 +42,6 @@ snapshot:
     with_group:
       name: With group
       description: True or False. Also snapshot the group layout.
-      example: "true"
       default: true
       selector:
         boolean:
@@ -60,7 +53,6 @@ restore:
     entity_id:
       name: Entity
       description: Name of entity that will be restored.
-      example: "media_player.living_room_sonos"
       selector:
         entity:
           integration: sonos
@@ -68,7 +60,6 @@ restore:
     with_group:
       name: With group
       description: True or False. Also restore the group layout.
-      example: "true"
       default: true
       selector:
         boolean:
@@ -83,14 +74,11 @@ set_sleep_timer:
     sleep_time:
       name: Sleep Time
       description: Number of seconds to set the timer.
-      example: "900"
       selector:
         number:
           min: 0
           max: 7200
-          step: 1
           unit_of_measurement: seconds
-          mode: slider
 
 clear_sleep_timer:
   name: Clear timer
@@ -106,22 +94,25 @@ set_option:
     device:
       integration: sonos
   fields:
+    buttons_enabled:
+      name: Buttons enabled
+      description: Enable control buttons on the device
+      example: "true"
+      selector:
+        boolean:
     night_sound:
       name: Night sound
       description: Enable Night Sound mode
-      example: "true"
       selector:
         boolean:
     speech_enhance:
       name: Speech enhance
       description: Enable Speech Enhancement mode
-      example: "true"
       selector:
         boolean:
     status_light:
       name: Status light
       description: Enable Status (LED) Light
-      example: "true"
       selector:
         boolean:
 
@@ -135,7 +126,6 @@ play_queue:
     queue_position:
       name: Queue position
       description: Position of the song in the queue to start playing from.
-      example: "0"
       selector:
         number:
           min: 0
@@ -152,7 +142,6 @@ remove_from_queue:
     queue_position:
       name: Queue position
       description: Position in the queue to remove.
-      example: "0"
       selector:
         number:
           min: 0
@@ -169,7 +158,6 @@ update_alarm:
     alarm_id:
       name: Alarm ID
       description: ID for the alarm to be updated.
-      example: "1"
       required: true
       selector:
         number:
@@ -185,22 +173,18 @@ update_alarm:
     volume:
       name: Volume
       description: Set alarm volume level.
-      example: "0.75"
       selector:
         number:
           min: 0
           max: 1
           step: 0.01
-          mode: slider
     enabled:
       name: Alarm enabled
       description: Enable or disable the alarm.
-      example: "true"
       selector:
         boolean:
     include_linked_zones:
       name: Include linked zones
       description: Enable or disable including grouped rooms.
-      example: "true"
       selector:
         boolean:

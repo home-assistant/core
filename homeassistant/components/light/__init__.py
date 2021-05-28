@@ -247,9 +247,50 @@ def preprocess_turn_on_alternatives(hass, params):
         params[ATTR_BRIGHTNESS] = round(255 * brightness_pct / 100)
 
 
-def filter_turn_off_params(params):
+def filter_turn_off_params(light, params):
     """Filter out params not used in turn off."""
+    supported_features = light.supported_features
+
+    if not supported_features & SUPPORT_FLASH:
+        params.pop(ATTR_FLASH, None)
+    if not supported_features & SUPPORT_TRANSITION:
+        params.pop(ATTR_TRANSITION, None)
+
     return {k: v for k, v in params.items() if k in (ATTR_TRANSITION, ATTR_FLASH)}
+
+
+def filter_turn_on_params(light, params):
+    """Filter out params not used in turn off."""
+    supported_features = light.supported_features
+
+    if not supported_features & SUPPORT_EFFECT:
+        params.pop(ATTR_EFFECT, None)
+    if not supported_features & SUPPORT_FLASH:
+        params.pop(ATTR_FLASH, None)
+    if not supported_features & SUPPORT_TRANSITION:
+        params.pop(ATTR_TRANSITION, None)
+    if not supported_features & SUPPORT_WHITE_VALUE:
+        params.pop(ATTR_WHITE_VALUE, None)
+
+    supported_color_modes = (
+        light._light_internal_supported_color_modes  # pylint:disable=protected-access
+    )
+    if not brightness_supported(supported_color_modes):
+        params.pop(ATTR_BRIGHTNESS, None)
+    if COLOR_MODE_COLOR_TEMP not in supported_color_modes:
+        params.pop(ATTR_COLOR_TEMP, None)
+    if COLOR_MODE_HS not in supported_color_modes:
+        params.pop(ATTR_HS_COLOR, None)
+    if COLOR_MODE_RGB not in supported_color_modes:
+        params.pop(ATTR_RGB_COLOR, None)
+    if COLOR_MODE_RGBW not in supported_color_modes:
+        params.pop(ATTR_RGBW_COLOR, None)
+    if COLOR_MODE_RGBWW not in supported_color_modes:
+        params.pop(ATTR_RGBWW_COLOR, None)
+    if COLOR_MODE_XY not in supported_color_modes:
+        params.pop(ATTR_XY_COLOR, None)
+
+    return params
 
 
 async def async_setup(hass, config):  # noqa: C901
@@ -373,7 +414,7 @@ async def async_setup(hass, config):  # noqa: C901
         if params.get(ATTR_BRIGHTNESS) == 0:
             await async_handle_light_off_service(light, call)
         else:
-            await light.async_turn_on(**params)
+            await light.async_turn_on(**filter_turn_on_params(light, params))
 
     async def async_handle_light_off_service(light, call):
         """Handle turning off a light."""
@@ -382,7 +423,7 @@ async def async_setup(hass, config):  # noqa: C901
         if ATTR_TRANSITION not in params:
             profiles.apply_default(light.entity_id, True, params)
 
-        await light.async_turn_off(**filter_turn_off_params(params))
+        await light.async_turn_off(**filter_turn_off_params(light, params))
 
     async def async_handle_toggle_service(light, call):
         """Handle toggling a light."""
@@ -488,7 +529,7 @@ class Profile:
 class Profiles:
     """Representation of available color profiles."""
 
-    def __init__(self, hass: HomeAssistant):
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize profiles."""
         self.hass = hass
         self.data: dict[str, Profile] = {}
@@ -559,15 +600,30 @@ class Profiles:
 class LightEntity(ToggleEntity):
     """Base class for light entities."""
 
+    _attr_brightness: int | None = None
+    _attr_color_mode: str | None = None
+    _attr_color_temp: int | None = None
+    _attr_effect_list: list[str] | None = None
+    _attr_effect: str | None = None
+    _attr_hs_color: tuple[float, float] | None = None
+    _attr_max_mired: int = 500
+    _attr_min_mired: int = 153
+    _attr_rgb_color: tuple[int, int, int] | None = None
+    _attr_rgbw_color: tuple[int, int, int, int] | None = None
+    _attr_rgbww_color: tuple[int, int, int, int, int] | None = None
+    _attr_supported_color_modes: set[str] | None = None
+    _attr_supported_features: int = 0
+    _attr_xy_color: tuple[float, float] | None = None
+
     @property
     def brightness(self) -> int | None:
         """Return the brightness of this light between 0..255."""
-        return None
+        return self._attr_brightness
 
     @property
     def color_mode(self) -> str | None:
         """Return the color mode of the light."""
-        return None
+        return self._attr_color_mode
 
     @property
     def _light_internal_color_mode(self) -> str:
@@ -600,22 +656,22 @@ class LightEntity(ToggleEntity):
     @property
     def hs_color(self) -> tuple[float, float] | None:
         """Return the hue and saturation color value [float, float]."""
-        return None
+        return self._attr_hs_color
 
     @property
     def xy_color(self) -> tuple[float, float] | None:
         """Return the xy color value [float, float]."""
-        return None
+        return self._attr_xy_color
 
     @property
     def rgb_color(self) -> tuple[int, int, int] | None:
         """Return the rgb color value [int, int, int]."""
-        return None
+        return self._attr_rgb_color
 
     @property
     def rgbw_color(self) -> tuple[int, int, int, int] | None:
         """Return the rgbw color value [int, int, int, int]."""
-        return None
+        return self._attr_rgbw_color
 
     @property
     def _light_internal_rgbw_color(self) -> tuple[int, int, int, int] | None:
@@ -639,26 +695,26 @@ class LightEntity(ToggleEntity):
     @property
     def rgbww_color(self) -> tuple[int, int, int, int, int] | None:
         """Return the rgbww color value [int, int, int, int, int]."""
-        return None
+        return self._attr_rgbww_color
 
     @property
     def color_temp(self) -> int | None:
         """Return the CT color value in mireds."""
-        return None
+        return self._attr_color_temp
 
     @property
     def min_mireds(self) -> int:
         """Return the coldest color_temp that this light supports."""
         # Default to the Philips Hue value that HA has always assumed
         # https://developers.meethue.com/documentation/core-concepts
-        return 153
+        return self._attr_min_mired
 
     @property
     def max_mireds(self) -> int:
         """Return the warmest color_temp that this light supports."""
         # Default to the Philips Hue value that HA has always assumed
         # https://developers.meethue.com/documentation/core-concepts
-        return 500
+        return self._attr_max_mired
 
     @property
     def white_value(self) -> int | None:
@@ -668,12 +724,12 @@ class LightEntity(ToggleEntity):
     @property
     def effect_list(self) -> list[str] | None:
         """Return the list of supported effects."""
-        return None
+        return self._attr_effect_list
 
     @property
     def effect(self) -> str | None:
         """Return the current effect."""
-        return None
+        return self._attr_effect
 
     @property
     def capability_attributes(self):
@@ -806,14 +862,14 @@ class LightEntity(ToggleEntity):
         return supported_color_modes
 
     @property
-    def supported_color_modes(self) -> set | None:
+    def supported_color_modes(self) -> set[str] | None:
         """Flag supported color modes."""
-        return None
+        return self._attr_supported_color_modes
 
     @property
     def supported_features(self) -> int:
         """Flag supported features."""
-        return 0
+        return self._attr_supported_features
 
 
 class Light(LightEntity):

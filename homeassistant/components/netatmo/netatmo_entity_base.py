@@ -1,15 +1,11 @@
 """Base class for Netatmo entities."""
 from __future__ import annotations
 
-import logging
-
 from homeassistant.core import CALLBACK_TYPE, callback
 from homeassistant.helpers.entity import Entity
 
 from .const import DATA_DEVICE_IDS, DOMAIN, MANUFACTURER, MODELS, SIGNAL_NAME
-from .data_handler import NetatmoDataHandler
-
-_LOGGER = logging.getLogger(__name__)
+from .data_handler import PUBLICDATA_DATA_CLASS_NAME, NetatmoDataHandler
 
 
 class NetatmoBase(Entity):
@@ -29,7 +25,6 @@ class NetatmoBase(Entity):
 
     async def async_added_to_hass(self) -> None:
         """Entity created."""
-        _LOGGER.debug("New client %s", self.entity_id)
         for data_class in self._data_classes:
             signal_name = data_class[SIGNAL_NAME]
 
@@ -41,7 +36,7 @@ class NetatmoBase(Entity):
                     home_id=data_class["home_id"],
                 )
 
-            elif data_class["name"] == "PublicData":
+            elif data_class["name"] == PUBLICDATA_DATA_CLASS_NAME:
                 await self.data_handler.register_data_class(
                     data_class["name"],
                     signal_name,
@@ -57,7 +52,9 @@ class NetatmoBase(Entity):
                     data_class["name"], signal_name, self.async_update_callback
                 )
 
-            await self.data_handler.unregister_data_class(signal_name, None)
+            for sub in self.data_handler.data_classes[signal_name].get("subscriptions"):
+                if sub is None:
+                    await self.data_handler.unregister_data_class(signal_name, None)
 
         registry = await self.hass.helpers.device_registry.async_get_registry()
         device = registry.async_get_device({(DOMAIN, self._id)}, set())

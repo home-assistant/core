@@ -1,21 +1,36 @@
 """Platform for binary sensor integration."""
 import logging
 
-from smarttub import SpaReminder
+from smarttub import SpaError, SpaReminder
+import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_CONNECTIVITY,
     DEVICE_CLASS_PROBLEM,
     BinarySensorEntity,
 )
+from homeassistant.helpers import entity_platform
 
-from .const import ATTR_REMINDERS, DOMAIN, SMARTTUB_CONTROLLER
+from .const import ATTR_ERRORS, ATTR_REMINDERS, DOMAIN, SMARTTUB_CONTROLLER
 from .entity import SmartTubEntity, SmartTubSensorBase
 
 _LOGGER = logging.getLogger(__name__)
 
 # whether the reminder has been snoozed (bool)
 ATTR_REMINDER_SNOOZED = "snoozed"
+
+ATTR_ERROR_CODE = "error_code"
+ATTR_ERROR_TITLE = "error_title"
+ATTR_ERROR_DESCRIPTION = "error_description"
+ATTR_ERROR_TYPE = "error_type"
+ATTR_CREATED_AT = "created_at"
+ATTR_UPDATED_AT = "updated_at"
+
+# how many days to snooze the reminder for
+ATTR_SNOOZE_DAYS = "days"
+SNOOZE_REMINDER_SCHEMA = {
+    vol.Required(ATTR_SNOOZE_DAYS): vol.All(vol.Coerce(int), vol.Range(min=10, max=120))
+}
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -26,12 +41,21 @@ async def async_setup_entry(hass, entry, async_add_entities):
     entities = []
     for spa in controller.spas:
         entities.append(SmartTubOnline(controller.coordinator, spa))
+        entities.append(SmartTubError(controller.coordinator, spa))
         entities.extend(
             SmartTubReminder(controller.coordinator, spa, reminder)
             for reminder in controller.coordinator.data[spa.id][ATTR_REMINDERS].values()
         )
 
     async_add_entities(entities)
+
+    platform = entity_platform.current_platform.get()
+
+    platform.async_register_entity_service(
+        "snooze_reminder",
+        SNOOZE_REMINDER_SCHEMA,
+        "async_snooze",
+    )
 
 
 class SmartTubOnline(SmartTubSensorBase, BinarySensorEntity):
@@ -92,6 +116,62 @@ class SmartTubReminder(SmartTubEntity, BinarySensorEntity):
         """Return the state attributes."""
         return {
             ATTR_REMINDER_SNOOZED: self.reminder.snoozed,
+        }
+
+    @property
+    def device_class(self) -> str:
+        """Return the device class for this entity."""
+        return DEVICE_CLASS_PROBLEM
+
+    async def async_snooze(self, days):
+        """Snooze this reminder for the specified number of days."""
+        await self.reminder.snooze(days)
+        await self.coordinator.async_request_refresh()
+
+
+class SmartTubError(SmartTubEntity, BinarySensorEntity):
+    """Indicates whether an error code is present.
+
+    There may be 0 or more errors. If there are >0, we show the first one.
+    """
+
+    def __init__(self, coordinator, spa):
+        """Initialize the entity."""
+        super().__init__(
+            coordinator,
+            spa,
+            "Error",
+        )
+
+    @property
+    def error(self) -> SpaError:
+        """Return the underlying SpaError object for this entity."""
+        errors = self.coordinator.data[self.spa.id][ATTR_ERRORS]
+        if len(errors) == 0:
+            return None
+        return errors[0]
+
+    @property
+    def is_on(self) -> bool:
+        """Return true if an error is signaled."""
+        return self.error is not None
+
+    @property
+    def extra_state_attributes(self):
+        """Return the state attributes."""
+
+        error = self.error
+
+        if error is None:
+            return {}
+
+        return {
+            ATTR_ERROR_CODE: error.code,
+            ATTR_ERROR_TITLE: error.title,
+            ATTR_ERROR_DESCRIPTION: error.description,
+            ATTR_ERROR_TYPE: error.error_type,
+            ATTR_CREATED_AT: error.created_at.isoformat(),
+            ATTR_UPDATED_AT: error.updated_at.isoformat(),
         }
 
     @property
