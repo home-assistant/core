@@ -71,12 +71,12 @@ def async_register_callback(
 
 
 @bind_hass
-def async_get_discovery_info_by_udn_st(  # pylint: disable=invalid-name
-    hass: HomeAssistant, udn: str, st: str
-) -> dict[str, str] | None:
-    """Lookup info by udn and st from previous scans."""
+def async_get_discovery_info_cache(
+    hass: HomeAssistant,
+) -> dict[tuple[str, str], dict[str, str]]:
+    """Fetch the discovery info cache."""
     scanner: Scanner = hass.data[DOMAIN]
-    return scanner.cache.get((udn, st))
+    return scanner.cache
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
