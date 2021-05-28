@@ -674,6 +674,120 @@ class PlexServer:
             _LOGGER.error("%s not found in %s", failed_item, library_name)
             return None
 
+    def continue_media(self, media, library_name, continuation):
+        """Find the episode object from which to resume watching.
+
+        The following continuation modes are supported:
+        1. deck
+        2. unfinished (episodes that were watched partway through)
+        3. unwatched
+        4. watched
+
+        Each mode above can function as a fallback in case the prior mode
+        fails to find suitable media. Fallbacks are delimited by a "|". If
+        all modes fail to find media, the media will start from the beginning.
+
+        Modes may also be parameterized to get the 'first' or 'last' element
+        among the results (e.g. unwatched_first, unfinished_last). Parameters are
+        optional and are delimited by an "_". Default parameter is 'first'.
+
+        Notes:
+            - Deck mode supports shows, seasons
+            - Unfinished mode supports shows, seasons
+            - Unwatched mode supports shows, seasons
+            - Watched mode supports shows, seasons
+
+        Args:
+            media (plexapi.video.Show or plexapi.video.Season): media to be continued
+            library_name (str): library section used for 'deck' continuation mode
+            continuation (str): structured continuation query as described in this method
+
+        Returns:
+            plexapi.video.Show or plexapi.video.Season object
+
+            Return object will always be either the original media argument, or a more suitable
+            continuation media.
+
+        Examples:
+            Let's assume the following complex continuation mechanism is desired:
+
+                Resume media from deck, and if it's missing then
+                resume last unfinished episode, and if it's missing then
+                resume first unwatched episode, and if it's missing then
+                start show from the beginning
+
+            Resultant continuation query:
+
+                "_continue": "deck|unfinished_last|unwatched_first"
+
+        """
+        if type(media) not in (plexapi.video.Show, plexapi.video.Season):
+            return media
+
+        if not continuation or not media:
+            return media
+
+        for query in continuation.lower().split("|"):
+            # Query format: <mode>[_<parameter>]
+            args = query.split("_")
+            mode = args[0]
+            index = 0
+
+            # Validate mode parameters
+            if len(args) == 2 and args[1] in ("first", "last"):
+                index = 0 if args[1] == "first" else -1
+            elif len(args) != 1:
+                _LOGGER.error("Unrecognized continuation mode args: '%s'", query)
+                continue
+
+            episodes = []
+            if mode == "deck":
+                try:
+                    library_section = self.library.section(library_name)
+                    deck = library_section.onDeck()
+                except NotFound:
+                    _LOGGER.error("Library '%s' not found", library_name)
+                    return media
+
+                if isinstance(library_section, plexapi.library.ShowSection):
+                    if isinstance(media, plexapi.video.Show):
+                        show_name = media.title
+                        season_number = None
+                    elif isinstance(media, plexapi.video.Season):
+                        show_name = media.parentTitle
+                        season_number = media.seasonNumber
+
+                    episodes = [e for e in deck if e.grandparentTitle == show_name]
+                    if season_number is not None:
+                        episodes = [
+                            e for e in episodes if e.seasonNumber == season_number
+                        ]
+                else:
+                    _LOGGER.error(
+                        "Continuation not supported for library '%s', section type '%s'",
+                        library_name,
+                        type(library_section),
+                    )
+                    return media
+            elif mode == "unfinished":
+                if isinstance(media, plexapi.video.Show):
+                    episodes = [e for e in media.episodes() if e.viewOffset]
+                elif isinstance(media, plexapi.video.Season):
+                    episodes = [e for e in media if e.viewOffset]
+            elif mode in ("unwatched", "watched"):
+                episodes = getattr(media, mode)()
+            else:
+                _LOGGER.error(
+                    "Unrecognized continuation mode '%s' in query '%s'", mode, query
+                )
+                continue
+
+            # If mode episodes were found, no need to fallback to other modes
+            if episodes:
+                return episodes[index]
+
+        return media
+
     @property
     def sensor_attributes(self):
         """Return active session information for use in activity sensor."""

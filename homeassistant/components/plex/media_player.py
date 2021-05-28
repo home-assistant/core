@@ -491,14 +491,21 @@ class PlexMediaPlayer(MediaPlayerEntity):
                 ) from err
         else:
             shuffle = src.pop("shuffle", 0)
+            continuous = src.pop("continuous", 0)
+            continuation = src.pop("_continue", None)
+            library_name = src.get("library_name", None)
+
             media = self.plex_server.lookup_media(media_type, **src)
+            media = self.plex_server.continue_media(media, library_name, continuation)
 
             if media is None:
                 _LOGGER.error("Media could not be found: %s", media_id)
                 return
 
             _LOGGER.debug("Attempting to play %s on %s", media, self.name)
-            playqueue = self.plex_server.create_playqueue(media, shuffle=shuffle)
+            playqueue = self.plex_server.create_playqueue(
+                media, continuous=continuous, shuffle=shuffle
+            )
 
         try:
             self.device.playMedia(playqueue)
