@@ -204,7 +204,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     hass.services.async_register(DOMAIN, "register_webhook", register_webhook)
     hass.services.async_register(DOMAIN, "unregister_webhook", unregister_webhook)
 
+    entry.add_update_listener(async_config_entry_updated)
+
     return True
+
+
+async def async_config_entry_updated(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Handle signals of config entry being updated."""
+    async_dispatcher_send(hass, f"signal-{DOMAIN}-public-update-{entry.entry_id}")
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
