@@ -54,8 +54,10 @@ REQUIRES = [
     "voluptuous==0.12.1",
     "voluptuous-serialize==2.4.0",
     "ais-dom-frontend==20210528.0",
-    "aisapi==0.1.0",
     "yarl==1.6.3",
+    # AIS
+    "aisapi==0.1.0",
+    "tzdata",
 ]
 
 MIN_PY_VERSION = ".".join(map(str, hass_const.REQUIRED_PYTHON_VER))
