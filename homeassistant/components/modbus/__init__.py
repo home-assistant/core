@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
 
 import voluptuous as vol
 
@@ -99,69 +98,18 @@ from .const import (
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_STRUCTURE_PREFIX,
     DEFAULT_TEMP_UNIT,
-    MINIMUM_SCAN_INTERVAL,
     MODBUS_DOMAIN as DOMAIN,
-    PLATFORMS,
 )
 from .modbus import async_modbus_setup
-from .validators import sensor_schema_validator
+from .validators import (
+    number_validator,
+    scan_interval_validator,
+    sensor_schema_validator,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 BASE_SCHEMA = vol.Schema({vol.Optional(CONF_NAME, default=DEFAULT_HUB): cv.string})
-
-
-def number(value: Any) -> int | float:
-    """Coerce a value to number without losing precision."""
-    if isinstance(value, int):
-        return value
-    if isinstance(value, float):
-        return value
-
-    try:
-        value = int(value)
-        return value
-    except (TypeError, ValueError):
-        pass
-    try:
-        value = float(value)
-        return value
-    except (TypeError, ValueError) as err:
-        raise vol.Invalid(f"invalid number {value}") from err
-
-
-def control_scan_interval(config: dict) -> dict:
-    """Control scan_interval."""
-    for hub in config:
-        minimum_scan_interval = DEFAULT_SCAN_INTERVAL
-        for component, conf_key in PLATFORMS:
-            if conf_key not in hub:
-                continue
-
-            for entry in hub[conf_key]:
-                scan_interval = entry.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
-                if scan_interval < MINIMUM_SCAN_INTERVAL:
-                    if scan_interval == 0:
-                        continue
-                    _LOGGER.warning(
-                        "%s %s scan_interval(%d) is adjusted to minimum(%d)",
-                        component,
-                        entry.get(CONF_NAME),
-                        scan_interval,
-                        MINIMUM_SCAN_INTERVAL,
-                    )
-                    scan_interval = MINIMUM_SCAN_INTERVAL
-                entry[CONF_SCAN_INTERVAL] = scan_interval
-                minimum_scan_interval = min(scan_interval, minimum_scan_interval)
-        if CONF_TIMEOUT in hub and hub[CONF_TIMEOUT] > minimum_scan_interval - 1:
-            _LOGGER.warning(
-                "Modbus %s timeout(%d) is adjusted(%d) due to scan_interval",
-                hub.get(CONF_NAME, ""),
-                hub[CONF_TIMEOUT],
-                minimum_scan_interval - 1,
-            )
-        hub[CONF_TIMEOUT] = minimum_scan_interval - 1
-    return config
 
 
 BASE_COMPONENT_SCHEMA = vol.Schema(
@@ -311,7 +259,7 @@ SENSOR_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
             ]
         ),
         vol.Optional(CONF_DEVICE_CLASS): SENSOR_DEVICE_CLASSES_SCHEMA,
-        vol.Optional(CONF_OFFSET, default=0): number,
+        vol.Optional(CONF_OFFSET, default=0): number_validator,
         vol.Optional(CONF_PRECISION, default=0): cv.positive_int,
         vol.Optional(CONF_INPUT_TYPE, default=CALL_TYPE_REGISTER_HOLDING): vol.In(
             [CALL_TYPE_REGISTER_HOLDING, CALL_TYPE_REGISTER_INPUT]
@@ -320,7 +268,7 @@ SENSOR_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
         vol.Optional(CONF_SWAP, default=CONF_SWAP_NONE): vol.In(
             [CONF_SWAP_NONE, CONF_SWAP_BYTE, CONF_SWAP_WORD, CONF_SWAP_WORD_BYTE]
         ),
-        vol.Optional(CONF_SCALE, default=1): number,
+        vol.Optional(CONF_SCALE, default=1): number_validator,
         vol.Optional(CONF_STRUCTURE): cv.string,
         vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
     }
@@ -380,7 +328,7 @@ CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.All(
             cv.ensure_list,
-            control_scan_interval,
+            scan_interval_validator,
             [
                 vol.Any(SERIAL_SCHEMA, ETHERNET_SCHEMA),
             ],
