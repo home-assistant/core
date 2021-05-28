@@ -116,4 +116,6 @@ class SIABinarySensor(BinarySensorEntity, SIABaseEntity):
     @property
     def entity_registry_enabled_default(self) -> bool:
         """Set the default enabled for the binary sensors to False for all but Power."""
-        return True if self._device_class == DEVICE_CLASS_POWER else False
+        return (  # pylint: disable=simplifiable-if-expression
+            True if self._device_class == DEVICE_CLASS_POWER else False
+        )
