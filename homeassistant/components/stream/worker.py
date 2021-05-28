@@ -16,7 +16,7 @@ from .const import (
     MIN_SEGMENT_DURATION,
     PACKETS_TO_WAIT_FOR_AUDIO,
     SEGMENT_CONTAINER_FORMAT,
-    STREAM_TIMEOUT,
+    SOURCE_TIMEOUT,
 )
 from .core import Segment, StreamOutput
 from .fmp4utils import get_init_and_moof_data
@@ -149,7 +149,7 @@ def stream_worker(source, options, segment_buffer, quit_event):  # noqa: C901
     """Handle consuming streams."""
 
     try:
-        container = av.open(source, options=options, timeout=STREAM_TIMEOUT)
+        container = av.open(source, options=options, timeout=SOURCE_TIMEOUT)
     except av.AVError:
         _LOGGER.error("Error opening stream %s", redact_credentials(str(source)))
         return
