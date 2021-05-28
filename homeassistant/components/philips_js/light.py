@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from haphilipsjs import PhilipsTV
 from haphilipsjs.typing import AmbilightCurrentConfiguration
 
 from homeassistant import config_entries
@@ -97,6 +98,16 @@ def _is_valid(mode, style):
     return True
 
 
+def _get_cache_keys(device: PhilipsTV):
+    """Return a cache keys to avoid always updating."""
+    return (
+        device.on,
+        device.powerstate,
+        device.ambilight_current_configuration,
+        device.ambilight_mode,
+    )
+
+
 def _average_pixels(data):
     """Calculate an average color over all ambilight pixels."""
     color_c = 0
@@ -134,6 +145,7 @@ class PhilipsTVLightEntity(CoordinatorEntity, LightEntity):
         self._brightness = None
         self._system = system
         self._coordinator = coordinator
+        self._cache_keys = None
         super().__init__(coordinator)
 
         self._attr_supported_color_modes = [COLOR_MODE_HS, COLOR_MODE_ONOFF]
@@ -243,8 +255,10 @@ class PhilipsTVLightEntity(CoordinatorEntity, LightEntity):
             self._attr_hs_color = None
             self._attr_brightness = None
 
-        self._attr_effect_list = self._calculate_effect_list()
-        self._attr_effect = self._calculate_effect()
+        if (cache_keys := _get_cache_keys(self._tv)) != self._cache_keys:
+            self._cache_keys = cache_keys
+            self._attr_effect_list = self._calculate_effect_list()
+            self._attr_effect = self._calculate_effect()
 
     @callback
     def _handle_coordinator_update(self) -> None:
