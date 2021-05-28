@@ -58,6 +58,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     coordinator = hass.data[DATA_NSW_FUEL_STATION]
 
+    if coordinator.data is None:
+        _LOGGER.error("Initial fuel station price data not available")
+        return
+
     entities = []
     for fuel_type in fuel_types:
         if coordinator.data.prices.get((station_id, fuel_type)) is None:

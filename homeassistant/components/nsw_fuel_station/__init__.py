@@ -7,8 +7,9 @@ import logging
 
 from nsw_fuel import FuelCheckClient, FuelCheckError, Station
 
-from homeassistant.components.nsw_fuel_station.const import DATA_NSW_FUEL_STATION
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+
+from .const import DATA_NSW_FUEL_STATION
 
 _LOGGER = logging.getLogger(__name__)
 

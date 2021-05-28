@@ -1,6 +1,8 @@
 """The tests for the NSW Fuel Station sensor platform."""
 from unittest.mock import patch
 
+from nsw_fuel import FuelCheckError
+
 from homeassistant.components import sensor
 from homeassistant.components.nsw_fuel_station import DOMAIN
 from homeassistant.setup import async_setup_component
@@ -12,6 +14,8 @@ VALID_CONFIG = {
     "station_id": 350,
     "fuel_types": ["E10", "P95"],
 }
+
+VALID_CONFIG_EXPECTED_ENTITY_IDS = ["my_fake_station_p95", "my_fake_station_e10"]
 
 
 class MockPrice:
@@ -78,11 +82,63 @@ async def test_setup(get_fuel_prices, hass):
         )
         await hass.async_block_till_done()
 
-    fake_entities = ["my_fake_station_p95", "my_fake_station_e10"]
-
-    for entity_id in fake_entities:
+    for entity_id in VALID_CONFIG_EXPECTED_ENTITY_IDS:
         state = hass.states.get(f"sensor.{entity_id}")
         assert state is not None
+
+
+def raise_fuel_check_error():
+    raise FuelCheckError()
+
+
+@patch(
+    "homeassistant.components.nsw_fuel_station.FuelCheckClient.get_fuel_prices",
+    side_effect=raise_fuel_check_error,
+)
+async def test_setup_error(get_fuel_prices, hass):
+    """Test the setup with client throwing error."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    with assert_setup_component(1, sensor.DOMAIN):
+        assert await async_setup_component(
+            hass, sensor.DOMAIN, {"sensor": VALID_CONFIG}
+        )
+        await hass.async_block_till_done()
+
+    for entity_id in VALID_CONFIG_EXPECTED_ENTITY_IDS:
+        state = hass.states.get(f"sensor.{entity_id}")
+        assert state is None
+
+
+@patch(
+    "homeassistant.components.nsw_fuel_station.FuelCheckClient.get_fuel_prices",
+    return_value=MOCK_FUEL_PRICES_RESPONSE,
+)
+async def test_setup_error_no_station(get_fuel_prices, hass):
+    """Test the setup with specified station not existing."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    with assert_setup_component(2, sensor.DOMAIN):
+        assert await async_setup_component(
+            hass,
+            sensor.DOMAIN,
+            {
+                "sensor": [
+                    {
+                        "platform": "nsw_fuel_station",
+                        "station_id": 350,
+                        "fuel_types": ["E10"],
+                    },
+                    {
+                        "platform": "nsw_fuel_station",
+                        "station_id": 351,
+                        "fuel_types": ["P95"],
+                    },
+                ]
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.my_fake_station_e10") is not None
+    assert hass.states.get("sensor.my_fake_station_p95") is None
 
 
 @patch(
