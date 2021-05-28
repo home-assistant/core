@@ -334,8 +334,6 @@ class ZWaveNodeStatusSensor(SensorEntity):
         self._attr_unique_id = (
             f"{self.client.driver.controller.home_id}.{node.node_id}.node_status"
         )
-        self._attr_entity_registry_enabled_default = False
-        self._attr_should_poll = False
         # device is precreated in main handler
         self._attr_device_info = {
             "identifiers": {get_device_id(self.client, self.node)},
@@ -369,3 +367,13 @@ class ZWaveNodeStatusSensor(SensorEntity):
     def available(self) -> bool:
         """Return entity availability."""
         return self.client.connected and bool(self.node.ready)
+
+    @property
+    def should_poll(self) -> bool:
+        """No polling needed."""
+        return False
+
+    @property
+    def entity_registry_enabled_default(self) -> bool:
+        """Return if the entity should be enabled when first added to the entity registry."""
+        return False
