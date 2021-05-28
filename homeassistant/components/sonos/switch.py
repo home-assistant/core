@@ -190,18 +190,20 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs) -> None:
         """Turn alarm switch on."""
-        await self.async_handle_switch_on_off(turn_on=True)
+        if not self.alarm.enabled:
+            await self.hass.async_add_executor_job(self.handle_switch_on_off, True)
 
     async def async_turn_off(self, **kwargs) -> None:
         """Turn alarm switch off."""
-        await self.async_handle_switch_on_off(turn_on=False)
+        if self.alarm.enabled:
+            await self.hass.async_add_executor_job(self.handle_switch_on_off, False)
 
-    async def async_handle_switch_on_off(self, turn_on: bool) -> None:
+    def handle_switch_on_off(self, turn_on: bool) -> None:
         """Handle turn on/off of alarm switch."""
         try:
             _LOGGER.debug("Switching the state of the alarm")
             self.alarm.enabled = turn_on
-            await self.hass.async_add_executor_job(self.alarm.save)
+            self.alarm.save()
         except SoCoUPnPException as exc:
             _LOGGER.warning(
                 "Home Assistant couldn't switch the alarm %s", exc, exc_info=True
