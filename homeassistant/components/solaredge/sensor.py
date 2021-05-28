@@ -127,20 +127,9 @@ class SolarEdgeSensor(CoordinatorEntity, SensorEntity):
         self.sensor_key = sensor_key
         self.data_service = data_service
 
-    @property
-    def unit_of_measurement(self) -> str | None:
-        """Return the unit of measurement."""
-        return SENSOR_TYPES[self.sensor_key][2]
-
-    @property
-    def name(self) -> str:
-        """Return the name."""
-        return f"{self.platform_name} ({SENSOR_TYPES[self.sensor_key][1]})"
-
-    @property
-    def icon(self) -> str | None:
-        """Return the sensor icon."""
-        return SENSOR_TYPES[self.sensor_key][3]
+        self._attr_unit_of_measurement = SENSOR_TYPES[sensor_key][2]
+        self._attr_name = f"{platform_name} ({SENSOR_TYPES[sensor_key][1]})"
+        self._attr_icon = SENSOR_TYPES[sensor_key][3]
 
 
 class SolarEdgeOverviewSensor(SolarEdgeSensor):
@@ -202,6 +191,7 @@ class SolarEdgeEnergyDetailsSensor(SolarEdgeSensor):
         super().__init__(platform_name, sensor_key, data_service)
 
         self._json_key = SENSOR_TYPES[self.sensor_key][0]
+        self._attr_unit_of_measurement = data_service.unit
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
@@ -213,14 +203,11 @@ class SolarEdgeEnergyDetailsSensor(SolarEdgeSensor):
         """Return the state of the sensor."""
         return self.data_service.data.get(self._json_key)
 
-    @property
-    def unit_of_measurement(self) -> str | None:
-        """Return the unit of measurement."""
-        return self.data_service.unit
-
 
 class SolarEdgePowerFlowSensor(SolarEdgeSensor):
     """Representation of an SolarEdge Monitoring API power flow sensor."""
+
+    _attr_device_class = DEVICE_CLASS_POWER
 
     def __init__(
         self, platform_name: str, sensor_key: str, data_service: SolarEdgeDataService
@@ -229,11 +216,7 @@ class SolarEdgePowerFlowSensor(SolarEdgeSensor):
         super().__init__(platform_name, sensor_key, data_service)
 
         self._json_key = SENSOR_TYPES[self.sensor_key][0]
-
-    @property
-    def device_class(self) -> str:
-        """Device Class."""
-        return DEVICE_CLASS_POWER
+        self._attr_unit_of_measurement = data_service.unit
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
@@ -245,14 +228,11 @@ class SolarEdgePowerFlowSensor(SolarEdgeSensor):
         """Return the state of the sensor."""
         return self.data_service.data.get(self._json_key)
 
-    @property
-    def unit_of_measurement(self) -> str | None:
-        """Return the unit of measurement."""
-        return self.data_service.unit
-
 
 class SolarEdgeStorageLevelSensor(SolarEdgeSensor):
     """Representation of an SolarEdge Monitoring API storage level sensor."""
+
+    _attr_device_class = DEVICE_CLASS_BATTERY
 
     def __init__(
         self, platform_name: str, sensor_key: str, data_service: SolarEdgeDataService
@@ -261,11 +241,6 @@ class SolarEdgeStorageLevelSensor(SolarEdgeSensor):
         super().__init__(platform_name, sensor_key, data_service)
 
         self._json_key = SENSOR_TYPES[self.sensor_key][0]
-
-    @property
-    def device_class(self) -> str:
-        """Return the device_class of the device."""
-        return DEVICE_CLASS_BATTERY
 
     @property
     def state(self) -> str | None:
