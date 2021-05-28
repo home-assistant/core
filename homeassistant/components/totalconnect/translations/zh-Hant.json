@@ -11,9 +11,10 @@
         "step": {
             "locations": {
                 "data": {
-                    "location": "\u5ea7\u6a19"
+                    "location": "\u5ea7\u6a19",
+                    "usercode": "\u4f7f\u7528\u8005\u4ee3\u78bc"
                 },
-                "description": "\u8f38\u5165\u4f7f\u7528\u8005\u65bc\u6b64\u5ea7\u6a19\u4e4b\u4f7f\u7528\u8005\u4ee3\u78bc",
+                "description": "\u8f38\u5165\u4f7f\u7528\u8005\u65bc\u6b64\u5ea7\u6a19 {location_id} \u4e4b\u4f7f\u7528\u8005\u4ee3\u78bc",
                 "title": "\u5ea7\u6a19\u4f7f\u7528\u8005\u4ee3\u78bc"
             },
             "reauth_confirm": {
