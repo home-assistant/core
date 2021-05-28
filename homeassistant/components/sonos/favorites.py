@@ -41,7 +41,9 @@ class SonosFavorites:
         Updated favorites are not always immediately available.
 
         """
-        event_id = event.variables["favorites_update_id"]
+        if not (event_id := event.variables.get("favorites_update_id")):
+            return
+
         if not self._event_version:
             self._event_version = event_id
             return
