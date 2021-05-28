@@ -18,7 +18,6 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 import homeassistant.util.dt as dt_util
 
-from .config_flow import discovery_info_to_discovery
 from .const import (
     BYTES_RECEIVED,
     BYTES_SENT,
@@ -26,6 +25,8 @@ from .const import (
     DISCOVERY_HOSTNAME,
     DISCOVERY_LOCATION,
     DISCOVERY_NAME,
+    DISCOVERY_ST,
+    DISCOVERY_UDN,
     DISCOVERY_UNIQUE_ID,
     DISCOVERY_USN,
     DOMAIN,
@@ -35,6 +36,16 @@ from .const import (
     PACKETS_SENT,
     TIMESTAMP,
 )
+
+
+def discovery_info_to_discovery(discovery_info: Mapping) -> Mapping:
+    """Convert a SSDP-discovery to 'our' discovery."""
+    return {
+        DISCOVERY_UDN: discovery_info[ssdp.ATTR_UPNP_UDN],
+        DISCOVERY_ST: discovery_info[ssdp.ATTR_SSDP_ST],
+        DISCOVERY_LOCATION: discovery_info[ssdp.ATTR_SSDP_LOCATION],
+        DISCOVERY_USN: discovery_info[ssdp.ATTR_SSDP_USN],
+    }
 
 
 def _get_local_ip(hass: HomeAssistant) -> IPv4Address | None:
