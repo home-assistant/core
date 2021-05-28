@@ -242,14 +242,11 @@ class Scanner:
             return
         assert self.description_manager is not None
 
-        info_with_req = dict(headers)
-        info_req = await self.description_manager.fetch_description(headers["location"])
-        if info_req:
-            info_with_req.update(info_req)
-
-        _LOGGER.debug("info_with_req: %s", info_with_req)
+        info_req = (
+            await self.description_manager.fetch_description(headers["location"]) or {}
+        )
+        info_with_req = {**headers, **info_req}
         discovery_info = discovery_info_from_headers_and_request(info_with_req)
-        _LOGGER.debug("Loading into cache: %s", discovery_info)
 
         if udn := discovery_info.get(ATTR_UPNP_UDN):
             self.cache[(udn, headers["st"])] = discovery_info
@@ -283,18 +280,9 @@ def discovery_info_from_headers_and_request(
     info_with_req: dict[str, str]
 ) -> dict[str, str]:
     """Convert headers and description to discovery_info."""
-    discovery_info = {
-        k: v for k, v in info_with_req.items() if k not in DISCOVERY_MAPPING
-    }
-    for upnp_key, hass_key in DISCOVERY_MAPPING.items():
-        if upnp_key in info_with_req:
-            discovery_info[hass_key] = info_with_req[upnp_key]
+    info = {DISCOVERY_MAPPING.get(k, k): v for k, v in info_with_req.items()}
 
-    if ATTR_UPNP_UDN not in discovery_info and str(
-        discovery_info.get(ATTR_SSDP_USN)
-    ).startswith("uuid:"):
-        discovery_info[ATTR_UPNP_UDN] = str(discovery_info[ATTR_SSDP_USN]).split("::")[
-            0
-        ]
+    if ATTR_UPNP_UDN not in info and str(info.get(ATTR_SSDP_USN)).startswith("uuid:"):
+        info[ATTR_UPNP_UDN] = str(info[ATTR_SSDP_USN]).split("::")[0]
 
-    return discovery_info
+    return info
