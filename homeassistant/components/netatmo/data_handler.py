@@ -138,6 +138,9 @@ class NetatmoDataHandler:
         try:
             await self.data[data_class_entry].async_update()
 
+        except AttributeError as err:
+            _LOGGER.debug("%s (%s)", data_class_entry, err)
+
         except pyatmo.NoDevice as err:
             _LOGGER.debug(err)
             self.data[data_class_entry] = None
