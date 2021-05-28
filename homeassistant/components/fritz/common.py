@@ -16,7 +16,10 @@ from fritzconnection.core.exceptions import (
 from fritzconnection.lib.fritzhosts import FritzHosts
 from fritzconnection.lib.fritzstatus import FritzStatus
 
-from homeassistant.components.device_tracker.const import CONF_CONSIDER_HOME
+from homeassistant.components.device_tracker.const import (
+    CONF_CONSIDER_HOME,
+    DEFAULT_CONSIDER_HOME,
+)
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
@@ -143,7 +146,9 @@ class FritzBoxTools:
         """Scan for new devices and return a list of found device ids."""
         _LOGGER.debug("Checking devices for FRITZ!Box router %s", self.host)
 
-        consider_home = self._options[CONF_CONSIDER_HOME]
+        consider_home = self._options.get(
+            CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME.total_seconds()
+        )
 
         new_device = False
         for known_host in self._update_info():
