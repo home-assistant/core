@@ -292,13 +292,12 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             return STATE_PLAYING
         return STATE_IDLE
 
-    async def async_update(self, now: datetime.datetime | None = None) -> None:
+    async def async_update(self) -> None:
         """Retrieve latest state."""
-        await self.hass.async_add_executor_job(self._update, now)
+        await self.hass.async_add_executor_job(self._update)
 
-    def _update(self, now: datetime.datetime | None = None) -> None:
+    def _update(self) -> None:
         """Retrieve latest state."""
-        _LOGGER.debug("Polling speaker %s", self.speaker.zone_name)
         try:
             self.speaker.update_groups()
             self.speaker.update_volume()
