@@ -54,9 +54,7 @@ class HomePilotCoverEntity(HomePilotEntity, CoverEntity):
     @property
     def device_class(self):
         """Return the class of the device."""
-        if not self._device.iconSet["k"] in DEVICE_CLASSES:
-            return None
-        return DEVICE_CLASSES[self._device.iconSet["k"]]
+        return DEVICE_CLASSES.get(self._device.iconSet["k"])
 
     @property
     def is_closed(self):
