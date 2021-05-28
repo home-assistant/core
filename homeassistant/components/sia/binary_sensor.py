@@ -82,17 +82,6 @@ async def async_setup_entry(
 class SIABinarySensor(BinarySensorEntity, SIABaseEntity):
     """Class for SIA Binary Sensors."""
 
-    def __init__(
-        self,
-        entry: ConfigEntry,
-        account_data: dict[str, Any],
-        zone: int,
-        device_class: str,
-    ) -> None:
-        """Create SIABinarySensor object."""
-        super().__init__(entry, account_data, zone, device_class)
-        self._is_on: bool | None = None
-
     def update_state_and_attr(self, sia_event: SIAEvent) -> None:
         """Update the state of the binary sensor."""
         if int(sia_event.ri) == self._zone:
@@ -106,23 +95,17 @@ class SIABinarySensor(BinarySensorEntity, SIABaseEntity):
                 new_state = SMOKE_CODE_CONSEQUENCES.get(sia_event.code, None)
             if new_state is not None:
                 _LOGGER.debug("New state will be %s", new_state)
-                self._is_on = new_state
+                self._attr_is_on = new_state
 
     def handle_last_state(self, last_state: State | None) -> None:
         """Handle the last state."""
         if last_state is not None and last_state.state is not None:
             if last_state.state == STATE_ON:
-                self._is_on = True
+                self._attr_is_on = True
             elif last_state.state == STATE_OFF:
-                self._is_on = False
+                self._attr_is_on = False
             elif last_state.state == STATE_UNAVAILABLE:
-                self._is_on = None
                 self._available = False
-
-    @property
-    def is_on(self) -> bool | None:
-        """Return true if the binary sensor is on."""
-        return self._is_on
 
     @property
     def unique_id(self) -> str:
@@ -130,3 +113,8 @@ class SIABinarySensor(BinarySensorEntity, SIABaseEntity):
         return SIA_UNIQUE_ID_FORMAT_BINARY.format(
             self._entry.entry_id, self._account, self._zone, self._device_class
         )
+
+    @property
+    def entity_registry_enabled_default(self) -> bool:
+        """Set the default enabled for the binary sensors to False for all but Power."""
+        return True if self._device_class == DEVICE_CLASS_POWER else False
