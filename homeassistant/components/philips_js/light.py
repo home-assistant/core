@@ -127,39 +127,34 @@ class PhilipsTVLightEntity(CoordinatorEntity, LightEntity):
         coordinator: PhilipsTVDataUpdateCoordinator,
         system: dict[str, Any],
         unique_id: str,
-    ):
+    ) -> None:
         """Initialize light."""
         self._tv = coordinator.api
         self._hs = None
         self._brightness = None
         self._system = system
-        self._unique_id = unique_id
         self._coordinator = coordinator
         super().__init__(coordinator)
 
+        self._attr_supported_color_modes = [COLOR_MODE_HS, COLOR_MODE_ONOFF]
+        self._attr_supported_features = [
+            SUPPORT_EFFECT | SUPPORT_COLOR | SUPPORT_BRIGHTNESS
+        ]
+        self._attr_should_poll = False
+        self._attr_name = self._system["name"]
+        self._attr_unique_id = unique_id
+        self._attr_icon = "mdi:television-ambient-light"
+        self._attr_device_info = {
+            "name": self._system["name"],
+            "identifiers": {
+                (DOMAIN, self._attr_unique_id),
+            },
+            "model": self._system.get("model"),
+            "manufacturer": "Philips",
+            "sw_version": self._system.get("softwareversion"),
+        }
+
         self._update_from_coordinator()
-
-    @property
-    def name(self):
-        """Return the device name."""
-        return self._system["name"]
-
-    @property
-    def unique_id(self):
-        """Return unique identifier if known."""
-        return self._unique_id
-
-    @property
-    def supported_features(self):
-        """Return supported features on this light."""
-        if self.color_mode == COLOR_MODE_HS:
-            return SUPPORT_EFFECT | SUPPORT_COLOR | SUPPORT_BRIGHTNESS
-        return SUPPORT_EFFECT
-
-    @property
-    def should_poll(self):
-        """Device should be polled."""
-        return False
 
     @property
     def effect_list(self):
@@ -210,11 +205,6 @@ class PhilipsTVLightEntity(CoordinatorEntity, LightEntity):
         return _get_effect(EFFECT_MODE, self._tv.ambilight_mode, None)
 
     @property
-    def supported_color_modes(self):
-        """Return the supported color mode."""
-        return [COLOR_MODE_HS, COLOR_MODE_ONOFF]
-
-    @property
     def color_mode(self):
         """Return the current color mode."""
         current = self._tv.ambilight_current_configuration
@@ -248,24 +238,6 @@ class PhilipsTVLightEntity(CoordinatorEntity, LightEntity):
             return _is_on(mode, style, self._tv.powerstate)
 
         return False
-
-    @property
-    def device_info(self):
-        """Return a device description for device registry."""
-        return {
-            "name": self._system["name"],
-            "identifiers": {
-                (DOMAIN, self._unique_id),
-            },
-            "model": self._system.get("model"),
-            "manufacturer": "Philips",
-            "sw_version": self._system.get("softwareversion"),
-        }
-
-    @property
-    def icon(self) -> str | None:
-        """Return the icon of the entity."""
-        return "mdi:television-ambient-light"
 
     def _update_from_coordinator(self):
         current = self._tv.ambilight_current_configuration
