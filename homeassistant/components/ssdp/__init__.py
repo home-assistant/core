@@ -2,14 +2,12 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Mapping
 from datetime import timedelta
 from ipaddress import IPv4Address, IPv6Address
 import logging
-from typing import Any, Callable
+from typing import Any, Callable, MutableMapping
 
 from async_upnp_client.search import SSDPListener
-from netdisco import ssdp
 
 from homeassistant import config_entries
 from homeassistant.components import network
@@ -45,6 +43,16 @@ ATTR_UPNP_UDN = "UDN"
 ATTR_UPNP_UPC = "UPC"
 ATTR_UPNP_PRESENTATION_URL = "presentationURL"
 
+
+DISCOVERY_MAPPING = {
+    "usn": ATTR_SSDP_USN,
+    "ext": ATTR_SSDP_EXT,
+    "server": ATTR_SSDP_SERVER,
+    "st": ATTR_SSDP_ST,
+    "location": ATTR_SSDP_LOCATION,
+}
+
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -63,10 +71,10 @@ def async_register_callback(
 
 
 @bind_hass
-def async_get_location_by_udn_st(  # pylint: disable=invalid-name
+def async_get_discovery_info_by_udn_st(  # pylint: disable=invalid-name
     hass: HomeAssistant, udn: str, st: str
 ) -> dict[str, str] | None:
-    """Lookup a location by udn and st from previous scans."""
+    """Lookup info by udn and st from previous scans."""
     scanner: Scanner = hass.data[DOMAIN]
     return scanner.cache.get((udn, st))
 
@@ -92,7 +100,7 @@ def _callback_if_match(
     callback: Callable[[dict], None], info: dict[str, str], match_dict: dict[str, str]
 ) -> None:
     """Fire a callback if info matches the match dict."""
-    if not all(item in info.items() for item in match_dict.items()):
+    if not all(info.get(k) == v for (k, v) in match_dict.items()):
         return
     try:
         callback(info)
@@ -116,12 +124,6 @@ class Scanner:
         self._callbacks: list[tuple[Callable[[dict], None], dict[str, str]]] = []
         self.flow_dispatcher: FlowDispatcher | None = None
         self.description_manager: DescriptionManager | None = None
-
-    async def _async_on_ssdp_response(self, data: Mapping[str, Any]) -> None:
-        """Process an ssdp response."""
-        await self._async_process_entry(
-            ssdp.UPNPEntry({key.lower(): item for key, item in data.items()})
-        )
 
     @core_callback
     def async_register_callback(
@@ -191,7 +193,7 @@ class Scanner:
         for source_ip in await self._async_build_source_set():
             self._ssdp_listeners.append(
                 SSDPListener(
-                    async_callback=self._async_on_ssdp_response, source_ip=source_ip
+                    async_callback=self._async_process_entry, source_ip=source_ip  # type: ignore
                 )
             )
 
@@ -206,76 +208,62 @@ class Scanner:
             self.hass, self.async_scan, SCAN_INTERVAL
         )
 
-    async def _async_process_entry(self, entry: ssdp.UPNPEntry) -> None:
+    async def _async_process_entry(self, headers: MutableMapping[str, str]) -> None:
         """Process SSDP entries."""
-        _LOGGER.debug("_async_process_entry: %s", entry)
-        key = (entry.st, entry.location)
+        _LOGGER.debug("_async_process_entry: %s", headers)
+        if "st" not in headers or "location" not in headers:
+            return
+        st = headers["st"]
+        location = headers["location"]
         assert self.description_manager is not None
-        info_req = await self.description_manager.fetch_description(entry.location)
-        info, domains = self._info_domains(entry, info_req)
+        info_req = await self.description_manager.fetch_description(location)
+        if info_req:
+            headers.update(info_req)
 
-        if udn := info.get(ATTR_UPNP_UDN):
-            self.cache[(udn, entry.st)] = info
+        discovery_info = discovery_info_from_headers_and_request(headers)
+
+        if udn := discovery_info.get(ATTR_UPNP_UDN):
+            self.cache[(udn, st)] = discovery_info
 
         for callback, match_dict in self._callbacks:
-            _callback_if_match(callback, info, match_dict)
+            _callback_if_match(callback, discovery_info, match_dict)
 
+        key = (st, location)
         if key in self.seen:
             return
         self.seen.add(key)
 
+        domains = set()
+        for domain, matchers in self._integration_matchers.items():
+            for matcher in matchers:
+                if all(headers.get(k) == v for (k, v) in matcher.items()):
+                    domains.add(domain)
+
         for domain in domains:
-            _LOGGER.debug("Discovered %s at %s", domain, entry.location)
+            _LOGGER.debug("Discovered %s at %s", domain, location)
             flow: SSDPFlow = {
                 "domain": domain,
                 "context": {"source": config_entries.SOURCE_SSDP},
-                "data": info,
+                "data": discovery_info,
             }
             assert self.flow_dispatcher is not None
             self.flow_dispatcher.create(flow)
 
-    def _info_domains(
-        self, entry: ssdp.UPNPEntry, info_req: None | dict[str, str]
-    ) -> tuple[dict[str, str], set[str]]:
-        """Process a single entry."""
 
-        info = {"st": entry.st}
-        for key in "usn", "ext", "server":
-            if key in entry.values:
-                info[key] = entry.values[key]
-
-        if info_req:
-            info.update(info_req)
-
-        domains = set()
-        for domain, matchers in self._integration_matchers.items():
-            for matcher in matchers:
-                if all(info.get(k) == v for (k, v) in matcher.items()):
-                    domains.add(domain)
-
-        return info_from_entry(entry, info), domains
-
-
-def info_from_entry(
-    entry: ssdp.UPNPEntry, device_info: dict[str, str]
+def discovery_info_from_headers_and_request(
+    data: MutableMapping[str, str]
 ) -> dict[str, str]:
     """Get info from an entry."""
     info = {
-        ATTR_SSDP_LOCATION: entry.location,
-        ATTR_SSDP_ST: entry.st,
+        **{k: v for k, v in data.items() if k not in DISCOVERY_MAPPING},
+        **{
+            discovery_key: data[header]
+            for header, discovery_key in DISCOVERY_MAPPING.items()
+            if header in data
+        },
     }
-    if device_info:
-        info.update(device_info)
-        info.pop("st", None)
-        if "usn" in info:
-            info[ATTR_SSDP_USN] = info.pop("usn")
-        if "ext" in info:
-            info[ATTR_SSDP_EXT] = info.pop("ext")
-        if "server" in info:
-            info[ATTR_SSDP_SERVER] = info.pop("server")
-        if ATTR_UPNP_UDN not in info and str(info.get(ATTR_SSDP_USN)).startswith(
-            "uuid:"
-        ):
-            info[ATTR_UPNP_UDN] = str(info[ATTR_SSDP_USN]).split("::")[0]
+
+    if ATTR_UPNP_UDN not in info and str(info.get(ATTR_SSDP_USN)).startswith("uuid:"):
+        info[ATTR_UPNP_UDN] = str(info[ATTR_SSDP_USN]).split("::")[0]
 
     return info
