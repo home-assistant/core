@@ -178,6 +178,11 @@ async def async_setup_entry(  # noqa: C901
             if disc_info.assumed_state:
                 value_updates_disc_info.append(disc_info)
 
+        # Create a node status sensor for each device
+        async_dispatcher_send(
+            hass, f"{DOMAIN}_{entry.entry_id}_add_node_status_sensor", node
+        )
+
         # add listener for value updated events if necessary
         if value_updates_disc_info:
             unsubscribe_callbacks.append(

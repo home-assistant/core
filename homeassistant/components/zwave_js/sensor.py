@@ -6,6 +6,7 @@ from typing import cast
 
 from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.const import CommandClass, ConfigurationValueType
+from zwave_js_server.model.node import Node as ZwaveNode
 from zwave_js_server.model.value import ConfigurationValue
 
 from homeassistant.components.sensor import (
@@ -17,6 +18,7 @@ from homeassistant.components.sensor import (
     STATE_CLASS_MEASUREMENT,
     SensorEntity,
 )
+from homeassistant.components.zwave_js.helpers import get_device_id
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DEVICE_CLASS_HUMIDITY,
@@ -26,6 +28,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DATA_CLIENT, DATA_UNSUBSCRIBE, DOMAIN
@@ -66,11 +69,24 @@ async def async_setup_entry(
 
         async_add_entities(entities)
 
+    @callback
+    def async_add_node_status_sensor(node: ZwaveNode) -> None:
+        """Add node status sensor."""
+        async_add_entities([ZWaveNodeStatusSensor(config_entry, client, node)])
+
     hass.data[DOMAIN][config_entry.entry_id][DATA_UNSUBSCRIBE].append(
         async_dispatcher_connect(
             hass,
             f"{DOMAIN}_{config_entry.entry_id}_add_{SENSOR_DOMAIN}",
             async_add_sensor,
+        )
+    )
+
+    hass.data[DOMAIN][config_entry.entry_id][DATA_UNSUBSCRIBE].append(
+        async_dispatcher_connect(
+            hass,
+            f"{DOMAIN}_{config_entry.entry_id}_add_node_status_sensor",
+            async_add_node_status_sensor,
         )
     )
 
@@ -295,3 +311,86 @@ class ZWaveConfigParameterSensor(ZwaveSensorBase):
             return None
         # add the value's int value as property for multi-value (list) items
         return {"value": self.info.primary_value.value}
+
+
+class ZWaveNodeStatusSensor(SensorEntity):
+    """Representation of a node status sensor."""
+
+    def __init__(
+        self, config_entry: ConfigEntry, client: ZwaveClient, node: ZwaveNode
+    ) -> None:
+        """Initialize a generic Z-Wave device entity."""
+        self.config_entry = config_entry
+        self.client = client
+        self.node = node
+        name: str = (
+            self.node.name
+            or self.node.device_config.description
+            or f"Node {self.node.node_id}"
+        )
+        self._name = f"{name}: Node Status"
+        self._unique_id = (
+            f"{self.client.driver.controller.home_id}.{node.node_id}.node_status"
+        )
+        self._status: str = node.status.name.lower()
+
+    @property
+    def state(self) -> str:
+        """Return state of the sensor."""
+        return self._status
+
+    async def async_poll_value(self, _: bool) -> None:
+        """Poll a value."""
+        raise ValueError("There is no value to poll for this entity")
+
+    def _status_changed(self, _: dict) -> None:
+        """Call when status event is received."""
+        self._status = self.node.status.name.lower()
+        self.async_write_ha_state()
+
+    async def async_added_to_hass(self) -> None:
+        """Call when entity is added."""
+        # Add value_changed callbacks.
+        for evt in ("wake up", "sleep", "dead", "alive"):
+            self.async_on_remove(self.node.on(evt, self._status_changed))
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{DOMAIN}_{self.unique_id}_poll_value",
+                self.async_poll_value,
+            )
+        )
+        self.async_write_ha_state()
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device information for the device registry."""
+        # device is precreated in main handler
+        return {
+            "identifiers": {get_device_id(self.client, self.node)},
+        }
+
+    @property
+    def name(self) -> str:
+        """Return default name from device name and value name combination."""
+        return self._name
+
+    @property
+    def unique_id(self) -> str:
+        """Return the unique_id of the entity."""
+        return self._unique_id
+
+    @property
+    def available(self) -> bool:
+        """Return entity availability."""
+        return self.client.connected and bool(self.node.ready)
+
+    @property
+    def should_poll(self) -> bool:
+        """No polling needed."""
+        return False
+
+    @property
+    def entity_registry_enabled_default(self) -> bool:
+        """Return if the entity should be enabled when first added to the entity registry."""
+        return False
