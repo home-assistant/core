@@ -57,15 +57,6 @@ async def async_setup_entry(
 class ZwaveFan(ZWaveBaseEntity, FanEntity):
     """Representation of a Z-Wave fan."""
 
-    def __init__(
-        self,
-        config_entry: ConfigEntry,
-        client: ZwaveClient,
-        info: ZwaveDiscoveryInfo,
-    ) -> None:
-        """Initialize a ZwaveFan entity."""
-        super().__init__(config_entry, client, info)
-
     async def async_set_percentage(self, percentage: int | None) -> None:
         """Set the speed percentage of the fan."""
         target_value = self.get_zwave_value("targetValue")
