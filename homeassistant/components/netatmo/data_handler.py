@@ -99,7 +99,8 @@ class NetatmoDataHandler:
                 time() + data_class["interval"]
             )
 
-            await self.async_fetch_data(data_class["name"])
+            if data_class_name := data_class["name"]:
+                await self.async_fetch_data(data_class_name)
 
         self._queue.rotate(BATCH_SIZE)
 
