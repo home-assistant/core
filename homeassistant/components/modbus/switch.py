@@ -22,6 +22,9 @@ async def async_setup_platform(
     """Read configuration and create Modbus switches."""
     switches = []
 
+    if discovery_info is None:  # pragma: no cover
+        return
+
     for entry in discovery_info[CONF_SWITCHES]:
         hub: ModbusHub = hass.data[MODBUS_DOMAIN][discovery_info[CONF_NAME]]
         switches.append(ModbusSwitch(hub, entry))
