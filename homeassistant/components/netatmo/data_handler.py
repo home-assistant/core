@@ -95,11 +95,12 @@ class NetatmoDataHandler:
         for data_class in islice(self._queue, 0, BATCH_SIZE):
             if data_class[NEXT_SCAN] > time():
                 continue
-            self.data_classes[data_class["name"]][NEXT_SCAN] = (
+            data_class_name = data_class["name"]
+            self.data_classes[data_class_name][NEXT_SCAN] = (
                 time() + data_class["interval"]
             )
 
-            if data_class_name := data_class["name"]:
+            if self.data_classes[data_class_name]["subscriptions"]:
                 await self.async_fetch_data(data_class_name)
 
         self._queue.rotate(BATCH_SIZE)
