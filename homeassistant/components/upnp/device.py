@@ -12,11 +12,13 @@ from async_upnp_client.aiohttp import AiohttpSessionRequester
 from async_upnp_client.device_updater import DeviceUpdater
 from async_upnp_client.profiles.igd import IgdDevice
 
+from homeassistant.components import ssdp
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 import homeassistant.util.dt as dt_util
 
+from .config_flow import discovery_info_to_discovery
 from .const import (
     BYTES_RECEIVED,
     BYTES_SENT,
@@ -24,8 +26,6 @@ from .const import (
     DISCOVERY_HOSTNAME,
     DISCOVERY_LOCATION,
     DISCOVERY_NAME,
-    DISCOVERY_ST,
-    DISCOVERY_UDN,
     DISCOVERY_UNIQUE_ID,
     DISCOVERY_USN,
     DOMAIN,
@@ -59,17 +59,12 @@ class Device:
     async def async_discover(cls, hass: HomeAssistant) -> list[Mapping]:
         """Discover UPnP/IGD devices."""
         _LOGGER.debug("Discovering UPnP/IGD devices")
-        local_ip = _get_local_ip(hass)
-        discoveries = await IgdDevice.async_search(source_ip=local_ip, timeout=10)
-
-        # Supplement/standardize discovery.
-        for discovery in discoveries:
-            discovery[DISCOVERY_UDN] = discovery["_udn"]
-            discovery[DISCOVERY_ST] = discovery["st"]
-            discovery[DISCOVERY_LOCATION] = discovery["location"]
-            discovery[DISCOVERY_USN] = discovery["usn"]
-            _LOGGER.debug("Discovered device: %s", discovery)
-
+        discoveries = []
+        for st in IgdDevice.DEVICE_TYPES:
+            for discovery_info in ssdp.async_get_discovery_info_by_st(
+                hass, st
+            ).values():
+                discoveries.append(discovery_info_to_discovery(discovery_info))
         return discoveries
 
     @classmethod
