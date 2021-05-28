@@ -106,7 +106,7 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
         if self.alarm_id in self.hass.data[DATA_SONOS].alarms:
             return True
 
-        _LOGGER.debug("The alarm is removed from hass because it has been deleted")
+        _LOGGER.debug("%s has been deleted", self.entity_id)
 
         entity_registry = er.async_get(self.hass)
         if entity_registry.async_get(self.entity_id):
@@ -151,7 +151,7 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
             connections={(dr.CONNECTION_NETWORK_MAC, self.speaker.mac_address)},
         )
         if not entity_registry.async_get(self.entity_id).device_id == new_device.id:
-            _LOGGER.debug("The alarm is switching the sonos player")
+            _LOGGER.debug("%s is moving to %s", self.entity_id, new_device.name)
             # pylint: disable=protected-access
             entity_registry._async_update_entity(
                 self.entity_id, device_id=new_device.id
@@ -200,10 +200,8 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
     async def async_handle_switch_on_off(self, turn_on: bool) -> None:
         """Handle turn on/off of alarm switch."""
         try:
-            _LOGGER.debug("Switching the state of the alarm")
+            _LOGGER.debug("Toggling the state of %s", self.entity_id)
             self.alarm.enabled = turn_on
             await self.hass.async_add_executor_job(self.alarm.save)
         except SoCoUPnPException as exc:
-            _LOGGER.warning(
-                "Home Assistant couldn't switch the alarm %s", exc, exc_info=True
-            )
+            _LOGGER.error("Could not update %s: %s", self.entity_id, exc, exc_info=True)
