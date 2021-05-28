@@ -2,10 +2,11 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Mapping
 from datetime import timedelta
 from ipaddress import IPv4Address, IPv6Address
 import logging
-from typing import Any, Callable, Mapping
+from typing import Any, Callable
 
 from async_upnp_client.search import SSDPListener
 
@@ -239,24 +240,22 @@ class Scanner:
         _LOGGER.debug("_async_process_entry: %s", headers)
         if "st" not in headers or "location" not in headers:
             return
-        st = headers["st"]
-        location = headers["location"]
         assert self.description_manager is not None
 
         info_with_req = dict(headers)
-        info_req = await self.description_manager.fetch_description(location)
+        info_req = await self.description_manager.fetch_description(headers["location"])
         if info_req:
             info_with_req.update(info_req)
 
         discovery_info = discovery_info_from_headers_and_request(info_with_req)
 
         if udn := discovery_info.get(ATTR_UPNP_UDN):
-            self.cache[(udn, st)] = discovery_info
+            self.cache[(udn, headers["st"])] = discovery_info
 
         for callback, match_dict in self._callbacks:
             _callback_if_match(callback, discovery_info, match_dict)
 
-        key = (st, location)
+        key = (headers["st"], headers["location"])
         if key in self.seen:
             return
         self.seen.add(key)
@@ -268,7 +267,7 @@ class Scanner:
                     domains.add(domain)
 
         for domain in domains:
-            _LOGGER.debug("Discovered %s at %s", domain, location)
+            _LOGGER.debug("Discovered %s at %s", domain, headers["location"])
             flow: SSDPFlow = {
                 "domain": domain,
                 "context": {"source": config_entries.SOURCE_SSDP},
