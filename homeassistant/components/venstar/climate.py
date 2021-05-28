@@ -124,7 +124,7 @@ class VenstarThermostat(ClimateEntity):
         if self._client.mode == self._client.MODE_AUTO:
             features |= SUPPORT_TARGET_TEMPERATURE_RANGE
 
-        if self._humidifier and hasattr(self._client, "hum_active"):
+        if self._humidifier and self._client.hum_setpoint is not None:
             features |= SUPPORT_TARGET_HUMIDITY
 
         return features

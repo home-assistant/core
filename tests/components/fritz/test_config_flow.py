@@ -4,6 +4,10 @@ from unittest.mock import patch
 from fritzconnection.core.exceptions import FritzConnectionException, FritzSecurityError
 import pytest
 
+from homeassistant.components.device_tracker.const import (
+    CONF_CONSIDER_HOME,
+    DEFAULT_CONSIDER_HOME,
+)
 from homeassistant.components.fritz.const import (
     DOMAIN,
     ERROR_AUTH_INVALID,
@@ -83,6 +87,10 @@ async def test_user(hass: HomeAssistant, fc_class_mock):
         assert result["data"][CONF_HOST] == "fake_host"
         assert result["data"][CONF_PASSWORD] == "fake_pass"
         assert result["data"][CONF_USERNAME] == "fake_user"
+        assert (
+            result["options"][CONF_CONSIDER_HOME]
+            == DEFAULT_CONSIDER_HOME.total_seconds()
+        )
         assert not result["result"].unique_id
         await hass.async_block_till_done()
 
@@ -416,3 +424,30 @@ async def test_import(hass: HomeAssistant, fc_class_mock):
         await hass.async_block_till_done()
 
     assert mock_setup_entry.called
+
+
+async def test_options_flow(hass: HomeAssistant, fc_class_mock):
+    """Test options flow."""
+
+    mock_config = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    mock_config.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.fritz.common.FritzConnection",
+        side_effect=fc_class_mock,
+    ), patch("homeassistant.components.fritz.common.FritzStatus"), patch(
+        "homeassistant.components.fritz.common.FritzBoxTools"
+    ):
+        result = await hass.config_entries.options.async_init(mock_config.entry_id)
+        assert result["type"] == RESULT_TYPE_FORM
+        assert result["step_id"] == "init"
+
+        result = await hass.config_entries.options.async_init(mock_config.entry_id)
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_CONSIDER_HOME: 37,
+            },
+        )
+        assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+        assert mock_config.options[CONF_CONSIDER_HOME] == 37

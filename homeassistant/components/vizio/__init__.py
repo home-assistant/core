@@ -56,19 +56,19 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Load the saved entities."""
 
     hass.data.setdefault(DOMAIN, {})
     if (
         CONF_APPS not in hass.data[DOMAIN]
-        and config_entry.data[CONF_DEVICE_CLASS] == DEVICE_CLASS_TV
+        and entry.data[CONF_DEVICE_CLASS] == DEVICE_CLASS_TV
     ):
         coordinator = VizioAppsDataUpdateCoordinator(hass)
         await coordinator.async_refresh()
         hass.data[DOMAIN][CONF_APPS] = coordinator
 
-    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
@@ -113,6 +113,9 @@ class VizioAppsDataUpdateCoordinator(DataUpdateCoordinator):
         """Update data via library."""
         data = await gen_apps_list_from_url(session=async_get_clientsession(self.hass))
         if not data:
+            # For every failure, increase the fail count until we reach the threshold.
+            # We then log a warning, increase the threshold, and reset the fail count.
+            # This is here to prevent silent failures but to reduce repeat logs.
             if self.fail_count == self.fail_threshold:
                 _LOGGER.warning(
                     (
@@ -126,6 +129,7 @@ class VizioAppsDataUpdateCoordinator(DataUpdateCoordinator):
             else:
                 self.fail_count += 1
             return self.data
+        # Reset the fail count and threshold when the data is successfully retrieved
         self.fail_count = 0
         self.fail_threshold = 10
         return sorted(data, key=lambda app: app["name"])

@@ -1,0 +1,12 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "station": "N\u00famero de serie de la estaci\u00f3n"
+                }
+            }
+        }
+    },
+    "title": "Wallbox"
+}

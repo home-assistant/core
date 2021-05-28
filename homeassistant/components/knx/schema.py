@@ -5,10 +5,15 @@ from typing import Any
 
 import voluptuous as vol
 from xknx.devices.climate import SetpointShiftMode
+from xknx.dpt import DPTBase
 from xknx.exceptions import CouldNotParseAddress
 from xknx.io import DEFAULT_MCAST_PORT
 from xknx.telegram.address import IndividualAddress, parse_device_group_address
 
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASSES as BINARY_SENSOR_DEVICE_CLASSES,
+)
+from homeassistant.components.cover import DEVICE_CLASSES as COVER_DEVICE_CLASSES
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_ENTITY_ID,
@@ -44,7 +49,8 @@ def ga_validator(value: Any) -> str | int:
         except CouldNotParseAddress:
             pass
     raise vol.Invalid(
-        f"value '{value}' is not a valid KNX group address '<main>/<middle>/<sub>', '<main>/<sub>' or '<free>' (eg.'1/2/3', '9/234', '123'), nor xknx internal address 'i-<string>'."
+        f"value '{value}' is not a valid KNX group address '<main>/<middle>/<sub>', '<main>/<sub>' "
+        "or '<free>' (eg.'1/2/3', '9/234', '123'), nor xknx internal address 'i-<string>'."
     )
 
 
@@ -56,14 +62,19 @@ ia_validator = vol.Any(
     msg="value does not match pattern for KNX individual address '<area>.<line>.<device>' (eg.'1.1.100')",
 )
 
+
+def sensor_type_validator(value: Any) -> str | int:
+    """Validate that value is parsable as sensor type."""
+    if isinstance(value, (str, int)) and DPTBase.parse_transcoder(value) is not None:
+        return value
+    raise vol.Invalid(f"value '{value}' is not a valid sensor type.")
+
+
 sync_state_validator = vol.Any(
     vol.All(vol.Coerce(int), vol.Range(min=2, max=1440)),
     cv.boolean,
     cv.matches_regex(r"^(init|expire|every)( \d*)?$"),
 )
-
-sensor_type_validator = vol.Any(int, str)
-
 
 ##############
 # CONNECTION
@@ -119,7 +130,7 @@ class BinarySensorSchema:
                 vol.Optional(CONF_CONTEXT_TIMEOUT): vol.All(
                     vol.Coerce(float), vol.Range(min=0, max=10)
                 ),
-                vol.Optional(CONF_DEVICE_CLASS): cv.string,
+                vol.Optional(CONF_DEVICE_CLASS): vol.In(BINARY_SENSOR_DEVICE_CLASSES),
                 vol.Optional(CONF_RESET_AFTER): cv.positive_float,
             }
         ),
@@ -222,10 +233,10 @@ class ClimateSchema:
                     CONF_ON_OFF_INVERT, default=DEFAULT_ON_OFF_INVERT
                 ): cv.boolean,
                 vol.Optional(CONF_OPERATION_MODES): vol.All(
-                    cv.ensure_list, [vol.In({**PRESET_MODES})]
+                    cv.ensure_list, [vol.In(PRESET_MODES)]
                 ),
                 vol.Optional(CONF_CONTROLLER_MODES): vol.All(
-                    cv.ensure_list, [vol.In({**CONTROLLER_MODES})]
+                    cv.ensure_list, [vol.In(CONTROLLER_MODES)]
                 ),
                 vol.Optional(CONF_MIN_TEMP): vol.Coerce(float),
                 vol.Optional(CONF_MAX_TEMP): vol.Coerce(float),
@@ -280,7 +291,7 @@ class CoverSchema:
                 ): cv.positive_float,
                 vol.Optional(CONF_INVERT_POSITION, default=False): cv.boolean,
                 vol.Optional(CONF_INVERT_ANGLE, default=False): cv.boolean,
-                vol.Optional(CONF_DEVICE_CLASS): cv.string,
+                vol.Optional(CONF_DEVICE_CLASS): vol.In(COVER_DEVICE_CLASSES),
             }
         ),
     )
@@ -291,6 +302,7 @@ class ExposeSchema:
 
     CONF_KNX_EXPOSE_TYPE = CONF_TYPE
     CONF_KNX_EXPOSE_ATTRIBUTE = "attribute"
+    CONF_KNX_EXPOSE_BINARY = "binary"
     CONF_KNX_EXPOSE_DEFAULT = "default"
     EXPOSE_TIME_TYPES = [
         "time",
@@ -308,14 +320,16 @@ class ExposeSchema:
     )
     EXPOSE_SENSOR_SCHEMA = vol.Schema(
         {
-            vol.Required(CONF_KNX_EXPOSE_TYPE): sensor_type_validator,
+            vol.Required(CONF_KNX_EXPOSE_TYPE): vol.Any(
+                CONF_KNX_EXPOSE_BINARY, sensor_type_validator
+            ),
             vol.Required(KNX_ADDRESS): ga_validator,
             vol.Required(CONF_ENTITY_ID): cv.entity_id,
             vol.Optional(CONF_KNX_EXPOSE_ATTRIBUTE): cv.string,
             vol.Optional(CONF_KNX_EXPOSE_DEFAULT): cv.match_all,
         }
     )
-    SCHEMA = vol.Any(EXPOSE_TIME_SCHEMA, EXPOSE_SENSOR_SCHEMA)
+    SCHEMA = vol.Any(EXPOSE_SENSOR_SCHEMA, EXPOSE_TIME_SCHEMA)
 
 
 class FanSchema:
@@ -521,27 +535,29 @@ class WeatherSchema:
     CONF_KNX_DAY_NIGHT_ADDRESS = "address_day_night"
     CONF_KNX_AIR_PRESSURE_ADDRESS = "address_air_pressure"
     CONF_KNX_HUMIDITY_ADDRESS = "address_humidity"
-    CONF_KNX_CREATE_SENSORS = "create_sensors"
 
     DEFAULT_NAME = "KNX Weather Station"
 
-    SCHEMA = vol.Schema(
-        {
-            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-            vol.Optional(CONF_SYNC_STATE, default=True): sync_state_validator,
-            vol.Optional(CONF_KNX_CREATE_SENSORS, default=False): cv.boolean,
-            vol.Required(CONF_KNX_TEMPERATURE_ADDRESS): ga_list_validator,
-            vol.Optional(CONF_KNX_BRIGHTNESS_SOUTH_ADDRESS): ga_list_validator,
-            vol.Optional(CONF_KNX_BRIGHTNESS_EAST_ADDRESS): ga_list_validator,
-            vol.Optional(CONF_KNX_BRIGHTNESS_WEST_ADDRESS): ga_list_validator,
-            vol.Optional(CONF_KNX_BRIGHTNESS_NORTH_ADDRESS): ga_list_validator,
-            vol.Optional(CONF_KNX_WIND_SPEED_ADDRESS): ga_list_validator,
-            vol.Optional(CONF_KNX_WIND_BEARING_ADDRESS): ga_list_validator,
-            vol.Optional(CONF_KNX_RAIN_ALARM_ADDRESS): ga_list_validator,
-            vol.Optional(CONF_KNX_FROST_ALARM_ADDRESS): ga_list_validator,
-            vol.Optional(CONF_KNX_WIND_ALARM_ADDRESS): ga_list_validator,
-            vol.Optional(CONF_KNX_DAY_NIGHT_ADDRESS): ga_list_validator,
-            vol.Optional(CONF_KNX_AIR_PRESSURE_ADDRESS): ga_list_validator,
-            vol.Optional(CONF_KNX_HUMIDITY_ADDRESS): ga_list_validator,
-        }
+    SCHEMA = vol.All(
+        # deprecated since 2021.6
+        cv.deprecated("create_sensors"),
+        vol.Schema(
+            {
+                vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+                vol.Optional(CONF_SYNC_STATE, default=True): sync_state_validator,
+                vol.Required(CONF_KNX_TEMPERATURE_ADDRESS): ga_list_validator,
+                vol.Optional(CONF_KNX_BRIGHTNESS_SOUTH_ADDRESS): ga_list_validator,
+                vol.Optional(CONF_KNX_BRIGHTNESS_EAST_ADDRESS): ga_list_validator,
+                vol.Optional(CONF_KNX_BRIGHTNESS_WEST_ADDRESS): ga_list_validator,
+                vol.Optional(CONF_KNX_BRIGHTNESS_NORTH_ADDRESS): ga_list_validator,
+                vol.Optional(CONF_KNX_WIND_SPEED_ADDRESS): ga_list_validator,
+                vol.Optional(CONF_KNX_WIND_BEARING_ADDRESS): ga_list_validator,
+                vol.Optional(CONF_KNX_RAIN_ALARM_ADDRESS): ga_list_validator,
+                vol.Optional(CONF_KNX_FROST_ALARM_ADDRESS): ga_list_validator,
+                vol.Optional(CONF_KNX_WIND_ALARM_ADDRESS): ga_list_validator,
+                vol.Optional(CONF_KNX_DAY_NIGHT_ADDRESS): ga_list_validator,
+                vol.Optional(CONF_KNX_AIR_PRESSURE_ADDRESS): ga_list_validator,
+                vol.Optional(CONF_KNX_HUMIDITY_ADDRESS): ga_list_validator,
+            }
+        ),
     )

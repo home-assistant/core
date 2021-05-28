@@ -11,6 +11,7 @@ from typing import Any, Callable
 import urllib.parse
 
 import async_timeout
+from pysonos.alarms import get_alarms
 from pysonos.core import MUSIC_SRC_LINE_IN, MUSIC_SRC_RADIO, MUSIC_SRC_TV, SoCo
 from pysonos.data_structures import DidlAudioBroadcast
 from pysonos.events_base import Event as SonosEvent, SubscriptionBase
@@ -21,6 +22,7 @@ from pysonos.snapshot import Snapshot
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as ent_reg
 from homeassistant.helpers.dispatcher import (
@@ -37,6 +39,8 @@ from .const import (
     PLATFORMS,
     SCAN_INTERVAL,
     SEEN_EXPIRE_TIME,
+    SONOS_ALARM_UPDATE,
+    SONOS_CREATE_ALARM,
     SONOS_CREATE_BATTERY,
     SONOS_CREATE_MEDIA_PLAYER,
     SONOS_ENTITY_CREATED,
@@ -147,7 +151,7 @@ class SonosSpeaker:
 
         self.mac_address = speaker_info["mac_address"]
         self.model_name = speaker_info["model_name"]
-        self.version = speaker_info["software_version"]
+        self.version = speaker_info["display_version"]
         self.zone_name = speaker_info["zone_name"]
 
         self.battery_info: dict[str, Any] | None = None
@@ -183,22 +187,33 @@ class SonosSpeaker:
             self.hass, f"{SONOS_SEEN}-{self.soco.uid}", self.async_seen
         )
 
-        if battery_info := fetch_battery_info_or_none(self.soco):
-            # Battery events can be infrequent, polling is still necessary
-            self.battery_info = battery_info
-            self._battery_poll_timer = self.hass.helpers.event.track_time_interval(
-                self.async_poll_battery, BATTERY_SCAN_INTERVAL
-            )
-            dispatcher_send(self.hass, SONOS_CREATE_BATTERY, self)
-        else:
+        if (battery_info := fetch_battery_info_or_none(self.soco)) is None:
             self._platforms_ready.update({BINARY_SENSOR_DOMAIN, SENSOR_DOMAIN})
+        else:
+            self.battery_info = battery_info
+            # Only create a polling task if successful, may fail on S1 firmware
+            if battery_info:
+                # Battery events can be infrequent, polling is still necessary
+                self._battery_poll_timer = self.hass.helpers.event.track_time_interval(
+                    self.async_poll_battery, BATTERY_SCAN_INTERVAL
+                )
+            else:
+                _LOGGER.warning(
+                    "S1 firmware detected, battery sensor may update infrequently"
+                )
+            dispatcher_send(self.hass, SONOS_CREATE_BATTERY, self)
+
+        if new_alarms := self.update_alarms_for_speaker():
+            dispatcher_send(self.hass, SONOS_CREATE_ALARM, self, new_alarms)
+        else:
+            self._platforms_ready.add(SWITCH_DOMAIN)
 
         dispatcher_send(self.hass, SONOS_CREATE_MEDIA_PLAYER, self)
 
     async def async_handle_new_entity(self, entity_type: str) -> None:
         """Listen to new entities to trigger first subscription."""
         self._platforms_ready.add(entity_type)
-        if self._platforms_ready == PLATFORMS:
+        if self._platforms_ready == PLATFORMS and not self._subscriptions:
             self._resubscription_lock = asyncio.Lock()
             await self.async_subscribe()
             self._is_ready = True
@@ -244,6 +259,7 @@ class SonosSpeaker:
                 self._subscribe(
                     self.soco.deviceProperties, self.async_dispatch_properties
                 ),
+                self._subscribe(self.soco.alarmClock, self.async_dispatch_alarms),
             )
             return True
         except SoCoException as ex:
@@ -265,6 +281,11 @@ class SonosSpeaker:
     def async_dispatch_properties(self, event: SonosEvent | None = None) -> None:
         """Update properties from event."""
         self.hass.async_create_task(self.async_update_device_properties(event))
+
+    @callback
+    def async_dispatch_alarms(self, event: SonosEvent | None = None) -> None:
+        """Update alarms from event."""
+        self.hass.async_create_task(self.async_update_alarms(event))
 
     @callback
     def async_dispatch_groups(self, event: SonosEvent | None = None) -> None:
@@ -365,11 +386,56 @@ class SonosSpeaker:
 
         self.async_write_entity_states()
 
+    def update_alarms_for_speaker(self) -> set[str]:
+        """Update current alarm instances.
+
+        Updates hass.data[DATA_SONOS].alarms and returns a list of all alarms that are new.
+        """
+        new_alarms = set()
+        stored_alarms = self.hass.data[DATA_SONOS].alarms
+        updated_alarms = get_alarms(self.soco)
+
+        for alarm in updated_alarms:
+            if alarm.zone.uid == self.soco.uid and alarm.alarm_id not in list(
+                stored_alarms.keys()
+            ):
+                new_alarms.add(alarm.alarm_id)
+                stored_alarms[alarm.alarm_id] = alarm
+
+        for alarm_id, alarm in list(stored_alarms.items()):
+            if alarm not in updated_alarms:
+                stored_alarms.pop(alarm_id)
+
+        return new_alarms
+
+    async def async_update_alarms(self, event: SonosEvent | None = None) -> None:
+        """Update device properties using the provided SonosEvent."""
+        if event is None:
+            return
+
+        if new_alarms := await self.hass.async_add_executor_job(
+            self.update_alarms_for_speaker
+        ):
+            async_dispatcher_send(self.hass, SONOS_CREATE_ALARM, self, new_alarms)
+
+        async_dispatcher_send(self.hass, SONOS_ALARM_UPDATE, self)
+
     async def async_update_battery_info(self, battery_dict: dict[str, Any]) -> None:
         """Update battery info using the decoded SonosEvent."""
         self._last_battery_event = dt_util.utcnow()
 
         is_charging = EVENT_CHARGING[battery_dict["BattChg"]]
+
+        if not self._battery_poll_timer:
+            # Battery info received for an S1 speaker
+            self.battery_info.update(
+                {
+                    "Level": int(battery_dict["BattPct"]),
+                    "PowerSource": "EXTERNAL" if is_charging else "BATTERY",
+                }
+            )
+            return
+
         if is_charging == self.charging:
             self.battery_info.update({"Level": int(battery_dict["BattPct"])})
         else:
@@ -384,17 +450,21 @@ class SonosSpeaker:
         return self.coordinator is None
 
     @property
-    def power_source(self) -> str:
+    def power_source(self) -> str | None:
         """Return the name of the current power source.
 
         Observed to be either BATTERY or SONOS_CHARGING_RING or USB_POWER.
+
+        May be an empty dict if used with an S1 Move.
         """
-        return self.battery_info["PowerSource"]
+        return self.battery_info.get("PowerSource")
 
     @property
-    def charging(self) -> bool:
+    def charging(self) -> bool | None:
         """Return the charging status of the speaker."""
-        return self.power_source != "BATTERY"
+        if self.power_source:
+            return self.power_source != "BATTERY"
+        return None
 
     async def async_poll_battery(self, now: datetime.datetime | None = None) -> None:
         """Poll the device for the current battery state."""
@@ -747,7 +817,9 @@ class SonosSpeaker:
 
         if variables and "transport_state" in variables:
             self.media.play_mode = variables["current_play_mode"]
-            track_uri = variables["enqueued_transport_uri"]
+            track_uri = (
+                variables["enqueued_transport_uri"] or variables["current_track_uri"]
+            )
             music_source = self.soco.music_source_from_uri(track_uri)
         else:
             self.media.play_mode = self.soco.play_mode
@@ -770,7 +842,8 @@ class SonosSpeaker:
                 if music_source == MUSIC_SRC_RADIO:
                     self.update_media_radio(variables)
                 else:
-                    self.update_media_music(update_position, track_info)
+                    self.update_media_music(track_info)
+                self.update_media_position(update_position, track_info)
 
         self.write_entity_states()
 
@@ -833,10 +906,24 @@ class SonosSpeaker:
             if fav.reference.get_uri() == media_info["uri"]:
                 self.media.source_name = fav.title
 
-    def update_media_music(self, update_media_position: bool, track_info: dict) -> None:
+    def update_media_music(self, track_info: dict) -> None:
+        """Update state when playing music tracks."""
+        self.media.image_url = track_info.get("album_art")
+
+        playlist_position = int(track_info.get("playlist_position"))  # type: ignore
+        if playlist_position > 0:
+            self.media.queue_position = playlist_position - 1
+
+    def update_media_position(
+        self, update_media_position: bool, track_info: dict
+    ) -> None:
         """Update state when playing music tracks."""
         self.media.duration = _timespan_secs(track_info.get("duration"))
         current_position = _timespan_secs(track_info.get("position"))
+
+        if self.media.duration == 0:
+            self.media.clear_position()
+            return
 
         # player started reporting position?
         if current_position is not None and self.media.position is None:
@@ -861,9 +948,3 @@ class SonosSpeaker:
         elif update_media_position:
             self.media.position = current_position
             self.media.position_updated_at = dt_util.utcnow()
-
-        self.media.image_url = track_info.get("album_art")
-
-        playlist_position = int(track_info.get("playlist_position"))  # type: ignore
-        if playlist_position > 0:
-            self.media.queue_position = playlist_position - 1

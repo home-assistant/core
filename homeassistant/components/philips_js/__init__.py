@@ -27,7 +27,7 @@ PLATFORMS = ["media_player", "remote"]
 LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Philips TV from a config entry."""
 
     tvapi = PhilipsTV(

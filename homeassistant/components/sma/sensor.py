@@ -46,8 +46,8 @@ _LOGGER = logging.getLogger(__name__)
 def _check_sensor_schema(conf: dict[str, Any]) -> dict[str, Any]:
     """Check sensors and attributes are valid."""
     try:
-        valid = [s.name for s in pysma.Sensors()]
-        valid += pysma.LEGACY_MAP.keys()
+        valid = [s.name for s in pysma.sensor.Sensors()]
+        valid += pysma.const.LEGACY_MAP.keys()
     except (ImportError, AttributeError):
         return conf
 
@@ -147,7 +147,7 @@ class SMAsensor(CoordinatorEntity, SensorEntity):
         coordinator: DataUpdateCoordinator,
         config_entry_unique_id: str,
         device_info: dict[str, Any],
-        pysma_sensor: pysma.Sensor,
+        pysma_sensor: pysma.sensor.Sensor,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)

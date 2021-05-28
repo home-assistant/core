@@ -7,7 +7,7 @@ import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     SOURCE_TYPE_ROUTER,
 )
 from homeassistant.components.device_tracker.config_entry import ScannerEntity
@@ -31,7 +31,7 @@ PLATFORM_SCHEMA = vol.All(
     cv.deprecated(CONF_HOST),
     cv.deprecated(CONF_USERNAME),
     cv.deprecated(CONF_PASSWORD),
-    PLATFORM_SCHEMA.extend(
+    PARENT_PLATFORM_SCHEMA.extend(
         {
             vol.Optional(CONF_HOST, default=YAML_DEFAULT_HOST): cv.string,
             vol.Optional(CONF_USERNAME, default=YAML_DEFAULT_USERNAME): cv.string,
@@ -116,6 +116,7 @@ class FritzBoxTracker(ScannerEntity):
         self._router = router
         self._mac = device.mac_address
         self._name = device.hostname or DEFAULT_DEVICE_NAME
+        self._last_activity = device.last_activity
         self._active = False
         self._attrs: dict = {}
 
@@ -186,16 +187,22 @@ class FritzBoxTracker(ScannerEntity):
         """Return if the entity should be enabled when first added to the entity registry."""
         return False
 
+    @property
+    def extra_state_attributes(self) -> dict[str, str]:
+        """Return the attributes."""
+        attrs: dict[str, str] = {}
+        if self._last_activity is not None:
+            attrs["last_time_reachable"] = self._last_activity.isoformat(
+                timespec="seconds"
+            )
+        return attrs
+
     @callback
     def async_process_update(self) -> None:
         """Update device."""
-        device = self._router.devices[self._mac]
+        device: FritzDevice = self._router.devices[self._mac]
         self._active = device.is_connected
-
-        if device.last_activity:
-            self._attrs["last_time_reachable"] = device.last_activity.isoformat(
-                timespec="seconds"
-            )
+        self._last_activity = device.last_activity
 
     @callback
     def async_on_demand_update(self):

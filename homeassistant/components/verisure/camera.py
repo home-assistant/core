@@ -58,20 +58,13 @@ class VerisureSmartcam(CoordinatorEntity, Camera):
         super().__init__(coordinator)
         Camera.__init__(self)
 
+        self._attr_name = coordinator.data["cameras"][serial_number]["area"]
+        self._attr_unique_id = serial_number
+
         self.serial_number = serial_number
         self._directory_path = directory_path
         self._image = None
         self._image_id = None
-
-    @property
-    def name(self) -> str:
-        """Return the name of this entity."""
-        return self.coordinator.data["cameras"][self.serial_number]["area"]
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique ID for this entity."""
-        return self.serial_number
 
     @property
     def device_info(self) -> DeviceInfo:

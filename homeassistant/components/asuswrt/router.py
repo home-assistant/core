@@ -195,6 +195,8 @@ class AsusWrtRouter:
         self._api: AsusWrt = None
         self._protocol = entry.data[CONF_PROTOCOL]
         self._host = entry.data[CONF_HOST]
+        self._model = "Asus Router"
+        self._sw_v = None
 
         self._devices: dict[str, Any] = {}
         self._connected_devices = 0
@@ -223,6 +225,14 @@ class AsusWrtRouter:
 
         if not self._api.is_connected:
             raise ConfigEntryNotReady
+
+        # System
+        model = await _get_nvram_info(self._api, "MODEL")
+        if model:
+            self._model = model["model"]
+        firmware = await _get_nvram_info(self._api, "FIRMWARE")
+        if firmware:
+            self._sw_v = f"{firmware['firmver']} (build {firmware['buildno']})"
 
         # Load tracked entities from registry
         entity_registry = await self.hass.helpers.entity_registry.async_get_registry()
@@ -373,8 +383,9 @@ class AsusWrtRouter:
         return {
             "identifiers": {(DOMAIN, "AsusWRT")},
             "name": self._host,
-            "model": "Asus Router",
+            "model": self._model,
             "manufacturer": "Asus",
+            "sw_version": self._sw_v,
         }
 
     @property
@@ -406,6 +417,17 @@ class AsusWrtRouter:
     def api(self) -> AsusWrt:
         """Return router API."""
         return self._api
+
+
+async def _get_nvram_info(api: AsusWrt, info_type: str) -> dict[str, Any]:
+    """Get AsusWrt router info from nvram."""
+    info = {}
+    try:
+        info = await api.async_get_nvram(info_type)
+    except OSError as exc:
+        _LOGGER.warning("Error calling method async_get_nvram(%s): %s", info_type, exc)
+
+    return info
 
 
 def get_api(conf: dict, options: dict | None = None) -> AsusWrt:
