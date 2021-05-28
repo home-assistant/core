@@ -68,7 +68,6 @@ from .const import (
     CONF_MIN_TEMP,
     CONF_PARITY,
     CONF_PRECISION,
-    CONF_REGISTER,
     CONF_REVERSE_ORDER,
     CONF_SCALE,
     CONF_STATE_CLOSED,
@@ -145,24 +144,26 @@ CLIMATE_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
     }
 )
 
-COVERS_SCHEMA = vol.All(
-    cv.has_at_least_one_key(CALL_TYPE_COIL, CONF_REGISTER),
-    BASE_COMPONENT_SCHEMA.extend(
-        {
-            vol.Optional(CONF_DEVICE_CLASS): COVER_DEVICE_CLASSES_SCHEMA,
-            vol.Optional(CONF_STATE_CLOSED, default=0): cv.positive_int,
-            vol.Optional(CONF_STATE_CLOSING, default=3): cv.positive_int,
-            vol.Optional(CONF_STATE_OPEN, default=1): cv.positive_int,
-            vol.Optional(CONF_STATE_OPENING, default=2): cv.positive_int,
-            vol.Optional(CONF_STATUS_REGISTER): cv.positive_int,
-            vol.Optional(
-                CONF_STATUS_REGISTER_TYPE,
-                default=CALL_TYPE_REGISTER_HOLDING,
-            ): vol.In([CALL_TYPE_REGISTER_HOLDING, CALL_TYPE_REGISTER_INPUT]),
-            vol.Exclusive(CALL_TYPE_COIL, CONF_INPUT_TYPE): cv.positive_int,
-            vol.Exclusive(CONF_REGISTER, CONF_INPUT_TYPE): cv.positive_int,
-        }
-    ),
+COVERS_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
+    {
+        vol.Required(CONF_ADDRESS): cv.positive_int,
+        vol.Optional(CONF_INPUT_TYPE, default=CALL_TYPE_REGISTER_HOLDING,): vol.In(
+            [
+                CALL_TYPE_REGISTER_HOLDING,
+                CALL_TYPE_COIL,
+            ]
+        ),
+        vol.Optional(CONF_DEVICE_CLASS): COVER_DEVICE_CLASSES_SCHEMA,
+        vol.Optional(CONF_STATE_CLOSED, default=0): cv.positive_int,
+        vol.Optional(CONF_STATE_CLOSING, default=3): cv.positive_int,
+        vol.Optional(CONF_STATE_OPEN, default=1): cv.positive_int,
+        vol.Optional(CONF_STATE_OPENING, default=2): cv.positive_int,
+        vol.Optional(CONF_STATUS_REGISTER): cv.positive_int,
+        vol.Optional(
+            CONF_STATUS_REGISTER_TYPE,
+            default=CALL_TYPE_REGISTER_HOLDING,
+        ): vol.In([CALL_TYPE_REGISTER_HOLDING, CALL_TYPE_REGISTER_INPUT]),
+    }
 )
 
 SWITCH_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
