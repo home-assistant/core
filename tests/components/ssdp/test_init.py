@@ -518,7 +518,7 @@ async def test_scan_second_hit(hass, aioclient_mock, caplog):
     }
     assert "Failed to fetch ssdp data" not in caplog.text
     assert (
-        ssdp.async_get_location_by_udn_st(
+        ssdp.async_get_discovery_info_by_udn_st(
             hass, "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL", "mock-st"
         )[ssdp.ATTR_SSDP_LOCATION]
         == "http://1.1.1.1"

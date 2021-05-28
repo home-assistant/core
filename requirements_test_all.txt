@@ -551,7 +551,6 @@ ndms2_client==0.1.1
 nessclient==0.9.15
 
 # homeassistant.components.discovery
-# homeassistant.components.ssdp
 netdisco==2.8.3
 
 # homeassistant.components.nam

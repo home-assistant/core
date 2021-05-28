@@ -21,7 +21,6 @@ home-assistant-frontend==20210528.0
 httpx==0.18.0
 ifaddr==0.1.7
 jinja2>=3.0.1
-netdisco==2.8.3
 paho-mqtt==1.5.1
 pillow==8.1.2
 pip>=8.0.3,<20.3
