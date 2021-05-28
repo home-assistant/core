@@ -104,6 +104,7 @@ from .const import (
     PLATFORMS,
 )
 from .modbus import async_modbus_setup
+from .validators import sensor_schema_validator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -140,6 +141,8 @@ def control_scan_interval(config: dict) -> dict:
             for entry in hub[conf_key]:
                 scan_interval = entry.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
                 if scan_interval < MINIMUM_SCAN_INTERVAL:
+                    if scan_interval == 0:
+                        continue
                     _LOGGER.warning(
                         "%s %s scan_interval(%d) is adjusted to minimum(%d)",
                         component,
@@ -236,6 +239,7 @@ SWITCH_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
                 ),
                 vol.Optional(CONF_STATE_OFF): cv.positive_int,
                 vol.Optional(CONF_STATE_ON): cv.positive_int,
+                vol.Optional(CONF_DELAY, default=0): cv.positive_int,
             }
         ),
     }
@@ -344,7 +348,9 @@ MODBUS_SCHEMA = vol.Schema(
         vol.Optional(CONF_CLIMATES): vol.All(cv.ensure_list, [CLIMATE_SCHEMA]),
         vol.Optional(CONF_COVERS): vol.All(cv.ensure_list, [COVERS_SCHEMA]),
         vol.Optional(CONF_LIGHTS): vol.All(cv.ensure_list, [LIGHT_SCHEMA]),
-        vol.Optional(CONF_SENSORS): vol.All(cv.ensure_list, [SENSOR_SCHEMA]),
+        vol.Optional(CONF_SENSORS): vol.All(
+            cv.ensure_list, [vol.All(SENSOR_SCHEMA, sensor_schema_validator)]
+        ),
         vol.Optional(CONF_SWITCHES): vol.All(cv.ensure_list, [SWITCH_SCHEMA]),
         vol.Optional(CONF_FANS): vol.All(cv.ensure_list, [FAN_SCHEMA]),
     }

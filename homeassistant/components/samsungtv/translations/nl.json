@@ -5,7 +5,13 @@
             "already_in_progress": "De configuratiestroom is al aan de gang",
             "auth_missing": "Home Assistant is niet geautoriseerd om verbinding te maken met deze Samsung TV.",
             "cannot_connect": "Kan geen verbinding maken",
-            "not_supported": "Deze Samsung TV wordt momenteel niet ondersteund."
+            "id_missing": "Dit Samsung-apparaat heeft geen serienummer.",
+            "not_supported": "Deze Samsung TV wordt momenteel niet ondersteund.",
+            "reauth_successful": "Herauthenticatie was succesvol",
+            "unknown": "Onverwachte fout"
+        },
+        "error": {
+            "auth_missing": "Home Assistant is niet geautoriseerd om verbinding te maken met deze Samsung TV."
         },
         "flow_title": "{model}",
         "step": {

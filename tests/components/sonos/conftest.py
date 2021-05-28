@@ -10,6 +10,18 @@ from homeassistant.const import CONF_HOSTS
 from tests.common import MockConfigEntry
 
 
+class SonosMockEvent:
+    """Mock a sonos Event used in callbacks."""
+
+    def __init__(self, soco, variables):
+        """Initialize the instance."""
+        self.sid = f"{soco.uid}_sub0000000001"
+        self.seq = "0"
+        self.timestamp = 1621000000.0
+        self.service = dummy_soco_service_fixture
+        self.variables = variables
+
+
 @pytest.fixture(name="config_entry")
 def config_entry_fixture():
     """Create a mock Sonos config entry."""
@@ -17,7 +29,9 @@ def config_entry_fixture():
 
 
 @pytest.fixture(name="soco")
-def soco_fixture(music_library, speaker_info, battery_info, dummy_soco_service):
+def soco_fixture(
+    music_library, speaker_info, battery_info, dummy_soco_service, alarm_clock
+):
     """Create a mock pysonos SoCo fixture."""
     with patch("pysonos.SoCo", autospec=True) as mock, patch(
         "socket.gethostbyname", return_value="192.168.42.2"
@@ -32,12 +46,13 @@ def soco_fixture(music_library, speaker_info, battery_info, dummy_soco_service):
         mock_soco.zoneGroupTopology = dummy_soco_service
         mock_soco.contentDirectory = dummy_soco_service
         mock_soco.deviceProperties = dummy_soco_service
+        mock_soco.alarmClock = alarm_clock
         mock_soco.mute = False
         mock_soco.night_mode = True
         mock_soco.dialog_mode = True
         mock_soco.volume = 19
         mock_soco.get_battery_info.return_value = battery_info
-
+        mock_soco.all_zones = [mock_soco]
         yield mock_soco
 
 
@@ -75,6 +90,42 @@ def music_library_fixture():
     return music_library
 
 
+@pytest.fixture(name="alarm_clock")
+def alarm_clock_fixture():
+    """Create alarmClock fixture."""
+    alarm_clock = Mock()
+    alarm_clock.subscribe = AsyncMock()
+    alarm_clock.ListAlarms.return_value = {
+        "CurrentAlarmList": "<Alarms>"
+        '<Alarm ID="14" StartTime="07:00:00" Duration="02:00:00" Recurrence="DAILY" '
+        'Enabled="1" RoomUUID="RINCON_test" ProgramURI="x-rincon-buzzer:0" '
+        'ProgramMetaData="" PlayMode="SHUFFLE_NOREPEAT" Volume="25" '
+        'IncludeLinkedZones="0"/>'
+        "</Alarms> "
+    }
+    return alarm_clock
+
+
+@pytest.fixture(name="alarm_clock_extended")
+def alarm_clock_fixture_extended():
+    """Create alarmClock fixture."""
+    alarm_clock = Mock()
+    alarm_clock.subscribe = AsyncMock()
+    alarm_clock.ListAlarms.return_value = {
+        "CurrentAlarmList": "<Alarms>"
+        '<Alarm ID="14" StartTime="07:00:00" Duration="02:00:00" Recurrence="DAILY" '
+        'Enabled="1" RoomUUID="RINCON_test" ProgramURI="x-rincon-buzzer:0" '
+        'ProgramMetaData="" PlayMode="SHUFFLE_NOREPEAT" Volume="25" '
+        'IncludeLinkedZones="0"/>'
+        '<Alarm ID="15" StartTime="07:00:00" Duration="02:00:00" '
+        'Recurrence="DAILY" Enabled="1" RoomUUID="RINCON_test" '
+        'ProgramURI="x-rincon-buzzer:0" ProgramMetaData="" PlayMode="SHUFFLE_NOREPEAT" '
+        'Volume="25" IncludeLinkedZones="0"/>'
+        "</Alarms> "
+    }
+    return alarm_clock
+
+
 @pytest.fixture(name="speaker_info")
 def speaker_info_fixture():
     """Create speaker_info fixture."""
@@ -96,3 +147,29 @@ def battery_info_fixture():
         "Temperature": "NORMAL",
         "PowerSource": "SONOS_CHARGING_RING",
     }
+
+
+@pytest.fixture(name="battery_event")
+def battery_event_fixture(soco):
+    """Create battery_event fixture."""
+    variables = {
+        "zone_name": "Zone A",
+        "more_info": "BattChg:NOT_CHARGING,RawBattPct:100,BattPct:100,BattTmp:25",
+    }
+    return SonosMockEvent(soco, variables)
+
+
+@pytest.fixture(name="alarm_event")
+def alarm_event_fixture(soco):
+    """Create alarm_event fixture."""
+    variables = {
+        "time_zone": "ffc40a000503000003000502ffc4",
+        "time_server": "0.sonostime.pool.ntp.org,1.sonostime.pool.ntp.org,2.sonostime.pool.ntp.org,3.sonostime.pool.ntp.org",
+        "time_generation": "20000001",
+        "alarm_list_version": "RINCON_test",
+        "time_format": "INV",
+        "date_format": "INV",
+        "daily_index_refresh_time": None,
+    }
+
+    return SonosMockEvent(soco, variables)

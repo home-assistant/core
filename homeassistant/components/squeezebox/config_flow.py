@@ -6,6 +6,7 @@ from pysqueezebox import Server, async_discover
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components.dhcp import IP_ADDRESS, MAC_ADDRESS
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -172,10 +173,21 @@ class SqueezeboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(discovery_info.pop("uuid"))
             self._abort_if_unique_id_configured()
         else:
-            # attempt to connect to server and determine uuid. will fail if password required
+            # attempt to connect to server and determine uuid. will fail if
+            # password required
+
+            if CONF_HOST not in discovery_info and IP_ADDRESS in discovery_info:
+                discovery_info[CONF_HOST] = discovery_info[IP_ADDRESS]
+
+            if CONF_PORT not in discovery_info:
+                discovery_info[CONF_PORT] = DEFAULT_PORT
+
             error = await self._validate_input(discovery_info)
             if error:
-                await self._async_handle_discovery_without_unique_id()
+                if MAC_ADDRESS in discovery_info:
+                    await self.async_set_unique_id(discovery_info[MAC_ADDRESS])
+                else:
+                    await self._async_handle_discovery_without_unique_id()
 
         # update schema with suggested values from discovery
         self.data_schema = _base_schema(discovery_info)

@@ -11,6 +11,10 @@
             "unknown": "Tundmatu viga"
         },
         "step": {
+            "hassio_confirm": {
+                "description": "Kas konfigureerida Home Assistanti \u00fchenduse loomiseks lisandmooduli pakutava motionEye teenusega: {addon} ?",
+                "title": "motionEye Home Assistanti lisandmooduli kaudu"
+            },
             "user": {
                 "data": {
                     "admin_password": "Haldaja salas\u00f5na",

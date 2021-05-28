@@ -81,10 +81,16 @@ GATEWAY_SENSOR_TYPES = {
         state_class=STATE_CLASS_MEASUREMENT,
     ),
     "humidity": SensorType(
-        unit=PERCENTAGE, icon=None, device_class=DEVICE_CLASS_HUMIDITY
+        unit=PERCENTAGE,
+        icon=None,
+        device_class=DEVICE_CLASS_HUMIDITY,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     "pressure": SensorType(
-        unit=PRESSURE_HPA, icon=None, device_class=DEVICE_CLASS_PRESSURE
+        unit=PRESSURE_HPA,
+        icon=None,
+        device_class=DEVICE_CLASS_PRESSURE,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     "load_power": SensorType(
         unit=POWER_WATT, icon=None, device_class=DEVICE_CLASS_POWER
