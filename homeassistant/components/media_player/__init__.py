@@ -574,7 +574,7 @@ class MediaPlayerEntity(Entity):
         return self._attr_sound_mode
 
     @property
-    def sound_mode_list(self):
+    def sound_mode_list(self) -> list[str] | None:
         """List of available sound modes."""
         return self._attr_sound_mode_list
 
