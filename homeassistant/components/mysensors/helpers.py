@@ -176,11 +176,15 @@ def validate_child(
 ) -> defaultdict[str, list[DevId]]:
     """Validate a child. Returns a dict mapping hass platform names to list of DevId."""
     validated: defaultdict[str, list[DevId]] = defaultdict(list)
-    pres: IntEnum = gateway.const.Presentation
-    set_req: IntEnum = gateway.const.SetReq
+    pres: type[IntEnum] = gateway.const.Presentation
+    set_req: type[IntEnum] = gateway.const.SetReq
     child_type_name: SensorType | None = next(
         (member.name for member in pres if member.value == child.type), None
     )
+    if not child_type_name:
+        _LOGGER.warning("Child type %s is not supported", child.type)
+        return validated
+
     value_types: set[int] = {value_type} if value_type else {*child.values}
     value_type_names: set[ValueType] = {
         member.name for member in set_req if member.value in value_types
@@ -199,7 +203,7 @@ def validate_child(
             child_value_names: set[ValueType] = {
                 member.name for member in set_req if member.value in child.values
             }
-            v_names: set[ValueType] = platform_v_names & child_value_names
+            v_names = platform_v_names & child_value_names
 
         for v_name in v_names:
             child_schema_gen = SCHEMAS.get((platform, v_name), default_schema)
