@@ -8,6 +8,7 @@ from pyhomepilot.api import HomePilotAPI
 from pyhomepilot.auth import Auth
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_HOST, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -24,9 +25,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     hass.data.setdefault(DOMAIN, {})
 
     session = aiohttp_client.async_create_clientsession(hass)
-    auth = Auth(session, entry.data["host"], entry.data.get("password"))
+    auth = Auth(session, entry.data[CONF_HOST], entry.data.get(CONF_PASSWORD))
 
-    if entry.data.get("password") is not None:
+    if entry.data.get(CONF_PASSWORD) is not None:
         await auth.async_login()
 
     api = HomePilotAPI(auth)

@@ -12,24 +12,25 @@ from pyhomepilot.auth import (  # pylint:disable=redefined-builtin
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
+from homeassistant.const import CONF_HOST, CONF_PASSWORD
 
 from .const import DOMAIN  # pylint: disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
-    {vol.Required("host"): str, vol.Optional("password"): str}
+    {vol.Required(CONF_HOST): str, vol.Optional(CONF_PASSWORD): str}
 )
 
 
 async def validate_input(hass: core.HomeAssistant, data):
     """Validate the user input allows us to connect."""
     async with aiohttp.ClientSession() as session:
-        auth = Auth(session, data["host"], data.get("password"))
+        auth = Auth(session, data[CONF_HOST], data.get(CONF_PASSWORD))
         api = HomePilotAPI(auth)
 
         try:
-            if "password" in data:
+            if CONF_PASSWORD in data:
                 await auth.async_login()
 
             name = await api.async_get_system_name()

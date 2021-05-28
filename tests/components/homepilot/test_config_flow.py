@@ -14,10 +14,11 @@ from homeassistant.components.homepilot.config_flow import (
     validate_input,
 )
 from homeassistant.components.homepilot.const import DOMAIN
+from homeassistant.const import CONF_HOST, CONF_PASSWORD
 
 TEST_USER_INPUT = {
-    "host": "192.168.1.16",
-    "password": "test-password",
+    CONF_HOST: "192.168.1.16",
+    CONF_PASSWORD: "test-password",
 }
 
 
@@ -51,8 +52,6 @@ async def test_form(hass):
         "pyhomepilot.api.HomePilotAPI.async_get_system_name",
         return_value="bridge",
     ), patch(
-        "homeassistant.components.homepilot.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.homepilot.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -65,7 +64,6 @@ async def test_form(hass):
     assert result2["type"] == "create_entry"
     assert result2["title"] == "bridge"
     assert result2["data"] == TEST_USER_INPUT
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
