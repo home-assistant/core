@@ -247,6 +247,7 @@ class Scanner:
         if info_req:
             info_with_req.update(info_req)
 
+        _LOGGER.debug("info_with_req: %s", info_with_req)
         discovery_info = discovery_info_from_headers_and_request(info_with_req)
         _LOGGER.debug("Loading into cache: %s", discovery_info)
 
@@ -278,14 +279,16 @@ class Scanner:
             self.flow_dispatcher.create(flow)
 
 
-def discovery_info_from_headers_and_request(data: dict[str, str]) -> dict[str, str]:
-    """Get info from an entry."""
+def discovery_info_from_headers_and_request(
+    info_with_req: dict[str, str]
+) -> dict[str, str]:
+    """Convert headers and description to discovery_info."""
     info = {
-        **{k: v for k, v in data.items() if k not in DISCOVERY_MAPPING},
+        **{k: v for k, v in info_with_req.items() if k not in DISCOVERY_MAPPING},
         **{
-            discovery_key: data[header]
-            for header, discovery_key in DISCOVERY_MAPPING.items()
-            if header in data
+            hass_key: info_with_req[upnp_key]
+            for upnp_key, hass_key in DISCOVERY_MAPPING.items()
+            if upnp_key in info_with_req
         },
     }
 
