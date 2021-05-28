@@ -248,6 +248,7 @@ class Scanner:
             info_with_req.update(info_req)
 
         discovery_info = discovery_info_from_headers_and_request(info_with_req)
+        _LOGGER.debug("Loading into cache: %s", discovery_info)
 
         if udn := discovery_info.get(ATTR_UPNP_UDN):
             self.cache[(udn, headers["st"])] = discovery_info
