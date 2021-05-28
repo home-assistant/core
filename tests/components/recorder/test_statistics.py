@@ -3,6 +3,8 @@
 from datetime import timedelta
 from unittest.mock import patch, sentinel
 
+from pytest import approx
+
 from homeassistant.components.recorder import history
 from homeassistant.components.recorder.const import DATA_INSTANCE
 from homeassistant.components.recorder.models import process_timestamp_to_utc_isoformat
@@ -10,7 +12,6 @@ from homeassistant.components.recorder.statistics import statistics_during_perio
 from homeassistant.setup import setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.common import nested_approx
 from tests.components.recorder.common import wait_recording_done
 
 
@@ -26,22 +27,20 @@ def test_compile_hourly_statistics(hass_recorder):
     recorder.do_adhoc_statistics(period="hourly", start=zero)
     wait_recording_done(hass)
     stats = statistics_during_period(hass, zero)
-    assert stats == nested_approx(
-        {
-            "sensor.test1": [
-                {
-                    "statistic_id": "sensor.test1",
-                    "start": process_timestamp_to_utc_isoformat(zero),
-                    "mean": 14.915254237288135,
-                    "min": 10.0,
-                    "max": 20.0,
-                    "last_reset": None,
-                    "state": None,
-                    "sum": None,
-                }
-            ]
-        }
-    )
+    assert stats == {
+        "sensor.test1": [
+            {
+                "statistic_id": "sensor.test1",
+                "start": process_timestamp_to_utc_isoformat(zero),
+                "mean": approx(14.915254237288135),
+                "min": approx(10.0),
+                "max": approx(20.0),
+                "last_reset": None,
+                "state": None,
+                "sum": None,
+            }
+        ]
+    }
 
 
 def record_states(hass):
