@@ -140,7 +140,6 @@ class PhilipsTVLightEntity(CoordinatorEntity, LightEntity):
         self._attr_supported_features = (
             SUPPORT_EFFECT | SUPPORT_COLOR | SUPPORT_BRIGHTNESS
         )
-        self._attr_should_poll = False
         self._attr_name = self._system["name"]
         self._attr_unique_id = unique_id
         self._attr_icon = "mdi:television-ambient-light"
