@@ -1,5 +1,6 @@
 """Platform for binary sensor integration."""
 import logging
+from typing import Optional
 
 from smarttub import SpaError, SpaReminder
 import voluptuous as vol
@@ -144,7 +145,7 @@ class SmartTubError(SmartTubEntity, BinarySensorEntity):
         )
 
     @property
-    def error(self) -> SpaError:
+    def error(self) -> Optional[SpaError]:
         """Return the underlying SpaError object for this entity."""
         errors = self.coordinator.data[self.spa.id][ATTR_ERRORS]
         if len(errors) == 0:
