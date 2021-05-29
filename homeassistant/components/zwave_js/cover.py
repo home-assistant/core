@@ -147,7 +147,7 @@ class ZwaveMotorizedBarrier(ZWaveBaseEntity, CoverEntity):
         )
 
     @property
-    def supported_features(self) -> int | None:
+    def supported_features(self) -> int:
         """Flag supported features."""
         return SUPPORT_OPEN | SUPPORT_CLOSE
 
