@@ -6,15 +6,7 @@ import logging
 
 import voluptuous as vol
 import yeelight
-from yeelight import (
-    Bulb,
-    BulbException,
-    Flow,
-    RGBTransition,
-    SleepTransition,
-    flows,
-    transitions as yee_transitions,
-)
+from yeelight import Bulb, BulbException, Flow, RGBTransition, SleepTransition, flows
 from yeelight.enums import BulbType, LightType, PowerMode, SceneClass
 
 from homeassistant.components.light import (
@@ -707,11 +699,11 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
         elif effect == EFFECT_FAST_RANDOM_LOOP:
             flow = flows.random_loop(duration=250)
         elif effect == EFFECT_WHATSAPP:
-            flow = Flow(count=2, transitions=yee_transitions.pulse(37, 211, 102))
+            flow = flows.pulse(37, 211, 102, count=2)
         elif effect == EFFECT_FACEBOOK:
-            flow = Flow(count=2, transitions=yee_transitions.pulse(59, 89, 152))
+            flow = flows.pulse(59, 89, 152, count=2)
         elif effect == EFFECT_TWITTER:
-            flow = Flow(count=2, transitions=yee_transitions.pulse(0, 172, 237))
+            flow = flows.pulse(0, 172, 237, count=2)
         else:
             return
 
