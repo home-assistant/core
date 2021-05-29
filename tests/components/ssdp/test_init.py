@@ -189,6 +189,7 @@ async def test_scan_description_fetch_fail(hass, aioclient_mock, exc):
     aioclient_mock.get("http://1.1.1.1", exc=exc)
     mock_ssdp_response = {
         "st": "mock-st",
+        "usn": "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL::urn:mdx-netflix-com:service:target:3",
         "location": "http://1.1.1.1",
     }
     mock_get_ssdp = {
@@ -202,6 +203,15 @@ async def test_scan_description_fetch_fail(hass, aioclient_mock, exc):
     mock_init = await _async_run_mocked_scan(hass, mock_ssdp_response, mock_get_ssdp)
 
     assert not mock_init.mock_calls
+
+    assert ssdp.async_get_discovery_info_by_st(hass, "mock-st") == [
+        {
+            "UDN": "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL",
+            "ssdp_location": "http://1.1.1.1",
+            "ssdp_st": "mock-st",
+            "ssdp_usn": "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL::urn:mdx-netflix-com:service:target:3",
+        }
+    ]
 
 
 async def test_scan_description_parse_fail(hass, aioclient_mock):
