@@ -81,6 +81,19 @@ async def test_scan_match_st(hass, caplog):
     assert "Failed to fetch ssdp data" not in caplog.text
 
 
+async def test_partial_response(hass, caplog):
+    """Test location and st missing."""
+    mock_ssdp_response = {
+        "usn": "mock-usn",
+        "server": "mock-server",
+        "ext": "",
+    }
+    mock_get_ssdp = {"mock-domain": [{"st": "mock-st"}]}
+    mock_init = await _async_run_mocked_scan(hass, mock_ssdp_response, mock_get_ssdp)
+
+    assert len(mock_init.mock_calls) == 0
+
+
 @pytest.mark.parametrize(
     "key", (ssdp.ATTR_UPNP_MANUFACTURER, ssdp.ATTR_UPNP_DEVICE_TYPE)
 )
@@ -562,6 +575,8 @@ async def test_scan_second_hit(hass, aioclient_mock, caplog):
         discovery_info[ssdp.ATTR_SSDP_USN]
         == "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL::urn:mdx-netflix-com:service:target:3"
     )
+
+    assert ssdp.async_get_discovery_info_by_udn_st(hass, "wrong", "mock-st") is None
 
 
 _ADAPTERS_WITH_MANUAL_CONFIG = [
