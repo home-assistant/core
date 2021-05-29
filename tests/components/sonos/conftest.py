@@ -3,6 +3,7 @@ from unittest.mock import AsyncMock, MagicMock, Mock, patch as patch
 
 import pytest
 
+from homeassistant.components import ssdp
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.components.sonos import DOMAIN
 from homeassistant.const import CONF_HOSTS
@@ -53,6 +54,7 @@ def soco_fixture(music_library, speaker_info, battery_info, alarm_clock):
         "socket.gethostbyname", return_value="192.168.42.2"
     ):
         mock_soco = mock.return_value
+        mock_soco.ip_address = "192.168.42.2"
         mock_soco.uid = "RINCON_test"
         mock_soco.play_mode = "NORMAL"
         mock_soco.music_library = music_library
@@ -76,11 +78,18 @@ def soco_fixture(music_library, speaker_info, battery_info, alarm_clock):
 def discover_fixture(soco):
     """Create a mock pysonos discover fixture."""
 
-    def do_callback(callback, **kwargs):
-        callback(soco)
+    def do_callback(hass, callback, *args, **kwargs):
+        callback(
+            {
+                ssdp.ATTR_UPNP_UDN: soco.uid,
+                ssdp.ATTR_SSDP_LOCATION: f"http://{soco.ip_address}/",
+            }
+        )
         return MagicMock()
 
-    with patch("pysonos.discover_thread", side_effect=do_callback) as mock:
+    with patch(
+        "homeassistant.components.ssdp.async_register_callback", side_effect=do_callback
+    ) as mock:
         yield mock
 
 
