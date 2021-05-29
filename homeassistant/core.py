@@ -1525,12 +1525,9 @@ class ServiceRegistry:
         """Execute a service."""
         if handler.job.job_type == HassJobType.Coroutinefunction:
             return await handler.job.target(service_call)
-        elif handler.job.job_type == HassJobType.Callback:
+        if handler.job.job_type == HassJobType.Callback:
             return handler.job.target(service_call)
-        else:
-            return await self._hass.async_add_executor_job(
-                handler.job.target, service_call
-            )
+        return await self._hass.async_add_executor_job(handler.job.target, service_call)
 
 
 class Config:
