@@ -1,6 +1,7 @@
 """Platform for binary sensor integration."""
+from __future__ import annotations
+
 import logging
-from typing import Union
 
 from smarttub import SpaError, SpaReminder
 import voluptuous as vol
