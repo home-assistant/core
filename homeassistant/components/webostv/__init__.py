@@ -32,6 +32,7 @@ from .const import (
     CONF_SOURCES,
     DEFAULT_NAME,
     DOMAIN,
+    PLATFORMS,
     SERVICE_BUTTON,
     SERVICE_COMMAND,
     SERVICE_SELECT_SOUND_OUTPUT,
@@ -138,10 +139,7 @@ async def async_setup_entry(hass, config_entry):
         )
 
     hass.data[DOMAIN][config_entry.entry_id] = client
-
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(config_entry, "media_player")
-    )
+    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
 
     # set up notify platform, no entry support for notify component yet,
     # have to use discovery to load platform.

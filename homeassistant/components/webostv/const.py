@@ -16,3 +16,4 @@ SERVICE_SELECT_SOUND_OUTPUT = "select_sound_output"
 TURN_ON_DATA = "data"
 TURN_ON_SERVICE = "service"
 WEBOSTV_CONFIG_FILE = "webostv.dat"
+PLATFORMS = ["media_player"]
