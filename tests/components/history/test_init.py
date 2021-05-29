@@ -5,6 +5,7 @@ import json
 from unittest.mock import patch, sentinel
 
 import pytest
+from pytest import approx
 
 from homeassistant.components import history, recorder
 from homeassistant.components.recorder.history import get_significant_states
@@ -884,9 +885,9 @@ async def test_statistics_during_period(hass, hass_ws_client):
                 {
                     "statistic_id": "sensor.test",
                     "start": now.isoformat(),
-                    "mean": 10.0,
-                    "min": 10.0,
-                    "max": 10.0,
+                    "mean": approx(10.0),
+                    "min": approx(10.0),
+                    "max": approx(10.0),
                     "last_reset": None,
                     "state": None,
                     "sum": None,
