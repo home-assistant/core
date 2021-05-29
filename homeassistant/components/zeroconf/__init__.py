@@ -316,7 +316,7 @@ class ZeroconfDiscovery:
         for hk_type in (ZEROCONF_TYPE, *HOMEKIT_TYPES):
             if hk_type not in self.zeroconf_types:
                 types.append(hk_type)
-        _LOGGER.debug("Starting Zeroconf browser")
+        _LOGGER.debug("Starting Zeroconf browser for: %s", types)
         self.service_browser = HaServiceBrowser(
             self.ipv6, self.zeroconf, types, handlers=[self.service_update]
         )
