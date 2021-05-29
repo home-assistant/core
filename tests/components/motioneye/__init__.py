@@ -175,7 +175,6 @@ async def setup_mock_motioneye_config_entry(
         {"external_url": "https://example.com"},
     )
 
-    """Add a mock MotionEye config entry to hass."""
     config_entry = config_entry or create_mock_motioneye_config_entry(hass)
     client = client or create_mock_motioneye_client()
 
