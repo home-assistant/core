@@ -814,7 +814,7 @@ pyhoma==0.5.11
 pyhomematic==0.1.72
 
 # homeassistant.components.ialarm
-pyialarm==1.5
+pyialarm==1.7
 
 # homeassistant.components.icloud
 pyicloud==0.10.2
