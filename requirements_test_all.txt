@@ -801,6 +801,9 @@ icmplib==3.0
 # homeassistant.components.network
 ifaddr==0.2.0
 
+# homeassistant.components.ihc
+ihcsdk==2.7.4
+
 # homeassistant.components.influxdb
 influxdb-client==1.24.0
 
