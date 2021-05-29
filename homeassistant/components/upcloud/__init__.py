@@ -272,17 +272,12 @@ class UpCloudServerEntity(CoordinatorEntity):
         return "mdi:server" if self.is_on else "mdi:server-off"
 
     @property
-    def state(self) -> str | None:
-        """Return state of the server."""
-        try:
-            return STATE_MAP.get(self._server.state, self._server.state)
-        except AttributeError:
-            return None
-
-    @property
     def is_on(self) -> bool:
         """Return true if the server is on."""
-        return self.state == STATE_ON
+        try:
+            return STATE_MAP.get(self._server.state, self._server.state) == STATE_ON
+        except AttributeError:
+            return False
 
     @property
     def device_class(self) -> str:
