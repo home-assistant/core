@@ -188,9 +188,9 @@ async def async_setup_entry(  # noqa: C901
         uid = info.get(ssdp.ATTR_UPNP_UDN)
         if uid.startswith("uuid:"):
             uid = uid[5:]
-        if uid not in hass.data[DATA_SONOS].ssdp_known:
+        if uid not in data.ssdp_known:
             _LOGGER.debug("New discovery: %s", info)
-            hass.data[DATA_SONOS].ssdp_known.add(uid)
+            data.ssdp_known.add(uid)
         discovered_ip = urlparse(info[ssdp.ATTR_SSDP_LOCATION]).hostname
         asyncio.create_task(_async_create_discovered_player(uid, discovered_ip))
 
