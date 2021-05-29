@@ -3,7 +3,7 @@
 
 cd "$(dirname "$0")/.."
 
-head -n 5 homeassistant/const.py | tail -n 1 | grep PATCH_VERSION > /dev/null
+head -n 6 homeassistant/const.py | tail -n 1 | grep PATCH_VERSION > /dev/null
 
 if [ $? -eq 1 ]
 then
