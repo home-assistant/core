@@ -385,12 +385,12 @@ async def test_scan_with_registered_callback(hass, aioclient_mock, caplog):
         ssdp.async_register_callback(
             hass,
             _async_intergration_callbacks,
-            {ssdp.ATTR_SSDP_ST: "mock-st"},
+            {"st": "mock-st"},
         )
         ssdp.async_register_callback(
             hass,
             _async_not_matching_intergration_callbacks,
-            {ssdp.ATTR_SSDP_ST: "not-match-mock-st"},
+            {"st": "not-match-mock-st"},
         )
         ssdp.async_register_callback(
             hass,
@@ -401,7 +401,7 @@ async def test_scan_with_registered_callback(hass, aioclient_mock, caplog):
         ssdp.async_register_callback(
             hass,
             _async_intergration_callbacks_from_cache,
-            {ssdp.ATTR_SSDP_ST: "mock-st"},
+            {"st": "mock-st"},
         )
         await hass.async_block_till_done()
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
@@ -484,7 +484,7 @@ async def test_scan_second_hit(hass, aioclient_mock, caplog):
         remove = ssdp.async_register_callback(
             hass,
             _async_intergration_callbacks,
-            {ssdp.ATTR_SSDP_ST: "mock-st"},
+            {"st": "mock-st"},
         )
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
@@ -522,7 +522,7 @@ async def test_scan_second_hit(hass, aioclient_mock, caplog):
     }
     assert "Failed to fetch ssdp data" not in caplog.text
     udn_discovery_info = ssdp.async_get_discovery_info_by_st(hass, "mock-st")
-    discovery_info = udn_discovery_info["uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL"]
+    discovery_info = udn_discovery_info[0]
     assert discovery_info[ssdp.ATTR_SSDP_LOCATION] == "http://1.1.1.1"
     assert discovery_info[ssdp.ATTR_SSDP_ST] == "mock-st"
     assert (
@@ -537,7 +537,7 @@ async def test_scan_second_hit(hass, aioclient_mock, caplog):
     st_discovery_info = ssdp.async_get_discovery_info_by_udn(
         hass, "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL"
     )
-    discovery_info = st_discovery_info["mock-st"]
+    discovery_info = st_discovery_info[0]
     assert discovery_info[ssdp.ATTR_SSDP_LOCATION] == "http://1.1.1.1"
     assert discovery_info[ssdp.ATTR_SSDP_ST] == "mock-st"
     assert (

@@ -8,7 +8,7 @@ import aiohttp
 from defusedxml import ElementTree
 from netdisco import util
 
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,6 +38,15 @@ class DescriptionManager:
                 _LOGGER.exception("Failed to fetch ssdp data from: %s", xml_location)
 
         return self._description_cache[xml_location]
+
+    @callback
+    def async_cached_description(
+        self, xml_location: str | None
+    ) -> None | dict[str, str]:
+        """Fetch the description from the cache."""
+        if xml_location is None:
+            return None
+        return self._description_cache.get(xml_location)
 
     async def _fetch_description(self, xml_location: str) -> None | dict[str, str]:
         """Fetch an XML description."""
