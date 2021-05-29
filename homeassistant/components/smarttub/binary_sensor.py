@@ -146,7 +146,7 @@ class SmartTubError(SmartTubEntity, BinarySensorEntity):
         )
 
     @property
-    def error(self) -> Union[SpaError, None]:
+    def error(self) -> SpaError | None:
         """Return the underlying SpaError object for this entity."""
         errors = self.coordinator.data[self.spa.id][ATTR_ERRORS]
         if len(errors) == 0:
