@@ -184,12 +184,11 @@ async def async_setup_entry(  # noqa: C901
 
     @callback
     def _async_discovered_player(info):
-        _LOGGER.critical("Sonos Discovery: %s", info)
+        _LOGGER.debug("Sonos Discovery: %s", info)
         uid = info.get(ssdp.ATTR_UPNP_UDN)
         if uid.startswith("uuid:"):
             uid = uid[5:]
         discovered_ip = urlparse(info[ssdp.ATTR_SSDP_LOCATION]).hostname
-        _LOGGER.debug("_async_discovered_player with ip=%s, uid=%s", discovered_ip, uid)
         asyncio.create_task(_async_create_discovered_player(uid, discovered_ip))
 
     @callback
