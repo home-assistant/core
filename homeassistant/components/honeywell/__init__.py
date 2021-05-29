@@ -10,7 +10,7 @@ from homeassistant.util import Throttle
 from .const import _LOGGER, CONF_DEV_ID, CONF_LOC_ID, DOMAIN
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=180)
-PLATFORMS = ["climate"]
+PLATFORMS = ["climate", "sensor"]
 
 
 async def async_setup_entry(hass, config):

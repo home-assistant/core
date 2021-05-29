@@ -9,5 +9,7 @@ CONF_COOL_AWAY_TEMPERATURE = "away_cool_temperature"
 CONF_HEAT_AWAY_TEMPERATURE = "away_heat_temperature"
 CONF_DEV_ID = "thermostat"
 CONF_LOC_ID = "location"
+SENSOR_LOCATION_OUTDOOR = "outdoor"
+SENSOR_LOCATION_INDOOR = "indoor"
 
 _LOGGER = logging.getLogger(__name__)
