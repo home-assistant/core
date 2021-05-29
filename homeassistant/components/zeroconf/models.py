@@ -4,7 +4,7 @@ import asyncio
 from typing import Any
 
 from zeroconf import DNSAddress, DNSRecord, ServiceBrowser, Zeroconf
-from zeroconf.asyncio import AsyncZeroconf
+from zeroconf.asyncio import AsyncZeroconf, _AsyncSender
 
 TYPE_AAAA = 28
 
@@ -26,6 +26,7 @@ class HaAsyncZeroconf(AsyncZeroconf):
     ) -> None:
         """Wrap AsyncZeroconf."""
         self.zeroconf = HaZeroconf(*args, **kwargs)
+        self.sender = _AsyncSender(self.zeroconf)
         self.loop = asyncio.get_running_loop()
 
     async def async_close(self) -> None:
