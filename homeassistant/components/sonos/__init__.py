@@ -152,7 +152,7 @@ async def async_setup_entry(  # noqa: C901
                     _ = player.volume
                 _discovered_player(player)
             except (OSError, SoCoException) as ex:
-                _LOGGER.debug("Exception %s", ex)
+                _LOGGER.debug("Issue connecting to '%s': %s", host, ex)
                 if now is None:
                     _LOGGER.warning("Failed to initialize '%s'", host)
 
