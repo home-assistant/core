@@ -11,6 +11,10 @@
             "unknown": "Uventet feil"
         },
         "step": {
+            "hassio_confirm": {
+                "description": "Vil du konfigurere Home Assistant for \u00e5 koble til motionEye-tjenesten som tilbys av tillegget: {addon} ?",
+                "title": "motionEye via Home Assistant-tillegget"
+            },
             "user": {
                 "data": {
                     "admin_password": "Admin Passord",
