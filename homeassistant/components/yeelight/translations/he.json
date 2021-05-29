@@ -1,0 +1,42 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "no_devices_found": "No devices found on the network"
+        },
+        "error": {
+            "cannot_connect": "כשלון התחברות"
+        },
+        "flow_title": "{model} {host}",
+        "step": {
+            "discovery_confirm": {
+                "description": "האם ברצונך להגדיר את  {model} ({host})?"
+            },
+            "pick_device": {
+                "data": {
+                    "device": "מכשיר"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "מארח"
+                },
+                "description": "באם שדה זה ישאר ריק, המגלה ינסה לאתר אוטמטית את המכשיר."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "model": "מודל (אופציונלי)",
+                    "nightlight_switch": "השתמש במצג תאורת לילה",
+                    "save_on_change": "שמירת מצב בעת שינוי",
+                    "transition": "זמן העברה (ms)",
+                    "use_music_mode": "הפעלת מצב מוזיקה"
+                },
+                "description": "באם המודל ישאר ריק, הוא יזוהה באופן אוטומטי."
+            }
+        }
+    }
+}
