@@ -78,6 +78,7 @@ class SonosData:
         self.alarms: dict[str, Alarm] = {}
         self.topology_condition = asyncio.Condition()
         self.hosts_heartbeat = None
+        self.ssdp_known: set[str] = set()
 
 
 async def async_setup(hass, config):
@@ -184,10 +185,12 @@ async def async_setup_entry(  # noqa: C901
 
     @callback
     def _async_discovered_player(info):
-        _LOGGER.debug("Sonos Discovery: %s", info)
         uid = info.get(ssdp.ATTR_UPNP_UDN)
         if uid.startswith("uuid:"):
             uid = uid[5:]
+        if uid not in hass.data[DATA_SONOS].ssdp_known:
+            _LOGGER.debug("New discovery: %s", info)
+            hass.data[DATA_SONOS].ssdp_known.add(uid)
         discovered_ip = urlparse(info[ssdp.ATTR_SSDP_LOCATION]).hostname
         asyncio.create_task(_async_create_discovered_player(uid, discovered_ip))
 
