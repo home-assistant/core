@@ -24,29 +24,8 @@ PROPERTIES = {
 HOMEKIT_STATUS_UNPAIRED = b"1"
 HOMEKIT_STATUS_PAIRED = b"0"
 
-_ROUTE_NO_LOOPBACK = (
-    {
-        "attrs": [
-            ("RTA_TABLE", 254),
-            ("RTA_DST", "224.0.0.251"),
-            ("RTA_OIF", 4),
-            ("RTA_PREFSRC", "192.168.1.5"),
-        ],
-    },
-)
-_ROUTE_LOOPBACK = (
-    {
-        "attrs": [
-            ("RTA_TABLE", 254),
-            ("RTA_DST", "224.0.0.251"),
-            ("RTA_OIF", 4),
-            ("RTA_PREFSRC", "127.0.0.1"),
-        ],
-    },
-)
 
-
-def service_update_mock(zeroconf, services, handlers, *, limit_service=None):
+def service_update_mock(ipv6, zeroconf, services, handlers, *, limit_service=None):
     """Call service update handler."""
     for service in services:
         if limit_service is not None and service != limit_service:
@@ -271,7 +250,7 @@ async def test_setup_with_ipv6_default(hass, mock_zeroconf):
 async def test_zeroconf_match_macaddress(hass, mock_zeroconf):
     """Test configured options for a device are loaded via config entry."""
 
-    def http_only_service_update_mock(zeroconf, services, handlers):
+    def http_only_service_update_mock(ipv6, zeroconf, services, handlers):
         """Call service update handler."""
         handlers[0](
             zeroconf,
@@ -308,7 +287,7 @@ async def test_zeroconf_match_macaddress(hass, mock_zeroconf):
 async def test_zeroconf_match_manufacturer(hass, mock_zeroconf):
     """Test configured options for a device are loaded via config entry."""
 
-    def http_only_service_update_mock(zeroconf, services, handlers):
+    def http_only_service_update_mock(ipv6, zeroconf, services, handlers):
         """Call service update handler."""
         handlers[0](
             zeroconf,
@@ -341,7 +320,7 @@ async def test_zeroconf_match_manufacturer(hass, mock_zeroconf):
 async def test_zeroconf_match_manufacturer_not_present(hass, mock_zeroconf):
     """Test matchers reject when a property is missing."""
 
-    def http_only_service_update_mock(zeroconf, services, handlers):
+    def http_only_service_update_mock(ipv6, zeroconf, services, handlers):
         """Call service update handler."""
         handlers[0](
             zeroconf,
@@ -373,7 +352,7 @@ async def test_zeroconf_match_manufacturer_not_present(hass, mock_zeroconf):
 async def test_zeroconf_no_match(hass, mock_zeroconf):
     """Test configured options for a device are loaded via config entry."""
 
-    def http_only_service_update_mock(zeroconf, services, handlers):
+    def http_only_service_update_mock(ipv6, zeroconf, services, handlers):
         """Call service update handler."""
         handlers[0](
             zeroconf,
@@ -405,7 +384,7 @@ async def test_zeroconf_no_match(hass, mock_zeroconf):
 async def test_zeroconf_no_match_manufacturer(hass, mock_zeroconf):
     """Test configured options for a device are loaded via config entry."""
 
-    def http_only_service_update_mock(zeroconf, services, handlers):
+    def http_only_service_update_mock(ipv6, zeroconf, services, handlers):
         """Call service update handler."""
         handlers[0](
             zeroconf,
@@ -658,7 +637,7 @@ async def test_get_instance(hass, mock_zeroconf):
 async def test_removed_ignored(hass, mock_zeroconf):
     """Test we remove it when a zeroconf entry is removed."""
 
-    def service_update_mock(zeroconf, services, handlers):
+    def service_update_mock(ipv6, zeroconf, services, handlers):
         """Call service update handler."""
         handlers[0](
             zeroconf,
@@ -726,7 +705,9 @@ async def test_async_detect_interfaces_setting_non_loopback_route(hass):
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
 
-    assert mock_zc.mock_calls[0] == call(interfaces=InterfaceChoice.Default)
+    assert mock_zc.mock_calls[0] == call(
+        interfaces=InterfaceChoice.Default, ip_version=IPVersion.V4Only
+    )
 
 
 _ADAPTERS_WITH_MANUAL_CONFIG = [
