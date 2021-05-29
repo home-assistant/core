@@ -424,7 +424,7 @@ class SonosSpeaker:
             await subscription.unsubscribe()
 
         self._subscriptions = []
-        self.hass.data[DATA_SONOS].ssdp_known.pop(self.soco.uid)
+        self.hass.data[DATA_SONOS].ssdp_known.remove(self.soco.uid)
 
     def update_alarms_for_speaker(self) -> set[str]:
         """Update current alarm instances.
