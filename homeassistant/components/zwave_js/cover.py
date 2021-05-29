@@ -141,6 +141,9 @@ class ZWaveCover(ZWaveBaseEntity, CoverEntity):
 class ZwaveMotorizedBarrier(ZWaveBaseEntity, CoverEntity):
     """Representation of a Z-Wave motorized barrier device."""
 
+    _attr_supported_features = SUPPORT_OPEN | SUPPORT_CLOSE
+    _attr_device_class = DEVICE_CLASS_GARAGE
+
     def __init__(
         self,
         config_entry: ConfigEntry,
@@ -188,13 +191,3 @@ class ZwaveMotorizedBarrier(ZWaveBaseEntity, CoverEntity):
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the garage door."""
         await self.info.node.async_set_value(self._target_state, BARRIER_TARGET_CLOSE)
-
-    @property
-    def supported_features(self) -> int | None:
-        """Flag supported features."""
-        return SUPPORT_OPEN | SUPPORT_CLOSE
-
-    @property
-    def device_class(self) -> str | None:
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        return DEVICE_CLASS_GARAGE
