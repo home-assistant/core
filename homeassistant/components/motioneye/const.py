@@ -25,19 +25,8 @@ from motioneye_client.const import (
 
 DOMAIN: Final = "motioneye"
 
-API_PATH_ROOT: Final = f"/api/{DOMAIN}"
-API_PATH_DEVICE_ROOT: Final = f"{API_PATH_ROOT}/device/"
-
-EVENT_MOTION_DETECTED: Final = "motion_detected"
-EVENT_FILE_STORED: Final = "file_stored"
-
-API_PATH_EVENT_REGEXP: Final = (
-    API_PATH_DEVICE_ROOT
-    + r"{device_id:[-:_a-zA-Z0-9]+}/"
-    + r"{event:"
-    + f"({EVENT_MOTION_DETECTED}|{EVENT_FILE_STORED})"
-    + r"}"
-)
+ATTR_EVENT_TYPE: Final = "event_type"
+ATTR_WEBHOOK_ID: Final = "webhook_id"
 
 CONF_CLIENT: Final = "client"
 CONF_COORDINATOR: Final = "coordinator"
@@ -51,6 +40,9 @@ CONF_WEBHOOK_SET_OVERWRITE: Final = "webhook_set_overwrite"
 DEFAULT_WEBHOOK_SET: Final = True
 DEFAULT_WEBHOOK_SET_OVERWRITE: Final = False
 DEFAULT_SCAN_INTERVAL: Final = timedelta(seconds=30)
+
+EVENT_MOTION_DETECTED: Final = "motion_detected"
+EVENT_FILE_STORED: Final = "file_stored"
 
 EVENT_MOTION_DETECTED_KEYS: Final = [
     KEY_WEB_HOOK_CS_EVENT,

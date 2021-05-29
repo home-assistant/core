@@ -17,7 +17,7 @@ from homeassistant.config_entries import (
     ConfigFlow,
     OptionsFlow,
 )
-from homeassistant.const import CONF_SOURCE, CONF_URL
+from homeassistant.const import CONF_SOURCE, CONF_URL, CONF_WEBHOOK_ID
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv
@@ -132,6 +132,9 @@ class MotionEyeConfigFlow(ConfigFlow, domain=DOMAIN):
             return _get_form(user_input, errors)
 
         if self.context.get(CONF_SOURCE) == SOURCE_REAUTH and reauth_entry is not None:
+            # Persist the same webhook id across reauths.
+            if CONF_WEBHOOK_ID in reauth_entry.data:
+                user_input[CONF_WEBHOOK_ID] = reauth_entry.data[CONF_WEBHOOK_ID]
             self.hass.config_entries.async_update_entry(reauth_entry, data=user_input)
             # Need to manually reload, as the listener won't have been
             # installed because the initial load did not succeed (the reauth

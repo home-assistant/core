@@ -18,7 +18,7 @@ from homeassistant.components.motioneye.const import (
     CONF_WEBHOOK_SET_OVERWRITE,
     DOMAIN,
 )
-from homeassistant.const import CONF_URL
+from homeassistant.const import CONF_URL, CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
 
 from . import TEST_URL, create_mock_motioneye_client, create_mock_motioneye_config_entry
@@ -249,6 +249,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
     """Test a reauth."""
     config_data = {
         CONF_URL: TEST_URL,
+        CONF_WEBHOOK_ID: "test-webhook-id",
     }
 
     config_entry = create_mock_motioneye_config_entry(hass, data=config_data)
@@ -289,7 +290,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "reauth_successful"
-    assert dict(config_entry.data) == new_data
+    assert dict(config_entry.data) == {**new_data, CONF_WEBHOOK_ID: "test-webhook-id"}
 
     assert len(mock_setup_entry.mock_calls) == 1
     assert mock_client.async_client_close.called

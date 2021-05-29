@@ -2,11 +2,12 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
 from typing import Any, Callable
-from urllib.parse import urlencode
+from urllib.parse import urlencode, urljoin
 
-from aiohttp import web
+from aiohttp.web import Request, Response
 from motioneye_client.client import (
     MotionEyeClient,
     MotionEyeClientError,
@@ -14,7 +15,7 @@ from motioneye_client.client import (
 )
 from motioneye_client.const import (
     KEY_CAMERAS,
-    KEY_HTTP_METHOD_GET,
+    KEY_HTTP_METHOD_POST_JSON,
     KEY_ID,
     KEY_NAME,
     KEY_WEB_HOOK_CONVERSION_SPECIFIERS,
@@ -25,12 +26,22 @@ from motioneye_client.const import (
     KEY_WEB_HOOK_STORAGE_HTTP_METHOD,
     KEY_WEB_HOOK_STORAGE_URL,
 )
-from multidict import MultiDictProxy
 
 from homeassistant.components.camera.const import DOMAIN as CAMERA_DOMAIN
-from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.webhook import (
+    async_generate_id,
+    async_generate_url,
+    async_register,
+    async_unregister,
+)
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_DEVICE_ID, CONF_NAME, CONF_URL, HTTP_NOT_FOUND
+from homeassistant.const import (
+    ATTR_DEVICE_ID,
+    ATTR_NAME,
+    CONF_URL,
+    CONF_WEBHOOK_ID,
+    HTTP_BAD_REQUEST,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
@@ -38,13 +49,11 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.network import NoURLAvailableError, get_url
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
-    API_PATH_DEVICE_ROOT,
-    API_PATH_EVENT_REGEXP,
+    ATTR_EVENT_TYPE,
+    ATTR_WEBHOOK_ID,
     CONF_ADMIN_PASSWORD,
     CONF_ADMIN_USERNAME,
     CONF_CLIENT,
@@ -126,12 +135,6 @@ def listen_for_new_cameras(
     )
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the motionEye component."""
-    hass.http.register_view(MotionEyeView())
-    return True
-
-
 @callback
 def _add_camera(
     hass: HomeAssistant,
@@ -165,28 +168,32 @@ def _add_camera(
             or _is_recognized_web_hook(camera[key_url])
         ) and (
             not camera.get(key_enabled, False)
-            or camera.get(key_method) != KEY_HTTP_METHOD_GET
+            or camera.get(key_method) != KEY_HTTP_METHOD_POST_JSON
             or camera.get(key_url) != url
         ):
             camera[key_enabled] = True
-            camera[key_method] = KEY_HTTP_METHOD_GET
+            camera[key_method] = KEY_HTTP_METHOD_POST_JSON
             camera[key_url] = url
             return True
         return False
 
-    def _build_url(base: str, keys: list[str]) -> str:
+    def _build_url(
+        device: dr.DeviceEntry, base: str, event_type: str, keys: list[str]
+    ) -> str:
         """Build a motionEye webhook URL."""
 
-        return (
-            base
-            + "?"
+        return urljoin(
+            base,
+            "?"
             + urlencode(
                 {
                     **{k: KEY_WEB_HOOK_CONVERSION_SPECIFIERS[k] for k in sorted(keys)},
                     WEB_HOOK_SENTINEL_KEY: WEB_HOOK_SENTINEL_VALUE,
+                    ATTR_EVENT_TYPE: event_type,
+                    ATTR_DEVICE_ID: device.id,
                 },
                 safe="%{}",
-            )
+            ),
         )
 
     device = device_registry.async_get_or_create(
@@ -197,32 +204,32 @@ def _add_camera(
         name=camera[KEY_NAME],
     )
     if entry.options.get(CONF_WEBHOOK_SET, DEFAULT_WEBHOOK_SET):
-        url = None
-        try:
-            url = get_url(hass)
-        except NoURLAvailableError:
-            pass
-        if url:
-            if _set_webhook(
-                _build_url(
-                    f"{url}{API_PATH_DEVICE_ROOT}{device.id}/{EVENT_MOTION_DETECTED}",
-                    EVENT_MOTION_DETECTED_KEYS,
-                ),
-                KEY_WEB_HOOK_NOTIFICATIONS_URL,
-                KEY_WEB_HOOK_NOTIFICATIONS_HTTP_METHOD,
-                KEY_WEB_HOOK_NOTIFICATIONS_ENABLED,
-                camera,
-            ) | _set_webhook(
-                _build_url(
-                    f"{url}{API_PATH_DEVICE_ROOT}{device.id}/{EVENT_FILE_STORED}",
-                    EVENT_FILE_STORED_KEYS,
-                ),
-                KEY_WEB_HOOK_STORAGE_URL,
-                KEY_WEB_HOOK_STORAGE_HTTP_METHOD,
-                KEY_WEB_HOOK_STORAGE_ENABLED,
-                camera,
-            ):
-                hass.async_create_task(client.async_set_camera(camera_id, camera))
+        url = async_generate_url(hass, entry.data[CONF_WEBHOOK_ID])
+
+        if _set_webhook(
+            _build_url(
+                device,
+                url,
+                EVENT_MOTION_DETECTED,
+                EVENT_MOTION_DETECTED_KEYS,
+            ),
+            KEY_WEB_HOOK_NOTIFICATIONS_URL,
+            KEY_WEB_HOOK_NOTIFICATIONS_HTTP_METHOD,
+            KEY_WEB_HOOK_NOTIFICATIONS_ENABLED,
+            camera,
+        ) | _set_webhook(
+            _build_url(
+                device,
+                url,
+                EVENT_FILE_STORED,
+                EVENT_FILE_STORED_KEYS,
+            ),
+            KEY_WEB_HOOK_STORAGE_URL,
+            KEY_WEB_HOOK_STORAGE_HTTP_METHOD,
+            KEY_WEB_HOOK_STORAGE_ENABLED,
+            camera,
+        ):
+            hass.async_create_task(client.async_set_camera(camera_id, camera))
 
     async_dispatcher_send(
         hass,
@@ -239,6 +246,15 @@ async def _async_entry_updated(hass: HomeAssistant, config_entry: ConfigEntry) -
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up motionEye from a config entry."""
     hass.data.setdefault(DOMAIN, {})
+
+    # Ensure every loaded entry has a registered webhook id.
+    if CONF_WEBHOOK_ID not in entry.data:
+        hass.config_entries.async_update_entry(
+            entry, data={**entry.data, CONF_WEBHOOK_ID: async_generate_id()}
+        )
+    async_register(
+        hass, DOMAIN, "motionEye", entry.data[CONF_WEBHOOK_ID], handle_webhook
+    )
 
     client = create_motioneye_client(
         entry.data[CONF_URL],
@@ -338,6 +354,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
+    async_unregister(hass, entry.data[CONF_WEBHOOK_ID])
+
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         config_data = hass.data[DOMAIN].pop(entry.entry_id)
@@ -346,42 +364,44 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-class MotionEyeView(HomeAssistantView):
-    """View to handle motionEye motion detection."""
+async def handle_webhook(
+    hass: HomeAssistant, webhook_id: str, request: Request
+) -> None | Response:
+    """Handle webhook callback."""
 
-    name = f"api:{DOMAIN}"
-    requires_auth = False
-    url = API_PATH_EVENT_REGEXP
-
-    async def get(
-        self, request: web.Request, device_id: str, event: str
-    ) -> web.Response:
-        """Handle the GET request received from motionEye."""
-        hass = request.app["hass"]
-        device_registry = await dr.async_get_registry(hass)
-        device = device_registry.async_get(device_id)
-
-        if not device:
-            return self.json_message(
-                f"Device not found: {device_id}",
-                status_code=HTTP_NOT_FOUND,
-            )
-        await self._fire_event(hass, event, device, request.query)
-        return self.json({})
-
-    async def _fire_event(
-        self,
-        hass: HomeAssistant,
-        event_type: str,
-        device: dr.DeviceEntry,
-        data: MultiDictProxy[str],
-    ) -> None:
-        """Fire a Home Assistant event."""
-        hass.bus.async_fire(
-            f"{DOMAIN}.{event_type}",
-            {
-                CONF_DEVICE_ID: device.id,
-                CONF_NAME: device.name,
-                **data,
-            },
+    try:
+        data = await request.json()
+    except (json.decoder.JSONDecodeError, UnicodeDecodeError):
+        return Response(
+            text="Could not decode request",
+            status=HTTP_BAD_REQUEST,
         )
+
+    for key in (ATTR_DEVICE_ID, ATTR_EVENT_TYPE):
+        if key not in data:
+            return Response(
+                text=f"Missing webhook parameter: {key}",
+                status=HTTP_BAD_REQUEST,
+            )
+
+    event_type = data[ATTR_EVENT_TYPE]
+    device_registry = dr.async_get(hass)
+    device_id = data[ATTR_DEVICE_ID]
+    device = device_registry.async_get(device_id)
+
+    if not device:
+        return Response(
+            text=f"Device not found: {device_id}",
+            status=HTTP_BAD_REQUEST,
+        )
+
+    hass.bus.async_fire(
+        f"{DOMAIN}.{event_type}",
+        {
+            ATTR_DEVICE_ID: device.id,
+            ATTR_NAME: device.name,
+            ATTR_WEBHOOK_ID: webhook_id,
+            **data,
+        },
+    )
+    return None
