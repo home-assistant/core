@@ -62,7 +62,6 @@ from .errors import (
     AlexaInvalidDirectiveError,
     AlexaInvalidValueError,
     AlexaSecurityPanelAuthorizationRequired,
-    AlexaSecurityPanelUnauthorizedError,
     AlexaTempRangeError,
     AlexaUnsupportedThermostatModeError,
     AlexaVideoActionNotPermittedForContentError,
@@ -927,11 +926,9 @@ async def async_api_disarm(hass, config, directive, context):
         if payload["authorization"]["type"] == "FOUR_DIGIT_PIN":
             data["code"] = value
 
-    if not await hass.services.async_call(
+    await hass.services.async_call(
         entity.domain, SERVICE_ALARM_DISARM, data, blocking=True, context=context
-    ):
-        msg = "Invalid Code"
-        raise AlexaSecurityPanelUnauthorizedError(msg)
+    )
 
     response.add_context_property(
         {
