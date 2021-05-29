@@ -175,7 +175,6 @@ class CoverEntity(Entity):
     _attr_is_closing: bool | None = None
     _attr_is_opening: bool | None = None
     _attr_state: None = None
-    _attr_supported_features: int
 
     @property
     def current_cover_position(self) -> int | None:
@@ -228,7 +227,7 @@ class CoverEntity(Entity):
     @property
     def supported_features(self) -> int:
         """Flag supported features."""
-        if hasattr(self, "_attr_supported_features"):
+        if self._attr_supported_features is not None:
             return self._attr_supported_features
 
         supported_features = SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_STOP
