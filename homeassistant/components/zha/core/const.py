@@ -138,7 +138,7 @@ CONF_USB_PATH = "usb_path"
 CONF_ZIGPY = "zigpy_config"
 
 CONF_CONSIDER_UNAVAILABLE_MAINS = "consider_unavailable_mains"
-CONF_DEFAULT_CONSIDER_UNAVAILABLE_MAINS = 60 * 60 * 2 # 2 hours
+CONF_DEFAULT_CONSIDER_UNAVAILABLE_MAINS = 60 * 60 * 2  # 2 hours
 CONF_CONSIDER_UNAVAILABLE_BATTERY = "consider_unavailable_battery"
 CONF_DEFAULT_CONSIDER_UNAVAILABLE_BATTERY = 60 * 60 * 6  # 6 hours
 
@@ -146,8 +146,14 @@ CONF_ZHA_OPTIONS_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_DEFAULT_LIGHT_TRANSITION): cv.positive_int,
         vol.Required(CONF_ENABLE_IDENTIFY_ON_JOIN, default=True): cv.boolean,
-        vol.Optional(CONF_CONSIDER_UNAVAILABLE_MAINS, default=CONF_DEFAULT_CONSIDER_UNAVAILABLE_MAINS): cv.positive_int,
-        vol.Optional(CONF_CONSIDER_UNAVAILABLE_BATTERY, default=CONF_DEFAULT_CONSIDER_UNAVAILABLE_BATTERY): cv.positive_int
+        vol.Optional(
+            CONF_CONSIDER_UNAVAILABLE_MAINS,
+            default=CONF_DEFAULT_CONSIDER_UNAVAILABLE_MAINS,
+        ): cv.positive_int,
+        vol.Optional(
+            CONF_CONSIDER_UNAVAILABLE_BATTERY,
+            default=CONF_DEFAULT_CONSIDER_UNAVAILABLE_BATTERY,
+        ): cv.positive_int,
     }
 )
 

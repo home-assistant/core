@@ -55,11 +55,11 @@ from .const import (
     CLUSTER_COMMANDS_SERVER,
     CLUSTER_TYPE_IN,
     CLUSTER_TYPE_OUT,
-    CONF_ENABLE_IDENTIFY_ON_JOIN,
-    CONF_CONSIDER_UNAVAILABLE_MAINS,
-    CONF_DEFAULT_CONSIDER_UNAVAILABLE_MAINS,
     CONF_CONSIDER_UNAVAILABLE_BATTERY,
+    CONF_CONSIDER_UNAVAILABLE_MAINS,
     CONF_DEFAULT_CONSIDER_UNAVAILABLE_BATTERY,
+    CONF_DEFAULT_CONSIDER_UNAVAILABLE_MAINS,
+    CONF_ENABLE_IDENTIFY_ON_JOIN,
     EFFECT_DEFAULT_VARIANT,
     EFFECT_OKAY,
     POWER_BATTERY_OR_UNKNOWN,
@@ -110,18 +110,18 @@ class ZHADevice(LogMixin):
 
         if self.is_mains_powered:
             self.consider_unavailable_time = async_get_zha_config_value(
-                    self._zha_gateway.config_entry,
-                    ZHA_OPTIONS,
-                    CONF_CONSIDER_UNAVAILABLE_MAINS,
-                    CONF_DEFAULT_CONSIDER_UNAVAILABLE_MAINS,
-                )
+                self._zha_gateway.config_entry,
+                ZHA_OPTIONS,
+                CONF_CONSIDER_UNAVAILABLE_MAINS,
+                CONF_DEFAULT_CONSIDER_UNAVAILABLE_MAINS,
+            )
         else:
             self.consider_unavailable_time = async_get_zha_config_value(
-                    self._zha_gateway.config_entry,
-                    ZHA_OPTIONS,
-                    CONF_CONSIDER_UNAVAILABLE_BATTERY,
-                    CONF_DEFAULT_CONSIDER_UNAVAILABLE_BATTERY,
-                )
+                self._zha_gateway.config_entry,
+                ZHA_OPTIONS,
+                CONF_CONSIDER_UNAVAILABLE_BATTERY,
+                CONF_DEFAULT_CONSIDER_UNAVAILABLE_BATTERY,
+            )
 
         keep_alive_interval = random.randint(*_UPDATE_ALIVE_INTERVAL)
         self.unsubs.append(
