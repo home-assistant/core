@@ -9,6 +9,7 @@ import pytest
 from homeassistant import config_entries, data_entry_flow, loader
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import CoreState, callback
+from homeassistant.data_entry_flow import RESULT_TYPE_ABORT
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryNotReady,
@@ -1612,7 +1613,7 @@ async def test_unique_id_update_existing_entry_without_reload(hass, manager):
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == "abort"
+    assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
     assert entry.data["host"] == "1.1.1.1"
     assert entry.data["additional"] == "data"
@@ -1657,7 +1658,7 @@ async def test_unique_id_update_existing_entry_with_reload(hass, manager):
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == "abort"
+    assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
     assert entry.data["host"] == "1.1.1.1"
     assert entry.data["additional"] == "data"
@@ -1674,7 +1675,7 @@ async def test_unique_id_update_existing_entry_with_reload(hass, manager):
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == "abort"
+    assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
     assert entry.data["host"] == "2.2.2.2"
     assert entry.data["additional"] == "data"
@@ -1717,7 +1718,7 @@ async def test_unique_id_not_update_existing_entry(hass, manager):
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == "abort"
+    assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
     assert entry.data["host"] == "0.0.0.0"
     assert entry.data["additional"] == "data"
@@ -2861,5 +2862,5 @@ async def test__async_abort_entries_match(hass, manager, matchers, reason):
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == "abort"
+    assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == reason
