@@ -78,33 +78,25 @@ def async_get_discovery_info_by_udn_st(  # pylint: disable=invalid-name
 ) -> dict[str, str] | None:
     """Fetch the discovery info cache."""
     scanner: Scanner = hass.data[DOMAIN]
-    return scanner.cache.get((udn, st))
+    return scanner.async_get_discovery_info_by_udn_st(udn, st)
 
 
 @bind_hass
 def async_get_discovery_info_by_st(  # pylint: disable=invalid-name
     hass: HomeAssistant, st: str
-) -> dict[str, dict[str, str]]:
-    """Fetch all the udns for the st."""
+) -> list[dict[str, str]]:
+    """Fetch all the entries matching the st."""
     scanner: Scanner = hass.data[DOMAIN]
-    return {
-        udn_st[0]: discovery_info
-        for udn_st, discovery_info in scanner.cache.items()
-        if udn_st[1] == st
-    }
+    return scanner.async_get_discovery_info_by_st(st)
 
 
 @bind_hass
 def async_get_discovery_info_by_udn(
     hass: HomeAssistant, udn: str
-) -> dict[str, dict[str, str]]:
-    """Fetch all the sts for the udn."""
+) -> list[dict[str, str]]:
+    """Fetch all the entries matching the udn."""
     scanner: Scanner = hass.data[DOMAIN]
-    return {
-        udn_st[1]: discovery_info
-        for udn_st, discovery_info in scanner.cache.items()
-        if udn_st[0] == udn
-    }
+    return scanner.async_get_discovery_info_by_udn(udn)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -117,6 +109,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
+@core_callback
 def _async_use_default_interface(adapters: list[network.Adapter]) -> bool:
     for adapter in adapters:
         if adapter["enabled"] and not adapter["default"]:
@@ -124,16 +117,15 @@ def _async_use_default_interface(adapters: list[network.Adapter]) -> bool:
     return True
 
 
-def _callback_if_match(
-    callback: Callable[[dict], None], info: dict[str, str], match_dict: dict[str, str]
+@core_callback
+def _async_process_callbacks(
+    callbacks: list[Callable[[dict], None]], discovery_info: dict[str, str]
 ) -> None:
-    """Fire a callback if info matches the match dict."""
-    if not all(info.get(k) == v for (k, v) in match_dict.items()):
-        return
-    try:
-        callback(info)
-    except Exception:  # pylint: disable=broad-except
-        _LOGGER.exception("Failed to callback info: %s", info)
+    for callback in callbacks:
+        try:
+            callback(discovery_info)
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception("Failed to callback info: %s", discovery_info)
 
 
 class Scanner:
@@ -145,7 +137,7 @@ class Scanner:
         """Initialize class."""
         self.hass = hass
         self.seen: set[tuple[str, str]] = set()
-        self.cache: dict[tuple[str, str], dict[str, str]] = {}
+        self.cache: dict[tuple[str, str], Mapping[str, str]] = {}
         self._integration_matchers = integration_matchers
         self._cancel_scan: Callable[[], None] | None = None
         self._ssdp_listeners: list[SSDPListener] = []
@@ -164,8 +156,8 @@ class Scanner:
         # Make sure any entries that happened
         # before the callback was registered are fired
         if self.hass.state != CoreState.running:
-            for info in self.cache.values():
-                _callback_if_match(callback, info, match_dict)
+            for headers in self.cache.values():
+                self._async_callback_if_match(callback, headers, match_dict)
 
         callback_entry = (callback, match_dict)
         self._callbacks.append(callback_entry)
@@ -175,6 +167,20 @@ class Scanner:
             self._callbacks.remove(callback_entry)
 
         return _async_remove_callback
+
+    @core_callback
+    def _async_callback_if_match(
+        self,
+        callback: Callable[[dict], None],
+        headers: Mapping[str, str],
+        match_dict: dict[str, str],
+    ) -> None:
+        """Fire a callback if info matches the match dict."""
+        if not all(headers.get(k) == v for (k, v) in match_dict.items()):
+            return
+        _async_process_callbacks(
+            [callback], self._async_headers_to_discovery_info(headers)
+        )
 
     @core_callback
     def async_stop(self, *_: Any) -> None:
@@ -236,38 +242,54 @@ class Scanner:
             self.hass, self.async_scan, SCAN_INTERVAL
         )
 
-    async def _async_process_entry(self, headers: Mapping[str, str]) -> None:
-        """Process SSDP entries."""
-        _LOGGER.debug("_async_process_entry: %s", headers)
-        if "st" not in headers or "location" not in headers:
-            return
-        assert self.description_manager is not None
+    @core_callback
+    def _async_get_matching_callbacks(
+        self, headers: Mapping[str, str]
+    ) -> list[Callable[[dict], None]]:
+        """Return a list of callbacks that match."""
+        return [
+            callback
+            for callback, match_dict in self._callbacks
+            if all(headers.get(k) == v for (k, v) in match_dict.items())
+        ]
 
-        info_req = (
-            await self.description_manager.fetch_description(headers["location"]) or {}
-        )
-        info_with_req = CaseInsensitiveDict(**headers, **info_req)
-        discovery_info = discovery_info_from_headers_and_request(info_with_req)
-
-        if udn := discovery_info.get(ATTR_UPNP_UDN):
-            self.cache[(udn, headers["st"])] = discovery_info
-
-        for callback, match_dict in self._callbacks:
-            _callback_if_match(callback, discovery_info, match_dict)
-
-        key = (headers["st"], headers["location"])
-        if key in self.seen:
-            return
-        self.seen.add(key)
-
+    @core_callback
+    def _async_matching_domains(self, info_with_req: CaseInsensitiveDict) -> set[str]:
         domains = set()
         for domain, matchers in self._integration_matchers.items():
             for matcher in matchers:
                 if all(info_with_req.get(k) == v for (k, v) in matcher.items()):
                     domains.add(domain)
+        return domains
 
-        for domain in domains:
-            _LOGGER.debug("Discovered %s at %s", domain, headers["location"])
+    async def _async_process_entry(self, headers: Mapping[str, str]) -> None:
+        """Process SSDP entries."""
+        _LOGGER.debug("_async_process_entry: %s", headers)
+        if "st" not in headers or "location" not in headers:
+            return
+        h_st = headers["st"]
+        h_location = headers["location"]
+        key = (h_st, h_location)
+
+        if udn := _udn_from_usn(headers.get("usn")):
+            self.cache[(udn, h_st)] = headers
+
+        callbacks = self._async_get_matching_callbacks(headers)
+        if key in self.seen and not callbacks:
+            return
+
+        assert self.description_manager is not None
+        info_req = await self.description_manager.fetch_description(h_location) or {}
+        info_with_req = CaseInsensitiveDict(**headers, **info_req)
+        discovery_info = discovery_info_from_headers_and_request(info_with_req)
+
+        _async_process_callbacks(callbacks, discovery_info)
+        if key in self.seen:
+            return
+        self.seen.add(key)
+
+        for domain in self._async_matching_domains(info_with_req):
+            _LOGGER.debug("Discovered %s at %s", domain, h_location)
             flow: SSDPFlow = {
                 "domain": domain,
                 "context": {"source": config_entries.SOURCE_SSDP},
@@ -276,6 +298,50 @@ class Scanner:
             assert self.flow_dispatcher is not None
             self.flow_dispatcher.create(flow)
 
+    @core_callback
+    def _async_headers_to_discovery_info(
+        self, headers: Mapping[str, str]
+    ) -> dict[str, str]:
+        """Combine the headers and description into discovery_info.
+
+        Building this is a bit expensive so we only do it on demand.
+        """
+        assert self.description_manager is not None
+        location = headers["location"]
+        info_req = self.description_manager.async_cached_description(location) or {}
+        return discovery_info_from_headers_and_request(
+            CaseInsensitiveDict(**headers, **info_req)
+        )
+
+    @core_callback
+    def async_get_discovery_info_by_udn_st(  # pylint: disable=invalid-name
+        self, udn: str, st: str
+    ) -> dict[str, str] | None:
+        """Return discovery_info for a udn and st."""
+        if headers := self.cache.get((udn, st)):
+            return self._async_headers_to_discovery_info(headers)
+        return None
+
+    @core_callback
+    def async_get_discovery_info_by_st(  # pylint: disable=invalid-name
+        self, st: str
+    ) -> list[dict[str, str]]:
+        """Return matching discovery_infos for a st."""
+        return [
+            self._async_headers_to_discovery_info(headers)
+            for udn_st, headers in self.cache.items()
+            if udn_st[1] == st
+        ]
+
+    @core_callback
+    def async_get_discovery_info_by_udn(self, udn: str) -> list[dict[str, str]]:
+        """Return matching discovery_infos for a udn."""
+        return [
+            self._async_headers_to_discovery_info(headers)
+            for udn_st, headers in self.cache.items()
+            if udn_st[0] == udn
+        ]
+
 
 def discovery_info_from_headers_and_request(
     info_with_req: CaseInsensitiveDict,
@@ -283,7 +349,17 @@ def discovery_info_from_headers_and_request(
     """Convert headers and description to discovery_info."""
     info = {DISCOVERY_MAPPING.get(k.lower(), k): v for k, v in info_with_req.items()}
 
-    if ATTR_UPNP_UDN not in info and str(info.get(ATTR_SSDP_USN)).startswith("uuid:"):
-        info[ATTR_UPNP_UDN] = str(info[ATTR_SSDP_USN]).split("::")[0]
+    if ATTR_UPNP_UDN not in info and ATTR_SSDP_USN in info:
+        if udn := _udn_from_usn(info[ATTR_SSDP_USN]):
+            info[ATTR_UPNP_UDN] = udn
 
     return info
+
+
+def _udn_from_usn(usn: str | None) -> str | None:
+    """Get the UDN from the USN."""
+    if usn is None:
+        return None
+    if usn.startswith("uuid:"):
+        return usn.split("::")[0]
+    return None
