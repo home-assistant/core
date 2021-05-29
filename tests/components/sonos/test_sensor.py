@@ -1,7 +1,7 @@
 """Tests for the Sonos battery sensor platform."""
 from pysonos.exceptions import NotSupportedException
 
-from homeassistant.components.sonos import DATA_SONOS, DOMAIN
+from homeassistant.components.sonos import DOMAIN
 from homeassistant.components.sonos.binary_sensor import ATTR_BATTERY_POWER_SOURCE
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.setup import async_setup_component
@@ -63,6 +63,9 @@ async def test_battery_on_S1(hass, config_entry, config, soco, battery_event):
 
     await setup_platform(hass, config_entry, config)
 
+    subscription = soco.deviceProperties.subscribe.return_value
+    sub_callback = subscription.callback
+
     entity_registry = await hass.helpers.entity_registry.async_get_registry()
 
     battery = entity_registry.entities["sensor.zone_a_battery"]
@@ -74,8 +77,7 @@ async def test_battery_on_S1(hass, config_entry, config, soco, battery_event):
     assert power_state.state == STATE_UNAVAILABLE
 
     # Update the speaker with a callback event
-    speaker = hass.data[DATA_SONOS].discovered[soco.uid]
-    speaker.async_dispatch_properties(battery_event)
+    sub_callback(battery_event)
     await hass.async_block_till_done()
 
     battery_state = hass.states.get(battery.entity_id)
