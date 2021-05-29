@@ -101,8 +101,7 @@ class NetatmoDataHandler:
                     time() + data_class["interval"]
                 )
 
-                if self.data_classes[data_class_name]["subscriptions"]:
-                    await self.async_fetch_data(data_class_name)
+                await self.async_fetch_data(data_class_name)
 
         self._queue.rotate(BATCH_SIZE)
 
@@ -133,6 +132,9 @@ class NetatmoDataHandler:
 
     async def async_fetch_data(self, data_class_entry):
         """Fetch data and notify."""
+        if self.data[data_class_entry] is None:
+            return
+
         try:
             await self.data[data_class_entry].async_update()
 
