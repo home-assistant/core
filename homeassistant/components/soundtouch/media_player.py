@@ -1,4 +1,5 @@
 """Support for interface with a Bose Soundtouch."""
+import json
 import logging
 import re
 
@@ -353,25 +354,49 @@ class SoundTouchDevice(MediaPlayerEntity):
 
     def play_media(self, media_type, media_id, **kwargs):
         """Play a piece of media."""
-        _LOGGER.debug("Starting media with media_id: %s", media_id)
-        if re.match(r"http?://", str(media_id)):
-            # URL
-            _LOGGER.debug("Playing URL %s", str(media_id))
-            self._device.play_url(str(media_id))
-        else:
-            # Preset
-            presets = self._device.presets()
-            preset = next(
-                [
-                    preset for preset in presets if preset.preset_id == str(media_id)
-                ].__iter__(),
-                None,
-            )
-            if preset is not None:
-                _LOGGER.debug("Playing preset: %s", preset.name)
-                self._device.select_preset(preset)
+        if media_type == "SPOTIFY":
+            try:
+                media_id = json.loads(media_id)
+            except ValueError as error_msg:
+                _LOGGER.error(
+                    "Error loading media ID: invalid JSON format. %s", error_msg
+                )
+                return
+            if all(sub_id in media_id for sub_id in ["spotify_media_uri", "user_id"]):
+                _LOGGER.debug(
+                    "Starting spotify with spotify_media_uri: %s and user_id: %s",
+                    media_id["spotify_media_uri"],
+                    media_id["user_id"],
+                )
+                self._device.play_media(
+                    Source.SPOTIFY, media_id["spotify_media_uri"], media_id["user_id"]
+                )
             else:
-                _LOGGER.warning("Unable to find preset with id %s", media_id)
+                _LOGGER.warning(
+                    "Unable to find key 'spotify_media_uri' or 'user_id' in media_content_id"
+                )
+        else:
+            _LOGGER.debug("Starting media with media_id: %s", media_id)
+            if re.match(r"http?://", str(media_id)):
+                # URL
+                _LOGGER.debug("Playing URL %s", str(media_id))
+                self._device.play_url(str(media_id))
+            else:
+                # Preset
+                presets = self._device.presets()
+                preset = next(
+                    [
+                        preset
+                        for preset in presets
+                        if preset.preset_id == str(media_id)
+                    ].__iter__(),
+                    None,
+                )
+                if preset is not None:
+                    _LOGGER.debug("Playing preset: %s", preset.name)
+                    self._device.select_preset(preset)
+                else:
+                    _LOGGER.warning("Unable to find preset with id %s", media_id)
 
     def select_source(self, source):
         """Select input source."""
