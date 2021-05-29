@@ -78,7 +78,7 @@ def make_playlist(sequence, discontinuity_sequence=0, segments=[]):
     """Create a an hls playlist response for tests to assert on."""
     response = [
         "#EXTM3U",
-        "#EXT-X-VERSION:7",
+        "#EXT-X-VERSION:6",
         "#EXT-X-TARGETDURATION:10",
         '#EXT-X-MAP:URI="init.mp4"',
         f"#EXT-X-MEDIA-SEQUENCE:{sequence}",

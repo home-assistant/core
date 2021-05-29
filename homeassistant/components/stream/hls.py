@@ -71,7 +71,7 @@ class HlsPlaylistView(StreamView):
     def render_preamble(track):
         """Render preamble."""
         return [
-            "#EXT-X-VERSION:7",
+            "#EXT-X-VERSION:6",
             f"#EXT-X-TARGETDURATION:{track.target_duration}",
             '#EXT-X-MAP:URI="init.mp4"',
         ]
