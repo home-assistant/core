@@ -317,6 +317,10 @@ class SonosSpeaker:
     @callback
     def async_dispatch_alarms(self, event: SonosEvent) -> None:
         """Create a task to update alarms from an event."""
+        update_id = event.variables["alarm_list_version"]
+        if update_id in self.processed_alarm_events:
+            return
+        self.processed_alarm_events.append(update_id)
         self.hass.async_add_executor_job(self.update_alarms)
 
     @callback
