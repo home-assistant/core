@@ -315,6 +315,9 @@ class ZWaveConfigParameterSensor(ZwaveSensorBase):
 class ZWaveNodeStatusSensor(SensorEntity):
     """Representation of a node status sensor."""
 
+    _attr_should_poll = False
+    _attr_entity_registry_enabled_default = False
+
     def __init__(
         self, config_entry: ConfigEntry, client: ZwaveClient, node: ZwaveNode
     ) -> None:
@@ -365,13 +368,3 @@ class ZWaveNodeStatusSensor(SensorEntity):
     def available(self) -> bool:
         """Return entity availability."""
         return self.client.connected and bool(self.node.ready)
-
-    @property
-    def should_poll(self) -> bool:
-        """No polling needed."""
-        return False
-
-    @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Return if the entity should be enabled when first added to the entity registry."""
-        return False
