@@ -7,7 +7,6 @@ import zigpy.profiles.zha
 import zigpy.zcl.clusters.general as general
 
 import homeassistant.components.automation as automation
-import homeassistant.components.zha.core.device as zha_core_device
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -252,9 +251,7 @@ async def test_device_offline_fires(
     await hass.async_block_till_done()
     assert zha_device.available is True
 
-    zigpy_device.last_seen = (
-        time.time() - zha_core_device.CONSIDER_UNAVAILABLE_BATTERY - 2
-    )
+    zigpy_device.last_seen = time.time() - zha_device.consider_unavailable_time - 2
 
     # there are 3 checkins to perform before marking the device unavailable
     future = dt_util.utcnow() + timedelta(seconds=90)
@@ -266,7 +263,7 @@ async def test_device_offline_fires(
     await hass.async_block_till_done()
 
     future = dt_util.utcnow() + timedelta(
-        seconds=zha_core_device.CONSIDER_UNAVAILABLE_BATTERY + 100
+        seconds=zha_device.consider_unavailable_time + 100
     )
     async_fire_time_changed(hass, future)
     await hass.async_block_till_done()
