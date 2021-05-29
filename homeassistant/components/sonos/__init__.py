@@ -230,7 +230,7 @@ async def async_setup_entry(  # noqa: C901
 
         entry.async_on_unload(
             ssdp.async_register_callback(
-                hass, _async_discovered_player, {ssdp.ATTR_SSDP_ST: UPNP_ST}
+                hass, _async_discovered_player, {"st": UPNP_ST}
             )
         )
 
