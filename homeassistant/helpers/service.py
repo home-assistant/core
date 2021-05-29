@@ -111,7 +111,9 @@ class SelectedEntities:
     # Referenced devices
     referenced_devices: set[str] = dataclasses.field(default_factory=set)
 
-    def log_missing(self, missing_entities: set[str]) -> None:
+    def log_missing(
+        self, missing_entities: set[str], result_dict: dict | None = None
+    ) -> None:
         """Log about missing items."""
         parts = []
         for label, items in (
@@ -121,6 +123,8 @@ class SelectedEntities:
         ):
             if items:
                 parts.append(f"{label} {', '.join(sorted(items))}")
+                if result_dict is not None:
+                    result_dict[f"missing_{label}"] = list(items)
 
         if not parts:
             return
@@ -523,11 +527,12 @@ async def entity_service_call(
     func: str | Callable[..., Any],
     call: ServiceCall,
     required_features: Iterable[int] | None = None,
-) -> None:
+) -> dict | None:
     """Handle an entity service call.
 
     Calls all platforms simultaneously.
     """
+    result: dict = {}
     if call.context.user_id:
         user = await hass.auth.async_get_user(call.context.user_id)
         if user is None:
@@ -620,12 +625,13 @@ async def entity_service_call(
         for entity in entity_candidates:
             missing.discard(entity.entity_id)
 
-        referenced.log_missing(missing)
+        referenced.log_missing(missing, result)
 
     entities = []
 
     for entity in entity_candidates:
         if not entity.available:
+            result.setdefault("unavailable", []).append(entity.entity_id)
             continue
 
         # Skip entities that don't have the required feature.
@@ -636,12 +642,13 @@ async def entity_service_call(
                 for feature_set in required_features
             )
         ):
+            result.setdefault("unsupported", []).append(entity.entity_id)
             continue
 
         entities.append(entity)
 
     if not entities:
-        return
+        return result
 
     done, pending = await asyncio.wait(
         [
@@ -673,6 +680,8 @@ async def entity_service_call(
         assert not pending
         for future in done:
             future.result()  # pop exception if have
+
+    return result
 
 
 async def _handle_entity_call(

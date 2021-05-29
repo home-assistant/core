@@ -778,13 +778,15 @@ async def test_serviceregistry_async_service(hass):
     async def service_handler(call):
         """Service handler coroutine."""
         calls.append(call)
+        return "abcd"
 
     hass.services.async_register("test_domain", "register_calls", service_handler)
 
-    assert await hass.services.async_call(
+    result = await hass.services.async_call(
         "test_domain", "REGISTER_CALLS", blocking=True
     )
     assert len(calls) == 1
+    assert result == {"completed": True, "result": "abcd"}
 
 
 async def test_serviceregistry_async_service_partial(hass):
@@ -814,13 +816,33 @@ async def test_serviceregistry_callback_service(hass):
     def service_handler(call):
         """Service handler coroutine."""
         calls.append(call)
+        return "abcd"
 
     hass.services.async_register("test_domain", "register_calls", service_handler)
 
-    assert await hass.services.async_call(
+    result = await hass.services.async_call(
         "test_domain", "REGISTER_CALLS", blocking=True
     )
     assert len(calls) == 1
+    assert result == {"completed": True, "result": "abcd"}
+
+
+async def test_serviceregistry_other_service(hass):
+    """Test registering and calling a non callback or async service."""
+    calls = []
+
+    def service_handler(call):
+        """Service handler coroutine."""
+        calls.append(call)
+        return "abcd"
+
+    hass.services.async_register("test_domain", "register_calls", service_handler)
+
+    result = await hass.services.async_call(
+        "test_domain", "REGISTER_CALLS", blocking=True
+    )
+    assert len(calls) == 1
+    assert result == {"completed": True, "result": "abcd"}
 
 
 async def test_serviceregistry_remove_service(hass):
@@ -1205,8 +1227,14 @@ async def test_track_task_functions(loop):
 
 async def test_service_executed_with_subservices(hass):
     """Test we block correctly till all services done."""
-    calls = async_mock_service(hass, "test", "inner")
+    # calls = async_mock_service(hass, "test", "inner")
+    calls = []
     context = ha.Context()
+
+    async def handle_inner(call):
+        """Handle outer service call."""
+        calls.append(call)
+        return "inner"
 
     async def handle_outer(call):
         """Handle outer service call."""
@@ -1219,14 +1247,19 @@ async def test_service_executed_with_subservices(hass):
         )
         await asyncio.wait([call1, call2])
         calls.append(call)
+        return "outer"
 
+    hass.services.async_register("test", "inner", handle_inner)
     hass.services.async_register("test", "outer", handle_outer)
 
-    await hass.services.async_call("test", "outer", blocking=True, context=context)
+    result = await hass.services.async_call(
+        "test", "outer", blocking=True, context=context
+    )
 
     assert len(calls) == 4
     assert [call.service for call in calls] == ["outer", "inner", "inner", "outer"]
     assert all(call.context is context for call in calls)
+    assert result == {"completed": True, "result": "outer"}
 
 
 async def test_service_call_event_contains_original_data(hass):

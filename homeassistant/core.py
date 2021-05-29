@@ -1388,7 +1388,7 @@ class ServiceRegistry:
         context: Context | None = None,
         limit: float | None = SERVICE_CALL_LIMIT,
         target: dict | None = None,
-    ) -> bool | None:
+    ) -> dict | None:
         """
         Call a service.
 
@@ -1410,7 +1410,7 @@ class ServiceRegistry:
         context: Context | None = None,
         limit: float | None = SERVICE_CALL_LIMIT,
         target: dict | None = None,
-    ) -> bool | None:
+    ) -> dict | None:
         """
         Call a service.
 
@@ -1487,15 +1487,16 @@ class ServiceRegistry:
             _LOGGER.debug("Service was cancelled: %s", service_call)
             raise asyncio.CancelledError
         if task.done():
-            # Propagate any exceptions that might have happened during service call.
-            task.result()
+            # Get result and propagate any exceptions that might have happened during
+            # the service call.
+            result = task.result()
             # Service call completed successfully!
-            return True
+            return {"completed": True, "result": result}
         # Service call task did not complete before timeout expired.
         # Let it keep running in background.
         self._run_service_in_background(task, service_call)
         _LOGGER.debug("Service did not complete before timeout: %s", service_call)
-        return False
+        return {"completed": False}
 
     def _run_service_in_background(
         self, coro_or_task: Coroutine | asyncio.Task, service_call: ServiceCall
@@ -1520,14 +1521,16 @@ class ServiceRegistry:
 
     async def _execute_service(
         self, handler: Service, service_call: ServiceCall
-    ) -> None:
+    ) -> Any:
         """Execute a service."""
         if handler.job.job_type == HassJobType.Coroutinefunction:
-            await handler.job.target(service_call)
+            return await handler.job.target(service_call)
         elif handler.job.job_type == HassJobType.Callback:
-            handler.job.target(service_call)
+            return handler.job.target(service_call)
         else:
-            await self._hass.async_add_executor_job(handler.job.target, service_call)
+            return await self._hass.async_add_executor_job(
+                handler.job.target, service_call
+            )
 
 
 class Config:

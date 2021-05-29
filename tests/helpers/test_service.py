@@ -17,6 +17,7 @@ from homeassistant.const import (
     ENTITY_MATCH_NONE,
     STATE_OFF,
     STATE_ON,
+    STATE_UNAVAILABLE,
 )
 from homeassistant.helpers import (
     device_registry as dev_reg,
@@ -466,7 +467,7 @@ async def test_async_get_all_descriptions(hass):
 async def test_call_with_required_features(hass, mock_entities):
     """Test service calls invoked only if entity has required features."""
     test_service_mock = AsyncMock(return_value=None)
-    await service.entity_service_call(
+    result = await service.entity_service_call(
         hass,
         [Mock(entities=mock_entities)],
         test_service_mock,
@@ -481,12 +482,13 @@ async def test_call_with_required_features(hass, mock_entities):
     ]
     actual = [call[0][0] for call in test_service_mock.call_args_list]
     assert all(entity in actual for entity in expected)
+    assert result == {"unsupported": ["light.living_room", "light.bathroom"]}
 
 
 async def test_call_with_both_required_features(hass, mock_entities):
     """Test service calls invoked only if entity has both features."""
     test_service_mock = AsyncMock(return_value=None)
-    await service.entity_service_call(
+    result = await service.entity_service_call(
         hass,
         [Mock(entities=mock_entities)],
         test_service_mock,
@@ -498,12 +500,15 @@ async def test_call_with_both_required_features(hass, mock_entities):
     assert [call[0][0] for call in test_service_mock.call_args_list] == [
         mock_entities["light.bedroom"]
     ]
+    assert result == {
+        "unsupported": ["light.kitchen", "light.living_room", "light.bathroom"]
+    }
 
 
 async def test_call_with_one_of_required_features(hass, mock_entities):
     """Test service calls invoked with one entity having the required features."""
     test_service_mock = AsyncMock(return_value=None)
-    await service.entity_service_call(
+    result = await service.entity_service_call(
         hass,
         [Mock(entities=mock_entities)],
         test_service_mock,
@@ -519,24 +524,26 @@ async def test_call_with_one_of_required_features(hass, mock_entities):
     ]
     actual = [call[0][0] for call in test_service_mock.call_args_list]
     assert all(entity in actual for entity in expected)
+    assert result == {"unsupported": ["light.living_room"]}
 
 
 async def test_call_with_sync_func(hass, mock_entities):
     """Test invoking sync service calls."""
     test_service_mock = Mock(return_value=None)
-    await service.entity_service_call(
+    result = await service.entity_service_call(
         hass,
         [Mock(entities=mock_entities)],
         test_service_mock,
         ha.ServiceCall("test_domain", "test_service", {"entity_id": "light.kitchen"}),
     )
     assert test_service_mock.call_count == 1
+    assert result == {}
 
 
 async def test_call_with_sync_attr(hass, mock_entities):
     """Test invoking sync service calls."""
     mock_method = mock_entities["light.kitchen"].sync_method = Mock(return_value=None)
-    await service.entity_service_call(
+    result = await service.entity_service_call(
         hass,
         [Mock(entities=mock_entities)],
         "sync_method",
@@ -549,6 +556,7 @@ async def test_call_with_sync_attr(hass, mock_entities):
     assert mock_method.call_count == 1
     # We pass empty kwargs because both entity_id and area_id are filtered out
     assert mock_method.mock_calls[0][2] == {}
+    assert result == {"missing_areas": ["abcd"]}
 
 
 async def test_call_context_user_not_exist(hass):
@@ -578,7 +586,7 @@ async def test_call_context_target_all(hass, mock_handle_entity_call, mock_entit
             )
         ),
     ):
-        await service.entity_service_call(
+        result = await service.entity_service_call(
             hass,
             [Mock(entities=mock_entities)],
             Mock(),
@@ -592,6 +600,7 @@ async def test_call_context_target_all(hass, mock_handle_entity_call, mock_entit
 
     assert len(mock_handle_entity_call.mock_calls) == 1
     assert mock_handle_entity_call.mock_calls[0][1][1].entity_id == "light.kitchen"
+    assert result == {}
 
 
 async def test_call_context_target_specific(
@@ -606,7 +615,7 @@ async def test_call_context_target_specific(
             )
         ),
     ):
-        await service.entity_service_call(
+        result = await service.entity_service_call(
             hass,
             [Mock(entities=mock_entities)],
             Mock(),
@@ -620,6 +629,7 @@ async def test_call_context_target_specific(
 
     assert len(mock_handle_entity_call.mock_calls) == 1
     assert mock_handle_entity_call.mock_calls[0][1][1].entity_id == "light.kitchen"
+    assert result == {}
 
 
 async def test_call_context_target_specific_no_auth(
@@ -648,7 +658,7 @@ async def test_call_context_target_specific_no_auth(
 
 async def test_call_no_context_target_all(hass, mock_handle_entity_call, mock_entities):
     """Check we target all if no user context given."""
-    await service.entity_service_call(
+    result = await service.entity_service_call(
         hass,
         [Mock(entities=mock_entities)],
         Mock(),
@@ -661,13 +671,14 @@ async def test_call_no_context_target_all(hass, mock_handle_entity_call, mock_en
     assert [call[1][1] for call in mock_handle_entity_call.mock_calls] == list(
         mock_entities.values()
     )
+    assert result == {}
 
 
 async def test_call_no_context_target_specific(
     hass, mock_handle_entity_call, mock_entities
 ):
     """Check we can target specified entities."""
-    await service.entity_service_call(
+    result = await service.entity_service_call(
         hass,
         [Mock(entities=mock_entities)],
         Mock(),
@@ -680,13 +691,14 @@ async def test_call_no_context_target_specific(
 
     assert len(mock_handle_entity_call.mock_calls) == 1
     assert mock_handle_entity_call.mock_calls[0][1][1].entity_id == "light.kitchen"
+    assert result == {"missing_entities": ["light.non-existing"]}
 
 
 async def test_call_with_match_all(
     hass, mock_handle_entity_call, mock_entities, caplog
 ):
     """Check we only target allowed entities if targeting all."""
-    await service.entity_service_call(
+    result = await service.entity_service_call(
         hass,
         [Mock(entities=mock_entities)],
         Mock(),
@@ -697,11 +709,12 @@ async def test_call_with_match_all(
     assert [call[1][1] for call in mock_handle_entity_call.mock_calls] == list(
         mock_entities.values()
     )
+    assert result == {}
 
 
 async def test_call_with_omit_entity_id(hass, mock_handle_entity_call, mock_entities):
     """Check service call if we do not pass an entity ID."""
-    await service.entity_service_call(
+    result = await service.entity_service_call(
         hass,
         [Mock(entities=mock_entities)],
         Mock(),
@@ -709,6 +722,29 @@ async def test_call_with_omit_entity_id(hass, mock_handle_entity_call, mock_enti
     )
 
     assert len(mock_handle_entity_call.mock_calls) == 0
+    assert result == {}
+
+
+async def test_call_unavailable(hass, mock_handle_entity_call, mock_entities, caplog):
+    """Check unavailable entities are excluded from call."""
+    mock_entities["light.kitchen"]._values["available"] = False
+    hass.states.async_set("light.kitchen", STATE_UNAVAILABLE)
+    result = await service.entity_service_call(
+        hass,
+        [Mock(entities=mock_entities)],
+        Mock(),
+        ha.ServiceCall("test_domain", "test_service", {"entity_id": "all"}),
+    )
+
+    assert len(mock_handle_entity_call.mock_calls) == 3
+    expected = [
+        mock_entities["light.living_room"],
+        mock_entities["light.bedroom"],
+        mock_entities["light.bathroom"],
+    ]
+    actual = [call[1][1] for call in mock_handle_entity_call.mock_calls]
+    assert all(entity in actual for entity in expected)
+    assert result == {"unavailable": ["light.kitchen"]}
 
 
 async def test_register_admin_service(hass, hass_read_only_user, hass_admin_user):
@@ -1055,11 +1091,16 @@ async def test_entity_service_call_warn_referenced(hass, caplog):
             "device_id": "non-existent-device",
         },
     )
-    await service.entity_service_call(hass, {}, "", call)
+    result = await service.entity_service_call(hass, {}, "", call)
     assert (
         "Unable to find referenced areas non-existent-area, devices non-existent-device, entities non.existent"
         in caplog.text
     )
+    assert result == {
+        "missing_areas": ["non-existent-area"],
+        "missing_devices": ["non-existent-device"],
+        "missing_entities": ["non.existent"],
+    }
 
 
 async def test_async_extract_entities_warn_referenced(hass, caplog):

@@ -565,10 +565,12 @@ class _ScriptRun:
         )
         if limit is not None:
             # There is a call limit, so just wait for it to finish.
-            await service_task
+            result = await service_task
+            trace_update_result(service_result=result)
             return
 
-        await self._async_run_long_action(service_task)
+        result = await self._async_run_long_action(service_task)
+        trace_update_result(service_result=result)
 
     async def _async_device_step(self):
         """Perform the device automation specified in the action."""

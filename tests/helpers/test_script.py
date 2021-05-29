@@ -246,6 +246,7 @@ async def test_calling_service_basic(hass, caplog):
                             "target": {},
                         },
                         "running_script": False,
+                        "service_result": {"completed": True, "result": None},
                     }
                 }
             ],
@@ -299,6 +300,7 @@ async def test_calling_service_template(hass):
                             "target": {},
                         },
                         "running_script": False,
+                        "service_result": {"completed": True, "result": None},
                     }
                 }
             ],
@@ -338,6 +340,7 @@ async def test_data_template_with_templated_key(hass):
                             "target": {},
                         },
                         "running_script": False,
+                        "service_result": {"completed": True, "result": None},
                     }
                 }
             ],
@@ -2794,6 +2797,7 @@ async def test_set_variable(hass, caplog):
                         "target": {},
                     },
                     "running_script": False,
+                    "service_result": {"completed": True, "result": None},
                 },
                 "variables": {"variable": "value"},
             }
@@ -2835,6 +2839,7 @@ async def test_set_redefines_variable(hass, caplog):
                         "target": {},
                     },
                     "running_script": False,
+                    "service_result": {"completed": True, "result": None},
                 },
                 "variables": {"variable": "1"},
             }
@@ -2851,6 +2856,7 @@ async def test_set_redefines_variable(hass, caplog):
                         "target": {},
                     },
                     "running_script": False,
+                    "service_result": {"completed": True, "result": None},
                 },
                 "variables": {"variable": 2},
             }
