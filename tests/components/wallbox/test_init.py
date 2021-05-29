@@ -4,13 +4,13 @@ import json
 import requests_mock
 from voluptuous.schema_builder import raises
 
-from homeassistant.components.wallbox import InvalidAuth
 from homeassistant.components.wallbox.const import (
     CONF_CONNECTIONS,
     CONF_STATION,
     DOMAIN,
 )
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.typing import HomeAssistantType
 
 from tests.common import MockConfigEntry
@@ -61,7 +61,7 @@ async def test_get_data(hass: HomeAssistantType):
         )
 
         wallbox = hass.data[DOMAIN][CONF_CONNECTIONS][entry.entry_id]
-        assert await wallbox.async_get_data()
+        assert await wallbox._async_update_data()
 
 
 async def test_get_data_rounding_error(hass: HomeAssistantType):
@@ -83,7 +83,7 @@ async def test_get_data_rounding_error(hass: HomeAssistantType):
 
         wallbox = hass.data[DOMAIN][CONF_CONNECTIONS][entry.entry_id]
 
-        assert await wallbox.async_get_data()
+        assert await wallbox._async_update_data()
 
 
 async def test_authentication_exception(hass: HomeAssistantType):
@@ -91,7 +91,7 @@ async def test_authentication_exception(hass: HomeAssistantType):
 
     await setup_integration(hass)
 
-    with requests_mock.Mocker() as m, raises(InvalidAuth):
+    with requests_mock.Mocker() as m, raises(ConfigEntryAuthFailed):
         m.get(
             "https://api.wall-box.com/auth/token/user",
             text='{"jwt":"fakekeyhere","user_id":12345,"ttl":145656758,"error":false,"status":403}',
@@ -105,7 +105,7 @@ async def test_authentication_exception(hass: HomeAssistantType):
 
         wallbox = hass.data[DOMAIN][CONF_CONNECTIONS][entry.entry_id]
 
-        assert await wallbox.async_authenticate()
+        assert await wallbox._async_update_data()
 
 
 async def test_connection_exception(hass: HomeAssistantType):
@@ -127,7 +127,7 @@ async def test_connection_exception(hass: HomeAssistantType):
 
         wallbox = hass.data[DOMAIN][CONF_CONNECTIONS][entry.entry_id]
 
-        assert await wallbox.async_authenticate()
+        assert await wallbox._async_update_data()
 
 
 async def test_get_data_exception(hass: HomeAssistantType):
@@ -149,4 +149,4 @@ async def test_get_data_exception(hass: HomeAssistantType):
 
         wallbox = hass.data[DOMAIN][CONF_CONNECTIONS][entry.entry_id]
 
-        assert await wallbox.async_get_data()
+        assert await wallbox._async_update_data()

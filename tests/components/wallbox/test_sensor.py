@@ -24,7 +24,7 @@ async def test_wallbox_sensor_class(hass):
 
     state = hass.states.get("sensor.mock_title_charging_power")
     assert state.attributes["unit_of_measurement"] == "kW"
-    assert state.attributes["icon"] == "mdi:ev-station"
+    assert state.attributes["device_class"] == "power"
     assert state.name == "Mock Title Charging Power"
 
     state = hass.states.get("sensor.mock_title_charging_speed")

@@ -6,10 +6,10 @@ import logging
 import requests
 from wallbox import Wallbox
 
-from homeassistant import exceptions
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import CONF_CONNECTIONS, CONF_ROUND, CONF_SENSOR_TYPES, CONF_STATION, DOMAIN
@@ -20,23 +20,21 @@ PLATFORMS = ["sensor"]
 UPDATE_INTERVAL = 30
 
 
-class WallboxHub:
+class WallboxHub(DataUpdateCoordinator):
     """Wallbox Hub class."""
 
-    def __init__(self, station, username, password, hass):
+    def __init__(
+        self, station, username: str, password: str, hass: HomeAssistant
+    ) -> None:
         """Initialize."""
         self._station = station
-        self._username = username
-        self._password = password
-        self._wallbox = Wallbox(self._username, self._password)
+        self._wallbox = Wallbox(username, password)
         self._hass = hass
-        self._coordinator = DataUpdateCoordinator(
+
+        super().__init__(
             hass,
             _LOGGER,
-            # Name of the data. For logging purposes.
             name="wallbox",
-            update_method=self.async_get_data,
-            # Polling interval. Will only be polled if there are subscribers.
             update_interval=timedelta(seconds=UPDATE_INTERVAL),
         )
 
@@ -47,7 +45,7 @@ class WallboxHub:
             return True
         except requests.exceptions.HTTPError as wallbox_connection_error:
             if wallbox_connection_error.response.status_code == 403:
-                raise InvalidAuth from wallbox_connection_error
+                raise ConfigEntryAuthFailed from wallbox_connection_error
             raise ConnectionError from wallbox_connection_error
 
     def _get_data(self):
@@ -70,23 +68,10 @@ class WallboxHub:
         except requests.exceptions.HTTPError as wallbox_connection_error:
             raise ConnectionError from wallbox_connection_error
 
-    async def async_coordinator_first_refresh(self):
-        """Refresh coordinator for the first time."""
-        await self._coordinator.async_config_entry_first_refresh()
-
-    async def async_authenticate(self) -> bool:
-        """Authenticate using Wallbox API."""
-        return await self._hass.async_add_executor_job(self._authenticate)
-
-    async def async_get_data(self) -> bool:
+    async def _async_update_data(self) -> bool:
         """Get new sensor data for Wallbox component."""
         data = await self._hass.async_add_executor_job(self._get_data)
         return data
-
-    @property
-    def coordinator(self):
-        """Return the coordinator."""
-        return self._coordinator
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
@@ -98,9 +83,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         hass,
     )
 
-    await wallbox.async_authenticate()
-
-    await wallbox.async_coordinator_first_refresh()
+    await wallbox.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {CONF_CONNECTIONS: {}})
     hass.data[DOMAIN][CONF_CONNECTIONS][entry.entry_id] = wallbox
@@ -127,7 +110,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         hass.data[DOMAIN]["connections"].pop(entry.entry_id)
 
     return unload_ok
-
-
-class InvalidAuth(exceptions.HomeAssistantError):
-    """Error to indicate there is invalid auth."""

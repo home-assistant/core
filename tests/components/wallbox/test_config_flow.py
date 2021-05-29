@@ -1,11 +1,10 @@
 """Test the Wallbox config flow."""
 import json
-from unittest.mock import patch
 
 import requests_mock
 
 from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.wallbox import InvalidAuth, config_flow
+from homeassistant.components.wallbox import config_flow
 from homeassistant.components.wallbox.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
@@ -22,29 +21,6 @@ async def test_show_set_form(hass: HomeAssistant) -> None:
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
-
-
-async def test_form_invalid_auth(hass):
-    """Test we handle invalid auth."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    with patch(
-        "homeassistant.components.wallbox.config_flow.WallboxHub.async_authenticate",
-        side_effect=InvalidAuth,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                "station": "12345",
-                "username": "test-username",
-                "password": "test-password",
-            },
-        )
-
-    assert result2["type"] == "form"
-    assert result2["errors"] == {"base": "invalid_auth"}
 
 
 async def test_form_cannot_authenticate(hass):

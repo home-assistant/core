@@ -3,8 +3,9 @@ import voluptuous as vol
 
 from homeassistant import config_entries, core
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.exceptions import ConfigEntryAuthFailed
 
-from . import InvalidAuth, WallboxHub
+from . import WallboxHub
 from .const import CONF_STATION, DOMAIN
 
 COMPONENT_DOMAIN = DOMAIN
@@ -25,7 +26,7 @@ async def validate_input(hass: core.HomeAssistant, data):
     """
     hub = WallboxHub(data["station"], data["username"], data["password"], hass)
 
-    await hub.async_get_data()
+    await hub._async_update_data()
 
     # Return info that you want to store in the config entry.
     return {"title": "Wallbox Portal"}
@@ -48,7 +49,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=COMPONENT_DOMAIN):
             info = await validate_input(self.hass, user_input)
         except ConnectionError:
             errors["base"] = "cannot_connect"
-        except InvalidAuth:
+        except ConfigEntryAuthFailed:
             errors["base"] = "invalid_auth"
         else:
             return self.async_create_entry(title=info["title"], data=user_input)
