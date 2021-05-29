@@ -334,19 +334,21 @@ class SonosSpeaker:
     async def async_resubscribe(self, exception: Exception) -> None:
         """Attempt to resubscribe when a renewal failure is detected."""
         async with self._resubscription_lock:
-            if self.available:
-                if getattr(exception, "status", None) == 412:
-                    _LOGGER.warning(
-                        "Subscriptions for %s failed, speaker may have lost power",
-                        self.zone_name,
-                    )
-                else:
-                    _LOGGER.error(
-                        "Subscription renewals for %s failed",
-                        self.zone_name,
-                        exc_info=exception,
-                    )
-                await self.async_unseen()
+            if not self.available:
+                return
+
+            if getattr(exception, "status", None) == 412:
+                _LOGGER.warning(
+                    "Subscriptions for %s failed, speaker may have lost power",
+                    self.zone_name,
+                )
+            else:
+                _LOGGER.error(
+                    "Subscription renewals for %s failed",
+                    self.zone_name,
+                    exc_info=exception,
+                )
+            await self.async_unseen()
 
     @callback
     def async_dispatch_event(self, event: SonosEvent) -> None:
