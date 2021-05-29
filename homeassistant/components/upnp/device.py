@@ -71,8 +71,8 @@ class Device:
         """Discover UPnP/IGD devices."""
         _LOGGER.debug("Discovering UPnP/IGD devices")
         discoveries = []
-        for st in IgdDevice.DEVICE_TYPES:
-            for discovery_info in ssdp.async_get_discovery_info_by_st(hass, st):
+        for ssdp_st in IgdDevice.DEVICE_TYPES:
+            for discovery_info in ssdp.async_get_discovery_info_by_st(hass, ssdp_st):
                 discoveries.append(discovery_info_to_discovery(discovery_info))
         return discoveries
 
