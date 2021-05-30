@@ -42,7 +42,7 @@ class DescriptionManager:
     @callback
     def async_cached_description(self, xml_location: str) -> None | dict[str, str]:
         """Fetch the description from the cache."""
-        return self._description_cache[xml_location]
+        return self._description_cache.get(xml_location)
 
     async def _fetch_description(self, xml_location: str) -> None | dict[str, str]:
         """Fetch an XML description."""
