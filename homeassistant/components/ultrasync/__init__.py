@@ -2,6 +2,7 @@
 
 import asyncio
 
+from datetime import timedelta
 from ultrasync import AlarmScene
 import voluptuous as vol
 
@@ -116,7 +117,11 @@ def _async_register_services(
 
 async def _async_update_listener(hass: HomeAssistantType, entry: ConfigEntry) -> None:
     """Handle options update."""
-    await hass.config_entries.async_reload(entry.entry_id)
+    if entry.options[CONF_SCAN_INTERVAL]:
+        coordinator = hass.data[DOMAIN][entry.entry_id]["coordinator"]
+        coordinator.update_interval = timedelta(seconds=entry.options[CONF_SCAN_INTERVAL])
+
+        await coordinator.async_refresh()
 
 
 class UltraSyncEntity(CoordinatorEntity):
