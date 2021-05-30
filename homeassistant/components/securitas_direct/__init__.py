@@ -8,12 +8,11 @@ from pysecuritas.api.installation import Installation
 from pysecuritas.core.session import ConnectionException, Session
 from requests.exceptions import ConnectTimeout, HTTPError
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
 from homeassistant.const import CONF_CODE, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.util import Throttle
 
-from ...config_entries import SOURCE_REAUTH
 from .const import (
     CONF_COUNTRY,
     CONF_INSTALLATION,
@@ -29,12 +28,6 @@ def _connect(client):
     """Connect to securitas."""
 
     client.login()
-
-    return True
-
-
-async def async_setup(hass, config) -> bool:
-    """Set up securitas direct."""
 
     return True
 

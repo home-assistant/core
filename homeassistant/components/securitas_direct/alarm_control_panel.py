@@ -9,6 +9,7 @@ from homeassistant.components.alarm_control_panel.const import (
     SUPPORT_ALARM_ARM_NIGHT,
 )
 from homeassistant.const import (
+    ATTR_CODE_FORMAT,
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_CUSTOM_BYPASS,
     STATE_ALARM_ARMED_HOME,
@@ -75,7 +76,7 @@ class SecuritasAlarm(alarm.AlarmControlPanelEntity):
     def name(self):
         """Return the name of the device."""
 
-        return f"securitas_{self.client.installation_alias or self.client.installation_num}"
+        return f"Securitas {self.client.installation_alias or self.client.installation_num}"
 
     @property
     def state(self):
@@ -91,7 +92,7 @@ class SecuritasAlarm(alarm.AlarmControlPanelEntity):
 
     @property
     def code_arm_required(self):
-        """Valiate if code is required."""
+        """Validate if code is required."""
 
         return False
 
@@ -126,6 +127,9 @@ class SecuritasAlarm(alarm.AlarmControlPanelEntity):
         """Return the state attributes."""
 
         return {
+            ATTR_CODE_FORMAT: self.code_format,
+            alarm.ATTR_CHANGED_BY: self.changed_by,
+            alarm.ATTR_CODE_ARM_REQUIRED: self.code_arm_required,
             "device": self._device,
             "time": self._time,
             "message": self._message,
