@@ -22,8 +22,9 @@ from .const import DOMAIN  # pylint: disable=unused-import
 _LOGGER = logging.getLogger(__name__)
 
 
-class AuthFailureException(IOError):
+class AuthFailureException(Exception):
     """A general exception we can use to track Authentication failures."""
+    pass
 
 
 def validate_input(hass: HomeAssistantType, data: dict) -> Dict[str, Any]:
@@ -70,7 +71,7 @@ class UltraSyncConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
 
             except AuthFailureException:
-                errors["base"] = "cannot_connect"
+                errors["base"] = "invalid_auth"
 
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")

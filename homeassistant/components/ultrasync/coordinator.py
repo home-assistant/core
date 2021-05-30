@@ -26,8 +26,6 @@ class UltraSyncDataUpdateCoordinator(DataUpdateCoordinator):
             host=config[CONF_HOST],
         )
 
-        self._init = False
-
         # Used to track delta (for change tracking)
         self._area_delta = {}
         self._zone_delta = {}
@@ -97,8 +95,6 @@ class UltraSyncDataUpdateCoordinator(DataUpdateCoordinator):
                     response["area{:0>2}_state".format(area["bank"] + 1)] = area[
                         "status"
                     ]
-
-            self._init = True
 
             # Return our response
             return response
