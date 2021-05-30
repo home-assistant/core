@@ -76,7 +76,8 @@ class UltraSyncConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
-                return self.async_abort(reason="unknown")
+                errors["base"] = "unknown"
+
             else:
                 return self.async_create_entry(
                     title=user_input[CONF_HOST],
