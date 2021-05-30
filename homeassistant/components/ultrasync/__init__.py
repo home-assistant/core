@@ -1,8 +1,8 @@
 """The Interlogix/Hills ComNav UltraSync Hub component."""
 
 import asyncio
-
 from datetime import timedelta
+
 from ultrasync import AlarmScene
 import voluptuous as vol
 
