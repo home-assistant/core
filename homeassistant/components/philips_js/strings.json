@@ -29,7 +29,7 @@
     "step": {
       "init": {
         "data": {
-          "allownotify": "Allow usage of data notification service."
+          "allow_notify": "Allow usage of data notification service."
         }
       }
     }
