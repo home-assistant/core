@@ -256,8 +256,8 @@ async def test_record_stream_audio(
         recorder = stream.add_provider(RECORDER_PROVIDER)
 
         while True:
-            segment = await recorder.recv()
-            if not segment:
+            await recorder.recv()
+            if not (segment := recorder.last_segment):
                 break
             last_segment = segment
             stream_worker_sync.resume()
