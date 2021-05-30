@@ -15,7 +15,8 @@ from xknx.io import (
     ConnectionConfig,
     ConnectionType,
 )
-from xknx.telegram import AddressFilter, GroupAddress, Telegram
+from xknx.telegram import AddressFilter, Telegram
+from xknx.telegram.address import parse_device_group_address
 from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWrite
 
 from homeassistant.const import (
@@ -35,7 +36,6 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, KNX_ADDRESS, SupportedPlatforms
 from .expose import KNXExposeSensor, KNXExposeTime, create_knx_exposure
-from .factory import create_knx_device
 from .schema import (
     BinarySensorSchema,
     ClimateSchema,
@@ -228,19 +228,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             )
 
     for platform in SupportedPlatforms:
-        if platform.value in config[DOMAIN]:
-            for device_config in config[DOMAIN][platform.value]:
-                create_knx_device(platform, knx_module.xknx, device_config)
-
-    # We need to wait until all entities are loaded into the device list since they could also be created from other platforms
-    for platform in SupportedPlatforms:
+        if platform.value not in config[DOMAIN]:
+            continue
         hass.async_create_task(
             discovery.async_load_platform(
                 hass,
                 platform.value,
                 DOMAIN,
                 {
-                    "platform_config": config[DOMAIN].get(platform.value),
+                    "platform_config": config[DOMAIN][platform.value],
                 },
                 config,
             )
@@ -402,7 +398,7 @@ class KNXModule:
         address_filters = list(
             map(AddressFilter, self.config[DOMAIN][CONF_KNX_EVENT_FILTER])
         )
-        return self.xknx.telegram_queue.register_telegram_received_cb(  # type: ignore[no-any-return]
+        return self.xknx.telegram_queue.register_telegram_received_cb(
             self.telegram_received_cb,
             address_filters=address_filters,
             group_addresses=[],
@@ -412,7 +408,7 @@ class KNXModule:
     async def service_event_register_modify(self, call: ServiceCall) -> None:
         """Service for adding or removing a GroupAddress to the knx_event filter."""
         attr_address = call.data[KNX_ADDRESS]
-        group_addresses = map(GroupAddress, attr_address)
+        group_addresses = map(parse_device_group_address, attr_address)
 
         if call.data.get(SERVICE_KNX_ATTR_REMOVE):
             for group_address in group_addresses:
@@ -483,7 +479,7 @@ class KNXModule:
 
         for address in attr_address:
             telegram = Telegram(
-                destination_address=GroupAddress(address),
+                destination_address=parse_device_group_address(address),
                 payload=GroupValueWrite(payload),
             )
             await self.xknx.telegrams.put(telegram)
@@ -492,7 +488,7 @@ class KNXModule:
         """Service for sending a GroupValueRead telegram to the KNX bus."""
         for address in call.data[KNX_ADDRESS]:
             telegram = Telegram(
-                destination_address=GroupAddress(address),
+                destination_address=parse_device_group_address(address),
                 payload=GroupValueRead(),
             )
             await self.xknx.telegrams.put(telegram)

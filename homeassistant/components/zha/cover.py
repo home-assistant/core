@@ -183,7 +183,7 @@ class Shade(ZhaEntity, CoverEntity):
         zha_device: ZhaDeviceType,
         channels: list[ChannelType],
         **kwargs,
-    ):
+    ) -> None:
         """Initialize the ZHA light."""
         super().__init__(unique_id, zha_device, channels, **kwargs)
         self._on_off_channel = self.cluster_channels[CHANNEL_ON_OFF]

@@ -8,7 +8,9 @@ from aprslib import ConnectionError as AprsConnectionError, LoginError
 import geopy.distance
 import voluptuous as vol
 
-from homeassistant.components.device_tracker import PLATFORM_SCHEMA
+from homeassistant.components.device_tracker import (
+    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
+)
 from homeassistant.const import (
     ATTR_GPS_ACCURACY,
     ATTR_LATITUDE,
@@ -44,7 +46,7 @@ FILTER_PORT = 14580
 
 MSG_FORMATS = ["compressed", "uncompressed", "mic-e"]
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_CALLSIGNS): cv.ensure_list,
         vol.Required(CONF_USERNAME): cv.string,

@@ -21,6 +21,7 @@ LOGGER = logging.getLogger(__package__)
 # constants for events
 ZWAVE_JS_VALUE_NOTIFICATION_EVENT = f"{DOMAIN}_value_notification"
 ZWAVE_JS_NOTIFICATION_EVENT = f"{DOMAIN}_notification"
+ZWAVE_JS_VALUE_UPDATED_EVENT = f"{DOMAIN}_value_updated"
 ATTR_NODE_ID = "node_id"
 ATTR_HOME_ID = "home_id"
 ATTR_ENDPOINT = "endpoint"
@@ -43,6 +44,8 @@ ATTR_DATA_TYPE = "data_type"
 ATTR_WAIT_FOR_RESULT = "wait_for_result"
 
 # service constants
+ATTR_NODES = "nodes"
+
 SERVICE_SET_CONFIG_PARAMETER = "set_config_parameter"
 SERVICE_BULK_SET_PARTIAL_CONFIG_PARAMETERS = "bulk_set_partial_config_parameters"
 
@@ -55,5 +58,8 @@ SERVICE_REFRESH_VALUE = "refresh_value"
 ATTR_REFRESH_ALL_VALUES = "refresh_all_values"
 
 SERVICE_SET_VALUE = "set_value"
+SERVICE_MULTICAST_SET_VALUE = "multicast_set_value"
+
+ATTR_BROADCAST = "broadcast"
 
 ADDON_SLUG = "core_zwave_js"

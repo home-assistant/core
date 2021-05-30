@@ -115,6 +115,7 @@ async def test_user_form_pin_not_required(hass, user_form):
         "type": "create_entry",
         "version": 1,
         "data": deepcopy(TEST_CONFIG),
+        "options": {},
     }
     expected["data"][CONF_PIN] = None
     result["data"][CONF_DEVICE_ID] = TEST_DEVICE_ID
@@ -131,6 +132,7 @@ async def test_pin_form_init(pin_form):
         "handler": DOMAIN,
         "step_id": "pin",
         "type": "form",
+        "last_step": None,
     }
     assert pin_form == expected
 
@@ -175,6 +177,7 @@ async def test_pin_form_success(hass, pin_form):
         "type": "create_entry",
         "version": 1,
         "data": TEST_CONFIG,
+        "options": {},
     }
     result["data"][CONF_DEVICE_ID] = TEST_DEVICE_ID
     assert result == expected

@@ -9,7 +9,7 @@
             "invalid_auth": "Niepoprawne uwierzytelnienie",
             "resolve_error": "Nie mo\u017cna rozpozna\u0107 adresu ESP. Je\u015bli ten b\u0142\u0105d b\u0119dzie si\u0119 powtarza\u0142, nale\u017cy ustawi\u0107 statyczny adres IP: https://esphomelib.com/esphomeyaml/components/wifi.html#manual-ips"
         },
-        "flow_title": "ESPHome: {name}",
+        "flow_title": "{name}",
         "step": {
             "authenticate": {
                 "data": {

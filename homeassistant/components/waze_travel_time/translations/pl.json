@@ -10,6 +10,7 @@
             "user": {
                 "data": {
                     "destination": "Punkt docelowy",
+                    "name": "Nazwa",
                     "origin": "Punkt pocz\u0105tkowy",
                     "region": "Region"
                 },

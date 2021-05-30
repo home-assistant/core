@@ -150,7 +150,7 @@ async def async_setup_platform(
         )
 
     # create upnp device
-    factory = UpnpFactory(requester, disable_state_variable_validation=True)
+    factory = UpnpFactory(requester, non_strict=True)
     try:
         upnp_device = await factory.async_create_device(url)
     except (asyncio.TimeoutError, aiohttp.ClientError) as err:

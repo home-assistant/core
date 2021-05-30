@@ -3,8 +3,8 @@ from __future__ import annotations
 
 import asyncio
 from collections import deque
-import io
-from typing import TYPE_CHECKING, Any, Callable
+import datetime
+from typing import Callable
 
 from aiohttp import web
 import attr
@@ -16,32 +16,22 @@ from homeassistant.util.decorator import Registry
 
 from .const import ATTR_STREAMS, DOMAIN
 
-if TYPE_CHECKING:
-    import av.container
-    import av.video
-
 PROVIDERS = Registry()
 
 
-@attr.s
-class StreamBuffer:
-    """Represent a segment."""
-
-    segment: io.BytesIO = attr.ib()
-    output: av.container.OutputContainer = attr.ib()
-    vstream: av.video.VideoStream = attr.ib()
-    astream = attr.ib(default=None)  # type=Optional[av.audio.AudioStream]
-
-
-@attr.s
+@attr.s(slots=True)
 class Segment:
     """Represent a segment."""
 
     sequence: int = attr.ib()
-    segment: io.BytesIO = attr.ib()
+    # the init of the mp4
+    init: bytes = attr.ib()
+    # the video data (moof + mddat)s of the mp4
+    moof_data: bytes = attr.ib()
     duration: float = attr.ib()
     # For detecting discontinuities across stream restarts
     stream_id: int = attr.ib(default=0)
+    start_time: datetime.datetime = attr.ib(factory=datetime.datetime.utcnow)
 
 
 class IdleTimer:
@@ -53,7 +43,7 @@ class IdleTimer:
 
     def __init__(
         self, hass: HomeAssistant, timeout: int, idle_callback: Callable[[], None]
-    ):
+    ) -> None:
         """Initialize IdleTimer."""
         self._hass = hass
         self._timeout = timeout
@@ -95,12 +85,11 @@ class StreamOutput:
         """Initialize a stream output."""
         self._hass = hass
         self._idle_timer = idle_timer
-        self._cursor = None
         self._event = asyncio.Event()
-        self._segments = deque(maxlen=deque_maxlen)
+        self._segments: deque[Segment] = deque(maxlen=deque_maxlen)
 
     @property
-    def name(self) -> str:
+    def name(self) -> str | None:
         """Return provider name."""
         return None
 
@@ -110,9 +99,23 @@ class StreamOutput:
         return self._idle_timer.idle
 
     @property
-    def segments(self) -> list[int]:
+    def last_sequence(self) -> int:
+        """Return the last sequence number without iterating."""
+        if self._segments:
+            return self._segments[-1].sequence
+        return -1
+
+    @property
+    def sequences(self) -> list[int]:
         """Return current sequence from segments."""
         return [s.sequence for s in self._segments]
+
+    @property
+    def last_segment(self) -> Segment | None:
+        """Return the last segment without iterating."""
+        if self._segments:
+            return self._segments[-1]
+        return None
 
     @property
     def target_duration(self) -> int:
@@ -123,30 +126,22 @@ class StreamOutput:
         durations = [s.duration for s in self._segments]
         return round(max(durations)) or 1
 
-    def get_segment(self, sequence: int = None) -> Any:
-        """Retrieve a specific segment, or the whole list."""
-        self._idle_timer.awake()
-
-        if not sequence:
-            return self._segments
-
+    def get_segment(self, sequence: int) -> Segment | None:
+        """Retrieve a specific segment."""
         for segment in self._segments:
             if segment.sequence == sequence:
                 return segment
         return None
 
-    async def recv(self) -> Segment:
+    def get_segments(self) -> deque[Segment]:
+        """Retrieve all segments."""
+        return self._segments
+
+    async def recv(self) -> bool:
         """Wait for and retrieve the latest segment."""
-        last_segment = max(self.segments, default=0)
-        if self._cursor is None or self._cursor <= last_segment:
-            await self._event.wait()
-
-        if not self._segments:
-            return None
-
-        segment = self.get_segment()[-1]
-        self._cursor = segment.sequence
-        return segment
+        self._idle_timer.awake()
+        await self._event.wait()
+        return self.last_segment is not None
 
     def put(self, segment: Segment) -> None:
         """Store output."""

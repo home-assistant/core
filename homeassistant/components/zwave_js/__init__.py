@@ -13,12 +13,13 @@ from zwave_js_server.model.notification import (
     EntryControlNotification,
     NotificationNotification,
 )
-from zwave_js_server.model.value import ValueNotification
+from zwave_js_server.model.value import Value, ValueNotification
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_DEVICE_ID,
     ATTR_DOMAIN,
+    ATTR_ENTITY_ID,
     CONF_URL,
     EVENT_HOMEASSISTANT_STOP,
 )
@@ -28,7 +29,7 @@ from homeassistant.helpers import device_registry, entity_registry
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from .addon import AddonError, AddonManager, get_addon_manager
+from .addon import AddonError, AddonManager, AddonState, get_addon_manager
 from .api import async_register_api
 from .const import (
     ATTR_COMMAND_CLASS,
@@ -50,6 +51,8 @@ from .const import (
     ATTR_TYPE,
     ATTR_VALUE,
     ATTR_VALUE_RAW,
+    CONF_ADDON_DEVICE,
+    CONF_ADDON_NETWORK_KEY,
     CONF_DATA_COLLECTION_OPTED_IN,
     CONF_INTEGRATION_CREATED_ADDON,
     CONF_NETWORK_KEY,
@@ -63,9 +66,10 @@ from .const import (
     LOGGER,
     ZWAVE_JS_NOTIFICATION_EVENT,
     ZWAVE_JS_VALUE_NOTIFICATION_EVENT,
+    ZWAVE_JS_VALUE_UPDATED_EVENT,
 )
-from .discovery import async_discover_values
-from .helpers import async_enable_statistics, get_device_id
+from .discovery import ZwaveDiscoveryInfo, async_discover_values
+from .helpers import async_enable_statistics, get_device_id, get_unique_id
 from .migrate import async_migrate_discovered_value
 from .services import ZWaveServices
 
@@ -108,7 +112,9 @@ def register_node_in_dev_reg(
     return device
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(  # noqa: C901
+    hass: HomeAssistant, entry: ConfigEntry
+) -> bool:
     """Set up Z-Wave JS from a config entry."""
     use_addon = entry.data.get(CONF_USE_ADDON)
     if use_addon:
@@ -138,6 +144,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if device.id not in registered_unique_ids:
             registered_unique_ids[device.id] = defaultdict(set)
 
+        value_updates_disc_info = []
+
         # run discovery on all node values and create/update entities
         for disc_info in async_discover_values(node):
             platform = disc_info.platform
@@ -164,6 +172,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             LOGGER.debug("Discovered entity: %s", disc_info)
             async_dispatcher_send(
                 hass, f"{DOMAIN}_{entry.entry_id}_add_{platform}", disc_info
+            )
+
+            # Capture discovery info for values we want to watch for updates
+            if disc_info.assumed_state:
+                value_updates_disc_info.append(disc_info)
+
+        # add listener for value updated events if necessary
+        if value_updates_disc_info:
+            unsubscribe_callbacks.append(
+                node.on(
+                    "value updated",
+                    lambda event: async_on_value_updated(
+                        value_updates_disc_info, event["value"]
+                    ),
+                )
             )
 
         # add listener for stateless node value notification events
@@ -272,6 +295,52 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         hass.bus.async_fire(ZWAVE_JS_NOTIFICATION_EVENT, event_data)
 
+    @callback
+    def async_on_value_updated(
+        value_updates_disc_info: list[ZwaveDiscoveryInfo], value: Value
+    ) -> None:
+        """Fire value updated event."""
+        # Get the discovery info for the value that was updated. If we can't
+        # find the discovery info, we don't need to fire an event
+        try:
+            disc_info = next(
+                disc_info
+                for disc_info in value_updates_disc_info
+                if disc_info.primary_value.value_id == value.value_id
+            )
+        except StopIteration:
+            return
+
+        device = dev_reg.async_get_device({get_device_id(client, value.node)})
+
+        unique_id = get_unique_id(
+            client.driver.controller.home_id, disc_info.primary_value.value_id
+        )
+        entity_id = ent_reg.async_get_entity_id(disc_info.platform, DOMAIN, unique_id)
+
+        raw_value = value_ = value.value
+        if value.metadata.states:
+            value_ = value.metadata.states.get(str(value), value_)
+
+        hass.bus.async_fire(
+            ZWAVE_JS_VALUE_UPDATED_EVENT,
+            {
+                ATTR_NODE_ID: value.node.node_id,
+                ATTR_HOME_ID: client.driver.controller.home_id,
+                ATTR_DEVICE_ID: device.id,  # type: ignore
+                ATTR_ENTITY_ID: entity_id,
+                ATTR_COMMAND_CLASS: value.command_class,
+                ATTR_COMMAND_CLASS_NAME: value.command_class_name,
+                ATTR_ENDPOINT: value.endpoint,
+                ATTR_PROPERTY: value.property_,
+                ATTR_PROPERTY_NAME: value.property_name,
+                ATTR_PROPERTY_KEY: value.property_key,
+                ATTR_PROPERTY_KEY_NAME: value.property_key_name,
+                ATTR_VALUE: value_,
+                ATTR_VALUE_RAW: raw_value,
+            },
+        )
+
     # connect and throw error if connection failed
     try:
         async with timeout(CONNECT_TIMEOUT):
@@ -293,7 +362,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry_hass_data[DATA_CONNECT_FAILED_LOGGED] = False
         entry_hass_data[DATA_INVALID_SERVER_VERSION_LOGGED] = False
 
-    services = ZWaveServices(hass, ent_reg)
+    services = ZWaveServices(hass, ent_reg, dev_reg)
     services.async_register()
 
     # Set up websocket API
@@ -492,26 +561,37 @@ async def async_ensure_addon_running(hass: HomeAssistant, entry: ConfigEntry) ->
     if addon_manager.task_in_progress():
         raise ConfigEntryNotReady
     try:
-        addon_is_installed = await addon_manager.async_is_addon_installed()
-        addon_is_running = await addon_manager.async_is_addon_running()
+        addon_info = await addon_manager.async_get_addon_info()
     except AddonError as err:
-        LOGGER.error("Failed to get the Z-Wave JS add-on info")
+        LOGGER.error(err)
         raise ConfigEntryNotReady from err
 
     usb_path: str = entry.data[CONF_USB_PATH]
     network_key: str = entry.data[CONF_NETWORK_KEY]
+    addon_state = addon_info.state
 
-    if not addon_is_installed:
+    if addon_state == AddonState.NOT_INSTALLED:
         addon_manager.async_schedule_install_setup_addon(
             usb_path, network_key, catch_error=True
         )
         raise ConfigEntryNotReady
 
-    if not addon_is_running:
+    if addon_state == AddonState.NOT_RUNNING:
         addon_manager.async_schedule_setup_addon(
             usb_path, network_key, catch_error=True
         )
         raise ConfigEntryNotReady
+
+    addon_options = addon_info.options
+    addon_device = addon_options[CONF_ADDON_DEVICE]
+    addon_network_key = addon_options[CONF_ADDON_NETWORK_KEY]
+    updates = {}
+    if usb_path != addon_device:
+        updates[CONF_USB_PATH] = addon_device
+    if network_key != addon_network_key:
+        updates[CONF_NETWORK_KEY] = addon_network_key
+    if updates:
+        hass.config_entries.async_update_entry(entry, data={**entry.data, **updates})
 
 
 @callback

@@ -1,10 +1,8 @@
 """Support for WLED."""
 from __future__ import annotations
 
-import asyncio
 from datetime import timedelta
 import logging
-from typing import Any
 
 from wled import WLED, Device as WLEDDevice, WLEDConnectionError, WLEDError
 
@@ -12,22 +10,24 @@ from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_NAME, CONF_HOST
+from homeassistant.const import (
+    ATTR_IDENTIFIERS,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
+    ATTR_NAME,
+    ATTR_SW_VERSION,
+    CONF_HOST,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
     UpdateFailed,
 )
 
-from .const import (
-    ATTR_IDENTIFIERS,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    ATTR_SOFTWARE_VERSION,
-    DOMAIN,
-)
+from .const import DOMAIN
 
 SCAN_INTERVAL = timedelta(seconds=5)
 PLATFORMS = (LIGHT_DOMAIN, SENSOR_DOMAIN, SWITCH_DOMAIN)
@@ -52,10 +52,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
 
     # Set up all platforms for this device/entry.
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, platform)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
@@ -64,15 +61,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload WLED config entry."""
 
     # Unload entities for this entry/device.
-    unload_ok = all(
-        await asyncio.gather(
-            *(
-                hass.config_entries.async_forward_entry_unload(entry, platform)
-                for platform in PLATFORMS
-            )
-        )
-    )
-
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         del hass.data[DOMAIN][entry.entry_id]
 
@@ -113,7 +102,7 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
         hass: HomeAssistant,
         *,
         host: str,
-    ):
+    ) -> None:
         """Initialize global WLED data updater."""
         self.wled = WLED(host, session=async_get_clientsession(hass))
 
@@ -140,49 +129,15 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
 class WLEDEntity(CoordinatorEntity):
     """Defines a base WLED entity."""
 
-    def __init__(
-        self,
-        *,
-        entry_id: str,
-        coordinator: WLEDDataUpdateCoordinator,
-        name: str,
-        icon: str,
-        enabled_default: bool = True,
-    ) -> None:
-        """Initialize the WLED entity."""
-        super().__init__(coordinator)
-        self._enabled_default = enabled_default
-        self._entry_id = entry_id
-        self._icon = icon
-        self._name = name
-        self._unsub_dispatcher = None
+    coordinator: WLEDDataUpdateCoordinator
 
     @property
-    def name(self) -> str:
-        """Return the name of the entity."""
-        return self._name
-
-    @property
-    def icon(self) -> str:
-        """Return the mdi icon of the entity."""
-        return self._icon
-
-    @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Return if the entity should be enabled when first added to the entity registry."""
-        return self._enabled_default
-
-
-class WLEDDeviceEntity(WLEDEntity):
-    """Defines a WLED device entity."""
-
-    @property
-    def device_info(self) -> dict[str, Any]:
+    def device_info(self) -> DeviceInfo:
         """Return device information about this WLED device."""
         return {
             ATTR_IDENTIFIERS: {(DOMAIN, self.coordinator.data.info.mac_address)},
             ATTR_NAME: self.coordinator.data.info.name,
             ATTR_MANUFACTURER: self.coordinator.data.info.brand,
             ATTR_MODEL: self.coordinator.data.info.product,
-            ATTR_SOFTWARE_VERSION: self.coordinator.data.info.version,
+            ATTR_SW_VERSION: self.coordinator.data.info.version,
         }

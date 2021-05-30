@@ -5,7 +5,7 @@ from unittest.mock import patch
 import pytest
 from transmissionrpc.error import TransmissionError
 
-from homeassistant import data_entry_flow
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import transmission
 from homeassistant.components.transmission import config_flow
 from homeassistant.components.transmission.const import (
@@ -96,7 +96,7 @@ def init_config_flow(hass):
 async def test_flow_user_config(hass, api):
     """Test user config."""
     result = await hass.config_entries.flow.async_init(
-        transmission.DOMAIN, context={"source": "user"}
+        transmission.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
@@ -106,7 +106,7 @@ async def test_flow_required_fields(hass, api):
     """Test with required fields only."""
     result = await hass.config_entries.flow.async_init(
         transmission.DOMAIN,
-        context={"source": "user"},
+        context={"source": config_entries.SOURCE_USER},
         data={CONF_NAME: NAME, CONF_HOST: HOST, CONF_PORT: PORT},
     )
 
@@ -120,7 +120,9 @@ async def test_flow_required_fields(hass, api):
 async def test_flow_all_provided(hass, api):
     """Test with all provided."""
     result = await hass.config_entries.flow.async_init(
-        transmission.DOMAIN, context={"source": "user"}, data=MOCK_ENTRY
+        transmission.DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
+        data=MOCK_ENTRY,
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
@@ -208,7 +210,9 @@ async def test_host_already_configured(hass, api):
     mock_entry_unique_name = MOCK_ENTRY.copy()
     mock_entry_unique_name[CONF_NAME] = "Transmission 1"
     result = await hass.config_entries.flow.async_init(
-        transmission.DOMAIN, context={"source": "user"}, data=mock_entry_unique_name
+        transmission.DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
+        data=mock_entry_unique_name,
     )
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
@@ -217,7 +221,9 @@ async def test_host_already_configured(hass, api):
     mock_entry_unique_port[CONF_PORT] = 9092
     mock_entry_unique_port[CONF_NAME] = "Transmission 2"
     result = await hass.config_entries.flow.async_init(
-        transmission.DOMAIN, context={"source": "user"}, data=mock_entry_unique_port
+        transmission.DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
+        data=mock_entry_unique_port,
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
 
@@ -225,7 +231,9 @@ async def test_host_already_configured(hass, api):
     mock_entry_unique_host[CONF_HOST] = "192.168.1.101"
     mock_entry_unique_host[CONF_NAME] = "Transmission 3"
     result = await hass.config_entries.flow.async_init(
-        transmission.DOMAIN, context={"source": "user"}, data=mock_entry_unique_host
+        transmission.DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
+        data=mock_entry_unique_host,
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
 
@@ -242,7 +250,9 @@ async def test_name_already_configured(hass, api):
     mock_entry = MOCK_ENTRY.copy()
     mock_entry[CONF_HOST] = "0.0.0.0"
     result = await hass.config_entries.flow.async_init(
-        transmission.DOMAIN, context={"source": "user"}, data=mock_entry
+        transmission.DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
+        data=mock_entry,
     )
 
     assert result["type"] == "form"

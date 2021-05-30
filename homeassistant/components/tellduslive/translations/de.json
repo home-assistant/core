@@ -2,7 +2,6 @@
     "config": {
         "abort": {
             "already_configured": "Dienst ist bereits konfiguriert",
-            "authorize_url_fail": "Unbekannter Fehler beim Erstellen der Authorisierungs-URL",
             "authorize_url_timeout": "Zeit\u00fcberschreitung beim Erstellen der Authorisierungs-URL.",
             "unknown": "Unerwarteter Fehler",
             "unknown_authorize_url_generation": "Beim Generieren einer Authentifizierungs-URL ist ein unbekannter Fehler aufgetreten"

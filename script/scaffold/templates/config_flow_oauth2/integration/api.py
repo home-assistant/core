@@ -9,7 +9,7 @@ from homeassistant.helpers import config_entry_oauth2_flow
 
 # TODO the following two API examples are based on our suggested best practices
 # for libraries using OAuth2 with requests or aiohttp. Delete the one you won't use.
-# For more info see the docs at <insert url>.
+# For more info see the docs at https://developers.home-assistant.io/docs/api_lib_auth/#oauth2.
 
 
 class ConfigEntryAuth(my_pypi_package.AbstractAuth):

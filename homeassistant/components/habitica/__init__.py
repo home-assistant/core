@@ -1,5 +1,4 @@
 """The habitica integration."""
-import asyncio
 import logging
 
 from habitipy.aio import HabitipyAsync
@@ -100,7 +99,7 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up habitica from a config entry."""
 
     class HAHabitipyAsync(HabitipyAsync):
@@ -131,7 +130,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         )
 
     data = hass.data.setdefault(DOMAIN, {})
-    config = config_entry.data
+    config = entry.data
     websession = async_get_clientsession(hass)
     url = config[CONF_URL]
     username = config[CONF_API_USER]
@@ -143,15 +142,12 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     if name is None:
         name = user["profile"]["name"]
         hass.config_entries.async_update_entry(
-            config_entry,
-            data={**config_entry.data, CONF_NAME: name},
+            entry,
+            data={**entry.data, CONF_NAME: name},
         )
-    data[config_entry.entry_id] = api
+    data[entry.entry_id] = api
 
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, platform)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     if not hass.services.has_service(DOMAIN, SERVICE_API_CALL):
         hass.services.async_register(
@@ -163,14 +159,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, platform)
-                for platform in PLATFORMS
-            ]
-        )
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
 
