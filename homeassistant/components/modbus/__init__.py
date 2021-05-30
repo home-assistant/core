@@ -58,8 +58,6 @@ from .const import (
     CONF_BYTESIZE,
     CONF_CLIMATES,
     CONF_CLOSE_COMM_ON_ERROR,
-    CONF_CURRENT_TEMP,
-    CONF_CURRENT_TEMP_REGISTER_TYPE,
     CONF_DATA_COUNT,
     CONF_DATA_TYPE,
     CONF_FANS,
@@ -124,12 +122,15 @@ BASE_COMPONENT_SCHEMA = vol.Schema(
 
 CLIMATE_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
     {
-        vol.Required(CONF_CURRENT_TEMP): cv.positive_int,
+        vol.Required(CONF_ADDRESS): cv.positive_int,
+        vol.Optional(CONF_INPUT_TYPE, default=CALL_TYPE_REGISTER_HOLDING): vol.In(
+            [
+                CALL_TYPE_REGISTER_HOLDING,
+                CALL_TYPE_REGISTER_INPUT,
+            ]
+        ),
         vol.Required(CONF_TARGET_TEMP): cv.positive_int,
         vol.Optional(CONF_DATA_COUNT, default=2): cv.positive_int,
-        vol.Optional(
-            CONF_CURRENT_TEMP_REGISTER_TYPE, default=CALL_TYPE_REGISTER_HOLDING
-        ): vol.In([CALL_TYPE_REGISTER_HOLDING, CALL_TYPE_REGISTER_INPUT]),
         vol.Optional(CONF_DATA_TYPE, default=DATA_TYPE_FLOAT): vol.In(
             [DATA_TYPE_INT, DATA_TYPE_UINT, DATA_TYPE_FLOAT, DATA_TYPE_CUSTOM]
         ),

@@ -61,6 +61,14 @@ EVENT_CHARGING = {
     "CHARGING": True,
     "NOT_CHARGING": False,
 }
+SUBSCRIPTION_SERVICES = [
+    "alarmClock",
+    "avTransport",
+    "contentDirectory",
+    "deviceProperties",
+    "renderingControl",
+    "zoneGroupTopology",
+]
 UNAVAILABLE_VALUES = {"", "NOT_IMPLEMENTED", None}
 
 
@@ -138,32 +146,43 @@ class SonosSpeaker:
         self.household_id: str = soco.household_id
         self.media = SonosMedia(soco)
 
+        # Synchronization helpers
         self.is_first_poll: bool = True
         self._is_ready: bool = False
-        self._subscriptions: list[SubscriptionBase] = []
-        self._resubscription_lock: asyncio.Lock | None = None
-        self._poll_timer: Callable | None = None
-        self._seen_timer: Callable | None = None
         self._platforms_ready: set[str] = set()
 
+        # Subscriptions and events
+        self._subscriptions: list[SubscriptionBase] = []
+        self._resubscription_lock: asyncio.Lock | None = None
+        self._event_dispatchers: dict[str, Callable] = {}
+
+        # Scheduled callback handles
+        self._poll_timer: Callable | None = None
+        self._seen_timer: Callable | None = None
+
+        # Dispatcher handles
         self._entity_creation_dispatcher: Callable | None = None
         self._group_dispatcher: Callable | None = None
         self._seen_dispatcher: Callable | None = None
 
+        # Device information
         self.mac_address = speaker_info["mac_address"]
         self.model_name = speaker_info["model_name"]
         self.version = speaker_info["display_version"]
         self.zone_name = speaker_info["zone_name"]
 
+        # Battery
         self.battery_info: dict[str, Any] | None = None
         self._last_battery_event: datetime.datetime | None = None
         self._battery_poll_timer: Callable | None = None
 
+        # Volume / Sound
         self.volume: int | None = None
         self.muted: bool | None = None
         self.night_mode: bool | None = None
         self.dialog_mode: bool | None = None
 
+        # Grouping
         self.coordinator: SonosSpeaker | None = None
         self.sonos_group: list[SonosSpeaker] = [self]
         self.sonos_group_entities: list[str] = []
@@ -209,8 +228,20 @@ class SonosSpeaker:
         else:
             self._platforms_ready.add(SWITCH_DOMAIN)
 
+        self._event_dispatchers = {
+            "AlarmClock": self.async_dispatch_alarms,
+            "AVTransport": self.async_dispatch_media_update,
+            "ContentDirectory": self.favorites.async_delayed_update,
+            "DeviceProperties": self.async_dispatch_device_properties,
+            "RenderingControl": self.async_update_volume,
+            "ZoneGroupTopology": self.async_update_groups,
+        }
+
         dispatcher_send(self.hass, SONOS_CREATE_MEDIA_PLAYER, self)
 
+    #
+    # Entity management
+    #
     async def async_handle_new_entity(self, entity_type: str) -> None:
         """Listen to new entities to trigger first subscription."""
         self._platforms_ready.add(entity_type)
@@ -233,11 +264,35 @@ class SonosSpeaker:
         self.media.play_mode = self.soco.play_mode
         self.update_volume()
 
+    #
+    # Properties
+    #
     @property
     def available(self) -> bool:
         """Return whether this speaker is available."""
         return self._seen_timer is not None
 
+    @property
+    def favorites(self) -> SonosFavorites:
+        """Return the SonosFavorites instance for this household."""
+        return self.hass.data[DATA_SONOS].favorites[self.household_id]
+
+    @property
+    def is_coordinator(self) -> bool:
+        """Return true if player is a coordinator."""
+        return self.coordinator is None
+
+    @property
+    def subscription_address(self) -> str | None:
+        """Return the current subscription callback address if any."""
+        if self._subscriptions:
+            addr, port = self._subscriptions[0].event_listener.address
+            return ":".join([addr, str(port)])
+        return None
+
+    #
+    # Subscription handling and event dispatchers
+    #
     async def async_subscribe(self) -> bool:
         """Initiate event subscriptions."""
         _LOGGER.debug("Creating subscriptions for %s", self.zone_name)
@@ -250,18 +305,11 @@ class SonosSpeaker:
                     f"when existing subscriptions exist: {self._subscriptions}"
                 )
 
-            await asyncio.gather(
-                self._subscribe(self.soco.avTransport, self.async_update_media),
-                self._subscribe(self.soco.renderingControl, self.async_update_volume),
-                self._subscribe(self.soco.contentDirectory, self.async_update_content),
-                self._subscribe(
-                    self.soco.zoneGroupTopology, self.async_dispatch_groups
-                ),
-                self._subscribe(
-                    self.soco.deviceProperties, self.async_dispatch_properties
-                ),
-                self._subscribe(self.soco.alarmClock, self.async_dispatch_alarms),
-            )
+            subscriptions = [
+                self._subscribe(getattr(self.soco, service), self.async_dispatch_event)
+                for service in SUBSCRIPTION_SERVICES
+            ]
+            await asyncio.gather(*subscriptions)
             return True
         except SoCoException as ex:
             _LOGGER.warning("Could not connect %s: %s", self.zone_name, ex)
@@ -279,27 +327,86 @@ class SonosSpeaker:
         self._subscriptions.append(subscription)
 
     @callback
-    def async_dispatch_properties(self, event: SonosEvent | None = None) -> None:
-        """Update properties from event."""
-        self.hass.async_create_task(self.async_update_device_properties(event))
+    def async_renew_failed(self, exception: Exception) -> None:
+        """Handle a failed subscription renewal."""
+        self.hass.async_create_task(self.async_resubscribe(exception))
+
+    async def async_resubscribe(self, exception: Exception) -> None:
+        """Attempt to resubscribe when a renewal failure is detected."""
+        async with self._resubscription_lock:
+            if not self.available:
+                return
+
+            if getattr(exception, "status", None) == 412:
+                _LOGGER.warning(
+                    "Subscriptions for %s failed, speaker may have lost power",
+                    self.zone_name,
+                )
+            else:
+                _LOGGER.error(
+                    "Subscription renewals for %s failed",
+                    self.zone_name,
+                    exc_info=exception,
+                )
+            await self.async_unseen()
 
     @callback
-    def async_dispatch_alarms(self, event: SonosEvent | None = None) -> None:
-        """Update alarms from event."""
-        self.hass.async_create_task(self.async_update_alarms(event))
-
-    @callback
-    def async_dispatch_groups(self, event: SonosEvent | None = None) -> None:
-        """Update groups from event."""
-        if event and self._poll_timer:
+    def async_dispatch_event(self, event: SonosEvent) -> None:
+        """Handle callback event and route as needed."""
+        if self._poll_timer:
             _LOGGER.debug(
                 "Received event, cancelling poll timer for %s", self.zone_name
             )
             self._poll_timer()
             self._poll_timer = None
 
-        self.async_update_groups(event)
+        dispatcher = self._event_dispatchers[event.service.service_type]
+        dispatcher(event)
 
+    @callback
+    def async_dispatch_alarms(self, event: SonosEvent) -> None:
+        """Create a task to update alarms from an event."""
+        self.hass.async_add_executor_job(self.update_alarms)
+
+    @callback
+    def async_dispatch_device_properties(self, event: SonosEvent) -> None:
+        """Update device properties from an event."""
+        self.hass.async_create_task(self.async_update_device_properties(event))
+
+    async def async_update_device_properties(self, event: SonosEvent) -> None:
+        """Update device properties from an event."""
+        if (more_info := event.variables.get("more_info")) is not None:
+            battery_dict = dict(x.split(":") for x in more_info.split(","))
+            await self.async_update_battery_info(battery_dict)
+        self.async_write_entity_states()
+
+    @callback
+    def async_dispatch_media_update(self, event: SonosEvent) -> None:
+        """Update information about currently playing media from an event."""
+        self.hass.async_add_executor_job(self.update_media, event)
+
+    @callback
+    def async_update_volume(self, event: SonosEvent) -> None:
+        """Update information about currently volume settings."""
+        variables = event.variables
+
+        if "volume" in variables:
+            self.volume = int(variables["volume"]["Master"])
+
+        if "mute" in variables:
+            self.muted = variables["mute"]["Master"] == "1"
+
+        if "night_mode" in variables:
+            self.night_mode = variables["night_mode"] == "1"
+
+        if "dialog_level" in variables:
+            self.dialog_mode = variables["dialog_level"] == "1"
+
+        self.async_write_entity_states()
+
+    #
+    # Speaker availability methods
+    #
     async def async_seen(self, soco: SoCo | None = None) -> None:
         """Record that this speaker was seen right now."""
         if soco is not None:
@@ -337,28 +444,6 @@ class SonosSpeaker:
 
         self.async_write_entity_states()
 
-    async def async_resubscribe(self, exception: Exception) -> None:
-        """Attempt to resubscribe when a renewal failure is detected."""
-        async with self._resubscription_lock:
-            if self.available:
-                if getattr(exception, "status", None) == 412:
-                    _LOGGER.warning(
-                        "Subscriptions for %s failed, speaker may have lost power",
-                        self.zone_name,
-                    )
-                else:
-                    _LOGGER.error(
-                        "Subscription renewals for %s failed",
-                        self.zone_name,
-                        exc_info=exception,
-                    )
-                await self.async_unseen()
-
-    @callback
-    def async_renew_failed(self, exception: Exception) -> None:
-        """Handle a failed subscription renewal."""
-        self.hass.async_create_task(self.async_resubscribe(exception))
-
     async def async_unseen(self, now: datetime.datetime | None = None) -> None:
         """Make this player unavailable when it was not seen recently."""
         self.async_write_entity_states()
@@ -376,17 +461,9 @@ class SonosSpeaker:
 
         self._subscriptions = []
 
-    async def async_update_device_properties(self, event: SonosEvent = None) -> None:
-        """Update device properties using the provided SonosEvent."""
-        if event is None:
-            return
-
-        if (more_info := event.variables.get("more_info")) is not None:
-            battery_dict = dict(x.split(":") for x in more_info.split(","))
-            await self.async_update_battery_info(battery_dict)
-
-        self.async_write_entity_states()
-
+    #
+    # Alarm management
+    #
     def update_alarms_for_speaker(self) -> set[str]:
         """Update current alarm instances.
 
@@ -409,18 +486,15 @@ class SonosSpeaker:
 
         return new_alarms
 
-    async def async_update_alarms(self, event: SonosEvent | None = None) -> None:
-        """Update device properties using the provided SonosEvent."""
-        if event is None:
-            return
+    def update_alarms(self) -> None:
+        """Update alarms from an event."""
+        if new_alarms := self.update_alarms_for_speaker():
+            dispatcher_send(self.hass, SONOS_CREATE_ALARM, self, new_alarms)
+        dispatcher_send(self.hass, SONOS_ALARM_UPDATE)
 
-        if new_alarms := await self.hass.async_add_executor_job(
-            self.update_alarms_for_speaker
-        ):
-            async_dispatcher_send(self.hass, SONOS_CREATE_ALARM, self, new_alarms)
-
-        async_dispatcher_send(self.hass, SONOS_ALARM_UPDATE)
-
+    #
+    # Battery management
+    #
     async def async_update_battery_info(self, battery_dict: dict[str, Any]) -> None:
         """Update battery info using the decoded SonosEvent."""
         self._last_battery_event = dt_util.utcnow()
@@ -444,11 +518,6 @@ class SonosSpeaker:
                 fetch_battery_info_or_none, self.soco
             ):
                 self.battery_info = battery_info
-
-    @property
-    def is_coordinator(self) -> bool:
-        """Return true if player is a coordinator."""
-        return self.coordinator is None
 
     @property
     def power_source(self) -> str | None:
@@ -484,6 +553,9 @@ class SonosSpeaker:
             self.battery_info = battery_info
             self.async_write_entity_states()
 
+    #
+    # Group management
+    #
     def update_groups(self, event: SonosEvent | None = None) -> None:
         """Handle callback for topology change event."""
         coro = self.create_update_groups_coro(event)
@@ -754,47 +826,15 @@ class SonosSpeaker:
         for speaker in hass.data[DATA_SONOS].discovered.values():
             speaker.soco._zgs_cache.clear()  # pylint: disable=protected-access
 
-    @property
-    def favorites(self) -> SonosFavorites:
-        """Return the SonosFavorites instance for this household."""
-        return self.hass.data[DATA_SONOS].favorites[self.household_id]
-
-    @callback
-    def async_update_content(self, event: SonosEvent | None = None) -> None:
-        """Update information about available content."""
-        if event and "favorites_update_id" in event.variables:
-            self.favorites.async_delayed_update(event)
-
+    #
+    # Media and playback state handlers
+    #
     def update_volume(self) -> None:
         """Update information about current volume settings."""
         self.volume = self.soco.volume
         self.muted = self.soco.mute
         self.night_mode = self.soco.night_mode
         self.dialog_mode = self.soco.dialog_mode
-
-    @callback
-    def async_update_volume(self, event: SonosEvent) -> None:
-        """Update information about currently volume settings."""
-        variables = event.variables
-
-        if "volume" in variables:
-            self.volume = int(variables["volume"]["Master"])
-
-        if "mute" in variables:
-            self.muted = variables["mute"]["Master"] == "1"
-
-        if "night_mode" in variables:
-            self.night_mode = variables["night_mode"] == "1"
-
-        if "dialog_level" in variables:
-            self.dialog_mode = variables["dialog_level"] == "1"
-
-        self.async_write_entity_states()
-
-    @callback
-    def async_update_media(self, event: SonosEvent | None = None) -> None:
-        """Update information about currently playing media."""
-        self.hass.async_add_executor_job(self.update_media, event)
 
     def update_media(self, event: SonosEvent | None = None) -> None:
         """Update information about currently playing media."""
@@ -949,11 +989,3 @@ class SonosSpeaker:
         elif update_media_position:
             self.media.position = current_position
             self.media.position_updated_at = dt_util.utcnow()
-
-    @property
-    def subscription_address(self) -> str | None:
-        """Return the current subscription callback address if any."""
-        if self._subscriptions:
-            addr, port = self._subscriptions[0].event_listener.address
-            return ":".join([addr, str(port)])
-        return None
