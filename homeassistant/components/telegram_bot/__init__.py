@@ -872,14 +872,14 @@ class BaseTelegramBotEntity:
         """Return boolean msg_data_is_ok and dict msg_data."""
         if not msg_data:
             return False, None
-        if ("sender_chat" in msg_data and "text" in msg_data):
+        if "sender_chat" in msg_data and "text" in msg_data:
             data = {
                 ATTR_MSGID: msg_data["message_id"],
                 ATTR_CHANNEL_ID: msg_data["sender_chat"]["id"],
                 ATTR_TEXT: msg_data["text"],
             }
             return True, data
-        
+
         _LOGGER.error("Incoming message does not have required data (%s)", msg_data)
         return False, None
 
