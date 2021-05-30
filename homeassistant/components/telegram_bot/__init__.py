@@ -69,7 +69,6 @@ ATTR_VERIFY_SSL = "verify_ssl"
 ATTR_TIMEOUT = "timeout"
 ATTR_MESSAGE_TAG = "message_tag"
 ATTR_CHANNEL_POST = "channel_post"
-ATTR_CHANNEL_ID = "channel_id"
 
 CONF_ALLOWED_CHAT_IDS = "allowed_chat_ids"
 CONF_PROXY_URL = "proxy_url"
@@ -875,7 +874,7 @@ class BaseTelegramBotEntity:
         if "sender_chat" in msg_data and "text" in msg_data:
             data = {
                 ATTR_MSGID: msg_data["message_id"],
-                ATTR_CHANNEL_ID: msg_data["sender_chat"]["id"],
+                ATTR_CHAT_ID: msg_data["chat"]["id"],
                 ATTR_TEXT: msg_data["text"],
             }
             return True, data
