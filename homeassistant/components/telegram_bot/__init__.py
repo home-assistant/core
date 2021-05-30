@@ -871,7 +871,17 @@ class BaseTelegramBotEntity:
         """Return boolean msg_data_is_ok and dict msg_data."""
         if not msg_data:
             return False, None
-        if "sender_chat" in msg_data and "text" in msg_data:
+
+        if "sender_chat" in msg_data and "chat" in msg_data and "text" in msg_data:
+            if (
+                msg_data["sender_chat"].get("id") not in self.allowed_chat_ids
+                and msg_data["chat"].get("id") not in self.allowed_chat_ids
+            ):
+                # Neither sender_chat id nor chat id was in allowed_chat_ids,
+                # origin is not allowed.
+                _LOGGER.error("Incoming message is not allowed (%s)", msg_data)
+                return True, None
+
             data = {
                 ATTR_MSGID: msg_data["message_id"],
                 ATTR_CHAT_ID: msg_data["chat"]["id"],
