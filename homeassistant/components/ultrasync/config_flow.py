@@ -59,12 +59,13 @@ class UltraSyncConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: Optional[ConfigType] = None
     ) -> Dict[str, Any]:
         """Handle user flow."""
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
 
         errors = {}
 
         if user_input is not None:
+            await self.async_set_unique_id(user_input.get(CONF_HOST))
+            self._abort_if_unique_id_configured()
+
             try:
                 await self.hass.async_add_executor_job(
                     validate_input, self.hass, user_input
