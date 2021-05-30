@@ -24,6 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 
 class AuthFailureException(Exception):
     """A general exception we can use to track Authentication failures."""
+
     pass
 
 

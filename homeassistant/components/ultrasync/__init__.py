@@ -119,7 +119,9 @@ async def _async_update_listener(hass: HomeAssistantType, entry: ConfigEntry) ->
     """Handle options update."""
     if entry.options[CONF_SCAN_INTERVAL]:
         coordinator = hass.data[DOMAIN][entry.entry_id]["coordinator"]
-        coordinator.update_interval = timedelta(seconds=entry.options[CONF_SCAN_INTERVAL])
+        coordinator.update_interval = timedelta(
+            seconds=entry.options[CONF_SCAN_INTERVAL]
+        )
 
         await coordinator.async_refresh()
 
