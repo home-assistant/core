@@ -37,8 +37,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class EmonitorPowerSensor(CoordinatorEntity, SensorEntity):
     """Representation of an Emonitor power sensor entity."""
 
-    _attr_unit_of_measurement = POWER_WATT
     _attr_device_class = DEVICE_CLASS_POWER
+    _attr_unit_of_measurement = POWER_WATT
 
     def __init__(self, coordinator: DataUpdateCoordinator, channel_number: int) -> None:
         """Initialize the channel sensor."""

@@ -30,8 +30,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class SomfyThermostatBatterySensor(SomfyEntity, SensorEntity):
     """Representation of a Somfy thermostat battery."""
 
-    _attr_unit_of_measurement = PERCENTAGE
     _attr_device_class = DEVICE_CLASS_BATTERY
+    _attr_unit_of_measurement = PERCENTAGE
 
     def __init__(self, coordinator, device_id, api):
         """Initialize the Somfy device."""

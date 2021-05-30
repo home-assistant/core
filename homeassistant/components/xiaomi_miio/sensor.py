@@ -273,8 +273,8 @@ class XiaomiGatewaySensor(XiaomiGatewayDevice, SensorEntity):
 class XiaomiGatewayIlluminanceSensor(SensorEntity):
     """Representation of the gateway device's illuminance sensor."""
 
-    _attr_unit_of_measurement = UNIT_LUMEN
     _attr_device_class = DEVICE_CLASS_ILLUMINANCE
+    _attr_unit_of_measurement = UNIT_LUMEN
 
     def __init__(self, gateway_device, gateway_name, gateway_device_id):
         """Initialize the entity."""

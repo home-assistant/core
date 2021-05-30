@@ -54,8 +54,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class CO2Sensor(SensorEntity):
     """Implementation of the CO2Signal sensor."""
 
-    _attr_unit_of_measurement = CO2_INTENSITY_UNIT
     _attr_icon = "mdi:molecule-co2"
+    _attr_unit_of_measurement = CO2_INTENSITY_UNIT
 
     def __init__(self, token, country_code, lat, lon):
         """Initialize the sensor."""
