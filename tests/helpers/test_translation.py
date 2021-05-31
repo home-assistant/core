@@ -366,4 +366,13 @@ async def test_custom_component_translations(hass, enable_custom_integrations):
     """Test getting translation from custom components."""
     hass.config.components.add("test_embedded")
     hass.config.components.add("test_package")
-    assert await translation.async_get_translations(hass, "en", "state") == {}
+    assert (
+        await translation.async_get_translations(hass, "en", "state", "test_embedded")
+        == {}
+    )
+    assert await translation.async_get_translations(
+        hass, "en", "state", "test_package"
+    ) == {
+        "component.test_package.state.awesome.off": "not_awesome",
+        "component.test_package.state.awesome.on": "awesome",
+    }
