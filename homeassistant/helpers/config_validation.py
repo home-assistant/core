@@ -15,7 +15,7 @@ from numbers import Number
 import os
 import re
 from socket import _GLOBAL_DEFAULT_TIMEOUT  # type: ignore # private, not in typeshed
-from typing import Any, Callable, TypeVar, cast
+from typing import Any, Callable, Dict, TypeVar, cast
 from urllib.parse import urlparse
 from uuid import UUID
 
@@ -784,7 +784,7 @@ def key_value_schemas(
         key_value = value.get(key)
 
         if isinstance(key_value, Hashable) and key_value in value_schemas:
-            return cast(dict[Hashable, Any], value_schemas[key_value](value))
+            return cast(Dict[Hashable, Any], value_schemas[key_value](value))
 
         raise vol.Invalid(
             f"Unexpected value for {key}: '{key_value}'. Expected {', '.join(str(key) for key in value_schemas)}"
