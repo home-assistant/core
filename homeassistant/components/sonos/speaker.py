@@ -460,6 +460,7 @@ class SonosSpeaker:
             await subscription.unsubscribe()
 
         self._subscriptions = []
+        self.hass.data[DATA_SONOS].ssdp_known.remove(self.soco.uid)
 
     #
     # Alarm management
