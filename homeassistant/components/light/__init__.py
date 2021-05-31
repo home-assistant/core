@@ -18,8 +18,8 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_ON,
 )
-from homeassistant.core import HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.core import HomeAssistant, HomeAssistantError, callback
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
@@ -114,6 +114,26 @@ def color_temp_supported(color_modes: Iterable[str] | None) -> bool:
     if not color_modes:
         return False
     return COLOR_MODE_COLOR_TEMP in color_modes
+
+
+def get_supported_color_modes(hass: HomeAssistant, entity_id: str) -> set | None:
+    """Get supported color modes for a light entity.
+
+    First try the statemachine, then entity registry.
+    This is the equivalent of entity helper get_supported_features.
+    """
+    state = hass.states.get(entity_id)
+    if state:
+        return state.attributes.get(ATTR_SUPPORTED_COLOR_MODES)
+
+    entity_registry = er.async_get(hass)
+    entry = entity_registry.async_get(entity_id)
+    if not entry:
+        raise HomeAssistantError(f"Unknown entity {entity_id}")
+    if not entry.capabilities:
+        return None
+
+    return entry.capabilities.get(ATTR_SUPPORTED_COLOR_MODES)
 
 
 # Float that represents transition time in seconds to make change.
