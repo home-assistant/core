@@ -1,5 +1,6 @@
 """Helpers to help during startup."""
-from typing import Awaitable, Callable
+from collections.abc import Awaitable
+from typing import Callable
 
 from homeassistant.const import EVENT_HOMEASSISTANT_START
 from homeassistant.core import Event, HomeAssistant, callback
@@ -7,7 +8,7 @@ from homeassistant.core import Event, HomeAssistant, callback
 
 @callback
 def async_at_start(
-    hass: HomeAssistant, at_start_cb: Callable[[HomeAssistant], Awaitable[None]]
+    hass: HomeAssistant, at_start_cb: Callable[[HomeAssistant], Awaitable]
 ) -> None:
     """Execute something when Home Assistant is started.
 
