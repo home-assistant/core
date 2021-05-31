@@ -3,7 +3,13 @@ from unittest.mock import patch
 
 from goalzero import exceptions
 
-from homeassistant.components.goalzero.const import DOMAIN
+from homeassistant import data_entry_flow
+from homeassistant.components.dhcp import IP_ADDRESS
+from homeassistant.components.goalzero.const import (
+    CONF_SCAN_INTERVAL,
+    DEFAULT_NAME,
+    DOMAIN,
+)
 from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER
 from homeassistant.data_entry_flow import (
     RESULT_TYPE_ABORT,
@@ -18,7 +24,8 @@ from . import (
     CONF_DHCP_FLOW,
     CONF_HOST,
     CONF_NAME,
-    NAME,
+    CONF_OPTIONS_FLOW,
+    HOST,
     _create_mocked_yeti,
     _patch_config_flow_yeti,
 )
@@ -54,7 +61,7 @@ async def test_flow_user(hass):
             user_input=CONF_CONFIG_FLOW,
         )
         assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-        assert result["title"] == NAME
+        assert result["title"] == DEFAULT_NAME
         assert result["data"] == CONF_DATA
 
 
@@ -62,17 +69,13 @@ async def test_flow_user_already_configured(hass):
     """Test user initialized flow with duplicate server."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_HOST: "1.2.3.4", CONF_NAME: "Yeti"},
+        data={CONF_HOST: HOST, CONF_NAME: DEFAULT_NAME},
     )
 
     entry.add_to_hass(hass)
 
-    service_info = {
-        "host": "1.2.3.4",
-        "name": "Yeti",
-    }
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=service_info
+        DOMAIN, context={"source": SOURCE_USER}, data=CONF_CONFIG_FLOW
     )
 
     assert result["type"] == RESULT_TYPE_ABORT
@@ -128,7 +131,7 @@ async def test_dhcp_discovery(hass):
             context={"source": SOURCE_DHCP},
             data=CONF_DHCP_FLOW,
         )
-        assert result["type"] == "form"
+        assert result["type"] == RESULT_TYPE_FORM
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {},
@@ -137,8 +140,8 @@ async def test_dhcp_discovery(hass):
 
         assert result["type"] == RESULT_TYPE_CREATE_ENTRY
         assert result["data"] == {
-            CONF_HOST: "1.1.1.1",
-            CONF_NAME: "Yeti",
+            CONF_HOST: CONF_DHCP_FLOW[IP_ADDRESS],
+            CONF_NAME: DEFAULT_NAME,
         }
 
         result = await hass.config_entries.flow.async_init(
@@ -182,3 +185,30 @@ async def test_dhcp_discovery_failed(hass):
         )
         assert result["type"] == RESULT_TYPE_ABORT
         assert result["reason"] == "unknown"
+
+
+async def test_options_flow(hass):
+    """Test config flow options."""
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=CONF_CONFIG_FLOW,
+    )
+    config_entry.add_to_hass(hass)
+
+    with _patch_setup():
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        result = await hass.config_entries.options.async_init(config_entry.entry_id)
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "init"
+
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input=CONF_OPTIONS_FLOW,
+        )
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert config_entry.options[CONF_SCAN_INTERVAL] == 30

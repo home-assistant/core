@@ -7,21 +7,23 @@ from typing import Any
 from goalzero import Yeti, exceptions
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components.dhcp import IP_ADDRESS, MAC_ADDRESS
+from homeassistant.config_entries import ConfigFlow, OptionsFlow
 from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.typing import ConfigType
 
-from .const import DEFAULT_NAME, DOMAIN
+from .const import CONF_SCAN_INTERVAL, DEFAULT_NAME, DEFAULT_SCAN_INTERVAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 DATA_SCHEMA = vol.Schema({"host": str, "name": str})
 
 
-class GoalZeroFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class GoalZeroFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Goal Zero Yeti."""
 
     VERSION = 1
@@ -29,6 +31,12 @@ class GoalZeroFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self):
         """Initialize a Goal Zero Yeti flow."""
         self.ip_address = None
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry):
+        """Get the options flow for this handler."""
+        return GoalZeroOptionsFlowHandler(config_entry)
 
     async def async_step_dhcp(self, discovery_info):
         """Handle dhcp discovery."""
@@ -65,7 +73,7 @@ class GoalZeroFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             },
         )
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(self, user_input: ConfigType | None = None) -> FlowResult:
         """Handle a flow initiated by the user."""
         errors = {}
         if user_input is not None:
@@ -116,3 +124,26 @@ class GoalZeroFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception")
             return None, "unknown"
         return str(api.sysdata["macAddress"]), None
+
+
+class GoalZeroOptionsFlowHandler(OptionsFlow):
+    """Handle Goal Zero options."""
+
+    def __init__(self, config_entry):
+        """Initialize options flow."""
+        self.config_entry = config_entry
+
+    async def async_step_init(self, user_input: ConfigType | None = None):
+        """Manage Goal Zero options."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        options = {
+            vol.Optional(
+                CONF_SCAN_INTERVAL,
+                default=self.config_entry.options.get(
+                    CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
+                ),
+            ): int,
+        }
+        return self.async_show_form(step_id="init", data_schema=vol.Schema(options))

@@ -1,18 +1,16 @@
 """Constants for the Goal Zero Yeti integration."""
-from datetime import timedelta
-
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_BATTERY_CHARGING,
     DEVICE_CLASS_CONNECTIVITY,
     DEVICE_CLASS_POWER,
 )
 
+CONF_SCAN_INTERVAL = "scan_interval"
 DATA_KEY_COORDINATOR = "coordinator"
 DOMAIN = "goalzero"
 DEFAULT_NAME = "Yeti"
+DEFAULT_SCAN_INTERVAL = 30
 DATA_KEY_API = "api"
-
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
 
 BINARY_SENSOR_DICT = {
     "backlight": ["Backlight", None, "mdi:clock-digital"],

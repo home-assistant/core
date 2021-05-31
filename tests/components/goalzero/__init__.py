@@ -3,26 +3,22 @@
 from unittest.mock import AsyncMock, patch
 
 from homeassistant.components.dhcp import HOSTNAME, IP_ADDRESS, MAC_ADDRESS
+from homeassistant.components.goalzero.const import CONF_SCAN_INTERVAL, DEFAULT_NAME
 from homeassistant.const import CONF_HOST, CONF_NAME
 
 HOST = "1.2.3.4"
-NAME = "Yeti"
 
-CONF_DATA = {
-    CONF_HOST: HOST,
-    CONF_NAME: NAME,
-}
+CONF_DATA = {CONF_HOST: HOST, CONF_NAME: DEFAULT_NAME}
 
-CONF_CONFIG_FLOW = {
-    CONF_HOST: HOST,
-    CONF_NAME: NAME,
-}
+CONF_CONFIG_FLOW = {CONF_HOST: HOST, CONF_NAME: DEFAULT_NAME}
 
 CONF_DHCP_FLOW = {
     IP_ADDRESS: "1.1.1.1",
     MAC_ADDRESS: "AA:BB:CC:DD:EE:FF",
     HOSTNAME: "any",
 }
+
+CONF_OPTIONS_FLOW = {CONF_SCAN_INTERVAL: 30}
 
 
 async def _create_mocked_yeti(raise_exception=False):

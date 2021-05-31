@@ -24,5 +24,14 @@
                 "title": "Goal Zero Yeti"
             }
         }
+    },
+    "options": {
+        "step": {
+          "init": {
+            "data": {
+              "scan_interval": "Amount of time between updates in seconds"
+            }
+          }
+        }
+      }
     }
-}

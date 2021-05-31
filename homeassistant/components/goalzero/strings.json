@@ -24,5 +24,14 @@
       "invalid_host": "[%key:common::config_flow::error::invalid_host%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "scan_interval": "Amount of time between updates in seconds"
+        }
+      }
+    }
   }
 }

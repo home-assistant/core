@@ -1,4 +1,5 @@
 """The Goal Zero Yeti integration."""
+from datetime import timedelta
 import logging
 
 from goalzero import Yeti, exceptions
@@ -6,7 +7,16 @@ from goalzero import Yeti, exceptions
 from homeassistant.components.binary_sensor import DOMAIN as DOMAIN_BINARY_SENSOR
 from homeassistant.components.switch import DOMAIN as DOMAIN_SWITCH
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.const import (
+    ATTR_IDENTIFIERS,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
+    ATTR_NAME,
+    ATTR_SW_VERSION,
+    CONF_HOST,
+    CONF_NAME,
+    CONF_SCAN_INTERVAL,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -16,7 +26,7 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
-from .const import DATA_KEY_API, DATA_KEY_COORDINATOR, DOMAIN, MIN_TIME_BETWEEN_UPDATES
+from .const import DATA_KEY_API, DATA_KEY_COORDINATOR, DEFAULT_SCAN_INTERVAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,8 +34,16 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [DOMAIN_BINARY_SENSOR, DOMAIN_SWITCH]
 
 
-async def async_setup_entry(hass, entry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Goal Zero Yeti from a config entry."""
+    if not entry.options:
+        options = {
+            CONF_SCAN_INTERVAL: entry.data.get(
+                CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
+            ),
+        }
+        hass.config_entries.async_update_entry(entry, options=options)
+
     name = entry.data[CONF_NAME]
     host = entry.data[CONF_HOST]
 
@@ -49,7 +67,7 @@ async def async_setup_entry(hass, entry):
         _LOGGER,
         name=name,
         update_method=async_update_data,
-        update_interval=MIN_TIME_BETWEEN_UPDATES,
+        update_interval=timedelta(seconds=entry.options[CONF_SCAN_INTERVAL]),
     )
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {
@@ -85,14 +103,14 @@ class YetiEntity(CoordinatorEntity):
     def device_info(self):
         """Return the device information of the entity."""
         info = {
-            "identifiers": {(DOMAIN, self._server_unique_id)},
-            "manufacturer": "Goal Zero",
-            "name": self._name,
+            ATTR_IDENTIFIERS: {(DOMAIN, self._server_unique_id)},
+            ATTR_MANUFACTURER: "Goal Zero",
+            ATTR_NAME: self._name,
         }
         if self.api.sysdata:
-            info["model"] = self.api.sysdata["model"]
+            info[ATTR_MODEL] = self.api.sysdata[ATTR_MODEL]
         if self.api.data:
-            info["sw_version"] = self.api.data["firmwareVersion"]
+            info[ATTR_SW_VERSION] = self.api.data["firmwareVersion"]
         return info
 
     @property

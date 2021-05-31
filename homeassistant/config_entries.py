@@ -910,6 +910,7 @@ class ConfigEntries:
         If an entry was not loaded, will just load.
         """
         entry = self.async_get_entry(entry_id)
+        _LOGGER.error(entry)
 
         if entry is None:
             raise UnknownEntry
