@@ -27,7 +27,7 @@ def mock_garmin():
     with patch(
         "homeassistant.components.garmin_connect.config_flow.Garmin",
     ) as garmin:
-        garmin.return_value.get_full_name.return_value = MOCK_CONF[CONF_ID]
+        garmin.return_value.login.return_value = MOCK_CONF[CONF_ID]
         yield garmin.return_value
 
 
@@ -107,10 +107,10 @@ async def test_abort_if_already_setup(hass):
         domain=DOMAIN, data=MOCK_CONF, unique_id=MOCK_CONF[CONF_ID]
     ).add_to_hass(hass)
     with patch(
-        "homeassistant.components.garmin_connect.config_flow.Garmin",
+        "homeassistant.components.garmin_connect.config_flow.Garmin", autospec=True
     ) as garmin:
-        garmin.return_value.get_full_name.return_value = MOCK_CONF[CONF_ID]
-        yield garmin.return_value
+        garmin.return_value.login.return_value = MOCK_CONF[CONF_ID]
+        # yield garmin.return_value
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": "user"}, data=MOCK_CONF
