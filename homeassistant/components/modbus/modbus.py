@@ -39,6 +39,8 @@ from .const import (
     CONF_BYTESIZE,
     CONF_CLOSE_COMM_ON_ERROR,
     CONF_PARITY,
+    CONF_RETRIES,
+    CONF_RETRY_ON_EMPTY,
     CONF_STOPBITS,
     DEFAULT_HUB,
     MODBUS_DOMAIN as DOMAIN,
@@ -148,6 +150,8 @@ class ModbusHub:
         self._config_timeout = client_config[CONF_TIMEOUT]
         self._config_delay = client_config[CONF_DELAY]
         self._config_reset_socket = client_config[CONF_CLOSE_COMM_ON_ERROR]
+        self._config_retries = client_config[CONF_RETRIES]
+        self._config_retry_on_empty = client_config[CONF_RETRY_ON_EMPTY]
         Defaults.Timeout = client_config[CONF_TIMEOUT]
         if self._config_type == "serial":
             # serial configuration
@@ -215,7 +219,8 @@ class ModbusHub:
                     bytesize=self._config_bytesize,
                     parity=self._config_parity,
                     timeout=self._config_timeout,
-                    retry_on_empty=True,
+                    retries=self._config_retries,
+                    retry_on_empty=self._config_retry_on_empty,
                     reset_socket=self._config_reset_socket,
                 )
             elif self._config_type == "rtuovertcp":
