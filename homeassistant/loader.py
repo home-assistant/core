@@ -298,12 +298,27 @@ class Integration:
             )
 
             if not integration.is_built_in:
-                try:
-                    validate_custom_integration_version(integration)
-                except IntegrationNotFound:
-                    return None
                 _LOGGER.warning(CUSTOM_WARNING, integration.domain)
-
+                try:
+                    AwesomeVersion(
+                        integration.version,
+                        [
+                            AwesomeVersionStrategy.CALVER,
+                            AwesomeVersionStrategy.SEMVER,
+                            AwesomeVersionStrategy.SIMPLEVER,
+                            AwesomeVersionStrategy.BUILDVER,
+                            AwesomeVersionStrategy.PEP440,
+                        ],
+                    )
+                except AwesomeVersionException:
+                    _LOGGER.error(
+                        "The custom integration '%s' does not have a "
+                        "valid version key (%s) in the manifest file and was blocked from loading. "
+                        "See https://developers.home-assistant.io/blog/2021/01/29/custom-integration-changes#versions for more details",
+                        integration.domain,
+                        integration.version,
+                    )
+                    return None
             return integration
 
         return None
@@ -751,31 +766,3 @@ def _lookup_path(hass: HomeAssistant) -> list[str]:
     if hass.config.safe_mode:
         return [PACKAGE_BUILTIN]
     return [PACKAGE_CUSTOM_COMPONENTS, PACKAGE_BUILTIN]
-
-
-def validate_custom_integration_version(integration: Integration) -> None:
-    """
-    Validate the version of custom integrations.
-
-    Raises IntegrationNotFound when version is missing or not valid
-    """
-    try:
-        AwesomeVersion(
-            integration.version,
-            [
-                AwesomeVersionStrategy.CALVER,
-                AwesomeVersionStrategy.SEMVER,
-                AwesomeVersionStrategy.SIMPLEVER,
-                AwesomeVersionStrategy.BUILDVER,
-                AwesomeVersionStrategy.PEP440,
-            ],
-        )
-    except AwesomeVersionException:
-        _LOGGER.error(
-            "The custom integration '%s' does not have a "
-            "valid version key (%s) in the manifest file and was blocked from loading. "
-            "See https://developers.home-assistant.io/blog/2021/01/29/custom-integration-changes#versions for more details",
-            integration.domain,
-            integration.version,
-        )
-        raise IntegrationNotFound(integration.domain) from None
