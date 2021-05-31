@@ -15,7 +15,7 @@ cd ~/zwavejs2mqtt
 echo "Installing dependencies..."
 npm ci --unsafe-perm
 
-echo "Starting zigbee2mqtt..."
+echo "Starting zwavejs2mqtt..."
 pm2 start zwave
 
 
