@@ -12,6 +12,7 @@ from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 
 from .const import (
+    CONF_AUTOMATIC_UPDATES,
     CONF_AVOID_FERRIES,
     CONF_AVOID_SUBSCRIPTION_ROADS,
     CONF_AVOID_TOLL_ROADS,
@@ -134,6 +135,12 @@ class WazeOptionsFlow(config_entries.OptionsFlow):
                     vol.Optional(
                         CONF_AVOID_FERRIES,
                         default=self.config_entry.options[CONF_AVOID_FERRIES],
+                    ): cv.boolean,
+                    vol.Optional(
+                        CONF_AUTOMATIC_UPDATES,
+                        default=self.config_entry.options.get(
+                            CONF_AUTOMATIC_UPDATES, True
+                        ),
                     ): cv.boolean,
                 }
             ),

@@ -31,7 +31,8 @@
           "realtime": "Realtime Travel Time?",
           "avoid_toll_roads": "Avoid Toll Roads?",
           "avoid_ferries": "Avoid Ferries?",
-          "avoid_subscription_roads": "Avoid Roads Needing a Vignette / Subscription?"
+          "avoid_subscription_roads": "Avoid Roads Needing a Vignette / Subscription?",
+          "automatic_updates": "Automatically update every 5 minutes?"
         }
       }
     }

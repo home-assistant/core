@@ -1,6 +1,7 @@
 """Test the Waze Travel Time config flow."""
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.waze_travel_time.const import (
+    CONF_AUTOMATIC_UPDATES,
     CONF_AVOID_FERRIES,
     CONF_AVOID_SUBSCRIPTION_ROADS,
     CONF_AVOID_TOLL_ROADS,
@@ -70,6 +71,7 @@ async def test_options(hass, validate_config_entry, mock_update):
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
+            CONF_AUTOMATIC_UPDATES: False,
             CONF_AVOID_FERRIES: True,
             CONF_AVOID_SUBSCRIPTION_ROADS: True,
             CONF_AVOID_TOLL_ROADS: True,
@@ -83,6 +85,7 @@ async def test_options(hass, validate_config_entry, mock_update):
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == ""
     assert result["data"] == {
+        CONF_AUTOMATIC_UPDATES: False,
         CONF_AVOID_FERRIES: True,
         CONF_AVOID_SUBSCRIPTION_ROADS: True,
         CONF_AVOID_TOLL_ROADS: True,
@@ -94,6 +97,7 @@ async def test_options(hass, validate_config_entry, mock_update):
     }
 
     assert entry.options == {
+        CONF_AUTOMATIC_UPDATES: False,
         CONF_AVOID_FERRIES: True,
         CONF_AVOID_SUBSCRIPTION_ROADS: True,
         CONF_AVOID_TOLL_ROADS: True,

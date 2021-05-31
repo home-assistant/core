@@ -11,16 +11,17 @@ ATTR_ROUTE = "route"
 
 ATTRIBUTION = "Powered by Waze"
 
+CONF_AUTOMATIC_UPDATES = "automatic_updates"
+CONF_AVOID_FERRIES = "avoid_ferries"
+CONF_AVOID_SUBSCRIPTION_ROADS = "avoid_subscription_roads"
+CONF_AVOID_TOLL_ROADS = "avoid_toll_roads"
 CONF_DESTINATION = "destination"
-CONF_ORIGIN = "origin"
-CONF_INCL_FILTER = "incl_filter"
 CONF_EXCL_FILTER = "excl_filter"
+CONF_INCL_FILTER = "incl_filter"
+CONF_ORIGIN = "origin"
 CONF_REALTIME = "realtime"
 CONF_UNITS = "units"
 CONF_VEHICLE_TYPE = "vehicle_type"
-CONF_AVOID_TOLL_ROADS = "avoid_toll_roads"
-CONF_AVOID_SUBSCRIPTION_ROADS = "avoid_subscription_roads"
-CONF_AVOID_FERRIES = "avoid_ferries"
 
 DEFAULT_NAME = "Waze Travel Time"
 DEFAULT_REALTIME = True

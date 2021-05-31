@@ -32,6 +32,7 @@ from .const import (
     ATTR_ORIGIN,
     ATTR_ROUTE,
     ATTRIBUTION,
+    CONF_AUTOMATIC_UPDATES,
     CONF_AVOID_FERRIES,
     CONF_AVOID_SUBSCRIPTION_ROADS,
     CONF_AVOID_TOLL_ROADS,
@@ -146,6 +147,7 @@ async def async_setup_entry(
             config_entry, data=new_data, options=options
         )
 
+    automatic_updates = config_entry.options.get(CONF_AUTOMATIC_UPDATES, True)
     destination = config_entry.data[CONF_DESTINATION]
     origin = config_entry.data[CONF_ORIGIN]
     region = config_entry.data[CONF_REGION]
@@ -158,7 +160,9 @@ async def async_setup_entry(
         config_entry,
     )
 
-    sensor = WazeTravelTime(config_entry.entry_id, name, origin, destination, data)
+    sensor = WazeTravelTime(
+        config_entry.entry_id, name, origin, destination, data, automatic_updates
+    )
 
     async_add_entities([sensor], False)
 
@@ -166,8 +170,11 @@ async def async_setup_entry(
 class WazeTravelTime(SensorEntity):
     """Representation of a Waze travel time sensor."""
 
-    def __init__(self, unique_id, name, origin, destination, waze_data):
+    def __init__(
+        self, unique_id, name, origin, destination, waze_data, automatic_updates
+    ):
         """Initialize the Waze travel time sensor."""
+        self._attr_should_poll = automatic_updates
         self._unique_id = unique_id
         self._waze_data = waze_data
         self._name = name
