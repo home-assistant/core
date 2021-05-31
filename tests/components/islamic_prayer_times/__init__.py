@@ -3,6 +3,7 @@
 from datetime import datetime
 
 PRAYER_TIMES = {
+    "Imsak": "06:00",
     "Fajr": "06:10",
     "Sunrise": "07:25",
     "Dhuhr": "12:30",
@@ -13,6 +14,7 @@ PRAYER_TIMES = {
 }
 
 PRAYER_TIMES_TIMESTAMPS = {
+    "Imsak": datetime(2020, 1, 1, 6, 0, 0),
     "Fajr": datetime(2020, 1, 1, 6, 10, 0),
     "Sunrise": datetime(2020, 1, 1, 7, 25, 0),
     "Dhuhr": datetime(2020, 1, 1, 12, 30, 0),
@@ -23,6 +25,7 @@ PRAYER_TIMES_TIMESTAMPS = {
 }
 
 NEW_PRAYER_TIMES = {
+    "Imsak": "05:50",
     "Fajr": "06:00",
     "Sunrise": "07:25",
     "Dhuhr": "12:30",
@@ -33,6 +36,7 @@ NEW_PRAYER_TIMES = {
 }
 
 NEW_PRAYER_TIMES_TIMESTAMPS = {
+    "Imsak": datetime(2020, 1, 1, 5, 50, 0),
     "Fajr": datetime(2020, 1, 1, 6, 00, 0),
     "Sunrise": datetime(2020, 1, 1, 7, 25, 0),
     "Dhuhr": datetime(2020, 1, 1, 12, 30, 0),

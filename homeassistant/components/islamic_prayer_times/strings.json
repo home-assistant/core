@@ -15,8 +15,28 @@
     "step": {
       "init": {
         "data": {
-          "calculation_method": "Prayer calculation method"
-        }
+          "calculation_method": "Prayer calculation method",
+          "school": "Asr calculation school",
+          "midnightMode": "Midnight calculation method",
+          "latitudeAdjustmentMethod": "Method for adjusting times for higher latitudes"
+        },
+        "description": "Configure calculation parameters",
+        "title": "Islamic Prayer Times options 1/2"
+      },
+      "set_times_tune": {
+        "data": {
+          "imsak_tune": "Imsak prayer offset",
+          "fajr_tune": "Fajr prayer offset",
+          "sunrise_tune": "Sunrise time offset",
+          "dhuhr_tune": "Dhuhr prayer offset",
+          "asr_tune": "Asr prayer offset",
+          "maghrib_tune": "Maghrib prayer offset",
+          "sunset_tune": "Sunset time offset",
+          "isha_tune": "Isha prayer offset",
+          "midnight_tune": "Midnight time offset"
+        },
+        "description": "Set prayer times offset",
+        "title": "Islamic Prayer Times options 2/2"
       }
     }
   }
