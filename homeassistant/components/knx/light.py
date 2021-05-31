@@ -288,8 +288,8 @@ class KNXLight(KnxEntity, LightEntity):
     def xy_color(self) -> tuple[float, float] | None:
         """Return the xy color value [float, float]."""
         if self._device.current_xyy_color is not None:
-            xy, _ = self._device.current_xyy_color
-            return xy
+            xy_color, _ = self._device.current_xyy_color
+            return xy_color
         return None
 
     @property
