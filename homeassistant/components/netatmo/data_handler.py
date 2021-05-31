@@ -158,7 +158,13 @@ class NetatmoDataHandler:
     ):
         """Register data class."""
         if data_class_entry in self.data_classes:
-            self.data_classes[data_class_entry]["subscriptions"].append(update_callback)
+            if (
+                update_callback
+                not in self.data_classes[data_class_entry]["subscriptions"]
+            ):
+                self.data_classes[data_class_entry]["subscriptions"].append(
+                    update_callback
+                )
             return
 
         self.data_classes[data_class_entry] = {
