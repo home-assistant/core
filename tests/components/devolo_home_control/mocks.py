@@ -89,4 +89,3 @@ class HomeControlMockDisabledBinarySensor(HomeControlMock):
     """devolo Home Control gateway mock with disabled device."""
 
     binary_sensor_devices = [DisabledBinarySensorMock()]
-    devices = {"Test": DisabledBinarySensorMock()}
