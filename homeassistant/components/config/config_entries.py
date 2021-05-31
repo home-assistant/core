@@ -31,7 +31,6 @@ async def async_setup(hass):
     hass.components.websocket_api.async_register_command(config_entry_disable)
     hass.components.websocket_api.async_register_command(config_entry_update)
     hass.components.websocket_api.async_register_command(config_entries_progress)
-    hass.components.websocket_api.async_register_command(system_options_list)
     hass.components.websocket_api.async_register_command(system_options_update)
     hass.components.websocket_api.async_register_command(ignore_config_flow)
 
@@ -231,20 +230,6 @@ def config_entries_progress(hass, connection, msg):
     )
 
 
-@websocket_api.require_admin
-@websocket_api.async_response
-@websocket_api.websocket_command(
-    {"type": "config_entries/system_options/list", "entry_id": str}
-)
-async def system_options_list(hass, connection, msg):
-    """List all system options for a config entry."""
-    entry_id = msg["entry_id"]
-    entry = hass.config_entries.async_get_entry(entry_id)
-
-    if entry:
-        connection.send_result(msg["id"], entry.system_options.as_dict())
-
-
 def send_entry_not_found(connection, msg_id):
     """Send Config entry not found error."""
     connection.send_error(
@@ -267,6 +252,7 @@ def get_entry(hass, connection, entry_id, msg_id):
         "type": "config_entries/system_options/update",
         "entry_id": str,
         vol.Optional("disable_new_entities"): bool,
+        vol.Optional("disable_polling"): bool,
     }
 )
 async def system_options_update(hass, connection, msg):
@@ -280,8 +266,25 @@ async def system_options_update(hass, connection, msg):
     if entry is None:
         return
 
+    old_disable_polling = entry.system_options.disable_polling
+
     hass.config_entries.async_update_entry(entry, system_options=changes)
-    connection.send_result(msg["id"], entry.system_options.as_dict())
+
+    result = {
+        "system_options": entry.system_options.as_dict(),
+        "require_restart": False,
+    }
+
+    if (
+        old_disable_polling != entry.system_options.disable_polling
+        and entry.state is config_entries.ConfigEntryState.LOADED
+    ):
+        if not await hass.config_entries.async_reload(entry.entry_id):
+            result["require_restart"] = (
+                entry.state is config_entries.ConfigEntryState.FAILED_UNLOAD
+            )
+
+    connection.send_result(msg["id"], result)
 
 
 @websocket_api.require_admin
@@ -388,6 +391,7 @@ def entry_json(entry: config_entries.ConfigEntry) -> dict:
         "state": entry.state.value,
         "supports_options": supports_options,
         "supports_unload": entry.supports_unload,
+        "system_options": entry.system_options.as_dict(),
         "disabled_by": entry.disabled_by,
         "reason": entry.reason,
     }
