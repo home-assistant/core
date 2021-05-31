@@ -26,7 +26,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def update_data():
         """Update the data."""
-        async with async_timeout.timeout(5):
+        async with async_timeout.timeout(2.5):
             return await client.get_state()
 
     coordinator = hass.data.setdefault(DOMAIN, {})[
@@ -35,7 +35,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass,
         logging.getLogger(__name__),
         name=DOMAIN,
-        update_interval=timedelta(seconds=10),
+        update_interval=timedelta(seconds=5),
         update_method=update_data,
     )
     await coordinator.async_config_entry_first_refresh()

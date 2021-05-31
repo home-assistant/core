@@ -66,22 +66,20 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Legrand Home+ Control from a config entry."""
-    hass_entry_data = hass.data[DOMAIN].setdefault(config_entry.entry_id, {})
+    hass_entry_data = hass.data[DOMAIN].setdefault(entry.entry_id, {})
 
     # Retrieve the registered implementation
     implementation = (
         await config_entry_oauth2_flow.async_get_config_entry_implementation(
-            hass, config_entry
+            hass, entry
         )
     )
 
     # Using an aiohttp-based API lib, so rely on async framework
     # Add the API object to the domain's data in HA
-    api = hass_entry_data[API] = HomePlusControlAsyncApi(
-        hass, config_entry, implementation
-    )
+    api = hass_entry_data[API] = HomePlusControlAsyncApi(hass, entry, implementation)
 
     # Set of entity unique identifiers of this integration
     uids = hass_entry_data[ENTITY_UIDS] = set()
@@ -143,7 +141,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         """Continue setting up the platforms."""
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_setup(config_entry, platform)
+                hass.config_entries.async_forward_entry_setup(entry, platform)
                 for platform in PLATFORMS
             ]
         )

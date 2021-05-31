@@ -20,7 +20,41 @@ import homeassistant.util.dt as dt_util
 
 from tests.common import async_fire_time_changed
 
+TEST_MODBUS_NAME = "modbusTest"
 _LOGGER = logging.getLogger(__name__)
+
+
+@pytest.fixture
+def mock_pymodbus():
+    """Mock pymodbus."""
+    mock_pb = mock.MagicMock()
+    with mock.patch(
+        "homeassistant.components.modbus.modbus.ModbusTcpClient", return_value=mock_pb
+    ), mock.patch(
+        "homeassistant.components.modbus.modbus.ModbusSerialClient",
+        return_value=mock_pb,
+    ), mock.patch(
+        "homeassistant.components.modbus.modbus.ModbusUdpClient", return_value=mock_pb
+    ):
+        yield mock_pb
+
+
+@pytest.fixture
+async def mock_modbus(hass, mock_pymodbus):
+    """Load integration modbus using mocked pymodbus."""
+    config = {
+        DOMAIN: [
+            {
+                CONF_TYPE: "tcp",
+                CONF_HOST: "modbusTestHost",
+                CONF_PORT: 5501,
+                CONF_NAME: TEST_MODBUS_NAME,
+            }
+        ]
+    }
+    assert await async_setup_component(hass, DOMAIN, config) is True
+    await hass.async_block_till_done()
+    yield mock_pymodbus
 
 
 class ReadResult:
@@ -46,6 +80,7 @@ async def base_test(
     config_modbus=None,
     scan_interval=None,
     expect_init_to_fail=False,
+    expect_setup_to_fail=False,
 ):
     """Run test on device for given config."""
 
@@ -97,7 +132,10 @@ async def base_test(
                     {array_name_discovery: [{**config_device}]}
                 )
                 config_device = None
-            assert await async_setup_component(hass, DOMAIN, config_modbus)
+            assert (
+                await async_setup_component(hass, DOMAIN, config_modbus)
+                is not expect_setup_to_fail
+            )
             await hass.async_block_till_done()
 
             # setup platform old style
@@ -117,7 +155,7 @@ async def base_test(
                 assert await async_setup_component(hass, entity_domain, config_device)
                 await hass.async_block_till_done()
 
-        assert DOMAIN in hass.config.components
+        assert (DOMAIN in hass.config.components) is not expect_setup_to_fail
         if config_device is not None:
             entity_id = f"{entity_domain}.{device_name}"
             device = hass.states.get(entity_id)
@@ -150,6 +188,7 @@ async def base_config_test(
     method_discovery=False,
     config_modbus=None,
     expect_init_to_fail=False,
+    expect_setup_to_fail=False,
 ):
     """Check config of device for given config."""
 
@@ -166,4 +205,23 @@ async def base_config_test(
         check_config_only=True,
         config_modbus=config_modbus,
         expect_init_to_fail=expect_init_to_fail,
+        expect_setup_to_fail=expect_setup_to_fail,
     )
+
+
+async def prepare_service_update(hass, config):
+    """Run test for service write_coil."""
+
+    config_modbus = {
+        DOMAIN: {
+            CONF_NAME: DEFAULT_HUB,
+            CONF_TYPE: "tcp",
+            CONF_HOST: "modbusTest",
+            CONF_PORT: 5001,
+            **config,
+        },
+    }
+    assert await async_setup_component(hass, DOMAIN, config_modbus)
+    await hass.async_block_till_done()
+    assert await async_setup_component(hass, "homeassistant", {})
+    await hass.async_block_till_done()

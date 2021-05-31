@@ -12,6 +12,7 @@ import voluptuous as vol
 from homeassistant.components import light
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
+    ATTR_COLOR_MODE,
     ATTR_COLOR_TEMP,
     ATTR_EFFECT,
     ATTR_EFFECT_LIST,
@@ -19,16 +20,22 @@ from homeassistant.components.light import (
     ATTR_HS_COLOR,
     ATTR_MAX_MIREDS,
     ATTR_MIN_MIREDS,
+    ATTR_RGB_COLOR,
+    ATTR_RGBW_COLOR,
+    ATTR_RGBWW_COLOR,
+    ATTR_SUPPORTED_COLOR_MODES,
     ATTR_TRANSITION,
     ATTR_WHITE_VALUE,
+    ATTR_XY_COLOR,
+    COLOR_MODE_BRIGHTNESS,
+    COLOR_MODE_ONOFF,
     PLATFORM_SCHEMA,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR,
-    SUPPORT_COLOR_TEMP,
     SUPPORT_EFFECT,
     SUPPORT_FLASH,
     SUPPORT_TRANSITION,
     SUPPORT_WHITE_VALUE,
+    color_supported,
+    color_temp_supported,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -59,13 +66,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 SUPPORT_GROUP_LIGHT = (
-    SUPPORT_BRIGHTNESS
-    | SUPPORT_COLOR_TEMP
-    | SUPPORT_EFFECT
-    | SUPPORT_FLASH
-    | SUPPORT_COLOR
-    | SUPPORT_TRANSITION
-    | SUPPORT_WHITE_VALUE
+    SUPPORT_EFFECT | SUPPORT_FLASH | SUPPORT_TRANSITION | SUPPORT_WHITE_VALUE
 )
 
 
@@ -89,13 +90,19 @@ class LightGroup(GroupEntity, light.LightEntity):
         self._available = False
         self._icon = "mdi:lightbulb-group"
         self._brightness: int | None = None
+        self._color_mode: str | None = None
         self._hs_color: tuple[float, float] | None = None
+        self._rgb_color: tuple[int, int, int] | None = None
+        self._rgbw_color: tuple[int, int, int, int] | None = None
+        self._rgbww_color: tuple[int, int, int, int, int] | None = None
+        self._xy_color: tuple[float, float] | None = None
         self._color_temp: int | None = None
         self._min_mireds: int = 154
         self._max_mireds: int = 500
         self._white_value: int | None = None
         self._effect_list: list[str] | None = None
         self._effect: str | None = None
+        self._supported_color_modes: set[str] | None = None
         self._supported_features: int = 0
 
     async def async_added_to_hass(self) -> None:
@@ -144,9 +151,34 @@ class LightGroup(GroupEntity, light.LightEntity):
         return self._brightness
 
     @property
+    def color_mode(self) -> str | None:
+        """Return the color mode of the light."""
+        return self._color_mode
+
+    @property
     def hs_color(self) -> tuple[float, float] | None:
         """Return the HS color value [float, float]."""
         return self._hs_color
+
+    @property
+    def rgb_color(self) -> tuple[int, int, int] | None:
+        """Return the rgb color value [int, int, int]."""
+        return self._rgb_color
+
+    @property
+    def rgbw_color(self) -> tuple[int, int, int, int] | None:
+        """Return the rgbw color value [int, int, int, int]."""
+        return self._rgbw_color
+
+    @property
+    def rgbww_color(self) -> tuple[int, int, int, int, int] | None:
+        """Return the rgbww color value [int, int, int, int, int]."""
+        return self._rgbww_color
+
+    @property
+    def xy_color(self) -> tuple[float, float] | None:
+        """Return the xy color value [float, float]."""
+        return self._xy_color
 
     @property
     def color_temp(self) -> int | None:
@@ -179,6 +211,11 @@ class LightGroup(GroupEntity, light.LightEntity):
         return self._effect
 
     @property
+    def supported_color_modes(self) -> set | None:
+        """Flag supported color modes."""
+        return self._supported_color_modes
+
+    @property
     def supported_features(self) -> int:
         """Flag supported features."""
         return self._supported_features
@@ -204,6 +241,18 @@ class LightGroup(GroupEntity, light.LightEntity):
         if ATTR_HS_COLOR in kwargs:
             data[ATTR_HS_COLOR] = kwargs[ATTR_HS_COLOR]
 
+        if ATTR_RGB_COLOR in kwargs:
+            data[ATTR_RGB_COLOR] = kwargs[ATTR_RGB_COLOR]
+
+        if ATTR_RGBW_COLOR in kwargs:
+            data[ATTR_RGBW_COLOR] = kwargs[ATTR_RGBW_COLOR]
+
+        if ATTR_RGBWW_COLOR in kwargs:
+            data[ATTR_RGBWW_COLOR] = kwargs[ATTR_RGBWW_COLOR]
+
+        if ATTR_XY_COLOR in kwargs:
+            data[ATTR_XY_COLOR] = kwargs[ATTR_XY_COLOR]
+
         if ATTR_COLOR_TEMP in kwargs:
             data[ATTR_COLOR_TEMP] = kwargs[ATTR_COLOR_TEMP]
 
@@ -215,11 +264,9 @@ class LightGroup(GroupEntity, light.LightEntity):
                 state = self.hass.states.get(entity_id)
                 if not state:
                     continue
-                support = state.attributes.get(ATTR_SUPPORTED_FEATURES)
+                support = state.attributes.get(ATTR_SUPPORTED_COLOR_MODES)
                 # Only pass color temperature to supported entity_ids
-                if bool(support & SUPPORT_COLOR) and not bool(
-                    support & SUPPORT_COLOR_TEMP
-                ):
+                if color_supported(support) and not color_temp_supported(support):
                     emulate_color_temp_entity_ids.append(entity_id)
                     updated_entities.remove(entity_id)
                     data[ATTR_ENTITY_ID] = updated_entities
@@ -300,6 +347,16 @@ class LightGroup(GroupEntity, light.LightEntity):
         self._brightness = _reduce_attribute(on_states, ATTR_BRIGHTNESS)
 
         self._hs_color = _reduce_attribute(on_states, ATTR_HS_COLOR, reduce=_mean_tuple)
+        self._rgb_color = _reduce_attribute(
+            on_states, ATTR_RGB_COLOR, reduce=_mean_tuple
+        )
+        self._rgbw_color = _reduce_attribute(
+            on_states, ATTR_RGBW_COLOR, reduce=_mean_tuple
+        )
+        self._rgbww_color = _reduce_attribute(
+            on_states, ATTR_RGBWW_COLOR, reduce=_mean_tuple
+        )
+        self._xy_color = _reduce_attribute(on_states, ATTR_XY_COLOR, reduce=_mean_tuple)
 
         self._white_value = _reduce_attribute(on_states, ATTR_WHITE_VALUE)
 
@@ -316,6 +373,10 @@ class LightGroup(GroupEntity, light.LightEntity):
         if all_effect_lists:
             # Merge all effects from all effect_lists with a union merge.
             self._effect_list = list(set().union(*all_effect_lists))
+            self._effect_list.sort()
+            if "None" in self._effect_list:
+                self._effect_list.remove("None")
+                self._effect_list.insert(0, "None")
 
         self._effect = None
         all_effects = list(_find_state_attributes(on_states, ATTR_EFFECT))
@@ -323,6 +384,25 @@ class LightGroup(GroupEntity, light.LightEntity):
             # Report the most common effect.
             effects_count = Counter(itertools.chain(all_effects))
             self._effect = effects_count.most_common(1)[0][0]
+
+        self._color_mode = None
+        all_color_modes = list(_find_state_attributes(on_states, ATTR_COLOR_MODE))
+        if all_color_modes:
+            # Report the most common color mode, select brightness and onoff last
+            color_mode_count = Counter(itertools.chain(all_color_modes))
+            if COLOR_MODE_ONOFF in color_mode_count:
+                color_mode_count[COLOR_MODE_ONOFF] = -1
+            if COLOR_MODE_BRIGHTNESS in color_mode_count:
+                color_mode_count[COLOR_MODE_BRIGHTNESS] = 0
+            self._color_mode = color_mode_count.most_common(1)[0][0]
+
+        self._supported_color_modes = None
+        all_supported_color_modes = list(
+            _find_state_attributes(states, ATTR_SUPPORTED_COLOR_MODES)
+        )
+        if all_supported_color_modes:
+            # Merge all color modes.
+            self._supported_color_modes = set().union(*all_supported_color_modes)
 
         self._supported_features = 0
         for support in _find_state_attributes(states, ATTR_SUPPORTED_FEATURES):

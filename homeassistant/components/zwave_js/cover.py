@@ -2,14 +2,17 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Callable
+from typing import Any
 
 from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.model.value import Value as ZwaveValue
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
+    DEVICE_CLASS_BLIND,
     DEVICE_CLASS_GARAGE,
+    DEVICE_CLASS_SHUTTER,
+    DEVICE_CLASS_WINDOW,
     DOMAIN as COVER_DOMAIN,
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
@@ -18,6 +21,7 @@ from homeassistant.components.cover import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DATA_CLIENT, DATA_UNSUBSCRIBE, DOMAIN
 from .discovery import ZwaveDiscoveryInfo
@@ -36,7 +40,9 @@ BARRIER_STATE_OPEN = 255
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities: Callable
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Z-Wave Cover from Config Entry."""
     client: ZwaveClient = hass.data[DOMAIN][config_entry.entry_id][DATA_CLIENT]
@@ -72,6 +78,15 @@ def percent_to_zwave_position(value: int) -> int:
 
 class ZWaveCover(ZWaveBaseEntity, CoverEntity):
     """Representation of a Z-Wave Cover device."""
+
+    @property
+    def device_class(self) -> str | None:
+        """Return the class of this device, from component DEVICE_CLASSES."""
+        if self.info.platform_hint == "window_shutter":
+            return DEVICE_CLASS_SHUTTER
+        if self.info.platform_hint == "window_blind":
+            return DEVICE_CLASS_BLIND
+        return DEVICE_CLASS_WINDOW
 
     @property
     def is_closed(self) -> bool | None:
@@ -132,7 +147,7 @@ class ZwaveMotorizedBarrier(ZWaveBaseEntity, CoverEntity):
         )
 
     @property
-    def supported_features(self) -> int | None:
+    def supported_features(self) -> int:
         """Flag supported features."""
         return SUPPORT_OPEN | SUPPORT_CLOSE
 

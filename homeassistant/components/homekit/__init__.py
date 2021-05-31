@@ -231,7 +231,7 @@ def _async_update_config_entry_if_from_yaml(hass, entries_by_name, conf):
     return False
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up HomeKit from a config entry."""
     _async_import_options_from_data_if_missing(hass, entry)
 
@@ -297,7 +297,7 @@ async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry):
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     dismiss_setup_message(hass, entry.entry_id)
     homekit = hass.data[DOMAIN][entry.entry_id][HOMEKIT]
@@ -675,7 +675,8 @@ class HomeKit:
                 self.add_bridge_accessory(state)
             acc = self.bridge
 
-        await self.hass.async_add_executor_job(self.driver.add_accessory, acc)
+        # No need to load/persist as we do it in setup
+        self.driver.accessory = acc
 
     async def async_stop(self, *args):
         """Stop the accessory driver."""

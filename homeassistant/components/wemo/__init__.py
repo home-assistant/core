@@ -1,5 +1,6 @@
 """Support for WeMo device discovery."""
-import asyncio
+from __future__ import annotations
+
 import logging
 
 import pywemo
@@ -16,8 +17,13 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
+from homeassistant.util.async_ import gather_with_concurrency
 
 from .const import DOMAIN
+
+# Max number of devices to initialize at once. This limit is in place to
+# avoid tying up too many executor threads with WeMo device setup.
+MAX_CONCURRENCY = 3
 
 # Mapping from Wemo model_name to domain.
 WEMO_MODEL_DISPATCH = {
@@ -92,16 +98,16 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a wemo config entry."""
     config = hass.data[DOMAIN].pop("config")
 
     # Keep track of WeMo device subscriptions for push updates
     registry = hass.data[DOMAIN]["registry"] = pywemo.SubscriptionRegistry()
     await hass.async_add_executor_job(registry.start)
-
+    static_conf = config.get(CONF_STATIC, [])
     wemo_dispatcher = WemoDispatcher(entry)
-    wemo_discovery = WemoDiscovery(hass, wemo_dispatcher)
+    wemo_discovery = WemoDiscovery(hass, wemo_dispatcher, static_conf)
 
     async def async_stop_wemo(event):
         """Shutdown Wemo subscriptions and subscription thread on exit."""
@@ -113,17 +119,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_stop_wemo)
     )
 
-    static_conf = config.get(CONF_STATIC, [])
-    if static_conf:
-        _LOGGER.debug("Adding statically configured WeMo devices")
-        for device in await asyncio.gather(
-            *[
-                hass.async_add_executor_job(validate_static_config, host, port)
-                for host, port in static_conf
-            ]
-        ):
-            if device:
-                wemo_dispatcher.async_add_unique_device(hass, device)
+    # Need to do this at least once in case statics are defined and discovery is disabled
+    await wemo_discovery.discover_statics()
 
     if config.get(CONF_DISCOVERY, DEFAULT_DISCOVERY):
         await wemo_discovery.async_discover_and_schedule()
@@ -134,7 +131,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 class WemoDispatcher:
     """Dispatch WeMo devices to the correct platform."""
 
-    def __init__(self, config_entry: ConfigEntry):
+    def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize the WemoDispatcher."""
         self._config_entry = config_entry
         self._added_serial_numbers = set()
@@ -183,12 +180,18 @@ class WemoDiscovery:
     ADDITIONAL_SECONDS_BETWEEN_SCANS = 10
     MAX_SECONDS_BETWEEN_SCANS = 300
 
-    def __init__(self, hass: HomeAssistant, wemo_dispatcher: WemoDispatcher) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        wemo_dispatcher: WemoDispatcher,
+        static_config: list[tuple[[str, str | None]]],
+    ) -> None:
         """Initialize the WemoDiscovery."""
         self._hass = hass
         self._wemo_dispatcher = wemo_dispatcher
         self._stop = None
         self._scan_delay = 0
+        self._static_config = static_config
 
     async def async_discover_and_schedule(self, *_) -> None:
         """Periodically scan the network looking for WeMo devices."""
@@ -198,6 +201,8 @@ class WemoDiscovery:
                 pywemo.discover_devices
             ):
                 self._wemo_dispatcher.async_add_unique_device(self._hass, device)
+            await self.discover_statics()
+
         finally:
             # Run discovery more frequently after hass has just started.
             self._scan_delay = min(
@@ -216,6 +221,22 @@ class WemoDiscovery:
         if self._stop:
             self._stop()
             self._stop = None
+
+    async def discover_statics(self):
+        """Initialize or Re-Initialize connections to statically configured devices."""
+        if self._static_config:
+            _LOGGER.debug("Adding statically configured WeMo devices")
+            for device in await gather_with_concurrency(
+                MAX_CONCURRENCY,
+                *[
+                    self._hass.async_add_executor_job(
+                        validate_static_config, host, port
+                    )
+                    for host, port in self._static_config
+                ],
+            ):
+                if device:
+                    self._wemo_dispatcher.async_add_unique_device(self._hass, device)
 
 
 def validate_static_config(host, port):

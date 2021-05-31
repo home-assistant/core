@@ -10,9 +10,8 @@ from tuyaha.tuyaapi import (
     TuyaNetException,
     TuyaServerException,
 )
-import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PLATFORM,
@@ -67,22 +66,7 @@ TUYA_TYPE_TO_HA = {
 TUYA_TRACKER = "tuya_tracker"
 STOP_CANCEL = "stop_event_cancel"
 
-CONFIG_SCHEMA = vol.Schema(
-    vol.All(
-        cv.deprecated(DOMAIN),
-        {
-            DOMAIN: vol.Schema(
-                {
-                    vol.Required(CONF_USERNAME): cv.string,
-                    vol.Required(CONF_COUNTRYCODE): cv.string,
-                    vol.Required(CONF_PASSWORD): cv.string,
-                    vol.Optional(CONF_PLATFORM, default="tuya"): cv.string,
-                }
-            )
-        },
-    ),
-    extra=vol.ALLOW_EXTRA,
-)
+CONFIG_SCHEMA = cv.deprecated(DOMAIN)
 
 
 def _update_discovery_interval(hass, interval):
@@ -109,21 +93,7 @@ def _update_query_interval(hass, interval):
         _LOGGER.warning(ex)
 
 
-async def async_setup(hass, config):
-    """Set up the Tuya integration."""
-
-    conf = config.get(DOMAIN)
-    if conf is not None:
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": SOURCE_IMPORT}, data=conf
-            )
-        )
-
-    return True
-
-
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Tuya platform."""
 
     tuya = TuyaApi()

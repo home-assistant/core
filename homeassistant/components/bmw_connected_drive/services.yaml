@@ -69,7 +69,7 @@ activate_air_conditioning:
         text:
 
 find_vehicle:
-  name: Find Vehicle
+  name: Find vehicle
   description: >
     Request vehicle to update the GPS location. The vehicle is identified either via its
     device entry or the VIN. If a VIN is specified, the device entry will be ignored.
@@ -90,6 +90,7 @@ find_vehicle:
         text:
 
 update_state:
+  name: Update state
   description: >
     Fetch the last state of the vehicles of all your accounts from the BMW
     server. This does *not* trigger an update from the vehicle, it just gets

@@ -20,10 +20,13 @@ from homeassistant.components.media_player.const import (
     MEDIA_TYPE_TRACK,
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+
+UPNP_ST = "urn:schemas-upnp-org:device:ZonePlayer:1"
 
 DOMAIN = "sonos"
 DATA_SONOS = "sonos_media_player"
-PLATFORMS = {BINARY_SENSOR_DOMAIN, MP_DOMAIN, SENSOR_DOMAIN}
+PLATFORMS = {BINARY_SENSOR_DOMAIN, MP_DOMAIN, SENSOR_DOMAIN, SWITCH_DOMAIN}
 
 SONOS_ARTIST = "artists"
 SONOS_ALBUM = "albums"
@@ -32,6 +35,9 @@ SONOS_GENRE = "genres"
 SONOS_ALBUM_ARTIST = "album_artists"
 SONOS_TRACKS = "tracks"
 SONOS_COMPOSER = "composers"
+
+SONOS_STATE_PLAYING = "PLAYING"
+SONOS_STATE_TRANSITIONING = "TRANSITIONING"
 
 EXPANDABLE_MEDIA_TYPES = [
     MEDIA_TYPE_ALBUM,
@@ -128,19 +134,22 @@ PLAYABLE_MEDIA_TYPES = [
     MEDIA_TYPE_TRACK,
 ]
 
-SONOS_CONTENT_UPDATE = "sonos_content_update"
+SONOS_CREATE_ALARM = "sonos_create_alarm"
 SONOS_CREATE_BATTERY = "sonos_create_battery"
 SONOS_CREATE_MEDIA_PLAYER = "sonos_create_media_player"
 SONOS_ENTITY_CREATED = "sonos_entity_created"
-SONOS_ENTITY_UPDATE = "sonos_entity_update"
+SONOS_POLL_UPDATE = "sonos_poll_update"
 SONOS_GROUP_UPDATE = "sonos_group_update"
-SONOS_MEDIA_UPDATE = "sonos_media_update"
-SONOS_PLAYER_RECONNECTED = "sonos_player_reconnected"
+SONOS_HOUSEHOLD_UPDATED = "sonos_household_updated"
+SONOS_ALARM_UPDATE = "sonos_alarm_update"
 SONOS_STATE_UPDATED = "sonos_state_updated"
-SONOS_VOLUME_UPDATE = "sonos_properties_update"
 SONOS_SEEN = "sonos_seen"
+
+SOURCE_LINEIN = "Line-in"
+SOURCE_TV = "TV"
 
 BATTERY_SCAN_INTERVAL = datetime.timedelta(minutes=15)
 SCAN_INTERVAL = datetime.timedelta(seconds=10)
 DISCOVERY_INTERVAL = datetime.timedelta(seconds=60)
 SEEN_EXPIRE_TIME = 3.5 * DISCOVERY_INTERVAL
+SUBSCRIPTION_TIMEOUT = 1200

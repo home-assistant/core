@@ -5,7 +5,7 @@
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
             "invalid_auth": "Niepoprawne uwierzytelnienie"
         },
-        "flow_title": "OVO Energy: {username}",
+        "flow_title": "{username}",
         "step": {
             "reauth": {
                 "data": {

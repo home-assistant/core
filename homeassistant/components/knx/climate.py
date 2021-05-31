@@ -1,10 +1,10 @@
 """Support for KNX/IP climate devices."""
 from __future__ import annotations
 
-from collections.abc import Iterable
-from typing import Any, Callable
+from typing import Any
 
-from xknx.devices import Climate as XknxClimate
+from xknx import XKNX
+from xknx.devices import Climate as XknxClimate, ClimateMode as XknxClimateMode
 from xknx.dpt.dpt_hvac_mode import HVACControllerMode, HVACOperationMode
 from xknx.telegram.address import parse_device_group_address
 
@@ -16,10 +16,10 @@ from homeassistant.components.climate.const import (
     SUPPORT_PRESET_MODE,
     SUPPORT_TARGET_TEMPERATURE,
 )
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
+from homeassistant.const import ATTR_TEMPERATURE, CONF_NAME, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import CONTROLLER_MODES, DOMAIN, PRESET_MODES
@@ -33,28 +33,30 @@ PRESET_MODES_INV = {value: key for key, value in PRESET_MODES.items()}
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    async_add_entities: Callable[[Iterable[Entity]], None],
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up climate(s) for KNX platform."""
-    _async_migrate_unique_id(hass, discovery_info)
+    if not discovery_info or not discovery_info["platform_config"]:
+        return
+
+    platform_config = discovery_info["platform_config"]
+    xknx: XKNX = hass.data[DOMAIN].xknx
+
+    _async_migrate_unique_id(hass, platform_config)
     entities = []
-    for device in hass.data[DOMAIN].xknx.devices:
-        if isinstance(device, XknxClimate):
-            entities.append(KNXClimate(device))
+    for entity_config in platform_config:
+        entities.append(KNXClimate(xknx, entity_config))
+
     async_add_entities(entities)
 
 
 @callback
 def _async_migrate_unique_id(
-    hass: HomeAssistant, discovery_info: DiscoveryInfoType | None
+    hass: HomeAssistant, platform_config: list[ConfigType]
 ) -> None:
     """Change unique_ids used in 2021.4 to include target_temperature GA."""
     entity_registry = er.async_get(hass)
-    if not discovery_info or not discovery_info["platform_config"]:
-        return
-
-    platform_config = discovery_info["platform_config"]
     for entity_config in platform_config:
         # normalize group address strings - ga_temperature_state was the old uid
         ga_temperature_state = parse_device_group_address(
@@ -68,20 +70,111 @@ def _async_migrate_unique_id(
         ga_target_temperature_state = parse_device_group_address(
             entity_config[ClimateSchema.CONF_TARGET_TEMPERATURE_STATE_ADDRESS][0]
         )
-        new_uid = f"{ga_temperature_state}_{ga_target_temperature_state}"
+        target_temp = entity_config.get(ClimateSchema.CONF_TARGET_TEMPERATURE_ADDRESS)
+        ga_target_temperature = (
+            parse_device_group_address(target_temp[0])
+            if target_temp is not None
+            else None
+        )
+        setpoint_shift = entity_config.get(ClimateSchema.CONF_SETPOINT_SHIFT_ADDRESS)
+        ga_setpoint_shift = (
+            parse_device_group_address(setpoint_shift[0])
+            if setpoint_shift is not None
+            else None
+        )
+        new_uid = (
+            f"{ga_temperature_state}_"
+            f"{ga_target_temperature_state}_"
+            f"{ga_target_temperature}_"
+            f"{ga_setpoint_shift}"
+        )
         entity_registry.async_update_entity(entity_id, new_unique_id=new_uid)
+
+
+def _create_climate(xknx: XKNX, config: ConfigType) -> XknxClimate:
+    """Return a KNX Climate device to be used within XKNX."""
+    climate_mode = XknxClimateMode(
+        xknx,
+        name=f"{config[CONF_NAME]} Mode",
+        group_address_operation_mode=config.get(
+            ClimateSchema.CONF_OPERATION_MODE_ADDRESS
+        ),
+        group_address_operation_mode_state=config.get(
+            ClimateSchema.CONF_OPERATION_MODE_STATE_ADDRESS
+        ),
+        group_address_controller_status=config.get(
+            ClimateSchema.CONF_CONTROLLER_STATUS_ADDRESS
+        ),
+        group_address_controller_status_state=config.get(
+            ClimateSchema.CONF_CONTROLLER_STATUS_STATE_ADDRESS
+        ),
+        group_address_controller_mode=config.get(
+            ClimateSchema.CONF_CONTROLLER_MODE_ADDRESS
+        ),
+        group_address_controller_mode_state=config.get(
+            ClimateSchema.CONF_CONTROLLER_MODE_STATE_ADDRESS
+        ),
+        group_address_operation_mode_protection=config.get(
+            ClimateSchema.CONF_OPERATION_MODE_FROST_PROTECTION_ADDRESS
+        ),
+        group_address_operation_mode_night=config.get(
+            ClimateSchema.CONF_OPERATION_MODE_NIGHT_ADDRESS
+        ),
+        group_address_operation_mode_comfort=config.get(
+            ClimateSchema.CONF_OPERATION_MODE_COMFORT_ADDRESS
+        ),
+        group_address_operation_mode_standby=config.get(
+            ClimateSchema.CONF_OPERATION_MODE_STANDBY_ADDRESS
+        ),
+        group_address_heat_cool=config.get(ClimateSchema.CONF_HEAT_COOL_ADDRESS),
+        group_address_heat_cool_state=config.get(
+            ClimateSchema.CONF_HEAT_COOL_STATE_ADDRESS
+        ),
+        operation_modes=config.get(ClimateSchema.CONF_OPERATION_MODES),
+        controller_modes=config.get(ClimateSchema.CONF_CONTROLLER_MODES),
+    )
+
+    return XknxClimate(
+        xknx,
+        name=config[CONF_NAME],
+        group_address_temperature=config[ClimateSchema.CONF_TEMPERATURE_ADDRESS],
+        group_address_target_temperature=config.get(
+            ClimateSchema.CONF_TARGET_TEMPERATURE_ADDRESS
+        ),
+        group_address_target_temperature_state=config[
+            ClimateSchema.CONF_TARGET_TEMPERATURE_STATE_ADDRESS
+        ],
+        group_address_setpoint_shift=config.get(
+            ClimateSchema.CONF_SETPOINT_SHIFT_ADDRESS
+        ),
+        group_address_setpoint_shift_state=config.get(
+            ClimateSchema.CONF_SETPOINT_SHIFT_STATE_ADDRESS
+        ),
+        setpoint_shift_mode=config.get(ClimateSchema.CONF_SETPOINT_SHIFT_MODE),
+        setpoint_shift_max=config[ClimateSchema.CONF_SETPOINT_SHIFT_MAX],
+        setpoint_shift_min=config[ClimateSchema.CONF_SETPOINT_SHIFT_MIN],
+        temperature_step=config[ClimateSchema.CONF_TEMPERATURE_STEP],
+        group_address_on_off=config.get(ClimateSchema.CONF_ON_OFF_ADDRESS),
+        group_address_on_off_state=config.get(ClimateSchema.CONF_ON_OFF_STATE_ADDRESS),
+        min_temp=config.get(ClimateSchema.CONF_MIN_TEMP),
+        max_temp=config.get(ClimateSchema.CONF_MAX_TEMP),
+        mode=climate_mode,
+        on_off_invert=config[ClimateSchema.CONF_ON_OFF_INVERT],
+    )
 
 
 class KNXClimate(KnxEntity, ClimateEntity):
     """Representation of a KNX climate device."""
 
-    def __init__(self, device: XknxClimate) -> None:
+    def __init__(self, xknx: XKNX, config: ConfigType) -> None:
         """Initialize of a KNX climate device."""
         self._device: XknxClimate
-        super().__init__(device)
+        super().__init__(_create_climate(xknx, config))
         self._unique_id = (
-            f"{device.temperature.group_address_state}_"
-            f"{device.target_temperature.group_address_state}"
+            f"{self._device.temperature.group_address_state}_"
+            f"{self._device.target_temperature.group_address_state}_"
+            f"{self._device.target_temperature.group_address}_"
+            f"{self._device._setpoint_shift.group_address}"  # pylint: disable=protected-access
         )
         self._unit_of_measurement = TEMP_CELSIUS
 

@@ -1,7 +1,6 @@
 """Denon HEOS Media Player."""
 from __future__ import annotations
 
-from collections.abc import Sequence
 from functools import reduce, wraps
 import logging
 from operator import ior
@@ -31,6 +30,7 @@ from homeassistant.components.media_player.const import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_IDLE, STATE_PAUSED, STATE_PLAYING
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.util.dt import utcnow
 
 from .const import DATA_SOURCE_MANAGER, DOMAIN as HEOS_DOMAIN, SIGNAL_HEOS_UPDATED
@@ -253,7 +253,7 @@ class HeosMediaPlayer(MediaPlayerEntity):
         return self._player.available
 
     @property
-    def device_info(self) -> dict:
+    def device_info(self) -> DeviceInfo:
         """Get attributes about the device."""
         return {
             "identifiers": {(HEOS_DOMAIN, self._player.player_id)},
@@ -361,7 +361,7 @@ class HeosMediaPlayer(MediaPlayerEntity):
         return self._source_manager.get_current_source(self._player.now_playing_media)
 
     @property
-    def source_list(self) -> Sequence[str]:
+    def source_list(self) -> list[str]:
         """List of available input sources."""
         return self._source_manager.source_list
 

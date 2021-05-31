@@ -3,7 +3,6 @@ from homepluscontrol.homeplusinteractivemodule import HomePlusInteractiveModule
 from homepluscontrol.homeplusplant import HomePlusPlant
 import pytest
 
-from homeassistant import config_entries
 from homeassistant.components.home_plus_control.const import DOMAIN
 
 from tests.common import MockConfigEntry
@@ -35,7 +34,6 @@ def mock_config_entry():
             },
         },
         source="test",
-        connection_class=config_entries.CONN_CLASS_LOCAL_POLL,
         options={},
         system_options={"disable_new_entities": False},
         unique_id=DOMAIN,

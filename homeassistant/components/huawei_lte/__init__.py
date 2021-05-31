@@ -39,6 +39,7 @@ from homeassistant.const import (
     CONF_RECIPIENT,
     CONF_URL,
     CONF_USERNAME,
+    EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -48,7 +49,7 @@ from homeassistant.helpers import (
     discovery,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 
@@ -303,9 +304,9 @@ class HuaweiLteData:
     routers: dict[str, Router] = attr.ib(init=False, factory=dict)
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Huawei LTE component from config entry."""
-    url = config_entry.data[CONF_URL]
+    url = entry.data[CONF_URL]
 
     # Override settings from YAML config, but only if they're changed in it
     # Old values are stored as *_from_yaml in the config entry
@@ -316,30 +317,29 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         for key in CONF_USERNAME, CONF_PASSWORD:
             if key in yaml_config:
                 value = yaml_config[key]
-                if value != config_entry.data.get(f"{key}_from_yaml"):
+                if value != entry.data.get(f"{key}_from_yaml"):
                     new_data[f"{key}_from_yaml"] = value
                     new_data[key] = value
         # Options
         new_options = {}
         yaml_recipient = yaml_config.get(NOTIFY_DOMAIN, {}).get(CONF_RECIPIENT)
-        if yaml_recipient is not None and yaml_recipient != config_entry.options.get(
+        if yaml_recipient is not None and yaml_recipient != entry.options.get(
             f"{CONF_RECIPIENT}_from_yaml"
         ):
             new_options[f"{CONF_RECIPIENT}_from_yaml"] = yaml_recipient
             new_options[CONF_RECIPIENT] = yaml_recipient
         yaml_notify_name = yaml_config.get(NOTIFY_DOMAIN, {}).get(CONF_NAME)
-        if (
-            yaml_notify_name is not None
-            and yaml_notify_name != config_entry.options.get(f"{CONF_NAME}_from_yaml")
+        if yaml_notify_name is not None and yaml_notify_name != entry.options.get(
+            f"{CONF_NAME}_from_yaml"
         ):
             new_options[f"{CONF_NAME}_from_yaml"] = yaml_notify_name
             new_options[CONF_NAME] = yaml_notify_name
         # Update entry if overrides were found
         if new_data or new_options:
             hass.config_entries.async_update_entry(
-                config_entry,
-                data={**config_entry.data, **new_data},
-                options={**config_entry.options, **new_options},
+                entry,
+                data={**entry.data, **new_data},
+                options={**entry.options, **new_options},
             )
 
     # Get MAC address for use in unique ids. Being able to use something
@@ -362,8 +362,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
         Authorized one if username/pass specified (even if empty), unauthorized one otherwise.
         """
-        username = config_entry.data.get(CONF_USERNAME)
-        password = config_entry.data.get(CONF_PASSWORD)
+        username = entry.data.get(CONF_USERNAME)
+        password = entry.data.get(CONF_PASSWORD)
         if username or password:
             connection: Connection = AuthorizedConnection(
                 url, username=username, password=password, timeout=CONNECTION_TIMEOUT
@@ -382,7 +382,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         raise ConfigEntryNotReady from ex
 
     # Set up router and store reference to it
-    router = Router(config_entry, connection, url, mac, signal_update)
+    router = Router(entry, connection, url, mac, signal_update)
     hass.data[DOMAIN].routers[url] = router
 
     # Do initial data update
@@ -392,29 +392,32 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     router.subscriptions.clear()
 
     # Set up device registry
-    device_data = {}
-    sw_version = None
-    if router.data.get(KEY_DEVICE_INFORMATION):
-        device_info = router.data[KEY_DEVICE_INFORMATION]
-        sw_version = device_info.get("SoftwareVersion")
-        if device_info.get("DeviceName"):
-            device_data["model"] = device_info["DeviceName"]
-    if not sw_version and router.data.get(KEY_DEVICE_BASIC_INFORMATION):
-        sw_version = router.data[KEY_DEVICE_BASIC_INFORMATION].get("SoftwareVersion")
-    if sw_version:
-        device_data["sw_version"] = sw_version
-    device_registry = await dr.async_get_registry(hass)
-    device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        connections=router.device_connections,
-        identifiers=router.device_identifiers,
-        name=router.device_name,
-        manufacturer="Huawei",
-        **device_data,
-    )
+    if router.device_identifiers or router.device_connections:
+        device_data = {}
+        sw_version = None
+        if router.data.get(KEY_DEVICE_INFORMATION):
+            device_info = router.data[KEY_DEVICE_INFORMATION]
+            sw_version = device_info.get("SoftwareVersion")
+            if device_info.get("DeviceName"):
+                device_data["model"] = device_info["DeviceName"]
+        if not sw_version and router.data.get(KEY_DEVICE_BASIC_INFORMATION):
+            sw_version = router.data[KEY_DEVICE_BASIC_INFORMATION].get(
+                "SoftwareVersion"
+            )
+        if sw_version:
+            device_data["sw_version"] = sw_version
+        device_registry = await dr.async_get_registry(hass)
+        device_registry.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            connections=router.device_connections,
+            identifiers=router.device_identifiers,
+            name=router.device_name,
+            manufacturer="Huawei",
+            **device_data,
+        )
 
     # Forward config entry setup to platforms
-    hass.config_entries.async_setup_platforms(config_entry, CONFIG_ENTRY_PLATFORMS)
+    hass.config_entries.async_setup_platforms(entry, CONFIG_ENTRY_PLATFORMS)
 
     # Notify doesn't support config entry setup yet, load with discovery for now
     await discovery.async_load_platform(
@@ -423,8 +426,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         DOMAIN,
         {
             CONF_URL: url,
-            CONF_NAME: config_entry.options.get(CONF_NAME, DEFAULT_NOTIFY_SERVICE_NAME),
-            CONF_RECIPIENT: config_entry.options.get(CONF_RECIPIENT),
+            CONF_NAME: entry.options.get(CONF_NAME, DEFAULT_NOTIFY_SERVICE_NAME),
+            CONF_RECIPIENT: entry.options.get(CONF_RECIPIENT),
         },
         hass.data[DOMAIN].hass_config,
     )
@@ -438,8 +441,13 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         router.update()
 
     # Set up periodic update
-    config_entry.async_on_unload(
+    entry.async_on_unload(
         async_track_time_interval(hass, _update_router, SCAN_INTERVAL)
+    )
+
+    # Clean up at end
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, router.cleanup)
     )
 
     return True
@@ -594,7 +602,7 @@ class HuaweiLteBaseEntity(Entity):
         return False
 
     @property
-    def device_info(self) -> dict[str, Any]:
+    def device_info(self) -> DeviceInfo:
         """Get info for matching with parent router."""
         return {
             "identifiers": self.router.device_identifiers,
