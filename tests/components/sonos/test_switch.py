@@ -68,6 +68,7 @@ async def test_alarm_create_delete(
     assert "switch.sonos_alarm_15" in entity_registry.entities
 
     alarm_clock_extended.ListAlarms.return_value = alarm_clock.ListAlarms.return_value
+    alarm_event.increment_variable("alarm_list_version")
 
     sub_callback(event=alarm_event)
     await hass.async_block_till_done()

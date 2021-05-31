@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections import OrderedDict
+from collections import OrderedDict, deque
 import datetime
 import logging
 import socket
@@ -76,6 +76,7 @@ class SonosData:
         self.discovered: OrderedDict[str, SonosSpeaker] = OrderedDict()
         self.favorites: dict[str, SonosFavorites] = {}
         self.alarms: dict[str, Alarm] = {}
+        self.processed_alarm_events = deque(maxlen=5)
         self.topology_condition = asyncio.Condition()
         self.hosts_heartbeat = None
         self.ssdp_known: set[str] = set()

@@ -31,6 +31,15 @@ class SonosMockEvent:
         self.service = service
         self.variables = variables
 
+    def increment_variable(self, var_name):
+        """Increment the value of the var_name key in variables dict attribute.
+
+        Assumes value has a format of <str>:<int>.
+        """
+        base, count = self.variables[var_name].split(":")
+        newcount = int(count) + 1
+        self.variables[var_name] = ":".join([base, str(newcount)])
+
 
 @pytest.fixture(name="config_entry")
 def config_entry_fixture():
@@ -174,7 +183,7 @@ def alarm_event_fixture(soco):
         "time_zone": "ffc40a000503000003000502ffc4",
         "time_server": "0.sonostime.pool.ntp.org,1.sonostime.pool.ntp.org,2.sonostime.pool.ntp.org,3.sonostime.pool.ntp.org",
         "time_generation": "20000001",
-        "alarm_list_version": "RINCON_test",
+        "alarm_list_version": "RINCON_test:1",
         "time_format": "INV",
         "date_format": "INV",
         "daily_index_refresh_time": None,
