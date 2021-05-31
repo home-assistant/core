@@ -240,6 +240,8 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
 class UpCloudServerEntity(CoordinatorEntity):
     """Entity class for UpCloud servers."""
 
+    _attr_device_class = DEFAULT_COMPONENT_DEVICE_CLASS
+
     def __init__(
         self,
         coordinator: DataUpdateCoordinator[dict[str, upcloud_api.Server]],
@@ -283,11 +285,6 @@ class UpCloudServerEntity(CoordinatorEntity):
     def is_on(self) -> bool:
         """Return true if the server is on."""
         return self.state == STATE_ON
-
-    @property
-    def device_class(self) -> str:
-        """Return the class of this server."""
-        return DEFAULT_COMPONENT_DEVICE_CLASS
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
