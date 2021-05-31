@@ -214,6 +214,7 @@ class EntityPlatform:
         @callback
         def async_create_setup_task() -> Coroutine:
             """Get task to set up platform."""
+            config_entries.current_entry.set(config_entry)
             return platform.async_setup_entry(  # type: ignore[no-any-return,union-attr]
                 self.hass, config_entry, self._async_schedule_add_entities
             )
