@@ -31,7 +31,6 @@ async def async_setup(hass):
     hass.components.websocket_api.async_register_command(config_entry_disable)
     hass.components.websocket_api.async_register_command(config_entry_update)
     hass.components.websocket_api.async_register_command(config_entries_progress)
-    hass.components.websocket_api.async_register_command(system_options_list)
     hass.components.websocket_api.async_register_command(system_options_update)
     hass.components.websocket_api.async_register_command(ignore_config_flow)
 
@@ -231,20 +230,6 @@ def config_entries_progress(hass, connection, msg):
     )
 
 
-@websocket_api.require_admin
-@websocket_api.async_response
-@websocket_api.websocket_command(
-    {"type": "config_entries/system_options/list", "entry_id": str}
-)
-async def system_options_list(hass, connection, msg):
-    """List all system options for a config entry."""
-    entry_id = msg["entry_id"]
-    entry = hass.config_entries.async_get_entry(entry_id)
-
-    if entry:
-        connection.send_result(msg["id"], entry.system_options.as_dict())
-
-
 def send_entry_not_found(connection, msg_id):
     """Send Config entry not found error."""
     connection.send_error(
@@ -406,6 +391,7 @@ def entry_json(entry: config_entries.ConfigEntry) -> dict:
         "state": entry.state.value,
         "supports_options": supports_options,
         "supports_unload": entry.supports_unload,
+        "system_options": entry.system_options.as_dict(),
         "disabled_by": entry.disabled_by,
         "reason": entry.reason,
     }

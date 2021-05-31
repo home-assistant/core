@@ -87,6 +87,10 @@ async def test_get_entries(hass, client):
                 "state": core_ce.ConfigEntryState.NOT_LOADED.value,
                 "supports_options": True,
                 "supports_unload": True,
+                "system_options": {
+                    "disable_new_entities": False,
+                    "disable_polling": False,
+                },
                 "disabled_by": None,
                 "reason": None,
             },
@@ -97,6 +101,10 @@ async def test_get_entries(hass, client):
                 "state": core_ce.ConfigEntryState.SETUP_ERROR.value,
                 "supports_options": False,
                 "supports_unload": False,
+                "system_options": {
+                    "disable_new_entities": False,
+                    "disable_polling": False,
+                },
                 "disabled_by": None,
                 "reason": "Unsupported API",
             },
@@ -107,6 +115,10 @@ async def test_get_entries(hass, client):
                 "state": core_ce.ConfigEntryState.NOT_LOADED.value,
                 "supports_options": False,
                 "supports_unload": False,
+                "system_options": {
+                    "disable_new_entities": False,
+                    "disable_polling": False,
+                },
                 "disabled_by": core_ce.DISABLED_USER,
                 "reason": None,
             },
@@ -328,6 +340,10 @@ async def test_create_account(hass, client, enable_custom_integrations):
             "state": core_ce.ConfigEntryState.LOADED.value,
             "supports_options": False,
             "supports_unload": False,
+            "system_options": {
+                "disable_new_entities": False,
+                "disable_polling": False,
+            },
             "title": "Test Entry",
             "reason": None,
         },
@@ -399,6 +415,10 @@ async def test_two_step_flow(hass, client, enable_custom_integrations):
                 "state": core_ce.ConfigEntryState.LOADED.value,
                 "supports_options": False,
                 "supports_unload": False,
+                "system_options": {
+                    "disable_new_entities": False,
+                    "disable_polling": False,
+                },
                 "title": "user-title",
                 "reason": None,
             },
@@ -676,30 +696,6 @@ async def test_two_step_options_flow(hass, client):
             "description": None,
             "description_placeholders": None,
         }
-
-
-async def test_list_system_options(hass, hass_ws_client):
-    """Test that we can list an entries system options."""
-    assert await async_setup_component(hass, "config", {})
-    ws_client = await hass_ws_client(hass)
-
-    entry = MockConfigEntry(domain="demo")
-    entry.add_to_hass(hass)
-
-    await ws_client.send_json(
-        {
-            "id": 5,
-            "type": "config_entries/system_options/list",
-            "entry_id": entry.entry_id,
-        }
-    )
-    response = await ws_client.receive_json()
-
-    assert response["success"]
-    assert response["result"] == {
-        "disable_new_entities": False,
-        "disable_polling": False,
-    }
 
 
 async def test_update_system_options(hass, hass_ws_client):
