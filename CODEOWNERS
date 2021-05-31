@@ -322,6 +322,7 @@ homeassistant/components/netdata/* @fabaff
 homeassistant/components/nexia/* @bdraco
 homeassistant/components/nextbus/* @vividboarder
 homeassistant/components/nextcloud/* @meichthys
+homeassistant/components/nfandroidtv/* @tkdrob
 homeassistant/components/nightscout/* @marciogranzotto
 homeassistant/components/nilu/* @hfurubotten
 homeassistant/components/nissan_leaf/* @filcole

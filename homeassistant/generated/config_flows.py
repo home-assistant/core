@@ -168,6 +168,7 @@ FLOWS = [
     "nest",
     "netatmo",
     "nexia",
+    "nfandroidtv",
     "nightscout",
     "notion",
     "nuheat",
