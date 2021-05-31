@@ -127,37 +127,30 @@ async def test_log_warning_custom_component(hass, caplog, enable_custom_integrat
     """Test that we log a warning when loading a custom component."""
 
     await loader.async_get_integration(hass, "test_package")
-    assert "You are using a custom integration test_package" in caplog.text
+    assert "We found a custom integration test_package" in caplog.text
 
     await loader.async_get_integration(hass, "test")
-    assert "You are using a custom integration test " in caplog.text
+    assert "We found a custom integration test " in caplog.text
 
 
-async def test_custom_integration_version_not_valid(hass, caplog):
+async def test_custom_integration_version_not_valid(
+    hass, caplog, enable_custom_integrations
+):
     """Test that we log a warning when custom integrations have a invalid version."""
-    test_integration1 = loader.Integration(
-        hass, "custom_components.test", None, {"domain": "test1", "version": "test"}
+    with pytest.raises(loader.IntegrationNotFound):
+        await loader.async_get_integration(hass, "test_no_version")
+
+    assert (
+        "The custom integration 'test_no_version' does not have a valid version key (None) in the manifest file and was blocked from loading."
+        in caplog.text
     )
-    test_integration2 = loader.Integration(
-        hass, "custom_components.test", None, {"domain": "test2"}
+
+    with pytest.raises(loader.IntegrationNotFound):
+        await loader.async_get_integration(hass, "test2")
+    assert (
+        "The custom integration 'test_bad_version' does not have a valid version key (bad) in the manifest file and was blocked from loading."
+        in caplog.text
     )
-
-    with patch("homeassistant.loader.async_get_custom_components") as mock_get:
-        mock_get.return_value = {"test1": test_integration1, "test2": test_integration2}
-
-        with pytest.raises(loader.IntegrationNotFound):
-            await loader.async_get_integration(hass, "test1")
-        assert (
-            "The custom integration 'test1' does not have a valid version key (test) in the manifest file and was blocked from loading."
-            in caplog.text
-        )
-
-        with pytest.raises(loader.IntegrationNotFound):
-            await loader.async_get_integration(hass, "test2")
-        assert (
-            "The custom integration 'test2' does not have a valid version key (None) in the manifest file and was blocked from loading."
-            in caplog.text
-        )
 
 
 async def test_get_integration(hass):
@@ -471,19 +464,11 @@ async def test_get_custom_components_safe_mode(hass):
 
 async def test_custom_integration_missing_version(hass, caplog):
     """Test trying to load a custom integration without a version twice does not deadlock."""
-    test_integration_1 = loader.Integration(
-        hass, "custom_components.test1", None, {"domain": "test1"}
-    )
-    with patch("homeassistant.loader.async_get_custom_components") as mock_get:
-        mock_get.return_value = {
-            "test1": test_integration_1,
-        }
+    with pytest.raises(loader.IntegrationNotFound):
+        await loader.async_get_integration(hass, "test_no_version")
 
-        with pytest.raises(loader.IntegrationNotFound):
-            await loader.async_get_integration(hass, "test1")
-
-        with pytest.raises(loader.IntegrationNotFound):
-            await loader.async_get_integration(hass, "test1")
+    with pytest.raises(loader.IntegrationNotFound):
+        await loader.async_get_integration(hass, "test_no_version")
 
 
 async def test_custom_integration_missing(hass, caplog):
