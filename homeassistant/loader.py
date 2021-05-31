@@ -47,7 +47,7 @@ DATA_CUSTOM_COMPONENTS = "custom_components"
 PACKAGE_CUSTOM_COMPONENTS = "custom_components"
 PACKAGE_BUILTIN = "homeassistant.components"
 CUSTOM_WARNING = (
-    "You are using a custom integration %s which has not "
+    "We found a custom integration %s which has not "
     "been tested by Home Assistant. This component might "
     "cause stability problems, be sure to disable it if you "
     "experience issues with Home Assistant"
