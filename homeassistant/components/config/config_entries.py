@@ -287,7 +287,7 @@ async def system_options_update(hass, connection, msg):
 
     result = {
         "system_options": entry.system_options.as_dict(),
-        "restart_required": False,
+        "require_restart": False,
     }
 
     if (
@@ -295,7 +295,7 @@ async def system_options_update(hass, connection, msg):
         and entry.state is config_entries.ConfigEntryState.LOADED
     ):
         if not await hass.config_entries.async_reload(entry.entry_id):
-            result["restart_required"] = (
+            result["require_restart"] = (
                 entry.state is config_entries.ConfigEntryState.FAILED_UNLOAD
             )
 

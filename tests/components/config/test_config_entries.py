@@ -725,7 +725,7 @@ async def test_update_system_options(hass, hass_ws_client):
 
     assert response["success"]
     assert response["result"] == {
-        "restart_required": False,
+        "require_restart": False,
         "system_options": {"disable_new_entities": True, "disable_polling": False},
     }
     assert entry.system_options.disable_new_entities is True
@@ -744,7 +744,7 @@ async def test_update_system_options(hass, hass_ws_client):
 
     assert response["success"]
     assert response["result"] == {
-        "restart_required": True,
+        "require_restart": True,
         "system_options": {"disable_new_entities": False, "disable_polling": True},
     }
     assert entry.system_options.disable_new_entities is False
