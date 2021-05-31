@@ -247,15 +247,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up motionEye from a config entry."""
     hass.data.setdefault(DOMAIN, {})
 
-    # Ensure every loaded entry has a registered webhook id.
-    if CONF_WEBHOOK_ID not in entry.data:
-        hass.config_entries.async_update_entry(
-            entry, data={**entry.data, CONF_WEBHOOK_ID: async_generate_id()}
-        )
-    async_register(
-        hass, DOMAIN, "motionEye", entry.data[CONF_WEBHOOK_ID], handle_webhook
-    )
-
     client = create_motioneye_client(
         entry.data[CONF_URL],
         admin_username=entry.data.get(CONF_ADMIN_USERNAME),
@@ -272,6 +263,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except MotionEyeClientError as exc:
         await client.async_client_close()
         raise ConfigEntryNotReady from exc
+
+    # Ensure every loaded entry has a registered webhook id.
+    if CONF_WEBHOOK_ID not in entry.data:
+        hass.config_entries.async_update_entry(
+            entry, data={**entry.data, CONF_WEBHOOK_ID: async_generate_id()}
+        )
+    async_register(
+        hass, DOMAIN, "motionEye", entry.data[CONF_WEBHOOK_ID], handle_webhook
+    )
 
     @callback
     async def async_update_data() -> dict[str, Any] | None:
