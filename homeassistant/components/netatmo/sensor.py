@@ -130,7 +130,7 @@ PUBLIC = "public"
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the Netatmo weather and homecoach platform."""
     data_handler = hass.data[DOMAIN][entry.entry_id][DATA_HANDLER]
-    platform_not_ready = False
+    platform_not_ready = True
 
     async def find_entities(data_class_name):
         """Find all entities."""
@@ -183,8 +183,8 @@ async def async_setup_entry(hass, entry, async_add_entities):
         await data_handler.register_data_class(data_class_name, data_class_name, None)
         data_class = data_handler.data.get(data_class_name)
 
-        if not data_class or not data_class.raw_data:
-            platform_not_ready = True
+        if not (data_class and data_class.raw_data):
+            platform_not_ready = False
 
         async_add_entities(await find_entities(data_class_name), True)
 
@@ -226,6 +226,12 @@ async def async_setup_entry(hass, entry, async_add_entities):
                 lat_sw=area.lat_sw,
                 lon_sw=area.lon_sw,
             )
+            data_class = data_handler.data.get(signal_name)
+
+            if not (data_class and data_class.raw_data):
+                nonlocal platform_not_ready
+                platform_not_ready = False
+
             for sensor_type in SUPPORTED_PUBLIC_SENSOR_TYPES:
                 new_entities.append(
                     NetatmoPublicSensor(data_handler, area, sensor_type)
