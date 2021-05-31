@@ -297,28 +297,30 @@ class Integration:
                 manifest,
             )
 
-            if not integration.is_built_in:
-                _LOGGER.warning(CUSTOM_WARNING, integration.domain)
-                try:
-                    AwesomeVersion(
-                        integration.version,
-                        [
-                            AwesomeVersionStrategy.CALVER,
-                            AwesomeVersionStrategy.SEMVER,
-                            AwesomeVersionStrategy.SIMPLEVER,
-                            AwesomeVersionStrategy.BUILDVER,
-                            AwesomeVersionStrategy.PEP440,
-                        ],
-                    )
-                except AwesomeVersionException:
-                    _LOGGER.error(
-                        "The custom integration '%s' does not have a "
-                        "valid version key (%s) in the manifest file and was blocked from loading. "
-                        "See https://developers.home-assistant.io/blog/2021/01/29/custom-integration-changes#versions for more details",
-                        integration.domain,
-                        integration.version,
-                    )
-                    return None
+            if integration.is_built_in:
+                return integration
+
+            _LOGGER.warning(CUSTOM_WARNING, integration.domain)
+            try:
+                AwesomeVersion(
+                    integration.version,
+                    [
+                        AwesomeVersionStrategy.CALVER,
+                        AwesomeVersionStrategy.SEMVER,
+                        AwesomeVersionStrategy.SIMPLEVER,
+                        AwesomeVersionStrategy.BUILDVER,
+                        AwesomeVersionStrategy.PEP440,
+                    ],
+                )
+            except AwesomeVersionException:
+                _LOGGER.error(
+                    "The custom integration '%s' does not have a "
+                    "valid version key (%s) in the manifest file and was blocked from loading. "
+                    "See https://developers.home-assistant.io/blog/2021/01/29/custom-integration-changes#versions for more details",
+                    integration.domain,
+                    integration.version,
+                )
+                return None
             return integration
 
         return None
