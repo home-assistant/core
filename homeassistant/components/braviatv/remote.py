@@ -1,6 +1,6 @@
 """Remote control support for Bravia TV."""
 
-from homeassistant.components.remote import RemoteEntity
+from homeassistant.components.remote import ATTR_NUM_REPEATS, RemoteEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import ATTR_MANUFACTURER, BRAVIA_CLIENT, DEFAULT_NAME, DOMAIN
@@ -64,4 +64,5 @@ class BraviaTVRemote(CoordinatorEntity, RemoteEntity):
 
     async def async_send_command(self, command, **kwargs):
         """Send a command to device."""
-        await self._client.async_send_command(command)
+        repeats = kwargs[ATTR_NUM_REPEATS]
+        await self._client.async_send_command(command, repeats)

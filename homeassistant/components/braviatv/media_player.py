@@ -22,7 +22,14 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_STEP,
 )
 from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PIN
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PIN,
+    STATE_OFF,
+    STATE_PAUSED,
+    STATE_PLAYING,
+)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.json import load_json
@@ -142,7 +149,9 @@ class BraviaTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
     @property
     def state(self):
         """Return the state of the device."""
-        return self._client.state
+        if self._client.is_on:
+            return STATE_PLAYING if self._client.playing else STATE_PAUSED
+        return STATE_OFF
 
     @property
     def source(self):

@@ -6,15 +6,9 @@ import logging
 from bravia_tv import BraviaRC
 from bravia_tv.braviarc import NoIPControl
 
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_MAC,
-    CONF_PIN,
-    STATE_OFF,
-    STATE_ON,
-    STATE_PAUSED,
-    STATE_PLAYING,
-)
+from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
+from homeassistant.components.remote import DOMAIN as REMOTE_DOMAIN
+from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PIN, STATE_OFF
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -29,7 +23,8 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["media_player", "remote"]
+PLATFORMS = [MEDIA_PLAYER_DOMAIN, REMOTE_DOMAIN]
+SCAN_INTERVAL = timedelta(seconds=15)
 
 
 async def async_setup_entry(hass, config_entry):
@@ -105,7 +100,8 @@ class BraviaTVClient(DataUpdateCoordinator[None]):
         self.max_volume = None
         self.volume = None
         self.is_on = False
-        self.playing = False
+        # Assume that the TV is in Play mode
+        self.playing = True
         self.state = STATE_OFF
         self.state_lock = asyncio.Lock()
 
@@ -113,7 +109,7 @@ class BraviaTVClient(DataUpdateCoordinator[None]):
             hass,
             _LOGGER,
             name=DOMAIN,
-            update_interval=timedelta(seconds=15),
+            update_interval=SCAN_INTERVAL,
             request_refresh_debouncer=Debouncer(
                 hass, _LOGGER, cooldown=1.0, immediate=False
             ),
@@ -197,17 +193,14 @@ class BraviaTVClient(DataUpdateCoordinator[None]):
                 power_status = "off"
 
         if power_status == "active":
-            self.state = STATE_ON
             self.is_on = True
             if (
                 await self._async_refresh_volume()
                 and await self._async_refresh_channels()
             ):
                 await self._async_refresh_playing_info()
-                self.state = STATE_PLAYING if self.playing else STATE_PAUSED
                 return
 
-        self.state = STATE_OFF
         self.is_on = False
 
     async def async_turn_on(self):
@@ -287,7 +280,7 @@ class BraviaTVClient(DataUpdateCoordinator[None]):
             await self.async_request_refresh()
 
     async def async_media_previous_track(self):
-        """Send the previous track command."""
+        """Send previous track command."""
         async with self.state_lock:
             await self.hass.async_add_executor_job(self.braviarc.media_previous_track)
             await self.async_request_refresh()
@@ -300,9 +293,12 @@ class BraviaTVClient(DataUpdateCoordinator[None]):
                 await self.hass.async_add_executor_job(self.braviarc.play_content, uri)
                 await self.async_request_refresh()
 
-    async def async_send_command(self, command):
+    async def async_send_command(self, command, repeats=1):
         """Send command to device."""
-        for cmd in command:
-            async with self.state_lock:
-                await self.hass.async_add_executor_job(self.braviarc.send_command, cmd)
-                await self.async_request_refresh()
+        async with self.state_lock:
+            for _ in range(repeats):
+                for cmd in command:
+                    await self.hass.async_add_executor_job(
+                        self.braviarc.send_command, cmd
+                    )
+            await self.async_request_refresh()

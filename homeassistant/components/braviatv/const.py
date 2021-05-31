@@ -6,7 +6,6 @@ ATTR_MODEL = "model"
 
 CONF_IGNORED_SOURCES = "ignored_sources"
 
-BRAVIARC = "braviarc"
 BRAVIA_CLIENT = "braviaclient"
 BRAVIA_CONFIG_FILE = "bravia.conf"
 CLIENTID_PREFIX = "HomeAssistant"
