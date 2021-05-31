@@ -119,6 +119,14 @@ class HassIO:
         return self.send_command(f"/addons/{addon}/info", method="get")
 
     @api_data
+    def get_addons(self):
+        """Return data for all Add-ons.
+
+        This method return a coroutine.
+        """
+        return self.send_command("/addons", method="get")
+
+    @api_data
     def get_ingress_panels(self):
         """Return data for Add-on ingress panels.
 

@@ -71,6 +71,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 DATA_CORE_INFO = "hassio_core_info"
 DATA_HOST_INFO = "hassio_host_info"
+DATA_ADDONS = "hassio_addons"
 DATA_INFO = "hassio_info"
 DATA_OS_INFO = "hassio_os_info"
 DATA_SUPERVISOR_INFO = "hassio_supervisor_info"
@@ -293,6 +294,16 @@ def get_host_info(hass):
 
 @callback
 @bind_hass
+def get_addons(hass):
+    """Return addon information.
+
+    Async friendly.
+    """
+    return hass.data.get(DATA_ADDONS)
+
+
+@callback
+@bind_hass
 def get_supervisor_info(hass):
     """Return Supervisor information.
 
@@ -456,6 +467,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
         try:
             hass.data[DATA_INFO] = await hassio.get_info()
             hass.data[DATA_HOST_INFO] = await hassio.get_host_info()
+            hass.data[DATA_ADDONS] = await hassio.get_addons()
             hass.data[DATA_CORE_INFO] = await hassio.get_core_info()
             hass.data[DATA_SUPERVISOR_INFO] = await hassio.get_supervisor_info()
             hass.data[DATA_OS_INFO] = await hassio.get_os_info()
@@ -627,10 +639,22 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self) -> dict[str, Any]:
         """Update data via library."""
         new_data = {}
-        addon_data = get_supervisor_info(self.hass)
+        supervisor_info = get_supervisor_info(self.hass)
+        addons_info = get_addons(self.hass)
+
+        repositories = {
+            repo[ATTR_SLUG]: repo[ATTR_NAME]
+            for repo in addons_info.get("repositories", [])
+        }
 
         new_data["addons"] = {
-            addon[ATTR_SLUG]: addon for addon in addon_data.get("addons", [])
+            addon[ATTR_SLUG]: {
+                **addon,
+                ATTR_REPOSITORY: repositories.get(
+                    addon.get(ATTR_REPOSITORY, ""), addon.get(ATTR_REPOSITORY)
+                ),
+            }
+            for addon in supervisor_info.get("addons", [])
         }
         if self.is_hass_os:
             new_data["os"] = get_os_info(self.hass)
