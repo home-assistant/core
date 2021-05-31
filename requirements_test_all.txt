@@ -811,7 +811,7 @@ pyhiveapi==0.4.2
 pyhomematic==0.1.72
 
 # homeassistant.components.ialarm
-pyialarm==1.5
+pyialarm==1.7
 
 # homeassistant.components.icloud
 pyicloud==0.10.2
@@ -871,7 +871,7 @@ pymata-express==1.19
 pymazda==0.1.6
 
 # homeassistant.components.melcloud
-pymelcloud==2.5.2
+pymelcloud==2.5.3
 
 # homeassistant.components.meteoclimatic
 pymeteoclimatic==0.0.6

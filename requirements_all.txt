@@ -1467,7 +1467,7 @@ pyhomematic==0.1.72
 pyhomeworks==0.0.6
 
 # homeassistant.components.ialarm
-pyialarm==1.5
+pyialarm==1.7
 
 # homeassistant.components.icloud
 pyicloud==0.10.2
@@ -1560,7 +1560,7 @@ pymazda==0.1.6
 pymediaroom==0.6.4.1
 
 # homeassistant.components.melcloud
-pymelcloud==2.5.2
+pymelcloud==2.5.3
 
 # homeassistant.components.meteoclimatic
 pymeteoclimatic==0.0.6
