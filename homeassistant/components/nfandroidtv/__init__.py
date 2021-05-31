@@ -1,5 +1,5 @@
 """The NFAndroidTV integration."""
-from asyncio.exceptions import TimeoutError
+from asyncio.exceptions import TimeoutError as TimedOutError
 import logging
 
 from async_timeout import timeout
@@ -45,7 +45,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         session = async_get_clientsession(hass)
         async with timeout(DEFAULT_TIMEOUT, loop=hass.loop):
             await session.post(f"http://{host}:7676")
-    except (ConnectError, TimeoutError) as ex:
+    except (ConnectError, TimedOutError) as ex:
         _LOGGER.warning("Failed to connect: %s", ex)
         raise ConfigEntryNotReady from ex
 

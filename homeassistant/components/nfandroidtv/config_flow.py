@@ -1,7 +1,7 @@
 """Config flow for NFAndroidTV integration."""
 from __future__ import annotations
 
-from asyncio.exceptions import TimeoutError
+from asyncio.exceptions import TimeoutError as TimedOutError
 import logging
 
 from aiohttp.client_exceptions import ClientConnectorError
@@ -75,7 +75,7 @@ class NFAndroidTVFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             session = async_get_clientsession(self.hass)
             async with timeout(DEFAULT_TIMEOUT, loop=self.hass.loop):
                 await session.post(f"http://{host}:7676")
-        except (ConnectError, TimeoutError, ClientConnectorError):
+        except (ConnectError, TimedOutError, ClientConnectorError):
             _LOGGER.error("Error connecting to device at %s", host)
             return "cannot_connect"
         except Exception:  # pylint: disable=broad-except
