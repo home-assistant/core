@@ -79,8 +79,6 @@ class GarminConnectData:
     async def async_update(self):
         """Update data via API wrapper."""
         today = date.today()
-        summary = None
-        body = None
 
         try:
             summary = await self.client.get_user_summary(today.isoformat())
@@ -99,9 +97,7 @@ class GarminConnectData:
             _LOGGER.error(
                 "Error occurred during Garmin Connect update requests: %s", err
             )
-            return
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception(
                 "Unknown error occurred during Garmin Connect update requests"
             )
-            return
