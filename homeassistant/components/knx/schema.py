@@ -367,6 +367,8 @@ class LightSchema:
     CONF_COLOR_TEMP_MODE = "color_temperature_mode"
     CONF_RGBW_ADDRESS = "rgbw_address"
     CONF_RGBW_STATE_ADDRESS = "rgbw_state_address"
+    CONF_XYY_ADDRESS = "xyy_address"
+    CONF_XYY_STATE_ADDRESS = "xyy_state_address"
     CONF_MIN_KELVIN = "min_kelvin"
     CONF_MAX_KELVIN = "max_kelvin"
 
@@ -425,6 +427,8 @@ class LightSchema:
                 ): vol.All(vol.Upper, cv.enum(ColorTempModes)),
                 vol.Exclusive(CONF_RGBW_ADDRESS, "color"): ga_list_validator,
                 vol.Optional(CONF_RGBW_STATE_ADDRESS): ga_list_validator,
+                vol.Exclusive(CONF_XYY_ADDRESS, "color"): ga_list_validator,
+                vol.Optional(CONF_XYY_STATE_ADDRESS): ga_list_validator,
                 vol.Optional(CONF_MIN_KELVIN, default=DEFAULT_MIN_KELVIN): vol.All(
                     vol.Coerce(int), vol.Range(min=1)
                 ),
