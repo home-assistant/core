@@ -99,9 +99,9 @@ class PacketSequence:
                 super().__init__(3)
 
             time_base = fractions.Fraction(1, VIDEO_FRAME_RATE)
-            dts = self.packet * PACKET_DURATION / time_base
-            pts = self.packet * PACKET_DURATION / time_base
-            duration = PACKET_DURATION / time_base
+            dts = int(self.packet * PACKET_DURATION / time_base)
+            pts = int(self.packet * PACKET_DURATION / time_base)
+            duration = int(PACKET_DURATION / time_base)
             stream = VIDEO_STREAM
             # Pretend we get 1 keyframe every second
             is_keyframe = not (self.packet - 1) % (VIDEO_FRAME_RATE * KEYFRAME_INTERVAL)
@@ -206,9 +206,20 @@ async def async_decode_stream(hass, packets, py_av=None):
         py_av = MockPyAv()
     py_av.container.packets = packets
 
+    # Wrap this method with a preceding write so the BytesIO pointer moves
+    check_flush_part = SegmentBuffer.check_flush_part
+
+    def wrapped_check_flush_part(segment_buffer, packet):
+        segment_buffer._memory_file.write(b"0")
+        return check_flush_part(segment_buffer, packet)
+
     with patch("av.open", new=py_av.open), patch(
         "homeassistant.components.stream.core.StreamOutput.put",
         side_effect=py_av.capture_buffer.capture_output_segment,
+    ), patch(
+        "homeassistant.components.stream.worker.SegmentBuffer.check_flush_part",
+        side_effect=wrapped_check_flush_part,
+        autospec=True,
     ):
         segment_buffer = SegmentBuffer(stream.outputs)
         stream_worker(STREAM_SOURCE, {}, segment_buffer, threading.Event())
@@ -237,11 +248,13 @@ async def test_stream_worker_success(hass):
     segments = decoded_stream.segments
     # Check number of segments. A segment is only formed when a packet from the next
     # segment arrives, hence the subtraction of one from the sequence length.
-    assert len(segments) == int((TEST_SEQUENCE_LENGTH - 1) * SEGMENTS_PER_PACKET)
+    assert len([segment for segment in segments if segment.duration]) == int(
+        (TEST_SEQUENCE_LENGTH - 1) * SEGMENTS_PER_PACKET
+    )
     # Check sequence numbers
     assert all(segments[i].sequence == i for i in range(len(segments)))
     # Check segment durations
-    assert all(s.duration == SEGMENT_DURATION for s in segments)
+    assert all(s.duration == SEGMENT_DURATION for s in segments[:-1])
     assert len(decoded_stream.video_packets) == TEST_SEQUENCE_LENGTH
     assert len(decoded_stream.audio_packets) == 0
 
@@ -273,12 +286,16 @@ async def test_skip_out_of_order_packet(hass):
         )
         del segments[longer_segment_index]
         # Check number of segments
-        assert len(segments) == int((len(packets) - 1 - 1) * SEGMENTS_PER_PACKET - 1)
+        assert len([segment for segment in segments if segment.duration]) == int(
+            (len(packets) - 1 - 1) * SEGMENTS_PER_PACKET - 1
+        )
     else:  # Otherwise segment durations and number of segments are unaffected
         # Check number of segments
-        assert len(segments) == int((len(packets) - 1) * SEGMENTS_PER_PACKET)
+        assert len([segment for segment in segments if segment.duration]) == int(
+            (len(packets) - 1) * SEGMENTS_PER_PACKET
+        )
     # Check remaining segment durations
-    assert all(s.duration == SEGMENT_DURATION for s in segments)
+    assert all(s.duration == SEGMENT_DURATION for s in segments[:-1])
     assert len(decoded_stream.video_packets) == len(packets) - 1
     assert len(decoded_stream.audio_packets) == 0
 
@@ -293,11 +310,13 @@ async def test_discard_old_packets(hass):
     decoded_stream = await async_decode_stream(hass, iter(packets))
     segments = decoded_stream.segments
     # Check number of segments
-    assert len(segments) == int((OUT_OF_ORDER_PACKET_INDEX - 1) * SEGMENTS_PER_PACKET)
+    assert len([segment for segment in segments if segment.duration]) == int(
+        (OUT_OF_ORDER_PACKET_INDEX - 1) * SEGMENTS_PER_PACKET
+    )
     # Check sequence numbers
     assert all(segments[i].sequence == i for i in range(len(segments)))
     # Check segment durations
-    assert all(s.duration == SEGMENT_DURATION for s in segments)
+    assert all(s.duration == SEGMENT_DURATION for s in segments[:-1])
     assert len(decoded_stream.video_packets) == OUT_OF_ORDER_PACKET_INDEX
     assert len(decoded_stream.audio_packets) == 0
 
@@ -312,11 +331,13 @@ async def test_packet_overflow(hass):
     decoded_stream = await async_decode_stream(hass, iter(packets))
     segments = decoded_stream.segments
     # Check number of segments
-    assert len(segments) == int((OUT_OF_ORDER_PACKET_INDEX - 1) * SEGMENTS_PER_PACKET)
+    assert len([segment for segment in segments if segment.duration]) == int(
+        (OUT_OF_ORDER_PACKET_INDEX - 1) * SEGMENTS_PER_PACKET
+    )
     # Check sequence numbers
     assert all(segments[i].sequence == i for i in range(len(segments)))
     # Check segment durations
-    assert all(s.duration == SEGMENT_DURATION for s in segments)
+    assert all(s.duration == SEGMENT_DURATION for s in segments[:-1])
     assert len(decoded_stream.video_packets) == OUT_OF_ORDER_PACKET_INDEX
     assert len(decoded_stream.audio_packets) == 0
 
@@ -335,7 +356,7 @@ async def test_skip_initial_bad_packets(hass):
     # Check sequence numbers
     assert all(segments[i].sequence == i for i in range(len(segments)))
     # Check segment durations
-    assert all(s.duration == SEGMENT_DURATION for s in segments)
+    assert all(s.duration == SEGMENT_DURATION for s in segments[:-1])
     assert (
         len(decoded_stream.video_packets)
         == num_packets
@@ -344,7 +365,7 @@ async def test_skip_initial_bad_packets(hass):
         * KEYFRAME_INTERVAL
     )
     # Check number of segments
-    assert len(segments) == int(
+    assert len(segments) - 1 == int(
         (len(decoded_stream.video_packets) - 1) * SEGMENTS_PER_PACKET
     )
     assert len(decoded_stream.audio_packets) == 0
@@ -404,7 +425,9 @@ async def test_too_many_bad_packets(hass):
 
     decoded_stream = await async_decode_stream(hass, iter(packets))
     segments = decoded_stream.segments
-    assert len(segments) == int((bad_packet_start - 1) * SEGMENTS_PER_PACKET)
+    assert len([segment for segment in segments if segment.duration]) == int(
+        (bad_packet_start - 1) * SEGMENTS_PER_PACKET
+    )
     assert len(decoded_stream.video_packets) == bad_packet_start
     assert len(decoded_stream.audio_packets) == 0
 
@@ -432,7 +455,9 @@ async def test_audio_packets_not_found(hass):
 
     decoded_stream = await async_decode_stream(hass, iter(packets), py_av=py_av)
     segments = decoded_stream.segments
-    assert len(segments) == int((num_packets - 1) * SEGMENTS_PER_PACKET)
+    assert len([segment for segment in segments if segment.duration]) == int(
+        (num_packets - 1) * SEGMENTS_PER_PACKET
+    )
     assert len(decoded_stream.video_packets) == num_packets
     assert len(decoded_stream.audio_packets) == 0
 
@@ -444,8 +469,8 @@ async def test_adts_aac_audio(hass):
     num_packets = PACKETS_TO_WAIT_FOR_AUDIO + 1
     packets = list(PacketSequence(num_packets))
     packets[1].stream = AUDIO_STREAM
-    packets[1].dts = packets[0].dts / VIDEO_FRAME_RATE * AUDIO_SAMPLE_RATE
-    packets[1].pts = packets[0].pts / VIDEO_FRAME_RATE * AUDIO_SAMPLE_RATE
+    packets[1].dts = int(packets[0].dts / VIDEO_FRAME_RATE * AUDIO_SAMPLE_RATE)
+    packets[1].pts = int(packets[0].pts / VIDEO_FRAME_RATE * AUDIO_SAMPLE_RATE)
     # The following is packet data is a sign of ADTS AAC
     packets[1][0] = 255
     packets[1][1] = 241
@@ -462,17 +487,19 @@ async def test_audio_is_first_packet(hass):
     packets = list(PacketSequence(num_packets))
     # Pair up an audio packet for each video packet
     packets[0].stream = AUDIO_STREAM
-    packets[0].dts = packets[1].dts / VIDEO_FRAME_RATE * AUDIO_SAMPLE_RATE
-    packets[0].pts = packets[1].pts / VIDEO_FRAME_RATE * AUDIO_SAMPLE_RATE
+    packets[0].dts = int(packets[1].dts / VIDEO_FRAME_RATE * AUDIO_SAMPLE_RATE)
+    packets[0].pts = int(packets[1].pts / VIDEO_FRAME_RATE * AUDIO_SAMPLE_RATE)
     packets[1].is_keyframe = True  # Move the video keyframe from packet 0 to packet 1
     packets[2].stream = AUDIO_STREAM
-    packets[2].dts = packets[3].dts / VIDEO_FRAME_RATE * AUDIO_SAMPLE_RATE
-    packets[2].pts = packets[3].pts / VIDEO_FRAME_RATE * AUDIO_SAMPLE_RATE
+    packets[2].dts = int(packets[3].dts / VIDEO_FRAME_RATE * AUDIO_SAMPLE_RATE)
+    packets[2].pts = int(packets[3].pts / VIDEO_FRAME_RATE * AUDIO_SAMPLE_RATE)
 
     decoded_stream = await async_decode_stream(hass, iter(packets), py_av=py_av)
     segments = decoded_stream.segments
     # The audio packets are segmented with the video packets
-    assert len(segments) == int((num_packets - 2 - 1) * SEGMENTS_PER_PACKET)
+    assert len([segment for segment in segments if segment.duration]) == int(
+        (num_packets - 2 - 1) * SEGMENTS_PER_PACKET
+    )
     assert len(decoded_stream.video_packets) == num_packets - 2
     assert len(decoded_stream.audio_packets) == 1
 
@@ -484,13 +511,15 @@ async def test_audio_packets_found(hass):
     num_packets = PACKETS_TO_WAIT_FOR_AUDIO + 1
     packets = list(PacketSequence(num_packets))
     packets[1].stream = AUDIO_STREAM
-    packets[1].dts = packets[0].dts / VIDEO_FRAME_RATE * AUDIO_SAMPLE_RATE
-    packets[1].pts = packets[0].pts / VIDEO_FRAME_RATE * AUDIO_SAMPLE_RATE
+    packets[1].dts = int(packets[0].dts / VIDEO_FRAME_RATE * AUDIO_SAMPLE_RATE)
+    packets[1].pts = int(packets[0].pts / VIDEO_FRAME_RATE * AUDIO_SAMPLE_RATE)
 
     decoded_stream = await async_decode_stream(hass, iter(packets), py_av=py_av)
     segments = decoded_stream.segments
     # The audio packet above is buffered with the video packet
-    assert len(segments) == int((num_packets - 1 - 1) * SEGMENTS_PER_PACKET)
+    assert len([segment for segment in segments if segment.duration]) == int(
+        (num_packets - 1 - 1) * SEGMENTS_PER_PACKET
+    )
     assert len(decoded_stream.video_packets) == num_packets - 1
     assert len(decoded_stream.audio_packets) == 1
 
@@ -508,11 +537,13 @@ async def test_pts_out_of_order(hass):
     decoded_stream = await async_decode_stream(hass, iter(packets))
     segments = decoded_stream.segments
     # Check number of segments
-    assert len(segments) == int((TEST_SEQUENCE_LENGTH - 1) * SEGMENTS_PER_PACKET)
+    assert len([segment for segment in segments if segment.duration]) == int(
+        (TEST_SEQUENCE_LENGTH - 1) * SEGMENTS_PER_PACKET
+    )
     # Check sequence numbers
     assert all(segments[i].sequence == i for i in range(len(segments)))
     # Check segment durations
-    assert all(s.duration == SEGMENT_DURATION for s in segments)
+    assert all(s.duration == SEGMENT_DURATION for s in segments[:-1])
     assert len(decoded_stream.video_packets) == len(packets)
     assert len(decoded_stream.audio_packets) == 0
 

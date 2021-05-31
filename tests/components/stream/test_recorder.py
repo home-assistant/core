@@ -16,8 +16,8 @@ import pytest
 
 from homeassistant.components.stream import create_stream
 from homeassistant.components.stream.const import HLS_PROVIDER, RECORDER_PROVIDER
-from homeassistant.components.stream.core import Segment
-from homeassistant.components.stream.fmp4utils import get_init_and_moof_data
+from homeassistant.components.stream.core import Part, Segment
+from homeassistant.components.stream.fmp4utils import find_box
 from homeassistant.components.stream.recorder import recorder_save_worker
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
@@ -40,9 +40,10 @@ class SaveRecordWorkerSync:
 
     def __init__(self):
         """Initialize SaveRecordWorkerSync."""
-        self.reset()
+        self._save_event = None
         self._segments = None
         self._save_thread = None
+        self.reset()
 
     def recorder_save_worker(self, file_out: str, segments: deque[Segment]):
         """Mock method for patch."""
@@ -179,6 +180,21 @@ async def test_record_path_not_allowed(hass, hass_client):
         await stream.async_record("/example/path")
 
 
+def add_parts_to_segment(segment, source):
+    """Add relevant part data to segment for testing recorder."""
+    moof_locs = list(find_box(source.getbuffer(), b"moof")) + [len(source.getbuffer())]
+    segment.init = source.getbuffer()[: moof_locs[0]].tobytes()
+    segment.parts = [
+        Part(
+            duration=None,
+            independent=None,
+            http_range_start=None,
+            data=source.getbuffer()[moof_locs[i] : moof_locs[i + 1]],
+        )
+        for i in range(1, len(moof_locs) - 1)
+    ]
+
+
 async def test_recorder_save(tmpdir):
     """Test recorder save."""
     # Setup
@@ -186,9 +202,10 @@ async def test_recorder_save(tmpdir):
     filename = f"{tmpdir}/test.mp4"
 
     # Run
-    recorder_save_worker(
-        filename, [Segment(1, *get_init_and_moof_data(source.getbuffer()), 4)]
-    )
+    segment = Segment(sequence=1)
+    add_parts_to_segment(segment, source)
+    segment.duration = 4
+    recorder_save_worker(filename, [segment])
 
     # Assert
     assert os.path.exists(filename)
@@ -201,15 +218,13 @@ async def test_recorder_discontinuity(tmpdir):
     filename = f"{tmpdir}/test.mp4"
 
     # Run
-    init, moof_data = get_init_and_moof_data(source.getbuffer())
-    recorder_save_worker(
-        filename,
-        [
-            Segment(1, init, moof_data, 4, 0),
-            Segment(2, init, moof_data, 4, 1),
-        ],
-    )
-
+    segment_1 = Segment(sequence=1, stream_id=0)
+    add_parts_to_segment(segment_1, source)
+    segment_1.duration = 4
+    segment_2 = Segment(sequence=2, stream_id=1)
+    add_parts_to_segment(segment_2, source)
+    segment_2.duration = 4
+    recorder_save_worker(filename, [segment_1, segment_2])
     # Assert
     assert os.path.exists(filename)
 
@@ -263,7 +278,11 @@ async def test_record_stream_audio(
             stream_worker_sync.resume()
 
         result = av.open(
-            BytesIO(last_segment.init + last_segment.moof_data), "r", format="mp4"
+            BytesIO(
+                last_segment.init + b"".join(part.data for part in last_segment.parts)
+            ),
+            "r",
+            format="mp4",
         )
 
         assert len(result.streams.audio) == expected_audio_streams

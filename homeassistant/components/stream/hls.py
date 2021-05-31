@@ -37,10 +37,8 @@ class HlsMasterPlaylistView(StreamView):
         # Need to calculate max bandwidth as input_container.bit_rate doesn't seem to work
         # Calculate file size / duration and use a small multiplier to account for variation
         # hls spec already allows for 25% variation
-        segment = track.get_segment(track.sequences[-1])
-        bandwidth = round(
-            (len(segment.init) + len(segment.moof_data)) * 8 / segment.duration * 1.2
-        )
+        segment = track.get_segment(track.sequences[-2])
+        bandwidth = round(segment.last_write_pos * 8 / segment.duration * 1.2)
         codecs = get_codec_string(segment.init)
         lines = [
             "#EXTM3U",
@@ -53,8 +51,10 @@ class HlsMasterPlaylistView(StreamView):
         """Return m3u8 playlist."""
         track = stream.add_provider(HLS_PROVIDER)
         stream.start()
-        # Wait for a segment to be ready
+        # Make sure at least two segments are ready (last one may not be complete)
         if not track.sequences and not await track.recv():
+            return web.HTTPNotFound()
+        if len(track.sequences) == 1 and not await track.recv():
             return web.HTTPNotFound()
         headers = {"Content-Type": FORMAT_CONTENT_TYPE[HLS_PROVIDER]}
         return web.Response(body=self.render(track).encode("utf-8"), headers=headers)
@@ -68,24 +68,23 @@ class HlsPlaylistView(StreamView):
     cors_allowed = True
 
     @staticmethod
-    def render_preamble(track):
-        """Render preamble."""
-        return [
-            "#EXT-X-VERSION:6",
-            f"#EXT-X-TARGETDURATION:{track.target_duration}",
-            '#EXT-X-MAP:URI="init.mp4"',
-        ]
-
-    @staticmethod
-    def render_playlist(track):
+    def render(track):
         """Render playlist."""
-        segments = list(track.get_segments())[-NUM_PLAYLIST_SEGMENTS:]
+        # NUM_PLAYLIST_SEGMENTS+1 because most recent is probably not yet complete
+        segments = list(track.get_segments())[-(NUM_PLAYLIST_SEGMENTS + 1) :]
 
-        if not segments:
-            return []
+        # To cap the number of complete segments at NUM_PLAYLIST_SEGMENTS,
+        # remove the first segment if the last segment is actually complete
+        if segments[-1].complete:
+            segments = segments[-NUM_PLAYLIST_SEGMENTS:]
 
         first_segment = segments[0]
         playlist = [
+            "#EXTM3U",
+            "#EXT-X-VERSION:6",
+            "#EXT-X-INDEPENDENT-SEGMENTS",
+            '#EXT-X-MAP:URI="init.mp4"',
+            f"#EXT-X-TARGETDURATION:{track.target_duration:.0f}",
             f"#EXT-X-MEDIA-SEQUENCE:{first_segment.sequence}",
             f"#EXT-X-DISCONTINUITY-SEQUENCE:{first_segment.stream_id}",
             "#EXT-X-PROGRAM-DATE-TIME:"
@@ -95,11 +94,12 @@ class HlsPlaylistView(StreamView):
             # at the beginning or we risk a behind live window exception in exoplayer.
             # EXT-X-START is not supposed to be within 3 target durations of the end,
             # but this seems ok
-            f"#EXT-X-START:TIME-OFFSET=-{EXT_X_START * track.target_duration:.3f},PRECISE=YES",
+            f"#EXT-X-START:TIME-OFFSET=-{EXT_X_START * track.target_duration:.3f}",
         ]
 
         last_stream_id = first_segment.stream_id
-        for segment in segments:
+        # Add playlist sections for completed segments
+        for segment in segments if segments[-1].complete else segments[:-1]:
             if last_stream_id != segment.stream_id:
                 playlist.extend(
                     [
@@ -117,19 +117,16 @@ class HlsPlaylistView(StreamView):
             )
             last_stream_id = segment.stream_id
 
-        return playlist
-
-    def render(self, track):
-        """Render M3U8 file."""
-        lines = ["#EXTM3U"] + self.render_preamble(track) + self.render_playlist(track)
-        return "\n".join(lines) + "\n"
+        return "\n".join(playlist) + "\n"
 
     async def handle(self, request, stream, sequence):
         """Return m3u8 playlist."""
         track = stream.add_provider(HLS_PROVIDER)
         stream.start()
-        # Wait for a segment to be ready
+        # Make sure at least two segments are ready (last one may not be complete)
         if not track.sequences and not await track.recv():
+            return web.HTTPNotFound()
+        if len(track.sequences) == 1 and not await track.recv():
             return web.HTTPNotFound()
         headers = {"Content-Type": FORMAT_CONTENT_TYPE[HLS_PROVIDER]}
         response = web.Response(
@@ -170,7 +167,7 @@ class HlsSegmentView(StreamView):
             return web.HTTPNotFound()
         headers = {"Content-Type": "video/iso.segment"}
         return web.Response(
-            body=segment.moof_data,
+            body=b"".join([part.data for part in segment.parts]),
             headers=headers,
         )
 

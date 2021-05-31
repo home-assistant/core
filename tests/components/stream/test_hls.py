@@ -12,7 +12,7 @@ from homeassistant.components.stream.const import (
     MAX_SEGMENTS,
     NUM_PLAYLIST_SEGMENTS,
 )
-from homeassistant.components.stream.core import Segment
+from homeassistant.components.stream.core import Part, Segment
 from homeassistant.const import HTTP_NOT_FOUND
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -22,7 +22,7 @@ from tests.components.stream.common import generate_h264_video
 
 STREAM_SOURCE = "some-stream-source"
 INIT_BYTES = b"init"
-MOOF_BYTES = b"some-bytes"
+FAKE_PAYLOAD = b"fake-payload"
 SEGMENT_DURATION = 10
 TEST_TIMEOUT = 5.0  # Lower than 9s home assistant timeout
 MAX_ABORT_SEGMENTS = 20  # Abort test to avoid looping forever
@@ -70,23 +70,24 @@ def make_segment(segment, discontinuity=False):
                 + "Z",
             ]
         )
-    response.extend(["#EXTINF:10.0000,", f"./segment/{segment}.m4s"]),
+    response.extend(["#EXTINF:10.0000,", f"./segment/{segment}.m4s"])
     return "\n".join(response)
 
 
-def make_playlist(sequence, discontinuity_sequence=0, segments=[]):
+def make_playlist(sequence, segments, discontinuity_sequence=0):
     """Create a an hls playlist response for tests to assert on."""
     response = [
         "#EXTM3U",
         "#EXT-X-VERSION:6",
-        "#EXT-X-TARGETDURATION:10",
+        "#EXT-X-INDEPENDENT-SEGMENTS",
         '#EXT-X-MAP:URI="init.mp4"',
+        "#EXT-X-TARGETDURATION:10",
         f"#EXT-X-MEDIA-SEQUENCE:{sequence}",
         f"#EXT-X-DISCONTINUITY-SEQUENCE:{discontinuity_sequence}",
         "#EXT-X-PROGRAM-DATE-TIME:"
         + FAKE_TIME.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]
         + "Z",
-        f"#EXT-X-START:TIME-OFFSET=-{1.5*SEGMENT_DURATION:.3f},PRECISE=YES",
+        f"#EXT-X-START:TIME-OFFSET=-{1.5*SEGMENT_DURATION:.3f}",
     ]
     response.extend(segments)
     response.append("")
@@ -264,21 +265,26 @@ async def test_hls_playlist_view(hass, hls_stream, stream_worker_sync):
     stream_worker_sync.pause()
     hls = stream.add_provider(HLS_PROVIDER)
 
-    hls.put(Segment(1, INIT_BYTES, MOOF_BYTES, SEGMENT_DURATION, start_time=FAKE_TIME))
+    for i in range(2):
+        segment = Segment(sequence=i, duration=SEGMENT_DURATION, start_time=FAKE_TIME)
+        hls.put(segment)
     await hass.async_block_till_done()
 
     hls_client = await hls_stream(stream)
 
     resp = await hls_client.get("/playlist.m3u8")
     assert resp.status == 200
-    assert await resp.text() == make_playlist(sequence=1, segments=[make_segment(1)])
+    assert await resp.text() == make_playlist(
+        sequence=0, segments=[make_segment(0), make_segment(1)]
+    )
 
-    hls.put(Segment(2, INIT_BYTES, MOOF_BYTES, SEGMENT_DURATION, start_time=FAKE_TIME))
+    segment = Segment(sequence=2, duration=SEGMENT_DURATION, start_time=FAKE_TIME)
+    hls.put(segment)
     await hass.async_block_till_done()
     resp = await hls_client.get("/playlist.m3u8")
     assert resp.status == 200
     assert await resp.text() == make_playlist(
-        sequence=1, segments=[make_segment(1), make_segment(2)]
+        sequence=0, segments=[make_segment(0), make_segment(1), make_segment(2)]
     )
 
     stream_worker_sync.resume()
@@ -296,37 +302,41 @@ async def test_hls_max_segments(hass, hls_stream, stream_worker_sync):
     hls_client = await hls_stream(stream)
 
     # Produce enough segments to overfill the output buffer by one
-    for sequence in range(1, MAX_SEGMENTS + 2):
-        hls.put(
-            Segment(
-                sequence,
-                INIT_BYTES,
-                MOOF_BYTES,
-                SEGMENT_DURATION,
-                start_time=FAKE_TIME,
-            )
+    for sequence in range(MAX_SEGMENTS + 1):
+        segment = Segment(
+            sequence=sequence, duration=SEGMENT_DURATION, start_time=FAKE_TIME
         )
+        hls.put(segment)
         await hass.async_block_till_done()
 
     resp = await hls_client.get("/playlist.m3u8")
     assert resp.status == 200
 
     # Only NUM_PLAYLIST_SEGMENTS are returned in the playlist.
-    start = MAX_SEGMENTS + 2 - NUM_PLAYLIST_SEGMENTS
+    start = MAX_SEGMENTS + 1 - NUM_PLAYLIST_SEGMENTS
     segments = []
-    for sequence in range(start, MAX_SEGMENTS + 2):
+    for sequence in range(start, MAX_SEGMENTS + 1):
         segments.append(make_segment(sequence))
-    assert await resp.text() == make_playlist(
-        sequence=start,
-        segments=segments,
-    )
+    assert await resp.text() == make_playlist(sequence=start, segments=segments)
+
+    # Fetch the actual segments with a fake byte payload
+    for segment in hls.get_segments():
+        segment.init = INIT_BYTES
+        segment.last_write_pos = len(segment.init) + len(FAKE_PAYLOAD)
+        segment.parts = [
+            Part(
+                duration=SEGMENT_DURATION,
+                independent=True,
+                data=FAKE_PAYLOAD,
+            )
+        ]
 
     # The segment that fell off the buffer is not accessible
-    segment_response = await hls_client.get("/segment/1.m4s")
+    segment_response = await hls_client.get("/segment/0.m4s")
     assert segment_response.status == 404
 
     # However all segments in the buffer are accessible, even those that were not in the playlist.
-    for sequence in range(2, MAX_SEGMENTS + 2):
+    for sequence in range(1, MAX_SEGMENTS + 1):
         segment_response = await hls_client.get(f"/segment/{sequence}.m4s")
         assert segment_response.status == 200
 
@@ -342,36 +352,21 @@ async def test_hls_playlist_view_discontinuity(hass, hls_stream, stream_worker_s
     stream_worker_sync.pause()
     hls = stream.add_provider(HLS_PROVIDER)
 
-    hls.put(
-        Segment(
-            1,
-            INIT_BYTES,
-            MOOF_BYTES,
-            SEGMENT_DURATION,
-            stream_id=0,
-            start_time=FAKE_TIME,
-        )
+    segment = Segment(
+        sequence=0, stream_id=0, duration=SEGMENT_DURATION, start_time=FAKE_TIME
     )
-    hls.put(
-        Segment(
-            2,
-            INIT_BYTES,
-            MOOF_BYTES,
-            SEGMENT_DURATION,
-            stream_id=0,
-            start_time=FAKE_TIME,
-        )
+    hls.put(segment)
+    segment = Segment(
+        sequence=1, stream_id=0, duration=SEGMENT_DURATION, start_time=FAKE_TIME
     )
-    hls.put(
-        Segment(
-            3,
-            INIT_BYTES,
-            MOOF_BYTES,
-            SEGMENT_DURATION,
-            stream_id=1,
-            start_time=FAKE_TIME,
-        )
+    hls.put(segment)
+    segment = Segment(
+        sequence=2,
+        stream_id=1,
+        duration=SEGMENT_DURATION,
+        start_time=FAKE_TIME,
     )
+    hls.put(segment)
     await hass.async_block_till_done()
 
     hls_client = await hls_stream(stream)
@@ -379,11 +374,11 @@ async def test_hls_playlist_view_discontinuity(hass, hls_stream, stream_worker_s
     resp = await hls_client.get("/playlist.m3u8")
     assert resp.status == 200
     assert await resp.text() == make_playlist(
-        sequence=1,
+        sequence=0,
         segments=[
+            make_segment(0),
             make_segment(1),
-            make_segment(2),
-            make_segment(3, discontinuity=True),
+            make_segment(2, discontinuity=True),
         ],
     )
 
@@ -401,29 +396,20 @@ async def test_hls_max_segments_discontinuity(hass, hls_stream, stream_worker_sy
 
     hls_client = await hls_stream(stream)
 
-    hls.put(
-        Segment(
-            1,
-            INIT_BYTES,
-            MOOF_BYTES,
-            SEGMENT_DURATION,
-            stream_id=0,
-            start_time=FAKE_TIME,
-        )
+    segment = Segment(
+        sequence=0, stream_id=0, duration=SEGMENT_DURATION, start_time=FAKE_TIME
     )
+    hls.put(segment)
 
     # Produce enough segments to overfill the output buffer by one
-    for sequence in range(1, MAX_SEGMENTS + 2):
-        hls.put(
-            Segment(
-                sequence,
-                INIT_BYTES,
-                MOOF_BYTES,
-                SEGMENT_DURATION,
-                stream_id=1,
-                start_time=FAKE_TIME,
-            )
+    for sequence in range(MAX_SEGMENTS + 1):
+        segment = Segment(
+            sequence=sequence,
+            stream_id=1,
+            duration=SEGMENT_DURATION,
+            start_time=FAKE_TIME,
         )
+        hls.put(segment)
     await hass.async_block_till_done()
 
     resp = await hls_client.get("/playlist.m3u8")
@@ -432,9 +418,9 @@ async def test_hls_max_segments_discontinuity(hass, hls_stream, stream_worker_sy
     # Only NUM_PLAYLIST_SEGMENTS are returned in the playlist causing the
     # EXT-X-DISCONTINUITY tag to be omitted and EXT-X-DISCONTINUITY-SEQUENCE
     # returned instead.
-    start = MAX_SEGMENTS + 2 - NUM_PLAYLIST_SEGMENTS
+    start = MAX_SEGMENTS + 1 - NUM_PLAYLIST_SEGMENTS
     segments = []
-    for sequence in range(start, MAX_SEGMENTS + 2):
+    for sequence in range(start, MAX_SEGMENTS + 1):
         segments.append(make_segment(sequence))
     assert await resp.text() == make_playlist(
         sequence=start,

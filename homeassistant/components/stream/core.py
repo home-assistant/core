@@ -20,18 +20,33 @@ PROVIDERS = Registry()
 
 
 @attr.s(slots=True)
+class Part:
+    """Represent a segment part."""
+
+    duration: float = attr.ib()
+    independent: bool = attr.ib()
+    data: bytes = attr.ib()
+
+
+@attr.s(slots=True)
 class Segment:
     """Represent a segment."""
 
-    sequence: int = attr.ib()
-    # the init of the mp4
-    init: bytes = attr.ib()
-    # the video data (moof + mddat)s of the mp4
-    moof_data: bytes = attr.ib()
-    duration: float = attr.ib()
+    sequence: int = attr.ib(default=0)
+    # the init of the mp4 the segment is based on
+    init: bytes = attr.ib(default=None)
+    duration: float = attr.ib(default=0)
     # For detecting discontinuities across stream restarts
     stream_id: int = attr.ib(default=0)
+    parts: list[Part] = attr.ib(factory=list)
+    # This value is the current length of the segment
+    last_write_pos: int = attr.ib(default=0)
     start_time: datetime.datetime = attr.ib(factory=datetime.datetime.utcnow)
+
+    @property
+    def complete(self) -> bool:
+        """Return whether the Segment is complete."""
+        return self.duration > 0
 
 
 class IdleTimer:

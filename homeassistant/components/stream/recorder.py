@@ -57,7 +57,7 @@ def recorder_save_worker(file_out: str, segments: deque[Segment]):
 
         # Open segment
         source = av.open(
-            BytesIO(segment.init + segment.moof_data),
+            BytesIO(segment.init + b"".join([part.data for part in segment.parts])),
             "r",
             format=SEGMENT_CONTAINER_FORMAT,
         )
