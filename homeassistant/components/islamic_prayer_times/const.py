@@ -1,9 +1,11 @@
 """Constants for the Islamic Prayer component."""
-DOMAIN = "islamic_prayer_times"
-NAME = "Islamic Prayer Times"
-PRAYER_TIMES_ICON = "mdi:calendar-clock"
+from typing import Final
 
-SENSOR_TYPES = {
+DOMAIN: Final = "islamic_prayer_times"
+NAME: Final = "Islamic Prayer Times"
+PRAYER_TIMES_ICON: Final = "mdi:calendar-clock"
+
+SENSOR_TYPES: Final = {
     "Fajr": "prayer",
     "Sunrise": "time",
     "Dhuhr": "prayer",
@@ -14,22 +16,22 @@ SENSOR_TYPES = {
     "Midnight": "time",
 }
 
-CONF_CALC_METHOD = "calculation_method"
-CONF_SCHOOL = "school"
-CONF_MIDNIGHT_MODE = "midnightMode"
-CONF_LAT_ADJ_METHOD = "latitudeAdjustmentMethod"
-CONF_TUNE = "tune"
-CONF_IMSAK_TUNE = "imsak_tune"
-CONF_FARJ_TUNE = "fajr_tune"
-CONF_SUNRISE_TUNE = "sunrise_tune"
-CONF_DHUHR_TUNE = "dhuhr_tune"
-CONF_ASR_TUNE = "asr_tune"
-CONF_MAGHRIB_TUNE = "maghrib_tune"
-CONF_SUNSET_TUNE = "sunset_tune"
-CONF_ISHA_TUNE = "isha_tune"
-CONF_MIDNIGHT_TUNE = "midnight_tune"
+CONF_CALC_METHOD: Final = "calculation_method"
+CONF_SCHOOL: Final = "school"
+CONF_MIDNIGHT_MODE: Final = "midnightMode"
+CONF_LAT_ADJ_METHOD: Final = "latitudeAdjustmentMethod"
+CONF_TUNE: Final = "tune"
+CONF_IMSAK_TUNE: Final = "imsak_tune"
+CONF_FARJ_TUNE: Final = "fajr_tune"
+CONF_SUNRISE_TUNE: Final = "sunrise_tune"
+CONF_DHUHR_TUNE: Final = "dhuhr_tune"
+CONF_ASR_TUNE: Final = "asr_tune"
+CONF_MAGHRIB_TUNE: Final = "maghrib_tune"
+CONF_SUNSET_TUNE: Final = "sunset_tune"
+CONF_ISHA_TUNE: Final = "isha_tune"
+CONF_MIDNIGHT_TUNE: Final = "midnight_tune"
 
-CALC_METHODS = [
+CALC_METHODS: Final = [
     "ISNA",
     "Makkah",
     "MWL",
@@ -45,9 +47,9 @@ CALC_METHODS = [
     "Russia",
 ]
 
-SCHOOLS = ["Shafi", "Hanafi"]
-LAT_ADJ_METHODS = ["Middle of the Night", "One Seventh", "Angle Based"]
-MIDNIGHT_MODES = ["Standard", "Jafari"]
+SCHOOLS: Final = ["Shafi", "Hanafi"]
+LAT_ADJ_METHODS: Final = ["Middle of the Night", "One Seventh", "Angle Based"]
+MIDNIGHT_MODES: Final = ["Standard", "Jafari"]
 
 TIMES_TUNE = [
     CONF_IMSAK_TUNE,

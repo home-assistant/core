@@ -1,4 +1,4 @@
-"""conftest bla bla."""
+"""Test helpers for Islamic Prayer Times."""
 from unittest.mock import patch
 
 import pytest
