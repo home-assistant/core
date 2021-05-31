@@ -456,7 +456,7 @@ class HomeKit:
         self.bridge = None
         self.driver = None
 
-    def setup(self, zeroconf_instance):
+    def setup(self, async_zeroconf_instance):
         """Set up bridge and accessory driver."""
         ip_addr = self._ip_address or get_local_ip()
         persist_file = get_persist_fullpath_for_entry_id(self.hass, self._entry_id)
@@ -471,7 +471,7 @@ class HomeKit:
             port=self._port,
             persist_file=persist_file,
             advertised_address=self._advertise_ip,
-            zeroconf_instance=zeroconf_instance,
+            async_zeroconf_instance=async_zeroconf_instance,
         )
 
         # If we do not load the mac address will be wrong
@@ -595,8 +595,8 @@ class HomeKit:
         if self.status != STATUS_READY:
             return
         self.status = STATUS_WAIT
-        zc_instance = await zeroconf.async_get_instance(self.hass)
-        await self.hass.async_add_executor_job(self.setup, zc_instance)
+        async_zc_instance = await zeroconf.async_get_async_instance(self.hass)
+        await self.hass.async_add_executor_job(self.setup, async_zc_instance)
         self.aid_storage = AccessoryAidStorage(self.hass, self._entry_id)
         await self.aid_storage.async_initialize()
         await self._async_create_accessories()
