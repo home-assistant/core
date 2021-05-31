@@ -102,8 +102,11 @@ async def test_remove_from_hass(hass: HomeAssistant):
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
-        await hass.config_entries.async_remove(entry.entry_id)
-        await hass.async_block_till_done()
+
+    state = hass.states.get(f"{DOMAIN}.test")
+    assert state is not None
+    await hass.config_entries.async_remove(entry.entry_id)
+    await hass.async_block_till_done()
 
     assert len(hass.states.async_all()) == 0
     HomeControlMockBinarySensor.publisher.unregister.assert_called_once()
