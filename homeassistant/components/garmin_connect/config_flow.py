@@ -46,7 +46,7 @@ class GarminConnectConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         errors = {}
         try:
-            unique_id = await garmin_client.login()
+            username = await garmin_client.login()
         except GarminConnectConnectionError:
             errors["base"] = "cannot_connect"
             return await self._show_setup_form(errors)
@@ -61,13 +61,13 @@ class GarminConnectConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = "unknown"
             return await self._show_setup_form(errors)
 
-        await self.async_set_unique_id(unique_id)
+        await self.async_set_unique_id(username)
         self._abort_if_unique_id_configured()
 
         return self.async_create_entry(
-            title=unique_id,
+            title=username,
             data={
-                CONF_ID: unique_id,
+                CONF_ID: username,
                 CONF_USERNAME: user_input[CONF_USERNAME],
                 CONF_PASSWORD: user_input[CONF_PASSWORD],
             },
