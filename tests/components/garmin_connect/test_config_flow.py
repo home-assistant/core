@@ -12,6 +12,8 @@ from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.garmin_connect.const import DOMAIN
 from homeassistant.const import CONF_ID, CONF_PASSWORD, CONF_USERNAME
 
+from tests.common import MockConfigEntry
+
 MOCK_CONF = {
     CONF_ID: "my@email.address",
     CONF_USERNAME: "my@email.address",
@@ -97,3 +99,21 @@ async def test_unknown_error(hass, mock_garmin_connect):
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["errors"] == {"base": "unknown"}
+
+
+async def test_abort_if_already_setup(hass):
+    """Test abort if already setup."""
+    MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONF, unique_id=MOCK_CONF[CONF_ID]
+    ).add_to_hass(hass)
+    with patch(
+        "homeassistant.components.garmin_connect.config_flow.Garmin",
+    ) as garmin:
+        garmin.return_value.get_full_name.return_value = MOCK_CONF[CONF_ID]
+        yield garmin.return_value
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": "user"}, data=MOCK_CONF
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["reason"] == "already_configured"
