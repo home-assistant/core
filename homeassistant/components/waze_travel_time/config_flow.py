@@ -111,6 +111,12 @@ class WazeOptionsFlow(config_entries.OptionsFlow):
                         default=self.config_entry.options.get(CONF_EXCL_FILTER, ""),
                     ): cv.string,
                     vol.Optional(
+                        CONF_AUTOMATIC_UPDATES,
+                        default=self.config_entry.options.get(
+                            CONF_AUTOMATIC_UPDATES, True
+                        ),
+                    ): cv.boolean,
+                    vol.Optional(
                         CONF_REALTIME,
                         default=self.config_entry.options[CONF_REALTIME],
                     ): cv.boolean,
@@ -135,12 +141,6 @@ class WazeOptionsFlow(config_entries.OptionsFlow):
                     vol.Optional(
                         CONF_AVOID_FERRIES,
                         default=self.config_entry.options[CONF_AVOID_FERRIES],
-                    ): cv.boolean,
-                    vol.Optional(
-                        CONF_AUTOMATIC_UPDATES,
-                        default=self.config_entry.options.get(
-                            CONF_AUTOMATIC_UPDATES, True
-                        ),
                     ): cv.boolean,
                 }
             ),
