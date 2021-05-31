@@ -290,12 +290,21 @@ class Integration:
                 )
                 continue
 
-            return cls(
+            integration = cls(
                 hass,
                 f"{root_module.__name__}.{domain}",
                 manifest_path.parent,
                 manifest,
             )
+
+            if not integration.is_built_in:
+                try:
+                    validate_custom_integration_version(integration)
+                except IntegrationNotFound:
+                    return None
+                _LOGGER.warning(CUSTOM_WARNING, integration.domain)
+
+            return integration
 
         return None
 
@@ -523,8 +532,6 @@ async def _async_get_integration(hass: HomeAssistant, domain: str) -> Integratio
     # Instead of using resolve_from_root we use the cache of custom
     # components to find the integration.
     if integration := (await async_get_custom_components(hass)).get(domain):
-        validate_custom_integration_version(integration)
-        _LOGGER.warning(CUSTOM_WARNING, integration.domain)
         return integration
 
     from homeassistant import components  # pylint: disable=import-outside-toplevel
