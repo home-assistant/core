@@ -1155,8 +1155,6 @@ class AlexaPowerLevelController(AlexaCapability):
         if self.entity.domain == fan.DOMAIN:
             return self.entity.attributes.get(fan.ATTR_PERCENTAGE) or 0
 
-        return None
-
 
 class AlexaSecurityPanelController(AlexaCapability):
     """Implements Alexa.SecurityPanelController.
@@ -1304,6 +1302,12 @@ class AlexaModeController(AlexaCapability):
             if mode in (fan.DIRECTION_FORWARD, fan.DIRECTION_REVERSE, STATE_UNKNOWN):
                 return f"{fan.ATTR_DIRECTION}.{mode}"
 
+        # Fan preset_mode
+        if self.instance == f"{fan.DOMAIN}.{fan.ATTR_PRESET_MODE}":
+            mode = self.entity.attributes.get(fan.ATTR_PRESET_MODE, None)
+            if mode in self.entity.attributes.get(fan.ATTR_PRESET_MODES, None):
+                return f"{fan.ATTR_PRESET_MODE}.{mode}"
+
         # Cover Position
         if self.instance == f"{cover.DOMAIN}.{cover.ATTR_POSITION}":
             # Return state instead of position when using ModeController.
@@ -1340,6 +1344,17 @@ class AlexaModeController(AlexaCapability):
             self._resource.add_mode(
                 f"{fan.ATTR_DIRECTION}.{fan.DIRECTION_REVERSE}", [fan.DIRECTION_REVERSE]
             )
+            return self._resource.serialize_capability_resources()
+
+        # Fan preset_mode
+        if self.instance == f"{fan.DOMAIN}.{fan.ATTR_PRESET_MODE}":
+            self._resource = AlexaModeResource(
+                [AlexaGlobalCatalog.SETTING_PRESET], False
+            )
+            for preset_mode in self.entity.attributes.get(fan.ATTR_PRESET_MODES, []):
+                self._resource.add_mode(
+                    f"{fan.ATTR_PRESET_MODE}.{preset_mode}", [preset_mode]
+                )
             return self._resource.serialize_capability_resources()
 
         # Cover Position Resources
