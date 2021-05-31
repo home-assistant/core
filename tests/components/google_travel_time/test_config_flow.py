@@ -3,6 +3,7 @@ from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.google_travel_time.const import (
     ARRIVAL_TIME,
     CONF_ARRIVAL_TIME,
+    CONF_AUTOMATIC_UPDATES,
     CONF_AVOID,
     CONF_DEPARTURE_TIME,
     CONF_DESTINATION,
@@ -105,44 +106,47 @@ async def test_options_flow(hass, validate_config_entry, bypass_update):
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
-            CONF_MODE: "driving",
-            CONF_LANGUAGE: "en",
+            CONF_AUTOMATIC_UPDATES: True,
             CONF_AVOID: "tolls",
-            CONF_UNITS: CONF_UNIT_SYSTEM_IMPERIAL,
+            CONF_LANGUAGE: "en",
+            CONF_MODE: "driving",
             CONF_TIME_TYPE: ARRIVAL_TIME,
             CONF_TIME: "test",
             CONF_TRAFFIC_MODEL: "best_guess",
             CONF_TRANSIT_MODE: "train",
             CONF_TRANSIT_ROUTING_PREFERENCE: "less_walking",
+            CONF_UNITS: CONF_UNIT_SYSTEM_IMPERIAL,
         },
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == ""
     assert result["data"] == {
-        CONF_MODE: "driving",
-        CONF_LANGUAGE: "en",
-        CONF_AVOID: "tolls",
-        CONF_UNITS: CONF_UNIT_SYSTEM_IMPERIAL,
         CONF_ARRIVAL_TIME: "test",
+        CONF_AUTOMATIC_UPDATES: True,
+        CONF_AVOID: "tolls",
+        CONF_LANGUAGE: "en",
+        CONF_MODE: "driving",
         CONF_TRAFFIC_MODEL: "best_guess",
         CONF_TRANSIT_MODE: "train",
         CONF_TRANSIT_ROUTING_PREFERENCE: "less_walking",
+        CONF_UNITS: CONF_UNIT_SYSTEM_IMPERIAL,
     }
 
     assert entry.options == {
-        CONF_MODE: "driving",
-        CONF_LANGUAGE: "en",
-        CONF_AVOID: "tolls",
-        CONF_UNITS: CONF_UNIT_SYSTEM_IMPERIAL,
         CONF_ARRIVAL_TIME: "test",
+        CONF_AUTOMATIC_UPDATES: True,
+        CONF_AVOID: "tolls",
+        CONF_LANGUAGE: "en",
+        CONF_MODE: "driving",
         CONF_TRAFFIC_MODEL: "best_guess",
         CONF_TRANSIT_MODE: "train",
         CONF_TRANSIT_ROUTING_PREFERENCE: "less_walking",
+        CONF_UNITS: CONF_UNIT_SYSTEM_IMPERIAL,
     }
 
 
 async def test_options_flow_departure_time(hass, validate_config_entry, bypass_update):
-    """Test options flow wiith departure time."""
+    """Test options flow with departure time."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
@@ -163,39 +167,42 @@ async def test_options_flow_departure_time(hass, validate_config_entry, bypass_u
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
-            CONF_MODE: "driving",
-            CONF_LANGUAGE: "en",
+            CONF_AUTOMATIC_UPDATES: False,
             CONF_AVOID: "tolls",
-            CONF_UNITS: CONF_UNIT_SYSTEM_IMPERIAL,
+            CONF_LANGUAGE: "en",
+            CONF_MODE: "driving",
             CONF_TIME_TYPE: DEPARTURE_TIME,
             CONF_TIME: "test",
             CONF_TRAFFIC_MODEL: "best_guess",
             CONF_TRANSIT_MODE: "train",
             CONF_TRANSIT_ROUTING_PREFERENCE: "less_walking",
+            CONF_UNITS: CONF_UNIT_SYSTEM_IMPERIAL,
         },
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == ""
     assert result["data"] == {
-        CONF_MODE: "driving",
-        CONF_LANGUAGE: "en",
+        CONF_AUTOMATIC_UPDATES: False,
         CONF_AVOID: "tolls",
-        CONF_UNITS: CONF_UNIT_SYSTEM_IMPERIAL,
         CONF_DEPARTURE_TIME: "test",
+        CONF_LANGUAGE: "en",
+        CONF_MODE: "driving",
         CONF_TRAFFIC_MODEL: "best_guess",
         CONF_TRANSIT_MODE: "train",
         CONF_TRANSIT_ROUTING_PREFERENCE: "less_walking",
+        CONF_UNITS: CONF_UNIT_SYSTEM_IMPERIAL,
     }
 
     assert entry.options == {
-        CONF_MODE: "driving",
-        CONF_LANGUAGE: "en",
+        CONF_AUTOMATIC_UPDATES: False,
         CONF_AVOID: "tolls",
-        CONF_UNITS: CONF_UNIT_SYSTEM_IMPERIAL,
         CONF_DEPARTURE_TIME: "test",
+        CONF_LANGUAGE: "en",
+        CONF_MODE: "driving",
         CONF_TRAFFIC_MODEL: "best_guess",
         CONF_TRANSIT_MODE: "train",
         CONF_TRANSIT_ROUTING_PREFERENCE: "less_walking",
+        CONF_UNITS: CONF_UNIT_SYSTEM_IMPERIAL,
     }
 
 

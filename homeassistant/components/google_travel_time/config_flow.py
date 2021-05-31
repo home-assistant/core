@@ -16,6 +16,7 @@ from .const import (
     ARRIVAL_TIME,
     AVOID,
     CONF_ARRIVAL_TIME,
+    CONF_AUTOMATIC_UPDATES,
     CONF_AVOID,
     CONF_DEPARTURE_TIME,
     CONF_DESTINATION,
@@ -117,6 +118,12 @@ class GoogleOptionsFlow(config_entries.OptionsFlow):
             step_id="init",
             data_schema=vol.Schema(
                 {
+                    vol.Optional(
+                        CONF_AUTOMATIC_UPDATES,
+                        default=self.config_entry.options.get(
+                            CONF_AUTOMATIC_UPDATES, True
+                        ),
+                    ): cv.boolean,
                     vol.Optional(
                         CONF_MODE, default=self.config_entry.options[CONF_MODE]
                     ): vol.In(TRAVEL_MODE),

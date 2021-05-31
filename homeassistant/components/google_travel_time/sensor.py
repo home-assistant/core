@@ -30,6 +30,7 @@ from .const import (
     ATTRIBUTION,
     AVOID,
     CONF_ARRIVAL_TIME,
+    CONF_AUTOMATIC_UPDATES,
     CONF_AVOID,
     CONF_DEPARTURE_TIME,
     CONF_DESTINATION,
@@ -133,11 +134,12 @@ async def async_setup_entry(
     origin = config_entry.data[CONF_ORIGIN]
     destination = config_entry.data[CONF_DESTINATION]
     name = config_entry.data.get(CONF_NAME, DEFAULT_NAME)
+    automatic_updates = config_entry.options.get(CONF_AUTOMATIC_UPDATES, True)
 
     client = Client(api_key, timeout=10)
 
     sensor = GoogleTravelTimeSensor(
-        config_entry, name, api_key, origin, destination, client
+        config_entry, name, api_key, origin, destination, client, automatic_updates
     )
 
     async_add_entities([sensor], False)
@@ -165,8 +167,18 @@ async def async_setup_platform(
 class GoogleTravelTimeSensor(SensorEntity):
     """Representation of a Google travel time sensor."""
 
-    def __init__(self, config_entry, name, api_key, origin, destination, client):
+    def __init__(
+        self,
+        config_entry,
+        name,
+        api_key,
+        origin,
+        destination,
+        client,
+        automatic_updates,
+    ):
         """Initialize the sensor."""
+        self._attr_should_poll = automatic_updates
         self._name = name
         self._config_entry = config_entry
         self._unit_of_measurement = TIME_MINUTES
