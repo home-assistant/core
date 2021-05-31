@@ -696,7 +696,10 @@ async def test_list_system_options(hass, hass_ws_client):
     response = await ws_client.receive_json()
 
     assert response["success"]
-    assert response["result"] == {"disable_new_entities": False}
+    assert response["result"] == {
+        "disable_new_entities": False,
+        "disable_polling": False,
+    }
 
 
 async def test_update_system_options(hass, hass_ws_client):
@@ -704,8 +707,11 @@ async def test_update_system_options(hass, hass_ws_client):
     assert await async_setup_component(hass, "config", {})
     ws_client = await hass_ws_client(hass)
 
-    entry = MockConfigEntry(domain="demo")
+    entry = MockConfigEntry(domain="demo", state=core_ce.ConfigEntryState.LOADED)
     entry.add_to_hass(hass)
+
+    assert entry.system_options.disable_new_entities is False
+    assert entry.system_options.disable_polling is False
 
     await ws_client.send_json(
         {
@@ -718,8 +724,31 @@ async def test_update_system_options(hass, hass_ws_client):
     response = await ws_client.receive_json()
 
     assert response["success"]
-    assert response["result"]["disable_new_entities"]
-    assert entry.system_options.disable_new_entities
+    assert response["result"] == {
+        "restart_required": False,
+        "system_options": {"disable_new_entities": True, "disable_polling": False},
+    }
+    assert entry.system_options.disable_new_entities is True
+    assert entry.system_options.disable_polling is False
+
+    await ws_client.send_json(
+        {
+            "id": 6,
+            "type": "config_entries/system_options/update",
+            "entry_id": entry.entry_id,
+            "disable_new_entities": False,
+            "disable_polling": True,
+        }
+    )
+    response = await ws_client.receive_json()
+
+    assert response["success"]
+    assert response["result"] == {
+        "restart_required": True,
+        "system_options": {"disable_new_entities": False, "disable_polling": True},
+    }
+    assert entry.system_options.disable_new_entities is False
+    assert entry.system_options.disable_polling is True
 
 
 async def test_update_system_options_nonexisting(hass, hass_ws_client):

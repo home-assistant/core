@@ -267,6 +267,7 @@ def get_entry(hass, connection, entry_id, msg_id):
         "type": "config_entries/system_options/update",
         "entry_id": str,
         vol.Optional("disable_new_entities"): bool,
+        vol.Optional("disable_polling"): bool,
     }
 )
 async def system_options_update(hass, connection, msg):
@@ -280,8 +281,25 @@ async def system_options_update(hass, connection, msg):
     if entry is None:
         return
 
+    old_disable_polling = entry.system_options.disable_polling
+
     hass.config_entries.async_update_entry(entry, system_options=changes)
-    connection.send_result(msg["id"], entry.system_options.as_dict())
+
+    result = {
+        "system_options": entry.system_options.as_dict(),
+        "restart_required": False,
+    }
+
+    if (
+        old_disable_polling != entry.system_options.disable_polling
+        and entry.state is config_entries.ConfigEntryState.LOADED
+    ):
+        if not await hass.config_entries.async_reload(entry.entry_id):
+            result["restart_required"] = (
+                entry.state is config_entries.ConfigEntryState.FAILED_UNLOAD
+            )
+
+    connection.send_result(msg["id"], result)
 
 
 @websocket_api.require_admin

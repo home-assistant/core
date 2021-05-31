@@ -395,8 +395,10 @@ class EntityPlatform:
             )
             raise
 
-        if self._async_unsub_polling is not None or not any(
-            entity.should_poll for entity in self.entities.values()
+        if (
+            (self.config_entry and self.config_entry.system_options.disable_polling)
+            or self._async_unsub_polling is not None
+            or not any(entity.should_poll for entity in self.entities.values())
         ):
             return
 
