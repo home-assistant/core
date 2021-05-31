@@ -295,7 +295,7 @@ def get_host_info(hass):
 @callback
 @bind_hass
 def get_addons(hass):
-    """Return addon information.
+    """Return addons information.
 
     Async friendly.
     """
