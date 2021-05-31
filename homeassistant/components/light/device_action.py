@@ -27,9 +27,9 @@ from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 from . import (
     ATTR_BRIGHTNESS_PCT,
     ATTR_BRIGHTNESS_STEP_PCT,
-    ATTR_SUPPORTED_COLOR_MODES,
     DOMAIN,
     brightness_supported,
+    get_supported_color_modes,
 )
 
 TYPE_BRIGHTNESS_INCREASE = "brightness_increase"
@@ -48,25 +48,6 @@ ACTION_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
         vol.Optional(ATTR_FLASH): VALID_FLASH,
     }
 )
-
-
-def get_supported_color_modes(hass: HomeAssistant, entity_id: str) -> set | None:
-    """Get supported color modes for a light entity.
-
-    First try the statemachine, then entity registry.
-    """
-    state = hass.states.get(entity_id)
-    if state:
-        return state.attributes.get(ATTR_SUPPORTED_COLOR_MODES)
-
-    entity_registry = er.async_get(hass)
-    entry = entity_registry.async_get(entity_id)
-    if not entry:
-        raise HomeAssistantError(f"Unknown entity {entity_id}")
-    if not entry.capabilities:
-        return None
-
-    return entry.capabilities.get(ATTR_SUPPORTED_COLOR_MODES)
 
 
 async def async_call_action_from_config(
