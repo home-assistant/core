@@ -55,7 +55,7 @@ class SenseDevicesData:
         return self._data_by_device.get(sense_device_id)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Sense from a config entry."""
 
     entry_data = entry.data
