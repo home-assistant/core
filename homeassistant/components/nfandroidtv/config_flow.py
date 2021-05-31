@@ -35,7 +35,7 @@ class NFAndroidTVFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(f"{host}_{DOMAIN}")
                 self._abort_if_unique_id_configured(updates={CONF_HOST: host})
                 return self.async_create_entry(
-                    title=user_input[CONF_NAME] or host,
+                    title=name,
                     data={CONF_HOST: host, CONF_NAME: name},
                 )
             errors["base"] = error
@@ -64,6 +64,8 @@ class NFAndroidTVFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     "Already configured. This yaml configuration has already been imported. Please remove it"
                 )
                 return self.async_abort(reason="already_configured")
+        if CONF_NAME not in import_config:
+            import_config[CONF_NAME] = f"{DEFAULT_NAME} {import_config[CONF_HOST]}"
 
         return await self.async_step_user(import_config)
 
