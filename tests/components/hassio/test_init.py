@@ -33,7 +33,7 @@ def mock_all(aioclient_mock, request):
         },
     )
     aioclient_mock.get(
-        "http://127.0.0.1/addons",
+        "http://127.0.0.1/store",
         json={
             "result": "ok",
             "data": {"addons": [], "repositories": []},
