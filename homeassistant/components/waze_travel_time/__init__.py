@@ -8,12 +8,22 @@ from homeassistant.helpers.entity_registry import (
     async_get,
 )
 
+from .const import DOMAIN
+
+DATA_LISTENER = "listener"
 PLATFORMS = ["sensor"]
 _LOGGER = logging.getLogger(__name__)
 
 
+async def async_setup(hass, config):
+    """Set up the waze_travel_time component."""
+    hass.data[DOMAIN] = {DATA_LISTENER: {}}
+    return True
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Load the saved entities."""
+    hass.data[DOMAIN][DATA_LISTENER][entry.entry_id] = []
     if entry.unique_id is not None:
         hass.config_entries.async_update_entry(entry, unique_id=None)
 
@@ -22,9 +32,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             ent_reg.async_update_entity(entity.entity_id, new_unique_id=entry.entry_id)
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+
+    hass.data[DOMAIN][DATA_LISTENER][entry.entry_id].append(
+        entry.add_update_listener(async_reload_entry)
+    )
+
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unload_ok:
+        for remove_listener in hass.data[DOMAIN][DATA_LISTENER].pop(entry.entry_id):
+            remove_listener()
+
+    return unload_ok
+
+
+async def async_reload_entry(hass, entry):
+    """Handle an options update."""
+    await hass.config_entries.async_reload(entry.entry_id)
