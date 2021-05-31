@@ -79,61 +79,26 @@ async def async_get_conditions(
         supported_features = state.attributes[ATTR_SUPPORTED_FEATURES]
 
         # Add conditions for each entity that belongs to this integration
+        base_condition = {
+            CONF_CONDITION: "device",
+            CONF_DEVICE_ID: device_id,
+            CONF_DOMAIN: DOMAIN,
+            CONF_ENTITY_ID: entry.entity_id,
+        }
+
         conditions += [
-            {
-                CONF_CONDITION: "device",
-                CONF_DEVICE_ID: device_id,
-                CONF_DOMAIN: DOMAIN,
-                CONF_ENTITY_ID: entry.entity_id,
-                CONF_TYPE: CONDITION_DISARMED,
-            },
-            {
-                CONF_CONDITION: "device",
-                CONF_DEVICE_ID: device_id,
-                CONF_DOMAIN: DOMAIN,
-                CONF_ENTITY_ID: entry.entity_id,
-                CONF_TYPE: CONDITION_TRIGGERED,
-            },
+            {**base_condition, CONF_TYPE: CONDITION_DISARMED},
+            {**base_condition, CONF_TYPE: CONDITION_TRIGGERED},
         ]
         if supported_features & SUPPORT_ALARM_ARM_HOME:
-            conditions.append(
-                {
-                    CONF_CONDITION: "device",
-                    CONF_DEVICE_ID: device_id,
-                    CONF_DOMAIN: DOMAIN,
-                    CONF_ENTITY_ID: entry.entity_id,
-                    CONF_TYPE: CONDITION_ARMED_HOME,
-                }
-            )
+            conditions.append({**base_condition, CONF_TYPE: CONDITION_ARMED_HOME})
         if supported_features & SUPPORT_ALARM_ARM_AWAY:
-            conditions.append(
-                {
-                    CONF_CONDITION: "device",
-                    CONF_DEVICE_ID: device_id,
-                    CONF_DOMAIN: DOMAIN,
-                    CONF_ENTITY_ID: entry.entity_id,
-                    CONF_TYPE: CONDITION_ARMED_AWAY,
-                }
-            )
+            conditions.append({**base_condition, CONF_TYPE: CONDITION_ARMED_AWAY})
         if supported_features & SUPPORT_ALARM_ARM_NIGHT:
-            conditions.append(
-                {
-                    CONF_CONDITION: "device",
-                    CONF_DEVICE_ID: device_id,
-                    CONF_DOMAIN: DOMAIN,
-                    CONF_ENTITY_ID: entry.entity_id,
-                    CONF_TYPE: CONDITION_ARMED_NIGHT,
-                }
-            )
+            conditions.append({**base_condition, CONF_TYPE: CONDITION_ARMED_NIGHT})
         if supported_features & SUPPORT_ALARM_ARM_CUSTOM_BYPASS:
             conditions.append(
-                {
-                    CONF_CONDITION: "device",
-                    CONF_DEVICE_ID: device_id,
-                    CONF_DOMAIN: DOMAIN,
-                    CONF_ENTITY_ID: entry.entity_id,
-                    CONF_TYPE: CONDITION_ARMED_CUSTOM_BYPASS,
-                }
+                {**base_condition, CONF_TYPE: CONDITION_ARMED_CUSTOM_BYPASS}
             )
 
     return conditions
