@@ -76,7 +76,13 @@ def async_setup_forwarded(
             return await handler(request)
 
         # Get connected IP
-        assert request.transport is not None
+        if (
+            request.transport is None
+            or request.transport.get_extra_info("peername") is None
+        ):
+            # Connected IP isn't retrieveable from the request transport, continue
+            return await handler(request)
+
         connected_ip = ip_address(request.transport.get_extra_info("peername")[0])
 
         # We have X-Forwarded-For, but config does not agree
