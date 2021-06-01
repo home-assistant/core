@@ -247,8 +247,8 @@ class ModbusHub:
 
         async with self._lock:
             if not await self.hass.async_add_executor_job(self._pymodbus_connect):
-                text = ModbusException("initial connect failed, no retry")
-                self._log_error(text, error_state=False)
+                exception = ModbusException("initial connect failed, no retry")
+                self._log_error(exception, error_state=False)
                 return False
 
         self._call_type[CALL_TYPE_COIL][ENTRY_FUNC] = self._client.read_coils
