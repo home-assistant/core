@@ -788,8 +788,21 @@ async def test_disable_entry(hass, hass_ws_client):
     assert await async_setup_component(hass, "config", {})
     ws_client = await hass_ws_client(hass)
 
-    entry = MockConfigEntry(domain="demo", state=core_ce.ConfigEntryState.LOADED)
+    entry = MockConfigEntry(domain="comp", state=core_ce.ConfigEntryState.LOADED)
     entry.add_to_hass(hass)
+
+    async_setup = AsyncMock(return_value=True)
+    async_setup_entry = AsyncMock(return_value=True)
+
+    mock_integration(
+        hass,
+        MockModule(
+            "comp",
+            async_setup=async_setup,
+            async_setup_entry=async_setup_entry,
+        ),
+    )
+    mock_entity_platform(hass, "config_flow.comp", None)
     assert entry.disabled_by is None
 
     # Disable
@@ -809,15 +822,23 @@ async def test_disable_entry(hass, hass_ws_client):
     assert entry.state is core_ce.ConfigEntryState.FAILED_UNLOAD
 
     # Enable
-    await ws_client.send_json(
-        {
-            "id": 6,
-            "type": "config_entries/disable",
-            "entry_id": entry.entry_id,
-            "disabled_by": None,
-        }
-    )
-    response = await ws_client.receive_json()
+    class TestFlow(core_ce.ConfigFlow):
+        VERSION = 1
+
+        async def async_step_user(self, user_input=None):
+            await self.async_set_unique_id("mock-unique-id")
+            return self.async_show_form(step_id="account", data_schema=vol.Schema({}))
+
+    with patch.dict(HANDLERS, {"comp": TestFlow}):
+        await ws_client.send_json(
+            {
+                "id": 6,
+                "type": "config_entries/disable",
+                "entry_id": entry.entry_id,
+                "disabled_by": None,
+            }
+        )
+        response = await ws_client.receive_json()
 
     assert response["success"]
     assert response["result"] == {"require_restart": True}
