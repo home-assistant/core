@@ -14,6 +14,7 @@ from ipaddress import (
     ip_address,
     ip_network,
 )
+import logging
 from typing import Any, Dict, List, Union, cast
 
 from aiohttp import hdrs
@@ -92,10 +93,19 @@ class TrustedNetworksAuthProvider(AuthProvider):
     def is_allowed_request(self) -> bool:
         """Return if it is an allowed request."""
         request = http.current_request.get()
-        return request is not None and (
+        if request is not None and (
             self.hass.http.use_x_forwarded_for
             or hdrs.X_FORWARDED_FOR not in request.headers
+        ):
+            return True
+
+        logging.getLogger(__name__).warning(
+            "A request contained an x-forwarded-for header but your HTTP integration is not set-up "
+            "for reverse proxies. This usually means that you have not configured your reverse proxy "
+            "correctly. This request will be blocked in Home Assistant 2021.7 unless you configure "
+            "your HTTP integration to allow this header."
         )
+        return True
 
     async def async_login_flow(self, context: dict | None) -> LoginFlow:
         """Return a flow to login."""

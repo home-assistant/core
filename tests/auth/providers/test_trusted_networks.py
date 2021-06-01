@@ -5,11 +5,13 @@ from unittest.mock import Mock, patch
 import pytest
 import voluptuous as vol
 
-from homeassistant import auth
+from homeassistant import auth, const
 from homeassistant.auth import auth_store
 from homeassistant.auth.providers import trusted_networks as tn_auth
 from homeassistant.data_entry_flow import RESULT_TYPE_ABORT, RESULT_TYPE_CREATE_ENTRY
 from homeassistant.setup import async_setup_component
+
+FORWARD_FOR_IS_WARNING = (const.MAJOR_VERSION, const.MINOR_VERSION) < (2021, 8)
 
 
 @pytest.fixture
@@ -364,7 +366,7 @@ async def test_bypass_login_flow(
     assert schema({"user": user.id})
 
 
-async def test_allowed_request(hass, provider, current_request):
+async def test_allowed_request(hass, provider, current_request, caplog):
     """Test allowing requests."""
     assert await async_setup_component(hass, "http", {})
 
@@ -377,9 +379,27 @@ async def test_allowed_request(hass, provider, current_request):
         }
     )
 
-    with pytest.raises(tn_auth.InvalidAuthError):
+    if FORWARD_FOR_IS_WARNING:
+        caplog.clear()
         provider.async_validate_access(ip_address("192.168.0.1"))
+        assert "This request will be blocked" in caplog.text
+    else:
+        with pytest.raises(tn_auth.InvalidAuthError):
+            provider.async_validate_access(ip_address("192.168.0.1"))
 
     hass.http.use_x_forwarded_for = True
 
     provider.async_validate_access(ip_address("192.168.0.1"))
+
+
+@pytest.mark.skipif(FORWARD_FOR_IS_WARNING, reason="Currently a warning")
+async def test_login_flow_no_request(provider):
+    """Test getting a login flow."""
+    login_flow = await provider.async_login_flow({"ip_address": ip_address("1.1.1.1")})
+    assert await login_flow.async_step_init() == {
+        "description_placeholders": None,
+        "flow_id": None,
+        "handler": None,
+        "reason": "forwared_for_header_not_allowed",
+        "type": "abort",
+    }
