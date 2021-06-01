@@ -752,7 +752,6 @@ def time(
             before_entity.attributes.get("hour", 23),
             before_entity.attributes.get("minute", 59),
             before_entity.attributes.get("second", 59),
-            999999,
         )
 
     if after < before:
