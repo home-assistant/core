@@ -802,6 +802,8 @@ async def test_time_using_input_datetime(hass):
         assert not condition.time(
             hass, after="input_datetime.am", before="input_datetime.pm"
         )
+        assert condition.time(hass, after="input_datetime.pm")
+        assert not condition.time(hass, before="input_datetime.pm")
 
     # Trigger on AM time
     with patch(
@@ -814,6 +816,8 @@ async def test_time_using_input_datetime(hass):
         assert condition.time(
             hass, after="input_datetime.am", before="input_datetime.pm"
         )
+        assert condition.time(hass, after="input_datetime.am")
+        assert not condition.time(hass, before="input_datetime.am")
 
     with pytest.raises(ConditionError):
         condition.time(hass, after="input_datetime.not_existing")
