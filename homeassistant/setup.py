@@ -189,7 +189,7 @@ async def async_prepare_setup_component(
     # without requiring imports to be in functions.
     try:
         await async_process_deps_reqs(hass, config, integration)
-    except PrepareSetupError as err:
+    except HomeAssistantError as err:
         raise PrepareSetupError(str(err), integration.documentation)
 
     return integration
