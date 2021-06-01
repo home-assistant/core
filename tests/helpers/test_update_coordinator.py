@@ -376,7 +376,7 @@ async def test_async_config_entry_first_refresh_success(crd, caplog):
 
 async def test_not_schedule_refresh_if_system_option_disable_polling(hass):
     """Test we do not schedule a refresh if disable polling in config entry."""
-    entry = MockConfigEntry(system_options={"disable_polling": True})
+    entry = MockConfigEntry(pref_disable_polling=True)
     config_entries.current_entry.set(entry)
     crd = get_crd(hass, DEFAULT_UPDATE_INTERVAL)
     crd.async_add_listener(lambda: None)
