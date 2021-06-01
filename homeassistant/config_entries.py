@@ -953,9 +953,9 @@ class ConfigEntries:
                     self.hass, entry.domain, self._hass_config
                 )
             except PrepareSetupError as err:
-                _LOGGER.error(
-                    "Failed to load integration %s: %s", entry.domain, str(err)
-                )
+                msg = f"Failed to load integration {entry.domain}: {str(err)}"
+                _LOGGER.error(msg)
+                raise HomeAssistantError(msg)
             # The config entry will no longer be disabled, enable devices and entities
             device_registry.async_config_entry_disabled_by_changed(dev_reg, entry)
             entity_registry.async_config_entry_disabled_by_changed(ent_reg, entry)

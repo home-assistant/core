@@ -8,7 +8,7 @@ from homeassistant.components import websocket_api
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import HTTP_FORBIDDEN, HTTP_NOT_FOUND
 from homeassistant.core import callback
-from homeassistant.exceptions import Unauthorized
+from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.helpers.data_entry_flow import (
     FlowManagerIndexView,
     FlowManagerResourceView,
@@ -328,6 +328,12 @@ async def config_entry_disable(hass, connection, msg):
         pass
     except config_entries.UnknownEntry:
         send_entry_not_found(connection, msg["id"])
+        return
+    except HomeAssistantError as err:
+        action = "disable" if disabled_by else "enable"
+        connection.send_error(
+            msg["id"], "disable_failed", f"Failed to {action} config entry: {str(err)}"
+        )
         return
 
     result = {"require_restart": not result}
