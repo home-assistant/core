@@ -165,6 +165,32 @@ def _setup_sensor(hass, humidity):
 
 
 @pytest.fixture
+async def setup_comp_0(hass):
+    """Initialize components."""
+    _setup_sensor(hass, 45)
+    hass.states.async_set(ENT_SWITCH, STATE_OFF)
+    await hass.async_block_till_done()
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            "humidifier": {
+                "platform": "generic_hygrostat",
+                "name": "test",
+                "dry_tolerance": 2,
+                "wet_tolerance": 4,
+                "humidifier": ENT_SWITCH,
+                "target_sensor": ENT_SENSOR,
+                "device_class": "dehumidifier",
+                "away_humidity": 35,
+                "initial_state": True,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+
+@pytest.fixture
 async def setup_comp_2(hass):
     """Initialize components."""
     _setup_sensor(hass, 45)
@@ -243,6 +269,14 @@ async def test_default_setup_params(hass, setup_comp_2):
     assert state.attributes.get("min_humidity") == 0
     assert state.attributes.get("max_humidity") == 100
     assert state.attributes.get("humidity") == 0
+
+
+async def test_default_setup_params_dehumidifier(hass, setup_comp_0):
+    """Test the setup with default parameters for dehumidifier."""
+    state = hass.states.get(ENTITY)
+    assert state.attributes.get("min_humidity") == 0
+    assert state.attributes.get("max_humidity") == 100
+    assert state.attributes.get("humidity") == 100
 
 
 async def test_get_modes(hass, setup_comp_2):
