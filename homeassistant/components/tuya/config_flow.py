@@ -83,7 +83,7 @@ class TuyaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize flow."""
         self._country_code = None
         self._password = None
@@ -151,7 +151,7 @@ class TuyaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 class OptionsFlowHandler(config_entries.OptionsFlow):
     """Handle a option flow for Tuya."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry):
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize options flow."""
         self.config_entry = config_entry
         self._conf_devs_id = None
@@ -245,7 +245,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
     async def async_step_init(self, user_input=None):
         """Handle options flow."""
 
-        if self.config_entry.state != config_entries.ENTRY_STATE_LOADED:
+        if self.config_entry.state is not config_entries.ConfigEntryState.LOADED:
             _LOGGER.error("Tuya integration not yet loaded")
             return self.async_abort(reason=RESULT_CONN_ERROR)
 

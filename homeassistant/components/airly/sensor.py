@@ -3,9 +3,14 @@ from __future__ import annotations
 
 from typing import Any, cast
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME
+from homeassistant.const import (
+    ATTR_ATTRIBUTION,
+    ATTR_DEVICE_CLASS,
+    ATTR_ICON,
+    CONF_NAME,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -16,6 +21,8 @@ from . import AirlyDataUpdateCoordinator
 from .const import (
     ATTR_API_PM1,
     ATTR_API_PRESSURE,
+    ATTR_LABEL,
+    ATTR_UNIT,
     ATTRIBUTION,
     DEFAULT_NAME,
     DOMAIN,
@@ -59,11 +66,12 @@ class AirlySensor(CoordinatorEntity, SensorEntity):
         self._state = None
         self._unit_of_measurement = None
         self._attrs = {ATTR_ATTRIBUTION: ATTRIBUTION}
+        self._attr_state_class = self._description[ATTR_STATE_CLASS]
 
     @property
     def name(self) -> str:
         """Return the name."""
-        return f"{self._name} {self._description['label']}"
+        return f"{self._name} {self._description[ATTR_LABEL]}"
 
     @property
     def state(self) -> StateType:
@@ -81,12 +89,12 @@ class AirlySensor(CoordinatorEntity, SensorEntity):
     @property
     def icon(self) -> str | None:
         """Return the icon."""
-        return self._description["icon"]
+        return self._description[ATTR_ICON]
 
     @property
     def device_class(self) -> str | None:
         """Return the device_class."""
-        return self._description["device_class"]
+        return self._description[ATTR_DEVICE_CLASS]
 
     @property
     def unique_id(self) -> str:
@@ -111,4 +119,4 @@ class AirlySensor(CoordinatorEntity, SensorEntity):
     @property
     def unit_of_measurement(self) -> str | None:
         """Return the unit the value is expressed in."""
-        return self._description["unit"]
+        return self._description[ATTR_UNIT]

@@ -22,7 +22,7 @@ from urllib.parse import urlencode as urllib_urlencode
 import weakref
 
 import jinja2
-from jinja2 import contextfilter, contextfunction
+from jinja2 import contextfunction, pass_context
 from jinja2.sandbox import ImmutableSandboxedEnvironment
 from jinja2.utils import Namespace
 import voluptuous as vol
@@ -175,7 +175,7 @@ class TupleWrapper(tuple, ResultWrapper):
 
     # pylint: disable=super-init-not-called
 
-    def __init__(self, value: tuple, *, render_result: str | None = None):
+    def __init__(self, value: tuple, *, render_result: str | None = None) -> None:
         """Initialize a new tuple class."""
         self.render_result = render_result
 
@@ -1315,7 +1315,7 @@ def to_json(value):
     return json.dumps(value)
 
 
-@contextfilter
+@pass_context
 def random_every_time(context, values):
     """Choose a random value.
 
@@ -1482,7 +1482,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
             return contextfunction(wrapper)
 
         self.globals["device_entities"] = hassfunction(device_entities)
-        self.filters["device_entities"] = contextfilter(self.globals["device_entities"])
+        self.filters["device_entities"] = pass_context(self.globals["device_entities"])
 
         if limited:
             # Only device_entities is available to limited templates, mark other
@@ -1514,9 +1514,9 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
             return
 
         self.globals["expand"] = hassfunction(expand)
-        self.filters["expand"] = contextfilter(self.globals["expand"])
+        self.filters["expand"] = pass_context(self.globals["expand"])
         self.globals["closest"] = hassfunction(closest)
-        self.filters["closest"] = contextfilter(hassfunction(closest_filter))
+        self.filters["closest"] = pass_context(hassfunction(closest_filter))
         self.globals["distance"] = hassfunction(distance)
         self.globals["is_state"] = hassfunction(is_state)
         self.globals["is_state_attr"] = hassfunction(is_state_attr)

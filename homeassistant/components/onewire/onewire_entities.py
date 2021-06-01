@@ -33,7 +33,7 @@ class OneWireBaseEntity(Entity):
         device_info: DeviceInfo,
         default_disabled: bool,
         unique_id: str,
-    ):
+    ) -> None:
         """Initialize the entity."""
         self._name = f"{name} {entity_name or entity_type.capitalize()}"
         self._device_file = device_file
@@ -88,7 +88,7 @@ class OneWireProxyEntity(OneWireBaseEntity):
         entity_path: str,
         entity_specs: DeviceComponentDescription,
         owproxy: protocol._Proxy,
-    ):
+    ) -> None:
         """Initialize the sensor."""
         super().__init__(
             name=device_name,

@@ -1,7 +1,11 @@
 """Support for Toon sensors."""
 from __future__ import annotations
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import (
+    ATTR_LAST_RESET,
+    ATTR_STATE_CLASS,
+    SensorEntity,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
@@ -124,6 +128,11 @@ class ToonSensor(ToonEntity, SensorEntity):
             name=SENSOR_ENTITIES[key][ATTR_NAME],
         )
 
+        self._attr_last_reset = SENSOR_ENTITIES[key][ATTR_LAST_RESET]
+        self._attr_state_class = SENSOR_ENTITIES[key][ATTR_STATE_CLASS]
+        self._attr_unit_of_measurement = SENSOR_ENTITIES[key][ATTR_UNIT_OF_MEASUREMENT]
+        self._sttr_device_class = SENSOR_ENTITIES[key][ATTR_DEVICE_CLASS]
+
     @property
     def unique_id(self) -> str:
         """Return the unique ID for this sensor."""
@@ -139,16 +148,6 @@ class ToonSensor(ToonEntity, SensorEntity):
             self.coordinator.data, SENSOR_ENTITIES[self.key][ATTR_SECTION]
         )
         return getattr(section, SENSOR_ENTITIES[self.key][ATTR_MEASUREMENT])
-
-    @property
-    def unit_of_measurement(self) -> str | None:
-        """Return the unit this state is expressed in."""
-        return SENSOR_ENTITIES[self.key][ATTR_UNIT_OF_MEASUREMENT]
-
-    @property
-    def device_class(self) -> str | None:
-        """Return the device class."""
-        return SENSOR_ENTITIES[self.key][ATTR_DEVICE_CLASS]
 
 
 class ToonElectricityMeterDeviceSensor(ToonSensor, ToonElectricityMeterDeviceEntity):

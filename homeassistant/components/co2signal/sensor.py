@@ -54,6 +54,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class CO2Sensor(SensorEntity):
     """Implementation of the CO2Signal sensor."""
 
+    _attr_icon = "mdi:molecule-co2"
+    _attr_unit_of_measurement = CO2_INTENSITY_UNIT
+
     def __init__(self, token, country_code, lat, lon):
         """Initialize the sensor."""
         self._token = token
@@ -75,19 +78,9 @@ class CO2Sensor(SensorEntity):
         return self._friendly_name
 
     @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return "mdi:molecule-co2"
-
-    @property
     def state(self):
         """Return the state of the device."""
         return self._data
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of this entity, if any."""
-        return CO2_INTENSITY_UNIT
 
     @property
     def extra_state_attributes(self):

@@ -118,6 +118,8 @@ def next_departuredate(departure):
 class TrainSensor(SensorEntity):
     """Contains data about a train depature."""
 
+    _attr_device_class = DEVICE_CLASS_TIMESTAMP
+
     def __init__(self, train_api, name, from_station, to_station, weekday, time):
         """Initialize the sensor."""
         self._train_api = train_api
@@ -175,11 +177,6 @@ class TrainSensor(SensorEntity):
             ATTR_OTHER_INFORMATION: other_information,
             ATTR_DEVIATIONS: deviations,
         }
-
-    @property
-    def device_class(self):
-        """Return the device class."""
-        return DEVICE_CLASS_TIMESTAMP
 
     @property
     def name(self):

@@ -92,12 +92,12 @@ async def async_modbus_setup(
             service.data[ATTR_HUB] if ATTR_HUB in service.data else DEFAULT_HUB
         )
         if isinstance(value, list):
-            await hub_collect[client_name].async_write_registers(
-                unit, address, [int(float(i)) for i in value]
+            await hub_collect[client_name].async_pymodbus_call(
+                unit, address, [int(float(i)) for i in value], CALL_TYPE_WRITE_REGISTERS
             )
         else:
-            await hub_collect[client_name].async_write_register(
-                unit, address, int(float(value))
+            await hub_collect[client_name].async_pymodbus_call(
+                unit, address, int(float(value)), CALL_TYPE_WRITE_REGISTER
             )
 
     hass.services.async_register(
@@ -116,9 +116,13 @@ async def async_modbus_setup(
             service.data[ATTR_HUB] if ATTR_HUB in service.data else DEFAULT_HUB
         )
         if isinstance(state, list):
-            await hub_collect[client_name].async_write_coils(unit, address, state)
+            await hub_collect[client_name].async_pymodbus_call(
+                unit, address, state, CALL_TYPE_WRITE_COILS
+            )
         else:
-            await hub_collect[client_name].async_write_coil(unit, address, state)
+            await hub_collect[client_name].async_pymodbus_call(
+                unit, address, state, CALL_TYPE_WRITE_COIL
+            )
 
     hass.services.async_register(
         DOMAIN, SERVICE_WRITE_COIL, async_write_coil, schema=service_write_coil_schema
@@ -190,11 +194,6 @@ class ModbusHub:
                 ENTRY_FUNC: None,
             },
         }
-
-    @property
-    def name(self):
-        """Return the name of this hub."""
-        return self._config_name
 
     def _log_error(self, exception_error: ModbusException, error_state=True):
         log_text = "Pymodbus: " + str(exception_error)
@@ -326,27 +325,3 @@ class ModbusHub:
             return await self.hass.async_add_executor_job(
                 self._pymodbus_call, unit, address, value, use_call
             )
-
-    async def async_write_coil(self, unit, address, value) -> bool:
-        """Write coil."""
-        return await self.async_pymodbus_call(
-            unit, address, value, CALL_TYPE_WRITE_COIL
-        )
-
-    async def async_write_coils(self, unit, address, values) -> bool:
-        """Write coil."""
-        return await self.async_pymodbus_call(
-            unit, address, values, CALL_TYPE_WRITE_COILS
-        )
-
-    async def async_write_register(self, unit, address, value) -> bool:
-        """Write register."""
-        return await self.async_pymodbus_call(
-            unit, address, value, CALL_TYPE_WRITE_REGISTER
-        )
-
-    async def async_write_registers(self, unit, address, values) -> bool:
-        """Write registers."""
-        return await self.async_pymodbus_call(
-            unit, address, values, CALL_TYPE_WRITE_REGISTERS
-        )

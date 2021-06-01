@@ -1,0 +1,20 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Meteoclimatic",
+        "description": "Enter the Meteoclimatic station code (e.g., ESCAT4300000043206B)",
+        "data": {
+          "code": "Station code"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "error": {
+      "not_found": "[%key:common::config_flow::abort::no_devices_found%]"
+    }
+  }
+}

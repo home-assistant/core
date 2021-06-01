@@ -47,7 +47,7 @@ DATA_CUSTOM_COMPONENTS = "custom_components"
 PACKAGE_CUSTOM_COMPONENTS = "custom_components"
 PACKAGE_BUILTIN = "homeassistant.components"
 CUSTOM_WARNING = (
-    "You are using a custom integration %s which has not "
+    "We found a custom integration %s which has not "
     "been tested by Home Assistant. This component might "
     "cause stability problems, be sure to disable it if you "
     "experience issues with Home Assistant"
@@ -290,12 +290,38 @@ class Integration:
                 )
                 continue
 
-            return cls(
+            integration = cls(
                 hass,
                 f"{root_module.__name__}.{domain}",
                 manifest_path.parent,
                 manifest,
             )
+
+            if integration.is_built_in:
+                return integration
+
+            _LOGGER.warning(CUSTOM_WARNING, integration.domain)
+            try:
+                AwesomeVersion(
+                    integration.version,
+                    [
+                        AwesomeVersionStrategy.CALVER,
+                        AwesomeVersionStrategy.SEMVER,
+                        AwesomeVersionStrategy.SIMPLEVER,
+                        AwesomeVersionStrategy.BUILDVER,
+                        AwesomeVersionStrategy.PEP440,
+                    ],
+                )
+            except AwesomeVersionException:
+                _LOGGER.error(
+                    "The custom integration '%s' does not have a "
+                    "valid version key (%s) in the manifest file and was blocked from loading. "
+                    "See https://developers.home-assistant.io/blog/2021/01/29/custom-integration-changes#versions for more details",
+                    integration.domain,
+                    integration.version,
+                )
+                return None
+            return integration
 
         return None
 
@@ -305,7 +331,7 @@ class Integration:
         pkg_path: str,
         file_path: pathlib.Path,
         manifest: Manifest,
-    ):
+    ) -> None:
         """Initialize an integration."""
         self.hass = hass
         self.pkg_path = pkg_path
@@ -523,8 +549,6 @@ async def _async_get_integration(hass: HomeAssistant, domain: str) -> Integratio
     # Instead of using resolve_from_root we use the cache of custom
     # components to find the integration.
     if integration := (await async_get_custom_components(hass)).get(domain):
-        validate_custom_integration_version(integration)
-        _LOGGER.warning(CUSTOM_WARNING, integration.domain)
         return integration
 
     from homeassistant import components  # pylint: disable=import-outside-toplevel
@@ -744,31 +768,3 @@ def _lookup_path(hass: HomeAssistant) -> list[str]:
     if hass.config.safe_mode:
         return [PACKAGE_BUILTIN]
     return [PACKAGE_CUSTOM_COMPONENTS, PACKAGE_BUILTIN]
-
-
-def validate_custom_integration_version(integration: Integration) -> None:
-    """
-    Validate the version of custom integrations.
-
-    Raises IntegrationNotFound when version is missing or not valid
-    """
-    try:
-        AwesomeVersion(
-            integration.version,
-            [
-                AwesomeVersionStrategy.CALVER,
-                AwesomeVersionStrategy.SEMVER,
-                AwesomeVersionStrategy.SIMPLEVER,
-                AwesomeVersionStrategy.BUILDVER,
-                AwesomeVersionStrategy.PEP440,
-            ],
-        )
-    except AwesomeVersionException:
-        _LOGGER.error(
-            "The custom integration '%s' does not have a "
-            "valid version key (%s) in the manifest file and was blocked from loading. "
-            "See https://developers.home-assistant.io/blog/2021/01/29/custom-integration-changes#versions for more details",
-            integration.domain,
-            integration.version,
-        )
-        raise IntegrationNotFound(integration.domain) from None

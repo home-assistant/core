@@ -30,7 +30,7 @@ from homeassistant.helpers.entity_registry import (
 )
 import homeassistant.util.color as color_util
 
-from . import WLEDDataUpdateCoordinator, WLEDDeviceEntity, wled_exception_handler
+from . import WLEDDataUpdateCoordinator, WLEDEntity, wled_exception_handler
 from .const import (
     ATTR_COLOR_PRIMARY,
     ATTR_INTENSITY,
@@ -93,27 +93,17 @@ async def async_setup_entry(
     update_segments()
 
 
-class WLEDMasterLight(LightEntity, WLEDDeviceEntity):
+class WLEDMasterLight(WLEDEntity, LightEntity):
     """Defines a WLED master light."""
 
-    def __init__(self, entry_id: str, coordinator: WLEDDataUpdateCoordinator):
+    _attr_supported_features = SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION
+    _attr_icon = "mdi:led-strip-variant"
+
+    def __init__(self, coordinator: WLEDDataUpdateCoordinator) -> None:
         """Initialize WLED master light."""
-        super().__init__(
-            entry_id=entry_id,
-            coordinator=coordinator,
-            name=f"{coordinator.data.info.name} Master",
-            icon="mdi:led-strip-variant",
-        )
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique ID for this sensor."""
-        return f"{self.coordinator.data.info.mac_address}"
-
-    @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        return SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION
+        super().__init__(coordinator=coordinator)
+        self._attr_name = f"{coordinator.data.info.name} Master"
+        self._attr_unique_id = coordinator.data.info.mac_address
 
     @property
     def brightness(self) -> int | None:
@@ -172,32 +162,25 @@ class WLEDMasterLight(LightEntity, WLEDDeviceEntity):
         await self.coordinator.wled.preset(**data)
 
 
-class WLEDSegmentLight(LightEntity, WLEDDeviceEntity):
+class WLEDSegmentLight(WLEDEntity, LightEntity):
     """Defines a WLED light based on a segment."""
 
-    def __init__(
-        self, entry_id: str, coordinator: WLEDDataUpdateCoordinator, segment: int
-    ):
+    _attr_icon = "mdi:led-strip-variant"
+
+    def __init__(self, coordinator: WLEDDataUpdateCoordinator, segment: int) -> None:
         """Initialize WLED segment light."""
+        super().__init__(coordinator=coordinator)
         self._rgbw = coordinator.data.info.leds.rgbw
         self._segment = segment
 
         # If this is the one and only segment, use a simpler name
-        name = f"{coordinator.data.info.name} Segment {self._segment}"
+        self._attr_name = f"{coordinator.data.info.name} Segment {segment}"
         if len(coordinator.data.state.segments) == 1:
-            name = coordinator.data.info.name
+            self._attr_name = coordinator.data.info.name
 
-        super().__init__(
-            entry_id=entry_id,
-            coordinator=coordinator,
-            name=name,
-            icon="mdi:led-strip-variant",
+        self._attr_unique_id = (
+            f"{self.coordinator.data.info.mac_address}_{self._segment}"
         )
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique ID for this sensor."""
-        return f"{self.coordinator.data.info.mac_address}_{self._segment}"
 
     @property
     def available(self) -> bool:
@@ -436,12 +419,12 @@ def async_update_segments(
     # Process new segments, add them to Home Assistant
     new_entities = []
     for segment_id in segment_ids - current_ids:
-        current[segment_id] = WLEDSegmentLight(entry.entry_id, coordinator, segment_id)
+        current[segment_id] = WLEDSegmentLight(coordinator, segment_id)
         new_entities.append(current[segment_id])
 
     # More than 1 segment now? Add master controls
     if len(current_ids) < 2 and len(segment_ids) > 1:
-        current[-1] = WLEDMasterLight(entry.entry_id, coordinator)
+        current[-1] = WLEDMasterLight(coordinator)
         new_entities.append(current[-1])
 
     if new_entities:

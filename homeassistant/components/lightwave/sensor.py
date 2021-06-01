@@ -25,17 +25,15 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class LightwaveBattery(SensorEntity):
     """Lightwave TRV Battery."""
 
+    _attr_device_class = DEVICE_CLASS_BATTERY
+    _attr_unit_of_measurement = PERCENTAGE
+
     def __init__(self, name, lwlink, serial):
         """Initialize the Lightwave Trv battery sensor."""
         self._name = name
         self._state = None
         self._lwlink = lwlink
         self._serial = serial
-
-    @property
-    def device_class(self):
-        """Return the device class of the sensor."""
-        return DEVICE_CLASS_BATTERY
 
     @property
     def name(self):
@@ -46,11 +44,6 @@ class LightwaveBattery(SensorEntity):
     def state(self):
         """Return the state of the sensor."""
         return self._state
-
-    @property
-    def unit_of_measurement(self):
-        """Return the state of the sensor."""
-        return PERCENTAGE
 
     def update(self):
         """Communicate with a Lightwave RTF Proxy to get state."""

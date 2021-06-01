@@ -6,7 +6,7 @@ import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
     DOMAIN,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     DeviceScanner,
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
@@ -20,7 +20,7 @@ CONF_DEFAULT_IP = "192.168.1.1"
 CONF_DEFAULT_USERNAME = "admin"
 CONF_DEFAULT_VERSION = 2
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_VERSION, default=CONF_DEFAULT_VERSION): cv.positive_int,
         vol.Required(CONF_HOST, default=CONF_DEFAULT_IP): cv.string,
