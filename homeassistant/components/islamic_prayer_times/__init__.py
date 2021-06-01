@@ -1,9 +1,6 @@
 """The islamic_prayer_times component."""
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
-from typing import Callable
 
 from prayer_times_calculator import PrayerTimesCalculator, exceptions
 from requests.exceptions import ConnectionError as ConnError
@@ -73,8 +70,6 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     """Unload Islamic Prayer entry from config_entry."""
     if hass.data[DOMAIN].event_unsub:
         hass.data[DOMAIN].event_unsub()
-    if hass.data[DOMAIN].unsub_listener:
-        hass.data[DOMAIN].unsub_listener()
 
     hass.data.pop(DOMAIN)
     return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
@@ -88,7 +83,6 @@ class IslamicPrayerDataCoordinator(DataUpdateCoordinator):
         self.hass = hass
         self.config_entry = config_entry
         self.event_unsub = None
-        self.unsub_listener: Callable | None = None
         super().__init__(
             self.hass,
             _LOGGER,
@@ -210,8 +204,8 @@ class IslamicPrayerDataCoordinator(DataUpdateCoordinator):
         except (exceptions.InvalidResponseError, ConnError) as err:
             raise ConfigEntryNotReady from err
 
-        self.unsub_listener = self.config_entry.add_update_listener(
-            async_options_updated
+        self.config_entry.async_on_unload(
+            self.config_entry.add_update_listener(async_options_updated)
         )
 
 
