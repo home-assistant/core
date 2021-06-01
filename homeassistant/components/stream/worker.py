@@ -48,7 +48,8 @@ class SegmentBuffer:
         self._input_audio_stream = None  # av.audio.AudioStream | None
         self._output_video_stream: av.video.VideoStream = None
         self._output_audio_stream = None  # av.audio.AudioStream | None
-        self._segment: Segment = cast(Segment, None)
+        self._segment: Segment | None = None
+        self._segment_last_write_pos: int = cast(int, None)
         self._part_start_dts: int = cast(int, None)
         self._last_packet_dts: int = cast(int, None)
         self._part_is_independent = False
@@ -94,7 +95,8 @@ class SegmentBuffer:
         self._segment_start_pts = (
             self._part_start_dts
         ) = self._last_packet_dts = video_pts
-        self._segment = Segment(sequence=self._sequence, stream_id=self._stream_id)
+        self._segment = None
+        self._segment_last_write_pos = 0
         self._memory_file = BytesIO()
         self._av_output = self.make_new_av(
             memory_file=self._memory_file,
@@ -148,11 +150,17 @@ class SegmentBuffer:
     def check_flush_part(self, packet: av.Packet) -> None:
         """Check for and mark a part segment boundary and record its duration."""
         byte_position = self._memory_file.tell()
-        if self._segment.last_write_pos == byte_position:
+        if self._segment_last_write_pos == byte_position:
             return
-        if self._segment.last_write_pos == 0:  # The beginning of the first moof
-            self._segment.last_write_pos = byte_position
-            self._segment.init = self._memory_file.getbuffer()[:byte_position].tobytes()
+        if self._segment is None:
+            # We have our first non-zero byte position. This means the init has just
+            # been written. Create a Segment and put it to the queue of each output.
+            self._segment = Segment(
+                sequence=self._sequence,
+                stream_id=self._stream_id,
+                init=self._memory_file.getvalue(),
+            )
+            self._segment_last_write_pos = byte_position
             # Fetch the latest StreamOutputs, which may have changed since the
             # worker started.
             for stream_output in self._outputs_callback().values():
@@ -167,30 +175,29 @@ class SegmentBuffer:
                     ),
                     independent=self._part_is_independent,
                     data=self._memory_file.getbuffer()[
-                        self._segment.last_write_pos : byte_position
+                        self._segment_last_write_pos : byte_position
                     ].tobytes(),
                 )
             )
-            self._segment.last_write_pos = byte_position
+            self._segment_last_write_pos = byte_position
             self._part_start_dts = self._last_packet_dts
             self._part_is_independent = False
 
     def flush(self, duration: Fraction, packet: av.Packet) -> None:
         """Create a segment from the buffered packets and write to output."""
         self._av_output.close()
+        assert self._segment
         self._segment.duration = float(duration)
         # Also flush the part segment (need to close the output above before this)
-        end_loc = self._memory_file.tell()
         self._segment.parts.append(
             Part(
                 duration=float((packet.pts - self._part_start_dts) * packet.time_base),
                 independent=self._part_is_independent | self._last_packet_independent,
                 data=self._memory_file.getbuffer()[
-                    self._segment.last_write_pos :
+                    self._segment_last_write_pos :
                 ].tobytes(),
             )
         )
-        self._segment.last_write_pos = end_loc
         self._memory_file.close()  # We don't need the BytesIO object anymore
 
     def discontinuity(self) -> None:

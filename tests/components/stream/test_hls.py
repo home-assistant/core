@@ -322,7 +322,6 @@ async def test_hls_max_segments(hass, hls_stream, stream_worker_sync):
     # Fetch the actual segments with a fake byte payload
     for segment in hls.get_segments():
         segment.init = INIT_BYTES
-        segment.last_write_pos = len(segment.init) + len(FAKE_PAYLOAD)
         segment.parts = [
             Part(
                 duration=SEGMENT_DURATION,

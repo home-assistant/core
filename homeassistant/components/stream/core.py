@@ -39,8 +39,6 @@ class Segment:
     # For detecting discontinuities across stream restarts
     stream_id: int = attr.ib(default=0)
     parts: list[Part] = attr.ib(factory=list)
-    # This value is the current length of the segment
-    last_write_pos: int = attr.ib(default=0)
     start_time: datetime.datetime = attr.ib(factory=datetime.datetime.utcnow)
 
     @property

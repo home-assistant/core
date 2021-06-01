@@ -197,6 +197,19 @@ class MockPyAv:
         return self.container
 
 
+class MockFlushPart:
+    """Class to hold a wrapper function for check_flush_part."""
+
+    # Wrap this method with a preceding write so the BytesIO pointer moves
+    check_flush_part = SegmentBuffer.check_flush_part
+
+    @classmethod
+    def wrapped_check_flush_part(cls, segment_buffer, packet):
+        """Wrap check_flush_part to also advance the memory_file pointer."""
+        segment_buffer._memory_file.write(b"0")
+        return cls.check_flush_part(segment_buffer, packet)
+
+
 async def async_decode_stream(hass, packets, py_av=None):
     """Start a stream worker that decodes incoming stream packets into output segments."""
     stream = Stream(hass, STREAM_SOURCE)
@@ -206,19 +219,12 @@ async def async_decode_stream(hass, packets, py_av=None):
         py_av = MockPyAv()
     py_av.container.packets = packets
 
-    # Wrap this method with a preceding write so the BytesIO pointer moves
-    check_flush_part = SegmentBuffer.check_flush_part
-
-    def wrapped_check_flush_part(segment_buffer, packet):
-        segment_buffer._memory_file.write(b"0")
-        return check_flush_part(segment_buffer, packet)
-
     with patch("av.open", new=py_av.open), patch(
         "homeassistant.components.stream.core.StreamOutput.put",
         side_effect=py_av.capture_buffer.capture_output_segment,
     ), patch(
         "homeassistant.components.stream.worker.SegmentBuffer.check_flush_part",
-        side_effect=wrapped_check_flush_part,
+        side_effect=MockFlushPart.wrapped_check_flush_part,
         autospec=True,
     ):
         segment_buffer = SegmentBuffer(stream.outputs)
@@ -604,7 +610,11 @@ async def test_update_stream_source(hass):
         worker_wake.wait()
         return py_av.open(stream_source, args, kwargs)
 
-    with patch("av.open", new=blocking_open):
+    with patch("av.open", new=blocking_open), patch(
+        "homeassistant.components.stream.worker.SegmentBuffer.check_flush_part",
+        side_effect=MockFlushPart.wrapped_check_flush_part,
+        autospec=True,
+    ):
         stream.start()
         assert worker_open.wait(TIMEOUT)
         assert last_stream_source == STREAM_SOURCE

@@ -38,7 +38,12 @@ class HlsMasterPlaylistView(StreamView):
         # Calculate file size / duration and use a small multiplier to account for variation
         # hls spec already allows for 25% variation
         segment = track.get_segment(track.sequences[-2])
-        bandwidth = round(segment.last_write_pos * 8 / segment.duration * 1.2)
+        bandwidth = round(
+            (len(segment.init) + sum(len(part.data) for part in segment.parts))
+            * 8
+            / segment.duration
+            * 1.2
+        )
         codecs = get_codec_string(segment.init)
         lines = [
             "#EXTM3U",
