@@ -280,6 +280,13 @@ class UpCloudServerEntity(CoordinatorEntity):
             return False
 
     @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return super().available and STATE_MAP.get(
+            self._server.state, self._server.state
+        ) in [STATE_ON, STATE_OFF]
+
+    @property
     def device_class(self) -> str:
         """Return the class of this server."""
         return DEFAULT_COMPONENT_DEVICE_CLASS
