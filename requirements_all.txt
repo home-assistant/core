@@ -14,7 +14,7 @@ Adafruit-SHT31==1.0.2
 # Adafruit_BBIO==1.1.1
 
 # homeassistant.components.homekit
-HAP-python==3.4.1
+HAP-python==3.5.0
 
 # homeassistant.components.mastodon
 Mastodon.py==1.5.1
@@ -175,7 +175,7 @@ aioguardian==1.0.4
 aioharmony==0.2.7
 
 # homeassistant.components.homekit_controller
-aiohomekit==0.2.65
+aiohomekit==0.2.66
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -635,7 +635,7 @@ gTTS==2.2.2
 garages-amsterdam==2.1.1
 
 # homeassistant.components.garmin_connect
-garminconnect==0.1.19
+garminconnect_aio==0.1.1
 
 # homeassistant.components.geniushub
 geniushub-client==0.6.30

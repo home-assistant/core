@@ -994,12 +994,10 @@ class ConfigEntries:
             changed = True
             entry.options = MappingProxyType(options)
 
-        if (
-            system_options is not UNDEFINED
-            and entry.system_options.as_dict() != system_options
-        ):
-            changed = True
+        if system_options is not UNDEFINED:
+            old_system_options = entry.system_options.as_dict()
             entry.system_options.update(**system_options)
+            changed = entry.system_options.as_dict() != old_system_options
 
         if not changed:
             return False
@@ -1408,14 +1406,27 @@ class SystemOptions:
     """Config entry system options."""
 
     disable_new_entities: bool = attr.ib(default=False)
+    disable_polling: bool = attr.ib(default=False)
 
-    def update(self, *, disable_new_entities: bool) -> None:
+    def update(
+        self,
+        *,
+        disable_new_entities: bool | UndefinedType = UNDEFINED,
+        disable_polling: bool | UndefinedType = UNDEFINED,
+    ) -> None:
         """Update properties."""
-        self.disable_new_entities = disable_new_entities
+        if disable_new_entities is not UNDEFINED:
+            self.disable_new_entities = disable_new_entities
+
+        if disable_polling is not UNDEFINED:
+            self.disable_polling = disable_polling
 
     def as_dict(self) -> dict[str, Any]:
         """Return dictionary version of this config entries system options."""
-        return {"disable_new_entities": self.disable_new_entities}
+        return {
+            "disable_new_entities": self.disable_new_entities,
+            "disable_polling": self.disable_polling,
+        }
 
 
 class EntityRegistryDisabledHandler:
