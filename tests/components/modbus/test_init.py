@@ -325,9 +325,13 @@ SERVICE = "service"
     [
         {
             CONF_NAME: TEST_MODBUS_NAME,
-            CONF_TYPE: "tcp",
-            CONF_HOST: TEST_HOST,
-            CONF_PORT: 5501,
+            CONF_TYPE: "serial",
+            CONF_BAUDRATE: 9600,
+            CONF_BYTESIZE: 8,
+            CONF_METHOD: "rtu",
+            CONF_PORT: "usb01",
+            CONF_PARITY: "E",
+            CONF_STOPBITS: 1,
         },
     ],
 )

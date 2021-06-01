@@ -322,6 +322,10 @@ class ModbusHub:
         if self._config_delay:
             return None
         async with self._lock:
-            return await self.hass.async_add_executor_job(
+            result = await self.hass.async_add_executor_job(
                 self._pymodbus_call, unit, address, value, use_call
             )
+            if self._config_type == "serial":
+                # small delay until next request/response
+                await asyncio.sleep(30 / 1000)
+            return result
