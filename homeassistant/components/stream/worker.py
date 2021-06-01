@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from collections import deque
-from collections.abc import Iterator, Mapping, ValuesView
+from collections.abc import Iterator, Mapping
 from fractions import Fraction
 from io import BytesIO
 import logging
@@ -38,8 +38,6 @@ class SegmentBuffer:
         self._outputs_callback: Callable[
             [], Mapping[str, StreamOutput]
         ] = outputs_callback
-        # Each element is a StreamOutput
-        self._outputs: ValuesView[StreamOutput] | list[StreamOutput] = []
         # sequence gets incremented before the first segment so the first segment
         # has a sequence number of 0.
         self._sequence = -1
@@ -154,8 +152,7 @@ class SegmentBuffer:
             self._segment.init = self._memory_file.getbuffer()[:byte_position].tobytes()
             # Fetch the latest StreamOutputs, which may have changed since the
             # worker started.
-            self._outputs = self._outputs_callback().values()
-            for stream_output in self._outputs:
+            for stream_output in self._outputs_callback().values():
                 stream_output.put(self._segment)
         else:  # These are the ends of the part segments
             self._segment.parts.append(
