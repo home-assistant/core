@@ -943,6 +943,13 @@ class ConfigEntries:
         ent_reg = entity_registry.async_get(self.hass)
 
         if not entry.disabled_by:
+            # Make sure requirements and dependencies of component are resolved
+            try:
+                domain = entry.domain
+                integration = await loader.async_get_integration(self.hass, domain)
+                await async_process_deps_reqs(self.hass, self._hass_config, integration)
+            except loader.IntegrationNotFound:
+                _LOGGER.error("Cannot find integration %s", domain)
             # The config entry will no longer be disabled, enable devices and entities
             device_registry.async_config_entry_disabled_by_changed(dev_reg, entry)
             entity_registry.async_config_entry_disabled_by_changed(ent_reg, entry)
