@@ -3,8 +3,9 @@ from __future__ import annotations
 
 import logging
 
-from homeassistant.helpers.reload import async_setup_reload_service
 from icmplib import SocketPermissionError, ping as icmp_ping
+
+from homeassistant.helpers.reload import async_setup_reload_service
 
 from .const import DOMAIN, PING_PRIVS, PLATFORMS
 

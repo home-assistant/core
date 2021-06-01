@@ -5,6 +5,7 @@ import logging
 import subprocess
 import sys
 
+from icmplib import async_multiping
 import voluptuous as vol
 
 from homeassistant import const, util
@@ -18,7 +19,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util.async_ import gather_with_concurrency
 from homeassistant.util.process import kill_subprocess
-from icmplib import async_multiping
 
 from .const import DOMAIN, ICMP_TIMEOUT, PING_ATTEMPTS_COUNT, PING_PRIVS, PING_TIMEOUT
 

@@ -9,6 +9,7 @@ import re
 import sys
 from typing import Any
 
+from icmplib import NameLookupError, async_ping
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
@@ -19,7 +20,6 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.const import CONF_HOST, CONF_NAME, STATE_ON
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
-from icmplib import NameLookupError, async_ping
 
 from .const import DOMAIN, ICMP_TIMEOUT, PING_PRIVS, PING_TIMEOUT
 
