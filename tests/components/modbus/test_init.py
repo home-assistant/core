@@ -79,41 +79,14 @@ from homeassistant.const import (
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
+from .conftest import ReadResult
+
 from tests.common import async_fire_time_changed
 
 TEST_SENSOR_NAME = "testSensor"
 TEST_ENTITY_ID = f"{SENSOR_DOMAIN}.{TEST_SENSOR_NAME}"
 TEST_HOST = "modbusTestHost"
 TEST_MODBUS_NAME = "modbusTest"
-
-
-class ReadResult:
-    """Storage class for register read results."""
-
-    def __init__(self, register_words):
-        """Init."""
-        # result read calls
-        self.registers = register_words
-        self.bits = register_words
-
-        # result write calls
-        self.value = register_words
-        self.count = len(register_words)
-
-
-@pytest.fixture
-def mock_pymodbus():
-    """Mock pymodbus."""
-    mock_pb = mock.MagicMock()
-    with mock.patch(
-        "homeassistant.components.modbus.modbus.ModbusTcpClient", return_value=mock_pb
-    ), mock.patch(
-        "homeassistant.components.modbus.modbus.ModbusSerialClient",
-        return_value=mock_pb,
-    ), mock.patch(
-        "homeassistant.components.modbus.modbus.ModbusUdpClient", return_value=mock_pb
-    ):
-        yield mock_pb
 
 
 @pytest.fixture
@@ -179,7 +152,7 @@ async def test_number_validator():
         },
     ],
 )
-async def test_OK_sensor_schema_validator(do_config):
+async def test_ok_sensor_schema_validator(do_config):
     """Test struct validator."""
     try:
         sensor_schema_validator(do_config)
