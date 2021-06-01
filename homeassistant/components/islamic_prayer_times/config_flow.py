@@ -28,7 +28,7 @@ from .const import (
 class IslamicPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle the Islamic Prayer config flow."""
 
-    VERSION = 2
+    VERSION = 1
 
     @staticmethod
     @callback

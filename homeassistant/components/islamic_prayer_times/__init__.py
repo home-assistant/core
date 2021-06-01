@@ -42,30 +42,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     return True
 
 
-async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry):
-    """Migrate old entry."""
-    _LOGGER.debug("Migrating from version %s", config_entry.version)
-
-    if config_entry.version == 1:
-
-        new_options = {**config_entry.options}
-        calc_method = new_options.get(CONF_CALC_METHOD)
-        if calc_method:
-            for method in CALC_METHODS:
-                if calc_method == method.lower():
-                    new_options[CONF_CALC_METHOD] = method
-                    break
-
-        config_entry.version = 2
-        hass.config_entries.async_update_entry(
-            config_entry,
-            options={**config_entry.options, **new_options},
-        )
-    _LOGGER.info("Migration to version %s successful", config_entry.version)
-
-    return True
-
-
 async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload Islamic Prayer entry from config_entry."""
     if hass.data[DOMAIN].event_unsub:
@@ -80,15 +56,15 @@ class IslamicPrayerDataCoordinator(DataUpdateCoordinator):
 
     def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         """Initialize the Islamic Prayer client."""
-        self.hass = hass
-        self.config_entry = config_entry
-        self.event_unsub = None
         super().__init__(
-            self.hass,
+            hass,
             _LOGGER,
             name=DOMAIN,
             update_method=self.async_update,
         )
+        self.hass = hass
+        self.config_entry: ConfigEntry = config_entry
+        self.event_unsub = None
 
     @property
     def calc_method(self):
@@ -204,9 +180,29 @@ class IslamicPrayerDataCoordinator(DataUpdateCoordinator):
         except (exceptions.InvalidResponseError, ConnError) as err:
             raise ConfigEntryNotReady from err
 
+        await self.async_update_options()
+
         self.config_entry.async_on_unload(
             self.config_entry.add_update_listener(async_options_updated)
         )
+
+    async def async_update_options(self) -> None:
+        """Update calc_method option from old entry."""
+        old_calc_method = self.config_entry.options.get(CONF_CALC_METHOD)
+        if not old_calc_method or old_calc_method in CALC_METHODS:
+            return
+        new_options = {**self.config_entry.options}
+        calc_method = new_options.get(CONF_CALC_METHOD)
+        if calc_method:
+            for method in CALC_METHODS:
+                if calc_method == method.lower():
+                    new_options[CONF_CALC_METHOD] = method
+                    break
+
+            self.hass.config_entries.async_update_entry(
+                self.config_entry,
+                options={**self.config_entry.options, **new_options},
+            )
 
 
 async def async_options_updated(hass: HomeAssistant, entry: ConfigEntry) -> None:

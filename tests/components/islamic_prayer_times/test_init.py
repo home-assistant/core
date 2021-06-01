@@ -74,8 +74,8 @@ async def test_unload_entry(hass: HomeAssistant, legacy_patchable_time) -> None:
     assert DOMAIN not in hass.data
 
 
-async def test_migrate_entry(hass: HomeAssistant) -> None:
-    """Test successful migration of entry data."""
+async def test_updating_options(hass: HomeAssistant) -> None:
+    """Test successful update of calc_metho from old entry data."""
     legacy_options = {
         CONF_CALC_METHOD: "isna",
     }
@@ -83,12 +83,10 @@ async def test_migrate_entry(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
 
     assert entry.options[CONF_CALC_METHOD] == "isna"
-    assert entry.version == 1
 
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entry.version == 2
     assert entry.options[CONF_CALC_METHOD] == "ISNA"
 
 
