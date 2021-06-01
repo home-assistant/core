@@ -405,7 +405,7 @@ ha-philipsjs==2.7.4
 habitipy==0.2.0
 
 # homeassistant.components.hangouts
-hangups==0.4.11
+hangups==0.4.14
 
 # homeassistant.components.cloud
 hass-nabucasa==0.43.0
