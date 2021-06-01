@@ -24,7 +24,11 @@ from homeassistant.exceptions import (
 from homeassistant.helpers import device_registry, entity_registry
 from homeassistant.helpers.event import Event
 from homeassistant.helpers.typing import UNDEFINED, DiscoveryInfoType, UndefinedType
-from homeassistant.setup import async_process_deps_reqs, async_setup_component
+from homeassistant.setup import (
+    PrepareSetupError,
+    async_prepare_setup_component,
+    async_setup_component,
+)
 from homeassistant.util.decorator import Registry
 import homeassistant.util.uuid as uuid_util
 
@@ -672,14 +676,14 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
 
         Handler key is the domain of the component that we want to set up.
         """
-        try:
-            integration = await loader.async_get_integration(self.hass, handler_key)
-        except loader.IntegrationNotFound as err:
-            _LOGGER.error("Cannot find integration %s", handler_key)
-            raise data_entry_flow.UnknownHandler from err
-
         # Make sure requirements and dependencies of component are resolved
-        await async_process_deps_reqs(self.hass, self._hass_config, integration)
+        try:
+            integration = await async_prepare_setup_component(
+                self.hass, handler_key, self._hass_config
+            )
+        except PrepareSetupError as err:
+            _LOGGER.error("Failed to load integration %s: %s", handler_key, str(err))
+            raise data_entry_flow.UnknownHandler from err
 
         try:
             integration.get_platform("config_flow")
@@ -945,11 +949,13 @@ class ConfigEntries:
         if not entry.disabled_by:
             # Make sure requirements and dependencies of component are resolved
             try:
-                domain = entry.domain
-                integration = await loader.async_get_integration(self.hass, domain)
-                await async_process_deps_reqs(self.hass, self._hass_config, integration)
-            except loader.IntegrationNotFound:
-                _LOGGER.error("Cannot find integration %s", domain)
+                await async_prepare_setup_component(
+                    self.hass, entry.domain, self._hass_config
+                )
+            except PrepareSetupError as err:
+                _LOGGER.error(
+                    "Failed to load integration %s: %s", entry.domain, str(err)
+                )
             # The config entry will no longer be disabled, enable devices and entities
             device_registry.async_config_entry_disabled_by_changed(dev_reg, entry)
             entity_registry.async_config_entry_disabled_by_changed(ent_reg, entry)

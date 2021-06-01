@@ -18,6 +18,7 @@ from homeassistant.const import (
 )
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.loader import Integration
 from homeassistant.util import dt as dt_util, ensure_unique_string
 
 _LOGGER = logging.getLogger(__name__)
@@ -159,6 +160,41 @@ async def _async_process_dependencies(
     return True
 
 
+class PrepareSetupError(HomeAssistantError):
+    """Failed to prepare a component for setup."""
+
+    def __init__(self, message: str, link: str | None = None) -> None:
+        """Init the error."""
+        super().__init__(message)
+        self.link = link
+
+
+async def async_prepare_setup_component(
+    hass: core.HomeAssistant, domain: str, config: ConfigType
+) -> Integration:
+    """Prepare to setup a component for Home Assistant."""
+    try:
+        integration = await loader.async_get_integration(hass, domain)
+    except loader.IntegrationNotFound:
+        raise PrepareSetupError("Integration not found.")
+
+    if integration.disabled:
+        raise PrepareSetupError(f"Integration is disabled - {integration.disabled}")
+
+    # Validate all dependencies exist and there are no circular dependencies
+    if not await integration.resolve_dependencies():
+        raise PrepareSetupError("Failed to resolve dependencies")
+
+    # Process requirements as soon as possible, so we can import the component
+    # without requiring imports to be in functions.
+    try:
+        await async_process_deps_reqs(hass, config, integration)
+    except PrepareSetupError as err:
+        raise PrepareSetupError(str(err), integration.documentation)
+
+    return integration
+
+
 async def _async_setup_component(
     hass: core.HomeAssistant, domain: str, config: ConfigType
 ) -> bool:
@@ -173,25 +209,9 @@ async def _async_setup_component(
         async_notify_setup_error(hass, domain, link)
 
     try:
-        integration = await loader.async_get_integration(hass, domain)
-    except loader.IntegrationNotFound:
-        log_error("Integration not found.")
-        return False
-
-    if integration.disabled:
-        log_error(f"Dependency is disabled - {integration.disabled}")
-        return False
-
-    # Validate all dependencies exist and there are no circular dependencies
-    if not await integration.resolve_dependencies():
-        return False
-
-    # Process requirements as soon as possible, so we can import the component
-    # without requiring imports to be in functions.
-    try:
-        await async_process_deps_reqs(hass, config, integration)
-    except HomeAssistantError as err:
-        log_error(str(err), integration.documentation)
+        integration = await async_prepare_setup_component(hass, domain, config)
+    except PrepareSetupError as err:
+        log_error(str(err), err.link)
         return False
 
     # Some integrations fail on import because they call functions incorrectly.
