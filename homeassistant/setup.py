@@ -175,8 +175,8 @@ async def async_prepare_setup_component(
     """Prepare to setup a component for Home Assistant."""
     try:
         integration = await loader.async_get_integration(hass, domain)
-    except loader.IntegrationNotFound:
-        raise PrepareSetupError("Integration not found.")
+    except loader.IntegrationNotFound as err:
+        raise PrepareSetupError("Integration not found.") from err
 
     if integration.disabled:
         raise PrepareSetupError(f"Integration is disabled - {integration.disabled}")
@@ -190,7 +190,7 @@ async def async_prepare_setup_component(
     try:
         await async_process_deps_reqs(hass, config, integration)
     except HomeAssistantError as err:
-        raise PrepareSetupError(str(err), integration.documentation)
+        raise PrepareSetupError(str(err), integration.documentation) from err
 
     return integration
 
