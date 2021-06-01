@@ -229,6 +229,8 @@ class ModbusHub:
                     port=self._config_port,
                     framer=ModbusRtuFramer,
                     timeout=self._config_timeout,
+                    retries=self._config_retries,
+                    retry_on_empty=self._config_retry_on_empty,
                     reset_socket=self._config_reset_socket,
                 )
             elif self._config_type == "tcp":
@@ -236,6 +238,8 @@ class ModbusHub:
                     host=self._config_host,
                     port=self._config_port,
                     timeout=self._config_timeout,
+                    retries=self._config_retries,
+                    retry_on_empty=self._config_retry_on_empty,
                     reset_socket=self._config_reset_socket,
                 )
             elif self._config_type == "udp":
@@ -243,6 +247,8 @@ class ModbusHub:
                     host=self._config_host,
                     port=self._config_port,
                     timeout=self._config_timeout,
+                    retries=self._config_retries,
+                    retry_on_empty=self._config_retry_on_empty,
                     reset_socket=self._config_reset_socket,
                 )
         except ModbusException as exception_error:
