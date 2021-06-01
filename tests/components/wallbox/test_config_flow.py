@@ -110,14 +110,6 @@ async def test_form_cannot_connect(hass):
                 "password": "test-password",
             },
         )
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                "station": "12345",
-                "username": "test-username",
-                "password": "test-password",
-            },
-        )
 
     assert result2["type"] == "form"
     assert result2["errors"] == {"base": "cannot_connect"}
