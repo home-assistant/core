@@ -232,7 +232,7 @@ class HomeAssistantHTTP:
         # forwarded middleware needs to go second.
         setup_security_filter(app)
 
-        async_setup_forwarded(app, trusted_proxies)
+        async_setup_forwarded(app, use_x_forwarded_for, trusted_proxies)
 
         setup_request_context(app, current_request)
 

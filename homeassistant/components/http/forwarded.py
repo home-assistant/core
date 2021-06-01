@@ -14,7 +14,9 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @callback
-def async_setup_forwarded(app: Application, trusted_proxies: list[str]) -> None:
+def async_setup_forwarded(
+    app: Application, use_x_forwarded_for: bool | None, trusted_proxies: list[str]
+) -> None:
     """Create forwarded middleware for the app.
 
     Process IP addresses, proto and host information in the forwarded for headers.
@@ -73,15 +75,31 @@ def async_setup_forwarded(app: Application, trusted_proxies: list[str]) -> None:
             # No forwarding headers, continue as normal
             return await handler(request)
 
-        # Ensure the IP of the connected peer is trusted
+        # Get connected IP
         assert request.transport is not None
         connected_ip = ip_address(request.transport.get_extra_info("peername")[0])
-        if not any(connected_ip in trusted_proxy for trusted_proxy in trusted_proxies):
+
+        # We have X-Forwarded-For, but config does not agree
+        if not use_x_forwarded_for:
             _LOGGER.warning(
-                "Received X-Forwarded-For header from untrusted proxy %s, headers not processed",
+                "A request from a reverse proxy was received from %s, but your "
+                "HTTP integration is not set-up for reverse proxies; "
+                "This request will be blocked in Home Assistant 2021.7 unless "
+                "you configure your HTTP integration to allow this header",
                 connected_ip,
             )
-            # Not trusted, continue as normal
+            # Block this request in the future, for now we pass.
+            return await handler(request)
+
+        # Ensure the IP of the connected peer is trusted
+        if not any(connected_ip in trusted_proxy for trusted_proxy in trusted_proxies):
+            _LOGGER.warning(
+                "Received X-Forwarded-For header from untrusted proxy %s, headers not processed; "
+                "This request will be blocked in Home Assistant 2021.7 unless you configure "
+                "your HTTP integration to allow this proxy to reverse your Home Assistant instance.",
+                connected_ip,
+            )
+            # Not trusted, Block this request in the future, continue as normal
             return await handler(request)
 
         # Multiple X-Forwarded-For headers
