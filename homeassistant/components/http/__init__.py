@@ -249,7 +249,6 @@ class HomeAssistantHTTP:
         self.ssl_key = ssl_key
         self.server_host = server_host
         self.server_port = server_port
-        self.use_x_forwarded_for = use_x_forwarded_for
         self.trusted_proxies = trusted_proxies
         self.is_ban_enabled = is_ban_enabled
         self.ssl_profile = ssl_profile

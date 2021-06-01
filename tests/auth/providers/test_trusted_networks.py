@@ -5,13 +5,10 @@ from unittest.mock import Mock, patch
 import pytest
 import voluptuous as vol
 
-from homeassistant import auth, const
+from homeassistant import auth
 from homeassistant.auth import auth_store
 from homeassistant.auth.providers import trusted_networks as tn_auth
 from homeassistant.data_entry_flow import RESULT_TYPE_ABORT, RESULT_TYPE_CREATE_ENTRY
-from homeassistant.setup import async_setup_component
-
-FORWARD_FOR_IS_WARNING = (const.MAJOR_VERSION, const.MINOR_VERSION) < (2021, 8)
 
 
 @pytest.fixture
@@ -115,17 +112,7 @@ def manager_bypass_login(hass, store, provider_bypass_login):
     )
 
 
-@pytest.fixture
-def mock_allowed_request():
-    """Mock that the request is allowed."""
-    with patch(
-        "homeassistant.auth.providers.trusted_networks.TrustedNetworksAuthProvider.is_allowed_request",
-        return_value=True,
-    ):
-        yield
-
-
-async def test_trusted_networks_credentials(manager, provider, mock_allowed_request):
+async def test_trusted_networks_credentials(manager, provider):
     """Test trusted_networks credentials related functions."""
     owner = await manager.async_create_user("test-owner")
     tn_owner_cred = await provider.async_get_or_create_credentials({"user": owner.id})
@@ -142,7 +129,7 @@ async def test_trusted_networks_credentials(manager, provider, mock_allowed_requ
         await provider.async_get_or_create_credentials({"user": "invalid-user"})
 
 
-async def test_validate_access(provider, mock_allowed_request):
+async def test_validate_access(provider):
     """Test validate access from trusted networks."""
     provider.async_validate_access(ip_address("192.168.0.1"))
     provider.async_validate_access(ip_address("192.168.128.10"))
@@ -157,7 +144,7 @@ async def test_validate_access(provider, mock_allowed_request):
         provider.async_validate_access(ip_address("2001:db8::ff00:42:8329"))
 
 
-async def test_validate_refresh_token(provider, mock_allowed_request):
+async def test_validate_refresh_token(provider):
     """Verify re-validation of refresh token."""
     with patch.object(provider, "async_validate_access") as mock:
         with pytest.raises(tn_auth.InvalidAuthError):
@@ -167,7 +154,7 @@ async def test_validate_refresh_token(provider, mock_allowed_request):
         mock.assert_called_once_with(ip_address("127.0.0.1"))
 
 
-async def test_login_flow(manager, provider, mock_allowed_request):
+async def test_login_flow(manager, provider):
     """Test login flow."""
     owner = await manager.async_create_user("test-owner")
     user = await manager.async_create_user("test-user")
@@ -194,9 +181,7 @@ async def test_login_flow(manager, provider, mock_allowed_request):
     assert step["data"]["user"] == user.id
 
 
-async def test_trusted_users_login(
-    manager_with_user, provider_with_user, mock_allowed_request
-):
+async def test_trusted_users_login(manager_with_user, provider_with_user):
     """Test available user list changed per different IP."""
     owner = await manager_with_user.async_create_user("test-owner")
     sys_user = await manager_with_user.async_create_system_user(
@@ -276,9 +261,7 @@ async def test_trusted_users_login(
         assert schema({"user": sys_user.id})
 
 
-async def test_trusted_group_login(
-    manager_with_user, provider_with_user, mock_allowed_request
-):
+async def test_trusted_group_login(manager_with_user, provider_with_user):
     """Test config trusted_user with group_id."""
     owner = await manager_with_user.async_create_user("test-owner")
     # create a user in user group
@@ -331,9 +314,7 @@ async def test_trusted_group_login(
     assert schema({"user": user.id})
 
 
-async def test_bypass_login_flow(
-    manager_bypass_login, provider_bypass_login, mock_allowed_request
-):
+async def test_bypass_login_flow(manager_bypass_login, provider_bypass_login):
     """Test login flow can be bypass if only one user available."""
     owner = await manager_bypass_login.async_create_user("test-owner")
 
@@ -364,42 +345,3 @@ async def test_bypass_login_flow(
     # both owner and user listed
     assert schema({"user": owner.id})
     assert schema({"user": user.id})
-
-
-async def test_allowed_request(hass, provider, current_request, caplog):
-    """Test allowing requests."""
-    assert await async_setup_component(hass, "http", {})
-
-    provider.async_validate_access(ip_address("192.168.0.1"))
-
-    current_request.get.return_value = current_request.get.return_value.clone(
-        headers={
-            **current_request.get.return_value.headers,
-            "x-forwarded-for": "1.2.3.4",
-        }
-    )
-
-    if FORWARD_FOR_IS_WARNING:
-        caplog.clear()
-        provider.async_validate_access(ip_address("192.168.0.1"))
-        assert "This request will be blocked" in caplog.text
-    else:
-        with pytest.raises(tn_auth.InvalidAuthError):
-            provider.async_validate_access(ip_address("192.168.0.1"))
-
-    hass.http.use_x_forwarded_for = True
-
-    provider.async_validate_access(ip_address("192.168.0.1"))
-
-
-@pytest.mark.skipif(FORWARD_FOR_IS_WARNING, reason="Currently a warning")
-async def test_login_flow_no_request(provider):
-    """Test getting a login flow."""
-    login_flow = await provider.async_login_flow({"ip_address": ip_address("1.1.1.1")})
-    assert await login_flow.async_step_init() == {
-        "description_placeholders": None,
-        "flow_id": None,
-        "handler": None,
-        "reason": "forwared_for_header_not_allowed",
-        "type": "abort",
-    }
