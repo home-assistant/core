@@ -30,7 +30,7 @@ def get_attr_from_sia_event(event: SIAEvent) -> dict[str, Any]:
 def get_event_data_from_sia_event(event: SIAEvent) -> dict[str, Any]:
     """Create a dict from the SIA Event for the HA Event."""
     return {
-        "message_type": event.message_type,
+        "message_type": event.message_type.value,
         "receiver": event.receiver,
         "line": event.line,
         "account": event.account,
@@ -43,7 +43,7 @@ def get_event_data_from_sia_event(event: SIAEvent) -> dict[str, Any]:
         "message": event.message,
         "x_data": event.x_data,
         "timestamp": event.timestamp.isoformat(),
-        "event_qualifier": event.qualifier,
+        "event_qualifier": event.event_qualifier,
         "event_type": event.event_type,
         "partition": event.partition,
         "extended_data": [
