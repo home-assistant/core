@@ -26,7 +26,6 @@ from .const import (
     DATA_TYPE_STRING,
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_STRUCT_FORMAT,
-    MINIMUM_SCAN_INTERVAL,
     PLATFORMS,
 )
 
@@ -127,17 +126,15 @@ def scan_interval_validator(config: dict) -> dict:
 
             for entry in hub[conf_key]:
                 scan_interval = entry.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
-                if scan_interval < MINIMUM_SCAN_INTERVAL:
-                    if scan_interval == 0:
-                        continue
+                if scan_interval == 0:
+                    continue
+                if scan_interval < 5:  # there are not constant in core for this.
                     _LOGGER.warning(
-                        "%s %s scan_interval(%d) is adjusted to minimum(%d)",
+                        "%s %s scan_interval(%d) is lower than HA standard",
                         component,
                         entry.get(CONF_NAME),
                         scan_interval,
-                        MINIMUM_SCAN_INTERVAL,
                     )
-                    scan_interval = MINIMUM_SCAN_INTERVAL
                 entry[CONF_SCAN_INTERVAL] = scan_interval
                 minimum_scan_interval = min(scan_interval, minimum_scan_interval)
         if CONF_TIMEOUT in hub and hub[CONF_TIMEOUT] > minimum_scan_interval - 1:
@@ -147,5 +144,5 @@ def scan_interval_validator(config: dict) -> dict:
                 hub[CONF_TIMEOUT],
                 minimum_scan_interval - 1,
             )
-        hub[CONF_TIMEOUT] = minimum_scan_interval - 1
+            hub[CONF_TIMEOUT] = minimum_scan_interval - 1
     return config
