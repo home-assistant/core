@@ -9,7 +9,7 @@ from homeassistant.auth.permissions.const import CAT_CONFIG_ENTRIES, POLICY_EDIT
 from homeassistant.components import websocket_api
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import HTTP_FORBIDDEN, HTTP_NOT_FOUND
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import Unauthorized
 from homeassistant.helpers.data_entry_flow import (
     FlowManagerIndexView,
@@ -231,14 +231,21 @@ def config_entries_progress(hass, connection, msg):
     )
 
 
-def send_entry_not_found(connection, msg_id):
+def send_entry_not_found(
+    connection: websocket_api.ActiveConnection, msg_id: int
+) -> None:
     """Send Config entry not found error."""
     connection.send_error(
         msg_id, websocket_api.const.ERR_NOT_FOUND, "Config entry not found"
     )
 
 
-def get_entry(hass, connection, entry_id, msg_id) -> config_entries.ConfigEntry | None:
+def get_entry(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    entry_id: str,
+    msg_id: int,
+) -> config_entries.ConfigEntry | None:
     """Get entry, send error message if it doesn't exist."""
     entry = hass.config_entries.async_get_entry(entry_id)
     if entry is None:
