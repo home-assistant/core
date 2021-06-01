@@ -14,7 +14,7 @@ Adafruit-SHT31==1.0.2
 # Adafruit_BBIO==1.1.1
 
 # homeassistant.components.homekit
-HAP-python==3.4.1
+HAP-python==3.5.0
 
 # homeassistant.components.mastodon
 Mastodon.py==1.5.1
@@ -108,7 +108,7 @@ adafruit-circuitpython-mcp230xx==2.2.2
 adb-shell[async]==0.3.1
 
 # homeassistant.components.alarmdecoder
-adext==0.4.1
+adext==0.4.2
 
 # homeassistant.components.adguard
 adguardhome==0.5.0
@@ -175,7 +175,7 @@ aioguardian==1.0.4
 aioharmony==0.2.7
 
 # homeassistant.components.homekit_controller
-aiohomekit==0.2.65
+aiohomekit==0.2.66
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -218,7 +218,7 @@ aiopulse==0.4.2
 aiopvapi==1.6.14
 
 # homeassistant.components.pvpc_hourly_pricing
-aiopvpc==2.1.1
+aiopvpc==2.1.2
 
 # homeassistant.components.webostv
 aiopylgtv==0.4.0
@@ -230,7 +230,7 @@ aiorecollect==1.0.4
 aioshelly==0.6.4
 
 # homeassistant.components.switcher_kis
-aioswitcher==1.2.1
+aioswitcher==1.2.3
 
 # homeassistant.components.syncthing
 aiosyncthing==0.5.1
@@ -635,7 +635,7 @@ gTTS==2.2.2
 garages-amsterdam==2.1.1
 
 # homeassistant.components.garmin_connect
-garminconnect==0.1.19
+garminconnect_aio==0.1.1
 
 # homeassistant.components.geniushub
 geniushub-client==0.6.30
@@ -723,7 +723,7 @@ guppy3==3.1.0
 ha-ffmpeg==3.0.2
 
 # homeassistant.components.philips_js
-ha-philipsjs==2.7.3
+ha-philipsjs==2.7.4
 
 # homeassistant.components.habitica
 habitipy==0.2.0
@@ -765,7 +765,7 @@ hole==0.5.1
 holidays==0.11.1
 
 # homeassistant.components.frontend
-home-assistant-frontend==20210526.0
+home-assistant-frontend==20210601.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -993,7 +993,6 @@ nessclient==0.9.15
 netdata==0.2.0
 
 # homeassistant.components.discovery
-# homeassistant.components.ssdp
 netdisco==2.8.3
 
 # homeassistant.components.nam
@@ -1024,7 +1023,7 @@ notify-events==1.0.4
 nsapi==3.0.4
 
 # homeassistant.components.nsw_fuel_station
-nsw-fuel-api-client==1.0.10
+nsw-fuel-api-client==1.1.0
 
 # homeassistant.components.nuheat
 nuheat==0.3.0
@@ -1440,7 +1439,7 @@ pyfttt==0.3
 pygatt[GATTTOOL]==4.0.5
 
 # homeassistant.components.gtfs
-pygtfs==0.1.5
+pygtfs==0.1.6
 
 # homeassistant.components.hvv_departures
 pygti==0.9.2
@@ -1464,7 +1463,7 @@ pyhomematic==0.1.72
 pyhomeworks==0.0.6
 
 # homeassistant.components.ialarm
-pyialarm==1.5
+pyialarm==1.7
 
 # homeassistant.components.icloud
 pyicloud==0.10.2
@@ -1557,7 +1556,7 @@ pymazda==0.1.6
 pymediaroom==0.6.4.1
 
 # homeassistant.components.melcloud
-pymelcloud==2.5.2
+pymelcloud==2.5.3
 
 # homeassistant.components.meteoclimatic
 pymeteoclimatic==0.0.6
@@ -2015,7 +2014,7 @@ rokuecp==0.8.1
 roombapy==1.6.3
 
 # homeassistant.components.roon
-roonapi==0.0.36
+roonapi==0.0.37
 
 # homeassistant.components.rova
 rova==0.2.1
@@ -2375,7 +2374,7 @@ xbox-webapi==2.0.11
 xboxapi==2.0.1
 
 # homeassistant.components.knx
-xknx==0.18.2
+xknx==0.18.3
 
 # homeassistant.components.bluesound
 # homeassistant.components.rest
