@@ -102,7 +102,7 @@ async def test_humidifier_input_boolean(hass, setup_comp_1):
     )
     await hass.async_block_till_done()
 
-    assert STATE_OFF == hass.states.get(humidifier_switch).state
+    assert hass.states.get(humidifier_switch).state == STATE_OFF
 
     _setup_sensor(hass, 23)
     await hass.async_block_till_done()
@@ -114,7 +114,7 @@ async def test_humidifier_input_boolean(hass, setup_comp_1):
     )
     await hass.async_block_till_done()
 
-    assert STATE_ON == hass.states.get(humidifier_switch).state
+    assert hass.states.get(humidifier_switch).state == STATE_ON
 
 
 async def test_humidifier_switch(hass, setup_comp_1, enable_custom_integrations):
@@ -143,7 +143,7 @@ async def test_humidifier_switch(hass, setup_comp_1, enable_custom_integrations)
     )
 
     await hass.async_block_till_done()
-    assert STATE_OFF == hass.states.get(humidifier_switch).state
+    assert hass.states.get(humidifier_switch).state == STATE_OFF
 
     _setup_sensor(hass, 23)
     await hass.async_block_till_done()
@@ -156,7 +156,7 @@ async def test_humidifier_switch(hass, setup_comp_1, enable_custom_integrations)
     )
     await hass.async_block_till_done()
 
-    assert STATE_ON == hass.states.get(humidifier_switch).state
+    assert hass.states.get(humidifier_switch).state == STATE_ON
 
 
 def _setup_sensor(hass, humidity):
@@ -208,12 +208,12 @@ async def test_unavailable_state(hass):
     )
     # The target sensor is unavailable, that should propagate to the humidifier entity:
     await hass.async_block_till_done()
-    assert STATE_UNAVAILABLE == hass.states.get(ENTITY).state
+    assert hass.states.get(ENTITY).state == STATE_UNAVAILABLE
 
     # Sensor online
     _setup_sensor(hass, 30)
     await hass.async_block_till_done()
-    assert STATE_OFF == hass.states.get(ENTITY).state
+    assert hass.states.get(ENTITY).state == STATE_OFF
 
 
 async def test_setup_defaults_to_unknown(hass):
@@ -234,22 +234,22 @@ async def test_setup_defaults_to_unknown(hass):
         },
     )
     await hass.async_block_till_done()
-    assert STATE_UNAVAILABLE == hass.states.get(ENTITY).state
+    assert hass.states.get(ENTITY).state == STATE_UNAVAILABLE
 
 
 async def test_default_setup_params(hass, setup_comp_2):
     """Test the setup with default parameters."""
     state = hass.states.get(ENTITY)
-    assert 0 == state.attributes.get("min_humidity")
-    assert 100 == state.attributes.get("max_humidity")
-    assert 0 == state.attributes.get("humidity")
+    assert state.attributes.get("min_humidity") == 0
+    assert state.attributes.get("max_humidity") == 100
+    assert state.attributes.get("humidity") == 0
 
 
 async def test_get_modes(hass, setup_comp_2):
     """Test that the attributes returns the correct modes."""
     state = hass.states.get(ENTITY)
     modes = state.attributes.get("available_modes")
-    assert [MODE_NORMAL, MODE_AWAY] == modes
+    assert modes == [MODE_NORMAL, MODE_AWAY]
 
 
 async def test_set_target_humidity(hass, setup_comp_2):
@@ -262,7 +262,7 @@ async def test_set_target_humidity(hass, setup_comp_2):
     )
     await hass.async_block_till_done()
     state = hass.states.get(ENTITY)
-    assert 40 == state.attributes.get("humidity")
+    assert state.attributes.get("humidity") == 40
     with pytest.raises(vol.Invalid):
         await hass.services.async_call(
             DOMAIN,
@@ -272,7 +272,7 @@ async def test_set_target_humidity(hass, setup_comp_2):
         )
     await hass.async_block_till_done()
     state = hass.states.get(ENTITY)
-    assert 40 == state.attributes.get("humidity")
+    assert state.attributes.get("humidity") == 40
 
 
 async def test_set_away_mode(hass, setup_comp_2):
@@ -292,7 +292,7 @@ async def test_set_away_mode(hass, setup_comp_2):
     )
     await hass.async_block_till_done()
     state = hass.states.get(ENTITY)
-    assert 35 == state.attributes.get("humidity")
+    assert state.attributes.get("humidity") == 35
 
 
 async def test_set_away_mode_and_restore_prev_humidity(hass, setup_comp_2):
@@ -315,7 +315,7 @@ async def test_set_away_mode_and_restore_prev_humidity(hass, setup_comp_2):
     )
     await hass.async_block_till_done()
     state = hass.states.get(ENTITY)
-    assert 35 == state.attributes.get("humidity")
+    assert state.attributes.get("humidity") == 35
     await hass.services.async_call(
         DOMAIN,
         SERVICE_SET_MODE,
@@ -324,7 +324,7 @@ async def test_set_away_mode_and_restore_prev_humidity(hass, setup_comp_2):
     )
     await hass.async_block_till_done()
     state = hass.states.get(ENTITY)
-    assert 44 == state.attributes.get("humidity")
+    assert state.attributes.get("humidity") == 44
 
 
 async def test_set_away_mode_twice_and_restore_prev_humidity(hass, setup_comp_2):
@@ -354,7 +354,7 @@ async def test_set_away_mode_twice_and_restore_prev_humidity(hass, setup_comp_2)
     )
     await hass.async_block_till_done()
     state = hass.states.get(ENTITY)
-    assert 35 == state.attributes.get("humidity")
+    assert state.attributes.get("humidity") == 35
     await hass.services.async_call(
         DOMAIN,
         SERVICE_SET_MODE,
@@ -363,7 +363,7 @@ async def test_set_away_mode_twice_and_restore_prev_humidity(hass, setup_comp_2)
     )
     await hass.async_block_till_done()
     state = hass.states.get(ENTITY)
-    assert 44 == state.attributes.get("humidity")
+    assert state.attributes.get("humidity") == 44
 
 
 async def test_sensor_bad_value(hass, setup_comp_2):
@@ -390,11 +390,11 @@ async def test_set_target_humidity_humidifier_on(hass, setup_comp_2):
         blocking=True,
     )
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
     call = calls[0]
-    assert HASS_DOMAIN == call.domain
-    assert SERVICE_TURN_ON == call.service
-    assert ENT_SWITCH == call.data["entity_id"]
+    assert call.domain == HASS_DOMAIN
+    assert call.service == SERVICE_TURN_ON
+    assert call.data["entity_id"] == ENT_SWITCH
 
 
 async def test_set_target_humidity_humidifier_off(hass, setup_comp_2):
@@ -409,11 +409,11 @@ async def test_set_target_humidity_humidifier_off(hass, setup_comp_2):
         blocking=True,
     )
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
     call = calls[0]
-    assert HASS_DOMAIN == call.domain
-    assert SERVICE_TURN_OFF == call.service
-    assert ENT_SWITCH == call.data["entity_id"]
+    assert call.domain == HASS_DOMAIN
+    assert call.service == SERVICE_TURN_OFF
+    assert call.data["entity_id"] == ENT_SWITCH
 
 
 async def test_humidity_change_humidifier_on_within_tolerance(hass, setup_comp_2):
@@ -428,7 +428,7 @@ async def test_humidity_change_humidifier_on_within_tolerance(hass, setup_comp_2
     await hass.async_block_till_done()
     _setup_sensor(hass, 43)
     await hass.async_block_till_done()
-    assert 0 == len(calls)
+    assert len(calls) == 0
 
 
 async def test_humidity_change_humidifier_on_outside_tolerance(hass, setup_comp_2):
@@ -443,11 +443,11 @@ async def test_humidity_change_humidifier_on_outside_tolerance(hass, setup_comp_
     await hass.async_block_till_done()
     _setup_sensor(hass, 42)
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
     call = calls[0]
-    assert HASS_DOMAIN == call.domain
-    assert SERVICE_TURN_ON == call.service
-    assert ENT_SWITCH == call.data["entity_id"]
+    assert call.domain == HASS_DOMAIN
+    assert call.service == SERVICE_TURN_ON
+    assert call.data["entity_id"] == ENT_SWITCH
 
 
 async def test_humidity_change_humidifier_off_within_tolerance(hass, setup_comp_2):
@@ -462,7 +462,7 @@ async def test_humidity_change_humidifier_off_within_tolerance(hass, setup_comp_
     await hass.async_block_till_done()
     _setup_sensor(hass, 48)
     await hass.async_block_till_done()
-    assert 0 == len(calls)
+    assert len(calls) == 0
 
 
 async def test_humidity_change_humidifier_off_outside_tolerance(hass, setup_comp_2):
@@ -477,11 +477,11 @@ async def test_humidity_change_humidifier_off_outside_tolerance(hass, setup_comp
     await hass.async_block_till_done()
     _setup_sensor(hass, 50)
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
     call = calls[0]
-    assert HASS_DOMAIN == call.domain
-    assert SERVICE_TURN_OFF == call.service
-    assert ENT_SWITCH == call.data["entity_id"]
+    assert call.domain == HASS_DOMAIN
+    assert call.service == SERVICE_TURN_OFF
+    assert call.data["entity_id"] == ENT_SWITCH
 
 
 async def test_operation_mode_humidify(hass, setup_comp_2):
@@ -513,11 +513,11 @@ async def test_operation_mode_humidify(hass, setup_comp_2):
         blocking=True,
     )
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
     call = calls[0]
-    assert HASS_DOMAIN == call.domain
-    assert SERVICE_TURN_ON == call.service
-    assert ENT_SWITCH == call.data["entity_id"]
+    assert call.domain == HASS_DOMAIN
+    assert call.service == SERVICE_TURN_ON
+    assert call.data["entity_id"] == ENT_SWITCH
 
 
 async def _setup_switch(hass, is_on):
@@ -573,11 +573,11 @@ async def test_set_target_humidity_dry_off(hass, setup_comp_3):
         blocking=True,
     )
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
     call = calls[0]
-    assert HASS_DOMAIN == call.domain
-    assert SERVICE_TURN_OFF == call.service
-    assert ENT_SWITCH == call.data["entity_id"]
+    assert call.domain == HASS_DOMAIN
+    assert call.service == SERVICE_TURN_OFF
+    assert call.data["entity_id"] == ENT_SWITCH
 
 
 async def test_turn_away_mode_on_drying(hass, setup_comp_3):
@@ -600,7 +600,7 @@ async def test_turn_away_mode_on_drying(hass, setup_comp_3):
     )
     await hass.async_block_till_done()
     state = hass.states.get(ENTITY)
-    assert 30 == state.attributes.get("humidity")
+    assert state.attributes.get("humidity") == 30
 
 
 async def test_operation_mode_dry(hass, setup_comp_3):
@@ -611,7 +611,7 @@ async def test_operation_mode_dry(hass, setup_comp_3):
     calls = await _setup_switch(hass, False)
     _setup_sensor(hass, 30)
     await hass.async_block_till_done()
-    assert 0 == len(calls)
+    assert len(calls) == 0
     await hass.services.async_call(
         DOMAIN,
         SERVICE_TURN_OFF,
@@ -621,7 +621,7 @@ async def test_operation_mode_dry(hass, setup_comp_3):
     await hass.async_block_till_done()
     _setup_sensor(hass, 45)
     await hass.async_block_till_done()
-    assert 0 == len(calls)
+    assert len(calls) == 0
     await hass.services.async_call(
         DOMAIN,
         SERVICE_TURN_ON,
@@ -629,11 +629,11 @@ async def test_operation_mode_dry(hass, setup_comp_3):
         blocking=True,
     )
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
     call = calls[0]
-    assert HASS_DOMAIN == call.domain
-    assert SERVICE_TURN_ON == call.service
-    assert ENT_SWITCH == call.data["entity_id"]
+    assert call.domain == HASS_DOMAIN
+    assert call.service == SERVICE_TURN_ON
+    assert call.data["entity_id"] == ENT_SWITCH
 
 
 async def test_set_target_humidity_dry_on(hass, setup_comp_3):
@@ -641,11 +641,11 @@ async def test_set_target_humidity_dry_on(hass, setup_comp_3):
     calls = await _setup_switch(hass, False)
     _setup_sensor(hass, 45)
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
     call = calls[0]
-    assert HASS_DOMAIN == call.domain
-    assert SERVICE_TURN_ON == call.service
-    assert ENT_SWITCH == call.data["entity_id"]
+    assert call.domain == HASS_DOMAIN
+    assert call.service == SERVICE_TURN_ON
+    assert call.data["entity_id"] == ENT_SWITCH
 
 
 async def test_init_ignores_tolerance(hass, setup_comp_3):
@@ -666,7 +666,7 @@ async def test_humidity_change_dry_off_within_tolerance(hass, setup_comp_3):
     _setup_sensor(hass, 45)
     _setup_sensor(hass, 39)
     await hass.async_block_till_done()
-    assert 0 == len(calls)
+    assert len(calls) == 0
 
 
 async def test_set_humidity_change_dry_off_outside_tolerance(hass, setup_comp_3):
@@ -674,11 +674,11 @@ async def test_set_humidity_change_dry_off_outside_tolerance(hass, setup_comp_3)
     calls = await _setup_switch(hass, True)
     _setup_sensor(hass, 36)
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
     call = calls[0]
-    assert HASS_DOMAIN == call.domain
-    assert SERVICE_TURN_OFF == call.service
-    assert ENT_SWITCH == call.data["entity_id"]
+    assert call.domain == HASS_DOMAIN
+    assert call.service == SERVICE_TURN_OFF
+    assert call.data["entity_id"] == ENT_SWITCH
 
 
 async def test_humidity_change_dry_on_within_tolerance(hass, setup_comp_3):
@@ -687,7 +687,7 @@ async def test_humidity_change_dry_on_within_tolerance(hass, setup_comp_3):
     _setup_sensor(hass, 37)
     _setup_sensor(hass, 41)
     await hass.async_block_till_done()
-    assert 0 == len(calls)
+    assert len(calls) == 0
 
 
 async def test_humidity_change_dry_on_outside_tolerance(hass, setup_comp_3):
@@ -695,11 +695,11 @@ async def test_humidity_change_dry_on_outside_tolerance(hass, setup_comp_3):
     calls = await _setup_switch(hass, False)
     _setup_sensor(hass, 45)
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
     call = calls[0]
-    assert HASS_DOMAIN == call.domain
-    assert SERVICE_TURN_ON == call.service
-    assert ENT_SWITCH == call.data["entity_id"]
+    assert call.domain == HASS_DOMAIN
+    assert call.service == SERVICE_TURN_ON
+    assert call.data["entity_id"] == ENT_SWITCH
 
 
 async def test_running_when_operating_mode_is_off_2(hass, setup_comp_3):
@@ -714,11 +714,11 @@ async def test_running_when_operating_mode_is_off_2(hass, setup_comp_3):
         blocking=True,
     )
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
     call = calls[0]
-    assert HASS_DOMAIN == call.domain
-    assert SERVICE_TURN_OFF == call.service
-    assert ENT_SWITCH == call.data["entity_id"]
+    assert call.domain == HASS_DOMAIN
+    assert call.service == SERVICE_TURN_OFF
+    assert call.data["entity_id"] == ENT_SWITCH
 
 
 async def test_no_state_change_when_operation_mode_off_2(hass, setup_comp_3):
@@ -735,7 +735,7 @@ async def test_no_state_change_when_operation_mode_off_2(hass, setup_comp_3):
     await hass.async_block_till_done()
     _setup_sensor(hass, 45)
     await hass.async_block_till_done()
-    assert 0 == len(calls)
+    assert len(calls) == 0
 
 
 @pytest.fixture
@@ -767,11 +767,11 @@ async def test_humidity_change_dry_trigger_on_not_long_enough(hass, setup_comp_4
     calls = await _setup_switch(hass, False)
     _setup_sensor(hass, 35)
     await hass.async_block_till_done()
-    assert 0 == len(calls)
+    assert len(calls) == 0
 
     _setup_sensor(hass, 45)
     await hass.async_block_till_done()
-    assert 0 == len(calls)
+    assert len(calls) == 0
 
 
 async def test_humidity_change_dry_trigger_on_long_enough(hass, setup_comp_4):
@@ -785,15 +785,15 @@ async def test_humidity_change_dry_trigger_on_long_enough(hass, setup_comp_4):
         calls = await _setup_switch(hass, False)
     _setup_sensor(hass, 35)
     await hass.async_block_till_done()
-    assert 0 == len(calls)
+    assert len(calls) == 0
 
     _setup_sensor(hass, 45)
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
     call = calls[0]
-    assert HASS_DOMAIN == call.domain
-    assert SERVICE_TURN_ON == call.service
-    assert ENT_SWITCH == call.data["entity_id"]
+    assert call.domain == HASS_DOMAIN
+    assert call.service == SERVICE_TURN_ON
+    assert call.data["entity_id"] == ENT_SWITCH
 
 
 async def test_humidity_change_dry_trigger_off_not_long_enough(hass, setup_comp_4):
@@ -801,11 +801,11 @@ async def test_humidity_change_dry_trigger_off_not_long_enough(hass, setup_comp_
     calls = await _setup_switch(hass, True)
     _setup_sensor(hass, 45)
     await hass.async_block_till_done()
-    assert 0 == len(calls)
+    assert len(calls) == 0
 
     _setup_sensor(hass, 35)
     await hass.async_block_till_done()
-    assert 0 == len(calls)
+    assert len(calls) == 0
 
 
 async def test_humidity_change_dry_trigger_off_long_enough(hass, setup_comp_4):
@@ -819,15 +819,15 @@ async def test_humidity_change_dry_trigger_off_long_enough(hass, setup_comp_4):
         calls = await _setup_switch(hass, True)
     _setup_sensor(hass, 45)
     await hass.async_block_till_done()
-    assert 0 == len(calls)
+    assert len(calls) == 0
 
     _setup_sensor(hass, 35)
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
     call = calls[0]
-    assert HASS_DOMAIN == call.domain
-    assert SERVICE_TURN_OFF == call.service
-    assert ENT_SWITCH == call.data["entity_id"]
+    assert call.domain == HASS_DOMAIN
+    assert call.service == SERVICE_TURN_OFF
+    assert call.data["entity_id"] == ENT_SWITCH
 
 
 async def test_mode_change_dry_trigger_off_not_long_enough(hass, setup_comp_4):
@@ -835,7 +835,7 @@ async def test_mode_change_dry_trigger_off_not_long_enough(hass, setup_comp_4):
     calls = await _setup_switch(hass, True)
     _setup_sensor(hass, 45)
     await hass.async_block_till_done()
-    assert 0 == len(calls)
+    assert len(calls) == 0
     await hass.services.async_call(
         DOMAIN,
         SERVICE_TURN_OFF,
@@ -843,11 +843,11 @@ async def test_mode_change_dry_trigger_off_not_long_enough(hass, setup_comp_4):
         blocking=True,
     )
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
     call = calls[0]
-    assert "homeassistant" == call.domain
-    assert SERVICE_TURN_OFF == call.service
-    assert ENT_SWITCH == call.data["entity_id"]
+    assert call.domain == "homeassistant"
+    assert call.service == SERVICE_TURN_OFF
+    assert call.data["entity_id"] == ENT_SWITCH
 
 
 async def test_mode_change_dry_trigger_on_not_long_enough(hass, setup_comp_4):
@@ -864,7 +864,7 @@ async def test_mode_change_dry_trigger_on_not_long_enough(hass, setup_comp_4):
     await hass.async_block_till_done()
     _setup_sensor(hass, 45)
     await hass.async_block_till_done()
-    assert 0 == len(calls)
+    assert len(calls) == 0
     await hass.services.async_call(
         DOMAIN,
         SERVICE_TURN_ON,
@@ -872,11 +872,11 @@ async def test_mode_change_dry_trigger_on_not_long_enough(hass, setup_comp_4):
         blocking=True,
     )
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
     call = calls[0]
-    assert "homeassistant" == call.domain
-    assert SERVICE_TURN_ON == call.service
-    assert ENT_SWITCH == call.data["entity_id"]
+    assert call.domain == "homeassistant"
+    assert call.service == SERVICE_TURN_ON
+    assert call.data["entity_id"] == ENT_SWITCH
 
 
 @pytest.fixture
@@ -909,11 +909,11 @@ async def test_humidity_change_humidifier_trigger_off_not_long_enough(
     calls = await _setup_switch(hass, True)
     _setup_sensor(hass, 35)
     await hass.async_block_till_done()
-    assert 0 == len(calls)
+    assert len(calls) == 0
 
     _setup_sensor(hass, 45)
     await hass.async_block_till_done()
-    assert 0 == len(calls)
+    assert len(calls) == 0
 
 
 async def test_humidity_change_humidifier_trigger_on_not_long_enough(
@@ -923,11 +923,11 @@ async def test_humidity_change_humidifier_trigger_on_not_long_enough(
     calls = await _setup_switch(hass, False)
     _setup_sensor(hass, 45)
     await hass.async_block_till_done()
-    assert 0 == len(calls)
+    assert len(calls) == 0
 
     _setup_sensor(hass, 35)
     await hass.async_block_till_done()
-    assert 0 == len(calls)
+    assert len(calls) == 0
 
 
 async def test_humidity_change_humidifier_trigger_on_long_enough(hass, setup_comp_6):
@@ -941,15 +941,15 @@ async def test_humidity_change_humidifier_trigger_on_long_enough(hass, setup_com
         calls = await _setup_switch(hass, False)
     _setup_sensor(hass, 45)
     await hass.async_block_till_done()
-    assert 0 == len(calls)
+    assert len(calls) == 0
 
     _setup_sensor(hass, 35)
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
     call = calls[0]
-    assert HASS_DOMAIN == call.domain
-    assert SERVICE_TURN_ON == call.service
-    assert ENT_SWITCH == call.data["entity_id"]
+    assert call.domain == HASS_DOMAIN
+    assert call.service == SERVICE_TURN_ON
+    assert call.data["entity_id"] == ENT_SWITCH
 
 
 async def test_humidity_change_humidifier_trigger_off_long_enough(hass, setup_comp_6):
@@ -963,15 +963,15 @@ async def test_humidity_change_humidifier_trigger_off_long_enough(hass, setup_co
         calls = await _setup_switch(hass, True)
     _setup_sensor(hass, 35)
     await hass.async_block_till_done()
-    assert 0 == len(calls)
+    assert len(calls) == 0
 
     _setup_sensor(hass, 45)
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
     call = calls[0]
-    assert HASS_DOMAIN == call.domain
-    assert SERVICE_TURN_OFF == call.service
-    assert ENT_SWITCH == call.data["entity_id"]
+    assert call.domain == HASS_DOMAIN
+    assert call.service == SERVICE_TURN_OFF
+    assert call.data["entity_id"] == ENT_SWITCH
 
 
 async def test_mode_change_humidifier_trigger_off_not_long_enough(hass, setup_comp_6):
@@ -979,7 +979,7 @@ async def test_mode_change_humidifier_trigger_off_not_long_enough(hass, setup_co
     calls = await _setup_switch(hass, True)
     _setup_sensor(hass, 35)
     await hass.async_block_till_done()
-    assert 0 == len(calls)
+    assert len(calls) == 0
 
     await hass.services.async_call(
         DOMAIN,
@@ -988,11 +988,11 @@ async def test_mode_change_humidifier_trigger_off_not_long_enough(hass, setup_co
         blocking=True,
     )
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
     call = calls[0]
-    assert "homeassistant" == call.domain
-    assert SERVICE_TURN_OFF == call.service
-    assert ENT_SWITCH == call.data["entity_id"]
+    assert call.domain == "homeassistant"
+    assert call.service == SERVICE_TURN_OFF
+    assert call.data["entity_id"] == ENT_SWITCH
 
 
 async def test_mode_change_humidifier_trigger_on_not_long_enough(hass, setup_comp_6):
@@ -1000,7 +1000,7 @@ async def test_mode_change_humidifier_trigger_on_not_long_enough(hass, setup_com
     calls = await _setup_switch(hass, False)
     _setup_sensor(hass, 45)
     await hass.async_block_till_done()
-    assert 0 == len(calls)
+    assert len(calls) == 0
 
     await hass.services.async_call(
         DOMAIN,
@@ -1009,11 +1009,11 @@ async def test_mode_change_humidifier_trigger_on_not_long_enough(hass, setup_com
         blocking=True,
     )
     await hass.async_block_till_done()
-    assert 0 == len(calls)
+    assert len(calls) == 0
 
     _setup_sensor(hass, 35)
     await hass.async_block_till_done()
-    assert 0 == len(calls)
+    assert len(calls) == 0
 
     await hass.services.async_call(
         DOMAIN,
@@ -1022,11 +1022,11 @@ async def test_mode_change_humidifier_trigger_on_not_long_enough(hass, setup_com
         blocking=True,
     )
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
     call = calls[0]
-    assert "homeassistant" == call.domain
-    assert SERVICE_TURN_ON == call.service
-    assert ENT_SWITCH == call.data["entity_id"]
+    assert call.domain == "homeassistant"
+    assert call.service == SERVICE_TURN_ON
+    assert call.data["entity_id"] == ENT_SWITCH
 
 
 @pytest.fixture
@@ -1059,17 +1059,17 @@ async def test_humidity_change_dry_trigger_on_long_enough_3(hass, setup_comp_7):
     calls = await _setup_switch(hass, True)
     _setup_sensor(hass, 45)
     await hass.async_block_till_done()
-    assert 0 == len(calls)
+    assert len(calls) == 0
     async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(minutes=5))
     await hass.async_block_till_done()
-    assert 0 == len(calls)
+    assert len(calls) == 0
     async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(minutes=10))
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
     call = calls[0]
-    assert HASS_DOMAIN == call.domain
-    assert SERVICE_TURN_ON == call.service
-    assert ENT_SWITCH == call.data["entity_id"]
+    assert call.domain == HASS_DOMAIN
+    assert call.service == SERVICE_TURN_ON
+    assert call.data["entity_id"] == ENT_SWITCH
 
 
 async def test_humidity_change_dry_trigger_off_long_enough_3(hass, setup_comp_7):
@@ -1077,17 +1077,17 @@ async def test_humidity_change_dry_trigger_off_long_enough_3(hass, setup_comp_7)
     calls = await _setup_switch(hass, False)
     _setup_sensor(hass, 35)
     await hass.async_block_till_done()
-    assert 0 == len(calls)
+    assert len(calls) == 0
     async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(minutes=5))
     await hass.async_block_till_done()
-    assert 0 == len(calls)
+    assert len(calls) == 0
     async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(minutes=10))
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
     call = calls[0]
-    assert HASS_DOMAIN == call.domain
-    assert SERVICE_TURN_OFF == call.service
-    assert ENT_SWITCH == call.data["entity_id"]
+    assert call.domain == HASS_DOMAIN
+    assert call.service == SERVICE_TURN_OFF
+    assert call.data["entity_id"] == ENT_SWITCH
 
 
 @pytest.fixture
@@ -1119,17 +1119,17 @@ async def test_humidity_change_humidifier_trigger_on_long_enough_2(hass, setup_c
     calls = await _setup_switch(hass, True)
     _setup_sensor(hass, 35)
     await hass.async_block_till_done()
-    assert 0 == len(calls)
+    assert len(calls) == 0
     async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(minutes=5))
     await hass.async_block_till_done()
-    assert 0 == len(calls)
+    assert len(calls) == 0
     async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(minutes=10))
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
     call = calls[0]
-    assert HASS_DOMAIN == call.domain
-    assert SERVICE_TURN_ON == call.service
-    assert ENT_SWITCH == call.data["entity_id"]
+    assert call.domain == HASS_DOMAIN
+    assert call.service == SERVICE_TURN_ON
+    assert call.data["entity_id"] == ENT_SWITCH
 
 
 async def test_humidity_change_humidifier_trigger_off_long_enough_2(hass, setup_comp_8):
@@ -1137,17 +1137,17 @@ async def test_humidity_change_humidifier_trigger_off_long_enough_2(hass, setup_
     calls = await _setup_switch(hass, False)
     _setup_sensor(hass, 45)
     await hass.async_block_till_done()
-    assert 0 == len(calls)
+    assert len(calls) == 0
     async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(minutes=5))
     await hass.async_block_till_done()
-    assert 0 == len(calls)
+    assert len(calls) == 0
     async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(minutes=10))
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
     call = calls[0]
-    assert HASS_DOMAIN == call.domain
-    assert SERVICE_TURN_OFF == call.service
-    assert ENT_SWITCH == call.data["entity_id"]
+    assert call.domain == HASS_DOMAIN
+    assert call.service == SERVICE_TURN_OFF
+    assert call.data["entity_id"] == ENT_SWITCH
 
 
 async def test_float_tolerance_values(hass):
@@ -1173,7 +1173,7 @@ async def test_float_tolerance_values(hass):
     _setup_sensor(hass, 45)
     _setup_sensor(hass, 39.9)
     await hass.async_block_till_done()
-    assert 0 == len(calls)
+    assert len(calls) == 0
 
 
 async def test_float_tolerance_values_2(hass):
@@ -1198,11 +1198,11 @@ async def test_float_tolerance_values_2(hass):
     calls = await _setup_switch(hass, True)
     _setup_sensor(hass, 39.7)
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
     call = calls[0]
-    assert HASS_DOMAIN == call.domain
-    assert SERVICE_TURN_OFF == call.service
-    assert ENT_SWITCH == call.data["entity_id"]
+    assert call.domain == HASS_DOMAIN
+    assert call.service == SERVICE_TURN_OFF
+    assert call.data["entity_id"] == ENT_SWITCH
 
 
 async def test_custom_setup_params(hass):
@@ -1421,14 +1421,14 @@ async def test_restore_state_uncoherence_case(hass):
     await hass.async_block_till_done()
 
     state = hass.states.get(ENTITY)
-    assert 40 == state.attributes[ATTR_HUMIDITY]
-    assert STATE_OFF == state.state
-    assert 0 == len(calls)
+    assert state.attributes[ATTR_HUMIDITY] == 40
+    assert state.state == STATE_OFF
+    assert len(calls) == 0
 
     calls = await _setup_switch(hass, False)
     await hass.async_block_till_done()
     state = hass.states.get(ENTITY)
-    assert STATE_OFF == state.state
+    assert state.state == STATE_OFF
 
 
 async def _setup_humidifier(hass):
@@ -1571,7 +1571,7 @@ async def test_sensor_stale_duration(hass, setup_comp_1, caplog):
     _setup_sensor(hass, 23)
     await hass.async_block_till_done()
 
-    assert STATE_OFF == hass.states.get(humidifier_switch).state
+    assert hass.states.get(humidifier_switch).state == STATE_OFF
 
     await hass.services.async_call(
         DOMAIN,
@@ -1581,14 +1581,14 @@ async def test_sensor_stale_duration(hass, setup_comp_1, caplog):
     )
     await hass.async_block_till_done()
 
-    assert STATE_ON == hass.states.get(humidifier_switch).state
+    assert hass.states.get(humidifier_switch).state == STATE_ON
 
     # Wait 11 minutes
     async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(minutes=11))
     await hass.async_block_till_done()
 
     # 11 minutes later, no news from the sensor : emergency cut off
-    assert STATE_OFF == hass.states.get(humidifier_switch).state
+    assert hass.states.get(humidifier_switch).state == STATE_OFF
     assert "emergency" in caplog.text
 
     # Updated value from sensor received
@@ -1596,7 +1596,7 @@ async def test_sensor_stale_duration(hass, setup_comp_1, caplog):
     await hass.async_block_till_done()
 
     # A new value has arrived, the humidifier should go ON
-    assert STATE_ON == hass.states.get(humidifier_switch).state
+    assert hass.states.get(humidifier_switch).state == STATE_ON
 
     # Manual turn off
     await hass.services.async_call(
@@ -1606,18 +1606,18 @@ async def test_sensor_stale_duration(hass, setup_comp_1, caplog):
         blocking=True,
     )
     await hass.async_block_till_done()
-    assert STATE_OFF == hass.states.get(humidifier_switch).state
+    assert hass.states.get(humidifier_switch).state == STATE_OFF
 
     # Wait another 11 minutes
     async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(minutes=22))
     await hass.async_block_till_done()
 
     # Still off
-    assert STATE_OFF == hass.states.get(humidifier_switch).state
+    assert hass.states.get(humidifier_switch).state == STATE_OFF
 
     # Updated value from sensor received
     _setup_sensor(hass, 22)
     await hass.async_block_till_done()
 
     # Not turning on by itself
-    assert STATE_OFF == hass.states.get(humidifier_switch).state
+    assert hass.states.get(humidifier_switch).state == STATE_OFF
