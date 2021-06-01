@@ -88,20 +88,17 @@ class ZWaveBarrierEventSignalingSwitch(ZWaveBaseEntity, SwitchEntity):
     ) -> None:
         """Initialize a ZWaveBarrierEventSignalingSwitch entity."""
         super().__init__(config_entry, client, info)
-        self._name = self.generate_name(include_value_name=True)
         self._state: bool | None = None
 
         self._update_state()
+
+        # Entity class attributes
+        self._attr_name = self.generate_name(include_value_name=True)
 
     @callback
     def on_value_update(self) -> None:
         """Call when a watched value is added or updated."""
         self._update_state()
-
-    @property
-    def name(self) -> str:
-        """Return default name from device name and value name combination."""
-        return self._name
 
     @property
     def is_on(self) -> bool | None:  # type: ignore

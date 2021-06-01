@@ -101,9 +101,20 @@ class ZwaveSensorBase(ZWaveBaseEntity, SensorEntity):
     ) -> None:
         """Initialize a ZWaveSensorBase entity."""
         super().__init__(config_entry, client, info)
-        self._name = self.generate_name(include_value_name=True)
-        self._device_class = self._get_device_class()
-        self._state_class = self._get_state_class()
+
+        # Entity class attributes
+        self._attr_name = self.generate_name(include_value_name=True)
+        self._attr_device_class = self._get_device_class()
+        self._attr_state_class = self._get_state_class()
+        self._attr_entity_registry_enabled_default = True
+        # We hide some of the more advanced sensors by default to not overwhelm users
+        if self.info.primary_value.command_class in [
+            CommandClass.BASIC,
+            CommandClass.CONFIGURATION,
+            CommandClass.INDICATOR,
+            CommandClass.NOTIFICATION,
+        ]:
+            self._attr_entity_registry_enabled_default = False
 
     def _get_device_class(self) -> str | None:
         """
@@ -146,29 +157,6 @@ class ZwaveSensorBase(ZWaveBaseEntity, SensorEntity):
         return None
 
     @property
-    def device_class(self) -> str | None:
-        """Return the device class of the sensor."""
-        return self._device_class
-
-    @property
-    def state_class(self) -> str | None:
-        """Return the state class of the sensor."""
-        return self._state_class
-
-    @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Return if the entity should be enabled when first added to the entity registry."""
-        # We hide some of the more advanced sensors by default to not overwhelm users
-        if self.info.primary_value.command_class in [
-            CommandClass.BASIC,
-            CommandClass.CONFIGURATION,
-            CommandClass.INDICATOR,
-            CommandClass.NOTIFICATION,
-        ]:
-            return False
-        return True
-
-    @property
     def force_update(self) -> bool:
         """Force updates."""
         return True
@@ -203,8 +191,10 @@ class ZWaveNumericSensor(ZwaveSensorBase):
     ) -> None:
         """Initialize a ZWaveNumericSensor entity."""
         super().__init__(config_entry, client, info)
+
+        # Entity class attributes
         if self.info.primary_value.command_class == CommandClass.BASIC:
-            self._name = self.generate_name(
+            self._attr_name = self.generate_name(
                 include_value_name=True,
                 alternate_value_name=self.info.primary_value.command_class_name,
             )
@@ -240,7 +230,9 @@ class ZWaveListSensor(ZwaveSensorBase):
     ) -> None:
         """Initialize a ZWaveListSensor entity."""
         super().__init__(config_entry, client, info)
-        self._name = self.generate_name(
+
+        # Entity class attributes
+        self._attr_name = self.generate_name(
             include_value_name=True,
             alternate_value_name=self.info.primary_value.property_name,
             additional_info=[self.info.primary_value.property_key_name],
@@ -278,13 +270,15 @@ class ZWaveConfigParameterSensor(ZwaveSensorBase):
     ) -> None:
         """Initialize a ZWaveConfigParameterSensor entity."""
         super().__init__(config_entry, client, info)
-        self._name = self.generate_name(
+        self._primary_value = cast(ConfigurationValue, self.info.primary_value)
+
+        # Entity class attributes
+        self._attr_name = self.generate_name(
             include_value_name=True,
             alternate_value_name=self.info.primary_value.property_name,
             additional_info=[self.info.primary_value.property_key_name],
             name_suffix="Config Parameter",
         )
-        self._primary_value = cast(ConfigurationValue, self.info.primary_value)
 
     @property
     def state(self) -> str | None:
