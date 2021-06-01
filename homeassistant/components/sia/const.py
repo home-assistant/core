@@ -4,7 +4,9 @@ from homeassistant.components.alarm_control_panel import (
 )
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 
-PLATFORMS = [ALARM_CONTROL_PANEL_DOMAIN, BINARY_SENSOR_DOMAIN]
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+
+PLATFORMS = [ALARM_CONTROL_PANEL_DOMAIN, BINARY_SENSOR_DOMAIN, SENSOR_DOMAIN]
 
 DOMAIN = "sia"
 
@@ -24,8 +26,10 @@ CONF_PING_INTERVAL = "ping_interval"
 CONF_ZONES = "zones"
 
 SIA_NAME_FORMAT = "{} - {} - zone {} - {}"
+SIA_NAME_FORMAT_SENSOR = "{} - {} - Last Ping"
 SIA_UNIQUE_ID_FORMAT_ALARM = "{}_{}_{}"
 SIA_UNIQUE_ID_FORMAT_BINARY = "{}_{}_{}_{}"
 SIA_HUB_ZONE = 0
+SIA_UNIQUE_ID_FORMAT_SENSOR = "{}_{}_last_ping"
 
 SIA_EVENT = "sia_event_{}_{}"
