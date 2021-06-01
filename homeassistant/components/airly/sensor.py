@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any, cast
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
@@ -66,6 +66,7 @@ class AirlySensor(CoordinatorEntity, SensorEntity):
         self._state = None
         self._unit_of_measurement = None
         self._attrs = {ATTR_ATTRIBUTION: ATTRIBUTION}
+        self._attr_state_class = self._description[ATTR_STATE_CLASS]
 
     @property
     def name(self) -> str:
