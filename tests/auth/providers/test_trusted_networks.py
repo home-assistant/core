@@ -9,6 +9,7 @@ from homeassistant import auth
 from homeassistant.auth import auth_store
 from homeassistant.auth.providers import trusted_networks as tn_auth
 from homeassistant.data_entry_flow import RESULT_TYPE_ABORT, RESULT_TYPE_CREATE_ENTRY
+from homeassistant.setup import async_setup_component
 
 
 @pytest.fixture
@@ -112,7 +113,17 @@ def manager_bypass_login(hass, store, provider_bypass_login):
     )
 
 
-async def test_trusted_networks_credentials(manager, provider):
+@pytest.fixture
+def mock_allowed_request():
+    """Mock that the request is allowed."""
+    with patch(
+        "homeassistant.auth.providers.trusted_networks.TrustedNetworksAuthProvider.is_allowed_request",
+        return_value=True,
+    ):
+        yield
+
+
+async def test_trusted_networks_credentials(manager, provider, mock_allowed_request):
     """Test trusted_networks credentials related functions."""
     owner = await manager.async_create_user("test-owner")
     tn_owner_cred = await provider.async_get_or_create_credentials({"user": owner.id})
@@ -129,7 +140,7 @@ async def test_trusted_networks_credentials(manager, provider):
         await provider.async_get_or_create_credentials({"user": "invalid-user"})
 
 
-async def test_validate_access(provider):
+async def test_validate_access(provider, mock_allowed_request):
     """Test validate access from trusted networks."""
     provider.async_validate_access(ip_address("192.168.0.1"))
     provider.async_validate_access(ip_address("192.168.128.10"))
@@ -144,7 +155,7 @@ async def test_validate_access(provider):
         provider.async_validate_access(ip_address("2001:db8::ff00:42:8329"))
 
 
-async def test_validate_refresh_token(provider):
+async def test_validate_refresh_token(provider, mock_allowed_request):
     """Verify re-validation of refresh token."""
     with patch.object(provider, "async_validate_access") as mock:
         with pytest.raises(tn_auth.InvalidAuthError):
@@ -154,7 +165,7 @@ async def test_validate_refresh_token(provider):
         mock.assert_called_once_with(ip_address("127.0.0.1"))
 
 
-async def test_login_flow(manager, provider):
+async def test_login_flow(manager, provider, mock_allowed_request):
     """Test login flow."""
     owner = await manager.async_create_user("test-owner")
     user = await manager.async_create_user("test-user")
@@ -181,7 +192,9 @@ async def test_login_flow(manager, provider):
     assert step["data"]["user"] == user.id
 
 
-async def test_trusted_users_login(manager_with_user, provider_with_user):
+async def test_trusted_users_login(
+    manager_with_user, provider_with_user, mock_allowed_request
+):
     """Test available user list changed per different IP."""
     owner = await manager_with_user.async_create_user("test-owner")
     sys_user = await manager_with_user.async_create_system_user(
@@ -261,7 +274,9 @@ async def test_trusted_users_login(manager_with_user, provider_with_user):
         assert schema({"user": sys_user.id})
 
 
-async def test_trusted_group_login(manager_with_user, provider_with_user):
+async def test_trusted_group_login(
+    manager_with_user, provider_with_user, mock_allowed_request
+):
     """Test config trusted_user with group_id."""
     owner = await manager_with_user.async_create_user("test-owner")
     # create a user in user group
@@ -314,7 +329,9 @@ async def test_trusted_group_login(manager_with_user, provider_with_user):
     assert schema({"user": user.id})
 
 
-async def test_bypass_login_flow(manager_bypass_login, provider_bypass_login):
+async def test_bypass_login_flow(
+    manager_bypass_login, provider_bypass_login, mock_allowed_request
+):
     """Test login flow can be bypass if only one user available."""
     owner = await manager_bypass_login.async_create_user("test-owner")
 
@@ -345,3 +362,24 @@ async def test_bypass_login_flow(manager_bypass_login, provider_bypass_login):
     # both owner and user listed
     assert schema({"user": owner.id})
     assert schema({"user": user.id})
+
+
+async def test_allowed_request(hass, provider, current_request):
+    """Test allowing requests."""
+    assert await async_setup_component(hass, "http", {})
+
+    provider.async_validate_access(ip_address("192.168.0.1"))
+
+    current_request.get.return_value = current_request.get.return_value.clone(
+        headers={
+            **current_request.get.return_value.headers,
+            "x-forwarded-for": "1.2.3.4",
+        }
+    )
+
+    with pytest.raises(tn_auth.InvalidAuthError):
+        provider.async_validate_access(ip_address("192.168.0.1"))
+
+    hass.http.use_x_forwarded_for = True
+
+    provider.async_validate_access(ip_address("192.168.0.1"))
