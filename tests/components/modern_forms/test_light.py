@@ -32,7 +32,6 @@ async def test_light_state(
 
     entity_registry = er.async_get(hass)
 
-    # First segment of the strip
     state = hass.states.get("light.modernformsfan_light")
     print(state)
     assert state

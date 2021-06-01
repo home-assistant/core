@@ -1,7 +1,6 @@
 {
     "clientId": "MF_000000000000",
     "mac": "AA:BB:CC:DD:EE:FF",
-    "lightType": "F6IN-120V-R1-30",
     "fanType": "1818-56",
     "fanMotorType": "DC125X25",
     "productionLotNumber": "",

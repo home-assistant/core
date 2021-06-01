@@ -4,7 +4,6 @@ from __future__ import annotations
 import asyncio
 from datetime import timedelta
 import logging
-from typing import Callable
 
 from aiomodernforms import (
     ModernFormsConnectionError,
@@ -16,10 +15,9 @@ from homeassistant.components.fan import DOMAIN as FAN_DOMAIN
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_MODEL, ATTR_NAME, ATTR_SW_VERSION, CONF_HOST
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -27,14 +25,7 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
-from .const import (
-    ATTR_IDENTIFIERS,
-    ATTR_MANUFACTURER,
-    CONF_ON_UNLOAD,
-    DOMAIN,
-    SIGNAL_INSTANCE_ADD,
-    SIGNAL_INSTANCE_REMOVE,
-)
+from .const import ATTR_IDENTIFIERS, ATTR_MANUFACTURER, DOMAIN
 
 SCAN_INTERVAL = timedelta(seconds=5)
 PLATFORMS = [
@@ -42,31 +33,6 @@ PLATFORMS = [
     FAN_DOMAIN,
 ]
 _LOGGER = logging.getLogger(__name__)
-
-
-@callback
-def listen_for_instance_updates(
-    hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    add_func: Callable,
-    remove_func: Callable,
-) -> None:
-    """Listen for instance additions/removals."""
-
-    hass.data[DOMAIN][config_entry.entry_id][CONF_ON_UNLOAD].extend(
-        [
-            async_dispatcher_connect(
-                hass,
-                SIGNAL_INSTANCE_ADD.format(config_entry.entry_id),
-                add_func,
-            ),
-            async_dispatcher_connect(
-                hass,
-                SIGNAL_INSTANCE_REMOVE.format(config_entry.entry_id),
-                remove_func,
-            ),
-        ]
-    )
 
 
 async def async_setup(hass: HomeAssistant, config: dict):

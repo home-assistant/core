@@ -40,7 +40,6 @@ async def test_fan_state(
 
     entity_registry = er.async_get(hass)
 
-    # First segment of the strip
     state = hass.states.get("fan.modernformsfan_fan")
     print(state)
     assert state

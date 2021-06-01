@@ -63,30 +63,32 @@ class ModernFormsFlowHandler(ConfigFlow, domain=DOMAIN):
         source = self.context.get("source")
 
         # Request user input, unless we are preparing discovery flow
-        if user_input is None and not prepare:
-            if source == SOURCE_ZEROCONF:
-                return self._show_confirm_dialog()
-            return self._show_setup_form()
+        if user_input is None:
+            user_input = {}
+            if not prepare:
+                if source == SOURCE_ZEROCONF:
+                    return self._show_confirm_dialog()
+                return self._show_setup_form()
 
         if source == SOURCE_ZEROCONF:
-            user_input[CONF_HOST] = self.context.get(CONF_HOST)  # type: ignore
-            user_input[CONF_MAC] = self.context.get(CONF_MAC)  # type: ignore
+            user_input[CONF_HOST] = self.context.get(CONF_HOST)
+            user_input[CONF_MAC] = self.context.get(CONF_MAC)
 
-        if user_input.get(CONF_MAC) is None or not prepare:  # type: ignore
+        if user_input.get(CONF_MAC) is None or not prepare:
             session = async_get_clientsession(self.hass)
-            device = ModernFormsDevice(user_input[CONF_HOST], session=session)  # type: ignore
+            device = ModernFormsDevice(user_input[CONF_HOST], session=session)
             try:
                 device = await device.update()
             except ModernFormsConnectionError:
                 if source == SOURCE_ZEROCONF:
                     return self.async_abort(reason="cannot_connect")
                 return self._show_setup_form({"base": "cannot_connect"})
-            user_input[CONF_MAC] = device.info.mac_address  # type: ignore
-            user_input[CONF_NAME] = device.info.device_name  # type: ignore
+            user_input[CONF_MAC] = device.info.mac_address
+            user_input[CONF_NAME] = device.info.device_name
 
         # Check if already configured
-        await self.async_set_unique_id(user_input[CONF_MAC])  # type: ignore
-        self._abort_if_unique_id_configured(updates={CONF_HOST: user_input[CONF_HOST]})  # type: ignore
+        await self.async_set_unique_id(user_input[CONF_MAC])
+        self._abort_if_unique_id_configured(updates={CONF_HOST: user_input[CONF_HOST]})
 
         title = device.info.device_name
         if source == SOURCE_ZEROCONF:
@@ -97,7 +99,7 @@ class ModernFormsFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_create_entry(
             title=title,
-            data={CONF_HOST: user_input[CONF_HOST], CONF_MAC: user_input[CONF_MAC]},  # type: ignore
+            data={CONF_HOST: user_input[CONF_HOST], CONF_MAC: user_input[CONF_MAC]},
         )
 
     def _show_setup_form(self, errors: dict | None = None) -> FlowResult:

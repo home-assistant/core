@@ -6,8 +6,12 @@ from aiomodernforms import ModernFormsConnectionError
 from homeassistant.components.modern_forms.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
-from tests.components.modern_forms import init_integration
+from tests.components.modern_forms import (
+    init_integration,
+    modern_forms_no_light_call_mock,
+)
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
@@ -41,3 +45,16 @@ async def test_setting_unique_id(hass, aioclient_mock):
 
     assert hass.data[DOMAIN]
     assert entry.unique_id == "AA:BB:CC:DD:EE:FF"
+
+
+async def test_fan_only_device(hass, aioclient_mock):
+    """Test we set unique ID if not set yet."""
+    await init_integration(
+        hass, aioclient_mock, mock_type=modern_forms_no_light_call_mock
+    )
+    entity_registry = er.async_get(hass)
+
+    fan_entry = entity_registry.async_get("fan.modernformsfan_fan")
+    assert fan_entry
+    light_entry = entity_registry.async_get("light.modernformsfan_light")
+    assert light_entry is None
