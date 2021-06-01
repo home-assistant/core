@@ -68,6 +68,7 @@ ATTR_USERNAME = "username"
 ATTR_VERIFY_SSL = "verify_ssl"
 ATTR_TIMEOUT = "timeout"
 ATTR_MESSAGE_TAG = "message_tag"
+ATTR_CHANNEL_POST = "channel_post"
 
 CONF_ALLOWED_CHAT_IDS = "allowed_chat_ids"
 CONF_PROXY_URL = "proxy_url"
@@ -866,6 +867,31 @@ class BaseTelegramBotEntity:
 
         return True, data
 
+    def _get_channel_post_data(self, msg_data):
+        """Return boolean msg_data_is_ok and dict msg_data."""
+        if not msg_data:
+            return False, None
+
+        if "sender_chat" in msg_data and "chat" in msg_data and "text" in msg_data:
+            if (
+                msg_data["sender_chat"].get("id") not in self.allowed_chat_ids
+                and msg_data["chat"].get("id") not in self.allowed_chat_ids
+            ):
+                # Neither sender_chat id nor chat id was in allowed_chat_ids,
+                # origin is not allowed.
+                _LOGGER.error("Incoming message is not allowed (%s)", msg_data)
+                return True, None
+
+            data = {
+                ATTR_MSGID: msg_data["message_id"],
+                ATTR_CHAT_ID: msg_data["chat"]["id"],
+                ATTR_TEXT: msg_data["text"],
+            }
+            return True, data
+
+        _LOGGER.error("Incoming message does not have required data (%s)", msg_data)
+        return False, None
+
     def process_message(self, data):
         """Check for basic message rules and fire an event if message is ok."""
         if ATTR_MSG in data or ATTR_EDITED_MSG in data:
@@ -913,6 +939,15 @@ class BaseTelegramBotEntity:
             event_data[ATTR_MSG] = data[ATTR_MSG]
             event_data[ATTR_CHAT_INSTANCE] = data[ATTR_CHAT_INSTANCE]
             event_data[ATTR_MSGID] = data[ATTR_MSGID]
+
+            self.hass.bus.async_fire(event, event_data)
+            return True
+        if ATTR_CHANNEL_POST in data:
+            event = EVENT_TELEGRAM_TEXT
+            data = data.get(ATTR_CHANNEL_POST)
+            message_ok, event_data = self._get_channel_post_data(data)
+            if event_data is None:
+                return message_ok
 
             self.hass.bus.async_fire(event, event_data)
             return True

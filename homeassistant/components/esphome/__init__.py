@@ -724,7 +724,7 @@ def esphome_state_property(func):
 class EsphomeEnumMapper:
     """Helper class to convert between hass and esphome enum values."""
 
-    def __init__(self, func: Callable[[], dict[int, str]]):
+    def __init__(self, func: Callable[[], dict[int, str]]) -> None:
         """Construct a EsphomeEnumMapper."""
         self._func = func
 
@@ -750,7 +750,7 @@ def esphome_map_enum(func: Callable[[], dict[int, str]]):
 class EsphomeBaseEntity(Entity):
     """Define a base esphome entity."""
 
-    def __init__(self, entry_id: str, component_key: str, key: int):
+    def __init__(self, entry_id: str, component_key: str, key: int) -> None:
         """Initialize."""
         self._entry_id = entry_id
         self._component_key = component_key

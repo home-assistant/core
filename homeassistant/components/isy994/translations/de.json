@@ -36,5 +36,10 @@
                 "title": "ISY994 Optionen"
             }
         }
+    },
+    "system_health": {
+        "info": {
+            "host_reachable": "Deutsch"
+        }
     }
 }

@@ -53,7 +53,7 @@ def _setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     return flume_auth, flume_devices, http_session
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up flume from a config entry."""
 
     flume_auth, flume_devices, http_session = await hass.async_add_executor_job(

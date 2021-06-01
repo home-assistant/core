@@ -3,9 +3,11 @@ from __future__ import annotations
 
 from typing import Any
 
+from xknx import XKNX
 from xknx.devices import Sensor as XknxSensor
 
 from homeassistant.components.sensor import DEVICE_CLASSES, SensorEntity
+from homeassistant.const import CONF_NAME, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
@@ -13,6 +15,7 @@ from homeassistant.util import dt
 
 from .const import ATTR_LAST_KNX_UPDATE, ATTR_SOURCE, DOMAIN
 from .knx_entity import KnxEntity
+from .schema import SensorSchema
 
 
 async def async_setup_platform(
@@ -22,20 +25,38 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up sensor(s) for KNX platform."""
+    if not discovery_info or not discovery_info["platform_config"]:
+        return
+
+    platform_config = discovery_info["platform_config"]
+    xknx: XKNX = hass.data[DOMAIN].xknx
+
     entities = []
-    for device in hass.data[DOMAIN].xknx.devices:
-        if isinstance(device, XknxSensor):
-            entities.append(KNXSensor(device))
+    for entity_config in platform_config:
+        entities.append(KNXSensor(xknx, entity_config))
+
     async_add_entities(entities)
+
+
+def _create_sensor(xknx: XKNX, config: ConfigType) -> XknxSensor:
+    """Return a KNX sensor to be used within XKNX."""
+    return XknxSensor(
+        xknx,
+        name=config[CONF_NAME],
+        group_address_state=config[SensorSchema.CONF_STATE_ADDRESS],
+        sync_state=config[SensorSchema.CONF_SYNC_STATE],
+        always_callback=config[SensorSchema.CONF_ALWAYS_CALLBACK],
+        value_type=config[CONF_TYPE],
+    )
 
 
 class KNXSensor(KnxEntity, SensorEntity):
     """Representation of a KNX sensor."""
 
-    def __init__(self, device: XknxSensor) -> None:
+    def __init__(self, xknx: XKNX, config: ConfigType) -> None:
         """Initialize of a KNX sensor."""
         self._device: XknxSensor
-        super().__init__(device)
+        super().__init__(_create_sensor(xknx, config))
         self._unique_id = f"{self._device.sensor_value.group_address_state}"
 
     @property

@@ -102,7 +102,7 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
         hass: HomeAssistant,
         *,
         host: str,
-    ):
+    ) -> None:
         """Initialize global WLED data updater."""
         self.wled = WLED(host, session=async_get_clientsession(hass))
 
@@ -130,42 +130,6 @@ class WLEDEntity(CoordinatorEntity):
     """Defines a base WLED entity."""
 
     coordinator: WLEDDataUpdateCoordinator
-
-    def __init__(
-        self,
-        *,
-        entry_id: str,
-        coordinator: WLEDDataUpdateCoordinator,
-        name: str,
-        icon: str,
-        enabled_default: bool = True,
-    ) -> None:
-        """Initialize the WLED entity."""
-        super().__init__(coordinator)
-        self._enabled_default = enabled_default
-        self._entry_id = entry_id
-        self._icon = icon
-        self._name = name
-        self._unsub_dispatcher = None
-
-    @property
-    def name(self) -> str:
-        """Return the name of the entity."""
-        return self._name
-
-    @property
-    def icon(self) -> str:
-        """Return the mdi icon of the entity."""
-        return self._icon
-
-    @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Return if the entity should be enabled when first added to the entity registry."""
-        return self._enabled_default
-
-
-class WLEDDeviceEntity(WLEDEntity):
-    """Defines a WLED device entity."""
 
     @property
     def device_info(self) -> DeviceInfo:

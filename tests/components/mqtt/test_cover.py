@@ -10,10 +10,22 @@ from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
 )
-from homeassistant.components.mqtt.cover import MqttCover
+from homeassistant.components.mqtt.const import CONF_STATE_TOPIC
+from homeassistant.components.mqtt.cover import (
+    CONF_GET_POSITION_TEMPLATE,
+    CONF_GET_POSITION_TOPIC,
+    CONF_SET_POSITION_TEMPLATE,
+    CONF_SET_POSITION_TOPIC,
+    CONF_TILT_COMMAND_TEMPLATE,
+    CONF_TILT_COMMAND_TOPIC,
+    CONF_TILT_STATUS_TEMPLATE,
+    CONF_TILT_STATUS_TOPIC,
+    MqttCover,
+)
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_ENTITY_ID,
+    CONF_VALUE_TEMPLATE,
     SERVICE_CLOSE_COVER,
     SERVICE_CLOSE_COVER_TILT,
     SERVICE_OPEN_COVER,
@@ -336,43 +348,6 @@ async def test_state_via_template_with_json_value(hass, mqtt_mock, caplog):
     assert (
         "Template variable warning: 'dict object' has no attribute 'Var1' when rendering"
     ) in caplog.text
-
-
-async def test_position_via_template(hass, mqtt_mock):
-    """Test the controlling state via topic."""
-    assert await async_setup_component(
-        hass,
-        cover.DOMAIN,
-        {
-            cover.DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "position_topic": "get-position-topic",
-                "command_topic": "command-topic",
-                "qos": 0,
-                "value_template": "{{ (value | multiply(0.01)) | int }}",
-            }
-        },
-    )
-    await hass.async_block_till_done()
-
-    state = hass.states.get("cover.test")
-    assert state.state == STATE_UNKNOWN
-
-    async_fire_mqtt_message(hass, "get-position-topic", "10000")
-
-    state = hass.states.get("cover.test")
-    assert state.state == STATE_OPEN
-
-    async_fire_mqtt_message(hass, "get-position-topic", "5000")
-
-    state = hass.states.get("cover.test")
-    assert state.state == STATE_OPEN
-
-    async_fire_mqtt_message(hass, "get-position-topic", "99")
-
-    state = hass.states.get("cover.test")
-    assert state.state == STATE_CLOSED
 
 
 async def test_position_via_template_and_entity_id(hass, mqtt_mock):
@@ -1037,6 +1012,50 @@ async def test_no_command_topic(hass, mqtt_mock):
     await hass.async_block_till_done()
 
     assert hass.states.get("cover.test").attributes["supported_features"] == 240
+
+
+async def test_no_payload_close(hass, mqtt_mock):
+    """Test with no close payload."""
+    assert await async_setup_component(
+        hass,
+        cover.DOMAIN,
+        {
+            cover.DOMAIN: {
+                "platform": "mqtt",
+                "name": "test",
+                "command_topic": "command-topic",
+                "qos": 0,
+                "payload_open": "OPEN",
+                "payload_close": None,
+                "payload_stop": "STOP",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get("cover.test").attributes["supported_features"] == 9
+
+
+async def test_no_payload_open(hass, mqtt_mock):
+    """Test with no open payload."""
+    assert await async_setup_component(
+        hass,
+        cover.DOMAIN,
+        {
+            cover.DOMAIN: {
+                "platform": "mqtt",
+                "name": "test",
+                "command_topic": "command-topic",
+                "qos": 0,
+                "payload_open": None,
+                "payload_close": "CLOSE",
+                "payload_stop": "STOP",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get("cover.test").attributes["supported_features"] == 10
 
 
 async def test_no_payload_stop(hass, mqtt_mock):
@@ -1899,7 +1918,6 @@ async def test_find_percentage_in_range_defaults(hass, mqtt_mock):
             "tilt_min": 0,
             "tilt_max": 100,
             "tilt_optimistic": False,
-            "tilt_invert_state": False,
             "set_position_topic": None,
             "set_position_template": None,
             "unique_id": None,
@@ -1943,7 +1961,6 @@ async def test_find_percentage_in_range_altered(hass, mqtt_mock):
             "tilt_min": 80,
             "tilt_max": 180,
             "tilt_optimistic": False,
-            "tilt_invert_state": False,
             "set_position_topic": None,
             "set_position_template": None,
             "unique_id": None,
@@ -1984,10 +2001,9 @@ async def test_find_percentage_in_range_defaults_inverted(hass, mqtt_mock):
             "value_template": None,
             "tilt_open_position": 100,
             "tilt_closed_position": 0,
-            "tilt_min": 0,
-            "tilt_max": 100,
+            "tilt_min": 100,
+            "tilt_max": 0,
             "tilt_optimistic": False,
-            "tilt_invert_state": True,
             "set_position_topic": None,
             "set_position_template": None,
             "unique_id": None,
@@ -2028,10 +2044,9 @@ async def test_find_percentage_in_range_altered_inverted(hass, mqtt_mock):
             "value_template": None,
             "tilt_open_position": 180,
             "tilt_closed_position": 80,
-            "tilt_min": 80,
-            "tilt_max": 180,
+            "tilt_min": 180,
+            "tilt_max": 80,
             "tilt_optimistic": False,
-            "tilt_invert_state": True,
             "set_position_topic": None,
             "set_position_template": None,
             "unique_id": None,
@@ -2075,7 +2090,6 @@ async def test_find_in_range_defaults(hass, mqtt_mock):
             "tilt_min": 0,
             "tilt_max": 100,
             "tilt_optimistic": False,
-            "tilt_invert_state": False,
             "set_position_topic": None,
             "set_position_template": None,
             "unique_id": None,
@@ -2119,7 +2133,6 @@ async def test_find_in_range_altered(hass, mqtt_mock):
             "tilt_min": 80,
             "tilt_max": 180,
             "tilt_optimistic": False,
-            "tilt_invert_state": False,
             "set_position_topic": None,
             "set_position_template": None,
             "unique_id": None,
@@ -2160,10 +2173,9 @@ async def test_find_in_range_defaults_inverted(hass, mqtt_mock):
             "value_template": None,
             "tilt_open_position": 100,
             "tilt_closed_position": 0,
-            "tilt_min": 0,
-            "tilt_max": 100,
+            "tilt_min": 100,
+            "tilt_max": 0,
             "tilt_optimistic": False,
-            "tilt_invert_state": True,
             "set_position_topic": None,
             "set_position_template": None,
             "unique_id": None,
@@ -2204,10 +2216,9 @@ async def test_find_in_range_altered_inverted(hass, mqtt_mock):
             "value_template": None,
             "tilt_open_position": 180,
             "tilt_closed_position": 80,
-            "tilt_min": 80,
-            "tilt_max": 180,
+            "tilt_min": 180,
+            "tilt_max": 80,
             "tilt_optimistic": False,
-            "tilt_invert_state": True,
             "set_position_topic": None,
             "set_position_template": None,
             "unique_id": None,
@@ -2428,105 +2439,6 @@ async def test_entity_debug_info_message(hass, mqtt_mock):
     await help_test_entity_debug_info_message(
         hass, mqtt_mock, cover.DOMAIN, DEFAULT_CONFIG
     )
-
-
-async def test_deprecated_value_template_for_position_topic_warning(
-    hass, caplog, mqtt_mock
-):
-    """Test warning when value_template is used for position_topic."""
-    assert await async_setup_component(
-        hass,
-        cover.DOMAIN,
-        {
-            cover.DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "command_topic": "command-topic",
-                "set_position_topic": "set-position-topic",
-                "position_topic": "position-topic",
-                "value_template": "{{100-62}}",
-            }
-        },
-    )
-    await hass.async_block_till_done()
-
-    assert (
-        "Using 'value_template' for 'position_topic' is deprecated "
-        "and will be removed from Home Assistant in version 2021.6, "
-        "please replace it with 'position_template'"
-    ) in caplog.text
-
-
-async def test_deprecated_tilt_invert_state_warning(hass, caplog, mqtt_mock):
-    """Test warning when tilt_invert_state is used."""
-    assert await async_setup_component(
-        hass,
-        cover.DOMAIN,
-        {
-            cover.DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "command_topic": "command-topic",
-                "tilt_invert_state": True,
-            }
-        },
-    )
-    await hass.async_block_till_done()
-
-    assert (
-        "'tilt_invert_state' is deprecated "
-        "and will be removed from Home Assistant in version 2021.6, "
-        "please invert tilt using 'tilt_min' & 'tilt_max'"
-    ) in caplog.text
-
-
-async def test_no_deprecated_tilt_invert_state_warning(hass, caplog, mqtt_mock):
-    """Test warning when tilt_invert_state is used."""
-    assert await async_setup_component(
-        hass,
-        cover.DOMAIN,
-        {
-            cover.DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "command_topic": "command-topic",
-            }
-        },
-    )
-    await hass.async_block_till_done()
-
-    assert (
-        "'tilt_invert_state' is deprecated "
-        "and will be removed from Home Assistant in version 2021.6, "
-        "please invert tilt using 'tilt_min' & 'tilt_max'"
-    ) not in caplog.text
-
-
-async def test_no_deprecated_warning_for_position_topic_using_position_template(
-    hass, caplog, mqtt_mock
-):
-    """Test no warning when position_template is used for position_topic."""
-    assert await async_setup_component(
-        hass,
-        cover.DOMAIN,
-        {
-            cover.DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "command_topic": "command-topic",
-                "set_position_topic": "set-position-topic",
-                "position_topic": "position-topic",
-                "position_template": "{{100-62}}",
-            }
-        },
-    )
-    await hass.async_block_till_done()
-
-    assert (
-        "using 'value_template' for 'position_topic' is deprecated "
-        "and will be removed from Home Assistant in version 2021.6, "
-        "please replace it with 'position_template'"
-    ) not in caplog.text
 
 
 async def test_state_and_position_topics_state_not_set_via_position_topic(
@@ -2969,3 +2881,142 @@ async def test_position_via_position_topic_template_return_invalid_json(
     async_fire_mqtt_message(hass, "get-position-topic", "55")
 
     assert ("Payload '{'position': Undefined}' is not numeric") in caplog.text
+
+
+async def test_set_position_topic_without_get_position_topic_error(
+    hass, caplog, mqtt_mock
+):
+    """Test error when set_position_topic is used without position_topic."""
+    assert await async_setup_component(
+        hass,
+        cover.DOMAIN,
+        {
+            cover.DOMAIN: {
+                "platform": "mqtt",
+                "name": "test",
+                "command_topic": "command-topic",
+                "set_position_topic": "set-position-topic",
+                "value_template": "{{100-62}}",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert (
+        f"'{CONF_SET_POSITION_TOPIC}' must be set together with '{CONF_GET_POSITION_TOPIC}'."
+    ) in caplog.text
+
+
+async def test_value_template_without_state_topic_error(hass, caplog, mqtt_mock):
+    """Test error when value_template is used and state_topic is missing."""
+    assert await async_setup_component(
+        hass,
+        cover.DOMAIN,
+        {
+            cover.DOMAIN: {
+                "platform": "mqtt",
+                "name": "test",
+                "command_topic": "command-topic",
+                "value_template": "{{100-62}}",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert (
+        f"'{CONF_VALUE_TEMPLATE}' must be set together with '{CONF_STATE_TOPIC}'."
+    ) in caplog.text
+
+
+async def test_position_template_without_position_topic_error(hass, caplog, mqtt_mock):
+    """Test error when position_template is used and position_topic is missing."""
+    assert await async_setup_component(
+        hass,
+        cover.DOMAIN,
+        {
+            cover.DOMAIN: {
+                "platform": "mqtt",
+                "name": "test",
+                "command_topic": "command-topic",
+                "position_template": "{{100-52}}",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert (
+        f"'{CONF_GET_POSITION_TEMPLATE}' must be set together with '{CONF_GET_POSITION_TOPIC}'."
+        in caplog.text
+    )
+
+
+async def test_set_position_template_without_set_position_topic(
+    hass, caplog, mqtt_mock
+):
+    """Test error when set_position_template is used and set_position_topic is missing."""
+    assert await async_setup_component(
+        hass,
+        cover.DOMAIN,
+        {
+            cover.DOMAIN: {
+                "platform": "mqtt",
+                "name": "test",
+                "command_topic": "command-topic",
+                "set_position_template": "{{100-42}}",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert (
+        f"'{CONF_SET_POSITION_TEMPLATE}' must be set together with '{CONF_SET_POSITION_TOPIC}'."
+        in caplog.text
+    )
+
+
+async def test_tilt_command_template_without_tilt_command_topic(
+    hass, caplog, mqtt_mock
+):
+    """Test error when tilt_command_template is used and tilt_command_topic is missing."""
+    assert await async_setup_component(
+        hass,
+        cover.DOMAIN,
+        {
+            cover.DOMAIN: {
+                "platform": "mqtt",
+                "name": "test",
+                "command_topic": "command-topic",
+                "tilt_command_template": "{{100-32}}",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert (
+        f"'{CONF_TILT_COMMAND_TEMPLATE}' must be set together with '{CONF_TILT_COMMAND_TOPIC}'."
+        in caplog.text
+    )
+
+
+async def test_tilt_status_template_without_tilt_status_topic_topic(
+    hass, caplog, mqtt_mock
+):
+    """Test error when tilt_status_template is used and tilt_status_topic is missing."""
+    assert await async_setup_component(
+        hass,
+        cover.DOMAIN,
+        {
+            cover.DOMAIN: {
+                "platform": "mqtt",
+                "name": "test",
+                "command_topic": "command-topic",
+                "tilt_status_template": "{{100-22}}",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert (
+        f"'{CONF_TILT_STATUS_TEMPLATE}' must be set together with '{CONF_TILT_STATUS_TOPIC}'."
+        in caplog.text
+    )

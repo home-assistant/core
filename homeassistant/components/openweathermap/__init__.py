@@ -30,14 +30,14 @@ from .weather_update_coordinator import WeatherUpdateCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up OpenWeatherMap as config entry."""
-    name = config_entry.data[CONF_NAME]
-    api_key = config_entry.data[CONF_API_KEY]
-    latitude = config_entry.data.get(CONF_LATITUDE, hass.config.latitude)
-    longitude = config_entry.data.get(CONF_LONGITUDE, hass.config.longitude)
-    forecast_mode = _get_config_value(config_entry, CONF_MODE)
-    language = _get_config_value(config_entry, CONF_LANGUAGE)
+    name = entry.data[CONF_NAME]
+    api_key = entry.data[CONF_API_KEY]
+    latitude = entry.data.get(CONF_LATITUDE, hass.config.latitude)
+    longitude = entry.data.get(CONF_LONGITUDE, hass.config.longitude)
+    forecast_mode = _get_config_value(entry, CONF_MODE)
+    language = _get_config_value(entry, CONF_LANGUAGE)
 
     config_dict = _get_owm_config(language)
 
@@ -49,15 +49,15 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     await weather_coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][config_entry.entry_id] = {
+    hass.data[DOMAIN][entry.entry_id] = {
         ENTRY_NAME: name,
         ENTRY_WEATHER_COORDINATOR: weather_coordinator,
     }
 
-    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
-    update_listener = config_entry.add_update_listener(async_update_options)
-    hass.data[DOMAIN][config_entry.entry_id][UPDATE_LISTENER] = update_listener
+    update_listener = entry.add_update_listener(async_update_options)
+    hass.data[DOMAIN][entry.entry_id][UPDATE_LISTENER] = update_listener
 
     return True
 
@@ -84,20 +84,18 @@ async def async_migrate_entry(hass, entry):
     return True
 
 
-async def async_update_options(hass: HomeAssistant, config_entry: ConfigEntry):
+async def async_update_options(hass: HomeAssistant, entry: ConfigEntry):
     """Update options."""
-    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(
-        config_entry, PLATFORMS
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        update_listener = hass.data[DOMAIN][config_entry.entry_id][UPDATE_LISTENER]
+        update_listener = hass.data[DOMAIN][entry.entry_id][UPDATE_LISTENER]
         update_listener()
-        hass.data[DOMAIN].pop(config_entry.entry_id)
+        hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
 

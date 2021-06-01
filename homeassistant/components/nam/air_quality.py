@@ -10,7 +10,14 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import NAMDataUpdateCoordinator
-from .const import AIR_QUALITY_SENSORS, DEFAULT_NAME, DOMAIN, SUFFIX_P1, SUFFIX_P2
+from .const import (
+    AIR_QUALITY_SENSORS,
+    ATTR_MHZ14A_CARBON_DIOXIDE,
+    DEFAULT_NAME,
+    DOMAIN,
+    SUFFIX_P1,
+    SUFFIX_P2,
+)
 
 PARALLEL_UPDATES = 1
 
@@ -19,9 +26,9 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Add a Nettigo Air Monitor entities from a config_entry."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: NAMDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
-    entities = []
+    entities: list[NAMAirQuality] = []
     for sensor in AIR_QUALITY_SENSORS:
         if f"{sensor}{SUFFIX_P1}" in coordinator.data:
             entities.append(NAMAirQuality(coordinator, sensor))
@@ -61,7 +68,9 @@ class NAMAirQuality(CoordinatorEntity, AirQualityEntity):
     @property
     def carbon_dioxide(self) -> StateType:
         """Return the particulate matter 10 level."""
-        return round_state(getattr(self.coordinator.data, "conc_co2_ppm", None))
+        return round_state(
+            getattr(self.coordinator.data, ATTR_MHZ14A_CARBON_DIOXIDE, None)
+        )
 
     @property
     def unique_id(self) -> str:
@@ -82,7 +91,7 @@ class NAMAirQuality(CoordinatorEntity, AirQualityEntity):
         # sensors. For this reason, we mark entities for which data is missing as
         # unavailable.
         return available and bool(
-            getattr(self.coordinator.data, f"{self.sensor_type}_p2", None)
+            getattr(self.coordinator.data, f"{self.sensor_type}{SUFFIX_P2}", None)
         )
 
 
