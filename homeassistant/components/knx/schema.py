@@ -1,13 +1,15 @@
 """Voluptuous schemas for the KNX integration."""
 from __future__ import annotations
 
-from typing import Any
+from abc import ABC
+from typing import Any, ClassVar
 
 import voluptuous as vol
+from xknx import XKNX
 from xknx.devices.climate import SetpointShiftMode
 from xknx.dpt import DPTBase
 from xknx.exceptions import CouldNotParseAddress
-from xknx.io import DEFAULT_MCAST_PORT
+from xknx.io import DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT
 from xknx.telegram.address import IndividualAddress, parse_device_group_address
 
 from homeassistant.components.binary_sensor import (
@@ -26,6 +28,10 @@ import homeassistant.helpers.config_validation as cv
 
 from .const import (
     CONF_INVERT,
+    CONF_KNX_EXPOSE,
+    CONF_KNX_INDIVIDUAL_ADDRESS,
+    CONF_KNX_ROUTING,
+    CONF_KNX_TUNNELING,
     CONF_RESET_AFTER,
     CONF_STATE_ADDRESS,
     CONF_SYNC_STATE,
@@ -33,6 +39,7 @@ from .const import (
     KNX_ADDRESS,
     PRESET_MODES,
     ColorTempModes,
+    SupportedPlatforms,
 )
 
 ##################
@@ -76,6 +83,7 @@ sync_state_validator = vol.Any(
     cv.matches_regex(r"^(init|expire|every)( \d*)?$"),
 )
 
+
 ##############
 # CONNECTION
 ##############
@@ -85,7 +93,11 @@ class ConnectionSchema:
     """Voluptuous schema for KNX connection."""
 
     CONF_KNX_LOCAL_IP = "local_ip"
+    CONF_KNX_MCAST_GRP = "multicast_group"
+    CONF_KNX_MCAST_PORT = "multicast_port"
+    CONF_KNX_RATE_LIMIT = "rate_limit"
     CONF_KNX_ROUTE_BACK = "route_back"
+    CONF_KNX_STATE_UPDATER = "state_updater"
 
     TUNNELING_SCHEMA = vol.Schema(
         {
@@ -98,14 +110,46 @@ class ConnectionSchema:
 
     ROUTING_SCHEMA = vol.Maybe(vol.Schema({vol.Optional(CONF_KNX_LOCAL_IP): cv.string}))
 
+    SCHEMA = {
+        vol.Exclusive(CONF_KNX_ROUTING, "connection_type"): ROUTING_SCHEMA,
+        vol.Exclusive(CONF_KNX_TUNNELING, "connection_type"): TUNNELING_SCHEMA,
+        vol.Optional(
+            CONF_KNX_INDIVIDUAL_ADDRESS, default=XKNX.DEFAULT_ADDRESS
+        ): ia_validator,
+        vol.Optional(CONF_KNX_MCAST_GRP, default=DEFAULT_MCAST_GRP): cv.string,
+        vol.Optional(CONF_KNX_MCAST_PORT, default=DEFAULT_MCAST_PORT): cv.port,
+        vol.Optional(CONF_KNX_STATE_UPDATER, default=True): cv.boolean,
+        vol.Optional(CONF_KNX_RATE_LIMIT, default=20): vol.All(
+            vol.Coerce(int), vol.Range(min=1, max=100)
+        ),
+    }
+
 
 #############
 # PLATFORMS
 #############
 
 
-class BinarySensorSchema:
+class KNXPlatformSchema(ABC):
+    """Voluptuous schema for KNX platform entity configuration."""
+
+    PLATFORM_NAME: ClassVar[str]
+    ENTITY_SCHEMA: ClassVar[vol.Schema]
+
+    @classmethod
+    def platform_node(cls) -> dict[vol.Optional, vol.All]:
+        """Return a schema node for the platform."""
+        return {
+            vol.Optional(cls.PLATFORM_NAME): vol.All(
+                cv.ensure_list, [cls.ENTITY_SCHEMA]
+            )
+        }
+
+
+class BinarySensorSchema(KNXPlatformSchema):
     """Voluptuous schema for KNX binary sensors."""
+
+    PLATFORM_NAME = SupportedPlatforms.BINARY_SENSOR.value
 
     CONF_STATE_ADDRESS = CONF_STATE_ADDRESS
     CONF_SYNC_STATE = CONF_SYNC_STATE
@@ -116,7 +160,7 @@ class BinarySensorSchema:
 
     DEFAULT_NAME = "KNX Binary Sensor"
 
-    SCHEMA = vol.All(
+    ENTITY_SCHEMA = vol.All(
         # deprecated since September 2020
         cv.deprecated("significant_bit"),
         cv.deprecated("automation"),
@@ -137,8 +181,10 @@ class BinarySensorSchema:
     )
 
 
-class ClimateSchema:
+class ClimateSchema(KNXPlatformSchema):
     """Voluptuous schema for KNX climate devices."""
+
+    PLATFORM_NAME = SupportedPlatforms.CLIMATE.value
 
     CONF_SETPOINT_SHIFT_ADDRESS = "setpoint_shift_address"
     CONF_SETPOINT_SHIFT_STATE_ADDRESS = "setpoint_shift_state_address"
@@ -178,7 +224,7 @@ class ClimateSchema:
     DEFAULT_TEMPERATURE_STEP = 0.1
     DEFAULT_ON_OFF_INVERT = False
 
-    SCHEMA = vol.All(
+    ENTITY_SCHEMA = vol.All(
         # deprecated since September 2020
         cv.deprecated("setpoint_shift_step", replacement_key=CONF_TEMPERATURE_STEP),
         # deprecated since 2021.6
@@ -245,8 +291,10 @@ class ClimateSchema:
     )
 
 
-class CoverSchema:
+class CoverSchema(KNXPlatformSchema):
     """Voluptuous schema for KNX covers."""
+
+    PLATFORM_NAME = SupportedPlatforms.COVER.value
 
     CONF_MOVE_LONG_ADDRESS = "move_long_address"
     CONF_MOVE_SHORT_ADDRESS = "move_short_address"
@@ -263,7 +311,7 @@ class CoverSchema:
     DEFAULT_TRAVEL_TIME = 25
     DEFAULT_NAME = "KNX Cover"
 
-    SCHEMA = vol.All(
+    ENTITY_SCHEMA = vol.All(
         vol.Schema(
             {
                 vol.Required(
@@ -297,8 +345,10 @@ class CoverSchema:
     )
 
 
-class ExposeSchema:
+class ExposeSchema(KNXPlatformSchema):
     """Voluptuous schema for KNX exposures."""
+
+    PLATFORM_NAME = CONF_KNX_EXPOSE
 
     CONF_KNX_EXPOSE_TYPE = CONF_TYPE
     CONF_KNX_EXPOSE_ATTRIBUTE = "attribute"
@@ -329,11 +379,13 @@ class ExposeSchema:
             vol.Optional(CONF_KNX_EXPOSE_DEFAULT): cv.match_all,
         }
     )
-    SCHEMA = vol.Any(EXPOSE_SENSOR_SCHEMA, EXPOSE_TIME_SCHEMA)
+    ENTITY_SCHEMA = vol.Any(EXPOSE_SENSOR_SCHEMA, EXPOSE_TIME_SCHEMA)
 
 
-class FanSchema:
+class FanSchema(KNXPlatformSchema):
     """Voluptuous schema for KNX fans."""
+
+    PLATFORM_NAME = SupportedPlatforms.FAN.value
 
     CONF_STATE_ADDRESS = CONF_STATE_ADDRESS
     CONF_OSCILLATION_ADDRESS = "oscillation_address"
@@ -342,7 +394,7 @@ class FanSchema:
 
     DEFAULT_NAME = "KNX Fan"
 
-    SCHEMA = vol.Schema(
+    ENTITY_SCHEMA = vol.Schema(
         {
             vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
             vol.Required(KNX_ADDRESS): ga_list_validator,
@@ -354,8 +406,10 @@ class FanSchema:
     )
 
 
-class LightSchema:
+class LightSchema(KNXPlatformSchema):
     """Voluptuous schema for KNX lights."""
+
+    PLATFORM_NAME = SupportedPlatforms.LIGHT.value
 
     CONF_STATE_ADDRESS = CONF_STATE_ADDRESS
     CONF_BRIGHTNESS_ADDRESS = "brightness_address"
@@ -390,7 +444,7 @@ class LightSchema:
         }
     )
 
-    SCHEMA = vol.All(
+    ENTITY_SCHEMA = vol.All(
         vol.Schema(
             {
                 vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -452,12 +506,14 @@ class LightSchema:
     )
 
 
-class NotifySchema:
+class NotifySchema(KNXPlatformSchema):
     """Voluptuous schema for KNX notifications."""
+
+    PLATFORM_NAME = SupportedPlatforms.NOTIFY.value
 
     DEFAULT_NAME = "KNX Notify"
 
-    SCHEMA = vol.Schema(
+    ENTITY_SCHEMA = vol.Schema(
         {
             vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
             vol.Required(KNX_ADDRESS): ga_validator,
@@ -465,13 +521,15 @@ class NotifySchema:
     )
 
 
-class SceneSchema:
+class SceneSchema(KNXPlatformSchema):
     """Voluptuous schema for KNX scenes."""
+
+    PLATFORM_NAME = SupportedPlatforms.SCENE.value
 
     CONF_SCENE_NUMBER = "scene_number"
 
     DEFAULT_NAME = "KNX SCENE"
-    SCHEMA = vol.Schema(
+    ENTITY_SCHEMA = vol.Schema(
         {
             vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
             vol.Required(KNX_ADDRESS): ga_list_validator,
@@ -482,15 +540,17 @@ class SceneSchema:
     )
 
 
-class SensorSchema:
+class SensorSchema(KNXPlatformSchema):
     """Voluptuous schema for KNX sensors."""
+
+    PLATFORM_NAME = SupportedPlatforms.SENSOR.value
 
     CONF_ALWAYS_CALLBACK = "always_callback"
     CONF_STATE_ADDRESS = CONF_STATE_ADDRESS
     CONF_SYNC_STATE = CONF_SYNC_STATE
     DEFAULT_NAME = "KNX Sensor"
 
-    SCHEMA = vol.Schema(
+    ENTITY_SCHEMA = vol.Schema(
         {
             vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
             vol.Optional(CONF_SYNC_STATE, default=True): sync_state_validator,
@@ -501,14 +561,16 @@ class SensorSchema:
     )
 
 
-class SwitchSchema:
+class SwitchSchema(KNXPlatformSchema):
     """Voluptuous schema for KNX switches."""
+
+    PLATFORM_NAME = SupportedPlatforms.SWITCH.value
 
     CONF_INVERT = CONF_INVERT
     CONF_STATE_ADDRESS = CONF_STATE_ADDRESS
 
     DEFAULT_NAME = "KNX Switch"
-    SCHEMA = vol.Schema(
+    ENTITY_SCHEMA = vol.Schema(
         {
             vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
             vol.Optional(CONF_INVERT, default=False): cv.boolean,
@@ -518,8 +580,10 @@ class SwitchSchema:
     )
 
 
-class WeatherSchema:
+class WeatherSchema(KNXPlatformSchema):
     """Voluptuous schema for KNX weather station."""
+
+    PLATFORM_NAME = SupportedPlatforms.WEATHER.value
 
     CONF_SYNC_STATE = CONF_SYNC_STATE
     CONF_KNX_TEMPERATURE_ADDRESS = "address_temperature"
@@ -538,7 +602,7 @@ class WeatherSchema:
 
     DEFAULT_NAME = "KNX Weather Station"
 
-    SCHEMA = vol.All(
+    ENTITY_SCHEMA = vol.All(
         # deprecated since 2021.6
         cv.deprecated("create_sensors"),
         vol.Schema(
