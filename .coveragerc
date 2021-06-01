@@ -780,6 +780,7 @@ omit =
     homeassistant/components/pcal9535a/*
     homeassistant/components/pencom/switch.py
     homeassistant/components/philips_js/__init__.py
+    homeassistant/components/philips_js/light.py
     homeassistant/components/philips_js/media_player.py
     homeassistant/components/philips_js/remote.py
     homeassistant/components/pi_hole/sensor.py
@@ -954,6 +955,7 @@ omit =
     homeassistant/components/snmp/*
     homeassistant/components/sochain/sensor.py
     homeassistant/components/solaredge/__init__.py
+    homeassistant/components/solaredge/coordinator.py
     homeassistant/components/solaredge/sensor.py
     homeassistant/components/solaredge_local/sensor.py
     homeassistant/components/solarlog/*
