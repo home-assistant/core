@@ -117,7 +117,7 @@ async def test_humidifier_input_boolean(hass, setup_comp_1):
     assert STATE_ON == hass.states.get(humidifier_switch).state
 
 
-async def test_humidifier_switch(hass, setup_comp_1):
+async def test_humidifier_switch(hass, setup_comp_1, enable_custom_integrations):
     """Test humidifier switching test switch."""
     platform = getattr(hass.components, "test.switch")
     platform.init()
