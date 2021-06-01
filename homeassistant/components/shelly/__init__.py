@@ -291,7 +291,7 @@ class ShellyDeviceWrapper(update_coordinator.DataUpdateCoordinator):
         if self.device:
             self.device.shutdown()
             self._async_remove_device_updates_handler()
-        self.device = None
+            self.device = None
 
     @callback
     def _handle_ha_stop(self, _):
