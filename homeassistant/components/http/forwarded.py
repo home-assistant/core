@@ -96,7 +96,7 @@ def async_setup_forwarded(
             _LOGGER.warning(
                 "Received X-Forwarded-For header from untrusted proxy %s, headers not processed; "
                 "This request will be blocked in Home Assistant 2021.7 unless you configure "
-                "your HTTP integration to allow this proxy to reverse your Home Assistant instance.",
+                "your HTTP integration to allow this proxy to reverse your Home Assistant instance",
                 connected_ip,
             )
             # Not trusted, Block this request in the future, continue as normal
