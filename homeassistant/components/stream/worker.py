@@ -70,6 +70,9 @@ class SegmentBuffer:
                 "avoid_negative_ts": "disabled",
                 "fragment_index": str(sequence + 1),
                 "video_track_timescale": str(int(1 / input_vstream.time_base)),
+                # Create a fragments every TARGET_PART_DURATION. The data from each fragment is stored in
+                # a "Part" that can be combined with the data from all the other "Part"s, plus an init
+                # section, to reconstitute the data in a "Segment".
                 "frag_duration": str(int(TARGET_PART_DURATION * 1e6)),
             },
         )
