@@ -1,4 +1,4 @@
-"""Module for SIA Alarm Control Panels."""
+"""Module for SIA Binary Sensors."""
 from __future__ import annotations
 
 from collections.abc import Iterable

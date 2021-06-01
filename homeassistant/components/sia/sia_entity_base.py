@@ -1,4 +1,4 @@
-"""Module for SIA Alarm Control Panels."""
+"""Module for SIA Base Entity."""
 from __future__ import annotations
 
 from abc import abstractmethod, abstractproperty
