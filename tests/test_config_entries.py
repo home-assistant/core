@@ -575,6 +575,14 @@ async def test_saving_and_loading(hass):
         )
 
     assert len(hass.config_entries.async_entries()) == 2
+    entry_1 = hass.config_entries.async_entries()[0]
+
+    # Test number of keys to ensure we add new keys to verify loading/saving
+    assert len(entry_1.system_options.as_dict()) == 2
+    hass.config_entries.async_update_entry(
+        entry_1,
+        system_options={"disable_polling": True, "disable_new_entities": True},
+    )
 
     # To trigger the call_later
     async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=1))
@@ -597,6 +605,7 @@ async def test_saving_and_loading(hass):
         assert orig.data == loaded.data
         assert orig.source == loaded.source
         assert orig.unique_id == loaded.unique_id
+        assert orig.system_options.as_dict() == loaded.system_options.as_dict()
 
 
 async def test_forward_entry_sets_up_component(hass):
@@ -818,10 +827,20 @@ async def test_updating_entry_system_options(manager):
     )
     entry.add_to_manager(manager)
 
-    assert entry.system_options.disable_new_entities
+    assert entry.system_options.disable_new_entities is True
+    assert entry.system_options.disable_polling is False
 
-    entry.system_options.update(disable_new_entities=False)
-    assert not entry.system_options.disable_new_entities
+    manager.async_update_entry(
+        entry, system_options={"disable_new_entities": False, "disable_polling": True}
+    )
+
+    assert entry.system_options.disable_new_entities is False
+    assert entry.system_options.disable_polling is True
+
+    assert entry.system_options.as_dict() == {
+        "disable_new_entities": False,
+        "disable_polling": True,
+    }
 
 
 async def test_update_entry_options_and_trigger_listener(hass, manager):

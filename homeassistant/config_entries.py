@@ -197,7 +197,10 @@ class ConfigEntry:
         self.options = MappingProxyType(options or {})
 
         # Entry system options
-        self.system_options = SystemOptions(**system_options)
+        self.system_options = SystemOptions(
+            disable_new_entities=system_options.get("disable_new_entities", False),
+            disable_polling=system_options.get("disable_polling", False),
+        )
 
         # Source of the configuration (user, discovery, cloud)
         self.source = source
@@ -1405,8 +1408,8 @@ class OptionsFlow(data_entry_flow.FlowHandler):
 class SystemOptions:
     """Config entry system options."""
 
-    disable_new_entities: bool = attr.ib(default=False)
-    disable_polling: bool = attr.ib(default=False)
+    disable_new_entities: bool = attr.ib()
+    disable_polling: bool = attr.ib()
 
     def update(
         self,
