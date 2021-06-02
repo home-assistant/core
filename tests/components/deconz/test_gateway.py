@@ -32,7 +32,7 @@ from homeassistant.components.ssdp import (
     ATTR_UPNP_UDN,
 )
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.config_entries import CONN_CLASS_LOCAL_PUSH, SOURCE_SSDP, SOURCE_USER
+from homeassistant.config_entries import SOURCE_SSDP, SOURCE_USER
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_HOST,
@@ -116,7 +116,6 @@ async def setup_deconz_integration(
         domain=DECONZ_DOMAIN,
         source=source,
         data=deepcopy(config),
-        connection_class=CONN_CLASS_LOCAL_PUSH,
         options=deepcopy(options),
         entry_id=entry_id,
         unique_id=unique_id,

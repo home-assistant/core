@@ -27,7 +27,7 @@ async def async_setup_entry(
 class RouterOnlineBinarySensor(BinarySensorEntity):
     """Representation router connection status."""
 
-    def __init__(self, router: KeeneticRouter):
+    def __init__(self, router: KeeneticRouter) -> None:
         """Initialize the APCUPSd binary device."""
         self._router = router
 

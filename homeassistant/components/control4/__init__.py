@@ -153,7 +153,7 @@ class Control4Entity(CoordinatorEntity):
         device_manufacturer: str,
         device_model: str,
         device_id: int,
-    ):
+    ) -> None:
         """Initialize a Control4 entity."""
         super().__init__(coordinator)
         self.entry = entry

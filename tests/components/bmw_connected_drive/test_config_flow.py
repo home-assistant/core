@@ -29,9 +29,7 @@ FIXTURE_CONFIG_ENTRY = {
         CONF_REGION: FIXTURE_USER_INPUT[CONF_REGION],
     },
     "options": {CONF_READ_ONLY: False, CONF_USE_LOCATION: False},
-    "system_options": {"disable_new_entities": False},
     "source": config_entries.SOURCE_USER,
-    "connection_class": config_entries.CONN_CLASS_CLOUD_POLL,
     "unique_id": f"{FIXTURE_USER_INPUT[CONF_REGION]}-{FIXTURE_USER_INPUT[CONF_REGION]}",
 }
 

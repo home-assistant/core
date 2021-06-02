@@ -40,6 +40,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import network
+from homeassistant.helpers.entity import entity_sources
 from homeassistant.util.decorator import Registry
 
 from .capabilities import (
@@ -254,7 +255,9 @@ class AlexaEntity:
     The API handlers should manipulate entities only through this interface.
     """
 
-    def __init__(self, hass: HomeAssistant, config: AbstractConfig, entity: State):
+    def __init__(
+        self, hass: HomeAssistant, config: AbstractConfig, entity: State
+    ) -> None:
         """Initialize Alexa Entity."""
         self.hass = hass
         self.config = config
@@ -613,8 +616,14 @@ class MediaPlayerCapabilities(AlexaEntity):
         if supported & media_player.const.SUPPORT_PLAY_MEDIA:
             yield AlexaChannelController(self.entity)
 
-        if supported & media_player.const.SUPPORT_SELECT_SOUND_MODE:
-            inputs = AlexaInputController.get_valid_inputs(
+        # AlexaEqualizerController is disabled for denonavr
+        # since it blocks alexa from discovering any devices.
+        domain = entity_sources(self.hass).get(self.entity_id, {}).get("domain")
+        if (
+            supported & media_player.const.SUPPORT_SELECT_SOUND_MODE
+            and domain != "denonavr"
+        ):
+            inputs = AlexaEqualizerController.get_valid_inputs(
                 self.entity.attributes.get(media_player.const.ATTR_SOUND_MODE_LIST, [])
             )
             if len(inputs) > 0:

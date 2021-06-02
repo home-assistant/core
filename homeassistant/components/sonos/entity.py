@@ -1,8 +1,8 @@
 """Entity representing a Sonos player."""
 from __future__ import annotations
 
+import datetime
 import logging
-from typing import Any
 
 from pysonos.core import SoCo
 
@@ -11,13 +11,13 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 
-from . import SonosData
 from .const import (
     DOMAIN,
     SONOS_ENTITY_CREATED,
-    SONOS_ENTITY_UPDATE,
+    SONOS_HOUSEHOLD_UPDATED,
+    SONOS_POLL_UPDATE,
     SONOS_STATE_UPDATED,
 )
 from .speaker import SonosSpeaker
@@ -28,10 +28,9 @@ _LOGGER = logging.getLogger(__name__)
 class SonosEntity(Entity):
     """Representation of a Sonos entity."""
 
-    def __init__(self, speaker: SonosSpeaker, sonos_data: SonosData) -> None:
+    def __init__(self, speaker: SonosSpeaker) -> None:
         """Initialize a SonosEntity."""
         self.speaker = speaker
-        self.data = sonos_data
 
     async def async_added_to_hass(self) -> None:
         """Handle common setup when added to hass."""
@@ -40,8 +39,8 @@ class SonosEntity(Entity):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{SONOS_ENTITY_UPDATE}-{self.soco.uid}",
-                self.async_update,  # pylint: disable=no-member
+                f"{SONOS_POLL_UPDATE}-{self.soco.uid}",
+                self.async_poll,
             )
         )
         self.async_on_remove(
@@ -51,6 +50,27 @@ class SonosEntity(Entity):
                 self.async_write_ha_state,
             )
         )
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{SONOS_HOUSEHOLD_UPDATED}-{self.soco.household_id}",
+                self.async_write_ha_state,
+            )
+        )
+        async_dispatcher_send(
+            self.hass, f"{SONOS_ENTITY_CREATED}-{self.soco.uid}", self.platform.domain
+        )
+
+    async def async_poll(self, now: datetime.datetime) -> None:
+        """Poll the entity if subscriptions fail."""
+        if self.speaker.is_first_poll:
+            _LOGGER.warning(
+                "%s cannot reach [%s], falling back to polling, functionality may be limited",
+                self.speaker.zone_name,
+                self.speaker.subscription_address,
+            )
+            self.speaker.is_first_poll = False
+        await self.async_update()  # pylint: disable=no-member
 
     @property
     def soco(self) -> SoCo:
@@ -58,7 +78,7 @@ class SonosEntity(Entity):
         return self.speaker.soco
 
     @property
-    def device_info(self) -> dict[str, Any]:
+    def device_info(self) -> DeviceInfo:
         """Return information about the device."""
         return {
             "identifiers": {(DOMAIN, self.soco.uid)},
@@ -79,14 +99,3 @@ class SonosEntity(Entity):
     def should_poll(self) -> bool:
         """Return that we should not be polled (we handle that internally)."""
         return False
-
-
-class SonosSensorEntity(SonosEntity):
-    """Representation of a Sonos sensor entity."""
-
-    async def async_added_to_hass(self) -> None:
-        """Handle common setup when added to hass."""
-        await super().async_added_to_hass()
-        async_dispatcher_send(
-            self.hass, f"{SONOS_ENTITY_CREATED}-{self.soco.uid}", self.platform.domain
-        )

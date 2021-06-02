@@ -13,7 +13,7 @@
                 "data": {
                     "token": "Toegangstoken"
                 },
-                "description": "De Nuki integratie moet opnieuw authenticeren met je bridge.",
+                "description": "De Nuki integratie moet opnieuw authenticeren met uw bridge.",
                 "title": "Verifieer de integratie opnieuw"
             },
             "user": {

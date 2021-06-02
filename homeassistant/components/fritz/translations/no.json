@@ -8,10 +8,11 @@
         "error": {
             "already_configured": "Enheten er allerede konfigurert",
             "already_in_progress": "Konfigurasjonsflyten p\u00e5g\u00e5r allerede",
+            "cannot_connect": "Tilkobling mislyktes",
             "connection_error": "Tilkobling mislyktes",
             "invalid_auth": "Ugyldig godkjenning"
         },
-        "flow_title": "FRITZ!Box Verkt\u00f8y: {name}",
+        "flow_title": "{name}",
         "step": {
             "confirm": {
                 "data": {
@@ -38,6 +39,25 @@
                 },
                 "description": "Sett opp FRITZ!Box verkt\u00f8y for \u00e5 kontrollere fritz! Boksen.\nMinimum n\u00f8dvendig: brukernavn, passord.",
                 "title": "Sett opp FRITZ!Box verkt\u00f8y - obligatorisk"
+            },
+            "user": {
+                "data": {
+                    "host": "Vert",
+                    "password": "Passord",
+                    "port": "Port",
+                    "username": "Brukernavn"
+                },
+                "description": "Sett opp FRITZ!Box verkt\u00f8y for \u00e5 kontrollere fritz! Boksen.\nMinimum n\u00f8dvendig: brukernavn, passord.",
+                "title": "Sett opp FRITZ!Box verkt\u00f8y"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "consider_home": "Sekunder \u00e5 vurdere en enhet hjemme"
+                }
             }
         }
     }

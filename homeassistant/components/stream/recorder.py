@@ -2,11 +2,13 @@
 from __future__ import annotations
 
 from collections import deque
+from io import BytesIO
 import logging
 import os
 import threading
 
 import av
+from av.container import OutputContainer
 
 from homeassistant.core import HomeAssistant, callback
 
@@ -31,8 +33,8 @@ def recorder_save_worker(file_out: str, segments: deque[Segment]):
     if not os.path.exists(os.path.dirname(file_out)):
         os.makedirs(os.path.dirname(file_out), exist_ok=True)
 
-    pts_adjuster = {"video": None, "audio": None}
-    output = None
+    pts_adjuster: dict[str, int | None] = {"video": None, "audio": None}
+    output: OutputContainer | None = None
     output_v = None
     output_a = None
 
@@ -50,7 +52,11 @@ def recorder_save_worker(file_out: str, segments: deque[Segment]):
         last_sequence = segment.sequence
 
         # Open segment
-        source = av.open(segment.segment, "r", format=SEGMENT_CONTAINER_FORMAT)
+        source = av.open(
+            BytesIO(segment.init + segment.moof_data),
+            "r",
+            format=SEGMENT_CONTAINER_FORMAT,
+        )
         source_v = source.streams.video[0]
         source_a = source.streams.audio[0] if len(source.streams.audio) > 0 else None
 
@@ -100,7 +106,8 @@ def recorder_save_worker(file_out: str, segments: deque[Segment]):
 
         source.close()
 
-    output.close()
+    if output is not None:
+        output.close()
 
 
 @PROVIDERS.register("recorder")
