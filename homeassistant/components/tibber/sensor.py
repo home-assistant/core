@@ -385,11 +385,7 @@ class TibberRtDataHandler:
         if live_measurement is None:
             return
 
-        raw_timestamp = live_measurement.pop("timestamp")
-        try:
-            timestamp = datetime.strptime(raw_timestamp, "%Y-%m-%dT%H:%M:%S%z")
-        except ValueError:
-            timestamp = datetime.strptime(raw_timestamp, "%Y-%m-%dT%H:%M:%S.%f%z")
+        timestamp = dt_util.parse_datetime(live_measurement.pop("timestamp"))
         new_entities = []
         for sensor_type, state in live_measurement.items():
             if state is None or sensor_type not in RT_SENSOR_MAP:
