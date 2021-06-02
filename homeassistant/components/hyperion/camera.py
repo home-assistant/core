@@ -177,7 +177,7 @@ class HyperionCamera(Camera):
         """Return a single camera image in a stream."""
         async with self._image_cond:
             await self._image_cond.wait()
-            return None if not self.available else self._image
+            return self._image if self.available else None
 
     async def _start_image_streaming_for_client(self) -> bool:
         """Start streaming for a client."""
