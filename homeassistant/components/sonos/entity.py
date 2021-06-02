@@ -75,7 +75,6 @@ class SonosEntity(Entity):
             await self.async_update()  # pylint: disable=no-member
         except (OSError, SoCoException) as ex:
             _LOGGER.debug("Error connecting to %s: %s", self.entity_id, ex)
-            pass
 
     @property
     def soco(self) -> SoCo:
