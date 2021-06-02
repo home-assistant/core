@@ -5,5 +5,6 @@
   "documentation": "https://www.home-assistant.io/integrations/ifttt",
   "requirements": ["pyfttt==0.3"],
   "dependencies": ["webhook"],
-  "codeowners": []
+  "codeowners": [],
+  "iot_class": "cloud_push"
 }

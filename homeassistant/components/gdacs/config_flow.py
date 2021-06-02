@@ -24,8 +24,6 @@ _LOGGER = logging.getLogger(__name__)
 class GdacsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a GDACS config flow."""
 
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
-
     async def _show_form(self, errors=None):
         """Show the form to the user."""
         return self.async_show_form(
@@ -53,7 +51,7 @@ class GdacsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured()
 
         scan_interval = user_input.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
-        user_input[CONF_SCAN_INTERVAL] = scan_interval.seconds
+        user_input[CONF_SCAN_INTERVAL] = scan_interval.total_seconds()
 
         categories = user_input.get(CONF_CATEGORIES, [])
         user_input[CONF_CATEGORIES] = categories

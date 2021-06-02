@@ -1,14 +1,13 @@
 """Support for Z-Wave controls using the number platform."""
 from __future__ import annotations
 
-from typing import Callable
-
 from zwave_js_server.client import Client as ZwaveClient
 
 from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN, NumberEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DATA_CLIENT, DATA_UNSUBSCRIBE, DOMAIN
 from .discovery import ZwaveDiscoveryInfo
@@ -16,7 +15,9 @@ from .entity import ZWaveBaseEntity
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities: Callable
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Z-Wave Number entity from Config Entry."""
     client: ZwaveClient = hass.data[DOMAIN][config_entry.entry_id][DATA_CLIENT]
@@ -45,13 +46,15 @@ class ZwaveNumberEntity(ZWaveBaseEntity, NumberEntity):
     ) -> None:
         """Initialize a ZwaveNumberEntity entity."""
         super().__init__(config_entry, client, info)
-        self._name = self.generate_name(
-            include_value_name=True, alternate_value_name=info.platform_hint
-        )
         if self.info.primary_value.metadata.writeable:
             self._target_value = self.info.primary_value
         else:
             self._target_value = self.get_zwave_value("targetValue")
+
+        # Entity class attributes
+        self._attr_name = self.generate_name(
+            include_value_name=True, alternate_value_name=info.platform_hint
+        )
 
     @property
     def min_value(self) -> float:

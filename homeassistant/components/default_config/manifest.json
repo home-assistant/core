@@ -19,6 +19,7 @@
     "media_source",
     "mobile_app",
     "my",
+    "network",
     "person",
     "scene",
     "script",
@@ -32,5 +33,6 @@
     "zeroconf",
     "zone"
   ],
-  "codeowners": []
+  "codeowners": [],
+  "quality_scale": "internal"
 }

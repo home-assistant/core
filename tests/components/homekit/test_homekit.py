@@ -250,7 +250,7 @@ async def test_homekit_setup(hass, hk_driver, mock_zeroconf):
         port=DEFAULT_PORT,
         persist_file=path,
         advertised_address=None,
-        zeroconf_instance=zeroconf_mock,
+        async_zeroconf_instance=zeroconf_mock,
     )
     assert homekit.driver.safe_mode is False
 
@@ -290,7 +290,7 @@ async def test_homekit_setup_ip_address(hass, hk_driver, mock_zeroconf):
         port=DEFAULT_PORT,
         persist_file=path,
         advertised_address=None,
-        zeroconf_instance=mock_zeroconf,
+        async_zeroconf_instance=mock_zeroconf,
     )
 
 
@@ -315,10 +315,10 @@ async def test_homekit_setup_advertise_ip(hass, hk_driver, mock_zeroconf):
         entry_title=entry.title,
     )
 
-    zeroconf_instance = MagicMock()
+    async_zeroconf_instance = MagicMock()
     path = get_persist_fullpath_for_entry_id(hass, entry.entry_id)
     with patch(f"{PATH_HOMEKIT}.HomeDriver", return_value=hk_driver) as mock_driver:
-        await hass.async_add_executor_job(homekit.setup, zeroconf_instance)
+        await hass.async_add_executor_job(homekit.setup, async_zeroconf_instance)
     mock_driver.assert_called_with(
         hass,
         entry.entry_id,
@@ -329,7 +329,7 @@ async def test_homekit_setup_advertise_ip(hass, hk_driver, mock_zeroconf):
         port=DEFAULT_PORT,
         persist_file=path,
         advertised_address="192.168.1.100",
-        zeroconf_instance=zeroconf_instance,
+        async_zeroconf_instance=async_zeroconf_instance,
     )
 
 
@@ -851,7 +851,7 @@ async def test_homekit_uses_system_zeroconf(hass, hk_driver, mock_zeroconf):
         options={},
     )
     assert await async_setup_component(hass, "zeroconf", {"zeroconf": {}})
-    system_zc = await zeroconf.async_get_instance(hass)
+    system_async_zc = await zeroconf.async_get_async_instance(hass)
 
     with patch("pyhap.accessory_driver.AccessoryDriver.async_start"), patch(
         f"{PATH_HOMEKIT}.HomeKit.async_stop"
@@ -859,7 +859,10 @@ async def test_homekit_uses_system_zeroconf(hass, hk_driver, mock_zeroconf):
         entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
-        assert hass.data[DOMAIN][entry.entry_id][HOMEKIT].driver.advertiser == system_zc
+        assert (
+            hass.data[DOMAIN][entry.entry_id][HOMEKIT].driver.advertiser
+            == system_async_zc
+        )
         assert await hass.config_entries.async_unload(entry.entry_id)
         await hass.async_block_till_done()
 

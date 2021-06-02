@@ -2,9 +2,8 @@
   "domain": "waze_travel_time",
   "name": "Waze Travel Time",
   "documentation": "https://www.home-assistant.io/integrations/waze_travel_time",
-  "requirements": [
-    "WazeRouteCalculator==0.12"
-  ],
+  "requirements": ["WazeRouteCalculator==0.12"],
   "codeowners": [],
-  "config_flow": true
+  "config_flow": true,
+  "iot_class": "cloud_polling"
 }

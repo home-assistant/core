@@ -6,8 +6,11 @@ import logging
 from typing import Callable
 
 from homeassistant import config as conf_util
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import EVENT_HOMEASSISTANT_START, SERVICE_RELOAD
+from homeassistant.const import (
+    CONF_UNIQUE_ID,
+    EVENT_HOMEASSISTANT_START,
+    SERVICE_RELOAD,
+)
 from homeassistant.core import CoreState, Event, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
@@ -57,23 +60,44 @@ async def async_setup(hass, config):
     return True
 
 
-async def _process_config(hass, config):
+async def _process_config(hass, hass_config):
     """Process config."""
-    coordinators: list[TriggerUpdateCoordinator] | None = hass.data.get(DOMAIN)
+    coordinators: list[TriggerUpdateCoordinator] | None = hass.data.pop(DOMAIN, None)
 
     # Remove old ones
     if coordinators:
         for coordinator in coordinators:
             coordinator.async_remove()
 
-    async def init_coordinator(hass, conf):
-        coordinator = TriggerUpdateCoordinator(hass, conf)
-        await coordinator.async_setup(conf)
+    async def init_coordinator(hass, conf_section):
+        coordinator = TriggerUpdateCoordinator(hass, conf_section)
+        await coordinator.async_setup(hass_config)
         return coordinator
 
-    hass.data[DOMAIN] = await asyncio.gather(
-        *[init_coordinator(hass, conf) for conf in config[DOMAIN]]
-    )
+    coordinator_tasks = []
+
+    for conf_section in hass_config[DOMAIN]:
+        if CONF_TRIGGER in conf_section:
+            coordinator_tasks.append(init_coordinator(hass, conf_section))
+            continue
+
+        for platform_domain in PLATFORMS:
+            if platform_domain in conf_section:
+                hass.async_create_task(
+                    discovery.async_load_platform(
+                        hass,
+                        platform_domain,
+                        DOMAIN,
+                        {
+                            "unique_id": conf_section.get(CONF_UNIQUE_ID),
+                            "entities": conf_section[platform_domain],
+                        },
+                        hass_config,
+                    )
+                )
+
+    if coordinator_tasks:
+        hass.data[DOMAIN] = await asyncio.gather(*coordinator_tasks)
 
 
 class TriggerUpdateCoordinator(update_coordinator.DataUpdateCoordinator):
@@ -110,16 +134,17 @@ class TriggerUpdateCoordinator(update_coordinator.DataUpdateCoordinator):
                 EVENT_HOMEASSISTANT_START, self._attach_triggers
             )
 
-        for platform_domain in (SENSOR_DOMAIN,):
-            self.hass.async_create_task(
-                discovery.async_load_platform(
-                    self.hass,
-                    platform_domain,
-                    DOMAIN,
-                    {"coordinator": self, "entities": self.config[platform_domain]},
-                    hass_config,
+        for platform_domain in PLATFORMS:
+            if platform_domain in self.config:
+                self.hass.async_create_task(
+                    discovery.async_load_platform(
+                        self.hass,
+                        platform_domain,
+                        DOMAIN,
+                        {"coordinator": self, "entities": self.config[platform_domain]},
+                        hass_config,
+                    )
                 )
-            )
 
     async def _attach_triggers(self, start_event=None) -> None:
         """Attach the triggers."""

@@ -2,12 +2,16 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Coroutine, Iterable
 from contextvars import ContextVar
 from datetime import datetime, timedelta
 import logging
 from logging import Logger
 from types import ModuleType
-from typing import TYPE_CHECKING, Callable, Coroutine, Iterable
+from typing import TYPE_CHECKING, Any, Callable
+
+from typing_extensions import Protocol
+import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import (
@@ -24,18 +28,24 @@ from homeassistant.core import (
     split_entity_id,
     valid_entity_id,
 )
-from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
-from homeassistant.helpers import (
+from homeassistant.exceptions import (
+    HomeAssistantError,
+    PlatformNotReady,
+    RequiredParameterMissing,
+)
+from homeassistant.setup import async_start_setup
+from homeassistant.util.async_ import run_callback_threadsafe
+
+from . import (
     config_validation as cv,
     device_registry as dev_reg,
     entity_registry as ent_reg,
     service,
 )
-from homeassistant.setup import async_start_setup
-from homeassistant.util.async_ import run_callback_threadsafe
-
-from .entity_registry import DISABLED_INTEGRATION
+from .device_registry import DeviceRegistry
+from .entity_registry import DISABLED_INTEGRATION, EntityRegistry
 from .event import async_call_later, async_track_time_interval
+from .typing import ConfigType, DiscoveryInfoType
 
 if TYPE_CHECKING:
     from .entity import Entity
@@ -53,6 +63,15 @@ PLATFORM_NOT_READY_BASE_WAIT_TIME = 30  # seconds
 _LOGGER = logging.getLogger(__name__)
 
 
+class AddEntitiesCallback(Protocol):
+    """Protocol type for EntityPlatform.add_entities callback."""
+
+    def __call__(
+        self, new_entities: Iterable[Entity], update_before_add: bool = False
+    ) -> None:
+        """Define add_entities type."""
+
+
 class EntityPlatform:
     """Manage the entities for a single platform."""
 
@@ -66,7 +85,7 @@ class EntityPlatform:
         platform: ModuleType | None,
         scan_interval: timedelta,
         entity_namespace: str | None,
-    ):
+    ) -> None:
         """Initialize the entity platform."""
         self.hass = hass
         self.logger = logger
@@ -131,7 +150,11 @@ class EntityPlatform:
 
         return self.parallel_updates
 
-    async def async_setup(self, platform_config, discovery_info=None):  # type: ignore[no-untyped-def]
+    async def async_setup(
+        self,
+        platform_config: ConfigType,
+        discovery_info: DiscoveryInfoType | None = None,
+    ) -> None:
         """Set up the platform from a config file."""
         platform = self.platform
         hass = self.hass
@@ -170,6 +193,18 @@ class EntityPlatform:
 
         await self._async_setup_platform(async_create_setup_task)
 
+    async def async_shutdown(self) -> None:
+        """Call when Home Assistant is stopping."""
+        self.async_cancel_retry_setup()
+        self.async_unsub_polling()
+
+    @callback
+    def async_cancel_retry_setup(self) -> None:
+        """Cancel retry setup."""
+        if self._async_cancel_retry_setup is not None:
+            self._async_cancel_retry_setup()
+            self._async_cancel_retry_setup = None
+
     async def async_setup_entry(self, config_entry: config_entries.ConfigEntry) -> bool:
         """Set up the platform from a config entry."""
         # Store it so that we can save config entry ID in entity registry
@@ -177,9 +212,10 @@ class EntityPlatform:
         platform = self.platform
 
         @callback
-        def async_create_setup_task():  # type: ignore[no-untyped-def]
+        def async_create_setup_task() -> Coroutine:
             """Get task to set up platform."""
-            return platform.async_setup_entry(  # type: ignore
+            config_entries.current_entry.set(config_entry)
+            return platform.async_setup_entry(  # type: ignore[no-any-return,union-attr]
                 self.hass, config_entry, self._async_schedule_add_entities
             )
 
@@ -228,8 +264,6 @@ class EntityPlatform:
                 tries += 1
                 wait_time = min(tries, 6) * PLATFORM_NOT_READY_BASE_WAIT_TIME
                 message = str(ex)
-                if not message and ex.__cause__:
-                    message = str(ex.__cause__)
                 ready_message = f"ready yet: {message}" if message else "ready yet"
                 if tries == 1:
                     logger.warning(
@@ -246,7 +280,7 @@ class EntityPlatform:
                         wait_time,
                     )
 
-                async def setup_again(*_):  # type: ignore[no-untyped-def]
+                async def setup_again(*_args: Any) -> None:
                     """Run setup again."""
                     self._async_cancel_retry_setup = None
                     await self._async_setup_platform(async_create_setup_task, tries)
@@ -333,7 +367,7 @@ class EntityPlatform:
         device_registry = dev_reg.async_get(hass)
         entity_registry = ent_reg.async_get(hass)
         tasks = [
-            self._async_add_entity(  # type: ignore
+            self._async_add_entity(
                 entity, update_before_add, entity_registry, device_registry
             )
             for entity in new_entities
@@ -362,8 +396,10 @@ class EntityPlatform:
             )
             raise
 
-        if self._async_unsub_polling is not None or not any(
-            entity.should_poll for entity in self.entities.values()
+        if (
+            (self.config_entry and self.config_entry.pref_disable_polling)
+            or self._async_unsub_polling is not None
+            or not any(entity.should_poll for entity in self.entities.values())
         ):
             return
 
@@ -373,9 +409,13 @@ class EntityPlatform:
             self.scan_interval,
         )
 
-    async def _async_add_entity(  # type: ignore[no-untyped-def]
-        self, entity, update_before_add, entity_registry, device_registry
-    ):
+    async def _async_add_entity(  # noqa: C901
+        self,
+        entity: Entity,
+        update_before_add: bool,
+        entity_registry: EntityRegistry,
+        device_registry: DeviceRegistry,
+    ) -> None:
         """Add an entity to the platform."""
         if entity is None:
             raise ValueError("Entity cannot be None")
@@ -397,6 +437,7 @@ class EntityPlatform:
 
         requested_entity_id = None
         suggested_object_id: str | None = None
+        generate_new_entity_id = False
 
         # Get entity_id from unique ID registration
         if entity.unique_id is not None:
@@ -404,7 +445,7 @@ class EntityPlatform:
                 requested_entity_id = entity.entity_id
                 suggested_object_id = split_entity_id(entity.entity_id)[1]
             else:
-                suggested_object_id = entity.name
+                suggested_object_id = entity.name  # type: ignore[unreachable]
 
             if self.entity_namespace is not None:
                 suggested_object_id = f"{self.entity_namespace} {suggested_object_id}"
@@ -434,11 +475,13 @@ class EntityPlatform:
                     "suggested_area",
                 ):
                     if key in device_info:
-                        processed_dev_info[key] = device_info[key]
+                        processed_dev_info[key] = device_info[key]  # type: ignore[misc]
 
-                device = device_registry.async_get_or_create(**processed_dev_info)
-                if device:
+                try:
+                    device = device_registry.async_get_or_create(**processed_dev_info)  # type: ignore[arg-type]
                     device_id = device.id
+                except RequiredParameterMissing:
+                    pass
 
             disabled_by: str | None = None
             if not entity.entity_registry_enabled_default:
@@ -481,10 +524,10 @@ class EntityPlatform:
         ):
             # If entity already registered, convert entity id to suggestion
             suggested_object_id = split_entity_id(entity.entity_id)[1]
-            entity.entity_id = None
+            generate_new_entity_id = True
 
         # Generate entity ID
-        if entity.entity_id is None:
+        if entity.entity_id is None or generate_new_entity_id:
             suggested_object_id = (
                 suggested_object_id or entity.name or DEVICE_DEFAULT_NAME
             )
@@ -536,7 +579,11 @@ class EntityPlatform:
             # has a chance to finish.
             self.hass.states.async_reserve(entity.entity_id)
 
-        entity.async_on_remove(lambda: self.entities.pop(entity_id))
+        def remove_entity_cb() -> None:
+            """Remove entity from entities list."""
+            self.entities.pop(entity_id)
+
+        entity.async_on_remove(remove_entity_cb)
 
         await entity.add_to_platform_finish()
 
@@ -545,9 +592,7 @@ class EntityPlatform:
 
         This method must be run in the event loop.
         """
-        if self._async_cancel_retry_setup is not None:
-            self._async_cancel_retry_setup()
-            self._async_cancel_retry_setup = None
+        self.async_cancel_retry_setup()
 
         if not self.entities:
             return
@@ -556,10 +601,15 @@ class EntityPlatform:
 
         await asyncio.gather(*tasks)
 
+        self.async_unsub_polling()
+        self._setup_complete = False
+
+    @callback
+    def async_unsub_polling(self) -> None:
+        """Stop polling."""
         if self._async_unsub_polling is not None:
             self._async_unsub_polling()
             self._async_unsub_polling = None
-        self._setup_complete = False
 
     async def async_destroy(self) -> None:
         """Destroy an entity platform.
@@ -594,7 +644,13 @@ class EntityPlatform:
         )
 
     @callback
-    def async_register_entity_service(self, name, schema, func, required_features=None):  # type: ignore[no-untyped-def]
+    def async_register_entity_service(
+        self,
+        name: str,
+        schema: dict | vol.Schema,
+        func: str | Callable[..., Any],
+        required_features: Iterable[int] | None = None,
+    ) -> None:
         """Register an entity service.
 
         Services will automatically be shared by all platforms of the same domain.
@@ -656,6 +712,15 @@ class EntityPlatform:
 current_platform: ContextVar[EntityPlatform | None] = ContextVar(
     "current_platform", default=None
 )
+
+
+@callback
+def async_get_current_platform() -> EntityPlatform:
+    """Get the current platform from context."""
+    platform = current_platform.get()
+    if platform is None:
+        raise RuntimeError("Cannot get non-set current platform")
+    return platform
 
 
 @callback

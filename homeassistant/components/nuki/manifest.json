@@ -1,9 +1,14 @@
 {
-    "domain": "nuki",
-    "name": "Nuki",
-    "documentation": "https://www.home-assistant.io/integrations/nuki",
-    "requirements": ["pynuki==1.4.1"],
-    "codeowners": ["@pschmitt", "@pvizeli", "@pree"],
-    "config_flow": true,
-    "dhcp": [{ "hostname": "nuki_bridge_*" }]
+  "domain": "nuki",
+  "name": "Nuki",
+  "documentation": "https://www.home-assistant.io/integrations/nuki",
+  "requirements": ["pynuki==1.4.1"],
+  "codeowners": ["@pschmitt", "@pvizeli", "@pree"],
+  "config_flow": true,
+  "dhcp": [
+    {
+      "hostname": "nuki_bridge_*"
+    }
+  ],
+  "iot_class": "local_polling"
 }

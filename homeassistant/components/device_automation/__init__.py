@@ -2,9 +2,10 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import MutableMapping
 from functools import wraps
 from types import ModuleType
-from typing import Any, MutableMapping
+from typing import Any
 
 import voluptuous as vol
 import voluptuous_serialize

@@ -205,6 +205,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         if service_location.has_voltage_values:
             for sensor_name, sensor in VOLTAGE_SENSORS.items():
                 if service_location.phase_type in sensor[5]:
+                    if (
+                        sensor_name.startswith("line_")
+                        and service_location.local_polling
+                    ):
+                        continue
                     entities.append(
                         SmappeeSensor(
                             smappee_base=smappee_base,

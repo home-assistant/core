@@ -3,5 +3,6 @@
   "name": "Schluter",
   "documentation": "https://www.home-assistant.io/integrations/schluter",
   "requirements": ["py-schluter==0.1.7"],
-  "codeowners": ["@prairieapps"]
+  "codeowners": ["@prairieapps"],
+  "iot_class": "cloud_polling"
 }

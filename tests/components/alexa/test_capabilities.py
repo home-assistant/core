@@ -239,17 +239,27 @@ async def test_report_lock_state(hass):
     properties.assert_equal("Alexa.LockController", "lockState", "JAMMED")
 
 
-async def test_report_dimmable_light_state(hass):
+@pytest.mark.parametrize(
+    "supported_color_modes", [["brightness"], ["hs"], ["color_temp"]]
+)
+async def test_report_dimmable_light_state(hass, supported_color_modes):
     """Test BrightnessController reports brightness correctly."""
     hass.states.async_set(
         "light.test_on",
         "on",
-        {"friendly_name": "Test light On", "brightness": 128, "supported_features": 1},
+        {
+            "friendly_name": "Test light On",
+            "brightness": 128,
+            "supported_color_modes": supported_color_modes,
+        },
     )
     hass.states.async_set(
         "light.test_off",
         "off",
-        {"friendly_name": "Test light Off", "supported_features": 1},
+        {
+            "friendly_name": "Test light Off",
+            "supported_color_modes": supported_color_modes,
+        },
     )
 
     properties = await reported_properties(hass, "light.test_on")
@@ -259,7 +269,8 @@ async def test_report_dimmable_light_state(hass):
     properties.assert_equal("Alexa.BrightnessController", "brightness", 0)
 
 
-async def test_report_colored_light_state(hass):
+@pytest.mark.parametrize("supported_color_modes", [["hs"], ["rgb"], ["xy"]])
+async def test_report_colored_light_state(hass, supported_color_modes):
     """Test ColorController reports color correctly."""
     hass.states.async_set(
         "light.test_on",
@@ -268,13 +279,16 @@ async def test_report_colored_light_state(hass):
             "friendly_name": "Test light On",
             "hs_color": (180, 75),
             "brightness": 128,
-            "supported_features": 17,
+            "supported_color_modes": supported_color_modes,
         },
     )
     hass.states.async_set(
         "light.test_off",
         "off",
-        {"friendly_name": "Test light Off", "supported_features": 17},
+        {
+            "friendly_name": "Test light Off",
+            "supported_color_modes": supported_color_modes,
+        },
     )
 
     properties = await reported_properties(hass, "light.test_on")
@@ -295,12 +309,16 @@ async def test_report_colored_temp_light_state(hass):
     hass.states.async_set(
         "light.test_on",
         "on",
-        {"friendly_name": "Test light On", "color_temp": 240, "supported_features": 2},
+        {
+            "friendly_name": "Test light On",
+            "color_temp": 240,
+            "supported_color_modes": ["color_temp"],
+        },
     )
     hass.states.async_set(
         "light.test_off",
         "off",
-        {"friendly_name": "Test light Off", "supported_features": 2},
+        {"friendly_name": "Test light Off", "supported_color_modes": ["color_temp"]},
     )
 
     properties = await reported_properties(hass, "light.test_on")
@@ -380,6 +398,48 @@ async def test_report_fan_speed_state(hass):
     properties.assert_equal("Alexa.PercentageController", "percentage", 100)
     properties.assert_equal("Alexa.PowerLevelController", "powerLevel", 100)
     properties.assert_equal("Alexa.RangeController", "rangeValue", 3)
+
+
+async def test_report_fan_preset_mode(hass):
+    """Test ModeController reports fan preset_mode correctly."""
+    hass.states.async_set(
+        "fan.preset_mode",
+        "eco",
+        {
+            "friendly_name": "eco enabled fan",
+            "supported_features": 8,
+            "preset_mode": "eco",
+            "preset_modes": ["eco", "smart", "whoosh"],
+        },
+    )
+    properties = await reported_properties(hass, "fan.preset_mode")
+    properties.assert_equal("Alexa.ModeController", "mode", "preset_mode.eco")
+
+    hass.states.async_set(
+        "fan.preset_mode",
+        "smart",
+        {
+            "friendly_name": "smart enabled fan",
+            "supported_features": 8,
+            "preset_mode": "smart",
+            "preset_modes": ["eco", "smart", "whoosh"],
+        },
+    )
+    properties = await reported_properties(hass, "fan.preset_mode")
+    properties.assert_equal("Alexa.ModeController", "mode", "preset_mode.smart")
+
+    hass.states.async_set(
+        "fan.preset_mode",
+        "whoosh",
+        {
+            "friendly_name": "whoosh enabled fan",
+            "supported_features": 8,
+            "preset_mode": "whoosh",
+            "preset_modes": ["eco", "smart", "whoosh"],
+        },
+    )
+    properties = await reported_properties(hass, "fan.preset_mode")
+    properties.assert_equal("Alexa.ModeController", "mode", "preset_mode.whoosh")
 
 
 async def test_report_fan_oscillating(hass):

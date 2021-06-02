@@ -4,7 +4,6 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/kostal_plenticore",
   "requirements": ["kostal_plenticore==0.2.0"],
-  "codeowners": [
-    "@stegm"
-  ]
+  "codeowners": ["@stegm"],
+  "iot_class": "local_polling"
 }

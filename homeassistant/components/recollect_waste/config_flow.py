@@ -21,7 +21,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for ReCollect Waste."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     @staticmethod
     @callback
@@ -74,7 +73,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 class RecollectWasteOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle a Recollect Waste options flow."""
 
-    def __init__(self, entry: config_entries.ConfigEntry):
+    def __init__(self, entry: config_entries.ConfigEntry) -> None:
         """Initialize."""
         self._entry = entry
 

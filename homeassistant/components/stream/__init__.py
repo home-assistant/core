@@ -14,6 +14,8 @@ are no active output formats, the background worker is shut down and access
 tokens are expired. Alternatively, a Stream can be configured with keepalive
 to always keep workers active.
 """
+from __future__ import annotations
+
 import logging
 import re
 import secrets
@@ -29,17 +31,24 @@ from .const import (
     ATTR_ENDPOINTS,
     ATTR_STREAMS,
     DOMAIN,
+    HLS_PROVIDER,
     MAX_SEGMENTS,
     OUTPUT_IDLE_TIMEOUT,
+    RECORDER_PROVIDER,
     STREAM_RESTART_INCREMENT,
     STREAM_RESTART_RESET_TIME,
 )
-from .core import PROVIDERS, IdleTimer
+from .core import PROVIDERS, IdleTimer, StreamOutput
 from .hls import async_setup_hls
 
 _LOGGER = logging.getLogger(__name__)
 
-STREAM_SOURCE_RE = re.compile("//(.*):(.*)@")
+STREAM_SOURCE_RE = re.compile("//.*:.*@")
+
+
+def redact_credentials(data):
+    """Redact credentials from string data."""
+    return STREAM_SOURCE_RE.sub("//****:****@", data)
 
 
 def create_stream(hass, stream_source, options=None):
@@ -83,7 +92,7 @@ async def async_setup(hass, config):
 
     # Setup HLS
     hls_endpoint = async_setup_hls(hass)
-    hass.data[DOMAIN][ATTR_ENDPOINTS]["hls"] = hls_endpoint
+    hass.data[DOMAIN][ATTR_ENDPOINTS][HLS_PROVIDER] = hls_endpoint
 
     # Setup Recorder
     async_setup_recorder(hass)
@@ -113,13 +122,13 @@ class Stream:
         self.access_token = None
         self._thread = None
         self._thread_quit = threading.Event()
-        self._outputs = {}
+        self._outputs: dict[str, StreamOutput] = {}
         self._fast_restart_once = False
 
         if self.options is None:
             self.options = {}
 
-    def endpoint_url(self, fmt):
+    def endpoint_url(self, fmt: str) -> str:
         """Start the stream and returns a url for the output format."""
         if fmt not in self._outputs:
             raise ValueError(f"Stream is not configured for format '{fmt}'")
@@ -139,7 +148,9 @@ class Stream:
 
             @callback
             def idle_callback():
-                if (not self.keepalive or fmt == "recorder") and fmt in self._outputs:
+                if (
+                    not self.keepalive or fmt == RECORDER_PROVIDER
+                ) and fmt in self._outputs:
                     self.remove_provider(self._outputs[fmt])
                 self.check_idle()
 
@@ -176,9 +187,7 @@ class Stream:
                 target=self._run_worker,
             )
             self._thread.start()
-            _LOGGER.info(
-                "Started stream: %s", STREAM_SOURCE_RE.sub("//", str(self.source))
-            )
+            _LOGGER.info("Started stream: %s", redact_credentials(str(self.source)))
 
     def update_source(self, new_source):
         """Restart the stream with a new stream source."""
@@ -244,9 +253,7 @@ class Stream:
             self._thread_quit.set()
             self._thread.join()
             self._thread = None
-            _LOGGER.info(
-                "Stopped stream: %s", STREAM_SOURCE_RE.sub("//", str(self.source))
-            )
+            _LOGGER.info("Stopped stream: %s", redact_credentials(str(self.source)))
 
     async def async_record(self, video_path, duration=30, lookback=5):
         """Make a .mp4 recording from a provided stream."""
@@ -256,21 +263,21 @@ class Stream:
             raise HomeAssistantError(f"Can't write {video_path}, no access to path!")
 
         # Add recorder
-        recorder = self.outputs().get("recorder")
+        recorder = self.outputs().get(RECORDER_PROVIDER)
         if recorder:
             raise HomeAssistantError(
                 f"Stream already recording to {recorder.video_path}!"
             )
-        recorder = self.add_provider("recorder", timeout=duration)
+        recorder = self.add_provider(RECORDER_PROVIDER, timeout=duration)
         recorder.video_path = video_path
 
         self.start()
         _LOGGER.debug("Started a stream recording of %s seconds", duration)
 
         # Take advantage of lookback
-        hls = self.outputs().get("hls")
+        hls = self.outputs().get(HLS_PROVIDER)
         if lookback > 0 and hls:
             num_segments = min(int(lookback // hls.target_duration), MAX_SEGMENTS)
             # Wait for latest segment, then add the lookback
             await hls.recv()
-            recorder.prepend(list(hls.get_segment())[-num_segments:])
+            recorder.prepend(list(hls.get_segments())[-num_segments:])

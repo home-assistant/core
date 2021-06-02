@@ -8,7 +8,7 @@ def ordered_list_item_to_percentage(ordered_list: list[str], item: str) -> int:
     When using this utility for fan speeds, do not include "off"
 
     Given the list: ["low", "medium", "high", "very_high"], this
-    function will return the following when when the item is passed
+    function will return the following when the item is passed
     in:
 
         low: 25

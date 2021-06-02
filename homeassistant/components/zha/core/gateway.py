@@ -77,12 +77,7 @@ from .const import (
     ZHA_GW_MSG_RAW_INIT,
     RadioType,
 )
-from .device import (
-    CONSIDER_UNAVAILABLE_BATTERY,
-    CONSIDER_UNAVAILABLE_MAINS,
-    DeviceStatus,
-    ZHADevice,
-)
+from .device import DeviceStatus, ZHADevice
 from .group import GroupMember, ZHAGroup
 from .registries import GROUP_ENTITY_DOMAINS
 from .store import async_get_registry
@@ -127,7 +122,7 @@ class ZHAGateway:
         }
         self.debug_enabled = False
         self._log_relay_handler = LogRelayHandler(hass, self)
-        self._config_entry = config_entry
+        self.config_entry = config_entry
         self._unsubs = []
 
     async def async_initialize(self):
@@ -139,7 +134,7 @@ class ZHAGateway:
         self.ha_device_registry = await get_dev_reg(self._hass)
         self.ha_entity_registry = await get_ent_reg(self._hass)
 
-        radio_type = self._config_entry.data[CONF_RADIO_TYPE]
+        radio_type = self.config_entry.data[CONF_RADIO_TYPE]
 
         app_controller_cls = RadioType[radio_type].controller
         self.radio_description = RadioType[radio_type].description
@@ -150,7 +145,7 @@ class ZHAGateway:
             os.path.join(self._hass.config.config_dir, DEFAULT_DATABASE_NAME),
         )
         app_config[CONF_DATABASE] = database
-        app_config[CONF_DEVICE] = self._config_entry.data[CONF_DEVICE]
+        app_config[CONF_DEVICE] = self.config_entry.data[CONF_DEVICE]
 
         app_config = app_controller_cls.SCHEMA(app_config)
         try:
@@ -185,17 +180,15 @@ class ZHAGateway:
             delta_msg = "not known"
             if zha_dev_entry and zha_dev_entry.last_seen is not None:
                 delta = round(time.time() - zha_dev_entry.last_seen)
-                if zha_device.is_mains_powered:
-                    zha_device.available = delta < CONSIDER_UNAVAILABLE_MAINS
-                else:
-                    zha_device.available = delta < CONSIDER_UNAVAILABLE_BATTERY
+                zha_device.available = delta < zha_device.consider_unavailable_time
                 delta_msg = f"{str(timedelta(seconds=delta))} ago"
             _LOGGER.debug(
-                "[%s](%s) restored as '%s', last seen: %s",
+                "[%s](%s) restored as '%s', last seen: %s, consider_unavailable_time: %s seconds",
                 zha_device.nwk,
                 zha_device.name,
                 "available" if zha_device.available else "unavailable",
                 delta_msg,
+                zha_device.consider_unavailable_time,
             )
         # update the last seen time for devices every 10 minutes to avoid thrashing
         # writes and shutdown issues where storage isn't updated
@@ -360,9 +353,7 @@ class ZHAGateway:
         if zha_device is not None:
             device_info = zha_device.zha_device_info
             zha_device.async_cleanup_handles()
-            async_dispatcher_send(
-                self._hass, "{}_{}".format(SIGNAL_REMOVE, str(zha_device.ieee))
-            )
+            async_dispatcher_send(self._hass, f"{SIGNAL_REMOVE}_{str(zha_device.ieee)}")
             asyncio.ensure_future(self._async_remove_device(zha_device, entity_refs))
             if device_info is not None:
                 async_dispatcher_send(
@@ -508,7 +499,7 @@ class ZHAGateway:
             zha_device = ZHADevice.new(self._hass, zigpy_device, self, restored)
             self._devices[zigpy_device.ieee] = zha_device
             device_registry_device = self.ha_device_registry.async_get_or_create(
-                config_entry_id=self._config_entry.entry_id,
+                config_entry_id=self.config_entry.entry_id,
                 connections={(CONNECTION_ZIGBEE, str(zha_device.ieee))},
                 identifiers={(DOMAIN, str(zha_device.ieee))},
                 name=zha_device.name,

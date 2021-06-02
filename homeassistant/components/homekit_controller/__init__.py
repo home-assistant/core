@@ -1,6 +1,7 @@
 """Support for Homekit device discovery."""
 from __future__ import annotations
 
+import asyncio
 from typing import Any
 
 import aiohomekit
@@ -13,6 +14,7 @@ from aiohomekit.model.characteristics import (
 from aiohomekit.model.services import Service, ServicesTypes
 
 from homeassistant.components import zeroconf
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.entity import Entity
 
@@ -29,6 +31,8 @@ def escape_characteristic_name(char_name):
 
 class HomeKitEntity(Entity):
     """Representation of a Home Assistant HomeKit device."""
+
+    _attr_should_poll = False
 
     def __init__(self, accessory, devinfo):
         """Initialise a generic HomeKit device."""
@@ -96,14 +100,6 @@ class HomeKitEntity(Entity):
         """
         payload = self.service.build_update(characteristics)
         return await self._accessory.put_characteristics(payload)
-
-    @property
-    def should_poll(self) -> bool:
-        """Return False.
-
-        Data update is triggered from HKDevice.
-        """
-        return False
 
     def setup(self):
         """Configure an entity baed on its HomeKit characteristics metadata."""
@@ -227,6 +223,16 @@ async def async_setup(hass, config):
     hass.data[CONTROLLER] = aiohomekit.Controller(zeroconf_instance=zeroconf_instance)
     hass.data[KNOWN_DEVICES] = {}
     hass.data[TRIGGERS] = {}
+
+    async def _async_stop_homekit_controller(event):
+        await asyncio.gather(
+            *[
+                connection.async_unload()
+                for connection in hass.data[KNOWN_DEVICES].values()
+            ]
+        )
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_stop_homekit_controller)
 
     return True
 

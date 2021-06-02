@@ -6,5 +6,6 @@
   "requirements": ["pypoint==2.1.0"],
   "dependencies": ["webhook", "http"],
   "codeowners": ["@fredrike"],
-  "quality_scale": "gold"
+  "quality_scale": "gold",
+  "iot_class": "cloud_polling"
 }

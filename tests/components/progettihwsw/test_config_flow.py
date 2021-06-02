@@ -48,9 +48,6 @@ async def test_form(hass):
     assert result2["errors"] == {}
 
     with patch(
-        "homeassistant.components.progettihwsw.async_setup",
-        return_value=True,
-    ), patch(
         "homeassistant.components.progettihwsw.async_setup_entry",
         return_value=True,
     ):

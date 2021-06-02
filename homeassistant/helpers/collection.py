@@ -3,10 +3,11 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 import asyncio
+from collections.abc import Coroutine
 from dataclasses import dataclass
 from itertools import groupby
 import logging
-from typing import Any, Awaitable, Callable, Coroutine, Iterable, Optional, cast
+from typing import Any, Awaitable, Callable, Iterable, Optional, cast
 
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
@@ -65,7 +66,7 @@ class CollectionError(HomeAssistantError):
 class ItemNotFound(CollectionError):
     """Raised when an item is not found."""
 
-    def __init__(self, item_id: str):
+    def __init__(self, item_id: str) -> None:
         """Initialize item not found error."""
         super().__init__(f"Item {item_id} not found.")
         self.item_id = item_id
@@ -102,7 +103,9 @@ class IDManager:
 class ObservableCollection(ABC):
     """Base collection type that can be observed."""
 
-    def __init__(self, logger: logging.Logger, id_manager: IDManager | None = None):
+    def __init__(
+        self, logger: logging.Logger, id_manager: IDManager | None = None
+    ) -> None:
         """Initialize the base collection."""
         self.logger = logger
         self.id_manager = id_manager or IDManager()
@@ -189,7 +192,7 @@ class StorageCollection(ObservableCollection):
         store: Store,
         logger: logging.Logger,
         id_manager: IDManager | None = None,
-    ):
+    ) -> None:
         """Initialize the storage collection."""
         super().__init__(logger, id_manager)
         self.store = store
@@ -388,7 +391,7 @@ class StorageCollectionWebsocket:
         model_name: str,
         create_schema: dict,
         update_schema: dict,
-    ):
+    ) -> None:
         """Initialize a websocket CRUD."""
         self.storage_collection = storage_collection
         self.api_prefix = api_prefix

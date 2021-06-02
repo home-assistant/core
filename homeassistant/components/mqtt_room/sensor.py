@@ -120,7 +120,7 @@ class MQTTRoomSensor(SensorEntity):
                     if (
                         device.get(ATTR_ROOM) == self._state
                         or device.get(ATTR_DISTANCE) < self._distance
-                        or timediff.seconds >= self._timeout
+                        or timediff.total_seconds() >= self._timeout
                     ):
                         update_state(**device)
 
