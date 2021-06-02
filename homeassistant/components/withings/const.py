@@ -44,7 +44,7 @@ class Measurement(Enum):
     SLEEP_RESPIRATORY_RATE_MIN = "sleep_respiratory_min_bpm"
     SLEEP_SCORE = "sleep_score"
     SLEEP_SNORING = "sleep_snoring"
-    SLEEP_SNORING_EPISODE_COUNT = "sleep_snoring_eposode_count"
+    SLEEP_SNORING_EPISODE_COUNT = "sleep_snoring_episode_count"
     SLEEP_TOSLEEP_DURATION_SECONDS = "sleep_tosleep_duration_seconds"
     SLEEP_TOWAKEUP_DURATION_SECONDS = "sleep_towakeup_duration_seconds"
     SLEEP_WAKEUP_COUNT = "sleep_wakeup_count"
