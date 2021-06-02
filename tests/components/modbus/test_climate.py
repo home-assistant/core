@@ -3,14 +3,11 @@ import pytest
 
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.components.climate.const import HVAC_MODE_AUTO
-from homeassistant.components.modbus.const import (
-    CONF_CLIMATES,
-    CONF_DATA_COUNT,
-    CONF_TARGET_TEMP,
-)
+from homeassistant.components.modbus.const import CONF_CLIMATES, CONF_TARGET_TEMP
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_ADDRESS,
+    CONF_COUNT,
     CONF_NAME,
     CONF_SCAN_INTERVAL,
     CONF_SLAVE,
@@ -28,7 +25,7 @@ from tests.common import mock_restore_cache
         {},
         {
             CONF_SCAN_INTERVAL: 20,
-            CONF_DATA_COUNT: 2,
+            CONF_COUNT: 2,
         },
     ],
 )
@@ -73,7 +70,7 @@ async def test_temperature_climate(hass, regs, expected):
             CONF_SLAVE: 1,
             CONF_TARGET_TEMP: 117,
             CONF_ADDRESS: 117,
-            CONF_DATA_COUNT: 2,
+            CONF_COUNT: 2,
         },
         climate_name,
         CLIMATE_DOMAIN,

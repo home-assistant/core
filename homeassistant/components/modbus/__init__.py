@@ -58,7 +58,6 @@ from .const import (
     CONF_BYTESIZE,
     CONF_CLIMATES,
     CONF_CLOSE_COMM_ON_ERROR,
-    CONF_DATA_COUNT,
     CONF_DATA_TYPE,
     CONF_FANS,
     CONF_INPUT_TYPE,
@@ -196,7 +195,7 @@ CLIMATE_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
             ]
         ),
         vol.Required(CONF_TARGET_TEMP): cv.positive_int,
-        vol.Optional(CONF_DATA_COUNT, default=2): cv.positive_int,
+        vol.Optional(CONF_COUNT, default=2): cv.positive_int,
         vol.Optional(CONF_DATA_TYPE, default=DATA_TYPE_FLOAT): vol.In(
             [DATA_TYPE_INT, DATA_TYPE_UINT, DATA_TYPE_FLOAT, DATA_TYPE_CUSTOM]
         ),
@@ -208,6 +207,9 @@ CLIMATE_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
         vol.Optional(CONF_STEP, default=0.5): vol.Coerce(float),
         vol.Optional(CONF_STRUCTURE, default=DEFAULT_STRUCTURE_PREFIX): cv.string,
         vol.Optional(CONF_TEMPERATURE_UNIT, default=DEFAULT_TEMP_UNIT): cv.string,
+        vol.Optional(CONF_SWAP, default=CONF_SWAP_NONE): vol.In(
+            [CONF_SWAP_NONE, CONF_SWAP_BYTE, CONF_SWAP_WORD, CONF_SWAP_WORD_BYTE]
+        ),
     }
 )
 
