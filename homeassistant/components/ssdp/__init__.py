@@ -13,7 +13,11 @@ from async_upnp_client.utils import CaseInsensitiveDict
 
 from homeassistant import config_entries
 from homeassistant.components import network
-from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import (
+    EVENT_HOMEASSISTANT_STARTED,
+    EVENT_HOMEASSISTANT_STOP,
+    MATCH_ALL,
+)
 from homeassistant.core import CoreState, HomeAssistant, callback as core_callback
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
@@ -128,6 +132,19 @@ def _async_process_callbacks(
             _LOGGER.exception("Failed to callback info: %s", discovery_info)
 
 
+@core_callback
+def _async_headers_match(
+    headers: Mapping[str, str], match_dict: dict[str, str]
+) -> bool:
+    for k, v in match_dict.items():
+        if v == MATCH_ALL:
+            if k not in headers:
+                return False
+        elif headers.get(k) != v:
+            return False
+    return True
+
+
 class Scanner:
     """Class to manage SSDP scanning."""
 
@@ -157,7 +174,10 @@ class Scanner:
         # before the callback was registered are fired
         if self.hass.state != CoreState.running:
             for headers in self.cache.values():
-                self._async_callback_if_match(callback, headers, match_dict)
+                if _async_headers_match(headers, match_dict):
+                    _async_process_callbacks(
+                        [callback], self._async_headers_to_discovery_info(headers)
+                    )
 
         callback_entry = (callback, match_dict)
         self._callbacks.append(callback_entry)
@@ -167,20 +187,6 @@ class Scanner:
             self._callbacks.remove(callback_entry)
 
         return _async_remove_callback
-
-    @core_callback
-    def _async_callback_if_match(
-        self,
-        callback: Callable[[dict], None],
-        headers: Mapping[str, str],
-        match_dict: dict[str, str],
-    ) -> None:
-        """Fire a callback if info matches the match dict."""
-        if not all(headers.get(k) == v for (k, v) in match_dict.items()):
-            return
-        _async_process_callbacks(
-            [callback], self._async_headers_to_discovery_info(headers)
-        )
 
     @core_callback
     def async_stop(self, *_: Any) -> None:
@@ -250,7 +256,7 @@ class Scanner:
         return [
             callback
             for callback, match_dict in self._callbacks
-            if all(headers.get(k) == v for (k, v) in match_dict.items())
+            if _async_headers_match(headers, match_dict)
         ]
 
     @core_callback
