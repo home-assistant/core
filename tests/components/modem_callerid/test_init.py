@@ -4,7 +4,7 @@ from unittest.mock import patch
 from phone_modem import exceptions
 
 from homeassistant.components.modem_callerid.const import DOMAIN
-from homeassistant.config_entries import ENTRY_STATE_LOADED, ENTRY_STATE_SETUP_RETRY
+from homeassistant.config_entries import ConfigEntryState
 
 from . import CONF_DATA
 
@@ -23,7 +23,7 @@ async def test_setup_config(hass):
         "homeassistant.components.modem_callerid.PhoneModem",
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
-    assert config_entry.state == ENTRY_STATE_LOADED
+    assert config_entry.state == ConfigEntryState.LOADED
 
 
 async def test_async_setup_entry_not_ready(hass):
@@ -39,7 +39,7 @@ async def test_async_setup_entry_not_ready(hass):
         side_effect=exceptions.SerialError(),
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
-    assert config_entry.state == ENTRY_STATE_SETUP_RETRY
+    assert config_entry.state == ConfigEntryState.SETUP_RETRY
 
 
 async def test_unload_config_entry(hass):
@@ -57,7 +57,7 @@ async def test_unload_config_entry(hass):
         await hass.async_block_till_done()
 
         assert len(modem_setup.mock_calls) == 1
-        assert config_entry.state == ENTRY_STATE_LOADED
+        assert config_entry.state == ConfigEntryState.LOADED
 
     with patch.object(
         hass.config_entries, "async_forward_entry_unload", return_value=True
@@ -84,7 +84,7 @@ async def test_failed_unload_config_entry(hass):
         await hass.async_block_till_done()
 
         assert len(modem_setup.mock_calls) == 1
-        assert config_entry.state == ENTRY_STATE_LOADED
+        assert config_entry.state == ConfigEntryState.LOADED
 
     with patch.object(
         hass.config_entries, "async_forward_entry_unload", return_value=False
@@ -93,4 +93,4 @@ async def test_failed_unload_config_entry(hass):
         await hass.async_block_till_done()
         assert unload.call_count == 1
 
-    assert config_entry.state == ENTRY_STATE_LOADED
+    assert config_entry.state == ConfigEntryState.LOADED
