@@ -5,6 +5,7 @@ import datetime
 import logging
 
 from pysonos.core import SoCo
+from pysonos.exceptions import SoCoException
 
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.dispatcher import (
@@ -70,7 +71,11 @@ class SonosEntity(Entity):
                 self.speaker.subscription_address,
             )
             self.speaker.is_first_poll = False
-        await self.async_update()  # pylint: disable=no-member
+        try:
+            await self.async_update()  # pylint: disable=no-member
+        except (OSError, SoCoException) as ex:
+            _LOGGER.debug("Error connecting to %s: %s", self.entity_id, ex)
+            pass
 
     @property
     def soco(self) -> SoCo:
