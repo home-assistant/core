@@ -8,7 +8,7 @@ from bravia_tv.braviarc import NoIPControl
 
 from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
 from homeassistant.components.remote import DOMAIN as REMOTE_DOMAIN
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PIN, STATE_OFF
+from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PIN
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -102,7 +102,6 @@ class BraviaTVClient(DataUpdateCoordinator[None]):
         self.is_on = False
         # Assume that the TV is in Play mode
         self.playing = True
-        self.state = STATE_OFF
         self.state_lock = asyncio.Lock()
 
         super().__init__(
