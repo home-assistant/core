@@ -33,7 +33,7 @@ class _TemplateAttribute:
         validator: Callable[[Any], Any] = None,
         on_update: Callable[[Any], None] | None = None,
         none_on_template_error: bool | None = False,
-    ):
+    ) -> None:
         """Template attribute."""
         self._entity = entity
         self._attribute = attribute

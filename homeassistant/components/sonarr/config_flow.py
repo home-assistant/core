@@ -7,7 +7,7 @@ from typing import Any
 from sonarr import Sonarr, SonarrAccessRestricted, SonarrError
 import voluptuous as vol
 
-from homeassistant.config_entries import CONN_CLASS_LOCAL_POLL, ConfigFlow, OptionsFlow
+from homeassistant.config_entries import ConfigFlow, OptionsFlow
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_HOST,
@@ -62,7 +62,6 @@ class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Sonarr."""
 
     VERSION = 1
-    CONNECTION_CLASS = CONN_CLASS_LOCAL_POLL
 
     def __init__(self):
         """Initialize the flow."""

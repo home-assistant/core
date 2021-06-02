@@ -4,9 +4,13 @@ from unittest.mock import Mock
 
 import aiohue
 
+from homeassistant.components.hue import sensor_base
 from homeassistant.components.hue.hue_event import CONF_HUE_EVENT
+from homeassistant.util import dt as dt_util
 
 from .conftest import create_mock_bridge, setup_bridge_for_sensors as setup_bridge
+
+from tests.common import async_capture_events, async_fire_time_changed
 
 PRESENCE_SENSOR_1_PRESENT = {
     "state": {"presence": True, "lastupdated": "2019-01-01T01:00:00"},
@@ -435,55 +439,76 @@ async def test_hue_events(hass, mock_bridge):
     """Test that hue remotes fire events when pressed."""
     mock_bridge.mock_sensor_responses.append(SENSOR_RESPONSE)
 
-    mock_listener = Mock()
-    unsub = hass.bus.async_listen(CONF_HUE_EVENT, mock_listener)
+    events = async_capture_events(hass, CONF_HUE_EVENT)
 
     await setup_bridge(hass, mock_bridge)
     assert len(mock_bridge.mock_requests) == 1
     assert len(hass.states.async_all()) == 7
-    assert len(mock_listener.mock_calls) == 0
+    assert len(events) == 0
 
     new_sensor_response = dict(SENSOR_RESPONSE)
     new_sensor_response["7"]["state"] = {
+        "buttonevent": 18,
+        "lastupdated": "2019-12-28T22:58:03",
+    }
+    mock_bridge.mock_sensor_responses.append(new_sensor_response)
+
+    # Force updates to run again
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + sensor_base.SensorManager.SCAN_INTERVAL
+    )
+    await hass.async_block_till_done()
+
+    assert len(mock_bridge.mock_requests) == 2
+    assert len(hass.states.async_all()) == 7
+    assert len(events) == 1
+    assert events[-1].data == {
+        "id": "hue_tap",
+        "unique_id": "00:00:00:00:00:44:23:08-f2",
+        "event": 18,
+        "last_updated": "2019-12-28T22:58:03",
+    }
+
+    new_sensor_response = dict(new_sensor_response)
+    new_sensor_response["8"]["state"] = {
+        "buttonevent": 3002,
+        "lastupdated": "2019-12-28T22:58:03",
+    }
+    mock_bridge.mock_sensor_responses.append(new_sensor_response)
+
+    # Force updates to run again
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + sensor_base.SensorManager.SCAN_INTERVAL
+    )
+    await hass.async_block_till_done()
+
+    assert len(mock_bridge.mock_requests) == 3
+    assert len(hass.states.async_all()) == 7
+    assert len(events) == 2
+    assert events[-1].data == {
+        "id": "hue_dimmer_switch_1",
+        "unique_id": "00:17:88:01:10:3e:3a:dc-02-fc00",
+        "event": 3002,
+        "last_updated": "2019-12-28T22:58:03",
+    }
+
+    # Fire old event, it should be ignored
+    new_sensor_response = dict(new_sensor_response)
+    new_sensor_response["8"]["state"] = {
         "buttonevent": 18,
         "lastupdated": "2019-12-28T22:58:02",
     }
     mock_bridge.mock_sensor_responses.append(new_sensor_response)
 
     # Force updates to run again
-    await mock_bridge.sensor_manager.coordinator.async_refresh()
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + sensor_base.SensorManager.SCAN_INTERVAL
+    )
     await hass.async_block_till_done()
 
-    assert len(mock_bridge.mock_requests) == 2
+    assert len(mock_bridge.mock_requests) == 4
     assert len(hass.states.async_all()) == 7
-    assert len(mock_listener.mock_calls) == 1
-    assert mock_listener.mock_calls[0][1][0].data == {
-        "id": "hue_tap",
-        "unique_id": "00:00:00:00:00:44:23:08-f2",
-        "event": 18,
-        "last_updated": "2019-12-28T22:58:02",
-    }
-
-    new_sensor_response = dict(new_sensor_response)
-    new_sensor_response["8"]["state"] = {
-        "buttonevent": 3002,
-        "lastupdated": "2019-12-28T22:58:01",
-    }
-    mock_bridge.mock_sensor_responses.append(new_sensor_response)
-
-    # Force updates to run again
-    await mock_bridge.sensor_manager.coordinator.async_refresh()
-    await hass.async_block_till_done()
-
-    assert len(mock_bridge.mock_requests) == 3
-    assert len(hass.states.async_all()) == 7
-    assert len(mock_listener.mock_calls) == 2
-    assert mock_listener.mock_calls[1][1][0].data == {
-        "id": "hue_dimmer_switch_1",
-        "unique_id": "00:17:88:01:10:3e:3a:dc-02-fc00",
-        "event": 3002,
-        "last_updated": "2019-12-28T22:58:01",
-    }
+    assert len(events) == 2
 
     # Add a new remote. In discovery the new event is registered **but not fired**
     new_sensor_response = dict(new_sensor_response)
@@ -521,29 +546,31 @@ async def test_hue_events(hass, mock_bridge):
     mock_bridge.mock_sensor_responses.append(new_sensor_response)
 
     # Force updates to run again
-    await mock_bridge.sensor_manager.coordinator.async_refresh()
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + sensor_base.SensorManager.SCAN_INTERVAL
+    )
     await hass.async_block_till_done()
 
-    assert len(mock_bridge.mock_requests) == 4
+    assert len(mock_bridge.mock_requests) == 5
     assert len(hass.states.async_all()) == 8
-    assert len(mock_listener.mock_calls) == 2
+    assert len(events) == 2
 
     # A new press fires the event
     new_sensor_response["21"]["state"]["lastupdated"] = "2020-01-31T15:57:19"
     mock_bridge.mock_sensor_responses.append(new_sensor_response)
 
     # Force updates to run again
-    await mock_bridge.sensor_manager.coordinator.async_refresh()
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + sensor_base.SensorManager.SCAN_INTERVAL
+    )
     await hass.async_block_till_done()
 
-    assert len(mock_bridge.mock_requests) == 5
+    assert len(mock_bridge.mock_requests) == 6
     assert len(hass.states.async_all()) == 8
-    assert len(mock_listener.mock_calls) == 3
-    assert mock_listener.mock_calls[2][1][0].data == {
+    assert len(events) == 3
+    assert events[-1].data == {
         "id": "lutron_aurora_1",
         "unique_id": "ff:ff:00:0f:e7:fd:bc:b7-01-fc00-0014",
         "event": 2,
         "last_updated": "2020-01-31T15:57:19",
     }
-
-    unsub()

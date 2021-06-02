@@ -21,7 +21,6 @@ class DexcomConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Dexcom."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
@@ -62,7 +61,7 @@ class DexcomConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 class DexcomOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle a option flow for Dexcom."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry):
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize options flow."""
         self.config_entry = config_entry
 

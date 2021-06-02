@@ -140,7 +140,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
     if has_flex_sched:
-        platform = entity_platform.current_platform.get()
+        platform = entity_platform.async_get_current_platform()
         platform.async_register_entity_service(
             SERVICE_SET_ZONE_MOISTURE,
             {vol.Required(ATTR_PERCENT): cv.positive_int},

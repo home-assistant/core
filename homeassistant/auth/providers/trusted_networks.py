@@ -95,31 +95,29 @@ class TrustedNetworksAuthProvider(AuthProvider):
             user for user in users if not user.system_generated and user.is_active
         ]
         for ip_net, user_or_group_list in self.trusted_users.items():
-            if ip_addr in ip_net:
-                user_list = [
-                    user_id
-                    for user_id in user_or_group_list
-                    if isinstance(user_id, str)
-                ]
-                group_list = [
-                    group[CONF_GROUP]
-                    for group in user_or_group_list
-                    if isinstance(group, dict)
-                ]
-                flattened_group_list = [
-                    group for sublist in group_list for group in sublist
-                ]
-                available_users = [
-                    user
-                    for user in available_users
-                    if (
-                        user.id in user_list
-                        or any(
-                            group.id in flattened_group_list for group in user.groups
-                        )
-                    )
-                ]
-                break
+            if ip_addr not in ip_net:
+                continue
+
+            user_list = [
+                user_id for user_id in user_or_group_list if isinstance(user_id, str)
+            ]
+            group_list = [
+                group[CONF_GROUP]
+                for group in user_or_group_list
+                if isinstance(group, dict)
+            ]
+            flattened_group_list = [
+                group for sublist in group_list for group in sublist
+            ]
+            available_users = [
+                user
+                for user in available_users
+                if (
+                    user.id in user_list
+                    or any(group.id in flattened_group_list for group in user.groups)
+                )
+            ]
+            break
 
         return TrustedNetworksLoginFlow(
             self,
@@ -136,13 +134,22 @@ class TrustedNetworksAuthProvider(AuthProvider):
 
         users = await self.store.async_get_users()
         for user in users:
-            if not user.system_generated and user.is_active and user.id == user_id:
-                for credential in await self.async_credentials():
-                    if credential.data["user_id"] == user_id:
-                        return credential
-                cred = self.async_create_credentials({"user_id": user_id})
-                await self.store.async_link_user(user, cred)
-                return cred
+            if user.id != user_id:
+                continue
+
+            if user.system_generated:
+                continue
+
+            if not user.is_active:
+                continue
+
+            for credential in await self.async_credentials():
+                if credential.data["user_id"] == user_id:
+                    return credential
+
+            cred = self.async_create_credentials({"user_id": user_id})
+            await self.store.async_link_user(user, cred)
+            return cred
 
         # We only allow login as exist user
         raise InvalidUserError

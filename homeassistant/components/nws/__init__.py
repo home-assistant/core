@@ -57,7 +57,7 @@ class NwsDataUpdateCoordinator(DataUpdateCoordinator):
         failed_update_interval: datetime.timedelta,
         update_method: Callable[[], Awaitable] | None = None,
         request_refresh_debouncer: debounce.Debouncer | None = None,
-    ):
+    ) -> None:
         """Initialize NWS coordinator."""
         super().__init__(
             hass,

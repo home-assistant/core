@@ -1,6 +1,5 @@
 """The tests for the Modbus sensor component."""
 import logging
-from unittest import mock
 
 import pytest
 
@@ -40,7 +39,9 @@ from homeassistant.const import (
 )
 from homeassistant.core import State
 
-from .conftest import base_config_test, base_test
+from .conftest import ReadResult, base_config_test, base_test, prepare_service_update
+
+from tests.common import mock_restore_cache
 
 
 @pytest.mark.parametrize(
@@ -573,24 +574,21 @@ async def test_restore_state_sensor(hass):
     sensor_name = "test_sensor"
     test_value = "117"
     config_sensor = {CONF_NAME: sensor_name, CONF_ADDRESS: 17}
-    with mock.patch(
-        "homeassistant.components.modbus.sensor.ModbusRegisterSensor.async_get_last_state"
-    ) as mock_get_last_state:
-        mock_get_last_state.return_value = State(
-            f"{SENSOR_DOMAIN}.{sensor_name}", f"{test_value}"
-        )
-
-        await base_config_test(
-            hass,
-            config_sensor,
-            sensor_name,
-            SENSOR_DOMAIN,
-            CONF_SENSORS,
-            None,
-            method_discovery=True,
-        )
-        entity_id = f"{SENSOR_DOMAIN}.{sensor_name}"
-        assert hass.states.get(entity_id).state == test_value
+    mock_restore_cache(
+        hass,
+        (State(f"{SENSOR_DOMAIN}.{sensor_name}", test_value),),
+    )
+    await base_config_test(
+        hass,
+        config_sensor,
+        sensor_name,
+        SENSOR_DOMAIN,
+        CONF_SENSORS,
+        None,
+        method_discovery=True,
+    )
+    entity_id = f"{SENSOR_DOMAIN}.{sensor_name}"
+    assert hass.states.get(entity_id).state == test_value
 
 
 @pytest.mark.parametrize(
@@ -621,3 +619,32 @@ async def test_swap_sensor_wrong_config(hass, caplog, swap_type):
         expect_init_to_fail=True,
     )
     assert caplog.messages[-1].startswith("Error in sensor " + sensor_name + " swap")
+
+
+async def test_service_sensor_update(hass, mock_pymodbus):
+    """Run test for service homeassistant.update_entity."""
+
+    entity_id = "sensor.test"
+    config = {
+        CONF_SENSORS: [
+            {
+                CONF_NAME: "test",
+                CONF_ADDRESS: 1234,
+                CONF_INPUT_TYPE: CALL_TYPE_REGISTER_INPUT,
+            }
+        ]
+    }
+    mock_pymodbus.read_input_registers.return_value = ReadResult([27])
+    await prepare_service_update(
+        hass,
+        config,
+    )
+    await hass.services.async_call(
+        "homeassistant", "update_entity", {"entity_id": entity_id}, blocking=True
+    )
+    assert hass.states.get(entity_id).state == "27"
+    mock_pymodbus.read_input_registers.return_value = ReadResult([32])
+    await hass.services.async_call(
+        "homeassistant", "update_entity", {"entity_id": entity_id}, blocking=True
+    )
+    assert hass.states.get(entity_id).state == "32"

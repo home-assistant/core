@@ -42,6 +42,16 @@ PAIRING_FINISH_ABORT_ERRORS = [
     (aiohomekit.AccessoryNotFoundError, "accessory_not_found_error")
 ]
 
+
+INSECURE_PAIRING_CODES = [
+    "111-11-111",
+    "123-45-678",
+    "22222222",
+    "111-11-111 ",
+    " 111-11-111",
+]
+
+
 INVALID_PAIRING_CODES = [
     "aaa-aa-aaa",
     "aaa-11-aaa",
@@ -49,11 +59,8 @@ INVALID_PAIRING_CODES = [
     "aaa-aa-111",
     "1111-1-111",
     "a111-11-111",
-    " 111-11-111",
-    "111-11-111 ",
     "111-11-111a",
     "1111111",
-    "22222222",
 ]
 
 
@@ -92,6 +99,15 @@ def test_invalid_pairing_codes(pairing_code):
     """Test ensure_pin_format raises for an invalid pin code."""
     with pytest.raises(aiohomekit.exceptions.MalformedPinError):
         config_flow.ensure_pin_format(pairing_code)
+
+
+@pytest.mark.parametrize("pairing_code", INSECURE_PAIRING_CODES)
+def test_insecure_pairing_codes(pairing_code):
+    """Test ensure_pin_format raises for an invalid setup code."""
+    with pytest.raises(config_flow.InsecureSetupCode):
+        config_flow.ensure_pin_format(pairing_code)
+
+    config_flow.ensure_pin_format(pairing_code, allow_insecure_setup_codes=True)
 
 
 @pytest.mark.parametrize("pairing_code", VALID_PAIRING_CODES)
@@ -619,6 +635,49 @@ async def test_user_works(hass, controller):
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={"pairing_code": "111-22-333"}
+    )
+    assert result["type"] == "create_entry"
+    assert result["title"] == "Koogeek-LS1-20833F"
+
+
+async def test_user_pairing_with_insecure_setup_code(hass, controller):
+    """Test user initiated disovers devices."""
+    device = setup_mock_accessory(controller)
+    device.pairing_code = "123-45-678"
+
+    # Device is discovered
+    result = await hass.config_entries.flow.async_init(
+        "homekit_controller", context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+    assert get_flow_context(hass, result) == {
+        "source": config_entries.SOURCE_USER,
+    }
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"device": "TestDevice"}
+    )
+    assert result["type"] == "form"
+    assert result["step_id"] == "pair"
+
+    assert get_flow_context(hass, result) == {
+        "source": config_entries.SOURCE_USER,
+        "unique_id": "00:00:00:00:00:00",
+        "title_placeholders": {"name": "TestDevice"},
+    }
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"pairing_code": "123-45-678"}
+    )
+    assert result["type"] == "form"
+    assert result["step_id"] == "pair"
+    assert result["errors"] == {"pairing_code": "insecure_setup_code"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={"pairing_code": "123-45-678", "allow_insecure_setup_codes": True},
     )
     assert result["type"] == "create_entry"
     assert result["title"] == "Koogeek-LS1-20833F"
