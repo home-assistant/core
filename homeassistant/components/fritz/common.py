@@ -227,9 +227,11 @@ class FritzDevice:
         else:
             self._connected = dev_home
 
+        if dev_home:
+            self._last_activity = utc_point_in_time
+
         if self._connected:
             self._ip_address = dev_info.ip_address
-            self._last_activity = utc_point_in_time
         else:
             self._ip_address = None
 
