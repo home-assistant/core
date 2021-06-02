@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import datetime
 import itertools
-from statistics import fmean
 
 from homeassistant.components.recorder import history, statistics
 from homeassistant.components.sensor import (
@@ -16,7 +15,7 @@ from homeassistant.components.sensor import (
     STATE_CLASS_MEASUREMENT,
 )
 from homeassistant.const import ATTR_DEVICE_CLASS
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, State
 import homeassistant.util.dt as dt_util
 
 from . import DOMAIN
@@ -51,6 +50,44 @@ def _get_entities(hass: HomeAssistant) -> list[tuple[str, str]]:
 def _is_number(s: str) -> bool:  # pylint: disable=invalid-name
     """Return True if string is a number."""
     return s.replace(".", "", 1).isdigit()
+
+
+def _time_weighted_average(
+    fstates: list[tuple[float, State]], start: datetime.datetime, end: datetime.datetime
+) -> float:
+    """Calculate a time weighted average.
+
+    The average is calculated by, weighting the states by duration in seconds between
+    state changes.
+    Note: there's no interpolation of values between state changes.
+    """
+    old_fstate: float | None = None
+    old_start_time: datetime.datetime | None = None
+    accumulated = 0.0
+
+    for fstate, state in fstates:
+        # The recorder will give us the last known state, which may be well
+        # before the requested start time for the statistics
+        start_time = start if state.last_updated < start else state.last_updated
+        if old_start_time is None:
+            # Adjust start time, if there was no last known state
+            start = start_time
+        else:
+            duration = start_time - old_start_time
+            # Accumulate the value, weighted by duration until next state change
+            assert old_fstate is not None
+            accumulated += old_fstate * duration.total_seconds()
+
+        old_fstate = fstate
+        old_start_time = start_time
+
+    if old_fstate is not None:
+        # Accumulate the value, weighted by duration until end of the period
+        assert old_start_time is not None
+        duration = end - old_start_time
+        accumulated += old_fstate * duration.total_seconds()
+
+    return accumulated / (end - start).total_seconds()
 
 
 def compile_statistics(
@@ -91,10 +128,8 @@ def compile_statistics(
         if "min" in wanted_statistics:
             result[entity_id]["min"] = min(*itertools.islice(zip(*fstates), 1))
 
-        # Note: The average calculation will be incorrect for unevenly spaced readings,
-        # this needs to be improved by weighting with time between measurements
         if "mean" in wanted_statistics:
-            result[entity_id]["mean"] = fmean(*itertools.islice(zip(*fstates), 1))
+            result[entity_id]["mean"] = _time_weighted_average(fstates, start, end)
 
         if "sum" in wanted_statistics:
             last_reset = old_last_reset = None

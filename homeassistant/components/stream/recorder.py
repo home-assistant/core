@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections import deque
+from io import BytesIO
 import logging
 import os
 import threading
@@ -11,7 +12,11 @@ from av.container import OutputContainer
 
 from homeassistant.core import HomeAssistant, callback
 
-from .const import RECORDER_CONTAINER_FORMAT, SEGMENT_CONTAINER_FORMAT
+from .const import (
+    RECORDER_CONTAINER_FORMAT,
+    RECORDER_PROVIDER,
+    SEGMENT_CONTAINER_FORMAT,
+)
 from .core import PROVIDERS, IdleTimer, Segment, StreamOutput
 
 _LOGGER = logging.getLogger(__name__)
@@ -51,7 +56,11 @@ def recorder_save_worker(file_out: str, segments: deque[Segment]):
         last_sequence = segment.sequence
 
         # Open segment
-        source = av.open(segment.segment, "r", format=SEGMENT_CONTAINER_FORMAT)
+        source = av.open(
+            BytesIO(segment.init + segment.moof_data),
+            "r",
+            format=SEGMENT_CONTAINER_FORMAT,
+        )
         source_v = source.streams.video[0]
         source_a = source.streams.audio[0] if len(source.streams.audio) > 0 else None
 
@@ -105,7 +114,7 @@ def recorder_save_worker(file_out: str, segments: deque[Segment]):
         output.close()
 
 
-@PROVIDERS.register("recorder")
+@PROVIDERS.register(RECORDER_PROVIDER)
 class RecorderOutput(StreamOutput):
     """Represents HLS Output formats."""
 
@@ -117,7 +126,7 @@ class RecorderOutput(StreamOutput):
     @property
     def name(self) -> str:
         """Return provider name."""
-        return "recorder"
+        return RECORDER_PROVIDER
 
     def prepend(self, segments: list[Segment]) -> None:
         """Prepend segments to existing list."""

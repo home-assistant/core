@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import logging
 
-from garminconnect import (
+from garminconnect_aio import (
     GarminConnectAuthenticationError,
     GarminConnectConnectionError,
     GarminConnectTooManyRequestsError,
