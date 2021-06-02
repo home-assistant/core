@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 import logging
+from typing import Any
 
 from pysiaalarm import SIAEvent
 
@@ -25,7 +26,6 @@ from .const import (
     SIA_UNIQUE_ID_FORMAT_BINARY,
 )
 from .sia_entity_base import SIABaseEntity
-from .utils import get_attr_from_sia_event
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,24 +49,19 @@ MOISTURE_CODE_CONSEQUENCES: dict[str, bool] = {
     "WH": False,
 }
 
-ZONE_DEVICES = [
-    DEVICE_CLASS_MOISTURE,
-    DEVICE_CLASS_SMOKE,
-]
 
-
-def generate_binary_sensors(entry) -> Iterable[SIABinarySensor]:
+def generate_binary_sensors(entry) -> Iterable[SIABinarySensorBase]:
     """Generate binary sensors.
 
     For each Account there is one power sensor with zone == 0.
     For each Zone in each Account there is one smoke and one moisture sensor.
     """
     for account in entry.data[CONF_ACCOUNTS]:
-        yield SIABinarySensor(entry, account, SIA_HUB_ZONE, DEVICE_CLASS_POWER)
+        yield SIABinarySensorPower(entry, account)
         zones = entry.options[CONF_ACCOUNTS][account[CONF_ACCOUNT]][CONF_ZONES]
         for zone in range(1, zones + 1):
-            for device_class in ZONE_DEVICES:
-                yield SIABinarySensor(entry, account, zone, device_class)
+            yield SIABinarySensorSmoke(entry, account, zone)
+            yield SIABinarySensorMoisture(entry, account, zone)
 
 
 async def async_setup_entry(
@@ -78,23 +73,22 @@ async def async_setup_entry(
     async_add_entities(generate_binary_sensors(entry))
 
 
-class SIABinarySensor(BinarySensorEntity, SIABaseEntity):
+class SIABinarySensorBase(BinarySensorEntity, SIABaseEntity):
     """Class for SIA Binary Sensors."""
 
-    def update_state_and_attr(self, sia_event: SIAEvent) -> None:
-        """Update the state of the binary sensor."""
-        if int(sia_event.ri) == self._zone:
-            self._attr.update(get_attr_from_sia_event(sia_event))
-            new_state = None
-            if self._device_class == DEVICE_CLASS_POWER:
-                new_state = POWER_CODE_CONSEQUENCES.get(sia_event.code, None)
-            elif self._device_class == DEVICE_CLASS_MOISTURE:
-                new_state = MOISTURE_CODE_CONSEQUENCES.get(sia_event.code, None)
-            elif self._device_class == DEVICE_CLASS_SMOKE:
-                new_state = SMOKE_CODE_CONSEQUENCES.get(sia_event.code, None)
-            if new_state is not None:
-                _LOGGER.debug("New state will be %s", new_state)
-                self._attr_is_on = new_state
+    def __init__(
+        self,
+        entry: ConfigEntry,
+        account_data: dict[str, Any],
+        zone: int,
+        device_class: str,
+    ) -> None:
+        """Initialize a base binary sensor."""
+        super().__init__(entry, account_data, zone, device_class)
+
+        self._attr_unique_id = SIA_UNIQUE_ID_FORMAT_BINARY.format(
+            self._entry.entry_id, self._account, self._zone, self._attr_device_class
+        )
 
     def handle_last_state(self, last_state: State | None) -> None:
         """Handle the last state."""
@@ -104,18 +98,66 @@ class SIABinarySensor(BinarySensorEntity, SIABaseEntity):
             elif last_state.state == STATE_OFF:
                 self._attr_is_on = False
             elif last_state.state == STATE_UNAVAILABLE:
-                self._available = False
+                self._attr_available = False
 
-    @property
-    def unique_id(self) -> str:
-        """Get unique_id."""
-        return SIA_UNIQUE_ID_FORMAT_BINARY.format(
-            self._entry.entry_id, self._account, self._zone, self._device_class
-        )
 
-    @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Set the default enabled for the binary sensors to False for all but Power."""
-        return (  # pylint: disable=simplifiable-if-expression
-            True if self._device_class == DEVICE_CLASS_POWER else False
-        )
+class SIABinarySensorMoisture(SIABinarySensorBase):
+    """Class for Moisture Binary Sensors."""
+
+    def __init__(
+        self,
+        entry: ConfigEntry,
+        account_data: dict[str, Any],
+        zone: int,
+    ) -> None:
+        """Initialize a Moisture binary sensor."""
+        super().__init__(entry, account_data, zone, DEVICE_CLASS_MOISTURE)
+        self._attr_entity_registry_enabled_default = False
+
+    def update_state(self, sia_event: SIAEvent) -> None:
+        """Update the state of the binary sensor."""
+        new_state = MOISTURE_CODE_CONSEQUENCES.get(sia_event.code, None)
+        if new_state is not None:
+            _LOGGER.debug("New state will be %s", new_state)
+            self._attr_is_on = new_state
+
+
+class SIABinarySensorSmoke(SIABinarySensorBase):
+    """Class for Smoke Binary Sensors."""
+
+    def __init__(
+        self,
+        entry: ConfigEntry,
+        account_data: dict[str, Any],
+        zone: int,
+    ) -> None:
+        """Initialize a Smoke binary sensor."""
+        super().__init__(entry, account_data, zone, DEVICE_CLASS_SMOKE)
+        self._attr_entity_registry_enabled_default = False
+
+    def update_state(self, sia_event: SIAEvent) -> None:
+        """Update the state of the binary sensor."""
+        new_state = SMOKE_CODE_CONSEQUENCES.get(sia_event.code, None)
+        if new_state is not None:
+            _LOGGER.debug("New state will be %s", new_state)
+            self._attr_is_on = new_state
+
+
+class SIABinarySensorPower(SIABinarySensorBase):
+    """Class for Power Binary Sensors."""
+
+    def __init__(
+        self,
+        entry: ConfigEntry,
+        account_data: dict[str, Any],
+    ) -> None:
+        """Initialize a Power binary sensor."""
+        super().__init__(entry, account_data, SIA_HUB_ZONE, DEVICE_CLASS_POWER)
+        self._attr_entity_registry_enabled_default = True
+
+    def update_state(self, sia_event: SIAEvent) -> None:
+        """Update the state of the binary sensor."""
+        new_state = POWER_CODE_CONSEQUENCES.get(sia_event.code, None)
+        if new_state is not None:
+            _LOGGER.debug("New state will be %s", new_state)
+            self._attr_is_on = new_state

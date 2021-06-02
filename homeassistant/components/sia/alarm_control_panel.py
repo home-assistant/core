@@ -22,7 +22,6 @@ from homeassistant.helpers.typing import StateType
 
 from .const import CONF_ACCOUNT, CONF_ACCOUNTS, CONF_ZONES, SIA_UNIQUE_ID_FORMAT_ALARM
 from .sia_entity_base import SIABaseEntity
-from .utils import get_attr_from_sia_event
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -84,40 +83,30 @@ class SIAAlarmControlPanel(AlarmControlPanelEntity, SIABaseEntity):
     ) -> None:
         """Create SIAAlarmControlPanel object."""
         super().__init__(entry, account_data, zone, DEVICE_CLASS_ALARM)
-        self._state: StateType = None
+        self._attr_state: StateType = None
         self._old_state: StateType = None
 
-    def update_state_and_attr(self, sia_event: SIAEvent) -> None:
+        self._attr_unique_id = SIA_UNIQUE_ID_FORMAT_ALARM.format(
+            self._entry.entry_id, self._account, self._zone
+        )
+
+    def update_state(self, sia_event: SIAEvent) -> None:
         """Update the state of the alarm control panel."""
-        if int(sia_event.ri) == self._zone:
-            self._attr.update(get_attr_from_sia_event(sia_event))
-            new_state = CODE_CONSEQUENCES.get(sia_event.code, None)
-            if new_state is not None:
-                _LOGGER.debug("New state will be %s", new_state)
-                if new_state == PREVIOUS_STATE:
-                    new_state = self._old_state
-                self._state, self._old_state = new_state, self._state
+        new_state = CODE_CONSEQUENCES.get(sia_event.code, None)
+        if new_state is not None:
+            _LOGGER.debug("New state will be %s", new_state)
+            if new_state == PREVIOUS_STATE:
+                new_state = self._old_state
+            self._attr_state, self._old_state = new_state, self._attr_state
 
     def handle_last_state(self, last_state: State | None) -> None:
         """Handle the last state."""
         if last_state is not None:
-            self._state = last_state.state
+            self._attr_state = last_state.state
         if self.state == STATE_UNAVAILABLE:
-            self._available = False
-
-    @property
-    def state(self) -> StateType:
-        """Get state."""
-        return self._state
-
-    @property
-    def unique_id(self) -> str:
-        """Get unique_id."""
-        return SIA_UNIQUE_ID_FORMAT_ALARM.format(
-            self._entry.entry_id, self._account, self._zone
-        )
+            self._attr_available = False
 
     @property
     def supported_features(self) -> int:
-        """Flag supported features."""
+        """Return the list of supported features."""
         return 0

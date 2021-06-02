@@ -9,7 +9,7 @@ PLATFORMS = [ALARM_CONTROL_PANEL_DOMAIN, BINARY_SENSOR_DOMAIN]
 DOMAIN = "sia"
 
 ATTR_CODE = "last_code"
-ATTR_ZONE = "zone"
+ATTR_ZONE = "last_zone"
 ATTR_MESSAGE = "last_message"
 ATTR_ID = "last_id"
 ATTR_TIMESTAMP = "last_timestamp"
