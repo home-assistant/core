@@ -254,6 +254,7 @@ async def test_service_calls(hass, mock_media_seek):
     assert hass.states.get("media_player.kitchen").state == STATE_PLAYING
     assert hass.states.get("media_player.living_room").state == STATE_PLAYING
 
+    # ATTR_MEDIA_TRACK is not supported by bedroom and living_room players
     assert hass.states.get("media_player.kitchen").attributes[ATTR_MEDIA_TRACK] == 1
     await hass.services.async_call(
         MEDIA_DOMAIN,
@@ -308,6 +309,16 @@ async def test_service_calls(hass, mock_media_seek):
     await hass.async_block_till_done()
     assert mock_media_seek.called
 
+    assert (
+        hass.states.get("media_player.bedroom").attributes[ATTR_MEDIA_VOLUME_LEVEL] == 1
+    )
+    assert (
+        hass.states.get("media_player.kitchen").attributes[ATTR_MEDIA_VOLUME_LEVEL] == 1
+    )
+    assert (
+        hass.states.get("media_player.living_room").attributes[ATTR_MEDIA_VOLUME_LEVEL]
+        == 1
+    )
     await hass.services.async_call(
         MEDIA_DOMAIN,
         SERVICE_VOLUME_SET,
@@ -371,6 +382,18 @@ async def test_service_calls(hass, mock_media_seek):
         == 0.5
     )
 
+    assert (
+        hass.states.get("media_player.bedroom").attributes[ATTR_MEDIA_VOLUME_MUTED]
+        is False
+    )
+    assert (
+        hass.states.get("media_player.kitchen").attributes[ATTR_MEDIA_VOLUME_MUTED]
+        is False
+    )
+    assert (
+        hass.states.get("media_player.living_room").attributes[ATTR_MEDIA_VOLUME_MUTED]
+        is False
+    )
     await hass.services.async_call(
         MEDIA_DOMAIN,
         SERVICE_VOLUME_MUTE,
@@ -391,6 +414,16 @@ async def test_service_calls(hass, mock_media_seek):
         is True
     )
 
+    assert (
+        hass.states.get("media_player.bedroom").attributes[ATTR_MEDIA_SHUFFLE] is False
+    )
+    assert (
+        hass.states.get("media_player.kitchen").attributes[ATTR_MEDIA_SHUFFLE] is False
+    )
+    assert (
+        hass.states.get("media_player.living_room").attributes[ATTR_MEDIA_SHUFFLE]
+        is False
+    )
     await hass.services.async_call(
         MEDIA_DOMAIN,
         SERVICE_SHUFFLE_SET,
@@ -409,6 +442,9 @@ async def test_service_calls(hass, mock_media_seek):
         is True
     )
 
+    assert hass.states.get("media_player.bedroom").state == STATE_PLAYING
+    assert hass.states.get("media_player.kitchen").state == STATE_PLAYING
+    assert hass.states.get("media_player.living_room").state == STATE_PLAYING
     await hass.services.async_call(
         MEDIA_DOMAIN,
         SERVICE_CLEAR_PLAYLIST,
@@ -416,8 +452,19 @@ async def test_service_calls(hass, mock_media_seek):
         blocking=True,
     )
     await hass.async_block_till_done()
+    # SERVICE_CLEAR_PLAYLIST is not supported by bedroom and living_room players
     assert hass.states.get("media_player.kitchen").state == STATE_OFF
 
+    await hass.services.async_call(
+        MEDIA_DOMAIN,
+        SERVICE_MEDIA_PLAY,
+        {ATTR_ENTITY_ID: "media_player.kitchen"},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get("media_player.bedroom").state == STATE_PLAYING
+    assert hass.states.get("media_player.kitchen").state == STATE_PLAYING
+    assert hass.states.get("media_player.living_room").state == STATE_PLAYING
     await hass.services.async_call(
         MEDIA_DOMAIN,
         SERVICE_MEDIA_STOP,
