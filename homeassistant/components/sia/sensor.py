@@ -51,7 +51,7 @@ class SIASensor(RestoreEntity):
         self,
         entry: ConfigEntry,
         account_data: dict[str, Any],
-    ):
+    ) -> None:
         """Create SIASensor object."""
         self._entry: ConfigEntry = entry
         self._account_data: dict[str, Any] = account_data
@@ -62,10 +62,10 @@ class SIASensor(RestoreEntity):
             minutes=self._account_data[CONF_PING_INTERVAL]
         )
 
-        self._state: StateType = utcnow()
-        self._attr: dict[str, Any] = {}
+        self._state: dt = utcnow()
         self._cancel_icon_cb: CALLBACK_TYPE | None = None
 
+        self._attr_extra_state_attributes: dict[str, Any] = {}
         self._attr_icon = REGULAR_ICON
         self._attr_unit_of_measurement = "ISO8601"
         self._attr_device_class = DEVICE_CLASS_TIMESTAMP
@@ -96,7 +96,7 @@ class SIASensor(RestoreEntity):
 
     async def async_handle_event(self, sia_event: SIAEvent):
         """Listen to events for this port and account and update the state and attributes."""
-        self._attr.update(get_attr_from_sia_event(sia_event))
+        self._attr_extra_state_attributes.update(get_attr_from_sia_event(sia_event))
         if sia_event.code == "RP":
             self._state = utcnow()
         self._update_icon()
@@ -111,20 +111,17 @@ class SIASensor(RestoreEntity):
         self.async_write_ha_state()
 
     @property
-    def state(self) -> str:
+    def state(self) -> StateType:
         """Return state."""
         return self._state.isoformat()
 
     @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return device attributes."""
-        return self._attr
-
-    @property
     def device_info(self) -> DeviceInfo:
         """Return the device_info."""
+        assert self._attr_unique_id is not None
+        assert self._attr_name is not None
         return {
-            "identifiers": {(DOMAIN, self.unique_id)},
-            "name": self.name,
+            "name": self._attr_name,
+            "identifiers": {(DOMAIN, self._attr_unique_id)},
             "via_device": (DOMAIN, f"{self._port}_{self._account}"),
         }
