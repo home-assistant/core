@@ -10,7 +10,7 @@ import logging
 import math
 import sys
 from timeit import default_timer as timer
-from typing import Any, TypedDict
+from typing import Any, TypedDict, final
 
 from homeassistant.config import DATA_CUSTOMIZE
 from homeassistant.const import (
@@ -766,7 +766,11 @@ class Entity(ABC):
 class ToggleEntity(Entity):
     """An abstract class for entities that can be turned on and off."""
 
+    _attr_is_on: bool
+    _attr_state: None = None
+
     @property
+    @final
     def state(self) -> str | None:
         """Return the state."""
         return STATE_ON if self.is_on else STATE_OFF
@@ -774,7 +778,7 @@ class ToggleEntity(Entity):
     @property
     def is_on(self) -> bool:
         """Return True if entity is on."""
-        raise NotImplementedError()
+        return self._attr_is_on
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
