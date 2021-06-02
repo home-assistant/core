@@ -45,6 +45,9 @@ config:
 
 http:
   server_port: 8180
+  cors_allowed_origins:
+    - http://localhost:8000
+
 
 # AIS Service for AI
 # Allows you to issue voice commands
