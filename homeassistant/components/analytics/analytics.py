@@ -21,6 +21,7 @@ from .const import (
     ANALYTICS_ENDPOINT_URL_DEV,
     ATTR_ADDON_COUNT,
     ATTR_ADDONS,
+    ATTR_ARCH,
     ATTR_AUTO_UPDATE,
     ATTR_AUTOMATION_COUNT,
     ATTR_BASE,
@@ -157,6 +158,7 @@ class Analytics:
             payload[ATTR_SUPERVISOR] = {
                 ATTR_HEALTHY: supervisor_info[ATTR_HEALTHY],
                 ATTR_SUPPORTED: supervisor_info[ATTR_SUPPORTED],
+                ATTR_ARCH: supervisor_info[ATTR_ARCH],
             }
 
         if operating_system_info.get(ATTR_BOARD) is not None:

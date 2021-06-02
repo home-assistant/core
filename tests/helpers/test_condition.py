@@ -27,7 +27,7 @@ def calls(hass):
 @pytest.fixture(autouse=True)
 def setup_comp(hass):
     """Initialize components."""
-    dt_util.set_default_time_zone(hass.config.time_zone)
+    hass.config.set_time_zone(hass.config.time_zone)
     hass.loop.run_until_complete(
         async_setup_component(hass, sun.DOMAIN, {sun.DOMAIN: {sun.CONF_ELEVATION: 0}})
     )
@@ -790,6 +790,34 @@ async def test_time_using_input_datetime(hass):
         assert condition.time(
             hass, after="input_datetime.pm", before="input_datetime.am"
         )
+
+    # Trigger on PM time
+    with patch(
+        "homeassistant.helpers.condition.dt_util.now",
+        return_value=dt_util.now().replace(hour=18, minute=0, second=0),
+    ):
+        assert condition.time(
+            hass, after="input_datetime.pm", before="input_datetime.am"
+        )
+        assert not condition.time(
+            hass, after="input_datetime.am", before="input_datetime.pm"
+        )
+        assert condition.time(hass, after="input_datetime.pm")
+        assert not condition.time(hass, before="input_datetime.pm")
+
+    # Trigger on AM time
+    with patch(
+        "homeassistant.helpers.condition.dt_util.now",
+        return_value=dt_util.now().replace(hour=6, minute=0, second=0),
+    ):
+        assert not condition.time(
+            hass, after="input_datetime.pm", before="input_datetime.am"
+        )
+        assert condition.time(
+            hass, after="input_datetime.am", before="input_datetime.pm"
+        )
+        assert condition.time(hass, after="input_datetime.am")
+        assert not condition.time(hass, before="input_datetime.am")
 
     with pytest.raises(ConditionError):
         condition.time(hass, after="input_datetime.not_existing")

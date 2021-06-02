@@ -81,7 +81,7 @@ class AccountSensor(SensorEntity):
     def update(self):
         """Get the latest state of the sensor."""
         self._coinbase_data.update()
-        for account in self._coinbase_data.accounts["data"]:
+        for account in self._coinbase_data.accounts:
             if self._name == f"Coinbase {account['name']}":
                 self._state = account["balance"]["amount"]
                 self._native_balance = account["native_balance"]["amount"]

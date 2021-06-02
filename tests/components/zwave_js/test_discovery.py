@@ -1,4 +1,11 @@
 """Test discovery of entities for device-specific schemas for the Z-Wave JS integration."""
+import pytest
+
+from homeassistant.components.zwave_js.discovery import (
+    FirmwareVersionRange,
+    ZWaveDiscoverySchema,
+    ZWaveValueDiscoverySchema,
+)
 
 
 async def test_iblinds_v2(hass, client, iblinds_v2, integration):
@@ -48,3 +55,13 @@ async def test_vision_security_zl7432(
         state = hass.states.get(entity_id)
         assert state
         assert state.attributes["assumed_state"]
+
+
+async def test_firmware_version_range_exception(hass):
+    """Test FirmwareVersionRange exception."""
+    with pytest.raises(ValueError):
+        ZWaveDiscoverySchema(
+            "test",
+            ZWaveValueDiscoverySchema(command_class=1),
+            firmware_version_range=FirmwareVersionRange(),
+        )

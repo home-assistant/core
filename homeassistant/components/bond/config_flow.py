@@ -63,7 +63,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Bond."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
     def __init__(self) -> None:
         """Initialize config flow."""
@@ -180,7 +179,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 class InputValidationError(exceptions.HomeAssistantError):
     """Error to indicate we cannot proceed due to invalid input."""
 
-    def __init__(self, base: str):
+    def __init__(self, base: str) -> None:
         """Initialize with error base."""
         super().__init__()
         self.base = base

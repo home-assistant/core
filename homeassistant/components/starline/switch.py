@@ -41,7 +41,7 @@ class StarlineSwitch(StarlineEntity, SwitchEntity):
         name: str,
         icon_on: str,
         icon_off: str,
-    ):
+    ) -> None:
         """Initialize the switch."""
         super().__init__(account, device, key, name)
         self._icon_on = icon_on

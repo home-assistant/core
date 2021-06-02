@@ -19,8 +19,7 @@
         "step": {
             "init": {
                 "data": {
-                    "floor_temperature": "Golvetemperatur",
-                    "precision": "Precision"
+                    "floor_temperature": "Golvetemperatur"
                 },
                 "description": "Alternativ f\u00f6r OpenTherm Gateway"
             }

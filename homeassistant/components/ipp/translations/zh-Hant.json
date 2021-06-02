@@ -13,7 +13,7 @@
             "cannot_connect": "\u9023\u7dda\u5931\u6557",
             "connection_upgrade": "\u9023\u7dda\u81f3\u5370\u8868\u6a5f\u5931\u6557\u3002\u8acb\u52fe\u9078 SSL/TLS \u9078\u9805\u5f8c\u518d\u8a66\u4e00\u6b21\u3002"
         },
-        "flow_title": "\u5370\u8868\u6a5f\uff1a{name}",
+        "flow_title": "{name}",
         "step": {
             "user": {
                 "data": {

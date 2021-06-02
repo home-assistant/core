@@ -10,7 +10,7 @@
         "error": {
             "discovery_error": "Failed to discover a Denon AVR Network Receiver"
         },
-        "flow_title": "Denon AVR Network Receiver: {name}",
+        "flow_title": "{name}",
         "step": {
             "confirm": {
                 "description": "Please confirm adding the receiver",
