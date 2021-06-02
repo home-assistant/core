@@ -944,6 +944,7 @@ omit =
     homeassistant/components/sia/binary_sensor.py
     homeassistant/components/sia/const.py
     homeassistant/components/sia/hub.py
+    homeassistant/components/sia/sensor.py
     homeassistant/components/sia/utils.py
     homeassistant/components/sia/sia_entity_base.py
     homeassistant/components/sinch/*
