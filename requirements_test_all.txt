@@ -460,7 +460,7 @@ hyperion-py==0.7.4
 iaqualink==0.3.4
 
 # homeassistant.components.ping
-icmplib==2.1.1
+icmplib==3.0
 
 # homeassistant.components.network
 ifaddr==0.1.7
