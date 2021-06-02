@@ -121,6 +121,7 @@ COMMAND_THERMOSTAT_TEMPERATURE_SET_RANGE = (
 COMMAND_THERMOSTAT_SET_MODE = f"{PREFIX_COMMANDS}ThermostatSetMode"
 COMMAND_LOCKUNLOCK = f"{PREFIX_COMMANDS}LockUnlock"
 COMMAND_FANSPEED = f"{PREFIX_COMMANDS}SetFanSpeed"
+COMMAND_FANSPEEDRELATIVE = f"{PREFIX_COMMANDS}SetFanSpeedRelative"
 COMMAND_MODES = f"{PREFIX_COMMANDS}SetModes"
 COMMAND_INPUT = f"{PREFIX_COMMANDS}SetInput"
 COMMAND_NEXT_INPUT = f"{PREFIX_COMMANDS}NextInput"
@@ -1276,10 +1277,9 @@ class FanSpeedTrait(_Trait):
         reversible = False
 
         if domain == fan.DOMAIN:
+            # The use of legacy speeds is deprecated in the schema, support will be removed after a quarter (2021.7)
             modes = self.state.attributes.get(fan.ATTR_SPEED_LIST, [])
             for mode in modes:
-                if mode not in self.speed_synonyms:
-                    continue
                 speed = {
                     "speed_name": mode,
                     "speed_values": [
@@ -1321,6 +1321,7 @@ class FanSpeedTrait(_Trait):
             if speed is not None:
                 response["on"] = speed != fan.SPEED_OFF
                 response["currentFanSpeedSetting"] = speed
+            if percent is not None:
                 response["currentFanSpeedPercent"] = percent
         return response
 
@@ -1369,6 +1370,7 @@ class ModesTrait(_Trait):
     commands = [COMMAND_MODES]
 
     SYNONYMS = {
+        "preset mode": ["preset mode", "mode", "preset"],
         "sound mode": ["sound mode", "effects"],
         "option": ["option", "setting", "mode", "value"],
     }
@@ -1376,6 +1378,9 @@ class ModesTrait(_Trait):
     @staticmethod
     def supported(domain, features, device_class, _):
         """Test if state is supported."""
+        if domain == fan.DOMAIN and features & fan.SUPPORT_PRESET_MODE:
+            return True
+
         if domain == input_select.DOMAIN:
             return True
 
@@ -1419,6 +1424,7 @@ class ModesTrait(_Trait):
         modes = []
 
         for domain, attr, name in (
+            (fan.DOMAIN, fan.ATTR_PRESET_MODES, "preset mode"),
             (media_player.DOMAIN, media_player.ATTR_SOUND_MODE_LIST, "sound mode"),
             (input_select.DOMAIN, input_select.ATTR_OPTIONS, "option"),
             (humidifier.DOMAIN, humidifier.ATTR_AVAILABLE_MODES, "mode"),
@@ -1445,7 +1451,10 @@ class ModesTrait(_Trait):
         response = {}
         mode_settings = {}
 
-        if self.state.domain == media_player.DOMAIN:
+        if self.state.domain == fan.DOMAIN:
+            if fan.ATTR_PRESET_MODES in attrs:
+                mode_settings["preset mode"] = attrs.get(fan.ATTR_PRESET_MODE)
+        elif self.state.domain == media_player.DOMAIN:
             if media_player.ATTR_SOUND_MODE_LIST in attrs:
                 mode_settings["sound mode"] = attrs.get(media_player.ATTR_SOUND_MODE)
         elif self.state.domain == input_select.DOMAIN:
@@ -1466,8 +1475,22 @@ class ModesTrait(_Trait):
         """Execute a SetModes command."""
         settings = params.get("updateModeSettings")
 
+        if self.state.domain == fan.DOMAIN:
+            preset_mode = settings["preset mode"]
+            await self.hass.services.async_call(
+                fan.DOMAIN,
+                fan.SERVICE_SET_PRESET_MODE,
+                {
+                    ATTR_ENTITY_ID: self.state.entity_id,
+                    fan.ATTR_PRESET_MODE: preset_mode,
+                },
+                blocking=True,
+                context=data.context,
+            )
+            return
+
         if self.state.domain == input_select.DOMAIN:
-            option = params["updateModeSettings"]["option"]
+            option = settings["option"]
             await self.hass.services.async_call(
                 input_select.DOMAIN,
                 input_select.SERVICE_SELECT_OPTION,
@@ -1508,26 +1531,25 @@ class ModesTrait(_Trait):
             )
             return
 
-        if self.state.domain != media_player.DOMAIN:
-            _LOGGER.info(
-                "Received an Options command for unrecognised domain %s",
-                self.state.domain,
-            )
-            return
+        if self.state.domain == media_player.DOMAIN:
+            sound_mode = settings.get("sound mode")
+            if sound_mode:
+                await self.hass.services.async_call(
+                    media_player.DOMAIN,
+                    media_player.SERVICE_SELECT_SOUND_MODE,
+                    {
+                        ATTR_ENTITY_ID: self.state.entity_id,
+                        media_player.ATTR_SOUND_MODE: sound_mode,
+                    },
+                    blocking=True,
+                    context=data.context,
+                )
 
-        sound_mode = settings.get("sound mode")
-
-        if sound_mode:
-            await self.hass.services.async_call(
-                media_player.DOMAIN,
-                media_player.SERVICE_SELECT_SOUND_MODE,
-                {
-                    ATTR_ENTITY_ID: self.state.entity_id,
-                    media_player.ATTR_SOUND_MODE: sound_mode,
-                },
-                blocking=True,
-                context=data.context,
-            )
+        _LOGGER.info(
+            "Received an Options command for unrecognised domain %s",
+            self.state.domain,
+        )
+        return
 
 
 @register_trait

@@ -247,14 +247,20 @@ DEMO_DEVICES = [
     {
         "id": "fan.living_room_fan",
         "name": {"name": "Living Room Fan"},
-        "traits": ["action.devices.traits.FanSpeed", "action.devices.traits.OnOff"],
+        "traits": [
+            "action.devices.traits.FanSpeed",
+            "action.devices.traits.OnOff",
+        ],
         "type": "action.devices.types.FAN",
         "willReportState": False,
     },
     {
         "id": "fan.ceiling_fan",
         "name": {"name": "Ceiling Fan"},
-        "traits": ["action.devices.traits.FanSpeed", "action.devices.traits.OnOff"],
+        "traits": [
+            "action.devices.traits.FanSpeed",
+            "action.devices.traits.OnOff",
+        ],
         "type": "action.devices.types.FAN",
         "willReportState": False,
     },
@@ -275,7 +281,10 @@ DEMO_DEVICES = [
     {
         "id": "fan.preset_only_limited_fan",
         "name": {"name": "Preset Only Limited Fan"},
-        "traits": ["action.devices.traits.OnOff"],
+        "traits": [
+            "action.devices.traits.OnOff",
+            "action.devices.traits.Modes",
+        ],
         "type": "action.devices.types.FAN",
         "willReportState": False,
     },
