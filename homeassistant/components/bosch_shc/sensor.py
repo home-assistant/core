@@ -1,12 +1,9 @@
 """Platform for sensor integration."""
-import logging
-
-from boschshcpy import SHCBatteryDevice, SHCSession
+from boschshcpy import SHCSession
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
-    DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_POWER,
@@ -19,8 +16,6 @@ from homeassistant.const import (
 
 from .const import DATA_SESSION, DOMAIN
 from .entity import SHCEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -142,23 +137,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 entry_id=config_entry.entry_id,
             )
         )
-
-    for sensor in (
-        session.device_helper.smoke_detectors
-        + session.device_helper.shutter_contacts
-        + session.device_helper.universal_switches
-        + session.device_helper.thermostats
-        + session.device_helper.wallthermostats
-        + session.device_helper.twinguards
-    ):
-        if sensor.supports_batterylevel:
-            entities.append(
-                BatterySensor(
-                    device=sensor,
-                    parent_id=session.information.unique_id,
-                    entry_id=config_entry.entry_id,
-                )
-            )
 
     if entities:
         async_add_entities(entities)
@@ -390,58 +368,6 @@ class EnergySensor(SHCEntity, SensorEntity):
     def unit_of_measurement(self):
         """Return the unit of measurement of the sensor."""
         return ENERGY_KILO_WATT_HOUR
-
-
-class BatterySensor(SHCEntity, SensorEntity):
-    """Representation of a SHC battery reporting sensor."""
-
-    @property
-    def unique_id(self):
-        """Return the unique ID of this sensor."""
-        return f"{self._device.serial}_battery"
-
-    @property
-    def name(self):
-        """Return the name of this sensor."""
-        return f"{self._device.name} Battery"
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        if (
-            self._device.batterylevel
-            == SHCBatteryDevice.BatteryLevelService.State.CRITICAL_LOW
-        ):
-            _LOGGER.warning("Battery state of device %s is critical low", self.name)
-            return 0
-
-        if (
-            self._device.batterylevel
-            == SHCBatteryDevice.BatteryLevelService.State.LOW_BATTERY
-        ):
-            _LOGGER.warning("Battery state of device %s is low", self.name)
-            return 20
-
-        if self._device.batterylevel == SHCBatteryDevice.BatteryLevelService.State.OK:
-            return 100
-
-        if (
-            self._device.batterylevel
-            == SHCBatteryDevice.BatteryLevelService.State.NOT_AVAILABLE
-        ):
-            _LOGGER.debug("Battery state of device %s is not available", self.name)
-
-        return None
-
-    @property
-    def device_class(self):
-        """Return the class of the sensor."""
-        return DEVICE_CLASS_BATTERY
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of the sensor."""
-        return PERCENTAGE
 
 
 class ValveTappetSensor(SHCEntity, SensorEntity):
