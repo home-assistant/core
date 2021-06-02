@@ -35,6 +35,7 @@ from .const import (
     PLATFORMS,
     SONOS_ALARM_UPDATE,
     SONOS_GROUP_UPDATE,
+    SONOS_REBOOTED,
     SONOS_SEEN,
     UPNP_ST,
 )
@@ -80,6 +81,7 @@ class SonosData:
         self.topology_condition = asyncio.Condition()
         self.hosts_heartbeat = None
         self.ssdp_known: set[str] = set()
+        self.boot_counts: dict[str, int] = {}
 
 
 async def async_setup(hass, config):
@@ -176,11 +178,18 @@ async def async_setup_entry(  # noqa: C901
         if player.is_visible:
             _discovered_player(player)
 
-    async def _async_create_discovered_player(uid, discovered_ip):
+    async def _async_create_discovered_player(uid, discovered_ip, boot_seqnum):
         """Only create one player at a time."""
         async with discovery_lock:
             if uid in data.discovered:
-                async_dispatcher_send(hass, f"{SONOS_SEEN}-{uid}")
+                if boot_seqnum and boot_seqnum > data.boot_counts[uid]:
+                    _LOGGER.warning(
+                        "%s rebooted, recreating subscriptions", discovered_ip
+                    )
+                    data.boot_counts[uid] = boot_seqnum
+                    async_dispatcher_send(hass, f"{SONOS_REBOOTED}-{uid}")
+                else:
+                    async_dispatcher_send(hass, f"{SONOS_SEEN}-{uid}")
                 return
             await hass.async_add_executor_job(_discovered_ip, discovered_ip)
 
@@ -189,11 +198,16 @@ async def async_setup_entry(  # noqa: C901
         uid = info.get(ssdp.ATTR_UPNP_UDN)
         if uid.startswith("uuid:"):
             uid = uid[5:]
+        if boot_seqnum := info.get("X-RINCON-BOOTSEQ"):
+            boot_seqnum = int(boot_seqnum)
+            data.boot_counts.setdefault(uid, boot_seqnum)
         if uid not in data.ssdp_known:
             _LOGGER.debug("New discovery: %s", info)
             data.ssdp_known.add(uid)
         discovered_ip = urlparse(info[ssdp.ATTR_SSDP_LOCATION]).hostname
-        asyncio.create_task(_async_create_discovered_player(uid, discovered_ip))
+        asyncio.create_task(
+            _async_create_discovered_player(uid, discovered_ip, boot_seqnum)
+        )
 
     @callback
     def _async_signal_update_alarms(event):
