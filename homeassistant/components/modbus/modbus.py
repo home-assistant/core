@@ -196,8 +196,8 @@ class ModbusHub:
             },
         }
 
-    def _log_error(self, exception_error: ModbusException, error_state=True):
-        log_text = "Pymodbus: " + str(exception_error)
+    def _log_error(self, text: str, error_state=True):
+        log_text = "Pymodbus: " + text
         if self._in_error:
             _LOGGER.debug(log_text)
         else:
@@ -242,13 +242,12 @@ class ModbusHub:
                     reset_socket=self._config_reset_socket,
                 )
         except ModbusException as exception_error:
-            self._log_error(exception_error, error_state=False)
+            self._log_error(str(exception_error), error_state=False)
             return False
 
         async with self._lock:
             if not await self.hass.async_add_executor_job(self._pymodbus_connect):
-                exception = ModbusException("initial connect failed, no retry")
-                self._log_error(exception, error_state=False)
+                self._log_error("initial connect failed, no retry", error_state=False)
                 return False
 
         self._call_type[CALL_TYPE_COIL][ENTRY_FUNC] = self._client.read_coils
@@ -289,7 +288,7 @@ class ModbusHub:
             try:
                 self._client.close()
             except ModbusException as exception_error:
-                self._log_error(exception_error)
+                self._log_error(str(exception_error))
         self._client = None
 
     async def async_close(self):
@@ -306,7 +305,7 @@ class ModbusHub:
         try:
             return self._client.connect()
         except ModbusException as exception_error:
-            self._log_error(exception_error, error_state=False)
+            self._log_error(str(exception_error), error_state=False)
             return False
 
     def _pymodbus_call(self, unit, address, value, use_call):
@@ -315,10 +314,10 @@ class ModbusHub:
         try:
             result = self._call_type[use_call][ENTRY_FUNC](address, value, **kwargs)
         except ModbusException as exception_error:
-            self._log_error(exception_error)
+            self._log_error(str(exception_error))
             result = exception_error
         if not hasattr(result, self._call_type[use_call][ENTRY_ATTR]):
-            self._log_error(result)
+            self._log_error(str(result))
             return None
         self._in_error = False
         return result
