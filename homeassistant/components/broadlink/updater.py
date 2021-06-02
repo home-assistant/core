@@ -17,6 +17,7 @@ def get_update_manager(device):
         "A1": BroadlinkA1UpdateManager,
         "BG1": BroadlinkBG1UpdateManager,
         "MP1": BroadlinkMP1UpdateManager,
+        "LB1": BroadlinkLB1UpdateManager,
         "RM4MINI": BroadlinkRMUpdateManager,
         "RM4PRO": BroadlinkRMUpdateManager,
         "RMMINI": BroadlinkRMUpdateManager,
@@ -29,7 +30,6 @@ def get_update_manager(device):
         "SP3S": BroadlinkSP2UpdateManager,
         "SP4": BroadlinkSP4UpdateManager,
         "SP4B": BroadlinkSP4UpdateManager,
-        "LB1": BroadlinkLB1UpdateManager,
     }
     return update_managers[device.api.type](device)
 

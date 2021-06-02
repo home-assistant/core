@@ -2,8 +2,6 @@
 from abc import ABC, abstractmethod
 import logging
 
-from broadlink.exceptions import BroadlinkException
-
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
@@ -11,12 +9,10 @@ from homeassistant.components.light import (
     COLOR_MODE_COLOR_TEMP,
     COLOR_MODE_HS,
     COLOR_MODE_UNKNOWN,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR,
-    SUPPORT_COLOR_TEMP,
     LightEntity,
 )
 from homeassistant.core import callback
+from broadlink.exceptions import BroadlinkException
 
 from .const import DOMAIN
 
@@ -44,22 +40,20 @@ class BroadlinkLight(LightEntity, ABC):
         """Initialize the light."""
         self._device = device
         self._coordinator = device.update_manager.coordinator
-        self._brightness = round(self._coordinator.data["brightness"] * 2.55)
-        if self._coordinator.data["bulb_colormode"] == BROADLINK_COLOR_MODE_RGB:
+
+        data = self._coordinator.data
+        self._hs_color = [data["hue"], data["saturation"]]
+        self._color_temp = round((data["colortemp"] - 2700) / 100 + 153)
+        self._state = data["pwr"]
+        self._brightness = round(data["brightness"] * 2.55)
+
+        if data["bulb_colormode"] == BROADLINK_COLOR_MODE_RGB:
             self._color_mode = COLOR_MODE_HS
-        elif self._coordinator.data["bulb_colormode"] == BROADLINK_COLOR_MODE_WHITE:
+        elif data["bulb_colormode"] == BROADLINK_COLOR_MODE_WHITE:
             self._color_mode = COLOR_MODE_COLOR_TEMP
         else:
             # Scenes are for now not supported
             self._color_mode = COLOR_MODE_UNKNOWN
-        self._hs_color = [
-            self._coordinator.data["hue"],
-            self._coordinator.data["saturation"],
-        ]
-        self._color_temp = round(
-            (self._coordinator.data["colortemp"] - 2700) / 100 + 153
-        )
-        self._state = self._coordinator.data["pwr"]
 
     @property
     def name(self):
@@ -102,11 +96,6 @@ class BroadlinkLight(LightEntity, ABC):
         return False
 
     @property
-    def supported_features(self):
-        """Return the supported features."""
-        return SUPPORT_BRIGHTNESS | SUPPORT_COLOR | SUPPORT_COLOR_TEMP
-
-    @property
     def color_mode(self):
         """Return the current color mode property"""
         return self._color_mode
@@ -114,7 +103,7 @@ class BroadlinkLight(LightEntity, ABC):
     @property
     def supported_color_modes(self):
         """Return the supported color modes"""
-        return [COLOR_MODE_COLOR_TEMP, COLOR_MODE_HS]
+        return {COLOR_MODE_COLOR_TEMP, COLOR_MODE_HS}
 
     @property
     def device_info(self):
@@ -130,22 +119,19 @@ class BroadlinkLight(LightEntity, ABC):
     @callback
     def update_data(self):
         """Update data."""
-        self._brightness = round(self._coordinator.data["brightness"] * 2.55)
-        if self._coordinator.data["bulb_colormode"] == BROADLINK_COLOR_MODE_RGB:
+        data = self._coordinator.data
+        self._brightness = round(data["brightness"] * 2.55)
+        self._hs_color = [data["hue"], data["saturation"]]
+        self._color_temp = round((data["colortemp"] - 2700) / 100 + 153)
+        self._state = data["pwr"]
+
+        if data["bulb_colormode"] == BROADLINK_COLOR_MODE_RGB:
             self._color_mode = COLOR_MODE_HS
-        elif self._coordinator.data["bulb_colormode"] == BROADLINK_COLOR_MODE_WHITE:
+        elif data["bulb_colormode"] == BROADLINK_COLOR_MODE_WHITE:
             self._color_mode = COLOR_MODE_COLOR_TEMP
         else:
             # Scenes are for now not supported
             self._color_mode = COLOR_MODE_UNKNOWN
-        self._hs_color = [
-            self._coordinator.data["hue"],
-            self._coordinator.data["saturation"],
-        ]
-        self._color_temp = round(
-            (self._coordinator.data["colortemp"] - 2700) / 100 + 153
-        )
-        self._state = self._coordinator.data["pwr"]
         self.async_write_ha_state()
 
     async def async_added_to_hass(self):
@@ -174,13 +160,14 @@ class BroadlinkLight(LightEntity, ABC):
             "colortemp": (color_temp - 153) * 100 + 2700,
             "brightness": round(brightness / 2.55),
             "pwr": 1,
-            "bulb_colormode": BROADLINK_COLOR_MODE_SCENES,
         }
 
         if color_mode == COLOR_MODE_HS:
             data["bulb_colormode"] = BROADLINK_COLOR_MODE_RGB
         elif color_mode == COLOR_MODE_COLOR_TEMP:
             data["bulb_colormode"] = BROADLINK_COLOR_MODE_WHITE
+        else:
+            data["bulb_colormode"] = BROADLINK_COLOR_MODE_SCENES
 
         if await self._async_send_packet(data):
             self._hs_color = hs_color
@@ -221,9 +208,6 @@ class BroadlinkLB1Light(BroadlinkLight):
 
     async def _async_send_packet(self, request):
         """Send a packet to the device."""
-        if request is None:
-            return True
-
         try:
             await self._device.async_request(self._device.api.set_state, **request)
         except (BroadlinkException, OSError) as err:
