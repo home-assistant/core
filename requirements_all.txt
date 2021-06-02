@@ -230,7 +230,7 @@ aiorecollect==1.0.4
 aioshelly==0.6.4
 
 # homeassistant.components.switcher_kis
-aioswitcher==1.2.1
+aioswitcher==1.2.3
 
 # homeassistant.components.syncthing
 aiosyncthing==0.5.1
@@ -358,7 +358,7 @@ bimmer_connected==0.7.15
 bizkaibus==0.1.1
 
 # homeassistant.components.blebox
-blebox_uniapi==1.3.2
+blebox_uniapi==1.3.3
 
 # homeassistant.components.blink
 blinkpy==0.17.0
@@ -729,7 +729,7 @@ ha-philipsjs==2.7.4
 habitipy==0.2.0
 
 # homeassistant.components.hangouts
-hangups==0.4.11
+hangups==0.4.14
 
 # homeassistant.components.cloud
 hass-nabucasa==0.43.0
@@ -765,7 +765,7 @@ hole==0.5.1
 holidays==0.11.1
 
 # homeassistant.components.frontend
-home-assistant-frontend==20210531.1
+home-assistant-frontend==20210601.1
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -816,7 +816,7 @@ ibm-watson==5.1.0
 ibmiotf==0.3.4
 
 # homeassistant.components.ping
-icmplib==2.1.1
+icmplib==3.0
 
 # homeassistant.components.network
 ifaddr==0.1.7
@@ -1481,7 +1481,7 @@ pyipma==2.0.5
 pyipp==0.11.0
 
 # homeassistant.components.iqvia
-pyiqvia==0.3.1
+pyiqvia==1.0.0
 
 # homeassistant.components.irish_rail_transport
 pyirishrail==0.0.2
@@ -2441,4 +2441,4 @@ zigpy==0.33.0
 zm-py==0.5.2
 
 # homeassistant.components.zwave_js
-zwave-js-server-python==0.25.1
+zwave-js-server-python==0.26.0

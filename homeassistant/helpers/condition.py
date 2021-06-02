@@ -752,19 +752,21 @@ def time(
             before_entity.attributes.get("hour", 23),
             before_entity.attributes.get("minute", 59),
             before_entity.attributes.get("second", 59),
-            999999,
         )
 
     if after < before:
+        condition_trace_update_result(after=after, now_time=now_time, before=before)
         if not after <= now_time < before:
             return False
     else:
+        condition_trace_update_result(after=after, now_time=now_time, before=before)
         if before <= now_time < after:
             return False
 
     if weekday is not None:
         now_weekday = WEEKDAYS[now.weekday()]
 
+        condition_trace_update_result(weekday=weekday, now_weekday=now_weekday)
         if (
             isinstance(weekday, str)
             and weekday != now_weekday
