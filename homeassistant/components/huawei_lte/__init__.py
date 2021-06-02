@@ -361,7 +361,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Check that we found required information
     device_info = router.data.get(KEY_DEVICE_INFORMATION)
     if not entry.unique_id:
-        # Transitional from < 2021.5: update None config entry and entity unique ids
+        # Transitional from < 2021.7: update None config entry and entity unique ids
         if device_info and (serial_number := device_info.get("SerialNumber")):
             hass.config_entries.async_update_entry(entry, unique_id=serial_number)
             ent_reg = entity_registry.async_get(hass)
@@ -414,7 +414,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         device_registry = await dr.async_get_registry(hass)
         device_registry.async_get_or_create(
             config_entry_id=entry.entry_id,
-            # We used to have "connections" here before 2021.6, but as of that version
+            # We used to have "connections" here before 2021.7, but as of that version
             # there is no way to clear them, so devices set up before that version will
             # have it left behind.
             identifiers=router.device_identifiers,
