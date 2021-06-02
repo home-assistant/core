@@ -358,7 +358,7 @@ bimmer_connected==0.7.15
 bizkaibus==0.1.1
 
 # homeassistant.components.blebox
-blebox_uniapi==1.3.2
+blebox_uniapi==1.3.3
 
 # homeassistant.components.blink
 blinkpy==0.17.0
@@ -1485,7 +1485,7 @@ pyipma==2.0.5
 pyipp==0.11.0
 
 # homeassistant.components.iqvia
-pyiqvia==0.3.1
+pyiqvia==1.0.0
 
 # homeassistant.components.irish_rail_transport
 pyirishrail==0.0.2

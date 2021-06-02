@@ -392,6 +392,9 @@ class ConfigEntry:
             self.reason = None
             return True
 
+        if self.state == ConfigEntryState.NOT_LOADED:
+            return True
+
         if integration is None:
             try:
                 integration = await loader.async_get_integration(hass, self.domain)
