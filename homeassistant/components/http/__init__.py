@@ -232,10 +232,7 @@ class HomeAssistantHTTP:
         # forwarded middleware needs to go second.
         setup_security_filter(app)
 
-        # Only register middleware if `use_x_forwarded_for` is enabled
-        # and trusted proxies are provided
-        if use_x_forwarded_for and trusted_proxies:
-            async_setup_forwarded(app, trusted_proxies)
+        async_setup_forwarded(app, use_x_forwarded_for, trusted_proxies)
 
         setup_request_context(app, current_request)
 
@@ -252,7 +249,6 @@ class HomeAssistantHTTP:
         self.ssl_key = ssl_key
         self.server_host = server_host
         self.server_port = server_port
-        self.use_x_forwarded_for = use_x_forwarded_for
         self.trusted_proxies = trusted_proxies
         self.is_ban_enabled = is_ban_enabled
         self.ssl_profile = ssl_profile
