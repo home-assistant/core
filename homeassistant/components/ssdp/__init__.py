@@ -136,11 +136,11 @@ def _async_process_callbacks(
 def _async_headers_match(
     headers: Mapping[str, str], match_dict: dict[str, str]
 ) -> bool:
-    for k, v in match_dict.items():
-        if v == MATCH_ALL:
-            if k not in headers:
+    for header, val in match_dict.items():
+        if val == MATCH_ALL:
+            if header not in headers:
                 return False
-        elif headers.get(k) != v:
+        elif headers.get(header) != val:
             return False
     return True
 
