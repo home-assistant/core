@@ -442,7 +442,7 @@ async def test_thermostat_heatit_z_trm3_no_value(
 ):
     """Test a heatit Z-TRM3 entity that is missing a value."""
     # When the config parameter that specifies what sensor to use has no value, we fall
-    # back to the first found current temperature
+    # back to the first temperature sensor found on the device
     state = hass.states.get(CLIMATE_FLOOR_THERMOSTAT_ENTITY)
     assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 22.5
 
