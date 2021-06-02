@@ -29,6 +29,10 @@ async def async_setup_entry(
 class IslamicPrayerTimeSensor(CoordinatorEntity, SensorEntity):
     """Representation of an Islamic prayer time sensor."""
 
+    _attr_device_class = DEVICE_CLASS_TIMESTAMP
+    _attr_icon = PRAYER_TIMES_ICON
+    _attr_should_poll = False
+
     def __init__(self, coordinator: IslamicPrayerDataCoordinator, sensor_type) -> None:
         """Initialize the Islamic prayer time sensor."""
         super().__init__(coordinator)
@@ -44,16 +48,6 @@ class IslamicPrayerTimeSensor(CoordinatorEntity, SensorEntity):
     def unique_id(self) -> str:
         """Return the unique id of the entity."""
         return self.sensor_type
-
-    @property
-    def icon(self) -> str:
-        """Icon to display in the front end."""
-        return PRAYER_TIMES_ICON
-
-    @property
-    def device_class(self):
-        """Return the device class."""
-        return DEVICE_CLASS_TIMESTAMP
 
     @property
     def state(self) -> str:
@@ -73,8 +67,8 @@ class IslamicPrayerTimeSensor(CoordinatorEntity, SensorEntity):
             "entry_type": "service",
         }
 
-    async def async_added_to_hass(self) -> None:
-        """When entity is added to hass."""
+    async def async_added_to_hass(self):
+        """Handle entity which will be added."""
         self.async_on_remove(
             self.coordinator.async_add_listener(self.async_write_ha_state)
         )

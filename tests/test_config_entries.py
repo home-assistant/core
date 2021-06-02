@@ -575,6 +575,13 @@ async def test_saving_and_loading(hass):
         )
 
     assert len(hass.config_entries.async_entries()) == 2
+    entry_1 = hass.config_entries.async_entries()[0]
+
+    hass.config_entries.async_update_entry(
+        entry_1,
+        pref_disable_polling=True,
+        pref_disable_new_entities=True,
+    )
 
     # To trigger the call_later
     async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=1))
@@ -597,6 +604,8 @@ async def test_saving_and_loading(hass):
         assert orig.data == loaded.data
         assert orig.source == loaded.source
         assert orig.unique_id == loaded.unique_id
+        assert orig.pref_disable_new_entities == loaded.pref_disable_new_entities
+        assert orig.pref_disable_polling == loaded.pref_disable_polling
 
 
 async def test_forward_entry_sets_up_component(hass):
@@ -814,14 +823,19 @@ async def test_updating_entry_system_options(manager):
         domain="test",
         data={"first": True},
         state=config_entries.ConfigEntryState.SETUP_ERROR,
-        system_options={"disable_new_entities": True},
+        pref_disable_new_entities=True,
     )
     entry.add_to_manager(manager)
 
-    assert entry.system_options.disable_new_entities
+    assert entry.pref_disable_new_entities is True
+    assert entry.pref_disable_polling is False
 
-    entry.system_options.update(disable_new_entities=False)
-    assert not entry.system_options.disable_new_entities
+    manager.async_update_entry(
+        entry, pref_disable_new_entities=False, pref_disable_polling=True
+    )
+
+    assert entry.pref_disable_new_entities is False
+    assert entry.pref_disable_polling is True
 
 
 async def test_update_entry_options_and_trigger_listener(hass, manager):
@@ -2558,48 +2572,18 @@ async def test_updating_entry_with_and_without_changes(manager):
     entry.add_to_manager(manager)
 
     assert manager.async_update_entry(entry) is False
-    assert manager.async_update_entry(entry, data={"second": True}) is True
-    assert manager.async_update_entry(entry, data={"second": True}) is False
-    assert (
-        manager.async_update_entry(entry, data={"second": True, "third": 456}) is True
-    )
-    assert (
-        manager.async_update_entry(entry, data={"second": True, "third": 456}) is False
-    )
-    assert manager.async_update_entry(entry, options={"second": True}) is True
-    assert manager.async_update_entry(entry, options={"second": True}) is False
-    assert (
-        manager.async_update_entry(entry, options={"second": True, "third": "123"})
-        is True
-    )
-    assert (
-        manager.async_update_entry(entry, options={"second": True, "third": "123"})
-        is False
-    )
-    assert (
-        manager.async_update_entry(entry, system_options={"disable_new_entities": True})
-        is True
-    )
-    assert (
-        manager.async_update_entry(entry, system_options={"disable_new_entities": True})
-        is False
-    )
-    assert (
-        manager.async_update_entry(
-            entry, system_options={"disable_new_entities": False}
-        )
-        is True
-    )
-    assert (
-        manager.async_update_entry(
-            entry, system_options={"disable_new_entities": False}
-        )
-        is False
-    )
-    assert manager.async_update_entry(entry, title="thetitle") is False
-    assert manager.async_update_entry(entry, title="newtitle") is True
-    assert manager.async_update_entry(entry, unique_id="abc123") is False
-    assert manager.async_update_entry(entry, unique_id="abc1234") is True
+
+    for change in (
+        {"data": {"second": True, "third": 456}},
+        {"data": {"second": True}},
+        {"options": {"hello": True}},
+        {"pref_disable_new_entities": True},
+        {"pref_disable_polling": True},
+        {"title": "sometitle"},
+        {"unique_id": "abcd1234"},
+    ):
+        assert manager.async_update_entry(entry, **change) is True
+        assert manager.async_update_entry(entry, **change) is False
 
 
 async def test_entry_reload_calls_on_unload_listeners(hass, manager):
@@ -2864,3 +2848,35 @@ async def test__async_abort_entries_match(hass, manager, matchers, reason):
 
     assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == reason
+
+
+async def test_loading_old_data(hass, hass_storage):
+    """Test automatically migrating old data."""
+    hass_storage[config_entries.STORAGE_KEY] = {
+        "version": 1,
+        "data": {
+            "entries": [
+                {
+                    "version": 5,
+                    "domain": "my_domain",
+                    "entry_id": "mock-id",
+                    "data": {"my": "data"},
+                    "source": "user",
+                    "title": "Mock title",
+                    "system_options": {"disable_new_entities": True},
+                }
+            ]
+        },
+    }
+    manager = config_entries.ConfigEntries(hass, {})
+    await manager.async_initialize()
+
+    entries = manager.async_entries()
+    assert len(entries) == 1
+    entry = entries[0]
+    assert entry.version == 5
+    assert entry.domain == "my_domain"
+    assert entry.entry_id == "mock-id"
+    assert entry.title == "Mock title"
+    assert entry.data == {"my": "data"}
+    assert entry.pref_disable_new_entities is True

@@ -127,7 +127,6 @@ async def setup_bridge_for_sensors(hass, mock_bridge, hostname=None):
         domain=hue.DOMAIN,
         title="Mock Title",
         data={"host": hostname},
-        system_options={},
     )
     mock_bridge.config_entry = config_entry
     hass.data[hue.DOMAIN] = {config_entry.entry_id: mock_bridge}
