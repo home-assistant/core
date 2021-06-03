@@ -1,16 +1,19 @@
 """Test Times of the Day Binary Sensor."""
+import asyncio
 from datetime import datetime, timedelta
 from unittest.mock import patch
 
 import pytest
 
-from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.const import EVENT_STATE_CHANGED, STATE_OFF, STATE_ON
 import homeassistant.core as ha
 from homeassistant.helpers.sun import get_astral_event_date, get_astral_event_next
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.common import assert_setup_component
+from tests.common import assert_setup_component, async_fire_time_changed
+
+ORIG_TIMEZONE = dt_util.DEFAULT_TIME_ZONE
 
 
 @pytest.fixture(autouse=True)
@@ -886,3 +889,54 @@ async def test_dst(hass):
         assert state.attributes["before"] == "2019-03-30T03:40:00+01:00"
         assert state.attributes["next_update"] == "2019-03-30T03:30:00+01:00"
         assert state.state == STATE_OFF
+
+
+@pytest.mark.parametrize("before, after", [("06:00", "22:00"), ("06:00", "00:00")])
+async def test_simple_before_after_does_not_loop(hass, before, after):
+    """Test simple before after."""
+    try:
+        dt_util.set_default_time_zone(dt_util.get_time_zone("Europe/Berlin"))
+        test_time = datetime(2019, 1, 10, 18, 43, 0, tzinfo=dt_util.UTC)
+        config = {
+            "binary_sensor": [
+                {
+                    "platform": "tod",
+                    "name": "Nacht",
+                    "before": before,
+                    "after": after,
+                }
+            ]
+        }
+        with patch(
+            "homeassistant.components.tod.binary_sensor.dt_util.utcnow",
+            return_value=test_time,
+        ):
+            await async_setup_component(hass, "binary_sensor", config)
+            await hass.async_block_till_done()
+
+        state = hass.states.get("binary_sensor.nacht")
+        assert state.state == STATE_OFF
+
+        state_change_events = 0
+
+        @ha.callback
+        def _state_change_listener(event):
+            nonlocal state_change_events
+            state_change_events += 1
+
+        hass.bus.async_listen(EVENT_STATE_CHANGED, _state_change_listener)
+
+        for i in range(100):
+            mock_time = dt_util.utcnow() + timedelta(hours=i)
+            with patch(
+                "homeassistant.components.tod.binary_sensor.dt_util.utcnow",
+                return_value=mock_time,
+            ):
+                async_fire_time_changed(hass, mock_time)
+                await hass.async_block_till_done()
+
+        await asyncio.sleep(1)
+        await hass.async_block_till_done()
+        assert state_change_events < 16
+    finally:
+        dt_util.set_default_time_zone(ORIG_TIMEZONE)
