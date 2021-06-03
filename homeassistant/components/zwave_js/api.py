@@ -1329,7 +1329,7 @@ class FirmwareUploadView(HomeAssistantView):
             raise web_exceptions.HTTPBadRequest
 
         entry = hass.config_entries.async_get_entry(config_entry_id)
-        client = hass.data[DOMAIN][config_entry_id][DATA_CLIENT]
+        client: Client = hass.data[DOMAIN][config_entry_id][DATA_CLIENT]
         node = client.driver.controller.nodes.get(int(node_id))
         if not node:
             raise web_exceptions.HTTPNotFound
