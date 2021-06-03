@@ -161,12 +161,12 @@ async def async_setup_entry(  # noqa: C901
     def _manual_hosts(now: datetime.datetime | None = None) -> None:
         """Players from network configuration."""
         for host in hosts:
-            ip = socket.gethostbyname(host)
+            ip_addr = socket.gethostbyname(host)
             known_uid = next(
                 (
                     uid
                     for uid, speaker in data.discovered.items()
-                    if speaker.soco.ip_address == ip
+                    if speaker.soco.ip_address == ip_addr
                 ),
                 None,
             )
@@ -174,7 +174,7 @@ async def async_setup_entry(  # noqa: C901
             if known_uid:
                 async_dispatcher_send(hass, f"{SONOS_SEEN}-{known_uid}")
             else:
-                soco = _create_soco(ip, "configured")
+                soco = _create_soco(ip_addr, "configured")
                 if soco and soco.is_visible:
                     _discovered_player(soco)
 
