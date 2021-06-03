@@ -171,6 +171,7 @@ def async_register_api(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_check_for_config_updates)
     websocket_api.async_register_command(hass, websocket_install_config_update)
     hass.http.register_view(DumpView())
+    hass.http.register_view(NodeDumpView())
     hass.http.register_view(FirmwareUploadView())
 
 
@@ -1175,7 +1176,7 @@ class DumpView(HomeAssistantView):
         if config_entry_id not in hass.data[DOMAIN]:
             raise web_exceptions.HTTPBadRequest
 
-        entry = hass.config_entries.async_get_entry(config_entry_id)
+        entry: ConfigEntry = hass.config_entries.async_get_entry(config_entry_id)
 
         msgs = await dump.dump_msgs(entry.data[CONF_URL], async_get_clientsession(hass))
 
@@ -1184,6 +1185,35 @@ class DumpView(HomeAssistantView):
             headers={
                 hdrs.CONTENT_TYPE: "application/json",
                 hdrs.CONTENT_DISPOSITION: 'attachment; filename="zwave_js_dump.json"',
+            },
+        )
+
+
+class NodeDumpView(HomeAssistantView):
+    """View to dump the state of a node on the Z-Wave JS server."""
+
+    url = r"/api/zwave_js/dump/{config_entry_id}/{node_id:\d+}"
+    name = "api:zwave_js:dump:node"
+
+    async def get(
+        self, request: web.Request, config_entry_id: str, node_id: str
+    ) -> web.Response:
+        """Dump the state of a Z-Wave node."""
+        hass = request.app["hass"]
+
+        if config_entry_id not in hass.data[DOMAIN]:
+            raise web_exceptions.HTTPBadRequest
+
+        client: Client = hass.data[DOMAIN][config_entry_id][DATA_CLIENT]
+        node: Node = client.driver.controller.nodes.get(int(node_id))
+        if not node:
+            raise web_exceptions.HTTPNotFound
+
+        return web.Response(
+            body=json.dumps(node.data, indent=2) + "\n",
+            headers={
+                hdrs.CONTENT_TYPE: "application/json",
+                hdrs.CONTENT_DISPOSITION: f'attachment; filename="zwave_js_node_{node.node_id}_state.json"',
             },
         )
 

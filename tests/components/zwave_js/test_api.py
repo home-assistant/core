@@ -1304,6 +1304,16 @@ async def test_dump_view(integration, hass_client):
     assert json.loads(await resp.text()) == [{"hello": "world"}, {"second": "msg"}]
 
 
+async def test_dump_node_view(multisensor_6, integration, hass_client):
+    """Test the HTTP dump node view."""
+    client = await hass_client()
+    resp = await client.get(
+        f"/api/zwave_js/dump/{integration.entry_id}/{multisensor_6.node_id}"
+    )
+    assert resp.status == 200
+    assert json.loads(await resp.text()) == multisensor_6.data
+
+
 async def test_firmware_upload_view(
     hass, multisensor_6, integration, hass_client, firmware_file
 ):
@@ -1352,6 +1362,7 @@ async def test_firmware_upload_view_invalid_payload(
     "method, url",
     [
         ("get", "/api/zwave_js/dump/INVALID"),
+        ("get", "/api/zwave_js/dump/INVALID/1"),
         ("post", "/api/zwave_js/firmware/upload/INVALID/1"),
     ],
 )
@@ -1363,7 +1374,11 @@ async def test_view_invalid_entry_id(integration, hass_client, method, url):
 
 
 @pytest.mark.parametrize(
-    "method, url", [("post", "/api/zwave_js/firmware/upload/{}/111")]
+    "method, url",
+    [
+        ("get", "/api/zwave_js/dump/{}/111"),
+        ("post", "/api/zwave_js/firmware/upload/{}/111"),
+    ],
 )
 async def test_view_invalid_node_id(integration, hass_client, method, url):
     """Test an invalid config entry id parameter."""
