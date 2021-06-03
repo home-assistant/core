@@ -261,6 +261,14 @@ def climate_heatit_z_trm2fx_state_fixture():
     return json.loads(load_fixture("zwave_js/climate_heatit_z_trm2fx_state.json"))
 
 
+@pytest.fixture(name="climate_heatit_z_trm3_no_value_state", scope="session")
+def climate_heatit_z_trm3_no_value_state_fixture():
+    """Load the climate HEATIT Z-TRM3 thermostat node w/no value state fixture data."""
+    return json.loads(
+        load_fixture("zwave_js/climate_heatit_z_trm3_no_value_state.json")
+    )
+
+
 @pytest.fixture(name="nortek_thermostat_state", scope="session")
 def nortek_thermostat_state_fixture():
     """Load the nortek thermostat node state fixture data."""
@@ -513,6 +521,16 @@ def climate_danfoss_lc_13_fixture(client, climate_danfoss_lc_13_state):
 def climate_eurotronic_spirit_z_fixture(client, climate_eurotronic_spirit_z_state):
     """Mock a climate radio danfoss LC-13 node."""
     node = Node(client, climate_eurotronic_spirit_z_state)
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="climate_heatit_z_trm3_no_value")
+def climate_heatit_z_trm3_no_value_fixture(
+    client, climate_heatit_z_trm3_no_value_state
+):
+    """Mock a climate radio HEATIT Z-TRM3 node."""
+    node = Node(client, copy.deepcopy(climate_heatit_z_trm3_no_value_state))
     client.driver.controller.nodes[node.node_id] = node
     return node
 
