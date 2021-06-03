@@ -1176,7 +1176,7 @@ class DumpView(HomeAssistantView):
         if config_entry_id not in hass.data[DOMAIN]:
             raise web_exceptions.HTTPBadRequest
 
-        entry: ConfigEntry = hass.config_entries.async_get_entry(config_entry_id)
+        entry = hass.config_entries.async_get_entry(config_entry_id)
 
         msgs = await dump.dump_msgs(entry.data[CONF_URL], async_get_clientsession(hass))
 
@@ -1204,8 +1204,8 @@ class NodeDumpView(HomeAssistantView):
         if config_entry_id not in hass.data[DOMAIN]:
             raise web_exceptions.HTTPBadRequest
 
-        client: Client = hass.data[DOMAIN][config_entry_id][DATA_CLIENT]
-        node: Node = client.driver.controller.nodes.get(int(node_id))
+        client = hass.data[DOMAIN][config_entry_id][DATA_CLIENT]
+        node = client.driver.controller.nodes.get(int(node_id))
         if not node:
             raise web_exceptions.HTTPNotFound
 
