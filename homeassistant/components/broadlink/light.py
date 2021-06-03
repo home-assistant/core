@@ -2,6 +2,8 @@
 from abc import ABC, abstractmethod
 import logging
 
+from broadlink.exceptions import BroadlinkException
+
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
@@ -12,7 +14,6 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.core import callback
-from broadlink.exceptions import BroadlinkException
 
 from .const import DOMAIN
 
