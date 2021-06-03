@@ -31,7 +31,6 @@ def get_update_manager(device):
         "SP4": BroadlinkSP4UpdateManager,
         "SP4B": BroadlinkSP4UpdateManager,
     }
-    _LOGGER.error("get update manager with type {} compared to {}".format(device.api.type, update_managers))
     return update_managers[device.api.type](device)
 
 
