@@ -172,6 +172,7 @@ async def test_reproducing_states(hass, caplog):
         light.COLOR_MODE_RGBW,
         light.COLOR_MODE_RGBWW,
         light.COLOR_MODE_UNKNOWN,
+        light.COLOR_MODE_WHITE,
         light.COLOR_MODE_XY,
     ),
 )
@@ -205,6 +206,7 @@ async def test_filter_color_modes(hass, caplog, color_mode):
         light.COLOR_MODE_RGBW: VALID_RGBW_COLOR,
         light.COLOR_MODE_RGBWW: VALID_RGBWW_COLOR,
         light.COLOR_MODE_UNKNOWN: {**VALID_HS_COLOR, **VALID_WHITE_VALUE},
+        light.COLOR_MODE_WHITE: {light.ATTR_WHITE: True},
         light.COLOR_MODE_XY: VALID_XY_COLOR,
     }
     expected = expected_map[color_mode]

@@ -5,7 +5,7 @@ import asyncio
 from collections.abc import Iterable
 import logging
 from types import MappingProxyType
-from typing import Any
+from typing import Any, cast
 
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -31,6 +31,7 @@ from . import (
     ATTR_RGBW_COLOR,
     ATTR_RGBWW_COLOR,
     ATTR_TRANSITION,
+    ATTR_WHITE,
     ATTR_WHITE_VALUE,
     ATTR_XY_COLOR,
     COLOR_MODE_COLOR_TEMP,
@@ -39,6 +40,7 @@ from . import (
     COLOR_MODE_RGBW,
     COLOR_MODE_RGBWW,
     COLOR_MODE_UNKNOWN,
+    COLOR_MODE_WHITE,
     COLOR_MODE_XY,
     DOMAIN,
 )
@@ -78,6 +80,8 @@ COLOR_MODE_TO_ATTRIBUTE = {
     COLOR_MODE_XY: ATTR_XY_COLOR,
 }
 
+COLOR_MODE_TO_PARAMETER = {COLOR_MODE_WHITE: (ATTR_WHITE, True)}
+
 DEPRECATED_GROUP = [
     ATTR_BRIGHTNESS_PCT,
     ATTR_COLOR_NAME,
@@ -91,6 +95,17 @@ DEPRECATION_WARNING = (
     "The use of other attributes than device state attributes is deprecated and will be removed in a future release. "
     "Invalid attributes are %s. Read the logs for further details: https://www.home-assistant.io/integrations/scene/"
 )
+
+
+def _color_mode_same(cur_state: State, state: State) -> bool:
+    """Test if color_mode is same."""
+    cur_color_mode = cur_state.attributes.get(ATTR_COLOR_MODE, COLOR_MODE_UNKNOWN)
+    saved_color_mode = state.attributes.get(ATTR_COLOR_MODE, COLOR_MODE_UNKNOWN)
+
+    # Guard for scenes etc. which where created before color modes were introduced
+    if saved_color_mode == COLOR_MODE_UNKNOWN:
+        return True
+    return cast(bool, cur_color_mode == saved_color_mode)
 
 
 async def _async_reproduce_state(
@@ -119,9 +134,13 @@ async def _async_reproduce_state(
         _LOGGER.warning(DEPRECATION_WARNING, deprecated_attrs)
 
     # Return if we are already at the right state.
-    if cur_state.state == state.state and all(
-        check_attr_equal(cur_state.attributes, state.attributes, attr)
-        for attr in ATTR_GROUP + COLOR_GROUP
+    if (
+        cur_state.state == state.state
+        and _color_mode_same(cur_state, state)
+        and all(
+            check_attr_equal(cur_state.attributes, state.attributes, attr)
+            for attr in ATTR_GROUP + COLOR_GROUP
+        )
     ):
         return
 
@@ -154,6 +173,9 @@ async def _async_reproduce_state(
                     )
                     return
                 service_data[color_attr] = state.attributes[color_attr]
+            if color_key_value := COLOR_MODE_TO_PARAMETER.get(color_mode):
+                color_parameter, color_value = color_key_value
+                service_data[color_parameter] = color_value
         else:
             # Fall back to Choosing the first color that is specified
             for color_attr in COLOR_GROUP:
