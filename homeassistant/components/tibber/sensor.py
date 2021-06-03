@@ -330,7 +330,7 @@ class TibberSensorRT(TibberSensor):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                SIGNAL_UPDATE_ENTITY.format(self._sensor_name),
+                SIGNAL_UPDATE_ENTITY.format(self.unique_id),
                 self._set_state,
             )
         )
@@ -370,7 +370,7 @@ class TibberRtDataHandler:
         self._async_add_entities = async_add_entities
         self._tibber_home = tibber_home
         self.hass = hass
-        self._entities = set()
+        self._entities = {}
 
     async def async_callback(self, payload):
         """Handle received data."""
@@ -393,7 +393,7 @@ class TibberRtDataHandler:
             if sensor_type in self._entities:
                 async_dispatcher_send(
                     self.hass,
-                    SIGNAL_UPDATE_ENTITY.format(RT_SENSOR_MAP[sensor_type][0]),
+                    SIGNAL_UPDATE_ENTITY.format(self._entities[sensor_type]),
                     state,
                     timestamp,
                 )
@@ -412,6 +412,6 @@ class TibberRtDataHandler:
                     state_class,
                 )
                 new_entities.append(entity)
-                self._entities.add(sensor_type)
+                self._entities[sensor_type] = entity.unique_id
         if new_entities:
             self._async_add_entities(new_entities)
