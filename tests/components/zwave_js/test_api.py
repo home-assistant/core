@@ -1317,7 +1317,10 @@ async def test_dump_node_view(multisensor_6, integration, hass_client, version_s
         "minSchemaVersion": 0,
         "maxSchemaVersion": 0,
     }
-    assert json.loads(await resp.text()) == [version_info, multisensor_6.data]
+    assert json.loads(await resp.text()) == {
+        "version_info": version_info,
+        "node_state": multisensor_6.data,
+    }
 
 
 async def test_firmware_upload_view(

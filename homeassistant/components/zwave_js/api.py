@@ -1222,7 +1222,10 @@ class NodeDumpView(HomeAssistantView):
 
         filename = f"zwave_js_node_{node.node_id}_state.json"
         return web.Response(
-            body=json.dumps([version_info, node.data], indent=2) + "\n",
+            body=json.dumps(
+                {"version_info": version_info, "node_state": node.data}, indent=2
+            )
+            + "\n",
             headers={
                 hdrs.CONTENT_TYPE: "application/json",
                 hdrs.CONTENT_DISPOSITION: f'attachment; filename="{filename}"',
