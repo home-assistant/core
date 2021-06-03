@@ -32,7 +32,7 @@ async def test_create_auroradevice(hass):
         system_options={},
         entry_id="13579",
     )
-    device = AuroraDevice(client, config)
+    device = AuroraDevice(client, config.data)
     uid = device.unique_id
     assert uid == "65432_device"
 

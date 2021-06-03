@@ -20,6 +20,7 @@ import homeassistant.helpers.config_validation as cv
 
 from .aurora_device import AuroraDevice
 from .const import (
+    ATTR_DEVICE_NAME,
     ATTR_FIRMWARE,
     ATTR_MODEL,
     ATTR_SERIAL_NUMBER,
@@ -54,14 +55,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     _LOGGER.debug("Intitialising com port=%s address=%s", comport, address)
     client = AuroraSerialClient(address, comport, parity="N", timeout=1)
 
-    config.data = {
-        "device_name": name,
+    data = {
+        ATTR_DEVICE_NAME: name,
         ATTR_SERIAL_NUMBER: None,
         ATTR_FIRMWARE: None,
         ATTR_MODEL: None,
     }
-    config.entry_id = "undefined_entry_id"
-    devices.append(AuroraSensor(client, config, "Power", "instantaneouspower"))
+    devices.append(AuroraSensor(client, data, "Power Output", "instantaneouspower"))
     add_entities(devices, True)
 
 
@@ -74,11 +74,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities) -> None:
         {"parameter": "temperature", "name": "Temperature"},
     ]
     client = hass.data[DOMAIN][config_entry.unique_id]
+    data = config_entry.data
 
     for sens in sensortypes:
-        entities.append(
-            AuroraSensor(client, config_entry, sens["name"], sens["parameter"])
-        )
+        entities.append(AuroraSensor(client, data, sens["name"], sens["parameter"]))
 
     _LOGGER.debug("async_setup_entry adding %d entities", len(entities))
     async_add_entities(entities, True)
@@ -89,10 +88,10 @@ class AuroraSensor(AuroraDevice):
 
     availableprev = True
 
-    def __init__(self, client: AuroraSerialClient, config_entry, name, typename):
+    def __init__(self, client: AuroraSerialClient, data, name, typename):
         """Initialize the sensor."""
         self._state = None
-        super().__init__(client, config_entry)
+        super().__init__(client, data)
 
         if typename == "instantaneouspower":
             self.type = typename
