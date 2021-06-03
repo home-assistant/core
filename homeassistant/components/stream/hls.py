@@ -165,6 +165,7 @@ class HlsSegmentView(StreamView):
     async def handle(self, request, stream, sequence):
         """Return fmp4 segment."""
         track = stream.add_provider(HLS_PROVIDER)
+        track.idle_timer.awake()
         if not (segment := track.get_segment(int(sequence))):
             return web.HTTPNotFound()
         headers = {"Content-Type": "video/iso.segment"}
