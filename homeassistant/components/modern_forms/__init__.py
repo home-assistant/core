@@ -12,7 +12,6 @@ from aiomodernforms import (
 )
 
 from homeassistant.components.fan import DOMAIN as FAN_DOMAIN
-from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_MODEL, ATTR_NAME, ATTR_SW_VERSION, CONF_HOST
 from homeassistant.core import HomeAssistant
@@ -29,7 +28,6 @@ from .const import ATTR_IDENTIFIERS, ATTR_MANUFACTURER, DOMAIN
 
 SCAN_INTERVAL = timedelta(seconds=5)
 PLATFORMS = [
-    LIGHT_DOMAIN,
     FAN_DOMAIN,
 ]
 _LOGGER = logging.getLogger(__name__)
@@ -61,8 +59,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Set up all platforms for this device/entry.
     for platform in PLATFORMS:
-        if platform is LIGHT_DOMAIN and not coordinator.data.info.light_type:
-            continue
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, platform)
         )
