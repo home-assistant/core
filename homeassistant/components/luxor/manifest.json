@@ -1,0 +1,17 @@
+{
+  "domain": "luxor",
+  "name": "FX Luminaire Luxor low voltage controller",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/luxor",
+  "requirements": [
+    "luxor==0.0.1"
+  ],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": [
+    "@pbozeman"
+  ],
+  "iot_class": "local_polling"
+}

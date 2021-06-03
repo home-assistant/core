@@ -147,6 +147,7 @@ FLOWS = [
     "logi_circle",
     "luftdaten",
     "lutron_caseta",
+    "luxor",
     "lyric",
     "mailgun",
     "mazda",
