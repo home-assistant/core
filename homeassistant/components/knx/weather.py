@@ -1,6 +1,8 @@
 """Support for KNX/IP weather station."""
 from __future__ import annotations
 
+from typing import Any
+
 from xknx import XKNX
 from xknx.devices import Weather as XknxWeather
 
@@ -13,6 +15,15 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from .const import DOMAIN
 from .knx_entity import KnxEntity
 from .schema import WeatherSchema
+
+ATTR_BRIGHTNESS_NORTH = "brightness_north"
+ATTR_BRIGHTNESS_EAST = "brightness_east"
+ATTR_BRIGHTNESS_SOUTH = "brightness_south"
+ATTR_BRIGHTNESS_WEST = "brightness_west"
+ATTR_RAIN_ALARM = "rain_alarm"
+ATTR_WIND_ALARM = "wind_alarm"
+ATTR_FROST_ALARM = "frost_alarm"
+ATTR_DAY_NIGHT = "night"
 
 
 async def async_setup_platform(
@@ -124,3 +135,26 @@ class KNXWeather(KnxEntity, WeatherEntity):
             if self._device.wind_speed is not None
             else None
         )
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        """Return device specific state attributes."""
+        attr: dict[str, Any] = {}
+        # pylint: disable=protected-access
+        if self._device._brightness_north.initialized:
+            attr[ATTR_BRIGHTNESS_NORTH] = self._device.brightness_north
+        if self._device._brightness_west.initialized:
+            attr[ATTR_BRIGHTNESS_WEST] = self._device.brightness_west
+        if self._device._brightness_south.initialized:
+            attr[ATTR_BRIGHTNESS_SOUTH] = self._device.brightness_south
+        if self._device._brightness_east.initialized:
+            attr[ATTR_BRIGHTNESS_EAST] = self._device.brightness_east
+        if self._device.rain_alarm is not None:
+            attr[ATTR_RAIN_ALARM] = self._device.rain_alarm
+        if self._device.wind_alarm is not None:
+            attr[ATTR_WIND_ALARM] = self._device.wind_alarm
+        if self._device.frost_alarm is not None:
+            attr[ATTR_FROST_ALARM] = self._device.frost_alarm
+        if self._device.day_night is not None:
+            attr[ATTR_DAY_NIGHT] = self._device.day_night
+        return attr if attr else None
