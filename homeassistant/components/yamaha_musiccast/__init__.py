@@ -3,12 +3,13 @@ import abc
 import asyncio
 from datetime import timedelta
 import logging
-from typing import Any, Dict
+from typing import List
 
+from aiomusiccast.musiccast_device import MusicCastData, MusicCastDevice
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_NAME, CONF_HOST
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import service
@@ -19,12 +20,9 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
+from ...helpers.entity import DeviceInfo, Entity
 from .const import (
-    ATTR_IDENTIFIERS,
-    ATTR_MANUFACTURER,
     ATTR_MASTER,
-    ATTR_MODEL,
-    ATTR_SOFTWARE_VERSION,
     BRAND,
     DOMAIN,
     JOIN_SERVICE_SCHEMA,
@@ -32,7 +30,6 @@ from .const import (
     SERVICE_UNJOIN,
     UNJOIN_SERVICE_SCHEMA,
 )
-from aiomusiccast.musiccast_device import MusicCastData, MusicCastDevice
 
 CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 
@@ -50,7 +47,9 @@ async def async_setup(hass: HomeAssistant, config: dict):
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up MusicCast from a config entry."""
 
-    client = MusicCastDevice(entry.data[CONF_HOST], async_get_clientsession(hass), hass.loop)
+    client = MusicCastDevice(
+        entry.data[CONF_HOST], async_get_clientsession(hass), hass.loop
+    )
     coordinator = MusicCastDataUpdateCoordinator(hass, client=client)
     await coordinator.async_refresh()
 
@@ -67,7 +66,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         if not entity_ids:
             return
 
-        all_entities = list()
+        all_entities = []
         for coord in hass.data[DOMAIN].values():
             all_entities += coord.entities
 
@@ -148,8 +147,8 @@ class MusicCastDataUpdateCoordinator(DataUpdateCoordinator[MusicCastData]):
     def __init__(self, hass: HomeAssistant, client: MusicCastDevice) -> None:
         """Initialize."""
         self.musiccast = client
-        self.platforms = []
-        self.entities = []
+        self.platforms: List[str] = []
+        self.entities: List[Entity] = []
 
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL)
 
@@ -203,20 +202,20 @@ class MusicCastDeviceEntity(MusicCastEntity, abc.ABC):
     """Defines a MusicCast device entity."""
 
     @property
-    def device_info(self) -> Dict[str, Any]:
+    def device_info(self) -> DeviceInfo:
         """Return device information about this MusicCast device."""
-        return {
-            ATTR_IDENTIFIERS: {
+        return DeviceInfo(
+            identifiers={
                 (
                     DOMAIN,
                     "".join(self.coordinator.data.mac_addresses.values()),
                 )
             },
-            ATTR_NAME: self.coordinator.data.network_name,
-            ATTR_MANUFACTURER: BRAND,
-            ATTR_MODEL: self.coordinator.data.model_name,
-            ATTR_SOFTWARE_VERSION: self.coordinator.data.system_version,
-        }
+            name=self.coordinator.data.network_name,
+            manufacturer=BRAND,
+            model=self.coordinator.data.model_name,
+            sw_version=self.coordinator.data.system_version,
+        )
 
     async def async_server_join(self, entities):
         """Let a server assign all given entities to its group."""
