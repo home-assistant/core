@@ -62,7 +62,7 @@ class SIABaseEntity(RestoreEntity):
             async_dispatcher_connect(
                 self.hass,
                 SIA_EVENT.format(self._port, self._account),
-                self.async_handle_event,
+                self.handle_event,
             )
         )
         self.handle_last_state(await self.async_get_last_state())
@@ -81,7 +81,8 @@ class SIABaseEntity(RestoreEntity):
         if self._cancel_availability_cb:
             self._cancel_availability_cb()
 
-    async def async_handle_event(self, sia_event: SIAEvent) -> None:
+    @callback
+    def handle_event(self, sia_event: SIAEvent) -> None:
         """Listen to dispatcher events for this port and account and update state and attributes.
 
         If the port and account combo receives any message it means it is online and can therefore be set to available.
