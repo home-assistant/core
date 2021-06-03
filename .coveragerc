@@ -115,9 +115,10 @@ omit =
     homeassistant/components/bmw_connected_drive/notify.py
     homeassistant/components/bmw_connected_drive/sensor.py
     homeassistant/components/bosch_shc/__init__.py
-    homeassistant/components/bosch_shc/const.py
     homeassistant/components/bosch_shc/binary_sensor.py
+    homeassistant/components/bosch_shc/const.py
     homeassistant/components/bosch_shc/entity.py
+    homeassistant/components/bosch_shc/sensor.py
     homeassistant/components/braviatv/__init__.py
     homeassistant/components/braviatv/const.py
     homeassistant/components/braviatv/media_player.py
@@ -920,9 +921,11 @@ omit =
     homeassistant/components/slack/notify.py
     homeassistant/components/sia/__init__.py
     homeassistant/components/sia/alarm_control_panel.py
+    homeassistant/components/sia/binary_sensor.py
     homeassistant/components/sia/const.py
     homeassistant/components/sia/hub.py
     homeassistant/components/sia/utils.py
+    homeassistant/components/sia/sia_entity_base.py
     homeassistant/components/sinch/*
     homeassistant/components/slide/*
     homeassistant/components/sma/__init__.py
