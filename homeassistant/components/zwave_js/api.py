@@ -1171,6 +1171,8 @@ class DumpView(HomeAssistantView):
 
     async def get(self, request: web.Request, config_entry_id: str) -> web.Response:
         """Dump the state of Z-Wave."""
+        if not request["hass_user"].is_admin:
+            raise Unauthorized()
         hass = request.app["hass"]
 
         if config_entry_id not in hass.data[DOMAIN]:
@@ -1199,6 +1201,8 @@ class NodeDumpView(HomeAssistantView):
         self, request: web.Request, config_entry_id: str, node_id: str
     ) -> web.Response:
         """Dump the state of a Z-Wave node."""
+        if not request["hass_user"].is_admin:
+            raise Unauthorized()
         hass = request.app["hass"]
 
         if config_entry_id not in hass.data[DOMAIN]:
@@ -1209,11 +1213,12 @@ class NodeDumpView(HomeAssistantView):
         if not node:
             raise web_exceptions.HTTPNotFound
 
+        filename = f"zwave_js_node_{node.node_id}_state.json"
         return web.Response(
             body=json.dumps(node.data, indent=2) + "\n",
             headers={
                 hdrs.CONTENT_TYPE: "application/json",
-                hdrs.CONTENT_DISPOSITION: f'attachment; filename="zwave_js_node_{node.node_id}_state.json"',
+                hdrs.CONTENT_DISPOSITION: f'attachment; filename="{filename}"',
             },
         )
 

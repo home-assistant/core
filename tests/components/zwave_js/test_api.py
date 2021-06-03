@@ -1361,6 +1361,43 @@ async def test_firmware_upload_view_invalid_payload(
 @pytest.mark.parametrize(
     "method, url",
     [
+        ("get", "/api/zwave_js/dump/{}"),
+    ],
+)
+async def test_view_non_admin_user(
+    integration, hass_client, hass_admin_user, method, url
+):
+    """Test config entry level views for non-admin users."""
+    client = await hass_client()
+    # Verify we require admin user
+    hass_admin_user.groups = []
+    resp = await client.request(method, url.format(integration.entry_id))
+    assert resp.status == 401
+
+
+@pytest.mark.parametrize(
+    "method, url",
+    [
+        ("get", "/api/zwave_js/dump/{}/{}"),
+        ("post", "/api/zwave_js/firmware/upload/{}/{}"),
+    ],
+)
+async def test_node_view_non_admin_user(
+    multisensor_6, integration, hass_client, hass_admin_user, method, url
+):
+    """Test node level views for non-admin users."""
+    client = await hass_client()
+    # Verify we require admin user
+    hass_admin_user.groups = []
+    resp = await client.request(
+        method, url.format(integration.entry_id, multisensor_6.node_id)
+    )
+    assert resp.status == 401
+
+
+@pytest.mark.parametrize(
+    "method, url",
+    [
         ("get", "/api/zwave_js/dump/INVALID"),
         ("get", "/api/zwave_js/dump/INVALID/1"),
         ("post", "/api/zwave_js/firmware/upload/INVALID/1"),
