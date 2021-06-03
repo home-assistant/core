@@ -4,7 +4,6 @@
   "documentation": "https://www.home-assistant.io/integrations/broadlink",
   "requirements": ["broadlink==0.17.0"],
   "codeowners": ["@danielhiversen", "@felipediel", "@L-I-Am"],
-  "version": "1.0.0",
   "config_flow": true,
   "dhcp": [
     {
