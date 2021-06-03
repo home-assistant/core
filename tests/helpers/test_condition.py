@@ -1265,12 +1265,12 @@ async def test_numeric_state_attribute(hass):
 
 async def test_numeric_state_using_input_number(hass):
     """Test numeric_state conditions using input_number entities."""
+    hass.states.async_set("number.low", 10)
     await async_setup_component(
         hass,
         "input_number",
         {
             "input_number": {
-                "low": {"min": 0, "max": 255, "initial": 10},
                 "high": {"min": 0, "max": 255, "initial": 100},
             }
         },
@@ -1285,7 +1285,7 @@ async def test_numeric_state_using_input_number(hass):
                     "condition": "numeric_state",
                     "entity_id": "sensor.temperature",
                     "below": "input_number.high",
-                    "above": "input_number.low",
+                    "above": "number.low",
                 },
             ],
         },
@@ -1317,10 +1317,10 @@ async def test_numeric_state_using_input_number(hass):
     )
     assert test(hass)
 
-    hass.states.async_set("input_number.low", "unknown")
+    hass.states.async_set("number.low", "unknown")
     assert not test(hass)
 
-    hass.states.async_set("input_number.low", "unavailable")
+    hass.states.async_set("number.low", "unavailable")
     assert not test(hass)
 
     with pytest.raises(ConditionError):
