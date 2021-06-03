@@ -11,7 +11,11 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components import ssdp
-from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import (
+    EVENT_HOMEASSISTANT_STARTED,
+    EVENT_HOMEASSISTANT_STOP,
+    MATCH_ALL,
+)
 from homeassistant.core import CoreState, callback
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -356,9 +360,12 @@ async def test_scan_with_registered_callback(hass, aioclient_mock, caplog):
         "location": "http://1.1.1.1",
         "usn": "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL::urn:mdx-netflix-com:service:target:3",
         "server": "mock-server",
+        "x-rincon-bootseq": "55",
         "ext": "",
     }
     not_matching_intergration_callbacks = []
+    intergration_match_all_callbacks = []
+    intergration_match_all_not_present_callbacks = []
     intergration_callbacks = []
     intergration_callbacks_from_cache = []
     match_any_callbacks = []
@@ -370,6 +377,14 @@ async def test_scan_with_registered_callback(hass, aioclient_mock, caplog):
     @callback
     def _async_intergration_callbacks(info):
         intergration_callbacks.append(info)
+
+    @callback
+    def _async_intergration_match_all_callbacks(info):
+        intergration_match_all_callbacks.append(info)
+
+    @callback
+    def _async_intergration_match_all_not_present_callbacks(info):
+        intergration_match_all_not_present_callbacks.append(info)
 
     @callback
     def _async_intergration_callbacks_from_cache(info):
@@ -412,6 +427,16 @@ async def test_scan_with_registered_callback(hass, aioclient_mock, caplog):
         )
         ssdp.async_register_callback(
             hass,
+            _async_intergration_match_all_callbacks,
+            {"x-rincon-bootseq": MATCH_ALL},
+        )
+        ssdp.async_register_callback(
+            hass,
+            _async_intergration_match_all_not_present_callbacks,
+            {"x-not-there": MATCH_ALL},
+        )
+        ssdp.async_register_callback(
+            hass,
             _async_not_matching_intergration_callbacks,
             {"st": "not-match-mock-st"},
         )
@@ -436,6 +461,8 @@ async def test_scan_with_registered_callback(hass, aioclient_mock, caplog):
 
     assert len(intergration_callbacks) == 3
     assert len(intergration_callbacks_from_cache) == 3
+    assert len(intergration_match_all_callbacks) == 3
+    assert len(intergration_match_all_not_present_callbacks) == 0
     assert len(match_any_callbacks) == 3
     assert len(not_matching_intergration_callbacks) == 0
     assert intergration_callbacks[0] == {
@@ -446,6 +473,7 @@ async def test_scan_with_registered_callback(hass, aioclient_mock, caplog):
         ssdp.ATTR_SSDP_ST: "mock-st",
         ssdp.ATTR_SSDP_USN: "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL::urn:mdx-netflix-com:service:target:3",
         ssdp.ATTR_UPNP_UDN: "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL",
+        "x-rincon-bootseq": "55",
     }
     assert "Failed to callback info" in caplog.text
 
