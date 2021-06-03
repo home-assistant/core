@@ -193,18 +193,11 @@ class IRobotVacuum(IRobotEntity, StateVacuumEntity):
         if self.state == STATE_CLEANING:
             # Get clean mission status
             mission_state = state.get("cleanMissionStatus", {})
-            cleaning_time = mission_state.get("mssnM", 0)
-            if cleaning_time == 0:
-                start_time = mission_state.get("mssnStrtTm", 0)
-                if start_time > 0:
-                    cleaning_time = (
-                        dt_util.as_timestamp(dt_util.utcnow()) - start_time
-                    ) // 60
             cleaned_area = mission_state.get("sqft")  # Imperial
             # Convert to m2 if the unit_system is set to metric
             if cleaned_area and self.hass.config.units.is_metric:
                 cleaned_area = round(cleaned_area * 0.0929)
-            state_attrs[ATTR_CLEANING_TIME] = cleaning_time
+            state_attrs[ATTR_CLEANING_TIME] = self.get_cleaning_time(state)
             state_attrs[ATTR_CLEANED_AREA] = cleaned_area
 
         # Error
@@ -225,6 +218,15 @@ class IRobotVacuum(IRobotEntity, StateVacuumEntity):
             state_attrs[ATTR_POSITION] = position
 
         return state_attrs
+
+    def get_cleaning_time(self, state) -> int:
+        if not (mission_state := state.get("cleanMissionStatus", None)):
+            return 0
+        if cleaning_time := mission_state.get("mssnM", None):
+            return cleaning_time
+        if not (start_time := mission_state.get("mssnStrtTm", None)):
+            return (dt_util.as_timestamp(dt_util.utcnow()) - start_time) // 60
+        return 0
 
     def on_message(self, json_data):
         """Update state on message change."""
