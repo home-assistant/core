@@ -16,7 +16,9 @@ from homeassistant.components import zone as zone_cmp
 from homeassistant.components.device_automation import (
     async_get_device_automation_platform,
 )
+from homeassistant.components.sensor import DEVICE_CLASS_TIMESTAMP
 from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
     ATTR_GPS_ACCURACY,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
@@ -736,11 +738,24 @@ def time(
         after_entity = hass.states.get(after)
         if not after_entity:
             raise ConditionErrorMessage("time", f"unknown 'after' entity {after}")
-        after = dt_util.dt.time(
-            after_entity.attributes.get("hour", 23),
-            after_entity.attributes.get("minute", 59),
-            after_entity.attributes.get("second", 59),
-        )
+        if after_entity.domain == "input_datetime":
+            after = dt_util.dt.time(
+                after_entity.attributes.get("hour", 23),
+                after_entity.attributes.get("minute", 59),
+                after_entity.attributes.get("second", 59),
+            )
+        elif after_entity.attributes.get(
+            ATTR_DEVICE_CLASS
+        ) == DEVICE_CLASS_TIMESTAMP and after_entity.state not in (
+            STATE_UNAVAILABLE,
+            STATE_UNKNOWN,
+        ):
+            after_timedatime = dt_util.parse_datetime(after_entity.state)
+            if after_timedatime is None:
+                return False
+            after = dt_util.as_local(after_timedatime).time()
+        else:
+            return False
 
     if before is None:
         before = dt_util.dt.time(23, 59, 59, 999999)
@@ -748,11 +763,24 @@ def time(
         before_entity = hass.states.get(before)
         if not before_entity:
             raise ConditionErrorMessage("time", f"unknown 'before' entity {before}")
-        before = dt_util.dt.time(
-            before_entity.attributes.get("hour", 23),
-            before_entity.attributes.get("minute", 59),
-            before_entity.attributes.get("second", 59),
-        )
+        if before_entity.domain == "input_datetime":
+            before = dt_util.dt.time(
+                before_entity.attributes.get("hour", 23),
+                before_entity.attributes.get("minute", 59),
+                before_entity.attributes.get("second", 59),
+            )
+        elif before_entity.attributes.get(
+            ATTR_DEVICE_CLASS
+        ) == DEVICE_CLASS_TIMESTAMP and before_entity.state not in (
+            STATE_UNAVAILABLE,
+            STATE_UNKNOWN,
+        ):
+            before_timedatime = dt_util.parse_datetime(before_entity.state)
+            if before_timedatime is None:
+                return False
+            before = dt_util.as_local(before_timedatime).time()
+        else:
+            return False
 
     if after < before:
         condition_trace_update_result(after=after, now_time=now_time, before=before)

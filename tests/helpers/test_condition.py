@@ -6,7 +6,8 @@ import pytest
 
 from homeassistant.components import sun
 import homeassistant.components.automation as automation
-from homeassistant.const import SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET
+from homeassistant.components.sensor import DEVICE_CLASS_TIMESTAMP
+from homeassistant.const import ATTR_DEVICE_CLASS, SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET
 from homeassistant.exceptions import ConditionError, HomeAssistantError
 from homeassistant.helpers import condition, trace
 from homeassistant.helpers.template import Template
@@ -824,6 +825,74 @@ async def test_time_using_input_datetime(hass):
 
     with pytest.raises(ConditionError):
         condition.time(hass, before="input_datetime.not_existing")
+
+
+async def test_time_using_sensor(hass):
+    """Test time conditions using sensor entities."""
+    hass.states.async_set(
+        "sensor.am",
+        "2021-06-03 13:00:00.000000+00:00",  # 6 am local time
+        {ATTR_DEVICE_CLASS: DEVICE_CLASS_TIMESTAMP},
+    )
+    hass.states.async_set(
+        "sensor.pm",
+        "2020-06-01 01:00:00.000000+00:00",  # 6 pm local time
+        {ATTR_DEVICE_CLASS: DEVICE_CLASS_TIMESTAMP},
+    )
+
+    with patch(
+        "homeassistant.helpers.condition.dt_util.now",
+        return_value=dt_util.now().replace(hour=3),
+    ):
+        assert not condition.time(hass, after="sensor.am", before="sensor.pm")
+        assert condition.time(hass, after="sensor.pm", before="sensor.am")
+
+    with patch(
+        "homeassistant.helpers.condition.dt_util.now",
+        return_value=dt_util.now().replace(hour=9),
+    ):
+        assert condition.time(hass, after="sensor.am", before="sensor.pm")
+        assert not condition.time(hass, after="sensor.pm", before="sensor.am")
+
+    with patch(
+        "homeassistant.helpers.condition.dt_util.now",
+        return_value=dt_util.now().replace(hour=15),
+    ):
+        assert condition.time(hass, after="sensor.am", before="sensor.pm")
+        assert not condition.time(hass, after="sensor.pm", before="sensor.am")
+
+    with patch(
+        "homeassistant.helpers.condition.dt_util.now",
+        return_value=dt_util.now().replace(hour=21),
+    ):
+        assert not condition.time(hass, after="sensor.am", before="sensor.pm")
+        assert condition.time(hass, after="sensor.pm", before="sensor.am")
+
+    # Trigger on PM time
+    with patch(
+        "homeassistant.helpers.condition.dt_util.now",
+        return_value=dt_util.now().replace(hour=18, minute=0, second=0),
+    ):
+        assert condition.time(hass, after="sensor.pm", before="sensor.am")
+        assert not condition.time(hass, after="sensor.am", before="sensor.pm")
+        assert condition.time(hass, after="sensor.pm")
+        assert not condition.time(hass, before="sensor.pm")
+
+    # Trigger on AM time
+    with patch(
+        "homeassistant.helpers.condition.dt_util.now",
+        return_value=dt_util.now().replace(hour=6, minute=0, second=0),
+    ):
+        assert not condition.time(hass, after="sensor.pm", before="sensor.am")
+        assert condition.time(hass, after="sensor.am", before="sensor.pm")
+        assert condition.time(hass, after="sensor.am")
+        assert not condition.time(hass, before="sensor.am")
+
+    with pytest.raises(ConditionError):
+        condition.time(hass, after="sensor.not_existing")
+
+    with pytest.raises(ConditionError):
+        condition.time(hass, before="sensor.not_existing")
 
 
 async def test_state_raises(hass):
