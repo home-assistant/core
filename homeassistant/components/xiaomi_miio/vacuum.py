@@ -80,6 +80,7 @@ ATTR_ZONE_ARRAY = "zone"
 ATTR_ZONE_REPEATER = "repeats"
 ATTR_TIMERS = "timers"
 ATTR_MOP_ATTACHED = "mop_attached"
+ATTR_WATER_BOX_ATTACHED = "water_box_attached"
 
 SUPPORT_XIAOMI = (
     SUPPORT_STATE
@@ -309,6 +310,10 @@ class MiroboVacuum(XiaomiMiioEntity, StateVacuumEntity):
         """Return the specific state attributes of this vacuum cleaner."""
         attrs = {}
         if self.vacuum_state is not None:
+            is_mop_attached = self.vacuum_state.is_water_box_carriage_attached
+            if is_mop_attached is None:
+                is_mop_attached = self.vacuum_state.is_water_box_attached
+
             attrs.update(
                 {
                     ATTR_DO_NOT_DISTURB: STATE_ON
@@ -340,7 +345,8 @@ class MiroboVacuum(XiaomiMiioEntity, StateVacuumEntity):
                         self.consumable_state.sensor_dirty_left.total_seconds() / 3600
                     ),
                     ATTR_STATUS: str(self.vacuum_state.state),
-                    ATTR_MOP_ATTACHED: self.vacuum_state.is_water_box_attached,
+                    ATTR_MOP_ATTACHED: is_mop_attached,
+                    ATTR_WATER_BOX_ATTACHED: self.vacuum_state.is_water_box_attached,
                 }
             )
 
