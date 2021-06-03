@@ -88,7 +88,6 @@ class SwitchEntity(ToggleEntity):
     """Base class for switch entities."""
 
     _attr_current_power_w: float | None = None
-    _attr_is_standby: bool | None = None
     _attr_today_energy_kwh: float | None = None
 
     @property
@@ -100,11 +99,6 @@ class SwitchEntity(ToggleEntity):
     def today_energy_kwh(self) -> float | None:
         """Return the today total energy usage in kWh."""
         return self._attr_today_energy_kwh
-
-    @property
-    def is_standby(self) -> bool | None:
-        """Return true if device is in standby."""
-        return self._attr_is_standby
 
     @final
     @property
