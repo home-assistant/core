@@ -27,7 +27,7 @@ def mock_get_device_info_valid():
     """Mock getting valid device info from musiccast API."""
     with patch(
         "aiomusiccast.MusicCastDevice.get_device_info",
-        return_value={"serial_number": "1234567890", "model_name": "MC20"},
+        return_value={"system_id": "1234567890", "model_name": "MC20"},
     ):
         yield
 
@@ -99,6 +99,28 @@ async def test_user_input_non_yamaha_device_found(hass, mock_get_device_info_inv
 
     assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result2["errors"] == {"base": "no_musiccast_device"}
+
+
+async def test_user_input_device_already_existing(hass, mock_get_device_info_valid):
+    """Test when user specifies an existing device."""
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="MC20-1234567890",
+        data={CONF_HOST: "192.168.188.18", "model": "MC20", "serial": "1234567890"},
+    )
+    mock_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"host": "192.168.188.18"},
+    )
+
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result2["errors"] == {"base": "already_configured"}
 
 
 async def test_user_input_unknown_error(hass, mock_get_device_info_exception):
