@@ -1208,14 +1208,21 @@ class NodeDumpView(HomeAssistantView):
         if config_entry_id not in hass.data[DOMAIN]:
             raise web_exceptions.HTTPBadRequest
 
-        client = hass.data[DOMAIN][config_entry_id][DATA_CLIENT]
+        client: Client = hass.data[DOMAIN][config_entry_id][DATA_CLIENT]
         node = client.driver.controller.nodes.get(int(node_id))
         if not node:
             raise web_exceptions.HTTPNotFound
 
+        version_info = {
+            "driverVersion": client.version.driver_version,
+            "serverVersion": client.version.server_version,
+            "minSchemaVersion": client.version.min_schema_version,
+            "maxSchemaVersion": client.version.max_schema_version,
+        }
+
         filename = f"zwave_js_node_{node.node_id}_state.json"
         return web.Response(
-            body=json.dumps(node.data, indent=2) + "\n",
+            body=json.dumps([version_info, node.data], indent=2) + "\n",
             headers={
                 hdrs.CONTENT_TYPE: "application/json",
                 hdrs.CONTENT_DISPOSITION: f'attachment; filename="{filename}"',

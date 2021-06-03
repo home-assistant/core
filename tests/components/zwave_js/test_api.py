@@ -1304,14 +1304,20 @@ async def test_dump_view(integration, hass_client):
     assert json.loads(await resp.text()) == [{"hello": "world"}, {"second": "msg"}]
 
 
-async def test_dump_node_view(multisensor_6, integration, hass_client):
+async def test_dump_node_view(multisensor_6, integration, hass_client, version_state):
     """Test the HTTP dump node view."""
     client = await hass_client()
     resp = await client.get(
         f"/api/zwave_js/dump/{integration.entry_id}/{multisensor_6.node_id}"
     )
     assert resp.status == 200
-    assert json.loads(await resp.text()) == multisensor_6.data
+    version_info = {
+        "driverVersion": version_state["driverVersion"],
+        "serverVersion": version_state["serverVersion"],
+        "minSchemaVersion": 0,
+        "maxSchemaVersion": 0,
+    }
+    assert json.loads(await resp.text()) == [version_info, multisensor_6.data]
 
 
 async def test_firmware_upload_view(
