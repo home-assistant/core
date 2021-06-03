@@ -702,8 +702,15 @@ async def test_entity_play_media_cast(hass: HomeAssistant, quick_play_mock):
     chromecast.start_app.assert_called_once_with("abc123")
 
     # Play_media - cast with app name (quick play)
-    await common.async_play_media(hass, "cast", '{"app_name": "youtube"}', entity_id)
-    quick_play_mock.assert_called_once_with(ANY, "youtube", {})
+    await common.async_play_media(
+        hass,
+        "cast",
+        '{"app_name": "youtube", "metadata": {"metadatatype": 3}}',
+        entity_id,
+    )
+    quick_play_mock.assert_called_once_with(
+        ANY, "youtube", {"metadata": {"metadatatype": 3}}
+    )
 
 
 async def test_entity_play_media_cast_invalid(hass, caplog, quick_play_mock):
