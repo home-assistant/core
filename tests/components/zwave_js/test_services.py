@@ -18,6 +18,7 @@ from homeassistant.components.zwave_js.const import (
     DOMAIN,
     SERVICE_BULK_SET_PARTIAL_CONFIG_PARAMETERS,
     SERVICE_MULTICAST_SET_VALUE,
+    SERVICE_PING,
     SERVICE_REFRESH_VALUE,
     SERVICE_SET_CONFIG_PARAMETER,
     SERVICE_SET_VALUE,
@@ -790,3 +791,43 @@ async def test_multicast_set_value(
             },
             blocking=True,
         )
+
+
+async def test_ping(
+    hass,
+    client,
+    climate_danfoss_lc_13,
+    climate_radio_thermostat_ct100_plus_different_endpoints,
+    integration,
+):
+    """Test ping service."""
+    client.async_send_command.return_value = {"responded": True}
+
+    # Test successful ping call
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_PING,
+        {
+            ATTR_ENTITY_ID: [
+                CLIMATE_DANFOSS_LC13_ENTITY,
+                CLIMATE_RADIO_THERMOSTAT_ENTITY,
+            ],
+        },
+        blocking=True,
+    )
+
+    assert len(client.async_send_command.call_args_list) == 2
+    args = client.async_send_command.call_args[0][0]
+    assert args["command"] == "node.ping"
+    assert args["nodeId"] == climate_danfoss_lc_13.node_id
+
+    client.async_send_command.reset_mock()
+
+    # # Test no device or entity raises error
+    # with pytest.raises(vol.Invalid):
+    #     await hass.services.async_call(
+    #         DOMAIN,
+    #         SERVICE_PING,
+    #         {},
+    #         blocking=True,
+    #     )
