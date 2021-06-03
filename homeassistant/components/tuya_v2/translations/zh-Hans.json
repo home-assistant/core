@@ -1,0 +1,69 @@
+{
+    "config": {
+        "abort": {
+            "cannot_connect": "连接失败",
+            "invalid_auth": "身份认证无效",
+            "single_instance_allowed": "已经配置过了，且只能配置一次。"
+        },
+        "error": {
+            "invalid_auth": "身份认证无效"
+        },
+        "flow_title": "涂鸦配置",
+        "step": {
+            "project_type":{
+                "title":"Tuya插件",
+                "data":{
+                  "tuya_project_type": "涂鸦云项目类型"
+                }
+            },
+            "user": {
+                "data": {
+                    "endpoint": "地区",
+                    "access_id": "Access ID",
+                    "access_secret": "Access Secret",
+                    "tuya_app_type": "移动应用",
+                    "country_code": "国家码",
+                    "username": "账号",
+                    "password": "密码"
+                },
+                "description": "请输入涂鸦账户信息。",
+                "title": "涂鸦"
+            }
+        }
+    },
+    "options": {
+        "abort": {
+            "cannot_connect": "连接失败"
+        },
+        "error": {
+            "dev_multi_type": "多个要配置的设备必须具有相同的类型",
+            "dev_not_config": "设备类型不可配置",
+            "dev_not_found": "未找到设备"
+        },
+        "step": {
+            "device": {
+                "data": {
+                    "brightness_range_mode": "设备使用的亮度范围",
+                    "max_kelvin": "最高支持色温（开氏）",
+                    "max_temp": "最高目标温度（min 和 max 为 0 时使用默认）",
+                    "min_kelvin": "最低支持色温（开氏）",
+                    "min_temp": "最低目标温度（min 和 max 为 0 时使用默认）",
+                    "support_color": "强制支持调色",
+                    "tuya_max_coltemp": "设备报告的最高色温",
+                    "unit_of_measurement": "设备使用的温度单位"
+                },
+                "title": "配置涂鸦设备"
+            },
+            "init": {
+                "data": {
+                    "discovery_interval": "发现设备轮询间隔（以秒为单位）",
+                    "list_devices": "请选择要配置的设备，或留空以保存配置",
+                    "query_device": "请选择使用查询方法的设备，以便更快地更新状态",
+                    "query_interval": "查询设备轮询间隔（以秒为单位）"
+                },
+                "description": "请不要将轮询间隔设置得太低，否则将调用失败并在日志生成错误消息",
+                "title": "配置涂鸦选项"
+            }
+        }
+    }
+}
