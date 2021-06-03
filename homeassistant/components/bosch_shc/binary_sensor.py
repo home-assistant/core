@@ -1,6 +1,4 @@
 """Platform for binarysensor integration."""
-import logging
-
 from boschshcpy import SHCBatteryDevice, SHCSession, SHCShutterContact
 
 from homeassistant.components.binary_sensor import (
@@ -12,8 +10,6 @@ from homeassistant.components.binary_sensor import (
 
 from .const import DATA_SESSION, DOMAIN
 from .entity import SHCEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -89,24 +85,6 @@ class BatterySensor(SHCEntity, BinarySensorEntity):
     @property
     def is_on(self):
         """Return the state of the sensor."""
-        if (
-            self._device.batterylevel
-            == SHCBatteryDevice.BatteryLevelService.State.NOT_AVAILABLE
-        ):
-            _LOGGER.debug("Battery state of device %s is not available", self.name)
-
-        if (
-            self._device.batterylevel
-            == SHCBatteryDevice.BatteryLevelService.State.CRITICAL_LOW
-        ):
-            _LOGGER.warning("Battery state of device %s is critical low", self.name)
-
-        if (
-            self._device.batterylevel
-            == SHCBatteryDevice.BatteryLevelService.State.LOW_BATTERY
-        ):
-            _LOGGER.warning("Battery state of device %s is low", self.name)
-
         return (
             self._device.batterylevel != SHCBatteryDevice.BatteryLevelService.State.OK
         )
