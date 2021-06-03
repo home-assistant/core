@@ -59,7 +59,7 @@ class MusicCastFlowHandler(ConfigFlow, domain=DOMAIN):
                 user_input[CONF_HOST], async_get_clientsession(self.hass)
             )
             if self.serial_number is None:
-                self.serial_number = info["serial_number"]
+                self.serial_number = info["system_id"]
             if self.model_name is None:
                 self.model_name = info["model_name"]
             unique_id = f"{self.model_name}-{self.serial_number}"
@@ -69,6 +69,8 @@ class MusicCastFlowHandler(ConfigFlow, domain=DOMAIN):
             errors["base"] = "cannot_connect"
         except KeyError:
             errors["base"] = "no_musiccast_device"
+        except data_entry_flow.AbortFlow:
+            errors["base"] = "already_configured"
         except Exception as e:
             _LOGGER.error(e)
             errors["base"] = "unknown"

@@ -8,6 +8,7 @@
         "error": {
             "cannot_connect": "Could not connect.",
             "no_musiccast_device": "This device seems to be no Musiccast Device.",
+            "already_configured": "This device is already configured.",
             "unknown": "Unknown error."
         },
         "flow_title": "MusicCast: {name}",
