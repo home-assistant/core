@@ -10,6 +10,7 @@ from .const import (
     ATTR_FIRMWARE,
     ATTR_MODEL,
     ATTR_SERIAL_NUMBER,
+    DEFAULT_DEVICE_NAME,
     DOMAIN,
     MANUFACTURER,
 )
@@ -45,6 +46,6 @@ class AuroraDevice(Entity):
             "identifiers": {(DOMAIN, self._data[ATTR_SERIAL_NUMBER])},
             "manufacturer": MANUFACTURER,
             "model": self._data[ATTR_MODEL],
-            "name": self._data[ATTR_DEVICE_NAME],
+            "name": self._data.get(ATTR_DEVICE_NAME, DEFAULT_DEVICE_NAME),
             "sw_version": self._data[ATTR_FIRMWARE],
         }

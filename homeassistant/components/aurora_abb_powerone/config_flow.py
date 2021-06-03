@@ -65,6 +65,21 @@ class AuroraABBConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialise the config flow."""
         self.config = None
 
+    async def async_step_import(self, conf: dict):
+        """Import a configuration from config.yaml."""
+        if self.hass.config_entries.async_entries(DOMAIN):
+            return self.async_abort(reason="already_setup")
+
+        conf[ATTR_SERIAL_NUMBER] = "sn_unknown_yaml"
+        conf[ATTR_MODEL] = "model_unknown_yaml"
+        conf[ATTR_FIRMWARE] = "fw_unknown_yaml"
+        conf[CONF_PORT] = conf["device"]
+
+        await self.async_set_unique_id(self.flow_id)
+        self._abort_if_unique_id_configured()
+
+        return self.async_create_entry(title=DEFAULT_INTEGRATION_TITLE, data=conf)
+
     async def async_step_user(self, user_input=None):
         """Handle a flow initialised by the user."""
 

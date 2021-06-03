@@ -6,6 +6,7 @@ from aurorapy.client import AuroraError, AuroraSerialClient
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     CONF_ADDRESS,
     CONF_DEVICE,
@@ -19,14 +20,7 @@ from homeassistant.exceptions import InvalidStateError
 import homeassistant.helpers.config_validation as cv
 
 from .aurora_device import AuroraDevice
-from .const import (
-    ATTR_DEVICE_NAME,
-    ATTR_FIRMWARE,
-    ATTR_MODEL,
-    ATTR_SERIAL_NUMBER,
-    DEFAULT_ADDRESS,
-    DOMAIN,
-)
+from .const import DEFAULT_ADDRESS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,29 +34,17 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up single sensor based on configuration.yaml (DEPRECATED)."""
-    devices = []
-    comport = config[CONF_DEVICE]
-    address = config.get(CONF_ADDRESS, DEFAULT_ADDRESS)
-    name = config.get(CONF_NAME, "Solar PV")
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    """Set up based on configuration.yaml (DEPRECATED)."""
     _LOGGER.warning(
-        "DEPRECATED: setting up %s via configuration.yaml will "
-        "soon be unsupported.  Please remove the entries from your "
-        "configuration.yaml file and then set up the integration via the UI",
-        DOMAIN,
+        "Loading aurora_abb_powerone via platform config is deprecated; The configuration"
+        " has been migrated to a config entry and can be safely removed from configuration.yaml"
     )
-    _LOGGER.debug("Intitialising com port=%s address=%s", comport, address)
-    client = AuroraSerialClient(address, comport, parity="N", timeout=1)
-
-    data = {
-        ATTR_DEVICE_NAME: name,
-        ATTR_SERIAL_NUMBER: None,
-        ATTR_FIRMWARE: None,
-        ATTR_MODEL: None,
-    }
-    devices.append(AuroraSensor(client, data, "Power Output", "instantaneouspower"))
-    add_entities(devices, True)
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+        )
+    )
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities) -> None:
