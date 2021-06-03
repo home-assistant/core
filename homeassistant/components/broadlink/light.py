@@ -62,6 +62,11 @@ class BroadlinkLight(LightEntity, ABC):
         return f"{self._device.name} Light"
 
     @property
+    def unique_id(self):
+        """Return the unique id of the light."""
+        return self._device.unique_id
+
+    @property
     def assumed_state(self):
         """Return True if unable to access real state of the light."""
         return False
@@ -191,21 +196,6 @@ class BroadlinkLight(LightEntity, ABC):
 
 class BroadlinkLB1Light(BroadlinkLight):
     """Representation of a Broadlink LB1 light."""
-
-    def __init__(self, device):
-        """Initialize the light."""
-        super().__init__(device)
-        self._name = f"{device.name} Light"
-
-    @property
-    def unique_id(self):
-        """Return the unique id of the light."""
-        return self._device.unique_id
-
-    @property
-    def name(self):
-        """Return the name of the light."""
-        return self._name
 
     async def _async_send_packet(self, request):
         """Send a packet to the device."""
