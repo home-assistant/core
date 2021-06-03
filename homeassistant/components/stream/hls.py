@@ -116,7 +116,7 @@ class HlsPlaylistView(StreamView):
                 )
             playlist.extend(
                 [
-                    f"#EXTINF:{float(segment.duration):.04f},",
+                    f"#EXTINF:{segment.duration:.3f},",
                     f"./segment/{segment.sequence}.m4s",
                 ]
             )
