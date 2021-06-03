@@ -480,10 +480,11 @@ class SonosSpeaker:
             self.hass.data[DATA_SONOS].ssdp_known.remove(self.soco.uid)
             self.async_write_entity_states()
 
-    async def async_rebooted(self) -> None:
+    async def async_rebooted(self, soco: SoCo) -> None:
         """Handle a detected speaker reboot."""
+        _LOGGER.warning("%s rebooted, reconnecting with %s", self.zone_name, soco)
         await self.async_unseen(will_reconnect=True)
-        await self.async_seen()
+        await self.async_seen(soco)
 
     #
     # Alarm management
