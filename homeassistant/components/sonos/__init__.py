@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections import OrderedDict, deque
 import datetime
+from enum import Enum
 import logging
 import socket
 from urllib.parse import urlparse
@@ -26,7 +27,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.dispatcher import async_dispatcher_send, dispatcher_send
 
 from .const import (
     DATA_SONOS,
@@ -66,6 +67,14 @@ CONFIG_SCHEMA = vol.Schema(
     },
     extra=vol.ALLOW_EXTRA,
 )
+
+
+class SoCoCreationSource(Enum):
+    """Represent the creation source of a SoCo instance."""
+
+    CONFIGURED = "configured"
+    DISCOVERED = "discovered"
+    REBOOTED = "rebooted"
 
 
 class SonosData:
@@ -144,7 +153,7 @@ async def async_setup_entry(  # noqa: C901
         except SoCoException as ex:
             _LOGGER.debug("SoCoException, ex=%s", ex)
 
-    def _create_soco(ip_address: str, source: str) -> SoCo | None:
+    def _create_soco(ip_address: str, source: SoCoCreationSource) -> SoCo | None:
         """Create a soco instance and return if successful."""
         try:
             soco = pysonos.SoCo(ip_address)
@@ -154,7 +163,7 @@ async def async_setup_entry(  # noqa: C901
             return soco
         except (OSError, SoCoException) as ex:
             _LOGGER.warning(
-                "Failed to connect to %s player '%s': %s", source, ip_address, ex
+                "Failed to connect to %s player '%s': %s", source.value, ip_address, ex
             )
         return None
 
@@ -172,9 +181,9 @@ async def async_setup_entry(  # noqa: C901
             )
 
             if known_uid:
-                async_dispatcher_send(hass, f"{SONOS_SEEN}-{known_uid}")
+                dispatcher_send(hass, f"{SONOS_SEEN}-{known_uid}")
             else:
-                soco = _create_soco(ip_addr, "configured")
+                soco = _create_soco(ip_addr, SoCoCreationSource.CONFIGURED)
                 if soco and soco.is_visible:
                     _discovered_player(soco)
 
@@ -187,7 +196,7 @@ async def async_setup_entry(  # noqa: C901
         async_dispatcher_send(hass, SONOS_GROUP_UPDATE)
 
     def _discovered_ip(ip_address):
-        soco = _create_soco(ip_address, "discovered")
+        soco = _create_soco(ip_address, SoCoCreationSource.DISCOVERED)
         if soco and soco.is_visible:
             _discovered_player(soco)
 
@@ -201,7 +210,7 @@ async def async_setup_entry(  # noqa: C901
             if boot_seqnum and boot_seqnum > data.boot_counts[uid]:
                 data.boot_counts[uid] = boot_seqnum
                 if soco := await hass.async_add_executor_job(
-                    _create_soco, discovered_ip, "rebooted"
+                    _create_soco, discovered_ip, SoCoCreationSource.REBOOTED
                 ):
                     async_dispatcher_send(hass, f"{SONOS_REBOOTED}-{uid}", soco)
             else:
