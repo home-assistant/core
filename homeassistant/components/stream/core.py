@@ -84,7 +84,7 @@ class StreamOutput:
     ) -> None:
         """Initialize a stream output."""
         self._hass = hass
-        self._idle_timer = idle_timer
+        self.idle_timer = idle_timer
         self._event = asyncio.Event()
         self._segments: deque[Segment] = deque(maxlen=deque_maxlen)
 
@@ -96,7 +96,7 @@ class StreamOutput:
     @property
     def idle(self) -> bool:
         """Return True if the output is idle."""
-        return self._idle_timer.idle
+        return self.idle_timer.idle
 
     @property
     def last_sequence(self) -> int:
@@ -139,7 +139,6 @@ class StreamOutput:
 
     async def recv(self) -> bool:
         """Wait for and retrieve the latest segment."""
-        self._idle_timer.awake()
         await self._event.wait()
         return self.last_segment is not None
 
@@ -151,7 +150,7 @@ class StreamOutput:
     def _async_put(self, segment: Segment) -> None:
         """Store output from event loop."""
         # Start idle timeout when we start receiving data
-        self._idle_timer.start()
+        self.idle_timer.start()
         self._segments.append(segment)
         self._event.set()
         self._event.clear()
@@ -159,7 +158,7 @@ class StreamOutput:
     def cleanup(self):
         """Handle cleanup."""
         self._event.set()
-        self._idle_timer.clear()
+        self.idle_timer.clear()
         self._segments = deque(maxlen=self._segments.maxlen)
 
 
