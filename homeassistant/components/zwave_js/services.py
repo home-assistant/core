@@ -1,6 +1,7 @@
 """Methods and classes related to executing Z-Wave commands and publishing these to hass."""
 from __future__ import annotations
 
+import asyncio
 import logging
 from typing import Any
 
@@ -440,5 +441,4 @@ class ZWaveServices:
     async def async_ping(self, service: ServiceCall) -> None:
         """Ping node(s)."""
         nodes: set[ZwaveNode] = service.data[const.ATTR_NODES]
-        for node in nodes:
-            await node.async_ping()
+        await asyncio.gather(*[node.async_ping() for node in nodes])
