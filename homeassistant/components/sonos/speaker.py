@@ -482,7 +482,11 @@ class SonosSpeaker:
 
     async def async_rebooted(self, soco: SoCo) -> None:
         """Handle a detected speaker reboot."""
-        _LOGGER.warning("%s rebooted, reconnecting with %s", self.zone_name, soco)
+        _LOGGER.warning(
+            "%s rebooted or lost network connectivity, reconnecting with %s",
+            self.zone_name,
+            soco,
+        )
         await self.async_unseen(will_reconnect=True)
         await self.async_seen(soco)
 
