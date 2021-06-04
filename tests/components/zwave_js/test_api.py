@@ -119,6 +119,54 @@ async def test_node_status(hass, multisensor_6, integration, hass_ws_client):
     assert msg["error"]["code"] == ERR_NOT_LOADED
 
 
+async def test_node_state(hass, multisensor_6, integration, hass_ws_client):
+    """Test the node_state websocket command."""
+    entry = integration
+    ws_client = await hass_ws_client(hass)
+
+    node = multisensor_6
+    await ws_client.send_json(
+        {
+            ID: 3,
+            TYPE: "zwave_js/node_state",
+            ENTRY_ID: entry.entry_id,
+            NODE_ID: node.node_id,
+        }
+    )
+    msg = await ws_client.receive_json()
+    assert msg["result"] == node.data
+
+    # Test getting non-existent node fails
+    await ws_client.send_json(
+        {
+            ID: 4,
+            TYPE: "zwave_js/node_state",
+            ENTRY_ID: entry.entry_id,
+            NODE_ID: 99999,
+        }
+    )
+    msg = await ws_client.receive_json()
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERR_NOT_FOUND
+
+    # Test sending command with not loaded entry fails
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    await ws_client.send_json(
+        {
+            ID: 5,
+            TYPE: "zwave_js/node_state",
+            ENTRY_ID: entry.entry_id,
+            NODE_ID: node.node_id,
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERR_NOT_LOADED
+
+
 async def test_node_metadata(hass, wallmote_central_scene, integration, hass_ws_client):
     """Test the node metadata websocket command."""
     entry = integration
@@ -1304,23 +1352,55 @@ async def test_dump_view(integration, hass_client):
     assert json.loads(await resp.text()) == [{"hello": "world"}, {"second": "msg"}]
 
 
-async def test_dump_node_view(multisensor_6, integration, hass_client, version_state):
+async def test_version_info(hass, integration, hass_ws_client, version_state):
     """Test the HTTP dump node view."""
-    client = await hass_client()
-    resp = await client.get(
-        f"/api/zwave_js/dump/{integration.entry_id}/{multisensor_6.node_id}"
-    )
-    assert resp.status == 200
+    entry = integration
+    ws_client = await hass_ws_client(hass)
+
     version_info = {
         "driverVersion": version_state["driverVersion"],
         "serverVersion": version_state["serverVersion"],
         "minSchemaVersion": 0,
         "maxSchemaVersion": 0,
     }
-    assert json.loads(await resp.text()) == {
-        "version_info": version_info,
-        "node_state": multisensor_6.data,
-    }
+
+    await ws_client.send_json(
+        {
+            ID: 3,
+            TYPE: "zwave_js/version_info",
+            ENTRY_ID: entry.entry_id,
+        }
+    )
+    msg = await ws_client.receive_json()
+    assert msg["result"] == version_info
+
+    # Test getting non-existent entry fails
+    await ws_client.send_json(
+        {
+            ID: 4,
+            TYPE: "zwave_js/version_info",
+            ENTRY_ID: "INVALID",
+        }
+    )
+    msg = await ws_client.receive_json()
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERR_NOT_FOUND
+
+    # Test sending command with not loaded entry fails
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    await ws_client.send_json(
+        {
+            ID: 5,
+            TYPE: "zwave_js/version_info",
+            ENTRY_ID: entry.entry_id,
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERR_NOT_LOADED
 
 
 async def test_firmware_upload_view(
@@ -1369,9 +1449,7 @@ async def test_firmware_upload_view_invalid_payload(
 
 @pytest.mark.parametrize(
     "method, url",
-    [
-        ("get", "/api/zwave_js/dump/{}"),
-    ],
+    [("get", "/api/zwave_js/dump/{}")],
 )
 async def test_view_non_admin_user(
     integration, hass_client, hass_admin_user, method, url
@@ -1386,10 +1464,7 @@ async def test_view_non_admin_user(
 
 @pytest.mark.parametrize(
     "method, url",
-    [
-        ("get", "/api/zwave_js/dump/{}/{}"),
-        ("post", "/api/zwave_js/firmware/upload/{}/{}"),
-    ],
+    [("post", "/api/zwave_js/firmware/upload/{}/{}")],
 )
 async def test_node_view_non_admin_user(
     multisensor_6, integration, hass_client, hass_admin_user, method, url
@@ -1408,7 +1483,6 @@ async def test_node_view_non_admin_user(
     "method, url",
     [
         ("get", "/api/zwave_js/dump/INVALID"),
-        ("get", "/api/zwave_js/dump/INVALID/1"),
         ("post", "/api/zwave_js/firmware/upload/INVALID/1"),
     ],
 )
@@ -1421,10 +1495,7 @@ async def test_view_invalid_entry_id(integration, hass_client, method, url):
 
 @pytest.mark.parametrize(
     "method, url",
-    [
-        ("get", "/api/zwave_js/dump/{}/111"),
-        ("post", "/api/zwave_js/firmware/upload/{}/111"),
-    ],
+    [("post", "/api/zwave_js/firmware/upload/{}/111")],
 )
 async def test_view_invalid_node_id(integration, hass_client, method, url):
     """Test an invalid config entry id parameter."""
