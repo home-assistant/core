@@ -204,5 +204,5 @@ async def test_client_session_immutable_headers(hass):
     with pytest.raises(TypeError):
         session.headers["user-agent"] = "bla"
 
-    with pytest.raises(TypeError):
+    with pytest.raises(AttributeError):
         session.headers.update({"user-agent": "bla"})
