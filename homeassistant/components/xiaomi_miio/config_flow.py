@@ -43,7 +43,7 @@ DEVICE_CLOUD_CONFIG = vol.Schema(
     {
         vol.Optional(CONF_CLOUD_USERNAME): str,
         vol.Optional(CONF_CLOUD_PASSWORD): str,
-        vol.Optional(CONF_CLOUD_COUNTRY): vol.In(SERVER_COUNTRY_CODES),
+        vol.Optional(CONF_CLOUD_COUNTRY, default=DEFAULT_CLOUD_COUNTRY): vol.In(SERVER_COUNTRY_CODES),
         vol.Optional(CONF_MANUAL, default=False): bool,
     }
 )
@@ -210,7 +210,7 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     step_id="cloud", data_schema=DEVICE_CLOUD_CONFIG, errors=errors
                 )
 
-            devices_raw = await self._hass.async_add_executor_job(
+            devices_raw = await self.hass.async_add_executor_job(
                 miio_cloud.get_devices, cloud_country
             )
 
@@ -237,11 +237,11 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 for device in self.cloud_devices.values():
                     cloud_host = device.get("localip")
                     if cloud_host == self.host:
-                        extract_cloud_info(device)
+                        self.extract_cloud_info(device)
                         return await self.async_step_connect()
 
             if len(self.cloud_devices) == 1:
-                extract_cloud_info(list(self.cloud_devices.values())[0])
+                self.extract_cloud_info(list(self.cloud_devices.values())[0])
                 return await self.async_step_connect()
 
             return await self.async_step_select()
@@ -250,14 +250,12 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="cloud", data_schema=DEVICE_CLOUD_CONFIG, errors=errors
         )
 
-    async def async_step_select(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    async def async_step_select(self, user_input=None):
         """Handle multiple cloud devices found."""
         errors = {}
         if user_input is not None:
             cloud_device = self.cloud_devices[user_input["select_device"]]
-            extract_cloud_info(cloud_device)
+            self.extract_cloud_info(cloud_device)
             return await self.async_step_connect()
 
         select_scheme = vol.Schema(
