@@ -5,9 +5,9 @@ from datetime import timedelta
 import logging
 from typing import Any, Final
 
+import praw
 from praw.exceptions import PRAWException
 from praw.models import Subreddit
-from praw.reddit import Reddit
 import voluptuous as vol
 from voluptuous.schema_builder import Schema
 
@@ -76,7 +76,7 @@ def setup_platform(
     sort_by: str = config[CONF_SORT_BY]
 
     try:
-        reddit = Reddit(
+        reddit = praw.Reddit(
             client_id=config[CONF_CLIENT_ID],
             client_secret=config[CONF_CLIENT_SECRET],
             username=config[CONF_USERNAME],
@@ -100,7 +100,7 @@ class RedditSensor(SensorEntity):
     """Representation of a Reddit sensor."""
 
     def __init__(
-        self, reddit: Reddit, subreddit: str, limit: int, sort_by: str
+        self, reddit: praw.Reddit, subreddit: str, limit: int, sort_by: str
     ) -> None:
         """Initialize the Reddit sensor."""
         self._reddit = reddit
