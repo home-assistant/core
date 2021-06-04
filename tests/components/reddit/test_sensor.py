@@ -2,20 +2,20 @@
 import copy
 from unittest.mock import patch
 
-from homeassistant.components.reddit.sensor import (
+from homeassistant.components.reddit.const import (
     ATTR_BODY,
     ATTR_COMMENTS_NUMBER,
     ATTR_CREATED,
-    ATTR_ID,
     ATTR_POSTS,
     ATTR_SCORE,
     ATTR_SUBREDDIT,
     ATTR_TITLE,
     ATTR_URL,
     CONF_SORT_BY,
-    DOMAIN,
 )
+from homeassistant.components.reddit.sensor import DOMAIN
 from homeassistant.const import (
+    ATTR_ID,
     CONF_CLIENT_ID,
     CONF_CLIENT_SECRET,
     CONF_MAXIMUM,
