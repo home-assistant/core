@@ -99,7 +99,6 @@ from .const import (
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_STRUCTURE_PREFIX,
     DEFAULT_TEMP_UNIT,
-    MINIMUM_SCAN_INTERVAL,
     MODBUS_DOMAIN as DOMAIN,
     PLATFORMS,
 )
@@ -139,27 +138,30 @@ def control_scan_interval(config: dict) -> dict:
 
             for entry in hub[conf_key]:
                 scan_interval = entry.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
-                if scan_interval < MINIMUM_SCAN_INTERVAL:
-                    if scan_interval == 0:
-                        continue
+                if scan_interval == 0:
+                    continue
+                if scan_interval < 5:
                     _LOGGER.warning(
-                        "%s %s scan_interval(%d) is adjusted to minimum(%d)",
+                        "%s %s scan_interval(%d) is lower than 5 seconds, "
+                        "which may cause Home Assistant stability issues",
                         component,
                         entry.get(CONF_NAME),
                         scan_interval,
-                        MINIMUM_SCAN_INTERVAL,
                     )
-                    scan_interval = MINIMUM_SCAN_INTERVAL
                 entry[CONF_SCAN_INTERVAL] = scan_interval
                 minimum_scan_interval = min(scan_interval, minimum_scan_interval)
-        if CONF_TIMEOUT in hub and hub[CONF_TIMEOUT] > minimum_scan_interval - 1:
+        if (
+            CONF_TIMEOUT in hub
+            and hub[CONF_TIMEOUT] > minimum_scan_interval - 1
+            and minimum_scan_interval > 1
+        ):
             _LOGGER.warning(
                 "Modbus %s timeout(%d) is adjusted(%d) due to scan_interval",
                 hub.get(CONF_NAME, ""),
                 hub[CONF_TIMEOUT],
                 minimum_scan_interval - 1,
             )
-        hub[CONF_TIMEOUT] = minimum_scan_interval - 1
+            hub[CONF_TIMEOUT] = minimum_scan_interval - 1
     return config
 
 
