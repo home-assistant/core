@@ -38,6 +38,11 @@ echo "Done!"
 # publih to ota
 # scp -P 7777 zigbee.zip dom@147.135.209.212:/var/www/AIS-WWW/ota/zigbee.zip
 
+echo "!!! PUT  zigbee.zip in AIS-WWW !!!"
+echo "!!! PUT  zigbee.zip in AIS-WWW !!!"
+echo "!!! PUT  zigbee.zip in AIS-WWW !!!"
+
+
 # to test restore
 # rm -rf ~/zigbee2mqtt
 # 7z x -mmt=2 -o/data/data/pl.sviete.dom/files/home/zigbee2mqtt ~/zigbee.zip -y
