@@ -21,6 +21,10 @@ async def async_process_devices(hass, manager):
         devices[VS_FANS].extend(manager.fans)
         _LOGGER.info("%d VeSync fans found", len(manager.fans))
 
+    if manager.bulbs:
+        devices[VS_LIGHTS].extend(manager.bulbs)
+        _LOGGER.info("%d VeSync lights found", len(manager.bulbs))
+
     if manager.outlets:
         devices[VS_SWITCHES].extend(manager.outlets)
         _LOGGER.info("%d VeSync outlets found", len(manager.outlets))

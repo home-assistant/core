@@ -16,6 +16,7 @@ from homeassistant.helpers.typing import ConfigType
 from .const import DOMAIN, KNOWN_DEVICES, TRIGGERS
 
 TRIGGER_TYPES = {
+    "doorbell",
     "button1",
     "button2",
     "button3",

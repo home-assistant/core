@@ -1,6 +1,6 @@
 {
   "config": {
-    "flow_title": "SiteSage {name}",
+    "flow_title": "{name}",
     "step": {
       "user": {
         "data": {

@@ -22,7 +22,10 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = ["sensor", "switch"]
 
 CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.Schema({vol.Required(CONF_ACCESS_TOKEN): cv.string})},
+    vol.All(
+        cv.deprecated(DOMAIN),
+        {DOMAIN: vol.Schema({vol.Required(CONF_ACCESS_TOKEN): cv.string})},
+    ),
     extra=vol.ALLOW_EXTRA,
 )
 
@@ -43,7 +46,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up JuiceNet from a config entry."""
 
     config = entry.data

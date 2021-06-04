@@ -4,6 +4,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -54,7 +55,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the TP-Link component."""
     conf = config.get(DOMAIN)
 
@@ -71,7 +72,7 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigType):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up TPLink from a config entry."""
     config_data = hass.data[DOMAIN].get(ATTR_CONFIG)
 
@@ -97,21 +98,26 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigType):
     forward_setup = hass.config_entries.async_forward_entry_setup
     if lights:
         _LOGGER.debug(
-            "Got %s lights: %s", len(lights), ", ".join([d.host for d in lights])
+            "Got %s lights: %s", len(lights), ", ".join(d.host for d in lights)
         )
-        hass.async_create_task(forward_setup(config_entry, "light"))
+
+        hass.async_create_task(forward_setup(entry, "light"))
+
     if switches:
         _LOGGER.debug(
-            "Got %s switches: %s", len(switches), ", ".join([d.host for d in switches])
+            "Got %s switches: %s",
+            len(switches),
+            ", ".join(d.host for d in switches),
         )
-        hass.async_create_task(forward_setup(config_entry, "switch"))
+
+        hass.async_create_task(forward_setup(entry, "switch"))
 
     return True
 
 
-async def async_unload_entry(hass, entry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    platforms = [platform for platform in PLATFORMS if platform in hass.data[DOMAIN]]
+    platforms = [platform for platform in PLATFORMS if hass.data[DOMAIN].get(platform)]
     unload_ok = await hass.config_entries.async_unload_platforms(entry, platforms)
     if unload_ok:
         hass.data[DOMAIN].clear()

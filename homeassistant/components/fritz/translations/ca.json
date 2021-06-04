@@ -8,10 +8,11 @@
         "error": {
             "already_configured": "El dispositiu ja est\u00e0 configurat",
             "already_in_progress": "El flux de configuraci\u00f3 ja est\u00e0 en curs",
+            "cannot_connect": "Ha fallat la connexi\u00f3",
             "connection_error": "Ha fallat la connexi\u00f3",
             "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida"
         },
-        "flow_title": "FRITZ!Box Tools: {name}",
+        "flow_title": "{name}",
         "step": {
             "confirm": {
                 "data": {
@@ -38,6 +39,25 @@
                 },
                 "description": "Configura FRITZ!Box Tools per poder controlar FRITZ!Box.\nEl m\u00ednim necessari \u00e9s: nom d'usuari i contrasenya.",
                 "title": "Configuraci\u00f3 de FRITZ!Box Tools - obligatori"
+            },
+            "user": {
+                "data": {
+                    "host": "Amfitri\u00f3",
+                    "password": "Contrasenya",
+                    "port": "Port",
+                    "username": "Nom d'usuari"
+                },
+                "description": "Configura FRITZ!Box Tools per poder controlar FRITZ!Box.\nEl m\u00ednim necessari \u00e9s: nom d'usuari i contrasenya.",
+                "title": "Configuraci\u00f3 de FRITZ!Box Tools"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "consider_home": "Segons d'espera abans de considerar un dispositiu a 'casa'"
+                }
             }
         }
     }

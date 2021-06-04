@@ -16,6 +16,11 @@ HOMEKIT_DISCOVERY_INFO = {
     "properties": {"id": "AA::BB::CC::DD::EE::FF"},
 }
 
+ZEROCONF_DISCOVERY_INFO = {
+    "name": "Hunter Douglas Powerview Hub._powerview._tcp.local.",
+    "host": "1.2.3.4",
+}
+
 DHCP_DISCOVERY_INFO = {"hostname": "Hunter Douglas Powerview Hub", "ip": "1.2.3.4"}
 
 DISCOVERY_DATA = [
@@ -27,6 +32,7 @@ DISCOVERY_DATA = [
         config_entries.SOURCE_DHCP,
         DHCP_DISCOVERY_INFO,
     ),
+    (config_entries.SOURCE_ZEROCONF, ZEROCONF_DISCOVERY_INFO),
 ]
 
 
@@ -35,12 +41,34 @@ def _get_mock_powerview_userdata(userdata=None, get_resources=None):
     if not userdata:
         userdata = json.loads(load_fixture("hunterdouglas_powerview/userdata.json"))
     if get_resources:
-        type(mock_powerview_userdata).get_resources = AsyncMock(
+        mock_powerview_userdata.get_resources = AsyncMock(side_effect=get_resources)
+    else:
+        mock_powerview_userdata.get_resources = AsyncMock(return_value=userdata)
+    return mock_powerview_userdata
+
+
+def _get_mock_powerview_legacy_userdata(userdata=None, get_resources=None):
+    mock_powerview_userdata_legacy = MagicMock()
+    if not userdata:
+        userdata = json.loads(load_fixture("hunterdouglas_powerview/userdata_v1.json"))
+    if get_resources:
+        mock_powerview_userdata_legacy.get_resources = AsyncMock(
             side_effect=get_resources
         )
     else:
-        type(mock_powerview_userdata).get_resources = AsyncMock(return_value=userdata)
-    return mock_powerview_userdata
+        mock_powerview_userdata_legacy.get_resources = AsyncMock(return_value=userdata)
+    return mock_powerview_userdata_legacy
+
+
+def _get_mock_powerview_fwversion(fwversion=None, get_resources=None):
+    mock_powerview_fwversion = MagicMock()
+    if not fwversion:
+        fwversion = json.loads(load_fixture("hunterdouglas_powerview/fwversion.json"))
+    if get_resources:
+        mock_powerview_fwversion.get_resources = AsyncMock(side_effect=get_resources)
+    else:
+        mock_powerview_fwversion.get_resources = AsyncMock(return_value=fwversion)
+    return mock_powerview_fwversion
 
 
 async def test_user_form(hass):
@@ -68,6 +96,53 @@ async def test_user_form(hass):
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == "AlexanderHD"
+    assert result2["data"] == {
+        "host": "1.2.3.4",
+    }
+    assert len(mock_setup_entry.mock_calls) == 1
+
+    result3 = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result3["type"] == "form"
+    assert result3["errors"] == {}
+
+    result4 = await hass.config_entries.flow.async_configure(
+        result3["flow_id"],
+        {"host": "1.2.3.4"},
+    )
+    assert result4["type"] == "abort"
+
+
+async def test_user_form_legacy(hass):
+    """Test we get the user form with a legacy device."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == "form"
+    assert result["errors"] == {}
+
+    mock_powerview_userdata = _get_mock_powerview_legacy_userdata()
+    mock_powerview_fwversion = _get_mock_powerview_fwversion()
+    with patch(
+        "homeassistant.components.hunterdouglas_powerview.UserData",
+        return_value=mock_powerview_userdata,
+    ), patch(
+        "homeassistant.components.hunterdouglas_powerview.ApiEntryPoint",
+        return_value=mock_powerview_fwversion,
+    ), patch(
+        "homeassistant.components.hunterdouglas_powerview.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"host": "1.2.3.4"},
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == "create_entry"
+    assert result2["title"] == "PowerView Hub Gen 1"
     assert result2["data"] == {
         "host": "1.2.3.4",
     }

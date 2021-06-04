@@ -44,7 +44,9 @@ class UnknownStep(FlowError):
 class AbortFlow(FlowError):
     """Exception to indicate a flow needs to be aborted."""
 
-    def __init__(self, reason: str, description_placeholders: dict | None = None):
+    def __init__(
+        self, reason: str, description_placeholders: dict | None = None
+    ) -> None:
         """Initialize an abort flow exception."""
         super().__init__(f"Flow aborted: {reason}")
         self.reason = reason
@@ -73,6 +75,7 @@ class FlowResult(TypedDict, total=False):
     context: dict[str, Any]
     result: Any
     last_step: bool | None
+    options: Mapping[str, Any]
 
 
 class FlowManager(abc.ABC):

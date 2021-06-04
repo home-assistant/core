@@ -10,7 +10,7 @@
             "service_unavailable": "\u9023\u7dda\u5931\u6557",
             "unknown_client_mac": "\u8a72 Mac \u4f4d\u5740\u7121\u53ef\u7528\u5ba2\u6236\u7aef"
         },
-        "flow_title": "UniFi Network {site} ({host})",
+        "flow_title": "{site} ({host})",
         "step": {
             "user": {
                 "data": {

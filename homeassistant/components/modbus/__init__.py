@@ -1,7 +1,7 @@
 """Support for Modbus."""
 from __future__ import annotations
 
-from typing import Any
+import logging
 
 import voluptuous as vol
 
@@ -27,6 +27,7 @@ from homeassistant.const import (
     CONF_DELAY,
     CONF_DEVICE_CLASS,
     CONF_HOST,
+    CONF_LIGHTS,
     CONF_METHOD,
     CONF_NAME,
     CONF_OFFSET,
@@ -56,16 +57,15 @@ from .const import (
     CONF_BAUDRATE,
     CONF_BYTESIZE,
     CONF_CLIMATES,
-    CONF_CURRENT_TEMP,
-    CONF_CURRENT_TEMP_REGISTER_TYPE,
+    CONF_CLOSE_COMM_ON_ERROR,
     CONF_DATA_COUNT,
     CONF_DATA_TYPE,
+    CONF_FANS,
     CONF_INPUT_TYPE,
     CONF_MAX_TEMP,
     CONF_MIN_TEMP,
     CONF_PARITY,
     CONF_PRECISION,
-    CONF_REGISTER,
     CONF_REVERSE_ORDER,
     CONF_SCALE,
     CONF_STATE_CLOSED,
@@ -97,28 +97,16 @@ from .const import (
     DEFAULT_TEMP_UNIT,
     MODBUS_DOMAIN as DOMAIN,
 )
-from .modbus import modbus_setup
+from .modbus import async_modbus_setup
+from .validators import (
+    number_validator,
+    scan_interval_validator,
+    sensor_schema_validator,
+)
+
+_LOGGER = logging.getLogger(__name__)
 
 BASE_SCHEMA = vol.Schema({vol.Optional(CONF_NAME, default=DEFAULT_HUB): cv.string})
-
-
-def number(value: Any) -> int | float:
-    """Coerce a value to number without losing precision."""
-    if isinstance(value, int):
-        return value
-    if isinstance(value, float):
-        return value
-
-    try:
-        value = int(value)
-        return value
-    except (TypeError, ValueError):
-        pass
-    try:
-        value = float(value)
-        return value
-    except (TypeError, ValueError) as err:
-        raise vol.Invalid(f"invalid number {value}") from err
 
 
 BASE_COMPONENT_SCHEMA = vol.Schema(
@@ -134,12 +122,15 @@ BASE_COMPONENT_SCHEMA = vol.Schema(
 
 CLIMATE_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
     {
-        vol.Required(CONF_CURRENT_TEMP): cv.positive_int,
+        vol.Required(CONF_ADDRESS): cv.positive_int,
+        vol.Optional(CONF_INPUT_TYPE, default=CALL_TYPE_REGISTER_HOLDING): vol.In(
+            [
+                CALL_TYPE_REGISTER_HOLDING,
+                CALL_TYPE_REGISTER_INPUT,
+            ]
+        ),
         vol.Required(CONF_TARGET_TEMP): cv.positive_int,
         vol.Optional(CONF_DATA_COUNT, default=2): cv.positive_int,
-        vol.Optional(
-            CONF_CURRENT_TEMP_REGISTER_TYPE, default=CALL_TYPE_REGISTER_HOLDING
-        ): vol.In([CALL_TYPE_REGISTER_HOLDING, CALL_TYPE_REGISTER_INPUT]),
         vol.Optional(CONF_DATA_TYPE, default=DATA_TYPE_FLOAT): vol.In(
             [DATA_TYPE_INT, DATA_TYPE_UINT, DATA_TYPE_FLOAT, DATA_TYPE_CUSTOM]
         ),
@@ -154,24 +145,26 @@ CLIMATE_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
     }
 )
 
-COVERS_SCHEMA = vol.All(
-    cv.has_at_least_one_key(CALL_TYPE_COIL, CONF_REGISTER),
-    BASE_COMPONENT_SCHEMA.extend(
-        {
-            vol.Optional(CONF_DEVICE_CLASS): COVER_DEVICE_CLASSES_SCHEMA,
-            vol.Optional(CONF_STATE_CLOSED, default=0): cv.positive_int,
-            vol.Optional(CONF_STATE_CLOSING, default=3): cv.positive_int,
-            vol.Optional(CONF_STATE_OPEN, default=1): cv.positive_int,
-            vol.Optional(CONF_STATE_OPENING, default=2): cv.positive_int,
-            vol.Optional(CONF_STATUS_REGISTER): cv.positive_int,
-            vol.Optional(
-                CONF_STATUS_REGISTER_TYPE,
-                default=CALL_TYPE_REGISTER_HOLDING,
-            ): vol.In([CALL_TYPE_REGISTER_HOLDING, CALL_TYPE_REGISTER_INPUT]),
-            vol.Exclusive(CALL_TYPE_COIL, CONF_INPUT_TYPE): cv.positive_int,
-            vol.Exclusive(CONF_REGISTER, CONF_INPUT_TYPE): cv.positive_int,
-        }
-    ),
+COVERS_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
+    {
+        vol.Required(CONF_ADDRESS): cv.positive_int,
+        vol.Optional(CONF_INPUT_TYPE, default=CALL_TYPE_REGISTER_HOLDING,): vol.In(
+            [
+                CALL_TYPE_REGISTER_HOLDING,
+                CALL_TYPE_COIL,
+            ]
+        ),
+        vol.Optional(CONF_DEVICE_CLASS): COVER_DEVICE_CLASSES_SCHEMA,
+        vol.Optional(CONF_STATE_CLOSED, default=0): cv.positive_int,
+        vol.Optional(CONF_STATE_CLOSING, default=3): cv.positive_int,
+        vol.Optional(CONF_STATE_OPEN, default=1): cv.positive_int,
+        vol.Optional(CONF_STATE_OPENING, default=2): cv.positive_int,
+        vol.Optional(CONF_STATUS_REGISTER): cv.positive_int,
+        vol.Optional(
+            CONF_STATUS_REGISTER_TYPE,
+            default=CALL_TYPE_REGISTER_HOLDING,
+        ): vol.In([CALL_TYPE_REGISTER_HOLDING, CALL_TYPE_REGISTER_INPUT]),
+    }
 )
 
 SWITCH_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
@@ -183,19 +176,74 @@ SWITCH_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
         ),
         vol.Optional(CONF_COMMAND_OFF, default=0x00): cv.positive_int,
         vol.Optional(CONF_COMMAND_ON, default=0x01): cv.positive_int,
-        vol.Optional(CONF_VERIFY): {
-            vol.Optional(CONF_ADDRESS): cv.positive_int,
-            vol.Optional(CONF_INPUT_TYPE): vol.In(
-                [
-                    CALL_TYPE_REGISTER_HOLDING,
-                    CALL_TYPE_DISCRETE,
-                    CALL_TYPE_REGISTER_INPUT,
-                    CALL_TYPE_COIL,
-                ]
-            ),
-            vol.Optional(CONF_STATE_OFF): cv.positive_int,
-            vol.Optional(CONF_STATE_ON): cv.positive_int,
-        },
+        vol.Optional(CONF_VERIFY): vol.Maybe(
+            {
+                vol.Optional(CONF_ADDRESS): cv.positive_int,
+                vol.Optional(CONF_INPUT_TYPE): vol.In(
+                    [
+                        CALL_TYPE_REGISTER_HOLDING,
+                        CALL_TYPE_DISCRETE,
+                        CALL_TYPE_REGISTER_INPUT,
+                        CALL_TYPE_COIL,
+                    ]
+                ),
+                vol.Optional(CONF_STATE_OFF): cv.positive_int,
+                vol.Optional(CONF_STATE_ON): cv.positive_int,
+                vol.Optional(CONF_DELAY, default=0): cv.positive_int,
+            }
+        ),
+    }
+)
+
+LIGHT_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
+    {
+        vol.Required(CONF_ADDRESS): cv.positive_int,
+        vol.Optional(CONF_WRITE_TYPE, default=CALL_TYPE_REGISTER_HOLDING): vol.In(
+            [CALL_TYPE_REGISTER_HOLDING, CALL_TYPE_COIL]
+        ),
+        vol.Optional(CONF_COMMAND_OFF, default=0x00): cv.positive_int,
+        vol.Optional(CONF_COMMAND_ON, default=0x01): cv.positive_int,
+        vol.Optional(CONF_VERIFY): vol.Maybe(
+            {
+                vol.Optional(CONF_ADDRESS): cv.positive_int,
+                vol.Optional(CONF_INPUT_TYPE): vol.In(
+                    [
+                        CALL_TYPE_REGISTER_HOLDING,
+                        CALL_TYPE_DISCRETE,
+                        CALL_TYPE_REGISTER_INPUT,
+                        CALL_TYPE_COIL,
+                    ]
+                ),
+                vol.Optional(CONF_STATE_OFF): cv.positive_int,
+                vol.Optional(CONF_STATE_ON): cv.positive_int,
+            }
+        ),
+    }
+)
+
+FAN_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
+    {
+        vol.Required(CONF_ADDRESS): cv.positive_int,
+        vol.Optional(CONF_WRITE_TYPE, default=CALL_TYPE_REGISTER_HOLDING): vol.In(
+            [CALL_TYPE_REGISTER_HOLDING, CALL_TYPE_COIL]
+        ),
+        vol.Optional(CONF_COMMAND_OFF, default=0x00): cv.positive_int,
+        vol.Optional(CONF_COMMAND_ON, default=0x01): cv.positive_int,
+        vol.Optional(CONF_VERIFY): vol.Maybe(
+            {
+                vol.Optional(CONF_ADDRESS): cv.positive_int,
+                vol.Optional(CONF_INPUT_TYPE): vol.In(
+                    [
+                        CALL_TYPE_REGISTER_HOLDING,
+                        CALL_TYPE_DISCRETE,
+                        CALL_TYPE_REGISTER_INPUT,
+                        CALL_TYPE_COIL,
+                    ]
+                ),
+                vol.Optional(CONF_STATE_OFF): cv.positive_int,
+                vol.Optional(CONF_STATE_ON): cv.positive_int,
+            }
+        ),
     }
 )
 
@@ -213,7 +261,7 @@ SENSOR_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
             ]
         ),
         vol.Optional(CONF_DEVICE_CLASS): SENSOR_DEVICE_CLASSES_SCHEMA,
-        vol.Optional(CONF_OFFSET, default=0): number,
+        vol.Optional(CONF_OFFSET, default=0): number_validator,
         vol.Optional(CONF_PRECISION, default=0): cv.positive_int,
         vol.Optional(CONF_INPUT_TYPE, default=CALL_TYPE_REGISTER_HOLDING): vol.In(
             [CALL_TYPE_REGISTER_HOLDING, CALL_TYPE_REGISTER_INPUT]
@@ -222,7 +270,7 @@ SENSOR_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
         vol.Optional(CONF_SWAP, default=CONF_SWAP_NONE): vol.In(
             [CONF_SWAP_NONE, CONF_SWAP_BYTE, CONF_SWAP_WORD, CONF_SWAP_WORD_BYTE]
         ),
-        vol.Optional(CONF_SCALE, default=1): number,
+        vol.Optional(CONF_SCALE, default=1): number_validator,
         vol.Optional(CONF_STRUCTURE): cv.string,
         vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
     }
@@ -242,14 +290,19 @@ MODBUS_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_NAME, default=DEFAULT_HUB): cv.string,
         vol.Optional(CONF_TIMEOUT, default=3): cv.socket_timeout,
+        vol.Optional(CONF_CLOSE_COMM_ON_ERROR, default=True): cv.boolean,
         vol.Optional(CONF_DELAY, default=0): cv.positive_int,
         vol.Optional(CONF_BINARY_SENSORS): vol.All(
             cv.ensure_list, [BINARY_SENSOR_SCHEMA]
         ),
         vol.Optional(CONF_CLIMATES): vol.All(cv.ensure_list, [CLIMATE_SCHEMA]),
         vol.Optional(CONF_COVERS): vol.All(cv.ensure_list, [COVERS_SCHEMA]),
-        vol.Optional(CONF_SENSORS): vol.All(cv.ensure_list, [SENSOR_SCHEMA]),
+        vol.Optional(CONF_LIGHTS): vol.All(cv.ensure_list, [LIGHT_SCHEMA]),
+        vol.Optional(CONF_SENSORS): vol.All(
+            cv.ensure_list, [vol.All(SENSOR_SCHEMA, sensor_schema_validator)]
+        ),
         vol.Optional(CONF_SWITCHES): vol.All(cv.ensure_list, [SWITCH_SCHEMA]),
+        vol.Optional(CONF_FANS): vol.All(cv.ensure_list, [FAN_SCHEMA]),
     }
 )
 
@@ -277,6 +330,7 @@ CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.All(
             cv.ensure_list,
+            scan_interval_validator,
             [
                 vol.Any(SERIAL_SCHEMA, ETHERNET_SCHEMA),
             ],
@@ -308,8 +362,8 @@ SERVICE_WRITE_COIL_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass, config):
+async def async_setup(hass, config):
     """Set up Modbus component."""
-    return modbus_setup(
+    return await async_modbus_setup(
         hass, config, SERVICE_WRITE_REGISTER_SCHEMA, SERVICE_WRITE_COIL_SCHEMA
     )

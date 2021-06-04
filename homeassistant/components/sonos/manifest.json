@@ -3,7 +3,8 @@
   "name": "Sonos",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/sonos",
-  "requirements": ["pysonos==0.0.44"],
+  "requirements": ["pysonos==0.0.50"],
+  "dependencies": ["ssdp"],
   "after_dependencies": ["plex"],
   "ssdp": [
     {

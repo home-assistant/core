@@ -9,7 +9,7 @@
             "invalid_auth": "Ugyldig godkjenning",
             "unknown": "Uventet feil"
         },
-        "flow_title": "Utsending {serial} ({host})",
+        "flow_title": "{serial} ({host})",
         "step": {
             "user": {
                 "data": {
