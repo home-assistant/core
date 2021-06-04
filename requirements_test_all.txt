@@ -457,7 +457,7 @@ huisbaasje-client==0.1.0
 hyperion-py==0.7.4
 
 # homeassistant.components.iaqualink
-iaqualink==0.3.4
+iaqualink==0.3.90
 
 # homeassistant.components.ping
 icmplib==3.0
