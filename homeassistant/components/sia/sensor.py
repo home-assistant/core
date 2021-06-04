@@ -94,7 +94,8 @@ class SIASensor(RestoreEntity):
             async_track_time_interval(self.hass, self._update_icon, self._ping_interval)
         )
 
-    async def async_handle_event(self, sia_event: SIAEvent):
+    @callback
+    def async_handle_event(self, sia_event: SIAEvent):
         """Listen to events for this port and account and update the state and attributes."""
         self._attr_extra_state_attributes.update(get_attr_from_sia_event(sia_event))
         if sia_event.code == "RP":
