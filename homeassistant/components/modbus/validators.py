@@ -128,7 +128,7 @@ def scan_interval_validator(config: dict) -> dict:
                 scan_interval = entry.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
                 if scan_interval == 0:
                     continue
-                if scan_interval < 5:  # there are not constant in core for this.
+                if scan_interval < 5:
                     _LOGGER.warning(
                         "%s %s scan_interval(%d) is lower than HA standard",
                         component,
