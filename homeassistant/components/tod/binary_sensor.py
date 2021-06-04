@@ -94,6 +94,7 @@ class TodSensor(BinarySensorEntity):
         """Return the state attributes of the sensor."""
         time_zone = dt_util.get_time_zone(self.hass.config.time_zone)
         import pprint
+
         pprint.pprint(time_zone)
         return {
             ATTR_AFTER: self._time_after.astimezone(time_zone).isoformat(),
@@ -179,15 +180,29 @@ class TodSensor(BinarySensorEntity):
         """Datetime when the next update to the state."""
         now = dt_util.utcnow()
         if now < self._time_after:
-            _LOGGER.warning("now < self._time_after: now=%s, self._time_after=%s", now, self._time_after)
+            _LOGGER.warning(
+                "now < self._time_after: now=%s, self._time_after=%s",
+                now,
+                self._time_after,
+            )
             self._next_update = self._time_after
             return
         if now < self._time_before:
-            _LOGGER.warning("now < self._time_before: now=%s, self._time_before=%s", now, self._time_before)
+            _LOGGER.warning(
+                "now < self._time_before: now=%s, self._time_before=%s",
+                now,
+                self._time_before,
+            )
             self._next_update = self._time_before
             return
         self._calculate_boudary_time()
-        _LOGGER.warning("_calculate_boudary_time: now=%s, self._next_update=%s self._time_before=%s self._time_after=%s", now, self._next_update, self._time_before, self._time_after)
+        _LOGGER.warning(
+            "_calculate_boudary_time: now=%s, self._next_update=%s self._time_before=%s self._time_after=%s",
+            now,
+            self._next_update,
+            self._time_before,
+            self._time_after,
+        )
         self._next_update = self._time_after
 
     @callback
