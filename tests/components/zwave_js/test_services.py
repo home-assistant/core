@@ -823,11 +823,11 @@ async def test_ping(
 
     client.async_send_command.reset_mock()
 
-    # # Test no device or entity raises error
-    # with pytest.raises(vol.Invalid):
-    #     await hass.services.async_call(
-    #         DOMAIN,
-    #         SERVICE_PING,
-    #         {},
-    #         blocking=True,
-    #     )
+    # Test no device or entity raises error
+    with pytest.raises(vol.Invalid):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_PING,
+            {},
+            blocking=True,
+        )
