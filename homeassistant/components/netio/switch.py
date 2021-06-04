@@ -1,14 +1,20 @@
 """The Netio switch component."""
-from collections import namedtuple
-from datetime import timedelta
-import logging
+from __future__ import annotations
 
+import logging
+from typing import Any, Final
+
+from aiohttp import web
 from pynetio import Netio
 import voluptuous as vol
+from voluptuous.schema_builder import Schema
 
 from homeassistant import util
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
+from homeassistant.components.switch import (
+    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
+    SwitchEntity,
+)
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -17,28 +23,27 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     STATE_ON,
 )
-from homeassistant.core import callback
+from homeassistant.core import Event, HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType
 
-_LOGGER = logging.getLogger(__name__)
+from .const import (
+    ATTR_START_DATE,
+    ATTR_TOTAL_CONSUMPTION_KWH,
+    CONF_OUTLETS,
+    DEFAULT_PORT,
+    DEFAULT_USERNAME,
+    MIN_TIME_BETWEEN_SCANS,
+    URL_API_NETIO_EP,
+)
+from .model import Device
 
-ATTR_START_DATE = "start_date"
-ATTR_TOTAL_CONSUMPTION_KWH = "total_energy_kwh"
+_LOGGER: Final = logging.getLogger(__name__)
 
-CONF_OUTLETS = "outlets"
+DEVICES: dict[str, Device] = {}
 
-DEFAULT_PORT = 1234
-DEFAULT_USERNAME = "admin"
-Device = namedtuple("device", ["netio", "entities"])
-DEVICES = {}
-
-MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
-
-REQ_CONF = [CONF_HOST, CONF_OUTLETS]
-
-URL_API_NETIO_EP = "/api/netio/{host}"
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA: Final[Schema] = PARENT_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
@@ -49,16 +54,21 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: dict[str, Any] | None = None,
+) -> bool:
     """Set up the Netio platform."""
 
-    host = config.get(CONF_HOST)
-    username = config.get(CONF_USERNAME)
-    password = config.get(CONF_PASSWORD)
-    port = config.get(CONF_PORT)
+    host: str = config[CONF_HOST]
+    username: str = config.get(CONF_USERNAME, DEFAULT_USERNAME)
+    password: str = config[CONF_PASSWORD]
+    port: int = config.get(CONF_PORT, DEFAULT_PORT)
 
     if not DEVICES:
-        hass.http.register_view(NetioApiView)
+        hass.http.register_view(NetioApiView())
 
     dev = Netio(host, port, username, password)
 
@@ -77,7 +87,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     return True
 
 
-def dispose(event):
+def dispose(event: Event) -> None:
     """Close connections to Netio Devices."""
     for value in DEVICES.values():
         value.netio.stop()
@@ -90,10 +100,13 @@ class NetioApiView(HomeAssistantView):
     name = "api:netio"
 
     @callback
-    def get(self, request, host):
+    def get(self, request: web.Request, host: str) -> web.Response:
         """Request handler."""
         data = request.query
-        states, consumptions, cumulated_consumptions, start_dates = [], [], [], []
+        states: list[bool] = []
+        consumptions: list[float] = []
+        cumulated_consumptions: list[float] = []
+        start_dates: list[str] = []
 
         for i in range(1, 5):
             out = "output%d" % i
@@ -113,7 +126,7 @@ class NetioApiView(HomeAssistantView):
             start_dates,
         )
 
-        ndev = DEVICES[host].netio
+        ndev: Netio = DEVICES[host].netio
         ndev.consumptions = consumptions
         ndev.cumulated_consumptions = cumulated_consumptions
         ndev.states = states
@@ -128,31 +141,31 @@ class NetioApiView(HomeAssistantView):
 class NetioSwitch(SwitchEntity):
     """Provide a Netio linked switch."""
 
-    def __init__(self, netio, outlet, name):
+    def __init__(self, netio: Netio, outlet: str, name: str) -> None:
         """Initialize the Netio switch."""
         self._name = name
         self.outlet = outlet
         self.netio = netio
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the device's name."""
         return self._name
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return true if entity is available."""
         return not hasattr(self, "telnet")
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn switch on."""
         self._set(True)
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn switch off."""
         self._set(False)
 
-    def _set(self, value):
+    def _set(self, value: bool) -> None:
         val = list("uuuu")
         val[int(self.outlet) - 1] = "1" if value else "0"
         self.netio.get("port list %s" % "".join(val))
@@ -160,16 +173,16 @@ class NetioSwitch(SwitchEntity):
         self.schedule_update_ha_state()
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return the switch's status."""
-        return self.netio.states[int(self.outlet) - 1]
+        return self.netio.states[int(self.outlet) - 1]  # type: ignore[no-any-return]
 
-    def update(self):
+    def update(self) -> None:
         """Update the state."""
         self.netio.update()
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return optional state attributes."""
         return {
             ATTR_TOTAL_CONSUMPTION_KWH: self.cumulated_consumption_kwh,
@@ -177,16 +190,16 @@ class NetioSwitch(SwitchEntity):
         }
 
     @property
-    def current_power_w(self):
+    def current_power_w(self) -> int:
         """Return actual power."""
-        return self.netio.consumptions[int(self.outlet) - 1]
+        return self.netio.consumptions[int(self.outlet) - 1]  # type: ignore[no-any-return]
 
     @property
-    def cumulated_consumption_kwh(self):
+    def cumulated_consumption_kwh(self) -> int:
         """Return the total enerygy consumption since start_date."""
-        return self.netio.cumulated_consumptions[int(self.outlet) - 1]
+        return self.netio.cumulated_consumptions[int(self.outlet) - 1]  # type: ignore[no-any-return]
 
     @property
-    def start_date(self):
+    def start_date(self) -> str:
         """Point in time when the energy accumulation started."""
-        return self.netio.start_dates[int(self.outlet) - 1]
+        return self.netio.start_dates[int(self.outlet) - 1]  # type: ignore[no-any-return]
