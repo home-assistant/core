@@ -220,14 +220,14 @@ class IRobotVacuum(IRobotEntity, StateVacuumEntity):
         if not (mission_state := state.get("cleanMissionStatus")):
             return (0, 0)
 
-        if (cleaning_time := mission_state.get("mssnM", 0)) > 0:
+        if cleaning_time := mission_state.get("mssnM", 0):
             pass
         elif start_time := mission_state.get("mssnStrtTm"):
             now = dt_util.as_timestamp(dt_util.utcnow())
             if now > start_time:
                 cleaning_time = (now - start_time) // 60
 
-        if (cleaned_area := mission_state.get("sqft", 0)) > 0:  # Imperial
+        if cleaned_area := mission_state.get("sqft", 0):  # Imperial
             # Convert to m2 if the unit_system is set to metric
             if self.hass.config.units.is_metric:
                 cleaned_area = round(cleaned_area * 0.0929)
