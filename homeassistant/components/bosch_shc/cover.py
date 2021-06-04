@@ -36,16 +36,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 class ShutterControlCover(SHCEntity, CoverEntity):
     """Representation of a SHC shutter control device."""
-
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        return SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_STOP | SUPPORT_SET_POSITION
-
-    @property
-    def device_class(self):
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        return DEVICE_CLASS_SHUTTER
+    
+    _attr_device_class = DEVICE_CLASS_SHUTTER
+    _attr_supported_features = (
+        SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_STOP | SUPPORT_SET_POSITION
+    )
 
     @property
     def current_cover_position(self):
