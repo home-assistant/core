@@ -93,6 +93,8 @@ class TodSensor(BinarySensorEntity):
     def extra_state_attributes(self):
         """Return the state attributes of the sensor."""
         time_zone = dt_util.get_time_zone(self.hass.config.time_zone)
+        import pprint
+        pprint.pprint(time_zone)
         return {
             ATTR_AFTER: self._time_after.astimezone(time_zone).isoformat(),
             ATTR_BEFORE: self._time_before.astimezone(time_zone).isoformat(),
