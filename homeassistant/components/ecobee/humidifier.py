@@ -10,7 +10,7 @@ from homeassistant.components.humidifier.const import (
     SUPPORT_MODES,
 )
 
-from .const import _LOGGER, DOMAIN, ECOBEE_MODEL_TO_NAME, MANUFACTURER
+from .const import DOMAIN, ECOBEE_MODEL_TO_NAME, MANUFACTURER
 
 SCAN_INTERVAL = timedelta(minutes=3)
 
@@ -51,27 +51,18 @@ class EcobeeHumidifier(HumidifierEntity):
     @property
     def unique_id(self):
         """Return a unique identifier for the humidifier."""
-        return f"{self.data.ecobee.get_thermostat(self.thermostat_index)['identifier']}-humidifier"
+        return f"{self.thermostat['identifier']}"
 
     @property
     def device_info(self):
         """Return device information for the ecobee humidifier."""
-        thermostat = self.data.ecobee.get_thermostat(self.thermostat_index)
         try:
-            model = f"{ECOBEE_MODEL_TO_NAME[thermostat['modelNumber']]} Thermostat"
+            model = f"{ECOBEE_MODEL_TO_NAME[self.thermostat['modelNumber']]} Thermostat"
         except KeyError:
-            _LOGGER.error(
-                "Model number for ecobee thermostat %s not recognized. "
-                "Please visit this link and provide the following information: "
-                "https://github.com/home-assistant/core/issues/27172 "
-                "Unrecognized model number: %s",
-                thermostat["name"],
-                thermostat["modelNumber"],
-            )
             return None
 
         return {
-            "identifiers": {(DOMAIN, thermostat["identifier"])},
+            "identifiers": {(DOMAIN, self.thermostat["identifier"])},
             "name": self.name,
             "manufacturer": MANUFACTURER,
             "model": model,
@@ -127,6 +118,11 @@ class EcobeeHumidifier(HumidifierEntity):
     def target_humidity(self) -> int:
         """Return the desired humidity set point."""
         return int(self.thermostat["runtime"]["desiredHumidity"])
+
+    @property
+    def humidity(self) -> int:
+        """Return the current humidity."""
+        return int(self.thermostat["runtime"]["actualHumidity"])
 
     def set_mode(self, mode):
         """Set humidifier mode (auto, off, manual)."""

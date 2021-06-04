@@ -1,130 +1,79 @@
 """The test for the ecobee thermostat humidifier module."""
-from unittest.mock import patch
+from unittest import mock
 
 import pytest
 
-from homeassistant.components.ecobee.humidifier import MODE_MANUAL, MODE_OFF
-from homeassistant.components.humidifier import DOMAIN as HUMIDIFIER_DOMAIN
+from homeassistant.components.ecobee import humidifier as ecobee
 from homeassistant.components.humidifier.const import (
-    ATTR_AVAILABLE_MODES,
-    ATTR_HUMIDITY,
-    ATTR_MAX_HUMIDITY,
-    ATTR_MIN_HUMIDITY,
     DEFAULT_MAX_HUMIDITY,
     DEFAULT_MIN_HUMIDITY,
     DEVICE_CLASS_HUMIDIFIER,
     MODE_AUTO,
-    SERVICE_SET_HUMIDITY,
-    SERVICE_SET_MODE,
     SUPPORT_MODES,
 )
-from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
-    ATTR_ENTITY_ID,
-    ATTR_FRIENDLY_NAME,
-    ATTR_MODE,
-    ATTR_SUPPORTED_FEATURES,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_OFF,
-)
 
-from .common import setup_platform
+from .common import data_fixture, ecobee_fixture
 
-DEVICE_ID = "humidifier.ecobee"
+__all__ = ["data_fixture", "ecobee_fixture"]
+
+MODE_MANUAL = "manual"
+MODE_OFF = "off"
 
 
-async def test_attributes(hass):
-    """Test the humidifier attributes are correct."""
-    await setup_platform(hass, HUMIDIFIER_DOMAIN)
+@pytest.fixture(name="humidifier")
+def humidifier_fixture(data):
+    """Set up ecobee thermostat object."""
+    return ecobee.EcobeeHumidifier(data, 1)
 
-    state = hass.states.get(DEVICE_ID)
-    assert state.state == STATE_OFF
-    assert state.attributes.get(ATTR_MIN_HUMIDITY) == DEFAULT_MIN_HUMIDITY
-    assert state.attributes.get(ATTR_MAX_HUMIDITY) == DEFAULT_MAX_HUMIDITY
-    assert state.attributes.get(ATTR_HUMIDITY) == 40
-    assert state.attributes.get(ATTR_AVAILABLE_MODES) == [
+
+async def test_attributes(humidifier):
+    """Test the attributes within the humidifier entity."""
+    assert humidifier.is_on is False
+    assert humidifier.max_humidity == DEFAULT_MAX_HUMIDITY
+    assert humidifier.min_humidity == DEFAULT_MIN_HUMIDITY
+    assert humidifier.humidity == 15
+    assert humidifier.available_modes == [
         MODE_OFF,
         MODE_AUTO,
         MODE_MANUAL,
     ]
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "ecobee"
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_HUMIDIFIER
-    assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == SUPPORT_MODES
+    assert humidifier.name == "Ecobee"
+    assert humidifier.device_class == DEVICE_CLASS_HUMIDIFIER
+    assert humidifier.mode == "off"
+    assert humidifier.supported_features == SUPPORT_MODES
+    assert humidifier.target_humidity == 45
 
 
-async def test_turn_on(hass):
-    """Test the humidifer can be turned on."""
-    with patch("pyecobee.Ecobee.set_humidifier_mode") as mock_turn_on:
-        await setup_platform(hass, HUMIDIFIER_DOMAIN)
-
-        await hass.services.async_call(
-            HUMIDIFIER_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: DEVICE_ID},
-            blocking=True,
-        )
-        await hass.async_block_till_done()
-        mock_turn_on.assert_called_once_with(0, "manual")
+async def test_turn_on(humidifier, data):
+    """Test turning on humidifier."""
+    data.reset_mock()
+    humidifier.turn_on()
+    data.ecobee.set_humidifier_mode.assert_has_calls([mock.call(1, "manual")])
 
 
-async def test_turn_off(hass):
-    """Test the humidifer can be turned off."""
-    with patch("pyecobee.Ecobee.set_humidifier_mode") as mock_turn_off:
-        await setup_platform(hass, HUMIDIFIER_DOMAIN)
-
-        await hass.services.async_call(
-            HUMIDIFIER_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: DEVICE_ID},
-            blocking=True,
-        )
-        await hass.async_block_till_done()
-        mock_turn_off.assert_called_once_with(0, STATE_OFF)
+async def test_turn_off(humidifier, data):
+    """Test turning off humidifier."""
+    data.reset_mock()
+    humidifier.turn_off()
+    data.ecobee.set_humidifier_mode.assert_has_calls([mock.call(1, "off")])
 
 
-async def test_set_mode(hass):
-    """Test the humidifer can change modes."""
-    with patch("pyecobee.Ecobee.set_humidifier_mode") as mock_set_mode:
-        await setup_platform(hass, HUMIDIFIER_DOMAIN)
-
-        await hass.services.async_call(
-            HUMIDIFIER_DOMAIN,
-            SERVICE_SET_MODE,
-            {ATTR_ENTITY_ID: DEVICE_ID, ATTR_MODE: MODE_AUTO},
-            blocking=True,
-        )
-        await hass.async_block_till_done()
-        mock_set_mode.assert_called_once_with(0, MODE_AUTO)
-
-        await hass.services.async_call(
-            HUMIDIFIER_DOMAIN,
-            SERVICE_SET_MODE,
-            {ATTR_ENTITY_ID: DEVICE_ID, ATTR_MODE: MODE_MANUAL},
-            blocking=True,
-        )
-        await hass.async_block_till_done()
-        mock_set_mode.assert_called_with(0, MODE_MANUAL)
-
-        with pytest.raises(ValueError):
-            await hass.services.async_call(
-                HUMIDIFIER_DOMAIN,
-                SERVICE_SET_MODE,
-                {ATTR_ENTITY_ID: DEVICE_ID, ATTR_MODE: "ModeThatDoesntExist"},
-                blocking=True,
-            )
+async def test_set_mode(humidifier, data):
+    """Test setting each humidifier mode."""
+    data.reset_mock()
+    """ Auto """
+    humidifier.set_mode("auto")
+    data.ecobee.set_humidifier_mode.assert_has_calls([mock.call(1, "auto")])
+    """ Off """
+    humidifier.set_mode("off")
+    data.ecobee.set_humidifier_mode.assert_has_calls([mock.call(1, "off")])
+    """ Manual """
+    humidifier.set_mode("manual")
+    data.ecobee.set_humidifier_mode.assert_has_calls([mock.call(1, "manual")])
 
 
-async def test_set_humidity(hass):
-    """Test the humidifer can set humidity level."""
-    with patch("pyecobee.Ecobee.set_humidity") as mock_set_humidity:
-        await setup_platform(hass, HUMIDIFIER_DOMAIN)
-
-        await hass.services.async_call(
-            HUMIDIFIER_DOMAIN,
-            SERVICE_SET_HUMIDITY,
-            {ATTR_ENTITY_ID: DEVICE_ID, ATTR_HUMIDITY: 60},
-            blocking=True,
-        )
-        await hass.async_block_till_done()
-        mock_set_humidity.assert_called_once_with(0, 60)
+async def test_set_humidity(humidifier, data):
+    """Test setting desired humidity."""
+    data.reset_mock()
+    humidifier.set_humidity("40")
+    data.ecobee.set_humidity.assert_has_calls([mock.call(1, "40")])
