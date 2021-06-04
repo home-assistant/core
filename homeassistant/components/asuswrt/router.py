@@ -231,7 +231,7 @@ class AsusWrtRouter:
         if model:
             self._model = model["model"]
         firmware = await _get_nvram_info(self._api, "FIRMWARE")
-        if firmware:
+        if firmware and "firmver" in firmware and "buildno" in firmware:
             self._sw_v = f"{firmware['firmver']} (build {firmware['buildno']})"
 
         # Load tracked entities from registry
