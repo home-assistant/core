@@ -224,7 +224,7 @@ LIGHT_TURN_ON_SCHEMA = {
     vol.Exclusive(ATTR_XY_COLOR, COLOR_GROUP): vol.All(
         vol.ExactSequence((cv.small_float, cv.small_float)), vol.Coerce(tuple)
     ),
-    vol.Exclusive(ATTR_WHITE, COLOR_GROUP): True,
+    vol.Exclusive(ATTR_WHITE, COLOR_GROUP): VALID_BRIGHTNESS,
     ATTR_WHITE_VALUE: vol.All(vol.Coerce(int), vol.Range(min=0, max=255)),
     ATTR_FLASH: VALID_FLASH,
     ATTR_EFFECT: cv.string,
@@ -273,7 +273,7 @@ def preprocess_turn_on_alternatives(hass, params):
 
 
 def filter_turn_off_params(light, params):
-    """Filter out params not used in turn off."""
+    """Filter out params not used in turn off or not supported by the light."""
     supported_features = light.supported_features
 
     if not supported_features & SUPPORT_FLASH:
@@ -285,7 +285,7 @@ def filter_turn_off_params(light, params):
 
 
 def filter_turn_on_params(light, params):
-    """Filter out params not used in turn off."""
+    """Filter out params not supported by the light."""
     supported_features = light.supported_features
 
     if not supported_features & SUPPORT_EFFECT:
@@ -312,6 +312,8 @@ def filter_turn_on_params(light, params):
         params.pop(ATTR_RGBW_COLOR, None)
     if COLOR_MODE_RGBWW not in supported_color_modes:
         params.pop(ATTR_RGBWW_COLOR, None)
+    if COLOR_MODE_WHITE not in supported_color_modes:
+        params.pop(ATTR_WHITE, None)
     if COLOR_MODE_XY not in supported_color_modes:
         params.pop(ATTR_XY_COLOR, None)
 
@@ -432,11 +434,15 @@ async def async_setup(hass, config):  # noqa: C901
                     *rgb_color, light.min_mireds, light.max_mireds
                 )
 
+        # If both white and brightness are specified, override white
+        if ATTR_WHITE in params and COLOR_MODE_WHITE in supported_color_modes:
+            params[ATTR_WHITE] = params.pop(ATTR_BRIGHTNESS, params[ATTR_WHITE])
+
         # Remove deprecated white value if the light supports color mode
         if supported_color_modes:
             params.pop(ATTR_WHITE_VALUE, None)
 
-        if params.get(ATTR_BRIGHTNESS) == 0:
+        if params.get(ATTR_BRIGHTNESS) == 0 or params.get(ATTR_WHITE) == 0:
             await async_handle_light_off_service(light, call)
         else:
             await light.async_turn_on(**filter_turn_on_params(light, params))
