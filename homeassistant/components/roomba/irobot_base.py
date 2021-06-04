@@ -192,13 +192,10 @@ class IRobotVacuum(IRobotEntity, StateVacuumEntity):
         # currently on
         if self.state == STATE_CLEANING:
             # Get clean mission status
-            mission_state = state.get("cleanMissionStatus", {})
-            cleaned_area = mission_state.get("sqft")  # Imperial
-            # Convert to m2 if the unit_system is set to metric
-            if cleaned_area and self.hass.config.units.is_metric:
-                cleaned_area = round(cleaned_area * 0.0929)
-            state_attrs[ATTR_CLEANING_TIME] = self.get_cleaning_time(state)
-            state_attrs[ATTR_CLEANED_AREA] = cleaned_area
+            (
+                state_attrs[ATTR_CLEANING_TIME],
+                state_attrs[ATTR_CLEANED_AREA],
+            ) = self.get_cleaning_status(state)
 
         # Error
         if self.vacuum.error_code != 0:
@@ -219,14 +216,23 @@ class IRobotVacuum(IRobotEntity, StateVacuumEntity):
 
         return state_attrs
 
-    def get_cleaning_time(self, state) -> int:
-        if not (mission_state := state.get("cleanMissionStatus", None)):
-            return 0
-        if cleaning_time := mission_state.get("mssnM", None):
-            return cleaning_time
-        if not (start_time := mission_state.get("mssnStrtTm", None)):
-            return (dt_util.as_timestamp(dt_util.utcnow()) - start_time) // 60
-        return 0
+    def get_cleaning_status(self, state) -> int:
+        if not (mission_state := state.get("cleanMissionStatus")):
+            return (0, 0)
+
+        if (cleaning_time := mission_state.get("mssnM", 0)) > 0:
+            pass
+        elif start_time := mission_state.get("mssnStrtTm"):
+            now = dt_util.as_timestamp(dt_util.utcnow())
+            if now > start_time:
+                cleaning_time = (now - start_time) // 60
+
+        if (cleaned_area := mission_state.get("sqft", 0)) > 0:  # Imperial
+            # Convert to m2 if the unit_system is set to metric
+            if self.hass.config.units.is_metric:
+                cleaned_area = round(cleaned_area * 0.0929)
+
+        return (cleaning_time, cleaned_area)
 
     def on_message(self, json_data):
         """Update state on message change."""
