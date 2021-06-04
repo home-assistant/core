@@ -187,7 +187,7 @@ class TodSensor(BinarySensorEntity):
             self._next_update = self._time_before
             return
         self._calculate_boudary_time()
-        _LOGGER.warning("_calculate_boudary_time: now=%s, self._next_update=%s", now, self._next_update)
+        _LOGGER.warning("_calculate_boudary_time: now=%s, self._next_update=%s self._time_before=%s self._time_after=%s", now, self._next_update, self._time_before, self._time_after)
         self._next_update = self._time_after
 
     @callback
