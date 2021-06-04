@@ -1,7 +1,6 @@
 """The mütesync integration."""
 from __future__ import annotations
 
-from datetime import timedelta
 import logging
 
 import async_timeout
@@ -11,12 +10,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import update_coordinator
 
-from .const import DOMAIN
+from .const import DOMAIN, UPDATE_INTERVAL_IN_MEETING, UPDATE_INTERVAL_NOT_IN_MEETING
 
 PLATFORMS = ["binary_sensor"]
-
-UPDATE_INTERVAL_NOT_IN_MEETING = timedelta(seconds=10)
-UPDATE_INTERVAL_IN_MEETING = timedelta(seconds=1)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
