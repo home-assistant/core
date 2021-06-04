@@ -17,6 +17,7 @@ from homeassistant.components.light import (
     ATTR_RGBW_COLOR,
     ATTR_RGBWW_COLOR,
     ATTR_TRANSITION,
+    ATTR_WHITE,
     ATTR_WHITE_VALUE,
     ATTR_XY_COLOR,
     DOMAIN,
@@ -92,6 +93,7 @@ async def async_turn_on(
     flash=None,
     effect=None,
     color_name=None,
+    white=None,
 ):
     """Turn all or specified light on."""
     data = {
@@ -113,6 +115,7 @@ async def async_turn_on(
             (ATTR_FLASH, flash),
             (ATTR_EFFECT, effect),
             (ATTR_COLOR_NAME, color_name),
+            (ATTR_WHITE, white),
         ]
         if value is not None
     }
