@@ -43,7 +43,9 @@ DEVICE_CLOUD_CONFIG = vol.Schema(
     {
         vol.Optional(CONF_CLOUD_USERNAME): str,
         vol.Optional(CONF_CLOUD_PASSWORD): str,
-        vol.Optional(CONF_CLOUD_COUNTRY, default=DEFAULT_CLOUD_COUNTRY): vol.In(SERVER_COUNTRY_CODES),
+        vol.Optional(CONF_CLOUD_COUNTRY, default=DEFAULT_CLOUD_COUNTRY): vol.In(
+            SERVER_COUNTRY_CODES
+        ),
         vol.Optional(CONF_MANUAL, default=False): bool,
     }
 )
@@ -176,6 +178,7 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_abort(reason="not_xiaomi_miio")
 
     def extract_cloud_info(self, cloud_device_info):
+        """Extract the cloud info."""
         if self.host is None:
             self.host = cloud_device_info["localip"]
         if self.mac is None:
@@ -350,11 +353,14 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         errors["base"] = "unknown_device"
         return await self.async_step_model(errors=errors)
 
-    async def async_step_model(self, user_input=None, errors={}):
+    async def async_step_model(self, user_input=None, errors=None):
         """Overwrite model info."""
         if user_input is not None:
             self.model = user_input[CONF_MODEL]
             return await self.async_step_connect()
+
+        if errors is None:
+            errors = {}
 
         return self.async_show_form(
             step_id="model", data_schema=DEVICE_MODEL_CONFIG, errors=errors
