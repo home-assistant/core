@@ -1608,9 +1608,7 @@ async def test_light_service_call_white_mode(hass, enable_custom_integrations):
         "light",
         "turn_on",
         {
-            "entity_id": [
-                entity0.entity_id,
-            ],
+            "entity_id": [entity0.entity_id],
             "brightness_pct": 100,
             "hs_color": (240, 100),
         },
@@ -1623,12 +1621,7 @@ async def test_light_service_call_white_mode(hass, enable_custom_integrations):
     await hass.services.async_call(
         "light",
         "turn_on",
-        {
-            "entity_id": [
-                entity0.entity_id,
-            ],
-            "white": 50,
-        },
+        {"entity_id": [entity0.entity_id], "white": 50},
         blocking=True,
     )
     _, data = entity0.last_call("turn_on")
@@ -1638,12 +1631,7 @@ async def test_light_service_call_white_mode(hass, enable_custom_integrations):
     await hass.services.async_call(
         "light",
         "turn_on",
-        {
-            "entity_id": [
-                entity0.entity_id,
-            ],
-            "white": 0,
-        },
+        {"entity_id": [entity0.entity_id], "white": 0},
         blocking=True,
     )
     _, data = entity0.last_call("turn_off")
@@ -1653,13 +1641,7 @@ async def test_light_service_call_white_mode(hass, enable_custom_integrations):
     await hass.services.async_call(
         "light",
         "turn_on",
-        {
-            "entity_id": [
-                entity0.entity_id,
-            ],
-            "brightness_pct": 100,
-            "white": 50,
-        },
+        {"entity_id": [entity0.entity_id], "brightness_pct": 100, "white": 50},
         blocking=True,
     )
     _, data = entity0.last_call("turn_on")
@@ -1669,13 +1651,7 @@ async def test_light_service_call_white_mode(hass, enable_custom_integrations):
     await hass.services.async_call(
         "light",
         "turn_on",
-        {
-            "entity_id": [
-                entity0.entity_id,
-            ],
-            "brightness": 100,
-            "white": 0,
-        },
+        {"entity_id": [entity0.entity_id], "brightness": 100, "white": 0},
         blocking=True,
     )
     _, data = entity0.last_call("turn_on")
@@ -1685,13 +1661,7 @@ async def test_light_service_call_white_mode(hass, enable_custom_integrations):
     await hass.services.async_call(
         "light",
         "turn_on",
-        {
-            "entity_id": [
-                entity0.entity_id,
-            ],
-            "brightness_pct": 0,
-            "white": 50,
-        },
+        {"entity_id": [entity0.entity_id], "brightness_pct": 0, "white": 50},
         blocking=True,
     )
     _, data = entity0.last_call("turn_off")
