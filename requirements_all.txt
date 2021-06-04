@@ -203,7 +203,7 @@ aiolifx_effects==0.2.2
 aiolip==1.1.4
 
 # homeassistant.components.lyric
-aiolyric==1.0.6
+aiolyric==1.0.7
 
 # homeassistant.components.keyboard_remote
 aionotify==0.2.0
