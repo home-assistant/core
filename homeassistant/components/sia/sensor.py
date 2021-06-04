@@ -81,7 +81,7 @@ class SIASensor(RestoreEntity):
         last_state = await self.async_get_last_state()
         if last_state is not None and last_state.state is not None:
             self._state = dt.fromisoformat(last_state.state)
-        self._update_icon()
+        self.async_update_icon()
 
         self.async_on_remove(
             async_dispatcher_connect(
@@ -91,7 +91,9 @@ class SIASensor(RestoreEntity):
             )
         )
         self.async_on_remove(
-            async_track_time_interval(self.hass, self._update_icon, self._ping_interval)
+            async_track_time_interval(
+                self.hass, self.async_update_icon, self._ping_interval
+            )
         )
 
     @callback
@@ -100,10 +102,10 @@ class SIASensor(RestoreEntity):
         self._attr_extra_state_attributes.update(get_attr_from_sia_event(sia_event))
         if sia_event.code == "RP":
             self._state = utcnow()
-        self._update_icon()
+        self.async_update_icon()
 
     @callback
-    def _update_icon(self, *_) -> None:
+    def async_update_icon(self, *_) -> None:
         """Update the icon."""
         if self._state < utcnow() - self._ping_interval:
             self._attr_icon = LATE_ICON
