@@ -682,7 +682,7 @@ omit =
     homeassistant/components/netdata/sensor.py
     homeassistant/components/netgear/device_tracker.py
     homeassistant/components/netgear_lte/*
-    homeassistant/components/netio/switch.py
+    homeassistant/components/netio/*
     homeassistant/components/neurio_energy/sensor.py
     homeassistant/components/nextcloud/*
     homeassistant/components/nfandroidtv/notify.py
