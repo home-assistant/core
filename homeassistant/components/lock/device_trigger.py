@@ -13,8 +13,11 @@ from homeassistant.const import (
     CONF_FOR,
     CONF_PLATFORM,
     CONF_TYPE,
+    STATE_JAMMED,
     STATE_LOCKED,
+    STATE_LOCKING,
     STATE_UNLOCKED,
+    STATE_UNLOCKING,
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_registry
@@ -22,7 +25,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from . import DOMAIN
 
-TRIGGER_TYPES = {"locked", "unlocked"}
+TRIGGER_TYPES = {"locked", "unlocked", "locking", "unlocking", "jammed"}
 
 TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {
@@ -74,7 +77,13 @@ async def async_attach_trigger(
     automation_info: dict,
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
-    if config[CONF_TYPE] == "locked":
+    if config[CONF_TYPE] == "jammed":
+        to_state = STATE_JAMMED
+    elif config[CONF_TYPE] == "locking":
+        to_state = STATE_LOCKING
+    elif config[CONF_TYPE] == "unlocking":
+        to_state = STATE_UNLOCKING
+    elif config[CONF_TYPE] == "locked":
         to_state = STATE_LOCKED
     else:
         to_state = STATE_UNLOCKED
