@@ -70,7 +70,7 @@ def make_segment(segment, discontinuity=False):
                 + "Z",
             ]
         )
-    response.extend(["#EXTINF:10.0000,", f"./segment/{segment}.m4s"])
+    response.extend([f"#EXTINF:{SEGMENT_DURATION:.3f},", f"./segment/{segment}.m4s"])
     return "\n".join(response)
 
 
