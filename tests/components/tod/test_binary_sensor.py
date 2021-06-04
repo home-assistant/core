@@ -1012,8 +1012,8 @@ async def test_simple_before_after_does_not_loop_berlin_in_range(hass):
 
         state = hass.states.get("binary_sensor.dark")
         assert state.state == STATE_ON
-        assert state.attributes["after"] == "2019-01-10T00:00:00+01:00"
-        assert state.attributes["before"] == "2019-01-10T06:00:00+01:00"
+        assert state.attributes["after"] == "2019-01-11T00:00:00+01:00"
+        assert state.attributes["before"] == "2019-01-11T06:00:00+01:00"
         assert state.attributes["next_update"] == "2019-01-11T06:00:00+01:00"
 
     finally:
