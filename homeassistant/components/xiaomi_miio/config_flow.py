@@ -44,10 +44,9 @@ DEVICE_CLOUD_CONFIG = vol.Schema(
         vol.Optional(CONF_CLOUD_USERNAME): str,
         vol.Optional(CONF_CLOUD_PASSWORD): str,
         vol.Optional(CONF_CLOUD_COUNTRY): vol.In(SERVER_COUNTRY_CODES),
-        vol.Optional(CONF_MANUAL, default=False)): bool,
+        vol.Optional(CONF_MANUAL, default=False): bool,
     }
 )
-
 
 
 class OptionsFlowHandler(config_entries.OptionsFlow):
@@ -66,7 +65,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             cloud_password = self.config_entry.data.get(CONF_CLOUD_PASSWORD)
             cloud_country = self.config_entry.data.get(CONF_CLOUD_COUNTRY)
 
-            if use_cloud and (not cloud_username or not cloud_password or not cloud_country):
+            if use_cloud and (
+                not cloud_username or not cloud_password or not cloud_country
+            ):
                 errors["base"] = "cloud_credentials_incomplete"
 
             if not errors:
@@ -116,7 +117,9 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self.name = conf.get(CONF_NAME)
         self.model = conf.get(CONF_MODEL)
 
-        self.context.update({"title_placeholders": {"name": f"YAML import {self.host}"}})
+        self.context.update(
+            {"title_placeholders": {"name": f"YAML import {self.host}"}}
+        )
         return await self.async_step_connect()
 
     async def async_step_user(self, user_input=None):
@@ -171,7 +174,7 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             self.host,
         )
         return self.async_abort(reason="not_xiaomi_miio")
-    
+
     def extract_cloud_info(self, cloud_device_info):
         if self.host is None:
             self.host = cloud_device_info["localip"]
@@ -182,35 +185,41 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if self.name is None:
             self.name = cloud_device_info["name"]
         self.token = cloud_device_info["token"]
-    
+
     async def async_step_cloud(self, user_input=None):
         """Configure a xiaomi miio device through the Miio Cloud."""
         errors = {}
         if user_input is not None:
             if user_input[CONF_MANUAL]:
                 return await self.async_step_manual()
-            
+
             cloud_username = user_input.get(CONF_CLOUD_USERNAME)
             cloud_password = user_input.get(CONF_CLOUD_PASSWORD)
             cloud_country = user_input.get(CONF_CLOUD_COUNTRY)
-            
+
             if not cloud_username or not cloud_password or not cloud_country:
                 errors["base"] = "cloud_credentials_incomplete"
-                return self.async_show_form(step_id="cloud", data_schema=DEVICE_CLOUD_CONFIG, errors=errors)
-            
+                return self.async_show_form(
+                    step_id="cloud", data_schema=DEVICE_CLOUD_CONFIG, errors=errors
+                )
+
             miio_cloud = MiCloud(cloud_username, cloud_password)
             if not await self.hass.async_add_executor_job(miio_cloud.login):
                 errors["base"] = "cloud_login_error"
-                return self.async_show_form(step_id="cloud", data_schema=DEVICE_CLOUD_CONFIG, errors=errors)
-            
+                return self.async_show_form(
+                    step_id="cloud", data_schema=DEVICE_CLOUD_CONFIG, errors=errors
+                )
+
             devices_raw = await self._hass.async_add_executor_job(
                 miio_cloud.get_devices, cloud_country
             )
-            
+
             if not devices_raw:
                 errors["base"] = "cloud_no_devices"
-                return self.async_show_form(step_id="cloud", data_schema=DEVICE_CLOUD_CONFIG, errors=errors)
-            
+                return self.async_show_form(
+                    step_id="cloud", data_schema=DEVICE_CLOUD_CONFIG, errors=errors
+                )
+
             self.cloud_devices = {}
             for device in devices_raw:
                 parent_id = device.get("parent_id")
@@ -219,25 +228,27 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     model = device["model"]
                     list_name = f"{name} - {model}"
                     self.cloud_devices[list_name] = device
-            
+
             self.cloud_username = cloud_username
             self.cloud_password = cloud_password
             self.cloud_country = cloud_country
-            
+
             if self.host is not None:
                 for device in self.cloud_devices.values():
                     cloud_host = device.get("localip")
                     if cloud_host == self.host:
                         extract_cloud_info(device)
                         return await self.async_step_connect()
-            
+
             if len(self.cloud_devices) == 1:
                 extract_cloud_info(list(self.cloud_devices.values())[0])
                 return await self.async_step_connect()
 
-            return await self.async_step_select() 
-            
-        return self.async_show_form(step_id="cloud", data_schema=DEVICE_CLOUD_CONFIG, errors=errors)
+            return await self.async_step_select()
+
+        return self.async_show_form(
+            step_id="cloud", data_schema=DEVICE_CLOUD_CONFIG, errors=errors
+        )
 
     async def async_step_select(
         self, user_input: dict[str, Any] | None = None
@@ -250,11 +261,7 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return await self.async_step_connect()
 
         select_scheme = vol.Schema(
-            {
-                vol.Required("select_device"): vol.In(
-                    list(self.cloud_devices.keys())
-                )
-            }
+            {vol.Required("select_device"): vol.In(list(self.cloud_devices.keys()))}
         )
 
         return self.async_show_form(
@@ -283,7 +290,7 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         if self.host is None or self.token is None:
             return self.async_abort(reason="incomplete_info")
-        
+
         # Try to connect to a Xiaomi Device.
         connect_device_class = ConnectXiaomiDevice(self.hass)
         await connect_device_class.async_connect_device(self.host, self.token)
@@ -295,14 +302,12 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if self.model is None:
             errors["base"] = "cannot_connect"
             return await self.async_step_model(errors=errors)
-        
+
         if self.mac is None and device_info is not None:
             self.mac = format_mac(device_info.mac_address)
 
         unique_id = self.mac
-        await self.async_set_unique_id(
-            unique_id, raise_on_progress=False
-        )
+        await self.async_set_unique_id(unique_id, raise_on_progress=False)
         self._abort_if_unique_id_configured()
 
         # Setup Gateways
@@ -353,4 +358,6 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             self.model = user_input[CONF_MODEL]
             return await self.async_step_connect()
 
-        return self.async_show_form(step_id="model", data_schema=DEVICE_MODEL_CONFIG, errors=errors)
+        return self.async_show_form(
+            step_id="model", data_schema=DEVICE_MODEL_CONFIG, errors=errors
+        )
