@@ -72,7 +72,7 @@ async def async_setup_entry(
     )
 
 
-class SIAAlarmControlPanel(AlarmControlPanelEntity, SIABaseEntity):
+class SIAAlarmControlPanel(SIABaseEntity, AlarmControlPanelEntity):
     """Class for SIA Alarm Control Panels."""
 
     def __init__(
