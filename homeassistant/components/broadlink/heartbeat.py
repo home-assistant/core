@@ -47,7 +47,8 @@ class BroadlinkHeartbeat:
         hosts = {entry.data[CONF_HOST] for entry in config_entries}
         await hass.async_add_executor_job(self.heartbeat, hosts)
 
-    def heartbeat(self, hosts):
+    @staticmethod
+    def heartbeat(hosts):
         """Send packets to feed watchdog timers."""
         for host in hosts:
             try:
