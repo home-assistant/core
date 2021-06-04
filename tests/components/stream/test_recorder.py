@@ -278,9 +278,7 @@ async def test_record_stream_audio(
             stream_worker_sync.resume()
 
         result = av.open(
-            BytesIO(
-                last_segment.init + b"".join(part.data for part in last_segment.parts)
-            ),
+            BytesIO(last_segment.init + last_segment.get_bytes_without_init()),
             "r",
             format="mp4",
         )

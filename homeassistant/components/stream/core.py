@@ -46,6 +46,10 @@ class Segment:
         """Return whether the Segment is complete."""
         return self.duration > 0
 
+    def get_bytes_without_init(self) -> bytes:
+        """Return reconstructed data for entire segment as bytes."""
+        return b"".join([part.data for part in self.parts])
+
 
 class IdleTimer:
     """Invoke a callback after an inactivity timeout.

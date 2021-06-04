@@ -172,7 +172,7 @@ class HlsSegmentView(StreamView):
             return web.HTTPNotFound()
         headers = {"Content-Type": "video/iso.segment"}
         return web.Response(
-            body=b"".join([part.data for part in segment.parts]),
+            body=segment.get_bytes_without_init(),
             headers=headers,
         )
 
