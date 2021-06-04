@@ -299,7 +299,7 @@ homeassistant/components/min_max/* @fabaff
 homeassistant/components/minecraft_server/* @elmurato
 homeassistant/components/minio/* @tkislan
 homeassistant/components/mobile_app/* @robbiet480
-homeassistant/components/modbus/* @adamchengtkc @janiversen @vzahradnik
+homeassistant/components/modbus/* @adamchengtkc @vzahradnik
 homeassistant/components/monoprice/* @etsinko @OnFreund
 homeassistant/components/moon/* @fabaff
 homeassistant/components/motion_blinds/* @starkillerOG
