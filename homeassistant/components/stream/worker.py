@@ -52,8 +52,8 @@ class SegmentBuffer:
         self._segment_last_write_pos: int = cast(int, None)
         self._part_start_dts: int = cast(int, None)
         self._last_packet_dts: int = cast(int, None)
-        self._part_is_independent = False
-        self._last_packet_independent = False
+        self._part_has_keyframe = False
+        self._last_packet_was_keyframe = False
 
     @staticmethod
     def make_new_av(
@@ -136,8 +136,8 @@ class SegmentBuffer:
                 self.reset(packet.pts)
 
             self._last_packet_dts = packet.dts
-            self._part_is_independent |= self._last_packet_independent
-            self._last_packet_independent = packet.is_keyframe
+            self._part_has_keyframe |= self._last_packet_was_keyframe
+            self._last_packet_was_keyframe = packet.is_keyframe
 
         # Mux the packet
         if packet.stream == self._input_video_stream:
@@ -173,7 +173,7 @@ class SegmentBuffer:
                         (self._last_packet_dts - self._part_start_dts)
                         * packet.time_base
                     ),
-                    independent=self._part_is_independent,
+                    independent=self._part_has_keyframe,
                     data=self._memory_file.getbuffer()[
                         self._segment_last_write_pos : byte_position
                     ].tobytes(),
@@ -181,7 +181,7 @@ class SegmentBuffer:
             )
             self._segment_last_write_pos = byte_position
             self._part_start_dts = self._last_packet_dts
-            self._part_is_independent = False
+            self._part_has_keyframe = False
 
     def flush(self, duration: Fraction, packet: av.Packet) -> None:
         """Create a segment from the buffered packets and write to output."""
@@ -192,7 +192,7 @@ class SegmentBuffer:
         self._segment.parts.append(
             Part(
                 duration=float((packet.pts - self._part_start_dts) * packet.time_base),
-                independent=self._part_is_independent | self._last_packet_independent,
+                independent=self._part_has_keyframe | self._last_packet_was_keyframe,
                 data=self._memory_file.getbuffer()[
                     self._segment_last_write_pos :
                 ].tobytes(),
