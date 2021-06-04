@@ -1,30 +1,32 @@
 """Support for scanning a network with nmap."""
-from collections import namedtuple
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
+from typing import Final
 
 from getmac import get_mac_address
 from nmap import PortScanner, PortScannerError
 import voluptuous as vol
+from voluptuous.schema_builder import Schema
 
 from homeassistant.components.device_tracker import (
     DOMAIN,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     DeviceScanner,
 )
 from homeassistant.const import CONF_EXCLUDE, CONF_HOSTS
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
 
-_LOGGER = logging.getLogger(__name__)
+from .const import CONF_HOME_INTERVAL, CONF_OPTIONS, DEFAULT_OPTIONS
+from .model import Device
 
-# Interval in minutes to exclude devices from a scan while they are home
-CONF_HOME_INTERVAL = "home_interval"
-CONF_OPTIONS = "scan_options"
-DEFAULT_OPTIONS = "-F --host-timeout 5s"
+_LOGGER: Final = logging.getLogger(__name__)
 
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA: Final[Schema] = PARENT_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOSTS): cv.ensure_list,
         vol.Required(CONF_HOME_INTERVAL, default=0): cv.positive_int,
@@ -34,32 +36,27 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def get_scanner(hass, config):
+def get_scanner(hass: HomeAssistant, config: ConfigType) -> NmapDeviceScanner:
     """Validate the configuration and return a Nmap scanner."""
     return NmapDeviceScanner(config[DOMAIN])
-
-
-Device = namedtuple("Device", ["mac", "name", "ip", "last_update"])
 
 
 class NmapDeviceScanner(DeviceScanner):
     """This class scans for devices using nmap."""
 
-    exclude = []
-
-    def __init__(self, config):
+    def __init__(self, config: ConfigType) -> None:
         """Initialize the scanner."""
-        self.last_results = []
+        self.last_results: list[Device] = []
 
-        self.hosts = config[CONF_HOSTS]
-        self.exclude = config[CONF_EXCLUDE]
-        minutes = config[CONF_HOME_INTERVAL]
-        self._options = config[CONF_OPTIONS]
+        self.hosts: list[str] = config[CONF_HOSTS]
+        self.exclude: list[str] = config[CONF_EXCLUDE]
+        minutes: int = config[CONF_HOME_INTERVAL]
+        self._options: str = config[CONF_OPTIONS]
         self.home_interval = timedelta(minutes=minutes)
 
         _LOGGER.debug("Scanner initialized")
 
-    def scan_devices(self):
+    def scan_devices(self) -> list[str]:
         """Scan for new devices and return a list with found device IDs."""
         self._update_info()
 
@@ -67,7 +64,7 @@ class NmapDeviceScanner(DeviceScanner):
 
         return [device.mac for device in self.last_results]
 
-    def get_device_name(self, device):
+    def get_device_name(self, device: str) -> str | None:
         """Return the name of the given device or None if we don't know."""
         filter_named = [
             result.name for result in self.last_results if result.mac == device
@@ -77,14 +74,14 @@ class NmapDeviceScanner(DeviceScanner):
             return filter_named[0]
         return None
 
-    def get_extra_attributes(self, device):
+    def get_extra_attributes(self, device: str) -> dict[str, str | None]:
         """Return the IP of the given device."""
         filter_ip = next(
             (result.ip for result in self.last_results if result.mac == device), None
         )
         return {"ip": filter_ip}
 
-    def _update_info(self):
+    def _update_info(self) -> bool:
         """Scan the network for devices.
 
         Returns boolean if scanning successful.
