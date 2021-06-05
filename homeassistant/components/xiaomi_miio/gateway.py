@@ -5,7 +5,6 @@ from micloud import MiCloud
 from miio import DeviceException, gateway
 from miio.gateway.gateway import GATEWAY_MODEL_EU
 
-from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
