@@ -65,7 +65,8 @@ async def async_modbus_setup(
 
         # modbus needs to be activated before components are loaded
         # to avoid a racing problem
-        await my_hub.async_setup()
+        if not await my_hub.async_setup():
+            return False
 
         # load platforms
         for component, conf_key in PLATFORMS:
@@ -195,8 +196,8 @@ class ModbusHub:
             },
         }
 
-    def _log_error(self, exception_error: ModbusException, error_state=True):
-        log_text = "Pymodbus: " + str(exception_error)
+    def _log_error(self, text: str, error_state=True):
+        log_text = f"Pymodbus: {text}"
         if self._in_error:
             _LOGGER.debug(log_text)
         else:
@@ -241,11 +242,13 @@ class ModbusHub:
                     reset_socket=self._config_reset_socket,
                 )
         except ModbusException as exception_error:
-            self._log_error(exception_error, error_state=False)
-            return
+            self._log_error(str(exception_error), error_state=False)
+            return False
 
         async with self._lock:
-            await self.hass.async_add_executor_job(self._pymodbus_connect)
+            if not await self.hass.async_add_executor_job(self._pymodbus_connect):
+                self._log_error("initial connect failed, no retry", error_state=False)
+                return False
 
         self._call_type[CALL_TYPE_COIL][ENTRY_FUNC] = self._client.read_coils
         self._call_type[CALL_TYPE_DISCRETE][
@@ -271,6 +274,7 @@ class ModbusHub:
             self._async_cancel_listener = async_call_later(
                 self.hass, self._config_delay, self.async_end_delay
             )
+        return True
 
     @callback
     def async_end_delay(self, args):
@@ -284,7 +288,7 @@ class ModbusHub:
             try:
                 self._client.close()
             except ModbusException as exception_error:
-                self._log_error(exception_error)
+                self._log_error(str(exception_error))
         self._client = None
 
     async def async_close(self):
@@ -299,9 +303,10 @@ class ModbusHub:
     def _pymodbus_connect(self):
         """Connect client."""
         try:
-            self._client.connect()
+            return self._client.connect()
         except ModbusException as exception_error:
-            self._log_error(exception_error, error_state=False)
+            self._log_error(str(exception_error), error_state=False)
+            return False
 
     def _pymodbus_call(self, unit, address, value, use_call):
         """Call sync. pymodbus."""
@@ -309,10 +314,10 @@ class ModbusHub:
         try:
             result = self._call_type[use_call][ENTRY_FUNC](address, value, **kwargs)
         except ModbusException as exception_error:
-            self._log_error(exception_error)
+            self._log_error(str(exception_error))
             result = exception_error
         if not hasattr(result, self._call_type[use_call][ENTRY_ATTR]):
-            self._log_error(result)
+            self._log_error(str(result))
             return None
         self._in_error = False
         return result
@@ -321,7 +326,13 @@ class ModbusHub:
         """Convert async to sync pymodbus call."""
         if self._config_delay:
             return None
+        if not self._client.is_socket_open():
+            return None
         async with self._lock:
-            return await self.hass.async_add_executor_job(
+            result = await self.hass.async_add_executor_job(
                 self._pymodbus_call, unit, address, value, use_call
             )
+            if self._config_type == "serial":
+                # small delay until next request/response
+                await asyncio.sleep(30 / 1000)
+            return result

@@ -42,7 +42,7 @@ from .const import (
     DevId,
     SensorType,
 )
-from .device import MySensorsDevice, MySensorsEntity, get_mysensors_devices
+from .device import MySensorsDevice, get_mysensors_devices
 from .gateway import finish_setup, get_mysensors_gateway, gw_stop, setup_gateway
 from .helpers import on_unload
 
@@ -218,7 +218,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             hass_config=hass.data[DOMAIN][DATA_HASS_CONFIG],
         )
 
-        await on_unload(
+        on_unload(
             hass,
             entry.entry_id,
             async_dispatcher_connect(
@@ -271,7 +271,7 @@ def setup_mysensors_platform(
     hass: HomeAssistant,
     domain: str,  # hass platform name
     discovery_info: dict[str, list[DevId]],
-    device_class: type[MySensorsDevice] | dict[SensorType, type[MySensorsEntity]],
+    device_class: type[MySensorsDevice] | dict[SensorType, type[MySensorsDevice]],
     device_args: (
         None | tuple
     ) = None,  # extra arguments that will be given to the entity constructor
@@ -302,11 +302,13 @@ def setup_mysensors_platform(
         if not gateway:
             _LOGGER.warning("Skipping setup of %s, no gateway found", dev_id)
             continue
-        device_class_copy = device_class
+
         if isinstance(device_class, dict):
             child = gateway.sensors[node_id].children[child_id]
             s_type = gateway.const.Presentation(child.type).name
             device_class_copy = device_class[s_type]
+        else:
+            device_class_copy = device_class
 
         args_copy = (*device_args, gateway_id, gateway, node_id, child_id, value_type)
         devices[dev_id] = device_class_copy(*args_copy)

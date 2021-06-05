@@ -4,13 +4,14 @@ import logging
 
 from homeassistant.components import mysensors
 from homeassistant.components.cover import ATTR_POSITION, DOMAIN, CoverEntity
-from homeassistant.components.mysensors import on_unload
 from homeassistant.components.mysensors.const import MYSENSORS_DISCOVERY
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+from .helpers import on_unload
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,7 +43,7 @@ async def async_setup_entry(
             async_add_entities=async_add_entities,
         )
 
-    await on_unload(
+    on_unload(
         hass,
         config_entry.entry_id,
         async_dispatcher_connect(

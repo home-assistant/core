@@ -635,7 +635,7 @@ gTTS==2.2.2
 garages-amsterdam==2.1.1
 
 # homeassistant.components.garmin_connect
-garminconnect_aio==0.1.1
+garminconnect_aio==0.1.4
 
 # homeassistant.components.geniushub
 geniushub-client==0.6.30
@@ -937,7 +937,7 @@ maxcube-api==0.4.3
 mbddns==0.1.2
 
 # homeassistant.components.minecraft_server
-mcstatus==5.1.1
+mcstatus==6.0.0
 
 # homeassistant.components.message_bird
 messagebird==1.2.0
@@ -1470,7 +1470,7 @@ pyhomematic==0.1.72
 pyhomeworks==0.0.6
 
 # homeassistant.components.ialarm
-pyialarm==1.7
+pyialarm==1.8.1
 
 # homeassistant.components.icloud
 pyicloud==0.10.2
@@ -2349,9 +2349,6 @@ waterfurnace==1.1.0
 
 # homeassistant.components.cisco_webex_teams
 webexteamssdk==1.1.1
-
-# homeassistant.components.gpmdp
-websocket-client==0.54.0
 
 # homeassistant.components.wiffi
 wiffi==1.0.1

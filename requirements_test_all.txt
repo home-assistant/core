@@ -341,7 +341,7 @@ gTTS==2.2.2
 garages-amsterdam==2.1.1
 
 # homeassistant.components.garmin_connect
-garminconnect_aio==0.1.1
+garminconnect_aio==0.1.4
 
 # homeassistant.components.geo_json_events
 # homeassistant.components.usgs_earthquakes_feed
@@ -515,7 +515,7 @@ maxcube-api==0.4.3
 mbddns==0.1.2
 
 # homeassistant.components.minecraft_server
-mcstatus==5.1.1
+mcstatus==6.0.0
 
 # homeassistant.components.meteo_france
 meteofrance-api==1.0.2
@@ -814,7 +814,7 @@ pyhoma==0.5.11
 pyhomematic==0.1.72
 
 # homeassistant.components.ialarm
-pyialarm==1.7
+pyialarm==1.8.1
 
 # homeassistant.components.icloud
 pyicloud==0.10.2
