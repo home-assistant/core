@@ -58,7 +58,7 @@ class EcobeeHumidifier(HumidifierEntity):
         """Return device information for the ecobee humidifier."""
         try:
             model = f"{ECOBEE_MODEL_TO_NAME[self.thermostat['modelNumber']]} Thermostat"
-        except KeyError:  # pragma: no cover
+        except KeyError:
             # Ecobee model is not in our list
             return None
 
