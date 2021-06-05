@@ -44,6 +44,11 @@ SENSORS = {
         ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
         ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER,
     },
+    "power_production_next_24hours": {
+        ATTR_NAME: "Estimated Power Production - Next 24 Hours",
+        ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
+        ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER,
+    },
     "energy_current_hour": {
         ATTR_NAME: "Estimated Energy Production - This Hour",
         ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
