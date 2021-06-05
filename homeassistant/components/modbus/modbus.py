@@ -197,7 +197,7 @@ class ModbusHub:
         }
 
     def _log_error(self, text: str, error_state=True):
-        log_text = "Pymodbus: " + text
+        log_text = f"Pymodbus: {text}"
         if self._in_error:
             _LOGGER.debug(log_text)
         else:
