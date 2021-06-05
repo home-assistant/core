@@ -128,6 +128,8 @@ async def test_step_reauth(hass):
         "homeassistant.components.simplisafe.async_setup_entry", return_value=True
     ), patch(
         "simplipy.API.login_via_credentials", new=AsyncMock(return_value=mock_api())
+    ), patch(
+        "homeassistant.config_entries.ConfigEntries.async_reload"
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_PASSWORD: "password"}
