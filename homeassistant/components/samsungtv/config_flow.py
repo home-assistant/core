@@ -112,6 +112,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _async_set_unique_id_from_udn(self, raise_on_progress=True):
         """Set the unique id from the udn."""
+        assert self._host is not None
         await self.async_set_unique_id(self._udn, raise_on_progress=raise_on_progress)
         self._async_update_existing_host_entry(self._host)
         updates = {CONF_HOST: self._host}
@@ -206,30 +207,28 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return entry
         return None
 
-    async def _async_start_discovery_for_host(self, host):
-        """Start discovery for a host."""
-        if entry := self._async_update_existing_host_entry(host):
+    async def _async_start_discovery(self):
+        """Start discovery."""
+        assert self._host is not None
+        if entry := self._async_update_existing_host_entry(self._host):
             if entry.unique_id:
                 # Let the flow continue to fill the missing
                 # unique id as we may be able to obtain it
                 # in the next step
                 raise data_entry_flow.AbortFlow("already_configured")
 
-        self.context[CONF_HOST] = host
+        self.context[CONF_HOST] = self._host
         for progress in self._async_in_progress():
-            if progress.get("context", {}).get(CONF_HOST) == host:
+            if progress.get("context", {}).get(CONF_HOST) == self._host:
                 raise data_entry_flow.AbortFlow("already_in_progress")
-
-        self._host = host
 
     async def async_step_ssdp(self, discovery_info: DiscoveryInfoType):
         """Handle a flow initialized by ssdp discovery."""
         LOGGER.debug("Samsung device found via SSDP: %s", discovery_info)
         self._udn = _strip_uuid(discovery_info[ATTR_UPNP_UDN])
+        self._host = urlparse(discovery_info[ATTR_SSDP_LOCATION]).hostname
         await self._async_set_unique_id_from_udn()
-        await self._async_start_discovery_for_host(
-            urlparse(discovery_info[ATTR_SSDP_LOCATION]).hostname
-        )
+        await self._async_start_discovery()
         self._manufacturer = discovery_info[ATTR_UPNP_MANUFACTURER]
         if not self._manufacturer or not self._manufacturer.lower().startswith(
             "samsung"
@@ -245,7 +244,8 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by dhcp discovery."""
         LOGGER.debug("Samsung device found via DHCP: %s", discovery_info)
         self._mac = discovery_info[MAC_ADDRESS]
-        await self._async_start_discovery_for_host(discovery_info[IP_ADDRESS])
+        self._host = discovery_info[IP_ADDRESS]
+        await self._async_start_discovery()
         await self._async_set_device_unique_id()
         self.context["title_placeholders"] = {"device": self._title}
         return await self.async_step_confirm()
@@ -254,7 +254,8 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by zeroconf discovery."""
         LOGGER.debug("Samsung device found via ZEROCONF: %s", discovery_info)
         self._mac = format_mac(discovery_info[ATTR_PROPERTIES]["deviceid"])
-        await self._async_start_discovery_for_host(discovery_info[CONF_HOST])
+        self._host = discovery_info[CONF_HOST]
+        await self._async_start_discovery()
         await self._async_set_device_unique_id()
         self.context["title_placeholders"] = {"device": self._title}
         return await self.async_step_confirm()
