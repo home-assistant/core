@@ -292,7 +292,7 @@ async def _gw_start(hass: HomeAssistant, entry: ConfigEntry, gateway: BaseAsyncG
     async def stop_this_gw(_: Event):
         await gw_stop(hass, entry, gateway)
 
-    await on_unload(
+    on_unload(
         hass,
         entry.entry_id,
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_this_gw),
