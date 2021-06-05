@@ -71,13 +71,15 @@ class CertExpiryEntity(CoordinatorEntity):
     @property
     def extra_state_attributes(self):
         """Return additional sensor state attributes."""
-        delta_days = (self.coordinator.data - dt_util.utcnow()).days
-        validity_days = delta_days if delta_days > 0 else "None"
+        if self.coordinator.data:
+            delta_days = (self.coordinator.data - dt_util.utcnow()).days
+        else:
+            delta_days = 0
 
         return {
             "is_valid": self.coordinator.is_cert_valid,
             "error": str(self.coordinator.cert_error),
-            "days_of_validity": validity_days,
+            "days_of_validity": delta_days,
         }
 
 
