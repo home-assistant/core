@@ -16,6 +16,13 @@ CONF_AZIMUTH = "azimuth"
 CONF_MODULES_POWER = "modules power"
 CONF_DAMPING = "damping"
 
+TEST_DATA = {
+    CONF_DECLINATION: 20,
+    CONF_AZIMUTH: 10,
+    CONF_MODULES_POWER: 1600,
+    CONF_DAMPING: 0,
+}
+
 SENSORS = {
     "energy_production_today": {
         ATTR_NAME: "Estimated Energy Production - Today",
