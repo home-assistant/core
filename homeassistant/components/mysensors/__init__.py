@@ -218,7 +218,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             hass_config=hass.data[DOMAIN][DATA_HASS_CONFIG],
         )
 
-        await on_unload(
+        on_unload(
             hass,
             entry.entry_id,
             async_dispatcher_connect(
