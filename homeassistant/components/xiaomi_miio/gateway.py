@@ -3,7 +3,9 @@ import logging
 
 from micloud import MiCloud
 from miio import DeviceException, gateway
+from miio.gateway.gateway import GATEWAY_MODEL_EU
 
+from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -56,12 +58,22 @@ class ConnectXiaomiGateway:
             )
 
             # get the connected sub devices
-            if (
-                use_cloud
-                and cloud_username is not None
-                and cloud_password is not None
-                and cloud_country is not None
-            ):
+            if use_cloud or self._gateway_info.model == GATEWAY_MODEL_EU:
+                if (
+                    cloud_username is None
+                    or cloud_password is None
+                    or cloud_country is None
+                ):
+                    # trigger re-auth flow
+                    self._hass.async_create_task(
+                        self._hass.config_entries.flow.async_init(
+                            DOMAIN,
+                            context={"source": SOURCE_REAUTH},
+                            data=self._config_entry.data,
+                        )
+                    )
+                    return False
+
                 # use miio-cloud
                 miio_cloud = MiCloud(cloud_username, cloud_password)
                 if not await self._hass.async_add_executor_job(miio_cloud.login):

@@ -6,6 +6,7 @@ from micloud import MiCloud
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TOKEN
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import format_mac
@@ -71,6 +72,14 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 not cloud_username or not cloud_password or not cloud_country
             ):
                 errors["base"] = "cloud_credentials_incomplete"
+                # trigger re-auth flow
+                self.hass.async_create_task(
+                    self.hass.config_entries.flow.async_init(
+                        DOMAIN,
+                        context={"source": SOURCE_REAUTH},
+                        data=self.config_entry.data,
+                    )
+                )
 
             if not errors:
                 return self.async_create_entry(title="", data=user_input)
@@ -111,6 +120,12 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     def async_get_options_flow(config_entry) -> OptionsFlowHandler:
         """Get the options flow."""
         return OptionsFlowHandler(config_entry)
+
+    async def async_step_reauth(self, user_input=None):
+        """Perform reauth upon an authentication error or missing cloud credentials."""
+        if user_input is not None:
+            return await self.async_step_cloud()
+        return self.async_show_form(step_id="reauth_confirm", data_schema=vol.Schema({}))
 
     async def async_step_import(self, conf: dict):
         """Import a configuration from config.yaml."""
@@ -308,8 +323,18 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             self.mac = format_mac(device_info.mac_address)
 
         unique_id = self.mac
-        await self.async_set_unique_id(unique_id, raise_on_progress=False)
-        self._abort_if_unique_id_configured()
+        existing_entry = await self.async_set_unique_id(unique_id, raise_on_progress=False)
+        if existing_entry:
+            data = existing_entry.data
+            data[CONF_HOST] = self.host
+            data[CONF_TOKEN] = self.token
+            if self.cloud_username is not None and self.cloud_password is not None and self.cloud_country is not None:
+                data[CONF_CLOUD_USERNAME] = self.cloud_username
+                data[CONF_CLOUD_PASSWORD] = self.cloud_password
+                data[CONF_CLOUD_COUNTRY] = self.cloud_country
+            self.hass.config_entries.async_update_entry(existing_entry, data=data)
+            await self.hass.config_entries.async_reload(existing_entry.entry_id)
+            return self.async_abort(reason="reauth_successful")
 
         # Setup Gateways
         for gateway_model in MODELS_GATEWAY:
