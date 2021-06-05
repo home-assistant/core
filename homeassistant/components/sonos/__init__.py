@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections import OrderedDict, deque
+from collections import OrderedDict
 import datetime
 import logging
 import socket
@@ -10,7 +10,6 @@ from urllib.parse import urlparse
 
 import pysonos
 from pysonos import events_asyncio
-from pysonos.alarms import Alarm
 from pysonos.core import SoCo
 from pysonos.exceptions import SoCoException
 import voluptuous as vol
@@ -28,12 +27,12 @@ from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
+from .alarms import SonosAlarms
 from .const import (
     DATA_SONOS,
     DISCOVERY_INTERVAL,
     DOMAIN,
     PLATFORMS,
-    SONOS_ALARM_UPDATE,
     SONOS_GROUP_UPDATE,
     SONOS_SEEN,
     UPNP_ST,
@@ -75,8 +74,7 @@ class SonosData:
         # OrderedDict behavior used by SonosFavorites
         self.discovered: OrderedDict[str, SonosSpeaker] = OrderedDict()
         self.favorites: dict[str, SonosFavorites] = {}
-        self.alarms: dict[str, Alarm] = {}
-        self.processed_alarm_events = deque(maxlen=5)
+        self.alarms: dict[str, SonosAlarms] = {}
         self.topology_condition = asyncio.Condition()
         self.hosts_heartbeat = None
         self.ssdp_known: set[str] = set()
@@ -134,6 +132,9 @@ async def async_setup_entry(  # noqa: C901
             _LOGGER.debug("Adding new speaker: %s", speaker_info)
             speaker = SonosSpeaker(hass, soco, speaker_info)
             data.discovered[soco.uid] = speaker
+            if soco.household_id not in data.alarms:
+                data.alarms[soco.household_id] = SonosAlarms(hass, soco.household_id)
+                data.alarms[soco.household_id].get_new_alarms(soco)
             if soco.household_id not in data.favorites:
                 data.favorites[soco.household_id] = SonosFavorites(
                     hass, soco.household_id
@@ -195,10 +196,6 @@ async def async_setup_entry(  # noqa: C901
         discovered_ip = urlparse(info[ssdp.ATTR_SSDP_LOCATION]).hostname
         asyncio.create_task(_async_create_discovered_player(uid, discovered_ip))
 
-    @callback
-    def _async_signal_update_alarms(event):
-        async_dispatcher_send(hass, SONOS_ALARM_UPDATE)
-
     async def setup_platforms_and_discovery():
         await asyncio.gather(
             *[
@@ -209,11 +206,6 @@ async def async_setup_entry(  # noqa: C901
         entry.async_on_unload(
             hass.bus.async_listen_once(
                 EVENT_HOMEASSISTANT_START, _async_signal_update_groups
-            )
-        )
-        entry.async_on_unload(
-            hass.bus.async_listen_once(
-                EVENT_HOMEASSISTANT_START, _async_signal_update_alarms
             )
         )
         entry.async_on_unload(

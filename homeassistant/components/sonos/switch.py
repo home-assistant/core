@@ -4,7 +4,8 @@ from __future__ import annotations
 import datetime
 import logging
 
-from pysonos.exceptions import SoCoUPnPException
+from pysonos.alarms import Alarm
+from pysonos.exceptions import SoCoException, SoCoUPnPException
 
 from homeassistant.components.switch import ENTITY_ID_FORMAT, SwitchEntity
 from homeassistant.const import ATTR_TIME
@@ -35,15 +36,12 @@ ATTR_INCLUDE_LINKED_ZONES = "include_linked_zones"
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Sonos from a config entry."""
 
-    configured_alarms = set()
-
-    async def _async_create_entity(speaker: SonosSpeaker, new_alarms: set) -> None:
-        for alarm_id in new_alarms:
-            if alarm_id not in configured_alarms:
-                _LOGGER.debug("Creating alarm with id %s", alarm_id)
-                entity = SonosAlarmEntity(alarm_id, speaker)
-                async_add_entities([entity])
-                configured_alarms.add(alarm_id)
+    async def _async_create_entity(speaker: SonosSpeaker, alarms: list[Alarm]) -> None:
+        entities = []
+        for alarm in alarms:
+            _LOGGER.debug("Creating alarm %s on %s", alarm.alarm_id, speaker.zone_name)
+            entities.append(SonosAlarmEntity(alarm.alarm_id, speaker))
+        async_add_entities(entities)
 
     config_entry.async_on_unload(
         async_dispatcher_connect(hass, SONOS_CREATE_ALARM, _async_create_entity)
@@ -57,7 +55,7 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
         """Initialize the switch."""
         super().__init__(speaker)
 
-        self._alarm_id = alarm_id
+        self.alarm_id = alarm_id
         self.entity_id = ENTITY_ID_FORMAT.format(f"sonos_alarm_{self.alarm_id}")
 
     async def async_added_to_hass(self) -> None:
@@ -66,7 +64,7 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                SONOS_ALARM_UPDATE,
+                f"{SONOS_ALARM_UPDATE}-{self.speaker.household_id}",
                 self.async_update,
             )
         )
@@ -74,12 +72,11 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
     @property
     def alarm(self):
         """Return the alarm instance."""
-        return self.hass.data[DATA_SONOS].alarms[self.alarm_id]
-
-    @property
-    def alarm_id(self):
-        """Return the ID of the alarm."""
-        return self._alarm_id
+        return (
+            self.hass.data[DATA_SONOS]
+            .alarms[self.speaker.household_id]
+            .get(self.alarm_id)
+        )
 
     @property
     def unique_id(self) -> str:
@@ -103,7 +100,7 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
     @callback
     def async_check_if_available(self):
         """Check if alarm exists and remove alarm entity if not available."""
-        if self.alarm_id in self.hass.data[DATA_SONOS].alarms:
+        if self.alarm:
             return True
 
         _LOGGER.debug("%s has been deleted", self.entity_id)
@@ -171,6 +168,11 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
         )
 
     @property
+    def available(self) -> bool:
+        """Return whether this alarm is available."""
+        return (self.alarm is not None) and self.speaker.available
+
+    @property
     def is_on(self):
         """Return state of Sonos alarm switch."""
         return self.alarm.enabled
@@ -203,5 +205,5 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
             _LOGGER.debug("Toggling the state of %s", self.entity_id)
             self.alarm.enabled = turn_on
             await self.hass.async_add_executor_job(self.alarm.save)
-        except SoCoUPnPException as exc:
+        except (OSError, SoCoException, SoCoUPnPException) as exc:
             _LOGGER.error("Could not update %s: %s", self.entity_id, exc, exc_info=True)

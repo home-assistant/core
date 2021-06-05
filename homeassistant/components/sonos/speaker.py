@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import asyncio
-from collections import deque
 from collections.abc import Coroutine
 import contextlib
 import datetime
@@ -12,7 +11,6 @@ from typing import Any, Callable
 import urllib.parse
 
 import async_timeout
-from pysonos.alarms import get_alarms
 from pysonos.core import MUSIC_SRC_LINE_IN, MUSIC_SRC_RADIO, MUSIC_SRC_TV, SoCo
 from pysonos.data_structures import DidlAudioBroadcast
 from pysonos.events_base import Event as SonosEvent, SubscriptionBase
@@ -33,6 +31,7 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.util import dt as dt_util
 
+from .alarms import SonosAlarms
 from .const import (
     BATTERY_SCAN_INTERVAL,
     DATA_SONOS,
@@ -40,7 +39,6 @@ from .const import (
     PLATFORMS,
     SCAN_INTERVAL,
     SEEN_EXPIRE_TIME,
-    SONOS_ALARM_UPDATE,
     SONOS_CREATE_ALARM,
     SONOS_CREATE_BATTERY,
     SONOS_CREATE_MEDIA_PLAYER,
@@ -224,7 +222,9 @@ class SonosSpeaker:
                 )
             dispatcher_send(self.hass, SONOS_CREATE_BATTERY, self)
 
-        if new_alarms := self.update_alarms_for_speaker():
+        if new_alarms := [
+            alarm for alarm in self.alarms if alarm.zone.uid == self.soco.uid
+        ]:
             dispatcher_send(self.hass, SONOS_CREATE_ALARM, self, new_alarms)
         else:
             self._platforms_ready.add(SWITCH_DOMAIN)
@@ -246,7 +246,7 @@ class SonosSpeaker:
     async def async_handle_new_entity(self, entity_type: str) -> None:
         """Listen to new entities to trigger first subscription."""
         self._platforms_ready.add(entity_type)
-        if self._platforms_ready == PLATFORMS and not self._subscriptions:
+        if self._platforms_ready == PLATFORMS:
             self._resubscription_lock = asyncio.Lock()
             await self.async_subscribe()
             self._is_ready = True
@@ -274,6 +274,11 @@ class SonosSpeaker:
         return self._seen_timer is not None
 
     @property
+    def alarms(self) -> SonosAlarms:
+        """Return the SonosAlarms instance for this household."""
+        return self.hass.data[DATA_SONOS].alarms[self.household_id]
+
+    @property
     def favorites(self) -> SonosFavorites:
         """Return the SonosFavorites instance for this household."""
         return self.hass.data[DATA_SONOS].favorites[self.household_id]
@@ -282,11 +287,6 @@ class SonosSpeaker:
     def is_coordinator(self) -> bool:
         """Return true if player is a coordinator."""
         return self.coordinator is None
-
-    @property
-    def processed_alarm_events(self) -> deque[str]:
-        """Return the container of processed alarm events."""
-        return self.hass.data[DATA_SONOS].processed_alarm_events
 
     @property
     def subscription_address(self) -> str | None:
@@ -371,13 +371,8 @@ class SonosSpeaker:
 
     @callback
     def async_dispatch_alarms(self, event: SonosEvent) -> None:
-        """Create a task to update alarms from an event."""
-        if not (update_id := event.variables.get("alarm_list_version")):
-            return
-        if update_id in self.processed_alarm_events:
-            return
-        self.processed_alarm_events.append(update_id)
-        self.hass.async_add_executor_job(self.update_alarms)
+        """Add the soco instance associated with the event to the callback."""
+        self.alarms.async_refresh(event, self.soco)
 
     @callback
     def async_dispatch_device_properties(self, event: SonosEvent) -> None:
@@ -472,37 +467,6 @@ class SonosSpeaker:
 
         self._subscriptions = []
         self.hass.data[DATA_SONOS].ssdp_known.remove(self.soco.uid)
-
-    #
-    # Alarm management
-    #
-    def update_alarms_for_speaker(self) -> set[str]:
-        """Update current alarm instances.
-
-        Updates hass.data[DATA_SONOS].alarms and returns a list of all alarms that are new.
-        """
-        new_alarms = set()
-        stored_alarms = self.hass.data[DATA_SONOS].alarms
-        updated_alarms = get_alarms(self.soco)
-
-        for alarm in updated_alarms:
-            if alarm.zone.uid == self.soco.uid and alarm.alarm_id not in list(
-                stored_alarms.keys()
-            ):
-                new_alarms.add(alarm.alarm_id)
-                stored_alarms[alarm.alarm_id] = alarm
-
-        for alarm_id, alarm in list(stored_alarms.items()):
-            if alarm not in updated_alarms:
-                stored_alarms.pop(alarm_id)
-
-        return new_alarms
-
-    def update_alarms(self) -> None:
-        """Update alarms from an event."""
-        if new_alarms := self.update_alarms_for_speaker():
-            dispatcher_send(self.hass, SONOS_CREATE_ALARM, self, new_alarms)
-        dispatcher_send(self.hass, SONOS_ALARM_UPDATE)
 
     #
     # Battery management
