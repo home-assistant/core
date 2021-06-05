@@ -17,7 +17,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         [
             DemoLock("Front Door", STATE_LOCKED),
             DemoLock("Kitchen Door", STATE_UNLOCKED),
-            DemoLock("Poorly Installed Door", STATE_LOCKED, False, True),
+            DemoLock("Poorly Installed Door", STATE_UNLOCKED, False, True),
             DemoLock("Openable Lock", STATE_LOCKED, True),
         ]
     )
@@ -56,7 +56,7 @@ class DemoLock(LockEntity):
     @property
     def is_unlocking(self):
         """Return true if lock is unlocking."""
-        return self._state == STATE_LOCKING
+        return self._state == STATE_UNLOCKING
 
     @property
     def is_jammed(self):
@@ -72,23 +72,18 @@ class DemoLock(LockEntity):
         """Lock the device."""
         self._state = STATE_LOCKING
         self.async_write_ha_state()
-        await asyncio.sleep(5)
+        await asyncio.sleep(2)
         if self._jam_on_operation:
             self._state = STATE_JAMMED
-            self.async_write_ha_state()
-            await asyncio.sleep(5)
-        self._state = STATE_UNLOCKED
+        else:
+            self._state = STATE_UNLOCKED
         self.async_write_ha_state()
 
     async def async_unlock(self, **kwargs):
         """Unlock the device."""
         self._state = STATE_UNLOCKING
         self.async_write_ha_state()
-        await asyncio.sleep(5)
-        if self._jam_on_operation:
-            self._state = STATE_JAMMED
-            self.async_write_ha_state()
-            await asyncio.sleep(5)
+        await asyncio.sleep(2)
         self._state = STATE_UNLOCKED
         self.async_write_ha_state()
 
