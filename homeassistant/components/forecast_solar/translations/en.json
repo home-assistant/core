@@ -22,5 +22,17 @@
             }
         }
     },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "azimuth": "azimuth",
+                    "damping": "damping",
+                    "declination": "declination",
+                    "modules power": "modules power"
+                }
+            }
+        }
+    },
     "title": "Forecast Solar"
 }
