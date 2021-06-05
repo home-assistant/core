@@ -79,6 +79,8 @@ def xiaomi_miio_connect_fixture():
         return_value=TEST_CLOUD_DEVICES_1,
     ), patch(
         "homeassistant.components.xiaomi_miio.async_setup_entry", return_value=True
+    ), patch(
+        "homeassistant.components.xiaomi_miio.async_unload_entry", return_value=True
     ):
         yield
 
@@ -792,3 +794,69 @@ async def test_options_flow_incomplete(hass):
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "init"
     assert result["errors"] == {"base": "cloud_credentials_incomplete"}
+
+
+async def test_reauth(hass):
+    """Test a reauth flow."""
+    # await setup.async_setup_component(hass, "persistent_notification", {})
+    config_entry = MockConfigEntry(
+        domain=const.DOMAIN,
+        unique_id=TEST_GATEWAY_ID,
+        data={
+            const.CONF_CLOUD_USERNAME: None,
+            const.CONF_CLOUD_PASSWORD: None,
+            const.CONF_CLOUD_COUNTRY: None,
+            const.CONF_FLOW_TYPE: const.CONF_GATEWAY,
+            CONF_HOST: TEST_HOST,
+            CONF_TOKEN: TEST_TOKEN,
+            const.CONF_MODEL: TEST_MODEL,
+            const.CONF_MAC: TEST_MAC,
+        },
+        title=TEST_NAME,
+    )
+    config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_init(
+        const.DOMAIN,
+        context={"source": config_entries.SOURCE_REAUTH},
+        data=config_entry.data,
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {},
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "cloud"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            const.CONF_CLOUD_USERNAME: TEST_CLOUD_USER,
+            const.CONF_CLOUD_PASSWORD: TEST_CLOUD_PASS,
+            const.CONF_CLOUD_COUNTRY: TEST_CLOUD_COUNTRY,
+        },
+    )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "reauth_successful"
+
+    config_data = config_entry.data.copy()
+    assert config_data == {
+        const.CONF_FLOW_TYPE: const.CONF_GATEWAY,
+        const.CONF_CLOUD_USERNAME: TEST_CLOUD_USER,
+        const.CONF_CLOUD_PASSWORD: TEST_CLOUD_PASS,
+        const.CONF_CLOUD_COUNTRY: TEST_CLOUD_COUNTRY,
+        CONF_HOST: TEST_HOST,
+        CONF_TOKEN: TEST_TOKEN,
+        const.CONF_MODEL: TEST_MODEL,
+        const.CONF_MAC: TEST_MAC,
+    }
