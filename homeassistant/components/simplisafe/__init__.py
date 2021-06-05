@@ -154,6 +154,7 @@ async def async_setup_entry(hass, config_entry):  # noqa: C901
         hass.config_entries.async_update_entry(config_entry, **entry_updates)
 
     _verify_domain_control = verify_domain_control(hass, DOMAIN)
+
     client_id = await async_get_client_id(hass)
     websession = aiohttp_client.async_get_clientsession(hass)
 

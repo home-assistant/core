@@ -9,7 +9,6 @@ LOGGER = logging.getLogger(__package__)
 DOMAIN = "simplisafe"
 
 DATA_CLIENT = "client"
-DATA_EVENT = "event"
 
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=30)
 
