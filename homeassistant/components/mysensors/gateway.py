@@ -14,6 +14,10 @@ from mysensors import BaseAsyncGateway, Message, Sensor, mysensors
 import voluptuous as vol
 
 from homeassistant.components.mqtt import DOMAIN as MQTT_DOMAIN
+from homeassistant.components.mqtt.models import (
+    Message as MQTTMessage,
+    PublishPayloadType,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
@@ -47,7 +51,7 @@ GATEWAY_READY_TIMEOUT = 20.0
 MQTT_COMPONENT = "mqtt"
 
 
-def is_serial_port(value):
+def is_serial_port(value: str) -> str:
     """Validate that value is a windows serial port or a unix device."""
     if sys.platform.startswith("win"):
         ports = (f"COM{idx + 1}" for idx in range(256))
@@ -57,7 +61,7 @@ def is_serial_port(value):
     return cv.isdevice(value)
 
 
-def is_socket_address(value):
+def is_socket_address(value: str) -> str:
     """Validate that value is a valid address."""
     try:
         socket.getaddrinfo(value, None)
@@ -169,15 +173,17 @@ async def _get_gateway(
             return None
         mqtt = hass.components.mqtt
 
-        def pub_callback(topic, payload, qos, retain):
+        def pub_callback(topic: str, payload: str, qos: int, retain: bool) -> None:
             """Call MQTT publish function."""
             mqtt.async_publish(topic, payload, qos, retain)
 
-        def sub_callback(topic, sub_cb, qos):
+        def sub_callback(
+            topic: str, sub_cb: Callable[[str, PublishPayloadType, int], None], qos: int
+        ) -> None:
             """Call MQTT subscribe function."""
 
             @callback
-            def internal_callback(msg):
+            def internal_callback(msg: MQTTMessage) -> None:
                 """Call callback."""
                 sub_cb(msg.topic, msg.payload, msg.qos)
 
@@ -233,7 +239,7 @@ async def _get_gateway(
 
 async def finish_setup(
     hass: HomeAssistant, entry: ConfigEntry, gateway: BaseAsyncGateway
-):
+) -> None:
     """Load any persistent devices and platforms and start gateway."""
     discover_tasks = []
     start_tasks = []
@@ -248,7 +254,7 @@ async def finish_setup(
 
 async def _discover_persistent_devices(
     hass: HomeAssistant, entry: ConfigEntry, gateway: BaseAsyncGateway
-):
+) -> None:
     """Discover platforms for devices loaded via persistence file."""
     new_devices = defaultdict(list)
     for node_id in gateway.sensors:
@@ -264,7 +270,9 @@ async def _discover_persistent_devices(
         discover_mysensors_platform(hass, entry.entry_id, platform, dev_ids)
 
 
-async def gw_stop(hass, entry: ConfigEntry, gateway: BaseAsyncGateway):
+async def gw_stop(
+    hass: HomeAssistant, entry: ConfigEntry, gateway: BaseAsyncGateway
+) -> None:
     """Stop the gateway."""
     connect_task = hass.data[DOMAIN].pop(
         MYSENSORS_GATEWAY_START_TASK.format(entry.entry_id), None
@@ -274,11 +282,14 @@ async def gw_stop(hass, entry: ConfigEntry, gateway: BaseAsyncGateway):
     await gateway.stop()
 
 
-async def _gw_start(hass: HomeAssistant, entry: ConfigEntry, gateway: BaseAsyncGateway):
+async def _gw_start(
+    hass: HomeAssistant, entry: ConfigEntry, gateway: BaseAsyncGateway
+) -> None:
     """Start the gateway."""
     gateway_ready = asyncio.Event()
 
-    def gateway_connected(_: BaseAsyncGateway):
+    def gateway_connected(_: BaseAsyncGateway) -> None:
+        """Handle gateway connected."""
         gateway_ready.set()
 
     gateway.on_conn_made = gateway_connected
@@ -289,7 +300,8 @@ async def _gw_start(hass: HomeAssistant, entry: ConfigEntry, gateway: BaseAsyncG
         gateway.start()
     )  # store the connect task so it can be cancelled in gw_stop
 
-    async def stop_this_gw(_: Event):
+    async def stop_this_gw(_: Event) -> None:
+        """Stop the gateway."""
         await gw_stop(hass, entry, gateway)
 
     on_unload(
@@ -318,7 +330,7 @@ def _gw_callback_factory(
     """Return a new callback for the gateway."""
 
     @callback
-    def mysensors_callback(msg: Message):
+    def mysensors_callback(msg: Message) -> None:
         """Handle messages from a MySensors gateway.
 
         All MySenors messages are received here.
