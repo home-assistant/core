@@ -1,6 +1,7 @@
 {
     "thermostatList": [
-        {"identifier": 8675309,
+        {
+            "identifier": 8675309,
             "name": "ecobee",
             "modelNumber": "athenaSmart",
             "program": {
@@ -27,7 +28,7 @@
                 "heatCoolMinDelta": 50,
                 "holdAction": "nextTransition",
                 "hasHumidifier": true,
-                "humidifierMode": "off",
+                "humidifierMode": "manual",
                 "humidity": "30"
             },
             "equipmentStatus": "fan",
