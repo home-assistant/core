@@ -153,7 +153,7 @@ class Scanner:
     ) -> None:
         """Initialize class."""
         self.hass = hass
-        self.seen: set[tuple[str, str]] = set()
+        self.seen: set[tuple[str, str | None]] = set()
         self.cache: dict[tuple[str, str], Mapping[str, str]] = {}
         self._integration_matchers = integration_matchers
         self._cancel_scan: Callable[[], None] | None = None
@@ -268,20 +268,28 @@ class Scanner:
                     domains.add(domain)
         return domains
 
+    def _async_seen(self, header_st: str | None, header_location: str | None) -> bool:
+        """Check if we have seen a specific st and optional location."""
+        if header_st is None:
+            return True
+        return (header_st, header_location) in self.seen
+
+    def _async_see(self, header_st: str | None, header_location: str | None) -> None:
+        """Mark a specific st and optional location as seen."""
+        if header_st is not None:
+            self.seen.add((header_st, header_location))
+
     async def _async_process_entry(self, headers: Mapping[str, str]) -> None:
         """Process SSDP entries."""
         _LOGGER.debug("_async_process_entry: %s", headers)
-        if "st" not in headers or "location" not in headers:
-            return
-        h_st = headers["st"]
-        h_location = headers["location"]
-        key = (h_st, h_location)
+        h_st = headers.get("st")
+        h_location = headers.get("location")
 
-        if udn := _udn_from_usn(headers.get("usn")):
+        if h_st and (udn := _udn_from_usn(headers.get("usn"))):
             self.cache[(udn, h_st)] = headers
 
         callbacks = self._async_get_matching_callbacks(headers)
-        if key in self.seen and not callbacks:
+        if self._async_seen(h_st, h_location) and not callbacks:
             return
 
         assert self.description_manager is not None
@@ -290,9 +298,10 @@ class Scanner:
         discovery_info = discovery_info_from_headers_and_request(info_with_req)
 
         _async_process_callbacks(callbacks, discovery_info)
-        if key in self.seen:
+
+        if self._async_seen(h_st, h_location):
             return
-        self.seen.add(key)
+        self._async_see(h_st, h_location)
 
         for domain in self._async_matching_domains(info_with_req):
             _LOGGER.debug("Discovered %s at %s", domain, h_location)
