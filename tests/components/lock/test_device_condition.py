@@ -60,6 +60,27 @@ async def test_get_conditions(hass, device_reg, entity_reg):
             "device_id": device_entry.id,
             "entity_id": f"{DOMAIN}.test_5678",
         },
+        {
+            "condition": "device",
+            "domain": DOMAIN,
+            "type": "is_unlocking",
+            "device_id": device_entry.id,
+            "entity_id": f"{DOMAIN}.test_5678",
+        },
+        {
+            "condition": "device",
+            "domain": DOMAIN,
+            "type": "is_locking",
+            "device_id": device_entry.id,
+            "entity_id": f"{DOMAIN}.test_5678",
+        },
+        {
+            "condition": "device",
+            "domain": DOMAIN,
+            "type": "is_jammed",
+            "device_id": device_entry.id,
+            "entity_id": f"{DOMAIN}.test_5678",
+        },
     ]
     conditions = await async_get_device_automations(hass, "condition", device_entry.id)
     assert_lists_same(conditions, expected_conditions)
