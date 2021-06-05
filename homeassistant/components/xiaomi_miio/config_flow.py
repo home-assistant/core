@@ -287,7 +287,7 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return await self.async_step_connect()
 
         select_schema = vol.Schema(
-            {vol.Required("select_device"): vol.In(list(self.cloud_devices.keys()))}
+            {vol.Required("select_device"): vol.In(list(self.cloud_devices))}
         )
 
         return self.async_show_form(
