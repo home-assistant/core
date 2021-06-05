@@ -1,7 +1,6 @@
 """Config flow for MySensors."""
 from __future__ import annotations
 
-from contextlib import suppress
 import logging
 import os
 from typing import Any
@@ -67,14 +66,14 @@ def _get_schema_common(user_input: dict[str, str]) -> dict:
 
 def _validate_version(version: str) -> dict[str, str]:
     """Validate a version string from the user."""
-    version_okay = False
-    with suppress(AwesomeVersionStrategyException):
-        version_okay = bool(
-            AwesomeVersion.ensure_strategy(
-                version,
-                [AwesomeVersionStrategy.SIMPLEVER, AwesomeVersionStrategy.SEMVER],
-            )
+    version_okay = True
+    try:
+        AwesomeVersion(
+            version,
+            [AwesomeVersionStrategy.SIMPLEVER, AwesomeVersionStrategy.SEMVER],
         )
+    except AwesomeVersionStrategyException:
+        version_okay = False
 
     if version_okay:
         return {}
