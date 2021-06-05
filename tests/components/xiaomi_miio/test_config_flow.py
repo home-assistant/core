@@ -1,9 +1,8 @@
 """Test the Xiaomi Miio config flow."""
 from unittest.mock import Mock, patch
 
-import pytest
-
 from miio import DeviceException
+import pytest
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.xiaomi_miio import const
@@ -34,8 +33,35 @@ TEST_HARDWARE_VERSION = "AB123"
 TEST_FIRMWARE_VERSION = "1.2.3_456"
 TEST_ZEROCONF_NAME = "lumi-gateway-v3_miio12345678._miio._udp.local."
 TEST_SUB_DEVICE_LIST = []
-TEST_CLOUD_DEVICES_1 = [{"parent_id": None, "name":TEST_NAME, "model":TEST_MODEL, "localip":TEST_HOST, "mac":TEST_MAC_DEVICE, "token":TEST_TOKEN}]
-TEST_CLOUD_DEVICES_2 = [{"parent_id": None, "name":TEST_NAME, "model":TEST_MODEL, "localip":TEST_HOST, "mac":TEST_MAC_DEVICE, "token":TEST_TOKEN}, {"parent_id": None, "name":TEST_NAME2, "model":TEST_MODEL, "localip":TEST_HOST2, "mac":TEST_MAC_DEVICE2, "token":TEST_TOKEN}]
+TEST_CLOUD_DEVICES_1 = [
+    {
+        "parent_id": None,
+        "name": TEST_NAME,
+        "model": TEST_MODEL,
+        "localip": TEST_HOST,
+        "mac": TEST_MAC_DEVICE,
+        "token": TEST_TOKEN,
+    }
+]
+TEST_CLOUD_DEVICES_2 = [
+    {
+        "parent_id": None,
+        "name": TEST_NAME,
+        "model": TEST_MODEL,
+        "localip": TEST_HOST,
+        "mac": TEST_MAC_DEVICE,
+        "token": TEST_TOKEN,
+    },
+    {
+        "parent_id": None,
+        "name": TEST_NAME2,
+        "model": TEST_MODEL,
+        "localip": TEST_HOST2,
+        "mac": TEST_MAC_DEVICE2,
+        "token": TEST_TOKEN,
+    },
+]
+
 
 @pytest.fixture(name="xiaomi_miio_connect", autouse=True)
 def xiaomi_miio_connect_fixture():
@@ -312,7 +338,16 @@ async def test_config_flow_gateway_cloud_missing_token(hass):
     assert result["step_id"] == "cloud"
     assert result["errors"] == {}
 
-    cloud_device = [{"parent_id": None, "name":TEST_NAME, "model":TEST_MODEL, "localip":TEST_HOST, "mac":TEST_MAC_DEVICE, "token":None}]
+    cloud_device = [
+        {
+            "parent_id": None,
+            "name": TEST_NAME,
+            "model": TEST_MODEL,
+            "localip": TEST_HOST,
+            "mac": TEST_MAC_DEVICE,
+            "token": None,
+        }
+    ]
 
     with patch(
         "homeassistant.components.xiaomi_miio.config_flow.MiCloud.get_devices",
