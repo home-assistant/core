@@ -59,7 +59,7 @@ class EcobeeHumidifier(HumidifierEntity):
         try:
             model = f"{ECOBEE_MODEL_TO_NAME[self.thermostat['modelNumber']]} Thermostat"
         except KeyError:  # pragma: no cover
-            """Ecobee model is not in our list"""
+            # Ecobee model is not in our list
             return None
 
         return {
