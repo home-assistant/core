@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any, cast
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
@@ -97,6 +97,7 @@ class AccuWeatherSensor(CoordinatorEntity, SensorEntity):
         self._device_class = None
         self._attrs = {ATTR_ATTRIBUTION: ATTRIBUTION}
         self.forecast_day = forecast_day
+        self._attr_state_class = self._description[ATTR_STATE_CLASS]
 
     @property
     def name(self) -> str:

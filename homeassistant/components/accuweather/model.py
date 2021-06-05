@@ -13,3 +13,4 @@ class SensorDescription(TypedDict):
     unit_metric: str | None
     unit_imperial: str | None
     enabled: bool
+    state_class: str | None

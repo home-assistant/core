@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from typing import Final
 
+from homeassistant.components.sensor import ATTR_STATE_CLASS, STATE_CLASS_MEASUREMENT
 from homeassistant.components.weather import (
     ATTR_CONDITION_CLEAR_NIGHT,
     ATTR_CONDITION_CLOUDY,
@@ -80,6 +81,7 @@ FORECAST_SENSOR_TYPES: Final[dict[str, SensorDescription]] = {
         ATTR_UNIT_METRIC: PERCENTAGE,
         ATTR_UNIT_IMPERIAL: PERCENTAGE,
         ATTR_ENABLED: False,
+        ATTR_STATE_CLASS: None,
     },
     "CloudCoverNight": {
         ATTR_DEVICE_CLASS: None,
@@ -88,6 +90,7 @@ FORECAST_SENSOR_TYPES: Final[dict[str, SensorDescription]] = {
         ATTR_UNIT_METRIC: PERCENTAGE,
         ATTR_UNIT_IMPERIAL: PERCENTAGE,
         ATTR_ENABLED: False,
+        ATTR_STATE_CLASS: None,
     },
     "Grass": {
         ATTR_DEVICE_CLASS: None,
@@ -96,6 +99,7 @@ FORECAST_SENSOR_TYPES: Final[dict[str, SensorDescription]] = {
         ATTR_UNIT_METRIC: CONCENTRATION_PARTS_PER_CUBIC_METER,
         ATTR_UNIT_IMPERIAL: CONCENTRATION_PARTS_PER_CUBIC_METER,
         ATTR_ENABLED: False,
+        ATTR_STATE_CLASS: None,
     },
     "HoursOfSun": {
         ATTR_DEVICE_CLASS: None,
@@ -104,6 +108,7 @@ FORECAST_SENSOR_TYPES: Final[dict[str, SensorDescription]] = {
         ATTR_UNIT_METRIC: TIME_HOURS,
         ATTR_UNIT_IMPERIAL: TIME_HOURS,
         ATTR_ENABLED: True,
+        ATTR_STATE_CLASS: None,
     },
     "Mold": {
         ATTR_DEVICE_CLASS: None,
@@ -112,6 +117,7 @@ FORECAST_SENSOR_TYPES: Final[dict[str, SensorDescription]] = {
         ATTR_UNIT_METRIC: CONCENTRATION_PARTS_PER_CUBIC_METER,
         ATTR_UNIT_IMPERIAL: CONCENTRATION_PARTS_PER_CUBIC_METER,
         ATTR_ENABLED: False,
+        ATTR_STATE_CLASS: None,
     },
     "Ozone": {
         ATTR_DEVICE_CLASS: None,
@@ -120,6 +126,7 @@ FORECAST_SENSOR_TYPES: Final[dict[str, SensorDescription]] = {
         ATTR_UNIT_METRIC: None,
         ATTR_UNIT_IMPERIAL: None,
         ATTR_ENABLED: False,
+        ATTR_STATE_CLASS: None,
     },
     "Ragweed": {
         ATTR_DEVICE_CLASS: None,
@@ -128,6 +135,7 @@ FORECAST_SENSOR_TYPES: Final[dict[str, SensorDescription]] = {
         ATTR_UNIT_METRIC: CONCENTRATION_PARTS_PER_CUBIC_METER,
         ATTR_UNIT_IMPERIAL: CONCENTRATION_PARTS_PER_CUBIC_METER,
         ATTR_ENABLED: False,
+        ATTR_STATE_CLASS: None,
     },
     "RealFeelTemperatureMax": {
         ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
@@ -136,6 +144,7 @@ FORECAST_SENSOR_TYPES: Final[dict[str, SensorDescription]] = {
         ATTR_UNIT_METRIC: TEMP_CELSIUS,
         ATTR_UNIT_IMPERIAL: TEMP_FAHRENHEIT,
         ATTR_ENABLED: True,
+        ATTR_STATE_CLASS: None,
     },
     "RealFeelTemperatureMin": {
         ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
@@ -144,6 +153,7 @@ FORECAST_SENSOR_TYPES: Final[dict[str, SensorDescription]] = {
         ATTR_UNIT_METRIC: TEMP_CELSIUS,
         ATTR_UNIT_IMPERIAL: TEMP_FAHRENHEIT,
         ATTR_ENABLED: True,
+        ATTR_STATE_CLASS: None,
     },
     "RealFeelTemperatureShadeMax": {
         ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
@@ -152,6 +162,7 @@ FORECAST_SENSOR_TYPES: Final[dict[str, SensorDescription]] = {
         ATTR_UNIT_METRIC: TEMP_CELSIUS,
         ATTR_UNIT_IMPERIAL: TEMP_FAHRENHEIT,
         ATTR_ENABLED: False,
+        ATTR_STATE_CLASS: None,
     },
     "RealFeelTemperatureShadeMin": {
         ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
@@ -160,6 +171,7 @@ FORECAST_SENSOR_TYPES: Final[dict[str, SensorDescription]] = {
         ATTR_UNIT_METRIC: TEMP_CELSIUS,
         ATTR_UNIT_IMPERIAL: TEMP_FAHRENHEIT,
         ATTR_ENABLED: False,
+        ATTR_STATE_CLASS: None,
     },
     "ThunderstormProbabilityDay": {
         ATTR_DEVICE_CLASS: None,
@@ -168,6 +180,7 @@ FORECAST_SENSOR_TYPES: Final[dict[str, SensorDescription]] = {
         ATTR_UNIT_METRIC: PERCENTAGE,
         ATTR_UNIT_IMPERIAL: PERCENTAGE,
         ATTR_ENABLED: True,
+        ATTR_STATE_CLASS: None,
     },
     "ThunderstormProbabilityNight": {
         ATTR_DEVICE_CLASS: None,
@@ -176,6 +189,7 @@ FORECAST_SENSOR_TYPES: Final[dict[str, SensorDescription]] = {
         ATTR_UNIT_METRIC: PERCENTAGE,
         ATTR_UNIT_IMPERIAL: PERCENTAGE,
         ATTR_ENABLED: True,
+        ATTR_STATE_CLASS: None,
     },
     "Tree": {
         ATTR_DEVICE_CLASS: None,
@@ -184,6 +198,7 @@ FORECAST_SENSOR_TYPES: Final[dict[str, SensorDescription]] = {
         ATTR_UNIT_METRIC: CONCENTRATION_PARTS_PER_CUBIC_METER,
         ATTR_UNIT_IMPERIAL: CONCENTRATION_PARTS_PER_CUBIC_METER,
         ATTR_ENABLED: False,
+        ATTR_STATE_CLASS: None,
     },
     "UVIndex": {
         ATTR_DEVICE_CLASS: None,
@@ -192,6 +207,7 @@ FORECAST_SENSOR_TYPES: Final[dict[str, SensorDescription]] = {
         ATTR_UNIT_METRIC: UV_INDEX,
         ATTR_UNIT_IMPERIAL: UV_INDEX,
         ATTR_ENABLED: True,
+        ATTR_STATE_CLASS: None,
     },
     "WindGustDay": {
         ATTR_DEVICE_CLASS: None,
@@ -200,6 +216,7 @@ FORECAST_SENSOR_TYPES: Final[dict[str, SensorDescription]] = {
         ATTR_UNIT_METRIC: SPEED_KILOMETERS_PER_HOUR,
         ATTR_UNIT_IMPERIAL: SPEED_MILES_PER_HOUR,
         ATTR_ENABLED: False,
+        ATTR_STATE_CLASS: None,
     },
     "WindGustNight": {
         ATTR_DEVICE_CLASS: None,
@@ -208,6 +225,7 @@ FORECAST_SENSOR_TYPES: Final[dict[str, SensorDescription]] = {
         ATTR_UNIT_METRIC: SPEED_KILOMETERS_PER_HOUR,
         ATTR_UNIT_IMPERIAL: SPEED_MILES_PER_HOUR,
         ATTR_ENABLED: False,
+        ATTR_STATE_CLASS: None,
     },
     "WindDay": {
         ATTR_DEVICE_CLASS: None,
@@ -216,6 +234,7 @@ FORECAST_SENSOR_TYPES: Final[dict[str, SensorDescription]] = {
         ATTR_UNIT_METRIC: SPEED_KILOMETERS_PER_HOUR,
         ATTR_UNIT_IMPERIAL: SPEED_MILES_PER_HOUR,
         ATTR_ENABLED: True,
+        ATTR_STATE_CLASS: None,
     },
     "WindNight": {
         ATTR_DEVICE_CLASS: None,
@@ -224,6 +243,7 @@ FORECAST_SENSOR_TYPES: Final[dict[str, SensorDescription]] = {
         ATTR_UNIT_METRIC: SPEED_KILOMETERS_PER_HOUR,
         ATTR_UNIT_IMPERIAL: SPEED_MILES_PER_HOUR,
         ATTR_ENABLED: True,
+        ATTR_STATE_CLASS: None,
     },
 }
 
@@ -235,6 +255,7 @@ SENSOR_TYPES: Final[dict[str, SensorDescription]] = {
         ATTR_UNIT_METRIC: TEMP_CELSIUS,
         ATTR_UNIT_IMPERIAL: TEMP_FAHRENHEIT,
         ATTR_ENABLED: False,
+        ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
     },
     "Ceiling": {
         ATTR_DEVICE_CLASS: None,
@@ -243,6 +264,7 @@ SENSOR_TYPES: Final[dict[str, SensorDescription]] = {
         ATTR_UNIT_METRIC: LENGTH_METERS,
         ATTR_UNIT_IMPERIAL: LENGTH_FEET,
         ATTR_ENABLED: True,
+        ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
     },
     "CloudCover": {
         ATTR_DEVICE_CLASS: None,
@@ -251,6 +273,7 @@ SENSOR_TYPES: Final[dict[str, SensorDescription]] = {
         ATTR_UNIT_METRIC: PERCENTAGE,
         ATTR_UNIT_IMPERIAL: PERCENTAGE,
         ATTR_ENABLED: False,
+        ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
     },
     "DewPoint": {
         ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
@@ -259,6 +282,7 @@ SENSOR_TYPES: Final[dict[str, SensorDescription]] = {
         ATTR_UNIT_METRIC: TEMP_CELSIUS,
         ATTR_UNIT_IMPERIAL: TEMP_FAHRENHEIT,
         ATTR_ENABLED: False,
+        ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
     },
     "RealFeelTemperature": {
         ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
@@ -267,6 +291,7 @@ SENSOR_TYPES: Final[dict[str, SensorDescription]] = {
         ATTR_UNIT_METRIC: TEMP_CELSIUS,
         ATTR_UNIT_IMPERIAL: TEMP_FAHRENHEIT,
         ATTR_ENABLED: True,
+        ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
     },
     "RealFeelTemperatureShade": {
         ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
@@ -275,6 +300,7 @@ SENSOR_TYPES: Final[dict[str, SensorDescription]] = {
         ATTR_UNIT_METRIC: TEMP_CELSIUS,
         ATTR_UNIT_IMPERIAL: TEMP_FAHRENHEIT,
         ATTR_ENABLED: False,
+        ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
     },
     "Precipitation": {
         ATTR_DEVICE_CLASS: None,
@@ -283,6 +309,7 @@ SENSOR_TYPES: Final[dict[str, SensorDescription]] = {
         ATTR_UNIT_METRIC: LENGTH_MILLIMETERS,
         ATTR_UNIT_IMPERIAL: LENGTH_INCHES,
         ATTR_ENABLED: True,
+        ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
     },
     "PressureTendency": {
         ATTR_DEVICE_CLASS: "accuweather__pressure_tendency",
@@ -291,6 +318,7 @@ SENSOR_TYPES: Final[dict[str, SensorDescription]] = {
         ATTR_UNIT_METRIC: None,
         ATTR_UNIT_IMPERIAL: None,
         ATTR_ENABLED: True,
+        ATTR_STATE_CLASS: None,
     },
     "UVIndex": {
         ATTR_DEVICE_CLASS: None,
@@ -299,6 +327,7 @@ SENSOR_TYPES: Final[dict[str, SensorDescription]] = {
         ATTR_UNIT_METRIC: UV_INDEX,
         ATTR_UNIT_IMPERIAL: UV_INDEX,
         ATTR_ENABLED: True,
+        ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
     },
     "WetBulbTemperature": {
         ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
@@ -307,6 +336,7 @@ SENSOR_TYPES: Final[dict[str, SensorDescription]] = {
         ATTR_UNIT_METRIC: TEMP_CELSIUS,
         ATTR_UNIT_IMPERIAL: TEMP_FAHRENHEIT,
         ATTR_ENABLED: False,
+        ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
     },
     "WindChillTemperature": {
         ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
@@ -315,6 +345,7 @@ SENSOR_TYPES: Final[dict[str, SensorDescription]] = {
         ATTR_UNIT_METRIC: TEMP_CELSIUS,
         ATTR_UNIT_IMPERIAL: TEMP_FAHRENHEIT,
         ATTR_ENABLED: False,
+        ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
     },
     "Wind": {
         ATTR_DEVICE_CLASS: None,
@@ -323,6 +354,7 @@ SENSOR_TYPES: Final[dict[str, SensorDescription]] = {
         ATTR_UNIT_METRIC: SPEED_KILOMETERS_PER_HOUR,
         ATTR_UNIT_IMPERIAL: SPEED_MILES_PER_HOUR,
         ATTR_ENABLED: True,
+        ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
     },
     "WindGust": {
         ATTR_DEVICE_CLASS: None,
@@ -331,5 +363,6 @@ SENSOR_TYPES: Final[dict[str, SensorDescription]] = {
         ATTR_UNIT_METRIC: SPEED_KILOMETERS_PER_HOUR,
         ATTR_UNIT_IMPERIAL: SPEED_MILES_PER_HOUR,
         ATTR_ENABLED: False,
+        ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
     },
 }
