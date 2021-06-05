@@ -933,7 +933,7 @@ maxcube-api==0.4.3
 mbddns==0.1.2
 
 # homeassistant.components.minecraft_server
-mcstatus==5.1.1
+mcstatus==6.0.0
 
 # homeassistant.components.message_bird
 messagebird==1.2.0
