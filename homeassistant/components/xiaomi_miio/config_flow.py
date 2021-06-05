@@ -125,7 +125,9 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Perform reauth upon an authentication error or missing cloud credentials."""
         if user_input is not None:
             return await self.async_step_cloud()
-        return self.async_show_form(step_id="reauth_confirm", data_schema=vol.Schema({}))
+        return self.async_show_form(
+            step_id="reauth_confirm", data_schema=vol.Schema({})
+        )
 
     async def async_step_import(self, conf: dict):
         """Import a configuration from config.yaml."""
@@ -323,12 +325,18 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             self.mac = format_mac(device_info.mac_address)
 
         unique_id = self.mac
-        existing_entry = await self.async_set_unique_id(unique_id, raise_on_progress=False)
+        existing_entry = await self.async_set_unique_id(
+            unique_id, raise_on_progress=False
+        )
         if existing_entry:
             data = existing_entry.data
             data[CONF_HOST] = self.host
             data[CONF_TOKEN] = self.token
-            if self.cloud_username is not None and self.cloud_password is not None and self.cloud_country is not None:
+            if (
+                self.cloud_username is not None
+                and self.cloud_password is not None
+                and self.cloud_country is not None
+            ):
                 data[CONF_CLOUD_USERNAME] = self.cloud_username
                 data[CONF_CLOUD_PASSWORD] = self.cloud_password
                 data[CONF_CLOUD_COUNTRY] = self.cloud_country
