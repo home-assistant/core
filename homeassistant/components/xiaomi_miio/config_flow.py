@@ -359,9 +359,6 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             self.model = user_input[CONF_MODEL]
             return await self.async_step_connect()
 
-        if errors is None:
-            errors = {}
-
         return self.async_show_form(
             step_id="model", data_schema=DEVICE_MODEL_CONFIG, errors=errors
         )
