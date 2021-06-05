@@ -521,8 +521,8 @@ async def test_pymodbus_constructor_fail(hass, caplog):
 @pytest.mark.parametrize(
     "do_connect,do_exception,do_text",
     [
-        [False, None, "initial"],
-        [True, ModbusException("no connect"), "no connect"],
+        [False, None, "initial connect failed, no retry"],
+        [True, ModbusException("no connect"), "Modbus Error: no connect"],
     ],
 )
 async def test_pymodbus_connect_fail(
@@ -543,7 +543,7 @@ async def test_pymodbus_connect_fail(
     mock_pymodbus.connect.side_effect = do_exception
     assert await async_setup_component(hass, DOMAIN, config) is False
     await hass.async_block_till_done()
-    assert caplog.messages[0].startswith(f"Pymodbus: Modbus Error: {do_text}")
+    assert caplog.messages[0].startswith(f"Pymodbus: {do_text}")
     assert caplog.records[0].levelname == "ERROR"
 
 
