@@ -49,7 +49,7 @@ async def test_locking(hass):
     assert state.state == STATE_LOCKING
     await asyncio.sleep(2)
     state = hass.states.get(KITCHEN)
-    assert state.state == STATE_UNLOCKED
+    assert state.state == STATE_LOCKED
 
 
 async def test_unlocking(hass):
