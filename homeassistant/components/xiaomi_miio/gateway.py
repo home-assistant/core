@@ -65,16 +65,12 @@ class ConnectXiaomiGateway:
                     or cloud_password is None
                     or cloud_country is None
                 ):
-                    # trigger re-auth flow
                     raise ConfigEntryAuthFailed("Missing cloud credentials in Xiaomi Miio configuration")
 
                 # use miio-cloud
                 miio_cloud = MiCloud(cloud_username, cloud_password)
                 if not await self._hass.async_add_executor_job(miio_cloud.login):
-                    _LOGGER.error(
-                        "Could not login to Xioami Miio Cloud, check the credentials"
-                    )
-                    return False
+                    raise ConfigEntryAuthFailed("Could not login to Xioami Miio Cloud, check the credentials")
                 devices_raw = await self._hass.async_add_executor_job(
                     miio_cloud.get_devices, cloud_country
                 )
