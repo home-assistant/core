@@ -182,7 +182,7 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if self.host is None:
             self.host = cloud_device_info["localip"]
         if self.mac is None:
-            self.mac = cloud_device_info["mac"]
+            self.mac = format_mac(cloud_device_info["mac"])
         if self.model is None:
             self.model = cloud_device_info["model"]
         if self.name is None:
