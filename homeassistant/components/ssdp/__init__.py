@@ -153,7 +153,7 @@ class Scanner:
     ) -> None:
         """Initialize class."""
         self.hass = hass
-        self.seen: set[tuple[str, None | str]] = set()
+        self.seen: set[tuple[str, str | None]] = set()
         self.cache: dict[tuple[str, str], Mapping[str, str]] = {}
         self._integration_matchers = integration_matchers
         self._cancel_scan: Callable[[], None] | None = None
