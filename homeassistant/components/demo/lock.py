@@ -76,7 +76,7 @@ class DemoLock(LockEntity):
         if self._jam_on_operation:
             self._state = STATE_JAMMED
         else:
-            self._state = STATE_UNLOCKED
+            self._state = STATE_LOCKED
         self.async_write_ha_state()
 
     async def async_unlock(self, **kwargs):
