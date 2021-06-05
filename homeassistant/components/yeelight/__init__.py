@@ -4,10 +4,10 @@ from __future__ import annotations
 import asyncio
 from datetime import timedelta
 import logging
-from threading import Thread
 
 import voluptuous as vol
-from yeelight import Bulb, BulbException, discover_bulbs
+from yeelight import BulbException, discover_bulbs
+from yeelight.aio import AsyncBulb
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry, ConfigEntryNotReady
 from homeassistant.const import (
@@ -50,7 +50,6 @@ DATA_CONFIG_ENTRIES = "config_entries"
 DATA_CUSTOM_EFFECTS = "custom_effects"
 DATA_SCAN_INTERVAL = "scan_interval"
 DATA_DEVICE = "device"
-DATA_LISTENER = "listener"
 DATA_REMOVE_INIT_DISPATCHER = "remove_init_dispatcher"
 DATA_PLATFORMS_LOADED = "platforms_loaded"
 
@@ -205,26 +204,22 @@ async def _async_initialize(
     entry_data[DATA_DEVICE] = device
 
     # start listening for local pushes
-    listen_thread = Thread(target=device.bulb.listen, args=(device.update_callback,))
-    listen_thread.daemon = True
-    listen_thread.start()
-    entry_data[DATA_LISTENER] = listen_thread
+    hass.loop.create_task(device.bulb.async_listen(device.update_callback))
 
     # register stop callback to shutdown listening for local pushes
-    def stop_listen_thread(event):
+    def stop_listen_task(event):
         """Stop listen thread."""
-        thread = (
+        device_bulp = (
             hass.data[DOMAIN][DATA_CONFIG_ENTRIES]
             .get(entry.entry_id, {})
-            .get(DATA_LISTENER)
+            .get(DATA_DEVICE)
         )
-        if thread is not None:
+        if device_bulp is not None:
             _LOGGER.debug("Shutting down Yeelight Listener")
-            device.bulb.stop_listening()
-            thread.join()
+            await device.bulb.async_stop_listening()
             _LOGGER.debug("Yeelight Listener stopped")
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_listen_thread)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_listen_task)
 
     entry.async_on_unload(
         async_dispatcher_connect(
@@ -310,11 +305,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         scanner = YeelightScanner.async_get(hass)
         scanner.async_unregister_callback(entry.data[CONF_ID])
 
-    thread = entry_data[DATA_LISTENER]
     device = entry_data[DATA_DEVICE]
     _LOGGER.debug("Shutting down Yeelight Listener")
-    device.bulb.stop_listening()
-    thread.join()
+    await device.bulb.async_stop_listening()
     _LOGGER.debug("Yeelight Listener stopped")
 
     data_config_entries.pop(entry.entry_id)
@@ -659,7 +652,7 @@ async def _async_get_device(
     model = entry.options.get(CONF_MODEL)
 
     # Set up device
-    bulb = Bulb(host, model=model or None)
+    bulb = AsyncBulb(host, model=model or None)
     capabilities = await hass.async_add_executor_job(bulb.get_capabilities)
 
     return YeelightDevice(hass, host, entry.options, bulb, capabilities)
