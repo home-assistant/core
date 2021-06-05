@@ -170,7 +170,7 @@ async def async_setup_entry(hass, config_entry):  # noqa: C901
     try:
         api = await async_get_api()
     except InvalidCredentialsError:
-        raise ConfigEntryAuthFailed
+        raise ConfigEntryAuthFailed  # pylint: disable=raise-missing-from
     except SimplipyError as err:
         LOGGER.error("Config entry failed: %s", err)
         raise ConfigEntryNotReady from err
