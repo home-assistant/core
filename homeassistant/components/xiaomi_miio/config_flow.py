@@ -123,6 +123,14 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth(self, user_input=None):
         """Perform reauth upon an authentication error or missing cloud credentials."""
+        self.host = user_input[CONF_HOST]
+        self.token = user_input[CONF_TOKEN]
+        self.mac = user_input[CONF_MAC]
+        self.model = user_input.get(CONF_MODEL)
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(self, user_input=None):
+        """Dialog that informs the user that reauth is required."""
         if user_input is not None:
             return await self.async_step_cloud()
         return self.async_show_form(
@@ -329,7 +337,7 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             unique_id, raise_on_progress=False
         )
         if existing_entry:
-            data = existing_entry.data
+            data = existing_entry.data.copy()
             data[CONF_HOST] = self.host
             data[CONF_TOKEN] = self.token
             if (

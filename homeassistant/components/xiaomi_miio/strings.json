@@ -16,7 +16,7 @@
     },
     "flow_title": "{name}",
     "step": {
-      "reauth": {
+      "reauth_confirm": {
         "description": "The Xiaomi Miio integration needs to re-authenticate your acount in order to update the tokens or add missing cloud credentials.",
         "title": "[%key:common::config_flow::title::reauth%]"
       },
