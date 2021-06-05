@@ -770,7 +770,7 @@ pyeconet==0.1.14
 pyeverlights==0.1.0
 
 # homeassistant.components.ezviz
-pyezviz==0.1.8.8
+pyezviz==0.1.8.9
 
 # homeassistant.components.fido
 pyfido==2.1.1
