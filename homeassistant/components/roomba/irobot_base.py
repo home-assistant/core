@@ -22,8 +22,8 @@ from homeassistant.components.vacuum import (
     StateVacuumEntity,
 )
 import homeassistant.helpers.device_registry as dr
-import homeassistant.util.dt as dt_util
 from homeassistant.helpers.entity import Entity
+import homeassistant.util.dt as dt_util
 
 from . import roomba_reported_state
 from .const import DOMAIN
