@@ -12,8 +12,11 @@ from homeassistant.const import (
     SERVICE_LOCK,
     SERVICE_OPEN,
     SERVICE_UNLOCK,
+    STATE_JAMMED,
     STATE_LOCKED,
+    STATE_LOCKING,
     STATE_UNLOCKED,
+    STATE_UNLOCKING,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import (  # noqa: F401
@@ -94,6 +97,21 @@ class LockEntity(Entity):
         """Return true if the lock is locked."""
         return None
 
+    @property
+    def is_locking(self):
+        """Return true if the lock is locking."""
+        return None
+
+    @property
+    def is_unlocking(self):
+        """Return true if the lock is unlocking."""
+        return None
+
+    @property
+    def is_jammed(self):
+        """Return true if the lock is jammed (incomplete locking)."""
+        return None
+
     def lock(self, **kwargs):
         """Lock the lock."""
         raise NotImplementedError()
@@ -132,6 +150,12 @@ class LockEntity(Entity):
     @property
     def state(self):
         """Return the state."""
+        if self.is_jammed:
+            return STATE_JAMMED
+        if self.is_locking:
+            return STATE_LOCKING
+        if self.is_unlocking:
+            return STATE_UNLOCKING
         locked = self.is_locked
         if locked is None:
             return None
