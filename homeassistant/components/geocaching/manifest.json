@@ -3,7 +3,7 @@
   "name": "Geocaching",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/geocaching",
-  "requirements": ["geocachingapi==0.0.7"],
+  "requirements": ["geocachingapi==0.1.0"],
   "dependencies": [
     "http"
   ],
