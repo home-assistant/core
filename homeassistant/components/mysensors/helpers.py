@@ -38,7 +38,7 @@ SCHEMAS = Registry()
 def on_unload(hass: HomeAssistant, gateway_id: GatewayId, fnct: Callable) -> None:
     """Register a callback to be called when entry is unloaded.
 
-    This function is used by platforms to cleanup after themselves
+    This function is used by platforms to cleanup after themselves.
     """
     key = MYSENSORS_ON_UNLOAD.format(gateway_id)
     if key not in hass.data[DOMAIN]:
