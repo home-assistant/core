@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_NAME, ATTR_UNIT_OF_MEASUREMENT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
@@ -10,57 +11,36 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from . import get_coordinator
-
-SENSORS = {
-    "watts": "mdi:sun",
-    "watt_hours": "mdi:sun",
-}
+from .const import DOMAIN, SENSORS
 
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Defer sensor setup to the shared sensor module."""
-    coordinator = await get_coordinator(hass, entry)
+    coordinator: DataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
-    entities: list[ForecastSolarSensor] = []
-
-    for info_type in SENSORS:
-        entities.append(ForecastSolarSensor(coordinator, entry.data["name"], info_type))
-
-    async_add_entities(entities)
+    async_add_entities(
+        ForecastSolarSensor(entry=entry, coordinator=coordinator, key=key)
+        for key in SENSORS
+    )
 
 
 class ForecastSolarSensor(CoordinatorEntity, SensorEntity):
-    """Define an Forecast Solar sensor."""
+    """Defines a Forcast.Solar sensor."""
 
     def __init__(
-        self, coordinator: DataUpdateCoordinator, name: str, info_type: str
+        self, entry: ConfigEntry, coordinator: DataUpdateCoordinator, key: str
     ) -> None:
-        """Initialize forecast solar sensor."""
-        super().__init__(coordinator)
-        self._unique_id = f"{name}-{info_type}"
-        self._name = name
-        self._info_type = info_type
-        self._name = f"{name} - {info_type}"
+        """Initialize Forcast.Solar sensor."""
+        super().__init__(coordinator=coordinator)
+        self._attr_name = SENSORS[key][ATTR_NAME]
+        self._attr_unit_of_measurement = SENSORS[key][ATTR_UNIT_OF_MEASUREMENT]
+        self._attr_device_class = SENSORS[key][ATTR_DEVICE_CLASS]
+        self._attr_unique_id = f"{entry.entry_id}_{key}"
+        self._key = key
 
     @property
-    def name(self) -> str:
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique id of the device."""
-        return self._unique_id
-
-    @property
-    def state(self) -> str:
+    def state(self) -> float:
         """Return the state of the sensor."""
-        return getattr(self.coordinator.data[self._name], self._info_type)
-
-    @property
-    def unit_of_measurement(self) -> str:
-        """Return unit of measurement."""
-        return "Watt"
+        return getattr(self.coordinator.data, self._key)

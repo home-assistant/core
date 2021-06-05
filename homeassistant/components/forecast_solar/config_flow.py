@@ -11,7 +11,13 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 
-from .const import CONF_AZIMUTH, CONF_DECLINATION, CONF_MODULES_POWER, DOMAIN
+from .const import (
+    CONF_AZIMUTH,
+    CONF_DAMPING,
+    CONF_DECLINATION,
+    CONF_MODULES_POWER,
+    DOMAIN,
+)
 
 
 class ForecastSolarFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -42,7 +48,8 @@ class ForecastSolarFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     ): cv.longitude,
                     vol.Required(CONF_DECLINATION): vol.Coerce(int),
                     vol.Required(CONF_AZIMUTH): vol.Coerce(int),
-                    vol.Required(CONF_MODULES_POWER): vol.Coerce(int),
+                    vol.Required(CONF_MODULES_POWER): vol.Coerce(float),
+                    vol.Optional(CONF_DAMPING, default=0): vol.Coerce(int),
                 }
             ),
         )

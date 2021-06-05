@@ -8,7 +8,9 @@
           "longitude": "[%key:common::config_flow::data::longitude%]",
           "declination": "declination",
           "azimuth": "azimuth",
-          "modules power": "modules power"
+          "modules power": "modules power",
+          "damping": "damping",
+          "name": "[%key:common::config_flow::data::name%]"
         }
       }
     },
