@@ -75,7 +75,7 @@ async def try_connect(
 ) -> bool:
     """Try to connect to a gateway and report if it worked."""
     if gateway_type == "MQTT":
-        return True  # Do not validate MQTT, as that do not use connection made.
+        return True  # Do not validate MQTT, as that does not use connection made.
     try:
         gateway_ready = asyncio.Event()
 
