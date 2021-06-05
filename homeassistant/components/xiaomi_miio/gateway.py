@@ -6,6 +6,7 @@ from miio import DeviceException, gateway
 from miio.gateway.gateway import GATEWAY_MODEL_EU
 
 from homeassistant.config_entries import SOURCE_REAUTH
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -65,14 +66,7 @@ class ConnectXiaomiGateway:
                     or cloud_country is None
                 ):
                     # trigger re-auth flow
-                    self._hass.async_create_task(
-                        self._hass.config_entries.flow.async_init(
-                            DOMAIN,
-                            context={"source": SOURCE_REAUTH},
-                            data=self._config_entry.data,
-                        )
-                    )
-                    return False
+                    raise ConfigEntryAuthFailed("Missing cloud credentials in Xiaomi Miio configuration")
 
                 # use miio-cloud
                 miio_cloud = MiCloud(cloud_username, cloud_password)
