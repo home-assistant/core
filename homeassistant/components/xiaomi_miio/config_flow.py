@@ -286,12 +286,12 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             self.extract_cloud_info(cloud_device)
             return await self.async_step_connect()
 
-        select_scheme = vol.Schema(
-            {vol.Required("select_device"): vol.In(list(self.cloud_devices.keys()))}
+        select_schema = vol.Schema(
+            {vol.Required("select_device"): vol.In(list(self.cloud_devices))}
         )
 
         return self.async_show_form(
-            step_id="select", data_schema=select_scheme, errors=errors
+            step_id="select", data_schema=select_schema, errors=errors
         )
 
     async def async_step_manual(self, user_input=None):
