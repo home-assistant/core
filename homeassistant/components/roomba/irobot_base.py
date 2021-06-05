@@ -217,6 +217,7 @@ class IRobotVacuum(IRobotEntity, StateVacuumEntity):
         return state_attrs
 
     def get_cleaning_status(self, state) -> tuple[int, int]:
+        """Return the cleaning time and cleaned area from the device."""
         if not (mission_state := state.get("cleanMissionStatus")):
             return (0, 0)
 
