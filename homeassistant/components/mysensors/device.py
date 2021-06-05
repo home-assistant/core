@@ -3,12 +3,13 @@ from __future__ import annotations
 
 from functools import partial
 import logging
+from typing import Any
 
 from mysensors import BaseAsyncGateway, Sensor
 from mysensors.sensor import ChildSensor
 
 from homeassistant.const import ATTR_BATTERY_LEVEL, STATE_OFF, STATE_ON
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo, Entity
 
@@ -36,6 +37,8 @@ MYSENSORS_PLATFORM_DEVICES = "mysensors_devices_{}"
 class MySensorsDevice:
     """Representation of a MySensors device."""
 
+    hass: HomeAssistant
+
     def __init__(
         self,
         gateway_id: GatewayId,
@@ -51,9 +54,8 @@ class MySensorsDevice:
         self.child_id: int = child_id
         self.value_type: int = value_type  # value_type as int. string variant can be looked up in gateway consts
         self.child_type = self._child.type
-        self._values = {}
+        self._values: dict[int, Any] = {}
         self._update_scheduled = False
-        self.hass = None
 
     @property
     def dev_id(self) -> DevId:
