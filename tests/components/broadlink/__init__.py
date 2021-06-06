@@ -1,4 +1,5 @@
 """Tests for the Broadlink integration."""
+from dataclasses import dataclass
 from unittest.mock import MagicMock, patch
 
 from homeassistant.components.broadlink.const import DOMAIN
@@ -70,14 +71,13 @@ BROADLINK_DEVICES = {
 }
 
 
+@dataclass
 class MockSetup:
     """Representation of a mock setup."""
 
-    def __init__(self, api: MagicMock, entry: MockConfigEntry, factory: MagicMock):
-        """Initialize the mock."""
-        self.api = api
-        self.entry = entry
-        self.factory = factory
+    api: MagicMock
+    entry: MockConfigEntry
+    factory: MagicMock
 
 
 class BroadlinkDevice:
