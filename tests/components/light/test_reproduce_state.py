@@ -223,6 +223,13 @@ async def test_filter_color_modes(hass, caplog, color_mode):
     assert turn_on_calls[0].domain == "light"
     assert dict(turn_on_calls[0].data) == {"entity_id": "light.entity", **expected}
 
+    # This should do nothing, the light is already in the desired state
+    hass.states.async_set("light.entity", "on", {"color_mode": color_mode, **expected})
+    await hass.helpers.state.async_reproduce_state(
+        [State("light.entity", "on", {**expected, "color_mode": color_mode})]
+    )
+    assert len(turn_on_calls) == 1
+
 
 async def test_deprecation_warning(hass, caplog):
     """Test deprecation warning."""
