@@ -27,6 +27,7 @@ class LightwaveBattery(SensorEntity):
 
     _attr_device_class = DEVICE_CLASS_BATTERY
     _attr_unit_of_measurement = PERCENTAGE
+    _attr_state_class = STATE_CLASS_MEASUREMENT
 
     def __init__(self, name, lwlink, serial):
         """Initialize the Lightwave Trv battery sensor."""
@@ -45,11 +46,6 @@ class LightwaveBattery(SensorEntity):
     def state(self):
         """Return the state of the sensor."""
         return self._state
-
-    @property
-    def state_class(self):
-        """Return the state class of the sensor."""
-        return STATE_CLASS_MEASUREMENT
 
     def update(self):
         """Communicate with a Lightwave RTF Proxy to get state."""
