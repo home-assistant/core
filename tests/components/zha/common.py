@@ -129,7 +129,6 @@ class FakeDevice:
         self.skip_configuration = False
         self.manufacturer = manufacturer
         self.model = model
-        self.node_desc = zigpy.zdo.types.NodeDescriptor()
         self.remove_from_group = AsyncMock()
         if node_desc is None:
             node_desc = b"\x02@\x807\x10\x7fd\x00\x00*d\x00\x00"
