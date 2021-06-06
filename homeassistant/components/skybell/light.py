@@ -6,20 +6,11 @@ from homeassistant.components.light import (
     SUPPORT_COLOR,
     LightEntity,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.util.color as color_util
 
-from . import DOMAIN as SKYBELL_DOMAIN, SkybellDevice
-
-
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the platform for a Skybell device."""
-    skybell = hass.data.get(SKYBELL_DOMAIN)
-
-    sensors = []
-    for device in skybell.get_devices():
-        sensors.append(SkybellLight(device))
-
-    add_entities(sensors, True)
+from . import SkybellDevice
+from .const import DATA_COORDINATOR, DATA_DEVICES, DOMAIN
 
 
 def _to_skybell_level(level):
@@ -32,18 +23,48 @@ def _to_hass_level(level):
     return int((level * 255) / 100)
 
 
-class SkybellLight(SkybellDevice, LightEntity):
-    """A binary sensor implementation for Skybell devices."""
+async def async_setup_entry(hass: HomeAssistant, entry, async_add_entities):
+    """Set up Skybell switch."""
+    skybell_data = hass.data[DOMAIN][entry.entry_id]
 
-    def __init__(self, device):
+    lights = []
+    for light in skybell_data[DATA_DEVICES]:
+        for device in skybell_data[DATA_DEVICES]:
+            lights.append(
+                SkybellLight(
+                    skybell_data[DATA_COORDINATOR],
+                    device,
+                    light,
+                    entry.entry_id,
+                )
+            )
+
+    async_add_entities(lights)
+
+
+class SkybellLight(SkybellDevice, LightEntity):
+    """A light implementation for Skybell devices."""
+
+    def __init__(
+        self,
+        coordinator,
+        device,
+        light,
+        server_unique_id,
+    ):
         """Initialize a light for a Skybell device."""
-        super().__init__(device)
+        super().__init__(coordinator, device, light, server_unique_id)
         self._name = self._device.name
 
     @property
     def name(self):
-        """Return the name of the sensor."""
+        """Return the name of the light."""
         return self._name
+
+    @property
+    def unique_id(self):
+        """Return the unique id of the light."""
+        return f"{self._server_unique_id}/{self._name}"
 
     def turn_on(self, **kwargs):
         """Turn on the light."""

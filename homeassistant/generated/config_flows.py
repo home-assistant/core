@@ -222,6 +222,7 @@ FLOWS = [
     "shopping_list",
     "sia",
     "simplisafe",
+    "skybell",
     "sma",
     "smappee",
     "smart_meter_texas",

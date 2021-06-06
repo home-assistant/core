@@ -1,0 +1,22 @@
+{
+    "config": {
+      "step": {
+        "user": {
+          "title": "Skybell",
+          "description": "",
+          "data": {
+            "email": "Email",
+            "password": "Password"
+          }
+        }
+      },
+      "error": {
+        "invalid_auth": "Invalid authentication",
+        "cannot_connect": "Failed to connect",
+        "unknown": "Unexpected error"
+      },
+      "abort": {
+        "already_configured": "Account is already configured"
+      }
+    }
+  }

@@ -1,54 +1,64 @@
 """Sensor support for Skybell Doorbells."""
-from datetime import timedelta
-
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_ENTITY_NAMESPACE, CONF_MONITORED_CONDITIONS
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 
-from . import DEFAULT_ENTITY_NAMESPACE, DOMAIN as SKYBELL_DOMAIN, SkybellDevice
+from . import SkybellDevice
+from .const import DATA_COORDINATOR, DATA_DEVICES, DOMAIN, SENSOR_TYPES
 
-SCAN_INTERVAL = timedelta(seconds=30)
-
-# Sensor types: Name, icon
-SENSOR_TYPES = {"chime_level": ["Chime Level", "bell-ring"]}
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(
-            CONF_ENTITY_NAMESPACE, default=DEFAULT_ENTITY_NAMESPACE
-        ): cv.string,
-        vol.Required(CONF_MONITORED_CONDITIONS, default=[]): vol.All(
-            cv.ensure_list, [vol.In(SENSOR_TYPES)]
-        ),
-    }
+PLATFORM_SCHEMA = cv.deprecated(
+    vol.All(
+        PLATFORM_SCHEMA.extend(
+            {
+                vol.Optional(CONF_ENTITY_NAMESPACE, default=DOMAIN): cv.string,
+                vol.Required(CONF_MONITORED_CONDITIONS, default=[]): vol.All(
+                    cv.ensure_list, [vol.In(SENSOR_TYPES)]
+                ),
+            }
+        )
+    )
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the platform for a Skybell device."""
-    skybell = hass.data.get(SKYBELL_DOMAIN)
+async def async_setup_entry(hass: HomeAssistant, entry, async_add_entities):
+    """Set up Skybell sensor."""
+    skybell_data = hass.data[DOMAIN][entry.entry_id]
 
     sensors = []
-    for sensor_type in config.get(CONF_MONITORED_CONDITIONS):
-        for device in skybell.get_devices():
-            sensors.append(SkybellSensor(device, sensor_type))
+    for sensor in SENSOR_TYPES:
+        for device in skybell_data[DATA_DEVICES]:
+            sensors.append(
+                SkybellSensor(
+                    skybell_data[DATA_COORDINATOR],
+                    device,
+                    sensor,
+                    entry.entry_id,
+                )
+            )
 
-    add_entities(sensors, True)
+    async_add_entities(sensors)
 
 
 class SkybellSensor(SkybellDevice, SensorEntity):
     """A sensor implementation for Skybell devices."""
 
-    def __init__(self, device, sensor_type):
-        """Initialize a sensor for a Skybell device."""
-        super().__init__(device)
-        self._sensor_type = sensor_type
-        self._icon = f"mdi:{SENSOR_TYPES[self._sensor_type][1]}"
-        self._name = "{} {}".format(
-            self._device.name, SENSOR_TYPES[self._sensor_type][0]
-        )
+    def __init__(
+        self,
+        coordinator,
+        device,
+        sensor_type,
+        server_unique_id,
+    ):
+        """Initialize sensor for Skybell device."""
+        super().__init__(coordinator, device, sensor_type, server_unique_id)
+        self._name = f"{device.name} {SENSOR_TYPES[sensor_type][0]}"
+
+        self._type = sensor_type
+        self._icon = SENSOR_TYPES[self._type][1]
+        self._device = device
         self._state = None
 
     @property
@@ -57,18 +67,19 @@ class SkybellSensor(SkybellDevice, SensorEntity):
         return self._name
 
     @property
+    def unique_id(self):
+        """Return the unique id of the sensor."""
+        return f"{self._server_unique_id}/{self._type}"
+
+    @property
     def state(self):
         """Return the state of the sensor."""
+        if self._type == "chime_level":
+            self._state = self._device.outdoor_chime_level
+            return self._state
         return self._state
 
     @property
     def icon(self):
         """Icon to use in the frontend, if any."""
         return self._icon
-
-    def update(self):
-        """Get the latest data and updates the state."""
-        super().update()
-
-        if self._sensor_type == "chime_level":
-            self._state = self._device.outdoor_chime_level

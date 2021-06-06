@@ -1,62 +1,67 @@
 """Binary sensor support for the Skybell HD Doorbell."""
-from datetime import timedelta
-
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_MOTION,
-    DEVICE_CLASS_OCCUPANCY,
-    PLATFORM_SCHEMA,
-    BinarySensorEntity,
-)
+from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ENTITY_NAMESPACE, CONF_MONITORED_CONDITIONS
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 
-from . import DEFAULT_ENTITY_NAMESPACE, DOMAIN as SKYBELL_DOMAIN, SkybellDevice
+from . import SkybellDevice
+from .const import BINARY_SENSOR_TYPES, DATA_COORDINATOR, DATA_DEVICES, DOMAIN
 
-SCAN_INTERVAL = timedelta(seconds=10)
-
-# Sensor types: Name, device_class, event
-SENSOR_TYPES = {
-    "button": ["Button", DEVICE_CLASS_OCCUPANCY, "device:sensor:button"],
-    "motion": ["Motion", DEVICE_CLASS_MOTION, "device:sensor:motion"],
-}
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(
-            CONF_ENTITY_NAMESPACE, default=DEFAULT_ENTITY_NAMESPACE
-        ): cv.string,
-        vol.Required(CONF_MONITORED_CONDITIONS, default=[]): vol.All(
-            cv.ensure_list, [vol.In(SENSOR_TYPES)]
-        ),
-    }
+PLATFORM_SCHEMA = cv.deprecated(
+    vol.All(
+        PLATFORM_SCHEMA.extend(
+            {
+                vol.Optional(CONF_ENTITY_NAMESPACE, default=DOMAIN): cv.string,
+                vol.Required(CONF_MONITORED_CONDITIONS, default=[]): vol.All(
+                    cv.ensure_list, [vol.In(BINARY_SENSOR_TYPES)]
+                ),
+            }
+        )
+    )
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the platform for a Skybell device."""
-    skybell = hass.data.get(SKYBELL_DOMAIN)
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
+):
+    """Set up Skybell switch."""
+    skybell_data = hass.data[DOMAIN][entry.entry_id]
 
     sensors = []
-    for sensor_type in config.get(CONF_MONITORED_CONDITIONS):
-        for device in skybell.get_devices():
-            sensors.append(SkybellBinarySensor(device, sensor_type))
+    for sensor in BINARY_SENSOR_TYPES:
+        for device in skybell_data[DATA_DEVICES]:
+            sensors.append(
+                SkybellBinarySensor(
+                    skybell_data[DATA_COORDINATOR],
+                    device,
+                    sensor,
+                    entry.entry_id,
+                )
+            )
 
-    add_entities(sensors, True)
+    async_add_entities(sensors)
 
 
 class SkybellBinarySensor(SkybellDevice, BinarySensorEntity):
     """A binary sensor implementation for Skybell devices."""
 
-    def __init__(self, device, sensor_type):
-        """Initialize a binary sensor for a Skybell device."""
-        super().__init__(device)
-        self._sensor_type = sensor_type
-        self._name = "{} {}".format(
-            self._device.name, SENSOR_TYPES[self._sensor_type][0]
-        )
-        self._device_class = SENSOR_TYPES[self._sensor_type][1]
+    def __init__(
+        self,
+        coordinator,
+        device,
+        sensor,
+        server_unique_id,
+    ):
+        """Initialize sensor for Skybell device."""
+        super().__init__(coordinator, device, sensor, server_unique_id)
+        self._name = f"{device.name} {BINARY_SENSOR_TYPES[sensor][0]}"
+
+        self._sensor = sensor
+        self._device = device
+        self._device_class = BINARY_SENSOR_TYPES[self._sensor][1]
         self._event = {}
         self._state = None
 
@@ -66,13 +71,18 @@ class SkybellBinarySensor(SkybellDevice, BinarySensorEntity):
         return self._name
 
     @property
+    def unique_id(self):
+        """Return the unique id of the sensor."""
+        return f"{self._server_unique_id}/{self._sensor}"
+
+    @property
     def is_on(self):
-        """Return True if the binary sensor is on."""
+        """Return True if the sensor is on."""
         return self._state
 
     @property
     def device_class(self):
-        """Return the class of the binary sensor."""
+        """Return the class of the sensor."""
         return self._device_class
 
     @property
@@ -83,13 +93,3 @@ class SkybellBinarySensor(SkybellDevice, BinarySensorEntity):
         attrs["event_date"] = self._event.get("createdAt")
 
         return attrs
-
-    def update(self):
-        """Get the latest data and updates the state."""
-        super().update()
-
-        event = self._device.latest(SENSOR_TYPES[self._sensor_type][2])
-
-        self._state = bool(event and event.get("id") != self._event.get("id"))
-
-        self._event = event or {}
