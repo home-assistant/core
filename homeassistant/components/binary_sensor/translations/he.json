@@ -18,6 +18,10 @@
             "off": "\u05e0\u05d5\u05e8\u05de\u05dc\u05d9",
             "on": "\u05e0\u05de\u05d5\u05da"
         },
+        "battery_charging": {
+            "off": "\u05dc\u05d0 \u05e0\u05d8\u05e2\u05df",
+            "on": "\u05e0\u05d8\u05e2\u05df"
+        },
         "cold": {
             "off": "\u05e8\u05d2\u05d9\u05dc",
             "on": "\u05e7\u05b7\u05e8"
@@ -42,6 +46,10 @@
             "off": "\u05e8\u05d2\u05d9\u05dc",
             "on": "\u05d7\u05dd"
         },
+        "light": {
+            "off": "\u05d0\u05d9\u05df \u05d0\u05d5\u05e8",
+            "on": "\u05d6\u05d5\u05d4\u05d4 \u05d0\u05d5\u05e8"
+        },
         "lock": {
             "off": "\u05e0\u05e2\u05d5\u05dc",
             "on": "\u05dc\u05d0 \u05e0\u05e2\u05d5\u05dc"
@@ -54,6 +62,10 @@
             "off": "\u05e0\u05e7\u05d9",
             "on": "\u05d6\u05d5\u05d4\u05d4"
         },
+        "moving": {
+            "off": "\u05dc\u05d0 \u05d6\u05d6",
+            "on": "\u05e0\u05e2"
+        },
         "occupancy": {
             "off": "\u05e0\u05e7\u05d9",
             "on": "\u05d6\u05d5\u05d4\u05d4"
@@ -61,6 +73,9 @@
         "opening": {
             "off": "\u05e1\u05d2\u05d5\u05e8",
             "on": "\u05e4\u05ea\u05d5\u05d7"
+        },
+        "plug": {
+            "off": "\u05de\u05e0\u05d5\u05ea\u05e7"
         },
         "presence": {
             "off": "\u05dc\u05d0 \u05e0\u05d5\u05db\u05d7",
