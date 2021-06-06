@@ -49,7 +49,7 @@ set_alarm:
           domain: media_player
     enable:
       description: Enable the alarm.
-      example: True
+      example: true
     volume:
       description: Alarm volume.
       example: 40
