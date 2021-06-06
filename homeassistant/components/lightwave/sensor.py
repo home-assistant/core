@@ -1,5 +1,5 @@
 """Support for LightwaveRF TRV - Associated Battery."""
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorEntity, STATE_CLASS_MEASUREMENT
 from homeassistant.const import CONF_NAME, DEVICE_CLASS_BATTERY, PERCENTAGE
 
 from . import CONF_SERIAL, LIGHTWAVE_LINK
@@ -36,6 +36,11 @@ class LightwaveBattery(SensorEntity):
         self._serial = serial
 
     @property
+    def unique_id(self):
+        """Return a unique identifier for this device."""
+        return f"{self._serial}-trv-battery"
+
+    @property
     def name(self):
         """Return the name of the sensor."""
         return self._name
@@ -44,6 +49,11 @@ class LightwaveBattery(SensorEntity):
     def state(self):
         """Return the state of the sensor."""
         return self._state
+
+    @property
+    def state_class(self):
+        """Return the state class of the sensor."""
+        return STATE_CLASS_MEASUREMENT
 
     def update(self):
         """Communicate with a Lightwave RTF Proxy to get state."""
