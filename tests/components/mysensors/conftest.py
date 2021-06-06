@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import AsyncGenerator, Generator
 import json
-from typing import Any
+from typing import Any, Callable
 from unittest.mock import MagicMock, patch
 
 from mysensors.persistence import MySensorsJSONDecoder
@@ -120,15 +120,25 @@ def config_entry_fixture(serial_entry: MockConfigEntry) -> MockConfigEntry:
 @pytest.fixture
 async def integration(
     hass: HomeAssistant, transport: MagicMock, config_entry: MockConfigEntry
-) -> AsyncGenerator[MockConfigEntry, None]:
+) -> AsyncGenerator[tuple[MockConfigEntry, Callable[[str], None]], None]:
     """Set up the mysensors integration with a config entry."""
     device = config_entry.data[CONF_DEVICE]
     config: dict[str, Any] = {DOMAIN: {CONF_GATEWAYS: [{CONF_DEVICE: device}]}}
     config_entry.add_to_hass(hass)
+
+    def receive_message(message_string) -> None:
+        """Receive a message with the transport.
+
+        The message_string parameter is a string in the MySensors message format.
+        """
+        gateway = transport.call_args[0][0]
+        # node_id;child_id;command;ack;type;payload\n
+        gateway.logic(message_string)
+
     with patch("homeassistant.components.mysensors.device.UPDATE_DELAY", new=0):
         await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()
-        yield config_entry
+        yield config_entry, receive_message
 
 
 def load_nodes_state(fixture_path: str) -> dict:
@@ -168,5 +178,61 @@ def power_sensor_state_fixture() -> dict:
 def power_sensor(gateway_nodes, power_sensor_state) -> Sensor:
     """Load the power sensor."""
     nodes = update_gateway_nodes(gateway_nodes, power_sensor_state)
+    node = nodes[1]
+    return node
+
+
+@pytest.fixture(name="energy_sensor_state", scope="session")
+def energy_sensor_state_fixture() -> dict:
+    """Load the energy sensor state."""
+    return load_nodes_state("mysensors/energy_sensor_state.json")
+
+
+@pytest.fixture
+def energy_sensor(gateway_nodes, energy_sensor_state) -> Sensor:
+    """Load the energy sensor."""
+    nodes = update_gateway_nodes(gateway_nodes, energy_sensor_state)
+    node = nodes[1]
+    return node
+
+
+@pytest.fixture(name="sound_sensor_state", scope="session")
+def sound_sensor_state_fixture() -> dict:
+    """Load the sound sensor state."""
+    return load_nodes_state("mysensors/sound_sensor_state.json")
+
+
+@pytest.fixture
+def sound_sensor(gateway_nodes, sound_sensor_state) -> Sensor:
+    """Load the sound sensor."""
+    nodes = update_gateway_nodes(gateway_nodes, sound_sensor_state)
+    node = nodes[1]
+    return node
+
+
+@pytest.fixture(name="distance_sensor_state", scope="session")
+def distance_sensor_state_fixture() -> dict:
+    """Load the distance sensor state."""
+    return load_nodes_state("mysensors/distance_sensor_state.json")
+
+
+@pytest.fixture
+def distance_sensor(gateway_nodes, distance_sensor_state) -> Sensor:
+    """Load the distance sensor."""
+    nodes = update_gateway_nodes(gateway_nodes, distance_sensor_state)
+    node = nodes[1]
+    return node
+
+
+@pytest.fixture(name="temperature_sensor_state", scope="session")
+def temperature_sensor_state_fixture() -> dict:
+    """Load the temperature sensor state."""
+    return load_nodes_state("mysensors/temperature_sensor_state.json")
+
+
+@pytest.fixture
+def temperature_sensor(gateway_nodes, temperature_sensor_state) -> Sensor:
+    """Load the temperature sensor."""
+    nodes = update_gateway_nodes(gateway_nodes, temperature_sensor_state)
     node = nodes[1]
     return node
