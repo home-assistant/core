@@ -77,7 +77,6 @@ async def test_sensors(hass):
             ATTR_FIRMWARE: "1.2.3.4",
         },
         source="dummysource",
-        system_options={},
         entry_id="13579",
     )
 

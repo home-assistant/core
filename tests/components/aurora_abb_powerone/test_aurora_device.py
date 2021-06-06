@@ -29,7 +29,6 @@ async def test_create_auroradevice(hass):
             ATTR_FIRMWARE: "0.1.2.3",
         },
         source="dummysource",
-        system_options={},
         entry_id="13579",
     )
     device = AuroraDevice(client, config.data)
