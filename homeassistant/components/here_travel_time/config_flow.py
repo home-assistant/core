@@ -100,7 +100,7 @@ def get_user_step_schema(data: dict[str, Any]) -> vol.Schema:
     name = DEFAULT_NAME if data.get(CONF_NAME) is None else data.get(CONF_NAME)
     mode = TRAVEL_MODE_CAR if data.get(CONF_MODE) is None else data.get(CONF_MODE)
 
-    vol.Schema(
+    return vol.Schema(
         {
             vol.Optional(CONF_NAME, default=name): cv.string,
             vol.Required(CONF_API_KEY, default=data.get(CONF_API_KEY)): cv.string,

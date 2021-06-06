@@ -111,8 +111,8 @@ PLATFORM_SCHEMA = vol.All(
             TRAVEL_MODE_TRUCK: PLATFORM_SCHEMA,
             TRAVEL_MODE_PUBLIC_TIME_TABLE: PLATFORM_SCHEMA.extend(
                 {
-                    vol.Exclusive(CONF_ARRIVAL, "arrival_departure"): cv.time,
-                    vol.Exclusive(CONF_DEPARTURE, "arrival_departure"): cv.time,
+                    vol.Exclusive(CONF_ARRIVAL, "arrival_departure"): cv.string,
+                    vol.Exclusive(CONF_DEPARTURE, "arrival_departure"): cv.string,
                 }
             ),
         },
