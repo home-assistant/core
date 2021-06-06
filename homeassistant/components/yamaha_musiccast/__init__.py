@@ -158,7 +158,6 @@ class MusicCastDataUpdateCoordinator(DataUpdateCoordinator[MusicCastData]):
             await self.musiccast.fetch()
             return self.musiccast.data
         except Exception as exception:
-            print(exception)
             raise UpdateFailed() from exception
 
 
