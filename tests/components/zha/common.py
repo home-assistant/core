@@ -3,8 +3,8 @@ import asyncio
 import time
 from unittest.mock import AsyncMock, Mock
 
-from zigpy.device import Device as zigpy_dev
-from zigpy.endpoint import Endpoint as zigpy_ep
+import zigpy.device as zigpy_dev
+import zigpy.endpoint as zigpy_ep
 import zigpy.profiles.zha
 import zigpy.types
 import zigpy.zcl
@@ -27,7 +27,7 @@ class FakeEndpoint:
         self.out_clusters = {}
         self._cluster_attr = {}
         self.member_of = {}
-        self.status = 1
+        self.status = zigpy_ep.Status.ZDO_INIT
         self.manufacturer = manufacturer
         self.model = model
         self.profile_id = zigpy.profiles.zha.PROFILE_ID
@@ -56,7 +56,7 @@ class FakeEndpoint:
     @property
     def __class__(self):
         """Fake being Zigpy endpoint."""
-        return zigpy_ep
+        return zigpy_ep.Endpoint
 
     @property
     def unique_id(self):
@@ -64,8 +64,8 @@ class FakeEndpoint:
         return self.device.ieee, self.endpoint_id
 
 
-FakeEndpoint.add_to_group = zigpy_ep.add_to_group
-FakeEndpoint.remove_from_group = zigpy_ep.remove_from_group
+FakeEndpoint.add_to_group = zigpy_ep.Endpoint.add_to_group
+FakeEndpoint.remove_from_group = zigpy_ep.Endpoint.remove_from_group
 
 
 def patch_cluster(cluster):
@@ -124,7 +124,7 @@ class FakeDevice:
         self.lqi = 255
         self.rssi = 8
         self.last_seen = time.time()
-        self.status = 2
+        self.status = zigpy_dev.Status.ENDPOINTS_INIT
         self.initializing = False
         self.skip_configuration = False
         self.manufacturer = manufacturer
@@ -136,7 +136,7 @@ class FakeDevice:
         self.neighbors = []
 
 
-FakeDevice.add_to_group = zigpy_dev.add_to_group
+FakeDevice.add_to_group = zigpy_dev.Device.add_to_group
 
 
 def get_zha_gateway(hass):
