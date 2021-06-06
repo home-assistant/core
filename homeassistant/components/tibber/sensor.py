@@ -45,6 +45,7 @@ SIGNAL_UPDATE_ENTITY = "tibber_rt_update_{}"
 RT_SENSOR_MAP = {
     "averagePower": ["average power", DEVICE_CLASS_POWER, POWER_WATT, None],
     "power": ["power", DEVICE_CLASS_POWER, POWER_WATT, None],
+    "powerProduction": ["power production", DEVICE_CLASS_POWER, POWER_WATT, None],
     "minPower": ["min power", DEVICE_CLASS_POWER, POWER_WATT, None],
     "maxPower": ["max power", DEVICE_CLASS_POWER, POWER_WATT, None],
     "accumulatedConsumption": [

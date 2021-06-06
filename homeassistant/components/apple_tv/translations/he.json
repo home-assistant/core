@@ -1,0 +1,11 @@
+{
+    "config": {
+        "step": {
+            "pair_with_pin": {
+                "data": {
+                    "pin": "\u05e7\u05d5\u05d3 PIN"
+                }
+            }
+        }
+    }
+}

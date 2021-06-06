@@ -325,9 +325,13 @@ SERVICE = "service"
     [
         {
             CONF_NAME: TEST_MODBUS_NAME,
-            CONF_TYPE: "tcp",
-            CONF_HOST: TEST_HOST,
-            CONF_PORT: 5501,
+            CONF_TYPE: "serial",
+            CONF_BAUDRATE: 9600,
+            CONF_BYTESIZE: 8,
+            CONF_METHOD: "rtu",
+            CONF_PORT: "usb01",
+            CONF_PARITY: "E",
+            CONF_STOPBITS: 1,
         },
     ],
 )
@@ -511,15 +515,24 @@ async def test_pymodbus_constructor_fail(hass, caplog):
     ) as mock_pb:
         caplog.set_level(logging.ERROR)
         mock_pb.side_effect = ModbusException("test no class")
-        assert await async_setup_component(hass, DOMAIN, config) is True
+        assert await async_setup_component(hass, DOMAIN, config) is False
         await hass.async_block_till_done()
-        assert len(caplog.records) == 1
+        assert caplog.messages[0].startswith("Pymodbus: Modbus Error: test")
         assert caplog.records[0].levelname == "ERROR"
         assert mock_pb.called
 
 
-async def test_pymodbus_connect_fail(hass, caplog, mock_pymodbus):
-    """Run test for failing pymodbus constructor."""
+@pytest.mark.parametrize(
+    "do_connect,do_exception,do_text",
+    [
+        [False, None, "initial connect failed, no retry"],
+        [True, ModbusException("no connect"), "Modbus Error: no connect"],
+    ],
+)
+async def test_pymodbus_connect_fail(
+    hass, do_connect, do_exception, do_text, caplog, mock_pymodbus
+):
+    """Run test for failing pymodbus connect."""
     config = {
         DOMAIN: [
             {
@@ -530,12 +543,69 @@ async def test_pymodbus_connect_fail(hass, caplog, mock_pymodbus):
         ]
     }
     caplog.set_level(logging.ERROR)
-    mock_pymodbus.connect.side_effect = ModbusException("test connect fail")
-    mock_pymodbus.close.side_effect = ModbusException("test connect fail")
+    mock_pymodbus.connect.return_value = do_connect
+    mock_pymodbus.connect.side_effect = do_exception
+    assert await async_setup_component(hass, DOMAIN, config) is False
+    await hass.async_block_till_done()
+    assert caplog.messages[0].startswith(f"Pymodbus: {do_text}")
+    assert caplog.records[0].levelname == "ERROR"
+
+
+async def test_pymodbus_close_fail(hass, caplog, mock_pymodbus):
+    """Run test for failing pymodbus close."""
+    config = {
+        DOMAIN: [
+            {
+                CONF_TYPE: "tcp",
+                CONF_HOST: TEST_HOST,
+                CONF_PORT: 5501,
+            }
+        ]
+    }
+    caplog.set_level(logging.ERROR)
+    mock_pymodbus.connect.return_value = True
+    mock_pymodbus.close.side_effect = ModbusException("close fail")
     assert await async_setup_component(hass, DOMAIN, config) is True
     await hass.async_block_till_done()
-    assert len(caplog.records) == 1
-    assert caplog.records[0].levelname == "ERROR"
+    # Close() is called as part of teardown
+
+
+async def test_disconnect(hass, mock_pymodbus):
+    """Run test for startup delay."""
+
+    # the purpose of this test is to test a device disconnect
+    # We "hijiack" a binary_sensor to make a proper blackbox test.
+    entity_id = f"{BINARY_SENSOR_DOMAIN}.{TEST_SENSOR_NAME}"
+    config = {
+        DOMAIN: [
+            {
+                CONF_TYPE: "tcp",
+                CONF_HOST: TEST_HOST,
+                CONF_PORT: 5501,
+                CONF_NAME: TEST_MODBUS_NAME,
+                CONF_BINARY_SENSORS: [
+                    {
+                        CONF_INPUT_TYPE: CALL_TYPE_COIL,
+                        CONF_NAME: f"{TEST_SENSOR_NAME}",
+                        CONF_ADDRESS: 52,
+                    },
+                ],
+            }
+        ]
+    }
+    mock_pymodbus.read_coils.return_value = ReadResult([0x01])
+    mock_pymodbus.is_socket_open.return_value = False
+    now = dt_util.utcnow()
+    with mock.patch("homeassistant.helpers.event.dt_util.utcnow", return_value=now):
+        assert await async_setup_component(hass, DOMAIN, config) is True
+        await hass.async_block_till_done()
+
+    # pass first scan_interval
+    now = now + timedelta(seconds=20)
+    with mock.patch("homeassistant.helpers.event.dt_util.utcnow", return_value=now):
+        async_fire_time_changed(hass, now)
+        await hass.async_block_till_done()
+        assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
 
 async def test_delay(hass, mock_pymodbus):
