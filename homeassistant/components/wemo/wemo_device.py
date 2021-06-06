@@ -1,8 +1,7 @@
 """Home Assistant wrapper for a pyWeMo device."""
 import logging
 
-from pywemo import WeMoDevice
-from pywemo.exceptions import PyWeMoException
+from pywemo import PyWeMoException, WeMoDevice
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
