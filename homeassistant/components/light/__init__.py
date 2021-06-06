@@ -61,6 +61,7 @@ COLOR_MODE_XY = "xy"
 COLOR_MODE_RGB = "rgb"
 COLOR_MODE_RGBW = "rgbw"
 COLOR_MODE_RGBWW = "rgbww"
+COLOR_MODE_WHITE = "white"  # Must *NOT* be the only supported mode
 
 VALID_COLOR_MODES = {
     COLOR_MODE_ONOFF,
@@ -71,6 +72,7 @@ VALID_COLOR_MODES = {
     COLOR_MODE_RGB,
     COLOR_MODE_RGBW,
     COLOR_MODE_RGBWW,
+    COLOR_MODE_WHITE,
 }
 COLOR_MODES_BRIGHTNESS = VALID_COLOR_MODES - {COLOR_MODE_ONOFF}
 COLOR_MODES_COLOR = {
@@ -90,6 +92,7 @@ def valid_supported_color_modes(color_modes: Iterable[str]) -> set[str]:
         or COLOR_MODE_UNKNOWN in color_modes
         or (COLOR_MODE_BRIGHTNESS in color_modes and len(color_modes) > 1)
         or (COLOR_MODE_ONOFF in color_modes and len(color_modes) > 1)
+        or (COLOR_MODE_WHITE in color_modes and len(color_modes) == 1)
     ):
         raise vol.Error(f"Invalid supported_color_modes {sorted(color_modes)}")
     return color_modes
@@ -151,6 +154,7 @@ ATTR_MIN_MIREDS = "min_mireds"
 ATTR_MAX_MIREDS = "max_mireds"
 ATTR_COLOR_NAME = "color_name"
 ATTR_WHITE_VALUE = "white_value"
+ATTR_WHITE = "white"
 
 # Brightness of the light, 0..255 or percentage
 ATTR_BRIGHTNESS = "brightness"
@@ -195,6 +199,19 @@ LIGHT_TURN_ON_SCHEMA = {
     vol.Exclusive(ATTR_BRIGHTNESS_STEP, ATTR_BRIGHTNESS): VALID_BRIGHTNESS_STEP,
     vol.Exclusive(ATTR_BRIGHTNESS_STEP_PCT, ATTR_BRIGHTNESS): VALID_BRIGHTNESS_STEP_PCT,
     vol.Exclusive(ATTR_COLOR_NAME, COLOR_GROUP): cv.string,
+    vol.Exclusive(ATTR_COLOR_TEMP, COLOR_GROUP): vol.All(
+        vol.Coerce(int), vol.Range(min=1)
+    ),
+    vol.Exclusive(ATTR_KELVIN, COLOR_GROUP): cv.positive_int,
+    vol.Exclusive(ATTR_HS_COLOR, COLOR_GROUP): vol.All(
+        vol.ExactSequence(
+            (
+                vol.All(vol.Coerce(float), vol.Range(min=0, max=360)),
+                vol.All(vol.Coerce(float), vol.Range(min=0, max=100)),
+            )
+        ),
+        vol.Coerce(tuple),
+    ),
     vol.Exclusive(ATTR_RGB_COLOR, COLOR_GROUP): vol.All(
         vol.ExactSequence((cv.byte,) * 3), vol.Coerce(tuple)
     ),
@@ -207,19 +224,7 @@ LIGHT_TURN_ON_SCHEMA = {
     vol.Exclusive(ATTR_XY_COLOR, COLOR_GROUP): vol.All(
         vol.ExactSequence((cv.small_float, cv.small_float)), vol.Coerce(tuple)
     ),
-    vol.Exclusive(ATTR_HS_COLOR, COLOR_GROUP): vol.All(
-        vol.ExactSequence(
-            (
-                vol.All(vol.Coerce(float), vol.Range(min=0, max=360)),
-                vol.All(vol.Coerce(float), vol.Range(min=0, max=100)),
-            )
-        ),
-        vol.Coerce(tuple),
-    ),
-    vol.Exclusive(ATTR_COLOR_TEMP, COLOR_GROUP): vol.All(
-        vol.Coerce(int), vol.Range(min=1)
-    ),
-    vol.Exclusive(ATTR_KELVIN, COLOR_GROUP): cv.positive_int,
+    vol.Exclusive(ATTR_WHITE, COLOR_GROUP): VALID_BRIGHTNESS,
     ATTR_WHITE_VALUE: vol.All(vol.Coerce(int), vol.Range(min=0, max=255)),
     ATTR_FLASH: VALID_FLASH,
     ATTR_EFFECT: cv.string,
@@ -268,7 +273,7 @@ def preprocess_turn_on_alternatives(hass, params):
 
 
 def filter_turn_off_params(light, params):
-    """Filter out params not used in turn off."""
+    """Filter out params not used in turn off or not supported by the light."""
     supported_features = light.supported_features
 
     if not supported_features & SUPPORT_FLASH:
@@ -280,7 +285,7 @@ def filter_turn_off_params(light, params):
 
 
 def filter_turn_on_params(light, params):
-    """Filter out params not used in turn off."""
+    """Filter out params not supported by the light."""
     supported_features = light.supported_features
 
     if not supported_features & SUPPORT_EFFECT:
@@ -307,6 +312,8 @@ def filter_turn_on_params(light, params):
         params.pop(ATTR_RGBW_COLOR, None)
     if COLOR_MODE_RGBWW not in supported_color_modes:
         params.pop(ATTR_RGBWW_COLOR, None)
+    if COLOR_MODE_WHITE not in supported_color_modes:
+        params.pop(ATTR_WHITE, None)
     if COLOR_MODE_XY not in supported_color_modes:
         params.pop(ATTR_XY_COLOR, None)
 
@@ -427,11 +434,15 @@ async def async_setup(hass, config):  # noqa: C901
                     *rgb_color, light.min_mireds, light.max_mireds
                 )
 
+        # If both white and brightness are specified, override white
+        if ATTR_WHITE in params and COLOR_MODE_WHITE in supported_color_modes:
+            params[ATTR_WHITE] = params.pop(ATTR_BRIGHTNESS, params[ATTR_WHITE])
+
         # Remove deprecated white value if the light supports color mode
         if supported_color_modes:
             params.pop(ATTR_WHITE_VALUE, None)
 
-        if params.get(ATTR_BRIGHTNESS) == 0:
+        if params.get(ATTR_BRIGHTNESS) == 0 or params.get(ATTR_WHITE) == 0:
             await async_handle_light_off_service(light, call)
         else:
             await light.async_turn_on(**filter_turn_on_params(light, params))
