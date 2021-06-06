@@ -1,0 +1,37 @@
+{
+  "title": "HERE Travel Time",
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "destination": "Destination as GPS coordinates or an entity id",
+          "origin": "Origin as GPS coordinates or an entity id",
+          "name": "[%key:common::config_flow::data::name%]",
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "mode": "Travel Mode"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "options": {
+    "step": {
+      "user": {
+        "title": "HERE Travel Time options",
+        "data": {
+          "traffic_mode": "Traffic Mode",
+          "route_mode": "Route Mode",
+          "time_type": "Time Type",
+          "time":  "Time",
+          "unit_system": "Unit system"
+        }
+      }
+    }
+  }
+}

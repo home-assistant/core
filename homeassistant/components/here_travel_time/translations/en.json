@@ -1,0 +1,37 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "destination": "Destination as GPS coordinates or an entity id",
+                    "origin": "Origin as GPS coordinates or an entity id",
+                    "name": "Name",
+                    "mode": "Travel Mode",
+                    "api_key": "API Key"
+                }
+            }
+        }
+    },
+    "title": "HERE Travel Time",
+    "options": {
+      "step": {
+        "user": {
+          "traffic_mode": "HERE Travel Time options",
+          "data": {
+            "traffic_mode": "Traffic Mode",
+            "route_mode": "Route Mode",
+            "time_type": "Time Type",
+            "time":  "Time",
+            "unit_system": "Unit system"
+          }
+        }
+      }
+    }
+}

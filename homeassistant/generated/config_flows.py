@@ -118,6 +118,7 @@ FLOWS = [
     "hangouts",
     "harmony",
     "heos",
+    "here_travel_time",
     "hisense_aehw4a1",
     "hive",
     "hlk_sw16",

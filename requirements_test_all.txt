@@ -494,7 +494,7 @@ hatasmota==0.3.0
 hdate==0.10.4
 
 # homeassistant.components.here_travel_time
-herepy==2.0.0
+herepy==3.5.2
 
 # homeassistant.components.hlk_sw16
 hlk-sw16==0.0.9
