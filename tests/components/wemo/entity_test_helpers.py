@@ -13,6 +13,7 @@ from homeassistant.components.homeassistant import (
     DOMAIN as HA_DOMAIN,
     SERVICE_UPDATE_ENTITY,
 )
+from homeassistant.components.wemo.const import WEMO_SUBSCRIPTION_EVENT
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_UNAVAILABLE
 from homeassistant.core import callback
 from homeassistant.setup import async_setup_component
@@ -22,11 +23,20 @@ def _perform_registry_callback(hass, pywemo_registry, pywemo_device):
     """Return a callable method to trigger a state callback from the device."""
 
     async def async_callback():
+        event = asyncio.Event()
+
+        async def event_callback(e):
+            event.set()
+
+        stop_event_listener = hass.bus.async_listen(
+            WEMO_SUBSCRIPTION_EVENT, event_callback
+        )
         # Cause a state update callback to be triggered by the device.
         await hass.async_add_executor_job(
             pywemo_registry.callbacks[pywemo_device.name], pywemo_device, "", ""
         )
-        await hass.async_block_till_done()
+        await event.wait()
+        stop_event_listener()
 
     return async_callback
 
@@ -64,8 +74,10 @@ async def _async_multiple_call_helper(
     """
     # get_state is called outside the event loop. Use non-async Python Event.
     event = threading.Event()
+    waiting = asyncio.Event()
 
     def get_update(force_update=True):
+        hass.add_job(waiting.set)
         event.wait()
 
     update_polling_method = update_polling_method or pywemo_device.get_state
@@ -78,6 +90,7 @@ async def _async_multiple_call_helper(
     )
 
     # Allow the blocked call to return.
+    await waiting.wait()
     event.set()
     if pending:
         await asyncio.wait(pending)

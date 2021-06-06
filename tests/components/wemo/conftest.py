@@ -60,8 +60,9 @@ def pywemo_device_fixture(pywemo_registry, pywemo_model):
         yield device
 
 
-async def async_setup_wemo_entity(hass, pywemo_device):
-    """Create a Wemo entity in hass."""
+@pytest.fixture(name="wemo_entity")
+async def async_wemo_entity_fixture(hass, pywemo_device):
+    """Fixture for a Wemo entity in hass."""
     assert await async_setup_component(
         hass,
         DOMAIN,
@@ -78,10 +79,4 @@ async def async_setup_wemo_entity(hass, pywemo_device):
     entity_entries = list(entity_registry.entities.values())
     assert len(entity_entries) == 1
 
-    return entity_entries[0]
-
-
-@pytest.fixture(name="wemo_entity")
-async def async_wemo_entity_fixture(hass, pywemo_device):
-    """Fixture for a Wemo entity in hass."""
-    yield await async_setup_wemo_entity(hass, pywemo_device)
+    yield entity_entries[0]
