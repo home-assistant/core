@@ -34,6 +34,8 @@ class ConnectXiaomiGateway:
         self._cloud_username = None
         self._cloud_password = None
         self._cloud_country = None
+        self._host = None
+        self._token = None
 
     @property
     def gateway_device(self):
@@ -49,6 +51,8 @@ class ConnectXiaomiGateway:
         """Connect to the Xiaomi Gateway."""
         _LOGGER.debug("Initializing with host %s (token %s...)", host, token[:5])
 
+        self._host = host
+        self._token = token
         self._use_cloud = self._config_entry.options.get(CONF_CLOUD_SUBDEVICES, False)
         self._cloud_username = self._config_entry.data.get(CONF_CLOUD_USERNAME)
         self._cloud_password = self._config_entry.data.get(CONF_CLOUD_PASSWORD)
@@ -66,9 +70,9 @@ class ConnectXiaomiGateway:
         return True
 
     def connect_gateway(self):
-        """connect the gateway in a way that can called by async_add_executor_job."""
+        """Connect the gateway in a way that can called by async_add_executor_job."""
         try:
-            self._gateway_device = gateway.Gateway(host, token)
+            self._gateway_device = gateway.Gateway(self._host, self._token)
             # get the gateway info
             self._gateway_device.info()
 
@@ -89,7 +93,7 @@ class ConnectXiaomiGateway:
                     raise ConfigEntryAuthFailed(
                         "Could not login to Xioami Miio Cloud, check the credentials"
                     )
-                devices_raw = miio_cloud.get_devices(cloud_country)
+                devices_raw = miio_cloud.get_devices(self._cloud_country)
                 self._gateway_device.get_devices_from_dict(devices_raw)
             else:
                 # use local query (not supported by all gateway types)
@@ -97,7 +101,8 @@ class ConnectXiaomiGateway:
 
         except DeviceException:
             _LOGGER.error(
-                "DeviceException during setup of xiaomi gateway with host %s", host
+                "DeviceException during setup of xiaomi gateway with host %s",
+                self._host,
             )
             return False
 
