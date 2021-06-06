@@ -101,7 +101,6 @@ class DeconzBaseLight(DeconzDevice, LightEntity):
     """Representation of a deCONZ light."""
 
     TYPE = DOMAIN
-    _attr_supported_features = 0
 
     def __init__(self, device, gateway):
         """Set up light."""
