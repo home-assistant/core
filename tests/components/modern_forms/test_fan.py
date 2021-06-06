@@ -175,7 +175,7 @@ async def test_fan_error(
     """Test error handling of the Modern Forms fans."""
 
     await init_integration(hass, aioclient_mock)
-    aioclient_mock.clear_requests
+    aioclient_mock.clear_requests()
 
     aioclient_mock.post("http://192.168.1.123:80/mf", text="", status=400)
 
@@ -189,6 +189,7 @@ async def test_fan_error(
         await hass.async_block_till_done()
         state = hass.states.get("fan.modernformsfan_fan")
         assert state.state == STATE_ON
+        assert "Invalid response from API" in caplog.text
 
 
 async def test_fan_connection_error(

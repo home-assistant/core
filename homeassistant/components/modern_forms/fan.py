@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from functools import partial
-from typing import Any, Callable, cast
+from typing import Any, Callable
 
 from aiomodernforms.const import FAN_POWER_OFF, FAN_POWER_ON
 import voluptuous as vol
@@ -61,11 +61,11 @@ async def async_setup_entry(
         "async_clear_fan_sleep_timer",
     )
 
-    update_lights = partial(
+    update_func = partial(
         async_update_fan, config_entry, coordinator, {}, async_add_entities
     )
-    coordinator.async_add_listener(update_lights)
-    update_lights()
+    coordinator.async_add_listener(update_func)
+    update_func()
 
 
 class ModernFormsFanEntity(FanEntity, ModernFormsDeviceEntity):
@@ -83,11 +83,7 @@ class ModernFormsFanEntity(FanEntity, ModernFormsDeviceEntity):
             name=f"{coordinator.data.info.device_name} Fan",
             icon="mdi:fan",
         )
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique ID for this light."""
-        return f"{self.coordinator.data.info.mac_address}_fan"
+        self._attr_unique_id = f"{self.coordinator.data.info.mac_address}_fan"
 
     @property
     def supported_features(self) -> int:
@@ -122,9 +118,7 @@ class ModernFormsFanEntity(FanEntity, ModernFormsDeviceEntity):
     @modernforms_exception_handler
     async def async_set_direction(self, direction: str) -> None:
         """Set the direction of the fan."""
-        await cast(ModernFormsDataUpdateCoordinator, self.coordinator).modernforms.fan(
-            direction=direction
-        )
+        await self.coordinator.modernforms.fan(direction=direction)
 
     @modernforms_exception_handler
     async def async_set_percentage(self, percentage: int) -> None:
@@ -149,16 +143,12 @@ class ModernFormsFanEntity(FanEntity, ModernFormsDeviceEntity):
             data[OPT_SPEED] = round(
                 percentage_to_ranged_value(self.SPEED_RANGE, percentage)
             )
-        await cast(ModernFormsDataUpdateCoordinator, self.coordinator).modernforms.fan(
-            **data
-        )
+        await self.coordinator.modernforms.fan(**data)
 
     @modernforms_exception_handler
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the fan off."""
-        await cast(ModernFormsDataUpdateCoordinator, self.coordinator).modernforms.fan(
-            on=FAN_POWER_OFF
-        )
+        await self.coordinator.modernforms.fan(on=FAN_POWER_OFF)
 
     @modernforms_exception_handler
     async def async_set_fan_sleep_timer(
@@ -166,18 +156,14 @@ class ModernFormsFanEntity(FanEntity, ModernFormsDeviceEntity):
         sleep_time: int,
     ) -> None:
         """Set a Modern Forms light sleep timer."""
-        await cast(ModernFormsDataUpdateCoordinator, self.coordinator).modernforms.fan(
-            sleep=sleep_time * 60
-        )
+        await self.coordinator.modernforms.fan(sleep=sleep_time * 60)
 
     @modernforms_exception_handler
     async def async_clear_fan_sleep_timer(
         self,
     ) -> None:
         """Clear a Modern Forms fan sleep timer."""
-        await cast(ModernFormsDataUpdateCoordinator, self.coordinator).modernforms.fan(
-            sleep=CLEAR_TIMER
-        )
+        await self.coordinator.modernforms.fan(sleep=CLEAR_TIMER)
 
 
 @callback

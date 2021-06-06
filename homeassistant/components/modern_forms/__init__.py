@@ -10,6 +10,7 @@ from aiomodernforms import (
     ModernFormsDevice,
     ModernFormsError,
 )
+from aiomodernforms.models import Device
 
 from homeassistant.components.fan import DOMAIN as FAN_DOMAIN
 from homeassistant.config_entries import ConfigEntry
@@ -33,11 +34,6 @@ PLATFORMS = [
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the Modern Forms component."""
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a Modern Forms device from a config entry."""
 
@@ -51,7 +47,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
-    # For backwards compat, set unique ID
     if entry.unique_id is None:
         hass.config_entries.async_update_entry(
             entry, unique_id=coordinator.data.info.mac_address
@@ -111,7 +106,7 @@ def modernforms_exception_handler(func):
     return handler
 
 
-class ModernFormsDataUpdateCoordinator(DataUpdateCoordinator[ModernFormsDevice]):
+class ModernFormsDataUpdateCoordinator(DataUpdateCoordinator[Device]):
     """Class to manage fetching Modern Forms data from single endpoint."""
 
     def __init__(
@@ -147,7 +142,7 @@ class ModernFormsDataUpdateCoordinator(DataUpdateCoordinator[ModernFormsDevice])
             raise UpdateFailed(f"Invalid response from API: {error}") from error
 
 
-class ModernFormsEntity(CoordinatorEntity):
+class ModernFormsEntity(CoordinatorEntity[ModernFormsDataUpdateCoordinator]):
     """Defines a base Modern Forms entity."""
 
     def __init__(
@@ -161,30 +156,17 @@ class ModernFormsEntity(CoordinatorEntity):
     ) -> None:
         """Initialize the Modern Forms entity."""
         super().__init__(coordinator)
-        self._enabled_default = enabled_default
+        self._attr_enabled_default = enabled_default
         self._entry_id = entry_id
-        self._icon = icon
-        self._name = name
+        self._attr_icon = icon
+        self._attr_name = name
         self._unsub_dispatcher = None
-
-    @property
-    def name(self) -> str:
-        """Return the name of the entity."""
-        return self._name
-
-    @property
-    def icon(self) -> str:
-        """Return the mdi icon of the entity."""
-        return self._icon
-
-    @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Return if the entity should be enabled when first added to the entity registry."""
-        return self._enabled_default
 
 
 class ModernFormsDeviceEntity(ModernFormsEntity):
     """Defines a Modern Forms device entity."""
+
+    coordinator: ModernFormsDataUpdateCoordinator
 
     @property
     def device_info(self) -> DeviceInfo:
