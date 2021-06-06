@@ -21,7 +21,7 @@ from unittest.mock import patch
 
 import av
 
-from homeassistant.components.stream import Stream
+from homeassistant.components.stream import Stream, create_stream
 from homeassistant.components.stream.const import (
     HLS_PROVIDER,
     MAX_MISSING_DTS,
@@ -29,6 +29,9 @@ from homeassistant.components.stream.const import (
     TARGET_SEGMENT_DURATION,
 )
 from homeassistant.components.stream.worker import SegmentBuffer, stream_worker
+from homeassistant.setup import async_setup_component
+
+from tests.components.stream.common import generate_h264_video
 
 STREAM_SOURCE = "some-stream-source"
 # Formats here are arbitrary, not exercised by tests
@@ -644,3 +647,42 @@ async def test_worker_log(hass, caplog):
         await hass.async_block_till_done()
     assert "https://abcd:efgh@foo.bar" not in caplog.text
     assert "https://****:****@foo.bar" in caplog.text
+
+
+async def test_durations(hass, record_worker_sync):
+    """Test that the durations of the media match the duration metadata."""
+    await async_setup_component(hass, "stream", {"stream": {}})
+
+    source = generate_h264_video()
+    stream = create_stream(hass, source)
+
+    # use record_worker_sync to grab output segments
+    with patch.object(hass.config, "is_allowed_path", return_value=True):
+        await stream.async_record("/example/path")
+
+    completed_segments = list(await record_worker_sync.get_segments())[:-1]
+    assert len(completed_segments) >= 1
+
+    # check that the Part duration metadata match the durations in the media
+    running_metadata_duration = 0
+    for segment in completed_segments:
+        for part in segment.parts:
+            av_part = av.open(io.BytesIO(segment.init + part.data))
+            running_metadata_duration += part.duration
+            # av_part.duration will just return the largest dts in av_part.
+            # When we normalize by av.time_base this should equal the running duration
+            assert math.isclose(
+                running_metadata_duration,
+                av_part.duration / av.time_base,
+                abs_tol=1e-6,
+            )
+            av_part.close()
+    # check that the Part durations are consistent with the Segment durations
+    for segment in completed_segments:
+        assert math.isclose(
+            sum(part.duration for part in segment.parts), segment.duration, abs_tol=1e-6
+        )
+
+    await record_worker_sync.join()
+
+    stream.stop()

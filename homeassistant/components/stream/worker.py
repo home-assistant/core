@@ -41,7 +41,7 @@ class SegmentBuffer:
         # sequence gets incremented before the first segment so the first segment
         # has a sequence number of 0.
         self._sequence = -1
-        self._segment_start_pts: int = cast(int, None)
+        self._segment_start_dts: int = cast(int, None)
         self._memory_file: BytesIO = cast(BytesIO, None)
         self._av_output: av.container.OutputContainer = None
         self._input_video_stream: av.video.VideoStream = None
@@ -68,7 +68,10 @@ class SegmentBuffer:
                 # Removed skip_sidx - see https://github.com/home-assistant/core/pull/39970
                 # "cmaf" flag replaces several of the movflags used, but too recent to use for now
                 "movflags": "empty_moov+default_base_moof+frag_discont+negative_cts_offsets+skip_trailer",
-                "avoid_negative_ts": "disabled",
+                # Sometimes the first segment begins with negative timestamps, and this setting just
+                # adjusts the timestamps in the output from that segment to start from 0. Helps from
+                # having to make some adjustments in test_durations
+                "avoid_negative_ts": "make_non_negative",
                 "fragment_index": str(sequence + 1),
                 "video_track_timescale": str(int(1 / input_vstream.time_base)),
                 # Create a fragments every TARGET_PART_DURATION. The data from each fragment is stored in
@@ -88,13 +91,13 @@ class SegmentBuffer:
         self._input_video_stream = video_stream
         self._input_audio_stream = audio_stream
 
-    def reset(self, video_pts: int) -> None:
+    def reset(self, video_dts: int) -> None:
         """Initialize a new stream segment."""
         # Keep track of the number of segments we've processed
         self._sequence += 1
-        self._segment_start_pts = (
+        self._segment_start_dts = (
             self._part_start_dts
-        ) = self._last_packet_dts = video_pts
+        ) = self._last_packet_dts = video_dts
         self._segment = None
         self._segment_last_write_pos = 0
         self._memory_file = BytesIO()
@@ -124,7 +127,7 @@ class SegmentBuffer:
             if (
                 packet.is_keyframe
                 and (
-                    segment_duration := (packet.pts - self._segment_start_pts)
+                    segment_duration := (packet.dts - self._segment_start_dts)
                     * packet.time_base
                 )
                 >= MIN_SEGMENT_DURATION
@@ -133,7 +136,7 @@ class SegmentBuffer:
                 self.flush(segment_duration, packet)
 
                 # Reinitialize
-                self.reset(packet.pts)
+                self.reset(packet.dts)
 
             self._last_packet_dts = packet.dts
             self._part_has_keyframe |= self._last_packet_was_keyframe
@@ -191,7 +194,7 @@ class SegmentBuffer:
         # Also flush the part segment (need to close the output above before this)
         self._segment.parts.append(
             Part(
-                duration=float((packet.pts - self._part_start_dts) * packet.time_base),
+                duration=float((packet.dts - self._part_start_dts) * packet.time_base),
                 independent=self._part_has_keyframe | self._last_packet_was_keyframe,
                 data=self._memory_file.getbuffer()[
                     self._segment_last_write_pos :
@@ -247,8 +250,8 @@ def stream_worker(  # noqa: C901
     last_dts = {video_stream: float("-inf"), audio_stream: float("-inf")}
     # Keep track of consecutive packets without a dts to detect end of stream.
     missing_dts = 0
-    # The video pts at the beginning of the segment
-    segment_start_pts: int | None = None
+    # The video dts at the beginning of the segment
+    segment_start_dts: int | None = None
     # Because of problems 1 and 2 below, we need to store the first few packets and replay them
     initial_packets: deque[av.Packet] = deque()
 
@@ -256,13 +259,13 @@ def stream_worker(  # noqa: C901
     # 1 - first frame has bad pts/dts https://trac.ffmpeg.org/ticket/5018
     # 2 - seeking can be problematic https://trac.ffmpeg.org/ticket/7815
 
-    def peek_first_pts() -> bool:
+    def peek_first_dts() -> bool:
         """Initialize by peeking into the first few packets of the stream.
 
         Deal with problem #1 above (bad first packet pts/dts) by recalculating using pts/dts from second packet.
         Also load the first video keyframe pts into segment_start_pts and check if the audio stream really exists.
         """
-        nonlocal segment_start_pts, audio_stream, container_packets
+        nonlocal segment_start_dts, audio_stream, container_packets
         missing_dts = 0
         found_audio = False
         try:
@@ -285,8 +288,8 @@ def stream_worker(  # noqa: C901
                 elif packet.is_keyframe:  # video_keyframe
                     first_packet = packet
                     initial_packets.append(packet)
-            # Get first_pts from subsequent frame to first keyframe
-            while segment_start_pts is None or (
+            # Get first_dts from subsequent frame to first keyframe
+            while segment_start_dts is None or (
                 audio_stream
                 and not found_audio
                 and len(initial_packets) < PACKETS_TO_WAIT_FOR_AUDIO
@@ -314,11 +317,10 @@ def stream_worker(  # noqa: C901
                                 continue
                     found_audio = True
                 elif (
-                    segment_start_pts is None
-                ):  # This is the second video frame to calculate first_pts from
-                    segment_start_pts = packet.dts - packet.duration
-                    first_packet.pts = segment_start_pts
-                    first_packet.dts = segment_start_pts
+                    segment_start_dts is None
+                ):  # This is the second video frame to calculate first_dts from
+                    segment_start_dts = packet.dts - packet.duration
+                    first_packet.pts = first_packet.dts = segment_start_dts
                 initial_packets.append(packet)
             if audio_stream and not found_audio:
                 _LOGGER.warning(
@@ -333,13 +335,13 @@ def stream_worker(  # noqa: C901
             return False
         return True
 
-    if not peek_first_pts():
+    if not peek_first_dts():
         container.close()
         return
 
     segment_buffer.set_streams(video_stream, audio_stream)
-    assert isinstance(segment_start_pts, int)
-    segment_buffer.reset(segment_start_pts)
+    assert isinstance(segment_start_dts, int)
+    segment_buffer.reset(segment_start_dts)
 
     while not quit_event.is_set():
         try:

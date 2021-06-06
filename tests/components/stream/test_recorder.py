@@ -1,16 +1,11 @@
 """The tests for hls streams."""
 from __future__ import annotations
 
-import asyncio
-from collections import deque
 from datetime import timedelta
 from io import BytesIO
-import logging
 import os
-import threading
 from unittest.mock import patch
 
-import async_timeout
 import av
 import pytest
 
@@ -26,62 +21,7 @@ import homeassistant.util.dt as dt_util
 from tests.common import async_fire_time_changed
 from tests.components.stream.common import generate_h264_video
 
-TEST_TIMEOUT = 7.0  # Lower than 9s home assistant timeout
 MAX_ABORT_SEGMENTS = 20  # Abort test to avoid looping forever
-
-
-class SaveRecordWorkerSync:
-    """
-    Test fixture to manage RecordOutput thread for recorder_save_worker.
-
-    This is used to assert that the worker is started and stopped cleanly
-    to avoid thread leaks in tests.
-    """
-
-    def __init__(self):
-        """Initialize SaveRecordWorkerSync."""
-        self._save_event = None
-        self._segments = None
-        self._save_thread = None
-        self.reset()
-
-    def recorder_save_worker(self, file_out: str, segments: deque[Segment]):
-        """Mock method for patch."""
-        logging.debug("recorder_save_worker thread started")
-        assert self._save_thread is None
-        self._segments = segments
-        self._save_thread = threading.current_thread()
-        self._save_event.set()
-
-    async def get_segments(self):
-        """Return the recorded video segments."""
-        with async_timeout.timeout(TEST_TIMEOUT):
-            await self._save_event.wait()
-        return self._segments
-
-    async def join(self):
-        """Verify save worker was invoked and block on shutdown."""
-        with async_timeout.timeout(TEST_TIMEOUT):
-            await self._save_event.wait()
-        self._save_thread.join(timeout=TEST_TIMEOUT)
-        assert not self._save_thread.is_alive()
-
-    def reset(self):
-        """Reset callback state for reuse in tests."""
-        self._save_thread = None
-        self._save_event = asyncio.Event()
-
-
-@pytest.fixture()
-def record_worker_sync(hass):
-    """Patch recorder_save_worker for clean thread shutdown for test."""
-    sync = SaveRecordWorkerSync()
-    with patch(
-        "homeassistant.components.stream.recorder.recorder_save_worker",
-        side_effect=sync.recorder_save_worker,
-        autospec=True,
-    ):
-        yield sync
 
 
 async def test_record_stream(hass, hass_client, record_worker_sync):
