@@ -8,6 +8,7 @@ DEFAULT_URL = "http://127.0.0.1:8384"
 
 RECONNECT_INTERVAL = timedelta(seconds=10)
 SCAN_INTERVAL = timedelta(seconds=120)
+SPEED_SCAN_INTERVAL = timedelta(seconds=10)
 
 FOLDER_SUMMARY_RECEIVED = "syncthing_folder_summary_received"
 FOLDER_PAUSED_RECEIVED = "syncthing_folder_paused_received"

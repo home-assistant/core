@@ -1,14 +1,21 @@
 """Support for monitoring the Syncthing instance."""
 
 import logging
+from time import monotonic
 
 import aiosyncthing
 
 from homeassistant.components.sensor import SensorEntity
+from homeassistant.const import DATA_RATE_MEGABYTES_PER_SECOND
 from homeassistant.core import callback
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+    UpdateFailed,
+)
 
 from .const import (
     DOMAIN,
@@ -20,6 +27,7 @@ from .const import (
     SCAN_INTERVAL,
     SERVER_AVAILABLE,
     SERVER_UNAVAILABLE,
+    SPEED_SCAN_INTERVAL,
     STATE_CHANGED_RECEIVED,
 )
 
@@ -37,7 +45,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         raise PlatformNotReady from exception
 
     server_id = syncthing.server_id
-    entities = [
+    folder_entities = [
         FolderSensor(
             syncthing,
             server_id,
@@ -48,7 +56,31 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         for folder in config["folders"]
     ]
 
-    async_add_entities(entities)
+    async def async_update_data():
+        try:
+            return await syncthing.system.connections()
+        except aiosyncthing.exceptions.SyncthingError as err:
+            raise UpdateFailed from err
+
+    coordinator = DataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        name="sensor",
+        update_method=async_update_data,
+        update_interval=SPEED_SCAN_INTERVAL,
+    )
+    await coordinator.async_refresh()
+
+    speed_entities = [
+        SpeedSensor(
+            coordinator, syncthing.url, server_id, "download", version["version"]
+        ),
+        SpeedSensor(
+            coordinator, syncthing.url, server_id, "upload", version["version"]
+        ),
+    ]
+
+    async_add_entities(folder_entities + speed_entities)
 
 
 class FolderSensor(SensorEntity):
@@ -266,3 +298,78 @@ class FolderSensor(SensorEntity):
         state["label"] = self._folder_label
 
         return state
+
+
+class SpeedSensor(CoordinatorEntity):
+    """A syncthing speed sensor."""
+
+    NAMES = {"download": "inBytesTotal", "upload": "outBytesTotal"}
+
+    def __init__(self, coordinator, url, server_id, name, version):
+        """Initialize the sensor."""
+        super().__init__(coordinator)
+        self._url = url
+        self._server_id = server_id
+        self._name = name
+        self._version = version
+        self._short_server_id = server_id.split("-")[0]
+        self._last_total_value = self._current_value()
+        self._last_updated = monotonic()
+        self._state = 0
+
+    @property
+    def name(self):
+        """Return the name of the sensor."""
+        return f"{self._short_server_id} {self._name}"
+
+    @property
+    def unique_id(self):
+        """Return the unique id of the entity."""
+        return f"{self._short_server_id}-{self._name}"
+
+    @property
+    def state(self):
+        """Return the state of the sensor."""
+        if not self.available:
+            return
+        return self._state
+
+    @property
+    def icon(self):
+        """Return the icon for this sensor."""
+        return "mdi:speedometer"
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit of measurement for this sensor."""
+        return DATA_RATE_MEGABYTES_PER_SECOND
+
+    @property
+    def device_info(self):
+        """Return device information."""
+        return {
+            "identifiers": {(DOMAIN, self._server_id)},
+            "name": f"Syncthing ({self._url})",
+            "manufacturer": "Syncthing Team",
+            "sw_version": self._version,
+            "entry_type": "service",
+        }
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        current = self._current_value()
+        now = monotonic()
+        speed = (
+            (current - self._last_total_value)
+            / (now - self._last_updated)
+            / 1024
+            / 1024
+        )
+        self._state = round(speed, 2 if speed < 0.1 else 1)
+        self._last_total_value = current
+        self._last_updated = now
+        super()._handle_coordinator_update()
+
+    def _current_value(self):
+        return self.coordinator.data["total"][self.NAMES[self._name]]
