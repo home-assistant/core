@@ -65,7 +65,7 @@ class ConnectXiaomiGateway:
         )
         return True
 
-   def connect_gateway(self):
+    def connect_gateway(self):
         """connect the gateway in a way that can called by async_add_executor_job."""
         try:
             self._gateway_device = gateway.Gateway(host, token)
