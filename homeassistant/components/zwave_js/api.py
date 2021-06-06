@@ -1232,10 +1232,10 @@ async def websocket_version_info(
 ) -> None:
     """Get version info from the Z-Wave JS server."""
     version_info = {
-        "driverVersion": client.version.driver_version,
-        "serverVersion": client.version.server_version,
-        "minSchemaVersion": client.version.min_schema_version,
-        "maxSchemaVersion": client.version.max_schema_version,
+        "driver_version": client.version.driver_version,
+        "server_version": client.version.server_version,
+        "min_schema_version": client.version.min_schema_version,
+        "max_schema_version": client.version.max_schema_version,
     }
     connection.send_result(
         msg[ID],

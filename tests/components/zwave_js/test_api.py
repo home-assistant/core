@@ -1358,10 +1358,10 @@ async def test_version_info(hass, integration, hass_ws_client, version_state):
     ws_client = await hass_ws_client(hass)
 
     version_info = {
-        "driverVersion": version_state["driverVersion"],
-        "serverVersion": version_state["serverVersion"],
-        "minSchemaVersion": 0,
-        "maxSchemaVersion": 0,
+        "driver_version": version_state["driverVersion"],
+        "server_version": version_state["serverVersion"],
+        "min_schema_version": 0,
+        "max_schema_version": 0,
     }
 
     await ws_client.send_json(
