@@ -1,7 +1,19 @@
 {
     "config": {
         "error": {
-            "pairing_failure": "\u05e6\u05d9\u05de\u05d5\u05d3 \u05e0\u05db\u05e9\u05dc"
+            "pairing_failure": "\u05d0\u05d9\u05df \u05d0\u05e4\u05e9\u05e8\u05d5\u05ea \u05dc\u05e9\u05d9\u05d9\u05da: {error_id}"
+        },
+        "step": {
+            "pair": {
+                "data": {
+                    "pin": "\u05e7\u05d5\u05d3 PIN"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "\u05de\u05d0\u05e8\u05d7"
+                }
+            }
         }
     }
 }
