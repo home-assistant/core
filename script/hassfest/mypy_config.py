@@ -173,8 +173,9 @@ STRICT_SETTINGS: Final[list[str]] = [
     "no_implicit_optional",
     "warn_return_any",
     "warn_unreachable",
-    "disallow_any_generics",
-    "no_implicit_reexport",
+    # TODO: turn these on, address issues
+    # "disallow_any_generics",
+    # "no_implicit_reexport",
 ]
 
 
