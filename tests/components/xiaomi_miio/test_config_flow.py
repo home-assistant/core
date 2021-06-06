@@ -6,7 +6,6 @@ import pytest
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.xiaomi_miio import const
-from homeassistant.components.xiaomi_miio.config_flow import DEFAULT_GATEWAY_NAME
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TOKEN
 
 from tests.common import MockConfigEntry
@@ -130,7 +129,7 @@ async def test_config_flow_step_gateway_connect_error(hass):
         )
 
     assert result["type"] == "form"
-    assert result["step_id"] == "model"
+    assert result["step_id"] == "connect"
     assert result["errors"] == {"base": "cannot_connect"}
 
 
@@ -159,7 +158,7 @@ async def test_config_flow_gateway_success(hass):
     )
 
     assert result["type"] == "create_entry"
-    assert result["title"] == DEFAULT_GATEWAY_NAME
+    assert result["title"] == TEST_MODEL
     assert result["data"] == {
         const.CONF_FLOW_TYPE: const.CONF_GATEWAY,
         const.CONF_CLOUD_USERNAME: None,
@@ -474,7 +473,7 @@ async def test_config_flow_step_device_connect_error(hass):
         )
 
     assert result["type"] == "form"
-    assert result["step_id"] == "model"
+    assert result["step_id"] == "connect"
     assert result["errors"] == {"base": "cannot_connect"}
 
 
@@ -509,7 +508,7 @@ async def test_config_flow_step_unknown_device(hass):
         )
 
     assert result["type"] == "form"
-    assert result["step_id"] == "model"
+    assert result["step_id"] == "connect"
     assert result["errors"] == {"base": "unknown_device"}
 
 
@@ -570,7 +569,7 @@ async def test_config_flow_step_device_manual_model_succes(hass):
         )
 
     assert result["type"] == "form"
-    assert result["step_id"] == "model"
+    assert result["step_id"] == "connect"
     assert result["errors"] == {"base": "cannot_connect"}
 
     overwrite_model = const.MODELS_VACUUM[0]
