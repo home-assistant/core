@@ -144,8 +144,17 @@ async def integration_fixture(
     """Set up the mysensors integration with a config entry."""
     config: dict[str, Any] = {}
     config_entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.mysensors.device.Debouncer", autospec=True
+    ) as debouncer_class:
 
-    with patch("homeassistant.components.mysensors.device.UPDATE_DELAY", new=0):
+        async def call_debouncer():
+            """Mock call to debouncer."""
+            update_function = debouncer_class.call_args.kwargs["function"]
+            update_function()
+
+        debouncer_class.return_value.async_call.side_effect = call_debouncer
+
         await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()
         yield config_entry

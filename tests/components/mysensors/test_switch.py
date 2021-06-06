@@ -36,9 +36,6 @@ async def test_relay_node(
     assert transport_write.call_args == call("1;1;1;1;2;1\n")
 
     receive_message("1;1;1;0;2;1\n")
-    # the integration adds multiple jobs to do the update currently
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
@@ -59,9 +56,6 @@ async def test_relay_node(
     assert transport_write.call_args == call("1;1;1;1;2;0\n")
 
     receive_message("1;1;1;0;2;0\n")
-    # the integration adds multiple jobs to do the update currently
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
@@ -96,9 +90,6 @@ async def test_ir_transceiver(
     assert transport_write.call_args_list[1] == call("1;1;1;1;2;1\n")
 
     receive_message("1;1;1;0;2;1\n")
-    # the integration adds multiple jobs to do the update currently
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
@@ -120,9 +111,6 @@ async def test_ir_transceiver(
     assert transport_write.call_args == call("1;1;1;1;2;0\n")
 
     receive_message("1;1;1;0;2;0\n")
-    # the integration adds multiple jobs to do the update currently
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
@@ -145,9 +133,6 @@ async def test_ir_transceiver(
 
     receive_message("1;1;1;0;32;new_code\n")
     receive_message("1;1;1;0;2;1\n")
-    # the integration adds multiple jobs to do the update currently
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
