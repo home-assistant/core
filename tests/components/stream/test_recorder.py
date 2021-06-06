@@ -1,6 +1,4 @@
 """The tests for hls streams."""
-from __future__ import annotations
-
 from datetime import timedelta
 from io import BytesIO
 import os

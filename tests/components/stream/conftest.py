@@ -9,6 +9,8 @@ nothing for the test to verify. The solution is the WorkerSync class that
 allows the tests to pause the worker thread before finalizing the stream
 so that it can inspect the output.
 """
+from __future__ import annotations
+
 import asyncio
 from collections import deque
 import logging
