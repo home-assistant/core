@@ -182,7 +182,9 @@ async def test_options_flow(hass: HomeAssistant, valid_response) -> None:
     }
 
 
-async def test_import_flow_entity_id(hass, validate_config_entry):
+async def test_import_flow_entity_id(
+    hass: HomeAssistant, validate_config_entry
+) -> None:
     """Test import_flow with entity ids."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -221,7 +223,9 @@ async def test_import_flow_entity_id(hass, validate_config_entry):
     }
 
 
-async def test_import_flow_coordinates(hass, validate_config_entry):
+async def test_import_flow_coordinates(
+    hass: HomeAssistant, validate_config_entry
+) -> None:
     """Test import_flow with coordinates."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -263,7 +267,7 @@ async def test_import_flow_coordinates(hass, validate_config_entry):
     }
 
 
-async def test_dupe_import(hass, validate_config_entry):
+async def test_dupe_import(hass: HomeAssistant, validate_config_entry) -> None:
     """Test duplicate import."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,

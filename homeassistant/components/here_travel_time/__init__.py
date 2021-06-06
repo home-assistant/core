@@ -127,7 +127,7 @@ class HERETravelTimeData:
                     if arrival is None:
                         arrival = ""
                         _LOGGER.warning(
-                            "Supplied arrival time could not be parsed. It was ignored."
+                            "Supplied arrival time could not be parsed. It was ignored"
                         )
             if self._config_entry.options[CONF_TIME_TYPE] == DEPARTURE_TIME:
                 if (conf_departure := self._config_entry.options[CONF_TIME]) not in [
@@ -138,7 +138,7 @@ class HERETravelTimeData:
                     if departure is None:
                         departure = ""
                         _LOGGER.warning(
-                            "Supplied departure time could not be parsed. It was ignored."
+                            "Supplied departure time could not be parsed. It was ignored"
                         )
 
             _LOGGER.debug(
@@ -166,12 +166,12 @@ class HERETravelTimeData:
             )
 
             _LOGGER.debug(
-                "Raw response is: %s", response.response
-            )  # pylint: disable=no-member
+                "Raw response is: %s", response.response  # pylint: disable=no-member
+            )
 
-            source_attribution = response.response.get(
+            source_attribution = response.response.get(  # pylint: disable=no-member
                 "sourceAttribution"
-            )  # pylint: disable=no-member
+            )
             attribution: str | None = None
             if source_attribution is not None:
                 attribution = build_hass_attribution(source_attribution)

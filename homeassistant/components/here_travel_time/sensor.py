@@ -103,7 +103,7 @@ PLATFORM_SCHEMA = vol.All(
     cv.key_value_schemas(
         CONF_MODE,
         {
-            None: PLATFORM_SCHEMA,  # type: ignore[dict-item]
+            None: PLATFORM_SCHEMA,
             TRAVEL_MODE_BICYCLE: PLATFORM_SCHEMA,
             TRAVEL_MODE_CAR: PLATFORM_SCHEMA,
             TRAVEL_MODE_PEDESTRIAN: PLATFORM_SCHEMA,
