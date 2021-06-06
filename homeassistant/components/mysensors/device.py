@@ -1,7 +1,7 @@
 """Handle MySensors devices."""
 from __future__ import annotations
 
-from functools import partial
+from abc import ABC, abstractmethod
 import logging
 from typing import Any
 
@@ -34,7 +34,7 @@ ATTR_HEARTBEAT = "heartbeat"
 MYSENSORS_PLATFORM_DEVICES = "mysensors_devices_{}"
 
 
-class MySensorsDevice:
+class MySensorsDevice(ABC):
     """Representation of a MySensors device."""
 
     hass: HomeAssistant
@@ -151,7 +151,8 @@ class MySensorsDevice:
 
         return attr
 
-    async def async_update(self) -> None:
+    @callback
+    def _async_update(self) -> None:
         """Update the controller with the latest value from a sensor."""
         node = self.gateway.sensors[self.node_id]
         child = node.children[self.child_id]
@@ -178,9 +179,10 @@ class MySensorsDevice:
             else:
                 self._values[value_type] = value
 
-    async def _async_update_callback(self) -> None:
+    @callback
+    @abstractmethod
+    def _async_update_callback(self) -> None:
         """Update the device."""
-        raise NotImplementedError
 
     @callback
     def async_update_callback(self) -> None:
@@ -188,18 +190,18 @@ class MySensorsDevice:
         if self._update_scheduled:
             return
 
-        async def update() -> None:
+        @callback
+        def async_update() -> None:
             """Perform update."""
             try:
-                await self._async_update_callback()
+                self._async_update_callback()
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Error updating %s", self.name)
             finally:
                 self._update_scheduled = False
 
         self._update_scheduled = True
-        delayed_update = partial(self.hass.async_create_task, update())
-        self.hass.loop.call_later(UPDATE_DELAY, delayed_update)
+        self.hass.loop.call_later(UPDATE_DELAY, async_update)
 
 
 def get_mysensors_devices(
@@ -235,9 +237,11 @@ class MySensorsEntity(MySensorsDevice, Entity):
 
         return attr
 
-    async def _async_update_callback(self) -> None:
+    @callback
+    def _async_update_callback(self) -> None:
         """Update the entity."""
-        await self.async_update_ha_state(True)
+        self._async_update()
+        self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
         """Register update callback."""
@@ -255,3 +259,4 @@ class MySensorsEntity(MySensorsDevice, Entity):
                 self.async_update_callback,
             )
         )
+        self._async_update()
