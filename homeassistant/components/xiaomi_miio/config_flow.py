@@ -33,8 +33,6 @@ from .device import ConnectXiaomiDevice
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_GATEWAY_NAME = "Xiaomi Gateway"
-
 DEVICE_SETTINGS = {
     vol.Required(CONF_TOKEN): vol.All(str, vol.Length(min=32, max=32)),
 }
@@ -317,6 +315,9 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if self.host is None or self.token is None:
             return self.async_abort(reason="incomplete_info")
 
+        if user_input is not None:
+            self.model = user_input[CONF_MODEL]
+
         # Try to connect to a Xiaomi Device.
         connect_device_class = ConnectXiaomiDevice(self.hass)
         await connect_device_class.async_connect_device(self.host, self.token)
@@ -327,7 +328,9 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         if self.model is None:
             errors["base"] = "cannot_connect"
-            return await self.async_step_model(errors=errors)
+            return self.async_show_form(
+                step_id="connect", data_schema=DEVICE_MODEL_CONFIG, errors=errors
+            )
 
         if self.mac is None and device_info is not None:
             self.mac = format_mac(device_info.mac_address)
@@ -352,54 +355,35 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             await self.hass.config_entries.async_reload(existing_entry.entry_id)
             return self.async_abort(reason="reauth_successful")
 
-        # Setup Gateways
-        for gateway_model in MODELS_GATEWAY:
-            if self.model.startswith(gateway_model):
-                if self.name is None:
-                    self.name = DEFAULT_GATEWAY_NAME
-                return self.async_create_entry(
-                    title=self.name,
-                    data={
-                        CONF_FLOW_TYPE: CONF_GATEWAY,
-                        CONF_HOST: self.host,
-                        CONF_TOKEN: self.token,
-                        CONF_MODEL: self.model,
-                        CONF_MAC: self.mac,
-                        CONF_CLOUD_USERNAME: self.cloud_username,
-                        CONF_CLOUD_PASSWORD: self.cloud_password,
-                        CONF_CLOUD_COUNTRY: self.cloud_country,
-                    },
-                )
-
-        # Setup all other Miio Devices
         if self.name is None:
             self.name = self.model
 
-        for device_model in MODELS_ALL_DEVICES:
-            if self.model.startswith(device_model):
-                return self.async_create_entry(
-                    title=self.name,
-                    data={
-                        CONF_FLOW_TYPE: CONF_DEVICE,
-                        CONF_HOST: self.host,
-                        CONF_TOKEN: self.token,
-                        CONF_MODEL: self.model,
-                        CONF_MAC: self.mac,
-                        CONF_CLOUD_USERNAME: self.cloud_username,
-                        CONF_CLOUD_PASSWORD: self.cloud_password,
-                        CONF_CLOUD_COUNTRY: self.cloud_country,
-                    },
-                )
+        flow_type = None
+        for gateway_model in MODELS_GATEWAY:
+            if self.model.startswith(gateway_model):
+                flow_type = CONF_GATEWAY
+
+        if flow_type is None:
+            for device_model in MODELS_ALL_DEVICES:
+                if self.model.startswith(device_model):
+                    flow_type = CONF_DEVICE
+
+        if flow_type is not None:
+            return self.async_create_entry(
+                title=self.name,
+                data={
+                    CONF_FLOW_TYPE: flow_type,
+                    CONF_HOST: self.host,
+                    CONF_TOKEN: self.token,
+                    CONF_MODEL: self.model,
+                    CONF_MAC: self.mac,
+                    CONF_CLOUD_USERNAME: self.cloud_username,
+                    CONF_CLOUD_PASSWORD: self.cloud_password,
+                    CONF_CLOUD_COUNTRY: self.cloud_country,
+                },
+            )
 
         errors["base"] = "unknown_device"
-        return await self.async_step_model(errors=errors)
-
-    async def async_step_model(self, user_input=None, errors=None):
-        """Overwrite model info."""
-        if user_input is not None:
-            self.model = user_input[CONF_MODEL]
-            return await self.async_step_connect()
-
         return self.async_show_form(
-            step_id="model", data_schema=DEVICE_MODEL_CONFIG, errors=errors
+            step_id="connect", data_schema=DEVICE_MODEL_CONFIG, errors=errors
         )
