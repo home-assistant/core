@@ -2,25 +2,20 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Generator, Mapping
+from collections.abc import Generator
 import contextlib
 import logging
-from typing import Any
 
 import async_timeout
 from pywemo import WeMoDevice
 from pywemo.exceptions import ActionException
-from pywemo.subscribe import EVENT_TYPE_LONG_PRESS
 
-from homeassistant.const import CONF_DEVICE_ID, CONF_ENTITY_ID, CONF_TYPE
+from homeassistant.const import CONF_DEVICE_ID, CONF_PARAMS, CONF_TYPE
+from homeassistant.core import callback
 from homeassistant.helpers.entity import DeviceInfo, Entity
 
-from .const import (
-    CAPABILITY_LONG_PRESS,
-    DOMAIN as WEMO_DOMAIN,
-    TRIGGER_TYPE_LONG_PRESS,
-    WEMO_EVENT,
-)
+from .const import DOMAIN as WEMO_DOMAIN, WEMO_SUBSCRIPTION_EVENT
+from .wemo_device import DeviceWrapper
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,9 +38,9 @@ class WemoEntity(Entity):
     Requires that subclasses implement the _update method.
     """
 
-    def __init__(self, device: WeMoDevice) -> None:
+    def __init__(self, wemo: WeMoDevice) -> None:
         """Initialize the WeMo device."""
-        self.wemo = device
+        self.wemo = wemo
         self._state = None
         self._available = True
         self._update_lock = None
@@ -128,6 +123,13 @@ class WemoEntity(Entity):
 class WemoSubscriptionEntity(WemoEntity):
     """Common methods for Wemo devices that register for update callbacks."""
 
+    def __init__(self, device: DeviceWrapper) -> None:
+        """Initialize WemoSubscriptionEntity."""
+        super().__init__(device.wemo)
+        self._device_id = device.device_id
+        self._device_info = device.device_info
+        self._stop_event_listener = None
+
     @property
     def unique_id(self) -> str:
         """Return the id of this WeMo device."""
@@ -136,20 +138,7 @@ class WemoSubscriptionEntity(WemoEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device info."""
-        return {
-            "name": self.name,
-            "identifiers": {(WEMO_DOMAIN, self.unique_id)},
-            "model": self.wemo.model_name,
-            "manufacturer": "Belkin",
-        }
-
-    @property
-    def capability_attributes(self) -> Mapping[str, Any]:
-        """Return the capability attributes."""
-        return {
-            CAPABILITY_LONG_PRESS: self.wemo.supports_long_press(),
-            **(super().capability_attributes or {}),
-        }
+        return self._device_info
 
     @property
     def is_on(self) -> bool:
@@ -185,42 +174,29 @@ class WemoSubscriptionEntity(WemoEntity):
         """Wemo device added to Home Assistant."""
         await super().async_added_to_hass()
 
-        registry = self.hass.data[WEMO_DOMAIN]["registry"]
-        await self.hass.async_add_executor_job(registry.register, self.wemo)
-        registry.on(self.wemo, None, self._subscription_callback)
-        if self.wemo.supports_long_press():
-            with self._wemo_exception_handler("register long press"):
-                await self.hass.async_add_executor_job(
-                    self.wemo.ensure_long_press_virtual_device
-                )
+        @callback
+        def event_filter(event):
+            return self._device_id == event.data.get(CONF_DEVICE_ID)
+
+        self._stop_event_listener = self.hass.bus.async_listen(
+            WEMO_SUBSCRIPTION_EVENT, self._async_subscription_callback, event_filter
+        )
 
     async def async_will_remove_from_hass(self) -> None:
         """Wemo device removed from hass."""
-        registry = self.hass.data[WEMO_DOMAIN]["registry"]
-        await self.hass.async_add_executor_job(registry.unregister, self.wemo)
+        await super().async_will_remove_from_hass()
+        self._stop_event_listener()
 
-    def _subscription_callback(
-        self, _device: WeMoDevice, event_type: str, _params: str
-    ) -> None:
+    async def _async_subscription_callback(self, event) -> None:
         """Update the state by the Wemo device."""
-        _LOGGER.debug("Subscription event (%s) for %s", event_type, self.name)
-        if event_type == EVENT_TYPE_LONG_PRESS:
-            self.hass.bus.fire(
-                WEMO_EVENT,
-                {
-                    CONF_DEVICE_ID: self.registry_entry.device_id,
-                    CONF_ENTITY_ID: self.entity_id,
-                    CONF_TYPE: TRIGGER_TYPE_LONG_PRESS,
-                },
-            )
-        else:
-            updated = self.wemo.subscription_update(event_type, _params)
-            self.hass.add_job(self._async_locked_subscription_callback(not updated))
-
-    async def _async_locked_subscription_callback(self, force_update: bool) -> None:
-        """Handle an update from a subscription."""
         # If an update is in progress, we don't do anything
         if self._update_lock.locked():
             return
 
-        await self._async_locked_update(force_update)
+        event_type = event.data.get(CONF_TYPE)
+        params = event.data.get(CONF_PARAMS)
+        _LOGGER.debug("Subscription event (%s) for %s", event_type, self.name)
+        updated = await self.hass.async_add_executor_job(
+            self.wemo.subscription_update, event_type, params
+        )
+        await self._async_locked_update(not updated)

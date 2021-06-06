@@ -1,19 +1,15 @@
 """Triggers for WeMo devices."""
+from pywemo.subscribe import EVENT_TYPE_LONG_PRESS
 import voluptuous as vol
 
 from homeassistant.components.device_automation import TRIGGER_BASE_SCHEMA
 from homeassistant.components.homeassistant.triggers import event as event_trigger
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF_TYPE
-from homeassistant.helpers.entity_registry import async_entries_for_device
 
-from .const import (
-    CAPABILITY_LONG_PRESS,
-    DOMAIN as WEMO_DOMAIN,
-    TRIGGER_TYPE_LONG_PRESS,
-    WEMO_EVENT,
-)
+from .const import DOMAIN as WEMO_DOMAIN, WEMO_SUBSCRIPTION_EVENT
+from .wemo_device import async_get_device
 
-TRIGGER_TYPES = {TRIGGER_TYPE_LONG_PRESS}
+TRIGGER_TYPES = {EVENT_TYPE_LONG_PRESS}
 
 TRIGGER_SCHEMA = TRIGGER_BASE_SCHEMA.extend(
     {
@@ -25,25 +21,23 @@ TRIGGER_SCHEMA = TRIGGER_BASE_SCHEMA.extend(
 async def async_get_triggers(hass, device_id):
     """Return a list of triggers."""
 
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
-    entity_entries = async_entries_for_device(entity_registry, device_id)
+    wemo_trigger = {
+        # Required fields of TRIGGER_BASE_SCHEMA
+        CONF_PLATFORM: "device",
+        CONF_DOMAIN: WEMO_DOMAIN,
+        CONF_DEVICE_ID: device_id,
+    }
 
+    device = async_get_device(hass, device_id)
     triggers = []
 
     # Check for long press support.
-    if any(
-        entry.capabilities.get(CAPABILITY_LONG_PRESS)
-        for entry in entity_entries
-        if entry.capabilities
-    ):
+    if device.supports_long_press:
         triggers.append(
             {
-                # Required fields of TRIGGER_BASE_SCHEMA
-                CONF_PLATFORM: "device",
-                CONF_DOMAIN: WEMO_DOMAIN,
-                CONF_DEVICE_ID: device_id,
                 # Required fields of TRIGGER_SCHEMA
-                CONF_TYPE: TRIGGER_TYPE_LONG_PRESS,
+                CONF_TYPE: EVENT_TYPE_LONG_PRESS,
+                **wemo_trigger,
             }
         )
 
@@ -55,7 +49,7 @@ async def async_attach_trigger(hass, config, action, automation_info):
     event_config = event_trigger.TRIGGER_SCHEMA(
         {
             event_trigger.CONF_PLATFORM: "event",
-            event_trigger.CONF_EVENT_TYPE: WEMO_EVENT,
+            event_trigger.CONF_EVENT_TYPE: WEMO_SUBSCRIPTION_EVENT,
             event_trigger.CONF_EVENT_DATA: {
                 CONF_DEVICE_ID: config[CONF_DEVICE_ID],
                 CONF_TYPE: config[CONF_TYPE],

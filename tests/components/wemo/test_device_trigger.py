@@ -1,13 +1,10 @@
 """Verify that WeMo device triggers work as expected."""
 import pytest
+from pywemo.subscribe import EVENT_TYPE_LONG_PRESS
 
 from homeassistant.components.automation import DOMAIN as AUTOMATION_DOMAIN
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
-from homeassistant.components.wemo.const import (
-    DOMAIN,
-    TRIGGER_TYPE_LONG_PRESS,
-    WEMO_EVENT,
-)
+from homeassistant.components.wemo.const import DOMAIN, WEMO_SUBSCRIPTION_EVENT
 from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_DOMAIN,
@@ -59,12 +56,14 @@ async def setup_automation(hass, device_id, trigger_type):
 
 async def test_get_triggers(hass, wemo_entity):
     """Test that the triggers appear for a supported device."""
+    assert wemo_entity.device_id is not None
+
     expected_triggers = [
         {
             CONF_DEVICE_ID: wemo_entity.device_id,
             CONF_DOMAIN: DOMAIN,
             CONF_PLATFORM: "device",
-            CONF_TYPE: TRIGGER_TYPE_LONG_PRESS,
+            CONF_TYPE: EVENT_TYPE_LONG_PRESS,
         },
         {
             CONF_DEVICE_ID: wemo_entity.device_id,
@@ -89,11 +88,11 @@ async def test_get_triggers(hass, wemo_entity):
 
 async def test_fires_on_long_press(hass):
     """Test wemo long press trigger firing."""
-    assert await setup_automation(hass, MOCK_DEVICE_ID, TRIGGER_TYPE_LONG_PRESS)
+    assert await setup_automation(hass, MOCK_DEVICE_ID, EVENT_TYPE_LONG_PRESS)
     calls = async_mock_service(hass, "test", "automation")
 
-    message = {CONF_DEVICE_ID: MOCK_DEVICE_ID, CONF_TYPE: TRIGGER_TYPE_LONG_PRESS}
-    hass.bus.async_fire(WEMO_EVENT, message)
+    message = {CONF_DEVICE_ID: MOCK_DEVICE_ID, CONF_TYPE: EVENT_TYPE_LONG_PRESS}
+    hass.bus.async_fire(WEMO_SUBSCRIPTION_EVENT, message)
     await hass.async_block_till_done()
     assert len(calls) == 1
     assert calls[0].data == DATA_MESSAGE

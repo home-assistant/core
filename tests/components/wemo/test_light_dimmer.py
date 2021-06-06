@@ -36,11 +36,6 @@ test_async_locked_update_with_exception = (
 test_async_update_with_timeout_and_recovery = (
     entity_test_helpers.test_async_update_with_timeout_and_recovery
 )
-test_long_press_event = entity_test_helpers.test_long_press_event
-test_ensure_long_press_virtual_device_fails_gracefully = (
-    entity_test_helpers.test_ensure_long_press_virtual_device_fails_gracefully
-)
-test_long_press_capability_true = entity_test_helpers.test_long_press_capability_true
 
 
 async def test_light_registry_state_callback(

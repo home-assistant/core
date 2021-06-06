@@ -36,7 +36,6 @@ test_async_locked_update_with_exception = (
 test_async_update_with_timeout_and_recovery = (
     entity_test_helpers.test_async_update_with_timeout_and_recovery
 )
-test_long_press_capability_false = entity_test_helpers.test_long_press_capability_false
 
 
 async def test_binary_sensor_registry_state_callback(

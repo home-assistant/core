@@ -8,39 +8,25 @@ from unittest.mock import patch
 
 import async_timeout
 from pywemo.ouimeaux_device.api.service import ActionException
-from pywemo.subscribe import EVENT_TYPE_LONG_PRESS
 
 from homeassistant.components.homeassistant import (
     DOMAIN as HA_DOMAIN,
     SERVICE_UPDATE_ENTITY,
 )
-from homeassistant.components.wemo.const import (
-    CAPABILITY_LONG_PRESS,
-    TRIGGER_TYPE_LONG_PRESS,
-    WEMO_EVENT,
-)
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    CONF_DEVICE_ID,
-    CONF_ENTITY_ID,
-    CONF_TYPE,
-    STATE_OFF,
-    STATE_UNAVAILABLE,
-)
+from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_UNAVAILABLE
 from homeassistant.core import callback
 from homeassistant.setup import async_setup_component
-
-from .conftest import async_setup_wemo_entity
 
 
 def _perform_registry_callback(hass, pywemo_registry, pywemo_device):
     """Return a callable method to trigger a state callback from the device."""
 
-    @callback
-    def async_callback():
+    async def async_callback():
         # Cause a state update callback to be triggered by the device.
-        pywemo_registry.callbacks[pywemo_device.name](pywemo_device, "", "")
-        return hass.async_block_till_done()
+        await hass.async_add_executor_job(
+            pywemo_registry.callbacks[pywemo_device.name], pywemo_device, "", ""
+        )
+        await hass.async_block_till_done()
 
     return async_callback
 
@@ -188,39 +174,3 @@ async def test_async_update_with_timeout_and_recovery(hass, wemo_entity, pywemo_
     event.set()
     await hass.async_block_till_done()
     assert hass.states.get(wemo_entity.entity_id).state == STATE_OFF
-
-
-async def test_long_press_event(hass, pywemo_registry, pywemo_device, wemo_entity):
-    """Verify that a long press event fires properly."""
-    events = []
-    hass.bus.async_listen(WEMO_EVENT, events.append)
-
-    pywemo_registry.callbacks[pywemo_device.name](
-        pywemo_device, EVENT_TYPE_LONG_PRESS, ""
-    )
-    await hass.async_block_till_done()
-
-    assert len(events) == 1
-    assert events[0].event_type == WEMO_EVENT
-    assert events[0].data == {
-        CONF_DEVICE_ID: wemo_entity.device_id,
-        CONF_ENTITY_ID: wemo_entity.entity_id,
-        CONF_TYPE: TRIGGER_TYPE_LONG_PRESS,
-    }
-
-
-async def test_ensure_long_press_virtual_device_fails_gracefully(hass, pywemo_device):
-    """Failure to enable long press support should not block device setup."""
-    assert pywemo_device.supports_long_press()
-    pywemo_device.ensure_long_press_virtual_device.side_effect = ActionException
-    assert await async_setup_wemo_entity(hass, pywemo_device)
-
-
-async def test_long_press_capability_true(wemo_entity):
-    """Verify that the WeMo entity supports long presses."""
-    assert wemo_entity.capabilities.get(CAPABILITY_LONG_PRESS)
-
-
-async def test_long_press_capability_false(wemo_entity):
-    """Verify that the WeMo entity does not support long presses."""
-    assert not wemo_entity.capabilities.get(CAPABILITY_LONG_PRESS)
