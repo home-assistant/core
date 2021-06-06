@@ -34,6 +34,7 @@ class LightwaveBattery(SensorEntity):
         self._state = None
         self._lwlink = lwlink
         self._serial = serial
+        self._attr_unique_id = f"{serial}-trv-battery"
 
     @property
     def unique_id(self):
