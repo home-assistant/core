@@ -13,6 +13,7 @@
         "step": {
             "init": {
                 "data": {
+                    "scan_interval": "Update-Intervall",
                     "tracked_asset_pairs": "Verfolgte Asset-Paare"
                 }
             }

@@ -39,7 +39,10 @@
     },
     "system_health": {
         "info": {
-            "host_reachable": "Deutsch"
+            "device_connected": "ISY verbunden",
+            "host_reachable": "Deutsch",
+            "last_heartbeat": "Letzte Heartbeat-Zeit",
+            "websocket_status": "Ereignis-Socket Status"
         }
     }
 }

@@ -50,6 +50,7 @@
                     "automatic_add": "Automatisches Hinzuf\u00fcgen aktivieren",
                     "debug": "Debugging aktivieren",
                     "device": "Zu konfigurierendes Ger\u00e4t ausw\u00e4hlen",
+                    "event_code": "Ereigniscode zum Hinzuf\u00fcgen eingeben",
                     "remove_device": "Zu l\u00f6schendes Ger\u00e4t ausw\u00e4hlen"
                 },
                 "title": "Rfxtrx Optionen"
@@ -65,7 +66,8 @@
                     "replace_device": "W\u00e4hle ein Ger\u00e4t aus, das ersetzt werden soll",
                     "signal_repetitions": "Anzahl der Signalwiederholungen",
                     "venetian_blind_mode": "Jalousie-Modus"
-                }
+                },
+                "title": "Ger\u00e4teoptionen konfigurieren"
             }
         }
     }
