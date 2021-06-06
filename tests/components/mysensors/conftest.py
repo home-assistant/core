@@ -125,6 +125,12 @@ def load_nodes_state(fixture_path: str) -> dict:
     return json.loads(load_fixture(fixture_path), cls=MySensorsJSONDecoder)
 
 
+def update_gateway_nodes(gateway: MagicMock, nodes: dict) -> dict:
+    """Update the gateway nodes."""
+    gateway.sensors.update(nodes)
+    return nodes
+
+
 @pytest.fixture(name="gps_sensor_state", scope="session")
 def gps_sensor_state_fixture() -> dict:
     """Load the gps sensor state."""
@@ -134,6 +140,6 @@ def gps_sensor_state_fixture() -> dict:
 @pytest.fixture
 def gps_sensor(gateway, gps_sensor_state) -> Sensor:
     """Load the gps sensor."""
-    gateway.sensors.update(gps_sensor_state)
-    node = gateway.sensors[1]
+    nodes = update_gateway_nodes(gateway, gps_sensor_state)
+    node = nodes[1]
     return node
