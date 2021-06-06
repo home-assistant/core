@@ -263,7 +263,7 @@ def stream_worker(  # noqa: C901
         """Initialize by peeking into the first few packets of the stream.
 
         Deal with problem #1 above (bad first packet pts/dts) by recalculating using pts/dts from second packet.
-        Also load the first video keyframe pts into segment_start_pts and check if the audio stream really exists.
+        Also load the first video keyframe dts into segment_start_dts and check if the audio stream really exists.
         """
         nonlocal segment_start_dts, audio_stream, container_packets
         missing_dts = 0
