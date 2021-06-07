@@ -131,8 +131,8 @@ async def async_register_base_station(hass, system, config_entry_id):
 async def async_setup_entry(hass, config_entry):  # noqa: C901
     """Set up SimpliSafe as config entry."""
     hass.data.setdefault(DOMAIN, {DATA_CLIENT: {}, DATA_LISTENER: {}})
-    hass.data[DOMAIN][DATA_CLIENT].setdefault(config_entry.entry_id, [])
-    hass.data[DOMAIN][DATA_LISTENER].setdefault(config_entry.entry_id, [])
+    hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id] = []
+    hass.data[DOMAIN][DATA_LISTENER][config_entry.entry_id] = []
 
     if CONF_PASSWORD not in config_entry.data:
         raise ConfigEntryAuthFailed("Config schema change requires re-authentication")
