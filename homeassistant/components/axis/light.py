@@ -50,6 +50,7 @@ class AxisLight(AxisEventBase, LightEntity):
         self.max_intensity = 0
 
         self._attr_supported_color_modes = {COLOR_MODE_BRIGHTNESS}
+        self._attr_color_mode = COLOR_MODE_BRIGHTNESS
 
     async def async_added_to_hass(self) -> None:
         """Subscribe lights events."""
@@ -66,11 +67,6 @@ class AxisLight(AxisEventBase, LightEntity):
             self.light_id
         )
         self.max_intensity = max_intensity["data"]["ranges"][0]["high"]
-
-    @property
-    def color_mode(self):
-        """Return the color mode of the light."""
-        return COLOR_MODE_BRIGHTNESS
 
     @property
     def name(self):
