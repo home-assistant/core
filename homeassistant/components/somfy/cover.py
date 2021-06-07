@@ -21,8 +21,8 @@ from homeassistant.components.cover import (
 from homeassistant.const import CONF_OPTIMISTIC, STATE_CLOSED, STATE_OPEN
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from . import SomfyEntity
 from .const import API, COORDINATOR, DOMAIN
+from .entity import SomfyEntity
 
 BLIND_DEVICE_CATEGORIES = {Category.INTERIOR_BLIND.value, Category.EXTERIOR_BLIND.value}
 SHUTTER_DEVICE_CATEGORIES = {Category.EXTERIOR_BLIND.value}

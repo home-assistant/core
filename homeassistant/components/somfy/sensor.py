@@ -6,8 +6,8 @@ from pymfy.api.devices.thermostat import Thermostat
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import DEVICE_CLASS_BATTERY, PERCENTAGE
 
-from . import SomfyEntity
 from .const import API, COORDINATOR, DOMAIN
+from .entity import SomfyEntity
 
 SUPPORTED_CATEGORIES = {Category.HVAC.value}
 

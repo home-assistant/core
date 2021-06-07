@@ -4,8 +4,8 @@ from pymfy.api.devices.category import Category
 
 from homeassistant.components.switch import SwitchEntity
 
-from . import SomfyEntity
 from .const import API, COORDINATOR, DOMAIN
+from .entity import SomfyEntity
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):

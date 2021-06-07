@@ -23,8 +23,8 @@ from homeassistant.components.climate.const import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 
-from . import SomfyEntity
 from .const import API, COORDINATOR, DOMAIN
+from .entity import SomfyEntity
 
 SUPPORTED_CATEGORIES = {Category.HVAC.value}
 
