@@ -411,4 +411,15 @@ DEMO_DEVICES = [
         "type": "action.devices.types.LIGHT",
         "willReportState": False,
     },
+    {
+        "id": "light.entrance_color_white_lights",
+        "name": {"name": "Entrance Color + White Lights"},
+        "traits": [
+            "action.devices.traits.OnOff",
+            "action.devices.traits.Brightness",
+            "action.devices.traits.ColorSetting",
+        ],
+        "type": "action.devices.types.LIGHT",
+        "willReportState": False,
+    },
 ]
