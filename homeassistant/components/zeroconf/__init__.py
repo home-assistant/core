@@ -349,8 +349,14 @@ class ZeroconfDiscovery:
         if state_change == ServiceStateChange.Removed:
             return
 
+        asyncio.create_task(self._process_service_update(zeroconf, service_type, name))
+
+    async def _process_service_update(
+        self, aiozc: HaAsyncZeroconf, service_type: str, name: str
+    ) -> None:
+        """Process a zeroconf update."""
         async_service_info = AsyncServiceInfo(service_type, name)
-        async_service_info.load_from_cache(zeroconf.zeroconf)
+        await async_service_info.async_request(aiozc, 3000)
 
         info = info_from_service(async_service_info)
         if not info:
