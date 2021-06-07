@@ -35,7 +35,7 @@ def mock_zone_2():
 def test_zone_unique_ids(mock_device, mock_zone_1, mock_zone_2):
     """Test unique id generation correctness."""
     sensor_1 = AtwZoneSensor(mock_device, mock_zone_1, "room_temperature", {})
-    assert sensor_1.unique_id == "1234-11:11:11:11:11:11-room_temperature-zone-1"
+    assert sensor_1.unique_id == "1234-11:11:11:11:11:11-room_temperature"
 
     sensor_2 = AtwZoneSensor(mock_device, mock_zone_2, "room_temperature", {})
     assert sensor_2.unique_id == "1234-11:11:11:11:11:11-room_temperature-zone-2"
