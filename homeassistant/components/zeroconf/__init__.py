@@ -333,7 +333,7 @@ class ZeroconfDiscovery:
     @callback
     def async_service_update(
         self,
-        aiozc: HaAsyncZeroconf,
+        zeroconf: HaAsyncZeroconf,
         service_type: str,
         name: str,
         state_change: ServiceStateChange,
@@ -350,7 +350,7 @@ class ZeroconfDiscovery:
             return
 
         async_service_info = AsyncServiceInfo(service_type, name)
-        async_service_info.load_from_cache(aiozc.zeroconf)
+        async_service_info.load_from_cache(zeroconf.zeroconf)
 
         info = info_from_service(async_service_info)
         if not info:
