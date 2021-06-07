@@ -558,7 +558,7 @@ class SonosSpeaker:
             coordinator_uid = self.soco.uid
             slave_uids = []
 
-            with contextlib.suppress(SoCoException):
+            with contextlib.suppress(OSError, SoCoException):
                 if self.soco.group and self.soco.group.coordinator:
                     coordinator_uid = self.soco.group.coordinator.uid
                     slave_uids = [
