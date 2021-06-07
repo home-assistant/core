@@ -56,6 +56,7 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
         super().__init__(speaker)
 
         self.alarm_id = alarm_id
+        self.household_id = speaker.household_id
         self.entity_id = ENTITY_ID_FORMAT.format(f"sonos_alarm_{self.alarm_id}")
 
     async def async_added_to_hass(self) -> None:
@@ -64,19 +65,15 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{SONOS_ALARM_UPDATE}-{self.speaker.household_id}",
-                self.async_update,
+                f"{SONOS_ALARM_UPDATE}-{self.household_id}",
+                self.async_update_state,
             )
         )
 
     @property
     def alarm(self):
         """Return the alarm instance."""
-        return (
-            self.hass.data[DATA_SONOS]
-            .alarms[self.speaker.household_id]
-            .get(self.alarm_id)
-        )
+        return self.hass.data[DATA_SONOS].alarms[self.household_id].get(self.alarm_id)
 
     @property
     def unique_id(self) -> str:
@@ -97,6 +94,10 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
             str(self.alarm.start_time)[0:5],
         )
 
+    async def async_update(self) -> None:
+        """Call the central alarm polling method."""
+        await self.hass.data[DATA_SONOS].alarms[self.household_id].async_poll()
+
     @callback
     def async_check_if_available(self):
         """Check if alarm exists and remove alarm entity if not available."""
@@ -111,7 +112,7 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
 
         return False
 
-    async def async_update(self) -> None:
+    async def async_update_state(self) -> None:
         """Poll the device for the current state."""
         if not self.async_check_if_available():
             return

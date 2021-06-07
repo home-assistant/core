@@ -134,7 +134,7 @@ async def async_setup_entry(  # noqa: C901
             data.discovered[soco.uid] = speaker
             if soco.household_id not in data.alarms:
                 data.alarms[soco.household_id] = SonosAlarms(hass, soco.household_id)
-                data.alarms[soco.household_id].get_new_alarms(soco)
+                data.alarms[soco.household_id].setup(soco)
             if soco.household_id not in data.favorites:
                 data.favorites[soco.household_id] = SonosFavorites(
                     hass, soco.household_id
