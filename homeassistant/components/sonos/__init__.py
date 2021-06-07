@@ -129,6 +129,8 @@ async def async_setup_entry(  # noqa: C901
         pysonos.config.EVENT_ADVERTISE_IP = advertise_addr
 
     async def _async_stop_event_listener(event: Event) -> None:
+        for speaker in data.discovered.values():
+            await speaker.async_unsubscribe()
         if events_asyncio.event_listener:
             await events_asyncio.event_listener.async_stop()
 
