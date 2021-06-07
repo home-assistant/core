@@ -302,10 +302,10 @@ async def async_reload_entry(hass, config_entry):
 class SimpliSafe:
     """Define a SimpliSafe data object."""
 
-    def __init__(self, hass, config_entry, api, get_api_coro):
+    def __init__(self, hass, config_entry, api, async_get_api):
         """Initialize."""
         self._api = api
-        self._get_api_coro = get_api_coro
+        self._async_get_api = async_get_api
         self._hass = hass
         self._system_notifications = {}
         self.config_entry = config_entry
@@ -383,7 +383,7 @@ class SimpliSafe:
         for result in results:
             if isinstance(result, InvalidCredentialsError):
                 try:
-                    self._api = await self._get_api_coro()
+                    self._api = await self._async_get_api()
                     return
                 except SimplipyError as err:
                     raise ConfigEntryAuthFailed(
