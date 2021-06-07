@@ -347,7 +347,7 @@ class MySensorsConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 break
 
         # if no errors so far, try to connect
-        if not errors and not await try_connect(self.hass, user_input):
+        if not errors and not await try_connect(self.hass, gw_type, user_input):
             errors["base"] = "cannot_connect"
 
         return errors
