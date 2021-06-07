@@ -12,7 +12,7 @@ from decora_wifi.models.residential_account import ResidentialAccount
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
-from .const import CONF_LIGHT, DOMAIN, PLATFORMS
+from .const import DOMAIN, LIGHT_DOMAIN, PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -108,7 +108,7 @@ class DecoraWifiPlatform:
     @staticmethod
     def classifydevice(dev):
         """Sort devices by device type."""
-        return CONF_LIGHT
+        return LIGHT_DOMAIN
 
 
 class DecoraWifiEntity(Entity):

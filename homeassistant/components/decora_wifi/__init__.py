@@ -40,7 +40,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass, config):
     """Set up the Decora Wifi component."""
-    hass.data[DOMAIN] = {}
+    hass.data.setdefault(DOMAIN, {})
 
     if DOMAIN not in config:
         return True
@@ -78,7 +78,6 @@ async def async_setup_entry(hass: HomeAssistant, entry):
             )
         }
     )
-    hass.data[DOMAIN][entry.entry_id] = email
     devices = {}
 
     try:

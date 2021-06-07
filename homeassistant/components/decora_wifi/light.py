@@ -9,6 +9,7 @@ from homeassistant.components.light import (
     SUPPORT_TRANSITION,
     LightEntity,
 )
+from homeassistant.const import CONF_USERNAME
 
 from .common import (
     DecoraWifiCommFailed,
@@ -16,7 +17,7 @@ from .common import (
     DecoraWifiPlatform,
     DecoraWifiSessionNotFound,
 )
-from .const import CONF_LIGHT, DOMAIN
+from .const import LIGHT_DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,7 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up Decora Wifi lights based on a config entry."""
 
-    email = hass.data[DOMAIN][entry.entry_id]
+    email = entry.data[CONF_USERNAME]
 
     try:
         devices = await DecoraWifiPlatform.async_getdevices(hass, email)
@@ -32,13 +33,13 @@ async def async_setup_entry(hass, entry, async_add_entities):
         _LOGGER.error("Communication with Decora Wifi platform failed.")
     except DecoraWifiSessionNotFound:
         _LOGGER.error("DecoraWifi Session not found.")
-    finally:
-        lights = devices[CONF_LIGHT]
-        entities = []
-        if lights:
-            for light in lights:
-                entities.append(DecoraWifiLight(light))
-        async_add_entities(entities, True)
+
+    lights = devices[LIGHT_DOMAIN]
+    entities = []
+    if lights:
+        for light in lights:
+            entities.append(DecoraWifiLight(light))
+    async_add_entities(entities, True)
 
 
 class DecoraWifiLight(DecoraWifiEntity, LightEntity):
@@ -71,7 +72,7 @@ class DecoraWifiLight(DecoraWifiEntity, LightEntity):
         """Return true if switch is on."""
         return self._switch.power == "ON"
 
-    async def turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs):
         """Instruct the switch to turn on & adjust brightness."""
         attribs = {"power": "ON"}
 
@@ -94,7 +95,7 @@ class DecoraWifiLight(DecoraWifiEntity, LightEntity):
         except ValueError:
             _LOGGER.error("Failed to turn on myLeviton switch")
 
-    async def turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs):
         """Instruct the switch to turn off."""
         attribs = {"power": "OFF"}
 
@@ -106,7 +107,7 @@ class DecoraWifiLight(DecoraWifiEntity, LightEntity):
         except ValueError:
             _LOGGER.error("Failed to turn off myLeviton switch")
 
-    async def update(self):
+    async def async_update(self):
         """Fetch new state data for this switch."""
         try:
             await self.hass.async_add_executor_job(self._switch.refresh)
