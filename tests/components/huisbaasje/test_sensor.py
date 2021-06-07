@@ -34,7 +34,6 @@ async def test_setup_entry(hass: HomeAssistant):
                 CONF_PASSWORD: "password",
             },
             source="test",
-            system_options={},
         )
         config_entry.add_to_hass(hass)
 
@@ -90,7 +89,6 @@ async def test_setup_entry_absent_measurement(hass: HomeAssistant):
                 CONF_PASSWORD: "password",
             },
             source="test",
-            system_options={},
         )
         config_entry.add_to_hass(hass)
 

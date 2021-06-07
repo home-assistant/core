@@ -13,8 +13,7 @@ import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.components.recorder import history
-from homeassistant.components.recorder.models import States
+from homeassistant.components.recorder import history, models as history_models
 from homeassistant.components.recorder.statistics import statistics_during_period
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.const import (
@@ -26,7 +25,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.deprecation import deprecated_function
+from homeassistant.helpers.deprecation import deprecated_class, deprecated_function
 from homeassistant.helpers.entityfilter import (
     CONF_ENTITY_GLOBS,
     INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA,
@@ -108,6 +107,11 @@ async def async_setup(hass, config):
     )
 
     return True
+
+
+@deprecated_class("homeassistant.components.recorder.models.LazyState")
+class LazyState(history_models.LazyState):
+    """A lazy version of core State."""
 
 
 @websocket_api.websocket_command(
@@ -345,17 +349,17 @@ class Filters:
         """Generate the entity filter query."""
         includes = []
         if self.included_domains:
-            includes.append(States.domain.in_(self.included_domains))
+            includes.append(history_models.States.domain.in_(self.included_domains))
         if self.included_entities:
-            includes.append(States.entity_id.in_(self.included_entities))
+            includes.append(history_models.States.entity_id.in_(self.included_entities))
         for glob in self.included_entity_globs:
             includes.append(_glob_to_like(glob))
 
         excludes = []
         if self.excluded_domains:
-            excludes.append(States.domain.in_(self.excluded_domains))
+            excludes.append(history_models.States.domain.in_(self.excluded_domains))
         if self.excluded_entities:
-            excludes.append(States.entity_id.in_(self.excluded_entities))
+            excludes.append(history_models.States.entity_id.in_(self.excluded_entities))
         for glob in self.excluded_entity_globs:
             excludes.append(_glob_to_like(glob))
 
@@ -373,7 +377,7 @@ class Filters:
 
 def _glob_to_like(glob_str):
     """Translate glob to sql."""
-    return States.entity_id.like(glob_str.translate(GLOB_TO_SQL_CHARS))
+    return history_models.States.entity_id.like(glob_str.translate(GLOB_TO_SQL_CHARS))
 
 
 def _entities_may_have_state_changes_after(

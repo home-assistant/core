@@ -1,4 +1,6 @@
 """Platform for binary sensor integration."""
+from __future__ import annotations
+
 import logging
 
 from smarttub import SpaError, SpaReminder
@@ -61,6 +63,8 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class SmartTubOnline(SmartTubSensorBase, BinarySensorEntity):
     """A binary sensor indicating whether the spa is currently online (connected to the cloud)."""
 
+    _attr_device_class = DEVICE_CLASS_CONNECTIVITY
+
     def __init__(self, coordinator, spa):
         """Initialize the entity."""
         super().__init__(coordinator, spa, "Online", "online")
@@ -78,14 +82,11 @@ class SmartTubOnline(SmartTubSensorBase, BinarySensorEntity):
         """Return true if the binary sensor is on."""
         return self._state is True
 
-    @property
-    def device_class(self) -> str:
-        """Return the device class for this entity."""
-        return DEVICE_CLASS_CONNECTIVITY
-
 
 class SmartTubReminder(SmartTubEntity, BinarySensorEntity):
     """Reminders for maintenance actions."""
+
+    _attr_device_class = DEVICE_CLASS_PROBLEM
 
     def __init__(self, coordinator, spa, reminder):
         """Initialize the entity."""
@@ -118,11 +119,6 @@ class SmartTubReminder(SmartTubEntity, BinarySensorEntity):
             ATTR_REMINDER_SNOOZED: self.reminder.snoozed,
         }
 
-    @property
-    def device_class(self) -> str:
-        """Return the device class for this entity."""
-        return DEVICE_CLASS_PROBLEM
-
     async def async_snooze(self, days):
         """Snooze this reminder for the specified number of days."""
         await self.reminder.snooze(days)
@@ -135,6 +131,8 @@ class SmartTubError(SmartTubEntity, BinarySensorEntity):
     There may be 0 or more errors. If there are >0, we show the first one.
     """
 
+    _attr_device_class = DEVICE_CLASS_PROBLEM
+
     def __init__(self, coordinator, spa):
         """Initialize the entity."""
         super().__init__(
@@ -144,7 +142,7 @@ class SmartTubError(SmartTubEntity, BinarySensorEntity):
         )
 
     @property
-    def error(self) -> SpaError:
+    def error(self) -> SpaError | None:
         """Return the underlying SpaError object for this entity."""
         errors = self.coordinator.data[self.spa.id][ATTR_ERRORS]
         if len(errors) == 0:
@@ -173,8 +171,3 @@ class SmartTubError(SmartTubEntity, BinarySensorEntity):
             ATTR_CREATED_AT: error.created_at.isoformat(),
             ATTR_UPDATED_AT: error.updated_at.isoformat(),
         }
-
-    @property
-    def device_class(self) -> str:
-        """Return the device class for this entity."""
-        return DEVICE_CLASS_PROBLEM

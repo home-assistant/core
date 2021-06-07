@@ -66,7 +66,7 @@ def is_socket_address(value):
         raise vol.Invalid("Device is not a valid domain name or ip address") from err
 
 
-async def try_connect(hass: HomeAssistant, user_input: dict[str, str]) -> bool:
+async def try_connect(hass: HomeAssistant, user_input: dict[str, Any]) -> bool:
     """Try to connect to a gateway and report if it worked."""
     if user_input[CONF_DEVICE] == MQTT_COMPONENT:
         return True  # dont validate mqtt. mqtt gateways dont send ready messages :(
@@ -250,7 +250,6 @@ async def _discover_persistent_devices(
     hass: HomeAssistant, entry: ConfigEntry, gateway: BaseAsyncGateway
 ):
     """Discover platforms for devices loaded via persistence file."""
-    tasks = []
     new_devices = defaultdict(list)
     for node_id in gateway.sensors:
         if not validate_node(gateway, node_id):
@@ -263,8 +262,6 @@ async def _discover_persistent_devices(
     _LOGGER.debug("discovering persistent devices: %s", new_devices)
     for platform, dev_ids in new_devices.items():
         discover_mysensors_platform(hass, entry.entry_id, platform, dev_ids)
-    if tasks:
-        await asyncio.wait(tasks)
 
 
 async def gw_stop(hass, entry: ConfigEntry, gateway: BaseAsyncGateway):
@@ -295,7 +292,7 @@ async def _gw_start(hass: HomeAssistant, entry: ConfigEntry, gateway: BaseAsyncG
     async def stop_this_gw(_: Event):
         await gw_stop(hass, entry, gateway)
 
-    await on_unload(
+    on_unload(
         hass,
         entry.entry_id,
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_this_gw),
@@ -331,8 +328,8 @@ def _gw_callback_factory(
 
         msg_type = msg.gateway.const.MessageType(msg.type)
         msg_handler: Callable[
-            [Any, GatewayId, Message], Coroutine[None]
-        ] = HANDLERS.get(msg_type.name)
+            [HomeAssistant, GatewayId, Message], Coroutine[Any, Any, None]
+        ] | None = HANDLERS.get(msg_type.name)
 
         if msg_handler is None:
             return

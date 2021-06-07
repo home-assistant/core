@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections import deque
+import datetime
 from typing import Callable
 
 from aiohttp import web
@@ -30,6 +31,7 @@ class Segment:
     duration: float = attr.ib()
     # For detecting discontinuities across stream restarts
     stream_id: int = attr.ib(default=0)
+    start_time: datetime.datetime = attr.ib(factory=datetime.datetime.utcnow)
 
 
 class IdleTimer:
@@ -82,8 +84,7 @@ class StreamOutput:
     ) -> None:
         """Initialize a stream output."""
         self._hass = hass
-        self._idle_timer = idle_timer
-        self._cursor: int | None = None
+        self.idle_timer = idle_timer
         self._event = asyncio.Event()
         self._segments: deque[Segment] = deque(maxlen=deque_maxlen)
 
@@ -95,7 +96,7 @@ class StreamOutput:
     @property
     def idle(self) -> bool:
         """Return True if the output is idle."""
-        return self._idle_timer.idle
+        return self.idle_timer.idle
 
     @property
     def last_sequence(self) -> int:
@@ -105,9 +106,16 @@ class StreamOutput:
         return -1
 
     @property
-    def segments(self) -> list[int]:
+    def sequences(self) -> list[int]:
         """Return current sequence from segments."""
         return [s.sequence for s in self._segments]
+
+    @property
+    def last_segment(self) -> Segment | None:
+        """Return the last segment without iterating."""
+        if self._segments:
+            return self._segments[-1]
+        return None
 
     @property
     def target_duration(self) -> int:
@@ -120,8 +128,6 @@ class StreamOutput:
 
     def get_segment(self, sequence: int) -> Segment | None:
         """Retrieve a specific segment."""
-        self._idle_timer.awake()
-
         for segment in self._segments:
             if segment.sequence == sequence:
                 return segment
@@ -129,20 +135,12 @@ class StreamOutput:
 
     def get_segments(self) -> deque[Segment]:
         """Retrieve all segments."""
-        self._idle_timer.awake()
         return self._segments
 
-    async def recv(self) -> Segment | None:
+    async def recv(self) -> bool:
         """Wait for and retrieve the latest segment."""
-        if self._cursor is None or self._cursor <= self.last_sequence:
-            await self._event.wait()
-
-        if not self._segments:
-            return None
-
-        segment = self.get_segments()[-1]
-        self._cursor = segment.sequence
-        return segment
+        await self._event.wait()
+        return self.last_segment is not None
 
     def put(self, segment: Segment) -> None:
         """Store output."""
@@ -152,7 +150,7 @@ class StreamOutput:
     def _async_put(self, segment: Segment) -> None:
         """Store output from event loop."""
         # Start idle timeout when we start receiving data
-        self._idle_timer.start()
+        self.idle_timer.start()
         self._segments.append(segment)
         self._event.set()
         self._event.clear()
@@ -160,7 +158,7 @@ class StreamOutput:
     def cleanup(self):
         """Handle cleanup."""
         self._event.set()
-        self._idle_timer.clear()
+        self.idle_timer.clear()
         self._segments = deque(maxlen=self._segments.maxlen)
 
 

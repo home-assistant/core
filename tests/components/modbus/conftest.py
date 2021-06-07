@@ -57,6 +57,7 @@ async def mock_modbus(hass, mock_pymodbus):
     yield mock_pymodbus
 
 
+# dataclass
 class ReadResult:
     """Storage class for register read results."""
 

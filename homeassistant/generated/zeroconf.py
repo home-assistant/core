@@ -109,6 +109,10 @@ ZEROCONF = {
             "name": "nam-*"
         },
         {
+            "domain": "nam",
+            "manufacturer": "nettigo"
+        },
+        {
             "domain": "rachio",
             "name": "rachio*"
         },

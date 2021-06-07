@@ -59,7 +59,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up ONVIF from a config entry."""
     if DOMAIN not in hass.data:
         hass.data[DOMAIN] = {}

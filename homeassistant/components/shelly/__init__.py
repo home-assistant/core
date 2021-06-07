@@ -66,7 +66,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Shelly from a config entry."""
     hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id] = {}
     hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id][DEVICE] = None
@@ -288,8 +288,10 @@ class ShellyDeviceWrapper(update_coordinator.DataUpdateCoordinator):
 
     def shutdown(self):
         """Shutdown the wrapper."""
-        self.device.shutdown()
-        self._async_remove_device_updates_handler()
+        if self.device:
+            self.device.shutdown()
+            self._async_remove_device_updates_handler()
+            self.device = None
 
     @callback
     def _handle_ha_stop(self, _):
