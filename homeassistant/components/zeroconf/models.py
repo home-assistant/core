@@ -1,10 +1,9 @@
 """Models for Zeroconf."""
 
-import asyncio
 from typing import Any
 
 from zeroconf import DNSAddress, DNSRecord, ServiceBrowser, Zeroconf
-from zeroconf.asyncio import AsyncZeroconf, _AsyncSender
+from zeroconf.asyncio import AsyncZeroconf
 
 TYPE_AAAA = 28
 
@@ -21,16 +20,10 @@ class HaZeroconf(Zeroconf):
 class HaAsyncZeroconf(AsyncZeroconf):
     """Home Assistant version of AsyncZeroconf."""
 
-    def __init__(  # pylint: disable=super-init-not-called
-        self, *args: Any, **kwargs: Any
-    ) -> None:
-        """Wrap AsyncZeroconf."""
-        self.zeroconf = HaZeroconf(*args, **kwargs)
-        self.sender = _AsyncSender(self.zeroconf)
-        self.loop = asyncio.get_running_loop()
-
     async def async_close(self) -> None:
         """Fake method to avoid integrations closing it."""
+
+    ha_async_close = AsyncZeroconf.async_close
 
 
 class HaServiceBrowser(ServiceBrowser):

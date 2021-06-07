@@ -690,9 +690,9 @@ _ADAPTER_WITH_DEFAULT_ENABLED = [
 
 async def test_async_detect_interfaces_setting_non_loopback_route(hass):
     """Test without default interface config and the route returns a non-loopback address."""
-    with patch(
-        "homeassistant.components.zeroconf.models.HaZeroconf"
-    ) as mock_zc, patch.object(hass.config_entries.flow, "async_init"), patch.object(
+    with patch("homeassistant.components.zeroconf.HaZeroconf") as mock_zc, patch.object(
+        hass.config_entries.flow, "async_init"
+    ), patch.object(
         zeroconf, "HaServiceBrowser", side_effect=service_update_mock
     ), patch(
         "homeassistant.components.zeroconf.network.async_get_adapters",
@@ -747,9 +747,9 @@ _ADAPTERS_WITH_MANUAL_CONFIG = [
 
 async def test_async_detect_interfaces_setting_empty_route(hass):
     """Test without default interface config and the route returns nothing."""
-    with patch(
-        "homeassistant.components.zeroconf.models.HaZeroconf"
-    ) as mock_zc, patch.object(hass.config_entries.flow, "async_init"), patch.object(
+    with patch("homeassistant.components.zeroconf.HaZeroconf") as mock_zc, patch.object(
+        hass.config_entries.flow, "async_init"
+    ), patch.object(
         zeroconf, "HaServiceBrowser", side_effect=service_update_mock
     ), patch(
         "homeassistant.components.zeroconf.network.async_get_adapters",
