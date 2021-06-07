@@ -236,6 +236,9 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
 
     def _setup_from_config(self, config):
         """(Re)Setup the entity."""
+        if CONF_STATE_VALUE_TEMPLATE not in config and CONF_VALUE_TEMPLATE in config:
+            config[CONF_STATE_VALUE_TEMPLATE] = config[CONF_VALUE_TEMPLATE]
+
         topic = {
             key: config.get(key)
             for key in (
