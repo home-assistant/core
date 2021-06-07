@@ -4,6 +4,14 @@ from __future__ import annotations
 from datetime import timedelta
 from typing import TYPE_CHECKING, Final
 
+from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
+    ATTR_ICON,
+    ATTR_NAME,
+    ATTR_STATE,
+    ATTR_UNIT_OF_MEASUREMENT,
+)
+
 if TYPE_CHECKING:
     from .models import GeocachingSensorSettings
 
@@ -15,59 +23,62 @@ API_ENDPOINT_URL = "https://staging.api.groundspeak.com"
 
 UPDATE_INTERVAL = timedelta(hours=1)
 
+ATTR_DEFAULT_ENABLED: Final = "default_enabled"
+ATTR_SECTION: Final = "section"
+
 SENSOR_DATA: Final[dict[str, GeocachingSensorSettings]] = {
     "username": {
-        "name": "Username",
-        "section": "user",
-        "state": "username",
-        "unit_of_measurement": None,
-        "device_class": None,
-        "icon": "mdi:account",
-        "default_enabled": False,
+        ATTR_NAME: "Username",
+        ATTR_SECTION: "user",
+        ATTR_STATE: "username",
+        ATTR_UNIT_OF_MEASUREMENT: None,
+        ATTR_DEVICE_CLASS: None,
+        ATTR_ICON: "mdi:account",
+        ATTR_DEFAULT_ENABLED: False,
     },
     "find_count": {
-        "name": "Total finds",
-        "section": "user",
-        "state": "find_count",
-        "unit_of_measurement": "caches",
-        "device_class": None,
-        "icon": "mdi:notebook-edit-outline",
-        "default_enabled": True,
+        ATTR_NAME: "Total finds",
+        ATTR_SECTION: "user",
+        ATTR_STATE: "find_count",
+        ATTR_UNIT_OF_MEASUREMENT: "caches",
+        ATTR_DEVICE_CLASS: None,
+        ATTR_ICON: "mdi:notebook-edit-outline",
+        ATTR_DEFAULT_ENABLED: True,
     },
     "hide_count": {
-        "name": "Total hides",
-        "section": "user",
-        "state": "hide_count",
-        "unit_of_measurement": "caches",
-        "device_class": None,
-        "icon": "mdi:eye-off-outline",
-        "default_enabled": True,
+        ATTR_NAME: "Total hides",
+        ATTR_SECTION: "user",
+        ATTR_STATE: "hide_count",
+        ATTR_UNIT_OF_MEASUREMENT: "caches",
+        ATTR_DEVICE_CLASS: None,
+        ATTR_ICON: "mdi:eye-off-outline",
+        ATTR_DEFAULT_ENABLED: True,
     },
     "favorite_points": {
-        "name": "Favorite points",
-        "section": "user",
-        "state": "favorite_points",
-        "unit_of_measurement": "points",
-        "device_class": None,
-        "icon": "mdi:heart-outline",
-        "default_enabled": True,
+        ATTR_NAME: "Favorite points",
+        ATTR_SECTION: "user",
+        ATTR_STATE: "favorite_points",
+        ATTR_UNIT_OF_MEASUREMENT: "points",
+        ATTR_DEVICE_CLASS: None,
+        ATTR_ICON: "mdi:heart-outline",
+        ATTR_DEFAULT_ENABLED: True,
     },
     "souvenir_count": {
-        "name": "Total souvenirs",
-        "section": "user",
-        "state": "souvenir_count",
-        "unit_of_measurement": "souvenirs",
-        "device_class": None,
-        "icon": "mdi:license",
-        "default_enabled": True,
+        ATTR_NAME: "Total souvenirs",
+        ATTR_SECTION: "user",
+        ATTR_STATE: "souvenir_count",
+        ATTR_UNIT_OF_MEASUREMENT: "souvenirs",
+        ATTR_DEVICE_CLASS: None,
+        ATTR_ICON: "mdi:license",
+        ATTR_DEFAULT_ENABLED: True,
     },
     "awarded_favorite_points": {
-        "name": "Awarded favorite points",
-        "section": "user",
-        "state": "awarded_favorite_points",
-        "unit_of_measurement": "points",
-        "device_class": None,
-        "icon": "mdi:heart",
-        "default_enabled": True,
+        ATTR_NAME: "Awarded favorite points",
+        ATTR_SECTION: "user",
+        ATTR_STATE: "awarded_favorite_points",
+        ATTR_UNIT_OF_MEASUREMENT: "points",
+        ATTR_DEVICE_CLASS: None,
+        ATTR_ICON: "mdi:heart",
+        ATTR_DEFAULT_ENABLED: True,
     },
 }

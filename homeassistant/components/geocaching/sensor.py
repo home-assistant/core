@@ -5,11 +5,18 @@ from typing import Any
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
+    ATTR_ICON,
+    ATTR_NAME,
+    ATTR_STATE,
+    ATTR_UNIT_OF_MEASUREMENT,
+)
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, SENSOR_DATA
+from .const import ATTR_DEFAULT_ENABLED, ATTR_SECTION, DOMAIN, SENSOR_DATA
 from .coordinator import GeocachingDataUpdateCoordinator
 from .models import GeocachingSensorSettings
 
@@ -45,19 +52,19 @@ class GeocachingSensor(CoordinatorEntity, SensorEntity):
         self.settings = settings
         self.key = key
 
-        self._attr_device_class = settings["device_class"]
-        self._attr_entity_registry_enabled_default = settings["default_enabled"]
-        self._attr_icon = settings["icon"]
+        self._attr_device_class = settings[ATTR_DEVICE_CLASS]
+        self._attr_entity_registry_enabled_default = settings[ATTR_DEFAULT_ENABLED]
+        self._attr_icon = settings[ATTR_ICON]
         self._attr_name = (
-            f"Geocaching {coordinator.data.user.username} {settings['name']}"
+            f"Geocaching {coordinator.data.user.username} {settings[ATTR_NAME]}"
         )
         self._attr_unique_id = (
             f"geocaching_{coordinator.data.user.reference_code}_{key}"
         )
-        self._attr_unit_of_measurement = settings["unit_of_measurement"]
+        self._attr_unit_of_measurement = settings[ATTR_UNIT_OF_MEASUREMENT]
 
     @property
     def state(self) -> Any:
         """Return the state of the sensor."""
-        section = getattr(self.coordinator.data, self.settings["section"])
-        return getattr(section, self.settings["state"])
+        section = getattr(self.coordinator.data, self.settings[ATTR_SECTION])
+        return getattr(section, self.settings[ATTR_STATE])
