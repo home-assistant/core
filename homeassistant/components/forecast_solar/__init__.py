@@ -40,7 +40,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         logging.getLogger(__name__),
         name=DOMAIN,
         update_method=forecast.estimate,
-        update_interval=timedelta(minutes=20),
+        update_interval=timedelta(minutes=15),
     )
     await coordinator.async_config_entry_first_refresh()
 
