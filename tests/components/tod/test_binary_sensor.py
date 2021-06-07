@@ -28,6 +28,13 @@ def setup_fixture(hass):
     hass.config.longitude = 18.98583
 
 
+@pytest.fixture(autouse=True)
+def restore_timezone(hass):
+    """Make sure we change timezone."""
+    yield
+    dt_util.set_default_time_zone(ORIG_TIMEZONE)
+
+
 async def test_setup(hass):
     """Test the setup."""
     config = {
@@ -864,257 +871,231 @@ async def test_sun_offset(hass):
 
 async def test_dst(hass):
     """Test sun event with offset."""
-    try:
-        hass.config.time_zone = "CET"
-        dt_util.set_default_time_zone(dt_util.get_time_zone("CET"))
-        test_time = datetime(2019, 3, 30, 3, 0, 0, tzinfo=dt_util.UTC)
-        config = {
-            "binary_sensor": [
-                {"platform": "tod", "name": "Day", "after": "2:30", "before": "2:40"}
-            ]
-        }
-        # Test DST:
-        # after 2019-03-30 03:00 CET the next update should ge scheduled
-        # at 3:30 not 2:30 local time
-        entity_id = "binary_sensor.day"
-        with patch(
-            "homeassistant.components.tod.binary_sensor.dt_util.utcnow",
-            return_value=test_time,
-        ):
-            await async_setup_component(hass, "binary_sensor", config)
-            await hass.async_block_till_done()
+    hass.config.time_zone = "CET"
+    dt_util.set_default_time_zone(dt_util.get_time_zone("CET"))
+    test_time = datetime(2019, 3, 30, 3, 0, 0, tzinfo=dt_util.UTC)
+    config = {
+        "binary_sensor": [
+            {"platform": "tod", "name": "Day", "after": "2:30", "before": "2:40"}
+        ]
+    }
+    # Test DST:
+    # after 2019-03-30 03:00 CET the next update should ge scheduled
+    # at 3:30 not 2:30 local time
+    entity_id = "binary_sensor.day"
+    with patch(
+        "homeassistant.components.tod.binary_sensor.dt_util.utcnow",
+        return_value=test_time,
+    ):
+        await async_setup_component(hass, "binary_sensor", config)
+        await hass.async_block_till_done()
 
-            await hass.async_block_till_done()
-            state = hass.states.get(entity_id)
-            assert state.attributes["after"] == "2019-03-31T03:30:00+02:00"
-            assert state.attributes["before"] == "2019-03-31T03:40:00+02:00"
-            assert state.attributes["next_update"] == "2019-03-31T03:30:00+02:00"
-            assert state.state == STATE_OFF
-    finally:
-        dt_util.set_default_time_zone(ORIG_TIMEZONE)
+        await hass.async_block_till_done()
+        state = hass.states.get(entity_id)
+        assert state.attributes["after"] == "2019-03-31T03:30:00+02:00"
+        assert state.attributes["before"] == "2019-03-31T03:40:00+02:00"
+        assert state.attributes["next_update"] == "2019-03-31T03:30:00+02:00"
+        assert state.state == STATE_OFF
 
 
 async def test_simple_before_after_does_not_loop_utc_not_in_range(hass):
     """Test simple before after."""
-    try:
-        hass.config.time_zone = "UTC"
-        dt_util.set_default_time_zone(dt_util.UTC)
-        test_time = datetime(2019, 1, 10, 18, 43, 0, tzinfo=dt_util.UTC)
-        config = {
-            "binary_sensor": [
-                {
-                    "platform": "tod",
-                    "name": "Night",
-                    "before": "06:00",
-                    "after": "22:00",
-                }
-            ]
-        }
-        with patch(
-            "homeassistant.components.tod.binary_sensor.dt_util.utcnow",
-            return_value=test_time,
-        ):
-            await async_setup_component(hass, "binary_sensor", config)
-            await hass.async_block_till_done()
+    hass.config.time_zone = "UTC"
+    dt_util.set_default_time_zone(dt_util.UTC)
+    test_time = datetime(2019, 1, 10, 18, 43, 0, tzinfo=dt_util.UTC)
+    config = {
+        "binary_sensor": [
+            {
+                "platform": "tod",
+                "name": "Night",
+                "before": "06:00",
+                "after": "22:00",
+            }
+        ]
+    }
+    with patch(
+        "homeassistant.components.tod.binary_sensor.dt_util.utcnow",
+        return_value=test_time,
+    ):
+        await async_setup_component(hass, "binary_sensor", config)
+        await hass.async_block_till_done()
 
-        state = hass.states.get("binary_sensor.night")
-        assert state.state == STATE_OFF
-        assert state.attributes["after"] == "2019-01-10T22:00:00+00:00"
-        assert state.attributes["before"] == "2019-01-11T06:00:00+00:00"
-        assert state.attributes["next_update"] == "2019-01-10T22:00:00+00:00"
-    finally:
-        dt_util.set_default_time_zone(ORIG_TIMEZONE)
+    state = hass.states.get("binary_sensor.night")
+    assert state.state == STATE_OFF
+    assert state.attributes["after"] == "2019-01-10T22:00:00+00:00"
+    assert state.attributes["before"] == "2019-01-11T06:00:00+00:00"
+    assert state.attributes["next_update"] == "2019-01-10T22:00:00+00:00"
 
 
 async def test_simple_before_after_does_not_loop_utc_in_range(hass):
     """Test simple before after."""
-    try:
-        hass.config.time_zone = "UTC"
-        dt_util.set_default_time_zone(dt_util.UTC)
-        test_time = datetime(2019, 1, 10, 22, 43, 0, tzinfo=dt_util.UTC)
-        config = {
-            "binary_sensor": [
-                {
-                    "platform": "tod",
-                    "name": "Night",
-                    "before": "06:00",
-                    "after": "22:00",
-                }
-            ]
-        }
-        with patch(
-            "homeassistant.components.tod.binary_sensor.dt_util.utcnow",
-            return_value=test_time,
-        ):
-            await async_setup_component(hass, "binary_sensor", config)
-            await hass.async_block_till_done()
+    hass.config.time_zone = "UTC"
+    dt_util.set_default_time_zone(dt_util.UTC)
+    test_time = datetime(2019, 1, 10, 22, 43, 0, tzinfo=dt_util.UTC)
+    config = {
+        "binary_sensor": [
+            {
+                "platform": "tod",
+                "name": "Night",
+                "before": "06:00",
+                "after": "22:00",
+            }
+        ]
+    }
+    with patch(
+        "homeassistant.components.tod.binary_sensor.dt_util.utcnow",
+        return_value=test_time,
+    ):
+        await async_setup_component(hass, "binary_sensor", config)
+        await hass.async_block_till_done()
 
-        state = hass.states.get("binary_sensor.night")
-        assert state.state == STATE_ON
-        assert state.attributes["after"] == "2019-01-10T22:00:00+00:00"
-        assert state.attributes["before"] == "2019-01-11T06:00:00+00:00"
-        assert state.attributes["next_update"] == "2019-01-11T06:00:00+00:00"
-    finally:
-        dt_util.set_default_time_zone(ORIG_TIMEZONE)
+    state = hass.states.get("binary_sensor.night")
+    assert state.state == STATE_ON
+    assert state.attributes["after"] == "2019-01-10T22:00:00+00:00"
+    assert state.attributes["before"] == "2019-01-11T06:00:00+00:00"
+    assert state.attributes["next_update"] == "2019-01-11T06:00:00+00:00"
 
 
 async def test_simple_before_after_does_not_loop_utc_fire_at_before(hass):
     """Test simple before after."""
-    try:
-        hass.config.time_zone = "UTC"
-        dt_util.set_default_time_zone(dt_util.UTC)
-        test_time = datetime(2019, 1, 11, 6, 0, 0, tzinfo=dt_util.UTC)
-        config = {
-            "binary_sensor": [
-                {
-                    "platform": "tod",
-                    "name": "Night",
-                    "before": "06:00",
-                    "after": "22:00",
-                }
-            ]
-        }
-        with patch(
-            "homeassistant.components.tod.binary_sensor.dt_util.utcnow",
-            return_value=test_time,
-        ):
-            await async_setup_component(hass, "binary_sensor", config)
-            await hass.async_block_till_done()
+    hass.config.time_zone = "UTC"
+    dt_util.set_default_time_zone(dt_util.UTC)
+    test_time = datetime(2019, 1, 11, 6, 0, 0, tzinfo=dt_util.UTC)
+    config = {
+        "binary_sensor": [
+            {
+                "platform": "tod",
+                "name": "Night",
+                "before": "06:00",
+                "after": "22:00",
+            }
+        ]
+    }
+    with patch(
+        "homeassistant.components.tod.binary_sensor.dt_util.utcnow",
+        return_value=test_time,
+    ):
+        await async_setup_component(hass, "binary_sensor", config)
+        await hass.async_block_till_done()
 
-        state = hass.states.get("binary_sensor.night")
-        assert state.state == STATE_OFF
-        assert state.attributes["after"] == "2019-01-11T22:00:00+00:00"
-        assert state.attributes["before"] == "2019-01-12T06:00:00+00:00"
-        assert state.attributes["next_update"] == "2019-01-11T22:00:00+00:00"
-    finally:
-        dt_util.set_default_time_zone(ORIG_TIMEZONE)
+    state = hass.states.get("binary_sensor.night")
+    assert state.state == STATE_OFF
+    assert state.attributes["after"] == "2019-01-11T22:00:00+00:00"
+    assert state.attributes["before"] == "2019-01-12T06:00:00+00:00"
+    assert state.attributes["next_update"] == "2019-01-11T22:00:00+00:00"
 
 
 async def test_simple_before_after_does_not_loop_utc_fire_at_after(hass):
     """Test simple before after."""
-    try:
-        hass.config.time_zone = "UTC"
-        dt_util.set_default_time_zone(dt_util.UTC)
-        test_time = datetime(2019, 1, 10, 22, 0, 0, tzinfo=dt_util.UTC)
-        config = {
-            "binary_sensor": [
-                {
-                    "platform": "tod",
-                    "name": "Night",
-                    "before": "06:00",
-                    "after": "22:00",
-                }
-            ]
-        }
-        with patch(
-            "homeassistant.components.tod.binary_sensor.dt_util.utcnow",
-            return_value=test_time,
-        ):
-            await async_setup_component(hass, "binary_sensor", config)
-            await hass.async_block_till_done()
+    hass.config.time_zone = "UTC"
+    dt_util.set_default_time_zone(dt_util.UTC)
+    test_time = datetime(2019, 1, 10, 22, 0, 0, tzinfo=dt_util.UTC)
+    config = {
+        "binary_sensor": [
+            {
+                "platform": "tod",
+                "name": "Night",
+                "before": "06:00",
+                "after": "22:00",
+            }
+        ]
+    }
+    with patch(
+        "homeassistant.components.tod.binary_sensor.dt_util.utcnow",
+        return_value=test_time,
+    ):
+        await async_setup_component(hass, "binary_sensor", config)
+        await hass.async_block_till_done()
 
-        state = hass.states.get("binary_sensor.night")
-        assert state.state == STATE_ON
-        assert state.attributes["after"] == "2019-01-10T22:00:00+00:00"
-        assert state.attributes["before"] == "2019-01-11T06:00:00+00:00"
-        assert state.attributes["next_update"] == "2019-01-11T06:00:00+00:00"
-    finally:
-        dt_util.set_default_time_zone(ORIG_TIMEZONE)
+    state = hass.states.get("binary_sensor.night")
+    assert state.state == STATE_ON
+    assert state.attributes["after"] == "2019-01-10T22:00:00+00:00"
+    assert state.attributes["before"] == "2019-01-11T06:00:00+00:00"
+    assert state.attributes["next_update"] == "2019-01-11T06:00:00+00:00"
 
 
 async def test_simple_before_after_does_not_loop_utc_both_before_now(hass):
     """Test simple before after."""
-    try:
-        hass.config.time_zone = "UTC"
-        dt_util.set_default_time_zone(dt_util.UTC)
-        test_time = datetime(2019, 1, 10, 22, 0, 0, tzinfo=dt_util.UTC)
-        config = {
-            "binary_sensor": [
-                {
-                    "platform": "tod",
-                    "name": "Morning",
-                    "before": "08:00",
-                    "after": "00:00",
-                }
-            ]
-        }
-        with patch(
-            "homeassistant.components.tod.binary_sensor.dt_util.utcnow",
-            return_value=test_time,
-        ):
-            await async_setup_component(hass, "binary_sensor", config)
-            await hass.async_block_till_done()
+    hass.config.time_zone = "UTC"
+    dt_util.set_default_time_zone(dt_util.UTC)
+    test_time = datetime(2019, 1, 10, 22, 0, 0, tzinfo=dt_util.UTC)
+    config = {
+        "binary_sensor": [
+            {
+                "platform": "tod",
+                "name": "Morning",
+                "before": "08:00",
+                "after": "00:00",
+            }
+        ]
+    }
+    with patch(
+        "homeassistant.components.tod.binary_sensor.dt_util.utcnow",
+        return_value=test_time,
+    ):
+        await async_setup_component(hass, "binary_sensor", config)
+        await hass.async_block_till_done()
 
-        state = hass.states.get("binary_sensor.morning")
-        assert state.state == STATE_OFF
-        assert state.attributes["after"] == "2019-01-11T00:00:00+00:00"
-        assert state.attributes["before"] == "2019-01-11T08:00:00+00:00"
-        assert state.attributes["next_update"] == "2019-01-11T00:00:00+00:00"
-    finally:
-        dt_util.set_default_time_zone(ORIG_TIMEZONE)
+    state = hass.states.get("binary_sensor.morning")
+    assert state.state == STATE_OFF
+    assert state.attributes["after"] == "2019-01-11T00:00:00+00:00"
+    assert state.attributes["before"] == "2019-01-11T08:00:00+00:00"
+    assert state.attributes["next_update"] == "2019-01-11T00:00:00+00:00"
 
 
 async def test_simple_before_after_does_not_loop_berlin_not_in_range(hass):
     """Test simple before after."""
-    try:
-        hass.config.time_zone = "Europe/Berlin"
-        dt_util.set_default_time_zone(dt_util.get_time_zone("Europe/Berlin"))
-        test_time = datetime(2019, 1, 10, 18, 43, 0, tzinfo=dt_util.UTC)
-        config = {
-            "binary_sensor": [
-                {
-                    "platform": "tod",
-                    "name": "Dark",
-                    "before": "06:00",
-                    "after": "00:00",
-                }
-            ]
-        }
-        with patch(
-            "homeassistant.components.tod.binary_sensor.dt_util.utcnow",
-            return_value=test_time,
-        ):
-            await async_setup_component(hass, "binary_sensor", config)
-            await hass.async_block_till_done()
+    hass.config.time_zone = "Europe/Berlin"
+    dt_util.set_default_time_zone(dt_util.get_time_zone("Europe/Berlin"))
+    test_time = datetime(2019, 1, 10, 18, 43, 0, tzinfo=dt_util.UTC)
+    config = {
+        "binary_sensor": [
+            {
+                "platform": "tod",
+                "name": "Dark",
+                "before": "06:00",
+                "after": "00:00",
+            }
+        ]
+    }
+    with patch(
+        "homeassistant.components.tod.binary_sensor.dt_util.utcnow",
+        return_value=test_time,
+    ):
+        await async_setup_component(hass, "binary_sensor", config)
+        await hass.async_block_till_done()
 
-        state = hass.states.get("binary_sensor.dark")
-        assert state.state == STATE_OFF
-        assert state.attributes["after"] == "2019-01-11T00:00:00+01:00"
-        assert state.attributes["before"] == "2019-01-11T06:00:00+01:00"
-        assert state.attributes["next_update"] == "2019-01-11T00:00:00+01:00"
-
-    finally:
-        dt_util.set_default_time_zone(ORIG_TIMEZONE)
+    state = hass.states.get("binary_sensor.dark")
+    assert state.state == STATE_OFF
+    assert state.attributes["after"] == "2019-01-11T00:00:00+01:00"
+    assert state.attributes["before"] == "2019-01-11T06:00:00+01:00"
+    assert state.attributes["next_update"] == "2019-01-11T00:00:00+01:00"
 
 
 async def test_simple_before_after_does_not_loop_berlin_in_range(hass):
     """Test simple before after."""
-    try:
-        hass.config.time_zone = "Europe/Berlin"
-        dt_util.set_default_time_zone(dt_util.get_time_zone("Europe/Berlin"))
-        test_time = datetime(2019, 1, 10, 23, 43, 0, tzinfo=dt_util.UTC)
-        config = {
-            "binary_sensor": [
-                {
-                    "platform": "tod",
-                    "name": "Dark",
-                    "before": "06:00",
-                    "after": "00:00",
-                }
-            ]
-        }
-        with patch(
-            "homeassistant.components.tod.binary_sensor.dt_util.utcnow",
-            return_value=test_time,
-        ):
-            await async_setup_component(hass, "binary_sensor", config)
-            await hass.async_block_till_done()
+    hass.config.time_zone = "Europe/Berlin"
+    dt_util.set_default_time_zone(dt_util.get_time_zone("Europe/Berlin"))
+    test_time = datetime(2019, 1, 10, 23, 43, 0, tzinfo=dt_util.UTC)
+    config = {
+        "binary_sensor": [
+            {
+                "platform": "tod",
+                "name": "Dark",
+                "before": "06:00",
+                "after": "00:00",
+            }
+        ]
+    }
+    with patch(
+        "homeassistant.components.tod.binary_sensor.dt_util.utcnow",
+        return_value=test_time,
+    ):
+        await async_setup_component(hass, "binary_sensor", config)
+        await hass.async_block_till_done()
 
-        state = hass.states.get("binary_sensor.dark")
-        assert state.state == STATE_ON
-        assert state.attributes["after"] == "2019-01-11T00:00:00+01:00"
-        assert state.attributes["before"] == "2019-01-11T06:00:00+01:00"
-        assert state.attributes["next_update"] == "2019-01-11T06:00:00+01:00"
-
-    finally:
-        dt_util.set_default_time_zone(ORIG_TIMEZONE)
+    state = hass.states.get("binary_sensor.dark")
+    assert state.state == STATE_ON
+    assert state.attributes["after"] == "2019-01-11T00:00:00+01:00"
+    assert state.attributes["before"] == "2019-01-11T06:00:00+01:00"
+    assert state.attributes["next_update"] == "2019-01-11T06:00:00+01:00"
