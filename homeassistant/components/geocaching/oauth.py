@@ -20,7 +20,7 @@ class GeocachingOAuth2Implementation(
 
     def __init__(
         self, hass: HomeAssistant, client_id: str, client_secret: str, name: str
-    ):
+    ) -> None:
         """Local Geocaching Oauth Implementation."""
         self._name = name
         super().__init__(
