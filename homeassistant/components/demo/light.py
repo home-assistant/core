@@ -81,7 +81,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 hs_color=LIGHT_COLORS[1],
                 state=True,
                 supported_color_modes=SUPPORT_DEMO_HS_WHITE,
-                unique_id="light_5",
+                unique_id="light_6",
             ),
         ]
     )
