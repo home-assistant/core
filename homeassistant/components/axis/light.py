@@ -40,8 +40,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class AxisLight(AxisEventBase, LightEntity):
     """Representation of a light Axis event."""
 
-    _attr_supported_color_modes = {COLOR_MODE_BRIGHTNESS}
-
     def __init__(self, event, device):
         """Initialize the Axis light."""
         super().__init__(event, device)
@@ -50,6 +48,8 @@ class AxisLight(AxisEventBase, LightEntity):
 
         self.current_intensity = 0
         self.max_intensity = 0
+
+        self._attr_supported_color_modes = {COLOR_MODE_BRIGHTNESS}
 
     async def async_added_to_hass(self) -> None:
         """Subscribe lights events."""
@@ -66,6 +66,11 @@ class AxisLight(AxisEventBase, LightEntity):
             self.light_id
         )
         self.max_intensity = max_intensity["data"]["ranges"][0]["high"]
+
+    @property
+    def color_mode(self):
+        """Return the color mode of the light."""
+        return COLOR_MODE_BRIGHTNESS
 
     @property
     def name(self):
