@@ -228,7 +228,7 @@ class AsusWrtRouter:
 
         # System
         model = await _get_nvram_info(self._api, "MODEL")
-        if model:
+        if model and "model" in model:
             self._model = model["model"]
         firmware = await _get_nvram_info(self._api, "FIRMWARE")
         if firmware and "firmver" in firmware and "buildno" in firmware:
