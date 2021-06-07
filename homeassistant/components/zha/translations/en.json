@@ -6,7 +6,7 @@
         "error": {
             "cannot_connect": "Failed to connect"
         },
-        "flow_title": "ZHA: {name}",
+        "flow_title": "{name}",
         "step": {
             "pick_radio": {
                 "data": {
@@ -41,6 +41,8 @@
             "title": "Alarm Control Panel Options"
         },
         "zha_options": {
+            "consider_unavailable_battery": "Consider battery powered devices unavailable after (seconds)",
+            "consider_unavailable_mains": "Consider mains powered devices unavailable after (seconds)",
             "default_light_transition": "Default light transition time (seconds)",
             "enable_identify_on_join": "Enable identify effect when devices join the network",
             "title": "Global Options"

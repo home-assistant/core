@@ -6,7 +6,7 @@
         "error": {
             "cannot_connect": "Ha fallat la connexi\u00f3"
         },
-        "flow_title": "ZHA: {name}",
+        "flow_title": "{name}",
         "step": {
             "pick_radio": {
                 "data": {
@@ -41,6 +41,8 @@
             "title": "Opcions del panell de control d'alarma"
         },
         "zha_options": {
+            "consider_unavailable_battery": "Considera els dispositius amb bateria com a no disponibles al cap de (segons)",
+            "consider_unavailable_mains": "Considera els dispositius connectats a la xarxa el\u00e8ctrica com a no disponibles al cap de (segons)",
             "default_light_transition": "Temps de transici\u00f3 predeterminat (segons)",
             "enable_identify_on_join": "Activa l'efecte d'identificaci\u00f3 quan els dispositius s'uneixin a la xarxa",
             "title": "Opcions globals"

@@ -32,6 +32,7 @@ class MotionEyeConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for motionEye."""
 
     VERSION = 1
+    _hassio_discovery: dict[str, Any] | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -42,13 +43,18 @@ class MotionEyeConfigFlow(ConfigFlow, domain=DOMAIN):
             user_input: dict[str, Any], errors: dict[str, str] | None = None
         ) -> FlowResult:
             """Show the form to the user."""
+            url_schema: dict[vol.Required, type[str]] = {}
+            if not self._hassio_discovery:
+                # Only ask for URL when not discovered
+                url_schema[
+                    vol.Required(CONF_URL, default=user_input.get(CONF_URL, ""))
+                ] = str
+
             return self.async_show_form(
                 step_id="user",
                 data_schema=vol.Schema(
                     {
-                        vol.Required(
-                            CONF_URL, default=user_input.get(CONF_URL, "")
-                        ): str,
+                        **url_schema,
                         vol.Optional(
                             CONF_ADMIN_USERNAME,
                             default=user_input.get(CONF_ADMIN_USERNAME),
@@ -80,6 +86,10 @@ class MotionEyeConfigFlow(ConfigFlow, domain=DOMAIN):
             return _get_form(
                 cast(Dict[str, Any], reauth_entry.data) if reauth_entry else {}
             )
+
+        if self._hassio_discovery:
+            # In case of Supervisor discovery, use pushed URL
+            user_input[CONF_URL] = self._hassio_discovery[CONF_URL]
 
         try:
             # Cannot use cv.url validation in the schema itself, so
@@ -121,12 +131,14 @@ class MotionEyeConfigFlow(ConfigFlow, domain=DOMAIN):
 
         # Search for duplicates: there isn't a useful unique_id, but
         # at least prevent entries with the same motionEye URL.
-        for existing_entry in self._async_current_entries(include_ignore=False):
-            if existing_entry.data.get(CONF_URL) == user_input[CONF_URL]:
-                return self.async_abort(reason="already_configured")
+        self._async_abort_entries_match({CONF_URL: user_input[CONF_URL]})
+
+        title = user_input[CONF_URL]
+        if self._hassio_discovery:
+            title = "Add-on"
 
         return self.async_create_entry(
-            title=f"{user_input[CONF_URL]}",
+            title=title,
             data=user_input,
         )
 
@@ -136,3 +148,22 @@ class MotionEyeConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle a reauthentication flow."""
         return await self.async_step_user(config_data)
+
+    async def async_step_hassio(self, discovery_info: dict[str, Any]) -> FlowResult:
+        """Handle Supervisor discovery."""
+        self._hassio_discovery = discovery_info
+        await self._async_handle_discovery_without_unique_id()
+
+        return await self.async_step_hassio_confirm()
+
+    async def async_step_hassio_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Confirm Supervisor discovery."""
+        if user_input is None and self._hassio_discovery is not None:
+            return self.async_show_form(
+                step_id="hassio_confirm",
+                description_placeholders={"addon": self._hassio_discovery["addon"]},
+            )
+
+        return await self.async_step_user()

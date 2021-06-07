@@ -13,7 +13,8 @@
                 "data": {
                     "password": "Passwort",
                     "username": "Benutzername"
-                }
+                },
+                "title": "Mit Canary verbinden"
             }
         }
     },
@@ -21,6 +22,7 @@
         "step": {
             "init": {
                 "data": {
+                    "ffmpeg_arguments": "An ffmpeg \u00fcbergebene Argumente f\u00fcr Kameras",
                     "timeout": "Anfrage-Timeout (Sekunden)"
                 }
             }

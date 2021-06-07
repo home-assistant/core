@@ -7,6 +7,7 @@
             "cannot_connect": "Verbinding mislukt, probeer het opnieuw",
             "unknown": "Onverwachte fout"
         },
+        "flow_title": "{name} ({host})",
         "step": {
             "link": {
                 "description": "Wil je {name} ({host}) instellen?",

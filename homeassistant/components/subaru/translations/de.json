@@ -8,15 +8,15 @@
             "bad_pin_format": "Die PIN sollte 4-stellig sein",
             "cannot_connect": "Verbindung fehlgeschlagen",
             "incorrect_pin": "Falsche PIN",
-            "invalid_auth": "Ung\u00fcltige Authentifizierung",
-            "unknown": "Unerwarteter Fehler"
+            "invalid_auth": "Ung\u00fcltige Authentifizierung"
         },
         "step": {
             "pin": {
                 "data": {
                     "pin": "PIN"
                 },
-                "description": "Bitte gib deinen MySubaru-PIN ein\nHINWEIS: Alle Fahrzeuge im Konto m\u00fcssen dieselbe PIN haben"
+                "description": "Bitte gib deinen MySubaru-PIN ein\nHINWEIS: Alle Fahrzeuge im Konto m\u00fcssen dieselbe PIN haben",
+                "title": "Subaru Starlink Konfiguration"
             },
             "user": {
                 "data": {

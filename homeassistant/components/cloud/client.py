@@ -35,7 +35,7 @@ class CloudClient(Interface):
         websession: aiohttp.ClientSession,
         alexa_user_config: dict[str, Any],
         google_user_config: dict[str, Any],
-    ):
+    ) -> None:
         """Initialize client interface to Cloud."""
         self._hass = hass
         self._prefs = prefs

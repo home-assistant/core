@@ -93,7 +93,7 @@ class BSBLanClimate(ClimateEntity):
         entry_id: str,
         bsblan: BSBLan,
         info: Info,
-    ):
+    ) -> None:
         """Initialize BSBLan climate device."""
         self._current_temperature: float | None = None
         self._available = True

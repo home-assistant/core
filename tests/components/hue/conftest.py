@@ -1,5 +1,6 @@
 """Test helpers for Hue."""
 from collections import deque
+import logging
 from unittest.mock import AsyncMock, Mock, patch
 
 from aiohue.groups import Groups
@@ -30,46 +31,47 @@ def create_mock_bridge(hass):
         authorized=True,
         allow_unreachable=False,
         allow_groups=False,
-        api=Mock(),
+        api=create_mock_api(hass),
+        config_entry=None,
         reset_jobs=[],
         spec=hue.HueBridge,
     )
     bridge.sensor_manager = hue_sensor_base.SensorManager(bridge)
-    bridge.mock_requests = []
-    # We're using a deque so we can schedule multiple responses
-    # and also means that `popleft()` will blow up if we get more updates
-    # than expected.
-    bridge.mock_light_responses = deque()
-    bridge.mock_group_responses = deque()
-    bridge.mock_sensor_responses = deque()
+    bridge.mock_requests = bridge.api.mock_requests
+    bridge.mock_light_responses = bridge.api.mock_light_responses
+    bridge.mock_group_responses = bridge.api.mock_group_responses
+    bridge.mock_sensor_responses = bridge.api.mock_sensor_responses
 
-    async def mock_request(method, path, **kwargs):
-        kwargs["method"] = method
-        kwargs["path"] = path
-        bridge.mock_requests.append(kwargs)
+    async def async_setup():
+        if bridge.config_entry:
+            hass.data.setdefault(hue.DOMAIN, {})[bridge.config_entry.entry_id] = bridge
+        return True
 
-        if path == "lights":
-            return bridge.mock_light_responses.popleft()
-        if path == "groups":
-            return bridge.mock_group_responses.popleft()
-        if path == "sensors":
-            return bridge.mock_sensor_responses.popleft()
-        return None
+    bridge.async_setup = async_setup
 
     async def async_request_call(task):
         await task()
 
     bridge.async_request_call = async_request_call
-    bridge.api.config.apiversion = "9.9.9"
-    bridge.api.lights = Lights({}, mock_request)
-    bridge.api.groups = Groups({}, mock_request)
-    bridge.api.sensors = Sensors({}, mock_request)
+
+    async def async_reset():
+        if bridge.config_entry:
+            hass.data[hue.DOMAIN].pop(bridge.config_entry.entry_id)
+        return True
+
+    bridge.async_reset = async_reset
+
     return bridge
 
 
 @pytest.fixture
 def mock_api(hass):
     """Mock the Hue api."""
+    return create_mock_api(hass)
+
+
+def create_mock_api(hass):
+    """Create a mock API."""
     api = Mock(initialize=AsyncMock())
     api.mock_requests = []
     api.mock_light_responses = deque()
@@ -92,11 +94,21 @@ def mock_api(hass):
             return api.mock_scene_responses.popleft()
         return None
 
-    api.config.apiversion = "9.9.9"
-    api.lights = Lights({}, mock_request)
-    api.groups = Groups({}, mock_request)
-    api.sensors = Sensors({}, mock_request)
-    api.scenes = Scenes({}, mock_request)
+    logger = logging.getLogger(__name__)
+
+    api.config = Mock(
+        bridgeid="ff:ff:ff:ff:ff:ff",
+        mac="aa:bb:cc:dd:ee:ff",
+        modelid="BSB002",
+        apiversion="9.9.9",
+        swversion="1935144040",
+    )
+    api.config.name = "Home"
+
+    api.lights = Lights(logger, {}, [], mock_request)
+    api.groups = Groups(logger, {}, [], mock_request)
+    api.sensors = Sensors(logger, {}, [], mock_request)
+    api.scenes = Scenes(logger, {}, [], mock_request)
     return api
 
 
@@ -115,7 +127,6 @@ async def setup_bridge_for_sensors(hass, mock_bridge, hostname=None):
         domain=hue.DOMAIN,
         title="Mock Title",
         data={"host": hostname},
-        system_options={},
     )
     mock_bridge.config_entry = config_entry
     hass.data[hue.DOMAIN] = {config_entry.entry_id: mock_bridge}

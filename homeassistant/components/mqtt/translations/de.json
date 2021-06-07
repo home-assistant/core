@@ -62,15 +62,25 @@
                     "port": "Port",
                     "username": "Benutzername"
                 },
-                "description": "Bitte gib die Verbindungsinformationen deines MQTT-Brokers ein."
+                "description": "Bitte gib die Verbindungsinformationen deines MQTT-Brokers ein.",
+                "title": "Broker-Optionen"
             },
             "options": {
                 "data": {
+                    "birth_enable": "Birth Nachricht aktivieren",
                     "birth_payload": "Nutzdaten der Birth Nachricht",
+                    "birth_qos": "Birth Nachricht QoS",
+                    "birth_retain": "Birth Nachricht zwischenspeichern",
+                    "birth_topic": "Thema der Birth Nachricht",
                     "discovery": "Erkennung aktivieren",
-                    "will_enable": "Letzten Willen aktivieren"
+                    "will_enable": "Letzten Willen aktivieren",
+                    "will_payload": "Nutzdaten der Letzter-Wille Nachricht",
+                    "will_qos": "Letzter-Wille Nachricht QoS",
+                    "will_retain": "Letzter-Wille Nachricht zwischenspeichern",
+                    "will_topic": "Thema der Letzter-Wille Nachricht"
                 },
-                "description": "Bitte die MQTT-Einstellungen ausw\u00e4hlen."
+                "description": "Erkennung - Wenn die Erkennung aktiviert ist (empfohlen), erkennt Home Assistant automatisch Ger\u00e4te und Entit\u00e4ten, die ihre Konfiguration auf dem MQTT-Broker ver\u00f6ffentlichen. Wenn die Erkennung deaktiviert ist, muss die gesamte Konfiguration manuell vorgenommen werden.\nGeburtsnachricht - Die Geburtsnachricht wird jedes Mal gesendet, wenn sich Home Assistant (erneut) mit dem MQTT-Broker verbindet.\nWill-Nachricht - Die Will-Nachricht wird jedes Mal gesendet, wenn Home Assistant die Verbindung zum Broker verliert, sowohl im Falle einer sauberen (z. B. Herunterfahren von Home Assistant) als auch im Falle einer unsauberen (z. B. Absturz von Home Assistant oder Verlust der Netzwerkverbindung) Verbindungstrennung.",
+                "title": "MQTT-Optionen"
             }
         }
     }

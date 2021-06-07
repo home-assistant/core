@@ -2,8 +2,8 @@
   "domain": "zeroconf",
   "name": "Zero-configuration networking (zeroconf)",
   "documentation": "https://www.home-assistant.io/integrations/zeroconf",
-  "requirements": ["zeroconf==0.30.0","pyroute2==0.5.18"],
-  "dependencies": ["api"],
+  "requirements": ["zeroconf==0.31.0"],
+  "dependencies": ["network", "api"],
   "codeowners": ["@bdraco"],
   "quality_scale": "internal",
   "iot_class": "local_push"

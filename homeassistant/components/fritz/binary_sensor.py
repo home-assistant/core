@@ -21,7 +21,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up entry."""
     _LOGGER.debug("Setting up FRITZ!Box binary sensors")
-    fritzbox_tools = hass.data[DOMAIN][entry.entry_id]
+    fritzbox_tools: FritzBoxTools = hass.data[DOMAIN][entry.entry_id]
 
     if "WANIPConn1" in fritzbox_tools.connection.services:
         # Only routers are supported at the moment
@@ -33,13 +33,15 @@ async def async_setup_entry(
 class FritzBoxConnectivitySensor(FritzBoxBaseEntity, BinarySensorEntity):
     """Define FRITZ!Box connectivity class."""
 
-    def __init__(self, fritzbox_tools: FritzBoxTools, device_friendlyname: str) -> None:
+    def __init__(
+        self, fritzbox_tools: FritzBoxTools, device_friendly_name: str
+    ) -> None:
         """Init FRITZ!Box connectivity class."""
         self._unique_id = f"{fritzbox_tools.unique_id}-connectivity"
-        self._name = f"{device_friendlyname} Connectivity"
+        self._name = f"{device_friendly_name} Connectivity"
         self._is_on = True
         self._is_available = True
-        super().__init__(fritzbox_tools, device_friendlyname)
+        super().__init__(fritzbox_tools, device_friendly_name)
 
     @property
     def name(self):
@@ -78,7 +80,7 @@ class FritzBoxConnectivitySensor(FritzBoxBaseEntity, BinarySensorEntity):
                 is_up = link_props["NewPhysicalLinkStatus"]
                 self._is_on = is_up == "Up"
             else:
-                self._is_on = self._fritzbox_tools.fritzstatus.is_connected
+                self._is_on = self._fritzbox_tools.fritz_status.is_connected
 
             self._is_available = True
 

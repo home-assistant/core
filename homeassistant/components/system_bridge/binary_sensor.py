@@ -1,4 +1,4 @@
-"""Support for System Bridge sensors."""
+"""Support for System Bridge binary sensors."""
 from __future__ import annotations
 
 from systembridge import Bridge
@@ -18,7 +18,7 @@ from .const import DOMAIN
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities
 ) -> None:
-    """Set up System Bridge sensor based on a config entry."""
+    """Set up System Bridge binary sensor based on a config entry."""
     coordinator: DataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     bridge: Bridge = coordinator.data
 
@@ -27,7 +27,7 @@ async def async_setup_entry(
 
 
 class BridgeBinarySensor(BridgeDeviceEntity, BinarySensorEntity):
-    """Defines a System Bridge sensor."""
+    """Defines a System Bridge binary sensor."""
 
     def __init__(
         self,
@@ -39,22 +39,22 @@ class BridgeBinarySensor(BridgeDeviceEntity, BinarySensorEntity):
         device_class: str | None,
         enabled_by_default: bool,
     ) -> None:
-        """Initialize System Bridge sensor."""
+        """Initialize System Bridge binary sensor."""
         self._device_class = device_class
 
         super().__init__(coordinator, bridge, key, name, icon, enabled_by_default)
 
     @property
     def device_class(self) -> str | None:
-        """Return the class of this sensor."""
+        """Return the class of this binary sensor."""
         return self._device_class
 
 
 class BridgeBatteryIsChargingBinarySensor(BridgeBinarySensor):
-    """Defines a Battery is charging sensor."""
+    """Defines a Battery is charging binary sensor."""
 
-    def __init__(self, coordinator: DataUpdateCoordinator, bridge: Bridge):
-        """Initialize System Bridge sensor."""
+    def __init__(self, coordinator: DataUpdateCoordinator, bridge: Bridge) -> None:
+        """Initialize System Bridge binary sensor."""
         super().__init__(
             coordinator,
             bridge,

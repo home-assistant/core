@@ -89,11 +89,3 @@ class SolarEdgeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             ),
             errors=self._errors,
         )
-
-    async def async_step_import(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Import a config entry."""
-        if self._site_in_configuration_exists(user_input[CONF_SITE_ID]):
-            return self.async_abort(reason="already_configured")
-        return await self.async_step_user(user_input)

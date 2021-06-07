@@ -179,7 +179,6 @@ async def test_lights_and_groups(hass, aioclient_mock, mock_deconz_websocket):
         blocking=True,
     )
     assert aioclient_mock.mock_calls[1][2] == {
-        "ct": 2500,
         "bri": 200,
         "transitiontime": 50,
         "alert": "select",

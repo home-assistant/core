@@ -43,10 +43,6 @@ DATA_SCHEMA = vol.Schema(
 
 async def validate_input(hass: core.HomeAssistant, data):
     """Validate the user input allows us to connect."""
-    for entry in hass.config_entries.async_entries(DOMAIN):
-        if entry.data[CONF_HOST] == data[CONF_HOST]:
-            raise AlreadyConfigured
-
     if data[CONF_VERSION] not in SUPPORTED_VERSIONS:
         raise WrongVersion
     try:
@@ -71,13 +67,12 @@ class GlancesFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
+            self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
             try:
                 await validate_input(self.hass, user_input)
                 return self.async_create_entry(
                     title=user_input[CONF_NAME], data=user_input
                 )
-            except AlreadyConfigured:
-                return self.async_abort(reason="already_configured")
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except WrongVersion:
@@ -119,10 +114,6 @@ class GlancesOptionsFlowHandler(config_entries.OptionsFlow):
 
 class CannotConnect(exceptions.HomeAssistantError):
     """Error to indicate we cannot connect."""
-
-
-class AlreadyConfigured(exceptions.HomeAssistantError):
-    """Error to indicate host is already configured."""
 
 
 class WrongVersion(exceptions.HomeAssistantError):

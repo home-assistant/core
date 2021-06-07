@@ -12,7 +12,7 @@
         "error": {
             "already_configured": "L'account \u00e8 gi\u00e0 configurato"
         },
-        "flow_title": "Withings: {profile}",
+        "flow_title": "{profile}",
         "step": {
             "pick_implementation": {
                 "title": "Scegli il metodo di autenticazione"

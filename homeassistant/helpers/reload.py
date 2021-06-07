@@ -124,7 +124,7 @@ async def _async_reconfig_platform(
 ) -> None:
     """Reconfigure an already loaded platform."""
     await platform.async_reset()
-    tasks = [platform.async_setup(p_config) for p_config in platform_configs]  # type: ignore
+    tasks = [platform.async_setup(p_config) for p_config in platform_configs]
     await asyncio.gather(*tasks)
 
 

@@ -5,6 +5,7 @@ import logging
 
 import aioshelly
 import async_timeout
+import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -17,6 +18,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, device_registry, update_coordinator
+import homeassistant.helpers.config_validation as cv
 
 from .const import (
     AIOSHELLY_DEVICE_TIMEOUT_SEC,
@@ -25,7 +27,9 @@ from .const import (
     ATTR_DEVICE,
     BATTERY_DEVICES_WITH_PERMANENT_CONNECTION,
     COAP,
+    CONF_COAP_PORT,
     DATA_CONFIG_ENTRY,
+    DEFAULT_COAP_PORT,
     DEVICE,
     DOMAIN,
     EVENT_SHELLY_CLICK,
@@ -43,14 +47,26 @@ PLATFORMS = ["binary_sensor", "cover", "light", "sensor", "switch"]
 SLEEPING_PLATFORMS = ["binary_sensor", "sensor"]
 _LOGGER = logging.getLogger(__name__)
 
+COAP_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_COAP_PORT, default=DEFAULT_COAP_PORT): cv.port,
+    }
+)
+CONFIG_SCHEMA = vol.Schema({DOMAIN: COAP_SCHEMA}, extra=vol.ALLOW_EXTRA)
+
 
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the Shelly component."""
     hass.data[DOMAIN] = {DATA_CONFIG_ENTRY: {}}
+
+    conf = config.get(DOMAIN)
+    if conf is not None:
+        hass.data[DOMAIN][CONF_COAP_PORT] = conf[CONF_COAP_PORT]
+
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Shelly from a config entry."""
     hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id] = {}
     hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id][DEVICE] = None
@@ -74,8 +90,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     )
 
     dev_reg = await device_registry.async_get_registry(hass)
-    identifier = (DOMAIN, entry.unique_id)
-    device_entry = dev_reg.async_get_device(identifiers={identifier}, connections=set())
+    device_entry = None
+    if entry.unique_id is not None:
+        device_entry = dev_reg.async_get_device(
+            identifiers={(DOMAIN, entry.unique_id)}, connections=set()
+        )
     if device_entry and entry.entry_id not in device_entry.config_entries:
         device_entry = None
 
@@ -169,7 +188,7 @@ class ShellyDeviceWrapper(update_coordinator.DataUpdateCoordinator):
         self._async_remove_device_updates_handler = self.async_add_listener(
             self._async_device_updates_handler
         )
-        self._last_input_events_count = {}
+        self._last_input_events_count: dict = {}
 
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._handle_ha_stop)
 
@@ -269,8 +288,10 @@ class ShellyDeviceWrapper(update_coordinator.DataUpdateCoordinator):
 
     def shutdown(self):
         """Shutdown the wrapper."""
-        self.device.shutdown()
-        self._async_remove_device_updates_handler()
+        if self.device:
+            self.device.shutdown()
+            self._async_remove_device_updates_handler()
+            self.device = None
 
     @callback
     def _handle_ha_stop(self, _):

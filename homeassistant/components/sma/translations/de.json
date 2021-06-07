@@ -6,6 +6,7 @@
         },
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen",
+            "cannot_retrieve_device_info": "Erfolgreich verbunden, aber Ger\u00e4teinformationen k\u00f6nnen nicht abgerufen werden",
             "invalid_auth": "Ung\u00fcltige Authentifizierung",
             "unknown": "Unerwarteter Fehler"
         },
@@ -18,7 +19,7 @@
                     "ssl": "Verwendet ein SSL-Zertifikat",
                     "verify_ssl": "SSL-Zertifikat \u00fcberpr\u00fcfen"
                 },
-                "description": "Geben Sie Ihre SMA-Ger\u00e4teinformationen ein.",
+                "description": "Gib deine SMA-Ger\u00e4teinformationen ein.",
                 "title": "Richten Sie SMA Solar ein"
             }
         }

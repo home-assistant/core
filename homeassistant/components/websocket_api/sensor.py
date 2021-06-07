@@ -1,7 +1,12 @@
 """Entity to track connections to websocket API."""
+from __future__ import annotations
+
+from typing import Any
 
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     DATA_CONNECTIONS,
@@ -9,10 +14,13 @@ from .const import (
     SIGNAL_WEBSOCKET_DISCONNECTED,
 )
 
-# mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
 
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: dict[str, Any] | None = None,
+) -> None:
     """Set up the API streams platform."""
     entity = APICount()
 
@@ -22,11 +30,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class APICount(SensorEntity):
     """Entity to represent how many people are connected to the stream API."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the API count."""
         self.count = 0
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Added to hass."""
         self.async_on_remove(
             self.hass.helpers.dispatcher.async_dispatcher_connect(
@@ -40,21 +48,21 @@ class APICount(SensorEntity):
         )
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return name of entity."""
         return "Connected clients"
 
     @property
-    def state(self):
+    def state(self) -> int:
         """Return current API count."""
         return self.count
 
     @property
-    def unit_of_measurement(self):
+    def unit_of_measurement(self) -> str:
         """Return the unit of measurement."""
         return "clients"
 
     @callback
-    def _update_count(self):
+    def _update_count(self) -> None:
         self.count = self.hass.data.get(DATA_CONNECTIONS, 0)
         self.async_write_ha_state()

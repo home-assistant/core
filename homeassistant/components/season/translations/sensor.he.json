@@ -1,0 +1,16 @@
+{
+    "state": {
+        "season__season": {
+            "autumn": "\u05e1\u05ea\u05d9\u05d5",
+            "spring": "\u05d0\u05d1\u05d9\u05d1",
+            "summer": "\u05e7\u05d9\u05e5",
+            "winter": "\u05d7\u05d5\u05e8\u05e3"
+        },
+        "season__season__": {
+            "autumn": "\u05e1\u05ea\u05d9\u05d5",
+            "spring": "\u05d0\u05d1\u05d9\u05d1",
+            "summer": "\u05e7\u05d9\u05e5",
+            "winter": "\u05d7\u05d5\u05e8\u05e3"
+        }
+    }
+}

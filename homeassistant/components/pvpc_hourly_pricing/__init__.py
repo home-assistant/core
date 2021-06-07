@@ -1,7 +1,7 @@
 """The pvpc_hourly_pricing integration to collect Spain official electric prices."""
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -15,7 +15,8 @@ UI_CONFIG_SCHEMA = vol.Schema(
     }
 )
 CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: cv.ensure_list(UI_CONFIG_SCHEMA)}, extra=vol.ALLOW_EXTRA
+    vol.All(cv.deprecated(DOMAIN), {DOMAIN: cv.ensure_list(UI_CONFIG_SCHEMA)}),
+    extra=vol.ALLOW_EXTRA,
 )
 
 
@@ -35,19 +36,19 @@ async def async_setup(hass: HomeAssistant, config: dict):
     for conf in config.get(DOMAIN, []):
         hass.async_create_task(
             hass.config_entries.flow.async_init(
-                DOMAIN, data=conf, context={"source": config_entries.SOURCE_IMPORT}
+                DOMAIN, data=conf, context={"source": SOURCE_IMPORT}
             )
         )
 
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: config_entries.ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up pvpc hourly pricing from a config entry."""
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: config_entries.ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
