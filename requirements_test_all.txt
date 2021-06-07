@@ -72,7 +72,7 @@ aio_geojson_geonetnz_volcano==0.5
 aio_geojson_nsw_rfs_incidents==0.3
 
 # homeassistant.components.gdacs
-aio_georss_gdacs==0.4
+aio_georss_gdacs==0.5
 
 # homeassistant.components.ambient_station
 aioambient==1.2.4
@@ -811,7 +811,7 @@ pyhiveapi==0.4.2
 pyhoma==0.5.11
 
 # homeassistant.components.homematic
-pyhomematic==0.1.72
+pyhomematic==0.1.73
 
 # homeassistant.components.ialarm
 pyialarm==1.8.1

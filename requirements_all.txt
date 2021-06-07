@@ -132,7 +132,7 @@ aio_geojson_geonetnz_volcano==0.5
 aio_geojson_nsw_rfs_incidents==0.3
 
 # homeassistant.components.gdacs
-aio_georss_gdacs==0.4
+aio_georss_gdacs==0.5
 
 # homeassistant.components.ambient_station
 aioambient==1.2.4
@@ -515,7 +515,7 @@ dovado==0.4.1
 dsmr_parser==0.29
 
 # homeassistant.components.dwd_weather_warnings
-dwdwfsapi==1.0.3
+dwdwfsapi==1.0.4
 
 # homeassistant.components.dweet
 dweepy==0.3.0
@@ -943,7 +943,7 @@ mcstatus==6.0.0
 messagebird==1.2.0
 
 # homeassistant.components.meteoalarm
-meteoalertapi==0.1.6
+meteoalertapi==0.2.0
 
 # homeassistant.components.meteo_france
 meteofrance-api==1.0.2
@@ -985,7 +985,7 @@ mychevy==2.1.1
 mycroftapi==2.0
 
 # homeassistant.components.nad
-nad_receiver==0.0.12
+nad_receiver==0.2.0
 
 # homeassistant.components.keenetic_ndms2
 ndms2_client==0.1.1
@@ -1464,7 +1464,7 @@ pyhiveapi==0.4.2
 pyhoma==0.5.11
 
 # homeassistant.components.homematic
-pyhomematic==0.1.72
+pyhomematic==0.1.73
 
 # homeassistant.components.homeworks
 pyhomeworks==0.0.6
