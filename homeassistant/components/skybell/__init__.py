@@ -1,6 +1,5 @@
 """Support for the Skybell HD Doorbell."""
 from logging import getLogger
-from typing import Dict
 
 from requests.exceptions import ConnectTimeout, HTTPError
 from skybellpy import Skybell
@@ -54,7 +53,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass: HomeAssistant, config: Dict) -> bool:
+async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     """Set up the SkyBell component."""
     hass.data.setdefault(DOMAIN, {})
 

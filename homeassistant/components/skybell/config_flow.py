@@ -76,7 +76,7 @@ class SkybellFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 False,
             )
             devices = await self.hass.async_add_executor_job(skybell.get_devices)
-            device_json = devices[0]._device_json
+            device_json = devices[0]._device_json  # pylint: disable=protected-access
         except exceptions.SkybellAuthenticationException:
             _LOGGER.error("Authentication Error: please check credentials")
             return None, "invalid_auth"
