@@ -6,7 +6,7 @@
         "error": {
             "cannot_connect": "Kan geen verbinding maken"
         },
-        "flow_title": "ZHA: {name}",
+        "flow_title": "{name}",
         "step": {
             "pick_radio": {
                 "data": {
@@ -41,6 +41,8 @@
             "title": "Alarm bedieningspaneel Opties"
         },
         "zha_options": {
+            "consider_unavailable_battery": "Overweeg apparaten met batterijvoeding als onbeschikbaar na (seconden)",
+            "consider_unavailable_mains": "Beschouw apparaten op netvoeding als onbeschikbaar na (seconden)",
             "default_light_transition": "Standaard licht transitietijd (seconden)",
             "enable_identify_on_join": "Schakel het identificatie-effect in wanneer apparaten in het netwerk komen",
             "title": "Globale opties"

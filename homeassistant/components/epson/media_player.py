@@ -87,6 +87,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Epson projector."""
+    _LOGGER.warning(
+        "Loading Espon projector via platform setup is deprecated; "
+        "Please remove it from your configuration"
+    )
     hass.async_create_task(
         hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_IMPORT}, data=config

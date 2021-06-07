@@ -1,6 +1,6 @@
 {
   "config": {
-    "flow_title": "ZHA: {name}",
+    "flow_title": "{name}",
     "step": {
       "user": {
         "title": "ZHA",
@@ -33,7 +33,9 @@
     "zha_options": {
       "title": "Global Options",
       "enable_identify_on_join": "Enable identify effect when devices join the network",
-      "default_light_transition": "Default light transition time (seconds)"
+      "default_light_transition": "Default light transition time (seconds)",
+      "consider_unavailable_mains": "Consider mains powered devices unavailable after (seconds)",
+      "consider_unavailable_battery": "Consider battery powered devices unavailable after (seconds)"
     },
     "zha_alarm_options": {
       "title": "Alarm Control Panel Options",

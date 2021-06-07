@@ -1,7 +1,7 @@
 """Test the Garmin Connect config flow."""
 from unittest.mock import patch
 
-from garminconnect import (
+from garminconnect_aio import (
     GarminConnectAuthenticationError,
     GarminConnectConnectionError,
     GarminConnectTooManyRequestsError,
@@ -15,7 +15,7 @@ from homeassistant.const import CONF_ID, CONF_PASSWORD, CONF_USERNAME
 from tests.common import MockConfigEntry
 
 MOCK_CONF = {
-    CONF_ID: "First Lastname",
+    CONF_ID: "my@email.address",
     CONF_USERNAME: "my@email.address",
     CONF_PASSWORD: "mypassw0rd",
 }
@@ -23,27 +23,33 @@ MOCK_CONF = {
 
 @pytest.fixture(name="mock_garmin_connect")
 def mock_garmin():
-    """Mock Garmin."""
+    """Mock Garmin Connect."""
     with patch(
         "homeassistant.components.garmin_connect.config_flow.Garmin",
     ) as garmin:
-        garmin.return_value.get_full_name.return_value = MOCK_CONF[CONF_ID]
+        garmin.return_value.login.return_value = MOCK_CONF[CONF_ID]
         yield garmin.return_value
 
 
 async def test_show_form(hass):
     """Test that the form is served with no input."""
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
+
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+    assert result["step_id"] == config_entries.SOURCE_USER
 
 
-async def test_step_user(hass, mock_garmin_connect):
+async def test_step_user(hass):
     """Test registering an integration and finishing flow works."""
 
     with patch(
+        "homeassistant.components.garmin_connect.Garmin.login",
+        return_value="my@email.address",
+    ), patch(
         "homeassistant.components.garmin_connect.async_setup_entry", return_value=True
     ):
         result = await hass.config_entries.flow.async_init(
@@ -95,12 +101,18 @@ async def test_unknown_error(hass, mock_garmin_connect):
     assert result["errors"] == {"base": "unknown"}
 
 
-async def test_abort_if_already_setup(hass, mock_garmin_connect):
+async def test_abort_if_already_setup(hass):
     """Test abort if already setup."""
-    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONF, unique_id=MOCK_CONF[CONF_ID])
-    entry.add_to_hass(hass)
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}, data=MOCK_CONF
-    )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "already_configured"
+    MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONF, unique_id=MOCK_CONF[CONF_ID]
+    ).add_to_hass(hass)
+    with patch(
+        "homeassistant.components.garmin_connect.config_flow.Garmin", autospec=True
+    ) as garmin:
+        garmin.return_value.login.return_value = MOCK_CONF[CONF_ID]
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": "user"}, data=MOCK_CONF
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["reason"] == "already_configured"

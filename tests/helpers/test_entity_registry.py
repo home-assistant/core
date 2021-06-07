@@ -6,6 +6,7 @@ import pytest
 from homeassistant import config_entries
 from homeassistant.const import EVENT_HOMEASSISTANT_START, STATE_UNAVAILABLE
 from homeassistant.core import CoreState, callback, valid_entity_id
+from homeassistant.exceptions import MaxLengthExceeded
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import (
@@ -512,12 +513,12 @@ async def test_disabled_by(registry):
     assert entry2.disabled_by is None
 
 
-async def test_disabled_by_system_options(registry):
-    """Test system options setting disabled_by."""
+async def test_disabled_by_config_entry_pref(registry):
+    """Test config entry preference setting disabled_by."""
     mock_config = MockConfigEntry(
         domain="light",
         entry_id="mock-id-1",
-        system_options={"disable_new_entities": True},
+        pref_disable_new_entities=True,
     )
     entry = registry.async_get_or_create(
         "light", "hue", "AAAA", config_entry=mock_config
@@ -904,3 +905,47 @@ async def test_disabled_entities_excluded_from_entity_list(hass, registry):
         registry, device_entry.id, include_disabled_entities=True
     )
     assert entries == [entry1, entry2]
+
+
+async def test_entity_max_length_exceeded(hass, registry):
+    """Test that an exception is raised when the max character length is exceeded."""
+
+    long_entity_id_name = (
+        "1234567890123456789012345678901234567890123456789012345678901234567890"
+        "1234567890123456789012345678901234567890123456789012345678901234567890"
+        "1234567890123456789012345678901234567890123456789012345678901234567890"
+        "1234567890123456789012345678901234567890123456789012345678901234567890"
+    )
+
+    with pytest.raises(MaxLengthExceeded) as exc_info:
+        registry.async_generate_entity_id("sensor", long_entity_id_name)
+
+    assert exc_info.value.property_name == "generated_entity_id"
+    assert exc_info.value.max_length == 255
+    assert exc_info.value.value == f"sensor.{long_entity_id_name}"
+
+    # Try again but against the domain
+    long_domain_name = long_entity_id_name
+    with pytest.raises(MaxLengthExceeded) as exc_info:
+        registry.async_generate_entity_id(long_domain_name, "sensor")
+
+    assert exc_info.value.property_name == "domain"
+    assert exc_info.value.max_length == 64
+    assert exc_info.value.value == long_domain_name
+
+    # Try again but force a number to get added to the entity ID
+    long_entity_id_name = (
+        "1234567890123456789012345678901234567890123456789012345678901234567890"
+        "1234567890123456789012345678901234567890123456789012345678901234567890"
+        "1234567890123456789012345678901234567890123456789012345678901234567890"
+        "1234567890123456789012345678901234567"
+    )
+
+    with pytest.raises(MaxLengthExceeded) as exc_info:
+        registry.async_generate_entity_id(
+            "sensor", long_entity_id_name, [f"sensor.{long_entity_id_name}"]
+        )
+
+    assert exc_info.value.property_name == "generated_entity_id"
+    assert exc_info.value.max_length == 255
+    assert exc_info.value.value == f"sensor.{long_entity_id_name}_2"

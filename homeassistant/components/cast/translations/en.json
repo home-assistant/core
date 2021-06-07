@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "no_devices_found": "No devices found on the network",
             "single_instance_allowed": "Already configured. Only a single configuration possible."
         },
         "error": {
@@ -30,7 +29,7 @@
                     "ignore_cec": "Ignore CEC",
                     "uuid": "Allowed UUIDs"
                 },
-                "description": "Allowed UUIDs - A comma-separated list of UUIDs of Cast devices to add to Home Assistant. Use only if you don\u2019t want to add all available cast devices.\nIgnore CEC - A comma-separated list of Chromecasts that should ignore CEC data for determining the active input. This will be will be passed to pychromecast.IGNORE_CEC.",
+                "description": "Allowed UUIDs - A comma-separated list of UUIDs of Cast devices to add to Home Assistant. Use only if you don\u2019t want to add all available cast devices.\nIgnore CEC - A comma-separated list of Chromecasts that should ignore CEC data for determining the active input. This will be passed to pychromecast.IGNORE_CEC.",
                 "title": "Advanced Google Cast configuration"
             },
             "basic_options": {
@@ -39,14 +38,6 @@
                 },
                 "description": "Known Hosts - A comma-separated list of hostnames or IP-addresses of cast devices, use if mDNS discovery is not working.",
                 "title": "Google Cast configuration"
-            },
-            "options": {
-                "data": {
-                    "ignore_cec": "Optional list which will be passed to pychromecast.IGNORE_CEC.",
-                    "known_hosts": "Optional list of known hosts if mDNS discovery is not working.",
-                    "uuid": "Optional list of UUIDs. Casts not listed will not be added."
-                },
-                "description": "Please enter the Google Cast configuration."
             }
         }
     }

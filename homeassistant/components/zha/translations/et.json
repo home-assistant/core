@@ -6,7 +6,7 @@
         "error": {
             "cannot_connect": "\u00dchendamine nurjus"
         },
-        "flow_title": "ZHA: {name}",
+        "flow_title": "{name}",
         "step": {
             "pick_radio": {
                 "data": {
@@ -41,6 +41,8 @@
             "title": "Valvekeskuse juhtpaneeli s\u00e4tted"
         },
         "zha_options": {
+            "consider_unavailable_battery": "Arvesta, et patareitoitega seadmed pole p\u00e4rast (sekundit) saadaval",
+            "consider_unavailable_mains": "Arvesta, et v\u00f5rgutoitega seadmed pole p\u00e4rast (sekundit) saadaval",
             "default_light_transition": "Heleduse vaike\u00fclemineku aeg (sekundites)",
             "enable_identify_on_join": "Luba tuvastamine kui seadmed liituvad v\u00f5rguga",
             "title": "\u00dcldised valikud"

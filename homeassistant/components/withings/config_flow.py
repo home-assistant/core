@@ -59,7 +59,7 @@ class WithingsFlowHandler(
         if profile:
             existing_entries = [
                 config_entry
-                for config_entry in self.hass.config_entries.async_entries(const.DOMAIN)
+                for config_entry in self._async_current_entries()
                 if slugify(config_entry.data.get(const.PROFILE)) == slugify(profile)
             ]
 

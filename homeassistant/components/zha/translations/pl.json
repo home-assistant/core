@@ -6,7 +6,7 @@
         "error": {
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia"
         },
-        "flow_title": "ZHA: {name}",
+        "flow_title": "{name}",
         "step": {
             "pick_radio": {
                 "data": {
@@ -31,6 +31,21 @@
                 "description": "Wyb\u00f3r portu szeregowego dla radia Zigbee",
                 "title": "ZHA"
             }
+        }
+    },
+    "config_panel": {
+        "zha_alarm_options": {
+            "alarm_arm_requires_code": "Kod wymagany do akcji uzbrajania",
+            "alarm_failed_tries": "Liczba kolejnych nieudanych wpis\u00f3w kodu uruchamiaj\u0105ca alarm",
+            "alarm_master_code": "Kod g\u0142\u00f3wny panelu (paneli) alarmowego",
+            "title": "Opcje panelu alarmowego"
+        },
+        "zha_options": {
+            "consider_unavailable_battery": "Uznaj urz\u0105dzenia zasilane bateryjnie za niedost\u0119pne po (sekundach)",
+            "consider_unavailable_mains": "Uznaj urz\u0105dzenia zasilane z gniazdka za niedost\u0119pne po (sekundach)",
+            "default_light_transition": "Domy\u015blny czas efektu przej\u015bcia dla \u015bwiat\u0142a (w sekundach)",
+            "enable_identify_on_join": "W\u0142\u0105cz efekt identyfikacji, gdy urz\u0105dzenia do\u0142\u0105czaj\u0105 do sieci",
+            "title": "Opcje og\u00f3lne"
         }
     },
     "device_automation": {

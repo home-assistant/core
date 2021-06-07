@@ -11,6 +11,12 @@ ZEROCONF = {
             "domain": "volumio"
         }
     ],
+    "_airplay._tcp.local.": [
+        {
+            "domain": "samsungtv",
+            "manufacturer": "samsung*"
+        }
+    ],
     "_api._udp.local.": [
         {
             "domain": "guardian"
@@ -95,8 +101,16 @@ ZEROCONF = {
     ],
     "_http._tcp.local.": [
         {
+            "domain": "bosch_shc",
+            "name": "bosch shc*"
+        },
+        {
             "domain": "nam",
             "name": "nam-*"
+        },
+        {
+            "domain": "nam",
+            "manufacturer": "nettigo"
         },
         {
             "domain": "rachio",
@@ -153,6 +167,11 @@ ZEROCONF = {
     "_plugwise._tcp.local.": [
         {
             "domain": "plugwise"
+        }
+    ],
+    "_powerview._tcp.local.": [
+        {
+            "domain": "hunterdouglas_powerview"
         }
     ],
     "_printer._tcp.local.": [
@@ -232,6 +251,7 @@ HOMEKIT = {
     "Touch HD": "rainmachine",
     "Welcome": "netatmo",
     "Wemo": "wemo",
+    "YLDP*": "yeelight",
     "iSmartGate": "gogogate2",
     "iZone": "izone",
     "tado": "tado"

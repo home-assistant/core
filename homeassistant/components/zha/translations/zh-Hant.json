@@ -6,7 +6,7 @@
         "error": {
             "cannot_connect": "\u9023\u7dda\u5931\u6557"
         },
-        "flow_title": "ZHA\uff1a{name}",
+        "flow_title": "{name}",
         "step": {
             "pick_radio": {
                 "data": {
@@ -41,6 +41,8 @@
             "title": "\u8b66\u6212\u63a7\u5236\u9762\u677f\u9078\u9805"
         },
         "zha_options": {
+            "consider_unavailable_battery": "\u5c07\u96fb\u6c60\u4f9b\u96fb\u88dd\u7f6e\u8996\u70ba\u4e0d\u53ef\u7528\uff08\u79d2\u6578\uff09",
+            "consider_unavailable_mains": "\u5c07\u4e3b\u4f9b\u96fb\u88dd\u7f6e\u8996\u70ba\u4e0d\u53ef\u7528\uff08\u79d2\u6578\uff09",
             "default_light_transition": "\u9810\u8a2d\u71c8\u5149\u8f49\u63db\u6642\u9593\uff08\u79d2\uff09",
             "enable_identify_on_join": "\u7576\u88dd\u7f6e\u52a0\u5165\u7db2\u8def\u6642\u3001\u958b\u555f\u8b58\u5225\u6548\u679c",
             "title": "Global \u9078\u9805"

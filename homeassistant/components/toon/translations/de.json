@@ -2,7 +2,6 @@
     "config": {
         "abort": {
             "already_configured": "Die ausgew\u00e4hlte Vereinbarung ist bereits konfiguriert.",
-            "authorize_url_fail": "Unbekannter Fehler beim Generieren einer Autorisierungs-URL.",
             "authorize_url_timeout": "Zeit\u00fcberschreitung beim Erstellen der Authorisierungs-URL.",
             "missing_configuration": "Die Komponente ist nicht konfiguriert. Bitte der Dokumentation folgen.",
             "no_agreements": "Dieses Konto hat keine Toon-Anzeigen.",
@@ -16,6 +15,9 @@
                 },
                 "description": "W\u00e4hlen Sie die Vereinbarungsadresse aus, die du hinzuf\u00fcgen m\u00f6chtest.",
                 "title": "W\u00e4hle deine Vereinbarung"
+            },
+            "pick_implementation": {
+                "title": "W\u00e4hlen Sie Ihren Mandanten f\u00fcr die Authentifizierung aus"
             }
         }
     }

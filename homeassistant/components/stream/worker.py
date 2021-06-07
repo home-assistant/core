@@ -1,7 +1,10 @@
 """Provides the worker thread needed for processing streams."""
+from __future__ import annotations
+
 from collections import deque
-import io
+from io import BytesIO
 import logging
+from typing import cast
 
 import av
 
@@ -13,38 +16,12 @@ from .const import (
     MIN_SEGMENT_DURATION,
     PACKETS_TO_WAIT_FOR_AUDIO,
     SEGMENT_CONTAINER_FORMAT,
-    STREAM_TIMEOUT,
+    SOURCE_TIMEOUT,
 )
-from .core import Segment, StreamBuffer
+from .core import Segment, StreamOutput
+from .fmp4utils import get_init_and_moof_data
 
 _LOGGER = logging.getLogger(__name__)
-
-
-def create_stream_buffer(video_stream, audio_stream, sequence):
-    """Create a new StreamBuffer."""
-
-    segment = io.BytesIO()
-    container_options = {
-        # Removed skip_sidx - see https://github.com/home-assistant/core/pull/39970
-        "movflags": "frag_custom+empty_moov+default_base_moof+frag_discont+negative_cts_offsets",
-        "avoid_negative_ts": "disabled",
-        "fragment_index": str(sequence),
-    }
-    output = av.open(
-        segment,
-        mode="w",
-        format=SEGMENT_CONTAINER_FORMAT,
-        container_options={
-            "video_track_timescale": str(int(1 / video_stream.time_base)),
-            **container_options,
-        },
-    )
-    vstream = output.add_stream(template=video_stream)
-    # Check if audio is requested
-    astream = None
-    if audio_stream and audio_stream.name in AUDIO_CODECS:
-        astream = output.add_stream(template=audio_stream)
-    return StreamBuffer(segment, output, vstream, astream)
 
 
 class SegmentBuffer:
@@ -53,19 +30,48 @@ class SegmentBuffer:
     def __init__(self, outputs_callback) -> None:
         """Initialize SegmentBuffer."""
         self._stream_id = 0
-        self._video_stream = None
-        self._audio_stream = None
         self._outputs_callback = outputs_callback
-        # Each element is a StreamOutput
-        self._outputs = []
-        self._sequence = 0
+        self._outputs: list[StreamOutput] = []
+        # sequence gets incremented before the first segment so the first segment
+        # has a sequence number of 0.
+        self._sequence = -1
         self._segment_start_pts = None
-        self._stream_buffer = None
+        self._memory_file: BytesIO = cast(BytesIO, None)
+        self._av_output: av.container.OutputContainer = None
+        self._input_video_stream: av.video.VideoStream = None
+        self._input_audio_stream = None  # av.audio.AudioStream | None
+        self._output_video_stream: av.video.VideoStream = None
+        self._output_audio_stream = None  # av.audio.AudioStream | None
+        self._segment: Segment = cast(Segment, None)
 
-    def set_streams(self, video_stream, audio_stream):
+    @staticmethod
+    def make_new_av(
+        memory_file: BytesIO, sequence: int, input_vstream: av.video.VideoStream
+    ) -> av.container.OutputContainer:
+        """Make a new av OutputContainer."""
+        return av.open(
+            memory_file,
+            mode="w",
+            format=SEGMENT_CONTAINER_FORMAT,
+            container_options={
+                # Removed skip_sidx - see https://github.com/home-assistant/core/pull/39970
+                # "cmaf" flag replaces several of the movflags used, but too recent to use for now
+                "movflags": "frag_custom+empty_moov+default_base_moof+frag_discont+negative_cts_offsets+skip_trailer",
+                "avoid_negative_ts": "disabled",
+                "fragment_index": str(sequence + 1),
+                "video_track_timescale": str(int(1 / input_vstream.time_base)),
+            },
+        )
+
+    def set_streams(
+        self,
+        video_stream: av.video.VideoStream,
+        audio_stream,
+        # no type hint for audio_stream until https://github.com/PyAV-Org/PyAV/pull/775 is merged
+    ) -> None:
         """Initialize output buffer with streams from container."""
-        self._video_stream = video_stream
-        self._audio_stream = audio_stream
+        self._input_video_stream = video_stream
+        self._input_audio_stream = audio_stream
 
     def reset(self, video_pts):
         """Initialize a new stream segment."""
@@ -76,15 +82,27 @@ class SegmentBuffer:
         # Fetch the latest StreamOutputs, which may have changed since the
         # worker started.
         self._outputs = self._outputs_callback().values()
-        self._stream_buffer = create_stream_buffer(
-            self._video_stream, self._audio_stream, self._sequence
+        self._memory_file = BytesIO()
+        self._av_output = self.make_new_av(
+            memory_file=self._memory_file,
+            sequence=self._sequence,
+            input_vstream=self._input_video_stream,
         )
+        self._output_video_stream = self._av_output.add_stream(
+            template=self._input_video_stream
+        )
+        # Check if audio is requested
+        self._output_audio_stream = None
+        if self._input_audio_stream and self._input_audio_stream.name in AUDIO_CODECS:
+            self._output_audio_stream = self._av_output.add_stream(
+                template=self._input_audio_stream
+            )
 
     def mux_packet(self, packet):
-        """Mux a packet to the appropriate StreamBuffers."""
+        """Mux a packet to the appropriate output stream."""
 
         # Check for end of segment
-        if packet.stream == self._video_stream and packet.is_keyframe:
+        if packet.stream == self._input_video_stream and packet.is_keyframe:
             duration = (packet.pts - self._segment_start_pts) * packet.time_base
             if duration >= MIN_SEGMENT_DURATION:
                 # Save segment to outputs
@@ -94,19 +112,23 @@ class SegmentBuffer:
                 self.reset(packet.pts)
 
         # Mux the packet
-        if packet.stream == self._video_stream:
-            packet.stream = self._stream_buffer.vstream
-            self._stream_buffer.output.mux(packet)
-        elif packet.stream == self._audio_stream:
-            packet.stream = self._stream_buffer.astream
-            self._stream_buffer.output.mux(packet)
+        if packet.stream == self._input_video_stream:
+            packet.stream = self._output_video_stream
+            self._av_output.mux(packet)
+        elif packet.stream == self._input_audio_stream:
+            packet.stream = self._output_audio_stream
+            self._av_output.mux(packet)
 
     def flush(self, duration):
         """Create a segment from the buffered packets and write to output."""
-        self._stream_buffer.output.close()
+        self._av_output.close()
         segment = Segment(
-            self._sequence, self._stream_buffer.segment, duration, self._stream_id
+            self._sequence,
+            *get_init_and_moof_data(self._memory_file.getbuffer()),
+            duration,
+            self._stream_id,
         )
+        self._memory_file.close()
         for stream_output in self._outputs:
             stream_output.put(segment)
 
@@ -119,14 +141,15 @@ class SegmentBuffer:
 
     def close(self):
         """Close stream buffer."""
-        self._stream_buffer.output.close()
+        self._av_output.close()
+        self._memory_file.close()
 
 
 def stream_worker(source, options, segment_buffer, quit_event):  # noqa: C901
     """Handle consuming streams."""
 
     try:
-        container = av.open(source, options=options, timeout=STREAM_TIMEOUT)
+        container = av.open(source, options=options, timeout=SOURCE_TIMEOUT)
     except av.AVError:
         _LOGGER.error("Error opening stream %s", redact_credentials(str(source)))
         return

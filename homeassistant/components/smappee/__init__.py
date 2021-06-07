@@ -71,7 +71,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Smappee from a zeroconf or config entry."""
     if CONF_IP_ADDRESS in entry.data:
         if helper.is_smappee_genius(entry.data[CONF_SERIALNUMBER]):

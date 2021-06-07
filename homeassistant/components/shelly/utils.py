@@ -1,7 +1,7 @@
 """Shelly helpers functions."""
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 
 import aioshelly
@@ -9,7 +9,7 @@ import aioshelly
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import singleton
-from homeassistant.util.dt import parse_datetime, utcnow
+from homeassistant.util.dt import utcnow
 
 from .const import (
     BASIC_INPUTS_EVENTS_TYPES,
@@ -21,6 +21,7 @@ from .const import (
     SHBTN_INPUTS_EVENTS_TYPES,
     SHBTN_MODELS,
     SHIX3_1_INPUTS_EVENTS_TYPES,
+    UPTIME_DEVIATION,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -118,6 +119,8 @@ def is_momentary_input(settings: dict, block: aioshelly.Block) -> bool:
         return True
 
     button = settings.get("relays") or settings.get("lights") or settings.get("inputs")
+    if button is None:
+        return False
 
     # Shelly 1L has two button settings in the first channel
     if settings["device"]["type"] == "SHSW-L":
@@ -133,13 +136,14 @@ def is_momentary_input(settings: dict, block: aioshelly.Block) -> bool:
 
 def get_device_uptime(status: dict, last_uptime: str) -> str:
     """Return device uptime string, tolerate up to 5 seconds deviation."""
-    uptime = utcnow() - timedelta(seconds=status["uptime"])
+    delta_uptime = utcnow() - timedelta(seconds=status["uptime"])
 
-    if not last_uptime:
-        return uptime.replace(microsecond=0).isoformat()
-
-    if abs((uptime - parse_datetime(last_uptime)).total_seconds()) > 5:
-        return uptime.replace(microsecond=0).isoformat()
+    if (
+        not last_uptime
+        or abs((delta_uptime - datetime.fromisoformat(last_uptime)).total_seconds())
+        > UPTIME_DEVIATION
+    ):
+        return delta_uptime.replace(microsecond=0).isoformat()
 
     return last_uptime
 

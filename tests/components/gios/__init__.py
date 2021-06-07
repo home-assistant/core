@@ -17,7 +17,7 @@ async def init_integration(hass, incomplete_data=False) -> MockConfigEntry:
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Home",
-        unique_id=123,
+        unique_id="123",
         data={"station_id": 123, "name": "Home"},
     )
 

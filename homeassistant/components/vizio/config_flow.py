@@ -278,7 +278,7 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, import_config: dict[str, Any]) -> FlowResult:
         """Import a config entry from configuration.yaml."""
         # Check if new config entry matches any existing config entries
-        for entry in self.hass.config_entries.async_entries(DOMAIN):
+        for entry in self._async_current_entries():
             # If source is ignore bypass host check and continue through loop
             if entry.source == SOURCE_IGNORE:
                 continue

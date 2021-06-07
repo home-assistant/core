@@ -160,7 +160,7 @@ class CastDevice(MediaPlayerEntity):
     "elected leader" itself.
     """
 
-    def __init__(self, cast_info: ChromecastInfo):
+    def __init__(self, cast_info: ChromecastInfo) -> None:
         """Initialize the cast device."""
 
         self._cast_info = cast_info

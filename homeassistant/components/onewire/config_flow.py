@@ -1,9 +1,14 @@
 """Config flow for 1-Wire component."""
+from __future__ import annotations
+
+from typing import Any
+
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TYPE
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResult
 
 from .const import (
     CONF_MOUNT_DIR,
@@ -32,7 +37,9 @@ DATA_SCHEMA_MOUNTDIR = vol.Schema(
 )
 
 
-async def validate_input_owserver(hass: HomeAssistant, data):
+async def validate_input_owserver(
+    hass: HomeAssistant, data: dict[str, Any]
+) -> dict[str, str]:
     """Validate the user input allows us to connect.
 
     Data has the keys from DATA_SCHEMA_OWSERVER with values provided by the user.
@@ -49,19 +56,9 @@ async def validate_input_owserver(hass: HomeAssistant, data):
     return {"title": host}
 
 
-def is_duplicate_owserver_entry(hass: HomeAssistant, user_input):
-    """Check existing entries for matching host and port."""
-    for config_entry in hass.config_entries.async_entries(DOMAIN):
-        if (
-            config_entry.data[CONF_TYPE] == CONF_TYPE_OWSERVER
-            and config_entry.data[CONF_HOST] == user_input[CONF_HOST]
-            and config_entry.data[CONF_PORT] == user_input[CONF_PORT]
-        ):
-            return True
-    return False
-
-
-async def validate_input_mount_dir(hass: HomeAssistant, data):
+async def validate_input_mount_dir(
+    hass: HomeAssistant, data: dict[str, Any]
+) -> dict[str, str]:
     """Validate the user input allows us to connect.
 
     Data has the keys from DATA_SCHEMA_MOUNTDIR with values provided by the user.
@@ -82,16 +79,18 @@ class OneWireFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize 1-Wire config flow."""
-        self.onewire_config = {}
+        self.onewire_config: dict[str, Any] = {}
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle 1-Wire config flow start.
 
         Let user manually input configuration.
         """
-        errors = {}
+        errors: dict[str, str] = {}
         if user_input is not None:
             self.onewire_config.update(user_input)
             if CONF_TYPE_OWSERVER == user_input[CONF_TYPE]:
@@ -105,13 +104,20 @@ class OneWireFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_owserver(self, user_input=None):
+    async def async_step_owserver(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle OWServer configuration."""
         errors = {}
         if user_input:
             # Prevent duplicate entries
-            if is_duplicate_owserver_entry(self.hass, user_input):
-                return self.async_abort(reason="already_configured")
+            self._async_abort_entries_match(
+                {
+                    CONF_TYPE: CONF_TYPE_OWSERVER,
+                    CONF_HOST: user_input[CONF_HOST],
+                    CONF_PORT: user_input[CONF_PORT],
+                }
+            )
 
             self.onewire_config.update(user_input)
 
@@ -130,7 +136,9 @@ class OneWireFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_mount_dir(self, user_input=None):
+    async def async_step_mount_dir(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle SysBus configuration."""
         errors = {}
         if user_input:
@@ -157,7 +165,7 @@ class OneWireFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_import(self, platform_config):
+    async def async_step_import(self, platform_config: dict[str, Any]) -> FlowResult:
         """Handle import configuration from YAML."""
         # OWServer
         if platform_config[CONF_TYPE] == CONF_TYPE_OWSERVER:

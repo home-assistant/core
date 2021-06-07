@@ -6,7 +6,7 @@
         "error": {
             "cannot_connect": "Tilkobling mislyktes"
         },
-        "flow_title": "ZHA: {name}",
+        "flow_title": "{name}",
         "step": {
             "pick_radio": {
                 "data": {
@@ -41,6 +41,8 @@
             "title": "Alternativer for alarmkontrollpanel"
         },
         "zha_options": {
+            "consider_unavailable_battery": "Vurder batteridrevne enheter som utilgjengelige etter (sekunder)",
+            "consider_unavailable_mains": "Tenk p\u00e5 str\u00f8mnettet som ikke er tilgjengelig etter (sekunder)",
             "default_light_transition": "Standard lysovergangstid (sekunder)",
             "enable_identify_on_join": "Aktiver identifiseringseffekt n\u00e5r enheter blir med i nettverket",
             "title": "Globale alternativer"

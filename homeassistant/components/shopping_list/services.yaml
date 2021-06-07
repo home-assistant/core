@@ -23,14 +23,20 @@ complete_item:
         text:
 
 incomplete_item:
+  name: Incomplete item
   description: Marks an item as incomplete in the shopping list.
   fields:
     name:
       description: The name of the item to mark as incomplete.
       example: Beer
+      required: true
+      selector:
+        text:
 
 complete_all:
+  name: Complete all
   description: Marks all items as completed in the shopping list. It does not remove the items.
 
 incomplete_all:
+  name: Incomplete all
   description: Marks all items as incomplete in the shopping list.
