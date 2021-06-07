@@ -27,7 +27,6 @@ async def test_full_flow(
         "geocaching",
         {
             "geocaching": {"client_id": CLIENT_ID, "client_secret": CLIENT_SECRET},
-            "http": {"base_url": "https://example.com"},
         },
     )
 
@@ -86,7 +85,6 @@ async def test_existing_entry(
         "geocaching",
         {
             "geocaching": {"client_id": CLIENT_ID, "client_secret": CLIENT_SECRET},
-            "http": {"base_url": "https://example.com"},
         },
     )
 
@@ -135,7 +133,6 @@ async def test_reauthentication(
         "geocaching",
         {
             "geocaching": {"client_id": CLIENT_ID, "client_secret": CLIENT_SECRET},
-            "http": {"base_url": "https://example.com"},
         },
     )
 
