@@ -35,13 +35,12 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 async def test_fan_state(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
-    """Test the creation and values of the Modern Forms lights."""
+    """Test the creation and values of the Modern Forms fans."""
     await init_integration(hass, aioclient_mock)
 
     entity_registry = er.async_get(hass)
 
     state = hass.states.get("fan.modernformsfan_fan")
-    print(state)
     assert state
     assert state.attributes.get(ATTR_PERCENTAGE) == 50
     assert state.attributes.get(ATTR_DIRECTION) == DIRECTION_FORWARD
@@ -55,7 +54,7 @@ async def test_fan_state(
 async def test_change_state(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, caplog
 ) -> None:
-    """Test the change of state of the Modern Forms segments."""
+    """Test the change of state of the Modern Forms fan."""
     await init_integration(hass, aioclient_mock)
 
     with patch("aiomodernforms.ModernFormsDevice.fan") as fan_mock:

@@ -86,7 +86,6 @@ async def test_full_zeroconf_flow_implementation(
     assert result2.get("title") == "example"
     assert result2.get("type") == RESULT_TYPE_CREATE_ENTRY
 
-    print(result2)
     assert "data" in result2
     assert result2["data"][CONF_HOST] == "192.168.1.123"
     assert result2["data"][CONF_MAC] == "AA:BB:CC:DD:EE:FF"

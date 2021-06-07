@@ -10,7 +10,7 @@ from aiomodernforms import (
     ModernFormsDevice,
     ModernFormsError,
 )
-from aiomodernforms.models import Device
+from aiomodernforms.models import Device as ModernFormsDeviceState
 
 from homeassistant.components.fan import DOMAIN as FAN_DOMAIN
 from homeassistant.config_entries import ConfigEntry
@@ -106,7 +106,7 @@ def modernforms_exception_handler(func):
     return handler
 
 
-class ModernFormsDataUpdateCoordinator(DataUpdateCoordinator[Device]):
+class ModernFormsDataUpdateCoordinator(DataUpdateCoordinator[ModernFormsDeviceState]):
     """Class to manage fetching Modern Forms data from single endpoint."""
 
     def __init__(
@@ -142,8 +142,10 @@ class ModernFormsDataUpdateCoordinator(DataUpdateCoordinator[Device]):
             raise UpdateFailed(f"Invalid response from API: {error}") from error
 
 
-class ModernFormsEntity(CoordinatorEntity[ModernFormsDataUpdateCoordinator]):
-    """Defines a base Modern Forms entity."""
+class ModernFormsDeviceEntity(CoordinatorEntity[ModernFormsDataUpdateCoordinator]):
+    """Defines a Modern Forms device entity."""
+
+    coordinator: ModernFormsDataUpdateCoordinator
 
     def __init__(
         self,
@@ -151,7 +153,7 @@ class ModernFormsEntity(CoordinatorEntity[ModernFormsDataUpdateCoordinator]):
         entry_id: str,
         coordinator: ModernFormsDataUpdateCoordinator,
         name: str,
-        icon: str,
+        icon: str | None,
         enabled_default: bool = True,
     ) -> None:
         """Initialize the Modern Forms entity."""
@@ -161,12 +163,6 @@ class ModernFormsEntity(CoordinatorEntity[ModernFormsDataUpdateCoordinator]):
         self._attr_icon = icon
         self._attr_name = name
         self._unsub_dispatcher = None
-
-
-class ModernFormsDeviceEntity(ModernFormsEntity):
-    """Defines a Modern Forms device entity."""
-
-    coordinator: ModernFormsDataUpdateCoordinator
 
     @property
     def device_info(self) -> DeviceInfo:

@@ -81,7 +81,7 @@ class ModernFormsFanEntity(FanEntity, ModernFormsDeviceEntity):
             entry_id=entry_id,
             coordinator=coordinator,
             name=f"{coordinator.data.info.device_name} Fan",
-            icon="mdi:fan",
+            icon=None,
         )
         self._attr_unique_id = f"{self.coordinator.data.info.mac_address}_fan"
 
