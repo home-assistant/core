@@ -30,6 +30,13 @@ async def test_full_flow(
         },
     )
 
+    # Ensure integration is discovered when manual implementation is configured
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert (
+        flows[0]["context"]["unique_id"] == config_entries.DEFAULT_DISCOVERY_UNIQUE_ID
+    )
+
     result = await hass.config_entries.flow.async_init(
         "geocaching", context={"source": config_entries.SOURCE_USER}
     )

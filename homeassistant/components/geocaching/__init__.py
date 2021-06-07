@@ -2,7 +2,7 @@
 import voluptuous as vol
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_DISCOVERY, ConfigEntry
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
@@ -49,6 +49,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             client_secret=config[DOMAIN][CONF_CLIENT_SECRET],
             name="Geocaching",
         ),
+    )
+
+    # When manual configuration is done, discover the integration.
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_DISCOVERY}
+        )
     )
 
     return True
