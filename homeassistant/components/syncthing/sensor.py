@@ -355,6 +355,11 @@ class SpeedSensor(CoordinatorEntity):
             "entry_type": "service",
         }
 
+    @property
+    def extra_state_attributes(self):
+        """Return the state attributes."""
+        return {"total": self._current_value()}
+
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
