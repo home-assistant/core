@@ -117,7 +117,10 @@ def switch_ir_send_schema(
 
 
 def get_child_schema(
-    gateway: BaseAsyncGateway, child: ChildSensor, value_type_name: ValueType, schema
+    gateway: BaseAsyncGateway,
+    child: ChildSensor,
+    value_type_name: ValueType,
+    schema: dict,
 ) -> vol.Schema:
     """Return a child schema."""
     set_req = gateway.const.SetReq
@@ -136,7 +139,7 @@ def get_child_schema(
 
 def invalid_msg(
     gateway: BaseAsyncGateway, child: ChildSensor, value_type_name: ValueType
-):
+) -> str:
     """Return a message for an invalid child during schema validation."""
     pres = gateway.const.Presentation
     set_req = gateway.const.SetReq
