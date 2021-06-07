@@ -40,8 +40,7 @@ class GeocachingOAuth2Implementation(
     @property
     def extra_authorize_data(self) -> dict:
         """Extra data that needs to be appended to the authorize url."""
-        data = {"scope": "*", "response_type": "code"}
-        return data
+        return {"scope": "*", "response_type": "code"}
 
     async def async_resolve_external_data(self, external_data: Any) -> dict:
         """Initialize local Geocaching API auth implementation."""
@@ -78,5 +77,4 @@ class GeocachingOAuth2Implementation(
         session = async_get_clientsession(self.hass)
         resp = await session.post(OAUTH2_TOKEN_URL, data=data)
         resp.raise_for_status()
-        resp_json = cast(dict, await resp.json())
-        return resp_json
+        return cast(dict, await resp.json())
