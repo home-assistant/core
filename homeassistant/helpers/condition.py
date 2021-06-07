@@ -750,10 +750,10 @@ def time(
             STATE_UNAVAILABLE,
             STATE_UNKNOWN,
         ):
-            after_timedatime = dt_util.parse_datetime(after_entity.state)
-            if after_timedatime is None:
+            after_datetime = dt_util.parse_datetime(after_entity.state)
+            if after_datetime is None:
                 return False
-            after = dt_util.as_local(after_timedatime).time()
+            after = dt_util.as_local(after_datetime).time()
         else:
             return False
 
