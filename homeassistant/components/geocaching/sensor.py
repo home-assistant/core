@@ -7,10 +7,11 @@ from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, SENSOR_DATA
 from .coordinator import GeocachingDataUpdateCoordinator
-from .models import GeocachingEntity, GeocachingSensorSettings
+from .models import GeocachingSensorSettings
 
 
 async def async_setup_entry(
@@ -26,7 +27,7 @@ async def async_setup_entry(
     )
 
 
-class GeocachingSensor(GeocachingEntity, SensorEntity):
+class GeocachingSensor(CoordinatorEntity, SensorEntity):
     """Representation of a Sensor."""
 
     settings: GeocachingSensorSettings
@@ -40,33 +41,23 @@ class GeocachingSensor(GeocachingEntity, SensorEntity):
         settings: GeocachingSensorSettings,
     ) -> None:
         """Initialize the Geocaching sensor."""
-
-        super().__init__(
-            coordinator,
-            enabled_default=settings["default_enabled"],
-            icon=settings["icon"],
-            name=f"Geocaching {coordinator.data.user.username} {settings['name']}",
-        )
+        super().__init__(coordinator)
         self.settings = settings
         self.key = key
 
-    @property
-    def unique_id(self) -> str:
-        """Return the unique ID for this sensor."""
-        return f"geocaching_{self.coordinator.data.user.reference_code}_{self.key}"
+        self._attr_device_class = settings["device_class"]
+        self._attr_entity_registry_enabled_default = settings["default_enabled"]
+        self._attr_icon = settings["icon"]
+        self._attr_name = (
+            f"Geocaching {coordinator.data.user.username} {settings['name']}"
+        )
+        self._attr_unique_id = (
+            f"geocaching_{coordinator.data.user.reference_code}_{key}"
+        )
+        self._attr_unit_of_measurement = settings["unit_of_measurement"]
 
     @property
     def state(self) -> Any:
         """Return the state of the sensor."""
         section = getattr(self.coordinator.data, self.settings["section"])
         return getattr(section, self.settings["state"])
-
-    @property
-    def unit_of_measurement(self) -> str | None:
-        """Return the unit of measurement."""
-        return self.settings["unit_of_measurement"]
-
-    @property
-    def device_class(self) -> str | None:
-        """Return the device class."""
-        return self.settings["device_class"]
