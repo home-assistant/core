@@ -765,7 +765,7 @@ class SonosSpeaker:
             """Pause all current coordinators and restore groups."""
             for speaker in (s for s in speakers if s.is_coordinator):
                 if speaker.media.playback_status == SONOS_STATE_PLAYING:
-                    hass.async_create_task(speaker.soco.pause())
+                    speaker.soco.pause()
 
             groups = []
 
