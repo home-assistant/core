@@ -11,13 +11,7 @@ from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import (
-    CONF_AZIMUTH,
-    CONF_DAMPING,
-    CONF_DECLINATION,
-    CONF_MODULES_POWER,
-    DOMAIN,
-)
+from .const import CONF_AZIMUTH, CONF_DECLINATION, CONF_MODULES_POWER, DOMAIN
 
 PLATFORMS = ["sensor"]
 
@@ -30,8 +24,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         longitude=entry.data[CONF_LONGITUDE],
         declination=entry.data[CONF_DECLINATION],
         azimuth=entry.data[CONF_AZIMUTH],
-        kwp=entry.data[CONF_MODULES_POWER],
-        damping=entry.data[CONF_DAMPING],
+        kwp=(entry.data[CONF_MODULES_POWER] / 1000),
+        damping=0,
     )
 
     # Create Forecast Solar instance for this entry

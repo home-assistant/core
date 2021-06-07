@@ -3,13 +3,13 @@
   "config": {
     "step": {
       "user": {
+        "description": "Fill in the data that apply to your solar panels, for more background information see the documentation",
         "data": {
           "latitude": "[%key:common::config_flow::data::latitude%]",
           "longitude": "[%key:common::config_flow::data::longitude%]",
-          "declination": "declination",
-          "azimuth": "azimuth",
-          "modules power": "modules power",
-          "damping": "damping",
+          "declination": "Declination",
+          "azimuth": "Azimuth",
+          "modules power": "Modules power (in Watts)",
           "name": "[%key:common::config_flow::data::name%]"
         }
       }
@@ -26,11 +26,12 @@
   "options": {
     "step": {
       "init": {
+        "description": "Fill in the data that apply to your solar panels, for more background information see the documentation",
         "data": {
-          "declination": "declination",
-          "azimuth": "azimuth",
-          "modules power": "modules power",
-          "damping": "damping"
+          "declination": "Declination",
+          "azimuth": "Azimuth",
+          "modules power": "Modules power (in Watts)",
+          "damping": "Damping"
         }
       }
     }

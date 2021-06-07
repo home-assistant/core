@@ -58,8 +58,7 @@ class ForecastSolarFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     ): cv.longitude,
                     vol.Required(CONF_DECLINATION): vol.Coerce(int),
                     vol.Required(CONF_AZIMUTH): vol.Coerce(int),
-                    vol.Required(CONF_MODULES_POWER): vol.Coerce(float),
-                    vol.Optional(CONF_DAMPING, default=0): vol.Coerce(int),
+                    vol.Required(CONF_MODULES_POWER): vol.Coerce(int),
                 }
             ),
         )
@@ -100,13 +99,13 @@ class ForecastSolarOptionFlowHandler(config_entries.OptionsFlow):
                         default=self.entry.options.get(
                             CONF_MODULES_POWER, self.entry.data.get(CONF_MODULES_POWER)
                         ),
-                    ): vol.Coerce(float),
+                    ): vol.Coerce(int),
                     vol.Optional(
                         CONF_DAMPING,
                         default=self.entry.options.get(
                             CONF_DAMPING, self.entry.data.get(CONF_DAMPING)
                         ),
-                    ): vol.Coerce(int),
+                    ): vol.Coerce(float),
                 }
             ),
         )

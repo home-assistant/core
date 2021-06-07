@@ -11,14 +11,14 @@
         "step": {
             "user": {
                 "data": {
-                    "azimuth": "azimuth",
-                    "damping": "damping",
-                    "declination": "declination",
+                    "azimuth": "Azimuth",
+                    "declination": "Declination",
                     "latitude": "Latitude",
                     "longitude": "Longitude",
-                    "modules power": "modules power",
+                    "modules power": "Modules power (in Watts)",
                     "name": "Name"
-                }
+                },
+                "description": "Fill in the data that apply to your solar panels, for more background information see the documentation"
             }
         }
     },
@@ -26,11 +26,12 @@
         "step": {
             "init": {
                 "data": {
-                    "azimuth": "azimuth",
-                    "damping": "damping",
-                    "declination": "declination",
-                    "modules power": "modules power"
-                }
+                    "azimuth": "Azimuth",
+                    "damping": "Damping",
+                    "declination": "Declination",
+                    "modules power": "Modules power (in Watts)"
+                },
+                "description": "Fill in the data that apply to your solar panels, for more background information see the documentation"
             }
         }
     },

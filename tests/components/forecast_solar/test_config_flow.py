@@ -2,7 +2,11 @@
 from unittest.mock import patch
 
 from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.forecast_solar.const import DOMAIN, TEST_DATA
+from homeassistant.components.forecast_solar.const import (
+    DOMAIN,
+    TEST_DATA,
+    TEST_OPTION_DATA,
+)
 
 from tests.common import MockConfigEntry
 
@@ -29,7 +33,7 @@ async def test_config_flow_setup(hass):
 
 async def test_options_flow(hass):
     """Test config flow options."""
-    entry = MockConfigEntry(domain=DOMAIN, data=TEST_DATA, unique_id=DOMAIN)
+    entry = MockConfigEntry(domain=DOMAIN, data=TEST_OPTION_DATA, unique_id=DOMAIN)
     entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(entry.entry_id)
@@ -41,7 +45,7 @@ async def test_options_flow(hass):
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input=TEST_DATA
+        result["flow_id"], user_input=TEST_OPTION_DATA
     )
 
     with patch(
@@ -53,4 +57,4 @@ async def test_options_flow(hass):
 
         await hass.async_block_till_done()
 
-    assert entry.options == TEST_DATA
+    assert entry.options == TEST_OPTION_DATA
