@@ -15,10 +15,9 @@ from zeroconf import (
     InterfaceChoice,
     IPVersion,
     NonUniqueNameException,
-    ServiceInfo,
     ServiceStateChange,
-    Zeroconf,
 )
+from zeroconf.asyncio import AsyncServiceInfo
 
 from homeassistant import config_entries, util
 from homeassistant.components import network
@@ -35,7 +34,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.loader import async_get_homekit, async_get_zeroconf, bind_hass
 
-from .models import HaAsyncZeroconf, HaServiceBrowser, HaZeroconf
+from .models import HaAsyncServiceBrowser, HaAsyncZeroconf, HaZeroconf
 from .usage import install_multiple_zeroconf_catcher
 
 _LOGGER = logging.getLogger(__name__)
@@ -166,12 +165,10 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
         zc_args["ip_version"] = IPVersion.V4Only
 
     aio_zc = await _async_get_instance(hass, **zc_args)
-    zeroconf = aio_zc.zeroconf
-
     zeroconf_types, homekit_models = await asyncio.gather(
         async_get_zeroconf(hass), async_get_homekit(hass)
     )
-    discovery = ZeroconfDiscovery(hass, zeroconf, zeroconf_types, homekit_models, ipv6)
+    discovery = ZeroconfDiscovery(hass, aio_zc, zeroconf_types, homekit_models, ipv6)
     await discovery.async_setup()
 
     async def _async_zeroconf_hass_start(_event: Event) -> None:
@@ -234,7 +231,7 @@ async def _async_register_hass_zc_service(
 
     _suppress_invalid_properties(params)
 
-    info = ServiceInfo(
+    info = AsyncServiceInfo(
         ZEROCONF_TYPE,
         name=f"{valid_location_name}.{ZEROCONF_TYPE}",
         server=f"{uuid}.local.",
@@ -272,10 +269,10 @@ class FlowDispatcher:
             self.hass.async_create_task(self._init_flow(flow))
         self.pending_flows = []
 
-    def create(self, flow: ZeroconfFlow) -> None:
+    def async_create(self, flow: ZeroconfFlow) -> None:
         """Create and add or queue a flow."""
         if self.started:
-            self.hass.create_task(self._init_flow(flow))
+            self.hass.async_create_task(self._init_flow(flow))
         else:
             self.pending_flows.append(flow)
 
@@ -292,20 +289,20 @@ class ZeroconfDiscovery:
     def __init__(
         self,
         hass: HomeAssistant,
-        zeroconf: Zeroconf,
+        aiozc: HaAsyncZeroconf,
         zeroconf_types: dict[str, list[dict[str, str]]],
         homekit_models: dict[str, str],
         ipv6: bool,
     ) -> None:
         """Init discovery."""
         self.hass = hass
-        self.zeroconf = zeroconf
+        self.aiozc = aiozc
         self.zeroconf_types = zeroconf_types
         self.homekit_models = homekit_models
         self.ipv6 = ipv6
 
         self.flow_dispatcher: FlowDispatcher | None = None
-        self.service_browser: HaServiceBrowser | None = None
+        self.async_service_browser: HaAsyncServiceBrowser | None = None
 
     async def async_setup(self) -> None:
         """Start discovery."""
@@ -318,14 +315,14 @@ class ZeroconfDiscovery:
             if hk_type not in self.zeroconf_types:
                 types.append(hk_type)
         _LOGGER.debug("Starting Zeroconf browser for: %s", types)
-        self.service_browser = HaServiceBrowser(
-            self.ipv6, self.zeroconf, types, handlers=[self.service_update]
+        self.async_service_browser = HaAsyncServiceBrowser(
+            self.ipv6, self.aiozc, types, handlers=[self.async_service_update]
         )
 
     async def async_stop(self) -> None:
         """Cancel the service browser and stop processing the queue."""
-        if self.service_browser:
-            await self.hass.async_add_executor_job(self.service_browser.cancel)
+        if self.async_service_browser:
+            await self.async_service_browser.async_cancel()
 
     @callback
     def async_start(self) -> None:
@@ -333,9 +330,10 @@ class ZeroconfDiscovery:
         assert self.flow_dispatcher is not None
         self.flow_dispatcher.async_start()
 
-    def service_update(
+    @callback
+    def async_service_update(
         self,
-        zeroconf: Zeroconf,
+        aiozc: HaAsyncZeroconf,
         service_type: str,
         name: str,
         state_change: ServiceStateChange,
@@ -351,10 +349,10 @@ class ZeroconfDiscovery:
         if state_change == ServiceStateChange.Removed:
             return
 
-        service_info = ServiceInfo(service_type, name)
-        service_info.load_from_cache(zeroconf)
+        async_service_info = AsyncServiceInfo(service_type, name)
+        async_service_info.load_from_cache(aiozc.zeroconf)
 
-        info = info_from_service(service_info)
+        info = info_from_service(async_service_info)
         if not info:
             # Prevent the browser thread from collapsing
             _LOGGER.debug("Failed to get addresses for device %s", name)
@@ -366,7 +364,7 @@ class ZeroconfDiscovery:
         # If we can handle it as a HomeKit discovery, we do that here.
         if service_type in HOMEKIT_TYPES:
             if pending_flow := handle_homekit(self.hass, self.homekit_models, info):
-                self.flow_dispatcher.create(pending_flow)
+                self.flow_dispatcher.async_create(pending_flow)
             # Continue on here as homekit_controller
             # still needs to get updates on devices
             # so it can see when the 'c#' field is updated.
@@ -428,7 +426,7 @@ class ZeroconfDiscovery:
                 "context": {"source": config_entries.SOURCE_ZEROCONF},
                 "data": info,
             }
-            self.flow_dispatcher.create(flow)
+            self.flow_dispatcher.async_create(flow)
 
 
 def handle_homekit(
@@ -466,7 +464,7 @@ def handle_homekit(
     return None
 
 
-def info_from_service(service: ServiceInfo) -> HaServiceInfo | None:
+def info_from_service(service: AsyncServiceInfo) -> HaServiceInfo | None:
     """Return prepared info from mDNS entries."""
     properties: dict[str, Any] = {"_raw": {}}
 

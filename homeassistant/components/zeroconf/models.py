@@ -2,8 +2,8 @@
 
 from typing import Any
 
-from zeroconf import DNSAddress, DNSRecord, ServiceBrowser, Zeroconf
-from zeroconf.asyncio import AsyncZeroconf
+from zeroconf import DNSAddress, DNSRecord, Zeroconf
+from zeroconf.asyncio import AsyncServiceBrowser, AsyncZeroconf
 
 TYPE_AAAA = 28
 
@@ -26,14 +26,13 @@ class HaAsyncZeroconf(AsyncZeroconf):
     ha_async_close = AsyncZeroconf.async_close
 
 
-class HaServiceBrowser(ServiceBrowser):
+class HaAsyncServiceBrowser(AsyncServiceBrowser):
     """ServiceBrowser that only consumes DNSPointer records."""
 
     def __init__(self, ipv6: bool, *args: Any, **kwargs: Any) -> None:
         """Create service browser that filters ipv6 if it is disabled."""
         self.ipv6 = ipv6
         super().__init__(*args, **kwargs)
-        self.name = self.__class__.__name__
 
     def update_record(self, zc: Zeroconf, now: float, record: DNSRecord) -> None:
         """Pre-Filter AAAA records if IPv6 is not enabled."""
