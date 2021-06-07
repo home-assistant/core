@@ -61,27 +61,21 @@ class ToonBinarySensor(ToonEntity, BinarySensorEntity):
 
     def __init__(self, coordinator: ToonDataUpdateCoordinator, *, key: str) -> None:
         """Initialize the Toon sensor."""
+        super().__init__(coordinator)
         self.key = key
 
-        super().__init__(
-            coordinator,
-            enabled_default=BINARY_SENSOR_ENTITIES[key][ATTR_DEFAULT_ENABLED],
-            icon=BINARY_SENSOR_ENTITIES[key][ATTR_ICON],
-            name=BINARY_SENSOR_ENTITIES[key][ATTR_NAME],
+        sensor = BINARY_SENSOR_ENTITIES[key]
+        self._attr_name = sensor[ATTR_NAME]
+        self._attr_icon = sensor.get(ATTR_ICON)
+        self._attr_entity_registry_enabled_default = sensor.get(
+            ATTR_DEFAULT_ENABLED, True
         )
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique ID for this binary sensor."""
-        agreement_id = self.coordinator.data.agreement.agreement_id
-        # This unique ID is a bit ugly and contains unneeded information.
-        # It is here for legacy / backward compatible reasons.
-        return f"{DOMAIN}_{agreement_id}_binary_sensor_{self.key}"
-
-    @property
-    def device_class(self) -> str:
-        """Return the device class."""
-        return BINARY_SENSOR_ENTITIES[self.key][ATTR_DEVICE_CLASS]
+        self._attr_device_class = sensor.get(ATTR_DEVICE_CLASS)
+        self._attr_unique_id = (
+            # This unique ID is a bit ugly and contains unneeded information.
+            # It is here for legacy / backward compatible reasons.
+            f"{DOMAIN}_{coordinator.data.agreement.agreement_id}_binary_sensor_{key}"
+        )
 
     @property
     def is_on(self) -> bool | None:
@@ -94,7 +88,7 @@ class ToonBinarySensor(ToonEntity, BinarySensorEntity):
         if value is None:
             return None
 
-        if BINARY_SENSOR_ENTITIES[self.key][ATTR_INVERTED]:
+        if BINARY_SENSOR_ENTITIES[self.key].get(ATTR_INVERTED, False):
             return not value
 
         return value
