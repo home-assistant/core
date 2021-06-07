@@ -939,7 +939,7 @@ mcstatus==6.0.0
 messagebird==1.2.0
 
 # homeassistant.components.meteoalarm
-meteoalertapi==0.1.6
+meteoalertapi==0.2.0
 
 # homeassistant.components.meteo_france
 meteofrance-api==1.0.2
