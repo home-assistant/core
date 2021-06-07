@@ -5,7 +5,6 @@ import logging
 from pymfy.api.devices.category import Category
 import voluptuous as vol
 
-from homeassistant.components.somfy.coordinator import SomfyDataUpdateCoordinator
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_OPTIMISTIC
 from homeassistant.core import HomeAssistant
@@ -16,7 +15,8 @@ from homeassistant.helpers import (
 )
 
 from . import api, config_flow
-from .const import API, COORDINATOR, DOMAIN
+from .const import COORDINATOR, DOMAIN
+from .coordinator import SomfyDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -122,5 +122,4 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
-    hass.data[DOMAIN].pop(API, None)
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

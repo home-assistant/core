@@ -1,8 +1,8 @@
 """Helpers to help coordinate updated."""
+from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import Dict, Optional
 
 from pymfy.api.model import Device
 from pymfy.api.somfy_api import SomfyApi
@@ -22,8 +22,8 @@ class SomfyDataUpdateCoordinator(DataUpdateCoordinator):
         *,
         name: str,
         client: SomfyApi,
-        update_interval: Optional[timedelta] = None,
-    ):
+        update_interval: timedelta | None = None,
+    ) -> None:
         """Initialize global data updater."""
         super().__init__(
             hass,
@@ -37,14 +37,14 @@ class SomfyDataUpdateCoordinator(DataUpdateCoordinator):
         self.site_ids = []
         self.last_site_index = -1
 
-    async def _async_update_data(self) -> Dict[str, Device]:
+    async def _async_update_data(self) -> dict[str, Device]:
         """Fetch Somfy data."""
         if not self.site_ids:
             try:
                 sites = await self.hass.async_add_executor_job(self.client.get_sites)
             except HTTPError:
                 sites = []
-            self.side_ids = [site.id for site in sites]
+            self.site_ids = [site.id for site in sites]
             if not self.site_ids:
                 raise UpdateFailed("Somfy did not returned any site id.")
 
@@ -62,6 +62,7 @@ class SomfyDataUpdateCoordinator(DataUpdateCoordinator):
                 "No devices returned. Assuming the previous ones are still valid"
             )
             return previous_devices
+
         return {dev.id: dev for dev in devices}
 
     @property
