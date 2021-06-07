@@ -9,13 +9,16 @@ from homeassistant.components.light import (
     ATTR_FLASH,
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
+    ATTR_XY_COLOR,
+    COLOR_MODE_BRIGHTNESS,
+    COLOR_MODE_COLOR_TEMP,
+    COLOR_MODE_HS,
+    COLOR_MODE_ONOFF,
+    COLOR_MODE_XY,
     DOMAIN,
     EFFECT_COLORLOOP,
     FLASH_LONG,
     FLASH_SHORT,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR,
-    SUPPORT_COLOR_TEMP,
     SUPPORT_EFFECT,
     SUPPORT_FLASH,
     SUPPORT_TRANSITION,
@@ -23,7 +26,6 @@ from homeassistant.components.light import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-import homeassistant.util.color as color_util
 
 from .const import (
     COVER_TYPES,
@@ -101,28 +103,52 @@ class DeconzBaseLight(DeconzDevice, LightEntity):
     """Representation of a deCONZ light."""
 
     TYPE = DOMAIN
+    # _attr_supported_color_modes = {}
 
     def __init__(self, device, gateway):
         """Set up light."""
         super().__init__(device, gateway)
 
+        self._attr_supported_color_modes = set()
         self.update_features(self._device)
 
     def update_features(self, device):
         """Calculate supported features of device."""
+        supported_color_modes = self._attr_supported_color_modes
+
+        if device.ct is not None:
+            supported_color_modes.add(COLOR_MODE_COLOR_TEMP)
+
+        if device.hue is not None and device.sat is not None:
+            supported_color_modes.add(COLOR_MODE_HS)
+
+        if device.xy is not None:
+            supported_color_modes.add(COLOR_MODE_XY)
+
+        if not supported_color_modes and device.brightness is not None:
+            supported_color_modes.add(COLOR_MODE_BRIGHTNESS)
+
+        if not supported_color_modes:
+            supported_color_modes.add(COLOR_MODE_ONOFF)
+
         if device.brightness is not None:
-            self._attr_supported_features |= SUPPORT_BRIGHTNESS
             self._attr_supported_features |= SUPPORT_FLASH
             self._attr_supported_features |= SUPPORT_TRANSITION
 
-        if device.ct is not None:
-            self._attr_supported_features |= SUPPORT_COLOR_TEMP
-
-        if device.xy is not None or (device.hue is not None and device.sat is not None):
-            self._attr_supported_features |= SUPPORT_COLOR
-
         if device.effect is not None:
             self._attr_supported_features |= SUPPORT_EFFECT
+
+    @property
+    def color_mode(self):
+        """Return the color mode of the light."""
+        color_mode = None
+        if self._device.colormode == "ct":
+            color_mode = COLOR_MODE_COLOR_TEMP
+        elif self._device.colormode == "hs":
+            color_mode = COLOR_MODE_HS
+        elif self._device.colormode == "xy":
+            color_mode = COLOR_MODE_XY
+        return color_mode
 
     @property
     def brightness(self):
@@ -137,20 +163,19 @@ class DeconzBaseLight(DeconzDevice, LightEntity):
     @property
     def color_temp(self):
         """Return the CT color value."""
-        if self._device.colormode != "ct":
-            return None
-
         return self._device.ct
 
     @property
     def hs_color(self):
         """Return the hs color value."""
-        if self._device.colormode in ("xy", "hs"):
-            if self._device.xy:
-                return color_util.color_xy_to_hs(*self._device.xy)
-            if self._device.hue and self._device.sat:
-                return (self._device.hue / 65535 * 360, self._device.sat / 255 * 100)
+        if self._device.hue is not None and self._device.sat is not None:
+            return (self._device.hue / 65535 * 360, self._device.sat / 255 * 100)
         return None
+
+    @property
+    def xy_color(self):
+        """Return the XY color value."""
+        return self._device.xy
 
     @property
     def is_on(self):
@@ -161,18 +186,18 @@ class DeconzBaseLight(DeconzDevice, LightEntity):
         """Turn on light."""
         data = {"on": True}
 
+        if ATTR_BRIGHTNESS in kwargs:
+            data["bri"] = kwargs[ATTR_BRIGHTNESS]
+
         if ATTR_COLOR_TEMP in kwargs:
             data["ct"] = kwargs[ATTR_COLOR_TEMP]
 
         if ATTR_HS_COLOR in kwargs:
-            if self._device.xy is not None:
-                data["xy"] = color_util.color_hs_to_xy(*kwargs[ATTR_HS_COLOR])
-            else:
-                data["hue"] = int(kwargs[ATTR_HS_COLOR][0] / 360 * 65535)
-                data["sat"] = int(kwargs[ATTR_HS_COLOR][1] / 100 * 255)
+            data["hue"] = int(kwargs[ATTR_HS_COLOR][0] / 360 * 65535)
+            data["sat"] = int(kwargs[ATTR_HS_COLOR][1] / 100 * 255)
 
-        if ATTR_BRIGHTNESS in kwargs:
-            data["bri"] = kwargs[ATTR_BRIGHTNESS]
+        if ATTR_XY_COLOR in kwargs:
+            data["xy"] = kwargs[ATTR_XY_COLOR]
 
         if ATTR_TRANSITION in kwargs:
             data["transitiontime"] = int(kwargs[ATTR_TRANSITION] * 10)
