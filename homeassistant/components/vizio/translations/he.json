@@ -15,7 +15,9 @@
             },
             "user": {
                 "data": {
-                    "host": "\u05de\u05d0\u05e8\u05d7"
+                    "access_token": "\u05d0\u05e1\u05d9\u05de\u05d5\u05df \u05d2\u05d9\u05e9\u05d4",
+                    "host": "\u05de\u05d0\u05e8\u05d7",
+                    "name": "\u05e9\u05dd"
                 }
             }
         }
