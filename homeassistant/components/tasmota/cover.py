@@ -63,6 +63,11 @@ class TasmotaCover(
         return self._position
 
     @property
+    def device_class(self):
+        """Return the device class."""
+        return cover.DEVICE_CLASS_SHUTTER
+
+    @property
     def supported_features(self):
         """Flag supported features."""
         return (
