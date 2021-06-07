@@ -128,6 +128,7 @@ async def test_reauthentication(
     hass, aiohttp_client, aioclient_mock, current_request_with_host
 ):
     """Test Geocaching reauthentication."""
+    MockConfigEntry(domain=DOMAIN, unique_id="mock_user").add_to_hass(hass)
     await setup.async_setup_component(
         hass,
         "geocaching",
