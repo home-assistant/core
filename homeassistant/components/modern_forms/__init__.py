@@ -153,7 +153,7 @@ class ModernFormsDeviceEntity(CoordinatorEntity[ModernFormsDataUpdateCoordinator
         entry_id: str,
         coordinator: ModernFormsDataUpdateCoordinator,
         name: str,
-        icon: str | None,
+        icon: str | None = None,
         enabled_default: bool = True,
     ) -> None:
         """Initialize the Modern Forms entity."""
