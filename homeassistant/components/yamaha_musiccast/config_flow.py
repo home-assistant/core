@@ -1,8 +1,7 @@
 """Config flow for MusicCast."""
-# import my_pypi_dependency
+from __future__ import annotations
 
 import logging
-from typing import Dict, Optional
 from urllib.parse import urlparse
 
 from aiohttp import ClientConnectorError
@@ -34,13 +33,13 @@ class MusicCastFlowHandler(ConfigFlow, domain=DOMAIN):
         self.host = None
 
     async def async_step_user(
-        self, user_input: Optional[ConfigType] = None
+        self, user_input: ConfigType | None = None
     ) -> data_entry_flow.FlowResult:
         """Handle a flow initiated by the user."""
         return await self._handle_config_flow(user_input)
 
     async def _handle_config_flow(
-        self, user_input: Optional[ConfigType] = None
+        self, user_input: ConfigType | None = None
     ) -> data_entry_flow.FlowResult:
         """Config flow handler for MusicCast."""
 
@@ -71,8 +70,8 @@ class MusicCastFlowHandler(ConfigFlow, domain=DOMAIN):
             errors["base"] = "no_musiccast_device"
         except data_entry_flow.AbortFlow:
             errors["base"] = "already_configured"
-        except Exception as e:
-            _LOGGER.error(e)
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
 
         if not errors:
@@ -88,7 +87,7 @@ class MusicCastFlowHandler(ConfigFlow, domain=DOMAIN):
         return self._show_setup_form(errors)
 
     def _show_setup_form(
-        self, errors: Optional[Dict] = None
+        self, errors: dict | None = None
     ) -> data_entry_flow.FlowResult:
         """Show the setup form to the user."""
         return self.async_show_form(

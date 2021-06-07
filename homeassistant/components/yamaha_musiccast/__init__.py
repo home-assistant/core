@@ -1,9 +1,10 @@
 """The MusicCast integration."""
+from __future__ import annotations
+
 import abc
 import asyncio
 from datetime import timedelta
 import logging
-from typing import List
 
 from aiomusiccast.musiccast_device import MusicCastData, MusicCastDevice
 import voluptuous as vol
@@ -21,15 +22,7 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from ...helpers.entity import DeviceInfo, Entity
-from .const import (
-    ATTR_MASTER,
-    BRAND,
-    DOMAIN,
-    JOIN_SERVICE_SCHEMA,
-    SERVICE_JOIN,
-    SERVICE_UNJOIN,
-    UNJOIN_SERVICE_SCHEMA,
-)
+from .const import BRAND, DOMAIN
 
 CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 
@@ -70,45 +63,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         for coord in hass.data[DOMAIN].values():
             all_entities += coord.entities
 
-        entities = [entity for entity in all_entities if entity.entity_id in entity_ids]
-
-        if service_call.service == SERVICE_JOIN:
-            master_id = service_call.data[ATTR_MASTER]
-            master = next(
-                (entity for entity in all_entities if entity.entity_id == master_id),
-                None,
-            )
-            if master and isinstance(master, MusicCastDeviceEntity):
-                await master.async_server_join(entities)
-            else:
-                _LOGGER.error(
-                    "Invalid master specified for join service: %s",
-                    service_call.data[ATTR_MASTER],
-                )
-        elif service_call.service == SERVICE_UNJOIN:
-            for entity in entities:
-                if isinstance(entity, MusicCastDeviceEntity):
-                    await entity.async_unjoin()
-                else:
-                    _LOGGER.error(
-                        "Invalid entity specified for unjoin service: %s",
-                        entity,
-                    )
-
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_JOIN,
-        async_group_service_handle,
-        JOIN_SERVICE_SCHEMA,
-    )
-
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_UNJOIN,
-        async_group_service_handle,
-        UNJOIN_SERVICE_SCHEMA,
-    )
-
     for component in PLATFORMS:
         coordinator.platforms.append(component)
         hass.async_create_task(
@@ -147,8 +101,8 @@ class MusicCastDataUpdateCoordinator(DataUpdateCoordinator[MusicCastData]):
     def __init__(self, hass: HomeAssistant, client: MusicCastDevice) -> None:
         """Initialize."""
         self.musiccast = client
-        self.platforms: List[str] = []
-        self.entities: List[Entity] = []
+        self.platforms: list[str] = []
+        self.entities: list[Entity] = []
 
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL)
 
@@ -215,11 +169,3 @@ class MusicCastDeviceEntity(MusicCastEntity, abc.ABC):
             model=self.coordinator.data.model_name,
             sw_version=self.coordinator.data.system_version,
         )
-
-    async def async_server_join(self, entities):
-        """Let a server assign all given entities to its group."""
-        raise NotImplementedError
-
-    async def async_unjoin(self):
-        """Let the device leave a group."""
-        raise NotImplementedError

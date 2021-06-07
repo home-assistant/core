@@ -1,77 +1,25 @@
 """Constants for the MusicCast integration."""
-import voluptuous as vol
-
-from homeassistant.components.media_player import MEDIA_CLASS_DIRECTORY
 from homeassistant.components.media_player.const import (
-    MEDIA_CLASS_TRACK,
     REPEAT_MODE_ALL,
     REPEAT_MODE_OFF,
     REPEAT_MODE_ONE,
 )
-from homeassistant.const import ATTR_ENTITY_ID
-from homeassistant.helpers import config_validation as cv
 
 DOMAIN = "yamaha_musiccast"
 
 BRAND = "Yamaha Corporation"
 
 # Attributes
-ATTR_COLOR_PRIMARY = "color_primary"
-ATTR_DURATION = "duration"
-ATTR_FADE = "fade"
 ATTR_IDENTIFIERS = "identifiers"
-ATTR_INTENSITY = "intensity"
-ATTR_LED_COUNT = "led_count"
 ATTR_MANUFACTURER = "manufacturer"
-ATTR_MAX_POWER = "max_power"
 ATTR_MODEL = "model"
-ATTR_ON = "on"
-ATTR_PALETTE = "palette"
 ATTR_PLAYLIST = "playlist"
 ATTR_PRESET = "preset"
-ATTR_REVERSE = "reverse"
-ATTR_SEGMENT_ID = "segment_id"
 ATTR_SOFTWARE_VERSION = "sw_version"
-ATTR_SPEED = "speed"
-ATTR_TARGET_BRIGHTNESS = "target_brightness"
-ATTR_UDP_PORT = "udp_port"
 
-ATTR_MC_LINK = "mc_link"
-ATTR_MAIN_SYNC = "main_sync"
-ATTR_MC_LINK_SOURCES = [ATTR_MC_LINK, ATTR_MAIN_SYNC]
-ATTR_MASTER = "master"
-ATTR_SLEEP_TIME = "sleep_time"
-
-SERVICE_JOIN = "join"
-SERVICE_UNJOIN = "unjoin"
-SERVICE_SLEEP = "sleep_timer"
-SERVICE_ALARM = "set_alarm"
-SERVICE_RECALL_NETUSB_PRESET = "recall_netusb_preset"
-SERVICE_STORE_NETUSB_PRESET = "store_netusb_preset"
-
-UNJOIN_SERVICE_SCHEMA = vol.Schema(
-    {
-        vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-    }
-)
-
-JOIN_SERVICE_SCHEMA = UNJOIN_SERVICE_SCHEMA.extend(
-    {
-        vol.Required(ATTR_MASTER): cv.entity_id,
-    }
-)
-
-NULL_GROUP = "00000000000000000000000000000000"
-
-ATTR_MUSICCAST_GROUP = DOMAIN + "_group"
 DEFAULT_ZONE = "main"
 REPEAT_MODE_MAPPING = {
     REPEAT_MODE_OFF: "off",
     REPEAT_MODE_ONE: "one",
     REPEAT_MODE_ALL: "all",
-}
-MEDIA_CLASS_MAPPING = {
-    "track": MEDIA_CLASS_TRACK,
-    "directory": MEDIA_CLASS_DIRECTORY,
-    "categories": "categories",
 }
