@@ -26,6 +26,7 @@ from jinja2 import contextfunction, pass_context
 from jinja2.sandbox import ImmutableSandboxedEnvironment
 from jinja2.utils import Namespace
 import voluptuous as vol
+import yaml
 
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -1315,6 +1316,16 @@ def to_json(value):
     return json.dumps(value)
 
 
+def from_yaml(value):
+    """Convert a YAML string to an object."""
+    return yaml.load(value, Loader=yaml.SafeLoader)
+
+
+def to_yaml(value):
+    """Convert an object to a YAML string."""
+    return yaml.dump(value, Dumper=yaml.SafeDumper)
+
+
 @pass_context
 def random_every_time(context, values):
     """Choose a random value.
@@ -1428,6 +1439,8 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["timestamp_utc"] = timestamp_utc
         self.filters["to_json"] = to_json
         self.filters["from_json"] = from_json
+        self.filters["to_yaml"] = to_yaml
+        self.filters["from_yaml"] = from_yaml
         self.filters["is_defined"] = fail_when_undefined
         self.filters["max"] = max
         self.filters["min"] = min
