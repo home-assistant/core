@@ -72,6 +72,7 @@ BINARY_SENSOR_ENTITIES = {
         ATTR_SECTION: "thermostat",
         ATTR_MEASUREMENT: "pre_heating",
         ATTR_ICON: "mdi:fire",
+        ATTR_DEFAULT_ENABLED: False,
     },
     "thermostat_info_burner_info_None": {
         ATTR_NAME: "Boiler Burner",
@@ -149,6 +150,7 @@ SENSOR_ENTITIES = {
         ATTR_ICON: "mdi:gas-cylinder",
         ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
         ATTR_LAST_RESET: datetime.fromtimestamp(0),
+        ATTR_DEFAULT_ENABLED: False,
     },
     "gas_value": {
         ATTR_NAME: "Current Gas Usage",
@@ -195,6 +197,7 @@ SENSOR_ENTITIES = {
         ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
         ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
         ATTR_LAST_RESET: datetime.fromtimestamp(0),
+        ATTR_DEFAULT_ENABLED: False,
     },
     "power_meter_reading_low": {
         ATTR_NAME: "Electricity Meter Feed IN Tariff 2",
@@ -204,6 +207,7 @@ SENSOR_ENTITIES = {
         ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
         ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
         ATTR_LAST_RESET: datetime.fromtimestamp(0),
+        ATTR_DEFAULT_ENABLED: False,
     },
     "power_value": {
         ATTR_NAME: "Current Power Usage",
@@ -221,6 +225,7 @@ SENSOR_ENTITIES = {
         ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
         ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
         ATTR_LAST_RESET: datetime.fromtimestamp(0),
+        ATTR_DEFAULT_ENABLED: False,
     },
     "solar_meter_reading_low_produced": {
         ATTR_NAME: "Electricity Meter Feed OUT Tariff 2",
@@ -230,6 +235,7 @@ SENSOR_ENTITIES = {
         ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
         ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
         ATTR_LAST_RESET: datetime.fromtimestamp(0),
+        ATTR_DEFAULT_ENABLED: False,
     },
     "solar_value": {
         ATTR_NAME: "Current Solar Power Production",
