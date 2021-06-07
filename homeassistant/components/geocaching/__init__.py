@@ -34,12 +34,8 @@ PLATFORMS = [SENSOR_DOMAIN]
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Geocaching component."""
-    hass.data[DOMAIN] = {}
-
     if DOMAIN not in config:
         return True
-
-    hass.data[DOMAIN][CONF_CLIENT_ID] = config[DOMAIN][CONF_CLIENT_ID]
 
     GeocachingFlowHandler.async_register_implementation(
         hass,
@@ -72,7 +68,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await coordinator.async_config_entry_first_refresh()
 
-    hass.data[DOMAIN][entry.entry_id] = {"COORD": coordinator, "SESSION": oauth_session}
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][entry.entry_id] = coordinator
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True

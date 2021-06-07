@@ -17,8 +17,7 @@ async def async_setup_entry(
     hass: HomeAssistantType, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up a Geocaching sensor entry."""
-
-    coordinator = hass.data[DOMAIN][entry.entry_id]["COORD"]
+    coordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
         [
             GeocachingSensor(coordinator, key=key, settings=SENSOR_DATA[key])
