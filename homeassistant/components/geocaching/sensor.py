@@ -6,7 +6,6 @@ from typing import Any
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
     ATTR_ICON,
     ATTR_NAME,
     ATTR_STATE,
@@ -52,16 +51,17 @@ class GeocachingSensor(CoordinatorEntity, SensorEntity):
         self.settings = settings
         self.key = key
 
-        self._attr_device_class = settings[ATTR_DEVICE_CLASS]
-        self._attr_entity_registry_enabled_default = settings[ATTR_DEFAULT_ENABLED]
-        self._attr_icon = settings[ATTR_ICON]
+        self._attr_entity_registry_enabled_default = settings.get(
+            ATTR_DEFAULT_ENABLED, True
+        )
+        self._attr_icon = settings.get(ATTR_ICON)
         self._attr_name = (
             f"Geocaching {coordinator.data.user.username} {settings[ATTR_NAME]}"
         )
         self._attr_unique_id = (
             f"geocaching_{coordinator.data.user.reference_code}_{key}"
         )
-        self._attr_unit_of_measurement = settings[ATTR_UNIT_OF_MEASUREMENT]
+        self._attr_unit_of_measurement = settings.get(ATTR_UNIT_OF_MEASUREMENT)
 
     @property
     def state(self) -> Any:
