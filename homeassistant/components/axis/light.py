@@ -4,7 +4,7 @@ from axis.event_stream import CLASS_LIGHT
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    SUPPORT_BRIGHTNESS,
+    COLOR_MODE_BRIGHTNESS,
     LightEntity,
 )
 from homeassistant.core import callback
@@ -49,7 +49,8 @@ class AxisLight(AxisEventBase, LightEntity):
         self.current_intensity = 0
         self.max_intensity = 0
 
-        self._features = SUPPORT_BRIGHTNESS
+        self._attr_supported_color_modes = {COLOR_MODE_BRIGHTNESS}
+        self._attr_color_mode = COLOR_MODE_BRIGHTNESS
 
     async def async_added_to_hass(self) -> None:
         """Subscribe lights events."""
@@ -66,11 +67,6 @@ class AxisLight(AxisEventBase, LightEntity):
             self.light_id
         )
         self.max_intensity = max_intensity["data"]["ranges"][0]["high"]
-
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        return self._features
 
     @property
     def name(self):
