@@ -5,6 +5,7 @@ import logging
 from pymfy.api.devices.category import Category
 import voluptuous as vol
 
+from homeassistant.components.somfy.coordinator import SomfyDataUpdateCoordinator
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_OPTIMISTIC
 from homeassistant.core import HomeAssistant
@@ -13,7 +14,6 @@ from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
 )
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import api, config_flow
 from .const import API, COORDINATOR, DOMAIN
@@ -79,25 +79,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     data = hass.data[DOMAIN]
-    data[API] = api.ConfigEntrySomfyApi(hass, entry, implementation)
 
-    async def _update_all_devices():
-        """Update all the devices."""
-        devices = await hass.async_add_executor_job(data[API].get_devices)
-        previous_devices = data[COORDINATOR].data
-        # Sometimes Somfy returns an empty list.
-        if not devices and previous_devices:
-            _LOGGER.debug(
-                "No devices returned. Assuming the previous ones are still valid"
-            )
-            return previous_devices
-        return {dev.id: dev for dev in devices}
-
-    coordinator = DataUpdateCoordinator(
+    coordinator = SomfyDataUpdateCoordinator(
         hass,
         _LOGGER,
         name="somfy device update",
-        update_method=_update_all_devices,
+        client=api.ConfigEntrySomfyApi(hass, entry, implementation),
         update_interval=SCAN_INTERVAL,
     )
     data[COORDINATOR] = coordinator
