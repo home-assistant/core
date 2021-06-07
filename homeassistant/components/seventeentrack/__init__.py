@@ -72,7 +72,7 @@ class SeventeenTrackDataCoordinator(DataUpdateCoordinator):
     def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         """Initialize the data object."""
         self.hass = hass
-        self.config_entry = config_entry
+        self.config_entry: ConfigEntry = config_entry
         self.client: Client = None
         super().__init__(
             self.hass,

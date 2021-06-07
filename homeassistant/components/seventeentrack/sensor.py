@@ -49,6 +49,9 @@ async def async_setup_entry(
 class SeventeenTrackBaseSensor(CoordinatorEntity, SensorEntity):
     """Base class for SeventeenTrack sensors."""
 
+    _attr_icon = ICON
+    _attr_unit_of_measurement = "packages"
+
     def __init__(self, coordinator: SeventeenTrackDataCoordinator) -> None:
         """Pass coordinator to CoordinatorEntity."""
         super().__init__(coordinator)
@@ -56,16 +59,6 @@ class SeventeenTrackBaseSensor(CoordinatorEntity, SensorEntity):
         self._name = coordinator.config_entry.data[CONF_NAME]
         self._username = coordinator.config_entry.data[CONF_USERNAME]
         self._attrs = {ATTR_ATTRIBUTION: ATTRIBUTION}
-
-    @property
-    def icon(self) -> str:
-        """Return the icon."""
-        return ICON
-
-    @property
-    def unit_of_measurement(self) -> str:
-        """Return the unit the value is expressed in."""
-        return "packages"
 
     @property
     def device_info(self) -> DeviceInfo:
