@@ -57,7 +57,7 @@ class MusicCastFlowHandler(ConfigFlow, domain=DOMAIN):
             if self.serial_number is None:
                 self.serial_number = info["system_id"]
             unique_id = self.serial_number
-            await self.async_set_unique_id(unique_id)
+            await self.async_set_unique_id(unique_id, raise_on_progress=False)
             self._abort_if_unique_id_configured()
         except (MusicCastConnectionException, ClientConnectorError):
             errors["base"] = "cannot_connect"
