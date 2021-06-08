@@ -143,6 +143,7 @@ SONOS_GROUP_UPDATE = "sonos_group_update"
 SONOS_HOUSEHOLD_UPDATED = "sonos_household_updated"
 SONOS_ALARM_UPDATE = "sonos_alarm_update"
 SONOS_STATE_UPDATED = "sonos_state_updated"
+SONOS_REBOOTED = "sonos_rebooted"
 SONOS_SEEN = "sonos_seen"
 
 SOURCE_LINEIN = "Line-in"
