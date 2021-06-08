@@ -11,10 +11,12 @@ from fritzconnection import FritzConnection
 from fritzconnection.core.exceptions import (
     FritzActionError,
     FritzConnectionException,
+    FritzSecurityError,
     FritzServiceError,
 )
 from fritzconnection.lib.fritzhosts import FritzHosts
 from fritzconnection.lib.fritzstatus import FritzStatus
+from fritzprofiles import FritzProfileSwitch, get_all_profiles
 
 from homeassistant.components.device_tracker.const import (
     CONF_CONSIDER_HOME,
@@ -26,7 +28,7 @@ from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.util import dt as dt_util
+from homeassistant.util import dt as dt_util, slugify
 
 from .const import (
     DEFAULT_HOST,
@@ -35,6 +37,7 @@ from .const import (
     DOMAIN,
     SERVICE_REBOOT,
     SERVICE_RECONNECT,
+    SWITCH_UPDATE,
     TRACKER_SCAN_INTERVAL,
 )
 
@@ -116,6 +119,13 @@ class FritzBoxTools:
 
         self._model = info.get("NewModelName")
         self._sw_version = info.get("NewSoftwareVersion")
+
+        self.fritz_profiles = {
+            profile: FritzProfileSwitch(
+                "http://" + self.host, self.username, self.password, profile
+            )
+            for profile in get_all_profiles(self.host, self.username, self.password)
+        }
 
     async def async_start(self, options: MappingProxyType[str, Any]) -> None:
         """Start FritzHosts connection."""
@@ -306,6 +316,17 @@ class FritzDevice:
         return self._last_activity
 
 
+class SwitchInfo(TypedDict):
+    """FRITZ!Box switch info class."""
+
+    description: str
+    friendly_name: str
+    icon: str
+    type: str
+    callback_update: Callable
+    callback_switch: Callable
+
+
 class FritzBoxBaseEntity:
     """Fritz host entity base class."""
 
@@ -331,3 +352,111 @@ class FritzBoxBaseEntity:
             "model": self._fritzbox_tools.model,
             "sw_version": self._fritzbox_tools.sw_version,
         }
+
+
+class FritzBoxBaseSwitch:
+    """Fritz switch base class."""
+
+    def __init__(self, fritzbox_tools: FritzBoxTools, switch_info: SwitchInfo):
+        """Init Fritzbox port switch."""
+        self.fritzbox_tools: FritzBoxTools = fritzbox_tools
+
+        self._description = switch_info["description"]
+        self._friendly_name = switch_info["friendly_name"]
+        self._icon = switch_info["icon"]
+        self._type = switch_info["type"]
+        self._update: Callable = switch_info["callback_update"]
+        self._switch: Callable = switch_info["callback_switch"]
+
+        self._name = f"{self._friendly_name} {self._description}"
+        self._unique_id = (
+            f"{self.fritzbox_tools.unique_id}-{slugify(self._description)}"
+        )
+
+        self._attributes: dict[str, str] = {}
+        self._is_available = True
+        self._last_toggle_timestamp: datetime | None = None
+
+        self._attr_is_on = False
+
+    @property
+    def name(self):
+        """Return name."""
+        return self._name
+
+    @property
+    def icon(self):
+        """Return name."""
+        return self._icon
+
+    @property
+    def unique_id(self):
+        """Return unique id."""
+        return self._unique_id
+
+    @property
+    def device_info(self):
+        """Return the device information."""
+
+        return {
+            "connections": {(CONNECTION_NETWORK_MAC, self.fritzbox_tools.mac)},
+            "identifiers": {(DOMAIN, self.fritzbox_tools.unique_id)},
+            "name": self._friendly_name,
+            "manufacturer": "AVM",
+            "model": self.fritzbox_tools.model,
+            "sw_version": self.fritzbox_tools.sw_version,
+        }
+
+    @property
+    def available(self) -> bool:
+        """Return availability."""
+        return self._is_available
+
+    @property
+    def device_state_attributes(self):
+        """Return device attributes."""
+        return self._attributes
+
+    async def async_update(self):
+        """Update data."""
+        if (
+            self._last_toggle_timestamp is not None
+            and (dt_util.utcnow() - self._last_toggle_timestamp).seconds < SWITCH_UPDATE
+        ):
+            _LOGGER.debug(
+                "Not updating switch state, because last toggle happened < %s seconds ago",
+                SWITCH_UPDATE,
+            )
+            return
+
+        _LOGGER.debug("Updating '%s' (%s) switch state.", self.name, self._type)
+        await self._update()
+
+    async def async_turn_on(self, **kwargs) -> None:
+        """Turn on switch."""
+        await self._async_handle_turn_on_off(turn_on=True)
+
+    async def async_turn_off(self, **kwargs) -> None:
+        """Turn off switch."""
+        await self._async_handle_turn_on_off(turn_on=False)
+
+    async def _async_handle_turn_on_off(self, turn_on: bool) -> bool:
+        """Handle switch state change request."""
+        try:
+            await self._switch(turn_on)
+        except FritzSecurityError:
+            _LOGGER.error(
+                "Authorization Error: Please check the provided credentials and verify that you can log into the web interface.",
+                exc_info=True,
+            )
+        except FritzConnectionException:
+            _LOGGER.error(
+                "Home Assistant cannot call the wished service on the FRITZ!Box.",
+                exc_info=True,
+            )
+            return False
+
+        self._attr_is_on = turn_on
+        self._last_toggle_timestamp = dt_util.utcnow()
+
+        return True
