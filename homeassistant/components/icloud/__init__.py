@@ -13,7 +13,6 @@ from .account import IcloudAccount
 from .const import (
     CONF_MAX_INTERVAL,
     CONF_WITH_FAMILY,
-    DEFAULT_GPS_ACCURACY_THRESHOLD,
     DEFAULT_MAX_INTERVAL,
     DEFAULT_WITH_FAMILY,
     DOMAIN,
