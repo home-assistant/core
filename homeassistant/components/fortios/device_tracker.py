@@ -51,7 +51,10 @@ def get_scanner(hass, config):
     fos_major_version = int(status_json["version"][1])
 
     if fos_major_version < 6 or fos_major_version > 7:
-        _LOGGER.error("unsupported FortiOS version, fos_major_version =  %s", str(fos_major_version))
+        _LOGGER.error(
+            "unsupported FortiOS version, fos_major_version =  %s",
+            str(fos_major_version),
+        )
         return None
 
     api_url = ""
@@ -60,7 +63,10 @@ def get_scanner(hass, config):
     elif fos_major_version == 7:
         api_url = "user/device/query"
     else:
-        _LOGGER.error("unsupported FortiOS version, fos_major_version =  %s", str(fos_major_version))
+        _LOGGER.error(
+            "unsupported FortiOS version, fos_major_version =  %s",
+            str(fos_major_version),
+        )
         return None
 
     return FortiOSDeviceScanner(fgt, fos_major_version, api_url)
@@ -94,7 +100,10 @@ class FortiOSDeviceScanner(DeviceScanner):
                     if client["is_online"]:
                         self._clients.append(client["mac"].upper())
             else:
-                _LOGGER.error("unsupported FortiOS version, fos_major_version =  %s", str(self._fos_major_version))
+                _LOGGER.error(
+                    "unsupported FortiOS version, fos_major_version =  %s",
+                    str(self._fos_major_version)
+                )
 
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
@@ -122,7 +131,10 @@ class FortiOSDeviceScanner(DeviceScanner):
                     elif self._fos_major_version == 7:
                         name = client["hostname"]
                     else:
-                        _LOGGER.error("unsupported FortiOS version, fos_major_version =  %s", str(self._fos_major_version))
+                        _LOGGER.error(
+                            "unsupported FortiOS version, fos_major_version =  %s",
+                            str(self._fos_major_version)
+                        )
                         return None
                     _LOGGER.debug("Getting device name=%s", name)
                     return name
