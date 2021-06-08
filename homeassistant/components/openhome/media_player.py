@@ -24,14 +24,39 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 
+from .config_flow import get_entry_device
 from .const import ATTR_PIN_INDEX, DATA_OPENHOME, SERVICE_INVOKE_PIN
 
 SUPPORT_OPENHOME = SUPPORT_SELECT_SOURCE | SUPPORT_TURN_OFF | SUPPORT_TURN_ON
 
 _LOGGER = logging.getLogger(__name__)
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities,
+):
+    """Set up the configuration entry."""
+
+    device = get_entry_device(hass, config_entry)
+
+    entity = OpenhomeDevice(hass, device)
+
+    async_add_entities([entity])
+
+    platform = entity_platform.async_get_current_platform()
+
+    platform.async_register_entity_service(
+        SERVICE_INVOKE_PIN,
+        {vol.Required(ATTR_PIN_INDEX): cv.positive_int},
+        "async_invoke_pin",
+    )
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
