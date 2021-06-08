@@ -13,7 +13,6 @@ import homeassistant.helpers.config_validation as cv
 from . import get_accounts
 from .const import (
     API_ACCOUNT_CURRENCY,
-    API_ACCOUNTS_DATA,
     API_RATES,
     CONF_CURRENCIES,
     CONF_EXCHANGE_RATES,
@@ -61,9 +60,7 @@ async def validate_options(
 
     accounts = get_accounts(client)
 
-    accounts_currencies = [
-        account[API_ACCOUNT_CURRENCY] for account in accounts[API_ACCOUNTS_DATA]
-    ]
+    accounts_currencies = [account[API_ACCOUNT_CURRENCY] for account in accounts]
     available_rates = await hass.async_add_executor_job(client.get_exchange_rates)
     if CONF_CURRENCIES in options:
         for currency in options[CONF_CURRENCIES]:
