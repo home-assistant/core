@@ -59,6 +59,7 @@ CONF_SET_SPEED_ACTION = "set_speed"
 CONF_SET_OSCILLATING_ACTION = "set_oscillating"
 CONF_SET_DIRECTION_ACTION = "set_direction"
 CONF_SET_PRESET_MODE_ACTION = "set_preset_mode"
+IGNORED_TEMPLATE_RESULT = "_IGNORED"
 
 _VALID_STATES = [STATE_ON, STATE_OFF]
 _VALID_OSC = [True, False]
@@ -547,6 +548,8 @@ class TemplateFan(TemplateEntity, FanEntity):
         try:
             percentage = int(float(percentage))
         except ValueError:
+            if percentage == IGNORED_TEMPLATE_RESULT:
+                return
             _LOGGER.error("Received invalid percentage: %s", percentage)
             self._speed = None
             self._percentage = 0
@@ -577,6 +580,8 @@ class TemplateFan(TemplateEntity, FanEntity):
             self._speed = None
             self._percentage = None
             self._preset_mode = None
+        elif preset_mode == IGNORED_TEMPLATE_RESULT:
+            return
         else:
             _LOGGER.error(
                 "Received invalid preset_mode: %s. Expected: %s",
