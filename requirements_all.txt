@@ -224,7 +224,7 @@ aiopvpc==2.1.2
 aiopylgtv==0.4.0
 
 # homeassistant.components.recollect_waste
-aiorecollect==1.0.4
+aiorecollect==1.0.5
 
 # homeassistant.components.shelly
 aioshelly==0.6.4
@@ -515,7 +515,7 @@ dovado==0.4.1
 dsmr_parser==0.29
 
 # homeassistant.components.dwd_weather_warnings
-dwdwfsapi==1.0.3
+dwdwfsapi==1.0.4
 
 # homeassistant.components.dweet
 dweepy==0.3.0
@@ -635,7 +635,7 @@ gTTS==2.2.2
 garages-amsterdam==2.1.1
 
 # homeassistant.components.garmin_connect
-garminconnect_aio==0.1.1
+garminconnect_aio==0.1.4
 
 # homeassistant.components.geniushub
 geniushub-client==0.6.30
@@ -1467,7 +1467,7 @@ pyhomematic==0.1.72
 pyhomeworks==0.0.6
 
 # homeassistant.components.ialarm
-pyialarm==1.7
+pyialarm==1.8.1
 
 # homeassistant.components.icloud
 pyicloud==0.10.2
