@@ -3694,6 +3694,14 @@ def _process_command_from_frame(hass, service):
 
         except Exception as e:
             pass
+
+    elif service.data["topic"] == "ais/trim_storage":
+        _LOGGER.warning("trim_storage " + str(service.data["payload"]))
+        _LOGGER.warning("ACTION_DEVICE_STORAGE_LOW report form Android")
+        # check if we can clear database
+        if hass.services.has_service("recorder", "purge"):
+            _LOGGER.warning("recorder -> purge keep_days: 0")
+            hass.services.call("recorder", "purge", {"keep_days": 0, "repack": True})
     else:
         # TODO process this without mqtt
         # player_status and speech_status
