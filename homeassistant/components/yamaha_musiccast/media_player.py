@@ -53,7 +53,7 @@ async def async_setup_entry(
             MusicCastMediaPlayer(zone, zone_name, entry.entry_id, coordinator)
         )
 
-    async_add_entities(media_players, True)
+    async_add_entities(media_players)
 
 
 MUSIC_PLAYER_SUPPORT = (
@@ -74,12 +74,11 @@ MUSIC_PLAYER_SUPPORT = (
 )
 
 
-class MusicCastMediaPlayer(MediaPlayerEntity, MusicCastDeviceEntity):
+class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
     """A demo media players."""
 
     def __init__(self, zone_id, name, entry_id, coordinator, device_class=None):
         """Initialize the demo device."""
-        self._name = name
         self._player_state = STATE_PLAYING
         self._volume_muted = False
         self._shuffle = False
@@ -100,7 +99,6 @@ class MusicCastMediaPlayer(MediaPlayerEntity, MusicCastDeviceEntity):
             icon="mdi:speaker",
         )
 
-        self.coordinator.entities.append(self)
 
     async def async_added_to_hass(self):
         """Run when this Entity has been added to HA."""
@@ -201,7 +199,7 @@ class MusicCastMediaPlayer(MediaPlayerEntity, MusicCastDeviceEntity):
     async def async_turn_on(self):
         """Turn the media player on."""
         await self.coordinator.musiccast.turn_on(self._zone_id)
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_turn_off(self):
         """Turn the media player off."""
@@ -246,7 +244,7 @@ class MusicCastMediaPlayer(MediaPlayerEntity, MusicCastDeviceEntity):
     @property
     def media_image_url(self):
         """Return the image url of current playing media."""
-        return self.coordinator.musiccast.media_image_url if self._is_netusb else ""
+        return self.coordinator.musiccast.media_image_url if self._is_netusb else None
 
     @property
     def media_title(self):
@@ -363,9 +361,3 @@ class MusicCastMediaPlayer(MediaPlayerEntity, MusicCastDeviceEntity):
             return self.coordinator.data.netusb_play_time_updated
 
         return None
-
-    @property
-    def device_state_attributes(self):
-        """Return entity specific state attributes."""
-        attributes = {}
-        return attributes

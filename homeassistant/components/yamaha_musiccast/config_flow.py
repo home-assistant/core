@@ -24,9 +24,8 @@ class MusicCastFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a MusicCast config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = CONN_CLASS_LOCAL_POLL
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize a new Flow."""
         self.serial_number = None
         self.model_name = None
