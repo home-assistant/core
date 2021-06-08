@@ -310,6 +310,6 @@ jobs:
 
               # Create series version tag (e.g. 2021.6.x)
               v="${{ needs.init.outputs.version }}"
-              create_manifest "${docker_reg}" "${v%.*}.x" "${{ needs.init.outputs.version }}"
+              create_manifest "${docker_reg}" "${v%.*}" "${{ needs.init.outputs.version }}"
             fi
           done
