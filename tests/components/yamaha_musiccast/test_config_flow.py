@@ -105,7 +105,7 @@ async def test_user_input_device_already_existing(hass, mock_get_device_info_val
     """Test when user specifies an existing device."""
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id="MC20-1234567890",
+        unique_id="1234567890",
         data={CONF_HOST: "192.168.188.18", "model": "MC20", "serial": "1234567890"},
     )
     mock_entry.add_to_hass(hass)
@@ -119,8 +119,8 @@ async def test_user_input_device_already_existing(hass, mock_get_device_info_val
         {"host": "192.168.188.18"},
     )
 
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result2["errors"] == {"base": "already_configured"}
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result2["reason"] == "already_configured"
 
 
 async def test_user_input_unknown_error(hass, mock_get_device_info_exception):
@@ -155,7 +155,6 @@ async def test_user_input_device_found(hass, mock_get_device_info_valid):
     assert isinstance(result2["result"], ConfigEntry)
     assert result2["data"] == {
         "host": "127.0.0.1",
-        "model": "MC20",
         "serial": "1234567890",
     }
 
@@ -176,7 +175,7 @@ async def test_ssdp_discovery_failed(hass, mock_ssdp_no_yamaha):
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "yxcControlURL_missing"
+    assert result["reason"] == "yxc_control_url_missing"
 
 
 async def test_ssdp_discovery_successful_add_device(hass, mock_ssdp_yamaha):
@@ -204,7 +203,6 @@ async def test_ssdp_discovery_successful_add_device(hass, mock_ssdp_yamaha):
     assert isinstance(result2["result"], ConfigEntry)
     assert result2["data"] == {
         "host": "127.0.0.1",
-        "model": "MC20",
         "serial": "1234567890",
     }
 
@@ -213,7 +211,7 @@ async def test_ssdp_discovery_existing_device_update(hass, mock_ssdp_yamaha):
     """Test when the SSDP discovered device is a musiccast device, but it already exists with another IP."""
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id="MC20-1234567890",
+        unique_id="1234567890",
         data={CONF_HOST: "192.168.188.18", "model": "MC20", "serial": "1234567890"},
     )
     mock_entry.add_to_hass(hass)
