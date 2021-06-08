@@ -85,9 +85,9 @@ class FortiOSDeviceScanner(DeviceScanner):
 
         if clients_json:
             if self._fos_major_version == 6:
-            for client in clients_json["results"]:
-                if client["last_seen"] < 180:
-                    self._clients.append(client["mac"].upper())
+                for client in clients_json["results"]:
+                    if client["last_seen"] < 180:
+                        self._clients.append(client["mac"].upper())
             elif self._fos_major_version == 7:
                for client in clients_json["results"]:
                    if client["is_online"] == True:
@@ -117,7 +117,7 @@ class FortiOSDeviceScanner(DeviceScanner):
                 try:
                     name = ""
                     if self._fos_major_version == 6:
-                    name = client["host"]["name"]
+                        name = client["host"]["name"]
                     elif self._fos_major_version ==7:
                         name = client["hostname"]
                     else:
