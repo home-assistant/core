@@ -83,7 +83,6 @@ class IcloudAccount:
         icloud_dir: Store,
         with_family: bool,
         max_interval: int,
-        gps_accuracy_threshold: int,
         config_entry: ConfigEntry,
     ) -> None:
         """Initialize an iCloud account."""
@@ -93,7 +92,6 @@ class IcloudAccount:
         self._with_family = with_family
         self._fetch_interval = max_interval
         self._max_interval = max_interval
-        self._gps_accuracy_threshold = gps_accuracy_threshold
 
         self._icloud_dir = icloud_dir
 
