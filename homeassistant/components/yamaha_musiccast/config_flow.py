@@ -5,7 +5,7 @@ import logging
 from urllib.parse import urlparse
 
 from aiohttp import ClientConnectorError
-from aiomusiccast import MusicCastDevice
+from aiomusiccast import MusicCastConnectionException, MusicCastDevice
 import voluptuous as vol
 
 from homeassistant.components import ssdp
@@ -59,7 +59,7 @@ class MusicCastFlowHandler(ConfigFlow, domain=DOMAIN):
             unique_id = self.serial_number
             await self.async_set_unique_id(unique_id)
             self._abort_if_unique_id_configured()
-        except ClientConnectorError:
+        except (MusicCastConnectionException, ClientConnectorError):
             errors["base"] = "cannot_connect"
         except KeyError:
             errors["base"] = "no_musiccast_device"

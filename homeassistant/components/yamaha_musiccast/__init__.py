@@ -5,6 +5,7 @@ import abc
 from datetime import timedelta
 import logging
 
+from aiomusiccast import MusicCastConnectionException
 from aiomusiccast.musiccast_device import MusicCastData, MusicCastDevice
 
 from homeassistant.config_entries import ConfigEntry
@@ -70,7 +71,7 @@ class MusicCastDataUpdateCoordinator(DataUpdateCoordinator[MusicCastData]):
         """Update data via library."""
         try:
             await self.musiccast.fetch()
-        except Exception as exception:
+        except MusicCastConnectionException as exception:
             raise UpdateFailed() from exception
         return self.musiccast.data
 
