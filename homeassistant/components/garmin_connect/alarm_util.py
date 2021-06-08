@@ -25,7 +25,6 @@ def calculate_next_active_alarms(alarms):
     Alarms are sorted by time
     """
     active_alarms = []
-    _LOGGER.debug(alarms)
 
     for alarm_setting in alarms:
         if alarm_setting["alarmMode"] != "ON":

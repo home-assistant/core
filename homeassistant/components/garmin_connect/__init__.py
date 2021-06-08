@@ -14,9 +14,9 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.util import Throttle
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DEFAULT_UPDATE_INTERVAL, DOMAIN
+from .const import DATA_API, DATA_COORDINATOR, DEFAULT_UPDATE_INTERVAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,14 +26,13 @@ PLATFORMS = ["sensor"]
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Garmin Connect from a config entry."""
 
-    websession = async_get_clientsession(hass)
     username: str = entry.data[CONF_USERNAME]
     password: str = entry.data[CONF_PASSWORD]
 
-    garmin_client = Garmin(websession, username, password)
-
+    websession = async_get_clientsession(hass)
+    api = Garmin(websession, username, password)
     try:
-        await garmin_client.login()
+        await api.login()
     except (
         GarminConnectAuthenticationError,
         GarminConnectTooManyRequestsError,
@@ -49,9 +48,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.exception("Unknown error occurred during Garmin Connect login request")
         return False
 
-    garmin_data = GarminConnectData(hass, garmin_client)
+    async def async_update_data():
+        return await async_update_garmin_data(api)
+
+    coordinator = DataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        name=username,
+        update_method=async_update_data,
+        update_interval=DEFAULT_UPDATE_INTERVAL,
+    )
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = garmin_data
+    hass.data[DOMAIN][entry.entry_id] = {
+        DATA_API: api,
+        DATA_COORDINATOR: coordinator,
+    }
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
@@ -66,38 +77,24 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     return unload_ok
 
 
-class GarminConnectData:
-    """Define an object to hold sensor data."""
+async def async_update_garmin_data(api):
+    """Fetch data from API endpoint."""
+    try:
+        summary = await api.get_user_summary(date.today().isoformat())
+        body = await api.get_body_composition(date.today().isoformat())
+        alarms = await api.get_device_alarms()
 
-    def __init__(self, hass, client):
-        """Initialize."""
-        self.hass = hass
-        self.client = client
-        self.data = None
+        return {
+            **summary,
+            **body["totalAverage"],
+            "nextAlarm": alarms,
+        }
 
-    @Throttle(DEFAULT_UPDATE_INTERVAL)
-    async def async_update(self):
-        """Update data via API wrapper."""
-        today = date.today()
-
-        try:
-            summary = await self.client.get_user_summary(today.isoformat())
-            body = await self.client.get_body_composition(today.isoformat())
-
-            self.data = {
-                **summary,
-                **body["totalAverage"],
-            }
-            self.data["nextAlarm"] = await self.client.get_device_alarms()
-        except (
-            GarminConnectAuthenticationError,
-            GarminConnectTooManyRequestsError,
-            GarminConnectConnectionError,
-        ) as err:
-            _LOGGER.error(
-                "Error occurred during Garmin Connect update requests: %s", err
-            )
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception(
-                "Unknown error occurred during Garmin Connect update requests"
-            )
+    except (
+        GarminConnectAuthenticationError,
+        GarminConnectTooManyRequestsError,
+        GarminConnectConnectionError,
+    ) as err:
+        _LOGGER.error("Error occurred during Garmin Connect update request: %s", err)
+    except Exception:  # pylint: disable=broad-except
+        _LOGGER.exception("Unknown error occurred during Garmin Connect update request")

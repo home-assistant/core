@@ -7,11 +7,14 @@ from homeassistant.const import (
     MASS_KILOGRAMS,
     PERCENTAGE,
     TIME_MINUTES,
+    TIME_YEARS,
 )
 
 DOMAIN = "garmin_connect"
 ATTRIBUTION = "connect.garmin.com"
-DEFAULT_UPDATE_INTERVAL = timedelta(minutes=10)
+DATA_API = "api"
+DATA_COORDINATOR = "coordinator"
+DEFAULT_UPDATE_INTERVAL = timedelta(minutes=5)
 
 GARMIN_ENTITY_LIST = {
     "totalSteps": ["Total Steps", "steps", "mdi:walk", None, True],
@@ -127,7 +130,7 @@ GARMIN_ENTITY_LIST = {
     "maxAvgHeartRate": ["Max Avg Heart Rate", "bpm", "mdi:heart-pulse", None, False],
     "abnormalHeartRateAlertsCount": [
         "Abnormal HR Counts",
-        "",
+        None,
         "mdi:heart-pulse",
         None,
         False,
@@ -343,13 +346,13 @@ GARMIN_ENTITY_LIST = {
         False,
     ],
     "weight": ["Weight", MASS_KILOGRAMS, "mdi:weight-kilogram", None, False],
-    "bmi": ["BMI", "", "mdi:food", None, False],
+    "bmi": ["BMI", "", "mdi:food", "bmi", False],
     "bodyFat": ["Body Fat", PERCENTAGE, "mdi:food", None, False],
     "bodyWater": ["Body Water", PERCENTAGE, "mdi:water-percent", None, False],
     "bodyMass": ["Body Mass", MASS_KILOGRAMS, "mdi:food", None, False],
     "muscleMass": ["Muscle Mass", MASS_KILOGRAMS, "mdi:dumbbell", None, False],
-    "physiqueRating": ["Physique Rating", "", "mdi:numeric", None, False],
-    "visceralFat": ["Visceral Fat", "", "mdi:food", None, False],
-    "metabolicAge": ["Metabolic Age", "", "mdi:calendar-heart", None, False],
+    "physiqueRating": ["Physique Rating", None, "mdi:numeric", None, False],
+    "visceralFat": ["Visceral Fat", PERCENTAGE, "mdi:food", None, False],
+    "metabolicAge": ["Metabolic Age", TIME_YEARS, "mdi:calendar-heart", None, False],
     "nextAlarm": ["Next Alarm Time", None, "mdi:alarm", DEVICE_CLASS_TIMESTAMP, True],
 }
