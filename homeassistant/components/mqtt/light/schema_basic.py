@@ -122,7 +122,9 @@ VALUE_TEMPLATE_KEYS = [
     CONF_XY_VALUE_TEMPLATE,
 ]
 
-PLATFORM_SCHEMA_BASIC = (
+PLATFORM_SCHEMA_BASIC = vol.All(
+    # CONF_VALUE_TEMPLATE is deprecated, support will be removed in 2021.10
+    cv.deprecated(CONF_VALUE_TEMPLATE, CONF_STATE_VALUE_TEMPLATE),
     mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(
         {
             vol.Optional(CONF_BRIGHTNESS_COMMAND_TOPIC): mqtt.valid_publish_topic,
@@ -166,6 +168,7 @@ PLATFORM_SCHEMA_BASIC = (
             vol.Optional(CONF_RGBWW_STATE_TOPIC): mqtt.valid_subscribe_topic,
             vol.Optional(CONF_RGBWW_VALUE_TEMPLATE): cv.template,
             vol.Optional(CONF_STATE_VALUE_TEMPLATE): cv.template,
+            vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
             vol.Optional(CONF_WHITE_VALUE_COMMAND_TOPIC): mqtt.valid_publish_topic,
             vol.Optional(
                 CONF_WHITE_VALUE_SCALE, default=DEFAULT_WHITE_VALUE_SCALE
@@ -178,7 +181,7 @@ PLATFORM_SCHEMA_BASIC = (
         }
     )
     .extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
-    .extend(MQTT_LIGHT_SCHEMA_SCHEMA.schema)
+    .extend(MQTT_LIGHT_SCHEMA_SCHEMA.schema),
 )
 
 
@@ -186,9 +189,6 @@ async def async_setup_entity_basic(
     hass, config, async_add_entities, config_entry, discovery_data=None
 ):
     """Set up a MQTT Light."""
-    if CONF_STATE_VALUE_TEMPLATE not in config and CONF_VALUE_TEMPLATE in config:
-        config[CONF_STATE_VALUE_TEMPLATE] = config[CONF_VALUE_TEMPLATE]
-
     async_add_entities([MqttLight(hass, config, config_entry, discovery_data)])
 
 
@@ -236,6 +236,9 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
 
     def _setup_from_config(self, config):
         """(Re)Setup the entity."""
+        if CONF_STATE_VALUE_TEMPLATE not in config and CONF_VALUE_TEMPLATE in config:
+            config[CONF_STATE_VALUE_TEMPLATE] = config[CONF_VALUE_TEMPLATE]
+
         topic = {
             key: config.get(key)
             for key in (

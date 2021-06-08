@@ -13,7 +13,11 @@ from async_upnp_client.utils import CaseInsensitiveDict
 
 from homeassistant import config_entries
 from homeassistant.components import network
-from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import (
+    EVENT_HOMEASSISTANT_STARTED,
+    EVENT_HOMEASSISTANT_STOP,
+    MATCH_ALL,
+)
 from homeassistant.core import CoreState, HomeAssistant, callback as core_callback
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
@@ -128,6 +132,19 @@ def _async_process_callbacks(
             _LOGGER.exception("Failed to callback info: %s", discovery_info)
 
 
+@core_callback
+def _async_headers_match(
+    headers: Mapping[str, str], match_dict: dict[str, str]
+) -> bool:
+    for header, val in match_dict.items():
+        if val == MATCH_ALL:
+            if header not in headers:
+                return False
+        elif headers.get(header) != val:
+            return False
+    return True
+
+
 class Scanner:
     """Class to manage SSDP scanning."""
 
@@ -136,7 +153,7 @@ class Scanner:
     ) -> None:
         """Initialize class."""
         self.hass = hass
-        self.seen: set[tuple[str, str]] = set()
+        self.seen: set[tuple[str, str | None]] = set()
         self.cache: dict[tuple[str, str], Mapping[str, str]] = {}
         self._integration_matchers = integration_matchers
         self._cancel_scan: Callable[[], None] | None = None
@@ -157,7 +174,10 @@ class Scanner:
         # before the callback was registered are fired
         if self.hass.state != CoreState.running:
             for headers in self.cache.values():
-                self._async_callback_if_match(callback, headers, match_dict)
+                if _async_headers_match(headers, match_dict):
+                    _async_process_callbacks(
+                        [callback], self._async_headers_to_discovery_info(headers)
+                    )
 
         callback_entry = (callback, match_dict)
         self._callbacks.append(callback_entry)
@@ -167,20 +187,6 @@ class Scanner:
             self._callbacks.remove(callback_entry)
 
         return _async_remove_callback
-
-    @core_callback
-    def _async_callback_if_match(
-        self,
-        callback: Callable[[dict], None],
-        headers: Mapping[str, str],
-        match_dict: dict[str, str],
-    ) -> None:
-        """Fire a callback if info matches the match dict."""
-        if not all(headers.get(k) == v for (k, v) in match_dict.items()):
-            return
-        _async_process_callbacks(
-            [callback], self._async_headers_to_discovery_info(headers)
-        )
 
     @core_callback
     def async_stop(self, *_: Any) -> None:
@@ -250,7 +256,7 @@ class Scanner:
         return [
             callback
             for callback, match_dict in self._callbacks
-            if all(headers.get(k) == v for (k, v) in match_dict.items())
+            if _async_headers_match(headers, match_dict)
         ]
 
     @core_callback
@@ -262,20 +268,28 @@ class Scanner:
                     domains.add(domain)
         return domains
 
+    def _async_seen(self, header_st: str | None, header_location: str | None) -> bool:
+        """Check if we have seen a specific st and optional location."""
+        if header_st is None:
+            return True
+        return (header_st, header_location) in self.seen
+
+    def _async_see(self, header_st: str | None, header_location: str | None) -> None:
+        """Mark a specific st and optional location as seen."""
+        if header_st is not None:
+            self.seen.add((header_st, header_location))
+
     async def _async_process_entry(self, headers: Mapping[str, str]) -> None:
         """Process SSDP entries."""
         _LOGGER.debug("_async_process_entry: %s", headers)
-        if "st" not in headers or "location" not in headers:
-            return
-        h_st = headers["st"]
-        h_location = headers["location"]
-        key = (h_st, h_location)
+        h_st = headers.get("st")
+        h_location = headers.get("location")
 
-        if udn := _udn_from_usn(headers.get("usn")):
+        if h_st and (udn := _udn_from_usn(headers.get("usn"))):
             self.cache[(udn, h_st)] = headers
 
         callbacks = self._async_get_matching_callbacks(headers)
-        if key in self.seen and not callbacks:
+        if self._async_seen(h_st, h_location) and not callbacks:
             return
 
         assert self.description_manager is not None
@@ -284,9 +298,10 @@ class Scanner:
         discovery_info = discovery_info_from_headers_and_request(info_with_req)
 
         _async_process_callbacks(callbacks, discovery_info)
-        if key in self.seen:
+
+        if self._async_seen(h_st, h_location):
             return
-        self.seen.add(key)
+        self._async_see(h_st, h_location)
 
         for domain in self._async_matching_domains(info_with_req):
             _LOGGER.debug("Discovered %s at %s", domain, h_location)

@@ -13,7 +13,7 @@ from pysonos.core import (
     PLAY_MODE_BY_MEANING,
     PLAY_MODES,
 )
-from pysonos.exceptions import SoCoException, SoCoUPnPException
+from pysonos.exceptions import SoCoUPnPException
 from pysonos.plugins.sharelink import ShareLinkPlugin
 import voluptuous as vol
 
@@ -294,18 +294,15 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         return STATE_IDLE
 
     async def async_update(self) -> None:
-        """Retrieve latest state."""
+        """Retrieve latest state by polling."""
         await self.hass.async_add_executor_job(self._update)
 
     def _update(self) -> None:
-        """Retrieve latest state."""
-        try:
-            self.speaker.update_groups()
-            self.speaker.update_volume()
-            if self.speaker.is_coordinator:
-                self.speaker.update_media()
-        except SoCoException:
-            pass
+        """Retrieve latest state by polling."""
+        self.speaker.update_groups()
+        self.speaker.update_volume()
+        if self.speaker.is_coordinator:
+            self.speaker.update_media()
 
     @property
     def volume_level(self) -> float | None:

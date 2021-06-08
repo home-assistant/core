@@ -926,7 +926,7 @@ SERVICE_SCHEMA = vol.All(
 )
 
 NUMERIC_STATE_THRESHOLD_SCHEMA = vol.Any(
-    vol.Coerce(float), vol.All(str, entity_domain("input_number"))
+    vol.Coerce(float), vol.All(str, entity_domain(["input_number", "number", "sensor"]))
 )
 
 CONDITION_BASE_SCHEMA = {vol.Optional(CONF_ALIAS): string}
@@ -1014,8 +1014,12 @@ TIME_CONDITION_SCHEMA = vol.All(
         {
             **CONDITION_BASE_SCHEMA,
             vol.Required(CONF_CONDITION): "time",
-            "before": vol.Any(time, vol.All(str, entity_domain("input_datetime"))),
-            "after": vol.Any(time, vol.All(str, entity_domain("input_datetime"))),
+            "before": vol.Any(
+                time, vol.All(str, entity_domain(["input_datetime", "sensor"]))
+            ),
+            "after": vol.Any(
+                time, vol.All(str, entity_domain(["input_datetime", "sensor"]))
+            ),
             "weekday": weekdays,
         }
     ),

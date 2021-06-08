@@ -217,21 +217,22 @@ class FritzDevice:
         """Update device info."""
         utc_point_in_time = dt_util.utcnow()
 
-        if not self._name:
-            self._name = dev_info.name or self._mac.replace(":", "_")
-
-        if not dev_home and self._last_activity:
-            self._connected = (
+        if self._last_activity:
+            consider_home_evaluated = (
                 utc_point_in_time - self._last_activity
             ).total_seconds() < consider_home
         else:
-            self._connected = dev_home
+            consider_home_evaluated = dev_home
 
-        if self._connected:
-            self._ip_address = dev_info.ip_address
+        if not self._name:
+            self._name = dev_info.name or self._mac.replace(":", "_")
+
+        self._connected = dev_home or consider_home_evaluated
+
+        if dev_home:
             self._last_activity = utc_point_in_time
-        else:
-            self._ip_address = None
+
+        self._ip_address = dev_info.ip_address if self._connected else None
 
     @property
     def is_connected(self):

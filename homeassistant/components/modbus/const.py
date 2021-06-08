@@ -35,6 +35,8 @@ CONF_PARITY = "parity"
 CONF_REGISTER = "register"
 CONF_REGISTER_TYPE = "register_type"
 CONF_REGISTERS = "registers"
+CONF_RETRIES = "retries"
+CONF_RETRY_ON_EMPTY = "retry_on_empty"
 CONF_REVERSE_ORDER = "reverse_order"
 CONF_PRECISION = "precision"
 CONF_SCALE = "scale"
@@ -90,7 +92,6 @@ SERVICE_WRITE_REGISTER = "write_register"
 
 # integration names
 DEFAULT_HUB = "modbus_hub"
-MINIMUM_SCAN_INTERVAL = 5  # seconds
 DEFAULT_SCAN_INTERVAL = 15  # seconds
 DEFAULT_SLAVE = 1
 DEFAULT_STRUCTURE_PREFIX = ">f"

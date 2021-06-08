@@ -5,9 +5,13 @@
             "cannot_connect": "Impossibile connettersi"
         },
         "error": {
-            "cannot_connect": "Impossibile connettersi"
+            "cannot_connect": "Impossibile connettersi",
+            "one": "Pi\u00f9",
+            "other": "Altri"
         },
         "step": {
+            "one": "Pi\u00f9",
+            "other": "Altri",
             "setup_network": {
                 "data": {
                     "host": "Host",
@@ -35,6 +39,7 @@
             }
         }
     },
+    "one": "Pi\u00f9",
     "options": {
         "error": {
             "already_configured_device": "Il dispositivo \u00e8 gi\u00e0 configurato",
@@ -70,5 +75,6 @@
                 "title": "Configurare le opzioni del dispositivo"
             }
         }
-    }
+    },
+    "other": "Altri"
 }

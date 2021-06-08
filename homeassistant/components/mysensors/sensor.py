@@ -1,9 +1,9 @@
 """Support for MySensors sensors."""
+from __future__ import annotations
+
 from awesomeversion import AwesomeVersion
 
 from homeassistant.components import mysensors
-from homeassistant.components.mysensors import on_unload
-from homeassistant.components.mysensors.const import MYSENSORS_DISCOVERY
 from homeassistant.components.sensor import DOMAIN, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -27,7 +27,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-SENSORS = {
+from .const import MYSENSORS_DISCOVERY, DiscoveryInfo
+from .helpers import on_unload
+
+SENSORS: dict[str, list[str | None] | dict[str, list[str | None]]] = {
     "V_TEMP": [None, "mdi:thermometer"],
     "V_HUM": [PERCENTAGE, "mdi:water-percent"],
     "V_DIMMER": [PERCENTAGE, "mdi:percent"],
@@ -66,10 +69,10 @@ async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-):
+) -> None:
     """Set up this platform for a specific ConfigEntry(==Gateway)."""
 
-    async def async_discover(discovery_info):
+    async def async_discover(discovery_info: DiscoveryInfo) -> None:
         """Discover and add a MySensors sensor."""
         mysensors.setup_mysensors_platform(
             hass,
@@ -79,9 +82,9 @@ async def async_setup_entry(
             async_add_entities=async_add_entities,
         )
 
-    await on_unload(
+    on_unload(
         hass,
-        config_entry,
+        config_entry.entry_id,
         async_dispatcher_connect(
             hass,
             MYSENSORS_DISCOVERY.format(config_entry.entry_id, DOMAIN),
@@ -94,7 +97,7 @@ class MySensorsSensor(mysensors.device.MySensorsEntity, SensorEntity):
     """Representation of a MySensors Sensor child node."""
 
     @property
-    def force_update(self):
+    def force_update(self) -> bool:
         """Return True if state updates should be forced.
 
         If True, a state change will be triggered anytime the state property is
@@ -103,36 +106,43 @@ class MySensorsSensor(mysensors.device.MySensorsEntity, SensorEntity):
         return True
 
     @property
-    def state(self):
+    def state(self) -> str | None:
         """Return the state of the device."""
         return self._values.get(self.value_type)
 
     @property
-    def icon(self):
+    def icon(self) -> str | None:
         """Return the icon to use in the frontend, if any."""
         icon = self._get_sensor_type()[1]
         return icon
 
     @property
-    def unit_of_measurement(self):
+    def unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of this entity."""
         set_req = self.gateway.const.SetReq
         if (
             AwesomeVersion(self.gateway.protocol_version) >= AwesomeVersion("1.5")
             and set_req.V_UNIT_PREFIX in self._values
         ):
-            return self._values[set_req.V_UNIT_PREFIX]
+            custom_unit: str = self._values[set_req.V_UNIT_PREFIX]
+            return custom_unit
+
+        if set_req(self.value_type) == set_req.V_TEMP:
+            if self.hass.config.units.is_metric:
+                return TEMP_CELSIUS
+            return TEMP_FAHRENHEIT
+
         unit = self._get_sensor_type()[0]
         return unit
 
-    def _get_sensor_type(self):
+    def _get_sensor_type(self) -> list[str | None]:
         """Return list with unit and icon of sensor type."""
         pres = self.gateway.const.Presentation
         set_req = self.gateway.const.SetReq
-        SENSORS[set_req.V_TEMP.name][0] = (
-            TEMP_CELSIUS if self.hass.config.units.is_metric else TEMP_FAHRENHEIT
-        )
-        sensor_type = SENSORS.get(set_req(self.value_type).name, [None, None])
-        if isinstance(sensor_type, dict):
-            sensor_type = sensor_type.get(pres(self.child_type).name, [None, None])
+
+        _sensor_type = SENSORS.get(set_req(self.value_type).name, [None, None])
+        if isinstance(_sensor_type, dict):
+            sensor_type = _sensor_type.get(pres(self.child_type).name, [None, None])
+        else:
+            sensor_type = _sensor_type
         return sensor_type
