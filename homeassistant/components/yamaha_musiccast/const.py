@@ -25,7 +25,5 @@ HA_REPEAT_MODE_TO_MC_MAPPING = {
 }
 
 MC_REPEAT_MODE_TO_HA_MAPPING = {
-    "off": REPEAT_MODE_OFF,
-    "one": REPEAT_MODE_ONE,
-    "all": REPEAT_MODE_ALL,
+    val: key for key, val in HA_REPEAT_MODE_TO_MC_MAPPING.items()
 }
