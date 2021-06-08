@@ -3702,6 +3702,8 @@ def _process_command_from_frame(hass, service):
         if hass.services.has_service("recorder", "purge"):
             _LOGGER.warning("recorder -> purge keep_days: 0")
             hass.services.call("recorder", "purge", {"keep_days": 0, "repack": True})
+            _LOGGER.warning("ais -> flush_logs")
+            hass.services.call("ais_shell_command", "flush_logs")
     else:
         # TODO process this without mqtt
         # player_status and speech_status
