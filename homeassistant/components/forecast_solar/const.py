@@ -1,10 +1,15 @@
 """Constants for the Forecast Solar integration."""
+from __future__ import annotations
+
+from typing import Any
+
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_NAME,
     ATTR_UNIT_OF_MEASUREMENT,
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_POWER,
+    DEVICE_CLASS_TIMESTAMP,
     ENERGY_KILO_WATT_HOUR,
     POWER_WATT,
 )
@@ -29,7 +34,7 @@ TEST_OPTION_DATA = {
     CONF_DAMPING: 0.5,
 }
 
-SENSORS = {
+SENSORS: dict[str, dict[str, Any]] = {
     "energy_production_today": {
         ATTR_NAME: "Estimated Energy Production - Today",
         ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
@@ -40,6 +45,16 @@ SENSORS = {
         ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
         ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
     },
+    "power_highest_peak_time_today": {
+        ATTR_NAME: "Highest Power Peak Time - Today",
+        ATTR_UNIT_OF_MEASUREMENT: None,
+        ATTR_DEVICE_CLASS: DEVICE_CLASS_TIMESTAMP,
+    },
+    "power_highest_peak_time_tomorrow": {
+        ATTR_NAME: "Highest Power Peak Time - Tomorrow",
+        ATTR_UNIT_OF_MEASUREMENT: None,
+        ATTR_DEVICE_CLASS: DEVICE_CLASS_TIMESTAMP,
+    },
     "power_production_now": {
         ATTR_NAME: "Estimated Power Production - Now",
         ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
@@ -47,6 +62,11 @@ SENSORS = {
     },
     "power_production_next_hour": {
         ATTR_NAME: "Estimated Power Production - Next Hour",
+        ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
+        ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER,
+    },
+    "power_production_next_12hours": {
+        ATTR_NAME: "Estimated Power Production - Next 12 Hours",
         ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
         ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER,
     },

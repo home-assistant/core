@@ -34,7 +34,7 @@ class ForecastSolarSensor(CoordinatorEntity, SensorEntity):
     ) -> None:
         """Initialize Forcast.Solar sensor."""
         super().__init__(coordinator=coordinator)
-        self._attr_name = SENSORS[key][ATTR_NAME]
+        self._attr_name = f"{entry.title} - {SENSORS[key][ATTR_NAME]}"
         self._attr_unit_of_measurement = SENSORS[key][ATTR_UNIT_OF_MEASUREMENT]
         self._attr_device_class = SENSORS[key][ATTR_DEVICE_CLASS]
         self._attr_unique_id = f"{entry.entry_id}_{key}"
