@@ -7,6 +7,7 @@ from homeassistant import config_entries
 from homeassistant.components.media_player.const import DOMAIN as MP_DOMAIN
 from homeassistant.const import (
     CONF_HOST,
+    CONF_MAC,
     CONF_METHOD,
     CONF_NAME,
     CONF_PORT,
@@ -17,7 +18,7 @@ from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
 from .bridge import SamsungTVBridge
-from .const import CONF_ON_ACTION, DEFAULT_NAME, DOMAIN, LOGGER
+from .const import CONF_ON_ACTION, DEFAULT_NAME, DOMAIN, LOGGER, METHOD_WEBSOCKET
 
 
 def ensure_unique_hosts(value):
@@ -90,13 +91,7 @@ async def async_setup_entry(hass, entry):
     """Set up the Samsung TV platform."""
 
     # Initialize bridge
-    data = entry.data.copy()
-    bridge = _async_get_device_bridge(data)
-    if bridge.port is None and bridge.default_port is not None:
-        # For backward compat, set default port for websocket tv
-        data[CONF_PORT] = bridge.default_port
-        hass.config_entries.async_update_entry(entry, data=data)
-        bridge = _async_get_device_bridge(data)
+    bridge = _async_create_bridge_with_updated_data(hass, entry)
 
     def stop_bridge(event):
         """Stop SamsungTV bridge connection."""
@@ -109,6 +104,28 @@ async def async_setup_entry(hass, entry):
     hass.data[DOMAIN][entry.entry_id] = bridge
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
     return True
+
+
+async def _async_create_bridge_with_updated_data(hass, entry, bridge):
+    """Create a bridge object and update any missing data in the config entry."""
+    bridge = _async_get_device_bridge(entry.data)
+    updated_data = {}
+
+    if bridge.port is None and bridge.default_port is not None:
+        # For backward compat, set default port for websocket tv
+        updated_data[CONF_PORT] = bridge.default_port
+
+    if not entry.data.get(CONF_MAC) and bridge.method == METHOD_WEBSOCKET:
+        if mac := await hass.async_add_executor_job(bridge.mac_from_device):
+            updated_data[CONF_MAC] = mac
+
+    if updated_data:
+        data = entry.data.copy()
+        data.update(updated_data)
+        hass.config_entries.async_update_entry(entry, data=data)
+        bridge = _async_get_device_bridge(entry.data)
+
+    return bridge
 
 
 async def async_unload_entry(hass, entry):
