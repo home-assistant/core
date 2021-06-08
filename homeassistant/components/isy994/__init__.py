@@ -1,6 +1,7 @@
 """Support the ISY-994 controllers."""
 from __future__ import annotations
 
+import asyncio
 from urllib.parse import urlparse
 
 from aiohttp import CookieJar
@@ -171,8 +172,14 @@ async def async_setup_entry(
     )
 
     try:
-        with async_timeout.timeout(30):
+        async with async_timeout.timeout(30):
             await isy.initialize()
+    except asyncio.TimeoutError as err:
+        _LOGGER.error(
+            "Timed out initializing the ISY; device may be busy, trying again later: %s",
+            err,
+        )
+        raise ConfigEntryNotReady from err
     except ISYInvalidAuthError as err:
         _LOGGER.error(
             "Invalid credentials for the ISY, please adjust settings and try again: %s",

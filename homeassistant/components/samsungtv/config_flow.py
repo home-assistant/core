@@ -224,6 +224,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_ssdp(self, discovery_info: DiscoveryInfoType):
         """Handle a flow initialized by ssdp discovery."""
+        LOGGER.debug("Samsung device found via SSDP: %s", discovery_info)
         self._udn = _strip_uuid(discovery_info[ATTR_UPNP_UDN])
         await self._async_set_unique_id_from_udn()
         await self._async_start_discovery_for_host(
@@ -242,6 +243,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_dhcp(self, discovery_info: DiscoveryInfoType):
         """Handle a flow initialized by dhcp discovery."""
+        LOGGER.debug("Samsung device found via DHCP: %s", discovery_info)
         self._mac = discovery_info[MAC_ADDRESS]
         await self._async_start_discovery_for_host(discovery_info[IP_ADDRESS])
         await self._async_set_device_unique_id()
@@ -250,6 +252,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf(self, discovery_info: DiscoveryInfoType):
         """Handle a flow initialized by zeroconf discovery."""
+        LOGGER.debug("Samsung device found via ZEROCONF: %s", discovery_info)
         self._mac = format_mac(discovery_info[ATTR_PROPERTIES]["deviceid"])
         await self._async_start_discovery_for_host(discovery_info[CONF_HOST])
         await self._async_set_device_unique_id()
