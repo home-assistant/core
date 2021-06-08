@@ -701,7 +701,7 @@ class LocalData:
 
         if drive_exist:
             if not ais_global.has_root():
-                pass
+                rclone_cmd_mount = "echo ok"
                 # to suport local test
                 # rclone_cmd_mount = (
                 #     "rclone mount "
