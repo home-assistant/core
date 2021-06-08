@@ -11,7 +11,6 @@ from homeassistant.util import slugify
 
 from .account import IcloudAccount
 from .const import (
-    CONF_GPS_ACCURACY_THRESHOLD,
     CONF_MAX_INTERVAL,
     CONF_WITH_FAMILY,
     DEFAULT_GPS_ACCURACY_THRESHOLD,
@@ -74,9 +73,6 @@ ACCOUNT_SCHEMA = vol.Schema(
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Optional(CONF_WITH_FAMILY, default=DEFAULT_WITH_FAMILY): cv.boolean,
         vol.Optional(CONF_MAX_INTERVAL, default=DEFAULT_MAX_INTERVAL): cv.positive_int,
-        vol.Optional(
-            CONF_GPS_ACCURACY_THRESHOLD, default=DEFAULT_GPS_ACCURACY_THRESHOLD
-        ): cv.positive_int,
     }
 )
 
@@ -112,7 +108,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     password = entry.data[CONF_PASSWORD]
     with_family = entry.data[CONF_WITH_FAMILY]
     max_interval = entry.data[CONF_MAX_INTERVAL]
-    gps_accuracy_threshold = entry.data[CONF_GPS_ACCURACY_THRESHOLD]
 
     # For backwards compat
     if entry.unique_id is None:
@@ -127,7 +122,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         icloud_dir,
         with_family,
         max_interval,
-        gps_accuracy_threshold,
         entry,
     )
     await hass.async_add_executor_job(account.setup)
