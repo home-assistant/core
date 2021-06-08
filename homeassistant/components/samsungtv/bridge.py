@@ -53,7 +53,7 @@ async def async_get_device_info(hass, bridge, host):
 
 def _get_device_info(bridge, host):
     """Fetch the port, method, and device info."""
-    if bridge:
+    if bridge and bridge.port:
         return bridge.port, bridge.method, bridge.device_info()
 
     for port in WEBSOCKET_PORTS:
