@@ -196,18 +196,18 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
     async def async_turn_off(self):
         """Turn the media player off."""
         await self.coordinator.musiccast.turn_off(self._zone_id)
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_mute_volume(self, mute):
         """Mute the volume."""
 
         await self.coordinator.musiccast.mute_volume(self._zone_id, mute)
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_set_volume_level(self, volume):
         """Set the volume level, range 0..1."""
         await self.coordinator.musiccast.set_volume_level(self._zone_id, volume)
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_media_play(self):
         """Send play command."""
@@ -295,7 +295,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
         """Clear players playlist."""
         self._cur_track = 0
         self._player_state = STATE_OFF
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_set_repeat(self, repeat):
         """Enable/disable repeat mode."""
