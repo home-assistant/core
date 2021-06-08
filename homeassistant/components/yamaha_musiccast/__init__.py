@@ -111,7 +111,7 @@ class MusicCastEntity(CoordinatorEntity):
         return self._enabled_default
 
 
-class MusicCastDeviceEntity(MusicCastEntity, abc.ABC):
+class MusicCastDeviceEntity(MusicCastEntity):
     """Defines a MusicCast device entity."""
 
     @property
