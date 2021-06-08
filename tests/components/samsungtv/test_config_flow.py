@@ -687,6 +687,7 @@ async def test_autodetect_websocket(hass: HomeAssistant, remote: Mock, remotews:
             "id": "uuid:be9554b9-c9fb-41f4-8920-22da015376a4",
             "device": {
                 "modelName": "82GXARRS",
+                "networkType": "wireless",
                 "wifiMac": "aa:bb:cc:dd:ee:ff",
                 "udn": "uuid:be9554b9-c9fb-41f4-8920-22da015376a4",
                 "mac": "aa:bb:cc:dd:ee:ff",
@@ -707,6 +708,11 @@ async def test_autodetect_websocket(hass: HomeAssistant, remote: Mock, remotews:
             call(**AUTODETECT_WEBSOCKET_SSL),
             call(**DEVICEINFO_WEBSOCKET_SSL),
         ]
+        await hass.async_block_till_done()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert entries[0].data[CONF_MAC] == "aa:bb:cc:dd:ee:ff"
 
 
 async def test_autodetect_auth_missing(hass: HomeAssistant, remote: Mock):
