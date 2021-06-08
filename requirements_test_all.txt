@@ -66,7 +66,7 @@ agent-py==0.0.23
 aio_geojson_geonetnz_quakes==0.12
 
 # homeassistant.components.geonetnz_volcano
-aio_geojson_geonetnz_volcano==0.5
+aio_geojson_geonetnz_volcano==0.6
 
 # homeassistant.components.nsw_rural_fire_service_feed
 aio_geojson_nsw_rfs_incidents==0.3
@@ -129,6 +129,9 @@ aiolip==1.1.4
 
 # homeassistant.components.lyric
 aiolyric==1.0.7
+
+# homeassistant.components.modern_forms
+aiomodernforms==0.1.5
 
 # homeassistant.components.notion
 aionotion==1.1.0
@@ -357,7 +360,7 @@ georss_generic_client==0.4
 georss_ign_sismologia_client==0.2
 
 # homeassistant.components.qld_bushfire
-georss_qld_bushfire_alert_client==0.3
+georss_qld_bushfire_alert_client==0.5
 
 # homeassistant.components.huawei_lte
 # homeassistant.components.kef
@@ -387,7 +390,7 @@ google-nest-sdm==0.2.12
 googlemaps==2.5.1
 
 # homeassistant.components.gree
-greeclimate==0.11.4
+greeclimate==0.11.7
 
 # homeassistant.components.growatt_server
 growattServer==1.0.1
@@ -411,7 +414,7 @@ hangups==0.4.14
 hass-nabucasa==0.43.0
 
 # homeassistant.components.tasmota
-hatasmota==0.2.14
+hatasmota==0.2.15
 
 # homeassistant.components.jewish_calendar
 hdate==0.10.2

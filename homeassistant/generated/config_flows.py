@@ -156,6 +156,7 @@ FLOWS = [
     "mill",
     "minecraft_server",
     "mobile_app",
+    "modern_forms",
     "monoprice",
     "motion_blinds",
     "motioneye",
