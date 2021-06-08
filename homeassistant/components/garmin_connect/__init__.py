@@ -89,8 +89,8 @@ async def async_update_garmin_data(api):
         GarminConnectAuthenticationError,
         GarminConnectTooManyRequestsError,
         GarminConnectConnectionError,
-    ):
-        raise UpdateFailed
+    ) as error:
+        raise UpdateFailed(error) from error
 
     return {
         **summary,
