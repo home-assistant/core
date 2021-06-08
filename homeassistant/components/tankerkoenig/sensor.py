@@ -27,6 +27,7 @@ ATTR_IS_OPEN = "is_open"
 ATTR_POSTCODE = "postcode"
 ATTR_STATION_NAME = "station_name"
 ATTR_STREET = "street"
+ATTR_STATION_ID = "station_id"
 ATTRIBUTION = "Data provided by https://creativecommons.tankerkoenig.de"
 
 ICON = "mdi:gas-station"
@@ -139,6 +140,7 @@ class FuelPriceSensor(CoordinatorEntity, SensorEntity):
             ATTR_HOUSE_NUMBER: self._house_number,
             ATTR_POSTCODE: self._postcode,
             ATTR_CITY: self._city,
+            ATTR_STATION_ID: self._station_id,
         }
 
         if self._show_on_map:
