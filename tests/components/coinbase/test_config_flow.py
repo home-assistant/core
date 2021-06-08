@@ -14,8 +14,8 @@ from homeassistant.components.coinbase.const import (
 from homeassistant.const import CONF_API_KEY, CONF_API_TOKEN
 
 from .common import (
+    Mock_get_accounts,
     init_mock_coinbase,
-    mock_get_accounts,
     mock_get_current_user,
     mock_get_exchange_rates,
 )
@@ -38,7 +38,7 @@ async def test_form(hass):
         return_value=mock_get_current_user(),
     ), patch(
         "coinbase.wallet.client.Client.get_accounts",
-        return_value=mock_get_accounts(),
+        return_value=Mock_get_accounts(),
     ), patch(
         "coinbase.wallet.client.Client.get_exchange_rates",
         return_value=mock_get_exchange_rates(),
@@ -145,7 +145,7 @@ async def test_option_good_account_currency(hass):
         return_value=mock_get_current_user(),
     ), patch(
         "coinbase.wallet.client.Client.get_accounts",
-        return_value=mock_get_accounts(),
+        return_value=Mock_get_accounts(),
     ), patch(
         "coinbase.wallet.client.Client.get_exchange_rates",
         return_value=mock_get_exchange_rates(),
@@ -170,7 +170,7 @@ async def test_form_bad_account_currency(hass):
         return_value=mock_get_current_user(),
     ), patch(
         "coinbase.wallet.client.Client.get_accounts",
-        return_value=mock_get_accounts(),
+        return_value=Mock_get_accounts(),
     ), patch(
         "coinbase.wallet.client.Client.get_exchange_rates",
         return_value=mock_get_exchange_rates(),
@@ -209,7 +209,7 @@ async def test_option_good_exchange_rate(hass):
         return_value=mock_get_current_user(),
     ), patch(
         "coinbase.wallet.client.Client.get_accounts",
-        return_value=mock_get_accounts(),
+        return_value=Mock_get_accounts(),
     ), patch(
         "coinbase.wallet.client.Client.get_exchange_rates",
         return_value=mock_get_exchange_rates(),
@@ -235,7 +235,7 @@ async def test_form_bad_exchange_rate(hass):
         return_value=mock_get_current_user(),
     ), patch(
         "coinbase.wallet.client.Client.get_accounts",
-        return_value=mock_get_accounts(),
+        return_value=Mock_get_accounts(),
     ), patch(
         "coinbase.wallet.client.Client.get_exchange_rates",
         return_value=mock_get_exchange_rates(),
@@ -261,7 +261,7 @@ async def test_option_catch_all_exception(hass):
         return_value=mock_get_current_user(),
     ), patch(
         "coinbase.wallet.client.Client.get_accounts",
-        return_value=mock_get_accounts(),
+        return_value=Mock_get_accounts(),
     ), patch(
         "coinbase.wallet.client.Client.get_exchange_rates",
         return_value=mock_get_exchange_rates(),
@@ -299,7 +299,7 @@ async def test_yaml_import(hass):
         return_value=mock_get_current_user(),
     ), patch(
         "coinbase.wallet.client.Client.get_accounts",
-        return_value=mock_get_accounts(),
+        return_value=Mock_get_accounts(),
     ), patch(
         "coinbase.wallet.client.Client.get_exchange_rates",
         return_value=mock_get_exchange_rates(),

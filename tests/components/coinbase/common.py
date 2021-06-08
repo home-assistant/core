@@ -27,26 +27,42 @@ def mock_get_current_user():
     }
 
 
-def mock_get_accounts():
-    """Return a simplified list of mock accounts."""
-    return {
-        "data": [
-            {
-                "balance": {"amount": "0.00001", "currency": GOOD_CURRENCY},
-                "currency": "BTC",
-                "id": "123456789",
-                "name": "BTC Wallet",
-                "native_balance": {"amount": "100.12", "currency": GOOD_CURRENCY},
-            },
-            {
-                "balance": {"amount": "9.90", "currency": GOOD_CURRENCY_2},
-                "currency": "USD",
-                "id": "987654321",
-                "name": "USD Wallet",
-                "native_balance": {"amount": "9.90", "currency": GOOD_CURRENCY_2},
-            },
-        ]
-    }
+class Mock_pagination:
+    """Mock pagination result."""
+
+    def __init__(self):
+        """Load simple pagination for tests."""
+        self.next_starting_after = None
+
+
+class Mock_get_accounts:
+    """Mock accounts with pagination."""
+
+    def __init__(self):
+        """Init mocked object."""
+        self.pagination = Mock_pagination()
+        self.accounts = {
+            "data": [
+                {
+                    "balance": {"amount": "0.00001", "currency": GOOD_CURRENCY},
+                    "currency": "BTC",
+                    "id": "123456789",
+                    "name": "BTC Wallet",
+                    "native_balance": {"amount": "100.12", "currency": GOOD_CURRENCY},
+                },
+                {
+                    "balance": {"amount": "9.90", "currency": GOOD_CURRENCY_2},
+                    "currency": "USD",
+                    "id": "987654321",
+                    "name": "USD Wallet",
+                    "native_balance": {"amount": "9.90", "currency": GOOD_CURRENCY_2},
+                },
+            ],
+        }
+
+    def __getitem__(self, item):
+        """Handle subscript request."""
+        return self.accounts[item]
 
 
 def mock_get_exchange_rates():
@@ -76,7 +92,7 @@ async def init_mock_coinbase(hass):
         return_value=mock_get_current_user(),
     ), patch(
         "coinbase.wallet.client.Client.get_accounts",
-        return_value=mock_get_accounts(),
+        return_value=Mock_get_accounts(),
     ), patch(
         "coinbase.wallet.client.Client.get_exchange_rates",
         return_value=mock_get_exchange_rates(),
