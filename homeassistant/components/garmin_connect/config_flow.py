@@ -39,14 +39,14 @@ class GarminConnectConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return await self._show_setup_form()
 
         websession = async_get_clientsession(self.hass)
+        username = user_input[CONF_USERNAME]
+        password = user_input[CONF_PASSWORD]
 
-        garmin_client = Garmin(
-            websession, user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
-        )
+        garmin_client = Garmin(websession, username, password)
 
         errors = {}
         try:
-            username = await garmin_client.login()
+            await garmin_client.login()
         except GarminConnectConnectionError:
             errors["base"] = "cannot_connect"
             return await self._show_setup_form(errors)
@@ -68,7 +68,7 @@ class GarminConnectConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             title=username,
             data={
                 CONF_ID: username,
-                CONF_USERNAME: user_input[CONF_USERNAME],
-                CONF_PASSWORD: user_input[CONF_PASSWORD],
+                CONF_USERNAME: username,
+                CONF_PASSWORD: password,
             },
         )
