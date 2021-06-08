@@ -142,8 +142,8 @@ GARMIN_ENTITY_LIST = {
         None,
         False,
     ],
-    "averageStressLevel": ["Avg Stress Level", "", "mdi:flash-alert", None, True],
-    "maxStressLevel": ["Max Stress Level", "", "mdi:flash-alert", None, True],
+    "averageStressLevel": ["Avg Stress Level", "lvl", "mdi:flash-alert", None, True],
+    "maxStressLevel": ["Max Stress Level", "lvl", "mdi:flash-alert", None, True],
     "stressQualifier": ["Stress Qualifier", "", "mdi:flash-alert", None, False],
     "stressDuration": ["Stress Duration", TIME_MINUTES, "mdi:flash-alert", None, False],
     "restStressDuration": [
