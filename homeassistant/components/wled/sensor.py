@@ -121,8 +121,10 @@ class WLEDWifiSignalSensor(WLEDEntity, SensorEntity):
         self._attr_unique_id = f"{coordinator.data.info.mac_address}_wifi_signal"
 
     @property
-    def state(self) -> int:
+    def state(self) -> int | None:
         """Return the state of the sensor."""
+        if not self.coordinator.data.info.wifi:
+            return None
         return self.coordinator.data.info.wifi.signal
 
 
@@ -140,8 +142,10 @@ class WLEDWifiRSSISensor(WLEDEntity, SensorEntity):
         self._attr_unique_id = f"{coordinator.data.info.mac_address}_wifi_rssi"
 
     @property
-    def state(self) -> int:
+    def state(self) -> int | None:
         """Return the state of the sensor."""
+        if not self.coordinator.data.info.wifi:
+            return None
         return self.coordinator.data.info.wifi.rssi
 
 
@@ -158,8 +162,10 @@ class WLEDWifiChannelSensor(WLEDEntity, SensorEntity):
         self._attr_unique_id = f"{coordinator.data.info.mac_address}_wifi_channel"
 
     @property
-    def state(self) -> int:
+    def state(self) -> int | None:
         """Return the state of the sensor."""
+        if not self.coordinator.data.info.wifi:
+            return None
         return self.coordinator.data.info.wifi.channel
 
 
@@ -176,6 +182,8 @@ class WLEDWifiBSSIDSensor(WLEDEntity, SensorEntity):
         self._attr_unique_id = f"{coordinator.data.info.mac_address}_wifi_bssid"
 
     @property
-    def state(self) -> str:
+    def state(self) -> str | None:
         """Return the state of the sensor."""
+        if not self.coordinator.data.info.wifi:
+            return None
         return self.coordinator.data.info.wifi.bssid
