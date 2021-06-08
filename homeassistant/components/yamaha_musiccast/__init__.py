@@ -87,6 +87,7 @@ class MusicCastEntity(CoordinatorEntity):
         entry_id: str,
         name: str,
         icon: str,
+        coordinator: MusicCastDataUpdateCoordinator,
         enabled_default: bool = True,
     ) -> None:
         """Initialize the MusicCast entity."""
