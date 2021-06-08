@@ -47,22 +47,20 @@ class MusicCastFlowHandler(ConfigFlow, domain=DOMAIN):
             info = await MusicCastDevice.get_device_info(
                 user_input[CONF_HOST], async_get_clientsession(self.hass)
             )
-            if self.serial_number is None:
-                self.serial_number = info["system_id"]
-            unique_id = self.serial_number
-            await self.async_set_unique_id(unique_id, raise_on_progress=False)
-            self._abort_if_unique_id_configured()
         except (MusicCastConnectionException, ClientConnectorError):
             errors["base"] = "cannot_connect"
-        except KeyError:
-            errors["base"] = "no_musiccast_device"
-        except data_entry_flow.AbortFlow:
-            errors["base"] = "already_configured"
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
+        else:
+            self.serial_number = info.get("system_id", None)
+            if self.serial_number is None:
+                errors["base"] = "no_musiccast_device"
 
         if not errors:
+            await self.async_set_unique_id(self.serial_number, raise_on_progress=False)
+            self._abort_if_unique_id_configured()
+
             return self.async_create_entry(
                 title=title,
                 data={

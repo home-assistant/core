@@ -3,12 +3,12 @@
         "abort": {
             "no_devices_found": "No devices found on the network",
             "single_instance_allowed": "Already configured. Only a single configuration possible.",
-            "yxc_control_url_missing": "The control URL is not given in the ssdp description."
+            "yxc_control_url_missing": "The control URL is not given in the ssdp description.",
+            "already_configured": "This device is already configured."
         },
         "error": {
             "cannot_connect": "Could not connect.",
             "no_musiccast_device": "This device seems to be no Musiccast Device.",
-            "already_configured": "This device is already configured.",
             "unknown": "Unknown error."
         },
         "flow_title": "MusicCast: {name}",
