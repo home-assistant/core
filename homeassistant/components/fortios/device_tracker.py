@@ -28,6 +28,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
+
 def get_scanner(hass, config):
     """Validate the configuration and return a FortiOSDeviceScanner."""
     host = config[DOMAIN][CONF_HOST]
@@ -50,8 +51,8 @@ def get_scanner(hass, config):
     fos_major_version = int(status_json["version"][1])
 
     if fos_major_version < 6 or fos_major_version > 7:
-       _LOGGER.error("unsupported FortiOS version, fos_major_version =  %s", str(fos_major_version))
-       return None
+        _LOGGER.error("unsupported FortiOS version, fos_major_version =  %s", str(fos_major_version))
+        return None
 
     api_url = ""
     if fos_major_version == 6:
