@@ -124,7 +124,7 @@ class WLEDMasterLight(WLEDEntity, LightEntity):
             # WLED uses 100ms per unit, so 10 = 1 second.
             data[ATTR_TRANSITION] = round(kwargs[ATTR_TRANSITION] * 10)
 
-        await self.coordinator.wled.master(**data)
+        await self.coordinator.wled.master(**data)  # type: ignore[arg-type]
 
     @wled_exception_handler
     async def async_turn_on(self, **kwargs: Any) -> None:
@@ -138,7 +138,7 @@ class WLEDMasterLight(WLEDEntity, LightEntity):
         if ATTR_BRIGHTNESS in kwargs:
             data[ATTR_BRIGHTNESS] = kwargs[ATTR_BRIGHTNESS]
 
-        await self.coordinator.wled.master(**data)
+        await self.coordinator.wled.master(**data)  # type: ignore[arg-type]
 
     async def async_effect(
         self,
@@ -195,11 +195,11 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the entity."""
-        playlist = self.coordinator.data.state.playlist
+        playlist: int | None = self.coordinator.data.state.playlist
         if playlist == -1:
             playlist = None
 
-        preset = self.coordinator.data.state.preset
+        preset: int | None = self.coordinator.data.state.preset
         if preset == -1:
             preset = None
 
@@ -287,11 +287,11 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
 
         # If there is a single segment, control via the master
         if len(self.coordinator.data.state.segments) == 1:
-            await self.coordinator.wled.master(**data)
+            await self.coordinator.wled.master(**data)  # type: ignore[arg-type]
             return
 
         data[ATTR_SEGMENT_ID] = self._segment
-        await self.coordinator.wled.segment(**data)
+        await self.coordinator.wled.segment(**data)  # type: ignore[arg-type]
 
     @wled_exception_handler
     async def async_turn_on(self, **kwargs: Any) -> None:
@@ -389,7 +389,7 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
         if speed is not None:
             data[ATTR_SPEED] = speed
 
-        await self.coordinator.wled.segment(**data)
+        await self.coordinator.wled.segment(**data)  # type: ignore[arg-type]
 
     @wled_exception_handler
     async def async_preset(
