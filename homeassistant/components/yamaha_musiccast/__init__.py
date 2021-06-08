@@ -91,7 +91,7 @@ class MusicCastEntity(CoordinatorEntity):
         enabled_default: bool = True,
     ) -> None:
         """Initialize the MusicCast entity."""
-        super().__init__(self.coordinator)
+        super().__init__(coordinator)
         self._enabled_default = enabled_default
         self._icon = icon
         self._name = name
