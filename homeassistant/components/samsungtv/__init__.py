@@ -19,7 +19,15 @@ from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
 from .bridge import SamsungTVBridge, async_get_device_info, mac_from_device_info
-from .const import CONF_ON_ACTION, DEFAULT_NAME, DOMAIN, LOGGER, METHOD_WEBSOCKET
+from .const import (
+    CONF_ON_ACTION,
+    DEFAULT_NAME,
+    DOMAIN,
+    LEGACY_PORT,
+    LOGGER,
+    METHOD_LEGACY,
+    METHOD_WEBSOCKET,
+)
 
 
 def ensure_unique_hosts(value):
@@ -111,16 +119,21 @@ async def _async_create_bridge_with_updated_data(hass, entry):
     """Create a bridge object and update any missing data in the config entry."""
     updated_data = {}
     host = entry.data[CONF_HOST]
+    port = entry.data.get(CONF_PORT)
+    method = entry.data.get(CONF_METHOD)
     info = None
 
-    if not entry.data.get(CONF_PORT) or not entry.data.get(CONF_METHOD):
-        # When we imported from yaml we didn't setup the method
-        # because we didn't know it
-        port, method, info = await async_get_device_info(hass, None, host)
-        if not port:
-            raise ConfigEntryNotReady(
-                "Failed to determine connection method, make sure the device is on."
-            )
+    if not port or not method:
+        if method == METHOD_LEGACY:
+            port = LEGACY_PORT
+        else:
+            # When we imported from yaml we didn't setup the method
+            # because we didn't know it
+            port, method, info = await async_get_device_info(hass, None, host)
+            if not port:
+                raise ConfigEntryNotReady(
+                    "Failed to determine connection method, make sure the device is on."
+                )
 
         updated_data[CONF_PORT] = port
         updated_data[CONF_METHOD] = method
