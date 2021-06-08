@@ -14,7 +14,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DATA_API, DATA_COORDINATOR, DEFAULT_UPDATE_INTERVAL, DOMAIN
 
@@ -58,6 +58,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         update_method=async_update_data,
         update_interval=DEFAULT_UPDATE_INTERVAL,
     )
+    await coordinator.async_config_entry_first_refresh()
+
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {
         DATA_API: api,
@@ -83,18 +85,15 @@ async def async_update_garmin_data(api):
         summary = await api.get_user_summary(date.today().isoformat())
         body = await api.get_body_composition(date.today().isoformat())
         alarms = await api.get_device_alarms()
-
-        return {
-            **summary,
-            **body["totalAverage"],
-            "nextAlarm": alarms,
-        }
-
     except (
         GarminConnectAuthenticationError,
         GarminConnectTooManyRequestsError,
         GarminConnectConnectionError,
-    ) as err:
-        _LOGGER.error("Error occurred during Garmin Connect update request: %s", err)
-    except Exception:  # pylint: disable=broad-except
-        _LOGGER.exception("Unknown error occurred during Garmin Connect update request")
+    ):
+        raise UpdateFailed
+
+    return {
+        **summary,
+        **body["totalAverage"],
+        "nextAlarm": alarms,
+    }

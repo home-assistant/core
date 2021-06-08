@@ -88,7 +88,6 @@ class GarminConnectSensor(CoordinatorEntity, SensorEntity):
         self._icon = icon
         self._device_class = device_class
         self._enabled_default = enabled_default
-        self._available = True
         self._state = None
 
     @property
@@ -104,22 +103,21 @@ class GarminConnectSensor(CoordinatorEntity, SensorEntity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        if self.coordinator.data:
-            if self.coordinator.data[self._type]:
-                value = self.coordinator.data[self._type]
-                if "Duration" in self._type or "Seconds" in self._type:
-                    value = value // 60
-                elif "Mass" in self._type or self._type == "weight":
-                    value = value / 1000
-                elif self._type == "nextAlarm":
-                    active_alarms = calculate_next_active_alarms(
-                        self.coordinator.data[self._type]
-                    )
-                    if active_alarms:
-                        self._state = active_alarms[0]
-                return round(value, 2)
+        if not self.coordinator.data or not self.coordinator.data[self._type]:
+            return None
 
-        return None
+        value = self.coordinator.data[self._type]
+        if "Duration" in self._type or "Seconds" in self._type:
+            value = value // 60
+        elif "Mass" in self._type or self._type == "weight":
+            value = value / 1000
+        elif self._type == "nextAlarm":
+            active_alarms = calculate_next_active_alarms(
+                self.coordinator.data[self._type]
+            )
+            if active_alarms:
+                self._state = active_alarms[0]
+        return round(value, 2)
 
     @property
     def unique_id(self) -> str:
@@ -166,7 +164,11 @@ class GarminConnectSensor(CoordinatorEntity, SensorEntity):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return self._available
+        return (
+            super().available
+            and self.coordinator.data
+            and self._type in self.coordinator.data
+        )
 
     @property
     def device_class(self):

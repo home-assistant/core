@@ -346,7 +346,7 @@ GARMIN_ENTITY_LIST = {
         False,
     ],
     "weight": ["Weight", MASS_KILOGRAMS, "mdi:weight-kilogram", None, False],
-    "bmi": ["BMI", "", "mdi:food", "bmi", False],
+    "bmi": ["BMI", "bmi", "mdi:food", None, False],
     "bodyFat": ["Body Fat", PERCENTAGE, "mdi:food", None, False],
     "bodyWater": ["Body Water", PERCENTAGE, "mdi:water-percent", None, False],
     "bodyMass": ["Body Mass", MASS_KILOGRAMS, "mdi:food", None, False],
