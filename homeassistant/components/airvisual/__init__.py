@@ -337,23 +337,11 @@ class AirVisualEntity(CoordinatorEntity):
         """Initialize."""
         super().__init__(coordinator)
         self._attrs = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
-        self._icon = None
-        self._unit = None
 
     @property
     def extra_state_attributes(self):
         """Return the device state attributes."""
         return self._attrs
-
-    @property
-    def icon(self):
-        """Return the icon."""
-        return self._icon
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        return self._unit
 
     async def async_added_to_hass(self):
         """Register callbacks."""
