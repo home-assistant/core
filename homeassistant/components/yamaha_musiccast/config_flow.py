@@ -9,7 +9,7 @@ from aiomusiccast import MusicCastDevice
 import voluptuous as vol
 
 from homeassistant.components import ssdp
-from homeassistant.config_entries import CONN_CLASS_LOCAL_POLL, ConfigFlow
+from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_HOST
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
@@ -25,11 +25,9 @@ class MusicCastFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self) -> None:
-        """Initialize a new Flow."""
-        self.serial_number = None
-        self.model_name = None
-        self.host = None
+    serial_number: str | None = None
+    model_name: str | None = None
+    host: str
 
     async def async_step_user(
         self, user_input: ConfigType | None = None
@@ -58,9 +56,7 @@ class MusicCastFlowHandler(ConfigFlow, domain=DOMAIN):
             )
             if self.serial_number is None:
                 self.serial_number = info["system_id"]
-            if self.model_name is None:
-                self.model_name = info["model_name"]
-            unique_id = f"{self.model_name}-{self.serial_number}"
+            unique_id = self.serial_number
             await self.async_set_unique_id(unique_id)
             self._abort_if_unique_id_configured()
         except ClientConnectorError:
@@ -95,12 +91,12 @@ class MusicCastFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors or {},
         )
 
-    async def async_step_ssdp(self, discovery_info):
+    async def async_step_ssdp(self, discovery_info) -> data_entry_flow.FlowResult:
         """Handle ssdp discoveries."""
         if not await MusicCastDevice.check_yamaha_ssdp(
             discovery_info[ssdp.ATTR_SSDP_LOCATION], async_get_clientsession(self.hass)
         ):
-            return self.async_abort(reason="yxcControlURL_missing")
+            return self.async_abort(reason="yxc_control_url_missing")
 
         self.model_name = discovery_info[ssdp.ATTR_UPNP_MODEL_NAME]
         self.serial_number = discovery_info[ssdp.ATTR_UPNP_SERIAL]
@@ -118,7 +114,7 @@ class MusicCastFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_confirm()
 
-    async def async_step_confirm(self, user_input=None):
+    async def async_step_confirm(self, user_input=None) -> data_entry_flow.FlowResult:
         """Allow the user to confirm adding the device."""
         if user_input is not None:
             return self.async_create_entry(

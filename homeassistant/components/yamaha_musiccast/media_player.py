@@ -1,13 +1,9 @@
 """Demo implementation of the media player."""
 from __future__ import annotations
 
-from typing import Callable
-
 from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import (
-    REPEAT_MODE_ALL,
     REPEAT_MODE_OFF,
-    REPEAT_MODE_ONE,
     SUPPORT_CLEAR_PLAYLIST,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
@@ -26,34 +22,18 @@ from homeassistant.components.media_player.const import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import HomeAssistantType
 
 from . import MusicCastDataUpdateCoordinator, MusicCastDeviceEntity
-from .const import DEFAULT_ZONE, DOMAIN, REPEAT_MODE_MAPPING
+from .const import (
+    DEFAULT_ZONE,
+    DOMAIN,
+    HA_REPEAT_MODE_TO_MC_MAPPING,
+    MC_REPEAT_MODE_TO_HA_MAPPING,
+)
 
 PARALLEL_UPDATES = 1
-
-
-async def async_setup_entry(
-    hass: HomeAssistantType,
-    entry: ConfigEntry,
-    async_add_entities: Callable[[list[Entity], bool], None],
-) -> None:
-    """Set up MusicCast sensor based on a config entry."""
-    coordinator: MusicCastDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
-
-    name = coordinator.data.network_name
-
-    media_players: list[Entity] = []
-
-    for zone in coordinator.data.zones:
-        zone_name = name if zone == DEFAULT_ZONE else f"{name} {zone}"
-
-        media_players.append(
-            MusicCastMediaPlayer(zone, zone_name, entry.entry_id, coordinator)
-        )
-
-    async_add_entities(media_players)
 
 
 MUSIC_PLAYER_SUPPORT = (
@@ -74,15 +54,36 @@ MUSIC_PLAYER_SUPPORT = (
 )
 
 
-class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
-    """A demo media players."""
+async def async_setup_entry(
+    hass: HomeAssistantType,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up MusicCast sensor based on a config entry."""
+    coordinator: MusicCastDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
-    def __init__(self, zone_id, name, entry_id, coordinator, device_class=None):
-        """Initialize the demo device."""
+    name = coordinator.data.network_name
+
+    media_players: list[Entity] = []
+
+    for zone in coordinator.data.zones:
+        zone_name = name if zone == DEFAULT_ZONE else f"{name} {zone}"
+
+        media_players.append(
+            MusicCastMediaPlayer(zone, zone_name, entry.entry_id, coordinator)
+        )
+
+    async_add_entities(media_players)
+
+
+class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
+    """The musiccast media player."""
+
+    def __init__(self, zone_id, name, entry_id, coordinator):
+        """Initialize the musiccast device."""
         self._player_state = STATE_PLAYING
         self._volume_muted = False
         self._shuffle = False
-        self._device_class = device_class
         self._zone_id = zone_id
         self.coordinator: MusicCastDataUpdateCoordinator = coordinator
 
@@ -94,19 +95,19 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
 
         super().__init__(
             entry_id=entry_id,
-            coordinator=coordinator,
             name=name,
             icon="mdi:speaker",
         )
 
-
     async def async_added_to_hass(self):
         """Run when this Entity has been added to HA."""
+        await super().async_added_to_hass()
         # Sensors should also register callbacks to HA when their state changes
         self.coordinator.musiccast.register_callback(self.async_write_ha_state)
 
     async def async_will_remove_from_hass(self):
         """Entity being removed from hass."""
+        await super().async_will_remove_from_hass()
         # The opposite of async_added_to_hass. Remove any registered call backs here.
         self.coordinator.musiccast.remove_callback(self.async_write_ha_state)
 
@@ -135,11 +136,6 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
     @property
     def _is_tuner(self):
         return self.coordinator.data.zones[self._zone_id].input == "tuner"
-
-    @property
-    def name(self):
-        """Return the name of the media player."""
-        return self._name
 
     @property
     def state(self):
@@ -179,11 +175,6 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
     def sound_mode_list(self):
         """Return a list of available sound modes."""
         return self.coordinator.data.zones[self._zone_id].sound_program_list
-
-    @property
-    def device_class(self):
-        """Return the device class of the media player."""
-        return self._device_class
 
     @property
     def zone(self):
@@ -272,19 +263,10 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
         return self.coordinator.data.netusb_album if self._is_netusb else None
 
     @property
-    def media_track(self):
-        """Return the track number of current media (Music track only)."""
-        return -1
-
-    @property
     def repeat(self):
         """Return current repeat mode."""
         return (
-            {
-                "off": REPEAT_MODE_OFF,
-                "one": REPEAT_MODE_ONE,
-                "all": REPEAT_MODE_ALL,
-            }.get(self.coordinator.data.netusb_repeat)
+            MC_REPEAT_MODE_TO_HA_MAPPING.get(self.coordinator.data.netusb_repeat)
             if self._is_netusb
             else REPEAT_MODE_OFF
         )
@@ -318,7 +300,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
         """Enable/disable repeat mode."""
         if self._is_netusb:
             await self.coordinator.musiccast.netusb_repeat(
-                REPEAT_MODE_MAPPING.get(repeat, "off")
+                HA_REPEAT_MODE_TO_MC_MAPPING.get(repeat, "off")
             )
 
     async def async_select_source(self, source):

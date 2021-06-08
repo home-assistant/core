@@ -18,8 +18,14 @@ ATTR_PRESET = "preset"
 ATTR_SOFTWARE_VERSION = "sw_version"
 
 DEFAULT_ZONE = "main"
-REPEAT_MODE_MAPPING = {
+HA_REPEAT_MODE_TO_MC_MAPPING = {
     REPEAT_MODE_OFF: "off",
     REPEAT_MODE_ONE: "one",
     REPEAT_MODE_ALL: "all",
+}
+
+MC_REPEAT_MODE_TO_HA_MAPPING = {
+    "off": REPEAT_MODE_OFF,
+    "one": REPEAT_MODE_ONE,
+    "all": REPEAT_MODE_ALL,
 }

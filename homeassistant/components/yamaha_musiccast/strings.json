@@ -1,5 +1,4 @@
 {
-  "title": "MusicCast",
   "config": {
     "flow_title": "MusicCast: {name}",
     "step": {
@@ -16,7 +15,7 @@
     "abort": {
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
-      "yxcControlURL_missing": "The control URL is not given in the ssdp description."
+      "yxc_control_url_missing": "The control URL is not given in the ssdp description."
     }
   }
 }

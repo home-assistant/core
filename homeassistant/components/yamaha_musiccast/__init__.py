@@ -2,18 +2,14 @@
 from __future__ import annotations
 
 import abc
-import asyncio
 from datetime import timedelta
 import logging
 
 from aiomusiccast.musiccast_device import MusicCastData, MusicCastDevice
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
-from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import service
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -21,7 +17,7 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
-from ...helpers.entity import DeviceInfo, Entity
+from ...helpers.entity import DeviceInfo
 from .const import BRAND, DOMAIN
 
 PLATFORMS = ["media_player"]
@@ -83,17 +79,17 @@ class MusicCastDataUpdateCoordinator(DataUpdateCoordinator[MusicCastData]):
 class MusicCastEntity(CoordinatorEntity):
     """Defines a base MusicCast entity."""
 
+    coordinator: MusicCastDataUpdateCoordinator
+
     def __init__(
         self,
         *,
         entry_id: str,
-        coordinator: MusicCastDataUpdateCoordinator,
         name: str,
         icon: str,
         enabled_default: bool = True,
     ) -> None:
         """Initialize the MusicCast entity."""
-        super().__init__(coordinator)
         self._enabled_default = enabled_default
         self._icon = icon
         self._name = name
