@@ -402,6 +402,14 @@ class AisDbConfigView(HomeAssistantView):
                     + db_connection["dbUrl"]
                     + " selected for recording!"
                 )
+        elif db_connection["dbEngine"] == "MariaDB (local)":
+            db_connection["dbUrl"] = (
+                    "mysql+pymysql://ais:dom@127.0.0.1/ha?charset=utf8mb4"
+                )
+            db_connection["dbPassword"] = "dom"
+            db_connection["dbUser"] = "ais"
+            db_connection["dbServerIp"] = "127.0.0.1"
+            db_connection["dbServerName"] = "ha"
         else:
             db_user_pass = ""
             if db_connection["dbUser"] + db_connection["dbPassword"] != "":
@@ -452,13 +460,29 @@ class AisDbConfigView(HomeAssistantView):
                     result = connection.execute("SELECT 1")
                     for row in result:
                         _LOGGER.info("SELECT 1: " + str(row))
-
                 return_info = (
                     "Zapis do bazy " + db_connection["dbEngine"] + " skonfigurowany."
                 )
             except Exception as e:
-                _LOGGER.error("Exception:" + str(e))
-                error_info = "Błąd konfiguracji zapisu do bazy " + str(e)
+                _LOGGER.warning("Exception:" + str(e))
+                if db_connection["dbEngine"] == "MariaDB (local)":
+                    _LOGGER.warning("Installing the local MariaDB")
+                    return_info = "TODO..."
+                    # check again the connection... again
+                    # try:
+                    #     engine = create_engine(db_connection["dbUrl"], **kwargs)
+                    #     with engine.connect() as connection:
+                    #         result = connection.execute("SELECT 1")
+                    #         for row in result:
+                    #             _LOGGER.info("SELECT 1: " + str(row))
+                    #     return_info = (
+                    #             "Zapis do bazy " + db_connection["dbEngine"] + " skonfigurowany."
+                    #     )
+                    # except Exception as e:
+                    #     _LOGGER.warning("Exception:" + str(e))
+                    #     error_info = "Błąd konfiguracji zapisu do lokalnej bazy " + str(e)
+                else:
+                    error_info = "Błąd konfiguracji zapisu do bazy " + str(e)
 
         # 3. store the settings in session and file
         if error_info == "":
