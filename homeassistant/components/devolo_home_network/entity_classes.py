@@ -14,7 +14,7 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
 class DevoloNetworkOverviewEntity(DevoloDevice):
     """PLC network overview sensor."""
 
-    def __init__(self, device: Device, device_name: str):
+    def __init__(self, device: Device, device_name: str) -> None:
         """Initialize entity."""
         super().__init__(device, device_name)
         self._enabled_default = False
@@ -23,7 +23,7 @@ class DevoloNetworkOverviewEntity(DevoloDevice):
         self._unique_id = f"{self._device.serial_number}_connected_plc_devices"
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update the value async."""
         try:
             network_overview = await self._device.plcnet.async_get_network_overview()
@@ -41,7 +41,7 @@ class DevoloNetworkOverviewEntity(DevoloDevice):
 class DevoloWifiClientsEntity(DevoloDevice):
     """Wifi network overview sensor."""
 
-    def __init__(self, device: Device, device_name: str):
+    def __init__(self, device: Device, device_name: str) -> None:
         """Initialize entity."""
         super().__init__(device, device_name)
         self._enabled_default = True
@@ -49,7 +49,7 @@ class DevoloWifiClientsEntity(DevoloDevice):
         self._name = "Connected wifi clients"
         self._unique_id = f"{self._device.serial_number}_connected_wifi_clients"
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update the value async."""
         try:
             network_overview = (
@@ -64,7 +64,7 @@ class DevoloWifiClientsEntity(DevoloDevice):
 class DevoloWifiNetworksEntity(DevoloDevice):
     """Neighboring wifi networks sensor."""
 
-    def __init__(self, device: Device, device_name: str):
+    def __init__(self, device: Device, device_name: str) -> None:
         """Initialize entity."""
         super().__init__(device, device_name)
         self._enabled_default = False
@@ -73,7 +73,7 @@ class DevoloWifiNetworksEntity(DevoloDevice):
         self._unique_id = f"{self._device.serial_number}_neighboring_wifi_networks"
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update the value async."""
         try:
             neighbors = (

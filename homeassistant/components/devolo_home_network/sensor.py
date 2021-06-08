@@ -1,10 +1,14 @@
 """Platform for sensor integration."""
+from __future__ import annotations
+
 from datetime import timedelta
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import DOMAIN
+from .device import DevoloDevice
 from .entity_classes import (
     DevoloNetworkOverviewEntity,
     DevoloWifiClientsEntity,
@@ -16,17 +20,17 @@ SCAN_INTERVAL = timedelta(seconds=15)
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Get all devices and sensors and setup them via config entry."""
     device = hass.data[DOMAIN][entry.entry_id]["device"]
     plc_entities = [DevoloNetworkOverviewEntity]
     wifi_entities = [DevoloWifiClientsEntity, DevoloWifiNetworksEntity]
 
-    entities = []
-    for entity in plc_entities:
-        entities.append(entity(device, entry.title))
+    entities: list[DevoloDevice] = []
+    for plc_entity in plc_entities:
+        entities.append(plc_entity(device, entry.title))
     if "wifi1" in device.device.features:
-        for entity in wifi_entities:
-            entities.append(entity(device, entry.title))
+        for wifi_entity in wifi_entities:
+            entities.append(wifi_entity(device, entry.title))
     async_add_entities(entities)

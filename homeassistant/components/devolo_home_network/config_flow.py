@@ -1,6 +1,7 @@
 """Config flow for devolo Home Network integration."""
+from __future__ import annotations
+
 import logging
-from typing import Dict
 
 from devolo_plc_api.device import Device
 from devolo_plc_api.exceptions.device import DeviceNotFound
@@ -9,17 +10,18 @@ import voluptuous as vol
 from homeassistant import config_entries, core
 from homeassistant.components import zeroconf
 from homeassistant.const import CONF_IP_ADDRESS
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.httpx_client import get_async_client
-from homeassistant.helpers.typing import DiscoveryInfoType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import DOMAIN, SERIAL_NUMBER, TITLE  # pylint:disable=unused-import
+from .const import DOMAIN, SERIAL_NUMBER, TITLE
 
 _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema({vol.Required(CONF_IP_ADDRESS): str})
 
 
-async def validate_input(hass: core.HomeAssistant, data: Dict):
+async def validate_input(hass: core.HomeAssistant, data: dict) -> dict:
     """Validate the user input allows us to connect.
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
@@ -44,13 +46,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Set up the instance."""
-        self._discovery_info = {}
+        self._discovery_info: dict = {}
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(self, user_input: ConfigType | None = None) -> FlowResult:
         """Handle the initial step."""
-        errors = {}
+        errors: dict = {}
 
         if user_input is None:
             return self.async_show_form(
@@ -73,7 +75,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
 
-    async def async_step_zeroconf(self, discovery_info: DiscoveryInfoType):
+    async def async_step_zeroconf(
+        self, discovery_info: DiscoveryInfoType
+    ) -> FlowResult:
         """Handle zerooconf discovery."""
         if discovery_info is None:
             return self.async_abort(reason="cannot_connect")
@@ -94,7 +98,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_zeroconf_confirm()
 
-    async def async_step_zeroconf_confirm(self, user_input=None):
+    async def async_step_zeroconf_confirm(
+        self, user_input: ConfigType | None = None
+    ) -> FlowResult:
         """Handle a flow initiated by zeroconf."""
         title = self._discovery_info["hostname"].split(".")[0]
         if user_input is not None:

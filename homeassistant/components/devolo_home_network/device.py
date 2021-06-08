@@ -1,11 +1,14 @@
 """Generic platform."""
+from __future__ import annotations
+
 import logging
+from typing import Callable
 
 from devolo_plc_api.device import Device
 
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .const import DOMAIN, TOPIC_UPDATE
 
@@ -15,7 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 class DevoloDevice(Entity):
     """Representation of a devolo home network device."""
 
-    def __init__(self, device: Device, device_name: str):
+    def __init__(self, device: Device, device_name: str) -> None:
         """Initialize a devolo home network device."""
         self._enabled_default: bool
         self._icon: str
@@ -24,12 +27,12 @@ class DevoloDevice(Entity):
 
         self._available = True
         self._device = device
-        self._dispatcher_disconnect = None
+        self._dispatcher_disconnect: Callable | None = None
         self._state = 0
         self._device_name = device_name
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device info."""
         return {
             "identifiers": {(DOMAIN, self._device.serial_number)},
@@ -69,7 +72,7 @@ class DevoloDevice(Entity):
         """Return the unique ID of the entity."""
         return self._unique_id
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register dispatcher when added."""
 
         @callback
@@ -81,12 +84,12 @@ class DevoloDevice(Entity):
             self.hass, TOPIC_UPDATE, update
         )
 
-    async def async_will_remove_from_hass(self):
+    async def async_will_remove_from_hass(self) -> None:
         """Disconnect dispatcher listener when removed."""
         if self._dispatcher_disconnect:
             self._dispatcher_disconnect()
 
-    def _set_availability(self, available: bool):
+    def _set_availability(self, available: bool) -> None:
         """Set availability and log if changed."""
         if self._available and not available:
             _LOGGER.warning("Unable to connect to %s", self._device_name)
