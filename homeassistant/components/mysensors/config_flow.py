@@ -82,8 +82,8 @@ def _validate_version(version: str) -> dict[str, str]:
 
 
 def _is_same_device(
-    gw_type: ConfGatewayType, user_input: dict[str, str], entry: ConfigEntry
-):
+    gw_type: ConfGatewayType, user_input: dict[str, Any], entry: ConfigEntry
+) -> bool:
     """Check if another ConfigDevice is actually the same as user_input.
 
     This function only compares addresses and tcp ports, so it is possible to fool it with tricks like port forwarding.
@@ -91,7 +91,9 @@ def _is_same_device(
     if entry.data[CONF_DEVICE] != user_input[CONF_DEVICE]:
         return False
     if gw_type == CONF_GATEWAY_TYPE_TCP:
-        return entry.data[CONF_TCP_PORT] == user_input[CONF_TCP_PORT]
+        entry_tcp_port: int = entry.data[CONF_TCP_PORT]
+        input_tcp_port: int = user_input[CONF_TCP_PORT]
+        return entry_tcp_port == input_tcp_port
     if gw_type == CONF_GATEWAY_TYPE_MQTT:
         entry_topics = {
             entry.data[CONF_TOPIC_IN_PREFIX],
@@ -347,7 +349,7 @@ class MySensorsConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 break
 
         # if no errors so far, try to connect
-        if not errors and not await try_connect(self.hass, user_input):
+        if not errors and not await try_connect(self.hass, gw_type, user_input):
             errors["base"] = "cannot_connect"
 
         return errors

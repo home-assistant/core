@@ -24,8 +24,6 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
-# mypy: allow-untyped-defs, no-check-untyped-defs
-
 DOMAIN = "switch"
 SCAN_INTERVAL = timedelta(seconds=30)
 
@@ -52,7 +50,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @bind_hass
-def is_on(hass, entity_id):
+def is_on(hass: HomeAssistant, entity_id: str) -> bool:
     """Return if the switch is on based on the statemachine.
 
     Async friendly.
@@ -117,9 +115,9 @@ class SwitchEntity(ToggleEntity):
 class SwitchDevice(SwitchEntity):
     """Representation of a switch (for backwards compatibility)."""
 
-    def __init_subclass__(cls, **kwargs):
+    def __init_subclass__(cls, **kwargs: Any) -> None:
         """Print deprecation warning."""
-        super().__init_subclass__(**kwargs)
+        super().__init_subclass__(**kwargs)  # type: ignore[call-arg]
         _LOGGER.warning(
             "SwitchDevice is deprecated, modify %s to extend SwitchEntity",
             cls.__name__,
