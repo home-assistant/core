@@ -11,6 +11,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, format_mac
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -29,9 +30,7 @@ SCAN_INTERVAL = timedelta(seconds=60)
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up MusicCast from a config entry."""
 
-    client = MusicCastDevice(
-        entry.data[CONF_HOST], async_get_clientsession(hass), hass.loop
-    )
+    client = MusicCastDevice(entry.data[CONF_HOST], async_get_clientsession(hass))
     coordinator = MusicCastDataUpdateCoordinator(hass, client=client)
     await coordinator.async_config_entry_first_refresh()
 
@@ -117,6 +116,10 @@ class MusicCastDeviceEntity(MusicCastEntity, abc.ABC):
     def device_info(self) -> DeviceInfo:
         """Return device information about this MusicCast device."""
         return DeviceInfo(
+            connections={
+                (CONNECTION_NETWORK_MAC, format_mac(mac))
+                for mac in self.coordinator.data.mac_addresses.values()
+            },
             identifiers={
                 (
                     DOMAIN,
