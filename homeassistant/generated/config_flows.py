@@ -262,6 +262,7 @@ FLOWS = [
     "tradfri",
     "transmission",
     "tuya",
+    "tuya_v2",
     "twentemilieu",
     "twilio",
     "twinkly",

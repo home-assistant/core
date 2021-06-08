@@ -1,13 +1,11 @@
 #!/usr/bin/env python3
-# -*- coding: UTF-8 -*-
+"""Tuya Home Assistant Base Device Model."""
+from typing import Optional
 
-from typing import Any, Dict, List, Optional, Tuple, cast
+from tuya_iot import TuyaDevice, TuyaDeviceManager
 
-from .const import (
-    DOMAIN,
-)
+from .const import DOMAIN
 
-from tuya_iot import TuyaDeviceManager, TuyaDevice
 
 class TuyaHaDevice:
     """Tuya base device."""
@@ -16,26 +14,31 @@ class TuyaHaDevice:
     tuyaDeviceManager: TuyaDeviceManager
 
     def __init__(self, device: TuyaDevice, deviceManager: TuyaDeviceManager):
+        """Init TuyaHaDevice."""
         super().__init__()
         self.tuyaDevice = device
         self.tuyaDeviceManager = deviceManager
-        self.entity_id = 'tuya.{}'.format(device.id)
+        self.entity_id = f"tuya_v2.{device.id}"
 
     @staticmethod
     def remap(old_value, old_min, old_max, new_min, new_max):
-        new_value = ( (old_value - old_min) / (old_max - old_min) ) * (new_max - new_min) + new_min
+        """Remap old_value to new_value."""
+        new_value = ((old_value - old_min) / (old_max - old_min)) * (
+            new_max - new_min
+        ) + new_min
         return new_value
 
     # Entity
 
     @property
     def should_poll(self) -> bool:
+        """Tuya device use cloud push, which means should not poll."""
         return False
 
     @property
     def unique_id(self) -> Optional[str]:
         """Return a unique ID."""
-        return self.tuyaDevice.uuid
+        return f"tuya_{self.tuyaDevice.uuid}"
 
     @property
     def name(self) -> Optional[str]:

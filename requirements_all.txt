@@ -2269,6 +2269,9 @@ tp-connected==0.0.4
 # homeassistant.components.transmission
 transmissionrpc==0.11
 
+# homeassistant.components.tuya_v2
+tuya-iot-py-sdk==0.2.1
+
 # homeassistant.components.tuya
 tuyaha==0.0.10
 

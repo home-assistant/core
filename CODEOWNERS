@@ -517,6 +517,7 @@ homeassistant/components/trafikverket_weatherstation/* @endor-force
 homeassistant/components/transmission/* @engrbm87 @JPHutchins
 homeassistant/components/tts/* @pvizeli
 homeassistant/components/tuya/* @ollo69
+homeassistant/components/tuya_v2/* @Tuya
 homeassistant/components/twentemilieu/* @frenck
 homeassistant/components/twinkly/* @dr1rrb
 homeassistant/components/ubus/* @noltari

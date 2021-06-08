@@ -1,32 +1,27 @@
 #!/usr/bin/env python3
-# -*- coding: UTF-8 -*-
-"""Support for Tuya switches."""
+"""Support for Tuya Humidifiers."""
 
-import logging
 import json
-from typing import Any, Dict, List, Optional, Tuple, cast
-from tuya_iot import TuyaDeviceManager, TuyaDevice
+import logging
+from typing import List
 
-from homeassistant.core import HomeAssistant, Config
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.components.humidifier import (
-    HumidifierEntity,
     DOMAIN as DEVICE_DOMAIN,
-    SUPPORT_MODES
+    SUPPORT_MODES,
+    HumidifierEntity,
 )
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect
-)
-
-from .const import (
-    DOMAIN,
-    TUYA_HA_TUYA_MAP,
-    TUYA_DISCOVERY_NEW,
-    TUYA_DEVICE_MANAGER,
-    TUYA_HA_DEVICES
-)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .base import TuyaHaDevice
+from .const import (
+    DOMAIN,
+    TUYA_DEVICE_MANAGER,
+    TUYA_DISCOVERY_NEW,
+    TUYA_HA_DEVICES,
+    TUYA_HA_TUYA_MAP,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,28 +31,24 @@ TUYA_SUPPORT_TYPE = {
 
 # Humidifier(jsq)
 # https://developers.home-assistant.io/docs/core/entity/humidifier
-DPCODE_MODE = 'mode'
-DPCODE_SWITCH = 'switch'
+DPCODE_MODE = "mode"
+DPCODE_SWITCH = "switch"
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
+):
     """Set up tuya sensors dynamically through tuya discovery."""
     print("humidifier init")
 
     hass.data[DOMAIN][TUYA_HA_TUYA_MAP].update({DEVICE_DOMAIN: TUYA_SUPPORT_TYPE})
-
-    # platform = config_entry.data[CONF_PLATFORM]
 
     async def async_discover_device(dev_ids):
         """Discover and add a discovered tuya sensor."""
         print("humidifier add->", dev_ids)
         if not dev_ids:
             return
-        entities = await hass.async_add_executor_job(
-            _setup_entities,
-            hass,
-            dev_ids
-        )
+        entities = await hass.async_add_executor_job(_setup_entities, hass, dev_ids)
         hass.data[DOMAIN][TUYA_HA_DEVICES].extend(entities)
         async_add_entities(entities)
 
@@ -81,15 +72,14 @@ def _setup_entities(hass, device_ids: List):
         device = device_manager.deviceMap[device_id]
         if device is None:
             continue
-        
+
         entities.append(TuyaHaHumidifier(device, device_manager))
-        
+
     return entities
+
 
 class TuyaHaHumidifier(TuyaHaDevice, HumidifierEntity):
     """Tuya Switch Device."""
-
-    platform = 'humidifier'
 
     @property
     def is_on(self):
@@ -98,31 +88,38 @@ class TuyaHaHumidifier(TuyaHaDevice, HumidifierEntity):
 
     @property
     def mode(self):
-        """Return the current mode"""
+        """Return the current mode."""
         return self.tuyaDevice.status.get(DPCODE_MODE)
-    
+
     @property
     def available_modes(self):
         """Return a list of available modes."""
-        return json.loads(self.tuyaDevice.function.get(
-            DPCODE_MODE, {}).values).get("range")
-    
+        return json.loads(self.tuyaDevice.function.get(DPCODE_MODE, {}).values).get(
+            "range"
+        )
+
     @property
     def supported_features(self):
+        """Return humidifier support features."""
         supports = 0
         if DPCODE_MODE in self.tuyaDevice.status:
             supports = supports | SUPPORT_MODES
         return supports
-    
+
     def set_mode(self, mode):
         """Set new target preset mode."""
-        self.tuyaDeviceManager.sendCommands(self.tuyaDevice.id, [{'code': DPCODE_MODE, 'value': mode}])
+        self.tuyaDeviceManager.sendCommands(
+            self.tuyaDevice.id, [{"code": DPCODE_MODE, "value": mode}]
+        )
 
     def turn_on(self, **kwargs):
         """Turn the device on."""
-        self.tuyaDeviceManager.sendCommands(self.tuyaDevice.id, [{'code': DPCODE_SWITCH, 'value': True}])
-    
+        self.tuyaDeviceManager.sendCommands(
+            self.tuyaDevice.id, [{"code": DPCODE_SWITCH, "value": True}]
+        )
+
     def turn_off(self, **kwargs):
         """Turn the device off."""
-        self.tuyaDeviceManager.sendCommands(self.tuyaDevice.id, [{'code': DPCODE_SWITCH, 'value': False}])
-    
+        self.tuyaDeviceManager.sendCommands(
+            self.tuyaDevice.id, [{"code": DPCODE_SWITCH, "value": False}]
+        )

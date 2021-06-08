@@ -1,51 +1,40 @@
 #!/usr/bin/env python3
-# -*- coding: UTF-8 -*-
 """Support for Tuya Cover."""
 
 import logging
-import json
-from typing import Any, Dict, List, Optional, Tuple, cast
+from typing import Any, List
 
-from homeassistant.core import HomeAssistant, Config
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.components.cover import (
-    CoverEntity,
     DEVICE_CLASS_CURTAIN,
+    DOMAIN as DEVICE_DOMAIN,
+    SUPPORT_CLOSE,
+    SUPPORT_OPEN,
     SUPPORT_SET_POSITION,
     SUPPORT_STOP,
-    SUPPORT_OPEN,
-    SUPPORT_CLOSE,
-    DOMAIN as DEVICE_DOMAIN
+    CoverEntity,
 )
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect
-)
-
-from .const import (
-    DOMAIN,
-    TUYA_HA_TUYA_MAP,
-    TUYA_DISCOVERY_NEW,
-    TUYA_DEVICE_MANAGER
-)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .base import TuyaHaDevice
+from .const import DOMAIN, TUYA_DEVICE_MANAGER, TUYA_DISCOVERY_NEW, TUYA_HA_TUYA_MAP
 
 _LOGGER = logging.getLogger(__name__)
 
-TUYA_SUPPORT_TYPE = {
-    "cl",  # Curtain
-    "clkg" # Curtain Switch
-}
+TUYA_SUPPORT_TYPE = {"cl", "clkg"}  # Curtain  # Curtain Switch
 
 # Curtain
 # https://developer.tuya.com/en/docs/iot/f?id=K9gf46o5mtfyc
-DPCODE_CONTROL = 'control'
-DPCODE_PERCENT_CONTROL = 'percent_control'
+DPCODE_CONTROL = "control"
+DPCODE_PERCENT_CONTROL = "percent_control"
 
-ATTR_POSITION = 'position'
+ATTR_POSITION = "position"
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
+):
     """Set up tuya cover dynamically through tuya discovery."""
     print("cover init")
 
@@ -56,11 +45,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
         print("cover add->", dev_ids)
         if not dev_ids:
             return
-        entities = await hass.async_add_executor_job(
-            _setup_entities,
-            hass,
-            dev_ids
-        )
+        entities = await hass.async_add_executor_job(_setup_entities, hass, dev_ids)
         async_add_entities(entities)
 
     async_dispatcher_connect(
@@ -86,47 +71,47 @@ def _setup_entities(hass, device_ids: List):
         entities.append(TuyaHaCover(device, device_manager))
     return entities
 
+
 class TuyaHaCover(TuyaHaDevice, CoverEntity):
     """Tuya Switch Device."""
-
-    platform = 'cover'
 
     # property
     @property
     def device_class(self) -> str:
         """Return Entity Properties."""
         return DEVICE_CLASS_CURTAIN
-    
-    @property
-    def is_closed(self) -> bool:
-        """Return if the cover is closed or not."""
-        return None
-    
+
     @property
     def current_cover_position(self) -> int:
-        return self.tuyaDevice.status.get(DPCODE_PERCENT_CONTROL, 0) 
+        """Return cover current position."""
+        return self.tuyaDevice.status.get(DPCODE_PERCENT_CONTROL, 0)
 
     def open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         self.tuyaDeviceManager.sendCommands(
-            self.tuyaDevice.id, [{'code': DPCODE_CONTROL, 'value': 'open'}])
+            self.tuyaDevice.id, [{"code": DPCODE_CONTROL, "value": "open"}]
+        )
 
     def close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
         self.tuyaDeviceManager.sendCommands(
-            self.tuyaDevice.id, [{'code': DPCODE_CONTROL, 'value': 'close'}])
+            self.tuyaDevice.id, [{"code": DPCODE_CONTROL, "value": "close"}]
+        )
 
     def stop_cover(self, **kwargs):
         """Stop the cover."""
         self.tuyaDeviceManager.sendCommands(
-            self.tuyaDevice.id, [{'code': DPCODE_CONTROL, 'value': 'stop'}])
-    
+            self.tuyaDevice.id, [{"code": DPCODE_CONTROL, "value": "stop"}]
+        )
+
     def set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
         print("cover-->", kwargs)
         self.tuyaDeviceManager.sendCommands(
-            self.tuyaDevice.id, [{'code': DPCODE_PERCENT_CONTROL, 'value': kwargs[ATTR_POSITION]}])
-    
+            self.tuyaDevice.id,
+            [{"code": DPCODE_PERCENT_CONTROL, "value": kwargs[ATTR_POSITION]}],
+        )
+
     @property
     def supported_features(self):
         """Flag supported features."""
@@ -134,7 +119,5 @@ class TuyaHaCover(TuyaHaDevice, CoverEntity):
 
         if DPCODE_PERCENT_CONTROL in self.tuyaDevice.status:
             supports = supports | SUPPORT_SET_POSITION
-        
-        return supports
 
-    
+        return supports

@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 """Support for Tuya switches."""
 
+import json
 import logging
-from typing import Any, List, Optional
+from typing import List, Optional, Tuple
 
 from tuya_iot import TuyaDevice, TuyaDeviceManager
 
-from homeassistant.components.switch import DOMAIN as DEVICE_DOMAIN, SwitchEntity
+from homeassistant.components.number import DOMAIN as DEVICE_DOMAIN, NumberEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -23,26 +24,24 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 TUYA_SUPPORT_TYPE = {
-    "kg",  # Switch
-    "cz",  # Socket
-    "pc",  # Power Strip
+    "hps",  # Human Presence Sensor
 }
 
 # Switch(kg), Socket(cz), Power Strip(pc)
 # https://developer.tuya.com/docs/iot/open-api/standard-function/electrician-category/categorykgczpc?categoryId=486118
-DPCODE_SWITCH = "switch"
+DPCODE_SENSITIVITY = "sensitivity"
 
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities
 ):
-    """Set up tuya sensors dynamically through tuya discovery."""
+    """Set up tuya number dynamically through tuya discovery."""
     print("switch init")
 
     hass.data[DOMAIN][TUYA_HA_TUYA_MAP].update({DEVICE_DOMAIN: TUYA_SUPPORT_TYPE})
 
     async def async_discover_device(dev_ids):
-        """Discover and add a discovered tuya sensor."""
+        """Discover and add a discovered tuya number."""
         print("switch add->", dev_ids)
         if not dev_ids:
             return
@@ -71,62 +70,55 @@ def _setup_entities(hass, device_ids: List):
         if device is None:
             continue
 
-        switch_set = []
-        for function in device.function:
-            if function.startswith(DPCODE_SWITCH):
-                switch_set.append(function.replace(DPCODE_SWITCH, ""))
-
-        if len(switch_set) > 1:
-            for channel in switch_set:
-                entities.append(TuyaHaSwitch(device, device_manager, channel))
-        elif len(switch_set) == 1:
-            entities.append(TuyaHaSwitch(device, device_manager))
+        if DPCODE_SENSITIVITY in device.status:
+            entities.append(TuyaHaNumber(device, device_manager, DPCODE_SENSITIVITY))
 
     return entities
 
 
-class TuyaHaSwitch(TuyaHaDevice, SwitchEntity):
-    """Tuya Switch Device."""
-
-    dp_code_switch = DPCODE_SWITCH
+class TuyaHaNumber(TuyaHaDevice, NumberEntity):
+    """Tuya Device Number."""
 
     def __init__(
-        self, device: TuyaDevice, deviceManager: TuyaDeviceManager, channel: str = ""
+        self, device: TuyaDevice, deviceManager: TuyaDeviceManager, code: str = ""
     ):
-        """Init TuyaHaSwitch."""
+        """Init tuya number device."""
+        self._code = code
         super().__init__(device, deviceManager)
 
-        self.channel = channel
-        if len(channel) > 0:
-            self.dp_code_switch = DPCODE_SWITCH + self.channel
-        else:
-            for function in device.function:
-                if function.startswith(DPCODE_SWITCH):
-                    self.dp_code_switch = function
+    # ToggleEntity
+
+    def set_value(self, value: float) -> None:
+        """Update the current value."""
+        self.tuyaDeviceManager.sendCommands(
+            self.tuyaDevice.id, [{"code": self._code, "value": int(value)}]
+        )
 
     @property
     def unique_id(self) -> Optional[str]:
         """Return a unique ID."""
-        return f"{super().unique_id}{self.channel}"
+        return f"{super().unique_id}{self._code}"
 
     @property
-    def name(self) -> Optional[str]:
-        """Return Tuya device name."""
-        return self.tuyaDevice.name + self.channel
+    def value(self) -> float:
+        """Return current value."""
+        return self.tuyaDevice.status.get(self._code, 0)
 
     @property
-    def is_on(self) -> bool:
-        """Return true if switch is on."""
-        return self.tuyaDevice.status.get(self.dp_code_switch, False)
+    def min_value(self) -> float:
+        """Return min value."""
+        return self._get_code_range()[0]
 
-    def turn_on(self, **kwargs: Any) -> None:
-        """Turn the switch on."""
-        self.tuyaDeviceManager.sendCommands(
-            self.tuyaDevice.id, [{"code": self.dp_code_switch, "value": True}]
-        )
+    @property
+    def max_value(self) -> float:
+        """Return max value."""
+        return self._get_code_range()[1]
 
-    def turn_off(self, **kwargs: Any) -> None:
-        """Turn the device off."""
-        self.tuyaDeviceManager.sendCommands(
-            self.tuyaDevice.id, [{"code": self.dp_code_switch, "value": False}]
-        )
+    @property
+    def step(self) -> float:
+        """Return step."""
+        return self._get_code_range()[2]
+
+    def _get_code_range(self) -> Tuple[int, int, int]:
+        range = json.loads(self.tuyaDevice.function.get(self._code).values)
+        return range.get("min", 0), range.get("max", 0), range.get("step", 0)
