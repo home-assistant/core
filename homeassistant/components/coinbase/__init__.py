@@ -17,6 +17,7 @@ from homeassistant.util import Throttle
 
 from .const import (
     API_ACCOUNT_ID,
+    API_ACCOUNTS_DATA,
     CONF_CURRENCIES,
     CONF_EXCHANGE_RATES,
     CONF_YAML_API_TOKEN,
@@ -113,6 +114,20 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     return unload_ok
 
 
+def get_accounts(client):
+    """Handle paginated accounts."""
+    response = client.get_accounts()
+    accounts = response[API_ACCOUNTS_DATA]
+    next_starting_after = response.pagination.next_starting_after
+
+    while next_starting_after:
+        response = client.get_accounts(starting_after=next_starting_after)
+        accounts += response[API_ACCOUNTS_DATA]
+        next_starting_after = response.pagination.next_starting_after
+
+    return accounts
+
+
 class CoinbaseData:
     """Get the latest data and update the states."""
 
@@ -120,7 +135,7 @@ class CoinbaseData:
         """Init the coinbase data object."""
 
         self.client = client
-        self.accounts = self.client.get_accounts()
+        self.accounts = get_accounts(self.client)
         self.exchange_rates = self.client.get_exchange_rates()
         self.user_id = self.client.get_current_user()[API_ACCOUNT_ID]
 
@@ -129,21 +144,7 @@ class CoinbaseData:
         """Get the latest data from coinbase."""
 
         try:
-            response = self.client.get_accounts()
-            accounts = response["data"]
-
-            # Most of Coinbase's API seems paginated now (25 items per page, but first page has 24).
-            # This API gives a 'next_starting_after' property to send back as a 'starting_after' param.
-            # Their API documentation is not up to date when writing these lines (2021-05-20)
-            next_starting_after = response.pagination.next_starting_after
-
-            while next_starting_after:
-                response = self.client.get_accounts(starting_after=next_starting_after)
-                accounts = accounts + response["data"]
-                next_starting_after = response.pagination.next_starting_after
-
-            self.accounts = accounts
-
+            self.accounts = get_accounts(self.client)
             self.exchange_rates = self.client.get_exchange_rates()
         except AuthenticationError as coinbase_error:
             _LOGGER.error(

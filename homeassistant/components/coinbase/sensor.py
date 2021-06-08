@@ -9,7 +9,6 @@ from .const import (
     API_ACCOUNT_ID,
     API_ACCOUNT_NAME,
     API_ACCOUNT_NATIVE_BALANCE,
-    API_ACCOUNTS_DATA,
     CONF_CURRENCIES,
     CONF_EXCHANGE_RATES,
     DOMAIN,
@@ -41,8 +40,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         desired_currencies = config_entry.options[CONF_CURRENCIES]
     else:
         desired_currencies = [
-            account[API_ACCOUNT_CURRENCY]
-            for account in instance.accounts[API_ACCOUNTS_DATA]
+            account[API_ACCOUNT_CURRENCY] for account in instance.accounts
         ]
 
     exchange_native_currency = instance.exchange_rates.currency
@@ -70,7 +68,7 @@ class AccountSensor(SensorEntity):
         """Initialize the sensor."""
         self._coinbase_data = coinbase_data
         self._currency = currency
-        for account in coinbase_data.accounts[API_ACCOUNTS_DATA]:
+        for account in coinbase_data.accounts:
             if account.currency == currency:
                 self._name = f"Coinbase {account[API_ACCOUNT_NAME]}"
                 self._id = f"coinbase-{account[API_ACCOUNT_ID]}"
@@ -120,7 +118,7 @@ class AccountSensor(SensorEntity):
     def update(self):
         """Get the latest state of the sensor."""
         self._coinbase_data.update()
-        for account in self._coinbase_data.accounts[API_ACCOUNTS_DATA]:
+        for account in self._coinbase_data.accounts:
             if account.currency == self._currency:
                 self._state = account[API_ACCOUNT_BALANCE][API_ACCOUNT_AMOUNT]
                 self._native_balance = account[API_ACCOUNT_NATIVE_BALANCE][

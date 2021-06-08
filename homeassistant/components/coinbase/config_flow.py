@@ -10,6 +10,7 @@ from homeassistant.const import CONF_API_KEY, CONF_API_TOKEN
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
+from . import get_accounts
 from .const import (
     API_ACCOUNT_CURRENCY,
     API_ACCOUNTS_DATA,
@@ -58,7 +59,8 @@ async def validate_options(
 
     client = hass.data[DOMAIN][config_entry.entry_id].client
 
-    accounts = await hass.async_add_executor_job(client.get_accounts)
+    accounts = get_accounts(client)
+
     accounts_currencies = [
         account[API_ACCOUNT_CURRENCY] for account in accounts[API_ACCOUNTS_DATA]
     ]
