@@ -701,20 +701,21 @@ class LocalData:
 
         if drive_exist:
             if not ais_global.has_root():
+                pass
                 # to suport local test
-                rclone_cmd_mount = (
-                    "rclone mount "
-                    + name
-                    + ":/ /data/data/pl.sviete.dom/dom_cloud_drives/"
-                    + name
-                    + " --uid "
-                    + uid
-                    + " --gid "
-                    + gid
-                    + " --allow-non-empty "
-                    + " "
-                    + G_RCLONE_CONF
-                )
+                # rclone_cmd_mount = (
+                #     "rclone mount "
+                #     + name
+                #     + ":/ /data/data/pl.sviete.dom/dom_cloud_drives/"
+                #     + name
+                #     + " --uid "
+                #     + uid
+                #     + " --gid "
+                #     + gid
+                #     + " --allow-non-empty "
+                #     + " "
+                #     + G_RCLONE_CONF
+                # )
 
             else:
                 #
