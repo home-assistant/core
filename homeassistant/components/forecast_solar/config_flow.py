@@ -85,25 +85,25 @@ class ForecastSolarOptionFlowHandler(config_entries.OptionsFlow):
                     vol.Required(
                         CONF_DECLINATION,
                         default=self.entry.options.get(
-                            CONF_DECLINATION, self.entry.data.get(CONF_DECLINATION)
+                            CONF_DECLINATION, self.entry.data[CONF_DECLINATION]
                         ),
                     ): vol.Coerce(int),
                     vol.Required(
                         CONF_AZIMUTH,
                         default=self.entry.options.get(
-                            CONF_AZIMUTH, self.entry.data.get(CONF_AZIMUTH)
+                            CONF_AZIMUTH, self.entry.data[CONF_AZIMUTH]
                         ),
                     ): vol.Coerce(int),
                     vol.Required(
                         CONF_MODULES_POWER,
                         default=self.entry.options.get(
-                            CONF_MODULES_POWER, self.entry.data.get(CONF_MODULES_POWER)
+                            CONF_MODULES_POWER, self.entry.data[CONF_MODULES_POWER]
                         ),
                     ): vol.Coerce(int),
                     vol.Optional(
                         CONF_DAMPING,
                         default=self.entry.options.get(
-                            CONF_DAMPING, self.entry.data.get(CONF_DAMPING)
+                            CONF_DAMPING, self.entry.data.get(CONF_DAMPING, 0)
                         ),
                     ): vol.Coerce(float),
                 }
