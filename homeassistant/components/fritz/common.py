@@ -357,7 +357,7 @@ class FritzBoxBaseEntity:
 class FritzBoxBaseSwitch:
     """Fritz switch base class."""
 
-    def __init__(self, fritzbox_tools: FritzBoxTools, switch_info: SwitchInfo):
+    def __init__(self, fritzbox_tools: FritzBoxTools, switch_info: SwitchInfo) -> None:
         """Init Fritzbox port switch."""
         self.fritzbox_tools: FritzBoxTools = fritzbox_tools
 
@@ -429,7 +429,7 @@ class FritzBoxBaseSwitch:
             )
             return
 
-        _LOGGER.debug("Updating '%s' (%s) switch state.", self.name, self._type)
+        _LOGGER.debug("Updating '%s' (%s) switch state", self.name, self._type)
         await self._update()
 
     async def async_turn_on(self, **kwargs) -> None:
@@ -446,12 +446,12 @@ class FritzBoxBaseSwitch:
             await self._switch(turn_on)
         except FritzSecurityError:
             _LOGGER.error(
-                "Authorization Error: Please check the provided credentials and verify that you can log into the web interface.",
+                "Authorization Error: Please check the provided credentials and verify that you can log into the web interface",
                 exc_info=True,
             )
         except FritzConnectionException:
             _LOGGER.error(
-                "Home Assistant cannot call the wished service on the FRITZ!Box.",
+                "Home Assistant cannot call the wished service on the FRITZ!Box",
                 exc_info=True,
             )
             return False

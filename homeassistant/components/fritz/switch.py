@@ -42,7 +42,7 @@ def service_call_action(
         return fritzbox_tools.connection.call_action(
             (service_name + service_append), action_name, **kwargs
         )
-    except Exception:
+    except Exception:  # pylint: disable=broad-except
         _LOGGER.error(
             "Call action cannot execute service %s",
             service_name,
@@ -90,7 +90,7 @@ async def async_setup_entry(
             fritzbox_tools, service_name, True, "GetNumberOfDeflections"
         )
         if not deflections_response:
-            _LOGGER.debug("The FRITZ!Box has no %s options.", SWITCH_TYPE_DEFLECTION)
+            _LOGGER.debug("The FRITZ!Box has no %s options", SWITCH_TYPE_DEFLECTION)
             return
 
         _LOGGER.debug(
@@ -119,7 +119,7 @@ async def async_setup_entry(
             fritzbox_tools, service_name, True, "GetDefaultConnectionService"
         )
         if not connection_type:
-            _LOGGER.debug("The FRITZ!Box has no %s options.", SWITCH_TYPE_PORTFORWARD)
+            _LOGGER.debug("The FRITZ!Box has no %s options", SWITCH_TYPE_PORTFORWARD)
             return
 
         # Return NewDefaultConnectionService sample: "1.WANPPPConnection.1"
@@ -258,11 +258,11 @@ class FritzBoxPortSwitch(FritzBoxBaseSwitch, SwitchEntity):
             ]
         except FritzConnectionException:
             _LOGGER.error(
-                "Authorization Error: Please check the provided credentials and verify that you can log into the web interface."
+                "Authorization Error: Please check the provided credentials and verify that you can log into the web interface"
             )
             self._is_available = False
-        except Exception:
-            _LOGGER.error(f"Could not get {self.name} state", exc_info=True)
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.error("Could not get %s state", self.name, exc_info=True)
             self._is_available = False
 
     async def _async_handle_port_switch_on_off(self, turn_on: bool) -> bool:
@@ -276,12 +276,12 @@ class FritzBoxPortSwitch(FritzBoxBaseSwitch, SwitchEntity):
             )
         except FritzSecurityError:
             _LOGGER.error(
-                "Authorization Error: Please check the provided credentials and verify that you can log into the web interface.",
+                "Authorization Error: Please check the provided credentials and verify that you can log into the web interface",
                 exc_info=True,
             )
         except FritzConnectionException:
             _LOGGER.error(
-                "Home Assistant cannot call the wished service on the FRITZ!Box.",
+                "Home Assistant cannot call the wished service on the FRITZ!Box",
                 exc_info=True,
             )
             return False
@@ -346,10 +346,10 @@ class FritzBoxDeflectionSwitch(FritzBoxBaseSwitch, SwitchEntity):
 
         except FritzConnectionException:
             _LOGGER.error(
-                "Authorization Error: Please check the provided credentials and verify that you can log into the web interface."
+                "Authorization Error: Please check the provided credentials and verify that you can log into the web interface"
             )
             self._is_available = False
-        except Exception:
+        except Exception:  # pylint: disable=broad-except
             _LOGGER.error(
                 "Could not get state of %s", SWITCH_TYPE_DEFLECTION, exc_info=True
             )
@@ -389,7 +389,7 @@ class FritzBoxProfileSwitch(FritzBoxBaseSwitch, SwitchEntity):
         """Update data."""
         try:
             status = await self.hass.async_add_executor_job(
-                lambda: self.fritzbox_tools.fritz_profiles[self.profile].get_state()
+                self.fritzbox_tools.fritz_profiles[self.profile].get_state()
             )
             _LOGGER.debug(
                 "Specific %s response: get_State()=%s",
@@ -404,8 +404,8 @@ class FritzBoxProfileSwitch(FritzBoxBaseSwitch, SwitchEntity):
                 self._is_available = True
             else:
                 self._is_available = False
-        except Exception:
-            _LOGGER.error(f"Could not get {self.name} state", exc_info=True)
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.error("Could not get %s state", self.name, exc_info=True)
             self._is_available = False
 
     async def _async_switch_on_off_executor(self, turn_on: bool) -> None:
@@ -460,12 +460,12 @@ class FritzBoxWifiSwitch(FritzBoxBaseSwitch, SwitchEntity):
 
         except FritzConnectionException:
             _LOGGER.error(
-                "Authorization Error: Please check the provided credentials and verify that you can log into the web interface.",
+                "Authorization Error: Please check the provided credentials and verify that you can log into the web interface",
                 exc_info=True,
             )
             self._is_available = False
-        except Exception:
-            _LOGGER.error(f"Could not get {self.name} state", exc_info=True)
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.error("Could not get %s state", self.name, exc_info=True)
             self._is_available = False
 
     async def _async_switch_on_off_executor(self, turn_on: bool) -> None:
