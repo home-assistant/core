@@ -130,6 +130,9 @@ aiolip==1.1.4
 # homeassistant.components.lyric
 aiolyric==1.0.7
 
+# homeassistant.components.modern_forms
+aiomodernforms==0.1.5
+
 # homeassistant.components.notion
 aionotion==1.1.0
 
