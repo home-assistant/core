@@ -26,7 +26,6 @@ class MusicCastFlowHandler(ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     serial_number: str | None = None
-    model_name: str | None = None
     host: str
 
     async def async_step_user(
@@ -65,7 +64,6 @@ class MusicCastFlowHandler(ConfigFlow, domain=DOMAIN):
                 title=title,
                 data={
                     CONF_HOST: user_input[CONF_HOST],
-                    "model": self.model_name,
                     "serial": self.serial_number,
                 },
             )
@@ -110,7 +108,6 @@ class MusicCastFlowHandler(ConfigFlow, domain=DOMAIN):
                 title=self.host,
                 data={
                     CONF_HOST: self.host,
-                    "model": self.model_name,
                     "serial": self.serial_number,
                 },
             )
