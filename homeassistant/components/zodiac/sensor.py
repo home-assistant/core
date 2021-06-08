@@ -1,8 +1,6 @@
 """Support for tracking the zodiac sign."""
 from __future__ import annotations
 
-from typing import Any
-
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -195,7 +193,7 @@ class ZodiacSensor(SensorEntity):
     @property
     def device_class(self) -> str:
         """Return the device class of the entity."""
-        return "zodiac_sign"
+        return "zodiac__sign"
 
     @property
     def state(self) -> str:
@@ -208,7 +206,7 @@ class ZodiacSensor(SensorEntity):
         return ZODIAC_ICONS.get(self._state)
 
     @property
-    def extra_state_attributes(self) -> dict[str, Any]:
+    def extra_state_attributes(self) -> dict[str, str]:
         """Return the state attributes."""
         return self._attrs
 
