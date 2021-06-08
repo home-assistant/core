@@ -33,13 +33,6 @@ class MusicCastFlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: ConfigType | None = None
     ) -> data_entry_flow.FlowResult:
         """Handle a flow initiated by the user."""
-        return await self._handle_config_flow(user_input)
-
-    async def _handle_config_flow(
-        self, user_input: ConfigType | None = None
-    ) -> data_entry_flow.FlowResult:
-        """Config flow handler for MusicCast."""
-
         # Request user input, unless we are preparing discovery flow
         if user_input is None:
             return self._show_setup_form()
