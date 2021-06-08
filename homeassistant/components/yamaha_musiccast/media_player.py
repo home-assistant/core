@@ -97,6 +97,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
             entry_id=entry_id,
             name=name,
             icon="mdi:speaker",
+            coordinator=coordinator,
         )
 
     async def async_added_to_hass(self):
