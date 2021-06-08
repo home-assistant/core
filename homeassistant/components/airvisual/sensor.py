@@ -197,7 +197,7 @@ class AirVisualGeographySensor(AirVisualEntity, SensorEntity):
 
         if self._kind == SENSOR_KIND_LEVEL:
             aqi = data[f"aqi{self._locale}"]
-            self._state, self._icon = async_get_pollutant_level_info(aqi)
+            self._state, self._attr_icon = async_get_pollutant_level_info(aqi)
         elif self._kind == SENSOR_KIND_AQI:
             self._state = data[f"aqi{self._locale}"]
         elif self._kind == SENSOR_KIND_POLLUTANT:
