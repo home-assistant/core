@@ -90,11 +90,11 @@ class FortiOSDeviceScanner(DeviceScanner):
                     if client["last_seen"] < 180:
                         self._clients.append(client["mac"].upper())
             elif self._fos_major_version == 7:
-               for client in clients_json["results"]:
-                   if client["is_online"] == True:
-                       self._clients.append(client["mac"].upper())
+                for client in clients_json["results"]:
+                    if client["is_online"]:
+                        self._clients.append(client["mac"].upper())
             else:
-               _LOGGER.error("unsupported FortiOS version, fos_major_version =  %s", str(self._fos_major_version))
+                _LOGGER.error("unsupported FortiOS version, fos_major_version =  %s", str(self._fos_major_version))
 
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
@@ -119,7 +119,7 @@ class FortiOSDeviceScanner(DeviceScanner):
                     name = ""
                     if self._fos_major_version == 6:
                         name = client["host"]["name"]
-                    elif self._fos_major_version ==7:
+                    elif self._fos_major_version == 7:
                         name = client["hostname"]
                     else:
                         _LOGGER.error("unsupported FortiOS version, fos_major_version =  %s", str(self._fos_major_version))
