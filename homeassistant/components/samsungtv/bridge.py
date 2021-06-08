@@ -21,8 +21,10 @@ from homeassistant.helpers.device_registry import format_mac
 
 from .const import (
     CONF_DESCRIPTION,
+    LEGACY_PORT,
     LOGGER,
     METHOD_LEGACY,
+    METHOD_WEBSOCKET,
     RESULT_AUTH_MISSING,
     RESULT_CANNOT_CONNECT,
     RESULT_NOT_SUPPORTED,
@@ -44,13 +46,36 @@ def mac_from_device_info(info):
     return None
 
 
+async def async_get_device_info(hass, bridge, host):
+    """Fetch the port, method, and device info."""
+    return await hass.async_add_executor_job(_get_device_info, bridge, host)
+
+
+def _get_device_info(bridge, host):
+    """Fetch the port, method, and device info."""
+    if bridge:
+        return bridge.port, bridge.method, bridge.device_info()
+
+    for port in WEBSOCKET_PORTS:
+        bridge = SamsungTVBridge.get_bridge(METHOD_WEBSOCKET, host, port)
+        if info := bridge.device_info():
+            return port, METHOD_WEBSOCKET, info
+
+    bridge = SamsungTVBridge.get_bridge(METHOD_LEGACY, host, LEGACY_PORT)
+    result = bridge.try_connect()
+    if result in (RESULT_SUCCESS, RESULT_AUTH_MISSING):
+        return LEGACY_PORT, METHOD_LEGACY, None
+
+    return None, None, None
+
+
 class SamsungTVBridge(ABC):
     """The Base Bridge abstract class."""
 
     @staticmethod
     def get_bridge(method, host, port=None, token=None):
         """Get Bridge instance."""
-        if method == METHOD_LEGACY:
+        if method == METHOD_LEGACY or port == LEGACY_PORT:
             return SamsungTVLegacyBridge(method, host, port)
         return SamsungTVWSBridge(method, host, port, token)
 
@@ -60,7 +85,6 @@ class SamsungTVBridge(ABC):
         self.method = method
         self.host = host
         self.token = None
-        self.default_port = None
         self._remote = None
         self._callback = None
 
@@ -151,7 +175,7 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
 
     def __init__(self, method, host, port):
         """Initialize Bridge."""
-        super().__init__(method, host, None)
+        super().__init__(method, host, LEGACY_PORT)
         self.config = {
             CONF_NAME: VALUE_CONF_NAME,
             CONF_DESCRIPTION: VALUE_CONF_NAME,
@@ -230,7 +254,6 @@ class SamsungTVWSBridge(SamsungTVBridge):
         """Initialize Bridge."""
         super().__init__(method, host, port)
         self.token = token
-        self.default_port = 8001
 
     def mac_from_device(self):
         """Try to fetch the mac address of the TV."""

@@ -5,6 +5,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components.media_player.const import DOMAIN as MP_DOMAIN
+from homeassistant.config_entries import ConfigEntryNotReady
 from homeassistant.const import (
     CONF_HOST,
     CONF_MAC,
@@ -17,7 +18,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
-from .bridge import SamsungTVBridge
+from .bridge import SamsungTVBridge, async_get_device_info, mac_from_device_info
 from .const import CONF_ON_ACTION, DEFAULT_NAME, DOMAIN, LOGGER, METHOD_WEBSOCKET
 
 
@@ -108,16 +109,30 @@ async def async_setup_entry(hass, entry):
 
 async def _async_create_bridge_with_updated_data(hass, entry):
     """Create a bridge object and update any missing data in the config entry."""
-    bridge = _async_get_device_bridge(entry.data)
     updated_data = {}
+    host = entry.data[CONF_HOST]
+    info = None
 
-    if bridge.port is None and bridge.default_port is not None:
-        # For backward compat, set default port for websocket tv
-        updated_data[CONF_PORT] = bridge.default_port
-        bridge = _async_get_device_bridge({**entry.data, **updated_data})
+    if not entry.data.get(CONF_PORT) or not entry.data.get(CONF_METHOD):
+        # When we imported from yaml we didn't setup the method
+        # because we didn't know it
+        port, method, info = await async_get_device_info(hass, None, host)
+        if not port:
+            raise ConfigEntryNotReady(
+                "Failed to determine connection method, make sure the device is on."
+            )
+
+        updated_data[CONF_PORT] = port
+        updated_data[CONF_METHOD] = method
+
+    bridge = _async_get_device_bridge({**entry.data, **updated_data})
 
     if not entry.data.get(CONF_MAC) and bridge.method == METHOD_WEBSOCKET:
-        if mac := await hass.async_add_executor_job(bridge.mac_from_device):
+        if info:
+            mac = mac_from_device_info(info)
+        else:
+            mac = await hass.async_add_executor_job(bridge.mac_from_device)
+        if mac:
             updated_data[CONF_MAC] = mac
 
     if updated_data:
