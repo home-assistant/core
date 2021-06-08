@@ -455,6 +455,7 @@ async def get_system_info(hass, include_components):
         "android_app_stt_version": G_CURRENT_ANDROID_STT_V,
         "linux_apt_version": G_CURRENT_LINUX_V,
         "zigbee2mqtt_version": G_CURRENT_ZIGBEE2MQTT_V,
+        "gate_model": ais_global.get_ais_gate_model()
     }
 
     if include_components:
@@ -489,6 +490,7 @@ def get_system_info_sync(hass):
         "android_app_stt_version": G_CURRENT_ANDROID_STT_V,
         "linux_apt_version": G_CURRENT_LINUX_V,
         "zigbee2mqtt_version": G_CURRENT_ZIGBEE2MQTT_V,
+        "gate_model": ais_global.get_ais_gate_model()
     }
     return info_object
 

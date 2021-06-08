@@ -397,6 +397,9 @@ async def _set_ais_secure_android_id_dom(hass, call):
         },
     )
 
+    # check the gate model
+    hass.states.async_set("sensor.ais_gate_model", ais_global.get_ais_gate_model())
+
 
 async def _init_local_sdcard(hass, call):
     if not ais_global.has_root():

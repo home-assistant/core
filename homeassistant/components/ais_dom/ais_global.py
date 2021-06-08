@@ -88,6 +88,7 @@ G_MODEL_SONOFF_T13 = "sonoff_t13"
 #
 G_AIS_SECURE_ANDROID_DOM_FOLDER = "/data/data/pl.sviete.dom/files/home/AIS/.dom"
 G_AIS_SECURE_ANDROID_ID_DOM = None
+G_AIS_GATE_MODEL = None
 G_AIS_SECURE_ANDROID_ID_DOM_FILE = (
     "/data/data/pl.sviete.dom/files/home/AIS/.dom/.ais_secure_android_id_dom"
 )
@@ -158,6 +159,24 @@ def say_direct(text):
         )
     except Exception as e:
         pass
+
+
+def get_ais_gate_model():
+    global G_AIS_GATE_MODEL
+    if G_AIS_GATE_MODEL is not None:
+        return G_AIS_GATE_MODEL
+
+    try:
+        ws_resp = requests.get(
+            G_HTTP_REST_SERVICE_BASE_URL.format("127.0.0.1"),
+            timeout=10,
+        )
+        data = ws_resp.json()
+        ais_model = data.get("Model")
+        G_AIS_GATE_MODEL = ais_model
+    except Exception:
+        ais_model = platform.machine()
+    return ais_model
 
 
 def get_sercure_android_id_dom():

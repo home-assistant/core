@@ -35,6 +35,7 @@ async def async_setup(hass, config):
         "",
         {"friendly_name": "Unikalny identyfikator bramki"},
     )
+    hass.states.async_set("sensor.ais_gate_model", "", {})
     hass.states.async_set("sensor.selected_entity", "", {})
     hass.states.async_set("sensor.ais_speech_status", "DONE", {})
     hass.states.async_set(
