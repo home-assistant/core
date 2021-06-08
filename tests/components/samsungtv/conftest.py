@@ -21,6 +21,7 @@ def remote_fixture():
         remote = Mock()
         remote.__enter__ = Mock()
         remote.__exit__ = Mock()
+        remote.port.return_value = 55000
         remote_class.return_value = remote
         yield remote
 
@@ -37,6 +38,7 @@ def remotews_fixture():
         remotews = Mock()
         remotews.__enter__ = Mock()
         remotews.__exit__ = Mock()
+        remotews.port.return_value = 8002
         remotews.rest_device_info.return_value = {
             "id": "uuid:be9554b9-c9fb-41f4-8920-22da015376a4",
             "device": {

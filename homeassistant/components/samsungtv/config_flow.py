@@ -24,7 +24,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.typing import DiscoveryInfoType
 
-from .bridge import SamsungTVBridge
+from .bridge import SamsungTVBridge, async_get_device_info, mac_from_device_info
 from .const import (
     ATTR_PROPERTIES,
     CONF_MANUFACTURER,
@@ -45,23 +45,6 @@ from .const import (
 
 DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str, vol.Required(CONF_NAME): str})
 SUPPORTED_METHODS = [METHOD_LEGACY, METHOD_WEBSOCKET]
-
-
-def _get_device_info(host):
-    """Fetch device info by any websocket method."""
-    for port in WEBSOCKET_PORTS:
-        bridge = SamsungTVBridge.get_bridge(METHOD_WEBSOCKET, host, port)
-        if info := bridge.device_info():
-            return info
-    return None
-
-
-async def async_get_device_info(hass, bridge, host):
-    """Fetch device info from bridge or websocket."""
-    if bridge:
-        return await hass.async_add_executor_job(bridge.device_info)
-
-    return await hass.async_add_executor_job(_get_device_info, host)
 
 
 def _strip_uuid(udn):
@@ -134,7 +117,9 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _async_get_and_check_device_info(self):
         """Try to get the device info."""
-        info = await async_get_device_info(self.hass, self._bridge, self._host)
+        _port, _method, info = await async_get_device_info(
+            self.hass, self._bridge, self._host
+        )
         if not info:
             raise data_entry_flow.AbortFlow(RESULT_NOT_SUPPORTED)
         dev_info = info.get("device", {})
@@ -146,8 +131,8 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._name = name.replace("[TV] ", "") if name else device_type
         self._title = f"{self._name} ({self._model})"
         self._udn = _strip_uuid(dev_info.get("udn", info["id"]))
-        if dev_info.get("networkType") == "wireless" and dev_info.get("wifiMac"):
-            self._mac = format_mac(dev_info.get("wifiMac"))
+        if mac := mac_from_device_info(info):
+            self._mac = mac
         self._device_info = info
 
     async def async_step_import(self, user_input=None):
@@ -156,11 +141,11 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # since the TV may be off at startup
         await self._async_set_name_host_from_input(user_input)
         self._async_abort_entries_match({CONF_HOST: self._host})
-        if user_input.get(CONF_PORT) in WEBSOCKET_PORTS:
+        port = user_input.get(CONF_PORT)
+        if port in WEBSOCKET_PORTS:
             user_input[CONF_METHOD] = METHOD_WEBSOCKET
-        else:
+        elif port == LEGACY_PORT:
             user_input[CONF_METHOD] = METHOD_LEGACY
-            user_input[CONF_PORT] = LEGACY_PORT
         user_input[CONF_MANUFACTURER] = DEFAULT_MANUFACTURER
         return self.async_create_entry(
             title=self._title,
@@ -291,7 +276,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             bridge = SamsungTVBridge.get_bridge(
                 self._reauth_entry.data[CONF_METHOD], self._reauth_entry.data[CONF_HOST]
             )
-            result = bridge.try_connect()
+            result = await self.hass.async_add_executor_job(bridge.try_connect)
             if result == RESULT_SUCCESS:
                 new_data = dict(self._reauth_entry.data)
                 new_data[CONF_TOKEN] = bridge.token
