@@ -67,7 +67,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Coinbase from a config entry."""
 
     # Do a one-time handle of options from YAML
-    if entry.source == SOURCE_IMPORT and entry.options == {}:
+    if entry.source == SOURCE_IMPORT and not entry.options:
         import_options: dict[str, list[str]] = {
             CONF_CURRENCIES: [],
             CONF_EXCHANGE_RATES: [],
