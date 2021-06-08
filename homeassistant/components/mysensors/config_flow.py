@@ -54,7 +54,6 @@ def _get_schema_common(user_input: dict[str, str]) -> dict:
     schema = {
         vol.Required(
             CONF_VERSION,
-            default="",
             description={
                 "suggested_value": user_input.get(CONF_VERSION, DEFAULT_VERSION)
             },
