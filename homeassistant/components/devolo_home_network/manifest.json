@@ -16,5 +16,6 @@
     "@2Fake",
     "@Shutgun"
   ],
-  "quality_scale": "platinum"
+  "quality_scale": "platinum",
+  "iot_class": "local_polling"
 }
