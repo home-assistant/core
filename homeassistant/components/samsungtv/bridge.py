@@ -17,6 +17,7 @@ from homeassistant.const import (
     CONF_TIMEOUT,
     CONF_TOKEN,
 )
+from homeassistant.helpers.device_registry import format_mac
 
 from .const import (
     CONF_DESCRIPTION,
@@ -32,6 +33,15 @@ from .const import (
     VALUE_CONF_NAME,
     WEBSOCKET_PORTS,
 )
+
+
+def mac_from_device_info(info):
+    """Extract the mac address from the device info."""
+    if info is not None:
+        dev_info = info.get("device", {})
+        if dev_info.get("networkType") == "wireless" and dev_info.get("wifiMac"):
+            return format_mac(dev_info.get("wifiMac"))
+    return None
 
 
 class SamsungTVBridge(ABC):
@@ -65,6 +75,10 @@ class SamsungTVBridge(ABC):
     @abstractmethod
     def device_info(self):
         """Try to gather infos of this TV."""
+
+    @abstractmethod
+    def mac_from_device(self):
+        """Try to fetch the mac address of the TV."""
 
     def is_on(self):
         """Tells if the TV is on."""
@@ -148,6 +162,10 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
             CONF_TIMEOUT: 1,
         }
 
+    def mac_from_device(self):
+        """Try to fetch the mac address of the TV."""
+        return None
+
     def try_connect(self):
         """Try to connect to the Legacy TV."""
         config = {
@@ -213,6 +231,10 @@ class SamsungTVWSBridge(SamsungTVBridge):
         super().__init__(method, host, port)
         self.token = token
         self.default_port = 8001
+
+    def mac_from_device(self):
+        """Try to fetch the mac address of the TV."""
+        return mac_from_device_info(self.device_info())
 
     def try_connect(self):
         """Try to connect to the Websocket TV."""
