@@ -296,10 +296,6 @@ jobs:
             # Create version tag
             create_manifest "${docker_reg}" "${{ needs.init.outputs.version }}" "${{ needs.init.outputs.version }}"
 
-            # Create series version tag (e.g. 2021.6.x)
-            v="${{ needs.init.outputs.version }}"
-            create_manifest "${docker_reg}" "${v%.*}.x" "${{ needs.init.outputs.version }}"
-
             # Create general tags
             if [[ "${{ needs.init.outputs.version }}" =~ d ]]; then
               create_manifest "${docker_reg}" "dev" "${{ needs.init.outputs.version }}"
@@ -311,5 +307,9 @@ jobs:
               create_manifest "${docker_reg}" "latest" "${{ needs.init.outputs.version }}"
               create_manifest "${docker_reg}" "beta" "${{ needs.init.outputs.version }}"
               create_manifest "${docker_reg}" "rc" "${{ needs.init.outputs.version }}"
+
+              # Create series version tag (e.g. 2021.6.x)
+              v="${{ needs.init.outputs.version }}"
+              create_manifest "${docker_reg}" "${v%.*}.x" "${{ needs.init.outputs.version }}"
             fi
           done
