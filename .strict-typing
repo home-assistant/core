@@ -46,6 +46,7 @@ homeassistant.components.local_ip.*
 homeassistant.components.lock.*
 homeassistant.components.mailbox.*
 homeassistant.components.media_player.*
+homeassistant.components.mysensors.*
 homeassistant.components.nam.*
 homeassistant.components.network.*
 homeassistant.components.notify.*
@@ -73,6 +74,7 @@ homeassistant.components.vacuum.*
 homeassistant.components.water_heater.*
 homeassistant.components.weather.*
 homeassistant.components.websocket_api.*
+homeassistant.components.zodiac.*
 homeassistant.components.zeroconf.*
 homeassistant.components.zone.*
 homeassistant.components.zwave_js.*

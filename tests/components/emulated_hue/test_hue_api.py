@@ -219,6 +219,10 @@ def hue_client(loop, hass_hue, aiohttp_client):
                 "light.bed_light": {emulated_hue.CONF_ENTITY_HIDDEN: True},
                 # Kitchen light is explicitly excluded from being exposed
                 "light.kitchen_lights": {emulated_hue.CONF_ENTITY_HIDDEN: True},
+                # Entrance light is explicitly excluded from being exposed
+                "light.entrance_color_white_lights": {
+                    emulated_hue.CONF_ENTITY_HIDDEN: True
+                },
                 # Ceiling Fan is explicitly excluded from being exposed
                 "fan.ceiling_fan": {emulated_hue.CONF_ENTITY_HIDDEN: True},
                 # Expose the script

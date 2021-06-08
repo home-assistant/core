@@ -154,12 +154,13 @@ class AirVisualGeographySensor(AirVisualEntity, SensorEntity):
             }
         )
         self._config_entry = config_entry
-        self._icon = icon
         self._kind = kind
         self._locale = locale
         self._name = name
         self._state = None
-        self._unit = unit
+
+        self._attr_icon = icon
+        self._attr_unit_of_measurement = unit
 
     @property
     def available(self):
@@ -196,7 +197,7 @@ class AirVisualGeographySensor(AirVisualEntity, SensorEntity):
 
         if self._kind == SENSOR_KIND_LEVEL:
             aqi = data[f"aqi{self._locale}"]
-            self._state, self._icon = async_get_pollutant_level_info(aqi)
+            self._state, self._attr_icon = async_get_pollutant_level_info(aqi)
         elif self._kind == SENSOR_KIND_AQI:
             self._state = data[f"aqi{self._locale}"]
         elif self._kind == SENSOR_KIND_POLLUTANT:
@@ -244,16 +245,12 @@ class AirVisualNodeProSensor(AirVisualEntity, SensorEntity):
         """Initialize."""
         super().__init__(coordinator)
 
-        self._device_class = device_class
         self._kind = kind
         self._name = name
         self._state = None
-        self._unit = unit
 
-    @property
-    def device_class(self):
-        """Return the device class."""
-        return self._device_class
+        self._attr_device_class = device_class
+        self._attr_unit_of_measurement = unit
 
     @property
     def device_info(self):

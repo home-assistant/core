@@ -106,24 +106,23 @@ class DeconzBaseLight(DeconzDevice, LightEntity):
         """Set up light."""
         super().__init__(device, gateway)
 
-        self._features = 0
         self.update_features(self._device)
 
     def update_features(self, device):
         """Calculate supported features of device."""
         if device.brightness is not None:
-            self._features |= SUPPORT_BRIGHTNESS
-            self._features |= SUPPORT_FLASH
-            self._features |= SUPPORT_TRANSITION
+            self._attr_supported_features |= SUPPORT_BRIGHTNESS
+            self._attr_supported_features |= SUPPORT_FLASH
+            self._attr_supported_features |= SUPPORT_TRANSITION
 
         if device.ct is not None:
-            self._features |= SUPPORT_COLOR_TEMP
+            self._attr_supported_features |= SUPPORT_COLOR_TEMP
 
         if device.xy is not None or (device.hue is not None and device.sat is not None):
-            self._features |= SUPPORT_COLOR
+            self._attr_supported_features |= SUPPORT_COLOR
 
         if device.effect is not None:
-            self._features |= SUPPORT_EFFECT
+            self._attr_supported_features |= SUPPORT_EFFECT
 
     @property
     def brightness(self):
@@ -157,11 +156,6 @@ class DeconzBaseLight(DeconzDevice, LightEntity):
     def is_on(self):
         """Return true if light is on."""
         return self._device.state
-
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        return self._features
 
     async def async_turn_on(self, **kwargs):
         """Turn on light."""

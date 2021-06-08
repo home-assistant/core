@@ -846,6 +846,7 @@ omit =
     homeassistant/components/ripple/sensor.py
     homeassistant/components/rituals_perfume_genie/binary_sensor.py
     homeassistant/components/rituals_perfume_genie/entity.py
+    homeassistant/components/rituals_perfume_genie/number.py
     homeassistant/components/rituals_perfume_genie/sensor.py
     homeassistant/components/rituals_perfume_genie/switch.py
     homeassistant/components/rituals_perfume_genie/__init__.py
@@ -973,6 +974,7 @@ omit =
     homeassistant/components/squeezebox/__init__.py
     homeassistant/components/squeezebox/browse_media.py
     homeassistant/components/squeezebox/media_player.py
+    homeassistant/components/ssdp/util.py
     homeassistant/components/starline/*
     homeassistant/components/starlingbank/sensor.py
     homeassistant/components/steam_online/sensor.py
