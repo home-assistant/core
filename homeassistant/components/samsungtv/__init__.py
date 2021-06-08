@@ -91,7 +91,7 @@ async def async_setup_entry(hass, entry):
     """Set up the Samsung TV platform."""
 
     # Initialize bridge
-    bridge = _async_create_bridge_with_updated_data(hass, entry)
+    bridge = await _async_create_bridge_with_updated_data(hass, entry)
 
     def stop_bridge(event):
         """Stop SamsungTV bridge connection."""
@@ -106,7 +106,7 @@ async def async_setup_entry(hass, entry):
     return True
 
 
-async def _async_create_bridge_with_updated_data(hass, entry, bridge):
+async def _async_create_bridge_with_updated_data(hass, entry):
     """Create a bridge object and update any missing data in the config entry."""
     bridge = _async_get_device_bridge(entry.data)
     updated_data = {}
@@ -114,6 +114,7 @@ async def _async_create_bridge_with_updated_data(hass, entry, bridge):
     if bridge.port is None and bridge.default_port is not None:
         # For backward compat, set default port for websocket tv
         updated_data[CONF_PORT] = bridge.default_port
+        bridge = _async_get_device_bridge({**entry.data, **updated_data})
 
     if not entry.data.get(CONF_MAC) and bridge.method == METHOD_WEBSOCKET:
         if mac := await hass.async_add_executor_job(bridge.mac_from_device):
@@ -123,7 +124,6 @@ async def _async_create_bridge_with_updated_data(hass, entry, bridge):
         data = entry.data.copy()
         data.update(updated_data)
         hass.config_entries.async_update_entry(entry, data=data)
-        bridge = _async_get_device_bridge(entry.data)
 
     return bridge
 
