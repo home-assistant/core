@@ -25,6 +25,8 @@ from .const import (
 )
 from .utils import get_tradable_asset_pairs
 
+CALL_RATE_LIMIT_SLEEP = 1
+
 PLATFORMS = ["sensor"]
 
 _LOGGER = logging.getLogger(__name__)
@@ -125,7 +127,8 @@ class KrakenData:
                 self._config_entry, options=options
             )
         await self._async_refresh_tradable_asset_pairs()
-        await asyncio.sleep(1)  # Wait 1 second to avoid triggering the CallRateLimiter
+        # Wait 1 second to avoid triggering the CallRateLimiter
+        await asyncio.sleep(CALL_RATE_LIMIT_SLEEP)
         self.coordinator = DataUpdateCoordinator(
             self._hass,
             _LOGGER,
