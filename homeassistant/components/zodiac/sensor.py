@@ -1,5 +1,6 @@
 """Support for tracking the zodiac sign."""
 from __future__ import annotations
+
 from typing import Any
 
 from homeassistant.components.sensor import SensorEntity
@@ -178,8 +179,8 @@ class ZodiacSensor(SensorEntity):
 
     def __init__(self) -> None:
         """Initialize the zodiac sensor."""
-        self._attrs: dict[str, str] = None
-        self._state: str = None
+        self._attrs: dict[str, str] = {}
+        self._state: str = ""
 
     @property
     def unique_id(self) -> str:
