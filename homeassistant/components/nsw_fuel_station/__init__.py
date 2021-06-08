@@ -7,9 +7,7 @@ import logging
 
 from nsw_fuel import FuelCheckClient, FuelCheckError, Station
 
-from homeassistant.helpers.update_coordinator import (
-    DataUpdateCoordinator,
-    UpdateFailed)
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DATA_NSW_FUEL_STATION
 
@@ -62,4 +60,6 @@ def fetch_station_price_data(client: FuelCheckClient) -> StationPriceData | None
         )
 
     except FuelCheckError as exc:
-        raise UpdateFailed(f"Failed to fetch NSW Fuel station price data: {exc}") from exc
+        raise UpdateFailed(
+            f"Failed to fetch NSW Fuel station price data: {exc}"
+        ) from exc
