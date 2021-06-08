@@ -12,6 +12,7 @@ from homeassistant.components.devolo_home_network.const import (
     TITLE,
 )
 from homeassistant.const import CONF_BASE, CONF_IP_ADDRESS
+from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import (
     RESULT_TYPE_ABORT,
     RESULT_TYPE_CREATE_ENTRY,
@@ -21,7 +22,7 @@ from homeassistant.data_entry_flow import (
 from .const import DISCOVERY_INFO, DISCOVERY_INFO_WRONG_DEVICE, IP
 
 
-async def test_form(hass):
+async def test_form(hass: HomeAssistant):
     """Test we get the form."""
     await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
@@ -64,7 +65,7 @@ async def test_form(hass):
     "exception_type",
     [DeviceNotFound, Exception],
 )
-async def test_form_error(hass, exception_type):
+async def test_form_error(hass: HomeAssistant, exception_type):
     """Test we handle errors."""
     expected_error = {DeviceNotFound: "cannot_connect", Exception: "unknown"}
     result = await hass.config_entries.flow.async_init(
@@ -86,7 +87,7 @@ async def test_form_error(hass, exception_type):
     assert result2["errors"] == {CONF_BASE: expected_error[exception_type]}
 
 
-async def test_show_zeroconf_form(hass):
+async def test_show_zeroconf_form(hass: HomeAssistant):
     """Test that the zeroconf confirmation form is served."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -99,7 +100,7 @@ async def test_show_zeroconf_form(hass):
     assert result["description_placeholders"] == {"host_name": "test"}
 
 
-async def test_abort_zeroconf_no_discovery(hass):
+async def test_abort_zeroconf_no_discovery(hass: HomeAssistant):
     """Test we abort zeroconf on missing discovery info."""
     await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
@@ -109,7 +110,7 @@ async def test_abort_zeroconf_no_discovery(hass):
     assert result["reason"] == "cannot_connect"
 
 
-async def test_abort_zeroconf_wrong_device(hass):
+async def test_abort_zeroconf_wrong_device(hass: HomeAssistant):
     """Test we abort zeroconf for wrong devices."""
     await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
@@ -121,7 +122,7 @@ async def test_abort_zeroconf_wrong_device(hass):
     assert result["reason"] == "home_control"
 
 
-async def test_step_zeroconf_confirm(hass):
+async def test_step_zeroconf_confirm(hass: HomeAssistant):
     """Test zeroconf confirmation with user input."""
     flow = config_flow.ConfigFlow()
     flow._discovery_info = DISCOVERY_INFO
@@ -133,11 +134,10 @@ async def test_step_zeroconf_confirm(hass):
     }
 
 
-async def test_validate_input(hass, mock_zeroconf):
+@pytest.mark.usefixtures("mock_device")
+@pytest.mark.usefixtures("mock_zeroconf")
+async def test_validate_input(hass: HomeAssistant):
     """Test input validaton."""
-    with patch("devolo_plc_api.device.Device.async_connect"), patch(
-        "devolo_plc_api.device.Device.async_disconnect"
-    ):
-        info = await config_flow.validate_input(hass, {CONF_IP_ADDRESS: IP})
-        assert SERIAL_NUMBER in info
-        assert TITLE in info
+    info = await config_flow.validate_input(hass, {CONF_IP_ADDRESS: IP})
+    assert SERIAL_NUMBER in info
+    assert TITLE in info

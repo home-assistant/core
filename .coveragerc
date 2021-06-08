@@ -203,8 +203,6 @@ omit =
     homeassistant/components/devolo_home_control/sensor.py
     homeassistant/components/devolo_home_control/subscriber.py
     homeassistant/components/devolo_home_control/switch.py
-    homeassistant/components/devolo_home_network/device.py
-    homeassistant/components/devolo_home_network/sensor.py
     homeassistant/components/dht/sensor.py
     homeassistant/components/digital_ocean/*
     homeassistant/components/digitalloggers/switch.py
