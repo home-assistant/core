@@ -1840,7 +1840,7 @@ class AisColudData:
             json_ws_resp["restore_error"] = restore_error
         if restore_info is not None:
             json_ws_resp["restore_info"] = restore_info
-        self.hass.states.async_set("sensor.aisbackupinfo", step, json_ws_resp)
+        self.hass.states.async_set("sensor.ais_backup_info", step, json_ws_resp)
         info_text = ""
         if backup_error is not None:
             info_text = info_text + backup_error

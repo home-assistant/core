@@ -71,7 +71,7 @@ select_rss_help_item:
       example: '2. Co nowego'
 
 get_backup_info:
-  description: Pobiera informacje o stanie kopii zapasowej ustawień w portalu integratora i zapisuje je do sensora aisbackupinfo
+  description: Pobiera informacje o stanie kopii zapasowej ustawień w portalu integratora i zapisuje je do sensora ais_backup_info
 
 set_backup_step:
   description: Ustawia status kopi zapasowej

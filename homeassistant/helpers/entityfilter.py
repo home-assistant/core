@@ -175,7 +175,7 @@ def convert_include_exclude_filter(
             "sensor.ais_player_mode",
             "sensor.ais_secure_android_id_dom",
             "sensor.ais_wifi_service_current_network_info",
-            "sensor.aisbackupinfo",
+            "sensor.ais_backup_info",
             "sensor.aisbookmarkslist",
             "sensor.aisfavoriteslist",
             "sensor.aisknowledgeanswer",
