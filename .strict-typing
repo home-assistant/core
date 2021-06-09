@@ -54,6 +54,7 @@ homeassistant.components.notify.*
 homeassistant.components.number.*
 homeassistant.components.onewire.*
 homeassistant.components.persistent_notification.*
+homeassistant.components.pi_hole.*
 homeassistant.components.proximity.*
 homeassistant.components.recorder.purge
 homeassistant.components.recorder.repack
