@@ -7,7 +7,7 @@
             "unknown": "Unerwarteter Fehler"
         },
         "error": {
-            "cannot_connect": "Es konnte keine Verbindung zu einem Konnected-Panel unter {host}:{port} hergestellt werden."
+            "cannot_connect": "Verbindung fehlgeschlagen"
         },
         "step": {
             "confirm": {
