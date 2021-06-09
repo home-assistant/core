@@ -175,8 +175,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
     @property
     def unique_id(self) -> str:
         """Return the unique ID for this media_player."""
-        macs = self.coordinator.data.mac_addresses
-        return f"{macs}_{self._zone_id}"
+        return f"{self.coordinator.data.device_id}_{self._zone_id}"
 
     async def async_turn_on(self):
         """Turn the media player on."""
