@@ -102,7 +102,7 @@ class FortiOSDeviceScanner(DeviceScanner):
             else:
                 _LOGGER.error(
                     "Unsupported FortiOS version, fos_major_version =  %s",
-                    str(self._fos_major_version)
+                    str(self._fos_major_version),
                 )
 
     def scan_devices(self):
@@ -133,7 +133,7 @@ class FortiOSDeviceScanner(DeviceScanner):
                     else:
                         _LOGGER.error(
                             "Unsupported FortiOS version, fos_major_version =  %s",
-                            str(self._fos_major_version)
+                            str(self._fos_major_version),
                         )
                         return None
                     _LOGGER.debug("Getting device name=%s", name)
