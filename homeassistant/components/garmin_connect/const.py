@@ -12,7 +12,6 @@ from homeassistant.const import (
 
 DOMAIN = "garmin_connect"
 ATTRIBUTION = "connect.garmin.com"
-DATA_API = "api"
 DATA_COORDINATOR = "coordinator"
 DEFAULT_UPDATE_INTERVAL = timedelta(minutes=5)
 

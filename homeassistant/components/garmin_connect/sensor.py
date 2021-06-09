@@ -5,7 +5,7 @@ import logging
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_ID
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_ID, DEVICE_CLASS_TIMESTAMP
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
@@ -88,7 +88,6 @@ class GarminConnectSensor(CoordinatorEntity, SensorEntity):
         self._icon = icon
         self._device_class = device_class
         self._enabled_default = enabled_default
-        self._state = None
 
     @property
     def name(self):
@@ -116,7 +115,11 @@ class GarminConnectSensor(CoordinatorEntity, SensorEntity):
                 self.coordinator.data[self._type]
             )
             if active_alarms:
-                self._state = active_alarms[0]
+                value = active_alarms[0]
+
+        if self._device_class == DEVICE_CLASS_TIMESTAMP:
+            return value
+
         return round(value, 2)
 
     @property
