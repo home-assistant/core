@@ -46,6 +46,8 @@ class AxisEventBase(AxisEntityBase):
         super().__init__(device)
         self.event = event
 
+        self._attr_should_poll = False
+
     async def async_added_to_hass(self) -> None:
         """Subscribe sensors events."""
         self.event.register_callback(self.update_callback)
@@ -64,11 +66,6 @@ class AxisEventBase(AxisEntityBase):
     def name(self):
         """Return the name of the event."""
         return f"{self.device.name} {self.event.TYPE} {self.event.id}"
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
 
     @property
     def unique_id(self):

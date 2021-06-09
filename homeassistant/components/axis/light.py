@@ -51,6 +51,7 @@ class AxisLight(AxisEventBase, LightEntity):
 
         self._attr_supported_color_modes = {COLOR_MODE_BRIGHTNESS}
         self._attr_color_mode = COLOR_MODE_BRIGHTNESS
+        self._attr_should_poll = True
 
     async def async_added_to_hass(self) -> None:
         """Subscribe lights events."""
@@ -108,8 +109,3 @@ class AxisLight(AxisEventBase, LightEntity):
             )
         )
         self.current_intensity = current_intensity["data"]["intensity"]
-
-    @property
-    def should_poll(self):
-        """Brightness needs polling."""
-        return True
