@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "cannot_connect": "Konnte keine Verbindung zum Controller mit url {base_url} herstellen"
+            "cannot_connect": "Konnte keine Verbindung zum Controller mit URL {base_url} herstellen"
         },
         "step": {
             "user": {
@@ -10,7 +10,7 @@
                     "lights": "Vera Switch-Ger\u00e4te-IDs, die im Home Assistant als Lichter behandelt werden sollen.",
                     "vera_controller_url": "Controller-URL"
                 },
-                "description": "Stellen Sie unten eine Vera-Controller-Url zur Verf\u00fcgung. Sie sollte wie folgt aussehen: http://192.168.1.161:3480.",
+                "description": "Stellen Sie unten eine Vera-Controller-URL zur Verf\u00fcgung. Sie sollte wie folgt aussehen: http://192.168.1.161:3480.",
                 "title": "Richten Sie den Vera-Controller ein"
             }
         }
