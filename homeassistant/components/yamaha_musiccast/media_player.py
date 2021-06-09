@@ -113,16 +113,6 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
         self.coordinator.musiccast.remove_callback(self.async_write_ha_state)
 
     @property
-    def zone_id(self):
-        """Return the zone_id of the media_player."""
-        return self._zone_id
-
-    @property
-    def ip_address(self):
-        """Return the ip address of the musiccast device."""
-        return self.coordinator.musiccast.ip
-
-    @property
     def should_poll(self):
         """Push an update after each command."""
         return False
