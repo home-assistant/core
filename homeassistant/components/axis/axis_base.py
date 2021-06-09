@@ -1,5 +1,6 @@
 """Base classes for Axis entities."""
 
+from homeassistant.const import ATTR_IDENTIFIERS
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
@@ -14,7 +15,7 @@ class AxisEntityBase(Entity):
         """Initialize the Axis event."""
         self.device = device
 
-        self._attr_device_info = {"identifiers": {(AXIS_DOMAIN, device.unique_id)}}
+        self._attr_device_info = {ATTR_IDENTIFIERS: {(AXIS_DOMAIN, device.unique_id)}}
 
     async def async_added_to_hass(self):
         """Subscribe device events."""
