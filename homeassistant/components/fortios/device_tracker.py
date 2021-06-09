@@ -124,12 +124,6 @@ class FortiOSDeviceScanner(DeviceScanner):
                         name = client["host"]["name"]
                     elif self._fos_major_version == 7:
                         name = client["hostname"]
-                    else:
-                        _LOGGER.error(
-                            "FortiOS version %s is not supported",
-                            str(self._fos_major_version),
-                        )
-                        return None
                     _LOGGER.debug("Getting device name=%s", name)
                     return name
                 except KeyError as kex:
