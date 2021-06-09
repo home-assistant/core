@@ -6,12 +6,11 @@ from wled import Device as WLEDDevice, WLEDConnectionError
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP,
     ATTR_EFFECT,
     ATTR_HS_COLOR,
     ATTR_RGB_COLOR,
+    ATTR_RGBW_COLOR,
     ATTR_TRANSITION,
-    ATTR_WHITE_VALUE,
     DOMAIN as LIGHT_DOMAIN,
 )
 from homeassistant.components.wled import SCAN_INTERVAL
@@ -142,20 +141,6 @@ async def test_segment_change_state(
             on=True,
             segment_id=0,
             transition=50,
-        )
-
-    with patch("wled.WLED.segment") as light_mock:
-        await hass.services.async_call(
-            LIGHT_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "light.wled_rgb_light_segment_0", ATTR_COLOR_TEMP: 400},
-            blocking=True,
-        )
-        await hass.async_block_till_done()
-        light_mock.assert_called_once_with(
-            color_primary=(255, 159, 70),
-            on=True,
-            segment_id=0,
         )
 
 
@@ -394,36 +379,7 @@ async def test_rgbw_light(
 
     state = hass.states.get("light.wled_rgbw_light")
     assert state.state == STATE_ON
-    assert state.attributes.get(ATTR_HS_COLOR) == (0.0, 100.0)
-    assert state.attributes.get(ATTR_WHITE_VALUE) == 139
-
-    with patch("wled.WLED.segment") as light_mock:
-        await hass.services.async_call(
-            LIGHT_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "light.wled_rgbw_light", ATTR_COLOR_TEMP: 400},
-            blocking=True,
-        )
-        await hass.async_block_till_done()
-        light_mock.assert_called_once_with(
-            on=True,
-            segment_id=0,
-            color_primary=(255, 159, 70, 139),
-        )
-
-    with patch("wled.WLED.segment") as light_mock:
-        await hass.services.async_call(
-            LIGHT_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "light.wled_rgbw_light", ATTR_WHITE_VALUE: 100},
-            blocking=True,
-        )
-        await hass.async_block_till_done()
-        light_mock.assert_called_once_with(
-            color_primary=(255, 0, 0, 100),
-            on=True,
-            segment_id=0,
-        )
+    assert state.attributes.get(ATTR_RGBW_COLOR) == (255, 0, 0, 139)
 
     with patch("wled.WLED.segment") as light_mock:
         await hass.services.async_call(
@@ -431,14 +387,13 @@ async def test_rgbw_light(
             SERVICE_TURN_ON,
             {
                 ATTR_ENTITY_ID: "light.wled_rgbw_light",
-                ATTR_RGB_COLOR: (255, 255, 255),
-                ATTR_WHITE_VALUE: 100,
+                ATTR_RGBW_COLOR: (255, 255, 255, 255),
             },
             blocking=True,
         )
         await hass.async_block_till_done()
         light_mock.assert_called_once_with(
-            color_primary=(0, 0, 0, 100),
+            color_primary=(255, 255, 255, 255),
             on=True,
             segment_id=0,
         )
