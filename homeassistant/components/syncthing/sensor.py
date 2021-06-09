@@ -124,19 +124,16 @@ class FolderSensor(SensorEntity):
         self._folder_label = folder_label
         self._state = None
         self._unsub_timer = None
-        self._version = version
 
-        self._short_server_id = server_id.split("-")[0]
+        short_server_id = server_id.split("-")[0]
 
-        self._attr_name = (
-            f"{self._short_server_id} {self._folder_id} {self._folder_label}"
-        )
-        self._attr_unique_id = f"{self._short_server_id}-{self._folder_id}"
+        self._attr_name = f"{short_server_id} {self._folder_id} {self._folder_label}"
+        self._attr_unique_id = f"{short_server_id}-{self._folder_id}"
         self._attr_device_info = {
             "identifiers": {(DOMAIN, self._server_id)},
-            "name": f"Syncthing ({self._syncthing.url})",
+            "name": f"Syncthing ({syncthing.url})",
             "manufacturer": "Syncthing Team",
-            "sw_version": self._version,
+            "sw_version": version,
             "entry_type": "service",
         }
 
@@ -296,24 +293,21 @@ class SpeedSensor(CoordinatorEntity):
     def __init__(self, coordinator, url, server_id, name, version):
         """Initialize the sensor."""
         super().__init__(coordinator)
-        self._url = url
-        self._server_id = server_id
         self._name = name
-        self._version = version
-        self._short_server_id = server_id.split("-")[0]
         self._last_total_value = self._current_value()
         self._last_updated = monotonic()
         self._state = 0
 
-        self._attr_name = f"{self._short_server_id} {self._name}"
-        self._attr_unique_id = f"{self._short_server_id}-{self._name}"
+        short_server_id = server_id.split("-")[0]
+        self._attr_name = f"{short_server_id} {self._name}"
+        self._attr_unique_id = f"{short_server_id}-{self._name}"
         self._attr_icon = "mdi:speedometer"
         self._attr_unit_of_measurement = DATA_RATE_MEGABYTES_PER_SECOND
         self._attr_device_info = {
-            "identifiers": {(DOMAIN, self._server_id)},
-            "name": f"Syncthing ({self._url})",
+            "identifiers": {(DOMAIN, server_id)},
+            "name": f"Syncthing ({url})",
             "manufacturer": "Syncthing Team",
-            "sw_version": self._version,
+            "sw_version": version,
             "entry_type": "service",
         }
 
