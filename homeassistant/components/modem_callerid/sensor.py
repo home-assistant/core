@@ -23,11 +23,15 @@ from .const import (
     STATE_RING,
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_DEVICE, default=DEFAULT_DEVICE): cv.string,
-    }
+PLATFORM_SCHEMA = cv.deprecated(
+    vol.All(
+        PLATFORM_SCHEMA.extend(
+            {
+                vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+                vol.Optional(CONF_DEVICE, default=DEFAULT_DEVICE): cv.string,
+            }
+        )
+    )
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -35,8 +39,14 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the Modem Caller ID sensor."""
-    name = entry.data[CONF_NAME]
-    device = entry.data[CONF_DEVICE]
+    try:
+        name = entry.data[CONF_NAME]
+    except KeyError:
+        name = DEFAULT_NAME
+    try:
+        device = entry.data[CONF_DEVICE]
+    except KeyError:
+        device = DEFAULT_DEVICE
     api = hass.data[DOMAIN][entry.entry_id][DATA_KEY_API]
     async_add_entities(
         [
@@ -132,7 +142,7 @@ class ModemCalleridSensor(SensorEntity):
                 }
                 self.set_attributes(att)
             self._state = STATE_RING
-            self.schedule_update_ha_state()
+            self.async_schedule_update_ha_state()
         elif newstate == self.api.STATE_CALLERID:
             att = {
                 "cid_time": self.api.get_cidtime,
@@ -141,11 +151,11 @@ class ModemCalleridSensor(SensorEntity):
             }
             self.set_attributes(att)
             self._state = STATE_CALLERID
-            self.schedule_update_ha_state()
+            self.async_schedule_update_ha_state()
         elif newstate == self.api.STATE_IDLE:
             self._state = STATE_IDLE
-            self.schedule_update_ha_state()
+            self.async_schedule_update_ha_state()
 
-    def reject_call(self) -> None:
+    async def reject_call(self) -> None:
         """Reject Incoming Call."""
-        self.api.reject_call(self.device)
+        await self.api.reject_call(self.device)

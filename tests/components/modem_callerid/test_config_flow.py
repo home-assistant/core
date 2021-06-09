@@ -51,9 +51,7 @@ async def test_flow_user(hass):
 
     entry.add_to_hass(hass)
 
-    service_info = {
-        "device": DEFAULT_DEVICE,
-    }
+    service_info = {"device": DEFAULT_DEVICE}
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}, data=service_info
     )

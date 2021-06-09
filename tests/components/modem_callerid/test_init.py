@@ -6,7 +6,7 @@ from phone_modem import exceptions
 from homeassistant.components.modem_callerid.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 
-from . import CONF_DATA
+from . import CONF_DATA, _create_mocked_modem, _patch_init_modem
 
 from tests.common import MockConfigEntry
 
@@ -18,10 +18,8 @@ async def test_setup_config(hass):
         data=CONF_DATA,
     )
     config_entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.modem_callerid.PhoneModem",
-    ):
+    mocked_modem = await _create_mocked_modem()
+    with _patch_init_modem(mocked_modem):
         await hass.config_entries.async_setup(config_entry.entry_id)
     assert config_entry.state == ConfigEntryState.LOADED
 

@@ -3,7 +3,7 @@
   "name": "Phone Modem",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/modem_callerid",
-  "requirements": ["phone_modem==0.0.2", "aioserial==1.3.0"],
+  "requirements": ["phone_modem==0.1.0", "aioserial==1.3.0"],
   "codeowners": ["@tkdrob"],
   "iot_class": "local_polling"
 }

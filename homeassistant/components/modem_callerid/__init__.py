@@ -1,5 +1,4 @@
 """The Modem Caller ID integration."""
-import asyncio
 import logging
 
 from phone_modem import PhoneModem, exceptions
@@ -36,6 +35,7 @@ async def async_setup_entry(hass, entry):
     device = entry.data[CONF_DEVICE]
     try:
         api = PhoneModem(device)
+        await api.initialize(device)
     except (
         FileNotFoundError,
         exceptions.SerialError,
@@ -59,16 +59,9 @@ async def async_setup_entry(hass, entry):
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS
-            ]
-        )
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        api = hass.data[DOMAIN].pop(entry.unique_id)
-        api.close()
+        api = hass.data[DOMAIN].pop(entry.entry_id)[DATA_KEY_API]
+        await api.close()
 
     return unload_ok
