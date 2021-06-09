@@ -13,9 +13,11 @@
       }
     },
     "abort": {
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
-      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "yxc_control_url_missing": "The control URL is not given in the ssdp description."
+    },
+    "error": {
+      "no_musiccast_device": "This device seems to be no MusicCast Device."
     }
   }
 }
