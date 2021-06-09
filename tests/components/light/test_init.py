@@ -1883,3 +1883,42 @@ async def test_services_filter_parameters(
 
     _, data = ent1.last_call("turn_off")
     assert data == {}
+
+
+def test_valid_supported_color_modes():
+    """Test valid_supported_color_modes."""
+    supported = {light.COLOR_MODE_HS}
+    assert light.valid_supported_color_modes(supported) == supported
+
+    # Supported color modes must not be empty
+    supported = set()
+    with pytest.raises(vol.Error):
+        light.valid_supported_color_modes(supported)
+
+    # COLOR_MODE_WHITE must be combined with a color mode supporting color
+    supported = {light.COLOR_MODE_WHITE}
+    with pytest.raises(vol.Error):
+        light.valid_supported_color_modes(supported)
+
+    supported = {light.COLOR_MODE_WHITE, light.COLOR_MODE_COLOR_TEMP}
+    with pytest.raises(vol.Error):
+        light.valid_supported_color_modes(supported)
+
+    supported = {light.COLOR_MODE_WHITE, light.COLOR_MODE_HS}
+    assert light.valid_supported_color_modes(supported) == supported
+
+    # COLOR_MODE_ONOFF must be the only supported mode
+    supported = {light.COLOR_MODE_ONOFF}
+    assert light.valid_supported_color_modes(supported) == supported
+
+    supported = {light.COLOR_MODE_ONOFF, light.COLOR_MODE_COLOR_TEMP}
+    with pytest.raises(vol.Error):
+        light.valid_supported_color_modes(supported)
+
+    # COLOR_MODE_BRIGHTNESS must be the only supported mode
+    supported = {light.COLOR_MODE_BRIGHTNESS}
+    assert light.valid_supported_color_modes(supported) == supported
+
+    supported = {light.COLOR_MODE_BRIGHTNESS, light.COLOR_MODE_COLOR_TEMP}
+    with pytest.raises(vol.Error):
+        light.valid_supported_color_modes(supported)
