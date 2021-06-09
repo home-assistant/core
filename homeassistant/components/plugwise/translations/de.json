@@ -8,13 +8,13 @@
             "invalid_auth": "Ung\u00fcltige Authentifizierung",
             "unknown": "Unerwarteter Fehler"
         },
-        "flow_title": "Smile: {name}",
+        "flow_title": "{name}",
         "step": {
             "user": {
                 "data": {
                     "flow_type": "Verbindungstyp"
                 },
-                "description": "Details",
+                "description": "Produkt:",
                 "title": "Plugwise Typ"
             },
             "user_gateway": {

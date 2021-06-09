@@ -86,15 +86,12 @@ class UniFiBandwidthSensor(UniFiClient, SensorEntity):
 
     DOMAIN = DOMAIN
 
+    _attr_unit_of_measurement = DATA_MEGABYTES
+
     @property
     def name(self) -> str:
         """Return the name of the client."""
         return f"{super().name} {self.TYPE.upper()}"
-
-    @property
-    def unit_of_measurement(self) -> str:
-        """Return the unit of measurement of this entity."""
-        return DATA_MEGABYTES
 
     async def options_updated(self) -> None:
         """Config entry options are updated, remove entity if option is disabled."""
@@ -134,10 +131,7 @@ class UniFiUpTimeSensor(UniFiClient, SensorEntity):
     DOMAIN = DOMAIN
     TYPE = UPTIME_SENSOR
 
-    @property
-    def device_class(self) -> str:
-        """Return device class."""
-        return DEVICE_CLASS_TIMESTAMP
+    _attr_device_class = DEVICE_CLASS_TIMESTAMP
 
     @property
     def name(self) -> str:

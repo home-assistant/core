@@ -12,9 +12,11 @@ homeassistant.components.airly.*
 homeassistant.components.aladdin_connect.*
 homeassistant.components.alarm_control_panel.*
 homeassistant.components.amazon_polly.*
+homeassistant.components.ambee.*
 homeassistant.components.ampio.*
 homeassistant.components.automation.*
 homeassistant.components.binary_sensor.*
+homeassistant.components.bluetooth_tracker.*
 homeassistant.components.bond.*
 homeassistant.components.brother.*
 homeassistant.components.calendar.*
@@ -23,6 +25,8 @@ homeassistant.components.canary.*
 homeassistant.components.cover.*
 homeassistant.components.device_automation.*
 homeassistant.components.device_tracker.*
+homeassistant.components.dnsip.*
+homeassistant.components.dunehd.*
 homeassistant.components.elgato.*
 homeassistant.components.fitbit.*
 homeassistant.components.fritzbox.*
@@ -39,10 +43,13 @@ homeassistant.components.integration.*
 homeassistant.components.knx.*
 homeassistant.components.kraken.*
 homeassistant.components.light.*
+homeassistant.components.local_ip.*
 homeassistant.components.lock.*
 homeassistant.components.mailbox.*
 homeassistant.components.media_player.*
+homeassistant.components.mysensors.*
 homeassistant.components.nam.*
+homeassistant.components.network.*
 homeassistant.components.notify.*
 homeassistant.components.number.*
 homeassistant.components.onewire.*
@@ -56,6 +63,7 @@ homeassistant.components.scene.*
 homeassistant.components.sensor.*
 homeassistant.components.slack.*
 homeassistant.components.sonos.media_player
+homeassistant.components.ssdp.*
 homeassistant.components.sun.*
 homeassistant.components.switch.*
 homeassistant.components.synology_dsm.*
@@ -63,10 +71,12 @@ homeassistant.components.systemmonitor.*
 homeassistant.components.tcp.*
 homeassistant.components.tts.*
 homeassistant.components.upcloud.*
+homeassistant.components.uptime.*
 homeassistant.components.vacuum.*
 homeassistant.components.water_heater.*
 homeassistant.components.weather.*
 homeassistant.components.websocket_api.*
+homeassistant.components.zodiac.*
 homeassistant.components.zeroconf.*
 homeassistant.components.zone.*
 homeassistant.components.zwave_js.*

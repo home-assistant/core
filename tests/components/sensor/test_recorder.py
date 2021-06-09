@@ -3,6 +3,8 @@
 from datetime import timedelta
 from unittest.mock import patch, sentinel
 
+from pytest import approx
+
 from homeassistant.components.recorder import history
 from homeassistant.components.recorder.const import DATA_INSTANCE
 from homeassistant.components.recorder.models import process_timestamp_to_utc_isoformat
@@ -31,9 +33,9 @@ def test_compile_hourly_statistics(hass_recorder):
             {
                 "statistic_id": "sensor.test1",
                 "start": process_timestamp_to_utc_isoformat(zero),
-                "mean": 15.0,
-                "min": 10.0,
-                "max": 20.0,
+                "mean": approx(16.440677966101696),
+                "min": approx(10.0),
+                "max": approx(30.0),
                 "last_reset": None,
                 "state": None,
                 "sum": None,
@@ -75,8 +77,8 @@ def test_compile_hourly_energy_statistics(hass_recorder):
                 "mean": None,
                 "min": None,
                 "last_reset": process_timestamp_to_utc_isoformat(zero),
-                "state": 20.0,
-                "sum": 10.0,
+                "state": approx(20.0),
+                "sum": approx(10.0),
             },
             {
                 "statistic_id": "sensor.test1",
@@ -85,8 +87,8 @@ def test_compile_hourly_energy_statistics(hass_recorder):
                 "mean": None,
                 "min": None,
                 "last_reset": process_timestamp_to_utc_isoformat(four),
-                "state": 40.0,
-                "sum": 10.0,
+                "state": approx(40.0),
+                "sum": approx(10.0),
             },
             {
                 "statistic_id": "sensor.test1",
@@ -95,8 +97,8 @@ def test_compile_hourly_energy_statistics(hass_recorder):
                 "mean": None,
                 "min": None,
                 "last_reset": process_timestamp_to_utc_isoformat(four),
-                "state": 70.0,
-                "sum": 40.0,
+                "state": approx(70.0),
+                "sum": approx(40.0),
             },
         ]
     }
@@ -135,8 +137,8 @@ def test_compile_hourly_energy_statistics2(hass_recorder):
                 "mean": None,
                 "min": None,
                 "last_reset": process_timestamp_to_utc_isoformat(zero),
-                "state": 20.0,
-                "sum": 10.0,
+                "state": approx(20.0),
+                "sum": approx(10.0),
             },
             {
                 "statistic_id": "sensor.test1",
@@ -145,8 +147,8 @@ def test_compile_hourly_energy_statistics2(hass_recorder):
                 "mean": None,
                 "min": None,
                 "last_reset": process_timestamp_to_utc_isoformat(four),
-                "state": 40.0,
-                "sum": 10.0,
+                "state": approx(40.0),
+                "sum": approx(10.0),
             },
             {
                 "statistic_id": "sensor.test1",
@@ -155,8 +157,8 @@ def test_compile_hourly_energy_statistics2(hass_recorder):
                 "mean": None,
                 "min": None,
                 "last_reset": process_timestamp_to_utc_isoformat(four),
-                "state": 70.0,
-                "sum": 40.0,
+                "state": approx(70.0),
+                "sum": approx(40.0),
             },
         ],
         "sensor.test2": [
@@ -167,8 +169,8 @@ def test_compile_hourly_energy_statistics2(hass_recorder):
                 "mean": None,
                 "min": None,
                 "last_reset": process_timestamp_to_utc_isoformat(zero),
-                "state": 130.0,
-                "sum": 20.0,
+                "state": approx(130.0),
+                "sum": approx(20.0),
             },
             {
                 "statistic_id": "sensor.test2",
@@ -177,8 +179,8 @@ def test_compile_hourly_energy_statistics2(hass_recorder):
                 "mean": None,
                 "min": None,
                 "last_reset": process_timestamp_to_utc_isoformat(four),
-                "state": 45.0,
-                "sum": -95.0,
+                "state": approx(45.0),
+                "sum": approx(-95.0),
             },
             {
                 "statistic_id": "sensor.test2",
@@ -187,8 +189,8 @@ def test_compile_hourly_energy_statistics2(hass_recorder):
                 "mean": None,
                 "min": None,
                 "last_reset": process_timestamp_to_utc_isoformat(four),
-                "state": 75.0,
-                "sum": -65.0,
+                "state": approx(75.0),
+                "sum": approx(-65.0),
             },
         ],
         "sensor.test3": [
@@ -199,8 +201,8 @@ def test_compile_hourly_energy_statistics2(hass_recorder):
                 "mean": None,
                 "min": None,
                 "last_reset": process_timestamp_to_utc_isoformat(zero),
-                "state": 5.0,
-                "sum": 5.0,
+                "state": approx(5.0),
+                "sum": approx(5.0),
             },
             {
                 "statistic_id": "sensor.test3",
@@ -209,8 +211,8 @@ def test_compile_hourly_energy_statistics2(hass_recorder):
                 "mean": None,
                 "min": None,
                 "last_reset": process_timestamp_to_utc_isoformat(four),
-                "state": 50.0,
-                "sum": 30.0,
+                "state": approx(50.0),
+                "sum": approx(30.0),
             },
             {
                 "statistic_id": "sensor.test3",
@@ -219,8 +221,8 @@ def test_compile_hourly_energy_statistics2(hass_recorder):
                 "mean": None,
                 "min": None,
                 "last_reset": process_timestamp_to_utc_isoformat(four),
-                "state": 90.0,
-                "sum": 70.0,
+                "state": approx(90.0),
+                "sum": approx(70.0),
             },
         ],
     }
@@ -243,9 +245,9 @@ def test_compile_hourly_statistics_unchanged(hass_recorder):
             {
                 "statistic_id": "sensor.test1",
                 "start": process_timestamp_to_utc_isoformat(four),
-                "mean": 20.0,
-                "min": 20.0,
-                "max": 20.0,
+                "mean": approx(30.0),
+                "min": approx(30.0),
+                "max": approx(30.0),
                 "last_reset": None,
                 "state": None,
                 "sum": None,
@@ -271,9 +273,9 @@ def test_compile_hourly_statistics_partially_unavailable(hass_recorder):
             {
                 "statistic_id": "sensor.test1",
                 "start": process_timestamp_to_utc_isoformat(zero),
-                "mean": 17.5,
-                "min": 10.0,
-                "max": 25.0,
+                "mean": approx(21.1864406779661),
+                "min": approx(10.0),
+                "max": approx(25.0),
                 "last_reset": None,
                 "state": None,
                 "sum": None,
@@ -318,9 +320,9 @@ def record_states(hass):
 
     zero = dt_util.utcnow()
     one = zero + timedelta(minutes=1)
-    two = one + timedelta(minutes=15)
-    three = two + timedelta(minutes=30)
-    four = three + timedelta(minutes=15)
+    two = one + timedelta(minutes=10)
+    three = two + timedelta(minutes=40)
+    four = three + timedelta(minutes=10)
 
     states = {mp: [], sns1: [], sns2: [], sns3: []}
     with patch("homeassistant.components.recorder.dt_util.utcnow", return_value=one):
@@ -340,9 +342,9 @@ def record_states(hass):
         states[sns3].append(set_state(sns3, "15", attributes=sns3_attr))
 
     with patch("homeassistant.components.recorder.dt_util.utcnow", return_value=three):
-        states[sns1].append(set_state(sns1, "20", attributes=sns1_attr))
-        states[sns2].append(set_state(sns2, "20", attributes=sns2_attr))
-        states[sns3].append(set_state(sns3, "20", attributes=sns3_attr))
+        states[sns1].append(set_state(sns1, "30", attributes=sns1_attr))
+        states[sns2].append(set_state(sns2, "30", attributes=sns2_attr))
+        states[sns3].append(set_state(sns3, "30", attributes=sns3_attr))
 
     return zero, four, states
 

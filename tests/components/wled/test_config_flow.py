@@ -91,7 +91,10 @@ async def test_full_zeroconf_flow_implementation(
     assert result2["data"][CONF_MAC] == "aabbccddeeff"
 
 
-@patch("homeassistant.components.wled.WLED.update", side_effect=WLEDConnectionError)
+@patch(
+    "homeassistant.components.wled.coordinator.WLED.update",
+    side_effect=WLEDConnectionError,
+)
 async def test_connection_error(
     update_mock: MagicMock, hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
@@ -109,7 +112,10 @@ async def test_connection_error(
     assert result.get("errors") == {"base": "cannot_connect"}
 
 
-@patch("homeassistant.components.wled.WLED.update", side_effect=WLEDConnectionError)
+@patch(
+    "homeassistant.components.wled.coordinator.WLED.update",
+    side_effect=WLEDConnectionError,
+)
 async def test_zeroconf_connection_error(
     update_mock: MagicMock, hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
@@ -126,7 +132,10 @@ async def test_zeroconf_connection_error(
     assert result.get("reason") == "cannot_connect"
 
 
-@patch("homeassistant.components.wled.WLED.update", side_effect=WLEDConnectionError)
+@patch(
+    "homeassistant.components.wled.coordinator.WLED.update",
+    side_effect=WLEDConnectionError,
+)
 async def test_zeroconf_confirm_connection_error(
     update_mock: MagicMock, hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:

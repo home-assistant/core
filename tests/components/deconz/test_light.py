@@ -170,7 +170,6 @@ async def test_lights_and_groups(hass, aioclient_mock, mock_deconz_websocket):
         SERVICE_TURN_ON,
         {
             ATTR_ENTITY_ID: "light.rgb_light",
-            ATTR_COLOR_TEMP: 2500,
             ATTR_BRIGHTNESS: 200,
             ATTR_TRANSITION: 5,
             ATTR_FLASH: FLASH_SHORT,
@@ -179,7 +178,6 @@ async def test_lights_and_groups(hass, aioclient_mock, mock_deconz_websocket):
         blocking=True,
     )
     assert aioclient_mock.mock_calls[1][2] == {
-        "ct": 2500,
         "bri": 200,
         "transitiontime": 50,
         "alert": "select",

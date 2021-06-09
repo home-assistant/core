@@ -40,12 +40,14 @@
                     "max_temp": "Maximale Solltemperatur (f\u00fcr Voreinstellung min und max = 0 verwenden)",
                     "min_kelvin": "Minimale unterst\u00fctzte Farbtemperatur in Kelvin",
                     "min_temp": "Minimal Solltemperatur (f\u00fcr Voreinstellung min und max = 0 verwenden)",
+                    "set_temp_divided": "Geteilten Temperaturwert f\u00fcr Solltemperaturbefehl verwenden",
                     "support_color": "Farbunterst\u00fctzung erzwingen",
                     "temp_divider": "Teiler f\u00fcr Temperaturwerte (0 = Standard verwenden)",
+                    "temp_step_override": "Zieltemperaturschritt",
                     "tuya_max_coltemp": "Vom Ger\u00e4t gemeldete maximale Farbtemperatur",
                     "unit_of_measurement": "Vom Ger\u00e4t verwendete Temperatureinheit"
                 },
-                "description": "Optionen zur Anpassung der angezeigten Informationen f\u00fcr das Ger\u00e4t `{Ger\u00e4tename}` konfigurieren",
+                "description": "Optionen zur Anpassung der angezeigten Informationen f\u00fcr das Ger\u00e4t `{device_name}` vom Typ: {device_type}konfigurieren",
                 "title": "Tuya-Ger\u00e4t konfigurieren"
             },
             "init": {

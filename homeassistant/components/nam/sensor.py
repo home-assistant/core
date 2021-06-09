@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import timedelta
 from typing import Any
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_ICON
 from homeassistant.core import HomeAssistant
@@ -45,7 +45,8 @@ class NAMSensor(CoordinatorEntity, SensorEntity):
         """Initialize."""
         super().__init__(coordinator)
         self.sensor_type = sensor_type
-        self._description = SENSORS[self.sensor_type]
+        self._description = SENSORS[sensor_type]
+        self._attr_state_class = SENSORS[sensor_type][ATTR_STATE_CLASS]
 
     @property
     def name(self) -> str:

@@ -4,7 +4,7 @@ aiodiscover==1.4.2
 aiohttp==3.7.4.post0
 aiohttp_cors==0.7.0
 astral==2.2
-async-upnp-client==0.17.0
+async-upnp-client==0.18.0
 async_timeout==3.0.1
 attrs==21.2.0
 awesomeversion==21.4.0
@@ -17,20 +17,19 @@ defusedxml==0.7.1
 distro==1.5.0
 emoji==1.2.0
 hass-nabucasa==0.43.0
-home-assistant-frontend==20210518.0
+home-assistant-frontend==20210603.0
 httpx==0.18.0
-jinja2>=2.11.3
-netdisco==2.8.3
+ifaddr==0.1.7
+jinja2==3.0.1
 paho-mqtt==1.5.1
 pillow==8.1.2
 pip>=8.0.3,<20.3
-pyroute2==0.5.18
 python-slugify==4.0.1
 pyyaml==5.4.1
 requests==2.25.1
 ruamel.yaml==0.15.100
 scapy==2.4.5
-sqlalchemy==1.4.13
+sqlalchemy==1.4.17
 voluptuous-serialize==2.4.0
 voluptuous==0.12.1
 yarl==1.6.3
@@ -47,6 +46,10 @@ h11>=0.12.0
 # Constrain httplib2 to protect against GHSA-93xj-8mrv-444m
 # https://github.com/advisories/GHSA-93xj-8mrv-444m
 httplib2>=0.19.0
+
+# gRPC 1.32+ currently causes issues on ARMv7, see:
+# https://github.com/home-assistant/core/issues/40148
+grpcio==1.31.0
 
 # This is a old unmaintained library and is replaced with pycryptodome
 pycrypto==1000000000.0.0

@@ -9,7 +9,6 @@ set_state:
     infrared:
       name: infrared
       description: Automatic infrared level when light brightness is low.
-      example: 255
       selector:
         number:
           min: 0
@@ -23,7 +22,6 @@ set_state:
     transition:
       name: Transition
       description: Duration it takes to get to the final state.
-      example: 10
       selector:
         number:
           min: 0
@@ -32,7 +30,6 @@ set_state:
     power:
       name: Power
       description: Turn the light on or off. Leave out to keep the power as it is.
-      example: false
       selector:
         boolean:
 
@@ -47,7 +44,6 @@ effect_pulse:
     mode:
       name: Mode
       description: "Decides how colors are changed."
-      example: strobe
       selector:
         select:
           options:
@@ -59,7 +55,6 @@ effect_pulse:
     brightness:
       name: Brightness
       description: Number indicating brightness of the temporary color.
-      example: 120
       selector:
         number:
           min: 0
@@ -79,7 +74,6 @@ effect_pulse:
     period:
       name: Period
       description: Duration of the effect.
-      example: 3
       default: 1.0
       selector:
         number:
@@ -90,7 +84,6 @@ effect_pulse:
     cycles:
       name: Cycles
       description: Number of times the effect should run.
-      example: 2
       default: 1
       selector:
         number:
@@ -99,7 +92,6 @@ effect_pulse:
     power_on:
       name: Power on
       description: Powered off lights are temporarily turned on during the effect.
-      example: false
       default: true
       selector:
         boolean:
@@ -115,7 +107,6 @@ effect_colorloop:
     brightness:
       name: Brightness
       description: Number indicating brightness of the effect. Leave this out to maintain the current brightness of each participating light.
-      example: 120
       selector:
         number:
           min: 0
@@ -123,7 +114,6 @@ effect_colorloop:
     period:
       name: Period
       description: Duration between color changes.
-      example: 180
       default: 60
       selector:
         number:
@@ -134,7 +124,6 @@ effect_colorloop:
     change:
       name: Change
       description: Hue movement per period, in degrees on a color wheel.
-      example: 45
       default: 20
       selector:
         number:
@@ -144,7 +133,6 @@ effect_colorloop:
     spread:
       name: Spread
       description: Maximum hue difference between participating lights, in degrees on a color wheel.
-      example: 0
       default: 30
       selector:
         number:
@@ -154,7 +142,6 @@ effect_colorloop:
     power_on:
       name: Power on
       description: Powered off lights are temporarily turned on during the effect.
-      example: false
       default: true
       selector:
         boolean:

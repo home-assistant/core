@@ -7,7 +7,7 @@
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen"
         },
-        "flow_title": "Sony Songpal {name} ({host})",
+        "flow_title": "{name} ({host})",
         "step": {
             "init": {
                 "description": "M\u00f6chten Sie {name} ({host}) einrichten?"

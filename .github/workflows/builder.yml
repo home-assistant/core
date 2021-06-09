@@ -115,7 +115,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build base image
-        uses: home-assistant/builder@2021.05.0
+        uses: home-assistant/builder@2021.06.2
         with:
           args: |
             $BUILD_ARGS \
@@ -167,7 +167,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build base image
-        uses: home-assistant/builder@2021.05.0
+        uses: home-assistant/builder@2021.06.2
         with:
           args: |
             $BUILD_ARGS \
@@ -307,5 +307,9 @@ jobs:
               create_manifest "${docker_reg}" "latest" "${{ needs.init.outputs.version }}"
               create_manifest "${docker_reg}" "beta" "${{ needs.init.outputs.version }}"
               create_manifest "${docker_reg}" "rc" "${{ needs.init.outputs.version }}"
+
+              # Create series version tag (e.g. 2021.6)
+              v="${{ needs.init.outputs.version }}"
+              create_manifest "${docker_reg}" "${v%.*}" "${{ needs.init.outputs.version }}"
             fi
           done

@@ -33,6 +33,7 @@ homeassistant/components/alarmdecoder/* @ajschmidt8
 homeassistant/components/alexa/* @home-assistant/cloud @ochlocracy
 homeassistant/components/almond/* @gcampax @balloob
 homeassistant/components/alpha_vantage/* @fabaff
+homeassistant/components/ambee/* @frenck
 homeassistant/components/ambiclimate/* @danielhiversen
 homeassistant/components/ambient_station/* @bachya
 homeassistant/components/analytics/* @home-assistant/core @ludeeus
@@ -64,7 +65,7 @@ homeassistant/components/azure_service_bus/* @hfurubotten
 homeassistant/components/beewi_smartclim/* @alemuro
 homeassistant/components/bitcoin/* @fabaff
 homeassistant/components/bizkaibus/* @UgaitzEtxebarria
-homeassistant/components/blebox/* @gadgetmobile
+homeassistant/components/blebox/* @bbx-a @bbx-jp
 homeassistant/components/blink/* @fronzbot
 homeassistant/components/blueprint/* @home-assistant/core
 homeassistant/components/bmp280/* @belidzs
@@ -290,6 +291,7 @@ homeassistant/components/met/* @danielhiversen @thimic
 homeassistant/components/met_eireann/* @DylanGore
 homeassistant/components/meteo_france/* @hacf-fr @oncleben31 @Quentame
 homeassistant/components/meteoalarm/* @rolfberkenbosch
+homeassistant/components/meteoclimatic/* @adrianmo
 homeassistant/components/metoffice/* @MrHarcombe
 homeassistant/components/miflora/* @danielhiversen @basnijholt
 homeassistant/components/mikrotik/* @engrbm87
@@ -300,6 +302,7 @@ homeassistant/components/minio/* @tkislan
 homeassistant/components/mobile_app/* @robbiet480
 homeassistant/components/modbus/* @adamchengtkc @janiversen @vzahradnik
 homeassistant/components/modem_callerid/* @tkdrob
+homeassistant/components/modern_forms/* @wonderslug
 homeassistant/components/monoprice/* @etsinko @OnFreund
 homeassistant/components/moon/* @fabaff
 homeassistant/components/motion_blinds/* @starkillerOG
@@ -432,6 +435,7 @@ homeassistant/components/shell_command/* @home-assistant/core
 homeassistant/components/shelly/* @balloob @bieniu @thecode @chemelli74
 homeassistant/components/shiftr/* @fabaff
 homeassistant/components/shodan/* @fabaff
+homeassistant/components/sia/* @eavanvalkenburg
 homeassistant/components/sighthound/* @robmarkcole
 homeassistant/components/signal_messenger/* @bbernhard
 homeassistant/components/simplisafe/* @bachya
@@ -480,7 +484,7 @@ homeassistant/components/surepetcare/* @benleb
 homeassistant/components/swiss_hydrological_data/* @fabaff
 homeassistant/components/swiss_public_transport/* @fabaff
 homeassistant/components/switchbot/* @danielhiversen
-homeassistant/components/switcher_kis/* @tomerfi
+homeassistant/components/switcher_kis/* @tomerfi @thecode
 homeassistant/components/switchmate/* @danielhiversen
 homeassistant/components/syncthing/* @zhulik
 homeassistant/components/syncthru/* @nielstron
@@ -544,6 +548,7 @@ homeassistant/components/vlc_telnet/* @rodripf @dmcc
 homeassistant/components/volkszaehler/* @fabaff
 homeassistant/components/volumio/* @OnFreund
 homeassistant/components/wake_on_lan/* @ntilley905
+homeassistant/components/wallbox/* @hesselonline
 homeassistant/components/waqi/* @andrey-git
 homeassistant/components/watson_tts/* @rutkai
 homeassistant/components/weather/* @fabaff

@@ -52,7 +52,7 @@ async def async_setup(hass, config) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up config entry for SmartHab integration."""
 
     # Assign configuration variables

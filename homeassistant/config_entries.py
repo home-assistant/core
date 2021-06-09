@@ -11,8 +11,6 @@ from types import MappingProxyType, MethodType
 from typing import Any, Callable, Optional, cast
 import weakref
 
-import attr
-
 from homeassistant import data_entry_flow, loader
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import CALLBACK_TYPE, CoreState, HomeAssistant, callback
@@ -152,7 +150,8 @@ class ConfigEntry:
         "options",
         "unique_id",
         "supports_unload",
-        "system_options",
+        "pref_disable_new_entities",
+        "pref_disable_polling",
         "source",
         "state",
         "disabled_by",
@@ -170,7 +169,8 @@ class ConfigEntry:
         title: str,
         data: Mapping[str, Any],
         source: str,
-        system_options: dict,
+        pref_disable_new_entities: bool | None = None,
+        pref_disable_polling: bool | None = None,
         options: Mapping[str, Any] | None = None,
         unique_id: str | None = None,
         entry_id: str | None = None,
@@ -197,7 +197,15 @@ class ConfigEntry:
         self.options = MappingProxyType(options or {})
 
         # Entry system options
-        self.system_options = SystemOptions(**system_options)
+        if pref_disable_new_entities is None:
+            pref_disable_new_entities = False
+
+        self.pref_disable_new_entities = pref_disable_new_entities
+
+        if pref_disable_polling is None:
+            pref_disable_polling = False
+
+        self.pref_disable_polling = pref_disable_polling
 
         # Source of the configuration (user, discovery, cloud)
         self.source = source
@@ -384,6 +392,9 @@ class ConfigEntry:
             self.reason = None
             return True
 
+        if self.state == ConfigEntryState.NOT_LOADED:
+            return True
+
         if integration is None:
             try:
                 integration = await loader.async_get_integration(hass, self.domain)
@@ -535,7 +546,8 @@ class ConfigEntry:
             "title": self.title,
             "data": dict(self.data),
             "options": dict(self.options),
-            "system_options": self.system_options.as_dict(),
+            "pref_disable_new_entities": self.pref_disable_new_entities,
+            "pref_disable_polling": self.pref_disable_polling,
             "source": self.source,
             "unique_id": self.unique_id,
             "disabled_by": self.disabled_by,
@@ -615,16 +627,21 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
         # Check if config entry exists with unique ID. Unload it.
         existing_entry = None
 
-        if flow.unique_id is not None:
-            # Abort all flows in progress with same unique ID.
-            for progress_flow in self.async_progress():
-                if (
-                    progress_flow["handler"] == flow.handler
-                    and progress_flow["flow_id"] != flow.flow_id
-                    and progress_flow["context"].get("unique_id") == flow.unique_id
-                ):
-                    self.async_abort(progress_flow["flow_id"])
+        # Abort all flows in progress with same unique ID
+        # or the default discovery ID
+        for progress_flow in self.async_progress():
+            progress_unique_id = progress_flow["context"].get("unique_id")
+            if (
+                progress_flow["handler"] == flow.handler
+                and progress_flow["flow_id"] != flow.flow_id
+                and (
+                    (flow.unique_id and progress_unique_id == flow.unique_id)
+                    or progress_unique_id == DEFAULT_DISCOVERY_UNIQUE_ID
+                )
+            ):
+                self.async_abort(progress_flow["flow_id"])
 
+        if flow.unique_id is not None:
             # Reset unique ID when the default discovery ID has been used
             if flow.unique_id == DEFAULT_DISCOVERY_UNIQUE_ID:
                 await flow.async_set_unique_id(None)
@@ -647,7 +664,6 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
             title=result["title"],
             data=result["data"],
             options=result["options"],
-            system_options={},
             source=flow.context["source"],
             unique_id=flow.unique_id,
         )
@@ -840,8 +856,18 @@ class ConfigEntries:
             self._entries = {}
             return
 
-        self._entries = {
-            entry["entry_id"]: ConfigEntry(
+        entries = {}
+
+        for entry in config["entries"]:
+            pref_disable_new_entities = entry.get("pref_disable_new_entities")
+
+            # Between 0.98 and 2021.6 we stored 'disable_new_entities' in a system options dictionary
+            if pref_disable_new_entities is None and "system_options" in entry:
+                pref_disable_new_entities = entry.get("system_options", {}).get(
+                    "disable_new_entities"
+                )
+
+            entries[entry["entry_id"]] = ConfigEntry(
                 version=entry["version"],
                 domain=entry["domain"],
                 entry_id=entry["entry_id"],
@@ -850,15 +876,16 @@ class ConfigEntries:
                 title=entry["title"],
                 # New in 0.89
                 options=entry.get("options"),
-                # New in 0.98
-                system_options=entry.get("system_options", {}),
                 # New in 0.104
                 unique_id=entry.get("unique_id"),
                 # New in 2021.3
                 disabled_by=entry.get("disabled_by"),
+                # New in 2021.6
+                pref_disable_new_entities=pref_disable_new_entities,
+                pref_disable_polling=entry.get("pref_disable_polling"),
             )
-            for entry in config["entries"]
-        }
+
+        self._entries = entries
 
     async def async_setup(self, entry_id: str) -> bool:
         """Set up a config entry.
@@ -957,11 +984,12 @@ class ConfigEntries:
         self,
         entry: ConfigEntry,
         *,
-        unique_id: str | dict | None | UndefinedType = UNDEFINED,
-        title: str | dict | UndefinedType = UNDEFINED,
+        unique_id: str | None | UndefinedType = UNDEFINED,
+        title: str | UndefinedType = UNDEFINED,
         data: dict | UndefinedType = UNDEFINED,
         options: Mapping[str, Any] | UndefinedType = UNDEFINED,
-        system_options: dict | UndefinedType = UNDEFINED,
+        pref_disable_new_entities: bool | UndefinedType = UNDEFINED,
+        pref_disable_polling: bool | UndefinedType = UNDEFINED,
     ) -> bool:
         """Update a config entry.
 
@@ -973,13 +1001,17 @@ class ConfigEntries:
         """
         changed = False
 
-        if unique_id is not UNDEFINED and entry.unique_id != unique_id:
-            changed = True
-            entry.unique_id = cast(Optional[str], unique_id)
+        for attr, value in (
+            ("unique_id", unique_id),
+            ("title", title),
+            ("pref_disable_new_entities", pref_disable_new_entities),
+            ("pref_disable_polling", pref_disable_polling),
+        ):
+            if value == UNDEFINED or getattr(entry, attr) == value:
+                continue
 
-        if title is not UNDEFINED and entry.title != title:
+            setattr(entry, attr, value)
             changed = True
-            entry.title = cast(str, title)
 
         if data is not UNDEFINED and entry.data != data:  # type: ignore
             changed = True
@@ -988,13 +1020,6 @@ class ConfigEntries:
         if options is not UNDEFINED and entry.options != options:
             changed = True
             entry.options = MappingProxyType(options)
-
-        if (
-            system_options is not UNDEFINED
-            and entry.system_options.as_dict() != system_options
-        ):
-            changed = True
-            entry.system_options.update(**system_options)
 
         if not changed:
             return False
@@ -1396,21 +1421,6 @@ class OptionsFlow(data_entry_flow.FlowHandler):
     """Base class for config option flows."""
 
     handler: str
-
-
-@attr.s(slots=True)
-class SystemOptions:
-    """Config entry system options."""
-
-    disable_new_entities: bool = attr.ib(default=False)
-
-    def update(self, *, disable_new_entities: bool) -> None:
-        """Update properties."""
-        self.disable_new_entities = disable_new_entities
-
-    def as_dict(self) -> dict[str, Any]:
-        """Return dictionary version of this config entries system options."""
-        return {"disable_new_entities": self.disable_new_entities}
 
 
 class EntityRegistryDisabledHandler:
