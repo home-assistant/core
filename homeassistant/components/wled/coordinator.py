@@ -57,9 +57,6 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
 
         async def listen() -> None:
             """Listen for state changes via WebSocket."""
-            # Disable polling
-            self.update_interval = None
-
             try:
                 await self.wled.listen(callback=self.async_set_updated_data)
             except WLEDConnectionClosed as err:
@@ -74,10 +71,6 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
             if self.unsub:
                 self.unsub()
                 self.unsub = None
-
-            # Resume polling
-            self.update_interval = SCAN_INTERVAL
-            self._schedule_refresh()
 
         # Start listening
         self.hass.loop.create_task(listen())
