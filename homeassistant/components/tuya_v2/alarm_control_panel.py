@@ -135,7 +135,7 @@ class TuyaHaAlarm(TuyaHaDevice, AlarmControlPanelEntity):
     @property
     def state(self):
         """Return is alarm on."""
-        return self._is_on(self.tuyaDevice)
+        return self._is_on(self.tuya_device)
 
     @property
     def supported_features(self) -> int:

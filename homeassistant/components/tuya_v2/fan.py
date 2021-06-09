@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """Support for Tuya Fan."""
+from __future__ import annotations
 
 import json
 import logging
-from typing import Any, List, Optional
+from typing import Any
 
 from homeassistant.components.fan import (
     DIRECTION_FORWARD,
@@ -71,7 +72,7 @@ async def async_setup_entry(
     await async_discover_device(device_ids)
 
 
-def _setup_entities(hass, device_ids: List):
+def _setup_entities(hass, device_ids: list):
     """Set up Tuya Fan."""
     device_manager = hass.data[DOMAIN][TUYA_DEVICE_MANAGER]
     entities = []
@@ -88,38 +89,38 @@ class TuyaHaFan(TuyaHaDevice, FanEntity):
 
     def set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode of the fan."""
-        self.tuyaDeviceManager.sendCommands(
-            self.tuyaDevice.id, [{"code": DPCODE_MODE, "value": preset_mode}]
+        self.tuya_device_manager.sendCommands(
+            self.tuya_device.id, [{"code": DPCODE_MODE, "value": preset_mode}]
         )
 
     def set_direction(self, direction: str) -> None:
         """Set the direction of the fan."""
-        self.tuyaDeviceManager.sendCommands(
-            self.tuyaDevice.id, [{"code": DPCODE_FAN_DIRECTION, "value": direction}]
+        self.tuya_device_manager.sendCommands(
+            self.tuya_device.id, [{"code": DPCODE_FAN_DIRECTION, "value": direction}]
         )
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
-        self.tuyaDeviceManager.sendCommands(
-            self.tuyaDevice.id, [{"code": DPCODE_SWITCH, "value": False}]
+        self.tuya_device_manager.sendCommands(
+            self.tuya_device.id, [{"code": DPCODE_SWITCH, "value": False}]
         )
 
     def turn_on(
         self,
-        speed: Optional[str] = None,
-        percentage: Optional[int] = None,
-        preset_mode: Optional[str] = None,
+        speed: str = None,
+        percentage: int = None,
+        preset_mode: str = None,
         **kwargs: Any,
     ) -> None:
         """Turn on the fan."""
-        self.tuyaDeviceManager.sendCommands(
-            self.tuyaDevice.id, [{"code": DPCODE_SWITCH, "value": True}]
+        self.tuya_device_manager.sendCommands(
+            self.tuya_device.id, [{"code": DPCODE_SWITCH, "value": True}]
         )
 
     def oscillate(self, oscillating: bool) -> None:
         """Oscillate the fan."""
-        self.tuyaDeviceManager.sendCommands(
-            self.tuyaDevice.id,
+        self.tuya_device_manager.sendCommands(
+            self.tuya_device.id,
             [{"code": DPCODE_SWITCH_HORIZONTAL, "value": oscillating}],
         )
 
@@ -127,26 +128,26 @@ class TuyaHaFan(TuyaHaDevice, FanEntity):
     @property
     def is_on(self) -> bool:
         """Return true if fan is on."""
-        return self.tuyaDevice.status.get(DPCODE_SWITCH, False)
+        return self.tuya_device.status.get(DPCODE_SWITCH, False)
 
     @property
     def current_direction(self) -> str:
         """Return the current direction of the fan."""
         return (
             DIRECTION_FORWARD
-            if self.tuyaDevice.status.get(DPCODE_FAN_DIRECTION)
+            if self.tuya_device.status.get(DPCODE_FAN_DIRECTION)
             else DIRECTION_REVERSE
         )
 
     @property
     def oscillating(self) -> bool:
         """Return true if the fan is oscillating."""
-        return self.tuyaDevice.status.get(DPCODE_SWITCH_HORIZONTAL, False)
+        return self.tuya_device.status.get(DPCODE_SWITCH_HORIZONTAL, False)
 
     @property
-    def preset_modes(self) -> List:
+    def preset_modes(self) -> list:
         """Return the list of available preset_modes."""
-        data = json.loads(self.tuyaDevice.function.get(DPCODE_MODE, {}).values).get(
+        data = json.loads(self.tuya_device.function.get(DPCODE_MODE, {}).values).get(
             "range"
         )
         return data
@@ -154,25 +155,25 @@ class TuyaHaFan(TuyaHaDevice, FanEntity):
     @property
     def preset_mode(self) -> str:
         """Return the current preset_mode."""
-        return self.tuyaDevice.status.get(DPCODE_MODE)
+        return self.tuya_device.status.get(DPCODE_MODE)
 
     @property
     def percentage(self) -> int:
         """Return the current speed."""
         if not self.is_on:
             return 0
-        return self.tuyaDevice.status.get(DPCODE_FAN_SPEED, 0)
+        return self.tuya_device.status.get(DPCODE_FAN_SPEED, 0)
 
     @property
     def supported_features(self):
         """Flag supported features."""
         supports = 0
-        if DPCODE_MODE in self.tuyaDevice.status:
+        if DPCODE_MODE in self.tuya_device.status:
             supports = supports | SUPPORT_PRESET_MODE
-        if DPCODE_FAN_SPEED in self.tuyaDevice.status:
+        if DPCODE_FAN_SPEED in self.tuya_device.status:
             supports = supports | SUPPORT_SET_SPEED
-        if DPCODE_SWITCH_HORIZONTAL in self.tuyaDevice.status:
+        if DPCODE_SWITCH_HORIZONTAL in self.tuya_device.status:
             supports = supports | SUPPORT_OSCILLATE
-        if DPCODE_FAN_DIRECTION in self.tuyaDevice.status:
+        if DPCODE_FAN_DIRECTION in self.tuya_device.status:
             supports = supports | SUPPORT_DIRECTION
         return supports

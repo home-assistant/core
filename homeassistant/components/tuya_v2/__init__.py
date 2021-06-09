@@ -62,7 +62,7 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-first_init = True
+FIRST_INIT = True
 
 
 async def _init_tuya_sdk(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -100,17 +100,17 @@ async def _init_tuya_sdk(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     mq = TuyaOpenMQ(api)
     mq.start()
 
-    deviceManager = TuyaDeviceManager(api, mq)
+    device_manager = TuyaDeviceManager(api, mq)
 
     # Get device list
-    home_manager = TuyaHomeManager(api, mq, deviceManager)
+    home_manager = TuyaHomeManager(api, mq, device_manager)
     await hass.async_add_executor_job(home_manager.updateDeviceCache)
 
-    class tuyaDeviceListener(TuyaDeviceListener):
+    class DeviceListener(TuyaDeviceListener):
         def updateDevice(self, device: TuyaDevice):
             for haDevice in hass.data[DOMAIN][TUYA_HA_DEVICES]:
-                if haDevice.tuyaDevice.id == device.id:
-                    print("_update-->", self, ";->>", haDevice.tuyaDevice.status)
+                if haDevice.tuya_device.id == device.id:
+                    print("_update-->", self, ";->>", haDevice.tuya_device.status)
                     haDevice.schedule_update_ha_state()
 
         def addDevice(self, device: TuyaDevice):
@@ -132,7 +132,6 @@ async def _init_tuya_sdk(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 remove_device(hass, device.id)
 
                 for key, list in map.items():
-                    print("add device key->", key, "; value->", list)
                     if device.category in list:
                         device_add = True
                         async_dispatcher_send(
@@ -144,16 +143,18 @@ async def _init_tuya_sdk(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 device_manager.mq.stop()
                 mq = TuyaOpenMQ(device_manager.api)
                 mq.start()
-                hass.data[DOMAIN][TUYA_DEVICE_MANAGER].mq = mq
+
+                device_manager.mq = mq
+                mq.add_message_listener(device_manager._onMessage)
 
         def removeDevice(self, id: str):
             print("tuya remove device:", id)
             remove_device(hass, id)
 
-    __listener = tuyaDeviceListener()
+    __listener = DeviceListener()
     hass.data[DOMAIN][TUYA_MQTT_LISTENER] = __listener
-    deviceManager.addDeviceListener(__listener)
-    hass.data[DOMAIN][TUYA_DEVICE_MANAGER] = deviceManager
+    device_manager.addDeviceListener(__listener)
+    hass.data[DOMAIN][TUYA_DEVICE_MANAGER] = device_manager
 
     # Clean up device entities
     await cleanup_device_registry(hass)
@@ -161,19 +162,19 @@ async def _init_tuya_sdk(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     print("domain key->", str(hass.data[DOMAIN][TUYA_HA_TUYA_MAP]))
     print("init support type->", TUYA_SUPPORT_HA_TYPE)
 
-    global first_init
+    global FIRST_INIT
 
-    if first_init:
+    if FIRST_INIT:
         for platform in TUYA_SUPPORT_HA_TYPE:
             print("tuya async platform-->", platform)
             hass.async_create_task(
                 hass.config_entries.async_forward_entry_setup(entry, platform)
             )
-        first_init = False
+        FIRST_INIT = False
     else:
-        for device_id, device in deviceManager.deviceMap.items():
-            for ha_type, map in hass.data[DOMAIN][TUYA_HA_TUYA_MAP].items():
-                if device.category in map:
+        for device_id, device in device_manager.deviceMap.items():
+            for ha_type, ha_map in hass.data[DOMAIN][TUYA_HA_TUYA_MAP].items():
+                if device.category in ha_map:
                     async_dispatcher_send(
                         hass, TUYA_DISCOVERY_NEW.format(ha_type), [device_id]
                     )
@@ -197,7 +198,7 @@ def remove_device(hass: HomeAssistant, device_id: str):
     device_registry = hass.helpers.device_registry.async_get(hass)
     entity_registry = hass.helpers.entity_registry.async_get(hass)
     for entity in list(entity_registry.entities.values()):
-        if entity.unique_id.startswith(device_id):
+        if entity.unique_id.startswith(f"tuya_{device_id}"):
             entity_registry.async_remove(entity.entity_id)
             if device_registry.async_get(entity.device_id):
                 device_registry.async_remove_device(entity.device_id)
@@ -228,8 +229,6 @@ async def async_setup(hass, config):
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unloading the Tuya platforms."""
-    # TODO handle tuya integration unload
-    # domain_data = hass.data[DOMAIN]
     print("integration unload")
     __device_manager = hass.data[DOMAIN][TUYA_DEVICE_MANAGER]
     __device_manager.mq.stop()
@@ -246,7 +245,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Async setup hass config entry."""
     print("tuya.__init__.async_setup_entry-->", entry.data)
 
-    if first_init:
+    if FIRST_INIT:
         hass.data[DOMAIN] = {TUYA_HA_TUYA_MAP: {}, TUYA_HA_DEVICES: []}
 
     success = await _init_tuya_sdk(hass, entry)

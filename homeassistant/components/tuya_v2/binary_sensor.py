@@ -185,12 +185,12 @@ class TuyaHaBSensor(TuyaHaDevice, BinarySensorEntity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return self.tuyaDevice.name + "_" + self._type
+        return self.tuya_device.name + "_" + self._type
 
     @property
     def is_on(self):
         """Return true if the binary sensor is on."""
-        return self._is_on(self.tuyaDevice)
+        return self._is_on(self.tuya_device)
 
     @property
     def device_class(self):

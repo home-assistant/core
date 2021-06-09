@@ -84,31 +84,31 @@ class TuyaHaCover(TuyaHaDevice, CoverEntity):
     @property
     def current_cover_position(self) -> int:
         """Return cover current position."""
-        return self.tuyaDevice.status.get(DPCODE_PERCENT_CONTROL, 0)
+        return self.tuya_device.status.get(DPCODE_PERCENT_CONTROL, 0)
 
     def open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
-        self.tuyaDeviceManager.sendCommands(
-            self.tuyaDevice.id, [{"code": DPCODE_CONTROL, "value": "open"}]
+        self.tuya_device_manager.sendCommands(
+            self.tuya_device.id, [{"code": DPCODE_CONTROL, "value": "open"}]
         )
 
     def close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
-        self.tuyaDeviceManager.sendCommands(
-            self.tuyaDevice.id, [{"code": DPCODE_CONTROL, "value": "close"}]
+        self.tuya_device_manager.sendCommands(
+            self.tuya_device.id, [{"code": DPCODE_CONTROL, "value": "close"}]
         )
 
     def stop_cover(self, **kwargs):
         """Stop the cover."""
-        self.tuyaDeviceManager.sendCommands(
-            self.tuyaDevice.id, [{"code": DPCODE_CONTROL, "value": "stop"}]
+        self.tuya_device_manager.sendCommands(
+            self.tuya_device.id, [{"code": DPCODE_CONTROL, "value": "stop"}]
         )
 
     def set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
         print("cover-->", kwargs)
-        self.tuyaDeviceManager.sendCommands(
-            self.tuyaDevice.id,
+        self.tuya_device_manager.sendCommands(
+            self.tuya_device.id,
             [{"code": DPCODE_PERCENT_CONTROL, "value": kwargs[ATTR_POSITION]}],
         )
 
@@ -117,7 +117,7 @@ class TuyaHaCover(TuyaHaDevice, CoverEntity):
         """Flag supported features."""
         supports = SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_STOP
 
-        if DPCODE_PERCENT_CONTROL in self.tuyaDevice.status:
+        if DPCODE_PERCENT_CONTROL in self.tuya_device.status:
             supports = supports | SUPPORT_SET_POSITION
 
         return supports

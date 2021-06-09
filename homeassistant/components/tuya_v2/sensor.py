@@ -214,12 +214,12 @@ class TuyaHaSensor(TuyaHaDevice, SensorEntity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return self.tuyaDevice.name + "_" + self._type
+        return self.tuya_device.name + "_" + self._type
 
     @property
     def state(self):
         """Return the state of the sensor."""
-        return str(self.tuyaDevice.status.get(self._code))
+        return str(self.tuya_device.status.get(self._code))
 
     @property
     def unit_of_measurement(self):

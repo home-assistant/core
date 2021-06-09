@@ -90,8 +90,8 @@ class TuyaHaNumber(TuyaHaDevice, NumberEntity):
 
     def set_value(self, value: float) -> None:
         """Update the current value."""
-        self.tuyaDeviceManager.sendCommands(
-            self.tuyaDevice.id, [{"code": self._code, "value": int(value)}]
+        self.tuya_device_manager.sendCommands(
+            self.tuya_device.id, [{"code": self._code, "value": int(value)}]
         )
 
     @property
@@ -102,7 +102,7 @@ class TuyaHaNumber(TuyaHaDevice, NumberEntity):
     @property
     def value(self) -> float:
         """Return current value."""
-        return self.tuyaDevice.status.get(self._code, 0)
+        return self.tuya_device.status.get(self._code, 0)
 
     @property
     def min_value(self) -> float:
@@ -120,5 +120,5 @@ class TuyaHaNumber(TuyaHaDevice, NumberEntity):
         return self._get_code_range()[2]
 
     def _get_code_range(self) -> Tuple[int, int, int]:
-        range = json.loads(self.tuyaDevice.function.get(self._code).values)
+        range = json.loads(self.tuya_device.function.get(self._code).values)
         return range.get("min", 0), range.get("max", 0), range.get("step", 0)

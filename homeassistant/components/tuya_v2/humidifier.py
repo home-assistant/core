@@ -84,17 +84,17 @@ class TuyaHaHumidifier(TuyaHaDevice, HumidifierEntity):
     @property
     def is_on(self):
         """Return the device is on or off."""
-        return self.tuyaDevice.status.get(DPCODE_SWITCH, False)
+        return self.tuya_device.status.get(DPCODE_SWITCH, False)
 
     @property
     def mode(self):
         """Return the current mode."""
-        return self.tuyaDevice.status.get(DPCODE_MODE)
+        return self.tuya_device.status.get(DPCODE_MODE)
 
     @property
     def available_modes(self):
         """Return a list of available modes."""
-        return json.loads(self.tuyaDevice.function.get(DPCODE_MODE, {}).values).get(
+        return json.loads(self.tuya_device.function.get(DPCODE_MODE, {}).values).get(
             "range"
         )
 
@@ -102,24 +102,24 @@ class TuyaHaHumidifier(TuyaHaDevice, HumidifierEntity):
     def supported_features(self):
         """Return humidifier support features."""
         supports = 0
-        if DPCODE_MODE in self.tuyaDevice.status:
+        if DPCODE_MODE in self.tuya_device.status:
             supports = supports | SUPPORT_MODES
         return supports
 
     def set_mode(self, mode):
         """Set new target preset mode."""
-        self.tuyaDeviceManager.sendCommands(
-            self.tuyaDevice.id, [{"code": DPCODE_MODE, "value": mode}]
+        self.tuya_device_manager.sendCommands(
+            self.tuya_device.id, [{"code": DPCODE_MODE, "value": mode}]
         )
 
     def turn_on(self, **kwargs):
         """Turn the device on."""
-        self.tuyaDeviceManager.sendCommands(
-            self.tuyaDevice.id, [{"code": DPCODE_SWITCH, "value": True}]
+        self.tuya_device_manager.sendCommands(
+            self.tuya_device.id, [{"code": DPCODE_SWITCH, "value": True}]
         )
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
-        self.tuyaDeviceManager.sendCommands(
-            self.tuyaDevice.id, [{"code": DPCODE_SWITCH, "value": False}]
+        self.tuya_device_manager.sendCommands(
+            self.tuya_device.id, [{"code": DPCODE_SWITCH, "value": False}]
         )

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Tuya Home Assistant Base Device Model."""
-from typing import Optional
+from __future__ import annotations
 
 from tuya_iot import TuyaDevice, TuyaDeviceManager
 
@@ -10,14 +10,11 @@ from .const import DOMAIN
 class TuyaHaDevice:
     """Tuya base device."""
 
-    tuyaDevice: TuyaDevice
-    tuyaDeviceManager: TuyaDeviceManager
-
-    def __init__(self, device: TuyaDevice, deviceManager: TuyaDeviceManager):
+    def __init__(self, device: TuyaDevice, device_manager: TuyaDeviceManager):
         """Init TuyaHaDevice."""
         super().__init__()
-        self.tuyaDevice = device
-        self.tuyaDeviceManager = deviceManager
+        self.tuya_device = device
+        self.tuya_device_manager = device_manager
         self.entity_id = f"tuya_v2.{device.id}"
 
     @staticmethod
@@ -28,31 +25,29 @@ class TuyaHaDevice:
         ) + new_min
         return new_value
 
-    # Entity
-
     @property
     def should_poll(self) -> bool:
-        """Tuya device use cloud push, which means should not poll."""
+        """Hass should not poll."""
         return False
 
     @property
-    def unique_id(self) -> Optional[str]:
+    def unique_id(self) -> str | None:
         """Return a unique ID."""
-        return f"tuya_{self.tuyaDevice.uuid}"
+        return f"tuya_{self.tuya_device.uuid}"
 
     @property
-    def name(self) -> Optional[str]:
+    def name(self) -> str | None:
         """Return Tuya device name."""
-        return self.tuyaDevice.name
+        return self.tuya_device.name
 
     @property
     def device_info(self):
         """Return a device description for device registry."""
         _device_info = {
-            "identifiers": {(DOMAIN, f"{self.tuyaDevice.uuid}")},
+            "identifiers": {(DOMAIN, f"{self.tuya_device.uuid}")},
             "manufacturer": "tuya",
-            "name": self.tuyaDevice.name,
-            "model": self.tuyaDevice.product_name,
+            "name": self.tuya_device.name,
+            "model": self.tuya_device.product_name,
         }
         return _device_info
 
@@ -66,4 +61,4 @@ class TuyaHaDevice:
     @property
     def available(self) -> bool:
         """Return if the device is available."""
-        return self.tuyaDevice.online
+        return self.tuya_device.online

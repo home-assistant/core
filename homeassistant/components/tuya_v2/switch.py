@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Support for Tuya switches."""
+from __future__ import annotations
 
 import logging
-from typing import Any, List, Optional
+from typing import Any
 
 from tuya_iot import TuyaDevice, TuyaDeviceManager
 
@@ -62,7 +63,7 @@ async def async_setup_entry(
     await async_discover_device(device_ids)
 
 
-def _setup_entities(hass, device_ids: List):
+def _setup_entities(hass, device_ids: list):
     """Set up Tuya Switch device."""
     device_manager = hass.data[DOMAIN][TUYA_DEVICE_MANAGER]
     entities = []
@@ -92,7 +93,7 @@ class TuyaHaSwitch(TuyaHaDevice, SwitchEntity):
 
     def __init__(
         self, device: TuyaDevice, deviceManager: TuyaDeviceManager, channel: str = ""
-    ):
+    ) -> None:
         """Init TuyaHaSwitch."""
         super().__init__(device, deviceManager)
 
@@ -105,28 +106,28 @@ class TuyaHaSwitch(TuyaHaDevice, SwitchEntity):
                     self.dp_code_switch = function
 
     @property
-    def unique_id(self) -> Optional[str]:
+    def unique_id(self) -> str | None:
         """Return a unique ID."""
         return f"{super().unique_id}{self.channel}"
 
     @property
-    def name(self) -> Optional[str]:
+    def name(self) -> str | None:
         """Return Tuya device name."""
-        return self.tuyaDevice.name + self.channel
+        return self.tuya_device.name + self.channel
 
     @property
     def is_on(self) -> bool:
         """Return true if switch is on."""
-        return self.tuyaDevice.status.get(self.dp_code_switch, False)
+        return self.tuya_device.status.get(self.dp_code_switch, False)
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        self.tuyaDeviceManager.sendCommands(
-            self.tuyaDevice.id, [{"code": self.dp_code_switch, "value": True}]
+        self.tuya_device_manager.sendCommands(
+            self.tuya_device.id, [{"code": self.dp_code_switch, "value": True}]
         )
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
-        self.tuyaDeviceManager.sendCommands(
-            self.tuyaDevice.id, [{"code": self.dp_code_switch, "value": False}]
+        self.tuya_device_manager.sendCommands(
+            self.tuya_device.id, [{"code": self.dp_code_switch, "value": False}]
         )

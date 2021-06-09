@@ -130,7 +130,7 @@ class TuyaHaLight(TuyaHaDevice, LightEntity):
     @property
     def is_on(self) -> bool:
         """Return true if light is on."""
-        return self.tuyaDevice.status.get(DPCODE_SWITCH, False)
+        return self.tuya_device.status.get(DPCODE_SWITCH, False)
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn on or control the light."""
@@ -186,7 +186,7 @@ class TuyaHaLight(TuyaHaDevice, LightEntity):
             commands += [
                 {"code": self.dp_code_colour, "value": json.dumps(colour_data)}
             ]
-            if self.tuyaDevice.status[DPCODE_WORK_MODE] != "colour":
+            if self.tuya_device.status[DPCODE_WORK_MODE] != "colour":
                 commands += [{"code": DPCODE_WORK_MODE, "value": "colour"}]
 
         if ATTR_COLOR_TEMP in kwargs:
@@ -209,15 +209,15 @@ class TuyaHaLight(TuyaHaDevice, LightEntity):
             )
             commands += [{"code": self.dp_code_bright, "value": int(tuya_brightness)}]
 
-            if self.tuyaDevice.status[DPCODE_WORK_MODE] != "white":
+            if self.tuya_device.status[DPCODE_WORK_MODE] != "white":
                 commands += [{"code": DPCODE_WORK_MODE, "value": "white"}]
 
-        self.tuyaDeviceManager.sendCommands(self.tuyaDevice.id, commands)
+        self.tuya_device_manager.sendCommands(self.tuya_device.id, commands)
 
     def turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
         commands = [{"code": DPCODE_SWITCH, "value": False}]
-        self.tuyaDeviceManager.sendCommands(self.tuyaDevice.id, commands)
+        self.tuya_device_manager.sendCommands(self.tuya_device.id, commands)
 
     # LightEntity
 
@@ -225,11 +225,11 @@ class TuyaHaLight(TuyaHaDevice, LightEntity):
     def brightness(self):
         """Return the brightness of the light."""
         old_range = self._tuya_brightness_range()
-        brightness = self.tuyaDevice.status.get(self.dp_code_bright, 0)
+        brightness = self.tuya_device.status.get(self.dp_code_bright, 0)
 
         print(
             "brightness id->",
-            self.tuyaDevice.id,
+            self.tuya_device.id,
             "work_mode->",
             self._work_mode(),
             "; check true->",
@@ -237,7 +237,9 @@ class TuyaHaLight(TuyaHaDevice, LightEntity):
         )
 
         if self._work_mode().startswith(WORK_MODE_COLOUR):
-            colour_data = json.loads(self.tuyaDevice.status.get(self.dp_code_colour, 0))
+            colour_data = json.loads(
+                self.tuya_device.status.get(self.dp_code_colour, 0)
+            )
             v_range = self._tuya_hsv_v_range()
             hsv_v = colour_data.get("v", 0)
             return int(self.remap(hsv_v, v_range[0], v_range[1], 0, 255))
@@ -245,18 +247,18 @@ class TuyaHaLight(TuyaHaDevice, LightEntity):
             return int(self.remap(brightness, old_range[0], old_range[1], 0, 255))
 
     def _tuya_brightness_range(self) -> Tuple[int, int]:
-        if self.dp_code_bright not in self.tuyaDevice.status:
+        if self.dp_code_bright not in self.tuya_device.status:
             return 0, 255
 
         bright_value = json.loads(
-            self.tuyaDevice.function.get(self.dp_code_bright, {}).values
+            self.tuya_device.function.get(self.dp_code_bright, {}).values
         )
         return bright_value.get("min", 0), bright_value.get("max", 255)
 
     @property
     def hs_color(self):
         """Return the hs_color of the light."""
-        colour_data = json.loads(self.tuyaDevice.status.get(self.dp_code_colour, 0))
+        colour_data = json.loads(self.tuya_device.status.get(self.dp_code_colour, 0))
         s_range = self._tuya_hsv_s_range()
         return colour_data.get("h", 0), self.remap(
             colour_data.get("s", 0),
@@ -270,7 +272,7 @@ class TuyaHaLight(TuyaHaDevice, LightEntity):
     def color_temp(self):
         """Return the color_temp of the light."""
         new_range = self._tuya_temp_range()
-        tuya_color_temp = self.tuyaDevice.status.get(self.dp_code_temp, 0)
+        tuya_color_temp = self.tuya_device.status.get(self.dp_code_temp, 0)
         ha_color_temp = (
             self.max_mireds
             - self.remap(
@@ -296,7 +298,7 @@ class TuyaHaLight(TuyaHaDevice, LightEntity):
 
     def _tuya_temp_range(self) -> Tuple[int, int]:
         temp_value = json.loads(
-            self.tuyaDevice.function.get(self.dp_code_temp, {}).values
+            self.tuya_device.function.get(self.dp_code_temp, {}).values
         )
         return temp_value.get("min", 0), temp_value.get("max", 255)
 
@@ -312,7 +314,7 @@ class TuyaHaLight(TuyaHaDevice, LightEntity):
 
     def _tuya_hsv_function(self):
         hsv_data = json.loads(
-            self.tuyaDevice.function.get(self.dp_code_colour, {}).values
+            self.tuya_device.function.get(self.dp_code_colour, {}).values
         )
         if hsv_data == {}:
             return DEFAULT_HSV
@@ -321,22 +323,22 @@ class TuyaHaLight(TuyaHaDevice, LightEntity):
 
     def _work_mode(self) -> str:
 
-        return self.tuyaDevice.status.get(DPCODE_WORK_MODE, "")
+        return self.tuya_device.status.get(DPCODE_WORK_MODE, "")
 
     def _get_hsv(self) -> Dict[str, int]:
-        return json.loads(self.tuyaDevice.status[self.dp_code_colour])
+        return json.loads(self.tuya_device.status[self.dp_code_colour])
 
     @property
     def supported_features(self):
         """Flag supported features."""
         supports = 0
-        if self.dp_code_bright in self.tuyaDevice.status:
+        if self.dp_code_bright in self.tuya_device.status:
             supports = supports | SUPPORT_BRIGHTNESS
         if (
-            self.dp_code_colour in self.tuyaDevice.status
-            and len(self.tuyaDevice.status[self.dp_code_colour]) > 0
+            self.dp_code_colour in self.tuya_device.status
+            and len(self.tuya_device.status[self.dp_code_colour]) > 0
         ):
             supports = supports | SUPPORT_COLOR
-        if self.dp_code_temp in self.tuyaDevice.status:
+        if self.dp_code_temp in self.tuya_device.status:
             supports = supports | SUPPORT_COLOR_TEMP
         return supports
