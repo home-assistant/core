@@ -44,6 +44,7 @@ class AxisEventBase(AxisEntityBase):
         super().__init__(device)
         self.event = event
 
+        self._attr_name = f"{device.name} {event.TYPE} {event.id}"
         self._attr_device_class = event.CLASS
         self._attr_should_poll = False
 
@@ -55,11 +56,6 @@ class AxisEventBase(AxisEntityBase):
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect device object when removed."""
         self.event.remove_callback(self.update_callback)
-
-    @property
-    def name(self):
-        """Return the name of the event."""
-        return f"{self.device.name} {self.event.TYPE} {self.event.id}"
 
     @property
     def unique_id(self):

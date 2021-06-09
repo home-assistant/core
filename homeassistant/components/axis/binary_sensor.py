@@ -128,4 +128,4 @@ class AxisBinarySensor(AxisEventBase, BinarySensorEntity):
                 ):
                     return f"{self.device.name} {self.event.TYPE} {event_data[self.event.id].name}"
 
-        return super().name
+        return self._attr_name

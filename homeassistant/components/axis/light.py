@@ -49,6 +49,8 @@ class AxisLight(AxisEventBase, LightEntity):
         self.current_intensity = 0
         self.max_intensity = 0
 
+        light_type = device.api.vapix.light_control[self.light_id].light_type
+        self._attr_name = f"{device.name} {light_type} {event.TYPE} {event.id}"
         self._attr_supported_color_modes = {COLOR_MODE_BRIGHTNESS}
         self._attr_color_mode = COLOR_MODE_BRIGHTNESS
         self._attr_should_poll = True
@@ -68,12 +70,6 @@ class AxisLight(AxisEventBase, LightEntity):
             self.light_id
         )
         self.max_intensity = max_intensity["data"]["ranges"][0]["high"]
-
-    @property
-    def name(self):
-        """Return the name of the light."""
-        light_type = self.device.api.vapix.light_control[self.light_id].light_type
-        return f"{self.device.name} {light_type} {self.event.TYPE} {self.event.id}"
 
     @property
     def is_on(self):
