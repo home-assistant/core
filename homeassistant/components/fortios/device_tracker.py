@@ -52,7 +52,7 @@ def get_scanner(hass, config):
     if fos_major_version < 6 or fos_major_version > 7:
         _LOGGER.error(
             "Unsupported FortiOS version, fos_major_version =  %s",
-            str(fos_major_version),
+            fos_major_version,
         )
         return None
 
