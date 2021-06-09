@@ -116,7 +116,8 @@ class EcobeeWeather(WeatherEntity):
         try:
             pressure = self.get_forecast(0, "pressure")
             if not self.hass.config.units.is_metric:
-                return pressure_convert(pressure, PRESSURE_HPA, PRESSURE_INHG)
+                pressure = pressure_convert(pressure, PRESSURE_HPA, PRESSURE_INHG)
+                return round(pressure, 2)
             return round(pressure)
         except ValueError:
             return None
