@@ -8,13 +8,13 @@ from aiohttp import ClientConnectorError
 from aiomusiccast import MusicCastConnectionException, MusicCastDevice
 import voluptuous as vol
 
+from homeassistant import data_entry_flow
 from homeassistant.components import ssdp
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_HOST
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
-from ... import data_entry_flow
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
