@@ -125,7 +125,7 @@ class KNXExposeSensor:
         if self.type == "binary":
             if value in (1, STATE_ON, "True"):
                 return True
-            elif value in (0, STATE_OFF, "False"):
+            if value in (0, STATE_OFF, "False"):
                 return False
         if (
             value is not None
