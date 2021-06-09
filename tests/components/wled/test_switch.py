@@ -144,7 +144,7 @@ async def test_switch_error(
     aioclient_mock.post("http://192.168.1.123:80/json/state", text="", status=400)
     await init_integration(hass, aioclient_mock)
 
-    with patch("homeassistant.components.wled.WLED.update"):
+    with patch("homeassistant.components.wled.coordinator.WLED.update"):
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SERVICE_TURN_ON,
@@ -164,8 +164,9 @@ async def test_switch_connection_error(
     """Test error handling of the WLED switches."""
     await init_integration(hass, aioclient_mock)
 
-    with patch("homeassistant.components.wled.WLED.update"), patch(
-        "homeassistant.components.wled.WLED.nightlight", side_effect=WLEDConnectionError
+    with patch("homeassistant.components.wled.coordinator.WLED.update"), patch(
+        "homeassistant.components.wled.coordinator.WLED.nightlight",
+        side_effect=WLEDConnectionError,
     ):
         await hass.services.async_call(
             SWITCH_DOMAIN,
