@@ -94,7 +94,6 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
         self._repeat = REPEAT_MODE_OFF
 
         super().__init__(
-            entry_id=entry_id,
             name=name,
             icon="mdi:speaker",
             coordinator=coordinator,

@@ -1,7 +1,6 @@
 """The MusicCast integration."""
 from __future__ import annotations
 
-import abc
 from datetime import timedelta
 import logging
 
@@ -84,7 +83,6 @@ class MusicCastEntity(CoordinatorEntity):
     def __init__(
         self,
         *,
-        entry_id: str,
         name: str,
         icon: str,
         coordinator: MusicCastDataUpdateCoordinator,
