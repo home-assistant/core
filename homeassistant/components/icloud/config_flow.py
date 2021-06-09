@@ -15,10 +15,8 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
 from .const import (
-    CONF_GPS_ACCURACY_THRESHOLD,
     CONF_MAX_INTERVAL,
     CONF_WITH_FAMILY,
-    DEFAULT_GPS_ACCURACY_THRESHOLD,
     DEFAULT_MAX_INTERVAL,
     DEFAULT_WITH_FAMILY,
     DOMAIN,
@@ -44,7 +42,6 @@ class IcloudFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._password = None
         self._with_family = None
         self._max_interval = None
-        self._gps_accuracy_threshold = None
 
         self._trusted_device = None
         self._verification_code = None
@@ -99,9 +96,6 @@ class IcloudFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._username = extra_inputs[CONF_USERNAME]
         self._with_family = extra_inputs.get(CONF_WITH_FAMILY, DEFAULT_WITH_FAMILY)
         self._max_interval = extra_inputs.get(CONF_MAX_INTERVAL, DEFAULT_MAX_INTERVAL)
-        self._gps_accuracy_threshold = extra_inputs.get(
-            CONF_GPS_ACCURACY_THRESHOLD, DEFAULT_GPS_ACCURACY_THRESHOLD
-        )
 
         # Check if already configured
         if self.unique_id is None:
@@ -146,7 +140,6 @@ class IcloudFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_PASSWORD: self._password,
             CONF_WITH_FAMILY: self._with_family,
             CONF_MAX_INTERVAL: self._max_interval,
-            CONF_GPS_ACCURACY_THRESHOLD: self._gps_accuracy_threshold,
         }
 
         # If this is a password update attempt, update the entry instead of creating one
@@ -302,7 +295,6 @@ class IcloudFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_PASSWORD: self._password,
                 CONF_WITH_FAMILY: self._with_family,
                 CONF_MAX_INTERVAL: self._max_interval,
-                CONF_GPS_ACCURACY_THRESHOLD: self._gps_accuracy_threshold,
             }
         )
 
