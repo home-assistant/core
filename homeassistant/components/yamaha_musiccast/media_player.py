@@ -85,19 +85,18 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
         self._volume_muted = False
         self._shuffle = False
         self._zone_id = zone_id
-        self.coordinator: MusicCastDataUpdateCoordinator = coordinator
-
-        self._volume_min = self.coordinator.data.zones[self._zone_id].min_volume
-        self._volume_max = self.coordinator.data.zones[self._zone_id].max_volume
-
-        self._cur_track = 0
-        self._repeat = REPEAT_MODE_OFF
 
         super().__init__(
             name=name,
             icon="mdi:speaker",
             coordinator=coordinator,
         )
+
+        self._volume_min = self.coordinator.data.zones[self._zone_id].min_volume
+        self._volume_max = self.coordinator.data.zones[self._zone_id].max_volume
+
+        self._cur_track = 0
+        self._repeat = REPEAT_MODE_OFF
 
     async def async_added_to_hass(self):
         """Run when this Entity has been added to HA."""
