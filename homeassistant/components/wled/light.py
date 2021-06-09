@@ -221,11 +221,6 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
         }
 
     @property
-    def color_mode(self) -> str:
-        """Return the color mode of a light."""
-        if self._rgbw and self._wv:
-            return COLOR_MODE_RGBW
-        return COLOR_MODE_RGB
 
     @property
     def rgb_color(self) -> tuple[int, int, int] | None:
