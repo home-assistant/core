@@ -46,7 +46,6 @@ def get_scanner(hass, config):
         _LOGGER.error("Failed to login to FortiOS API: %s", ex)
         return None
 
-    """Get FortiGate major SW version."""
     status_json = fgt.monitor("system/status", "")
     fos_major_version = int(status_json["version"][1])
 
