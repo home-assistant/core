@@ -41,58 +41,39 @@ async def create_trackable_entity(client, trackable):
     )
 
     return TractiveDeviceTracker(
-        client, trackable, tracker_details, hw_info, pos_report
+        client.user_id, trackable, tracker_details, hw_info, pos_report
     )
 
 
 class TractiveDeviceTracker(TrackerEntity):
     """Tractive device tracker."""
 
-    def __init__(self, client, trackable, tracker_details, hw_info, pos_report):
+    def __init__(self, user_id, trackable, tracker_details, hw_info, pos_report):
         """Initialize tracker entity."""
-        self._client = client
-        self._trackable = trackable
-        self._tracker_details = tracker_details
-        self._hw_info = hw_info
+        self._user_id = user_id
 
         self._battery_level = hw_info["battery_level"]
         self._latitude = pos_report["latlong"][0]
         self._longitude = pos_report["latlong"][1]
         self._accuracy = pos_report["pos_uncertainty"]
-        self._tracker_id = self._tracker_details["_id"]
+        self._tracker_id = tracker_details["_id"]
 
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        pet_name = self._trackable["details"]["name"]
-        return f"{self._tracker_id} {pet_name}"
-
-    @property
-    def unique_id(self):
-        """Return a unique identifier for this entity."""
-        return self._trackable["_id"]
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend."""
-        return "mdi:paw"
+        self._attr_name = f"{self._tracker_id} {trackable['details']['name']}"
+        self._attr_unique_id = trackable["_id"]
+        self._attr_icon = "mdi:paw"
+        self._attr_device_info = {
+            "identifiers": {(DOMAIN, self._tracker_id)},
+            "name": f"Tractive ({self._tracker_id})",
+            "manufacturer": "Tractive GmbH",
+            "sw_version": tracker_details["fw_version"],
+            "entry_type": None,
+            "model": tracker_details["model_number"],
+        }
 
     @property
     def source_type(self):
         """Return the source type, eg gps or router, of the device."""
         return SOURCE_TYPE_GPS
-
-    @property
-    def device_info(self):
-        """Return device information."""
-        return {
-            "identifiers": {(DOMAIN, self._tracker_id)},
-            "name": f"Tractive ({self._tracker_id})",
-            "manufacturer": "Tractive GmbH",
-            "sw_version": self._tracker_details["fw_version"],
-            "entry_type": None,
-            "model": self._tracker_details["model_number"],
-        }
 
     @property
     def latitude(self):
@@ -159,7 +140,7 @@ class TractiveDeviceTracker(TrackerEntity):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{SERVER_UNAVAILABLE}-{self._client.user_id}",
+                f"{SERVER_UNAVAILABLE}-{self._user_id}",
                 handle_server_unavailable,
             )
         )
