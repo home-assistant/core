@@ -92,7 +92,7 @@ def valid_supported_color_modes(color_modes: Iterable[str]) -> set[str]:
         or COLOR_MODE_UNKNOWN in color_modes
         or (COLOR_MODE_BRIGHTNESS in color_modes and len(color_modes) > 1)
         or (COLOR_MODE_ONOFF in color_modes and len(color_modes) > 1)
-        or (COLOR_MODE_WHITE in color_modes and len(color_modes) == 1)
+        or (COLOR_MODE_WHITE in color_modes and not color_supported(color_modes))
     ):
         raise vol.Error(f"Invalid supported_color_modes {sorted(color_modes)}")
     return color_modes
@@ -370,13 +370,13 @@ async def async_setup(hass, config):  # noqa: C901
         ):
             profiles.apply_default(light.entity_id, light.is_on, params)
 
+        legacy_supported_color_modes = (
+            light._light_internal_supported_color_modes  # pylint: disable=protected-access
+        )
         supported_color_modes = light.supported_color_modes
         # Backwards compatibility: if an RGBWW color is specified, convert to RGB + W
         # for legacy lights
         if ATTR_RGBW_COLOR in params:
-            legacy_supported_color_modes = (
-                light._light_internal_supported_color_modes  # pylint: disable=protected-access
-            )
             if (
                 COLOR_MODE_RGBW in legacy_supported_color_modes
                 and not supported_color_modes
@@ -384,6 +384,16 @@ async def async_setup(hass, config):  # noqa: C901
                 rgbw_color = params.pop(ATTR_RGBW_COLOR)
                 params[ATTR_RGB_COLOR] = rgbw_color[0:3]
                 params[ATTR_WHITE_VALUE] = rgbw_color[3]
+
+        # If a color temperature is specified, emulate it if not supported by the light
+        if (
+            ATTR_COLOR_TEMP in params
+            and COLOR_MODE_COLOR_TEMP not in legacy_supported_color_modes
+        ):
+            color_temp = params.pop(ATTR_COLOR_TEMP)
+            if color_supported(legacy_supported_color_modes):
+                temp_k = color_util.color_temperature_mired_to_kelvin(color_temp)
+                params[ATTR_HS_COLOR] = color_util.color_temperature_to_hs(temp_k)
 
         # If a color is specified, convert to the color space supported by the light
         # Backwards compatibility: Fall back to hs color if light.supported_color_modes

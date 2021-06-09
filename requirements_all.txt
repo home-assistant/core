@@ -253,6 +253,9 @@ aladdin_connect==0.3
 # homeassistant.components.alpha_vantage
 alpha_vantage==2.3.1
 
+# homeassistant.components.ambee
+ambee==0.2.1
+
 # homeassistant.components.ambiclimate
 ambiclimate==0.2.1
 
@@ -741,7 +744,7 @@ hass-nabucasa==0.43.0
 hass_splunk==0.1.1
 
 # homeassistant.components.tasmota
-hatasmota==0.2.15
+hatasmota==0.2.16
 
 # homeassistant.components.jewish_calendar
 hdate==0.10.2
@@ -1758,7 +1761,7 @@ pysnmp==4.4.12
 pysoma==0.0.10
 
 # homeassistant.components.sonos
-pysonos==0.0.50
+pysonos==0.0.51
 
 # homeassistant.components.spc
 pyspcwebgw==0.4.0
@@ -2359,7 +2362,7 @@ wirelesstagpy==0.4.1
 withings-api==2.3.2
 
 # homeassistant.components.wled
-wled==0.4.4
+wled==0.5.0
 
 # homeassistant.components.wolflink
 wolf_smartset==0.1.8
@@ -2374,7 +2377,7 @@ xbox-webapi==2.0.11
 xboxapi==2.0.1
 
 # homeassistant.components.knx
-xknx==0.18.4
+xknx==0.18.5
 
 # homeassistant.components.bluesound
 # homeassistant.components.rest

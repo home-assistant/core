@@ -12,7 +12,7 @@
             "wrong_password": "Ung\u00fcltiges Passwort",
             "wrong_server_type": "F\u00fcr die forked-daapd Integration ist ein forked-daapd Server mit der Version > = 27.0 erforderlich."
         },
-        "flow_title": "Forked-Daapd-Server: {name} ({host})",
+        "flow_title": "{name} ({host})",
         "step": {
             "user": {
                 "data": {

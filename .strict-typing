@@ -12,6 +12,7 @@ homeassistant.components.airly.*
 homeassistant.components.aladdin_connect.*
 homeassistant.components.alarm_control_panel.*
 homeassistant.components.amazon_polly.*
+homeassistant.components.ambee.*
 homeassistant.components.ampio.*
 homeassistant.components.automation.*
 homeassistant.components.binary_sensor.*
@@ -70,6 +71,7 @@ homeassistant.components.systemmonitor.*
 homeassistant.components.tcp.*
 homeassistant.components.tts.*
 homeassistant.components.upcloud.*
+homeassistant.components.uptime.*
 homeassistant.components.vacuum.*
 homeassistant.components.water_heater.*
 homeassistant.components.weather.*
