@@ -33,11 +33,32 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
             update_interval=SCAN_INTERVAL,
         )
 
+    def update_listeners(self) -> None:
+        """Call update on all listeners."""
+        for update_callback in self._listeners:
+            update_callback()
+
     async def _use_websocket(self) -> None:
         """Use WebSocket for updates, instead of polling."""
         if self.wled.connected:
             # We are already connected
             return
+
+        # Connect to WebSocket
+        try:
+            await self.wled.connect()
+        except WLEDError as err:
+            self.logger.info(err)
+            return
+
+        async def close_websocket(_) -> None:
+            """Close WebSocket connection."""
+            await self.wled.disconnect()
+
+        # Clean disconnect WebSocket on Home Assistant shutdown
+        self.unsub = self.hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_STOP, close_websocket
+        )
 
         def update_data_from_websocket(device: WLEDDevice) -> None:
             """Call when WLED reports a state change."""
@@ -68,28 +89,8 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
             self.update_interval = SCAN_INTERVAL
             self._schedule_refresh()
 
-        # Connect to WebSocket
-        try:
-            await self.wled.connect()
-        except WLEDError as err:
-            self.logger.info(err)
-            return
-
-        async def close_websocket(_) -> None:
-            """Close WebSocket connection."""
-            await self.wled.disconnect()
-
-        self.unsub = self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STOP, close_websocket
-        )
-
         # Start listening
         self.hass.loop.create_task(listen())
-
-    def update_listeners(self) -> None:
-        """Call update on all listeners."""
-        for update_callback in self._listeners:
-            update_callback()
 
     async def _async_update_data(self) -> WLEDDevice:
         """Fetch data from WLED."""
