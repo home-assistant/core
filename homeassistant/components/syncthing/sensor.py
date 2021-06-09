@@ -86,6 +86,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class FolderSensor(SensorEntity):
     """A Syncthing folder sensor."""
 
+    _attr_should_poll = False
+
     STATE_ATTRIBUTES = {
         "errors": "errors",
         "globalBytes": "global_bytes",
@@ -126,15 +128,17 @@ class FolderSensor(SensorEntity):
 
         self._short_server_id = server_id.split("-")[0]
 
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return f"{self._short_server_id} {self._folder_id} {self._folder_label}"
-
-    @property
-    def unique_id(self):
-        """Return the unique id of the entity."""
-        return f"{self._short_server_id}-{self._folder_id}"
+        self._attr_name = (
+            f"{self._short_server_id} {self._folder_id} {self._folder_label}"
+        )
+        self._attr_unique_id = f"{self._short_server_id}-{self._folder_id}"
+        self._attr_device_info = {
+            "identifiers": {(DOMAIN, self._server_id)},
+            "name": f"Syncthing ({self._syncthing.url})",
+            "manufacturer": "Syncthing Team",
+            "sw_version": self._version,
+            "entry_type": "service",
+        }
 
     @property
     def state(self):
@@ -159,22 +163,6 @@ class FolderSensor(SensorEntity):
     def extra_state_attributes(self):
         """Return the state attributes."""
         return self._state
-
-    @property
-    def should_poll(self):
-        """Return the polling requirement for this sensor."""
-        return False
-
-    @property
-    def device_info(self):
-        """Return device information."""
-        return {
-            "identifiers": {(DOMAIN, self._server_id)},
-            "name": f"Syncthing ({self._syncthing.url})",
-            "manufacturer": "Syncthing Team",
-            "sw_version": self._version,
-            "entry_type": "service",
-        }
 
     async def async_update_status(self):
         """Request folder status and update state."""
@@ -335,6 +323,11 @@ class SpeedSensor(CoordinatorEntity):
         if not self.available:
             return
         return self._state
+
+    @property
+    def device_info(self):
+        """Return device information."""
+        return
 
     @property
     def extra_state_attributes(self):
