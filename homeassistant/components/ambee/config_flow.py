@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from ambee import Ambee, AmbeeError
+from ambee import Ambee, AmbeeAuthenticationError, AmbeeError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow
@@ -36,6 +36,8 @@ class AmbeeFlowHandler(ConfigFlow, domain=DOMAIN):
                     session=session,
                 )
                 await client.air_quality()
+            except AmbeeAuthenticationError:
+                errors["base"] = "invalid_api_key"
             except AmbeeError:
                 errors["base"] = "cannot_connect"
             else:

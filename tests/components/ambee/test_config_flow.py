@@ -2,7 +2,7 @@
 
 from unittest.mock import patch
 
-from ambee import AmbeeError
+from ambee import AmbeeAuthenticationError, AmbeeError
 
 from homeassistant.components.ambee.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -48,6 +48,66 @@ async def test_full_user_flow(hass: HomeAssistant) -> None:
     assert len(mock_ambee.mock_calls) == 1
 
 
+async def test_full_flow_with_authentication_error(hass: HomeAssistant) -> None:
+    """Test the full user configuration flow with an authentication error.
+
+    This tests tests a full config flow, with a case the user enters an invalid
+    API token, but recover by entering the correct one.
+    """
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result.get("type") == RESULT_TYPE_FORM
+    assert result.get("step_id") == SOURCE_USER
+    assert "flow_id" in result
+
+    with patch(
+        "homeassistant.components.ambee.config_flow.Ambee.air_quality",
+        side_effect=AmbeeAuthenticationError,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_NAME: "Name",
+                CONF_API_KEY: "invalid",
+                CONF_LATITUDE: 52.42,
+                CONF_LONGITUDE: 4.44,
+            },
+        )
+
+    assert result2.get("type") == RESULT_TYPE_FORM
+    assert result2.get("step_id") == SOURCE_USER
+    assert result2.get("errors") == {"base": "invalid_api_key"}
+    assert "flow_id" in result2
+
+    with patch(
+        "homeassistant.components.ambee.config_flow.Ambee.air_quality"
+    ) as mock_ambee, patch(
+        "homeassistant.components.ambee.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            user_input={
+                CONF_NAME: "Name",
+                CONF_API_KEY: "example",
+                CONF_LATITUDE: 52.42,
+                CONF_LONGITUDE: 4.44,
+            },
+        )
+
+    assert result3.get("type") == RESULT_TYPE_CREATE_ENTRY
+    assert result3.get("title") == "Name"
+    assert result3.get("data") == {
+        CONF_API_KEY: "example",
+        CONF_LATITUDE: 52.42,
+        CONF_LONGITUDE: 4.44,
+    }
+
+    assert len(mock_setup_entry.mock_calls) == 1
+    assert len(mock_ambee.mock_calls) == 1
+
+
 async def test_api_error(hass: HomeAssistant) -> None:
     """Test API error."""
     with patch(
@@ -65,5 +125,5 @@ async def test_api_error(hass: HomeAssistant) -> None:
             },
         )
 
-        assert result.get("type") == RESULT_TYPE_FORM
-        assert result.get("errors") == {"base": "cannot_connect"}
+    assert result.get("type") == RESULT_TYPE_FORM
+    assert result.get("errors") == {"base": "cannot_connect"}
