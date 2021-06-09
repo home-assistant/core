@@ -1,6 +1,8 @@
 """Demo implementation of the media player."""
 from __future__ import annotations
 
+import logging
+
 from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     REPEAT_MODE_OFF,
@@ -19,11 +21,18 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.const import (
+    EVENT_HOMEASSISTANT_STARTED,
+    STATE_IDLE,
+    STATE_OFF,
+    STATE_PAUSED,
+    STATE_PLAYING,
+)
+from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.helpers.typing import DiscoveryInfoType, HomeAssistantType
 
 from . import MusicCastDataUpdateCoordinator, MusicCastDeviceEntity
 from .const import (
@@ -33,8 +42,7 @@ from .const import (
     MC_REPEAT_MODE_TO_HA_MAPPING,
 )
 
-PARALLEL_UPDATES = 1
-
+_LOGGER = logging.getLogger(__name__)
 
 MUSIC_PLAYER_SUPPORT = (
     SUPPORT_PAUSE
@@ -52,6 +60,29 @@ MUSIC_PLAYER_SUPPORT = (
     | SUPPORT_SELECT_SOURCE
     | SUPPORT_STOP
 )
+
+
+async def async_setup_platform(
+    hass: HomeAssistantType,
+    config,
+    async_add_devices: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
+    """Import legacy configurations."""
+    _LOGGER.warning(
+        "Configuration in configuration.yaml is deprecated. Use the config flow instead."
+    )
+
+    @callback
+    def config_import(_):
+        """Import config entry when homeassistant has started."""
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+            )
+        )
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, config_import)
 
 
 async def async_setup_entry(

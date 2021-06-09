@@ -113,3 +113,16 @@ class MusicCastFlowHandler(ConfigFlow, domain=DOMAIN):
             )
 
         return self.async_show_form(step_id="confirm")
+
+    async def async_step_import(self, import_data: dict) -> data_entry_flow.FlowResult:
+        """Import data from configuration.yaml into the config flow."""
+        res = await self.async_step_user(import_data)
+        if res["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY:
+            _LOGGER.info(
+                f"Successfully imported {import_data.get('host')} from configuration.yaml"
+            )
+        elif res["type"] == data_entry_flow.RESULT_TYPE_FORM:
+            _LOGGER.exception(
+                f"Could not import {import_data.get('host')} from configuration.yaml"
+            )
+        return res
