@@ -124,7 +124,7 @@ class MusicCastDeviceEntity(MusicCastEntity):
             identifiers={
                 (
                     DOMAIN,
-                    "".join(self.coordinator.data.mac_addresses.values()),
+                    self.coordinator.data.device_id,
                 )
             },
             name=self.coordinator.data.network_name,
