@@ -40,11 +40,6 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
 
     async def _use_websocket(self) -> None:
         """Use WebSocket for updates, instead of polling."""
-        if self.wled.connected:
-            # We are already connected
-            return
-
-        # Connect to WebSocket
         try:
             await self.wled.connect()
         except WLEDError as err:
@@ -95,7 +90,7 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
             raise UpdateFailed(f"Invalid response from API: {error}") from error
 
         # If the device supports a WebSocket, try activating it.
-        if device.info.websocket is not None:
+        if device.info.websocket is not None and not self.wled.connected:
             await self._use_websocket()
 
         return device
