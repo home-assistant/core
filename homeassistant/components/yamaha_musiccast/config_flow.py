@@ -36,15 +36,15 @@ class MusicCastFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self._show_setup_form()
 
-        title = user_input[CONF_HOST]
-        self.host = user_input[CONF_HOST]
+        host = user_input[CONF_HOST]
+        serial_number = None
 
         errors = {}
         # Check if device is a MusicCast device
 
         try:
             info = await MusicCastDevice.get_device_info(
-                user_input[CONF_HOST], async_get_clientsession(self.hass)
+                host, async_get_clientsession(self.hass)
             )
         except (MusicCastConnectionException, ClientConnectorError):
             errors["base"] = "cannot_connect"
@@ -52,19 +52,19 @@ class MusicCastFlowHandler(ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
-            self.serial_number = info.get("system_id")
-            if self.serial_number is None:
+            serial_number = info.get("system_id")
+            if serial_number is None:
                 errors["base"] = "no_musiccast_device"
 
         if not errors:
-            await self.async_set_unique_id(self.serial_number, raise_on_progress=False)
+            await self.async_set_unique_id(serial_number, raise_on_progress=False)
             self._abort_if_unique_id_configured()
 
             return self.async_create_entry(
-                title=title,
+                title=host,
                 data={
-                    CONF_HOST: user_input[CONF_HOST],
-                    "serial": self.serial_number,
+                    CONF_HOST: host,
+                    "serial": serial_number,
                 },
             )
 
