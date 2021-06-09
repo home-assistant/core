@@ -46,14 +46,14 @@ def get_scanner(hass, config):
         _LOGGER.error("Failed to login to FortiOS API: %s", ex)
         return None
 
-    """Get FortiGate major SW version """
+    """Get FortiGate major SW version."""
     status_json = fgt.monitor("system/status", "")
     fos_major_version = int(status_json["version"][1])
 
     if fos_major_version < 6 or fos_major_version > 7:
         _LOGGER.error(
-            "unsupported FortiOS version, fos_major_version =  %s",
-            str(fos_major_version)
+            "Unsupported FortiOS version, fos_major_version =  %s",
+            str(fos_major_version),
         )
         return None
 
@@ -64,7 +64,7 @@ def get_scanner(hass, config):
         api_url = "user/device/query"
     else:
         _LOGGER.error(
-            "unsupported FortiOS version, fos_major_version =  %s",
+            "Unsupported FortiOS version, fos_major_version =  %s",
             str(fos_major_version)
         )
         return None
@@ -101,7 +101,7 @@ class FortiOSDeviceScanner(DeviceScanner):
                         self._clients.append(client["mac"].upper())
             else:
                 _LOGGER.error(
-                    "unsupported FortiOS version, fos_major_version =  %s",
+                    "Unsupported FortiOS version, fos_major_version =  %s",
                     str(self._fos_major_version)
                 )
 
@@ -132,7 +132,7 @@ class FortiOSDeviceScanner(DeviceScanner):
                         name = client["hostname"]
                     else:
                         _LOGGER.error(
-                            "unsupported FortiOS version, fos_major_version =  %s",
+                            "Unsupported FortiOS version, fos_major_version =  %s",
                             str(self._fos_major_version)
                         )
                         return None
