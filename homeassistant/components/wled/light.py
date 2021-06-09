@@ -27,7 +27,6 @@ from homeassistant.helpers.entity_registry import (
     async_get_registry as async_get_entity_registry,
 )
 
-from . import WLEDDataUpdateCoordinator, WLEDEntity, wled_exception_handler
 from .const import (
     ATTR_COLOR_PRIMARY,
     ATTR_INTENSITY,
@@ -42,6 +41,9 @@ from .const import (
     SERVICE_EFFECT,
     SERVICE_PRESET,
 )
+from .coordinator import WLEDDataUpdateCoordinator
+from .helpers import wled_exception_handler
+from .models import WLEDEntity
 
 PARALLEL_UPDATES = 1
 
