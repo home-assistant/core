@@ -1,7 +1,11 @@
 """DataUpdateCoordinator for WLED."""
+from __future__ import annotations
 
-from wled import WLED, Device as WLEDDevice, WLEDError
+from typing import Callable
 
+from wled import WLED, Device as WLEDDevice, WLEDConnectionClosed, WLEDError
+
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -20,6 +24,7 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
     ) -> None:
         """Initialize global WLED data updater."""
         self.wled = WLED(host, session=async_get_clientsession(hass))
+        self.unsub: Callable | None = None
 
         super().__init__(
             hass,
@@ -27,6 +32,59 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
             name=DOMAIN,
             update_interval=SCAN_INTERVAL,
         )
+
+    async def _use_websocket(self) -> None:
+        """Use WebSocket for updates, instead of polling."""
+        if self.wled.connected:
+            # We are already connected
+            return
+
+        def update_data_from_websocket(device: WLEDDevice) -> None:
+            """Call when WLED reports a state change."""
+            self.data = device
+            self.update_listeners()
+
+        async def listen() -> None:
+            """Listen for state changes via WebSocket."""
+            # Disable polling
+            self.update_interval = None
+
+            try:
+                await self.wled.listen(callback=update_data_from_websocket)
+            except WLEDConnectionClosed as err:
+                self.last_update_success = False
+                self.logger.info(err)
+            except WLEDError as err:
+                self.last_update_success = False
+                self.logger.error(err)
+
+            # Ensure we are disconnected
+            await self.wled.disconnect()
+            if self.unsub:
+                self.unsub()
+                self.unsub = None
+
+            # Resume polling
+            self.update_interval = SCAN_INTERVAL
+            self._schedule_refresh()
+
+        # Connect to WebSocket
+        try:
+            await self.wled.connect()
+        except WLEDError as err:
+            self.logger.info(err)
+            return
+
+        async def close_websocket(_) -> None:
+            """Close WebSocket connection."""
+            await self.wled.disconnect()
+
+        self.unsub = self.hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_STOP, close_websocket
+        )
+
+        # Start listening
+        self.hass.loop.create_task(listen())
 
     def update_listeners(self) -> None:
         """Call update on all listeners."""
@@ -36,6 +94,12 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
     async def _async_update_data(self) -> WLEDDevice:
         """Fetch data from WLED."""
         try:
-            return await self.wled.update(full_update=not self.last_update_success)
+            device = await self.wled.update(full_update=not self.last_update_success)
         except WLEDError as error:
             raise UpdateFailed(f"Invalid response from API: {error}") from error
+
+        # If the device supports a WebSocket, try activating it.
+        if device.info.websocket is not None:
+            await self._use_websocket()
+
+        return device
