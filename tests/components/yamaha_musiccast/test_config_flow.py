@@ -196,7 +196,7 @@ async def test_ssdp_discovery_successful_add_device(hass, mock_ssdp_yamaha):
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"user_input": "Confirm"},
+        {},
     )
 
     assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
