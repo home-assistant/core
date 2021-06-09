@@ -60,18 +60,13 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
             EVENT_HOMEASSISTANT_STOP, close_websocket
         )
 
-        def update_data_from_websocket(device: WLEDDevice) -> None:
-            """Call when WLED reports a state change."""
-            self.data = device
-            self.update_listeners()
-
         async def listen() -> None:
             """Listen for state changes via WebSocket."""
             # Disable polling
             self.update_interval = None
 
             try:
-                await self.wled.listen(callback=update_data_from_websocket)
+                await self.wled.listen(callback=self.async_set_updated_data)
             except WLEDConnectionClosed as err:
                 self.last_update_success = False
                 self.logger.info(err)
