@@ -98,11 +98,6 @@ class FortiOSDeviceScanner(DeviceScanner):
                 for client in clients_json["results"]:
                     if client["is_online"]:
                         self._clients.append(client["mac"].upper())
-            else:
-                _LOGGER.error(
-                    "FortiOS version %s is not supported",
-                    str(self._fos_major_version),
-                )
 
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
