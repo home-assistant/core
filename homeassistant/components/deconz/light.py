@@ -1,5 +1,8 @@
 """Support for deCONZ lights."""
 
+from __future__ import annotations
+
+from pydeconz.group import DeconzGroup as Group
 from pydeconz.light import Light
 
 from homeassistant.components.light import (
@@ -103,7 +106,6 @@ class DeconzBaseLight(DeconzDevice, LightEntity):
     """Representation of a deCONZ light."""
 
     TYPE = DOMAIN
-    # _attr_supported_color_modes = {}
 
     def __init__(self, device, gateway):
         """Set up light."""
@@ -112,7 +114,7 @@ class DeconzBaseLight(DeconzDevice, LightEntity):
         self._attr_supported_color_modes = set()
         self.update_features(self._device)
 
-    def update_features(self, device):
+    def update_features(self, device: Light | Group) -> None:
         """Calculate supported features of device."""
         supported_color_modes = self._attr_supported_color_modes
 
@@ -139,15 +141,18 @@ class DeconzBaseLight(DeconzDevice, LightEntity):
             self._attr_supported_features |= SUPPORT_EFFECT
 
     @property
-    def color_mode(self):
+    def color_mode(self) -> str:
         """Return the color mode of the light."""
-        color_mode = None
         if self._device.colormode == "ct":
             color_mode = COLOR_MODE_COLOR_TEMP
         elif self._device.colormode == "hs":
             color_mode = COLOR_MODE_HS
         elif self._device.colormode == "xy":
             color_mode = COLOR_MODE_XY
+        elif self._device.brightness is not None:
+            color_mode = COLOR_MODE_BRIGHTNESS
+        else:
+            color_mode = COLOR_MODE_ONOFF
         return color_mode
 
     @property
@@ -166,14 +171,12 @@ class DeconzBaseLight(DeconzDevice, LightEntity):
         return self._device.ct
 
     @property
-    def hs_color(self):
+    def hs_color(self) -> tuple:
         """Return the hs color value."""
-        if self._device.hue is not None and self._device.sat is not None:
-            return (self._device.hue / 65535 * 360, self._device.sat / 255 * 100)
-        return None
+        return (self._device.hue / 65535 * 360, self._device.sat / 255 * 100)
 
     @property
-    def xy_color(self):
+    def xy_color(self) -> tuple | None:
         """Return the XY color value."""
         return self._device.xy
 
@@ -274,6 +277,21 @@ class DeconzGroup(DeconzBaseLight):
             light = gateway.api.lights[light_id]
             if light.ZHATYPE == Light.ZHATYPE:
                 self.update_features(light)
+
+        for exclusive_color_mode in [COLOR_MODE_ONOFF, COLOR_MODE_BRIGHTNESS]:
+            if (
+                exclusive_color_mode in self._attr_supported_color_modes
+                and len(self._attr_supported_color_modes) > 1
+            ):
+                self._attr_supported_color_modes.remove(exclusive_color_mode)
+
+    @property
+    def hs_color(self) -> tuple | None:
+        """Return the hs color value."""
+        try:
+            return super().hs_color
+        except TypeError:
+            return None
 
     @property
     def unique_id(self):
