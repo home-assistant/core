@@ -148,7 +148,12 @@ class SamsungTVDevice(MediaPlayerEntity):
         """Return the availability of the device."""
         if self._auth_failed:
             return False
-        return self._state == STATE_ON or self._on_script or self._mac
+        return (
+            self._state == STATE_ON
+            or self._on_script
+            or self._mac
+            or self._power_off_in_progress()
+        )
 
     @property
     def device_info(self):
