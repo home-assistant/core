@@ -221,7 +221,6 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
         }
 
     @property
-    @property
     def rgb_color(self) -> tuple[int, int, int] | None:
         """Return the color value."""
         return self.coordinator.data.state.segments[self._segment].color_primary[:3]
