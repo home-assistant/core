@@ -385,6 +385,20 @@ async def async_setup(hass, config):  # noqa: C901
                 params[ATTR_RGB_COLOR] = rgbw_color[0:3]
                 params[ATTR_WHITE_VALUE] = rgbw_color[3]
 
+        # If a color temperature is specified, emualte it if not supported by the light
+        if (
+            ATTR_COLOR_TEMP in params
+            and COLOR_MODE_COLOR_TEMP not in supported_color_modes
+        ):
+            color_temp = params.pop(ATTR_COLOR_TEMP)
+            if color_supported(supported_color_modes):
+                temp_k = color_util.color_temperature_mired_to_kelvin(color_temp)
+                params[ATTR_HS_COLOR] = color_util.color_temperature_to_hs(temp_k)
+            elif (
+                COLOR_MODE_WHITE in supported_color_modes and ATTR_BRIGHTNESS in params
+            ):
+                params[ATTR_WHITE] = params[ATTR_BRIGHTNESS]
+
         # If a color is specified, convert to the color space supported by the light
         # Backwards compatibility: Fall back to hs color if light.supported_color_modes
         # is not implemented
