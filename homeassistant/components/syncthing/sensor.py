@@ -317,15 +317,17 @@ class SpeedSensor(CoordinatorEntity):
         self._last_updated = monotonic()
         self._state = 0
 
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return f"{self._short_server_id} {self._name}"
-
-    @property
-    def unique_id(self):
-        """Return the unique id of the entity."""
-        return f"{self._short_server_id}-{self._name}"
+        self._attr_name = f"{self._short_server_id} {self._name}"
+        self._attr_unique_id = f"{self._short_server_id}-{self._name}"
+        self._attr_icon = "mdi:speedometer"
+        self._attr_unit_of_measurement = DATA_RATE_MEGABYTES_PER_SECOND
+        self._attr_device_info = {
+            "identifiers": {(DOMAIN, self._server_id)},
+            "name": f"Syncthing ({self._url})",
+            "manufacturer": "Syncthing Team",
+            "sw_version": self._version,
+            "entry_type": "service",
+        }
 
     @property
     def state(self):
@@ -333,27 +335,6 @@ class SpeedSensor(CoordinatorEntity):
         if not self.available:
             return
         return self._state
-
-    @property
-    def icon(self):
-        """Return the icon for this sensor."""
-        return "mdi:speedometer"
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement for this sensor."""
-        return DATA_RATE_MEGABYTES_PER_SECOND
-
-    @property
-    def device_info(self):
-        """Return device information."""
-        return {
-            "identifiers": {(DOMAIN, self._server_id)},
-            "name": f"Syncthing ({self._url})",
-            "manufacturer": "Syncthing Team",
-            "sw_version": self._version,
-            "entry_type": "service",
-        }
 
     @property
     def extra_state_attributes(self):
