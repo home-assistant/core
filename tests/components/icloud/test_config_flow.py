@@ -10,10 +10,8 @@ from homeassistant.components.icloud.config_flow import (
     CONF_VERIFICATION_CODE,
 )
 from homeassistant.components.icloud.const import (
-    CONF_GPS_ACCURACY_THRESHOLD,
     CONF_MAX_INTERVAL,
     CONF_WITH_FAMILY,
-    DEFAULT_GPS_ACCURACY_THRESHOLD,
     DEFAULT_MAX_INTERVAL,
     DEFAULT_WITH_FAMILY,
     DOMAIN,
@@ -30,14 +28,12 @@ PASSWORD = "password"
 PASSWORD_2 = "second_password"
 WITH_FAMILY = True
 MAX_INTERVAL = 15
-GPS_ACCURACY_THRESHOLD = 250
 
 MOCK_CONFIG = {
     CONF_USERNAME: USERNAME,
     CONF_PASSWORD: PASSWORD,
     CONF_WITH_FAMILY: DEFAULT_WITH_FAMILY,
     CONF_MAX_INTERVAL: DEFAULT_MAX_INTERVAL,
-    CONF_GPS_ACCURACY_THRESHOLD: DEFAULT_GPS_ACCURACY_THRESHOLD,
 }
 
 TRUSTED_DEVICES = [
@@ -194,7 +190,6 @@ async def test_user_with_cookie(hass: HomeAssistant, service_authenticated: Magi
     assert result["data"][CONF_PASSWORD] == PASSWORD
     assert result["data"][CONF_WITH_FAMILY] == WITH_FAMILY
     assert result["data"][CONF_MAX_INTERVAL] == DEFAULT_MAX_INTERVAL
-    assert result["data"][CONF_GPS_ACCURACY_THRESHOLD] == DEFAULT_GPS_ACCURACY_THRESHOLD
 
 
 async def test_import(hass: HomeAssistant, service: MagicMock):
@@ -217,7 +212,6 @@ async def test_import(hass: HomeAssistant, service: MagicMock):
             CONF_PASSWORD: PASSWORD,
             CONF_WITH_FAMILY: WITH_FAMILY,
             CONF_MAX_INTERVAL: MAX_INTERVAL,
-            CONF_GPS_ACCURACY_THRESHOLD: GPS_ACCURACY_THRESHOLD,
         },
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -241,7 +235,6 @@ async def test_import_with_cookie(
     assert result["data"][CONF_PASSWORD] == PASSWORD
     assert result["data"][CONF_WITH_FAMILY] == DEFAULT_WITH_FAMILY
     assert result["data"][CONF_MAX_INTERVAL] == DEFAULT_MAX_INTERVAL
-    assert result["data"][CONF_GPS_ACCURACY_THRESHOLD] == DEFAULT_GPS_ACCURACY_THRESHOLD
 
     # import with all
     result = await hass.config_entries.flow.async_init(
@@ -252,7 +245,6 @@ async def test_import_with_cookie(
             CONF_PASSWORD: PASSWORD,
             CONF_WITH_FAMILY: WITH_FAMILY,
             CONF_MAX_INTERVAL: MAX_INTERVAL,
-            CONF_GPS_ACCURACY_THRESHOLD: GPS_ACCURACY_THRESHOLD,
         },
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
@@ -262,7 +254,6 @@ async def test_import_with_cookie(
     assert result["data"][CONF_PASSWORD] == PASSWORD
     assert result["data"][CONF_WITH_FAMILY] == WITH_FAMILY
     assert result["data"][CONF_MAX_INTERVAL] == MAX_INTERVAL
-    assert result["data"][CONF_GPS_ACCURACY_THRESHOLD] == GPS_ACCURACY_THRESHOLD
 
 
 async def test_two_accounts_setup(
@@ -288,7 +279,6 @@ async def test_two_accounts_setup(
     assert result["data"][CONF_PASSWORD] == PASSWORD
     assert result["data"][CONF_WITH_FAMILY] == DEFAULT_WITH_FAMILY
     assert result["data"][CONF_MAX_INTERVAL] == DEFAULT_MAX_INTERVAL
-    assert result["data"][CONF_GPS_ACCURACY_THRESHOLD] == DEFAULT_GPS_ACCURACY_THRESHOLD
 
 
 async def test_already_setup(hass: HomeAssistant):
@@ -430,7 +420,6 @@ async def test_verification_code_success(hass: HomeAssistant, service: MagicMock
     assert result["data"][CONF_PASSWORD] == PASSWORD
     assert result["data"][CONF_WITH_FAMILY] == DEFAULT_WITH_FAMILY
     assert result["data"][CONF_MAX_INTERVAL] == DEFAULT_MAX_INTERVAL
-    assert result["data"][CONF_GPS_ACCURACY_THRESHOLD] == DEFAULT_GPS_ACCURACY_THRESHOLD
 
 
 async def test_validate_verification_code_failed(
@@ -475,7 +464,6 @@ async def test_2fa_code_success(hass: HomeAssistant, service_2fa: MagicMock):
     assert result["data"][CONF_PASSWORD] == PASSWORD
     assert result["data"][CONF_WITH_FAMILY] == DEFAULT_WITH_FAMILY
     assert result["data"][CONF_MAX_INTERVAL] == DEFAULT_MAX_INTERVAL
-    assert result["data"][CONF_GPS_ACCURACY_THRESHOLD] == DEFAULT_GPS_ACCURACY_THRESHOLD
 
 
 async def test_validate_2fa_code_failed(
