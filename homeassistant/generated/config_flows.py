@@ -18,6 +18,7 @@ FLOWS = [
     "airvisual",
     "alarmdecoder",
     "almond",
+    "ambee",
     "ambiclimate",
     "ambient_station",
     "apple_tv",
