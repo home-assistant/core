@@ -183,8 +183,10 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
             f"{self.coordinator.data.info.mac_address}_{self._segment}"
         )
 
+        self._attr_color_mode = COLOR_MODE_RGB
         self._attr_supported_color_modes = {COLOR_MODE_RGB}
         if self._rgbw and self._wv:
+            self._attr_color_mode = COLOR_MODE_RGBW
             self._attr_supported_color_modes = {COLOR_MODE_RGBW}
 
     @property
