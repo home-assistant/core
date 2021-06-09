@@ -14,7 +14,7 @@ import urllib.parse
 import async_timeout
 from pysonos.alarms import get_alarms
 from pysonos.core import MUSIC_SRC_LINE_IN, MUSIC_SRC_RADIO, MUSIC_SRC_TV, SoCo
-from pysonos.data_structures import DidlAudioBroadcast
+from pysonos.data_structures import DidlAudioBroadcast, DidlPlaylistContainer
 from pysonos.events_base import Event as SonosEvent, SubscriptionBase
 from pysonos.exceptions import SoCoException
 from pysonos.music_library import MusicLibrary
@@ -893,6 +893,9 @@ class SonosSpeaker:
                 variables["enqueued_transport_uri"] or variables["current_track_uri"]
             )
             music_source = self.soco.music_source_from_uri(track_uri)
+            if uri_meta_data := variables.get("enqueued_transport_uri_meta_data"):
+                if isinstance(uri_meta_data, DidlPlaylistContainer):
+                    self.media.channel = uri_meta_data.title
         else:
             self.media.play_mode = self.soco.play_mode
             music_source = self.soco.music_source
