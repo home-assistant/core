@@ -37,7 +37,7 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the uptime sensor platform."""
-    name = config.get(CONF_NAME)
+    name = config[CONF_NAME]
 
     async_add_entities([UptimeSensor(name)], True)
 
@@ -45,13 +45,13 @@ async def async_setup_platform(
 class UptimeSensor(SensorEntity):
     """Representation of an uptime sensor."""
 
-    def __init__(self, name: str | None) -> None:
+    def __init__(self, name: str) -> None:
         """Initialize the uptime sensor."""
         self._name = name
         self._state = dt_util.now().isoformat()
 
     @property
-    def name(self) -> str | None:
+    def name(self) -> str:
         """Return the name of the sensor."""
         return self._name
 
