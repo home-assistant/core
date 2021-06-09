@@ -56,17 +56,9 @@ def get_scanner(hass, config):
         )
         return None
 
-    api_url = ""
+    api_url = "user/device/query"
     if fos_major_version == 6:
         api_url = "user/device/select"
-    elif fos_major_version == 7:
-        api_url = "user/device/query"
-    else:
-        _LOGGER.error(
-            "FortiOS version %s is not supported",
-            str(fos_major_version),
-        )
-        return None
 
     return FortiOSDeviceScanner(fgt, fos_major_version, api_url)
 
