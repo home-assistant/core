@@ -169,6 +169,9 @@ aioymaps==1.1.0
 # homeassistant.components.airly
 airly==1.1.0
 
+# homeassistant.components.ambee
+ambee==0.2.1
+
 # homeassistant.components.ambiclimate
 ambiclimate==0.2.1
 
