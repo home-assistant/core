@@ -11,7 +11,10 @@ from tests.components.wled import init_integration
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
-@patch("homeassistant.components.wled.WLED.update", side_effect=WLEDConnectionError)
+@patch(
+    "homeassistant.components.wled.coordinator.WLED.update",
+    side_effect=WLEDConnectionError,
+)
 async def test_config_entry_not_ready(
     mock_update: MagicMock, hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:

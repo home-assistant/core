@@ -17,8 +17,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import utcnow
 
-from . import WLEDDataUpdateCoordinator, WLEDEntity
 from .const import ATTR_LED_COUNT, ATTR_MAX_POWER, CURRENT_MA, DOMAIN
+from .coordinator import WLEDDataUpdateCoordinator
+from .models import WLEDEntity
 
 
 async def async_setup_entry(
