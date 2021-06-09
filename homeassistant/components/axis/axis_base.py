@@ -14,6 +14,8 @@ class AxisEntityBase(Entity):
         """Initialize the Axis event."""
         self.device = device
 
+        self._attr_device_info = {"identifiers": {(AXIS_DOMAIN, device.unique_id)}}
+
     async def async_added_to_hass(self):
         """Subscribe device events."""
         self.async_on_remove(
@@ -26,11 +28,6 @@ class AxisEntityBase(Entity):
     def available(self):
         """Return True if device is available."""
         return self.device.available
-
-    @property
-    def device_info(self):
-        """Return a device description for device registry."""
-        return {"identifiers": {(AXIS_DOMAIN, self.device.unique_id)}}
 
     @callback
     def update_callback(self, no_delay=None):
