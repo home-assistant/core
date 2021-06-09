@@ -7,14 +7,3 @@ RUN apk --no-cache add usbutils \
         bluepy \
         pybluez \
         pygatt[GATTTOOL]
-
-# Install GPIO support
-RUN apk add --no-cache --virtual .build-dependencies \
-        gcc libc-dev musl-dev \
-    && git clone --depth 1 https://github.com/TinkerBoard/gpio_lib_python /usr/src/gpio \
-    && cd /usr/src/gpio \
-    && sed -i "s/caddr_t/void*/g" source/wiringTB.c \
-    && export MAKEFLAGS="-j$(nproc)" \
-    && python3 setup.py install \
-    && apk del .build-dependencies \
-    && rm -rf /usr/src/gpio
