@@ -2,6 +2,7 @@
 
 from unittest.mock import patch
 
+from aiomusiccast import MusicCastConnectionException
 import pytest
 
 from homeassistant import config_entries, data_entry_flow
@@ -53,6 +54,16 @@ def mock_get_device_info_exception():
 
 
 @pytest.fixture
+def mock_get_device_info_mc_exception():
+    """Mock raising an unexpected Exception."""
+    with patch(
+        "aiomusiccast.MusicCastDevice.get_device_info",
+        side_effect=MusicCastConnectionException("mocked error"),
+    ):
+        yield
+
+
+@pytest.fixture
 def mock_ssdp_yamaha():
     """Mock that the SSDP detected device is a musiccast device."""
     with patch("aiomusiccast.MusicCastDevice.check_yamaha_ssdp", return_value=True):
@@ -69,7 +80,7 @@ def mock_ssdp_no_yamaha():
 # User Flows
 
 
-async def test_user_input_device_not_found(hass):
+async def test_user_input_device_not_found(hass, mock_get_device_info_mc_exception):
     """Test when user specifies a non-existing device."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
