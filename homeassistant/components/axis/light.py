@@ -51,6 +51,7 @@ class AxisLight(AxisEventBase, LightEntity):
 
         light_type = device.api.vapix.light_control[self.light_id].light_type
         self._attr_name = f"{device.name} {light_type} {event.TYPE} {event.id}"
+
         self._attr_supported_color_modes = {COLOR_MODE_BRIGHTNESS}
         self._attr_color_mode = COLOR_MODE_BRIGHTNESS
         self._attr_should_poll = True
