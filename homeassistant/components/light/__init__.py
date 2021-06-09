@@ -370,13 +370,13 @@ async def async_setup(hass, config):  # noqa: C901
         ):
             profiles.apply_default(light.entity_id, light.is_on, params)
 
+        legacy_supported_color_modes = (
+            light._light_internal_supported_color_modes  # pylint: disable=protected-access
+        )
         supported_color_modes = light.supported_color_modes
         # Backwards compatibility: if an RGBWW color is specified, convert to RGB + W
         # for legacy lights
         if ATTR_RGBW_COLOR in params:
-            legacy_supported_color_modes = (
-                light._light_internal_supported_color_modes  # pylint: disable=protected-access
-            )
             if (
                 COLOR_MODE_RGBW in legacy_supported_color_modes
                 and not supported_color_modes
@@ -385,17 +385,18 @@ async def async_setup(hass, config):  # noqa: C901
                 params[ATTR_RGB_COLOR] = rgbw_color[0:3]
                 params[ATTR_WHITE_VALUE] = rgbw_color[3]
 
-        # If a color temperature is specified, emualte it if not supported by the light
+        # If a color temperature is specified, emulate it if not supported by the light
         if (
             ATTR_COLOR_TEMP in params
-            and COLOR_MODE_COLOR_TEMP not in supported_color_modes
+            and COLOR_MODE_COLOR_TEMP not in legacy_supported_color_modes
         ):
             color_temp = params.pop(ATTR_COLOR_TEMP)
-            if color_supported(supported_color_modes):
+            if color_supported(legacy_supported_color_modes):
                 temp_k = color_util.color_temperature_mired_to_kelvin(color_temp)
                 params[ATTR_HS_COLOR] = color_util.color_temperature_to_hs(temp_k)
             elif (
-                COLOR_MODE_WHITE in supported_color_modes and ATTR_BRIGHTNESS in params
+                COLOR_MODE_WHITE in legacy_supported_color_modes
+                and ATTR_BRIGHTNESS in params
             ):
                 params[ATTR_WHITE] = params[ATTR_BRIGHTNESS]
 
