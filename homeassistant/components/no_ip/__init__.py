@@ -3,12 +3,12 @@ import asyncio
 import base64
 from datetime import timedelta
 import logging
+from typing import Any
 
 import aiohttp
 from aiohttp.hdrs import AUTHORIZATION, USER_AGENT
 import async_timeout
 import voluptuous as vol
-from voluptuous.validators import Any
 
 from homeassistant.const import CONF_DOMAIN, CONF_PASSWORD, CONF_TIMEOUT, CONF_USERNAME
 from homeassistant.core import HomeAssistant
