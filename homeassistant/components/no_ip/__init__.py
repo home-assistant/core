@@ -8,10 +8,13 @@ import aiohttp
 from aiohttp.hdrs import AUTHORIZATION, USER_AGENT
 import async_timeout
 import voluptuous as vol
+from voluptuous.validators import Any
 
 from homeassistant.const import CONF_DOMAIN, CONF_PASSWORD, CONF_TIMEOUT, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import SERVER_SOFTWARE
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,7 +54,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Initialize the NO-IP component."""
     domain = config[DOMAIN].get(CONF_DOMAIN)
     user = config[DOMAIN].get(CONF_USERNAME)
@@ -67,7 +70,7 @@ async def async_setup(hass, config):
     if not result:
         return False
 
-    async def update_domain_interval(now):
+    async def update_domain_interval(now: Any) -> None:
         """Update the NO-IP entry."""
         await _update_no_ip(hass, session, domain, auth_str, timeout)
 
@@ -76,7 +79,13 @@ async def async_setup(hass, config):
     return True
 
 
-async def _update_no_ip(hass, session, domain, auth_str, timeout):
+async def _update_no_ip(
+    hass: HomeAssistant,
+    session: aiohttp.ClientSession,
+    domain: str,
+    auth_str: bytes,
+    timeout: int,
+) -> bool:
     """Update NO-IP."""
     url = UPDATE_URL
 
