@@ -1,7 +1,7 @@
 """Provides device automations for Philips Hue events."""
 import voluptuous as vol
 
-from homeassistant.components.device_automation import TRIGGER_BASE_SCHEMA
+from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
 )
@@ -94,7 +94,7 @@ REMOTES = {
     HUE_FOHSWITCH_REMOTE_MODEL: HUE_FOHSWITCH_REMOTE,
 }
 
-TRIGGER_SCHEMA = TRIGGER_BASE_SCHEMA.extend(
+TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {vol.Required(CONF_TYPE): str, vol.Required(CONF_SUBTYPE): str}
 )
 
