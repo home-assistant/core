@@ -1,0 +1,19 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "\u9023\u7dda\u5931\u6557",
+            "invalid_api_key": "API \u5bc6\u9470\u7121\u6548"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API \u5bc6\u9470",
+                    "latitude": "\u7def\u5ea6",
+                    "longitude": "\u7d93\u5ea6",
+                    "name": "\u540d\u7a31"
+                },
+                "description": "\u8a2d\u5b9a Ambee \u4ee5\u6574\u5408\u81f3 Home Assistant\u3002"
+            }
+        }
+    }
+}
