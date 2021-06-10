@@ -39,6 +39,8 @@ class AxisEntityBase(Entity):
 class AxisEventBase(AxisEntityBase):
     """Base common to all Axis entities from event stream."""
 
+    _attr_should_poll = False
+
     def __init__(self, event, device):
         """Initialize the Axis event."""
         super().__init__(device)
@@ -48,7 +50,6 @@ class AxisEventBase(AxisEntityBase):
         self._attr_unique_id = f"{device.unique_id}-{event.topic}-{event.id}"
 
         self._attr_device_class = event.CLASS
-        self._attr_should_poll = False
 
     async def async_added_to_hass(self) -> None:
         """Subscribe sensors events."""

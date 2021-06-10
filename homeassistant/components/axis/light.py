@@ -40,6 +40,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class AxisLight(AxisEventBase, LightEntity):
     """Representation of a light Axis event."""
 
+    _attr_should_poll = True
+
     def __init__(self, event, device):
         """Initialize the Axis light."""
         super().__init__(event, device)
@@ -54,7 +56,6 @@ class AxisLight(AxisEventBase, LightEntity):
 
         self._attr_supported_color_modes = {COLOR_MODE_BRIGHTNESS}
         self._attr_color_mode = COLOR_MODE_BRIGHTNESS
-        self._attr_should_poll = True
 
     async def async_added_to_hass(self) -> None:
         """Subscribe lights events."""
