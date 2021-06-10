@@ -21,15 +21,6 @@ class MawaqitHub:
         self._mosque = mosque
         self._token = token
 
-        _LOGGER.info(
-            self._username,
-            self._password,
-            self._latitude,
-            self._longitude,
-            self._mosque,
-            self._token,
-        )
-
     def validate_auth(self):
         """Validate authentication."""
         try:
