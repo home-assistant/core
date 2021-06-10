@@ -1,0 +1,33 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "no_mosque": "No mosque could be found",
+            "single_instance_allowed": "Single instance allowed"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Password",
+                    "username": "Username",
+                    "latitude": "Latitude",
+                    "longitude": "Longitude"
+                },
+                "description": "Make sure to have an account on https://mawaqit.net/",
+                "title": "Authentication"
+            },
+            "select_mosque": {
+                "data": {
+                    "mosque": "Mosque"
+                },
+                "title": "Select a Mosque closeby"
+            }            
+        }
+    },
+    "title": "Mawaqit Prayer Times"
+}

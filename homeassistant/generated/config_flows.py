@@ -97,6 +97,7 @@ FLOWS = [
     "growatt_server",
     "guardian",
     "habitica",
+    "habo",
     "hangouts",
     "harmony",
     "heos",
