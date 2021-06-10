@@ -50,7 +50,7 @@ class NAMSensor(CoordinatorEntity, SensorEntity):
         self._attr_icon = description[ATTR_ICON]
         self._attr_name = description[ATTR_LABEL]
         self._attr_state_class = description[ATTR_STATE_CLASS]
-        self._attr_unique_id = f"{self.coordinator.unique_id}-{sensor_type}"
+        self._attr_unique_id = f"{coordinator.unique_id}-{sensor_type}"
         self._attr_unit_of_measurement = description[ATTR_UNIT]
         self.sensor_type = sensor_type
 
