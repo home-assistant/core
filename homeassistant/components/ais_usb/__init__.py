@@ -5,6 +5,7 @@ For more details about this component, please refer to the documentation at
 https://www.ai-speaker.com
 """
 import asyncio
+import fileinput
 import logging
 import os
 import platform
@@ -68,19 +69,10 @@ def get_device_info(pathname):
 
 
 async def prepare_usb_device(hass, device_info):
-    # start zigbee2mqtt service
-    # add info in app
+    # ZIGBEE
     if device_info["id"] in G_ZIGBEE_DEVICES_ID:
-        # Register the built-in zigbee panel
-        # hass.components.frontend.async_register_built_in_panel(
-        #     "aiszigbee",
-        #     require_admin=True,
-        #     sidebar_title="Zigbee",
-        #     sidebar_icon="mdi:zigbee",
-        #     update=True,
-        # )
-
         # check if zigbee already exists
+        # add info in app
         if not os.path.isdir("/data/data/pl.sviete.dom/files/home/zigbee2mqtt"):
             await hass.services.async_call(
                 "ais_ai_service",
@@ -91,17 +83,32 @@ async def prepare_usb_device(hass, device_info):
                 },
             )
             return
-
-        # fix permitions
+        # fix permissions
         uid = str(os.getuid())
         gid = str(os.getgid())
         if ais_global.has_root():
-            await _run("su -c 'chown " + uid + ":" + gid + " /dev/ttyACM0'")
+            await _run("su -c 'chown " + uid + ":" + gid + " /dev/ttyACM*'")
         # TODO check the /dev/ttyACM.. number
         if ais_global.has_root():
-            await _run("su -c 'chmod 777 /dev/ttyACM0'")
+            await _run("su -c 'chmod 777 /dev/ttyACM*'")
 
-        # restart-delay 120000 milisecond == 2 minutes
+        # set the adapter
+        adapter = "null"
+        if device_info["id"] == "0451:16a8":
+            adapter = "zstack"
+        if device_info["id"] == "1cf1:0030":
+            adapter = "deconz"
+        # change zigbee settings
+        with fileinput.FileInput(
+                "/data/data/pl.sviete.dom/files/home/zigbee2mqtt/data/configuration.yaml", inplace=True) as file:
+            for line in file:
+                if line.startswith("  adapter:"):
+                    line.replace(line, "  adapter: " + adapter)
+                if line.startswith("  port:"):
+                    line.replace(line, "  port: /dev/ttyACM0")
+
+        # start zigbee2mqtt service
+        # restart-delay 120000 millisecond == 2 minutes
         cmd_to_run = (
             "pm2 restart zigbee || pm2 start /data/data/pl.sviete.dom/files/home/zigbee2mqtt/index.js "
             "--name zigbee --output /dev/null --error /dev/null --restart-delay=120000"
@@ -113,6 +120,16 @@ async def prepare_usb_device(hass, device_info):
         await hass.services.async_call(
             "ais_ai_service", "say_it", {"text": "Uruchomiono serwis zigbee"}
         )
+    # ZWAVE
+    if device_info["id"] == G_ZWAVE_ID:
+        # fix permissions
+        uid = str(os.getuid())
+        gid = str(os.getgid())
+        if ais_global.has_root():
+            await _run("su -c 'chown " + uid + ":" + gid + " /dev/ttyACM*'")
+        # TODO check the /dev/ttyACM.. number
+        if ais_global.has_root():
+            await _run("su -c 'chmod 777 /dev/ttyACM*'")
 
 
 async def remove_usb_device(hass, device_info):
@@ -311,9 +328,8 @@ async def async_setup(hass, config):
         # check if the call was from scheduler or service / web app
         ais_global.G_USB_DEVICES = _lsusb()
         for device in ais_global.G_USB_DEVICES:
-            if device["id"] in G_ZIGBEE_DEVICES_ID:
-                # USB zigbee dongle
-                await prepare_usb_device(hass, device)
+            # check if USB is zigbee or zwave dongle
+            await prepare_usb_device(hass, device)
 
     async def mount_external_drives(call):
         """mount_external_drives."""
