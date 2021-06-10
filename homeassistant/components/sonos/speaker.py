@@ -149,11 +149,11 @@ class SonosSpeaker:
         self.media = SonosMedia(soco)
 
         # Synchronization helpers
-        self.is_first_poll: bool = True
         self._is_ready: bool = False
         self._platforms_ready: set[str] = set()
 
         # Subscriptions and events
+        self.subscriptions_failed: bool = False
         self._subscriptions: list[SubscriptionBase] = []
         self._resubscription_lock: asyncio.Lock | None = None
         self._event_dispatchers: dict[str, Callable] = {}
@@ -331,6 +331,15 @@ class SonosSpeaker:
         subscription.auto_renew_fail = self.async_renew_failed
         self._subscriptions.append(subscription)
 
+    async def async_unsubscribe(self) -> None:
+        """Cancel all subscriptions."""
+        _LOGGER.debug("Unsubscribing from events for %s", self.zone_name)
+        await asyncio.gather(
+            *[subscription.unsubscribe() for subscription in self._subscriptions],
+            return_exceptions=True,
+        )
+        self._subscriptions = []
+
     @callback
     def async_renew_failed(self, exception: Exception) -> None:
         """Handle a failed subscription renewal."""
@@ -445,7 +454,7 @@ class SonosSpeaker:
             SCAN_INTERVAL,
         )
 
-        if self._is_ready:
+        if self._is_ready and not self.subscriptions_failed:
             done = await self.async_subscribe()
             if not done:
                 assert self._seen_timer is not None
@@ -466,10 +475,7 @@ class SonosSpeaker:
             self._poll_timer()
             self._poll_timer = None
 
-        for subscription in self._subscriptions:
-            await subscription.unsubscribe()
-
-        self._subscriptions = []
+        await self.async_unsubscribe()
 
         if not will_reconnect:
             self.hass.data[DATA_SONOS].ssdp_known.remove(self.soco.uid)
