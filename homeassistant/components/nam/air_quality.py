@@ -4,7 +4,6 @@ from __future__ import annotations
 from homeassistant.components.air_quality import AirQualityEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -44,12 +43,10 @@ class NAMAirQuality(CoordinatorEntity, AirQualityEntity):
     def __init__(self, coordinator: NAMDataUpdateCoordinator, sensor_type: str) -> None:
         """Initialize."""
         super().__init__(coordinator)
+        self._attr_device_info = coordinator.device_info
+        self._attr_name = f"{DEFAULT_NAME} {AIR_QUALITY_SENSORS[sensor_type]}"
+        self._attr_unique_id = f"{coordinator.unique_id}-{sensor_type}"
         self.sensor_type = sensor_type
-
-    @property
-    def name(self) -> str:
-        """Return the name."""
-        return f"{DEFAULT_NAME} {AIR_QUALITY_SENSORS[self.sensor_type]}"
 
     @property
     def particulate_matter_2_5(self) -> StateType:
@@ -71,16 +68,6 @@ class NAMAirQuality(CoordinatorEntity, AirQualityEntity):
         return round_state(
             getattr(self.coordinator.data, ATTR_MHZ14A_CARBON_DIOXIDE, None)
         )
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique_id for this entity."""
-        return f"{self.coordinator.unique_id}-{self.sensor_type}"
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device info."""
-        return self.coordinator.device_info
 
     @property
     def available(self) -> bool:
