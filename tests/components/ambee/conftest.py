@@ -2,7 +2,7 @@
 import json
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from ambee import AirQuality
+from ambee import AirQuality, Pollen
 import pytest
 
 from homeassistant.components.ambee.const import DOMAIN
@@ -33,6 +33,9 @@ def mock_ambee(aioclient_mock: AiohttpClientMocker):
             return_value=AirQuality.from_dict(
                 json.loads(load_fixture("ambee/air_quality.json"))
             )
+        )
+        client.pollen = AsyncMock(
+            return_value=Pollen.from_dict(json.loads(load_fixture("ambee/pollen.json")))
         )
         yield ambee_mock
 
