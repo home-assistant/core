@@ -21,6 +21,7 @@ DEFAULT_QOS = 0
 
 TRIGGER_SCHEMA = vol.Schema(
     {
+        **cv.TRIGGER_BASE_SCHEMA,
         vol.Required(CONF_PLATFORM): mqtt.DOMAIN,
         vol.Required(CONF_TOPIC): mqtt.util.valid_subscribe_topic_template,
         vol.Optional(CONF_PAYLOAD): cv.template,

@@ -433,6 +433,7 @@ def handle_entity_source(
 
 @decorators.websocket_command(
     {
+        **cv.TRIGGER_BASE_SCHEMA,
         vol.Required("type"): "subscribe_trigger",
         vol.Required("trigger"): cv.TRIGGER_SCHEMA,
         vol.Optional("variables"): dict,

@@ -23,6 +23,7 @@ _EVENT_DESCRIPTION = {EVENT_ENTER: "entering", EVENT_LEAVE: "leaving"}
 
 TRIGGER_SCHEMA = vol.Schema(
     {
+        **cv.TRIGGER_BASE_SCHEMA,
         vol.Required(CONF_PLATFORM): "zone",
         vol.Required(CONF_ENTITY_ID): cv.entity_ids,
         vol.Required(CONF_ZONE): cv.entity_id,

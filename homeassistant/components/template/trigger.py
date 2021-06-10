@@ -20,6 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 
 TRIGGER_SCHEMA = IF_ACTION_SCHEMA = vol.Schema(
     {
+        **cv.TRIGGER_BASE_SCHEMA,
         vol.Required(CONF_PLATFORM): "template",
         vol.Required(CONF_VALUE_TEMPLATE): cv.template,
         vol.Optional(CONF_FOR): cv.positive_time_period_template,

@@ -45,6 +45,7 @@ class TimePattern:
 TRIGGER_SCHEMA = vol.All(
     vol.Schema(
         {
+            **cv.TRIGGER_BASE_SCHEMA,
             vol.Required(CONF_PLATFORM): "time_pattern",
             CONF_HOURS: TimePattern(maximum=23),
             CONF_MINUTES: TimePattern(maximum=59),

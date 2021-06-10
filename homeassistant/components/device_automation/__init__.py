@@ -27,6 +27,7 @@ DOMAIN = "device_automation"
 
 DEVICE_TRIGGER_BASE_SCHEMA = vol.Schema(
     {
+        **cv.TRIGGER_BASE_SCHEMA,
         vol.Required(CONF_PLATFORM): "device",
         vol.Required(CONF_DOMAIN): str,
         vol.Required(CONF_DEVICE_ID): str,

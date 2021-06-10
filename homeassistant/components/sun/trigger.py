@@ -17,6 +17,7 @@ from homeassistant.helpers.event import async_track_sunrise, async_track_sunset
 
 TRIGGER_SCHEMA = vol.Schema(
     {
+        **cv.TRIGGER_BASE_SCHEMA,
         vol.Required(CONF_PLATFORM): "sun",
         vol.Required(CONF_EVENT): cv.sun_event,
         vol.Required(CONF_OFFSET, default=timedelta(0)): cv.time_period,

@@ -31,6 +31,7 @@ _TIME_TRIGGER_SCHEMA = vol.Any(
 
 TRIGGER_SCHEMA = vol.Schema(
     {
+        **cv.TRIGGER_BASE_SCHEMA,
         vol.Required(CONF_PLATFORM): "time",
         vol.Required(CONF_AT): vol.All(cv.ensure_list, [_TIME_TRIGGER_SCHEMA]),
     }

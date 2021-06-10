@@ -28,6 +28,7 @@ CONF_FROM = "from"
 CONF_TO = "to"
 
 BASE_SCHEMA = {
+    **cv.TRIGGER_BASE_SCHEMA,
     vol.Required(CONF_PLATFORM): "state",
     vol.Required(CONF_ENTITY_ID): cv.entity_ids,
     vol.Optional(CONF_FOR): cv.positive_time_period_template,
