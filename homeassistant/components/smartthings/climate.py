@@ -20,6 +20,7 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_COOL,
     HVAC_MODE_DRY,
     HVAC_MODE_FAN_ONLY,
+    HVAC_MODE_WIND,
     HVAC_MODE_HEAT,
     HVAC_MODE_HEAT_COOL,
     HVAC_MODE_OFF,
@@ -68,6 +69,7 @@ AC_MODE_TO_STATE = {
     "heat": HVAC_MODE_HEAT,
     "heatClean": HVAC_MODE_HEAT,
     "fanOnly": HVAC_MODE_FAN_ONLY,
+    "wind": HVAC_MODE_WIND,
 }
 STATE_TO_AC_MODE = {
     HVAC_MODE_HEAT_COOL: "auto",
@@ -75,6 +77,7 @@ STATE_TO_AC_MODE = {
     HVAC_MODE_DRY: "dry",
     HVAC_MODE_HEAT: "heat",
     HVAC_MODE_FAN_ONLY: "fanOnly",
+    HVAC_MODE_WIND: "wind",
 }
 
 UNIT_MAP = {"C": TEMP_CELSIUS, "F": TEMP_FAHRENHEIT}
