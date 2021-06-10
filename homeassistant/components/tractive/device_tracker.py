@@ -66,7 +66,6 @@ class TractiveDeviceTracker(TrackerEntity):
             "name": f"Tractive ({self._tracker_id})",
             "manufacturer": "Tractive GmbH",
             "sw_version": tracker_details["fw_version"],
-            "entry_type": None,
             "model": tracker_details["model_number"],
         }
 
