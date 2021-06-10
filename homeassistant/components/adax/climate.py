@@ -49,7 +49,7 @@ async def async_setup_entry(
 class AdaxDevice(ClimateEntity):
     """Representation of a heater."""
 
-    def __init__(self, heater_data: dict, adax_data_handler: Adax) -> None:
+    def __init__(self, heater_data: dict[str, Any], adax_data_handler: Adax) -> None:
         """Initialize the heater."""
         self._heater_data = heater_data
         self._adax_data_handler = adax_data_handler
