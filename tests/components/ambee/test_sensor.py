@@ -3,7 +3,11 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from homeassistant.components.ambee.const import DEVICE_CLASS_AMBEE_RISK, DOMAIN
+from homeassistant.components.ambee.const import (
+    DEVICE_CLASS_AMBEE_RISK,
+    DOMAIN,
+    ENTRY_TYPE_SERVICE,
+)
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
     DOMAIN as SENSOR_DOMAIN,
@@ -143,6 +147,7 @@ async def test_air_quality(
     assert device_entry.identifiers == {(DOMAIN, f"{entry_id}_air_quality")}
     assert device_entry.manufacturer == "Ambee"
     assert device_entry.name == "Air Quality"
+    assert device_entry.entry_type == ENTRY_TYPE_SERVICE
     assert not device_entry.model
     assert not device_entry.sw_version
 
@@ -243,6 +248,7 @@ async def test_pollen(
     assert device_entry.identifiers == {(DOMAIN, f"{entry_id}_pollen")}
     assert device_entry.manufacturer == "Ambee"
     assert device_entry.name == "Pollen"
+    assert device_entry.entry_type == ENTRY_TYPE_SERVICE
     assert not device_entry.model
     assert not device_entry.sw_version
 

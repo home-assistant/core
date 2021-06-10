@@ -23,7 +23,14 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from .const import ATTR_ENABLED_BY_DEFAULT, DOMAIN, SENSORS, SERVICES
+from .const import (
+    ATTR_ENABLED_BY_DEFAULT,
+    ATTR_ENTRY_TYPE,
+    DOMAIN,
+    ENTRY_TYPE_SERVICE,
+    SENSORS,
+    SERVICES,
+)
 from .models import AmbeeSensor
 
 
@@ -80,6 +87,7 @@ class AmbeeSensorEntity(CoordinatorEntity, SensorEntity):
             ATTR_IDENTIFIERS: {(DOMAIN, f"{entry_id}_{service_key}")},
             ATTR_NAME: service,
             ATTR_MANUFACTURER: "Ambee",
+            ATTR_ENTRY_TYPE: ENTRY_TYPE_SERVICE,
         }
 
     @property

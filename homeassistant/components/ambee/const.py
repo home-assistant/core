@@ -25,6 +25,8 @@ LOGGER = logging.getLogger(__package__)
 SCAN_INTERVAL = timedelta(minutes=180)
 
 ATTR_ENABLED_BY_DEFAULT: Final = "enabled_by_default"
+ATTR_ENTRY_TYPE: Final = "entry_type"
+ENTRY_TYPE_SERVICE: Final = "service"
 
 DEVICE_CLASS_AMBEE_RISK: Final = "ambee__risk"
 
