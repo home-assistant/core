@@ -2,14 +2,14 @@
 import voluptuous as vol
 
 from homeassistant.components.device_automation import (
-    TRIGGER_BASE_SCHEMA,
+    DEVICE_TRIGGER_BASE_SCHEMA,
     async_get_device_automation_platform,
 )
 from homeassistant.const import CONF_DOMAIN
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
-TRIGGER_SCHEMA = TRIGGER_BASE_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA)
+TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA)
 
 
 async def async_validate_trigger_config(hass, config):
