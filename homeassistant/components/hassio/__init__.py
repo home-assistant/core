@@ -231,7 +231,7 @@ async def async_restart_addon(hass: HomeAssistant, slug: str) -> dict:
     """
     hassio = hass.data[DOMAIN]
     command = f"/addons/{slug}/restart"
-    return await hassio.send_command(command, timeout=60)
+    return await hassio.send_command(command, timeout=None)
 
 
 @bind_hass
