@@ -28,10 +28,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     username: str = entry.data[CONF_USERNAME]
     password: str = entry.data[CONF_PASSWORD]
 
-    garmin_client = Garmin(username, password)
+    api = Garmin(username, password)
 
     try:
-        await hass.async_add_executor_job(garmin_client.login)
+        await hass.async_add_executor_job(api.login)
     except (
         GarminConnectAuthenticationError,
         GarminConnectTooManyRequestsError,
@@ -47,7 +47,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.exception("Unknown error occurred during Garmin Connect login request")
         return False
 
-    garmin_data = GarminConnectData(hass, garmin_client)
+    garmin_data = GarminConnectData(hass, api)
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = garmin_data
 
