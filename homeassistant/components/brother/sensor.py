@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ICON, DEVICE_CLASS_TIMESTAMP
 from homeassistant.core import HomeAssistant
@@ -66,6 +66,7 @@ class BrotherPrinterSensor(CoordinatorEntity, SensorEntity):
         self._device_info = device_info
         self.kind = kind
         self._attrs: dict[str, Any] = {}
+        self._attr_state_class = self._description[ATTR_STATE_CLASS]
 
     @property
     def name(self) -> str:
