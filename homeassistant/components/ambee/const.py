@@ -22,7 +22,7 @@ from .models import AmbeeSensor
 
 DOMAIN: Final = "ambee"
 LOGGER = logging.getLogger(__package__)
-SCAN_INTERVAL = timedelta(minutes=180)
+SCAN_INTERVAL = timedelta(hours=1)
 
 ATTR_ENABLED_BY_DEFAULT: Final = "enabled_by_default"
 ATTR_ENTRY_TYPE: Final = "entry_type"
