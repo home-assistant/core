@@ -29,11 +29,11 @@ async def test_load_unload_config_entry(
 
 
 @patch(
-    "homeassistant.components.ambee.Ambee.air_quality",
+    "homeassistant.components.ambee.Ambee.request",
     side_effect=AmbeeConnectionError,
 )
 async def test_config_entry_not_ready(
-    mock_air_quality: MagicMock,
+    mock_request: MagicMock,
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
 ) -> None:
@@ -42,5 +42,5 @@ async def test_config_entry_not_ready(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert mock_air_quality.call_count == 1
+    assert mock_request.call_count == 1
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY

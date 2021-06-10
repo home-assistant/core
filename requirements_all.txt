@@ -254,7 +254,7 @@ aladdin_connect==0.3
 alpha_vantage==2.3.1
 
 # homeassistant.components.ambee
-ambee==0.2.1
+ambee==0.3.0
 
 # homeassistant.components.ambiclimate
 ambiclimate==0.2.1

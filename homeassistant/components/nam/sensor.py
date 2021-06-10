@@ -8,7 +8,6 @@ from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_ICON
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.dt import utcnow
@@ -44,49 +43,21 @@ class NAMSensor(CoordinatorEntity, SensorEntity):
     def __init__(self, coordinator: NAMDataUpdateCoordinator, sensor_type: str) -> None:
         """Initialize."""
         super().__init__(coordinator)
+        description = SENSORS[sensor_type]
+        self._attr_device_class = description[ATTR_DEVICE_CLASS]
+        self._attr_device_info = coordinator.device_info
+        self._attr_entity_registry_enabled_default = description[ATTR_ENABLED]
+        self._attr_icon = description[ATTR_ICON]
+        self._attr_name = description[ATTR_LABEL]
+        self._attr_state_class = description[ATTR_STATE_CLASS]
+        self._attr_unique_id = f"{coordinator.unique_id}-{sensor_type}"
+        self._attr_unit_of_measurement = description[ATTR_UNIT]
         self.sensor_type = sensor_type
-        self._description = SENSORS[sensor_type]
-        self._attr_state_class = SENSORS[sensor_type][ATTR_STATE_CLASS]
-
-    @property
-    def name(self) -> str:
-        """Return the name."""
-        return self._description[ATTR_LABEL]
 
     @property
     def state(self) -> Any:
         """Return the state."""
         return getattr(self.coordinator.data, self.sensor_type)
-
-    @property
-    def unit_of_measurement(self) -> str | None:
-        """Return the unit the value is expressed in."""
-        return self._description[ATTR_UNIT]
-
-    @property
-    def device_class(self) -> str | None:
-        """Return the class of this sensor."""
-        return self._description[ATTR_DEVICE_CLASS]
-
-    @property
-    def icon(self) -> str | None:
-        """Return the icon."""
-        return self._description[ATTR_ICON]
-
-    @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Return if the entity should be enabled when first added to the entity registry."""
-        return self._description[ATTR_ENABLED]
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique_id for this entity."""
-        return f"{self.coordinator.unique_id}-{self.sensor_type}"
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device info."""
-        return self.coordinator.device_info
 
     @property
     def available(self) -> bool:
