@@ -45,6 +45,7 @@ from homeassistant.const import (
     CONF_EVENT_DATA,
     CONF_EVENT_DATA_TEMPLATE,
     CONF_FOR,
+    CONF_ID,
     CONF_PLATFORM,
     CONF_REPEAT,
     CONF_SCAN_INTERVAL,
@@ -1026,6 +1027,13 @@ TIME_CONDITION_SCHEMA = vol.All(
     has_at_least_one_key("before", "after", "weekday"),
 )
 
+TRIGGER_CONDITION_SCHEMA = vol.Schema(
+    {
+        **CONDITION_BASE_SCHEMA,
+        vol.Required("trigger_id"): str,
+    }
+)
+
 ZONE_CONDITION_SCHEMA = vol.Schema(
     {
         **CONDITION_BASE_SCHEMA,
@@ -1106,7 +1114,9 @@ CONDITION_SCHEMA: vol.Schema = vol.Schema(
     )
 )
 
-TRIGGER_BASE_SCHEMA = vol.Schema({vol.Required(CONF_PLATFORM): str})
+TRIGGER_BASE_SCHEMA = vol.Schema(
+    {vol.Required(CONF_PLATFORM): str, vol.Optional(CONF_ID): str}
+)
 
 TRIGGER_SCHEMA = vol.All(
     ensure_list, [TRIGGER_BASE_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA)]
