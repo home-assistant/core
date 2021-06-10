@@ -205,7 +205,7 @@ def get_sercure_android_id_dom():
 
     android_id = ""
     if not has_root():
-        # to suport local test
+        # to support local test
         from uuid import getnode as get_mac
 
         android_id = get_mac()
