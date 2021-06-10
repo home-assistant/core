@@ -123,7 +123,7 @@ class MusicCastFlowHandler(ConfigFlow, domain=DOMAIN):
                 import_data.get("host"),
             )
         elif res["type"] == data_entry_flow.RESULT_TYPE_FORM:
-            _LOGGER.exception(
+            _LOGGER.error(
                 "Could not import %s from configuration.yaml",
                 import_data.get("host"),
             )
