@@ -73,7 +73,7 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
                 self.unsub = None
 
         # Start listening
-        self.hass.loop.create_task(listen())
+        asyncio.create_task(listen())
 
     async def _async_update_data(self) -> WLEDDevice:
         """Fetch data from WLED."""
