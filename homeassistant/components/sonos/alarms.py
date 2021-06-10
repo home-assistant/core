@@ -4,7 +4,6 @@ from __future__ import annotations
 from collections import deque
 from collections.abc import Coroutine, Iterator
 import logging
-from typing import Callable
 
 from pysonos import SoCo
 from pysonos.alarms import Alarm, get_alarms
@@ -28,7 +27,6 @@ class SonosAlarms:
         self.hass = hass
         self.household_id = household_id
         self._alarms: dict[str, Alarm] = {}
-        self._next_update: Callable | None = None
         self._processed_events = deque(maxlen=5)
         self.async_poll: Coroutine | None = None
 
