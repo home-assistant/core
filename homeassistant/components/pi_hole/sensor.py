@@ -1,6 +1,8 @@
 """Support for getting statistical data from a Pi-hole system."""
 from typing import Any
 
+from hole import Hole
+
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
@@ -43,7 +45,7 @@ class PiHoleSensor(PiHoleEntity, SensorEntity):
 
     def __init__(
         self,
-        api: dict,
+        api: Hole,
         coordinator: DataUpdateCoordinator,
         name: str,
         sensor_name: str,
