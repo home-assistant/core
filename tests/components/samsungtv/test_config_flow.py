@@ -905,6 +905,8 @@ async def test_form_reauth_websocket(hass, remotews: Mock):
     """Test reauthenticate websocket."""
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_WS_ENTRY)
     entry.add_to_hass(hass)
+    assert entry.state == config_entries.ConfigEntryState.NOT_LOADED
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"entry_id": entry.entry_id, "source": config_entries.SOURCE_REAUTH},
@@ -920,6 +922,7 @@ async def test_form_reauth_websocket(hass, remotews: Mock):
     await hass.async_block_till_done()
     assert result2["type"] == "abort"
     assert result2["reason"] == "reauth_successful"
+    assert entry.state == config_entries.ConfigEntryState.LOADED
 
 
 async def test_form_reauth_websocket_cannot_connect(hass, remotews: Mock):
