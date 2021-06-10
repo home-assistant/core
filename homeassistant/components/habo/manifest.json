@@ -1,0 +1,15 @@
+{
+  "domain": "habo",
+  "name": "habo",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/habo",
+  "requirements": [],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": [
+    "@hboulakhrif"
+  ],
+  "iot_class": "cloud_polling"
+}
