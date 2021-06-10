@@ -125,7 +125,7 @@ class AdvantageAirAC(AdvantageAirClimateEntity):
     @property
     def hvac_modes(self):
         """Return the supported HVAC modes."""
-        if(self._ac["myAutoModeEnabled"] == True):
+        if self._ac.get("myAutoModeEnabled"):
             return [
                 HVAC_MODE_OFF,
                 HVAC_MODE_COOL,
@@ -141,7 +141,6 @@ class AdvantageAirAC(AdvantageAirClimateEntity):
             HVAC_MODE_FAN_ONLY,
             HVAC_MODE_DRY,
         ]
-        return AC_HVAC_MODES
 
     @property
     def fan_mode(self):
