@@ -64,18 +64,9 @@ class AirlyAirQuality(CoordinatorEntity, AirQualityEntity):
     def __init__(self, coordinator: AirlyDataUpdateCoordinator, name: str) -> None:
         """Initialize."""
         super().__init__(coordinator)
-        self._name = name
-        self._icon = "mdi:blur"
-
-    @property
-    def name(self) -> str:
-        """Return the name."""
-        return self._name
-
-    @property
-    def icon(self) -> str:
-        """Return the icon."""
-        return self._icon
+        self._attr_icon = "mdi:blur"
+        self._attr_name = name
+        self._attr_unique_id = f"{coordinator.latitude}-{coordinator.longitude}"
 
     @property
     def air_quality_index(self) -> float | None:
@@ -96,11 +87,6 @@ class AirlyAirQuality(CoordinatorEntity, AirQualityEntity):
     def attribution(self) -> str:
         """Return the attribution."""
         return ATTRIBUTION
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique_id for this entity."""
-        return f"{self.coordinator.latitude}-{self.coordinator.longitude}"
 
     @property
     def device_info(self) -> DeviceInfo:
