@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections import OrderedDict, deque
+from collections import deque
 import datetime
 from enum import Enum
 import logging
@@ -82,8 +82,7 @@ class SonosData:
 
     def __init__(self) -> None:
         """Initialize the data."""
-        # OrderedDict behavior used by SonosFavorites
-        self.discovered: OrderedDict[str, SonosSpeaker] = OrderedDict()
+        self.discovered: dict[str, SonosSpeaker] = {}
         self.favorites: dict[str, SonosFavorites] = {}
         self.alarms: dict[str, Alarm] = {}
         self.processed_alarm_events = deque(maxlen=5)
@@ -152,7 +151,7 @@ async def async_setup_entry(  # noqa: C901
                 data.favorites[soco.household_id] = SonosFavorites(
                     hass, soco.household_id
                 )
-                data.favorites[soco.household_id].update()
+                data.favorites[soco.household_id].update(soco)
             speaker.setup()
         except SoCoException as ex:
             _LOGGER.debug("SoCoException, ex=%s", ex)

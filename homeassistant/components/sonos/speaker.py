@@ -231,7 +231,7 @@ class SonosSpeaker:
         self._event_dispatchers = {
             "AlarmClock": self.async_dispatch_alarms,
             "AVTransport": self.async_dispatch_media_update,
-            "ContentDirectory": self.favorites.async_delayed_update,
+            "ContentDirectory": self.async_dispatch_favorites,
             "DeviceProperties": self.async_dispatch_device_properties,
             "RenderingControl": self.async_update_volume,
             "ZoneGroupTopology": self.async_update_groups,
@@ -398,6 +398,13 @@ class SonosSpeaker:
             battery_dict = dict(x.split(":") for x in more_info.split(","))
             await self.async_update_battery_info(battery_dict)
         self.async_write_entity_states()
+
+    @callback
+    def async_dispatch_favorites(self, event: SonosEvent) -> None:
+        """Update known favorites from an event."""
+        if not (event_id := event.variables.get("favorites_update_id")):
+            return
+        self.favorites.async_update(event_id, self.soco)
 
     @callback
     def async_dispatch_media_update(self, event: SonosEvent) -> None:
