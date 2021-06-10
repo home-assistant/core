@@ -15,5 +15,13 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]"
     }
+  },
+  "state": {
+    "_": {
+      "low": "Low",
+      "moderate": "Moderate",
+      "high": "High",
+      "very high": "Very High"
+    }
   }
 }
