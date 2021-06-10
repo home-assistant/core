@@ -15,13 +15,5 @@
                 "description": "Set up Ambee to integrate with Home Assistant."
             }
         }
-    },
-    "state": {
-        "_": {
-            "high": "High",
-            "low": "Low",
-            "moderate": "Moderate",
-            "very high": "Very High"
-        }
     }
 }

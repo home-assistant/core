@@ -3,7 +3,7 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from homeassistant.components.ambee.const import DOMAIN
+from homeassistant.components.ambee.const import DEVICE_CLASS_AMBEE_RISK, DOMAIN
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
     DOMAIN as SENSOR_DOMAIN,
@@ -207,9 +207,9 @@ async def test_pollen(
     assert state
     assert entry.unique_id == f"{entry_id}_pollen_grass_risk"
     assert state.state == "high"
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_AMBEE_RISK
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Grass Pollen Risk"
     assert state.attributes.get(ATTR_ICON) == "mdi:grass"
-    assert ATTR_DEVICE_CLASS not in state.attributes
     assert ATTR_STATE_CLASS not in state.attributes
     assert ATTR_UNIT_OF_MEASUREMENT not in state.attributes
 
@@ -219,9 +219,9 @@ async def test_pollen(
     assert state
     assert entry.unique_id == f"{entry_id}_pollen_tree_risk"
     assert state.state == "moderate"
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_AMBEE_RISK
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Tree Pollen Risk"
     assert state.attributes.get(ATTR_ICON) == "mdi:tree"
-    assert ATTR_DEVICE_CLASS not in state.attributes
     assert ATTR_STATE_CLASS not in state.attributes
     assert ATTR_UNIT_OF_MEASUREMENT not in state.attributes
 
@@ -231,9 +231,9 @@ async def test_pollen(
     assert state
     assert entry.unique_id == f"{entry_id}_pollen_weed_risk"
     assert state.state == "high"
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_AMBEE_RISK
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Weed Pollen Risk"
     assert state.attributes.get(ATTR_ICON) == "mdi:sprout"
-    assert ATTR_DEVICE_CLASS not in state.attributes
     assert ATTR_STATE_CLASS not in state.attributes
     assert ATTR_UNIT_OF_MEASUREMENT not in state.attributes
 

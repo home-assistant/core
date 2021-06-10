@@ -26,6 +26,8 @@ SCAN_INTERVAL = timedelta(minutes=180)
 
 ATTR_ENABLED_BY_DEFAULT: Final = "enabled_by_default"
 
+DEVICE_CLASS_AMBEE_RISK: Final = "ambee__risk"
+
 SERVICE_AIR_QUALITY: Final = "air_quality"
 SERVICE_POLLEN: Final = "pollen"
 
@@ -94,14 +96,17 @@ SENSORS: dict[str, dict[str, AmbeeSensor]] = {
         "grass_risk": {
             ATTR_NAME: "Grass Pollen Risk",
             ATTR_ICON: "mdi:grass",
+            ATTR_DEVICE_CLASS: DEVICE_CLASS_AMBEE_RISK,
         },
         "tree_risk": {
             ATTR_NAME: "Tree Pollen Risk",
             ATTR_ICON: "mdi:tree",
+            ATTR_DEVICE_CLASS: DEVICE_CLASS_AMBEE_RISK,
         },
         "weed_risk": {
             ATTR_NAME: "Weed Pollen Risk",
             ATTR_ICON: "mdi:sprout",
+            ATTR_DEVICE_CLASS: DEVICE_CLASS_AMBEE_RISK,
         },
         "grass_poaceae": {
             ATTR_NAME: "Poaceae Grass Pollen",
