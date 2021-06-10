@@ -10,7 +10,6 @@ from homeassistant.components.homeassistant.triggers import (
     state as state_trigger,
 )
 from homeassistant.const import (
-    ATTR_SUPPORTED_FEATURES,
     CONF_ABOVE,
     CONF_BELOW,
     CONF_DEVICE_ID,
@@ -27,6 +26,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_registry
+from homeassistant.helpers.entity import get_supported_features
 from homeassistant.helpers.typing import ConfigType
 
 from . import (
@@ -77,11 +77,7 @@ async def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict]:
         if entry.domain != DOMAIN:
             continue
 
-        state = hass.states.get(entry.entity_id)
-        if not state or ATTR_SUPPORTED_FEATURES not in state.attributes:
-            continue
-
-        supported_features = state.attributes[ATTR_SUPPORTED_FEATURES]
+        supported_features = get_supported_features(hass, entry.entity_id)
         supports_open_close = supported_features & (SUPPORT_OPEN | SUPPORT_CLOSE)
 
         # Add triggers for each entity that belongs to this integration
