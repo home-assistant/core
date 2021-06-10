@@ -389,7 +389,7 @@ class FritzBoxProfileSwitch(FritzBoxBaseSwitch, SwitchEntity):
         """Update data."""
         try:
             status = await self.hass.async_add_executor_job(
-                self.fritzbox_tools.fritz_profiles[self.profile].get_state()
+                self.fritzbox_tools.fritz_profiles[self.profile].get_state
             )
             _LOGGER.debug(
                 "Specific %s response: get_State()=%s",
