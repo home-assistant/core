@@ -1103,7 +1103,7 @@ async def test_controlling_state_via_topic_with_templates(hass, mqtt_mock):
     assert state.attributes.get(light.ATTR_SUPPORTED_COLOR_MODES) == color_modes
 
 
-async def test_controlling_state_via_topic_with_value_template(hass, mqtt_mock):
+async def test_controlling_state_via_topic_with_value_template(hass, mqtt_mock, caplog):
     """Test the setting of the state with undocumented value_template."""
     config = {
         light.DOMAIN: {
@@ -1117,6 +1117,8 @@ async def test_controlling_state_via_topic_with_value_template(hass, mqtt_mock):
 
     assert await async_setup_component(hass, light.DOMAIN, config)
     await hass.async_block_till_done()
+
+    assert "The 'value_template' option is deprecated" in caplog.text
 
     state = hass.states.get("light.test")
     assert state.state == STATE_OFF

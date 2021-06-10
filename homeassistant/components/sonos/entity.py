@@ -64,13 +64,14 @@ class SonosEntity(Entity):
 
     async def async_poll(self, now: datetime.datetime) -> None:
         """Poll the entity if subscriptions fail."""
-        if self.speaker.is_first_poll:
+        if not self.speaker.subscriptions_failed:
             _LOGGER.warning(
                 "%s cannot reach [%s], falling back to polling, functionality may be limited",
                 self.speaker.zone_name,
                 self.speaker.subscription_address,
             )
-            self.speaker.is_first_poll = False
+            self.speaker.subscriptions_failed = True
+            await self.speaker.async_unsubscribe()
         try:
             await self.async_update()  # pylint: disable=no-member
         except (OSError, SoCoException) as ex:

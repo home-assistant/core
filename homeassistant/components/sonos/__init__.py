@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections import OrderedDict, deque
 import datetime
+from enum import Enum
 import logging
 import socket
 from urllib.parse import urlparse
@@ -26,7 +27,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.dispatcher import async_dispatcher_send, dispatcher_send
 
 from .const import (
     DATA_SONOS,
@@ -35,6 +36,7 @@ from .const import (
     PLATFORMS,
     SONOS_ALARM_UPDATE,
     SONOS_GROUP_UPDATE,
+    SONOS_REBOOTED,
     SONOS_SEEN,
     UPNP_ST,
 )
@@ -67,6 +69,14 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
+class SoCoCreationSource(Enum):
+    """Represent the creation source of a SoCo instance."""
+
+    CONFIGURED = "configured"
+    DISCOVERED = "discovered"
+    REBOOTED = "rebooted"
+
+
 class SonosData:
     """Storage class for platform global data."""
 
@@ -80,6 +90,7 @@ class SonosData:
         self.topology_condition = asyncio.Condition()
         self.hosts_heartbeat = None
         self.ssdp_known: set[str] = set()
+        self.boot_counts: dict[str, int] = {}
 
 
 async def async_setup(hass, config):
@@ -118,6 +129,10 @@ async def async_setup_entry(  # noqa: C901
         pysonos.config.EVENT_ADVERTISE_IP = advertise_addr
 
     async def _async_stop_event_listener(event: Event) -> None:
+        await asyncio.gather(
+            *[speaker.async_unsubscribe() for speaker in data.discovered.values()],
+            return_exceptions=True,
+        )
         if events_asyncio.event_listener:
             await events_asyncio.event_listener.async_stop()
 
@@ -129,7 +144,6 @@ async def async_setup_entry(  # noqa: C901
     def _discovered_player(soco: SoCo) -> None:
         """Handle a (re)discovered player."""
         try:
-            _LOGGER.debug("Reached _discovered_player, soco=%s", soco)
             speaker_info = soco.get_speaker_info(True)
             _LOGGER.debug("Adding new speaker: %s", speaker_info)
             speaker = SonosSpeaker(hass, soco, speaker_info)
@@ -143,22 +157,40 @@ async def async_setup_entry(  # noqa: C901
         except SoCoException as ex:
             _LOGGER.debug("SoCoException, ex=%s", ex)
 
+    def _create_soco(ip_address: str, source: SoCoCreationSource) -> SoCo | None:
+        """Create a soco instance and return if successful."""
+        try:
+            soco = pysonos.SoCo(ip_address)
+            # Ensure that the player is available and UID is cached
+            _ = soco.uid
+            _ = soco.volume
+            return soco
+        except (OSError, SoCoException) as ex:
+            _LOGGER.warning(
+                "Failed to connect to %s player '%s': %s", source.value, ip_address, ex
+            )
+        return None
+
     def _manual_hosts(now: datetime.datetime | None = None) -> None:
         """Players from network configuration."""
         for host in hosts:
-            try:
-                _LOGGER.debug("Testing %s", host)
-                player = pysonos.SoCo(socket.gethostbyname(host))
-                if player.is_visible:
-                    # Make sure that the player is available
-                    _ = player.volume
-                _discovered_player(player)
-            except (OSError, SoCoException) as ex:
-                _LOGGER.debug("Issue connecting to '%s': %s", host, ex)
-                if now is None:
-                    _LOGGER.warning("Failed to initialize '%s'", host)
+            ip_addr = socket.gethostbyname(host)
+            known_uid = next(
+                (
+                    uid
+                    for uid, speaker in data.discovered.items()
+                    if speaker.soco.ip_address == ip_addr
+                ),
+                None,
+            )
 
-        _LOGGER.debug("Tested all hosts")
+            if known_uid:
+                dispatcher_send(hass, f"{SONOS_SEEN}-{known_uid}")
+            else:
+                soco = _create_soco(ip_addr, SoCoCreationSource.CONFIGURED)
+                if soco and soco.is_visible:
+                    _discovered_player(soco)
+
         data.hosts_heartbeat = hass.helpers.event.call_later(
             DISCOVERY_INTERVAL.total_seconds(), _manual_hosts
         )
@@ -168,32 +200,41 @@ async def async_setup_entry(  # noqa: C901
         async_dispatcher_send(hass, SONOS_GROUP_UPDATE)
 
     def _discovered_ip(ip_address):
-        try:
-            player = pysonos.SoCo(ip_address)
-        except (OSError, SoCoException):
-            _LOGGER.debug("Failed to connect to discovered player '%s'", ip_address)
-            return
-        if player.is_visible:
-            _discovered_player(player)
+        soco = _create_soco(ip_address, SoCoCreationSource.DISCOVERED)
+        if soco and soco.is_visible:
+            _discovered_player(soco)
 
-    async def _async_create_discovered_player(uid, discovered_ip):
+    async def _async_create_discovered_player(uid, discovered_ip, boot_seqnum):
         """Only create one player at a time."""
         async with discovery_lock:
-            if uid in data.discovered:
-                async_dispatcher_send(hass, f"{SONOS_SEEN}-{uid}")
+            if uid not in data.discovered:
+                await hass.async_add_executor_job(_discovered_ip, discovered_ip)
                 return
-            await hass.async_add_executor_job(_discovered_ip, discovered_ip)
+
+            if boot_seqnum and boot_seqnum > data.boot_counts[uid]:
+                data.boot_counts[uid] = boot_seqnum
+                if soco := await hass.async_add_executor_job(
+                    _create_soco, discovered_ip, SoCoCreationSource.REBOOTED
+                ):
+                    async_dispatcher_send(hass, f"{SONOS_REBOOTED}-{uid}", soco)
+            else:
+                async_dispatcher_send(hass, f"{SONOS_SEEN}-{uid}")
 
     @callback
     def _async_discovered_player(info):
         uid = info.get(ssdp.ATTR_UPNP_UDN)
         if uid.startswith("uuid:"):
             uid = uid[5:]
+        if boot_seqnum := info.get("X-RINCON-BOOTSEQ"):
+            boot_seqnum = int(boot_seqnum)
+            data.boot_counts.setdefault(uid, boot_seqnum)
         if uid not in data.ssdp_known:
             _LOGGER.debug("New discovery: %s", info)
             data.ssdp_known.add(uid)
         discovered_ip = urlparse(info[ssdp.ATTR_SSDP_LOCATION]).hostname
-        asyncio.create_task(_async_create_discovered_player(uid, discovered_ip))
+        asyncio.create_task(
+            _async_create_discovered_player(uid, discovered_ip, boot_seqnum)
+        )
 
     @callback
     def _async_signal_update_alarms(event):

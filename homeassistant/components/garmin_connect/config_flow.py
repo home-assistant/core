@@ -45,6 +45,7 @@ class GarminConnectConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         try:
             await self.hass.async_add_executor_job(api.login)
+
         except GarminConnectConnectionError:
             errors["base"] = "cannot_connect"
             return await self._show_setup_form(errors)

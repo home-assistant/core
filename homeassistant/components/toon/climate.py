@@ -37,29 +37,26 @@ async def async_setup_entry(
 ) -> None:
     """Set up a Toon binary sensors based on a config entry."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities(
-        [ToonThermostatDevice(coordinator, name="Thermostat", icon="mdi:thermostat")]
-    )
+    async_add_entities([ToonThermostatDevice(coordinator)])
 
 
 class ToonThermostatDevice(ToonDisplayDeviceEntity, ClimateEntity):
     """Representation of a Toon climate device."""
 
     _attr_hvac_mode = HVAC_MODE_HEAT
+    _attr_icon = "mdi:thermostat"
     _attr_max_temp = DEFAULT_MAX_TEMP
     _attr_min_temp = DEFAULT_MIN_TEMP
+    _attr_name = "Thermostat"
     _attr_supported_features = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
     _attr_temperature_unit = TEMP_CELSIUS
 
     def __init__(
         self,
         coordinator: ToonDataUpdateCoordinator,
-        *,
-        name: str,
-        icon: str,
     ) -> None:
         """Initialize Toon climate entity."""
-        super().__init__(coordinator, name=name, icon=icon)
+        super().__init__(coordinator)
         self._attr_hvac_modes = [HVAC_MODE_HEAT]
         self._attr_preset_modes = [
             PRESET_AWAY,
