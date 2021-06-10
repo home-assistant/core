@@ -26,7 +26,7 @@ async def test_show_form(hass):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "user"
+    assert result["step_id"] == config_entries.SOURCE_USER
 
 
 async def test_step_user(hass):
