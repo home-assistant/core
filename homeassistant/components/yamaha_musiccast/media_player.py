@@ -70,7 +70,7 @@ async def async_setup_platform(
 ) -> None:
     """Import legacy configurations."""
     _LOGGER.warning(
-        "Configuration in configuration.yaml is deprecated. Use the config flow instead."
+        "Configuration in configuration.yaml is deprecated. Use the config flow instead"
     )
 
     @callback

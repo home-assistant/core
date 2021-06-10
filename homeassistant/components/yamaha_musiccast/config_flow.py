@@ -119,10 +119,12 @@ class MusicCastFlowHandler(ConfigFlow, domain=DOMAIN):
         res = await self.async_step_user(import_data)
         if res["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY:
             _LOGGER.info(
-                f"Successfully imported {import_data.get('host')} from configuration.yaml"
+                "Successfully imported %s from configuration.yaml",
+                import_data.get("host"),
             )
         elif res["type"] == data_entry_flow.RESULT_TYPE_FORM:
             _LOGGER.exception(
-                f"Could not import {import_data.get('host')} from configuration.yaml"
+                "Could not import %s from configuration.yaml",
+                import_data.get("host"),
             )
         return res
