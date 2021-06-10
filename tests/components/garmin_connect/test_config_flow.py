@@ -7,7 +7,7 @@ from garminconnect_ha import (
     GarminConnectTooManyRequestsError,
 )
 
-from homeassistant import data_entry_flow
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.garmin_connect.const import DOMAIN
 from homeassistant.const import CONF_ID, CONF_PASSWORD, CONF_USERNAME
 
@@ -23,7 +23,7 @@ MOCK_CONF = {
 async def test_show_form(hass):
     """Test that the form is served with no input."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
@@ -36,7 +36,7 @@ async def test_step_user(hass):
     ) as garmin:
         garmin.return_value.login.return_value = MOCK_CONF[CONF_ID]
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "user"}, data=MOCK_CONF
+            DOMAIN, context={"source": config_entries.SOURCE_USER}, data=MOCK_CONF
         )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["data"] == MOCK_CONF
