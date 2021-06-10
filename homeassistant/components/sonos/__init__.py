@@ -130,7 +130,8 @@ async def async_setup_entry(  # noqa: C901
 
     async def _async_stop_event_listener(event: Event) -> None:
         await asyncio.gather(
-            *[speaker.async_unsubscribe() for speaker in data.discovered.values()]
+            *[speaker.async_unsubscribe() for speaker in data.discovered.values()],
+            return_exceptions=True,
         )
         if events_asyncio.event_listener:
             await events_asyncio.event_listener.async_stop()
