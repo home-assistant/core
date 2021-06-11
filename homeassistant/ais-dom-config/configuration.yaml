@@ -6,6 +6,7 @@ homeassistant:
       trusted_networks:
         - 127.0.0.1
         - 0.0.0.0/0
+        - ::1
     - type: homeassistant
     - type: legacy_api_password
       api_password: dom
