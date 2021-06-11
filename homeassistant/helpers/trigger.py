@@ -8,7 +8,7 @@ from typing import Any, Callable
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_PLATFORM
+from homeassistant.const import CONF_ID, CONF_PLATFORM
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.typing import ConfigType
@@ -74,7 +74,8 @@ async def async_initialize_triggers(
     triggers = []
     for idx, conf in enumerate(trigger_config):
         platform = await _async_get_trigger_platform(hass, conf)
-        info = {**info, "trigger_id": f"{idx}"}
+        trigger_id = conf.get(CONF_ID, f"{idx}")
+        info = {**info, "trigger_id": trigger_id}
         triggers.append(platform.async_attach_trigger(hass, conf, action, info))
 
     attach_results = await asyncio.gather(*triggers, return_exceptions=True)
