@@ -125,12 +125,6 @@ class RokuEntity(CoordinatorEntity):
         """Initialize the Roku entity."""
         super().__init__(coordinator)
         self._device_id = device_id
-        self._name = name
-
-    @property
-    def name(self) -> str:
-        """Return the name of the entity."""
-        return self._name
 
     @property
     def device_info(self) -> DeviceInfo:
