@@ -74,7 +74,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             api_token = await self.hass.async_add_executor_job(
                 mawaqit_connect.get_api_token, True
             )
-            # api_token = mawaqit_connect.get_api_token(as_dict=True)
             _LOGGER.debug(api_token)
             ConfigFlow.config_flow_data = {**user_input, **api_token}
         except CannotConnect:
@@ -85,7 +84,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
-            #     return self.async_create_entry(title="Connect", data=user_input)
             return await self.async_step_select_mosque()
 
         return self.async_show_form(
