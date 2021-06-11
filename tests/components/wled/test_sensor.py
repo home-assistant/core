@@ -1,6 +1,6 @@
 """Tests for the WLED sensor platform."""
 from datetime import datetime
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -28,16 +28,15 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
-from tests.components.wled import init_integration
-from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.common import MockConfigEntry
 
 
 async def test_sensors(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_wled: MagicMock,
 ) -> None:
     """Test the creation and values of the WLED sensors."""
-
-    entry = await init_integration(hass, aioclient_mock, skip_setup=True)
     registry = er.async_get(hass)
 
     # Pre-create registry entries for disabled by default sensors
@@ -90,9 +89,10 @@ async def test_sensors(
     )
 
     # Setup
+    mock_config_entry.add_to_hass(hass)
     test_time = datetime(2019, 11, 11, 9, 10, 32, tzinfo=dt_util.UTC)
     with patch("homeassistant.components.wled.sensor.utcnow", return_value=test_time):
-        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
     state = hass.states.get("sensor.wled_rgb_light_estimated_current")
@@ -184,10 +184,9 @@ async def test_sensors(
     ),
 )
 async def test_disabled_by_default_sensors(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, entity_id: str
+    hass: HomeAssistant, init_integration: MockConfigEntry, entity_id: str
 ) -> None:
     """Test the disabled by default WLED sensors."""
-    await init_integration(hass, aioclient_mock)
     registry = er.async_get(hass)
 
     state = hass.states.get(entity_id)
