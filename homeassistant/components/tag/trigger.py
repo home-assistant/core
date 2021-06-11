@@ -7,9 +7,8 @@ from homeassistant.helpers import config_validation as cv
 
 from .const import DEVICE_ID, DOMAIN, EVENT_TAG_SCANNED, TAG_ID
 
-TRIGGER_SCHEMA = vol.Schema(
+TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
     {
-        **cv.TRIGGER_BASE_SCHEMA,
         vol.Required(CONF_PLATFORM): DOMAIN,
         vol.Required(TAG_ID): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(DEVICE_ID): vol.All(cv.ensure_list, [cv.string]),

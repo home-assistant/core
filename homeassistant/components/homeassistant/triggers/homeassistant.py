@@ -10,9 +10,8 @@ from homeassistant.helpers import config_validation as cv
 EVENT_START = "start"
 EVENT_SHUTDOWN = "shutdown"
 
-TRIGGER_SCHEMA = vol.Schema(
+TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
     {
-        **cv.TRIGGER_BASE_SCHEMA,
         vol.Required(CONF_PLATFORM): "homeassistant",
         vol.Required(CONF_EVENT): vol.Any(EVENT_START, EVENT_SHUTDOWN),
     }

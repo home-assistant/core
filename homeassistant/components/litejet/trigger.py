@@ -15,9 +15,8 @@ CONF_NUMBER = "number"
 CONF_HELD_MORE_THAN = "held_more_than"
 CONF_HELD_LESS_THAN = "held_less_than"
 
-TRIGGER_SCHEMA = vol.Schema(
+TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
     {
-        **cv.TRIGGER_BASE_SCHEMA,
         vol.Required(CONF_PLATFORM): "litejet",
         vol.Required(CONF_NUMBER): cv.positive_int,
         vol.Optional(CONF_HELD_MORE_THAN): vol.All(

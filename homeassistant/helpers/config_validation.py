@@ -1106,10 +1106,10 @@ CONDITION_SCHEMA: vol.Schema = vol.Schema(
     )
 )
 
-TRIGGER_BASE_SCHEMA = {vol.Required(CONF_PLATFORM): str}
+TRIGGER_BASE_SCHEMA = vol.Schema({vol.Required(CONF_PLATFORM): str})
 
 TRIGGER_SCHEMA = vol.All(
-    ensure_list, [vol.Schema({**TRIGGER_BASE_SCHEMA}, extra=vol.ALLOW_EXTRA)]
+    ensure_list, [TRIGGER_BASE_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA)]
 )
 
 _SCRIPT_DELAY_SCHEMA = vol.Schema(
