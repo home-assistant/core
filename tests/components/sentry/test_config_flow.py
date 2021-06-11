@@ -87,7 +87,7 @@ async def test_user_flow_bad_dsn(hass: HomeAssistant) -> None:
     assert result2.get("errors") == {"base": "bad_dsn"}
 
 
-async def test_user_flow_unkown_exception(hass: HomeAssistant) -> None:
+async def test_user_flow_unknown_exception(hass: HomeAssistant) -> None:
     """Test we handle any unknown exception error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}

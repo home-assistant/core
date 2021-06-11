@@ -7,7 +7,7 @@ import homeassistant.components.climate as climate
 import homeassistant.components.cover as cover
 from homeassistant.components.homekit.accessories import TYPES, get_accessory
 from homeassistant.components.homekit.const import (
-    ATTR_INTERGRATION,
+    ATTR_INTEGRATION,
     CONF_FEATURE_LIST,
     FEATURE_ON_OFF,
     TYPE_FAUCET,
@@ -66,7 +66,7 @@ def test_customize_options(config, name):
     """Test with customized options."""
     mock_type = Mock()
     conf = config.copy()
-    conf[ATTR_INTERGRATION] = "platform_name"
+    conf[ATTR_INTEGRATION] = "platform_name"
     with patch.dict(TYPES, {"Light": mock_type}):
         entity_state = State("light.demo", "on")
         get_accessory(None, None, entity_state, 2, conf)

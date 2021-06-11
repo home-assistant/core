@@ -21,7 +21,7 @@ AUDIO_CODEC_COPY = "copy"
 # #### Attributes ####
 ATTR_DISPLAY_NAME = "display_name"
 ATTR_VALUE = "value"
-ATTR_INTERGRATION = "platform"
+ATTR_INTEGRATION = "platform"
 ATTR_MANUFACTURER = "manufacturer"
 ATTR_MODEL = "model"
 ATTR_SOFTWARE_VERSION = "sw_version"

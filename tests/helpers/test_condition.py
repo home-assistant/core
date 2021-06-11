@@ -1034,7 +1034,7 @@ async def test_state_attribute(hass):
         },
     )
 
-    hass.states.async_set("sensor.temperature", 100, {"unkown_attr": 200})
+    hass.states.async_set("sensor.temperature", 100, {"unknown_attr": 200})
     with pytest.raises(ConditionError):
         test(hass)
 
@@ -1330,7 +1330,7 @@ async def test_numeric_state_attribute(hass):
         },
     )
 
-    hass.states.async_set("sensor.temperature", 100, {"unkown_attr": 10})
+    hass.states.async_set("sensor.temperature", 100, {"unknown_attr": 10})
     with pytest.raises(ConditionError):
         assert test(hass)
 
