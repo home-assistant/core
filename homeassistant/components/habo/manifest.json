@@ -3,7 +3,7 @@
   "name": "habo",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/habo",
-  "requirements": [],
+  "requirements": ["mawaqit-times-calculator==0.0.4"],
   "ssdp": [],
   "zeroconf": [],
   "homekit": {},
