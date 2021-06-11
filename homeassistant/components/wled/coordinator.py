@@ -49,6 +49,9 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
                 await self.wled.connect()
             except WLEDError as err:
                 self.logger.info(err)
+                if self.unsub:
+                    self.unsub()
+                    self.unsub = None
                 return
 
             try:
