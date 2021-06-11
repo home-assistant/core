@@ -32,7 +32,7 @@ async def test_show_form(hass):
 async def test_step_user(hass):
     """Test registering an integration and finishing flow works."""
     with patch(
-        "homeassistant.components.accuweather.async_setup_entry", return_value=True
+        "homeassistant.components.garmin_connect.async_setup_entry", return_value=True
     ), patch(
         "homeassistant.components.garmin_connect.config_flow.Garmin",
     ) as garmin:
