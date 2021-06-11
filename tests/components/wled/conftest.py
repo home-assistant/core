@@ -1,7 +1,7 @@
 """Fixtures for WLED integration tests."""
 import json
 from typing import Generator
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from wled import Device as WLEDDevice
@@ -46,9 +46,7 @@ def mock_wled_config_flow(
         "homeassistant.components.wled.config_flow.WLED", autospec=True
     ) as wled_mock:
         wled = wled_mock.return_value
-        wled.update = AsyncMock(
-            return_value=WLEDDevice(json.loads(load_fixture("wled/rgb.json")))
-        )
+        wled.update.return_value = WLEDDevice(json.loads(load_fixture("wled/rgb.json")))
         yield wled
 
 
@@ -64,7 +62,7 @@ def mock_wled(request: pytest.FixtureRequest) -> Generator[None, MagicMock, None
         "homeassistant.components.wled.coordinator.WLED", autospec=True
     ) as wled_mock:
         wled = wled_mock.return_value
-        wled.update = AsyncMock(return_value=device)
+        wled.update.return_value = device
         yield wled
 
 
