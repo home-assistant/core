@@ -68,8 +68,8 @@ def get_device_info(pathname):
 
 
 def get_device_number(devoce_id):
-    # 1. ls -l /dev/ttyACM*
-    # 2. ls -l /sys/dev/char/166:0
+    # 1. ls -l /dev/ttyACM to find number 166:0
+    # 2. use this number in ls -l /sys/dev/char/166:0
     # 3. cat /sys/dev/char/166:0/../../../idProduct
     # find /sys/devices -name 'ttyACM*' -exec cat '{}/../../../idProduct' \;
     # find /sys/devices -name 'ttyACM*' -exec cat {}/../../../idProduct {}/../../../idVendor \;
@@ -193,13 +193,22 @@ async def prepare_usb_device(hass, device_info):
             return
         else:
             device_num = get_device_number(device_info["id"])
-            with open("/data/data/pl.sviete.dom/files/home/zwavejs2mqtt/store/settings.json", "r") as file_r:
-                zwave_settings_json = json.load(file_r)
+            try:
+                with open("/data/data/pl.sviete.dom/files/home/zwavejs2mqtt/store/settings.json", "r") as file_r:
+                    zwave_settings_json = json.load(file_r)
 
-            zwave_settings_json["zwave"]["port"] = "/dev/" + device_num
+                zwave_settings_json["zwave"]["port"] = "/dev/" + device_num
 
-            with open("/data/data/pl.sviete.dom/files/home/zwavejs2mqtt/store/settings.json", "w") as file_w:
-                json.dump(zwave_settings_json, file_w)
+                with open("/data/data/pl.sviete.dom/files/home/zwavejs2mqtt/store/settings.json", "w") as file_w:
+                    json.dump(zwave_settings_json, file_w)
+            except Exception as e:
+                _LOGGER.error("Zwave settings error, exception: " + str(e))
+                await hass.services.async_call(
+                    "ais_ai_service",
+                    "say_it", {
+                        "text": "Sprawdź ustawienia Zwave w aplikacji."
+                    },
+                )
 
             cmd_to_run = (
                 "pm2 restart zwave || pm2 start /data/data/pl.sviete.dom/files/home/zwavejs2mqtt/server/bin/www.js "
@@ -212,19 +221,20 @@ async def prepare_usb_device(hass, device_info):
             )
 
 
-
 async def remove_usb_device(hass, device_info):
     # stop service and remove device from dict
     if device_info in ais_global.G_USB_DEVICES:
         ais_global.G_USB_DEVICES.remove(device_info)
 
     if device_info["id"] in G_ZIGBEE_DEVICES_ID:
-        # Unregister the built-in zigbee panel
-        # hass.components.frontend.async_remove_panel("aiszigbee")
-        # stop pm2 zigbee service
         await _run("pm2 delete zigbee")
         await hass.services.async_call(
             "ais_ai_service", "say_it", {"text": "Zatrzymano serwis zigbee"}
+        )
+    elif device_info["id"] == G_ZWAVE_ID:
+        await _run("pm2 delete zwave")
+        await hass.services.async_call(
+            "ais_ai_service", "say_it", {"text": "Zatrzymano serwis zwave"}
         )
 
 
