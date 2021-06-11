@@ -68,6 +68,7 @@ from .const import (
     CONF_PRECISION,
     CONF_RETRIES,
     CONF_RETRY_ON_EMPTY,
+    CONF_REVERSE_ORDER,
     CONF_SCALE,
     CONF_STATE_CLOSED,
     CONF_STATE_CLOSING,
@@ -244,6 +245,7 @@ FAN_SCHEMA = BASE_SWITCH_SCHEMA.extend({})
 SENSOR_SCHEMA = BASE_STRUCT_SCHEMA.extend(
     {
         vol.Optional(CONF_DEVICE_CLASS): SENSOR_DEVICE_CLASSES_SCHEMA,
+        vol.deprecated(CONF_REVERSE_ORDER): cv.boolean,
         vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
     }
 )
