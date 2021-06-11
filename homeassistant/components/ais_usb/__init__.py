@@ -11,7 +11,7 @@ import os
 import platform
 import re
 import subprocess
-
+import json
 import pyinotify
 
 import homeassistant.components.ais_dom.ais_global as ais_global
@@ -67,7 +67,7 @@ def get_device_info(pathname):
     return None
 
 
-def get_device_number(product):
+def get_device_number(devoce_id):
     # 1. ls -l /dev/ttyACM*
     # 2. ls -l /sys/dev/char/166:0
     # 3. cat /sys/dev/char/166:0/../../../idProduct
@@ -82,6 +82,14 @@ def get_device_number(product):
         .strip()
     )
     for line in tty_acm_paths.split("\n"):
+        usb_vendor = (
+            subprocess.check_output(
+                "cat " + line + "/../../../idVendor",
+                shell=True,  # nosec
+            )
+            .decode("utf-8")
+            .strip()
+        )
         usb_product = (
             subprocess.check_output(
                 "cat " + line + "/../../../idProduct",
@@ -90,8 +98,8 @@ def get_device_number(product):
             .decode("utf-8")
             .strip()
         )
-        if usb_product == product:
-            return line
+        if usb_vendor + ":" + usb_product == devoce_id:
+            return line.split("/")[-1]
     return None
 
 
@@ -125,16 +133,31 @@ async def prepare_usb_device(hass, device_info):
         if device_info["id"] == "1cf1:0030":
             adapter = "deconz"
         # change zigbee settings
+        stage_no = 0
         with fileinput.FileInput(
             "/data/data/pl.sviete.dom/files/home/zigbee2mqtt/data/configuration.yaml",
             inplace=True,
+            backup='.bak'
         ) as file:
             for line in file:
-                if line.startswith("  adapter:"):
-                    line.replace(line, "  adapter: " + adapter)
-                if line.startswith("  port:"):
-                    # TODO check the /dev/ttyACM.. number
-                    line.replace(line, "  port: /dev/ttyACM0")
+                if line.startswith("serial:"):
+                    stage_no = 1
+                if 0 < stage_no < 3:
+                    if line.startswith("  adapter:"):
+                        print("  adapter: " + adapter, end='\n')
+                        stage_no = stage_no + 1
+                    elif line.startswith("  port:"):
+                        device_num = get_device_number(device_info["id"])
+                        print("  port: /dev/" + device_num, end='\n')
+                        stage_no = stage_no + 1
+                    elif line.startswith("  ") or line.startswith("serial:"):
+                        print(line, end='')
+                    else:
+                        # configuration not correct... exit
+                        print(line, end='')
+                        stage_no = 3
+                else:
+                    print(line, end='')
 
         # start zigbee2mqtt service
         # restart-delay 120000 millisecond == 2 minutes
@@ -157,7 +180,37 @@ async def prepare_usb_device(hass, device_info):
         if ais_global.has_root():
             await _run("su -c 'chown " + uid + ":" + gid + " /dev/ttyACM*'")
             await _run("su -c 'chmod 777 /dev/ttyACM*'")
-        # TODO check the /dev/ttyACM.. number and save in settings
+        # zwavejs2mqtt exists?
+        if not os.path.isdir("/data/data/pl.sviete.dom/files/home/zwavejs2mqtt"):
+            await hass.services.async_call(
+                "ais_ai_service",
+                "say_it",
+                {
+                    "text": "Nie znaleziono pakietu ZwaveJs2Mqtt zainstaluj go przed pierwszym uruchomieniem usługi "
+                            "Zwave. Szczegóły w dokumentacji Asystenta domowego."
+                },
+            )
+            return
+        else:
+            device_num = get_device_number(device_info["id"])
+            with open("/data/data/pl.sviete.dom/files/home/zwavejs2mqtt/store/settings.json", "r") as file_r:
+                zwave_settings_json = json.load(file_r)
+
+            zwave_settings_json["zwave"]["port"] = "/dev/" + device_num
+
+            with open("/data/data/pl.sviete.dom/files/home/zwavejs2mqtt/store/settings.json", "w") as file_w:
+                json.dump(zwave_settings_json, file_w)
+
+            cmd_to_run = (
+                "pm2 restart zwave || pm2 start /data/data/pl.sviete.dom/files/home/zwavejs2mqtt/server/bin/www.js "
+                "--name zwave --output /dev/null --error /dev/null --restart-delay=120000"
+            )
+            await _run(cmd_to_run)
+            #
+            await hass.services.async_call(
+                "ais_ai_service", "say_it", {"text": "Uruchomiono serwis zwave"}
+            )
+
 
 
 async def remove_usb_device(hass, device_info):
