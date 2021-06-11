@@ -23,13 +23,12 @@ from homeassistant.components.media_player.const import (
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
-    EVENT_HOMEASSISTANT_STARTED,
+    CONF_HOST,
     STATE_IDLE,
     STATE_OFF,
     STATE_PAUSED,
     STATE_PLAYING,
 )
-from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import DiscoveryInfoType, HomeAssistantType
@@ -69,20 +68,25 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Import legacy configurations."""
-    _LOGGER.warning(
-        "Configuration in configuration.yaml is deprecated. Use the config flow instead"
-    )
 
-    @callback
-    def config_import(_):
-        """Import config entry when homeassistant has started."""
+    if config.get(CONF_HOST, "") not in [
+        x.data[CONF_HOST] for x in hass.config_entries.async_entries(DOMAIN)
+    ] and len(hass.config_entries.async_entries(DOMAIN)):
+        _LOGGER.error(
+            "Configuration in configuration.yaml is not supported anymore. "
+            "Please add this device using the config flow: %s",
+            config.get(CONF_HOST, ""),
+        )
+    else:
+        _LOGGER.warning(
+            "Configuration in configuration.yaml is deprecated. Use the config flow instead"
+        )
+
         hass.async_create_task(
             hass.config_entries.flow.async_init(
                 DOMAIN, context={"source": SOURCE_IMPORT}, data=config
             )
         )
-
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, config_import)
 
 
 async def async_setup_entry(
