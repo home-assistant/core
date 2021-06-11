@@ -62,7 +62,7 @@ class BrotherPrinterSensor(CoordinatorEntity, SensorEntity):
         super().__init__(coordinator)
         description = SENSOR_TYPES[kind]
         self._attrs: dict[str, Any] = {}
-        self._attr_device_class = description[ATTR_DEVICE_CLASS]
+        self._attr_device_class = description.get(ATTR_DEVICE_CLASS)
         self._attr_device_info = device_info
         self._attr_entity_registry_enabled_default = description[ATTR_ENABLED]
         self._attr_icon = description[ATTR_ICON]

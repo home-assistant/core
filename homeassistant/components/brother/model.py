@@ -4,7 +4,7 @@ from __future__ import annotations
 from typing import TypedDict
 
 
-class SensorDescription(TypedDict):
+class SensorDescription(TypedDict, total=False):
     """Sensor description class."""
 
     icon: str | None
