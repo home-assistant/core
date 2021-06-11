@@ -29,10 +29,10 @@ class RokuRemote(RokuEntity, RemoteEntity):
         """Initialize the Roku device."""
         super().__init__(
             device_id=unique_id,
-            name=coordinator.data.info.name,
             coordinator=coordinator,
         )
 
+        self._attr_name = coordinator.data.info.name
         self._attr_unique_id = unique_id
 
     @property
