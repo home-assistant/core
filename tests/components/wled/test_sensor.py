@@ -23,6 +23,7 @@ from homeassistant.const import (
     DATA_BYTES,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -196,3 +197,44 @@ async def test_disabled_by_default_sensors(
     assert entry
     assert entry.disabled
     assert entry.disabled_by == er.DISABLED_INTEGRATION
+
+
+@pytest.mark.parametrize(
+    "key",
+    [
+        "bssid",
+        "channel",
+        "rssi",
+        "signal",
+    ],
+)
+async def test_no_wifi_support(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_wled: MagicMock,
+    key: str,
+) -> None:
+    """Test missing Wi-Fi information from WLED device."""
+    registry = er.async_get(hass)
+
+    # Pre-create registry entries for disabled by default sensors
+    registry.async_get_or_create(
+        SENSOR_DOMAIN,
+        DOMAIN,
+        f"aabbccddeeff_wifi_{key}",
+        suggested_object_id=f"wled_rgb_light_wifi_{key}",
+        disabled_by=None,
+    )
+
+    # Remove Wi-Fi info
+    device = mock_wled.update.return_value
+    device.info.wifi = None
+
+    # Setup
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(f"sensor.wled_rgb_light_wifi_{key}")
+    assert state
+    assert state.state == STATE_UNKNOWN
