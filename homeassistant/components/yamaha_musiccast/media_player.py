@@ -32,6 +32,7 @@ from homeassistant.const import (
     STATE_PAUSED,
     STATE_PLAYING,
 )
+from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -248,21 +249,37 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
         """Send play command."""
         if self._is_netusb:
             await self.coordinator.musiccast.netusb_play()
+        else:
+            raise HomeAssistantError(
+                "Service play is not supported for non NetUSB sources."
+            )
 
     async def async_media_pause(self):
         """Send pause command."""
         if self._is_netusb:
             await self.coordinator.musiccast.netusb_pause()
+        else:
+            raise HomeAssistantError(
+                "Service pause is not supported for non NetUSB sources."
+            )
 
     async def async_media_stop(self):
         """Send stop command."""
         if self._is_netusb:
             await self.coordinator.musiccast.netusb_pause()
+        else:
+            raise HomeAssistantError(
+                "Service stop is not supported for non NetUSB sources."
+            )
 
     async def async_set_shuffle(self, shuffle):
         """Enable/disable shuffle mode."""
         if self._is_netusb:
             await self.coordinator.musiccast.netusb_shuffle(shuffle)
+        else:
+            raise HomeAssistantError(
+                "Service shuffle is not supported for non NetUSB sources."
+            )
 
     async def async_select_sound_mode(self, sound_mode):
         """Select sound mode."""
@@ -318,6 +335,10 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
             await self.coordinator.musiccast.netusb_previous_track()
         elif self._is_tuner:
             await self.coordinator.musiccast.tuner_previous_station()
+        else:
+            raise HomeAssistantError(
+                "Service previous track is not supported for non NetUSB or Tuner sources."
+            )
 
     async def async_media_next_track(self):
         """Send next track command."""
@@ -325,6 +346,10 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
             await self.coordinator.musiccast.netusb_next_track()
         elif self._is_tuner:
             await self.coordinator.musiccast.tuner_next_station()
+        else:
+            raise HomeAssistantError(
+                "Service next track is not supported for non NetUSB or Tuner sources."
+            )
 
     def clear_playlist(self):
         """Clear players playlist."""
@@ -337,6 +362,10 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
         if self._is_netusb:
             await self.coordinator.musiccast.netusb_repeat(
                 HA_REPEAT_MODE_TO_MC_MAPPING.get(repeat, "off")
+            )
+        else:
+            raise HomeAssistantError(
+                "Service set repeat is not supported for non NetUSB sources."
             )
 
     async def async_select_source(self, source):
