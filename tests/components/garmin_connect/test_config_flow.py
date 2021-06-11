@@ -32,6 +32,8 @@ async def test_show_form(hass):
 async def test_step_user(hass):
     """Test registering an integration and finishing flow works."""
     with patch(
+        "homeassistant.components.accuweather.async_setup_entry", return_value=True
+    ), patch(
         "homeassistant.components.garmin_connect.config_flow.Garmin",
     ) as garmin:
         garmin.return_value.login.return_value = MOCK_CONF[CONF_ID]
@@ -45,7 +47,7 @@ async def test_step_user(hass):
 async def test_connection_error(hass):
     """Test for connection error."""
     with patch(
-        "garminconnect_ha.Garmin.login",
+        "homeassistant.components.garmin_connect.Garmin.login",
         side_effect=GarminConnectConnectionError("errormsg"),
     ):
         result = await hass.config_entries.flow.async_init(
@@ -58,7 +60,7 @@ async def test_connection_error(hass):
 async def test_authentication_error(hass):
     """Test for authentication error."""
     with patch(
-        "garminconnect_ha.Garmin.login",
+        "homeassistant.components.garmin_connect.Garmin.login",
         side_effect=GarminConnectAuthenticationError("errormsg"),
     ):
         result = await hass.config_entries.flow.async_init(
@@ -71,7 +73,7 @@ async def test_authentication_error(hass):
 async def test_toomanyrequest_error(hass):
     """Test for toomanyrequests error."""
     with patch(
-        "garminconnect_ha.Garmin.login",
+        "homeassistant.components.garmin_connect.Garmin.login",
         side_effect=GarminConnectTooManyRequestsError("errormsg"),
     ):
         result = await hass.config_entries.flow.async_init(
@@ -84,7 +86,7 @@ async def test_toomanyrequest_error(hass):
 async def test_unknown_error(hass):
     """Test for unknown error."""
     with patch(
-        "garminconnect_ha.Garmin.login",
+        "homeassistant.components.garmin_connect.Garmin.login",
         side_effect=Exception,
     ):
         result = await hass.config_entries.flow.async_init(
