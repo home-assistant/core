@@ -6,7 +6,7 @@ import logging
 DOMAIN = "wled"
 
 LOGGER = logging.getLogger(__package__)
-SCAN_INTERVAL = timedelta(seconds=5)
+SCAN_INTERVAL = timedelta(seconds=10)
 
 # Attributes
 ATTR_COLOR_PRIMARY = "color_primary"
