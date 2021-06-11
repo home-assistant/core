@@ -466,21 +466,9 @@ class AisDbConfigView(HomeAssistantView):
             except Exception as e:
                 _LOGGER.warning("Exception:" + str(e))
                 if db_connection["dbEngine"] == "MariaDB (local)":
-                    _LOGGER.warning("Installing the local MariaDB")
-                    return_info = "TODO..."
-                    # check again the connection... again
-                    # try:
-                    #     engine = create_engine(db_connection["dbUrl"], **kwargs)
-                    #     with engine.connect() as connection:
-                    #         result = connection.execute("SELECT 1")
-                    #         for row in result:
-                    #             _LOGGER.info("SELECT 1: " + str(row))
-                    #     return_info = (
-                    #             "Zapis do bazy " + db_connection["dbEngine"] + " skonfigurowany."
-                    #     )
-                    # except Exception as e:
-                    #     _LOGGER.warning("Exception:" + str(e))
-                    #     error_info = "Błąd konfiguracji zapisu do lokalnej bazy " + str(e)
+                    _LOGGER.warning("Install the MariaDB. See the instruction on AI-Speaker.com page.")
+                    error_info = "Problem z połączeniem do bazy. Sprawdź/wykonaj instalację bazy MariaDB. " \
+                                 "Szczegółowa instrukcja na stronie AI-Speaker.com. Komunikat błędu: " + str(e)
                 else:
                     error_info = "Błąd konfiguracji zapisu do bazy " + str(e)
 
