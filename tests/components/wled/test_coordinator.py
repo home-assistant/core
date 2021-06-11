@@ -64,12 +64,19 @@ async def test_websocket_disconnect(
     assert mock_wled.listen.call_count == 1
     assert mock_wled.disconnect.call_count == 1
 
+    connection_connected = asyncio.Future()
+    connection_finished = asyncio.Future()
+
+    async def connect(callback):
+        connection_connected.set_result(callback)
+        await connection_finished
+
     # Mock out wled.listen with a Future
-    mock_wled.listen.return_value = asyncio.Future()
+    mock_wled.listen.side_effect = connect
 
     # Next refresh it should connect
     async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
-    await hass.async_block_till_done()
+    callback = await connection_connected
 
     # Connected to WebSocket, disconnect not called
     assert mock_wled.connect.call_count == 2
@@ -77,8 +84,7 @@ async def test_websocket_disconnect(
     assert mock_wled.disconnect.call_count == 1
 
     # Resolve Future with a connection losed.
-    future: asyncio.Future = mock_wled.listen.return_value
-    future.set_exception(WLEDConnectionClosed)
+    connection_finished.set_exception(WLEDConnectionClosed)
     await hass.async_block_till_done()
 
     # Disconnect called
