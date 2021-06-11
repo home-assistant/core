@@ -1,9 +1,8 @@
 """Integrate with NO-IP Dynamic DNS service."""
 import asyncio
 import base64
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
-from typing import Any
 
 import aiohttp
 from aiohttp.hdrs import AUTHORIZATION, USER_AGENT
@@ -70,7 +69,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if not result:
         return False
 
-    async def update_domain_interval(now: Any) -> None:
+    async def update_domain_interval(now: datetime) -> None:
         """Update the NO-IP entry."""
         await _update_no_ip(hass, session, domain, auth_str, timeout)
 
