@@ -1,4 +1,6 @@
 """Base Entity for Roku."""
+from __future__ import annotations
+
 from homeassistant.const import ATTR_NAME, CONF_HOST
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
