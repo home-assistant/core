@@ -344,7 +344,7 @@ freebox-api==0.0.10
 fritzconnection==1.4.2
 
 # homeassistant.components.fritz
-fritzprofiles==0.6
+fritzprofiles==0.6.1
 
 # homeassistant.components.google_translate
 gTTS==2.2.2
