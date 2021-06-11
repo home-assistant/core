@@ -242,12 +242,15 @@ LIGHT_SCHEMA = BASE_SWITCH_SCHEMA.extend({})
 
 FAN_SCHEMA = BASE_SWITCH_SCHEMA.extend({})
 
-SENSOR_SCHEMA = BASE_STRUCT_SCHEMA.extend(
-    {
-        vol.Optional(CONF_DEVICE_CLASS): SENSOR_DEVICE_CLASSES_SCHEMA,
-        vol.Optional(CONF_REVERSE_ORDER): cv.boolean,
-        vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
-    }
+SENSOR_SCHEMA = vol.All(
+    cv.deprecated(CONF_REVERSE_ORDER),
+    BASE_STRUCT_SCHEMA.extend(
+        {
+            vol.Optional(CONF_DEVICE_CLASS): SENSOR_DEVICE_CLASSES_SCHEMA,
+            vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+            vol.Optional(CONF_REVERSE_ORDER): cv.boolean,
+        }
+    ),
 )
 
 BINARY_SENSOR_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
