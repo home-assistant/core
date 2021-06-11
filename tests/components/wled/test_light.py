@@ -21,6 +21,7 @@ from homeassistant.components.wled.const import (
     ATTR_PRESET,
     ATTR_REVERSE,
     ATTR_SPEED,
+    CONF_KEEP_MASTER_LIGHT,
     DOMAIN,
     SCAN_INTERVAL,
     SERVICE_EFFECT,
@@ -588,3 +589,22 @@ async def test_preset_service_error(
     assert "Invalid response from API" in caplog.text
     assert mock_wled.preset.call_count == 1
     mock_wled.preset.assert_called_with(preset=1)
+
+
+@pytest.mark.parametrize("mock_wled", ["wled/rgb_single_segment.json"], indirect=True)
+async def test_single_segment_with_keep_master_light(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_wled: MagicMock,
+) -> None:
+    """Test the behavior of the integration with a single segment."""
+    assert not hass.states.get("light.wled_rgb_light_master")
+
+    hass.config_entries.async_update_entry(
+        init_integration, options={CONF_KEEP_MASTER_LIGHT: True}
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("light.wled_rgb_light_master")
+    assert state
+    assert state.state == STATE_ON
