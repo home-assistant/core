@@ -193,6 +193,7 @@ homeassistant/components/group/* @home-assistant/core
 homeassistant/components/growatt_server/* @indykoning @muppet3000
 homeassistant/components/guardian/* @bachya
 homeassistant/components/habitica/* @ASMfreaK @leikoilja
+homeassistant/components/habo/* @hboulakhrif
 homeassistant/components/harmony/* @ehendrix23 @bramkragten @bdraco @mkeesey
 homeassistant/components/hassio/* @home-assistant/supervisor
 homeassistant/components/heatmiser/* @andylockran

@@ -932,6 +932,9 @@ magicseaweed==1.0.3
 # homeassistant.components.matrix
 matrix-client==0.3.2
 
+# homeassistant.components.habo
+mawaqit-times-calculator==0.0.4
+
 # homeassistant.components.maxcube
 maxcube-api==0.4.3
 
