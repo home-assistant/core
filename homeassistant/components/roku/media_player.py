@@ -83,10 +83,10 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
         """Initialize the Roku device."""
         super().__init__(
             coordinator=coordinator,
-            name=coordinator.data.info.name,
             device_id=unique_id,
         )
 
+        self._attr_name = coordinator.data.info.name
         self._attr_unique_id = unique_id
 
     def _media_playback_trackable(self) -> bool:
