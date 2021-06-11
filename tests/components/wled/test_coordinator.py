@@ -1,8 +1,9 @@
 """Tests for the coordinator of the WLED integration."""
+import asyncio
 from unittest.mock import MagicMock
 
 import pytest
-from wled import WLEDConnectionError
+from wled import WLEDConnectionClosed, WLEDConnectionError
 
 from homeassistant.components.wled.const import SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
@@ -48,3 +49,37 @@ async def test_websocket_connect_error_no_listen(
 
     assert mock_wled.connect.call_count == 2
     assert mock_wled.listen.call_count == 1
+
+
+@pytest.mark.parametrize("mock_wled", ["wled/rgb_websocket.json"], indirect=True)
+async def test_websocket_disconnect(
+    hass: HomeAssistant, init_integration: MockConfigEntry, mock_wled: MagicMock
+) -> None:
+    """Test WebSocket connection."""
+    state = hass.states.get("light.wled_websocket")
+    assert state
+
+    # There is no Future in place yet...
+    assert mock_wled.connect.call_count == 1
+    assert mock_wled.listen.call_count == 1
+    assert mock_wled.disconnect.call_count == 1
+
+    # Mock out wled.listen with a Future
+    mock_wled.listen.return_value = asyncio.Future()
+
+    # Next refresh it should connect
+    async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
+    await hass.async_block_till_done()
+
+    # Connected to WebSocket, disconnect not called
+    assert mock_wled.connect.call_count == 2
+    assert mock_wled.listen.call_count == 2
+    assert mock_wled.disconnect.call_count == 1
+
+    # Resolve Future with a connection losed.
+    future: asyncio.Future = mock_wled.listen.return_value
+    future.set_exception(WLEDConnectionClosed)
+    await hass.async_block_till_done()
+
+    # Disconnect called
+    assert mock_wled.disconnect.call_count == 2
