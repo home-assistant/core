@@ -24,6 +24,8 @@ HA_REPEAT_MODE_TO_MC_MAPPING = {
     REPEAT_MODE_ALL: "all",
 }
 
+INTERVAL_SECONDS = "interval_seconds"
+
 MC_REPEAT_MODE_TO_HA_MAPPING = {
     val: key for key, val in HA_REPEAT_MODE_TO_MC_MAPPING.items()
 }

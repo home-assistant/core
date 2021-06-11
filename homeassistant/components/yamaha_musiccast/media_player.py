@@ -1,9 +1,11 @@
-"""Demo implementation of the media player."""
+"""Implementation of the musiccast media player."""
 from __future__ import annotations
 
 import logging
 
-from homeassistant.components.media_player import MediaPlayerEntity
+import voluptuous as vol
+
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     REPEAT_MODE_OFF,
     SUPPORT_CLEAR_PLAYLIST,
@@ -24,11 +26,13 @@ from homeassistant.components.media_player.const import (
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
+    CONF_PORT,
     STATE_IDLE,
     STATE_OFF,
     STATE_PAUSED,
     STATE_PLAYING,
 )
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import DiscoveryInfoType, HomeAssistantType
@@ -38,6 +42,7 @@ from .const import (
     DEFAULT_ZONE,
     DOMAIN,
     HA_REPEAT_MODE_TO_MC_MAPPING,
+    INTERVAL_SECONDS,
     MC_REPEAT_MODE_TO_HA_MAPPING,
 )
 
@@ -58,6 +63,14 @@ MUSIC_PLAYER_SUPPORT = (
     | SUPPORT_SELECT_SOUND_MODE
     | SUPPORT_SELECT_SOURCE
     | SUPPORT_STOP
+)
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_HOST): cv.string,
+        vol.Optional(CONF_PORT, default=5000): cv.port,
+        vol.Optional(INTERVAL_SECONDS, default=0): cv.positive_int,
+    }
 )
 
 
