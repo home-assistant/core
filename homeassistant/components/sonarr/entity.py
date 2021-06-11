@@ -23,32 +23,11 @@ class SonarrEntity(Entity):
         sonarr: Sonarr,
         entry_id: str,
         device_id: str,
-        name: str,
-        icon: str,
-        enabled_default: bool = True,
     ) -> None:
         """Initialize the Sonarr entity."""
         self._entry_id = entry_id
         self._device_id = device_id
-        self._enabled_default = enabled_default
-        self._icon = icon
-        self._name = name
         self.sonarr = sonarr
-
-    @property
-    def name(self) -> str:
-        """Return the name of the entity."""
-        return self._name
-
-    @property
-    def icon(self) -> str:
-        """Return the mdi icon of the entity."""
-        return self._icon
-
-    @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Return if the entity should be enabled when first added to the entity registry."""
-        return self._enabled_default
 
     @property
     def device_info(self) -> DeviceInfo | None:
