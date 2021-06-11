@@ -148,7 +148,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 @callback
-def _async_platforms(entry: ConfigEntry) -> list:
+def _async_platforms(entry: ConfigEntry) -> list[str]:
     """Return platforms to be loaded / unloaded."""
     platforms = ["sensor"]
     if not entry.data[CONF_STATISTICS_ONLY]:

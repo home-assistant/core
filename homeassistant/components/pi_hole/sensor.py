@@ -90,6 +90,6 @@ class PiHoleSensor(PiHoleEntity, SensorEntity):
             return self.api.data[self._condition]
 
     @property
-    def extra_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the Pi-hole."""
         return {ATTR_BLOCKED_DOMAINS: self.api.data["domains_being_blocked"]}

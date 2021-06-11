@@ -80,7 +80,7 @@ class PiHoleSwitch(PiHoleEntity, SwitchEntity):
             return True
         return False
 
-    async def async_turn_on(self, **kwargs: "dict[str, Any]") -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the service."""
         try:
             await self.api.enable()
