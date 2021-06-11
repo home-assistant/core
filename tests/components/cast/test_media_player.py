@@ -10,7 +10,7 @@ import attr
 import pychromecast
 import pytest
 
-from homeassistant.components import tts, media_player
+from homeassistant.components import media_player, tts
 from homeassistant.components.cast import media_player as cast
 from homeassistant.components.cast.media_player import ChromecastInfo
 from homeassistant.components.media_player.const import (
