@@ -1213,9 +1213,9 @@ track_point_in_utc_time = threaded_listener_factory(async_track_point_in_utc_tim
 @callback
 @bind_hass
 def async_call_later(
-  hass: HomeAssistant,
-  delay: float | timedelta,
-  action: HassJob | Callable[..., Awaitable[None] | None]
+    hass: HomeAssistant,
+    delay: float | timedelta,
+    action: HassJob | Callable[..., Awaitable[None] | None],
 ) -> CALLBACK_TYPE:
     """Add a listener that is called in <delay>."""
     if not isinstance(delay, timedelta):
