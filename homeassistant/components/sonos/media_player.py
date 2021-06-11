@@ -55,6 +55,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.network import is_internal_request
 
 from .const import (
+    DATA_SONOS,
     DOMAIN as SONOS_DOMAIN,
     MEDIA_TYPES_TO_SONOS,
     PLAYABLE_MEDIA_TYPES,
@@ -295,6 +296,9 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
 
     async def async_update(self) -> None:
         """Retrieve latest state by polling."""
+        await self.hass.data[DATA_SONOS].favorites[
+            self.speaker.household_id
+        ].async_poll()
         await self.hass.async_add_executor_job(self._update)
 
     def _update(self) -> None:
