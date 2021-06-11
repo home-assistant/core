@@ -300,6 +300,17 @@ class Thermostat(ClimateEntity):
         self.vacation = None
         self._last_active_hvac_mode = HVAC_MODE_HEAT_COOL
 
+        # Check that this is a known model, log message if not
+        if not self.thermostat["modelNumber"] in ECOBEE_MODEL_TO_NAME:
+            _LOGGER.error(
+                "Model number for ecobee thermostat %s not recognized. "
+                "Please visit this link and provide the following information: "
+                "https://github.com/home-assistant/core/issues/27172 "
+                "Unrecognized model number: %s",
+                self.name,
+                self.thermostat["modelNumber"],
+            )
+
         self._operation_list = []
         if (
             self.thermostat["settings"]["heatStages"]
@@ -358,15 +369,7 @@ class Thermostat(ClimateEntity):
         try:
             model = f"{ECOBEE_MODEL_TO_NAME[self.thermostat['modelNumber']]} Thermostat"
         except KeyError:
-            _LOGGER.error(
-                "Model number for ecobee thermostat %s not recognized. "
-                "Please visit this link and provide the following information: "
-                "https://github.com/home-assistant/core/issues/27172 "
-                "Unrecognized model number: %s",
-                self.name,
-                self.thermostat["modelNumber"],
-            )
-            return None
+            model = "Unknown Thermostat"
 
         return {
             "identifiers": {(DOMAIN, self.thermostat["identifier"])},
