@@ -48,7 +48,9 @@ class PiHoleFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle a flow initiated by the user."""
         return await self.async_step_init(user_input)
 
-    async def async_step_import(self, user_input: dict | None = None) -> FlowResult:
+    async def async_step_import(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle a flow initiated by import."""
         return await self.async_step_init(user_input, is_import=True)
 
@@ -139,7 +141,9 @@ class PiHoleFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_api_key(self, user_input: dict | None = None) -> FlowResult:
+    async def async_step_api_key(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle step to setup API key."""
         if user_input is not None:
             return self.async_create_entry(
