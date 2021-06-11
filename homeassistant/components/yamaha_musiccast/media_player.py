@@ -69,13 +69,13 @@ async def async_setup_platform(
 ) -> None:
     """Import legacy configurations."""
 
-    if config.get(CONF_HOST, "") not in [
-        x.data[CONF_HOST] for x in hass.config_entries.async_entries(DOMAIN)
-    ] and len(hass.config_entries.async_entries(DOMAIN)):
+    if hass.config_entries.async_entries(DOMAIN) and config[CONF_HOST] not in [
+        entry.data[CONF_HOST] for entry in hass.config_entries.async_entries(DOMAIN)
+    ]:
         _LOGGER.error(
             "Configuration in configuration.yaml is not supported anymore. "
             "Please add this device using the config flow: %s",
-            config.get(CONF_HOST, ""),
+            config[CONF_HOST],
         )
     else:
         _LOGGER.warning(
