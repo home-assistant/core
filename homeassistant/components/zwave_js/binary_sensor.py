@@ -269,7 +269,20 @@ class ZWaveBooleanBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
     ) -> None:
         """Initialize a ZWaveBooleanBinarySensor entity."""
         super().__init__(config_entry, client, info)
-        self._name = self.generate_name(include_value_name=True)
+
+        # Entity class attributes
+        self._attr_name = self.generate_name(include_value_name=True)
+        self._attr_device_class = (
+            DEVICE_CLASS_BATTERY
+            if self.info.primary_value.command_class == CommandClass.BATTERY
+            else None
+        )
+        # Legacy binary sensors are phased out (replaced by notification sensors)
+        # Disable by default to not confuse users
+        self._attr_entity_registry_enabled_default = bool(
+            self.info.primary_value.command_class != CommandClass.SENSOR_BINARY
+            or self.info.node.device_class.generic.key == 0x20
+        )
 
     @property
     def is_on(self) -> bool | None:
@@ -277,23 +290,6 @@ class ZWaveBooleanBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
         if self.info.primary_value.value is None:
             return None
         return bool(self.info.primary_value.value)
-
-    @property
-    def device_class(self) -> str | None:
-        """Return device class."""
-        if self.info.primary_value.command_class == CommandClass.BATTERY:
-            return DEVICE_CLASS_BATTERY
-        return None
-
-    @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Return if the entity should be enabled when first added to the entity registry."""
-        # Legacy binary sensors are phased out (replaced by notification sensors)
-        # Disable by default to not confuse users
-        return bool(
-            self.info.primary_value.command_class != CommandClass.SENSOR_BINARY
-            or self.info.node.device_class.generic.key == 0x20
-        )
 
 
 class ZWaveNotificationBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
@@ -309,13 +305,20 @@ class ZWaveNotificationBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
         """Initialize a ZWaveNotificationBinarySensor entity."""
         super().__init__(config_entry, client, info)
         self.state_key = state_key
-        self._name = self.generate_name(
+        # check if we have a custom mapping for this value
+        self._mapping_info = self._get_sensor_mapping()
+
+        # Entity class attributes
+        self._attr_name = self.generate_name(
             include_value_name=True,
             alternate_value_name=self.info.primary_value.property_name,
             additional_info=[self.info.primary_value.metadata.states[self.state_key]],
         )
-        # check if we have a custom mapping for this value
-        self._mapping_info = self._get_sensor_mapping()
+        self._attr_device_class = self._mapping_info.get("device_class")
+        self._attr_unique_id = f"{self._attr_unique_id}.{self.state_key}"
+        self._attr_entity_registry_enabled_default = (
+            True if not self._mapping_info else self._mapping_info.get("enabled", True)
+        )
 
     @property
     def is_on(self) -> bool | None:
@@ -323,23 +326,6 @@ class ZWaveNotificationBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
         if self.info.primary_value.value is None:
             return None
         return int(self.info.primary_value.value) == int(self.state_key)
-
-    @property
-    def device_class(self) -> str | None:
-        """Return device class."""
-        return self._mapping_info.get("device_class")
-
-    @property
-    def unique_id(self) -> str:
-        """Return unique id for this entity."""
-        return f"{super().unique_id}.{self.state_key}"
-
-    @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Return if the entity should be enabled when first added to the entity registry."""
-        if not self._mapping_info:
-            return True
-        return self._mapping_info.get("enabled", True)
 
     @callback
     def _get_sensor_mapping(self) -> NotificationSensorMapping:
@@ -366,7 +352,15 @@ class ZWavePropertyBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
         super().__init__(config_entry, client, info)
         # check if we have a custom mapping for this value
         self._mapping_info = self._get_sensor_mapping()
-        self._name = self.generate_name(include_value_name=True)
+
+        # Entity class attributes
+        self._attr_name = self.generate_name(include_value_name=True)
+        self._attr_device_class = self._mapping_info.get("device_class")
+        # We hide some more advanced sensors by default to not overwhelm users
+        # unless explicitly stated in a mapping, assume deisabled by default
+        self._attr_entity_registry_enabled_default = self._mapping_info.get(
+            "enabled", False
+        )
 
     @property
     def is_on(self) -> bool | None:
@@ -374,18 +368,6 @@ class ZWavePropertyBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
         if self.info.primary_value.value is None:
             return None
         return self.info.primary_value.value in self._mapping_info["on_states"]
-
-    @property
-    def device_class(self) -> str | None:
-        """Return device class."""
-        return self._mapping_info.get("device_class")
-
-    @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Return if the entity should be enabled when first added to the entity registry."""
-        # We hide some more advanced sensors by default to not overwhelm users
-        # unless explicitly stated in a mapping, assume deisabled by default
-        return self._mapping_info.get("enabled", False)
 
     @callback
     def _get_sensor_mapping(self) -> PropertySensorMapping:

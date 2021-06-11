@@ -945,6 +945,7 @@ async def test_sending_hs_color(hass, mqtt_mock):
                 "command_topic": "test_light_rgb/set",
                 "brightness": True,
                 "hs": True,
+                "white_value": True,
             }
         },
     )
@@ -1139,6 +1140,7 @@ async def test_sending_rgb_color_with_brightness(hass, mqtt_mock):
                 "command_topic": "test_light_rgb/set",
                 "brightness": True,
                 "rgb": True,
+                "white_value": True,
             }
         },
     )
@@ -1209,6 +1211,7 @@ async def test_sending_rgb_color_with_scaled_brightness(hass, mqtt_mock):
                 "brightness": True,
                 "brightness_scale": 100,
                 "rgb": True,
+                "white_value": True,
             }
         },
     )
@@ -1278,6 +1281,7 @@ async def test_sending_xy_color(hass, mqtt_mock):
                 "command_topic": "test_light_rgb/set",
                 "brightness": True,
                 "xy": True,
+                "white_value": True,
             }
         },
     )

@@ -10,10 +10,12 @@ from homeassistant.components.light import (
     ATTR_HS_COLOR,
     ATTR_RGBW_COLOR,
     ATTR_RGBWW_COLOR,
+    ATTR_WHITE,
     COLOR_MODE_COLOR_TEMP,
     COLOR_MODE_HS,
     COLOR_MODE_RGBW,
     COLOR_MODE_RGBWW,
+    COLOR_MODE_WHITE,
     SUPPORT_EFFECT,
     LightEntity,
 )
@@ -27,6 +29,7 @@ LIGHT_EFFECT_LIST = ["rainbow", "none"]
 LIGHT_TEMPS = [240, 380]
 
 SUPPORT_DEMO = {COLOR_MODE_HS, COLOR_MODE_COLOR_TEMP}
+SUPPORT_DEMO_HS_WHITE = {COLOR_MODE_HS, COLOR_MODE_WHITE}
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -71,6 +74,14 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 state=True,
                 supported_color_modes={COLOR_MODE_RGBWW},
                 unique_id="light_5",
+            ),
+            DemoLight(
+                available=True,
+                name="Entrance Color + White Lights",
+                hs_color=LIGHT_COLORS[1],
+                state=True,
+                supported_color_modes=SUPPORT_DEMO_HS_WHITE,
+                unique_id="light_6",
             ),
         ]
     )
@@ -218,6 +229,20 @@ class DemoLight(LightEntity):
         """Turn the light on."""
         self._state = True
 
+        if ATTR_BRIGHTNESS in kwargs:
+            self._brightness = kwargs[ATTR_BRIGHTNESS]
+
+        if ATTR_COLOR_TEMP in kwargs:
+            self._color_mode = COLOR_MODE_COLOR_TEMP
+            self._ct = kwargs[ATTR_COLOR_TEMP]
+
+        if ATTR_EFFECT in kwargs:
+            self._effect = kwargs[ATTR_EFFECT]
+
+        if ATTR_HS_COLOR in kwargs:
+            self._color_mode = COLOR_MODE_HS
+            self._hs_color = kwargs[ATTR_HS_COLOR]
+
         if ATTR_RGBW_COLOR in kwargs:
             self._color_mode = COLOR_MODE_RGBW
             self._rgbw_color = kwargs[ATTR_RGBW_COLOR]
@@ -226,19 +251,9 @@ class DemoLight(LightEntity):
             self._color_mode = COLOR_MODE_RGBWW
             self._rgbww_color = kwargs[ATTR_RGBWW_COLOR]
 
-        if ATTR_HS_COLOR in kwargs:
-            self._color_mode = COLOR_MODE_HS
-            self._hs_color = kwargs[ATTR_HS_COLOR]
-
-        if ATTR_COLOR_TEMP in kwargs:
-            self._color_mode = COLOR_MODE_COLOR_TEMP
-            self._ct = kwargs[ATTR_COLOR_TEMP]
-
-        if ATTR_BRIGHTNESS in kwargs:
-            self._brightness = kwargs[ATTR_BRIGHTNESS]
-
-        if ATTR_EFFECT in kwargs:
-            self._effect = kwargs[ATTR_EFFECT]
+        if ATTR_WHITE in kwargs:
+            self._color_mode = COLOR_MODE_WHITE
+            self._brightness = kwargs[ATTR_WHITE]
 
         # As we have disabled polling, we need to inform
         # Home Assistant about updates in our state ourselves.

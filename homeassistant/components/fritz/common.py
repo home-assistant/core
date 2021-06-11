@@ -16,7 +16,10 @@ from fritzconnection.core.exceptions import (
 from fritzconnection.lib.fritzhosts import FritzHosts
 from fritzconnection.lib.fritzstatus import FritzStatus
 
-from homeassistant.components.device_tracker.const import CONF_CONSIDER_HOME
+from homeassistant.components.device_tracker.const import (
+    CONF_CONSIDER_HOME,
+    DEFAULT_CONSIDER_HOME,
+)
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
@@ -143,7 +146,9 @@ class FritzBoxTools:
         """Scan for new devices and return a list of found device ids."""
         _LOGGER.debug("Checking devices for FRITZ!Box router %s", self.host)
 
-        consider_home = self._options[CONF_CONSIDER_HOME]
+        consider_home = self._options.get(
+            CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME.total_seconds()
+        )
 
         new_device = False
         for known_host in self._update_info():
@@ -212,21 +217,22 @@ class FritzDevice:
         """Update device info."""
         utc_point_in_time = dt_util.utcnow()
 
-        if not self._name:
-            self._name = dev_info.name or self._mac.replace(":", "_")
-
-        if not dev_home and self._last_activity:
-            self._connected = (
+        if self._last_activity:
+            consider_home_evaluated = (
                 utc_point_in_time - self._last_activity
             ).total_seconds() < consider_home
         else:
-            self._connected = dev_home
+            consider_home_evaluated = dev_home
 
-        if self._connected:
-            self._ip_address = dev_info.ip_address
+        if not self._name:
+            self._name = dev_info.name or self._mac.replace(":", "_")
+
+        self._connected = dev_home or consider_home_evaluated
+
+        if dev_home:
             self._last_activity = utc_point_in_time
-        else:
-            self._ip_address = None
+
+        self._ip_address = dev_info.ip_address if self._connected else None
 
     @property
     def is_connected(self):

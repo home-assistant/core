@@ -64,7 +64,9 @@ class RingConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({"username": str, "password": str}),
+            data_schema=vol.Schema(
+                {vol.Required("username"): str, vol.Required("password"): str}
+            ),
             errors=errors,
         )
 
@@ -75,7 +77,7 @@ class RingConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="2fa",
-            data_schema=vol.Schema({"2fa": str}),
+            data_schema=vol.Schema({vol.Required("2fa"): str}),
         )
 
 

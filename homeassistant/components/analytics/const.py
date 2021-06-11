@@ -16,6 +16,7 @@ LOGGER: logging.Logger = logging.getLogger(__package__)
 
 ATTR_ADDON_COUNT = "addon_count"
 ATTR_ADDONS = "addons"
+ATTR_ARCH = "arch"
 ATTR_AUTO_UPDATE = "auto_update"
 ATTR_AUTOMATION_COUNT = "automation_count"
 ATTR_BASE = "base"

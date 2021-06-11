@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u05ea\u05e6\u05d5\u05e8\u05ea \u05d4\u05d4\u05ea\u05e7\u05df \u05db\u05d1\u05e8 \u05e0\u05e7\u05d1\u05e2\u05d4",
+            "already_in_progress": "\u05d6\u05e8\u05d9\u05de\u05ea \u05d4\u05ea\u05e6\u05d5\u05e8\u05d4 \u05db\u05d1\u05e8 \u05de\u05ea\u05d1\u05e6\u05e2\u05ea",
+            "single_instance_allowed": "\u05ea\u05e6\u05d5\u05e8\u05ea\u05d5 \u05db\u05d1\u05e8 \u05e0\u05e7\u05d1\u05e2\u05d4. \u05e8\u05e7 \u05ea\u05e6\u05d5\u05e8\u05d4 \u05d0\u05d7\u05ea \u05d0\u05e4\u05e9\u05e8\u05d9\u05ea."
+        },
+        "step": {
+            "on_supervisor": {
+                "data": {
+                    "use_addon": "\u05e9\u05d9\u05de\u05d5\u05e9 \u05d1\u05d4\u05e8\u05d7\u05d1\u05d4 '\u05de\u05e4\u05e7\u05d7 OpenZWave'"
+                },
+                "description": "\u05d4\u05d0\u05dd \u05d1\u05e8\u05e6\u05d5\u05e0\u05da \u05dc\u05d4\u05e9\u05ea\u05de\u05e9 \u05d1\u05d4\u05e8\u05d7\u05d1\u05d4 \u05e9\u05dc \u05de\u05e4\u05e7\u05d7 OpenZWave?",
+                "title": "\u05d1\u05d7\u05e8 \u05e9\u05d9\u05d8\u05ea \u05d7\u05d9\u05d1\u05d5\u05e8"
+            },
+            "start_addon": {
+                "data": {
+                    "usb_path": "\u05e0\u05ea\u05d9\u05d1 \u05d4\u05ea\u05e7\u05df USB"
+                }
+            }
+        }
+    }
+}

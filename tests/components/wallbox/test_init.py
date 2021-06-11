@@ -11,7 +11,7 @@ from homeassistant.components.wallbox.const import (
     DOMAIN,
 )
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 from tests.components.wallbox import setup_integration
@@ -35,7 +35,7 @@ test_response_rounding_error = json.loads(
 )
 
 
-async def test_wallbox_unload_entry(hass: HomeAssistantType):
+async def test_wallbox_unload_entry(hass: HomeAssistant):
     """Test Wallbox Unload."""
 
     await setup_integration(hass)
@@ -43,18 +43,18 @@ async def test_wallbox_unload_entry(hass: HomeAssistantType):
     assert await hass.config_entries.async_unload(entry.entry_id)
 
 
-async def test_get_data(hass: HomeAssistantType):
+async def test_get_data(hass: HomeAssistant):
     """Test hub class, get_data."""
 
     await setup_integration(hass)
 
-    with requests_mock.Mocker() as m:
-        m.get(
+    with requests_mock.Mocker() as mock_request:
+        mock_request.get(
             "https://api.wall-box.com/auth/token/user",
             text='{"jwt":"fakekeyhere","user_id":12345,"ttl":145656758,"error":false,"status":200}',
             status_code=200,
         )
-        m.get(
+        mock_request.get(
             "https://api.wall-box.com/chargers/status/12345",
             json=test_response_rounding_error,
             status_code=200,
@@ -64,18 +64,18 @@ async def test_get_data(hass: HomeAssistantType):
         assert await wallbox.async_get_data()
 
 
-async def test_get_data_rounding_error(hass: HomeAssistantType):
+async def test_get_data_rounding_error(hass: HomeAssistant):
     """Test hub class, get_data with rounding error."""
 
     await setup_integration(hass)
 
-    with requests_mock.Mocker() as m:
-        m.get(
+    with requests_mock.Mocker() as mock_request:
+        mock_request.get(
             "https://api.wall-box.com/auth/token/user",
             text='{"jwt":"fakekeyhere","user_id":12345,"ttl":145656758,"error":false,"status":200}',
             status_code=200,
         )
-        m.get(
+        mock_request.get(
             "https://api.wall-box.com/chargers/status/12345",
             json=test_response_rounding_error,
             status_code=200,
@@ -86,18 +86,18 @@ async def test_get_data_rounding_error(hass: HomeAssistantType):
         assert await wallbox.async_get_data()
 
 
-async def test_authentication_exception(hass: HomeAssistantType):
+async def test_authentication_exception(hass: HomeAssistant):
     """Test hub class, authentication raises exception."""
 
     await setup_integration(hass)
 
-    with requests_mock.Mocker() as m, raises(InvalidAuth):
-        m.get(
+    with requests_mock.Mocker() as mock_request, raises(InvalidAuth):
+        mock_request.get(
             "https://api.wall-box.com/auth/token/user",
             text='{"jwt":"fakekeyhere","user_id":12345,"ttl":145656758,"error":false,"status":403}',
             status_code=403,
         )
-        m.get(
+        mock_request.get(
             "https://api.wall-box.com/chargers/status/12345",
             json=test_response_rounding_error,
             status_code=200,
@@ -108,18 +108,18 @@ async def test_authentication_exception(hass: HomeAssistantType):
         assert await wallbox.async_authenticate()
 
 
-async def test_connection_exception(hass: HomeAssistantType):
+async def test_connection_exception(hass: HomeAssistant):
     """Test Connection Exception."""
 
     await setup_integration(hass)
 
-    with requests_mock.Mocker() as m, raises(ConnectionError):
-        m.get(
+    with requests_mock.Mocker() as mock_request, raises(ConnectionError):
+        mock_request.get(
             "https://api.wall-box.com/auth/token/user",
             text='{"jwt":"fakekeyhere","user_id":12345,"ttl":145656758,"error":false,"status":200}',
             status_code=200,
         )
-        m.get(
+        mock_request.get(
             "https://api.wall-box.com/chargers/status/12345",
             json=test_response_rounding_error,
             status_code=200,
@@ -130,18 +130,18 @@ async def test_connection_exception(hass: HomeAssistantType):
         assert await wallbox.async_authenticate()
 
 
-async def test_get_data_exception(hass: HomeAssistantType):
+async def test_get_data_exception(hass: HomeAssistant):
     """Test hub class, authentication raises exception."""
 
     await setup_integration(hass)
 
-    with requests_mock.Mocker() as m, raises(ConnectionError):
-        m.get(
+    with requests_mock.Mocker() as mock_request, raises(ConnectionError):
+        mock_request.get(
             "https://api.wall-box.com/auth/token/user",
             text='{"jwt":"fakekeyhere","user_id":12345,"ttl":145656758,"error":false,"status":200}',
             status_code=200,
         )
-        m.get(
+        mock_request.get(
             "https://api.wall-box.com/chargers/status/12345",
             text="data",
             status_code=404,

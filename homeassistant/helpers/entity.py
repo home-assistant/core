@@ -10,7 +10,7 @@ import logging
 import math
 import sys
 from timeit import default_timer as timer
-from typing import Any, TypedDict
+from typing import Any, TypedDict, final
 
 from homeassistant.config import DATA_CUSTOMIZE
 from homeassistant.const import (
@@ -93,6 +93,40 @@ def async_generate_entity_id(
     return test_string
 
 
+def get_capability(hass: HomeAssistant, entity_id: str, capability: str) -> str | None:
+    """Get a capability attribute of an entity.
+
+    First try the statemachine, then entity registry.
+    """
+    state = hass.states.get(entity_id)
+    if state:
+        return state.attributes.get(capability)
+
+    entity_registry = er.async_get(hass)
+    entry = entity_registry.async_get(entity_id)
+    if not entry:
+        raise HomeAssistantError(f"Unknown entity {entity_id}")
+
+    return entry.capabilities.get(capability) if entry.capabilities else None
+
+
+def get_device_class(hass: HomeAssistant, entity_id: str) -> str | None:
+    """Get device class of an entity.
+
+    First try the statemachine, then entity registry.
+    """
+    state = hass.states.get(entity_id)
+    if state:
+        return state.attributes.get(ATTR_DEVICE_CLASS)
+
+    entity_registry = er.async_get(hass)
+    entry = entity_registry.async_get(entity_id)
+    if not entry:
+        raise HomeAssistantError(f"Unknown entity {entity_id}")
+
+    return entry.device_class
+
+
 def get_supported_features(hass: HomeAssistant, entity_id: str) -> int:
     """Get supported features for an entity.
 
@@ -108,6 +142,23 @@ def get_supported_features(hass: HomeAssistant, entity_id: str) -> int:
         raise HomeAssistantError(f"Unknown entity {entity_id}")
 
     return entry.supported_features or 0
+
+
+def get_unit_of_measurement(hass: HomeAssistant, entity_id: str) -> str | None:
+    """Get unit of measurement class of an entity.
+
+    First try the statemachine, then entity registry.
+    """
+    state = hass.states.get(entity_id)
+    if state:
+        return state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+
+    entity_registry = er.async_get(hass)
+    entry = entity_registry.async_get(entity_id)
+    if not entry:
+        raise HomeAssistantError(f"Unknown entity {entity_id}")
+
+    return entry.unit_of_measurement
 
 
 class DeviceInfo(TypedDict, total=False):
@@ -766,7 +817,11 @@ class Entity(ABC):
 class ToggleEntity(Entity):
     """An abstract class for entities that can be turned on and off."""
 
+    _attr_is_on: bool
+    _attr_state: None = None
+
     @property
+    @final
     def state(self) -> str | None:
         """Return the state."""
         return STATE_ON if self.is_on else STATE_OFF
@@ -774,7 +829,7 @@ class ToggleEntity(Entity):
     @property
     def is_on(self) -> bool:
         """Return True if entity is on."""
-        raise NotImplementedError()
+        return self._attr_is_on
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""

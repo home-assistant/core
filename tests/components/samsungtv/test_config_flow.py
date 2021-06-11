@@ -54,6 +54,9 @@ MOCK_IMPORT_DATA = {
     CONF_NAME: "fake",
     CONF_PORT: 55000,
 }
+MOCK_IMPORT_DATA_WITHOUT_NAME = {
+    CONF_HOST: "fake_host",
+}
 MOCK_IMPORT_WSDATA = {
     CONF_HOST: "fake_host",
     CONF_NAME: "fake",
@@ -509,6 +512,26 @@ async def test_import_legacy(hass: HomeAssistant):
     assert result["result"].unique_id is None
 
 
+async def test_import_legacy_without_name(hass: HomeAssistant):
+    """Test importing from yaml without a name."""
+    with patch(
+        "homeassistant.components.samsungtv.config_flow.socket.gethostbyname",
+        return_value="fake_host",
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data=MOCK_IMPORT_DATA_WITHOUT_NAME,
+        )
+    await hass.async_block_till_done()
+    assert result["type"] == "create_entry"
+    assert result["title"] == "fake_host"
+    assert result["data"][CONF_METHOD] == METHOD_LEGACY
+    assert result["data"][CONF_HOST] == "fake_host"
+    assert result["data"][CONF_MANUFACTURER] == "Samsung"
+    assert result["result"].unique_id is None
+
+
 async def test_import_websocket(hass: HomeAssistant):
     """Test importing from yaml with hostname."""
     with patch(
@@ -882,6 +905,8 @@ async def test_form_reauth_websocket(hass, remotews: Mock):
     """Test reauthenticate websocket."""
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_WS_ENTRY)
     entry.add_to_hass(hass)
+    assert entry.state == config_entries.ConfigEntryState.NOT_LOADED
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"entry_id": entry.entry_id, "source": config_entries.SOURCE_REAUTH},
@@ -897,6 +922,7 @@ async def test_form_reauth_websocket(hass, remotews: Mock):
     await hass.async_block_till_done()
     assert result2["type"] == "abort"
     assert result2["reason"] == "reauth_successful"
+    assert entry.state == config_entries.ConfigEntryState.LOADED
 
 
 async def test_form_reauth_websocket_cannot_connect(hass, remotews: Mock):

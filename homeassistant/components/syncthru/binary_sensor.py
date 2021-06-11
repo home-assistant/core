@@ -75,15 +75,12 @@ class SyncThruBinarySensor(CoordinatorEntity, BinarySensorEntity):
 class SyncThruOnlineSensor(SyncThruBinarySensor):
     """Implementation of a sensor that checks whether is turned on/online."""
 
+    _attr_device_class = DEVICE_CLASS_CONNECTIVITY
+
     def __init__(self, syncthru, name):
         """Initialize the sensor."""
         super().__init__(syncthru, name)
         self._id_suffix = "_online"
-
-    @property
-    def device_class(self):
-        """Class of the sensor."""
-        return DEVICE_CLASS_CONNECTIVITY
 
     @property
     def is_on(self):
@@ -94,15 +91,12 @@ class SyncThruOnlineSensor(SyncThruBinarySensor):
 class SyncThruProblemSensor(SyncThruBinarySensor):
     """Implementation of a sensor that checks whether the printer works correctly."""
 
+    _attr_device_class = DEVICE_CLASS_PROBLEM
+
     def __init__(self, syncthru, name):
         """Initialize the sensor."""
         super().__init__(syncthru, name)
         self._id_suffix = "_problem"
-
-    @property
-    def device_class(self):
-        """Class of the sensor."""
-        return DEVICE_CLASS_PROBLEM
 
     @property
     def is_on(self):

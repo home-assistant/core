@@ -129,6 +129,11 @@ CC_ATTR_FIRE_INDEX = "fireIndex"
 
 CC_SENSOR_TYPES = [
     {
+        ATTR_FIELD: CC_ATTR_OZONE,
+        ATTR_NAME: "Ozone",
+        CONF_UNIT_OF_MEASUREMENT: CONCENTRATION_PARTS_PER_BILLION,
+    },
+    {
         ATTR_FIELD: CC_ATTR_PARTICULATE_MATTER_25,
         ATTR_NAME: "Particulate Matter < 2.5 μm",
         CONF_UNIT_SYSTEM_IMPERIAL: "μg/ft³",
@@ -262,6 +267,11 @@ CC_V3_ATTR_POLLEN_GRASS = "pollen_grass"
 CC_V3_ATTR_FIRE_INDEX = "fire_index"
 
 CC_V3_SENSOR_TYPES = [
+    {
+        ATTR_FIELD: CC_V3_ATTR_OZONE,
+        ATTR_NAME: "Ozone",
+        CONF_UNIT_OF_MEASUREMENT: CONCENTRATION_PARTS_PER_BILLION,
+    },
     {
         ATTR_FIELD: CC_V3_ATTR_PARTICULATE_MATTER_25,
         ATTR_NAME: "Particulate Matter < 2.5 μm",

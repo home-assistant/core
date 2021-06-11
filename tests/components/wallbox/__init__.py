@@ -26,13 +26,13 @@ async def setup_integration(hass):
         },
         entry_id="testEntry",
     )
-    with requests_mock.Mocker() as m:
-        m.get(
+    with requests_mock.Mocker() as mock_request:
+        mock_request.get(
             "https://api.wall-box.com/auth/token/user",
             text='{"jwt":"fakekeyhere","user_id":12345,"ttl":145656758,"error":false,"status":200}',
             status_code=200,
         )
-        m.get(
+        mock_request.get(
             "https://api.wall-box.com/chargers/status/12345",
             json=test_response,
             status_code=200,

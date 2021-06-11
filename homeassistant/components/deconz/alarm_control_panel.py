@@ -102,34 +102,19 @@ class DeconzAlarmControlPanel(DeconzDevice, AlarmControlPanelEntity):
 
     TYPE = DOMAIN
 
+    _attr_code_arm_required = False
+    _attr_supported_features = (
+        SUPPORT_ALARM_ARM_AWAY | SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_NIGHT
+    )
+
     def __init__(self, device, gateway) -> None:
         """Set up alarm control panel device."""
         super().__init__(device, gateway)
-
-        self._features = SUPPORT_ALARM_ARM_AWAY
-        self._features |= SUPPORT_ALARM_ARM_HOME
-        self._features |= SUPPORT_ALARM_ARM_NIGHT
-
         self._service_to_device_panel_command = {
             PANEL_ENTRY_DELAY: self._device.entry_delay,
             PANEL_EXIT_DELAY: self._device.exit_delay,
             PANEL_NOT_READY_TO_ARM: self._device.not_ready_to_arm,
         }
-
-    @property
-    def supported_features(self) -> int:
-        """Return the list of supported features."""
-        return self._features
-
-    @property
-    def code_arm_required(self) -> bool:
-        """Code is not required for arm actions."""
-        return False
-
-    @property
-    def code_format(self) -> None:
-        """Code is not supported."""
-        return None
 
     @callback
     def async_update_callback(self, force_update: bool = False) -> None:
@@ -142,7 +127,7 @@ class DeconzAlarmControlPanel(DeconzDevice, AlarmControlPanelEntity):
             super().async_update_callback(force_update=force_update)
 
     @property
-    def state(self) -> str:
+    def state(self) -> str | None:
         """Return the state of the control panel."""
         return DECONZ_TO_ALARM_STATE.get(self._device.state)
 

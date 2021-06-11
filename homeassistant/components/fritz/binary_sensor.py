@@ -1,4 +1,4 @@
-"""AVM FRITZ!Box connectivitiy sensor."""
+"""AVM FRITZ!Box connectivity sensor."""
 import logging
 
 from fritzconnection.core.exceptions import FritzConnectionException
@@ -9,6 +9,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .common import FritzBoxBaseEntity, FritzBoxTools
 from .const import DOMAIN
@@ -17,7 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up entry."""
     _LOGGER.debug("Setting up FRITZ!Box binary sensors")
@@ -44,12 +45,12 @@ class FritzBoxConnectivitySensor(FritzBoxBaseEntity, BinarySensorEntity):
         super().__init__(fritzbox_tools, device_friendly_name)
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return name."""
         return self._name
 
     @property
-    def device_class(self):
+    def device_class(self) -> str:
         """Return device class."""
         return DEVICE_CLASS_CONNECTIVITY
 
@@ -59,7 +60,7 @@ class FritzBoxConnectivitySensor(FritzBoxBaseEntity, BinarySensorEntity):
         return self._is_on
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str:
         """Return unique id."""
         return self._unique_id
 

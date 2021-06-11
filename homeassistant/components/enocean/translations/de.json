@@ -1,7 +1,25 @@
 {
     "config": {
         "abort": {
+            "invalid_dongle_path": "Ung\u00fcltiger Dongle-Pfad",
             "single_instance_allowed": "Schon konfiguriert. Nur eine einzige Konfiguration m\u00f6glich."
+        },
+        "error": {
+            "invalid_dongle_path": "Kein g\u00fcltiger Dongle unter diesem Pfad gefunden"
+        },
+        "step": {
+            "detect": {
+                "data": {
+                    "path": "USB-Dongle-Pfad"
+                },
+                "title": "W\u00e4hlen Sie den Pfad zu Ihrem ENOcean-Dongle"
+            },
+            "manual": {
+                "data": {
+                    "path": "USB-Dongle-Pfad"
+                },
+                "title": "Geben Sie den Pfad zu Ihrem ENOcean-Dongle ein"
+            }
         }
     }
 }

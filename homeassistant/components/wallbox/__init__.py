@@ -1,5 +1,4 @@
 """The Wallbox integration."""
-import asyncio
 from datetime import timedelta
 import logging
 
@@ -89,7 +88,7 @@ class WallboxHub:
         return self._coordinator
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Wallbox from a config entry."""
     wallbox = WallboxHub(
         entry.data[CONF_STATION],
@@ -115,14 +114,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, platform)
-                for platform in PLATFORMS
-            ]
-        )
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         hass.data[DOMAIN]["connections"].pop(entry.entry_id)
 

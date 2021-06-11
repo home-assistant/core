@@ -29,6 +29,8 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class NukiDoorsensorEntity(NukiEntity, BinarySensorEntity):
     """Representation of a Nuki Lock Doorsensor."""
 
+    _attr_device_class = DEVICE_CLASS_DOOR
+
     @property
     def name(self):
         """Return the name of the lock."""
@@ -66,8 +68,3 @@ class NukiDoorsensorEntity(NukiEntity, BinarySensorEntity):
     def is_on(self):
         """Return true if the door is open."""
         return self.door_sensor_state == STATE_DOORSENSOR_OPENED
-
-    @property
-    def device_class(self):
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        return DEVICE_CLASS_DOOR
