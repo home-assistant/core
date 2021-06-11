@@ -184,12 +184,18 @@ async def async_setup_entry(
     def _create_wifi_switches():
         _LOGGER.debug("Setting up %s switches", SWITCH_TYPE_WIFINETWORK)
 
+        std_table = {"ac": "5Ghz", "n": "2.4Ghz"}
         networks = {}
         for i in range(4):
             if ("WLANConfiguration" + str(i)) in fritzbox_tools.connection.services:
-                networks[i] = service_call_action(
-                    fritzbox_tools, "WLANConfiguration" + str(i), False, "GetSSID"
-                )["NewSSID"]
+                network_info = service_call_action(
+                    fritzbox_tools, "WLANConfiguration" + str(i), False, "GetInfo"
+                )
+                ssid = network_info["NewSSID"]
+                if ssid in networks:
+                    networks[i] = ssid + " " + std_table[network_info["NewStandard"]]
+                else:
+                    networks[i] = ssid
 
         for net in networks:
             hass.add_job(
