@@ -16,8 +16,8 @@ from tests.components.light.conftest import mock_light_profiles  # noqa: F401
 
 
 @pytest.fixture(autouse=True)
-async def mock_persistent_notidication(hass: HomeAssistant) -> None:
-    """Set up componoent for persistent notifications."""
+async def mock_persistent_notification(hass: HomeAssistant) -> None:
+    """Set up component for persistent notifications."""
     await async_setup_component(hass, "persistent_notification", {})
 
 
