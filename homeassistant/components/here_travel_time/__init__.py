@@ -136,7 +136,7 @@ class HERETravelTimeData:
                 ]:
                     departure = convert_time_to_isodate(conf_departure)
                     if departure is None:
-                        departure = ""
+                        departure = "now"
                         _LOGGER.warning(
                             "Supplied departure time could not be parsed. It was ignored"
                         )
