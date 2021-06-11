@@ -654,7 +654,7 @@ geojson_client==0.6
 geopy==2.1.0
 
 # homeassistant.components.geo_rss_events
-georss_generic_client==0.4
+georss_generic_client==0.6
 
 # homeassistant.components.ign_sismologia
 georss_ign_sismologia_client==0.2
