@@ -6,12 +6,7 @@ from sonarr import Sonarr
 from homeassistant.const import ATTR_NAME
 from homeassistant.helpers.entity import DeviceInfo, Entity
 
-from .const import (
-    ATTR_IDENTIFIERS,
-    ATTR_MANUFACTURER,
-    ATTR_SOFTWARE_VERSION,
-    DOMAIN,
-)
+from .const import ATTR_IDENTIFIERS, ATTR_MANUFACTURER, ATTR_SOFTWARE_VERSION, DOMAIN
 
 
 class SonarrEntity(Entity):
