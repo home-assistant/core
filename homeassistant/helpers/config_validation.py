@@ -1030,7 +1030,8 @@ TIME_CONDITION_SCHEMA = vol.All(
 TRIGGER_CONDITION_SCHEMA = vol.Schema(
     {
         **CONDITION_BASE_SCHEMA,
-        vol.Required("trigger_id"): str,
+        vol.Required(CONF_CONDITION): "trigger",
+        vol.Required(CONF_ID): vol.All(ensure_list, [string]),
     }
 )
 
@@ -1098,16 +1099,17 @@ CONDITION_SCHEMA: vol.Schema = vol.Schema(
         key_value_schemas(
             CONF_CONDITION,
             {
+                "and": AND_CONDITION_SCHEMA,
+                "device": DEVICE_CONDITION_SCHEMA,
+                "not": NOT_CONDITION_SCHEMA,
                 "numeric_state": NUMERIC_STATE_CONDITION_SCHEMA,
+                "or": OR_CONDITION_SCHEMA,
                 "state": STATE_CONDITION_SCHEMA,
                 "sun": SUN_CONDITION_SCHEMA,
                 "template": TEMPLATE_CONDITION_SCHEMA,
                 "time": TIME_CONDITION_SCHEMA,
+                "trigger": TRIGGER_CONDITION_SCHEMA,
                 "zone": ZONE_CONDITION_SCHEMA,
-                "and": AND_CONDITION_SCHEMA,
-                "or": OR_CONDITION_SCHEMA,
-                "not": NOT_CONDITION_SCHEMA,
-                "device": DEVICE_CONDITION_SCHEMA,
             },
         ),
         dynamic_template,

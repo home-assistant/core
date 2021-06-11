@@ -2829,3 +2829,17 @@ async def test_if_action_after_sunset_no_offset_kotzebue(hass, hass_ws_client, c
         "sun",
         {"result": True, "wanted_time_after": "2015-07-23T11:22:18.467277+00:00"},
     )
+
+
+async def test_trigger(hass):
+    """Test trigger condition."""
+    test = await condition.async_from_config(
+        hass,
+        {"alias": "Trigger Cond", "condition": "trigger", "id": "123456"},
+    )
+
+    assert not test(hass)
+    assert not test(hass, {})
+    assert not test(hass, {"other_var": "123456"})
+    assert not test(hass, {"trigger": {"trigger_id": "123456"}})
+    assert test(hass, {"trigger": {"id": "123456"}})

@@ -945,7 +945,7 @@ async def async_trigger_from_config(
         return (
             variables is not None
             and "trigger" in variables
-            and variables["trigger"].get["id"] == trigger_id
+            and variables["trigger"].get("id") in trigger_id
         )
 
     return trigger_if
