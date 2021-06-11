@@ -19,7 +19,7 @@ CONF_TOPIC = "topic"
 DEFAULT_ENCODING = "utf-8"
 DEFAULT_QOS = 0
 
-TRIGGER_SCHEMA = vol.Schema(
+TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_PLATFORM): mqtt.DOMAIN,
         vol.Required(CONF_TOPIC): mqtt.util.valid_subscribe_topic_template,
