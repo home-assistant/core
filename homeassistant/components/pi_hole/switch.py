@@ -88,7 +88,7 @@ class PiHoleSwitch(PiHoleEntity, SwitchEntity):
         except HoleError as err:
             _LOGGER.error("Unable to enable Pi-hole: %s", err)
 
-    async def async_turn_off(self, **kwargs: "dict[str, Any]") -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the service."""
         await self.async_disable()
 
