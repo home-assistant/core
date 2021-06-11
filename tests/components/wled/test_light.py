@@ -301,8 +301,8 @@ async def test_single_segment_behavior(
         blocking=True,
     )
     await hass.async_block_till_done()
-    mock_wled.segment.call_count == 1
-    mock_wled.master.call_count == 2
+    assert mock_wled.segment.call_count == 1
+    assert mock_wled.master.call_count == 2
     mock_wled.segment.assert_called_with(on=True, segment_id=0, brightness=255)
     mock_wled.master.assert_called_with(on=True, transition=50, brightness=42)
 
@@ -438,7 +438,7 @@ async def test_effect_service(
         blocking=True,
     )
     await hass.async_block_till_done()
-    mock_wled.segment.call_count == 3
+    assert mock_wled.segment.call_count == 3
     mock_wled.segment.assert_called_with(
         intensity=200,
         reverse=True,
@@ -459,7 +459,7 @@ async def test_effect_service(
         blocking=True,
     )
     await hass.async_block_till_done()
-    mock_wled.segment.call_count == 4
+    assert mock_wled.segment.call_count == 4
     mock_wled.segment.assert_called_with(
         effect="Rainbow",
         palette="Tiamat",
@@ -480,7 +480,7 @@ async def test_effect_service(
         blocking=True,
     )
     await hass.async_block_till_done()
-    mock_wled.segment.call_count == 5
+    assert mock_wled.segment.call_count == 5
     mock_wled.segment.assert_called_with(
         effect="Rainbow",
         intensity=200,
@@ -500,7 +500,7 @@ async def test_effect_service(
         blocking=True,
     )
     await hass.async_block_till_done()
-    mock_wled.segment.call_count == 6
+    assert mock_wled.segment.call_count == 6
     mock_wled.segment.assert_called_with(
         effect="Rainbow",
         intensity=200,
