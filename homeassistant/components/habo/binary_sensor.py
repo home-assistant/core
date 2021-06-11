@@ -137,26 +137,10 @@ class PraySensor(BinarySensorEntity):
         """Return true if the binary sensor is on."""
         return self._state
 
-    # @property
-    # def available(self):
-    #     """Return True if Monitor is available."""
-    #     return self._is_available
-
-    # @property
-    # def state(self):
-    #     """Return the state of the sensor."""
-    #     #datetime(2019, 5, 18, 15, 17, tzinfo=timezone.utc).isoformat()
-    #     return self._state
-
-    # @property
-    # def icon(self):
-    #     """Icon of the entity."""
-    #     return "mdi:alarm"
-
     @property
     def extra_state_attributes(self):
         """Return the state attributes."""
-        
+
         attributes = {
             "mosque": self._mosque_name,
             "prayer": self._prayer_time,
@@ -173,7 +157,7 @@ class PraySensor(BinarySensorEntity):
 
         This is the only method that should fetch new data for Home Assistant.
         """
-        
+
         self.update_prayer_time()
         time_now = dt_util.now().replace(second=0, microsecond=0).isoformat()
         _LOGGER.debug(
@@ -215,4 +199,3 @@ class InvalidAuth(HomeAssistantError):
 
 class InvalidEntityFormatError(HomeAssistantError):
     """When an invalid formatted entity is encountered."""
-    
