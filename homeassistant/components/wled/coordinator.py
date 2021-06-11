@@ -65,6 +65,7 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
                 self.logger.info(err)
             except WLEDError as err:
                 self.last_update_success = False
+                self.update_listeners()
                 self.logger.error(err)
 
             # Ensure we are disconnected
