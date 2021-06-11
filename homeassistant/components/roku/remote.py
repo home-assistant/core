@@ -32,12 +32,7 @@ class RokuRemote(RokuEntity, RemoteEntity):
             coordinator=coordinator,
         )
 
-        self._unique_id = unique_id
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique ID for this entity."""
-        return self._unique_id
+        self._attr_unique_id = unique_id
 
     @property
     def is_on(self) -> bool:
