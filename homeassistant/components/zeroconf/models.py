@@ -43,7 +43,7 @@ class HaServiceBrowser(ServiceBrowser):
         # As the list of zeroconf names we watch for grows, each additional
         # ServiceBrowser would process all the A and AAAA updates on the network.
         #
-        # To avoid overwhemling the system we pre-filter here and only process
+        # To avoid overwhelming the system we pre-filter here and only process
         # DNSPointers for the configured record name (type)
         #
         if record.name not in self.types or not isinstance(record, DNSPointer):
