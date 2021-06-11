@@ -87,7 +87,6 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
         )
 
         self._attr_unique_id = unique_id
-        self._unique_id = unique_id
 
     def _media_playback_trackable(self) -> bool:
         """Detect if we have enough media data to track playback."""
