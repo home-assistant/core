@@ -4,7 +4,12 @@ from __future__ import annotations
 from typing import Final
 
 from homeassistant.components.sensor import ATTR_STATE_CLASS, STATE_CLASS_MEASUREMENT
-from homeassistant.const import ATTR_ICON, PERCENTAGE
+from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
+    ATTR_ICON,
+    DEVICE_CLASS_TIMESTAMP,
+    PERCENTAGE,
+)
 
 from .model import SensorDescription
 
@@ -247,5 +252,6 @@ SENSOR_TYPES: Final[dict[str, SensorDescription]] = {
         ATTR_UNIT: None,
         ATTR_ENABLED: False,
         ATTR_STATE_CLASS: None,
+        ATTR_DEVICE_CLASS: DEVICE_CLASS_TIMESTAMP,
     },
 }
