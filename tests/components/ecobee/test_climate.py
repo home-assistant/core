@@ -13,6 +13,7 @@ def ecobee_fixture():
     """Set up ecobee mock."""
     vals = {
         "name": "Ecobee",
+        "modelNumber": "athenaSmart",
         "program": {
             "climates": [
                 {"name": "Climate1", "climateRef": "c1"},

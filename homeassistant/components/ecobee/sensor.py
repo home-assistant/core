@@ -9,7 +9,7 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
 )
 
-from .const import _LOGGER, DOMAIN, ECOBEE_MODEL_TO_NAME, MANUFACTURER
+from .const import DOMAIN, ECOBEE_MODEL_TO_NAME, MANUFACTURER
 
 SENSOR_TYPES = {
     "temperature": ["Temperature", TEMP_FAHRENHEIT],
@@ -79,14 +79,7 @@ class EcobeeSensor(SensorEntity):
                         f"{ECOBEE_MODEL_TO_NAME[thermostat['modelNumber']]} Thermostat"
                     )
                 except KeyError:
-                    _LOGGER.error(
-                        "Model number for ecobee thermostat %s not recognized. "
-                        "Please visit this link and provide the following information: "
-                        "https://github.com/home-assistant/core/issues/27172 "
-                        "Unrecognized model number: %s",
-                        thermostat["name"],
-                        thermostat["modelNumber"],
-                    )
+                    model = "Unknown Thermostat"
             break
 
         if identifier is not None and model is not None:

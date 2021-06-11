@@ -4,7 +4,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 
-from .const import _LOGGER, DOMAIN, ECOBEE_MODEL_TO_NAME, MANUFACTURER
+from .const import DOMAIN, ECOBEE_MODEL_TO_NAME, MANUFACTURER
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -67,14 +67,7 @@ class EcobeeBinarySensor(BinarySensorEntity):
                         f"{ECOBEE_MODEL_TO_NAME[thermostat['modelNumber']]} Thermostat"
                     )
                 except KeyError:
-                    _LOGGER.error(
-                        "Model number for ecobee thermostat %s not recognized. "
-                        "Please visit this link and provide the following information: "
-                        "https://github.com/home-assistant/core/issues/27172 "
-                        "Unrecognized model number: %s",
-                        thermostat["name"],
-                        thermostat["modelNumber"],
-                    )
+                    model = "Unknown Thermostat"
             break
 
         if identifier is not None and model is not None:

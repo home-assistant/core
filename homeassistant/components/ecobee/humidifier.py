@@ -60,7 +60,7 @@ class EcobeeHumidifier(HumidifierEntity):
             model = f"{ECOBEE_MODEL_TO_NAME[self.thermostat['modelNumber']]} Thermostat"
         except KeyError:
             # Ecobee model is not in our list
-            return None
+            model = "Unknown Thermostat"
 
         return {
             "identifiers": {(DOMAIN, self.thermostat["identifier"])},
