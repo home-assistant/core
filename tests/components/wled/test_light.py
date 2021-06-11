@@ -551,6 +551,19 @@ async def test_preset_service(
     assert mock_wled.preset.call_count == 1
     mock_wled.preset.assert_called_with(preset=1)
 
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_PRESET,
+        {
+            ATTR_ENTITY_ID: "light.wled_rgb_light_master",
+            ATTR_PRESET: 2,
+        },
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    assert mock_wled.preset.call_count == 2
+    mock_wled.preset.assert_called_with(preset=2)
+
 
 async def test_preset_service_error(
     hass: HomeAssistant,
