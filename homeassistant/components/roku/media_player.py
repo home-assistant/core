@@ -86,6 +86,7 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
             device_id=unique_id,
         )
 
+        self._attr_unique_id = unique_id
         self._unique_id = unique_id
 
     def _media_playback_trackable(self) -> bool:
@@ -94,11 +95,6 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
             return False
 
         return self.coordinator.data.media.duration > 0
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique ID for this entity."""
-        return self._unique_id
 
     @property
     def device_class(self) -> str | None:
