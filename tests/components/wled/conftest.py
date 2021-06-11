@@ -1,4 +1,5 @@
 """Fixtures for WLED integration tests."""
+import asyncio
 import json
 from typing import Generator
 from unittest.mock import MagicMock, patch
@@ -63,6 +64,8 @@ def mock_wled(request: pytest.FixtureRequest) -> Generator[None, MagicMock, None
     ) as wled_mock:
         wled = wled_mock.return_value
         wled.update.return_value = device
+        wled.connected = False
+        wled.listen.return_value = asyncio.Future
         yield wled
 
 
