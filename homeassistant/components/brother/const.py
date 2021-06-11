@@ -4,7 +4,12 @@ from __future__ import annotations
 from typing import Final
 
 from homeassistant.components.sensor import ATTR_STATE_CLASS, STATE_CLASS_MEASUREMENT
-from homeassistant.const import ATTR_ICON, PERCENTAGE
+from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
+    ATTR_ICON,
+    DEVICE_CLASS_TIMESTAMP,
+    PERCENTAGE,
+)
 
 from .model import SensorDescription
 
@@ -86,6 +91,7 @@ SENSOR_TYPES: Final[dict[str, SensorDescription]] = {
         ATTR_UNIT: None,
         ATTR_ENABLED: True,
         ATTR_STATE_CLASS: None,
+        ATTR_DEVICE_CLASS: None,
     },
     ATTR_PAGE_COUNTER: {
         ATTR_ICON: "mdi:file-document-outline",
@@ -93,6 +99,7 @@ SENSOR_TYPES: Final[dict[str, SensorDescription]] = {
         ATTR_UNIT: UNIT_PAGES,
         ATTR_ENABLED: True,
         ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+        ATTR_DEVICE_CLASS: None,
     },
     ATTR_BW_COUNTER: {
         ATTR_ICON: "mdi:file-document-outline",
@@ -100,6 +107,7 @@ SENSOR_TYPES: Final[dict[str, SensorDescription]] = {
         ATTR_UNIT: UNIT_PAGES,
         ATTR_ENABLED: True,
         ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+        ATTR_DEVICE_CLASS: None,
     },
     ATTR_COLOR_COUNTER: {
         ATTR_ICON: "mdi:file-document-outline",
@@ -107,6 +115,7 @@ SENSOR_TYPES: Final[dict[str, SensorDescription]] = {
         ATTR_UNIT: UNIT_PAGES,
         ATTR_ENABLED: True,
         ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+        ATTR_DEVICE_CLASS: None,
     },
     ATTR_DUPLEX_COUNTER: {
         ATTR_ICON: "mdi:file-document-outline",
@@ -114,6 +123,7 @@ SENSOR_TYPES: Final[dict[str, SensorDescription]] = {
         ATTR_UNIT: UNIT_PAGES,
         ATTR_ENABLED: True,
         ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+        ATTR_DEVICE_CLASS: None,
     },
     ATTR_DRUM_REMAINING_LIFE: {
         ATTR_ICON: "mdi:chart-donut",
@@ -121,6 +131,7 @@ SENSOR_TYPES: Final[dict[str, SensorDescription]] = {
         ATTR_UNIT: PERCENTAGE,
         ATTR_ENABLED: True,
         ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+        ATTR_DEVICE_CLASS: None,
     },
     ATTR_BLACK_DRUM_REMAINING_LIFE: {
         ATTR_ICON: "mdi:chart-donut",
@@ -128,6 +139,7 @@ SENSOR_TYPES: Final[dict[str, SensorDescription]] = {
         ATTR_UNIT: PERCENTAGE,
         ATTR_ENABLED: True,
         ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+        ATTR_DEVICE_CLASS: None,
     },
     ATTR_CYAN_DRUM_REMAINING_LIFE: {
         ATTR_ICON: "mdi:chart-donut",
@@ -135,6 +147,7 @@ SENSOR_TYPES: Final[dict[str, SensorDescription]] = {
         ATTR_UNIT: PERCENTAGE,
         ATTR_ENABLED: True,
         ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+        ATTR_DEVICE_CLASS: None,
     },
     ATTR_MAGENTA_DRUM_REMAINING_LIFE: {
         ATTR_ICON: "mdi:chart-donut",
@@ -142,6 +155,7 @@ SENSOR_TYPES: Final[dict[str, SensorDescription]] = {
         ATTR_UNIT: PERCENTAGE,
         ATTR_ENABLED: True,
         ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+        ATTR_DEVICE_CLASS: None,
     },
     ATTR_YELLOW_DRUM_REMAINING_LIFE: {
         ATTR_ICON: "mdi:chart-donut",
@@ -149,6 +163,7 @@ SENSOR_TYPES: Final[dict[str, SensorDescription]] = {
         ATTR_UNIT: PERCENTAGE,
         ATTR_ENABLED: True,
         ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+        ATTR_DEVICE_CLASS: None,
     },
     ATTR_BELT_UNIT_REMAINING_LIFE: {
         ATTR_ICON: "mdi:current-ac",
@@ -156,6 +171,7 @@ SENSOR_TYPES: Final[dict[str, SensorDescription]] = {
         ATTR_UNIT: PERCENTAGE,
         ATTR_ENABLED: True,
         ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+        ATTR_DEVICE_CLASS: None,
     },
     ATTR_FUSER_REMAINING_LIFE: {
         ATTR_ICON: "mdi:water-outline",
@@ -163,6 +179,7 @@ SENSOR_TYPES: Final[dict[str, SensorDescription]] = {
         ATTR_UNIT: PERCENTAGE,
         ATTR_ENABLED: True,
         ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+        ATTR_DEVICE_CLASS: None,
     },
     ATTR_LASER_REMAINING_LIFE: {
         ATTR_ICON: "mdi:spotlight-beam",
@@ -170,6 +187,7 @@ SENSOR_TYPES: Final[dict[str, SensorDescription]] = {
         ATTR_UNIT: PERCENTAGE,
         ATTR_ENABLED: True,
         ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+        ATTR_DEVICE_CLASS: None,
     },
     ATTR_PF_KIT_1_REMAINING_LIFE: {
         ATTR_ICON: "mdi:printer-3d",
@@ -177,6 +195,7 @@ SENSOR_TYPES: Final[dict[str, SensorDescription]] = {
         ATTR_UNIT: PERCENTAGE,
         ATTR_ENABLED: True,
         ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+        ATTR_DEVICE_CLASS: None,
     },
     ATTR_PF_KIT_MP_REMAINING_LIFE: {
         ATTR_ICON: "mdi:printer-3d",
@@ -184,6 +203,7 @@ SENSOR_TYPES: Final[dict[str, SensorDescription]] = {
         ATTR_UNIT: PERCENTAGE,
         ATTR_ENABLED: True,
         ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+        ATTR_DEVICE_CLASS: None,
     },
     ATTR_BLACK_TONER_REMAINING: {
         ATTR_ICON: "mdi:printer-3d-nozzle",
@@ -191,6 +211,7 @@ SENSOR_TYPES: Final[dict[str, SensorDescription]] = {
         ATTR_UNIT: PERCENTAGE,
         ATTR_ENABLED: True,
         ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+        ATTR_DEVICE_CLASS: None,
     },
     ATTR_CYAN_TONER_REMAINING: {
         ATTR_ICON: "mdi:printer-3d-nozzle",
@@ -198,6 +219,7 @@ SENSOR_TYPES: Final[dict[str, SensorDescription]] = {
         ATTR_UNIT: PERCENTAGE,
         ATTR_ENABLED: True,
         ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+        ATTR_DEVICE_CLASS: None,
     },
     ATTR_MAGENTA_TONER_REMAINING: {
         ATTR_ICON: "mdi:printer-3d-nozzle",
@@ -205,6 +227,7 @@ SENSOR_TYPES: Final[dict[str, SensorDescription]] = {
         ATTR_UNIT: PERCENTAGE,
         ATTR_ENABLED: True,
         ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+        ATTR_DEVICE_CLASS: None,
     },
     ATTR_YELLOW_TONER_REMAINING: {
         ATTR_ICON: "mdi:printer-3d-nozzle",
@@ -212,6 +235,7 @@ SENSOR_TYPES: Final[dict[str, SensorDescription]] = {
         ATTR_UNIT: PERCENTAGE,
         ATTR_ENABLED: True,
         ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+        ATTR_DEVICE_CLASS: None,
     },
     ATTR_BLACK_INK_REMAINING: {
         ATTR_ICON: "mdi:printer-3d-nozzle",
@@ -219,6 +243,7 @@ SENSOR_TYPES: Final[dict[str, SensorDescription]] = {
         ATTR_UNIT: PERCENTAGE,
         ATTR_ENABLED: True,
         ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+        ATTR_DEVICE_CLASS: None,
     },
     ATTR_CYAN_INK_REMAINING: {
         ATTR_ICON: "mdi:printer-3d-nozzle",
@@ -226,6 +251,7 @@ SENSOR_TYPES: Final[dict[str, SensorDescription]] = {
         ATTR_UNIT: PERCENTAGE,
         ATTR_ENABLED: True,
         ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+        ATTR_DEVICE_CLASS: None,
     },
     ATTR_MAGENTA_INK_REMAINING: {
         ATTR_ICON: "mdi:printer-3d-nozzle",
@@ -233,6 +259,7 @@ SENSOR_TYPES: Final[dict[str, SensorDescription]] = {
         ATTR_UNIT: PERCENTAGE,
         ATTR_ENABLED: True,
         ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+        ATTR_DEVICE_CLASS: None,
     },
     ATTR_YELLOW_INK_REMAINING: {
         ATTR_ICON: "mdi:printer-3d-nozzle",
@@ -240,6 +267,7 @@ SENSOR_TYPES: Final[dict[str, SensorDescription]] = {
         ATTR_UNIT: PERCENTAGE,
         ATTR_ENABLED: True,
         ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+        ATTR_DEVICE_CLASS: None,
     },
     ATTR_UPTIME: {
         ATTR_ICON: None,
@@ -247,5 +275,6 @@ SENSOR_TYPES: Final[dict[str, SensorDescription]] = {
         ATTR_UNIT: None,
         ATTR_ENABLED: False,
         ATTR_STATE_CLASS: None,
+        ATTR_DEVICE_CLASS: DEVICE_CLASS_TIMESTAMP,
     },
 }

@@ -12,3 +12,4 @@ class SensorDescription(TypedDict):
     unit: str | None
     enabled: bool
     state_class: str | None
+    device_class: str | None
