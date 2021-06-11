@@ -458,7 +458,8 @@ class FritzBoxWifiSwitch(FritzBoxBaseSwitch, SwitchEntity):
             self._attr_is_on = wifi_info["NewEnable"] is True
             self._is_available = True
 
-            self._attributes["beacon_type"] = wifi_info["NewBeaconType"]
+            std = wifi_info["NewStandard"]
+            self._attributes["standard"] = std if std else None
             self._attributes["BSSID"] = wifi_info["NewBSSID"]
             self._attributes["mac_address_control"] = wifi_info[
                 "NewMACAddressControlEnabled"
