@@ -6,8 +6,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import RokuDataUpdateCoordinator, RokuEntity, roku_exception_handler
+from . import RokuDataUpdateCoordinator, roku_exception_handler
 from .const import DOMAIN
+from .entity import RokuEntity
 
 
 async def async_setup_entry(
