@@ -64,7 +64,34 @@ def get_device_info(pathname):
     for d in ais_global.G_USB_DEVICES:
         if d["bus"] == bus and d["device"] == device:
             return d
+    return None
 
+
+def get_device_number(product):
+    # 1. ls -l /dev/ttyACM*
+    # 2. ls -l /sys/dev/char/166:0
+    # 3. cat /sys/dev/char/166:0/../../../idProduct
+    # find /sys/devices -name 'ttyACM*' -exec cat '{}/../../../idProduct' \;
+    # find /sys/devices -name 'ttyACM*' -exec cat {}/../../../idProduct {}/../../../idVendor \;
+    tty_acm_paths = (
+        subprocess.check_output(
+            "find /sys/devices -name 'ttyACM*'",
+            shell=True,  # nosec
+        )
+        .decode("utf-8")
+        .strip()
+    )
+    for line in tty_acm_paths.split("\n"):
+        usb_product = (
+            subprocess.check_output(
+                "cat " + line + "/../../../idProduct",
+                shell=True,  # nosec
+            )
+            .decode("utf-8")
+            .strip()
+        )
+        if usb_product == product:
+            return line
     return None
 
 
@@ -88,7 +115,6 @@ async def prepare_usb_device(hass, device_info):
         gid = str(os.getgid())
         if ais_global.has_root():
             await _run("su -c 'chown " + uid + ":" + gid + " /dev/ttyACM*'")
-        # TODO check the /dev/ttyACM.. number
         if ais_global.has_root():
             await _run("su -c 'chmod 777 /dev/ttyACM*'")
 
@@ -100,11 +126,14 @@ async def prepare_usb_device(hass, device_info):
             adapter = "deconz"
         # change zigbee settings
         with fileinput.FileInput(
-                "/data/data/pl.sviete.dom/files/home/zigbee2mqtt/data/configuration.yaml", inplace=True) as file:
+            "/data/data/pl.sviete.dom/files/home/zigbee2mqtt/data/configuration.yaml",
+            inplace=True,
+        ) as file:
             for line in file:
                 if line.startswith("  adapter:"):
                     line.replace(line, "  adapter: " + adapter)
                 if line.startswith("  port:"):
+                    # TODO check the /dev/ttyACM.. number
                     line.replace(line, "  port: /dev/ttyACM0")
 
         # start zigbee2mqtt service
@@ -127,9 +156,8 @@ async def prepare_usb_device(hass, device_info):
         gid = str(os.getgid())
         if ais_global.has_root():
             await _run("su -c 'chown " + uid + ":" + gid + " /dev/ttyACM*'")
-        # TODO check the /dev/ttyACM.. number
-        if ais_global.has_root():
             await _run("su -c 'chmod 777 /dev/ttyACM*'")
+        # TODO check the /dev/ttyACM.. number and save in settings
 
 
 async def remove_usb_device(hass, device_info):
