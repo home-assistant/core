@@ -50,6 +50,7 @@ homeassistant.components.media_player.*
 homeassistant.components.mysensors.*
 homeassistant.components.nam.*
 homeassistant.components.network.*
+homeassistant.components.no_ip.*
 homeassistant.components.notify.*
 homeassistant.components.number.*
 homeassistant.components.onewire.*
