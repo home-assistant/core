@@ -59,7 +59,7 @@ class SonosHouseholdCoordinator:
 
     @callback
     def async_handle_event(self, event_id: str, soco: SoCo) -> None:
-        """Create a task to update alarms from an event callback."""
+        """Create a task to update from an event callback."""
         if event_id in self._processed_events:
             return
         self._processed_events.append(event_id)
