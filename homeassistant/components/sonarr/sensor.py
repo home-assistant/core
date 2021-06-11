@@ -176,7 +176,7 @@ class SonarrDiskspaceSensor(SonarrSensor):
 
             attrs[
                 disk.path
-            ] = f"{free:.2f}/{total:.2f}{self._unit_of_measurement} ({usage:.2f}%)"
+            ] = f"{free:.2f}/{total:.2f}{self.unit_of_measurement} ({usage:.2f}%)"
 
         return attrs
 
