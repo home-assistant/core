@@ -38,5 +38,13 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload WLED config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
+        coordinator: WLEDDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+
+        # Ensure disconnected and cleanup stop sub
+        await coordinator.wled.disconnect()
+        if coordinator.unsub:
+            coordinator.unsub()
+
         del hass.data[DOMAIN][entry.entry_id]
+
     return unload_ok
