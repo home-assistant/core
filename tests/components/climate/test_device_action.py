@@ -253,3 +253,43 @@ async def test_capabilities(
         )
         == expected_capabilities
     )
+
+
+@pytest.mark.parametrize(
+    "action,capability_name",
+    [("set_hvac_mode", "hvac_mode"), ("set_preset_mode", "preset_mode")],
+)
+async def test_capabilities_mising_entity(
+    hass, device_reg, entity_reg, action, capability_name
+):
+    """Test getting capabilities."""
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+
+    capabilities = await device_action.async_get_action_capabilities(
+        hass,
+        {
+            "domain": DOMAIN,
+            "device_id": "abcdefgh",
+            "entity_id": f"{DOMAIN}.test_5678",
+            "type": action,
+        },
+    )
+
+    expected_capabilities = [
+        {
+            "name": capability_name,
+            "options": [],
+            "required": True,
+            "type": "select",
+        }
+    ]
+
+    assert capabilities and "extra_fields" in capabilities
+
+    assert (
+        voluptuous_serialize.convert(
+            capabilities["extra_fields"], custom_serializer=cv.custom_serializer
+        )
+        == expected_capabilities
+    )
