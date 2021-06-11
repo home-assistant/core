@@ -2,16 +2,16 @@ homeassistant:
   customize_glob: !include customize_glob.yaml
   packages: !include_dir_named ais_packages/
   auth_providers:
-  - type: trusted_networks
-    trusted_networks:
-    - 127.0.0.1
-    - 0.0.0.0/0
-  - type: homeassistant
-  - type: legacy_api_password
-    api_password: dom
+    - type: trusted_networks
+      trusted_networks:
+        - 127.0.0.1
+        - 0.0.0.0/0
+    - type: homeassistant
+    - type: legacy_api_password
+      api_password: dom
   allowlist_external_dirs:
-  - /data/data/pl.sviete.dom/files/home/AIS/
-  - /data/data/pl.sviete.dom/files/home/AIS/www/
+    - /data/data/pl.sviete.dom/files/home/AIS/
+    - /data/data/pl.sviete.dom/files/home/AIS/www/
 #
 system_health:
 
@@ -39,13 +39,15 @@ frontend:
   # development_repo: ~/Projects/AIS-home-assistant-polymer
   themes: !include_dir_merge_named themes
 
-
 # Enables configuration UI
 config:
 
 http:
   server_port: 8180
-
+  use_x_forwarded_for: true
+  trusted_proxies:
+    - 127.0.0.1
+    - ::1
 
 # AIS Service for AI
 # Allows you to issue voice commands
