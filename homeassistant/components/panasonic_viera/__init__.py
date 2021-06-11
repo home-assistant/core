@@ -164,7 +164,7 @@ class Remote:
 
             if during_setup:
                 await self.async_update()
-        except (TimeoutError, URLError, SOAPError, OSError) as err:
+        except (URLError, SOAPError, OSError) as err:
             _LOGGER.debug("Could not establish remote connection: %s", err)
             self._control = None
             self.state = STATE_OFF
@@ -251,7 +251,7 @@ class Remote:
             self.state = STATE_OFF
             self.available = True
             await self.async_create_remote_control()
-        except (TimeoutError, URLError, OSError):
+        except (URLError, OSError):
             self.state = STATE_OFF
             self.available = self._on_action is not None
             await self.async_create_remote_control()
