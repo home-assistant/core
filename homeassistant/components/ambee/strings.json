@@ -9,6 +9,12 @@
           "longitude": "[%key:common::config_flow::data::longitude%]",
           "name": "[%key:common::config_flow::data::name%]"
         }
+      },
+      "reauth_confirm": {
+        "data": {
+          "description": "Re-authenticate with your Ambee account.",
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        }
       }
     },
     "error": {
