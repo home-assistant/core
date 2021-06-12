@@ -14,7 +14,7 @@ from pycfdns.exceptions import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_TOKEN, CONF_ZONE
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
@@ -43,9 +43,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         zone_id = await cfupdate.get_zone_id()
-    except CloudflareAuthenticationException:
-        _LOGGER.error("API access forbidden. Please reauthenticate")
-        return False
+    except CloudflareAuthenticationException as error:
+        raise ConfigEntryAuthFailed from error
     except CloudflareConnectionException as error:
         raise ConfigEntryNotReady from error
 
