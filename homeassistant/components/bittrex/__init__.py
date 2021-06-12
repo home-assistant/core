@@ -1,7 +1,8 @@
 """Gather the market details from Bittrex."""
+from __future__ import annotations
+
 import asyncio
 import logging
-from typing import Dict, List, Optional
 
 from aiobittrexapi import Bittrex
 from aiobittrexapi.errors import (
@@ -29,7 +30,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass: HomeAssistant, config: Dict) -> bool:
+async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     """Set up the component."""
     return True
 
@@ -78,7 +79,7 @@ class BittrexDataUpdateCoordinator(DataUpdateCoordinator):
     """Class to get the latest data from Bittrex."""
 
     def __init__(
-        self, hass, api_key, api_secret, markets, balances: Optional[List] = None
+        self, hass, api_key, api_secret, markets, balances: list | None = None
     ):
         """Initialize the data object."""
         self._api_key = api_key
