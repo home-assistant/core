@@ -138,7 +138,6 @@ class HassIOIngress(HomeAssistantView):
     ) -> Union[web.Response, web.StreamResponse]:
         """Ingress route for request."""
         url = self._create_url(token, path)
-        _LOGGER.error("URL: " + url)
         data = await request.read()
         source_header = _init_header(request, token)
 
@@ -205,7 +204,8 @@ def _init_header(
     headers[X_HASSIO] = token
 
     # Ingress information
-    headers[X_INGRESS_PATH] = f"/api/zwave2mqtt/{token}"
+    # headers[X_INGRESS_PATH] = f"/api/zwave2mqtt/{token}"
+    headers["X-External-Path"] = f"/api/zwave2mqtt/{token}"
 
     # Set X-Forwarded-For
     forward_for = request.headers.get(hdrs.X_FORWARDED_FOR)
