@@ -7,7 +7,7 @@ from typing import Any, ClassVar
 import voluptuous as vol
 from xknx import XKNX
 from xknx.devices.climate import SetpointShiftMode
-from xknx.dpt import DPTBase
+from xknx.dpt import DPTBase, DPTNumeric
 from xknx.exceptions import CouldNotParseAddress
 from xknx.io import DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT
 from xknx.telegram.address import IndividualAddress, parse_device_group_address
@@ -33,6 +33,7 @@ from .const import (
     CONF_KNX_ROUTING,
     CONF_KNX_TUNNELING,
     CONF_RESET_AFTER,
+    CONF_RESPOND_TO_READ,
     CONF_STATE_ADDRESS,
     CONF_SYNC_STATE,
     CONTROLLER_MODES,
@@ -68,6 +69,13 @@ ia_validator = vol.Any(
     vol.All(vol.Coerce(int), vol.Range(min=1, max=65535)),
     msg="value does not match pattern for KNX individual address '<area>.<line>.<device>' (eg.'1.1.100')",
 )
+
+
+def numeric_type_validator(value: Any) -> str | int:
+    """Validate that value is parsable as numeric sensor type."""
+    if isinstance(value, (str, int)) and DPTNumeric.parse_transcoder(value) is not None:
+        return value
+    raise vol.Invalid(f"value '{value}' is not a valid numeric sensor type.")
 
 
 def sensor_type_validator(value: Any) -> str | int:
@@ -521,6 +529,30 @@ class NotifySchema(KNXPlatformSchema):
         {
             vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
             vol.Required(KNX_ADDRESS): ga_validator,
+        }
+    )
+
+
+class NumberSchema(KNXPlatformSchema):
+    """Voluptuous schema for KNX numbers."""
+
+    PLATFORM_NAME = SupportedPlatforms.NUMBER.value
+
+    CONF_MAX = "max"
+    CONF_MIN = "min"
+    CONF_STEP = "step"
+    DEFAULT_NAME = "KNX Number"
+
+    ENTITY_SCHEMA = vol.Schema(
+        {
+            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+            vol.Optional(CONF_RESPOND_TO_READ, default=False): cv.boolean,
+            vol.Required(CONF_TYPE): numeric_type_validator,
+            vol.Required(KNX_ADDRESS): ga_list_validator,
+            vol.Optional(CONF_STATE_ADDRESS): ga_list_validator,
+            vol.Optional(CONF_MAX): vol.Coerce(float),
+            vol.Optional(CONF_MIN): vol.Coerce(float),
+            vol.Optional(CONF_STEP): cv.positive_float,
         }
     )
 
