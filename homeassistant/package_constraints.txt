@@ -17,7 +17,7 @@ defusedxml==0.7.1
 distro==1.5.0
 emoji==1.2.0
 hass-nabucasa==0.43.0
-ais-dom-frontend==20210603.1
+ais-dom-frontend==20210603.2
 httpx==0.18.0
 ifaddr==0.1.7
 jinja2>=3.0.1
