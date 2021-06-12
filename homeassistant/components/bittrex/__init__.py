@@ -115,17 +115,17 @@ class BittrexDataUpdateCoordinator(DataUpdateCoordinator):
 
         for asset in asset_currencies:
             # Skip the ASSET_VALUE_BASE as we calculate it differently
-            if asset == ASSET_VALUE_BASE:
-                continue
-            
-            currency = f"{asset}-{ASSET_VALUE_BASE}"
+            if asset != ASSET_VALUE_BASE:
+                currency = f"{asset}-{ASSET_VALUE_BASE}"
 
-            # Flip currency format as it differs from other currencies
-            if currency == "EUR-USDT":
-                 currency = "USDT-EUR"
+                # Flip currency format as it differs from other currencies
+                if currency == "EUR-USDT":
+                    currency = "USDT-EUR"
 
-           if currency not in asset_tickers_dict:
-                asset_tickers_dict[currency] = tickers[currency]
+                if currency not in asset_tickers_dict:
+                    asset_tickers_dict[currency] = {}
+                    ticker_details = tickers[currency]
+                    asset_tickers_dict[currency].update(ticker_details)
 
         return asset_tickers_dict
 
