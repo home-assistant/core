@@ -71,7 +71,8 @@ class EcobeeWeather(WeatherEntity):
         try:
             model = f"{ECOBEE_MODEL_TO_NAME[thermostat['modelNumber']]} Thermostat"
         except KeyError:
-            model = "Unknown Thermostat"
+            # Ecobee model is not in our list
+            model = None
 
         return {
             "identifiers": {(DOMAIN, thermostat["identifier"])},

@@ -67,10 +67,11 @@ class EcobeeBinarySensor(BinarySensorEntity):
                         f"{ECOBEE_MODEL_TO_NAME[thermostat['modelNumber']]} Thermostat"
                     )
                 except KeyError:
-                    model = "Unknown Thermostat"
+                    # Ecobee model is not in our list
+                    model = None
             break
 
-        if identifier is not None and model is not None:
+        if identifier is not None:
             return {
                 "identifiers": {(DOMAIN, identifier)},
                 "name": self.sensor_name,
