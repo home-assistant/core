@@ -191,11 +191,13 @@ class BittrexDataUpdateCoordinator(DataUpdateCoordinator):
         try:
             bittrex = Bittrex(self._api_key, self._api_secret)
 
-            tickers = await bittrex.get_tickers()
-            markets = await bittrex.get_markets()
-            balances = await bittrex.get_balances()
-            open_orders = await bittrex.get_open_orders()
-            closed_orders = await bittrex.get_closed_orders()
+        tickers, markets, balances, open_orders, closed_orders = await asyncio.gather(
+            bittrex.get_tickers(),
+            bittrex.get_markets(),
+            bittrex.get_balances(),
+            bittrex.get_open_orders(),
+            bittrex.get_closed_orders(),
+        )
 
             result_dict = {
                 "tickers": self._prep_markets(self.markets, tickers, markets)
