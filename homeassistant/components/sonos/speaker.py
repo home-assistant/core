@@ -173,7 +173,7 @@ class SonosSpeaker:
         self.zone_name = speaker_info["zone_name"]
 
         # Battery
-        self.battery_info: dict[str, Any] | None = None
+        self.battery_info: dict[str, Any] = {}
         self._last_battery_event: datetime.datetime | None = None
         self._battery_poll_timer: Callable | None = None
 
@@ -208,21 +208,15 @@ class SonosSpeaker:
             self.hass, f"{SONOS_SEEN}-{self.soco.uid}", self.async_seen
         )
 
-        if (battery_info := fetch_battery_info_or_none(self.soco)) is None:
-            self._platforms_ready.update({BINARY_SENSOR_DOMAIN, SENSOR_DOMAIN})
-        else:
+        if battery_info := fetch_battery_info_or_none(self.soco):
             self.battery_info = battery_info
-            # Only create a polling task if successful, may fail on S1 firmware
-            if battery_info:
-                # Battery events can be infrequent, polling is still necessary
-                self._battery_poll_timer = self.hass.helpers.event.track_time_interval(
-                    self.async_poll_battery, BATTERY_SCAN_INTERVAL
-                )
-            else:
-                _LOGGER.warning(
-                    "S1 firmware detected, battery sensor may update infrequently"
-                )
+            # Battery events can be infrequent, polling is still necessary
+            self._battery_poll_timer = self.hass.helpers.event.track_time_interval(
+                self.async_poll_battery, BATTERY_SCAN_INTERVAL
+            )
             dispatcher_send(self.hass, SONOS_CREATE_BATTERY, self)
+        else:
+            self._platforms_ready.update({BINARY_SENSOR_DOMAIN, SENSOR_DOMAIN})
 
         if new_alarms := self.update_alarms_for_speaker():
             dispatcher_send(self.hass, SONOS_CREATE_ALARM, self, new_alarms)
@@ -386,7 +380,7 @@ class SonosSpeaker:
 
     async def async_update_device_properties(self, event: SonosEvent) -> None:
         """Update device properties from an event."""
-        if (more_info := event.variables.get("more_info")) is not None:
+        if more_info := event.variables.get("more_info"):
             battery_dict = dict(x.split(":") for x in more_info.split(","))
             await self.async_update_battery_info(battery_dict)
         self.async_write_entity_states()
@@ -514,12 +508,19 @@ class SonosSpeaker:
 
         if not self._battery_poll_timer:
             # Battery info received for an S1 speaker
+            new_battery = not self.battery_info
             self.battery_info.update(
                 {
                     "Level": int(battery_dict["BattPct"]),
                     "PowerSource": "EXTERNAL" if is_charging else "BATTERY",
                 }
             )
+            if new_battery:
+                _LOGGER.warning(
+                    "S1 firmware detected on %s, battery info may update infrequently",
+                    self.zone_name,
+                )
+                async_dispatcher_send(self.hass, SONOS_CREATE_BATTERY, self)
             return
 
         if is_charging == self.charging:
