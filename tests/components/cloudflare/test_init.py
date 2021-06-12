@@ -1,5 +1,8 @@
 """Test the Cloudflare integration."""
-from pycfdns.exceptions import CloudflareAuthenticationException, CloudflareConnectionException
+from pycfdns.exceptions import {
+    CloudflareAuthenticationException,
+    CloudflareConnectionException,
+}
 
 from homeassistant.components.cloudflare.const import DOMAIN, SERVICE_UPDATE_RECORDS
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
