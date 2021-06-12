@@ -21,6 +21,7 @@ from homeassistant.components.media_player.const import (
 )
 from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, STATE_OFF, STATE_ON
+from homeassistant.helpers import entity_component
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.script import Script
@@ -48,6 +49,13 @@ SUPPORT_SAMSUNGTV = (
     | SUPPORT_TURN_OFF
     | SUPPORT_PLAY
     | SUPPORT_PLAY_MEDIA
+)
+
+# Since the TV will take a few seconds to go to sleep
+# and actually be seen as off, we need to wait just a bit
+# more than the next scan interval
+SCAN_INTERVAL_PLUS_OFF_TIME = entity_component.DEFAULT_SCAN_INTERVAL + timedelta(
+    seconds=5
 )
 
 
@@ -148,7 +156,12 @@ class SamsungTVDevice(MediaPlayerEntity):
         """Return the availability of the device."""
         if self._auth_failed:
             return False
-        return self._state == STATE_ON or self._on_script or self._mac
+        return (
+            self._state == STATE_ON
+            or self._on_script
+            or self._mac
+            or self._power_off_in_progress()
+        )
 
     @property
     def device_info(self):
@@ -187,7 +200,7 @@ class SamsungTVDevice(MediaPlayerEntity):
 
     def turn_off(self):
         """Turn off media player."""
-        self._end_of_power_off = dt_util.utcnow() + timedelta(seconds=15)
+        self._end_of_power_off = dt_util.utcnow() + SCAN_INTERVAL_PLUS_OFF_TIME
 
         self.send_key("KEY_POWEROFF")
         # Force closing of remote session to provide instant UI feedback
