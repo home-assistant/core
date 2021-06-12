@@ -60,6 +60,7 @@ class Alpha2Climate(ClimateEntity):
         """Handle updated heatarea data."""
         if data["NR"] == self._data["NR"]:
             self._data = data
+            self.async_schedule_update_ha_state()
 
     @property
     def supported_features(self):
@@ -68,7 +69,7 @@ class Alpha2Climate(ClimateEntity):
 
     @property
     def should_poll(self):
-        """Return the polling state."""
+        """Disable polling."""
         return False
 
     @property
