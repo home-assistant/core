@@ -1,7 +1,8 @@
 """Gather the market details from Binance."""
+from __future__ import annotations
+
 import asyncio
 import logging
-from typing import List, Optional
 
 from binance import AsyncClient
 from binance.exceptions import BinanceAPIException, BinanceRequestException
@@ -69,7 +70,7 @@ class BinanceDataUpdateCoordinator(DataUpdateCoordinator):
     """Class to get the latest data from Binance."""
 
     def __init__(
-        self, hass, api_key, api_secret, markets, balances: Optional[List] = None
+        self, hass, api_key, api_secret, markets, balances: list | None = None
     ):
         """Initialize the data object."""
         self._api_key = api_key

@@ -8,5 +8,6 @@
   ],
   "codeowners": [
     "@DevSecNinja"
-  ]
+  ],
+  "iot_class": "cloud_polling"
 }
