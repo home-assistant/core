@@ -33,6 +33,7 @@ from .const import (
     CONF_KNX_ROUTING,
     CONF_KNX_TUNNELING,
     CONF_RESET_AFTER,
+    CONF_RESPOND_TO_READ,
     CONF_STATE_ADDRESS,
     CONF_SYNC_STATE,
     CONTROLLER_MODES,
@@ -578,6 +579,7 @@ class SwitchSchema(KNXPlatformSchema):
         {
             vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
             vol.Optional(CONF_INVERT, default=False): cv.boolean,
+            vol.Optional(CONF_RESPOND_TO_READ, default=False): cv.boolean,
             vol.Required(KNX_ADDRESS): ga_list_validator,
             vol.Optional(CONF_STATE_ADDRESS): ga_list_validator,
         }
