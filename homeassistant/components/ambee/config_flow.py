@@ -96,11 +96,10 @@ class AmbeeFlowHandler(ConfigFlow, domain=DOMAIN):
             except AmbeeError:
                 errors["base"] = "cannot_connect"
             else:
-                data = self.entry.data.copy()
                 self.hass.config_entries.async_update_entry(
                     self.entry,
                     data={
-                        **data,
+                        **self.entry.data,
                         CONF_API_KEY: user_input[CONF_API_KEY],
                     },
                 )
