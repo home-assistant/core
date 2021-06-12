@@ -7,7 +7,6 @@ import inspect
 from itertools import groupby
 import logging
 from operator import attrgetter
-import os
 import ssl
 import time
 from typing import Any, Callable, Union
@@ -221,7 +220,6 @@ MQTT_RW_PLATFORM_SCHEMA = MQTT_BASE_PLATFORM_SCHEMA.extend(
         vol.Required(CONF_COMMAND_TOPIC): valid_publish_topic,
         vol.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
         vol.Optional(CONF_STATE_TOPIC): valid_subscribe_topic,
-        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
     }
 )
 
@@ -633,18 +631,7 @@ class MQTT:
 
         certificate = self.conf.get(CONF_CERTIFICATE)
 
-        # For cloudmqtt.com, secured connection, auto fill in certificate
-        if (
-            certificate is None
-            and 19999 < self.conf[CONF_PORT] < 30000
-            and self.conf[CONF_BROKER].endswith(".cloudmqtt.com")
-        ):
-            certificate = os.path.join(
-                os.path.dirname(__file__), "addtrustexternalcaroot.crt"
-            )
-
-        # When the certificate is set to auto, use bundled certs from certifi
-        elif certificate == "auto":
+        if certificate == "auto":
             certificate = certifi.where()
 
         client_key = self.conf.get(CONF_CLIENT_KEY)

@@ -11,6 +11,12 @@ ZEROCONF = {
             "domain": "volumio"
         }
     ],
+    "_airplay._tcp.local.": [
+        {
+            "domain": "samsungtv",
+            "manufacturer": "samsung*"
+        }
+    ],
     "_api._udp.local.": [
         {
             "domain": "guardian"
@@ -52,6 +58,12 @@ ZEROCONF = {
     "_dvl-deviceapi._tcp.local.": [
         {
             "domain": "devolo_home_control"
+        }
+    ],
+    "_easylink._tcp.local.": [
+        {
+            "domain": "modern_forms",
+            "name": "wac*"
         }
     ],
     "_elg._tcp.local.": [
@@ -101,6 +113,10 @@ ZEROCONF = {
         {
             "domain": "nam",
             "name": "nam-*"
+        },
+        {
+            "domain": "nam",
+            "manufacturer": "nettigo"
         },
         {
             "domain": "rachio",

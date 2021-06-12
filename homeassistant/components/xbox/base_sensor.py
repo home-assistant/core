@@ -55,7 +55,7 @@ class XboxBaseSensorEntity(CoordinatorEntity):
         # We need to also remove the 'mode=Padding' query because with it, it results in an error 400.
         url = URL(self.data.display_pic)
         if url.host == "images-eds.xboxlive.com":
-            url = url.with_host("images-eds-ssl.xboxlive.com")
+            url = url.with_host("images-eds-ssl.xboxlive.com").with_scheme("https")
         query = dict(url.query)
         query.pop("mode", None)
         return str(url.with_query(query))

@@ -17,6 +17,7 @@ from homeassistant.components.recorder import (
     SERVICE_DISABLE,
     SERVICE_ENABLE,
     SERVICE_PURGE,
+    SERVICE_PURGE_ENTITIES,
     SQLITE_URL_PREFIX,
     Recorder,
     run_information,
@@ -822,6 +823,7 @@ def test_has_services(hass_recorder):
     assert hass.services.has_service(DOMAIN, SERVICE_DISABLE)
     assert hass.services.has_service(DOMAIN, SERVICE_ENABLE)
     assert hass.services.has_service(DOMAIN, SERVICE_PURGE)
+    assert hass.services.has_service(DOMAIN, SERVICE_PURGE_ENTITIES)
 
 
 def test_service_disable_events_not_recording(hass, hass_recorder):

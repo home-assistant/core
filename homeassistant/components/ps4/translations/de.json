@@ -25,7 +25,7 @@
                     "name": "Name",
                     "region": "Region"
                 },
-                "description": "Gib deine PlayStation 4-Informationen ein. Navigiere f\u00fcr \"PIN\" auf der PlayStation 4-Konsole zu \"Einstellungen\". Navigiere dann zu \"Mobile App-Verbindungseinstellungen\" und w\u00e4hle \"Ger\u00e4t hinzuf\u00fcgen\" aus. Gib die angezeigte PIN ein.",
+                "description": "Gib deine PlayStation 4-Informationen ein. Navigiere f\u00fcr \"PIN\" auf der PlayStation 4-Konsole zu \"Einstellungen\". Navigiere dann zu \"Mobile App-Verbindungseinstellungen\" und w\u00e4hle \"Ger\u00e4t hinzuf\u00fcgen\" aus. Gib die angezeigte PIN ein. Weitere Informationen finden Sie in der [Dokumentation](https://www.home-assistant.io/components/ps4/).",
                 "title": "PlayStation 4"
             },
             "mode": {

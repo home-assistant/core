@@ -43,7 +43,7 @@ class TimePattern:
 
 
 TRIGGER_SCHEMA = vol.All(
-    vol.Schema(
+    cv.TRIGGER_BASE_SCHEMA.extend(
         {
             vol.Required(CONF_PLATFORM): "time_pattern",
             CONF_HOURS: TimePattern(maximum=23),

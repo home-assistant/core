@@ -1,4 +1,6 @@
 """Offer geolocation automation rules."""
+import logging
+
 import voluptuous as vol
 
 from homeassistant.components.geo_location import DOMAIN
@@ -10,11 +12,13 @@ from homeassistant.helpers.event import TrackStates, async_track_state_change_fi
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
+_LOGGER = logging.getLogger(__name__)
+
 EVENT_ENTER = "enter"
 EVENT_LEAVE = "leave"
 DEFAULT_EVENT = EVENT_ENTER
 
-TRIGGER_SCHEMA = vol.Schema(
+TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_PLATFORM): "geo_location",
         vol.Required(CONF_SOURCE): cv.string,
@@ -49,6 +53,13 @@ async def async_attach_trigger(hass, config, action, automation_info):
             return
 
         zone_state = hass.states.get(zone_entity_id)
+        if zone_state is None:
+            _LOGGER.warning(
+                "Unable to execute automation %s: Zone %s not found",
+                automation_info["name"],
+                zone_entity_id,
+            )
+            return
 
         from_match = (
             condition.zone(hass, zone_state, from_state) if from_state else False

@@ -270,7 +270,7 @@ class AppleTVManager:
 
         self.hass.components.persistent_notification.create(
             "An irrecoverable connection problem occurred when connecting to "
-            f"`f{name}`. Please go to the Integrations page and reconfigure it",
+            f"`{name}`. Please go to the Integrations page and reconfigure it",
             title=NOTIFICATION_TITLE,
             notification_id=NOTIFICATION_ID,
         )

@@ -27,7 +27,7 @@ LAST_EVENT_TIMESTAMP_KEY = "last_event_timestamp"
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Risco from a config entry."""
     data = entry.data
     risco = RiscoAPI(data[CONF_USERNAME], data[CONF_PASSWORD], data[CONF_PIN])

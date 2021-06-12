@@ -28,7 +28,12 @@ SENSOR_TYPES = {
         STATE_CLASS_MEASUREMENT,
     ),
     "air_quality": ("Air Quality", None, None, None),
-    "humidity": ("Humidity", PERCENTAGE, DEVICE_CLASS_HUMIDITY, None),
+    "humidity": (
+        "Humidity",
+        PERCENTAGE,
+        DEVICE_CLASS_HUMIDITY,
+        STATE_CLASS_MEASUREMENT,
+    ),
     "light": ("Light", None, DEVICE_CLASS_ILLUMINANCE, None),
     "noise": ("Noise", None, None, None),
 }
