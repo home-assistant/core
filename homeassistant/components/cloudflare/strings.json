@@ -9,12 +9,6 @@
           "api_token": "[%key:common::config_flow::data::api_token%]"
         },
       },
-      "reauth_confirm": {
-        "data": {
-          "description": "Re-authenticate with your Cloudflare account.",
-          "api_token": "[%key:common::config_flow::data::api_token%]"
-        }
-      },
       "zone": {
         "title": "Choose the Zone to Update",
         "data": {
@@ -25,6 +19,12 @@
         "title": "Choose the Records to Update",
         "data": {
            "records": "Records"
+        }
+      },
+      "reauth_confirm": {
+        "data": {
+          "description": "Re-authenticate with your Cloudflare account.",
+          "api_token": "[%key:common::config_flow::data::api_token%]"
         }
       }
     },
