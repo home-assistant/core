@@ -192,7 +192,7 @@ async def test_reauth_flow(hass, cfupdate_flow):
     assert result["reason"] == "reauth_successful"
 
     assert entry.data[CONF_API_TOKEN] == "other_token"
-    assert entrt.data[CONF_ZONE] == ENTRY_CONFIG[CONF_ZONE]
+    assert entry.data[CONF_ZONE] == ENTRY_CONFIG[CONF_ZONE]
     assert entry.data[CONF_RECORDS] == ENTRY_CONFIG[CONF_RECORDS]
 
     assert len(mock_setup_entry.mock_calls) == 1
