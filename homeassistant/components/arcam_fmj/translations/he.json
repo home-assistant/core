@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u05ea\u05e6\u05d5\u05e8\u05ea \u05d4\u05d4\u05ea\u05e7\u05df \u05db\u05d1\u05e8 \u05e0\u05e7\u05d1\u05e2\u05d4",
+            "already_in_progress": "\u05d6\u05e8\u05d9\u05de\u05ea \u05d4\u05ea\u05e6\u05d5\u05e8\u05d4 \u05db\u05d1\u05e8 \u05de\u05ea\u05d1\u05e6\u05e2\u05ea",
+            "cannot_connect": "\u05d4\u05d4\u05ea\u05d7\u05d1\u05e8\u05d5\u05ea \u05e0\u05db\u05e9\u05dc\u05d4"
+        },
+        "flow_title": "{host}",
+        "step": {
+            "confirm": {
+                "description": "\u05d4\u05d0\u05dd \u05d1\u05e8\u05e6\u05d5\u05e0\u05da \u05dc\u05d4\u05d5\u05e1\u05d9\u05e3 \u05d0\u05ea Arcam FMJ \u05d1- '{host}' \u05dc-Home Assistant?"
+            },
+            "user": {
+                "data": {
+                    "host": "\u05de\u05d0\u05e8\u05d7",
+                    "port": "\u05e4\u05ea\u05d7\u05d4"
+                },
+                "description": "\u05d0\u05e0\u05d0 \u05d4\u05d6\u05df \u05d0\u05ea \u05e9\u05dd \u05d4\u05de\u05d0\u05e8\u05d7 \u05d0\u05d5 \u05d0\u05ea \u05db\u05ea\u05d5\u05d1\u05ea \u05d4-IP \u05e9\u05dc \u05d4\u05d4\u05ea\u05e7\u05df."
+            }
+        }
+    }
+}

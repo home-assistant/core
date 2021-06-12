@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import math
-from typing import Any
+from typing import Any, Final
 
 from xknx import XKNX
 from xknx.devices import Fan as XknxFan
@@ -22,7 +22,7 @@ from .const import DOMAIN, KNX_ADDRESS
 from .knx_entity import KnxEntity
 from .schema import FanSchema
 
-DEFAULT_PERCENTAGE = 50
+DEFAULT_PERCENTAGE: Final = 50
 
 
 async def async_setup_platform(

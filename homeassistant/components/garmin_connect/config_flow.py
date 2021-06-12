@@ -1,7 +1,7 @@
 """Config flow for Garmin Connect integration."""
 import logging
 
-from garminconnect import (
+from garminconnect_ha import (
     Garmin,
     GarminConnectAuthenticationError,
     GarminConnectConnectionError,
@@ -37,11 +37,14 @@ class GarminConnectConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return await self._show_setup_form()
 
-        garmin_client = Garmin(user_input[CONF_USERNAME], user_input[CONF_PASSWORD])
+        username = user_input[CONF_USERNAME]
+        password = user_input[CONF_PASSWORD]
+
+        api = Garmin(username, password)
 
         errors = {}
         try:
-            await self.hass.async_add_executor_job(garmin_client.login)
+            await self.hass.async_add_executor_job(api.login)
         except GarminConnectConnectionError:
             errors["base"] = "cannot_connect"
             return await self._show_setup_form(errors)
@@ -56,16 +59,14 @@ class GarminConnectConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = "unknown"
             return await self._show_setup_form(errors)
 
-        unique_id = garmin_client.get_full_name()
-
-        await self.async_set_unique_id(unique_id)
+        await self.async_set_unique_id(username)
         self._abort_if_unique_id_configured()
 
         return self.async_create_entry(
-            title=unique_id,
+            title=username,
             data={
-                CONF_ID: unique_id,
-                CONF_USERNAME: user_input[CONF_USERNAME],
-                CONF_PASSWORD: user_input[CONF_PASSWORD],
+                CONF_ID: username,
+                CONF_USERNAME: username,
+                CONF_PASSWORD: password,
             },
         )

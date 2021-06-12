@@ -1,0 +1,38 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u05ea\u05e6\u05d5\u05e8\u05ea \u05d4\u05d4\u05ea\u05e7\u05df \u05db\u05d1\u05e8 \u05e0\u05e7\u05d1\u05e2\u05d4"
+        },
+        "error": {
+            "cannot_connect": "\u05d4\u05d4\u05ea\u05d7\u05d1\u05e8\u05d5\u05ea \u05e0\u05db\u05e9\u05dc\u05d4",
+            "unknown": "\u05e9\u05d2\u05d9\u05d0\u05d4 \u05d1\u05dc\u05ea\u05d9 \u05e6\u05e4\u05d5\u05d9\u05d4"
+        },
+        "step": {
+            "relay_modes": {
+                "data": {
+                    "relay_1": "Relay 1",
+                    "relay_10": "Relay 10",
+                    "relay_11": "Relay 11",
+                    "relay_12": "Relay 12",
+                    "relay_13": "Relay 13",
+                    "relay_15": "Relay 15",
+                    "relay_2": "Relay 2",
+                    "relay_3": "Relay 3",
+                    "relay_4": "Relay 4",
+                    "relay_5": "Relay 5",
+                    "relay_6": "Relay 6",
+                    "relay_7": "Relay 7",
+                    "relay_8": "Relay 8",
+                    "relay_9": "Relay 9"
+                },
+                "title": "\u05d4\u05d2\u05d3\u05e8\u05ea \u05de\u05de\u05e1\u05e8\u05d9\u05dd"
+            },
+            "user": {
+                "data": {
+                    "host": "\u05de\u05d0\u05e8\u05d7",
+                    "port": "\u05e4\u05ea\u05d7\u05d4"
+                }
+            }
+        }
+    }
+}

@@ -27,25 +27,25 @@ CONF_ENTITY_ID = "entity_id"
 CONF_FROM = "from"
 CONF_TO = "to"
 
-BASE_SCHEMA = {
-    vol.Required(CONF_PLATFORM): "state",
-    vol.Required(CONF_ENTITY_ID): cv.entity_ids,
-    vol.Optional(CONF_FOR): cv.positive_time_period_template,
-    vol.Optional(CONF_ATTRIBUTE): cv.match_all,
-}
-
-TRIGGER_STATE_SCHEMA = vol.Schema(
+BASE_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
     {
-        **BASE_SCHEMA,
+        vol.Required(CONF_PLATFORM): "state",
+        vol.Required(CONF_ENTITY_ID): cv.entity_ids,
+        vol.Optional(CONF_FOR): cv.positive_time_period_template,
+        vol.Optional(CONF_ATTRIBUTE): cv.match_all,
+    }
+)
+
+TRIGGER_STATE_SCHEMA = BASE_SCHEMA.extend(
+    {
         # These are str on purpose. Want to catch YAML conversions
         vol.Optional(CONF_FROM): vol.Any(str, [str]),
         vol.Optional(CONF_TO): vol.Any(str, [str]),
     }
 )
 
-TRIGGER_ATTRIBUTE_SCHEMA = vol.Schema(
+TRIGGER_ATTRIBUTE_SCHEMA = BASE_SCHEMA.extend(
     {
-        **BASE_SCHEMA,
         vol.Optional(CONF_FROM): cv.match_all,
         vol.Optional(CONF_TO): cv.match_all,
     }

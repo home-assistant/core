@@ -53,7 +53,7 @@ class BridgeBinarySensor(BridgeDeviceEntity, BinarySensorEntity):
 class BridgeBatteryIsChargingBinarySensor(BridgeBinarySensor):
     """Defines a Battery is charging binary sensor."""
 
-    def __init__(self, coordinator: DataUpdateCoordinator, bridge: Bridge):
+    def __init__(self, coordinator: DataUpdateCoordinator, bridge: Bridge) -> None:
         """Initialize System Bridge binary sensor."""
         super().__init__(
             coordinator,

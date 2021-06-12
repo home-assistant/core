@@ -25,10 +25,10 @@ from homeassistant.components.light import (
     DOMAIN as LIGHT_DOMAIN,
 )
 from homeassistant.config_entries import (
-    ENTRY_STATE_SETUP_ERROR,
     RELOAD_AFTER_UPDATE_DELAY,
     SOURCE_REAUTH,
     ConfigEntry,
+    ConfigEntryState,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -241,7 +241,7 @@ async def test_setup_config_entry_dynamic_instances(hass: HomeAssistant) -> None
     assert hass.states.get(TEST_ENTITY_ID_3) is not None
 
 
-async def test_light_basic_properies(hass: HomeAssistant) -> None:
+async def test_light_basic_properties(hass: HomeAssistant) -> None:
     """Test the basic properties."""
     client = create_mock_client()
     await setup_test_config_entry(hass, hyperion_client=client)
@@ -862,7 +862,7 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
     assert client.async_client_disconnect.call_count == 2
 
 
-async def test_version_log_warning(caplog, hass: HomeAssistant) -> None:  # type: ignore[no-untyped-def]
+async def test_version_log_warning(caplog, hass: HomeAssistant) -> None:
     """Test warning on old version."""
     client = create_mock_client()
     client.async_sysinfo_version = AsyncMock(return_value="2.0.0-alpha.7")
@@ -871,7 +871,7 @@ async def test_version_log_warning(caplog, hass: HomeAssistant) -> None:  # type
     assert "Please consider upgrading" in caplog.text
 
 
-async def test_version_no_log_warning(caplog, hass: HomeAssistant) -> None:  # type: ignore[no-untyped-def]
+async def test_version_no_log_warning(caplog, hass: HomeAssistant) -> None:
     """Test no warning on acceptable version."""
     client = create_mock_client()
     client.async_sysinfo_version = AsyncMock(return_value="2.0.0-alpha.9")
@@ -900,7 +900,7 @@ async def test_setup_entry_no_token_reauth(hass: HomeAssistant) -> None:
             },
             data=config_entry.data,
         )
-        assert config_entry.state == ENTRY_STATE_SETUP_ERROR
+        assert config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
 async def test_setup_entry_bad_token_reauth(hass: HomeAssistant) -> None:
@@ -928,7 +928,7 @@ async def test_setup_entry_bad_token_reauth(hass: HomeAssistant) -> None:
             },
             data=config_entry.data,
         )
-        assert config_entry.state == ENTRY_STATE_SETUP_ERROR
+        assert config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
 async def test_priority_light_async_updates(
@@ -1359,7 +1359,7 @@ async def test_lights_can_be_enabled(hass: HomeAssistant) -> None:
         assert not updated_entry.disabled
         await hass.async_block_till_done()
 
-        async_fire_time_changed(  # type: ignore[no-untyped-call]
+        async_fire_time_changed(
             hass,
             dt.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
         )
@@ -1369,7 +1369,7 @@ async def test_lights_can_be_enabled(hass: HomeAssistant) -> None:
     assert entity_state
 
 
-async def test_deprecated_effect_names(caplog, hass: HomeAssistant) -> None:  # type: ignore[no-untyped-def]
+async def test_deprecated_effect_names(caplog, hass: HomeAssistant) -> None:
     """Test deprecated effects function and issue a warning."""
     client = create_mock_client()
     client.async_send_clear = AsyncMock(return_value=True)

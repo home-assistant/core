@@ -4,6 +4,8 @@ set_away_mode:
   name: Set away mode
   description: Turn away mode on/off for water_heater device.
   target:
+    entity:
+      domain: water_heater
   fields:
     away_mode:
       name: Away mode
@@ -16,6 +18,8 @@ set_temperature:
   name: Set temperature
   description: Set target temperature of water_heater device.
   target:
+    entity:
+      domain: water_heater
   fields:
     temperature:
       name: Temperature
@@ -26,7 +30,7 @@ set_temperature:
           min: 0
           max: 100
           step: 0.5
-          unit_of_measurement: '°'
+          unit_of_measurement: "°"
     operation_mode:
       name: Operation mode
       description: New value of operation mode.
@@ -38,6 +42,8 @@ set_operation_mode:
   name: Set operation mode
   description: Set operation mode for water_heater device.
   target:
+    entity:
+      domain: water_heater
   fields:
     operation_mode:
       name: Operation mode

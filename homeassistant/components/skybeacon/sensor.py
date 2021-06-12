@@ -64,6 +64,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class SkybeaconHumid(SensorEntity):
     """Representation of a Skybeacon humidity sensor."""
 
+    _attr_unit_of_measurement = PERCENTAGE
+
     def __init__(self, name, mon):
         """Initialize a sensor."""
         self.mon = mon
@@ -80,11 +82,6 @@ class SkybeaconHumid(SensorEntity):
         return self.mon.data["humid"]
 
     @property
-    def unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        return PERCENTAGE
-
-    @property
     def extra_state_attributes(self):
         """Return the state attributes of the sensor."""
         return {ATTR_DEVICE: "SKYBEACON", ATTR_MODEL: 1}
@@ -92,6 +89,8 @@ class SkybeaconHumid(SensorEntity):
 
 class SkybeaconTemp(SensorEntity):
     """Representation of a Skybeacon temperature sensor."""
+
+    _attr_unit_of_measurement = TEMP_CELSIUS
 
     def __init__(self, name, mon):
         """Initialize a sensor."""
@@ -107,11 +106,6 @@ class SkybeaconTemp(SensorEntity):
     def state(self):
         """Return the state of the device."""
         return self.mon.data["temp"]
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        return TEMP_CELSIUS
 
     @property
     def extra_state_attributes(self):

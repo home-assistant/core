@@ -6,7 +6,7 @@
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen"
         },
-        "flow_title": "ZHA: {name}",
+        "flow_title": "{name}",
         "step": {
             "pick_radio": {
                 "data": {
@@ -41,6 +41,8 @@
             "title": "Optionen f\u00fcr die Alarmsteuerung"
         },
         "zha_options": {
+            "consider_unavailable_battery": "Batteriebetriebene Ger\u00e4te als nicht verf\u00fcgbar betrachten nach (Sekunden)",
+            "consider_unavailable_mains": "Netzbetriebene Ger\u00e4te als nicht verf\u00fcgbar betrachten nach (Sekunden)",
             "default_light_transition": "Standardlicht\u00fcbergangszeit (Sekunden)",
             "enable_identify_on_join": "Aktivieren Sie den Identifikationseffekt, wenn Ger\u00e4te dem Netzwerk beitreten",
             "title": "Globale Optionen"

@@ -13,7 +13,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import ACCOUNT_HASH, COORDINATORS, DEVICES, DOMAIN, HUBLOT
 
-PLATFORMS = ["binary_sensor", "sensor", "switch"]
+PLATFORMS = ["binary_sensor", "number", "sensor", "switch"]
 
 EMPTY_CREDENTIALS = ""
 
@@ -22,7 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 UPDATE_INTERVAL = timedelta(seconds=30)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Rituals Perfume Genie from a config entry."""
     session = async_get_clientsession(hass)
     account = Account(EMPTY_CREDENTIALS, EMPTY_CREDENTIALS, session)
@@ -64,7 +64,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
 class RitualsDataUpdateCoordinator(DataUpdateCoordinator):
     """Class to manage fetching Rituals Perufme Genie device data from single endpoint."""
 
-    def __init__(self, hass: HomeAssistant, device: Diffuser):
+    def __init__(self, hass: HomeAssistant, device: Diffuser) -> None:
         """Initialize global Rituals Perufme Genie data updater."""
         self._device = device
         super().__init__(

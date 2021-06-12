@@ -107,13 +107,10 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
             value_property_key=ColorComponent.COLD_WHITE,
         )
         self._supported_color_modes = set()
-        self._supported_features = 0
 
         # get additional (optional) values and set features
         self._target_value = self.get_zwave_value("targetValue")
         self._dimming_duration = self.get_zwave_value("duration")
-        if self._dimming_duration is not None:
-            self._supported_features |= SUPPORT_TRANSITION
         self._calculate_color_values()
         if self._supports_rgbw:
             self._supported_color_modes.add(COLOR_MODE_RGBW)
@@ -123,6 +120,11 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
             self._supported_color_modes.add(COLOR_MODE_COLOR_TEMP)
         if not self._supported_color_modes:
             self._supported_color_modes.add(COLOR_MODE_BRIGHTNESS)
+
+        # Entity class attributes
+        self._attr_supported_features = 0
+        if self._dimming_duration is not None:
+            self._attr_supported_features |= SUPPORT_TRANSITION
 
     @callback
     def on_value_update(self) -> None:
@@ -178,11 +180,6 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
     def supported_color_modes(self) -> set | None:
         """Flag supported features."""
         return self._supported_color_modes
-
-    @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        return self._supported_features
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
@@ -388,10 +385,11 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
             green = multi_color.get("green", green_val.value)
             blue = multi_color.get("blue", blue_val.value)
             self._supports_color = True
-            # convert to HS
-            self._hs_color = color_util.color_RGB_to_hs(red, green, blue)
-            # Light supports color, set color mode to hs
-            self._color_mode = COLOR_MODE_HS
+            if None not in (red, green, blue):
+                # convert to HS
+                self._hs_color = color_util.color_RGB_to_hs(red, green, blue)
+                # Light supports color, set color mode to hs
+                self._color_mode = COLOR_MODE_HS
 
         # color temperature support
         if ww_val and cw_val:

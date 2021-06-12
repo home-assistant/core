@@ -1,6 +1,8 @@
 """Provide the device automations for Alarm control panel."""
 from __future__ import annotations
 
+from typing import Final
+
 import voluptuous as vol
 
 from homeassistant.components.alarm_control_panel.const import (
@@ -39,7 +41,7 @@ from .const import (
     CONDITION_TRIGGERED,
 )
 
-CONDITION_TYPES = {
+CONDITION_TYPES: Final[set[str]] = {
     CONDITION_TRIGGERED,
     CONDITION_DISARMED,
     CONDITION_ARMED_HOME,
@@ -48,7 +50,7 @@ CONDITION_TYPES = {
     CONDITION_ARMED_CUSTOM_BYPASS,
 }
 
-CONDITION_SCHEMA = DEVICE_CONDITION_BASE_SCHEMA.extend(
+CONDITION_SCHEMA: Final = DEVICE_CONDITION_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_ENTITY_ID): cv.entity_id,
         vol.Required(CONF_TYPE): vol.In(CONDITION_TYPES),
@@ -77,61 +79,26 @@ async def async_get_conditions(
         supported_features = state.attributes[ATTR_SUPPORTED_FEATURES]
 
         # Add conditions for each entity that belongs to this integration
+        base_condition = {
+            CONF_CONDITION: "device",
+            CONF_DEVICE_ID: device_id,
+            CONF_DOMAIN: DOMAIN,
+            CONF_ENTITY_ID: entry.entity_id,
+        }
+
         conditions += [
-            {
-                CONF_CONDITION: "device",
-                CONF_DEVICE_ID: device_id,
-                CONF_DOMAIN: DOMAIN,
-                CONF_ENTITY_ID: entry.entity_id,
-                CONF_TYPE: CONDITION_DISARMED,
-            },
-            {
-                CONF_CONDITION: "device",
-                CONF_DEVICE_ID: device_id,
-                CONF_DOMAIN: DOMAIN,
-                CONF_ENTITY_ID: entry.entity_id,
-                CONF_TYPE: CONDITION_TRIGGERED,
-            },
+            {**base_condition, CONF_TYPE: CONDITION_DISARMED},
+            {**base_condition, CONF_TYPE: CONDITION_TRIGGERED},
         ]
         if supported_features & SUPPORT_ALARM_ARM_HOME:
-            conditions.append(
-                {
-                    CONF_CONDITION: "device",
-                    CONF_DEVICE_ID: device_id,
-                    CONF_DOMAIN: DOMAIN,
-                    CONF_ENTITY_ID: entry.entity_id,
-                    CONF_TYPE: CONDITION_ARMED_HOME,
-                }
-            )
+            conditions.append({**base_condition, CONF_TYPE: CONDITION_ARMED_HOME})
         if supported_features & SUPPORT_ALARM_ARM_AWAY:
-            conditions.append(
-                {
-                    CONF_CONDITION: "device",
-                    CONF_DEVICE_ID: device_id,
-                    CONF_DOMAIN: DOMAIN,
-                    CONF_ENTITY_ID: entry.entity_id,
-                    CONF_TYPE: CONDITION_ARMED_AWAY,
-                }
-            )
+            conditions.append({**base_condition, CONF_TYPE: CONDITION_ARMED_AWAY})
         if supported_features & SUPPORT_ALARM_ARM_NIGHT:
-            conditions.append(
-                {
-                    CONF_CONDITION: "device",
-                    CONF_DEVICE_ID: device_id,
-                    CONF_DOMAIN: DOMAIN,
-                    CONF_ENTITY_ID: entry.entity_id,
-                    CONF_TYPE: CONDITION_ARMED_NIGHT,
-                }
-            )
+            conditions.append({**base_condition, CONF_TYPE: CONDITION_ARMED_NIGHT})
         if supported_features & SUPPORT_ALARM_ARM_CUSTOM_BYPASS:
             conditions.append(
-                {
-                    CONF_CONDITION: "device",
-                    CONF_DEVICE_ID: device_id,
-                    CONF_DOMAIN: DOMAIN,
-                    CONF_ENTITY_ID: entry.entity_id,
-                    CONF_TYPE: CONDITION_ARMED_CUSTOM_BYPASS,
-                }
+                {**base_condition, CONF_TYPE: CONDITION_ARMED_CUSTOM_BYPASS}
             )
 
     return conditions
