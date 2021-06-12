@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import collections
+from datetime import timedelta
 
 import voluptuous as vol
 
@@ -38,10 +39,14 @@ from homeassistant.const import (
 )
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util import Throttle
 from homeassistant.util.temperature import convert
 
 from .const import _LOGGER, DOMAIN, ECOBEE_MODEL_TO_NAME, MANUFACTURER
 from .util import ecobee_date, ecobee_time
+
+# Interval for throttled ecobee data validation
+VALIDATE_DATA_INTERVAL = timedelta(minutes=60)
 
 ATTR_COOL_TEMP = "cool_temp"
 ATTR_END_DATE = "end_date"
@@ -300,18 +305,6 @@ class Thermostat(ClimateEntity):
         self.vacation = None
         self._last_active_hvac_mode = HVAC_MODE_HEAT_COOL
 
-        # Check that this is a known model, log message if not
-        if not self.thermostat["modelNumber"] in ECOBEE_MODEL_TO_NAME:
-            _LOGGER.error(
-                "Model number for ecobee thermostat %s not recognized. "
-                "Please visit this link to open a new issue: "
-                "https://github.com/home-assistant/core/issues "
-                "and include the following information: "
-                "Unrecognized model number: %s",
-                self.name,
-                self.thermostat["modelNumber"],
-            )
-
         self._operation_list = []
         if (
             self.thermostat["settings"]["heatStages"]
@@ -341,6 +334,23 @@ class Thermostat(ClimateEntity):
         self.thermostat = self.data.ecobee.get_thermostat(self.thermostat_index)
         if self.hvac_mode != HVAC_MODE_OFF:
             self._last_active_hvac_mode = self.hvac_mode
+
+        await self.throttled_validate_data()
+
+    @Throttle(VALIDATE_DATA_INTERVAL)
+    async def throttled_validate_data(self):
+        """Validate data from ecobee periodically and log errors."""
+        # Check that this is a known model, log message if not
+        if not self.thermostat["modelNumber"] in ECOBEE_MODEL_TO_NAME:
+            _LOGGER.error(
+                "Model number for ecobee thermostat %s not recognized. "
+                "Please visit this link to open a new issue: "
+                "https://github.com/home-assistant/core/issues "
+                "and include the following information: "
+                "Unrecognized model number: %s",
+                self.name,
+                self.thermostat["modelNumber"],
+            )
 
     @property
     def available(self):
