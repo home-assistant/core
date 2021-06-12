@@ -6,7 +6,7 @@ import aiohttp
 from moehlenhoff_alpha2 import Alpha2Base
 import voluptuous as vol
 
-from homeassistant import config_entries, core
+from homeassistant import config_entries
 
 from .const import DOMAIN
 
@@ -15,7 +15,7 @@ _LOGGER = logging.getLogger(__name__)
 DATA_SCHEMA = vol.Schema({"host": str})
 
 
-async def validate_input(hass: core.HomeAssistant, data):
+async def validate_input(data):
     """Validate the user input allows us to connect.
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
@@ -46,7 +46,7 @@ class Alpha2BaseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     if entry.data["host"] == user_input["host"]:
                         return self.async_abort(reason="already_configured")
 
-                result = await validate_input(self.hass, user_input)
+                result = await validate_input(user_input)
                 if result.get("error"):
                     errors["base"] = result["error"]
                 else:
