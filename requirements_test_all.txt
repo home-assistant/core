@@ -751,6 +751,9 @@ pycomfoconnect==0.4
 # homeassistant.components.coolmaster
 pycoolmasternet-async==0.1.2
 
+# homeassistant.components.zyxelt50
+pycryptodome==latest
+
 # homeassistant.components.daikin
 pydaikin==2.4.1
 

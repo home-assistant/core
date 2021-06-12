@@ -1,0 +1,14 @@
+{
+  "domain": "zyxelt50",
+  "name": "Zyxel T-50",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/zyxelt50",
+  "requirements": [
+    "pycryptodome==latest"
+  ],
+  "dependencies": [],
+  "codeowners": [
+    "@SLG"
+  ],
+  "iot_class": "local_polling"
+}
