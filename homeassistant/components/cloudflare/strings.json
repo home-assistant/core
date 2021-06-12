@@ -7,6 +7,12 @@
         "description": "This integration requires an API Token created with Zone:Zone:Read and Zone:DNS:Edit permissions for all zones in your account.",
         "data": {
           "api_token": "[%key:common::config_flow::data::api_token%]"
+        },
+      },
+      "reauth_confirm": {
+        "data": {
+          "description": "Re-authenticate with your Cloudflare account.",
+          "api_token": "[%key:common::config_flow::data::api_token%]"
         }
       },
       "zone": {
@@ -28,6 +34,7 @@
       "invalid_zone": "Invalid zone"
     },
     "abort": {
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     }
