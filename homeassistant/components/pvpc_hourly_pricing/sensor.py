@@ -57,14 +57,6 @@ class ElecPriceSensor(RestoreEntity, SensorEntity):
         self._pvpc_data = pvpc_data_handler
         self._num_retries = 0
 
-        self._hourly_tracker = None
-        self._price_tracker = None
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Cancel listeners for sensor updates."""
-        self._hourly_tracker()
-        self._price_tracker()
-
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
         await super().async_added_to_hass()
@@ -73,14 +65,18 @@ class ElecPriceSensor(RestoreEntity, SensorEntity):
             self._pvpc_data.state = state.state
 
         # Update 'state' value in hour changes
-        self._hourly_tracker = async_track_time_change(
-            self.hass, self.update_current_price, second=[0], minute=[0]
+        self.async_on_remove(
+            async_track_time_change(
+                self.hass, self.update_current_price, second=[0], minute=[0]
+            )
         )
         # Update prices at random time, 2 times/hour (don't want to upset API)
         random_minute = randint(1, 29)
         mins_update = [random_minute, random_minute + 30]
-        self._price_tracker = async_track_time_change(
-            self.hass, self.async_update_prices, second=[0], minute=mins_update
+        self.async_on_remove(
+            async_track_time_change(
+                self.hass, self.async_update_prices, second=[0], minute=mins_update
+            )
         )
         _LOGGER.debug(
             "Setup of price sensor %s (%s) with tariff '%s', "
