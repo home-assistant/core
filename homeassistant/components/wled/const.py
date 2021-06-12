@@ -8,6 +8,10 @@ DOMAIN = "wled"
 LOGGER = logging.getLogger(__package__)
 SCAN_INTERVAL = timedelta(seconds=10)
 
+# Options
+CONF_KEEP_MASTER_LIGHT = "keep_master_light"
+DEFAULT_KEEP_MASTER_LIGHT = False
+
 # Attributes
 ATTR_COLOR_PRIMARY = "color_primary"
 ATTR_DURATION = "duration"
