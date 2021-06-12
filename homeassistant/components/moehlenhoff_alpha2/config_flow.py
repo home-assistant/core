@@ -41,7 +41,7 @@ class Alpha2BaseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
             try:
-                for entry in self.hass.config_entries.async_entries(DOMAIN):
+                for entry in self._async_current_entries(include_ignore=False):
                     if entry.data["host"] == user_input["host"]:
                         return self.async_abort(reason="already_configured")
 
