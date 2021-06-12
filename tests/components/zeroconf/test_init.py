@@ -2,7 +2,7 @@
 from unittest.mock import call, patch
 
 from zeroconf import InterfaceChoice, IPVersion, ServiceStateChange
-from zeroconf.asyncio import AsyncServiceInfo
+from zeroconf.aio import AsyncServiceInfo
 
 from homeassistant.components import zeroconf
 from homeassistant.components.zeroconf import CONF_DEFAULT_INTERFACE, CONF_IPV6

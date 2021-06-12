@@ -3,7 +3,7 @@
 from typing import Any
 
 from zeroconf import DNSAddress, DNSRecord, Zeroconf
-from zeroconf.asyncio import AsyncServiceBrowser, AsyncZeroconf
+from zeroconf.aio import AsyncServiceBrowser, AsyncZeroconf
 
 TYPE_AAAA = 28
 

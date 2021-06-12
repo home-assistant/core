@@ -17,7 +17,7 @@ from zeroconf import (
     NonUniqueNameException,
     ServiceStateChange,
 )
-from zeroconf.asyncio import AsyncServiceInfo
+from zeroconf.aio import AsyncServiceInfo
 
 from homeassistant import config_entries, util
 from homeassistant.components import network
