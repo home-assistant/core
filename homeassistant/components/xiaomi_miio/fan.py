@@ -1467,7 +1467,8 @@ class XiaomiAirHumidifierMiot(XiaomiAirHumidifier):
             == AirhumidifierMiotOperationMode.High
         ):
             return SPEED_HIGH
-        return None
+        else:
+            return None
 
     @property
     def percentage(self):
