@@ -3,7 +3,7 @@ from unittest.mock import MagicMock
 
 from wled import WLEDConnectionError
 
-from homeassistant.components.wled.const import DOMAIN
+from homeassistant.components.wled.const import CONF_KEEP_MASTER_LIGHT, DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME
 from homeassistant.core import HomeAssistant
@@ -177,3 +177,26 @@ async def test_zeroconf_with_mac_device_exists_abort(
 
     assert result.get("type") == RESULT_TYPE_ABORT
     assert result.get("reason") == "already_configured"
+
+
+async def test_options_flow(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test options config flow."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+
+    assert result.get("type") == RESULT_TYPE_FORM
+    assert result.get("step_id") == "init"
+    assert "flow_id" in result
+
+    result2 = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_KEEP_MASTER_LIGHT: True},
+    )
+
+    assert result2.get("type") == RESULT_TYPE_CREATE_ENTRY
+    assert result2.get("data") == {
+        CONF_KEEP_MASTER_LIGHT: True,
+    }
