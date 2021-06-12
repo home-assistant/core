@@ -29,8 +29,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Update method for updating Ambee Air Quality data."""
         try:
             return await client.air_quality()
-        except AmbeeAuthenticationError:
-            raise ConfigEntryAuthFailed
+        except AmbeeAuthenticationError as err:
+            raise ConfigEntryAuthFailed from err
 
     air_quality: DataUpdateCoordinator[AirQuality] = DataUpdateCoordinator(
         hass,
@@ -46,8 +46,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Update method for updating Ambee Pollen data."""
         try:
             return await client.pollen()
-        except AmbeeAuthenticationError:
-            raise ConfigEntryAuthFailed
+        except AmbeeAuthenticationError as err:
+            raise ConfigEntryAuthFailed from err
 
     pollen: DataUpdateCoordinator[Pollen] = DataUpdateCoordinator(
         hass,
