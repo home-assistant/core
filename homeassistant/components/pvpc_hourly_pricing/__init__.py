@@ -1,17 +1,38 @@
 """The pvpc_hourly_pricing integration to collect Spain official electric prices."""
+import logging
+
+from aiopvpc import DEFAULT_POWER_KW, TARIFFS
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_NAME
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_registry import (
+    EntityRegistry,
+    async_get_registry,
+    async_migrate_entries,
+)
 
-from .const import ATTR_TARIFF, DEFAULT_NAME, DEFAULT_TARIFF, DOMAIN, PLATFORMS, TARIFFS
+from .const import (
+    ATTR_POWER,
+    ATTR_POWER_P3,
+    ATTR_TARIFF,
+    DEFAULT_NAME,
+    DOMAIN,
+    PLATFORMS,
+)
 
+_LOGGER = logging.getLogger(__name__)
+_DEFAULT_TARIFF = TARIFFS[0]
+VALID_POWER = vol.All(vol.Coerce(float), vol.Range(min=1.0, max=15.0))
+VALID_TARIFF = vol.In(TARIFFS)
 UI_CONFIG_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_NAME, default=DEFAULT_NAME): str,
-        vol.Required(ATTR_TARIFF, default=DEFAULT_TARIFF): vol.In(TARIFFS),
+        vol.Required(ATTR_TARIFF, default=_DEFAULT_TARIFF): VALID_TARIFF,
+        vol.Required(ATTR_POWER, default=DEFAULT_POWER_KW): VALID_POWER,
+        vol.Required(ATTR_POWER_P3, default=DEFAULT_POWER_KW): VALID_POWER,
     }
 )
 CONFIG_SCHEMA = vol.Schema(
@@ -52,3 +73,54 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry):
+    """Migrate old entry."""
+    if config_entry.version == 1:
+        _LOGGER.warning(
+            "Migrating PVPC sensor from old tariff '%s' to new '%s'. "
+            "Configure the integration to set your contracted power, "
+            "and select prices for Ceuta/Melilla, "
+            "if that is your case",
+            config_entry.data[ATTR_TARIFF],
+            _DEFAULT_TARIFF,
+        )
+        defaults = {
+            ATTR_TARIFF: _DEFAULT_TARIFF,
+            ATTR_POWER: DEFAULT_POWER_KW,
+            ATTR_POWER_P3: DEFAULT_POWER_KW,
+        }
+        config_entry.version = 2
+        data = {**config_entry.data, **defaults}
+        hass.config_entries.async_update_entry(
+            config_entry, unique_id=_DEFAULT_TARIFF, data=data, options=defaults
+        )
+
+        @callback
+        def update_unique_id(entry):
+            """Change unique id for sensor entity, pointing to new tariff."""
+            return {"new_unique_id": _DEFAULT_TARIFF}
+
+        try:
+            await async_migrate_entries(hass, config_entry.entry_id, update_unique_id)
+            _LOGGER.info("Migration to version %s successful", config_entry.version)
+        except ValueError:
+            # there were multiple sensors (with different old tariffs, up to 3),
+            # so we leave just one and remove the others
+            ent_reg: EntityRegistry = await async_get_registry(hass)
+            entity_filter = filter(
+                lambda x: x.config_entry_id == config_entry.entry_id,
+                ent_reg.entities.values(),
+            )
+            entry = next(entity_filter)
+            ent_reg.async_remove(entry.entity_id)
+            _LOGGER.error(
+                "Old PVPC Sensor %s is removed "
+                "(another one already exists, using the same tariff)",
+                entry.entity_id,
+            )
+            await hass.config_entries.async_remove(config_entry.entry_id)
+            return False
+
+    return True

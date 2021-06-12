@@ -4,13 +4,11 @@ from homeassistant import config_entries
 from . import CONF_NAME, UI_CONFIG_SCHEMA
 from .const import ATTR_TARIFF, DOMAIN
 
-_DOMAIN_NAME = DOMAIN
 
+class TariffSelectorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+    """Handle config flow for `pvpc_hourly_pricing`."""
 
-class TariffSelectorConfigFlow(config_entries.ConfigFlow, domain=_DOMAIN_NAME):
-    """Handle a config flow for `pvpc_hourly_pricing` to select the tariff."""
-
-    VERSION = 1
+    VERSION = 2
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""

@@ -15,7 +15,7 @@ from homeassistant.helpers.event import async_call_later, async_track_time_chang
 from homeassistant.helpers.restore_state import RestoreEntity
 import homeassistant.util.dt as dt_util
 
-from .const import ATTR_TARIFF
+from .const import ATTR_POWER, ATTR_POWER_P3, ATTR_TARIFF
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,6 +33,8 @@ async def async_setup_entry(
     name = config_entry.data[CONF_NAME]
     pvpc_data_handler = PVPCData(
         tariff=config_entry.data[ATTR_TARIFF],
+        power=config_entry.data[ATTR_POWER],
+        power_valley=config_entry.data[ATTR_POWER_P3],
         local_timezone=hass.config.time_zone,
         websession=async_get_clientsession(hass),
         logger=_LOGGER,
@@ -86,8 +88,9 @@ class ElecPriceSensor(RestoreEntity, SensorEntity):
             self._pvpc_data.tariff,
             mins_update,
         )
-        await self.async_update_prices(dt_util.utcnow())
-        self.update_current_price(dt_util.utcnow())
+        now = dt_util.utcnow()
+        await self.async_update_prices(now)
+        self.update_current_price(now)
 
     @property
     def unique_id(self) -> str | None:
