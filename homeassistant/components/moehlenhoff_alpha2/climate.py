@@ -69,7 +69,7 @@ class Alpha2Climate(ClimateEntity):
     @property
     def should_poll(self):
         """Return the polling state."""
-        return True
+        return False
 
     @property
     def name(self):
