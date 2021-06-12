@@ -38,6 +38,9 @@ import voluptuous as vol
 
 from homeassistant.components.fan import (
     PLATFORM_SCHEMA,
+    SPEED_HIGH,
+    SPEED_LOW,
+    SPEED_MEDIUM,
     SUPPORT_PRESET_MODE,
     SUPPORT_SET_SPEED,
     FanEntity,
@@ -1219,10 +1222,25 @@ class XiaomiAirHumidifierMiot(XiaomiAirHumidifier):
     REVERSE_MODE_MAPPING = {v: k for k, v in MODE_MAPPING.items()}
 
     # the speed attribute is deprecated, support will end with release 2021.7
-    # it is added here temporary to prevent the calling of the inherrited property
+    # it is added here for compatibility
     @property
     def speed(self):
-        """Return None for the current legacy speed."""
+        """Return current legacy speed."""
+        if (
+            AirhumidifierMiotOperationMode(self._state_attrs[ATTR_MODE])
+            == AirhumidifierMiotOperationMode.Low
+        ):
+            return SPEED_LOW
+        elif (
+            AirhumidifierMiotOperationMode(self._state_attrs[ATTR_MODE])
+            == AirhumidifierMiotOperationMode.Mid
+        ):
+            return SPEED_MEDIUM
+        elif (
+            AirhumidifierMiotOperationMode(self._state_attrs[ATTR_MODE])
+            == AirhumidifierMiotOperationMode.High
+        ):
+            return SPEED_HIGH
         return None
 
     @property
@@ -1261,10 +1279,22 @@ class XiaomiAirHumidifierMiot(XiaomiAirHumidifier):
         return None
 
     # the async_set_speed function is deprecated, support will end with release 2021.7
-    # it is added here temporary to prevent the calling of the inherrited function
+    # it is added here only for compatibility with legacy speeds
     async def async_set_speed(self, speed: str) -> None:
         """Override for set async_set_speed of the super() class."""
-        return None
+        mode = None
+        if speed == SPEED_LOW:
+            mode = AirhumidifierMiotOperationMode.Low
+        if speed == SPEED_MEDIUM:
+            mode = AirhumidifierMiotOperationMode.Mid
+        if speed == SPEED_HIGH:
+            mode = AirhumidifierMiotOperationMode.High
+        if mode:
+            await self._try_command(
+                "Setting operation mode of the miio device failed.",
+                self._device.set_mode,
+                AirhumidifierMiotOperationMode(mode),
+            )
 
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the percentage of the fan.
