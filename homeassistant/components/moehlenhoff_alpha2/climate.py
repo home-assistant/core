@@ -11,8 +11,9 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from . import DOMAIN
+from . import DOMAIN, SIGNAL_HEATAREA_DATA_UPDATED
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,13 +45,21 @@ class Alpha2Climate(ClimateEntity):
         """Initialize Alpha2 ClimateEntity."""
         self._base_update_handler = base_update_handler
         self._data = data
-        self._base_update_handler.add_heatarea_update_callback(
-            self.update_data, self._data["NR"]
+
+    async def async_added_to_hass(self):
+        """Register callbacks."""
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                SIGNAL_HEATAREA_DATA_UPDATED,
+                self._handle_heatarea_data_updated,
+            )
         )
 
-    def update_data(self, data):
-        """Update data."""
-        self._data = data
+    def _handle_heatarea_data_updated(self, data):
+        """Handle updated heatarea data."""
+        if data["NR"] == self._data["NR"]:
+            self._data = data
 
     @property
     def supported_features(self):

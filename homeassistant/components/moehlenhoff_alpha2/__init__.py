@@ -9,9 +9,10 @@ from moehlenhoff_alpha2 import Alpha2Base
 from homeassistant import exceptions
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 
-from .const import DOMAIN
+from .const import DOMAIN, SIGNAL_HEATAREA_DATA_UPDATED
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,7 +41,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     ) as err:
         raise exceptions.ConfigEntryNotReady from err
 
-    base_uh = Alpha2BaseUpdateHandler(base, 60)
+    base_uh = Alpha2BaseUpdateHandler(hass, base)
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {"connection": base_uh, "devices": set()}
 
@@ -70,29 +71,18 @@ async def update_listener(hass: HomeAssistant, entry: ConfigEntry):
 class Alpha2BaseUpdateHandler:
     """Keep the base instance in one place and centralize the update."""
 
-    def __init__(self, base, scan_interval):
+    def __init__(self, hass: HomeAssistant, base: Alpha2Base):
         """Initialize the base handle."""
+        self._hass = hass
         self.base = base
-        self.scan_interval = scan_interval
-        self._heatarea_update_callbacks = {}
         self._loop = asyncio.get_event_loop()
-
-    def add_heatarea_update_callback(self, callback, heatarea_nr):
-        """Add a callback which will be run when data of the given heatarea is updated."""
-        if heatarea_nr not in self._heatarea_update_callbacks:
-            self._heatarea_update_callbacks[heatarea_nr] = []
-        self._heatarea_update_callbacks[heatarea_nr].append(callback)
 
     async def async_update(self, now=None):
         """Pull the latest data from the Alpha2 base."""
         await self.base.update_data()
         for heatarea in self.base.heatareas:
             _LOGGER.debug("Heatarea: %s", heatarea)
-            for callback in self._heatarea_update_callbacks.get(heatarea["NR"], []):
-                try:
-                    callback(heatarea)
-                except Exception as cb_err:  # pylint: disable=broad-except
-                    _LOGGER.error("Failed to run callback '%s': %s", callback, cb_err)
+            async_dispatcher_send(self._hass, SIGNAL_HEATAREA_DATA_UPDATED, heatarea)
 
     def update(self):
         """Pull the latest data from the Alpha2 base (sync version)."""
