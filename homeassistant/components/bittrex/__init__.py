@@ -115,17 +115,15 @@ class BittrexDataUpdateCoordinator(DataUpdateCoordinator):
 
         for asset in asset_currencies:
             # Skip the ASSET_VALUE_BASE as we calculate it differently
-            if asset != ASSET_VALUE_BASE:
-                currency = f"{asset}-{ASSET_VALUE_BASE}"
+            if asset == ASSET_VALUE_BASE:
+                continue
 
-                # Flip currency format as it differs from other currencies
-                if currency == "EUR-USDT":
-                    currency = "USDT-EUR"
-
-                if currency not in asset_tickers_dict:
-                    asset_tickers_dict[currency] = {}
-                    ticker_details = tickers[currency]
-                    asset_tickers_dict[currency].update(ticker_details)
+            currency = f"{asset}-{ASSET_VALUE_BASE}"
+            # Flip currency format as it differs from other currencies
+            if currency == "EUR-USDT":
+                currency = "USDT-EUR"
+            if currency not in asset_tickers_dict:
+                asset_tickers_dict[currency] = tickers[currency]
 
         return asset_tickers_dict
 
@@ -140,10 +138,7 @@ class BittrexDataUpdateCoordinator(DataUpdateCoordinator):
                 balances[balance]["currencySymbol"] not in balances_dict
                 and balances[balance]["currencySymbol"] != "BTXCRD"
             ):
-                balances_dict[balances[balance]["currencySymbol"]] = {}
-                balances_dict[balances[balance]["currencySymbol"]].update(
-                    balances[balance]
-                )
+                balances_dict[balances[balance]["currencySymbol"]] = balances[balance]
                 base_asset_ticker_details = None
 
                 total_balance = float(balances[balance]["total"])
@@ -186,11 +181,19 @@ class BittrexDataUpdateCoordinator(DataUpdateCoordinator):
         try:
             bittrex = Bittrex(self._api_key, self._api_secret)
 
-            tickers = await bittrex.get_tickers()
-            markets = await bittrex.get_markets()
-            balances = await bittrex.get_balances()
-            open_orders = await bittrex.get_open_orders()
-            closed_orders = await bittrex.get_closed_orders()
+            (
+                tickers,
+                markets,
+                balances,
+                open_orders,
+                closed_orders,
+            ) = await asyncio.gather(
+                bittrex.get_tickers(),
+                bittrex.get_markets(),
+                bittrex.get_balances(),
+                bittrex.get_open_orders(),
+                bittrex.get_closed_orders(),
+            )
 
             result_dict = {
                 "tickers": self._prep_markets(self.markets, tickers, markets)
