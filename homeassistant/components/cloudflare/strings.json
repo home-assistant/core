@@ -7,7 +7,7 @@
         "description": "This integration requires an API Token created with Zone:Zone:Read and Zone:DNS:Edit permissions for all zones in your account.",
         "data": {
           "api_token": "[%key:common::config_flow::data::api_token%]"
-        },
+        }
       },
       "zone": {
         "title": "Choose the Zone to Update",
