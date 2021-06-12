@@ -3,15 +3,20 @@ from datetime import datetime, timedelta
 import logging
 from unittest.mock import patch
 
-from homeassistant.components.pvpc_hourly_pricing import ATTR_TARIFF, DOMAIN
+from homeassistant.components.pvpc_hourly_pricing import (
+    ATTR_POWER,
+    ATTR_POWER_P3,
+    ATTR_TARIFF,
+    DOMAIN,
+    TARIFFS,
+)
 from homeassistant.const import CONF_NAME
 from homeassistant.core import ATTR_NOW, EVENT_TIME_CHANGED
-from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from .conftest import check_valid_state
 
-from tests.common import date_util
+from tests.common import MockConfigEntry, assert_setup_component, date_util
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
@@ -32,14 +37,28 @@ async def test_sensor_availability(
 ):
     """Test sensor availability and handling of cloud access."""
     hass.config.time_zone = dt_util.get_time_zone("Europe/Madrid")
-    config = {DOMAIN: [{CONF_NAME: "test_dst", ATTR_TARIFF: "discrimination"}]}
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_NAME: "test_dst", ATTR_TARIFF: "discrimination"}
+    )
+    config_entry.add_to_hass(hass)
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     mock_data = {"return_time": datetime(2019, 10, 27, 20, 0, 0, tzinfo=date_util.UTC)}
 
     def mock_now():
         return mock_data["return_time"]
 
     with patch("homeassistant.util.dt.utcnow", new=mock_now):
-        assert await async_setup_component(hass, DOMAIN, config)
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        assert_setup_component(1, DOMAIN)
+
+        # check migration
+        current_entries = hass.config_entries.async_entries(DOMAIN)
+        assert len(current_entries) == 1
+        migrated_entry = current_entries[0]
+        assert migrated_entry.version == 2
+        assert migrated_entry.data[ATTR_POWER] == migrated_entry.data[ATTR_POWER_P3]
+        assert migrated_entry.data[ATTR_TARIFF] == TARIFFS[0]
+
         await hass.async_block_till_done()
         caplog.clear()
         assert pvpc_aioclient_mock.call_count == 2
