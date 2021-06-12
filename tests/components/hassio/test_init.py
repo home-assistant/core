@@ -206,6 +206,25 @@ async def test_setup_adds_admin_group_to_user(hass, aioclient_mock, hass_storage
     assert user.is_admin
 
 
+async def test_setup_migrate_user_name(hass, aioclient_mock, hass_storage):
+    """Test setup with migrating the user name."""
+    # Create user with old name
+    user = await hass.auth.async_create_system_user("Hass.io")
+    await hass.auth.async_create_refresh_token(user)
+
+    hass_storage[STORAGE_KEY] = {
+        "data": {"hassio_user": user.id},
+        "key": STORAGE_KEY,
+        "version": 1,
+    }
+
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        result = await async_setup_component(hass, "hassio", {"http": {}, "hassio": {}})
+        assert result
+
+    assert user.name == "Supervisor"
+
+
 async def test_setup_api_existing_hassio_user(hass, aioclient_mock, hass_storage):
     """Test setup with API push default data."""
     user = await hass.auth.async_create_system_user("Hass.io test")
