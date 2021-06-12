@@ -146,8 +146,8 @@ async def async_setup_entry(
 
     # Add zones as entities
     async_add_devices(
-        NoboZone(zones, hub, command_off_id, command_on_by_id.get(zones))
-        for zones in hub.zones
+        NoboZone(zone_id, hub, command_off_id, command_on_by_id.get(zone_id))
+        for zone_id in hub.zones
     )
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, hub.stop)
@@ -339,20 +339,19 @@ class NoboZone(ClimateEntity):
         """Set new zone override."""
         if self._nobo.zones[self._id][ATTR_OVERRIDE_ALLOWED] == "1":
             if preset_mode == PRESET_ECO:
-                mode = self._nobo.API.OVERRIDE_MODE_ECO
+                mode = nobo.API.OVERRIDE_MODE_ECO
             elif preset_mode == PRESET_AWAY:
-                mode = self._nobo.API.OVERRIDE_MODE_AWAY
+                mode = nobo.API.OVERRIDE_MODE_AWAY
             elif preset_mode == PRESET_COMFORT:
-                mode = self._nobo.API.OVERRIDE_MODE_COMFORT
+                mode = nobo.API.OVERRIDE_MODE_COMFORT
             else:  # PRESET_NONE
-                mode = self._nobo.API.OVERRIDE_MODE_NORMAL
+                mode = nobo.API.OVERRIDE_MODE_NORMAL
             await self._nobo.async_create_override(
                 mode,
-                self._nobo.API.OVERRIDE_TYPE_CONSTANT,
-                self._nobo.API.OVERRIDE_TARGET_ZONE,
+                nobo.API.OVERRIDE_TYPE_CONSTANT,
+                nobo.API.OVERRIDE_TARGET_ZONE,
                 self._id,
             )
-            # TODO: override to program if new operation mode == current week profile status
 
     async def async_set_temperature(self, **kwargs):
         """Set new target temperature."""
@@ -375,13 +374,13 @@ class NoboZone(ClimateEntity):
         self._current_mode = HVAC_MODE_AUTO
         self._current_operation = PRESET_NONE
 
-        if state == self._nobo.API.NAME_OFF:
+        if state == nobo.API.NAME_OFF:
             self._current_mode = HVAC_MODE_OFF
-        elif state == self._nobo.API.NAME_AWAY:
+        elif state == nobo.API.NAME_AWAY:
             self._current_operation = PRESET_AWAY
-        elif state == self._nobo.API.NAME_ECO:
+        elif state == nobo.API.NAME_ECO:
             self._current_operation = PRESET_ECO
-        elif state == self._nobo.API.NAME_COMFORT:
+        elif state == nobo.API.NAME_COMFORT:
             self._current_operation = PRESET_COMFORT
 
         if self._nobo.zones[self._id][ATTR_OVERRIDE_ALLOWED] == "1":
@@ -390,7 +389,7 @@ class NoboZone(ClimateEntity):
                     continue  # "normal" overrides
                 if (
                     self._nobo.overrides[override][ATTR_TARGET_TYPE]
-                    == self._nobo.API.OVERRIDE_TARGET_ZONE
+                    == nobo.API.OVERRIDE_TARGET_ZONE
                 ):
                     if self._nobo.overrides[override][ATTR_TARGET_ID] == self._id:
                         self._current_mode = HVAC_MODE_HEAT
