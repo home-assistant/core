@@ -181,12 +181,12 @@ async def test_reauth_flow(hass, cfupdate_flow):
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "reauth_confirm"
 
-    with _patch_async_setup_entry() as mock_setup_entry:     
+    with _patch_async_setup_entry() as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_API_TOKEN: "other_token"},
         )
-        await hass.async_block_till_done()    
+        await hass.async_block_till_done()
 
     assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "reauth_successful"
