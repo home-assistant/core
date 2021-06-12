@@ -44,7 +44,6 @@ ADDON_SETUP_TIMEOUT_ROUNDS = 4
 SERVER_VERSION_TIMEOUT = 10
 
 ON_SUPERVISOR_SCHEMA = vol.Schema({vol.Optional(CONF_USE_ADDON, default=True): bool})
-STEP_USER_DATA_SCHEMA = vol.Schema({vol.Required(CONF_URL, default=DEFAULT_URL): str})
 
 
 def get_manual_schema(user_input: dict[str, Any]) -> vol.Schema:
