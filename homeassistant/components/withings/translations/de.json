@@ -12,7 +12,7 @@
         "error": {
             "already_configured": "Konto wurde bereits konfiguriert"
         },
-        "flow_title": "Withings: {profile}",
+        "flow_title": "{profile}",
         "step": {
             "pick_implementation": {
                 "title": "W\u00e4hle die Authentifizierungsmethode"
@@ -21,7 +21,7 @@
                 "data": {
                     "profile": "Profilname"
                 },
-                "description": "Welches Profil hast du auf der Withings-Website ausgew\u00e4hlt? Es ist wichtig, dass die Profile \u00fcbereinstimmen, da sonst die Daten falsch beschriftet werden.",
+                "description": "Gib einen eindeutigen Profilnamen f\u00fcr diese Daten an. Normalerweise ist dies der Name des Profils, das du im vorherigen Schritt ausgew\u00e4hlt hast.",
                 "title": "Benutzerprofil"
             },
             "reauth": {

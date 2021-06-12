@@ -12,7 +12,11 @@ from miio.gateway.gateway import (
 )
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    STATE_CLASS_MEASUREMENT,
+    SensorEntity,
+)
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
@@ -66,17 +70,27 @@ class SensorType:
     unit: str = None
     icon: str = None
     device_class: str = None
+    state_class: str = None
 
 
 GATEWAY_SENSOR_TYPES = {
     "temperature": SensorType(
-        unit=TEMP_CELSIUS, icon=None, device_class=DEVICE_CLASS_TEMPERATURE
+        unit=TEMP_CELSIUS,
+        icon=None,
+        device_class=DEVICE_CLASS_TEMPERATURE,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     "humidity": SensorType(
-        unit=PERCENTAGE, icon=None, device_class=DEVICE_CLASS_HUMIDITY
+        unit=PERCENTAGE,
+        icon=None,
+        device_class=DEVICE_CLASS_HUMIDITY,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     "pressure": SensorType(
-        unit=PRESSURE_HPA, icon=None, device_class=DEVICE_CLASS_PRESSURE
+        unit=PRESSURE_HPA,
+        icon=None,
+        device_class=DEVICE_CLASS_PRESSURE,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     "load_power": SensorType(
         unit=POWER_WATT, icon=None, device_class=DEVICE_CLASS_POWER
@@ -246,6 +260,11 @@ class XiaomiGatewaySensor(XiaomiGatewayDevice, SensorEntity):
         return GATEWAY_SENSOR_TYPES[self._data_key].device_class
 
     @property
+    def state_class(self):
+        """Return the state class of this entity."""
+        return GATEWAY_SENSOR_TYPES[self._data_key].state_class
+
+    @property
     def state(self):
         """Return the state of the sensor."""
         return self._sub_device.status[self._data_key]
@@ -253,6 +272,9 @@ class XiaomiGatewaySensor(XiaomiGatewayDevice, SensorEntity):
 
 class XiaomiGatewayIlluminanceSensor(SensorEntity):
     """Representation of the gateway device's illuminance sensor."""
+
+    _attr_device_class = DEVICE_CLASS_ILLUMINANCE
+    _attr_unit_of_measurement = UNIT_LUMEN
 
     def __init__(self, gateway_device, gateway_name, gateway_device_id):
         """Initialize the entity."""
@@ -282,16 +304,6 @@ class XiaomiGatewayIlluminanceSensor(SensorEntity):
     def available(self):
         """Return true when state is known."""
         return self._available
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of this entity."""
-        return UNIT_LUMEN
-
-    @property
-    def device_class(self):
-        """Return the device class of this entity."""
-        return DEVICE_CLASS_ILLUMINANCE
 
     @property
     def state(self):

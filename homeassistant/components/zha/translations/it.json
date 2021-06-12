@@ -6,7 +6,7 @@
         "error": {
             "cannot_connect": "Impossibile connettersi"
         },
-        "flow_title": "ZHA: {name}",
+        "flow_title": "{name}",
         "step": {
             "pick_radio": {
                 "data": {
@@ -41,6 +41,8 @@
             "title": "Opzioni del pannello di controllo degli allarmi"
         },
         "zha_options": {
+            "consider_unavailable_battery": "Considera i dispositivi alimentati a batteria non disponibili dopo (secondi)",
+            "consider_unavailable_mains": "Considera i dispositivi alimentati dalla rete non disponibili dopo (secondi)",
             "default_light_transition": "Tempo di transizione della luce predefinito (secondi)",
             "enable_identify_on_join": "Abilita l'effetto di identificazione quando i dispositivi si uniscono alla rete",
             "title": "Opzioni globali"
@@ -82,7 +84,7 @@
             "device_offline": "Dispositivo offline",
             "device_rotated": "Dispositivo ruotato \" {subtype} \"",
             "device_shaken": "Dispositivo in vibrazione",
-            "device_slid": "Dispositivo scivolato \"{sottotipo}\"",
+            "device_slid": "Dispositivo scivolato \"{subtype}\"",
             "device_tilted": "Dispositivo inclinato",
             "remote_button_alt_double_press": "Pulsante \"{subtype}\" cliccato due volte (modalit\u00e0 Alternata)",
             "remote_button_alt_long_press": "Pulsante \"{subtype}\" premuto continuamente (modalit\u00e0 Alternata)",

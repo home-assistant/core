@@ -33,8 +33,10 @@
             "init": {
                 "data": {
                     "code_arm_required": "PIN-Code zum Entsperren vorgeben",
-                    "code_disarm_required": "PIN-Code zum Entsperren vorgeben"
-                }
+                    "code_disarm_required": "PIN-Code zum Entsperren vorgeben",
+                    "scan_interval": "Wie oft Risco abgefragt werden soll (in Sekunden)"
+                },
+                "title": "Optionen konfigurieren"
             },
             "risco_to_ha": {
                 "data": {

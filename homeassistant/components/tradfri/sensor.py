@@ -29,22 +29,15 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class TradfriSensor(TradfriBaseDevice, SensorEntity):
     """The platform class required by Home Assistant."""
 
+    _attr_device_class = DEVICE_CLASS_BATTERY
+    _attr_unit_of_measurement = PERCENTAGE
+
     def __init__(self, device, api, gateway_id):
         """Initialize the device."""
         super().__init__(device, api, gateway_id)
         self._unique_id = f"{gateway_id}-{device.id}"
 
     @property
-    def device_class(self):
-        """Return the devices' state attributes."""
-        return DEVICE_CLASS_BATTERY
-
-    @property
     def state(self):
         """Return the current state of the device."""
         return self._device.device_info.battery_level
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit_of_measurement of the device."""
-        return PERCENTAGE

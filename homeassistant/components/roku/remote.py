@@ -6,8 +6,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import RokuDataUpdateCoordinator, RokuEntity, roku_exception_handler
+from . import RokuDataUpdateCoordinator, roku_exception_handler
 from .const import DOMAIN
+from .entity import RokuEntity
 
 
 async def async_setup_entry(
@@ -28,16 +29,11 @@ class RokuRemote(RokuEntity, RemoteEntity):
         """Initialize the Roku device."""
         super().__init__(
             device_id=unique_id,
-            name=coordinator.data.info.name,
             coordinator=coordinator,
         )
 
-        self._unique_id = unique_id
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique ID for this entity."""
-        return self._unique_id
+        self._attr_name = coordinator.data.info.name
+        self._attr_unique_id = unique_id
 
     @property
     def is_on(self) -> bool:

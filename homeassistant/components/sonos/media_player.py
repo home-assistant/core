@@ -13,7 +13,8 @@ from pysonos.core import (
     PLAY_MODE_BY_MEANING,
     PLAY_MODES,
 )
-from pysonos.exceptions import SoCoException, SoCoUPnPException
+from pysonos.exceptions import SoCoUPnPException
+from pysonos.plugins.sharelink import ShareLinkPlugin
 import voluptuous as vol
 
 from homeassistant.components.media_player import MediaPlayerEntity
@@ -119,6 +120,7 @@ ATTR_ENABLED = "enabled"
 ATTR_INCLUDE_LINKED_ZONES = "include_linked_zones"
 ATTR_MASTER = "master"
 ATTR_WITH_GROUP = "with_group"
+ATTR_BUTTONS_ENABLED = "buttons_enabled"
 ATTR_NIGHT_SOUND = "night_sound"
 ATTR_SPEECH_ENHANCE = "speech_enhance"
 ATTR_QUEUE_POSITION = "queue_position"
@@ -229,6 +231,7 @@ async def async_setup_entry(
     platform.async_register_entity_service(  # type: ignore
         SERVICE_SET_OPTION,
         {
+            vol.Optional(ATTR_BUTTONS_ENABLED): cv.boolean,
             vol.Optional(ATTR_NIGHT_SOUND): cv.boolean,
             vol.Optional(ATTR_SPEECH_ENHANCE): cv.boolean,
             vol.Optional(ATTR_STATUS_LIGHT): cv.boolean,
@@ -290,20 +293,16 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             return STATE_PLAYING
         return STATE_IDLE
 
-    async def async_update(self, now: datetime.datetime | None = None) -> None:
-        """Retrieve latest state."""
-        await self.hass.async_add_executor_job(self._update, now)
+    async def async_update(self) -> None:
+        """Retrieve latest state by polling."""
+        await self.hass.async_add_executor_job(self._update)
 
-    def _update(self, now: datetime.datetime | None = None) -> None:
-        """Retrieve latest state."""
-        _LOGGER.debug("Polling speaker %s", self.speaker.zone_name)
-        try:
-            self.speaker.update_groups()
-            self.speaker.update_volume()
-            if self.speaker.is_coordinator:
-                self.speaker.update_media()
-        except SoCoException:
-            pass
+    def _update(self) -> None:
+        """Retrieve latest state by polling."""
+        self.speaker.update_groups()
+        self.speaker.update_volume()
+        if self.speaker.is_coordinator:
+            self.speaker.update_media()
 
     @property
     def volume_level(self) -> float | None:
@@ -520,10 +519,11 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             media_id = media_id[len(PLEX_URI_SCHEME) :]
             play_on_sonos(self.hass, media_type, media_id, self.name)  # type: ignore[no-untyped-call]
         elif media_type in (MEDIA_TYPE_MUSIC, MEDIA_TYPE_TRACK):
+            share_link = ShareLinkPlugin(soco)
             if kwargs.get(ATTR_MEDIA_ENQUEUE):
                 try:
-                    if soco.is_service_uri(media_id):
-                        soco.add_service_uri_to_queue(media_id)
+                    if share_link.is_share_link(media_id):
+                        share_link.add_share_link_to_queue(media_id)
                     else:
                         soco.add_uri_to_queue(media_id)
                 except SoCoUPnPException:
@@ -534,9 +534,9 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
                         media_id,
                     )
             else:
-                if soco.is_service_uri(media_id):
+                if share_link.is_share_link(media_id):
                     soco.clear_queue()
-                    soco.add_service_uri_to_queue(media_id)
+                    share_link.add_share_link_to_queue(media_id)
                     soco.play_from_queue(0)
                 else:
                     soco.play_uri(media_id)
@@ -586,8 +586,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         """Set the alarm clock on the player."""
         alarm = None
         for one_alarm in alarms.get_alarms(self.coordinator.soco):
-            # pylint: disable=protected-access
-            if one_alarm._alarm_id == str(alarm_id):
+            if one_alarm.alarm_id == str(alarm_id):
                 alarm = one_alarm
         if alarm is None:
             _LOGGER.warning("Did not find alarm with id %s", alarm_id)
@@ -605,11 +604,15 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
     @soco_error()
     def set_option(
         self,
+        buttons_enabled: bool | None = None,
         night_sound: bool | None = None,
         speech_enhance: bool | None = None,
         status_light: bool | None = None,
     ) -> None:
         """Modify playback options."""
+        if buttons_enabled is not None:
+            self.soco.buttons_enabled = buttons_enabled
+
         if night_sound is not None and self.speaker.night_mode is not None:
             self.soco.night_mode = night_sound
 

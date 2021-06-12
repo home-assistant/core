@@ -27,6 +27,7 @@ from homeassistant.const import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_OFF,
+    STATE_ON,
 )
 
 from .common import setup_platform
@@ -39,7 +40,7 @@ async def test_attributes(hass):
     await setup_platform(hass, HUMIDIFIER_DOMAIN)
 
     state = hass.states.get(DEVICE_ID)
-    assert state.state == STATE_OFF
+    assert state.state == STATE_ON
     assert state.attributes.get(ATTR_MIN_HUMIDITY) == DEFAULT_MIN_HUMIDITY
     assert state.attributes.get(ATTR_MAX_HUMIDITY) == DEFAULT_MAX_HUMIDITY
     assert state.attributes.get(ATTR_HUMIDITY) == 40

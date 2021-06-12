@@ -109,19 +109,19 @@ def _set_update_interval(hass: HomeAssistant, current_entry: ConfigEntry) -> tim
     return interval
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up ClimaCell API from a config entry."""
     hass.data.setdefault(DOMAIN, {})
 
     params = {}
     # If config entry options not set up, set them up
-    if not config_entry.options:
+    if not entry.options:
         params["options"] = {
             CONF_TIMESTEP: DEFAULT_TIMESTEP,
         }
     else:
         # Use valid timestep if it's invalid
-        timestep = config_entry.options[CONF_TIMESTEP]
+        timestep = entry.options[CONF_TIMESTEP]
         if timestep not in (1, 5, 15, 30):
             if timestep <= 2:
                 timestep = 1
@@ -131,38 +131,38 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
                 timestep = 15
             else:
                 timestep = 30
-            new_options = config_entry.options.copy()
+            new_options = entry.options.copy()
             new_options[CONF_TIMESTEP] = timestep
             params["options"] = new_options
     # Add API version if not found
-    if CONF_API_VERSION not in config_entry.data:
-        new_data = config_entry.data.copy()
+    if CONF_API_VERSION not in entry.data:
+        new_data = entry.data.copy()
         new_data[CONF_API_VERSION] = 3
         params["data"] = new_data
 
     if params:
-        hass.config_entries.async_update_entry(config_entry, **params)
+        hass.config_entries.async_update_entry(entry, **params)
 
-    api_class = ClimaCellV3 if config_entry.data[CONF_API_VERSION] == 3 else ClimaCellV4
+    api_class = ClimaCellV3 if entry.data[CONF_API_VERSION] == 3 else ClimaCellV4
     api = api_class(
-        config_entry.data[CONF_API_KEY],
-        config_entry.data.get(CONF_LATITUDE, hass.config.latitude),
-        config_entry.data.get(CONF_LONGITUDE, hass.config.longitude),
+        entry.data[CONF_API_KEY],
+        entry.data.get(CONF_LATITUDE, hass.config.latitude),
+        entry.data.get(CONF_LONGITUDE, hass.config.longitude),
         session=async_get_clientsession(hass),
     )
 
     coordinator = ClimaCellDataUpdateCoordinator(
         hass,
-        config_entry,
+        entry,
         api,
-        _set_update_interval(hass, config_entry),
+        _set_update_interval(hass, entry),
     )
 
     await coordinator.async_config_entry_first_refresh()
 
-    hass.data[DOMAIN][config_entry.entry_id] = coordinator
+    hass.data[DOMAIN][entry.entry_id] = coordinator
 
-    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 

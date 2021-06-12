@@ -9,10 +9,10 @@
         "step": {
             "config": {
                 "data": {
-                    "known_hosts": "Optionele lijst van bekende hosts indien mDNS discovery niet werkt."
+                    "known_hosts": "Bekende hosts"
                 },
-                "description": "Voer de Google Cast configuratie in.",
-                "title": "Google Cast"
+                "description": "Bekende hosts - Een door komma's gescheiden lijst van hostnamen of IP-adressen van cast-apparaten, te gebruiken als mDNS-ontdekking niet werkt.",
+                "title": "Google Cast configuratie"
             },
             "confirm": {
                 "description": "Wil je beginnen met instellen?"

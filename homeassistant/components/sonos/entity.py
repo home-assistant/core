@@ -1,9 +1,11 @@
 """Entity representing a Sonos player."""
 from __future__ import annotations
 
+import datetime
 import logging
 
 from pysonos.core import SoCo
+from pysonos.exceptions import SoCoException
 
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.dispatcher import (
@@ -15,8 +17,8 @@ from homeassistant.helpers.entity import DeviceInfo, Entity
 from .const import (
     DOMAIN,
     SONOS_ENTITY_CREATED,
-    SONOS_ENTITY_UPDATE,
     SONOS_HOUSEHOLD_UPDATED,
+    SONOS_POLL_UPDATE,
     SONOS_STATE_UPDATED,
 )
 from .speaker import SonosSpeaker
@@ -38,8 +40,8 @@ class SonosEntity(Entity):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{SONOS_ENTITY_UPDATE}-{self.soco.uid}",
-                self.async_update,  # pylint: disable=no-member
+                f"{SONOS_POLL_UPDATE}-{self.soco.uid}",
+                self.async_poll,
             )
         )
         self.async_on_remove(
@@ -59,6 +61,21 @@ class SonosEntity(Entity):
         async_dispatcher_send(
             self.hass, f"{SONOS_ENTITY_CREATED}-{self.soco.uid}", self.platform.domain
         )
+
+    async def async_poll(self, now: datetime.datetime) -> None:
+        """Poll the entity if subscriptions fail."""
+        if not self.speaker.subscriptions_failed:
+            _LOGGER.warning(
+                "%s cannot reach [%s], falling back to polling, functionality may be limited",
+                self.speaker.zone_name,
+                self.speaker.subscription_address,
+            )
+            self.speaker.subscriptions_failed = True
+            await self.speaker.async_unsubscribe()
+        try:
+            await self.async_update()  # pylint: disable=no-member
+        except (OSError, SoCoException) as ex:
+            _LOGGER.debug("Error connecting to %s: %s", self.entity_id, ex)
 
     @property
     def soco(self) -> SoCo:

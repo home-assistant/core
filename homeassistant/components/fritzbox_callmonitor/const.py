@@ -19,7 +19,7 @@ FRITZ_ATTR_NAME = "name"
 FRITZ_ATTR_SERIAL_NUMBER = "NewSerialNumber"
 FRITZ_SERVICE_DEVICE_INFO = "DeviceInfo"
 
-UNKOWN_NAME = "unknown"
+UNKNOWN_NAME = "unknown"
 SERIAL_NUMBER = "serial_number"
 REGEX_NUMBER = r"[^\d\+]"
 

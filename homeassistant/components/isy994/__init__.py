@@ -1,16 +1,24 @@
 """Support the ISY-994 controllers."""
 from __future__ import annotations
 
-from functools import partial
+import asyncio
 from urllib.parse import urlparse
 
-from pyisy import ISY
+from aiohttp import CookieJar
+import async_timeout
+from pyisy import ISY, ISYConnectionError, ISYInvalidAuthError, ISYResponseParseError
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    EVENT_HOMEASSISTANT_STOP,
+)
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv
+from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import aiohttp_client, config_validation as cv
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.typing import ConfigType
 
@@ -32,7 +40,7 @@ from .const import (
     ISY994_VARIABLES,
     MANUFACTURER,
     PLATFORMS,
-    SUPPORTED_PROGRAM_PLATFORMS,
+    PROGRAM_PLATFORMS,
     UNDO_UPDATE_LISTENER,
 )
 from .helpers import _categorize_nodes, _categorize_programs, _categorize_variables
@@ -115,7 +123,7 @@ async def async_setup_entry(
         hass_isy_data[ISY994_NODES][platform] = []
 
     hass_isy_data[ISY994_PROGRAMS] = {}
-    for platform in SUPPORTED_PROGRAM_PLATFORMS:
+    for platform in PROGRAM_PLATFORMS:
         hass_isy_data[ISY994_PROGRAMS][platform] = []
 
     hass_isy_data[ISY994_VARIABLES] = []
@@ -139,31 +147,51 @@ async def async_setup_entry(
     if host.scheme == "http":
         https = False
         port = host.port or 80
+        session = aiohttp_client.async_create_clientsession(
+            hass, verify_ssl=None, cookie_jar=CookieJar(unsafe=True)
+        )
     elif host.scheme == "https":
         https = True
         port = host.port or 443
+        session = aiohttp_client.async_get_clientsession(hass)
     else:
         _LOGGER.error("The isy994 host value in configuration is invalid")
         return False
 
     # Connect to ISY controller.
-    isy = await hass.async_add_executor_job(
-        partial(
-            ISY,
-            host.hostname,
-            port,
-            username=user,
-            password=password,
-            use_https=https,
-            tls_ver=tls_version,
-            webroot=host.path,
-        )
+    isy = ISY(
+        host.hostname,
+        port,
+        username=user,
+        password=password,
+        use_https=https,
+        tls_ver=tls_version,
+        webroot=host.path,
+        websession=session,
+        use_websocket=True,
     )
-    if not isy.connected:
-        return False
 
-    # Trigger a status update for all nodes, not done automatically in PyISY v2.x
-    await hass.async_add_executor_job(isy.nodes.update)
+    try:
+        async with async_timeout.timeout(60):
+            await isy.initialize()
+    except asyncio.TimeoutError as err:
+        raise ConfigEntryNotReady(
+            f"Timed out initializing the ISY; device may be busy, trying again later: {err}"
+        ) from err
+    except ISYInvalidAuthError as err:
+        _LOGGER.error(
+            "Invalid credentials for the ISY, please adjust settings and try again: %s",
+            err,
+        )
+        return False
+    except ISYConnectionError as err:
+        raise ConfigEntryNotReady(
+            f"Failed to connect to the ISY, please adjust settings and try again: {err}"
+        ) from err
+    except ISYResponseParseError as err:
+        raise ConfigEntryNotReady(
+            f"Invalid XML response from ISY; Ensure the ISY is running the latest firmware: {err}"
+        ) from err
 
     _categorize_nodes(hass_isy_data, isy.nodes, ignore_identifier, sensor_identifier)
     _categorize_programs(hass_isy_data, isy.programs)
@@ -181,13 +209,21 @@ async def async_setup_entry(
     def _start_auto_update() -> None:
         """Start isy auto update."""
         _LOGGER.debug("ISY Starting Event Stream and automatic updates")
-        isy.auto_update = True
+        isy.websocket.start()
+
+    def _stop_auto_update(event) -> None:
+        """Stop the isy auto update on Home Assistant Shutdown."""
+        _LOGGER.debug("ISY Stopping Event Stream and automatic updates")
+        isy.websocket.stop()
 
     await hass.async_add_executor_job(_start_auto_update)
 
     undo_listener = entry.add_update_listener(_async_update_listener)
 
     hass_isy_data[UNDO_UPDATE_LISTENER] = undo_listener
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _stop_auto_update)
+    )
 
     # Register Integration-wide Services:
     async_setup_services(hass)
@@ -248,9 +284,9 @@ async def async_unload_entry(
     isy = hass_isy_data[ISY994_ISY]
 
     def _stop_auto_update() -> None:
-        """Start isy auto update."""
+        """Stop the isy auto update."""
         _LOGGER.debug("ISY Stopping Event Stream and automatic updates")
-        isy.auto_update = False
+        isy.websocket.stop()
 
     await hass.async_add_executor_job(_stop_auto_update)
 

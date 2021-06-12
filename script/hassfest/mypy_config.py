@@ -28,10 +28,8 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.azure_devops.*",
     "homeassistant.components.azure_event_hub.*",
     "homeassistant.components.blueprint.*",
-    "homeassistant.components.bluetooth_tracker.*",
     "homeassistant.components.bmw_connected_drive.*",
     "homeassistant.components.bsblan.*",
-    "homeassistant.components.canary.*",
     "homeassistant.components.cast.*",
     "homeassistant.components.cert_expiry.*",
     "homeassistant.components.climacell.*",
@@ -44,7 +42,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.deconz.*",
     "homeassistant.components.demo.*",
     "homeassistant.components.denonavr.*",
-    "homeassistant.components.device_tracker.*",
     "homeassistant.components.devolo_home_control.*",
     "homeassistant.components.dhcp.*",
     "homeassistant.components.directv.*",
@@ -64,7 +61,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.fints.*",
     "homeassistant.components.fireservicerota.*",
     "homeassistant.components.firmata.*",
-    "homeassistant.components.fitbit.*",
     "homeassistant.components.flo.*",
     "homeassistant.components.fortios.*",
     "homeassistant.components.foscam.*",
@@ -94,7 +90,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.homekit_controller.*",
     "homeassistant.components.homematicip_cloud.*",
     "homeassistant.components.honeywell.*",
-    "homeassistant.components.hue.*",
     "homeassistant.components.huisbaasje.*",
     "homeassistant.components.humidifier.*",
     "homeassistant.components.iaqualink.*",
@@ -114,7 +109,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.kodi.*",
     "homeassistant.components.konnected.*",
     "homeassistant.components.kostal_plenticore.*",
-    "homeassistant.components.kraken.*",
     "homeassistant.components.kulersky.*",
     "homeassistant.components.lifx.*",
     "homeassistant.components.litejet.*",
@@ -133,7 +127,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.motion_blinds.*",
     "homeassistant.components.mqtt.*",
     "homeassistant.components.mullvad.*",
-    "homeassistant.components.mysensors.*",
     "homeassistant.components.neato.*",
     "homeassistant.components.ness_alarm.*",
     "homeassistant.components.nest.*",
@@ -180,7 +173,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.script.*",
     "homeassistant.components.search.*",
     "homeassistant.components.sense.*",
-    "homeassistant.components.sentry.*",
     "homeassistant.components.sesame.*",
     "homeassistant.components.sharkiq.*",
     "homeassistant.components.sma.*",
@@ -205,7 +197,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.system_log.*",
     "homeassistant.components.tado.*",
     "homeassistant.components.tasmota.*",
-    "homeassistant.components.tcp.*",
     "homeassistant.components.telegram_bot.*",
     "homeassistant.components.template.*",
     "homeassistant.components.tesla.*",
@@ -323,7 +314,7 @@ def generate_and_validate(config: Config) -> str:
                 config.add_error("mypy_config", f"Module '{module} doesn't exist")
 
     # Don't generate mypy.ini if there're errors found because it will likely crash.
-    if any(not err.fixable for err in config.errors):
+    if any(err.plugin == "mypy_config" for err in config.errors):
         return ""
 
     mypy_config = configparser.ConfigParser()
@@ -369,7 +360,7 @@ def validate(integrations: dict[str, Integration], config: Config) -> None:
     config_path = config.root / "mypy.ini"
     config.cache["mypy_config"] = content = generate_and_validate(config)
 
-    if config.errors:
+    if any(err.plugin == "mypy_config" for err in config.errors):
         return
 
     with open(str(config_path)) as fp:

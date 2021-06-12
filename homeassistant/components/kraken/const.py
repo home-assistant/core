@@ -1,5 +1,19 @@
 """Constants for the kraken integration."""
 
+from __future__ import annotations
+
+from typing import Dict, TypedDict
+
+KrakenResponse = Dict[str, Dict[str, float]]
+
+
+class SensorType(TypedDict):
+    """SensorType class."""
+
+    name: str
+    enabled_by_default: bool
+
+
 DEFAULT_SCAN_INTERVAL = 60
 DEFAULT_TRACKED_ASSET_PAIR = "XBT/USD"
 DISPATCH_CONFIG_UPDATED = "kraken_config_updated"
@@ -8,7 +22,7 @@ CONF_TRACKED_ASSET_PAIRS = "tracked_asset_pairs"
 
 DOMAIN = "kraken"
 
-SENSOR_TYPES = [
+SENSOR_TYPES: list[SensorType] = [
     {"name": "ask", "enabled_by_default": True},
     {"name": "ask_volume", "enabled_by_default": False},
     {"name": "bid", "enabled_by_default": True},
