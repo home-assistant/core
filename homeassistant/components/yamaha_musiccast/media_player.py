@@ -431,7 +431,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
     # Group and MusicCast System specific functions/properties
 
     @property
-    def is_network_server(self):
+    def is_network_server(self) -> bool:
         """Return only true if the current entity is a network server and not a main zone with an attached zone2."""
         return (
             self.coordinator.data.group_role == "server"
@@ -440,7 +440,16 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
         )
 
     @property
-    def is_server(self):
+    def other_zones(self):
+        """Return media player entities of the other zones of this device."""
+        return [
+            entity
+            for entity in self.coordinator.entities
+            if entity != self and isinstance(entity, MusicCastMediaPlayer)
+        ]
+
+    @property
+    def is_server(self) -> bool:
         """Return whether the media player is the server/host of the group.
 
         If the media player is not part of a group, False is returned.
@@ -450,14 +459,15 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
             and len(
                 [
                     entity
-                    for entity in self.coordinator.entities
+                    for entity in self.other_zones
                     if entity.source == ATTR_MAIN_SYNC
                 ]
             )
+            > 0
         )
 
     @property
-    def is_network_client(self):
+    def is_network_client(self) -> bool:
         """Return True if the current entity is a network client and not just a main syncing entity."""
         return (
             self.coordinator.data.group_role == "client"
@@ -466,26 +476,30 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
         )
 
     @property
-    def is_client(self):
+    def is_client(self) -> bool:
         """Return whether the media player is the client of a group.
 
         If the media player is not part of a group, False is returned.
         """
         return self.is_network_client or self.source == ATTR_MAIN_SYNC
 
-    def get_all_mc_entities(self):
+    def get_all_mc_entities(self) -> list[MusicCastMediaPlayer]:
         """Return all media player entities of the musiccast system."""
         entities = []
         for coordinator in self.hass.data[DOMAIN].values():
-            entities += coordinator.entities
+            entities += [
+                entity
+                for entity in coordinator.entities
+                if isinstance(entity, MusicCastMediaPlayer)
+            ]
         return entities
 
-    def get_all_server_entities(self):
+    def get_all_server_entities(self) -> list[MusicCastMediaPlayer]:
         """Return all media player entities in the musiccast system, which are in server mode."""
         entities = self.get_all_mc_entities()
         return [entity for entity in entities if entity.is_server]
 
-    def get_distribution_num(self):
+    def get_distribution_num(self) -> int:
         """Return the distribution_num (number of clients in the whole musiccast system)."""
         distribution_num = sum(
             [
@@ -495,7 +509,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
         )
         return distribution_num
 
-    def is_part_of_group(self, group_server):
+    def is_part_of_group(self, group_server) -> bool:
         """Return True if the given server is the server of self's group."""
         return group_server != self and (
             (
@@ -512,7 +526,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
         )
 
     @property
-    def musiccast_group(self):
+    def musiccast_group(self) -> list[MusicCastMediaPlayer]:
         """Return all media players of the current group, if the media player is server."""
         if self.is_client:
             # If we are a client we can still share group information, but we will take them from the server.
@@ -528,13 +542,13 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
         return [self] + clients
 
     @property
-    def musiccast_zone_entity(self):
+    def musiccast_zone_entity(self) -> MusicCastMediaPlayer:
         """Return the the entity of the zone, which is using MusicCast at the moment, if there is one, self else.
 
         It is possible that multiple zones use MusicCast as client at the same time. In this case the first one is
         returned.
         """
-        for entity in self.coordinator.entities:
+        for entity in self.other_zones:
             if entity.is_network_server or entity.is_network_client:
                 return entity
 
@@ -685,11 +699,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
         if not force and (
             self.source == ATTR_MAIN_SYNC
             or len(
-                [
-                    entity
-                    for entity in self.coordinator.entities
-                    if (entity.source == ATTR_MC_LINK and entity != self)
-                ]
+                [entity for entity in self.other_zones if entity.source == ATTR_MC_LINK]
             )
         ):
             # If we are only syncing to main or another zone is also using the musiccast module as client, don't
