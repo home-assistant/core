@@ -51,8 +51,6 @@ class HassIOIngress(HomeAssistantView):
 
     def _create_url(self, token: str, path: str) -> str:
         """Create URL to service."""
-        if path is None or path == "":
-            path = "control-panel"
         return f"http://{self._host}:{self._port}/{path}"
 
     async def _handle(
@@ -140,6 +138,7 @@ class HassIOIngress(HomeAssistantView):
     ) -> Union[web.Response, web.StreamResponse]:
         """Ingress route for request."""
         url = self._create_url(token, path)
+        _LOGGER.error("URL: " + url)
         data = await request.read()
         source_header = _init_header(request, token)
 
@@ -202,6 +201,7 @@ def _init_header(
         headers[name] = value
 
     # Inject token
+    # headers[X_HASSIO] = os.environ.get("HASSIO_TOKEN", "")
     headers[X_HASSIO] = token
 
     # Ingress information

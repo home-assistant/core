@@ -91,9 +91,14 @@ media_source:
 
 # ais ingress
 ais_auto_proxy:
+#
 ais_web_zigbee2mqtt:
   host: localhost
   port: 8099
+
+ais_web_zwave2mqtt:
+  host: localhost
+  port: 8091
 
 ais_files:
 
