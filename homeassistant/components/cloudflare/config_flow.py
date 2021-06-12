@@ -107,7 +107,7 @@ class CloudflareConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None and self.entry:
-            info, errors = await self._async_validate_or_error(user_input)
+            _, errors = await self._async_validate_or_error(user_input)
 
             if not errors:
                 self.hass.config_entries.async_update_entry(
@@ -125,6 +125,7 @@ class CloudflareConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="reauth_successful")
 
         return self.async_show_form(
+            step_id="reauth_confirm",
             data_schema=DATA_SCHEMA,
             errors=errors,
         )
