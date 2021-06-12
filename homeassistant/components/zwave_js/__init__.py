@@ -388,7 +388,7 @@ async def async_setup_entry(  # noqa: C901
 
         async def handle_ha_shutdown(event: Event) -> None:
             """Handle HA shutdown."""
-            await disconnect_client(hass, entry, client, listen_task, platform_task)
+            await disconnect_client(hass, entry)
 
         listen_task = asyncio.create_task(
             client_listen(hass, entry, client, driver_ready)
@@ -484,14 +484,12 @@ async def client_listen(
         hass.async_create_task(hass.config_entries.async_reload(entry.entry_id))
 
 
-async def disconnect_client(
-    hass: HomeAssistant,
-    entry: ConfigEntry,
-    client: ZwaveClient,
-    listen_task: asyncio.Task,
-    platform_task: asyncio.Task,
-) -> None:
+async def disconnect_client(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Disconnect client."""
+    data = hass.data[DOMAIN][entry.entry_id]
+    client: ZwaveClient = data[DATA_CLIENT]
+    listen_task: asyncio.Task = data[DATA_CLIENT_LISTEN_TASK]
+    platform_task: asyncio.Task = data[DATA_START_PLATFORM_TASK]
     listen_task.cancel()
     platform_task.cancel()
     platform_setup_tasks = (
@@ -509,7 +507,7 @@ async def disconnect_client(
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    info = hass.data[DOMAIN].pop(entry.entry_id)
+    info = hass.data[DOMAIN][entry.entry_id]
 
     for unsub in info[DATA_UNSUBSCRIBE]:
         unsub()
@@ -527,13 +525,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     unload_ok = all(await asyncio.gather(*tasks))
 
     if DATA_CLIENT_LISTEN_TASK in info:
-        await disconnect_client(
-            hass,
-            entry,
-            info[DATA_CLIENT],
-            info[DATA_CLIENT_LISTEN_TASK],
-            platform_task=info[DATA_START_PLATFORM_TASK],
-        )
+        await disconnect_client(hass, entry)
+
+    hass.data[DOMAIN].pop(entry.entry_id)
 
     if entry.data.get(CONF_USE_ADDON) and entry.disabled_by:
         addon_manager: AddonManager = get_addon_manager(hass)
