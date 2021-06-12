@@ -40,9 +40,22 @@ async def async_setup_entry(
         logger=_LOGGER,
         timeout=_DEFAULT_TIMEOUT,
     )
-    async_add_entities(
-        [ElecPriceSensor(name, config_entry.unique_id, pvpc_data_handler)], False
-    )
+    async_add_entities([ElecPriceSensor(name, config_entry, pvpc_data_handler)], False)
+
+
+async def options_update_listener(
+    hass: HomeAssistant, entry: config_entries.ConfigEntry
+):
+    """Handle options update."""
+    if any(
+        entry.data.get(attrib) != entry.options.get(attrib)
+        for attrib in (ATTR_TARIFF, ATTR_POWER, ATTR_POWER_P3)
+    ):
+        # update entry replacing data with new options
+        hass.config_entries.async_update_entry(
+            entry, data={**entry.data, **entry.options}
+        )
+        hass.async_create_task(hass.config_entries.async_reload(entry.entry_id))
 
 
 class ElecPriceSensor(RestoreEntity, SensorEntity):
@@ -52,10 +65,10 @@ class ElecPriceSensor(RestoreEntity, SensorEntity):
     icon = ICON
     should_poll = False
 
-    def __init__(self, name, unique_id, pvpc_data_handler):
+    def __init__(self, name, config_entry, pvpc_data_handler):
         """Initialize the sensor object."""
         self._name = name
-        self._unique_id = unique_id
+        self._config_entry = config_entry
         self._pvpc_data = pvpc_data_handler
         self._num_retries = 0
 
@@ -80,6 +93,11 @@ class ElecPriceSensor(RestoreEntity, SensorEntity):
                 self.hass, self.async_update_prices, second=[0], minute=mins_update
             )
         )
+        # Register callback for when config entry is updated.
+        self.async_on_remove(
+            self._config_entry.add_update_listener(options_update_listener)
+        )
+
         _LOGGER.debug(
             "Setup of price sensor %s (%s) with tariff '%s', "
             "updating prices each hour at %s min",
@@ -95,7 +113,7 @@ class ElecPriceSensor(RestoreEntity, SensorEntity):
     @property
     def unique_id(self) -> str | None:
         """Return a unique ID."""
-        return self._unique_id
+        return self._config_entry.unique_id
 
     @property
     def name(self):
