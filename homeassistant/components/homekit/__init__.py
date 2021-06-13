@@ -599,7 +599,8 @@ class HomeKit:
         await self.hass.async_add_executor_job(self.setup, async_zc_instance)
         self.aid_storage = AccessoryAidStorage(self.hass, self._entry_id)
         await self.aid_storage.async_initialize()
-        await self._async_create_accessories()
+        if not await self._async_create_accessories():
+            return
         self._async_register_bridge()
         _LOGGER.debug("Driver start for %s", self._name)
         await self.driver.async_start()
@@ -666,6 +667,13 @@ class HomeKit:
         """Create the accessories."""
         entity_states = await self.async_configure_accessories()
         if self._homekit_mode == HOMEKIT_MODE_ACCESSORY:
+            if not entity_states:
+                _LOGGER.error(
+                    "HomeKit %s cannot startup: entity not available: %s",
+                    self._name,
+                    self._filter.config,
+                )
+                return False
             state = entity_states[0]
             conf = self._config.pop(state.entity_id, {})
             acc = get_accessory(self.hass, self.driver, state, STANDALONE_AID, conf)
@@ -677,6 +685,7 @@ class HomeKit:
 
         # No need to load/persist as we do it in setup
         self.driver.accessory = acc
+        return True
 
     async def async_stop(self, *args):
         """Stop the accessory driver."""
