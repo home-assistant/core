@@ -199,15 +199,15 @@ set_occupancy_modes:
 
 set_ventilator_mode:
   name: Set ventilator mode
-  description: THE.
+  description: Set ventilator mode for Ecobee device.
   target:
     entity:
       integration: ecobee
       domain: climate
   fields:
     ventilator_mode:
-      name: THE
-      description: THE.
+      name: Ventilator mode
+      description: New value of ventilator mode.
       required: true
       example: "on"
       default: "off"
@@ -221,15 +221,15 @@ set_ventilator_mode:
 
 set_ventilator_min_on_time:
   name: Set ventilator minimum on time
-  description: THE.
+  description: Set the minimum ventilator on time.
   target:
     entity:
       integration: ecobee
       domain: climate
   fields:
     ventilator_min_on_time:
-      name: THE
-      description: THE.
+      name: Ventilator minimum on time
+      description: New value of ventilator minimum on time.
       required: true
       example: 20
       default: 0
@@ -241,15 +241,15 @@ set_ventilator_min_on_time:
 
 set_ventilator_min_on_time_home:
   name: Set ventilator minimum on time when home
-  description: THE.
+  description: Set the minimum ventilator on time when home.
   target:
     entity:
       integration: ecobee
       domain: climate
   fields:
     ventilator_min_on_time_home:
-      name: THE
-      description: THE.
+      name: Ventilator minimum on time when home
+      description: New value of ventilator minimum on time for home mode.
       required: true
       example: 20
       default: 0
@@ -261,15 +261,15 @@ set_ventilator_min_on_time_home:
 
 set_ventilator_min_on_time_away:
   name: Set ventilator minimum on time when away
-  description: THE.
+  description: Set the minimum ventilator on time when away.
   target:
     entity:
       integration: ecobee
       domain: climate
   fields:
     ventilator_min_on_time_away:
-      name: THE
-      description: THE.
+      name: Ventilator minimum on time when away
+      description: New value of ventilator minimum on time for away mode.
       required: true
       example: 20
       default: 0
@@ -281,7 +281,10 @@ set_ventilator_min_on_time_away:
 
 set_ventilator_timer:
   name: set ventilator timer
-  description: THE.
+  description: >-
+    Turn on or off ventilator timer.
+    If turned on, ventilator will start running and stop after 20 minutes.
+    If turned off, ventilator will stop.
   target:
     entity:
       integration: ecobee

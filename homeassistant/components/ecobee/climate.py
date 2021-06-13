@@ -792,33 +792,39 @@ class Thermostat(ClimateEntity):
         self.update_without_throttle = True
 
     def set_ventilator_mode(self, ventilator_mode):
-        """Do this."""
+        """Set ventilator mode (on, off, auto, minontime)."""
         self.data.ecobee.set_vent_mode(self.thermostat_index, ventilator_mode)
         self.update_without_throttle = True
 
     def set_ventilator_min_on_time(self, ventilator_min_on_time):
-        """Do this."""
+        """Set the minimum ventilator on time."""
         self.data.ecobee.set_ventilator_min_on_time(
             self.thermostat_index, ventilator_min_on_time
         )
         self.update_without_throttle = True
 
     def set_ventilator_min_on_time_home(self, ventilator_min_on_time_home):
-        """Do this."""
+        """Set the minimum ventilator on time for home mode."""
         self.data.ecobee.set_ventilator_min_on_time_home(
             self.thermostat_index, ventilator_min_on_time_home
         )
         self.update_without_throttle = True
 
     def set_ventilator_min_on_time_away(self, ventilator_min_on_time_away):
-        """Do this."""
+        """Set the minimum ventilator on time for away mode."""
         self.data.ecobee.set_ventilator_min_on_time_away(
             self.thermostat_index, ventilator_min_on_time_away
         )
         self.update_without_throttle = True
 
     def set_ventilator_timer(self, is_ventilator_timer_on):
-        """Do this."""
+        """Set the ventilator timer.
+
+        If set to true, the ventilator_off_date_time is set to now() + 20 minutes,
+        ventilator will start running and stop after 20 minutes.
+        If set to false, the ventilator_off_date_time is set to it's default value,
+        ventilator will stop.
+        """
         self.data.ecobee.set_ventilator_timer(
             self.thermostat_index, is_ventilator_timer_on
         )
