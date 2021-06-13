@@ -18,6 +18,7 @@ ATTR_DURATION = "duration"
 ATTR_FADE = "fade"
 ATTR_INTENSITY = "intensity"
 ATTR_LED_COUNT = "led_count"
+ATTR_LIVE = "live"
 ATTR_MAX_POWER = "max_power"
 ATTR_ON = "on"
 ATTR_PALETTE = "palette"
@@ -35,4 +36,5 @@ CURRENT_MA = "mA"
 
 # Services
 SERVICE_EFFECT = "effect"
+SERVICE_LIVE = "live"
 SERVICE_PRESET = "preset"

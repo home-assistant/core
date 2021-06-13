@@ -40,6 +40,24 @@ effect:
       selector:
         boolean:
 
+live:
+  name: Set live override mode
+  description: Set the live override mode for the WLED device.
+  target:
+    entity:
+      integration: wled
+      domain: light
+  fields:
+    live:
+      name: Live Override Mode
+      description: Mode for live override
+      selector:
+        select:
+          options:
+            - Off
+            - On
+            - Off until Reboot
+
 preset:
   name: Set preset
   description: Set a preset for the WLED device.

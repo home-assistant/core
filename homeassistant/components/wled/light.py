@@ -6,6 +6,8 @@ from typing import Any, Tuple, cast
 
 import voluptuous as vol
 
+from wled import Live
+
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_EFFECT,
@@ -30,6 +32,7 @@ from homeassistant.helpers.entity_registry import (
 from .const import (
     ATTR_COLOR_PRIMARY,
     ATTR_INTENSITY,
+    ATTR_LIVE,
     ATTR_ON,
     ATTR_PALETTE,
     ATTR_PLAYLIST,
@@ -41,6 +44,7 @@ from .const import (
     DEFAULT_KEEP_MASTER_LIGHT,
     DOMAIN,
     SERVICE_EFFECT,
+    SERVICE_LIVE,
     SERVICE_PRESET,
 )
 from .coordinator import WLEDDataUpdateCoordinator
@@ -74,6 +78,14 @@ async def async_setup_entry(
             ),
         },
         "async_effect",
+    )
+
+    platform.async_register_entity_service(
+        SERVICE_LIVE,
+        {
+            vol.Required(ATTR_LIVE): vol.Coerce(cv.string),
+        },
+        "async_live",
     )
 
     platform.async_register_entity_service(
@@ -164,6 +176,13 @@ class WLEDMasterLight(WLEDEntity, LightEntity):
     ) -> None:
         """Set the effect of a WLED light."""
         # Master light does not have an effect setting.
+
+    async def async_live(
+        self,
+        live: str | None = None,
+    ) -> None:
+        """Set the live override mode of a WLED light."""
+        # Master light does not have an live override setting.
 
     @wled_exception_handler
     async def async_preset(
@@ -382,6 +401,15 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
             data[ATTR_SPEED] = speed
 
         await self.coordinator.wled.segment(**data)  # type: ignore[arg-type]
+
+    @wled_exception_handler
+    async def async_live(
+        self,
+        live: str,
+    ) -> None:
+        """Set a WLED light to a specific live override mode."""
+
+        await self.coordinator.wled.live(Live[live.upper()])
 
     @wled_exception_handler
     async def async_preset(
