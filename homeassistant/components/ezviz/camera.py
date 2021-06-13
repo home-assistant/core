@@ -1,10 +1,9 @@
 """Support ezviz camera devices."""
 import asyncio
-from datetime import timedelta
 import logging
 
 from haffmpeg.tools import IMAGE_JPEG, ImageFrame
-from pyezviz.exceptions import HTTPError, PyEzvizError
+from pyezviz.exceptions import HTTPError, InvalidHost, PyEzvizError
 import voluptuous as vol
 
 from homeassistant.components.camera import PLATFORM_SCHEMA, SUPPORT_STREAM, Camera
@@ -54,8 +53,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-MIN_TIME_BETWEEN_SESSION_RENEW = timedelta(seconds=90)
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -292,16 +289,18 @@ class EzvizCamera(CoordinatorEntity, Camera, RestoreEntity):
         try:
             self.coordinator.ezviz_client.set_camera_defence(self._serial, 1)
 
-        except TypeError:
-            _LOGGER.debug("Communication problem")
+        except InvalidHost as err:
+            _LOGGER.error("Error enabling motion detection")
+            raise InvalidHost from err
 
     def disable_motion_detection(self):
         """Disable motion detection."""
         try:
             self.coordinator.ezviz_client.set_camera_defence(self._serial, 0)
 
-        except TypeError:
-            _LOGGER.debug("Communication problem")
+        except InvalidHost as err:
+            _LOGGER.error("Error disabling motion detection")
+            raise InvalidHost from err
 
     @property
     def unique_id(self):
