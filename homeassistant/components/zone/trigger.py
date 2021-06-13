@@ -21,7 +21,7 @@ DEFAULT_EVENT = EVENT_ENTER
 
 _EVENT_DESCRIPTION = {EVENT_ENTER: "entering", EVENT_LEAVE: "leaving"}
 
-TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
+TRIGGER_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_PLATFORM): "zone",
         vol.Required(CONF_ENTITY_ID): cv.entity_ids,

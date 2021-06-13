@@ -12,7 +12,7 @@ from tests.common import MockConfigEntry
 
 
 async def setup_mikrotik_entry(hass, **kwargs):
-    """Set up Mikrotik integration successfully."""
+    """Set up Mikrotik intergation successfully."""
     support_wireless = kwargs.get("support_wireless", True)
     dhcp_data = kwargs.get("dhcp_data", DHCP_DATA)
     wireless_data = kwargs.get("wireless_data", WIRELESS_DATA)

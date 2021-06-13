@@ -1,5 +1,6 @@
 """Support for AirVisual Node/Pro units."""
 from homeassistant.components.air_quality import AirQualityEntity
+from homeassistant.const import CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
 from homeassistant.core import callback
 
 from . import AirVisualEntity
@@ -33,7 +34,8 @@ class AirVisualNodeProSensor(AirVisualEntity, AirQualityEntity):
         """Initialize."""
         super().__init__(airvisual)
 
-        self._attr_icon = "mdi:chemical-weapon"
+        self._icon = "mdi:chemical-weapon"
+        self._unit = CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
 
     @property
     def air_quality_index(self):

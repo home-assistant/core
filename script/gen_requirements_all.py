@@ -83,10 +83,6 @@ enum34==1000000000.0.0
 typing==1000000000.0.0
 uuid==1000000000.0.0
 
-# httpcore 0.13.4 breaks several integrations
-# https://github.com/home-assistant/core/issues/51778
-httpcore==0.13.3
-
 """
 
 IGNORE_PRE_COMMIT_HOOK_ID = (

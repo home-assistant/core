@@ -275,6 +275,8 @@ async def async_setup(hass, config):
 
         except (
             SerialException,
+            ConnectionRefusedError,
+            TimeoutError,
             OSError,
             asyncio.TimeoutError,
         ) as exc:

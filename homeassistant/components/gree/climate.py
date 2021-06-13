@@ -4,10 +4,6 @@ from __future__ import annotations
 import logging
 
 from greeclimate.device import (
-    TEMP_MAX,
-    TEMP_MAX_F,
-    TEMP_MIN,
-    TEMP_MIN_F,
     FanSpeed,
     HorizontalSwing,
     Mode,
@@ -59,6 +55,8 @@ from .const import (
     DOMAIN,
     FAN_MEDIUM_HIGH,
     FAN_MEDIUM_LOW,
+    MAX_TEMP,
+    MIN_TEMP,
     TARGET_TEMPERATURE_STEP,
 )
 
@@ -186,12 +184,12 @@ class GreeClimateEntity(CoordinatorEntity, ClimateEntity):
     @property
     def min_temp(self) -> float:
         """Return the minimum temperature supported by the device."""
-        return TEMP_MIN if self.temperature_unit == TEMP_CELSIUS else TEMP_MIN_F
+        return MIN_TEMP
 
     @property
     def max_temp(self) -> float:
         """Return the maximum temperature supported by the device."""
-        return TEMP_MAX if self.temperature_unit == TEMP_CELSIUS else TEMP_MAX_F
+        return MAX_TEMP
 
     @property
     def target_temperature_step(self) -> float:

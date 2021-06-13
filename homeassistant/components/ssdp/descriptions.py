@@ -6,10 +6,9 @@ import logging
 
 import aiohttp
 from defusedxml import ElementTree
+from netdisco import util
 
 from homeassistant.core import HomeAssistant, callback
-
-from .util import etree_to_dict
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -65,5 +64,7 @@ class DescriptionManager:
             _LOGGER.debug("Error parsing %s: %s", xml_location, err)
             return None
 
-        root = etree_to_dict(tree).get("root") or {}
-        return root.get("device") or {}
+        parsed: dict[str, str] = (
+            util.etree_to_dict(tree).get("root", {}).get("device", {})
+        )
+        return parsed

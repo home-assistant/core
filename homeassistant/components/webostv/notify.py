@@ -55,6 +55,7 @@ class LgWebOSNotificationService(BaseNotificationService):
         except (
             OSError,
             ConnectionClosed,
+            ConnectionRefusedError,
             asyncio.TimeoutError,
             asyncio.CancelledError,
             PyLGTVCmdException,

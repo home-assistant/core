@@ -17,9 +17,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import utcnow
 
+from . import WLEDDataUpdateCoordinator, WLEDEntity
 from .const import ATTR_LED_COUNT, ATTR_MAX_POWER, CURRENT_MA, DOMAIN
-from .coordinator import WLEDDataUpdateCoordinator
-from .models import WLEDEntity
 
 
 async def async_setup_entry(
@@ -40,7 +39,7 @@ async def async_setup_entry(
         WLEDWifiSignalSensor(coordinator),
     ]
 
-    async_add_entities(sensors)
+    async_add_entities(sensors, True)
 
 
 class WLEDEstimatedCurrentSensor(WLEDEntity, SensorEntity):
@@ -122,10 +121,8 @@ class WLEDWifiSignalSensor(WLEDEntity, SensorEntity):
         self._attr_unique_id = f"{coordinator.data.info.mac_address}_wifi_signal"
 
     @property
-    def state(self) -> int | None:
+    def state(self) -> int:
         """Return the state of the sensor."""
-        if not self.coordinator.data.info.wifi:
-            return None
         return self.coordinator.data.info.wifi.signal
 
 
@@ -143,10 +140,8 @@ class WLEDWifiRSSISensor(WLEDEntity, SensorEntity):
         self._attr_unique_id = f"{coordinator.data.info.mac_address}_wifi_rssi"
 
     @property
-    def state(self) -> int | None:
+    def state(self) -> int:
         """Return the state of the sensor."""
-        if not self.coordinator.data.info.wifi:
-            return None
         return self.coordinator.data.info.wifi.rssi
 
 
@@ -163,10 +158,8 @@ class WLEDWifiChannelSensor(WLEDEntity, SensorEntity):
         self._attr_unique_id = f"{coordinator.data.info.mac_address}_wifi_channel"
 
     @property
-    def state(self) -> int | None:
+    def state(self) -> int:
         """Return the state of the sensor."""
-        if not self.coordinator.data.info.wifi:
-            return None
         return self.coordinator.data.info.wifi.channel
 
 
@@ -183,8 +176,6 @@ class WLEDWifiBSSIDSensor(WLEDEntity, SensorEntity):
         self._attr_unique_id = f"{coordinator.data.info.mac_address}_wifi_bssid"
 
     @property
-    def state(self) -> str | None:
+    def state(self) -> str:
         """Return the state of the sensor."""
-        if not self.coordinator.data.info.wifi:
-            return None
         return self.coordinator.data.info.wifi.bssid

@@ -98,7 +98,7 @@ class ResponseSwitch(SwitchEntity):
         return attr
 
     async def async_turn_on(self, **kwargs) -> None:
-        """Send Acknowledge response status."""
+        """Send Acknowlegde response status."""
         await self.async_set_response(True)
 
     async def async_turn_off(self, **kwargs) -> None:

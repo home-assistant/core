@@ -24,6 +24,7 @@ class KrakenConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for kraken."""
 
     VERSION = 1
+    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     @staticmethod
     @callback
@@ -37,7 +38,7 @@ class KrakenConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle the initial step."""
-        if self._async_current_entries():
+        if DOMAIN in self.hass.data:
             return self.async_abort(reason="already_configured")
         if user_input is not None:
             return self.async_create_entry(title=DOMAIN, data=user_input)

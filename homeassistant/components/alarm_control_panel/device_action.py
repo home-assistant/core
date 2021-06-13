@@ -8,6 +8,7 @@ import voluptuous as vol
 from homeassistant.const import (
     ATTR_CODE,
     ATTR_ENTITY_ID,
+    ATTR_SUPPORTED_FEATURES,
     CONF_CODE,
     CONF_DEVICE_ID,
     CONF_DOMAIN,
@@ -22,7 +23,6 @@ from homeassistant.const import (
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import entity_registry
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import get_supported_features
 from homeassistant.helpers.typing import ConfigType
 
 from . import ATTR_CODE_ARM_REQUIRED, DOMAIN
@@ -62,7 +62,13 @@ async def async_get_actions(
         if entry.domain != DOMAIN:
             continue
 
-        supported_features = get_supported_features(hass, entry.entity_id)
+        state = hass.states.get(entry.entity_id)
+
+        # We need a state or else we can't populate the HVAC and preset modes.
+        if state is None:
+            continue
+
+        supported_features = state.attributes[ATTR_SUPPORTED_FEATURES]
 
         base_action = {
             CONF_DEVICE_ID: device_id,

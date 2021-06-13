@@ -18,7 +18,7 @@ EVENT_ENTER = "enter"
 EVENT_LEAVE = "leave"
 DEFAULT_EVENT = EVENT_ENTER
 
-TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
+TRIGGER_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_PLATFORM): "geo_location",
         vol.Required(CONF_SOURCE): cv.string,

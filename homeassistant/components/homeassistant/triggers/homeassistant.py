@@ -3,14 +3,13 @@ import voluptuous as vol
 
 from homeassistant.const import CONF_EVENT, CONF_PLATFORM, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HassJob, callback
-from homeassistant.helpers import config_validation as cv
 
 # mypy: allow-untyped-defs
 
 EVENT_START = "start"
 EVENT_SHUTDOWN = "shutdown"
 
-TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
+TRIGGER_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_PLATFORM): "homeassistant",
         vol.Required(CONF_EVENT): vol.Any(EVENT_START, EVENT_SHUTDOWN),

@@ -31,7 +31,6 @@ from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_DOMAIN,
     CONF_ENTITY_ID,
-    CONF_ID,
     CONF_STATE,
     CONF_VALUE_TEMPLATE,
     CONF_WEEKDAY,
@@ -929,26 +928,6 @@ async def async_device_from_config(
             platform.async_condition_from_config(config, config_validation),  # type: ignore
         )
     )
-
-
-async def async_trigger_from_config(
-    hass: HomeAssistant, config: ConfigType, config_validation: bool = True
-) -> ConditionCheckerType:
-    """Test a trigger condition."""
-    if config_validation:
-        config = cv.TRIGGER_CONDITION_SCHEMA(config)
-    trigger_id = config[CONF_ID]
-
-    @trace_condition_function
-    def trigger_if(hass: HomeAssistant, variables: TemplateVarsType = None) -> bool:
-        """Validate trigger based if-condition."""
-        return (
-            variables is not None
-            and "trigger" in variables
-            and variables["trigger"].get("id") in trigger_id
-        )
-
-    return trigger_if
 
 
 async def async_validate_condition_config(

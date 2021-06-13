@@ -2499,7 +2499,7 @@ async def test_no_result_parsing(hass):
 
 
 async def test_is_static_still_ast_evals(hass):
-    """Test is_static still converts to native type."""
+    """Test is_static still convers to native type."""
     tpl = template.Template("[1, 2]", hass)
     assert tpl.is_static
     assert tpl.async_render() == [1, 2]

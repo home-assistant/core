@@ -47,7 +47,6 @@ from .const import (
     SONOS_ENTITY_CREATED,
     SONOS_GROUP_UPDATE,
     SONOS_POLL_UPDATE,
-    SONOS_REBOOTED,
     SONOS_SEEN,
     SONOS_STATE_PLAYING,
     SONOS_STATE_TRANSITIONING,
@@ -149,11 +148,11 @@ class SonosSpeaker:
         self.media = SonosMedia(soco)
 
         # Synchronization helpers
+        self.is_first_poll: bool = True
         self._is_ready: bool = False
         self._platforms_ready: set[str] = set()
 
         # Subscriptions and events
-        self.subscriptions_failed: bool = False
         self._subscriptions: list[SubscriptionBase] = []
         self._resubscription_lock: asyncio.Lock | None = None
         self._event_dispatchers: dict[str, Callable] = {}
@@ -165,7 +164,6 @@ class SonosSpeaker:
         # Dispatcher handles
         self._entity_creation_dispatcher: Callable | None = None
         self._group_dispatcher: Callable | None = None
-        self._reboot_dispatcher: Callable | None = None
         self._seen_dispatcher: Callable | None = None
 
         # Device information
@@ -175,7 +173,7 @@ class SonosSpeaker:
         self.zone_name = speaker_info["zone_name"]
 
         # Battery
-        self.battery_info: dict[str, Any] = {}
+        self.battery_info: dict[str, Any] | None = None
         self._last_battery_event: datetime.datetime | None = None
         self._battery_poll_timer: Callable | None = None
 
@@ -209,19 +207,22 @@ class SonosSpeaker:
         self._seen_dispatcher = dispatcher_connect(
             self.hass, f"{SONOS_SEEN}-{self.soco.uid}", self.async_seen
         )
-        self._reboot_dispatcher = dispatcher_connect(
-            self.hass, f"{SONOS_REBOOTED}-{self.soco.uid}", self.async_rebooted
-        )
 
-        if battery_info := fetch_battery_info_or_none(self.soco):
-            self.battery_info = battery_info
-            # Battery events can be infrequent, polling is still necessary
-            self._battery_poll_timer = self.hass.helpers.event.track_time_interval(
-                self.async_poll_battery, BATTERY_SCAN_INTERVAL
-            )
-            dispatcher_send(self.hass, SONOS_CREATE_BATTERY, self)
-        else:
+        if (battery_info := fetch_battery_info_or_none(self.soco)) is None:
             self._platforms_ready.update({BINARY_SENSOR_DOMAIN, SENSOR_DOMAIN})
+        else:
+            self.battery_info = battery_info
+            # Only create a polling task if successful, may fail on S1 firmware
+            if battery_info:
+                # Battery events can be infrequent, polling is still necessary
+                self._battery_poll_timer = self.hass.helpers.event.track_time_interval(
+                    self.async_poll_battery, BATTERY_SCAN_INTERVAL
+                )
+            else:
+                _LOGGER.warning(
+                    "S1 firmware detected, battery sensor may update infrequently"
+                )
+            dispatcher_send(self.hass, SONOS_CREATE_BATTERY, self)
 
         if new_alarms := self.update_alarms_for_speaker():
             dispatcher_send(self.hass, SONOS_CREATE_ALARM, self, new_alarms)
@@ -331,15 +332,6 @@ class SonosSpeaker:
         subscription.auto_renew_fail = self.async_renew_failed
         self._subscriptions.append(subscription)
 
-    async def async_unsubscribe(self) -> None:
-        """Cancel all subscriptions."""
-        _LOGGER.debug("Unsubscribing from events for %s", self.zone_name)
-        await asyncio.gather(
-            *[subscription.unsubscribe() for subscription in self._subscriptions],
-            return_exceptions=True,
-        )
-        self._subscriptions = []
-
     @callback
     def async_renew_failed(self, exception: Exception) -> None:
         """Handle a failed subscription renewal."""
@@ -394,7 +386,7 @@ class SonosSpeaker:
 
     async def async_update_device_properties(self, event: SonosEvent) -> None:
         """Update device properties from an event."""
-        if more_info := event.variables.get("more_info"):
+        if (more_info := event.variables.get("more_info")) is not None:
             battery_dict = dict(x.split(":") for x in more_info.split(","))
             await self.async_update_battery_info(battery_dict)
         self.async_write_entity_states()
@@ -454,7 +446,7 @@ class SonosSpeaker:
             SCAN_INTERVAL,
         )
 
-        if self._is_ready and not self.subscriptions_failed:
+        if self._is_ready:
             done = await self.async_subscribe()
             if not done:
                 assert self._seen_timer is not None
@@ -463,10 +455,10 @@ class SonosSpeaker:
 
         self.async_write_entity_states()
 
-    async def async_unseen(
-        self, now: datetime.datetime | None = None, will_reconnect: bool = False
-    ) -> None:
+    async def async_unseen(self, now: datetime.datetime | None = None) -> None:
         """Make this player unavailable when it was not seen recently."""
+        self.async_write_entity_states()
+
         if self._seen_timer:
             self._seen_timer()
             self._seen_timer = None
@@ -475,21 +467,11 @@ class SonosSpeaker:
             self._poll_timer()
             self._poll_timer = None
 
-        await self.async_unsubscribe()
+        for subscription in self._subscriptions:
+            await subscription.unsubscribe()
 
-        if not will_reconnect:
-            self.hass.data[DATA_SONOS].ssdp_known.remove(self.soco.uid)
-            self.async_write_entity_states()
-
-    async def async_rebooted(self, soco: SoCo) -> None:
-        """Handle a detected speaker reboot."""
-        _LOGGER.warning(
-            "%s rebooted or lost network connectivity, reconnecting with %s",
-            self.zone_name,
-            soco,
-        )
-        await self.async_unseen(will_reconnect=True)
-        await self.async_seen(soco)
+        self._subscriptions = []
+        self.hass.data[DATA_SONOS].ssdp_known.remove(self.soco.uid)
 
     #
     # Alarm management
@@ -533,19 +515,12 @@ class SonosSpeaker:
 
         if not self._battery_poll_timer:
             # Battery info received for an S1 speaker
-            new_battery = not self.battery_info
             self.battery_info.update(
                 {
                     "Level": int(battery_dict["BattPct"]),
                     "PowerSource": "EXTERNAL" if is_charging else "BATTERY",
                 }
             )
-            if new_battery:
-                _LOGGER.warning(
-                    "S1 firmware detected on %s, battery info may update infrequently",
-                    self.zone_name,
-                )
-                async_dispatcher_send(self.hass, SONOS_CREATE_BATTERY, self)
             return
 
         if is_charging == self.charging:

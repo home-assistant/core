@@ -12,9 +12,8 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_WIND_SPEED,
     WeatherEntity,
 )
-from homeassistant.const import PRESSURE_HPA, PRESSURE_INHG, TEMP_FAHRENHEIT
+from homeassistant.const import TEMP_FAHRENHEIT
 from homeassistant.util import dt as dt_util
-from homeassistant.util.pressure import convert as pressure_convert
 
 from .const import (
     _LOGGER,
@@ -114,11 +113,7 @@ class EcobeeWeather(WeatherEntity):
     def pressure(self):
         """Return the pressure."""
         try:
-            pressure = self.get_forecast(0, "pressure")
-            if not self.hass.config.units.is_metric:
-                pressure = pressure_convert(pressure, PRESSURE_HPA, PRESSURE_INHG)
-                return round(pressure, 2)
-            return round(pressure)
+            return int(self.get_forecast(0, "pressure"))
         except ValueError:
             return None
 

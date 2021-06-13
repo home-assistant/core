@@ -161,7 +161,7 @@ class KeyboardRemote:
         # devices are often added and then correct permissions set after
         try:
             dev = InputDevice(descriptor)
-        except OSError:
+        except (OSError, PermissionError):
             return (None, None)
 
         handler = None
@@ -318,7 +318,7 @@ class KeyboardRemote:
                         ):
                             repeat_tasks[event.code].cancel()
                             del repeat_tasks[event.code]
-            except (OSError, asyncio.CancelledError):
+            except (OSError, PermissionError, asyncio.CancelledError):
                 # cancel key repeat tasks
                 for task in repeat_tasks.values():
                     task.cancel()

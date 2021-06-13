@@ -44,7 +44,7 @@ def validate_above_below(value):
 
 
 TRIGGER_SCHEMA = vol.All(
-    cv.TRIGGER_BASE_SCHEMA.extend(
+    vol.Schema(
         {
             vol.Required(CONF_PLATFORM): "numeric_state",
             vol.Required(CONF_ENTITY_ID): cv.entity_ids,

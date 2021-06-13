@@ -2,7 +2,7 @@
 from datetime import date
 import logging
 
-from garminconnect_ha import (
+from garminconnect_aio import (
     Garmin,
     GarminConnectAuthenticationError,
     GarminConnectConnectionError,
@@ -13,6 +13,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util import Throttle
 
 from .const import DEFAULT_UPDATE_INTERVAL, DOMAIN
@@ -25,13 +26,14 @@ PLATFORMS = ["sensor"]
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Garmin Connect from a config entry."""
 
+    websession = async_get_clientsession(hass)
     username: str = entry.data[CONF_USERNAME]
     password: str = entry.data[CONF_PASSWORD]
 
-    api = Garmin(username, password)
+    garmin_client = Garmin(websession, username, password)
 
     try:
-        await hass.async_add_executor_job(api.login)
+        await garmin_client.login()
     except (
         GarminConnectAuthenticationError,
         GarminConnectTooManyRequestsError,
@@ -47,7 +49,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.exception("Unknown error occurred during Garmin Connect login request")
         return False
 
-    garmin_data = GarminConnectData(hass, api)
+    garmin_data = GarminConnectData(hass, garmin_client)
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = garmin_data
 
@@ -79,20 +81,14 @@ class GarminConnectData:
         today = date.today()
 
         try:
-            summary = await self.hass.async_add_executor_job(
-                self.client.get_user_summary, today.isoformat()
-            )
-            body = await self.hass.async_add_executor_job(
-                self.client.get_body_composition, today.isoformat()
-            )
+            summary = await self.client.get_user_summary(today.isoformat())
+            body = await self.client.get_body_composition(today.isoformat())
 
             self.data = {
                 **summary,
                 **body["totalAverage"],
             }
-            self.data["nextAlarm"] = await self.hass.async_add_executor_job(
-                self.client.get_device_alarms
-            )
+            self.data["nextAlarm"] = await self.client.get_device_alarms()
         except (
             GarminConnectAuthenticationError,
             GarminConnectTooManyRequestsError,

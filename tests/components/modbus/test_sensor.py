@@ -10,6 +10,7 @@ from homeassistant.components.modbus.const import (
     CONF_INPUT_TYPE,
     CONF_PRECISION,
     CONF_REGISTERS,
+    CONF_REVERSE_ORDER,
     CONF_SCALE,
     CONF_SWAP,
     CONF_SWAP_BYTE,
@@ -54,6 +55,7 @@ from tests.common import mock_restore_cache
             CONF_DATA_TYPE: "int",
             CONF_PRECISION: 0,
             CONF_SCALE: 1,
+            CONF_REVERSE_ORDER: False,
             CONF_OFFSET: 0,
             CONF_INPUT_TYPE: CALL_TYPE_REGISTER_HOLDING,
             CONF_DEVICE_CLASS: "battery",
@@ -65,6 +67,7 @@ from tests.common import mock_restore_cache
             CONF_DATA_TYPE: "int",
             CONF_PRECISION: 0,
             CONF_SCALE: 1,
+            CONF_REVERSE_ORDER: False,
             CONF_OFFSET: 0,
             CONF_INPUT_TYPE: CALL_TYPE_REGISTER_INPUT,
             CONF_DEVICE_CLASS: "battery",
@@ -327,6 +330,15 @@ async def test_config_wrong_struct_sensor(
             },
             [0x89AB, 0xCDEF],
             str(0x89ABCDEF),
+        ),
+        (
+            {
+                CONF_COUNT: 2,
+                CONF_DATA_TYPE: DATA_TYPE_UINT,
+                CONF_REVERSE_ORDER: True,
+            },
+            [0x89AB, 0xCDEF],
+            str(0xCDEF89AB),
         ),
         (
             {

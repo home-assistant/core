@@ -10,7 +10,7 @@ from homeassistant.helpers import config_validation as cv, template
 CONF_EVENT_TYPE = "event_type"
 CONF_EVENT_CONTEXT = "context"
 
-TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
+TRIGGER_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_PLATFORM): "event",
         vol.Required(CONF_EVENT_TYPE): vol.All(cv.ensure_list, [cv.template]),

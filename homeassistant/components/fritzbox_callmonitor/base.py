@@ -8,7 +8,7 @@ from fritzconnection.lib.fritzphonebook import FritzPhonebook
 
 from homeassistant.util import Throttle
 
-from .const import REGEX_NUMBER, UNKNOWN_NAME
+from .const import REGEX_NUMBER, UNKOWN_NAME
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -61,13 +61,13 @@ class FritzBoxPhonebook:
         """Return a name for a given phone number."""
         number = re.sub(REGEX_NUMBER, "", str(number))
         if self.number_dict is None:
-            return UNKNOWN_NAME
+            return UNKOWN_NAME
 
         if number in self.number_dict:
             return self.number_dict[number]
 
         if not self.prefixes:
-            return UNKNOWN_NAME
+            return UNKOWN_NAME
 
         for prefix in self.prefixes:
             with suppress(KeyError):

@@ -75,6 +75,7 @@ MOCK_FUEL_PRICES_RESPONSE = MockGetFuelPricesResponse(
 )
 async def test_setup(get_fuel_prices, hass):
     """Test the setup with custom settings."""
+    assert await async_setup_component(hass, DOMAIN, {})
     with assert_setup_component(1, sensor.DOMAIN):
         assert await async_setup_component(
             hass, sensor.DOMAIN, {"sensor": VALID_CONFIG}
@@ -97,6 +98,7 @@ def raise_fuel_check_error():
 )
 async def test_setup_error(get_fuel_prices, hass):
     """Test the setup with client throwing error."""
+    assert await async_setup_component(hass, DOMAIN, {})
     with assert_setup_component(1, sensor.DOMAIN):
         assert await async_setup_component(
             hass, sensor.DOMAIN, {"sensor": VALID_CONFIG}
@@ -114,6 +116,7 @@ async def test_setup_error(get_fuel_prices, hass):
 )
 async def test_setup_error_no_station(get_fuel_prices, hass):
     """Test the setup with specified station not existing."""
+    assert await async_setup_component(hass, DOMAIN, {})
     with assert_setup_component(2, sensor.DOMAIN):
         assert await async_setup_component(
             hass,

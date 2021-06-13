@@ -5,15 +5,15 @@ import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_SUPPORTED_FEATURES,
     CONF_DEVICE_ID,
     CONF_DOMAIN,
     CONF_ENTITY_ID,
     CONF_TYPE,
 )
-from homeassistant.core import Context, HomeAssistant, HomeAssistantError
+from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import entity_registry
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import get_capability, get_supported_features
 
 from . import DOMAIN, const
 
@@ -48,7 +48,11 @@ async def async_get_actions(hass: HomeAssistant, device_id: str) -> list[dict]:
         if entry.domain != DOMAIN:
             continue
 
-        supported_features = get_supported_features(hass, entry.entity_id)
+        state = hass.states.get(entry.entity_id)
+
+        # We need a state or else we can't populate the HVAC and preset modes.
+        if state is None:
+            continue
 
         base_action = {
             CONF_DEVICE_ID: device_id,
@@ -57,7 +61,7 @@ async def async_get_actions(hass: HomeAssistant, device_id: str) -> list[dict]:
         }
 
         actions.append({**base_action, CONF_TYPE: "set_hvac_mode"})
-        if supported_features & const.SUPPORT_PRESET_MODE:
+        if state.attributes[ATTR_SUPPORTED_FEATURES] & const.SUPPORT_PRESET_MODE:
             actions.append({**base_action, CONF_TYPE: "set_preset_mode"})
 
     return actions
@@ -83,26 +87,18 @@ async def async_call_action_from_config(
 
 async def async_get_action_capabilities(hass, config):
     """List action capabilities."""
+    state = hass.states.get(config[CONF_ENTITY_ID])
     action_type = config[CONF_TYPE]
 
     fields = {}
 
     if action_type == "set_hvac_mode":
-        try:
-            hvac_modes = (
-                get_capability(hass, config[ATTR_ENTITY_ID], const.ATTR_HVAC_MODES)
-                or []
-            )
-        except HomeAssistantError:
-            hvac_modes = []
+        hvac_modes = state.attributes[const.ATTR_HVAC_MODES] if state else []
         fields[vol.Required(const.ATTR_HVAC_MODE)] = vol.In(hvac_modes)
     elif action_type == "set_preset_mode":
-        try:
-            preset_modes = (
-                get_capability(hass, config[ATTR_ENTITY_ID], const.ATTR_PRESET_MODES)
-                or []
-            )
-        except HomeAssistantError:
+        if state:
+            preset_modes = state.attributes.get(const.ATTR_PRESET_MODES, [])
+        else:
             preset_modes = []
         fields[vol.Required(const.ATTR_PRESET_MODE)] = vol.In(preset_modes)
 

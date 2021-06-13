@@ -7,7 +7,7 @@
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen"
         },
-        "flow_title": "{name}",
+        "flow_title": "Canary: {name}",
         "step": {
             "user": {
                 "data": {

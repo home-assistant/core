@@ -1,4 +1,4 @@
-"""AVM FRITZ!Box connectivity sensor."""
+"""AVM FRITZ!Box connectivitiy sensor."""
 import logging
 
 from fritzconnection.core.exceptions import FritzConnectionException

@@ -12,7 +12,7 @@
             "invalid_auth": "Ung\u00fcltige Authentifizierung",
             "unknown": "Unerwarteter Fehler"
         },
-        "flow_title": "{name}",
+        "flow_title": "Kodi: {name}",
         "step": {
             "credentials": {
                 "data": {

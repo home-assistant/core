@@ -1,18 +1,14 @@
 """Platform to retrieve uptime for Home Assistant."""
-from __future__ import annotations
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import (
-    CONF_NAME,
-    CONF_UNIT_OF_MEASUREMENT,
+from homeassistant.components.sensor import (
     DEVICE_CLASS_TIMESTAMP,
+    PLATFORM_SCHEMA,
+    SensorEntity,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.const import CONF_NAME, CONF_UNIT_OF_MEASUREMENT
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
 DEFAULT_NAME = "Uptime"
@@ -30,14 +26,9 @@ PLATFORM_SCHEMA = vol.All(
 )
 
 
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the uptime sensor platform."""
-    name = config[CONF_NAME]
+    name = config.get(CONF_NAME)
 
     async_add_entities([UptimeSensor(name)], True)
 
@@ -45,23 +36,23 @@ async def async_setup_platform(
 class UptimeSensor(SensorEntity):
     """Representation of an uptime sensor."""
 
-    def __init__(self, name: str) -> None:
+    def __init__(self, name):
         """Initialize the uptime sensor."""
         self._name = name
         self._state = dt_util.now().isoformat()
 
     @property
-    def name(self) -> str:
+    def name(self):
         """Return the name of the sensor."""
         return self._name
 
     @property
-    def device_class(self) -> str:
+    def device_class(self):
         """Return device class."""
         return DEVICE_CLASS_TIMESTAMP
 
     @property
-    def state(self) -> str:
+    def state(self):
         """Return the state of the sensor."""
         return self._state
 

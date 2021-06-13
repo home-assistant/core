@@ -8,7 +8,7 @@
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen"
         },
-        "flow_title": "{name}",
+        "flow_title": "Roku: {name}",
         "step": {
             "discovery_confirm": {
                 "description": "M\u00f6chtest du {name} einrichten?",

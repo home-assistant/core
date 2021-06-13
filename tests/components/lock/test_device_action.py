@@ -2,7 +2,8 @@
 import pytest
 
 import homeassistant.components.automation as automation
-from homeassistant.components.lock import DOMAIN, SUPPORT_OPEN
+from homeassistant.components.lock import DOMAIN
+from homeassistant.const import CONF_PLATFORM
 from homeassistant.helpers import device_registry
 from homeassistant.setup import async_setup_component
 
@@ -29,25 +30,15 @@ def entity_reg(hass):
     return mock_registry(hass)
 
 
-@pytest.mark.parametrize(
-    "set_state,features_reg,features_state,expected_action_types",
-    [
-        (False, 0, 0, []),
-        (False, SUPPORT_OPEN, 0, ["open"]),
-        (True, 0, 0, []),
-        (True, 0, SUPPORT_OPEN, ["open"]),
-    ],
-)
-async def test_get_actions(
-    hass,
-    device_reg,
-    entity_reg,
-    set_state,
-    features_reg,
-    features_state,
-    expected_action_types,
+async def test_get_actions_support_open(
+    hass, device_reg, entity_reg, enable_custom_integrations
 ):
-    """Test we get the expected actions from a lock."""
+    """Test we get the expected actions from a lock which supports open."""
+    platform = getattr(hass.components, f"test.{DOMAIN}")
+    platform.init()
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
+
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
     device_entry = device_reg.async_get_or_create(
@@ -57,33 +48,69 @@ async def test_get_actions(
     entity_reg.async_get_or_create(
         DOMAIN,
         "test",
-        "5678",
+        platform.ENTITIES["support_open"].unique_id,
         device_id=device_entry.id,
-        supported_features=features_reg,
     )
-    if set_state:
-        hass.states.async_set(
-            f"{DOMAIN}.test_5678", "attributes", {"supported_features": features_state}
-        )
-    expected_actions = []
-    basic_action_types = ["lock", "unlock"]
-    expected_actions += [
+
+    expected_actions = [
         {
             "domain": DOMAIN,
-            "type": action,
+            "type": "lock",
             "device_id": device_entry.id,
-            "entity_id": f"{DOMAIN}.test_5678",
-        }
-        for action in basic_action_types
+            "entity_id": "lock.support_open_lock",
+        },
+        {
+            "domain": DOMAIN,
+            "type": "unlock",
+            "device_id": device_entry.id,
+            "entity_id": "lock.support_open_lock",
+        },
+        {
+            "domain": DOMAIN,
+            "type": "open",
+            "device_id": device_entry.id,
+            "entity_id": "lock.support_open_lock",
+        },
     ]
-    expected_actions += [
+    actions = await async_get_device_automations(hass, "action", device_entry.id)
+    assert_lists_same(actions, expected_actions)
+
+
+async def test_get_actions_not_support_open(
+    hass, device_reg, entity_reg, enable_custom_integrations
+):
+    """Test we get the expected actions from a lock which doesn't support open."""
+    platform = getattr(hass.components, f"test.{DOMAIN}")
+    platform.init()
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
+
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_reg.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entity_reg.async_get_or_create(
+        DOMAIN,
+        "test",
+        platform.ENTITIES["no_support_open"].unique_id,
+        device_id=device_entry.id,
+    )
+
+    expected_actions = [
         {
             "domain": DOMAIN,
-            "type": action,
+            "type": "lock",
             "device_id": device_entry.id,
-            "entity_id": f"{DOMAIN}.test_5678",
-        }
-        for action in expected_action_types
+            "entity_id": "lock.no_support_open_lock",
+        },
+        {
+            "domain": DOMAIN,
+            "type": "unlock",
+            "device_id": device_entry.id,
+            "entity_id": "lock.no_support_open_lock",
+        },
     ]
     actions = await async_get_device_automations(hass, "action", device_entry.id)
     assert_lists_same(actions, expected_actions)

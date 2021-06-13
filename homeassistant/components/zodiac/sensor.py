@@ -1,10 +1,5 @@
 """Support for tracking the zodiac sign."""
-from __future__ import annotations
-
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.dt import as_local, utcnow
 
 from .const import (
@@ -159,12 +154,7 @@ ZODIAC_ICONS = {
 }
 
 
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Zodiac sensor platform."""
     if discovery_info is None:
         return
@@ -175,42 +165,42 @@ async def async_setup_platform(
 class ZodiacSensor(SensorEntity):
     """Representation of a Zodiac sensor."""
 
-    def __init__(self) -> None:
+    def __init__(self):
         """Initialize the zodiac sensor."""
-        self._attrs: dict[str, str] = {}
-        self._state: str = ""
+        self._attrs = None
+        self._state = None
 
     @property
-    def unique_id(self) -> str:
+    def unique_id(self):
         """Return a unique ID."""
         return DOMAIN
 
     @property
-    def name(self) -> str:
+    def name(self):
         """Return the name of the entity."""
         return "Zodiac"
 
     @property
-    def device_class(self) -> str:
+    def device_class(self):
         """Return the device class of the entity."""
         return "zodiac__sign"
 
     @property
-    def state(self) -> str:
+    def state(self):
         """Return the state of the device."""
         return self._state
 
     @property
-    def icon(self) -> str | None:
-        """Icon to use in the frontend."""
+    def icon(self):
+        """Icon to use in the frontend, if any."""
         return ZODIAC_ICONS.get(self._state)
 
     @property
-    def extra_state_attributes(self) -> dict[str, str]:
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return self._attrs
 
-    async def async_update(self) -> None:
+    async def async_update(self):
         """Get the time and updates the state."""
         today = as_local(utcnow()).date()
 

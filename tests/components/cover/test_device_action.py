@@ -2,16 +2,7 @@
 import pytest
 
 import homeassistant.components.automation as automation
-from homeassistant.components.cover import (
-    DOMAIN,
-    SUPPORT_CLOSE,
-    SUPPORT_CLOSE_TILT,
-    SUPPORT_OPEN,
-    SUPPORT_OPEN_TILT,
-    SUPPORT_SET_POSITION,
-    SUPPORT_SET_TILT_POSITION,
-    SUPPORT_STOP,
-)
+from homeassistant.components.cover import DOMAIN
 from homeassistant.const import CONF_PLATFORM
 from homeassistant.helpers import device_registry
 from homeassistant.setup import async_setup_component
@@ -40,37 +31,12 @@ def entity_reg(hass):
     return mock_registry(hass)
 
 
-@pytest.mark.parametrize(
-    "set_state,features_reg,features_state,expected_action_types",
-    [
-        (False, 0, 0, []),
-        (False, SUPPORT_CLOSE_TILT, 0, ["close_tilt"]),
-        (False, SUPPORT_CLOSE, 0, ["close"]),
-        (False, SUPPORT_OPEN_TILT, 0, ["open_tilt"]),
-        (False, SUPPORT_OPEN, 0, ["open"]),
-        (False, SUPPORT_SET_POSITION, 0, ["set_position"]),
-        (False, SUPPORT_SET_TILT_POSITION, 0, ["set_tilt_position"]),
-        (False, SUPPORT_STOP, 0, ["stop"]),
-        (True, 0, 0, []),
-        (True, 0, SUPPORT_CLOSE_TILT, ["close_tilt"]),
-        (True, 0, SUPPORT_CLOSE, ["close"]),
-        (True, 0, SUPPORT_OPEN_TILT, ["open_tilt"]),
-        (True, 0, SUPPORT_OPEN, ["open"]),
-        (True, 0, SUPPORT_SET_POSITION, ["set_position"]),
-        (True, 0, SUPPORT_SET_TILT_POSITION, ["set_tilt_position"]),
-        (True, 0, SUPPORT_STOP, ["stop"]),
-    ],
-)
-async def test_get_actions(
-    hass,
-    device_reg,
-    entity_reg,
-    set_state,
-    features_reg,
-    features_state,
-    expected_action_types,
-):
+async def test_get_actions(hass, device_reg, entity_reg, enable_custom_integrations):
     """Test we get the expected actions from a cover."""
+    platform = getattr(hass.components, f"test.{DOMAIN}")
+    platform.init()
+    ent = platform.ENTITIES[0]
+
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
     device_entry = device_reg.async_get_or_create(
@@ -78,27 +44,168 @@ async def test_get_actions(
         connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
     entity_reg.async_get_or_create(
-        DOMAIN,
-        "test",
-        "5678",
-        device_id=device_entry.id,
-        supported_features=features_reg,
+        DOMAIN, "test", ent.unique_id, device_id=device_entry.id
     )
-    if set_state:
-        hass.states.async_set(
-            f"{DOMAIN}.test_5678", "attributes", {"supported_features": features_state}
-        )
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
     await hass.async_block_till_done()
 
-    expected_actions = []
-    expected_actions += [
+    expected_actions = [
         {
             "domain": DOMAIN,
-            "type": action,
+            "type": "open",
             "device_id": device_entry.id,
-            "entity_id": f"{DOMAIN}.test_5678",
-        }
-        for action in expected_action_types
+            "entity_id": ent.entity_id,
+        },
+        {
+            "domain": DOMAIN,
+            "type": "close",
+            "device_id": device_entry.id,
+            "entity_id": ent.entity_id,
+        },
+        {
+            "domain": DOMAIN,
+            "type": "stop",
+            "device_id": device_entry.id,
+            "entity_id": ent.entity_id,
+        },
+    ]
+    actions = await async_get_device_automations(hass, "action", device_entry.id)
+    assert_lists_same(actions, expected_actions)
+
+
+async def test_get_actions_tilt(
+    hass, device_reg, entity_reg, enable_custom_integrations
+):
+    """Test we get the expected actions from a cover."""
+    platform = getattr(hass.components, f"test.{DOMAIN}")
+    platform.init()
+    ent = platform.ENTITIES[3]
+
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_reg.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entity_reg.async_get_or_create(
+        DOMAIN, "test", ent.unique_id, device_id=device_entry.id
+    )
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
+
+    expected_actions = [
+        {
+            "domain": DOMAIN,
+            "type": "open",
+            "device_id": device_entry.id,
+            "entity_id": ent.entity_id,
+        },
+        {
+            "domain": DOMAIN,
+            "type": "close",
+            "device_id": device_entry.id,
+            "entity_id": ent.entity_id,
+        },
+        {
+            "domain": DOMAIN,
+            "type": "stop",
+            "device_id": device_entry.id,
+            "entity_id": ent.entity_id,
+        },
+        {
+            "domain": DOMAIN,
+            "type": "open_tilt",
+            "device_id": device_entry.id,
+            "entity_id": ent.entity_id,
+        },
+        {
+            "domain": DOMAIN,
+            "type": "close_tilt",
+            "device_id": device_entry.id,
+            "entity_id": ent.entity_id,
+        },
+    ]
+    actions = await async_get_device_automations(hass, "action", device_entry.id)
+    assert_lists_same(actions, expected_actions)
+
+
+async def test_get_actions_set_pos(
+    hass, device_reg, entity_reg, enable_custom_integrations
+):
+    """Test we get the expected actions from a cover."""
+    platform = getattr(hass.components, f"test.{DOMAIN}")
+    platform.init()
+    ent = platform.ENTITIES[1]
+
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_reg.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entity_reg.async_get_or_create(
+        DOMAIN, "test", ent.unique_id, device_id=device_entry.id
+    )
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
+
+    expected_actions = [
+        {
+            "domain": DOMAIN,
+            "type": "set_position",
+            "device_id": device_entry.id,
+            "entity_id": ent.entity_id,
+        },
+    ]
+    actions = await async_get_device_automations(hass, "action", device_entry.id)
+    assert_lists_same(actions, expected_actions)
+
+
+async def test_get_actions_set_tilt_pos(
+    hass, device_reg, entity_reg, enable_custom_integrations
+):
+    """Test we get the expected actions from a cover."""
+    platform = getattr(hass.components, f"test.{DOMAIN}")
+    platform.init()
+    ent = platform.ENTITIES[2]
+
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_reg.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entity_reg.async_get_or_create(
+        DOMAIN, "test", ent.unique_id, device_id=device_entry.id
+    )
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
+
+    expected_actions = [
+        {
+            "domain": DOMAIN,
+            "type": "open",
+            "device_id": device_entry.id,
+            "entity_id": ent.entity_id,
+        },
+        {
+            "domain": DOMAIN,
+            "type": "close",
+            "device_id": device_entry.id,
+            "entity_id": ent.entity_id,
+        },
+        {
+            "domain": DOMAIN,
+            "type": "stop",
+            "device_id": device_entry.id,
+            "entity_id": ent.entity_id,
+        },
+        {
+            "domain": DOMAIN,
+            "type": "set_tilt_position",
+            "device_id": device_entry.id,
+            "entity_id": ent.entity_id,
+        },
     ]
     actions = await async_get_device_automations(hass, "action", device_entry.id)
     assert_lists_same(actions, expected_actions)
