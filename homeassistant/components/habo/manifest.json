@@ -1,6 +1,7 @@
 {
   "domain": "habo",
   "name": "Mawaqit Prayer Times",
+  "version": "1.0.0",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/habo",
   "requirements": ["mawaqit-times-calculator==0.0.4"],
