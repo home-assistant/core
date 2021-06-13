@@ -11,7 +11,7 @@ from .const import ATTR_POWER, ATTR_POWER_P3, ATTR_TARIFF, DOMAIN
 class TariffSelectorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle config flow for `pvpc_hourly_pricing`."""
 
-    VERSION = 2
+    VERSION = 1
 
     @staticmethod
     @callback
