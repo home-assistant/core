@@ -263,7 +263,7 @@ ambiclimate==0.2.1
 amcrest==1.7.2
 
 # homeassistant.components.androidtv
-androidtv[async]==0.0.59
+androidtv[async]==0.0.60
 
 # homeassistant.components.anel_pwrctrl
 anel_pwrctrl-homeassistant==0.0.1.dev2
