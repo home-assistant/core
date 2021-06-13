@@ -6,11 +6,7 @@ from typing import Any
 from aiomodernforms import ModernFormsConnectionError, ModernFormsDevice
 import voluptuous as vol
 
-from homeassistant.config_entries import (
-    CONN_CLASS_LOCAL_POLL,
-    SOURCE_ZEROCONF,
-    ConfigFlow,
-)
+from homeassistant.config_entries import SOURCE_ZEROCONF, ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -23,7 +19,6 @@ class ModernFormsFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a ModernForms config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = CONN_CLASS_LOCAL_POLL
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None

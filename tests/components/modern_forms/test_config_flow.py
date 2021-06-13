@@ -39,15 +39,20 @@ async def test_full_user_flow_implementation(
     assert result.get("type") == RESULT_TYPE_FORM
     assert "flow_id" in result
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={CONF_HOST: "192.168.1.123"}
-    )
+    with patch(
+        "homeassistant.components.modern_forms.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_HOST: "192.168.1.123"}
+        )
 
-    assert result.get("title") == "ModernFormsFan"
-    assert "data" in result
-    assert result.get("type") == RESULT_TYPE_CREATE_ENTRY
-    assert result["data"][CONF_HOST] == "192.168.1.123"
-    assert result["data"][CONF_MAC] == "AA:BB:CC:DD:EE:FF"
+    assert result2.get("title") == "ModernFormsFan"
+    assert "data" in result2
+    assert result2.get("type") == RESULT_TYPE_CREATE_ENTRY
+    assert result2["data"][CONF_HOST] == "192.168.1.123"
+    assert result2["data"][CONF_MAC] == "AA:BB:CC:DD:EE:FF"
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_full_zeroconf_flow_implementation(
