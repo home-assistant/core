@@ -3,6 +3,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from wled import Live
+
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -34,6 +36,7 @@ async def async_setup_entry(
         WLEDNightlightSwitch(coordinator),
         WLEDSyncSendSwitch(coordinator),
         WLEDSyncReceiveSwitch(coordinator),
+        WLEDLiveOverrideSwitch(coordinator),
     ]
     async_add_entities(switches)
 
@@ -136,3 +139,30 @@ class WLEDSyncReceiveSwitch(WLEDEntity, SwitchEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the WLED sync receive switch."""
         await self.coordinator.wled.sync(receive=True)
+
+
+class WLEDLiveOverrideSwitch(WLEDEntity, SwitchEntity):
+    """Defines a WLED live override switch."""
+
+    _attr_icon = "mdi:star-outline"
+
+    def __init__(self, coordinator: WLEDDataUpdateCoordinator) -> None:
+        """Initialize WLED sync receive switch."""
+        super().__init__(coordinator=coordinator)
+        self._attr_name = f"{coordinator.data.info.name} Live Override"
+        self._attr_unique_id = f"{coordinator.data.info.mac_address}_live_override"
+
+    @property
+    def is_on(self) -> bool:
+        """Return the state of the switch."""
+        return self.coordinator.data.state.lor == 1
+
+    @wled_exception_handler
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn off the WLED live override switch."""
+        await self.coordinator.wled.live(live=Live.OFF)
+
+    @wled_exception_handler
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn on the WLED live override switch."""
+        await self.coordinator.wled.live(live=Live.ON)
