@@ -163,9 +163,6 @@ ATTR_DRY = "dry"
 # Air Humidifier CA4
 ATTR_ACTUAL_MOTOR_SPEED = "actual_speed"
 ATTR_FAHRENHEIT = "fahrenheit"
-ATTR_ERROR = "error"
-ATTR_WATER_LEVEL = "water_level"
-ATTR_CLEAN_MODE = "clean_mode"
 
 # Air Fresh
 ATTR_CO2 = "co2"
@@ -319,9 +316,6 @@ AVAILABLE_ATTRIBUTES_AIRHUMIDIFIER_CA4 = {
     ATTR_DRY: "dry",
     ATTR_FAHRENHEIT: "fahrenheit",
     ATTR_MOTOR_SPEED: "motor_speed",
-    ATTR_WATER_LEVEL: "water_level",
-    ATTR_CLEAN_MODE: "clean_mode",
-    ATTR_ERROR: "error",
 }
 
 AVAILABLE_ATTRIBUTES_AIRFRESH = {
@@ -1441,11 +1435,25 @@ class XiaomiAirHumidifier(XiaomiGenericDevice):
 class XiaomiAirHumidifierMiot(XiaomiAirHumidifier):
     """Representation of a Xiaomi Air Humidifier (MiOT protocol)."""
 
-    MODE_MAPPING = {
+    PRESET_MODE_MAPPING = {
         AirhumidifierMiotOperationMode.Auto: "Auto",
     }
 
-    REVERSE_MODE_MAPPING = {v: k for k, v in MODE_MAPPING.items()}
+    REVERSE_PRESET_MODE_MAPPING = {v: k for k, v in PRESET_MODE_MAPPING.items()}
+
+    SPEED_MAPPING = {
+        AirhumidifierMiotOperationMode.Low: SPEED_LOW,
+        AirhumidifierMiotOperationMode.Mid: SPEED_MEDIUM,
+        AirhumidifierMiotOperationMode.High: SPEED_HIGH,
+    }
+
+    REVERSE_SPEED_MAPPING = {v: k for k, v in SPEED_MAPPING.items()}
+
+    SPEEDS = [
+        AirhumidifierMiotOperationMode.Low,
+        AirhumidifierMiotOperationMode.Mid,
+        AirhumidifierMiotOperationMode.High,
+    ]
 
     # the speed attribute is deprecated, support will end with release 2021.7
     # it is added here for compatibility
@@ -1453,33 +1461,26 @@ class XiaomiAirHumidifierMiot(XiaomiAirHumidifier):
     def speed(self):
         """Return current legacy speed."""
         if (
-            AirhumidifierMiotOperationMode(self._state_attrs[ATTR_MODE])
-            == AirhumidifierMiotOperationMode.Low
+            self.state
+            and AirhumidifierMiotOperationMode(self._state_attrs[ATTR_MODE])
+            in self.SPEED_MAPPING
         ):
-            return SPEED_LOW
-        elif (
-            AirhumidifierMiotOperationMode(self._state_attrs[ATTR_MODE])
-            == AirhumidifierMiotOperationMode.Mid
-        ):
-            return SPEED_MEDIUM
-        elif (
-            AirhumidifierMiotOperationMode(self._state_attrs[ATTR_MODE])
-            == AirhumidifierMiotOperationMode.High
-        ):
-            return SPEED_HIGH
-        else:
-            return None
+            return self.SPEED_MAPPING[
+                AirhumidifierMiotOperationMode(self._state_attrs[ATTR_MODE])
+            ]
+        return None
 
     @property
     def percentage(self):
         """Return the current percentage based speed."""
-        if self._state:
-            if AirhumidifierMiotOperationMode(self._state_attrs[ATTR_MODE]) in [
-                AirhumidifierMiotOperationMode.Low,
-                AirhumidifierMiotOperationMode.Mid,
-                AirhumidifierMiotOperationMode.High,
-            ]:
-                return ranged_value_to_percentage((1, 3), self._state_attrs[ATTR_MODE])
+        if (
+            self.state
+            and AirhumidifierMiotOperationMode(self._state_attrs[ATTR_MODE])
+            in self.SPEEDS
+        ):
+            return ranged_value_to_percentage(
+                (1, self.speed_count), self._state_attrs[ATTR_MODE]
+            )
 
         return None
 
@@ -1487,7 +1488,7 @@ class XiaomiAirHumidifierMiot(XiaomiAirHumidifier):
     def preset_mode(self):
         """Return the current preset_mode."""
         if self._state:
-            mode = self.MODE_MAPPING.get(
+            mode = self.PRESET_MODE_MAPPING.get(
                 AirhumidifierMiotOperationMode(self._state_attrs[ATTR_MODE])
             )
             if mode in self._preset_modes:
@@ -1509,18 +1510,11 @@ class XiaomiAirHumidifierMiot(XiaomiAirHumidifier):
     # it is added here only for compatibility with legacy speeds
     async def async_set_speed(self, speed: str) -> None:
         """Override for set async_set_speed of the super() class."""
-        mode = None
-        if speed == SPEED_LOW:
-            mode = AirhumidifierMiotOperationMode.Low
-        if speed == SPEED_MEDIUM:
-            mode = AirhumidifierMiotOperationMode.Mid
-        if speed == SPEED_HIGH:
-            mode = AirhumidifierMiotOperationMode.High
-        if mode:
+        if speed and speed in self.REVERSE_SPEED_MAPPING:
             await self._try_command(
                 "Setting operation mode of the miio device failed.",
                 self._device.set_mode,
-                AirhumidifierMiotOperationMode(mode),
+                self.REVERSE_SPEED_MAPPING[speed],
             )
 
     async def async_set_percentage(self, percentage: int) -> None:
@@ -1547,7 +1541,7 @@ class XiaomiAirHumidifierMiot(XiaomiAirHumidifier):
         await self._try_command(
             "Setting operation mode of the miio device failed.",
             self._device.set_mode,
-            self.REVERSE_MODE_MAPPING[preset_mode],
+            self.REVERSE_PRESET_MODE_MAPPING[preset_mode],
         )
 
     async def async_set_led_brightness(self, brightness: int = 2):
