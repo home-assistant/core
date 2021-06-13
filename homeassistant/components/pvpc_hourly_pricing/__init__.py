@@ -67,14 +67,6 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up pvpc hourly pricing from a config entry."""
     if len(entry.data) == 2:
-        _LOGGER.warning(
-            "Migrating PVPC sensor from old tariff '%s' to new '%s'. "
-            "Configure the integration to set your contracted power, "
-            "and select prices for Ceuta/Melilla, "
-            "if that is your case",
-            entry.data[ATTR_TARIFF],
-            _DEFAULT_TARIFF,
-        )
         defaults = {
             ATTR_TARIFF: _DEFAULT_TARIFF,
             ATTR_POWER: DEFAULT_POWER_KW,
@@ -92,6 +84,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         try:
             await async_migrate_entries(hass, entry.entry_id, update_unique_id)
+            _LOGGER.warning(
+                "Migrating PVPC sensor from old tariff '%s' to new '%s'. "
+                "Configure the integration to set your contracted power, "
+                "and select prices for Ceuta/Melilla, "
+                "if that is your case",
+                entry.data[ATTR_TARIFF],
+                _DEFAULT_TARIFF,
+            )
         except ValueError:
             # there were multiple sensors (with different old tariffs, up to 3),
             # so we leave just one and remove the others
