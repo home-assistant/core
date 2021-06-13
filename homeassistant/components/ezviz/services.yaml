@@ -86,14 +86,11 @@ set_alarm_detection_sensibility:
 sound_alarm:
   name: Sound Alarm
   description: Sounds the alarm on your camera.
+  target:
+    entity:
+      integration: ezviz
+      domain: camera
   fields:
-    entity_id:
-      description: Name(s) of Ezviz Camera entities.
-      required: true
-      selector:
-        entity:
-          integration: ezviz
-          domain: camera
     enable:
       description: Enter 1 or 2 (1=disable, 2=enable).
       required: true
