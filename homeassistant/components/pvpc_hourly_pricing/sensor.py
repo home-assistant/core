@@ -3,14 +3,16 @@ from __future__ import annotations
 
 import logging
 from random import randint
+from typing import Any
 
 from aiopvpc import PVPCData
 
-from homeassistant import config_entries
 from homeassistant.components.sensor import SensorEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, CURRENCY_EURO, ENERGY_KILO_WATT_HOUR
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later, async_track_time_change
 from homeassistant.helpers.restore_state import RestoreEntity
 import homeassistant.util.dt as dt_util
@@ -27,8 +29,10 @@ _DEFAULT_TIMEOUT = 10
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, config_entry: config_entries.ConfigEntry, async_add_entities
-):
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the electricity price sensor from config_entry."""
     name = config_entry.data[CONF_NAME]
     pvpc_data_handler = PVPCData(
@@ -37,25 +41,11 @@ async def async_setup_entry(
         power_valley=config_entry.data[ATTR_POWER_P3],
         local_timezone=hass.config.time_zone,
         websession=async_get_clientsession(hass),
-        logger=_LOGGER,
         timeout=_DEFAULT_TIMEOUT,
     )
-    async_add_entities([ElecPriceSensor(name, config_entry, pvpc_data_handler)], False)
-
-
-async def options_update_listener(
-    hass: HomeAssistant, entry: config_entries.ConfigEntry
-):
-    """Handle options update."""
-    if any(
-        entry.data.get(attrib) != entry.options.get(attrib)
-        for attrib in (ATTR_TARIFF, ATTR_POWER, ATTR_POWER_P3)
-    ):
-        # update entry replacing data with new options
-        hass.config_entries.async_update_entry(
-            entry, data={**entry.data, **entry.options}
-        )
-        hass.async_create_task(hass.config_entries.async_reload(entry.entry_id))
+    async_add_entities(
+        [ElecPriceSensor(name, config_entry.unique_id, pvpc_data_handler)], False
+    )
 
 
 class ElecPriceSensor(RestoreEntity, SensorEntity):
@@ -65,14 +55,14 @@ class ElecPriceSensor(RestoreEntity, SensorEntity):
     icon = ICON
     should_poll = False
 
-    def __init__(self, name, config_entry, pvpc_data_handler):
+    def __init__(self, name, unique_id, pvpc_data_handler):
         """Initialize the sensor object."""
         self._name = name
-        self._config_entry = config_entry
+        self._unique_id = unique_id
         self._pvpc_data = pvpc_data_handler
         self._num_retries = 0
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()
         state = await self.async_get_last_state()
@@ -93,11 +83,6 @@ class ElecPriceSensor(RestoreEntity, SensorEntity):
                 self.hass, self.async_update_prices, second=[0], minute=mins_update
             )
         )
-        # Register callback for when config entry is updated.
-        self.async_on_remove(
-            self._config_entry.add_update_listener(options_update_listener)
-        )
-
         _LOGGER.debug(
             "Setup of price sensor %s (%s) with tariff '%s', "
             "updating prices each hour at %s min",
@@ -113,15 +98,15 @@ class ElecPriceSensor(RestoreEntity, SensorEntity):
     @property
     def unique_id(self) -> str | None:
         """Return a unique ID."""
-        return self._config_entry.unique_id
+        return self._unique_id
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the sensor."""
         return self._name
 
     @property
-    def state(self):
+    def state(self) -> float:
         """Return the state of the sensor."""
         return self._pvpc_data.state
 
@@ -131,7 +116,7 @@ class ElecPriceSensor(RestoreEntity, SensorEntity):
         return self._pvpc_data.state_available
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return self._pvpc_data.attributes
 
