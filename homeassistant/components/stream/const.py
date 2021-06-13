@@ -18,8 +18,9 @@ FORMAT_CONTENT_TYPE = {HLS_PROVIDER: "application/vnd.apple.mpegurl"}
 OUTPUT_IDLE_TIMEOUT = 300  # Idle timeout due to inactivity
 
 NUM_PLAYLIST_SEGMENTS = 3  # Number of segments to use in HLS playlist
-MAX_SEGMENTS = 4  # Max number of segments to keep around
+MAX_SEGMENTS = 5  # Max number of segments to keep around
 TARGET_SEGMENT_DURATION = 2.0  # Each segment is about this many seconds
+TARGET_PART_DURATION = 1.0
 SEGMENT_DURATION_ADJUSTER = 0.1  # Used to avoid missing keyframe boundaries
 # Each segment is at least this many seconds
 MIN_SEGMENT_DURATION = TARGET_SEGMENT_DURATION - SEGMENT_DURATION_ADJUSTER
