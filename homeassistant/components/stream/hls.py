@@ -96,31 +96,37 @@ class HlsPlaylistView(StreamView):
             + first_segment.start_time.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]
             + "Z",
             # Since our window doesn't have many segments, we don't want to start
-            # at the beginning or we risk a behind live window exception in exoplayer.
+            # at the beginning or we risk a behind live window exception in Exoplayer.
             # EXT-X-START is not supposed to be within 3 target durations of the end,
-            # but this seems ok
+            # but a value as low as 1.5 doesn't seem to hurt.
+            # A value below 3 may not be as useful for hls.js as many hls.js clients
+            # don't autoplay. Also, hls.js uses the player parameter liveSyncDuration
+            # which seems to take precedence for setting target delay. Yet it also
+            # doesn't seem to hurt, so we can stick with it for now.
             f"#EXT-X-START:TIME-OFFSET=-{EXT_X_START * track.target_duration:.3f}",
         ]
 
         last_stream_id = first_segment.stream_id
-        # Add playlist sections for completed segments
-        for segment in segments if segments[-1].complete else segments[:-1]:
-            if last_stream_id != segment.stream_id:
+        # Add playlist sections
+        for segment in segments:
+            # Skip last segment if it is not complete
+            if segment.complete:
+                if last_stream_id != segment.stream_id:
+                    playlist.extend(
+                        [
+                            "#EXT-X-DISCONTINUITY",
+                            "#EXT-X-PROGRAM-DATE-TIME:"
+                            + segment.start_time.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]
+                            + "Z",
+                        ]
+                    )
                 playlist.extend(
                     [
-                        "#EXT-X-DISCONTINUITY",
-                        "#EXT-X-PROGRAM-DATE-TIME:"
-                        + segment.start_time.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]
-                        + "Z",
+                        f"#EXTINF:{segment.duration:.3f},",
+                        f"./segment/{segment.sequence}.m4s",
                     ]
                 )
-            playlist.extend(
-                [
-                    f"#EXTINF:{segment.duration:.3f},",
-                    f"./segment/{segment.sequence}.m4s",
-                ]
-            )
-            last_stream_id = segment.stream_id
+                last_stream_id = segment.stream_id
 
         return "\n".join(playlist) + "\n"
 
