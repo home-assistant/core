@@ -34,6 +34,7 @@ def ecobee_fixture():
             "fanMinOnTime": 10,
             "heatCoolMinDelta": 50,
             "holdAction": "nextTransition",
+            "ventilatorType": "none",
         },
         "equipmentStatus": "fan",
         "events": [
@@ -155,6 +156,7 @@ async def test_extra_state_attributes(ecobee_fixture, thermostat):
         "climate_mode": "Climate1",
         "fan_min_on_time": 10,
         "equipment_running": "heatPump2",
+        "ventilator_type": "none",
     } == thermostat.extra_state_attributes
 
     ecobee_fixture["equipmentStatus"] = "auxHeat2"
@@ -163,6 +165,7 @@ async def test_extra_state_attributes(ecobee_fixture, thermostat):
         "climate_mode": "Climate1",
         "fan_min_on_time": 10,
         "equipment_running": "auxHeat2",
+        "ventilator_type": "none",
     } == thermostat.extra_state_attributes
 
     ecobee_fixture["equipmentStatus"] = "compCool1"
@@ -171,6 +174,7 @@ async def test_extra_state_attributes(ecobee_fixture, thermostat):
         "climate_mode": "Climate1",
         "fan_min_on_time": 10,
         "equipment_running": "compCool1",
+        "ventilator_type": "none",
     } == thermostat.extra_state_attributes
     ecobee_fixture["equipmentStatus"] = ""
     assert {
@@ -178,6 +182,7 @@ async def test_extra_state_attributes(ecobee_fixture, thermostat):
         "climate_mode": "Climate1",
         "fan_min_on_time": 10,
         "equipment_running": "",
+        "ventilator_type": "none",
     } == thermostat.extra_state_attributes
 
     ecobee_fixture["equipmentStatus"] = "Unknown"
@@ -186,6 +191,7 @@ async def test_extra_state_attributes(ecobee_fixture, thermostat):
         "climate_mode": "Climate1",
         "fan_min_on_time": 10,
         "equipment_running": "Unknown",
+        "ventilator_type": "none",
     } == thermostat.extra_state_attributes
 
     ecobee_fixture["program"]["currentClimateRef"] = "c2"
@@ -194,6 +200,28 @@ async def test_extra_state_attributes(ecobee_fixture, thermostat):
         "climate_mode": "Climate2",
         "fan_min_on_time": 10,
         "equipment_running": "Unknown",
+        "ventilator_type": "none",
+    } == thermostat.extra_state_attributes
+
+    ecobee_fixture["settings"]["ventilatorType"] = "ventilator"
+    ecobee_fixture["settings"]["vent"] = "auto"
+    ecobee_fixture["settings"]["ventilatorMinOnTime"] = 50
+    ecobee_fixture["settings"]["ventilatorMinOnTimeHome"] = 20
+    ecobee_fixture["settings"]["ventilatorMinOnTimeAway"] = 10
+    ecobee_fixture["settings"]["isVentilatorTimerOn"] = True
+    ecobee_fixture["settings"]["ventilatorOffDateTime"] = "2014-01-01 00:00:00"
+    assert {
+        "fan": "off",
+        "climate_mode": "Climate2",
+        "fan_min_on_time": 10,
+        "equipment_running": "Unknown",
+        "ventilator_type": "ventilator",
+        "vent": "auto",
+        "ventilator_min_on_time": 50,
+        "ventilator_min_on_time_home": 20,
+        "ventilator_min_on_time_away": 10,
+        "is_ventilator_timer_on": True,
+        "ventilator_off_date_time": "2014-01-01 00:00:00",
     } == thermostat.extra_state_attributes
 
 
@@ -331,3 +359,38 @@ async def test_set_fan_mode_auto(thermostat, data):
     data.ecobee.set_fan_mode.assert_has_calls(
         [mock.call(1, "auto", "nextTransition", holdHours=None)]
     )
+
+
+async def test_set_ventilator_mode_on(thermostat, data):
+    """Test set ventilator mode to on."""
+    data.reset_mock()
+    thermostat.set_ventilator_mode("on")
+    data.ecobee.set_vent_mode.assert_has_calls([mock.call(1, "on")])
+
+
+async def test_set_ventilator_min_on_time(thermostat, data):
+    """Test set ventilator mode to on."""
+    data.reset_mock()
+    thermostat.set_ventilator_min_on_time(50)
+    data.ecobee.set_ventilator_min_on_time.assert_has_calls([mock.call(1, 50)])
+
+
+async def test_set_ventilator_min_on_time_home(thermostat, data):
+    """Test set ventilator mode to on."""
+    data.reset_mock()
+    thermostat.set_ventilator_min_on_time_home(40)
+    data.ecobee.set_ventilator_min_on_time_home.assert_has_calls([mock.call(1, 40)])
+
+
+async def test_set_ventilator_min_on_time_away(thermostat, data):
+    """Test set ventilator mode to on."""
+    data.reset_mock()
+    thermostat.set_ventilator_min_on_time_away(30)
+    data.ecobee.set_ventilator_min_on_time_away.assert_has_calls([mock.call(1, 30)])
+
+
+async def test_set_ventilator_timer_on(thermostat, data):
+    """Test set ventilator mode to on."""
+    data.reset_mock()
+    thermostat.set_ventilator_timer(True)
+    data.ecobee.set_ventilator_timer.assert_has_calls([mock.call(1, True)])
