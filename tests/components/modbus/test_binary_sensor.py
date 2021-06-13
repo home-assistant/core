@@ -25,33 +25,31 @@ from tests.common import mock_restore_cache
 
 
 @pytest.mark.parametrize(
-    "do_options",
+    "do_config",
     [
-        {},
         {
-            CONF_SLAVE: 10,
-            CONF_INPUT_TYPE: CALL_TYPE_DISCRETE,
-            CONF_DEVICE_CLASS: "door",
+            CONF_BINARY_SENSORS: [
+                {
+                    CONF_NAME: "test_sensor",
+                    CONF_ADDRESS: 51,
+                }
+            ]
+        },
+        {
+            CONF_BINARY_SENSORS: [
+                {
+                    CONF_NAME: "test_sensor",
+                    CONF_ADDRESS: 51,
+                    CONF_SLAVE: 10,
+                    CONF_INPUT_TYPE: CALL_TYPE_DISCRETE,
+                    CONF_DEVICE_CLASS: "door",
+                }
+            ]
         },
     ],
 )
-async def test_config_binary_sensor(hass, do_options):
-    """Run test for binary sensor."""
-    sensor_name = "test_sensor"
-    config_sensor = {
-        CONF_NAME: sensor_name,
-        CONF_ADDRESS: 51,
-        **do_options,
-    }
-    await base_config_test(
-        hass,
-        config_sensor,
-        sensor_name,
-        SENSOR_DOMAIN,
-        CONF_BINARY_SENSORS,
-        None,
-        method_discovery=True,
-    )
+async def test_config_binary_sensor(hass, mock_modbus):
+    """Run config test for binary sensor."""
 
 
 @pytest.mark.parametrize("do_type", [CALL_TYPE_COIL, CALL_TYPE_DISCRETE])
