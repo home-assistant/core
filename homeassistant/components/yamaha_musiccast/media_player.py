@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import logging
 
+from aiomusiccast import MusicCastGroupException
 import voluptuous as vol
 
 from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
@@ -501,13 +502,12 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
 
     def get_distribution_num(self) -> int:
         """Return the distribution_num (number of clients in the whole musiccast system)."""
-        distribution_num = sum(
+        return sum(
             [
                 len(server.coordinator.data.group_client_list)
                 for server in self.get_all_server_entities()
             ]
         )
-        return distribution_num
 
     def is_part_of_group(self, group_server) -> bool:
         """Return True if the given server is the server of self's group."""
@@ -584,9 +584,13 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
         # First let the clients join
         for client in entities:
             if client != self:
-                await client.async_client_join(group, self)
+                try:
+                    await client.async_client_join(group, self)
+                except MusicCastGroupException:
+                    _LOGGER.warning(
+                        "%s is struggling to update it's group data. Will try to proceed anyway"
+                    )
 
-        distribution_num = self.get_distribution_num()
         await self.coordinator.musiccast.mc_server_group_extend(
             self._zone_id,
             [
@@ -595,7 +599,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
                 if entity.ip_address != self.ip_address
             ],
             group,
-            distribution_num,
+            self.get_distribution_num(),
         )
         _LOGGER.info(self.entity_id + " added the following entities " + str(entities))
         _LOGGER.info(
@@ -707,8 +711,8 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
             save_inputs = self.coordinator.musiccast.get_save_inputs(self._zone_id)
             if len(save_inputs):
                 await self.async_select_source(save_inputs[0])
-            else:
-                await self.async_turn_off()
+            # Then turn off the zone
+            await self.async_turn_off()
         else:
             servers = [
                 server
@@ -748,7 +752,6 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
                 # The client is no longer part of the group. Prepare removal.
                 client_ips_for_removal.append(expected_client_ip)
 
-        distribution_num = self.get_distribution_num()
         if len(client_ips_for_removal):
             _LOGGER.info(
                 self.entity_id
@@ -756,7 +759,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
                 + str(client_ips_for_removal)
             )
             await self.coordinator.musiccast.mc_server_group_reduce(
-                self._zone_id, client_ips_for_removal, distribution_num
+                self._zone_id, client_ips_for_removal, self.get_distribution_num()
             )
         if len(self.musiccast_group) < 2:
             # The group is empty, stop distribution.
