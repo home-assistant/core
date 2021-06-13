@@ -16,7 +16,12 @@ from homeassistant.util import dt as dt_util
 
 from .conftest import check_valid_state
 
-from tests.common import MockConfigEntry, assert_setup_component, date_util
+from tests.common import (
+    MockConfigEntry,
+    assert_setup_component,
+    date_util,
+    mock_registry,
+)
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
@@ -104,3 +109,65 @@ async def test_sensor_availability(
             assert pvpc_aioclient_mock.call_count == 33
             assert len(caplog.messages) == 1
             assert caplog.records[0].levelno == logging.WARNING
+
+
+async def test_multi_sensor_migration(
+    hass, caplog, legacy_patchable_time, pvpc_aioclient_mock: AiohttpClientMocker
+):
+    """Test tariff migration when there are >1 old sensors."""
+    entity_reg = mock_registry(hass)
+    hass.config.time_zone = dt_util.get_time_zone("Europe/Madrid")
+    uid_1 = "discrimination"
+    uid_2 = "normal"
+    old_conf_1 = {CONF_NAME: "test_pvpc_1", ATTR_TARIFF: uid_1}
+    old_conf_2 = {CONF_NAME: "test_pvpc_2", ATTR_TARIFF: uid_2}
+
+    config_entry_1 = MockConfigEntry(domain=DOMAIN, data=old_conf_1, unique_id=uid_1)
+    config_entry_1.add_to_hass(hass)
+    entity1 = entity_reg.async_get_or_create(
+        domain="sensor",
+        platform=DOMAIN,
+        unique_id=uid_1,
+        config_entry=config_entry_1,
+        suggested_object_id="test_pvpc_1",
+    )
+
+    config_entry_2 = MockConfigEntry(domain=DOMAIN, data=old_conf_2, unique_id=uid_2)
+    config_entry_2.add_to_hass(hass)
+    entity2 = entity_reg.async_get_or_create(
+        domain="sensor",
+        platform=DOMAIN,
+        unique_id=uid_2,
+        config_entry=config_entry_2,
+        suggested_object_id="test_pvpc_2",
+    )
+
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 2
+    assert len(entity_reg.entities) == 2
+
+    mock_data = {"return_time": datetime(2019, 10, 27, 20, tzinfo=date_util.UTC)}
+
+    def mock_now():
+        return mock_data["return_time"]
+
+    caplog.clear()
+    with caplog.at_level(logging.WARNING):
+        with patch("homeassistant.util.dt.utcnow", new=mock_now):
+            await hass.config_entries.async_setup(config_entry_1.entry_id)
+            assert len(caplog.messages) == 2
+            assert_setup_component(1, DOMAIN)
+
+            # check migration with removal of extra sensors
+            assert len(entity_reg.entities) == 1
+            assert entity1.entity_id in entity_reg.entities.keys()
+            assert entity2.entity_id not in entity_reg.entities.keys()
+
+            current_entries = hass.config_entries.async_entries(DOMAIN)
+            assert len(current_entries) == 1
+            migrated_entry = current_entries[0]
+            assert migrated_entry.version == 1
+            assert migrated_entry.data[ATTR_POWER] == migrated_entry.data[ATTR_POWER_P3]
+            assert migrated_entry.data[ATTR_TARIFF] == TARIFFS[0]
+
+            await hass.async_block_till_done()
+            assert pvpc_aioclient_mock.call_count == 2
