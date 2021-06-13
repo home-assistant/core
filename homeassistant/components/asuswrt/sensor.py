@@ -18,11 +18,9 @@ from homeassistant.helpers.update_coordinator import (
 from .const import (
     DATA_ASUSWRT,
     DOMAIN,
-    SENSOR_CONNECTED_DEVICE,
-    SENSOR_RX_BYTES,
-    SENSOR_RX_RATES,
-    SENSOR_TX_BYTES,
-    SENSOR_TX_RATES,
+    SENSORS_BYTES,
+    SENSORS_CONNECTED_DEVICE,
+    SENSORS_RATES,
 )
 from .router import KEY_COORDINATOR, KEY_SENSORS, AsusWrtRouter
 
@@ -38,41 +36,36 @@ SENSOR_DEFAULT_ENABLED = "default_enabled"
 UNIT_DEVICES = "Devices"
 
 CONNECTION_SENSORS = {
-    SENSOR_CONNECTED_DEVICE: {
+    SENSORS_CONNECTED_DEVICE[0]: {
         SENSOR_NAME: "Devices Connected",
         SENSOR_UNIT: UNIT_DEVICES,
         SENSOR_FACTOR: 0,
         SENSOR_ICON: "mdi:router-network",
-        SENSOR_DEVICE_CLASS: None,
         SENSOR_DEFAULT_ENABLED: True,
     },
-    SENSOR_RX_RATES: {
+    SENSORS_RATES[0]: {
         SENSOR_NAME: "Download Speed",
         SENSOR_UNIT: DATA_RATE_MEGABITS_PER_SECOND,
         SENSOR_FACTOR: 125000,
         SENSOR_ICON: "mdi:download-network",
-        SENSOR_DEVICE_CLASS: None,
     },
-    SENSOR_TX_RATES: {
+    SENSORS_RATES[1]: {
         SENSOR_NAME: "Upload Speed",
         SENSOR_UNIT: DATA_RATE_MEGABITS_PER_SECOND,
         SENSOR_FACTOR: 125000,
         SENSOR_ICON: "mdi:upload-network",
-        SENSOR_DEVICE_CLASS: None,
     },
-    SENSOR_RX_BYTES: {
+    SENSORS_BYTES[0]: {
         SENSOR_NAME: "Download",
         SENSOR_UNIT: DATA_GIGABYTES,
         SENSOR_FACTOR: 1000000000,
         SENSOR_ICON: "mdi:download",
-        SENSOR_DEVICE_CLASS: None,
     },
-    SENSOR_TX_BYTES: {
+    SENSORS_BYTES[1]: {
         SENSOR_NAME: "Upload",
         SENSOR_UNIT: DATA_GIGABYTES,
         SENSOR_FACTOR: 1000000000,
         SENSOR_ICON: "mdi:upload",
-        SENSOR_DEVICE_CLASS: None,
     },
 }
 
@@ -108,24 +101,21 @@ class AsusWrtSensor(CoordinatorEntity, SensorEntity):
         coordinator: DataUpdateCoordinator,
         router: AsusWrtRouter,
         sensor_type: str,
-        sensor: dict[str, Any],
+        sensor_def: dict[str, Any],
     ) -> None:
         """Initialize a AsusWrt sensor."""
         super().__init__(coordinator)
         self._router = router
         self._sensor_type = sensor_type
-        self._name = f"{DEFAULT_PREFIX} {sensor[SENSOR_NAME]}"
+        self._sensor_def = sensor_def
+        self._name = f"{DEFAULT_PREFIX} {sensor_def[SENSOR_NAME]}"
         self._unique_id = f"{DOMAIN} {self._name}"
-        self._unit = sensor[SENSOR_UNIT]
-        self._factor = sensor[SENSOR_FACTOR]
-        self._icon = sensor[SENSOR_ICON]
-        self._device_class = sensor[SENSOR_DEVICE_CLASS]
-        self._default_enabled = sensor.get(SENSOR_DEFAULT_ENABLED, False)
+        self._factor = sensor_def.get(SENSOR_FACTOR)
 
     @property
     def entity_registry_enabled_default(self) -> bool:
         """Return if the entity should be enabled when first added to the entity registry."""
-        return self._default_enabled
+        return self._sensor_def.get(SENSOR_DEFAULT_ENABLED, False)
 
     @property
     def state(self) -> str:
@@ -150,17 +140,17 @@ class AsusWrtSensor(CoordinatorEntity, SensorEntity):
     @property
     def unit_of_measurement(self) -> str:
         """Return the unit."""
-        return self._unit
+        return self._sensor_def.get(SENSOR_UNIT)
 
     @property
     def icon(self) -> str:
         """Return the icon."""
-        return self._icon
+        return self._sensor_def.get(SENSOR_ICON)
 
     @property
     def device_class(self) -> str:
         """Return the device_class."""
-        return self._device_class
+        return self._sensor_def.get(SENSOR_DEVICE_CLASS)
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
