@@ -165,7 +165,7 @@ class SegmentBuffer:
                     duration=float(
                         (packet.dts - self._part_start_dts) * packet.time_base
                     ),
-                    independent=self._part_has_keyframe,
+                    has_keyframe=self._part_has_keyframe,
                     data=self._memory_file.getbuffer()[
                         self._segment_last_write_pos : byte_position
                     ].tobytes(),
@@ -184,7 +184,7 @@ class SegmentBuffer:
         self._segment.parts.append(
             Part(
                 duration=float((packet.dts - self._part_start_dts) * packet.time_base),
-                independent=self._part_has_keyframe,
+                has_keyframe=self._part_has_keyframe,
                 data=self._memory_file.getbuffer()[
                     self._segment_last_write_pos :
                 ].tobytes(),

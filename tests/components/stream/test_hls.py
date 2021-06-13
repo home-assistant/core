@@ -325,7 +325,7 @@ async def test_hls_max_segments(hass, hls_stream, stream_worker_sync):
         segment.parts = [
             Part(
                 duration=SEGMENT_DURATION,
-                independent=True,
+                has_keyframe=True,
                 data=FAKE_PAYLOAD,
             )
         ]

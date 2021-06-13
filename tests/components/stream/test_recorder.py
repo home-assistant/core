@@ -125,7 +125,7 @@ def add_parts_to_segment(segment, source):
     segment.parts = [
         Part(
             duration=None,
-            independent=None,
+            has_keyframe=None,
             http_range_start=None,
             data=source.getbuffer()[moof_locs[i] : moof_locs[i + 1]],
         )

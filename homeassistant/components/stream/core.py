@@ -24,7 +24,7 @@ class Part:
     """Represent a segment part."""
 
     duration: float = attr.ib()
-    independent: bool = attr.ib()
+    has_keyframe: bool = attr.ib()
     data: bytes = attr.ib()
 
 
