@@ -57,6 +57,11 @@ ATTR_DST_ENABLED = "dst_enabled"
 ATTR_MIC_ENABLED = "mic_enabled"
 ATTR_AUTO_AWAY = "auto_away"
 ATTR_FOLLOW_ME = "follow_me"
+ATTR_VENTILATOR_MODE = "ventilator_mode"
+ATTR_VENTILATOR_MIN_ON_TIME = "ventilator_min_on_time"
+ATTR_VENTILATOR_MIN_ON_TIME_HOME = "ventilator_min_on_time_home"
+ATTR_VENTILATOR_MIN_ON_TIME_AWAY = "ventilator_min_on_time_away"
+ATTR_IS_VENTILATOR_TIMER_ON = "is_ventilator_timer_on"
 
 DEFAULT_RESUME_ALL = False
 PRESET_TEMPERATURE = "temp"
@@ -114,6 +119,11 @@ SERVICE_SET_FAN_MIN_ON_TIME = "set_fan_min_on_time"
 SERVICE_SET_DST_MODE = "set_dst_mode"
 SERVICE_SET_MIC_MODE = "set_mic_mode"
 SERVICE_SET_OCCUPANCY_MODES = "set_occupancy_modes"
+SERVICE_SET_VENTILATOR_MODE = "set_ventilator_mode"
+SERVICE_SET_VENTILATOR_MIN_ON_TIME = "set_ventilator_min_on_time"
+SERVICE_SET_VENTILATOR_MIN_ON_TIME_HOME = "set_ventilator_min_on_time_home"
+SERVICE_SET_VENTILATOR_MIN_ON_TIME_AWAY = "set_ventilator_min_on_time_away"
+SERVICE_SET_VENTILATOR_TIMER = "set_ventilator_timer"
 
 DTGROUP_INCLUSIVE_MSG = (
     f"{ATTR_START_DATE}, {ATTR_START_TIME}, {ATTR_END_DATE}, "
@@ -285,6 +295,48 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             vol.Optional(ATTR_FOLLOW_ME): cv.boolean,
         },
         "set_occupancy_modes",
+    )
+
+    platform.async_register_entity_service(
+        SERVICE_SET_VENTILATOR_MODE,
+        {
+            vol.Required(ATTR_VENTILATOR_MODE): vol.Any(
+                "on", "off", "auto", "minontime"
+            ),
+        },
+        Thermostat.set_ventilator_mode.__name__,
+    )
+
+    platform.async_register_entity_service(
+        SERVICE_SET_VENTILATOR_MIN_ON_TIME,
+        {
+            vol.Required(ATTR_VENTILATOR_MIN_ON_TIME): vol.Coerce(int),
+        },
+        Thermostat.set_ventilator_min_on_time.__name__,
+    )
+
+    platform.async_register_entity_service(
+        SERVICE_SET_VENTILATOR_MIN_ON_TIME_HOME,
+        {
+            vol.Required(ATTR_VENTILATOR_MIN_ON_TIME_HOME): vol.Coerce(int),
+        },
+        Thermostat.set_ventilator_min_on_time_home.__name__,
+    )
+
+    platform.async_register_entity_service(
+        SERVICE_SET_VENTILATOR_MIN_ON_TIME_AWAY,
+        {
+            vol.Required(ATTR_VENTILATOR_MIN_ON_TIME_AWAY): vol.Coerce(int),
+        },
+        Thermostat.set_ventilator_min_on_time_away.__name__,
+    )
+
+    platform.async_register_entity_service(
+        SERVICE_SET_VENTILATOR_TIMER,
+        {
+            vol.Required(ATTR_IS_VENTILATOR_TIMER_ON): cv.boolean,
+        },
+        Thermostat.set_ventilator_timer.__name__,
     )
 
 
@@ -529,14 +581,33 @@ class Thermostat(ClimateEntity):
     def extra_state_attributes(self):
         """Return device specific state attributes."""
         status = self.thermostat["equipmentStatus"]
-        return {
+        attributes = {
             "fan": self.fan,
             "climate_mode": self._preset_modes[
                 self.thermostat["program"]["currentClimateRef"]
             ],
             "equipment_running": status,
             "fan_min_on_time": self.thermostat["settings"]["fanMinOnTime"],
+            "ventilator_type": self.thermostat["settings"]["ventilatorType"],
         }
+        if self.thermostat["settings"]["ventilatorType"] != "none":
+            attributes["vent"] = self.thermostat["settings"]["vent"]
+            attributes["ventilator_min_on_time"] = self.thermostat["settings"][
+                "ventilatorMinOnTime"
+            ]
+            attributes["ventilator_min_on_time_home"] = self.thermostat["settings"][
+                "ventilatorMinOnTimeHome"
+            ]
+            attributes["ventilator_min_on_time_away"] = self.thermostat["settings"][
+                "ventilatorMinOnTimeAway"
+            ]
+            attributes["is_ventilator_timer_on"] = self.thermostat["settings"][
+                "isVentilatorTimerOn"
+            ]
+            attributes["ventilator_off_date_time"] = self.thermostat["settings"][
+                "ventilatorOffDateTime"
+            ]
+        return attributes
 
     @property
     def is_aux_heat(self):
@@ -718,6 +789,39 @@ class Thermostat(ClimateEntity):
     def set_fan_min_on_time(self, fan_min_on_time):
         """Set the minimum fan on time."""
         self.data.ecobee.set_fan_min_on_time(self.thermostat_index, fan_min_on_time)
+        self.update_without_throttle = True
+
+    def set_ventilator_mode(self, ventilator_mode):
+        """Do this."""
+        self.data.ecobee.set_vent_mode(self.thermostat_index, ventilator_mode)
+        self.update_without_throttle = True
+
+    def set_ventilator_min_on_time(self, ventilator_min_on_time):
+        """Do this."""
+        self.data.ecobee.set_ventilator_min_on_time(
+            self.thermostat_index, ventilator_min_on_time
+        )
+        self.update_without_throttle = True
+
+    def set_ventilator_min_on_time_home(self, ventilator_min_on_time_home):
+        """Do this."""
+        self.data.ecobee.set_ventilator_min_on_time_home(
+            self.thermostat_index, ventilator_min_on_time_home
+        )
+        self.update_without_throttle = True
+
+    def set_ventilator_min_on_time_away(self, ventilator_min_on_time_away):
+        """Do this."""
+        self.data.ecobee.set_ventilator_min_on_time_away(
+            self.thermostat_index, ventilator_min_on_time_away
+        )
+        self.update_without_throttle = True
+
+    def set_ventilator_timer(self, is_ventilator_timer_on):
+        """Do this."""
+        self.data.ecobee.set_ventilator_timer(
+            self.thermostat_index, is_ventilator_timer_on
+        )
         self.update_without_throttle = True
 
     def resume_program(self, resume_all):
