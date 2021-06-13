@@ -650,7 +650,7 @@ async def test_worker_log(hass, caplog):
 
 
 async def test_durations(hass, record_worker_sync):
-    """Test that the durations of the media match the duration metadata."""
+    """Test that the duration metadata matches the media."""
     await async_setup_component(hass, "stream", {"stream": {}})
 
     source = generate_h264_video()
@@ -663,7 +663,7 @@ async def test_durations(hass, record_worker_sync):
     complete_segments = list(await record_worker_sync.get_segments())[:-1]
     assert len(complete_segments) >= 1
 
-    # check that the Part duration metadata match the durations in the media
+    # check that the Part duration metadata matches the durations in the media
     running_metadata_duration = 0
     for segment in complete_segments:
         for part in segment.parts:
@@ -682,6 +682,38 @@ async def test_durations(hass, record_worker_sync):
         assert math.isclose(
             sum(part.duration for part in segment.parts), segment.duration, abs_tol=1e-6
         )
+
+    await record_worker_sync.join()
+
+    stream.stop()
+
+
+async def test_has_keyframe(hass, record_worker_sync):
+    """Test that the has_keyframe metadata matches the media."""
+    await async_setup_component(hass, "stream", {"stream": {}})
+
+    source = generate_h264_video()
+    stream = create_stream(hass, source)
+
+    # use record_worker_sync to grab output segments
+    with patch.object(hass.config, "is_allowed_path", return_value=True):
+        await stream.async_record("/example/path")
+
+    # Our test video has keyframes every second. Use smaller parts so we have more
+    # part boundaries to better test keyframe logic.
+    with patch("homeassistant.components.stream.worker.TARGET_PART_DURATION", 0.25):
+        complete_segments = list(await record_worker_sync.get_segments())[:-1]
+    assert len(complete_segments) >= 1
+
+    # check that the Part has_keyframe metadata matches the keyframes in the media
+    for segment in complete_segments:
+        for part in segment.parts:
+            av_part = av.open(io.BytesIO(segment.init + part.data))
+            media_has_keyframe = any(
+                packet.is_keyframe for packet in av_part.demux(av_part.streams.video[0])
+            )
+            av_part.close()
+            assert part.has_keyframe == media_has_keyframe
 
     await record_worker_sync.join()
 
