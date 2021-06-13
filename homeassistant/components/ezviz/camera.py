@@ -4,6 +4,7 @@ from datetime import timedelta
 import logging
 
 from haffmpeg.tools import IMAGE_JPEG, ImageFrame
+from pyezviz.exceptions import HTTPError, PyEzvizError
 import voluptuous as vol
 
 from homeassistant.components.camera import PLATFORM_SCHEMA, SUPPORT_STREAM, Camera
@@ -33,6 +34,11 @@ from .const import (
     DIR_UP,
     DOMAIN,
     MANUFACTURER,
+    SERVICE_ALARM_SOUND,
+    SERVICE_ALARM_TRIGER,
+    SERVICE_DETECTION_SENSITIVITY,
+    SERVICE_PTZ,
+    SERVICE_WAKE_DEVICE,
 )
 
 CAMERA_SCHEMA = vol.Schema(
@@ -169,7 +175,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     platform = entity_platform.current_platform.get()
 
     platform.async_register_entity_service(
-        "ptz",
+        SERVICE_PTZ,
         {
             vol.Required(ATTR_DIRECTION): vol.In(
                 [DIR_UP, DIR_DOWN, DIR_LEFT, DIR_RIGHT]
@@ -180,23 +186,25 @@ async def async_setup_entry(hass, entry, async_add_entities):
     )
 
     platform.async_register_entity_service(
-        "sound_alarm",
+        SERVICE_ALARM_TRIGER,
         {
             vol.Required(ATTR_ENABLE): cv.positive_int,
         },
         "perform_sound_alarm",
     )
 
-    platform.async_register_entity_service("wake_device", {}, "perform_wake_device")
+    platform.async_register_entity_service(
+        SERVICE_WAKE_DEVICE, {}, "perform_wake_device"
+    )
 
     platform.async_register_entity_service(
-        "alarm_sound",
+        SERVICE_ALARM_SOUND,
         {vol.Required(ATTR_LEVEL): cv.positive_int},
         "perform_alarm_sound",
     )
 
     platform.async_register_entity_service(
-        "set_alarm_detection_sensibility",
+        SERVICE_DETECTION_SENSITIVITY,
         {
             vol.Required(ATTR_LEVEL): cv.positive_int,
             vol.Required(ATTR_TYPE): cv.positive_int,
@@ -338,41 +346,48 @@ class EzvizCamera(CoordinatorEntity, Camera, RestoreEntity):
     def perform_ptz(self, direction, speed):
         """Perform a PTZ action on the camera."""
         _LOGGER.debug("PTZ action '%s' on %s", direction, self._name)
+        try:
+            self.coordinator.ezviz_client.ptz_control(
+                str(direction).upper(), self._serial, "START", speed
+            )
+            self.coordinator.ezviz_client.ptz_control(
+                str(direction).upper(), self._serial, "STOP", speed
+            )
 
-        self.coordinator.ezviz_client.ptz_control(
-            str(direction).upper(), self._serial, "START", speed
-        )
-        self.coordinator.ezviz_client.ptz_control(
-            str(direction).upper(), self._serial, "STOP", speed
-        )
+        except HTTPError as err:
+            _LOGGER.error("Cannot perform PTZ")
+            raise HTTPError from err
 
     def perform_sound_alarm(self, enable):
         """Sound the alarm on a camera."""
-        _LOGGER.debug("EZVIZ Alarm Switch to %s", enable)
-
-        self.coordinator.ezviz_client.sound_alarm(self._serial, enable)
+        try:
+            self.coordinator.ezviz_client.sound_alarm(self._serial, enable)
+        except HTTPError as err:
+            _LOGGER.debug("Cannot sound alarm")
+            raise HTTPError from err
 
     def perform_wake_device(self):
         """Basically wakes the camera by querying the device."""
-        _LOGGER.debug("Wake camera '%s' with serial %s", self._name, self._serial)
-
-        self.coordinator.ezviz_client.get_detection_sensibility(self._serial)
+        try:
+            self.coordinator.ezviz_client.get_detection_sensibility(self._serial)
+        except (HTTPError, PyEzvizError) as err:
+            _LOGGER.error("Cannot wake device")
+            raise PyEzvizError from err
 
     def perform_alarm_sound(self, level):
         """Enable/Disable movement sound alarm."""
-        _LOGGER.debug("Set alarm sound on camera '%s' on %s", self._name, level)
-
-        self.coordinator.ezviz_client.alarm_sound(self._serial, level, 1)
+        try:
+            self.coordinator.ezviz_client.alarm_sound(self._serial, level, 1)
+        except HTTPError as err:
+            _LOGGER.error("Cannot set alarm sound level for on movement detected")
+            raise HTTPError from err
 
     def perform_set_alarm_detection_sensibility(self, level, type_value):
         """Set camera detection sensibility level service."""
-        _LOGGER.debug(
-            "Set detection sensibility level '%s' on camera '%s' using type %s",
-            level,
-            self._name,
-            type_value,
-        )
-
-        self.coordinator.ezviz_client.detection_sensibility(
-            self._serial, level, type_value
-        )
+        try:
+            self.coordinator.ezviz_client.detection_sensibility(
+                self._serial, level, type_value
+            )
+        except (HTTPError, PyEzvizError) as err:
+            _LOGGER.error("Cannot set detection sensitivity level")
+            raise PyEzvizError from err
