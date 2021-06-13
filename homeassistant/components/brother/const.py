@@ -3,7 +3,13 @@ from __future__ import annotations
 
 from typing import Final
 
-from homeassistant.const import ATTR_ICON, PERCENTAGE
+from homeassistant.components.sensor import ATTR_STATE_CLASS, STATE_CLASS_MEASUREMENT
+from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
+    ATTR_ICON,
+    DEVICE_CLASS_TIMESTAMP,
+    PERCENTAGE,
+)
 
 from .model import SensorDescription
 
@@ -84,143 +90,168 @@ SENSOR_TYPES: Final[dict[str, SensorDescription]] = {
         ATTR_LABEL: ATTR_STATUS.title(),
         ATTR_UNIT: None,
         ATTR_ENABLED: True,
+        ATTR_STATE_CLASS: None,
     },
     ATTR_PAGE_COUNTER: {
         ATTR_ICON: "mdi:file-document-outline",
         ATTR_LABEL: ATTR_PAGE_COUNTER.replace("_", " ").title(),
         ATTR_UNIT: UNIT_PAGES,
         ATTR_ENABLED: True,
+        ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
     },
     ATTR_BW_COUNTER: {
         ATTR_ICON: "mdi:file-document-outline",
         ATTR_LABEL: ATTR_BW_COUNTER.replace("_", " ").title(),
         ATTR_UNIT: UNIT_PAGES,
         ATTR_ENABLED: True,
+        ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
     },
     ATTR_COLOR_COUNTER: {
         ATTR_ICON: "mdi:file-document-outline",
         ATTR_LABEL: ATTR_COLOR_COUNTER.replace("_", " ").title(),
         ATTR_UNIT: UNIT_PAGES,
         ATTR_ENABLED: True,
+        ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
     },
     ATTR_DUPLEX_COUNTER: {
         ATTR_ICON: "mdi:file-document-outline",
         ATTR_LABEL: ATTR_DUPLEX_COUNTER.replace("_", " ").title(),
         ATTR_UNIT: UNIT_PAGES,
         ATTR_ENABLED: True,
+        ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
     },
     ATTR_DRUM_REMAINING_LIFE: {
         ATTR_ICON: "mdi:chart-donut",
         ATTR_LABEL: ATTR_DRUM_REMAINING_LIFE.replace("_", " ").title(),
         ATTR_UNIT: PERCENTAGE,
         ATTR_ENABLED: True,
+        ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
     },
     ATTR_BLACK_DRUM_REMAINING_LIFE: {
         ATTR_ICON: "mdi:chart-donut",
         ATTR_LABEL: ATTR_BLACK_DRUM_REMAINING_LIFE.replace("_", " ").title(),
         ATTR_UNIT: PERCENTAGE,
         ATTR_ENABLED: True,
+        ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
     },
     ATTR_CYAN_DRUM_REMAINING_LIFE: {
         ATTR_ICON: "mdi:chart-donut",
         ATTR_LABEL: ATTR_CYAN_DRUM_REMAINING_LIFE.replace("_", " ").title(),
         ATTR_UNIT: PERCENTAGE,
         ATTR_ENABLED: True,
+        ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
     },
     ATTR_MAGENTA_DRUM_REMAINING_LIFE: {
         ATTR_ICON: "mdi:chart-donut",
         ATTR_LABEL: ATTR_MAGENTA_DRUM_REMAINING_LIFE.replace("_", " ").title(),
         ATTR_UNIT: PERCENTAGE,
         ATTR_ENABLED: True,
+        ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
     },
     ATTR_YELLOW_DRUM_REMAINING_LIFE: {
         ATTR_ICON: "mdi:chart-donut",
         ATTR_LABEL: ATTR_YELLOW_DRUM_REMAINING_LIFE.replace("_", " ").title(),
         ATTR_UNIT: PERCENTAGE,
         ATTR_ENABLED: True,
+        ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
     },
     ATTR_BELT_UNIT_REMAINING_LIFE: {
         ATTR_ICON: "mdi:current-ac",
         ATTR_LABEL: ATTR_BELT_UNIT_REMAINING_LIFE.replace("_", " ").title(),
         ATTR_UNIT: PERCENTAGE,
         ATTR_ENABLED: True,
+        ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
     },
     ATTR_FUSER_REMAINING_LIFE: {
         ATTR_ICON: "mdi:water-outline",
         ATTR_LABEL: ATTR_FUSER_REMAINING_LIFE.replace("_", " ").title(),
         ATTR_UNIT: PERCENTAGE,
         ATTR_ENABLED: True,
+        ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
     },
     ATTR_LASER_REMAINING_LIFE: {
         ATTR_ICON: "mdi:spotlight-beam",
         ATTR_LABEL: ATTR_LASER_REMAINING_LIFE.replace("_", " ").title(),
         ATTR_UNIT: PERCENTAGE,
         ATTR_ENABLED: True,
+        ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
     },
     ATTR_PF_KIT_1_REMAINING_LIFE: {
         ATTR_ICON: "mdi:printer-3d",
         ATTR_LABEL: ATTR_PF_KIT_1_REMAINING_LIFE.replace("_", " ").title(),
         ATTR_UNIT: PERCENTAGE,
         ATTR_ENABLED: True,
+        ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
     },
     ATTR_PF_KIT_MP_REMAINING_LIFE: {
         ATTR_ICON: "mdi:printer-3d",
         ATTR_LABEL: ATTR_PF_KIT_MP_REMAINING_LIFE.replace("_", " ").title(),
         ATTR_UNIT: PERCENTAGE,
         ATTR_ENABLED: True,
+        ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
     },
     ATTR_BLACK_TONER_REMAINING: {
         ATTR_ICON: "mdi:printer-3d-nozzle",
         ATTR_LABEL: ATTR_BLACK_TONER_REMAINING.replace("_", " ").title(),
         ATTR_UNIT: PERCENTAGE,
         ATTR_ENABLED: True,
+        ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
     },
     ATTR_CYAN_TONER_REMAINING: {
         ATTR_ICON: "mdi:printer-3d-nozzle",
         ATTR_LABEL: ATTR_CYAN_TONER_REMAINING.replace("_", " ").title(),
         ATTR_UNIT: PERCENTAGE,
         ATTR_ENABLED: True,
+        ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
     },
     ATTR_MAGENTA_TONER_REMAINING: {
         ATTR_ICON: "mdi:printer-3d-nozzle",
         ATTR_LABEL: ATTR_MAGENTA_TONER_REMAINING.replace("_", " ").title(),
         ATTR_UNIT: PERCENTAGE,
         ATTR_ENABLED: True,
+        ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
     },
     ATTR_YELLOW_TONER_REMAINING: {
         ATTR_ICON: "mdi:printer-3d-nozzle",
         ATTR_LABEL: ATTR_YELLOW_TONER_REMAINING.replace("_", " ").title(),
         ATTR_UNIT: PERCENTAGE,
         ATTR_ENABLED: True,
+        ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
     },
     ATTR_BLACK_INK_REMAINING: {
         ATTR_ICON: "mdi:printer-3d-nozzle",
         ATTR_LABEL: ATTR_BLACK_INK_REMAINING.replace("_", " ").title(),
         ATTR_UNIT: PERCENTAGE,
         ATTR_ENABLED: True,
+        ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
     },
     ATTR_CYAN_INK_REMAINING: {
         ATTR_ICON: "mdi:printer-3d-nozzle",
         ATTR_LABEL: ATTR_CYAN_INK_REMAINING.replace("_", " ").title(),
         ATTR_UNIT: PERCENTAGE,
         ATTR_ENABLED: True,
+        ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
     },
     ATTR_MAGENTA_INK_REMAINING: {
         ATTR_ICON: "mdi:printer-3d-nozzle",
         ATTR_LABEL: ATTR_MAGENTA_INK_REMAINING.replace("_", " ").title(),
         ATTR_UNIT: PERCENTAGE,
         ATTR_ENABLED: True,
+        ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
     },
     ATTR_YELLOW_INK_REMAINING: {
         ATTR_ICON: "mdi:printer-3d-nozzle",
         ATTR_LABEL: ATTR_YELLOW_INK_REMAINING.replace("_", " ").title(),
         ATTR_UNIT: PERCENTAGE,
         ATTR_ENABLED: True,
+        ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
     },
     ATTR_UPTIME: {
         ATTR_ICON: None,
         ATTR_LABEL: ATTR_UPTIME.title(),
         ATTR_UNIT: None,
         ATTR_ENABLED: False,
+        ATTR_STATE_CLASS: None,
+        ATTR_DEVICE_CLASS: DEVICE_CLASS_TIMESTAMP,
     },
 }

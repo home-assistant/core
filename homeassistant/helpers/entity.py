@@ -93,6 +93,40 @@ def async_generate_entity_id(
     return test_string
 
 
+def get_capability(hass: HomeAssistant, entity_id: str, capability: str) -> str | None:
+    """Get a capability attribute of an entity.
+
+    First try the statemachine, then entity registry.
+    """
+    state = hass.states.get(entity_id)
+    if state:
+        return state.attributes.get(capability)
+
+    entity_registry = er.async_get(hass)
+    entry = entity_registry.async_get(entity_id)
+    if not entry:
+        raise HomeAssistantError(f"Unknown entity {entity_id}")
+
+    return entry.capabilities.get(capability) if entry.capabilities else None
+
+
+def get_device_class(hass: HomeAssistant, entity_id: str) -> str | None:
+    """Get device class of an entity.
+
+    First try the statemachine, then entity registry.
+    """
+    state = hass.states.get(entity_id)
+    if state:
+        return state.attributes.get(ATTR_DEVICE_CLASS)
+
+    entity_registry = er.async_get(hass)
+    entry = entity_registry.async_get(entity_id)
+    if not entry:
+        raise HomeAssistantError(f"Unknown entity {entity_id}")
+
+    return entry.device_class
+
+
 def get_supported_features(hass: HomeAssistant, entity_id: str) -> int:
     """Get supported features for an entity.
 
@@ -108,6 +142,23 @@ def get_supported_features(hass: HomeAssistant, entity_id: str) -> int:
         raise HomeAssistantError(f"Unknown entity {entity_id}")
 
     return entry.supported_features or 0
+
+
+def get_unit_of_measurement(hass: HomeAssistant, entity_id: str) -> str | None:
+    """Get unit of measurement class of an entity.
+
+    First try the statemachine, then entity registry.
+    """
+    state = hass.states.get(entity_id)
+    if state:
+        return state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+
+    entity_registry = er.async_get(hass)
+    entry = entity_registry.async_get(entity_id)
+    if not entry:
+        raise HomeAssistantError(f"Unknown entity {entity_id}")
+
+    return entry.unit_of_measurement
 
 
 class DeviceInfo(TypedDict, total=False):

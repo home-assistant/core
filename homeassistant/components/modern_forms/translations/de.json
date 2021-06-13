@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert",
+            "cannot_connect": "Verbindung fehlgeschlagen"
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "confirm": {
+                "description": "M\u00f6chten Sie mit der Einrichtung beginnen?"
+            },
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "description": "Einrichten Ihres Modern Forms Ventilator f\u00fcr die Integration in Home Assistant."
+            },
+            "zeroconf_confirm": {
+                "description": "M\u00f6chten Sie den Modern Forms Ventilator mit dem Namen `{name}` zu Home Assistant hinzuf\u00fcgen?",
+                "title": "Erkannter Modern Forms Ventilator"
+            }
+        }
+    },
+    "title": "Modern Forms"
+}

@@ -17,11 +17,9 @@ from homeassistant.const import (
 
 from .const import (
     CONF_DATA_TYPE,
-    CONF_REVERSE_ORDER,
     CONF_SWAP,
     CONF_SWAP_BYTE,
     CONF_SWAP_NONE,
-    CONF_SWAP_WORD,
     DATA_TYPE_CUSTOM,
     DATA_TYPE_STRING,
     DEFAULT_SCAN_INTERVAL,
@@ -70,13 +68,6 @@ def sensor_schema_validator(config):
         )
 
     swap_type = config.get(CONF_SWAP)
-
-    if CONF_REVERSE_ORDER in config:
-        if config[CONF_REVERSE_ORDER]:
-            swap_type = CONF_SWAP_WORD
-        else:
-            swap_type = CONF_SWAP_NONE
-        del config[CONF_REVERSE_ORDER]
 
     if config.get(CONF_SWAP) != CONF_SWAP_NONE:
         if swap_type == CONF_SWAP_BYTE:

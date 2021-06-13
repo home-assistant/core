@@ -8,7 +8,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import WLEDDataUpdateCoordinator, WLEDEntity, wled_exception_handler
 from .const import (
     ATTR_DURATION,
     ATTR_FADE,
@@ -16,6 +15,9 @@ from .const import (
     ATTR_UDP_PORT,
     DOMAIN,
 )
+from .coordinator import WLEDDataUpdateCoordinator
+from .helpers import wled_exception_handler
+from .models import WLEDEntity
 
 PARALLEL_UPDATES = 1
 
@@ -33,7 +35,7 @@ async def async_setup_entry(
         WLEDSyncSendSwitch(coordinator),
         WLEDSyncReceiveSwitch(coordinator),
     ]
-    async_add_entities(switches, True)
+    async_add_entities(switches)
 
 
 class WLEDNightlightSwitch(WLEDEntity, SwitchEntity):

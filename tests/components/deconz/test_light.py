@@ -7,13 +7,19 @@ import pytest
 from homeassistant.components.deconz.const import CONF_ALLOW_DECONZ_GROUPS
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
+    ATTR_COLOR_MODE,
     ATTR_COLOR_TEMP,
     ATTR_EFFECT,
     ATTR_FLASH,
     ATTR_HS_COLOR,
     ATTR_MAX_MIREDS,
     ATTR_MIN_MIREDS,
+    ATTR_SUPPORTED_COLOR_MODES,
     ATTR_TRANSITION,
+    ATTR_XY_COLOR,
+    COLOR_MODE_COLOR_TEMP,
+    COLOR_MODE_ONOFF,
+    COLOR_MODE_XY,
     DOMAIN as LIGHT_DOMAIN,
     EFFECT_COLORLOOP,
     FLASH_LONG,
@@ -73,7 +79,7 @@ async def test_lights_and_groups(hass, aioclient_mock, mock_deconz_websocket):
                     "bri": 255,
                     "colormode": "xy",
                     "effect": "colorloop",
-                    "xy": (500, 500),
+                    "xy": (0.5, 0.5),
                     "reachable": True,
                 },
                 "type": "Extended color light",
@@ -117,16 +123,22 @@ async def test_lights_and_groups(hass, aioclient_mock, mock_deconz_websocket):
     rgb_light = hass.states.get("light.rgb_light")
     assert rgb_light.state == STATE_ON
     assert rgb_light.attributes[ATTR_BRIGHTNESS] == 255
-    assert rgb_light.attributes[ATTR_HS_COLOR] == (224.235, 100.0)
+    assert rgb_light.attributes[ATTR_XY_COLOR] == (0.5, 0.5)
+    assert rgb_light.attributes[ATTR_SUPPORTED_COLOR_MODES] == [COLOR_MODE_XY]
+    assert rgb_light.attributes[ATTR_COLOR_MODE] == COLOR_MODE_XY
+    assert rgb_light.attributes[ATTR_SUPPORTED_FEATURES] == 44
     assert rgb_light.attributes["is_deconz_group"] is False
-    assert rgb_light.attributes[ATTR_SUPPORTED_FEATURES] == 61
 
     tunable_white_light = hass.states.get("light.tunable_white_light")
     assert tunable_white_light.state == STATE_ON
     assert tunable_white_light.attributes[ATTR_COLOR_TEMP] == 2500
     assert tunable_white_light.attributes[ATTR_MAX_MIREDS] == 454
     assert tunable_white_light.attributes[ATTR_MIN_MIREDS] == 155
-    assert tunable_white_light.attributes[ATTR_SUPPORTED_FEATURES] == 2
+    assert tunable_white_light.attributes[ATTR_SUPPORTED_COLOR_MODES] == [
+        COLOR_MODE_COLOR_TEMP
+    ]
+    assert tunable_white_light.attributes[ATTR_COLOR_MODE] == COLOR_MODE_COLOR_TEMP
+    assert tunable_white_light.attributes[ATTR_SUPPORTED_FEATURES] == 0
 
     tunable_white_light_bad_maxmin = hass.states.get(
         "light.tunable_white_light_with_bad_maxmin_values"
@@ -135,10 +147,12 @@ async def test_lights_and_groups(hass, aioclient_mock, mock_deconz_websocket):
     assert tunable_white_light_bad_maxmin.attributes[ATTR_COLOR_TEMP] == 2500
     assert tunable_white_light_bad_maxmin.attributes[ATTR_MAX_MIREDS] == 650
     assert tunable_white_light_bad_maxmin.attributes[ATTR_MIN_MIREDS] == 140
-    assert tunable_white_light_bad_maxmin.attributes[ATTR_SUPPORTED_FEATURES] == 2
+    assert tunable_white_light_bad_maxmin.attributes[ATTR_SUPPORTED_FEATURES] == 0
 
     on_off_light = hass.states.get("light.on_off_light")
     assert on_off_light.state == STATE_ON
+    assert on_off_light.attributes[ATTR_SUPPORTED_COLOR_MODES] == [COLOR_MODE_ONOFF]
+    assert on_off_light.attributes[ATTR_COLOR_MODE] == COLOR_MODE_ONOFF
     assert on_off_light.attributes[ATTR_SUPPORTED_FEATURES] == 0
 
     assert hass.states.get("light.light_group").state == STATE_ON
@@ -170,7 +184,6 @@ async def test_lights_and_groups(hass, aioclient_mock, mock_deconz_websocket):
         SERVICE_TURN_ON,
         {
             ATTR_ENTITY_ID: "light.rgb_light",
-            ATTR_COLOR_TEMP: 2500,
             ATTR_BRIGHTNESS: 200,
             ATTR_TRANSITION: 5,
             ATTR_FLASH: FLASH_SHORT,
@@ -192,7 +205,7 @@ async def test_lights_and_groups(hass, aioclient_mock, mock_deconz_websocket):
         SERVICE_TURN_ON,
         {
             ATTR_ENTITY_ID: "light.rgb_light",
-            ATTR_HS_COLOR: (20, 30),
+            ATTR_XY_COLOR: (0.411, 0.351),
             ATTR_FLASH: FLASH_LONG,
             ATTR_EFFECT: "None",
         },
@@ -599,4 +612,4 @@ async def test_verify_group_supported_features(hass, aioclient_mock):
     assert len(hass.states.async_all()) == 4
 
     assert hass.states.get("light.group").state == STATE_ON
-    assert hass.states.get("light.group").attributes[ATTR_SUPPORTED_FEATURES] == 63
+    assert hass.states.get("light.group").attributes[ATTR_SUPPORTED_FEATURES] == 44

@@ -12,6 +12,7 @@ homeassistant.components.airly.*
 homeassistant.components.aladdin_connect.*
 homeassistant.components.alarm_control_panel.*
 homeassistant.components.amazon_polly.*
+homeassistant.components.ambee.*
 homeassistant.components.ampio.*
 homeassistant.components.automation.*
 homeassistant.components.binary_sensor.*
@@ -49,6 +50,7 @@ homeassistant.components.media_player.*
 homeassistant.components.mysensors.*
 homeassistant.components.nam.*
 homeassistant.components.network.*
+homeassistant.components.no_ip.*
 homeassistant.components.notify.*
 homeassistant.components.number.*
 homeassistant.components.onewire.*
@@ -70,10 +72,12 @@ homeassistant.components.systemmonitor.*
 homeassistant.components.tcp.*
 homeassistant.components.tts.*
 homeassistant.components.upcloud.*
+homeassistant.components.uptime.*
 homeassistant.components.vacuum.*
 homeassistant.components.water_heater.*
 homeassistant.components.weather.*
 homeassistant.components.websocket_api.*
+homeassistant.components.zodiac.*
 homeassistant.components.zeroconf.*
 homeassistant.components.zone.*
 homeassistant.components.zwave_js.*

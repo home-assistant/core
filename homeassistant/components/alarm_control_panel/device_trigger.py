@@ -11,10 +11,9 @@ from homeassistant.components.alarm_control_panel.const import (
     SUPPORT_ALARM_ARM_NIGHT,
 )
 from homeassistant.components.automation import AutomationActionType
-from homeassistant.components.device_automation import TRIGGER_BASE_SCHEMA
+from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.components.homeassistant.triggers import state as state_trigger
 from homeassistant.const import (
-    ATTR_SUPPORTED_FEATURES,
     CONF_DEVICE_ID,
     CONF_DOMAIN,
     CONF_ENTITY_ID,
@@ -30,6 +29,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_registry
+from homeassistant.helpers.entity import get_supported_features
 from homeassistant.helpers.typing import ConfigType
 
 from . import DOMAIN
@@ -41,7 +41,7 @@ TRIGGER_TYPES: Final[set[str]] = BASIC_TRIGGER_TYPES | {
     "armed_night",
 }
 
-TRIGGER_SCHEMA: Final = TRIGGER_BASE_SCHEMA.extend(
+TRIGGER_SCHEMA: Final = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_ENTITY_ID): cv.entity_id,
         vol.Required(CONF_TYPE): vol.In(TRIGGER_TYPES),
@@ -62,13 +62,7 @@ async def async_get_triggers(
         if entry.domain != DOMAIN:
             continue
 
-        entity_state = hass.states.get(entry.entity_id)
-
-        # We need a state or else we can't populate the HVAC and preset modes.
-        if entity_state is None:
-            continue
-
-        supported_features = entity_state.attributes[ATTR_SUPPORTED_FEATURES]
+        supported_features = get_supported_features(hass, entry.entity_id)
 
         # Add triggers for each entity that belongs to this integration
         base_trigger = {

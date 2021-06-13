@@ -59,7 +59,7 @@ from . import (  # noqa: F401
 from .accessories import HomeBridge, HomeDriver, get_accessory
 from .aidmanager import AccessoryAidStorage
 from .const import (
-    ATTR_INTERGRATION,
+    ATTR_INTEGRATION,
     ATTR_MANUFACTURER,
     ATTR_MODEL,
     ATTR_SOFTWARE_VERSION,
@@ -767,9 +767,9 @@ class HomeKit:
                 integration = await async_get_integration(
                     self.hass, ent_reg_ent.platform
                 )
-                ent_cfg[ATTR_INTERGRATION] = integration.name
+                ent_cfg[ATTR_INTEGRATION] = integration.name
             except IntegrationNotFound:
-                ent_cfg[ATTR_INTERGRATION] = ent_reg_ent.platform
+                ent_cfg[ATTR_INTEGRATION] = ent_reg_ent.platform
 
 
 class HomeKitPairingQRView(HomeAssistantView):

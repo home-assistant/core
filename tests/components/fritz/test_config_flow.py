@@ -305,7 +305,7 @@ async def test_ssdp_already_configured_host(hass: HomeAssistant, fc_class_mock):
 
 
 async def test_ssdp_already_configured_host_uuid(hass: HomeAssistant, fc_class_mock):
-    """Test starting a flow from discovery with a laready configured uuid."""
+    """Test starting a flow from discovery with an already configured uuid."""
 
     mock_config = MockConfigEntry(
         domain=DOMAIN,
