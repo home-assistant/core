@@ -54,14 +54,11 @@ ptz:
 set_alarm_detection_sensibility:
   name: Detection sensitivity
   description: Sets the detection sensibility level.
+  target:
+    entity:
+      integration: ezviz
+      domain: camera
   fields:
-    entity_id:
-      description: Name(s) of Ezviz Camera entities.
-      required: true
-      selector:
-        entity:
-          integration: ezviz
-          domain: camera
     level:
       name: Sensitivity Level
       description: 'Sensibility level (1-6) for type 0 (Normal camera)
