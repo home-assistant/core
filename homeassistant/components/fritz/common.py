@@ -83,7 +83,7 @@ class FritzBoxTools:
         self._cancel_scan: CALLBACK_TYPE | None = None
         self._devices: dict[str, Any] = {}
         self._options: MappingProxyType[str, Any] | None = None
-        self._unique_id: str | None = None
+        self._unique_id: str
         self.connection: FritzConnection = None
         self.fritz_hosts: FritzHosts = None
         self.fritz_profiles: dict[str, FritzProfileSwitch] = {}
