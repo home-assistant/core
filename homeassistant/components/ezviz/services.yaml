@@ -21,14 +21,11 @@ alarm_sound:
 ptz:
   name: PTZ
   description: Moves the camera to the direction, with defined speed
+  target:
+    entity:
+      integration: ezviz
+      domain: camera
   fields:
-    entity_id:
-      description: Name(s) of Ezviz Camera entities.
-      required: true
-      selector:
-        entity:
-          integration: ezviz
-          domain: camera
     direction:
       name: Direction
       description: Direction to move camera (up, down, left, right).
