@@ -10,7 +10,7 @@ from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_registry import (
     EntityRegistry,
-    async_get_registry,
+    async_get,
     async_migrate_entries,
 )
 
@@ -91,7 +91,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Migrate old entry."""
-    if config_entry.version == 1:
+    if len(config_entry.data) == 2:
         _LOGGER.warning(
             "Migrating PVPC sensor from old tariff '%s' to new '%s'. "
             "Configure the integration to set your contracted power, "
@@ -105,7 +105,6 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
             ATTR_POWER: DEFAULT_POWER_KW,
             ATTR_POWER_P3: DEFAULT_POWER_KW,
         }
-        config_entry.version = 2
         data = {**config_entry.data, **defaults}
         hass.config_entries.async_update_entry(
             config_entry, unique_id=_DEFAULT_TARIFF, data=data, options=defaults
@@ -122,18 +121,17 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         except ValueError:
             # there were multiple sensors (with different old tariffs, up to 3),
             # so we leave just one and remove the others
-            ent_reg: EntityRegistry = await async_get_registry(hass)
-            entity_filter = filter(
-                lambda x: x.config_entry_id == config_entry.entry_id,
-                ent_reg.entities.values(),
-            )
-            entry = next(entity_filter)
-            ent_reg.async_remove(entry.entity_id)
-            _LOGGER.error(
-                "Old PVPC Sensor %s is removed "
-                "(another one already exists, using the same tariff)",
-                entry.entity_id,
-            )
+            ent_reg: EntityRegistry = async_get(hass)
+            for entity_id, entry in ent_reg.entities.items():
+                if entry.config_entry_id == config_entry.entry_id:
+                    ent_reg.async_remove(entity_id)
+                    _LOGGER.error(
+                        "Old PVPC Sensor %s is removed "
+                        "(another one already exists, using the same tariff)",
+                        entity_id,
+                    )
+                    break
+
             await hass.config_entries.async_remove(config_entry.entry_id)
             return False
 

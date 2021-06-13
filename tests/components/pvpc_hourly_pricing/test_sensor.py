@@ -55,7 +55,7 @@ async def test_sensor_availability(
         current_entries = hass.config_entries.async_entries(DOMAIN)
         assert len(current_entries) == 1
         migrated_entry = current_entries[0]
-        assert migrated_entry.version == 2
+        assert migrated_entry.version == 1
         assert migrated_entry.data[ATTR_POWER] == migrated_entry.data[ATTR_POWER_P3]
         assert migrated_entry.data[ATTR_TARIFF] == TARIFFS[0]
 
