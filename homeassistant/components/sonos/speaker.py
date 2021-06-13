@@ -222,7 +222,7 @@ class SonosSpeaker:
             self._platforms_ready.update({BINARY_SENSOR_DOMAIN, SENSOR_DOMAIN})
 
         if new_alarms := [
-            alarm for alarm in self.alarms if alarm.zone.uid == self.soco.uid
+            alarm.alarm_id for alarm in self.alarms if alarm.zone.uid == self.soco.uid
         ]:
             dispatcher_send(self.hass, SONOS_CREATE_ALARM, self, new_alarms)
         else:

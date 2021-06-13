@@ -8,7 +8,6 @@ from pysonos import SoCo
 from pysonos.alarms import Alarm, get_alarms
 from pysonos.exceptions import SoCoException
 
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import DATA_SONOS, SONOS_ALARMS_UPDATED, SONOS_CREATE_ALARM
@@ -18,11 +17,11 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class SonosAlarms(SonosHouseholdCoordinator):
-    """Storage class for Sonos alarms."""
+    """Coordinator class for Sonos alarms."""
 
-    def __init__(self, hass: HomeAssistant, household_id: str) -> None:
+    def __init__(self, *args) -> None:
         """Initialize the data."""
-        super().__init__(hass, household_id)
+        super().__init__(*args)
         self._alarms: dict[str, Alarm] = {}
 
     def __iter__(self) -> Iterator:
@@ -42,7 +41,9 @@ class SonosAlarms(SonosHouseholdCoordinator):
 
         for alarm in new_alarms:
             speaker = self.hass.data[DATA_SONOS].discovered[alarm.zone.uid]
-            async_dispatcher_send(self.hass, SONOS_CREATE_ALARM, speaker, [alarm])
+            async_dispatcher_send(
+                self.hass, SONOS_CREATE_ALARM, speaker, [alarm.alarm_id]
+            )
         async_dispatcher_send(self.hass, f"{SONOS_ALARMS_UPDATED}-{self.household_id}")
         return True
 

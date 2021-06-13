@@ -8,7 +8,6 @@ from pysonos import SoCo
 from pysonos.data_structures import DidlFavorite
 from pysonos.exceptions import SoCoException
 
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import SONOS_FAVORITES_UPDATED
@@ -18,11 +17,11 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class SonosFavorites(SonosHouseholdCoordinator):
-    """Storage class for Sonos favorites."""
+    """Coordinator class for Sonos favorites."""
 
-    def __init__(self, hass: HomeAssistant, household_id: str) -> None:
+    def __init__(self, *args) -> None:
         """Initialize the data."""
-        super().__init__(hass, household_id)
+        super().__init__(*args)
         self._favorites: list[DidlFavorite] = []
 
     def __iter__(self) -> Iterator:

@@ -4,7 +4,6 @@ from __future__ import annotations
 import datetime
 import logging
 
-from pysonos.alarms import Alarm
 from pysonos.exceptions import SoCoException, SoCoUPnPException
 
 from homeassistant.components.switch import ENTITY_ID_FORMAT, SwitchEntity
@@ -36,11 +35,11 @@ ATTR_INCLUDE_LINKED_ZONES = "include_linked_zones"
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Sonos from a config entry."""
 
-    async def _async_create_entity(speaker: SonosSpeaker, alarms: list[Alarm]) -> None:
+    async def _async_create_entity(speaker: SonosSpeaker, alarm_ids: list[str]) -> None:
         entities = []
-        for alarm in alarms:
-            _LOGGER.debug("Creating alarm %s on %s", alarm.alarm_id, speaker.zone_name)
-            entities.append(SonosAlarmEntity(alarm.alarm_id, speaker))
+        for alarm_id in alarm_ids:
+            _LOGGER.debug("Creating alarm %s on %s", alarm_id, speaker.zone_name)
+            entities.append(SonosAlarmEntity(alarm_id, speaker))
         async_add_entities(entities)
 
     config_entry.async_on_unload(
