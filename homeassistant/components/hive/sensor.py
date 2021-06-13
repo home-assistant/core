@@ -1,4 +1,4 @@
-"""Support for the Hive sesnors."""
+"""Support for the Hive sensors."""
 
 from datetime import timedelta
 

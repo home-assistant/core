@@ -4,7 +4,7 @@ from __future__ import annotations
 from typing import Final
 
 MAJOR_VERSION: Final = 2021
-MINOR_VERSION: Final = 6
+MINOR_VERSION: Final = 7
 PATCH_VERSION: Final = "0.dev0"
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
@@ -26,9 +26,14 @@ ENTITY_MATCH_ALL: Final = "all"
 # If no name is specified
 DEVICE_DEFAULT_NAME: Final = "Unnamed Device"
 
-# Max characters for an event_type (changing this requires a recorder
-# database migration)
-MAX_LENGTH_EVENT_TYPE: Final = 64
+# Max characters for data stored in the recorder (changes to these limits would require
+# a database migration)
+MAX_LENGTH_EVENT_EVENT_TYPE: Final = 64
+MAX_LENGTH_EVENT_ORIGIN: Final = 32
+MAX_LENGTH_EVENT_CONTEXT_ID: Final = 36
+MAX_LENGTH_STATE_DOMAIN: Final = 64
+MAX_LENGTH_STATE_ENTITY_ID: Final = 255
+MAX_LENGTH_STATE_STATE: Final = 255
 
 # Sun events
 SUN_EVENT_SUNSET: Final = "sunset"

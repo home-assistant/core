@@ -12,8 +12,11 @@ import homeassistant.helpers.config_validation as cv
 
 DEPENDENCIES = ("webhook",)
 
-TRIGGER_SCHEMA = vol.Schema(
-    {vol.Required(CONF_PLATFORM): "webhook", vol.Required(CONF_WEBHOOK_ID): cv.string}
+TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
+    {
+        vol.Required(CONF_PLATFORM): "webhook",
+        vol.Required(CONF_WEBHOOK_ID): cv.string,
+    }
 )
 
 

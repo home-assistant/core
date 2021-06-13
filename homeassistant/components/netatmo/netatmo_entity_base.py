@@ -1,15 +1,11 @@
 """Base class for Netatmo entities."""
 from __future__ import annotations
 
-import logging
-
 from homeassistant.core import CALLBACK_TYPE, callback
 from homeassistant.helpers.entity import Entity
 
 from .const import DATA_DEVICE_IDS, DOMAIN, MANUFACTURER, MODELS, SIGNAL_NAME
 from .data_handler import PUBLICDATA_DATA_CLASS_NAME, NetatmoDataHandler
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class NetatmoBase(Entity):

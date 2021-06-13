@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "\u05ea\u05e6\u05d5\u05e8\u05ea\u05d5 \u05db\u05d1\u05e8 \u05e0\u05e7\u05d1\u05e2\u05d4. \u05e8\u05e7 \u05ea\u05e6\u05d5\u05e8\u05d4 \u05d0\u05d7\u05ea \u05d0\u05e4\u05e9\u05e8\u05d9\u05ea.",
+            "unknown": "\u05e9\u05d2\u05d9\u05d0\u05d4 \u05d1\u05dc\u05ea\u05d9 \u05e6\u05e4\u05d5\u05d9\u05d4"
+        },
+        "error": {
+            "cannot_connect": "\u05d4\u05d4\u05ea\u05d7\u05d1\u05e8\u05d5\u05ea \u05e0\u05db\u05e9\u05dc\u05d4",
+            "invalid_auth": "\u05d0\u05d9\u05de\u05d5\u05ea \u05dc\u05d0 \u05d7\u05d5\u05e7\u05d9",
+            "invalid_zone": "\u05d0\u05d6\u05d5\u05e8 \u05dc\u05d0 \u05d7\u05d5\u05e7\u05d9"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "records": {
+                "data": {
+                    "records": "\u05e8\u05e9\u05d5\u05de\u05d5\u05ea"
+                }
+            },
+            "user": {
+                "data": {
+                    "api_token": "\u05d0\u05e1\u05d9\u05de\u05d5\u05df API"
+                }
+            },
+            "zone": {
+                "data": {
+                    "zone": "\u05d0\u05b5\u05d6\u05d5\u05b9\u05e8"
+                }
+            }
+        }
+    }
+}

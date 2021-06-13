@@ -172,7 +172,7 @@ class GoogleTravelTimeSensor(SensorEntity):
         self._unit_of_measurement = TIME_MINUTES
         self._matrix = None
         self._api_key = api_key
-        self._unique_id = config_entry.unique_id
+        self._unique_id = config_entry.entry_id
         self._client = client
 
         # Check if location is a trackable entity

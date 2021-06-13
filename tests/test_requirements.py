@@ -361,10 +361,14 @@ async def test_discovery_requirements_ssdp(hass):
     ) as mock_process:
         await async_get_integration_with_requirements(hass, "ssdp_comp")
 
-    assert len(mock_process.mock_calls) == 3
+    assert len(mock_process.mock_calls) == 4
     assert mock_process.mock_calls[0][1][2] == ssdp.requirements
     # Ensure zeroconf is a dep for ssdp
-    assert mock_process.mock_calls[1][1][1] == "zeroconf"
+    assert {
+        mock_process.mock_calls[1][1][1],
+        mock_process.mock_calls[2][1][1],
+        mock_process.mock_calls[3][1][1],
+    } == {"network", "zeroconf", "http"}
 
 
 @pytest.mark.parametrize(
@@ -386,7 +390,7 @@ async def test_discovery_requirements_zeroconf(hass, partial_manifest):
     ) as mock_process:
         await async_get_integration_with_requirements(hass, "comp")
 
-    assert len(mock_process.mock_calls) == 2  # zeroconf also depends on http
+    assert len(mock_process.mock_calls) == 3  # zeroconf also depends on http
     assert mock_process.mock_calls[0][1][2] == zeroconf.requirements
 
 

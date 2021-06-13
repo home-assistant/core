@@ -45,6 +45,7 @@ from homeassistant.const import (
     CONF_EVENT_DATA,
     CONF_EVENT_DATA_TEMPLATE,
     CONF_FOR,
+    CONF_ID,
     CONF_PLATFORM,
     CONF_REPEAT,
     CONF_SCAN_INTERVAL,
@@ -770,25 +771,25 @@ def deprecated(
 
 
 def key_value_schemas(
-    key: str, value_schemas: dict[str, vol.Schema]
-) -> Callable[[Any], dict[str, Any]]:
+    key: str, value_schemas: dict[Hashable, vol.Schema]
+) -> Callable[[Any], dict[Hashable, Any]]:
     """Create a validator that validates based on a value for specific key.
 
     This gives better error messages.
     """
 
-    def key_value_validator(value: Any) -> dict[str, Any]:
+    def key_value_validator(value: Any) -> dict[Hashable, Any]:
         if not isinstance(value, dict):
             raise vol.Invalid("Expected a dictionary")
 
         key_value = value.get(key)
 
-        if key_value not in value_schemas:
-            raise vol.Invalid(
-                f"Unexpected value for {key}: '{key_value}'. Expected {', '.join(value_schemas)}"
-            )
+        if isinstance(key_value, Hashable) and key_value in value_schemas:
+            return cast(Dict[Hashable, Any], value_schemas[key_value](value))
 
-        return cast(Dict[str, Any], value_schemas[key_value](value))
+        raise vol.Invalid(
+            f"Unexpected value for {key}: '{key_value}'. Expected {', '.join(str(key) for key in value_schemas)}"
+        )
 
     return key_value_validator
 
@@ -926,7 +927,7 @@ SERVICE_SCHEMA = vol.All(
 )
 
 NUMERIC_STATE_THRESHOLD_SCHEMA = vol.Any(
-    vol.Coerce(float), vol.All(str, entity_domain("input_number"))
+    vol.Coerce(float), vol.All(str, entity_domain(["input_number", "number", "sensor"]))
 )
 
 CONDITION_BASE_SCHEMA = {vol.Optional(CONF_ALIAS): string}
@@ -1014,12 +1015,24 @@ TIME_CONDITION_SCHEMA = vol.All(
         {
             **CONDITION_BASE_SCHEMA,
             vol.Required(CONF_CONDITION): "time",
-            "before": vol.Any(time, vol.All(str, entity_domain("input_datetime"))),
-            "after": vol.Any(time, vol.All(str, entity_domain("input_datetime"))),
+            "before": vol.Any(
+                time, vol.All(str, entity_domain(["input_datetime", "sensor"]))
+            ),
+            "after": vol.Any(
+                time, vol.All(str, entity_domain(["input_datetime", "sensor"]))
+            ),
             "weekday": weekdays,
         }
     ),
     has_at_least_one_key("before", "after", "weekday"),
+)
+
+TRIGGER_CONDITION_SCHEMA = vol.Schema(
+    {
+        **CONDITION_BASE_SCHEMA,
+        vol.Required(CONF_CONDITION): "trigger",
+        vol.Required(CONF_ID): vol.All(ensure_list, [string]),
+    }
 )
 
 ZONE_CONDITION_SCHEMA = vol.Schema(
@@ -1086,24 +1099,29 @@ CONDITION_SCHEMA: vol.Schema = vol.Schema(
         key_value_schemas(
             CONF_CONDITION,
             {
+                "and": AND_CONDITION_SCHEMA,
+                "device": DEVICE_CONDITION_SCHEMA,
+                "not": NOT_CONDITION_SCHEMA,
                 "numeric_state": NUMERIC_STATE_CONDITION_SCHEMA,
+                "or": OR_CONDITION_SCHEMA,
                 "state": STATE_CONDITION_SCHEMA,
                 "sun": SUN_CONDITION_SCHEMA,
                 "template": TEMPLATE_CONDITION_SCHEMA,
                 "time": TIME_CONDITION_SCHEMA,
+                "trigger": TRIGGER_CONDITION_SCHEMA,
                 "zone": ZONE_CONDITION_SCHEMA,
-                "and": AND_CONDITION_SCHEMA,
-                "or": OR_CONDITION_SCHEMA,
-                "not": NOT_CONDITION_SCHEMA,
-                "device": DEVICE_CONDITION_SCHEMA,
             },
         ),
         dynamic_template,
     )
 )
 
+TRIGGER_BASE_SCHEMA = vol.Schema(
+    {vol.Required(CONF_PLATFORM): str, vol.Optional(CONF_ID): str}
+)
+
 TRIGGER_SCHEMA = vol.All(
-    ensure_list, [vol.Schema({vol.Required(CONF_PLATFORM): str}, extra=vol.ALLOW_EXTRA)]
+    ensure_list, [TRIGGER_BASE_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA)]
 )
 
 _SCRIPT_DELAY_SCHEMA = vol.Schema(

@@ -78,7 +78,7 @@ class PlexSession:
 
         if media.librarySectionID in SPECIAL_SECTIONS:
             self.media_library_title = SPECIAL_SECTIONS[media.librarySectionID]
-        elif media.librarySectionID < 1:
+        elif media.librarySectionID and media.librarySectionID < 1:
             self.media_library_title = UNKNOWN_SECTION
             _LOGGER.warning(
                 "Unknown library section ID (%s) for title '%s', please create an issue",
