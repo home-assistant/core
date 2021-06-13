@@ -65,3 +65,4 @@ uuid==1000000000.0.0
 # httpcore 0.13.4 breaks several integrations
 # https://github.com/home-assistant/core/issues/51778
 httpcore==0.13.3
+
