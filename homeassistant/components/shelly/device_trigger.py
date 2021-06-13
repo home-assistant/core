@@ -4,7 +4,7 @@ from __future__ import annotations
 import voluptuous as vol
 
 from homeassistant.components.automation import AutomationActionType
-from homeassistant.components.device_automation import TRIGGER_BASE_SCHEMA
+from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
 )
@@ -27,12 +27,13 @@ from .const import (
     DOMAIN,
     EVENT_SHELLY_CLICK,
     INPUTS_EVENTS_SUBTYPES,
-    SHBTN_1_INPUTS_EVENTS_TYPES,
+    SHBTN_INPUTS_EVENTS_TYPES,
+    SHBTN_MODELS,
     SUPPORTED_INPUTS_EVENTS_TYPES,
 )
 from .utils import get_device_wrapper, get_input_triggers
 
-TRIGGER_SCHEMA = TRIGGER_BASE_SCHEMA.extend(
+TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_TYPE): vol.In(SUPPORTED_INPUTS_EVENTS_TYPES),
         vol.Required(CONF_SUBTYPE): vol.In(INPUTS_EVENTS_SUBTYPES),
@@ -69,8 +70,8 @@ async def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict]:
     if not wrapper:
         raise InvalidDeviceAutomationConfig(f"Device not found: {device_id}")
 
-    if wrapper.model in ("SHBTN-1", "SHBTN-2"):
-        for trigger in SHBTN_1_INPUTS_EVENTS_TYPES:
+    if wrapper.model in SHBTN_MODELS:
+        for trigger in SHBTN_INPUTS_EVENTS_TYPES:
             triggers.append(
                 {
                     CONF_PLATFORM: "device",

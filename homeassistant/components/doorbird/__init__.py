@@ -1,5 +1,4 @@
 """Support for DoorBird devices."""
-import asyncio
 import logging
 
 from aiohttp import web
@@ -8,10 +7,9 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    CONF_DEVICES,
     CONF_HOST,
     CONF_NAME,
     CONF_PASSWORD,
@@ -57,17 +55,7 @@ DEVICE_SCHEMA = vol.Schema(
     }
 )
 
-CONFIG_SCHEMA = vol.Schema(
-    vol.All(
-        cv.deprecated(DOMAIN),
-        {
-            DOMAIN: vol.Schema(
-                {vol.Required(CONF_DEVICES): vol.All(cv.ensure_list, [DEVICE_SCHEMA])}
-            )
-        },
-    ),
-    extra=vol.ALLOW_EXTRA,
-)
+CONFIG_SCHEMA = cv.deprecated(DOMAIN)
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
@@ -76,17 +64,6 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
     # Provide an endpoint for the doorstations to call to trigger events
     hass.http.register_view(DoorBirdRequestView)
-
-    if DOMAIN in config and CONF_DEVICES in config[DOMAIN]:
-        for index, doorstation_config in enumerate(config[DOMAIN][CONF_DEVICES]):
-            if CONF_NAME not in doorstation_config:
-                doorstation_config[CONF_NAME] = f"DoorBird {index + 1}"
-
-            hass.async_create_task(
-                hass.config_entries.flow.async_init(
-                    DOMAIN, context={"source": SOURCE_IMPORT}, data=doorstation_config
-                )
-            )
 
     def _reset_device_favorites_handler(event):
         """Handle clearing favorites on device."""
@@ -113,7 +90,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up DoorBird from a config entry."""
 
     _async_import_options_from_data_if_missing(hass, entry)
@@ -167,10 +144,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         UNDO_UPDATE_LISTENER: undo_listener,
     }
 
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, platform)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
@@ -184,14 +158,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     hass.data[DOMAIN][entry.entry_id][UNDO_UPDATE_LISTENER]()
 
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, platform)
-                for platform in PLATFORMS
-            ]
-        )
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
 

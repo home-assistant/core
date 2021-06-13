@@ -4,13 +4,12 @@ from __future__ import annotations
 import voluptuous as vol
 
 from homeassistant.components.automation import AutomationActionType
-from homeassistant.components.device_automation import TRIGGER_BASE_SCHEMA
+from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.components.homeassistant.triggers import (
     numeric_state as numeric_state_trigger,
     state as state_trigger,
 )
 from homeassistant.const import (
-    ATTR_SUPPORTED_FEATURES,
     CONF_ABOVE,
     CONF_BELOW,
     CONF_DEVICE_ID,
@@ -27,6 +26,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_registry
+from homeassistant.helpers.entity import get_supported_features
 from homeassistant.helpers.typing import ConfigType
 
 from . import (
@@ -41,7 +41,7 @@ POSITION_TRIGGER_TYPES = {"position", "tilt_position"}
 STATE_TRIGGER_TYPES = {"opened", "closed", "opening", "closing"}
 
 POSITION_TRIGGER_SCHEMA = vol.All(
-    TRIGGER_BASE_SCHEMA.extend(
+    DEVICE_TRIGGER_BASE_SCHEMA.extend(
         {
             vol.Required(CONF_ENTITY_ID): cv.entity_id,
             vol.Required(CONF_TYPE): vol.In(POSITION_TRIGGER_TYPES),
@@ -56,7 +56,7 @@ POSITION_TRIGGER_SCHEMA = vol.All(
     cv.has_at_least_one_key(CONF_BELOW, CONF_ABOVE),
 )
 
-STATE_TRIGGER_SCHEMA = TRIGGER_BASE_SCHEMA.extend(
+STATE_TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_ENTITY_ID): cv.entity_id,
         vol.Required(CONF_TYPE): vol.In(STATE_TRIGGER_TYPES),
@@ -77,11 +77,7 @@ async def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict]:
         if entry.domain != DOMAIN:
             continue
 
-        state = hass.states.get(entry.entity_id)
-        if not state or ATTR_SUPPORTED_FEATURES not in state.attributes:
-            continue
-
-        supported_features = state.attributes[ATTR_SUPPORTED_FEATURES]
+        supported_features = get_supported_features(hass, entry.entity_id)
         supports_open_close = supported_features & (SUPPORT_OPEN | SUPPORT_CLOSE)
 
         # Add triggers for each entity that belongs to this integration

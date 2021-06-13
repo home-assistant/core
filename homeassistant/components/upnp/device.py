@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Mapping
 from ipaddress import IPv4Address
+from typing import Any
 from urllib.parse import urlparse
 
 from async_upnp_client import UpnpFactory
@@ -11,6 +12,7 @@ from async_upnp_client.aiohttp import AiohttpSessionRequester
 from async_upnp_client.device_updater import DeviceUpdater
 from async_upnp_client.profiles.igd import IgdDevice
 
+from homeassistant.components import ssdp
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -36,6 +38,16 @@ from .const import (
 )
 
 
+def discovery_info_to_discovery(discovery_info: Mapping) -> Mapping:
+    """Convert a SSDP-discovery to 'our' discovery."""
+    return {
+        DISCOVERY_UDN: discovery_info[ssdp.ATTR_UPNP_UDN],
+        DISCOVERY_ST: discovery_info[ssdp.ATTR_SSDP_ST],
+        DISCOVERY_LOCATION: discovery_info[ssdp.ATTR_SSDP_LOCATION],
+        DISCOVERY_USN: discovery_info[ssdp.ATTR_SSDP_USN],
+    }
+
+
 def _get_local_ip(hass: HomeAssistant) -> IPv4Address | None:
     """Get the configured local ip."""
     if DOMAIN in hass.data and DOMAIN_CONFIG in hass.data[DOMAIN]:
@@ -58,17 +70,10 @@ class Device:
     async def async_discover(cls, hass: HomeAssistant) -> list[Mapping]:
         """Discover UPnP/IGD devices."""
         _LOGGER.debug("Discovering UPnP/IGD devices")
-        local_ip = _get_local_ip(hass)
-        discoveries = await IgdDevice.async_search(source_ip=local_ip, timeout=10)
-
-        # Supplement/standardize discovery.
-        for discovery in discoveries:
-            discovery[DISCOVERY_UDN] = discovery["_udn"]
-            discovery[DISCOVERY_ST] = discovery["st"]
-            discovery[DISCOVERY_LOCATION] = discovery["location"]
-            discovery[DISCOVERY_USN] = discovery["usn"]
-            _LOGGER.debug("Discovered device: %s", discovery)
-
+        discoveries = []
+        for ssdp_st in IgdDevice.DEVICE_TYPES:
+            for discovery_info in ssdp.async_get_discovery_info_by_st(hass, ssdp_st):
+                discoveries.append(discovery_info_to_discovery(discovery_info))
         return discoveries
 
     @classmethod
@@ -162,7 +167,7 @@ class Device:
         """Get string representation."""
         return f"IGD Device: {self.name}/{self.udn}::{self.device_type}"
 
-    async def async_get_traffic_data(self) -> Mapping[str, any]:
+    async def async_get_traffic_data(self) -> Mapping[str, Any]:
         """
         Get all traffic data in one go.
 

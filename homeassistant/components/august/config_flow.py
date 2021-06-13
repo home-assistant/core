@@ -57,7 +57,6 @@ class AugustConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for August."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     def __init__(self):
         """Store an AugustGateway()."""

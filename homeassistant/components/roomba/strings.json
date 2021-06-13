@@ -1,8 +1,8 @@
 {
   "config": {
-    "flow_title": "iRobot {name} ({host})",
+    "flow_title": "{name} ({host})",
     "step": {
-      "init": {
+      "user": {
         "title": "Automatically connect to the device",
         "description": "Select a Roomba or Braava.",
         "data": {
@@ -16,7 +16,7 @@
           "host": "[%key:common::config_flow::data::host%]",
           "blid": "BLID"
         }
-      },      
+      },
       "link": {
         "title": "Retrieve Password",
         "description": "Press and hold the Home button on {name} until the device generates a sound (about two seconds), then submit within 30 seconds."
@@ -27,7 +27,7 @@
         "data": {
           "password": "[%key:common::config_flow::data::password%]"
         }
-      }          
+      }
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
@@ -37,7 +37,7 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "not_irobot_device": "Discovered device is not an iRobot device",
       "short_blid": "The BLID was truncated"
-    }    
+    }
   },
   "options": {
     "step": {

@@ -10,34 +10,28 @@ from homeassistant.components.fritzbox.const import DOMAIN as FB_DOMAIN
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_FRIENDLY_NAME,
+    CONF_DEVICES,
     STATE_OFF,
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from . import MOCK_CONFIG, FritzDeviceBinarySensorMock
+from . import MOCK_CONFIG, FritzDeviceBinarySensorMock, setup_config_entry
 
 from tests.common import async_fire_time_changed
 
 ENTITY_ID = f"{DOMAIN}.fake_name"
 
 
-async def setup_fritzbox(hass: HomeAssistant, config: dict):
-    """Set up mock AVM Fritz!Box."""
-    assert await async_setup_component(hass, FB_DOMAIN, config)
-    await hass.async_block_till_done()
-
-
 async def test_setup(hass: HomeAssistant, fritz: Mock):
     """Test setup of platform."""
     device = FritzDeviceBinarySensorMock()
-    fritz().get_devices.return_value = [device]
+    assert await setup_config_entry(
+        hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
+    )
 
-    await setup_fritzbox(hass, MOCK_CONFIG)
     state = hass.states.get(ENTITY_ID)
-
     assert state
     assert state.state == STATE_ON
     assert state.attributes[ATTR_FRIENDLY_NAME] == "fake_name"
@@ -48,21 +42,21 @@ async def test_is_off(hass: HomeAssistant, fritz: Mock):
     """Test state of platform."""
     device = FritzDeviceBinarySensorMock()
     device.present = False
-    fritz().get_devices.return_value = [device]
+    assert await setup_config_entry(
+        hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
+    )
 
-    await setup_fritzbox(hass, MOCK_CONFIG)
     state = hass.states.get(ENTITY_ID)
-
     assert state
     assert state.state == STATE_OFF
 
 
 async def test_update(hass: HomeAssistant, fritz: Mock):
-    """Test update with error."""
+    """Test update without error."""
     device = FritzDeviceBinarySensorMock()
-    fritz().get_devices.return_value = [device]
-
-    await setup_fritzbox(hass, MOCK_CONFIG)
+    assert await setup_config_entry(
+        hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
+    )
 
     assert device.update.call_count == 1
     assert fritz().login.call_count == 1
@@ -79,9 +73,9 @@ async def test_update_error(hass: HomeAssistant, fritz: Mock):
     """Test update with error."""
     device = FritzDeviceBinarySensorMock()
     device.update.side_effect = [mock.DEFAULT, HTTPError("Boom")]
-    fritz().get_devices.return_value = [device]
-
-    await setup_fritzbox(hass, MOCK_CONFIG)
+    assert await setup_config_entry(
+        hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
+    )
 
     assert device.update.call_count == 1
     assert fritz().login.call_count == 1
@@ -91,4 +85,4 @@ async def test_update_error(hass: HomeAssistant, fritz: Mock):
     await hass.async_block_till_done()
 
     assert device.update.call_count == 2
-    assert fritz().login.call_count == 2
+    assert fritz().login.call_count == 1

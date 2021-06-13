@@ -1,8 +1,12 @@
 """Fixtures for sma tests."""
 from unittest.mock import patch
 
+from pysma.const import DEVCLASS_INVERTER
+from pysma.definitions import sensor_map
+from pysma.sensor import Sensors
 import pytest
 
+from homeassistant import config_entries
 from homeassistant.components.sma.const import DOMAIN
 
 from . import MOCK_CUSTOM_SETUP_DATA, MOCK_DEVICE
@@ -18,7 +22,7 @@ def mock_config_entry():
         title=MOCK_DEVICE["name"],
         unique_id=MOCK_DEVICE["serial"],
         data=MOCK_CUSTOM_SETUP_DATA,
-        source="import",
+        source=config_entries.SOURCE_IMPORT,
     )
 
 
@@ -27,7 +31,9 @@ async def init_integration(hass, mock_config_entry):
     """Create a fake SMA Config Entry."""
     mock_config_entry.add_to_hass(hass)
 
-    with patch("pysma.SMA.read"):
+    with patch("pysma.SMA.read"), patch(
+        "pysma.SMA.get_sensors", return_value=Sensors(sensor_map[DEVCLASS_INVERTER])
+    ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
     return mock_config_entry

@@ -5,7 +5,7 @@ import math
 
 import voluptuous as vol
 
-from homeassistant.components import history
+from homeassistant.components.recorder import history
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_ENTITY_ID,

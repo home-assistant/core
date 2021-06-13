@@ -14,7 +14,7 @@ from homeassistant.const import (
     CONF_WEBHOOK_ID,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, device_registry
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -74,7 +74,7 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Point from a config entry."""
 
     async def token_saver(token, **kwargs):
@@ -139,13 +139,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     session = hass.data[DOMAIN].pop(entry.entry_id)
     await session.remove_webhook()
 
-    for platform in PLATFORMS:
-        await hass.config_entries.async_forward_entry_unload(entry, platform)
-
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if not hass.data[DOMAIN]:
         hass.data.pop(DOMAIN)
 
-    return True
+    return unload_ok
 
 
 async def handle_webhook(hass, webhook_id, request):
@@ -309,7 +307,9 @@ class MinutPointEntity(Entity):
         """Return a device description for device registry."""
         device = self.device.device
         return {
-            "connections": {("mac", device["device_mac"])},
+            "connections": {
+                (device_registry.CONNECTION_NETWORK_MAC, device["device_mac"])
+            },
             "identifieres": device["device_id"],
             "manufacturer": "Minut",
             "model": f"Point v{device['hardware_version']}",

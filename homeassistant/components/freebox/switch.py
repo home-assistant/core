@@ -8,6 +8,7 @@ from freebox_api.exceptions import InsufficientPermissionsError
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
 
 from .const import DOMAIN
 from .router import FreeboxRouter
@@ -49,7 +50,7 @@ class FreeboxWifiSwitch(SwitchEntity):
         return self._state
 
     @property
-    def device_info(self) -> dict[str, any]:
+    def device_info(self) -> DeviceInfo:
         """Return the device information."""
         return self._router.device_info
 

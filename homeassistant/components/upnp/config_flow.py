@@ -29,24 +29,13 @@ from .const import (
     DOMAIN_DEVICES,
     LOGGER as _LOGGER,
 )
-from .device import Device
-
-
-def discovery_info_to_discovery(discovery_info: Mapping) -> Mapping:
-    """Convert a SSDP-discovery to 'our' discovery."""
-    return {
-        DISCOVERY_UDN: discovery_info[ssdp.ATTR_UPNP_UDN],
-        DISCOVERY_ST: discovery_info[ssdp.ATTR_SSDP_ST],
-        DISCOVERY_LOCATION: discovery_info[ssdp.ATTR_SSDP_LOCATION],
-        DISCOVERY_USN: discovery_info[ssdp.ATTR_SSDP_USN],
-    }
+from .device import Device, discovery_info_to_discovery
 
 
 class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a UPnP/IGD config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     # Paths:
     # - ssdp(discovery_info) --> ssdp_confirm(None) --> ssdp_confirm({}) --> create_entry()
@@ -185,7 +174,7 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
         # Handle devices changing their UDN, only allow a single
-        existing_entries = self.hass.config_entries.async_entries(DOMAIN)
+        existing_entries = self._async_current_entries()
         for config_entry in existing_entries:
             entry_hostname = config_entry.data.get(CONFIG_ENTRY_HOSTNAME)
             if entry_hostname == discovery[DISCOVERY_HOSTNAME]:

@@ -1,8 +1,7 @@
 """Light support for switch entities."""
 from __future__ import annotations
 
-from collections.abc import Sequence
-from typing import Any, Callable, cast
+from typing import Any, cast
 
 import voluptuous as vol
 
@@ -17,7 +16,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, State, callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -36,7 +35,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    async_add_entities: Callable[[Sequence[Entity]], None],
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Initialize Light Switch platform."""

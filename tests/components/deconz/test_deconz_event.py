@@ -232,7 +232,7 @@ async def test_deconz_alarm_events(hass, aioclient_mock, mock_deconz_websocket):
 
     device_registry = await hass.helpers.device_registry.async_get_registry()
 
-    assert len(hass.states.async_all()) == 1
+    assert len(hass.states.async_all()) == 2
     # 1 alarm control device + 2 additional devices for deconz service and host
     assert (
         len(async_entries_for_config_entry(device_registry, config_entry.entry_id)) == 3
@@ -265,7 +265,19 @@ async def test_deconz_alarm_events(hass, aioclient_mock, mock_deconz_websocket):
         CONF_CODE: "1234",
     }
 
-    # Unsupported event
+    # Unsupported events
+
+    event_changed_sensor = {
+        "t": "event",
+        "e": "changed",
+        "r": "sensors",
+        "id": "1",
+        "state": {"action": "unsupported,1234,1"},
+    }
+    await mock_deconz_websocket(data=event_changed_sensor)
+    await hass.async_block_till_done()
+
+    assert len(captured_events) == 1
 
     event_changed_sensor = {
         "t": "event",
@@ -282,7 +294,7 @@ async def test_deconz_alarm_events(hass, aioclient_mock, mock_deconz_websocket):
     await hass.config_entries.async_unload(config_entry.entry_id)
 
     states = hass.states.async_all()
-    assert len(hass.states.async_all()) == 1
+    assert len(hass.states.async_all()) == 2
     for state in states:
         assert state.state == STATE_UNAVAILABLE
 

@@ -1,0 +1,14 @@
+<MediaContainer size="1">
+<Video addedAt="1619538677" genuineMediaAnalysis="1" grandparentThumb="https://metadata-static.plex.tv/5/gracenote/55af94d4c6e3139f2cd925cd6436d514.jpg" grandparentTitle="The Price Is Right" guid="plex://episode/6083464579af59002d1e35bc" index="105" key="/livetv/sessions/live_tv_1" librarySectionID="-4" live="1" parentIndex="49" ratingKey="203216" sessionKey="97" summary="" title="The Price Is Right" titleSort="Price Is Right" type="episode" year="2021">
+<Media id="382631" origin="livetv" uuid="live_tv_1" audioChannels="6" audioCodec="*" container="mkv" height="1080" videoCodec="*" videoFrameRate="NTSC" videoResolution="1080p" width="1920" selected="1">
+<Part id="383069" container="mkv" height="1080" width="1920" decision="transcode" selected="1">
+<Stream bitrate="2147483647" closedCaptions="1" codec="*" displayTitle="1080i (MPEG2VIDEO)" extendedDisplayTitle="1080i (MPEG2VIDEO)" frameRate="29.969999999999999" height="1080" id="770097" streamType="1" width="1920" decision="copy" location="direct" />
+<Stream bitrate="384" bitrateMode="cbr" channels="6" codec="*" displayTitle="Unknown (AC3 5.1)" extendedDisplayTitle="Unknown (AC3 5.1)" id="770098" selected="1" streamType="2" decision="copy" location="direct" />
+</Part>
+</Media>
+<User id="1" thumb="https://plex.tv/users/1234567890abcdef/avatar?c=11111" title="User 1" />
+<Player address="1.2.3.11" device="SHIELD Android TV" deviceClass="stb" local="1" machineIdentifier="1234567890123456-com-plexapp-android" model="darcy" platform="Android" platformVersion="9" product="Plex for Android (TV)" profile="Android" protocolVersion="1" relayed="0" remotePublicAddress="10.20.30.40" secure="1" state="playing" title="SHIELD Android TV" userID="1" vendor="NVIDIA" version="8.9.2.21619" />
+<Session id="session_id_1" bandwidth="10000000" location="lan" />
+<TranscodeSession key="/transcode/sessions/g3z46t06s5y0qp6pimggs49g" throttled="0" complete="0" progress="-1" size="-22" speed="2" duration="7200000" context="streaming" sourceVideoCodec="mpeg2video" sourceAudioCodec="ac3" videoDecision="copy" audioDecision="copy" protocol="http" container="mkv" videoCodec="*" audioCodec="*" audioChannels="6" transcodeHwRequested="1" transcodeHwFullPipeline="0" timeStamp="1619538677.7417972" maxOffsetAvailable="304.55399999999997" minOffsetAvailable="0" />
+</Video>
+</MediaContainer>

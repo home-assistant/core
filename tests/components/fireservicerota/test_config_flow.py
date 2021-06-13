@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 from pyfireservicerota import InvalidAuthError
 
-from homeassistant import data_entry_flow
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.fireservicerota.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
 
@@ -40,7 +40,7 @@ MOCK_TOKEN_INFO = {
 async def test_show_form(hass):
     """Test that the form is served with no input."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
@@ -53,7 +53,7 @@ async def test_abort_if_already_setup(hass):
     )
     entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}, data=MOCK_CONF
+        DOMAIN, context={"source": config_entries.SOURCE_USER}, data=MOCK_CONF
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
@@ -67,7 +67,7 @@ async def test_invalid_credentials(hass):
         side_effect=InvalidAuthError,
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "user"}, data=MOCK_CONF
+            DOMAIN, context={"source": config_entries.SOURCE_USER}, data=MOCK_CONF
         )
         assert result["errors"] == {"base": "invalid_auth"}
 
@@ -86,7 +86,7 @@ async def test_step_user(hass):
         mock_fireservicerota.request_tokens.return_value = MOCK_TOKEN_INFO
 
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "user"}, data=MOCK_CONF
+            DOMAIN, context={"source": config_entries.SOURCE_USER}, data=MOCK_CONF
         )
 
         await hass.async_block_till_done()
@@ -123,7 +123,10 @@ async def test_reauth(hass):
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": "reauth", "unique_id": entry.unique_id},
+            context={
+                "source": config_entries.SOURCE_REAUTH,
+                "unique_id": entry.unique_id,
+            },
             data=MOCK_CONF,
         )
 

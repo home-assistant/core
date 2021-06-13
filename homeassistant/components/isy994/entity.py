@@ -11,9 +11,11 @@ from pyisy.constants import (
 from pyisy.helpers import NodeProperty
 
 from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.core import callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import Entity
 
-from .const import _LOGGER, DOMAIN
+from .const import DOMAIN
 
 
 class ISYEntity(Entity):
@@ -30,16 +32,20 @@ class ISYEntity(Entity):
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to the node change events."""
-        self._change_handler = self._node.status_events.subscribe(self.on_update)
+        self._change_handler = self._node.status_events.subscribe(self.async_on_update)
 
         if hasattr(self._node, "control_events"):
-            self._control_handler = self._node.control_events.subscribe(self.on_control)
+            self._control_handler = self._node.control_events.subscribe(
+                self.async_on_control
+            )
 
-    def on_update(self, event: object) -> None:
+    @callback
+    def async_on_update(self, event: object) -> None:
         """Handle the update event from the ISY994 Node."""
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()
 
-    def on_control(self, event: NodeProperty) -> None:
+    @callback
+    def async_on_control(self, event: NodeProperty) -> None:
         """Handle a control event from the ISY994 Node."""
         event_data = {
             "entity_id": self.entity_id,
@@ -52,7 +58,7 @@ class ISYEntity(Entity):
 
         if event.control not in EVENT_PROPS_IGNORED:
             # New state attributes may be available, update the state.
-            self.schedule_update_ha_state()
+            self.async_write_ha_state()
 
         self.hass.bus.fire("isy994_control", event_data)
 
@@ -99,9 +105,9 @@ class ISYEntity(Entity):
                     f"ProductTypeID:{node.zwave_props.prod_type_id} "
                     f"ProductID:{node.zwave_props.product_id}"
                 )
-        # Note: sw_version is not exposed by the ISY for the individual devices.
         if hasattr(node, "folder") and node.folder is not None:
             device_info["suggested_area"] = node.folder
+        # Note: sw_version is not exposed by the ISY for the individual devices.
 
         return device_info
 
@@ -155,25 +161,44 @@ class ISYNodeEntity(ISYEntity):
         self._attrs.update(attr)
         return self._attrs
 
-    def send_node_command(self, command):
+    async def async_send_node_command(self, command):
         """Respond to an entity service command call."""
         if not hasattr(self._node, command):
-            _LOGGER.error(
-                "Invalid Service Call %s for device %s", command, self.entity_id
+            raise HomeAssistantError(
+                f"Invalid service call: {command} for device {self.entity_id}"
             )
-            return
-        getattr(self._node, command)()
+        await getattr(self._node, command)()
 
-    def send_raw_node_command(
+    async def async_send_raw_node_command(
         self, command, value=None, unit_of_measurement=None, parameters=None
     ):
         """Respond to an entity service raw command call."""
         if not hasattr(self._node, "send_cmd"):
-            _LOGGER.error(
-                "Invalid Service Call %s for device %s", command, self.entity_id
+            raise HomeAssistantError(
+                f"Invalid service call: {command} for device {self.entity_id}"
             )
-            return
-        self._node.send_cmd(command, value, unit_of_measurement, parameters)
+        await self._node.send_cmd(command, value, unit_of_measurement, parameters)
+
+    async def async_get_zwave_parameter(self, parameter):
+        """Respond to an entity service command to request a Z-Wave device parameter from the ISY."""
+        if not hasattr(self._node, "protocol") or self._node.protocol != PROTO_ZWAVE:
+            raise HomeAssistantError(
+                f"Invalid service call: cannot request Z-Wave Parameter for non-Z-Wave device {self.entity_id}"
+            )
+        await self._node.get_zwave_parameter(parameter)
+
+    async def async_set_zwave_parameter(self, parameter, value, size):
+        """Respond to an entity service command to set a Z-Wave device parameter via the ISY."""
+        if not hasattr(self._node, "protocol") or self._node.protocol != PROTO_ZWAVE:
+            raise HomeAssistantError(
+                f"Invalid service call: cannot set Z-Wave Parameter for non-Z-Wave device {self.entity_id}"
+            )
+        await self._node.set_zwave_parameter(parameter, value, size)
+        await self._node.get_zwave_parameter(parameter)
+
+    async def async_rename_node(self, name):
+        """Respond to an entity service command to rename a node on the ISY."""
+        await self._node.rename(name)
 
 
 class ISYProgramEntity(ISYEntity):

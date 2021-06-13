@@ -8,7 +8,7 @@
         "error": {
             "cannot_connect": "Tilkobling mislyktes"
         },
-        "flow_title": "",
+        "flow_title": "{name}",
         "step": {
             "discovery_confirm": {
                 "description": "Vil du konfigurere {name}?",

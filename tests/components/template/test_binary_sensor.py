@@ -965,7 +965,8 @@ async def test_trigger_entity(hass):
                             "picture": "{{ '/local/dogs.png' }}",
                             "icon": "{{ 'mdi:pirate' }}",
                             "attributes": {
-                                "plus_one": "{{ trigger.event.data.beer + 1 }}"
+                                "plus_one": "{{ trigger.event.data.beer + 1 }}",
+                                "another": "{{ trigger.event.data.uno_mas or 1 }}",
                             },
                         }
                     ],
@@ -1021,7 +1022,15 @@ async def test_trigger_entity(hass):
     assert state.attributes.get("icon") == "mdi:pirate"
     assert state.attributes.get("entity_picture") == "/local/dogs.png"
     assert state.attributes.get("plus_one") == 3
+    assert state.attributes.get("another") == 1
     assert state.context is context
+
+    # Even if state itself didn't change, attributes might have changed
+    hass.bus.async_fire("test_event", {"beer": 2, "uno_mas": "si"})
+    await hass.async_block_till_done()
+    state = hass.states.get("binary_sensor.via_list")
+    assert state.state == "on"
+    assert state.attributes.get("another") == "si"
 
 
 async def test_template_with_trigger_templated_delay_on(hass):
@@ -1034,6 +1043,7 @@ async def test_template_with_trigger_templated_delay_on(hass):
                 "state": "{{ trigger.event.data.beer == 2 }}",
                 "device_class": "motion",
                 "delay_on": '{{ ({ "seconds": 6 / 2 }) }}',
+                "auto_off": '{{ ({ "seconds": 1 + 1 }) }}',
             },
         }
     }
@@ -1054,3 +1064,11 @@ async def test_template_with_trigger_templated_delay_on(hass):
 
     state = hass.states.get("binary_sensor.test")
     assert state.state == "on"
+
+    # Now wait for the auto-off
+    future = dt_util.utcnow() + timedelta(seconds=2)
+    async_fire_time_changed(hass, future)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.test")
+    assert state.state == "off"

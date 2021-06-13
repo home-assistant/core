@@ -67,7 +67,8 @@ async def test_form_already_configured(hass):
 async def test_form_advanced_options(hass):
     """Test if we get the advanced options if user has enabled it."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user", "show_advanced_options": True}
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USER, "show_advanced_options": True},
     )
     assert result["type"] == "form"
     assert result["errors"] == {}

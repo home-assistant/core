@@ -159,7 +159,7 @@ async def info_for_device(hass, device_id):
         )
 
     for trigger in mqtt_debug_info["triggers"].values():
-        if trigger["device_id"] != device_id:
+        if trigger["device_id"] != device_id or trigger["discovery_data"] is None:
             continue
 
         discovery_data = {

@@ -7,7 +7,7 @@
         "error": {
             "cannot_connect": "\u9023\u7dda\u5931\u6557"
         },
-        "flow_title": "WLED\uff1a{name}",
+        "flow_title": "{name}",
         "step": {
             "user": {
                 "data": {
@@ -18,6 +18,15 @@
             "zeroconf_confirm": {
                 "description": "\u662f\u5426\u8981\u65b0\u589e WLED \u540d\u7a31\u300c{name}\u300d\u88dd\u7f6e\u81f3 Home Assistant\uff1f",
                 "title": "\u81ea\u52d5\u63a2\u7d22\u5230 WLED \u88dd\u7f6e"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "keep_master_light": "\u4fdd\u7559\u4e3b\u71c8\u5149\u3001\u5373\u4fbf\u50c5\u5269 1 \u6bb5 LED\u3002"
+                }
             }
         }
     }

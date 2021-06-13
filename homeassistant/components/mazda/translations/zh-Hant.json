@@ -11,15 +11,6 @@
             "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
         },
         "step": {
-            "reauth": {
-                "data": {
-                    "email": "\u96fb\u5b50\u90f5\u4ef6",
-                    "password": "\u5bc6\u78bc",
-                    "region": "\u5340\u57df"
-                },
-                "description": "Mazda Connected \u670d\u52d9\u8a8d\u8b49\u5931\u6557\u3002\u8acb\u8f38\u5165\u76ee\u524d\u6191\u8b49\u3002",
-                "title": "Mazda Connected \u670d\u52d9 - \u8a8d\u8b49\u5931\u6557"
-            },
             "user": {
                 "data": {
                     "email": "\u96fb\u5b50\u90f5\u4ef6",

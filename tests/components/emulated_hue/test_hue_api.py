@@ -91,6 +91,8 @@ ENTITY_IDS_BY_NUMBER = {
     "22": "scene.light_on",
     "23": "scene.light_off",
     "24": "media_player.kitchen",
+    "25": "light.office_rgbw_lights",
+    "26": "light.living_room_rgbww_lights",
 }
 
 ENTITY_NUMBERS_BY_ID = {v: k for k, v in ENTITY_IDS_BY_NUMBER.items()}
@@ -217,6 +219,10 @@ def hue_client(loop, hass_hue, aiohttp_client):
                 "light.bed_light": {emulated_hue.CONF_ENTITY_HIDDEN: True},
                 # Kitchen light is explicitly excluded from being exposed
                 "light.kitchen_lights": {emulated_hue.CONF_ENTITY_HIDDEN: True},
+                # Entrance light is explicitly excluded from being exposed
+                "light.entrance_color_white_lights": {
+                    emulated_hue.CONF_ENTITY_HIDDEN: True
+                },
                 # Ceiling Fan is explicitly excluded from being exposed
                 "fan.ceiling_fan": {emulated_hue.CONF_ENTITY_HIDDEN: True},
                 # Expose the script

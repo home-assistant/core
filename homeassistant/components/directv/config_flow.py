@@ -9,10 +9,10 @@ from directv import DIRECTV, DIRECTVError
 import voluptuous as vol
 
 from homeassistant.components.ssdp import ATTR_SSDP_LOCATION, ATTR_UPNP_SERIAL
-from homeassistant.config_entries import CONN_CLASS_LOCAL_POLL, ConfigFlow
+from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultDict
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -40,15 +40,12 @@ class DirecTVConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for DirecTV."""
 
     VERSION = 1
-    CONNECTION_CLASS = CONN_CLASS_LOCAL_POLL
 
     def __init__(self):
         """Set up the instance."""
         self.discovery_info = {}
 
-    async def async_step_user(
-        self, user_input: ConfigType | None = None
-    ) -> FlowResultDict:
+    async def async_step_user(self, user_input: ConfigType | None = None) -> FlowResult:
         """Handle a flow initiated by the user."""
         if user_input is None:
             return self._show_setup_form()
@@ -68,9 +65,7 @@ class DirecTVConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_create_entry(title=user_input[CONF_HOST], data=user_input)
 
-    async def async_step_ssdp(
-        self, discovery_info: DiscoveryInfoType
-    ) -> FlowResultDict:
+    async def async_step_ssdp(self, discovery_info: DiscoveryInfoType) -> FlowResult:
         """Handle SSDP discovery."""
         host = urlparse(discovery_info[ATTR_SSDP_LOCATION]).hostname
         receiver_id = None
@@ -103,7 +98,7 @@ class DirecTVConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_ssdp_confirm(
         self, user_input: ConfigType = None
-    ) -> FlowResultDict:
+    ) -> FlowResult:
         """Handle a confirmation flow initiated by SSDP."""
         if user_input is None:
             return self.async_show_form(
@@ -117,7 +112,7 @@ class DirecTVConfigFlow(ConfigFlow, domain=DOMAIN):
             data=self.discovery_info,
         )
 
-    def _show_setup_form(self, errors: dict | None = None) -> FlowResultDict:
+    def _show_setup_form(self, errors: dict | None = None) -> FlowResult:
         """Show the setup form to the user."""
         return self.async_show_form(
             step_id="user",

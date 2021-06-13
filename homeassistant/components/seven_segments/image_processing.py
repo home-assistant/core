@@ -124,14 +124,14 @@ class ImageProcessingSsocr(ImageProcessingEntity):
         img = Image.open(stream)
         img.save(self.filepath, "png")
 
-        ocr = subprocess.Popen(
+        with subprocess.Popen(
             self._command, stdout=subprocess.PIPE, stderr=subprocess.PIPE
-        )
-        out = ocr.communicate()
-        if out[0] != b"":
-            self._state = out[0].strip().decode("utf-8")
-        else:
-            self._state = None
-            _LOGGER.warning(
-                "Unable to detect value: %s", out[1].strip().decode("utf-8")
-            )
+        ) as ocr:
+            out = ocr.communicate()
+            if out[0] != b"":
+                self._state = out[0].strip().decode("utf-8")
+            else:
+                self._state = None
+                _LOGGER.warning(
+                    "Unable to detect value: %s", out[1].strip().decode("utf-8")
+                )

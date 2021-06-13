@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import Callable
 
 import pykulersky
 
@@ -19,7 +18,7 @@ from homeassistant.components.light import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 import homeassistant.util.color as color_util
 
@@ -35,7 +34,7 @@ DISCOVERY_INTERVAL = timedelta(seconds=60)
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: Callable[[list[Entity], bool], None],
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Kuler sky light devices."""
 
@@ -69,7 +68,7 @@ async def async_setup_entry(
 class KulerskyLight(LightEntity):
     """Representation of an Kuler Sky Light."""
 
-    def __init__(self, light: pykulersky.Light):
+    def __init__(self, light: pykulersky.Light) -> None:
         """Initialize a Kuler Sky light."""
         self._light = light
         self._hs_color = None

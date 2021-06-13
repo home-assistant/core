@@ -89,7 +89,7 @@ class OndiloICO(CoordinatorEntity, SensorEntity):
 
     def __init__(
         self, coordinator: DataUpdateCoordinator, poolidx: int, sensor_idx: int
-    ):
+    ) -> None:
         """Initialize sensor entity with data from coordinator."""
         super().__init__(coordinator)
 

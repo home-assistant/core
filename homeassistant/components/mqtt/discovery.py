@@ -9,6 +9,7 @@ import time
 
 from homeassistant.const import CONF_DEVICE, CONF_PLATFORM
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import RESULT_TYPE_ABORT
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -79,7 +80,9 @@ class MQTTConfig(dict):
     """Dummy class to allow adding attributes."""
 
 
-async def async_start(hass: HomeAssistant, discovery_topic, config_entry=None) -> bool:
+async def async_start(  # noqa: C901
+    hass: HomeAssistant, discovery_topic, config_entry=None
+) -> bool:
     """Start MQTT Discovery."""
     mqtt_integrations = {}
 
@@ -272,7 +275,7 @@ async def async_start(hass: HomeAssistant, discovery_topic, config_entry=None) -
                 )
                 if (
                     result
-                    and result["type"] == "abort"
+                    and result["type"] == RESULT_TYPE_ABORT
                     and result["reason"]
                     in ["already_configured", "single_instance_allowed"]
                 ):

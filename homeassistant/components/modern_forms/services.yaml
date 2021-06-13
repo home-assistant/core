@@ -1,0 +1,28 @@
+set_fan_sleep_timer:
+  name: Set fan sleep timer
+  description: Set a sleep timer on a Modern Forms fan.
+  target:
+    entity:
+      integration: modern_forms
+      domain: fan
+  fields:
+    sleep_time:
+      name: Sleep Time
+      description: Number of seconds to set the timer.
+      required: true
+      example: "900"
+      selector:
+        number:
+          min: 1
+          max: 1440
+          step: 1
+          unit_of_measurement: minutes
+          mode: slider
+
+clear_fan_sleep_timer:
+  name: Clear fan sleep timer
+  description: Clear the sleep timer on a Modern Forms fan.
+  target:
+    entity:
+      integration: modern_forms
+      domain: fan

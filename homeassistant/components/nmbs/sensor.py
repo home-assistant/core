@@ -152,7 +152,7 @@ class NMBSLiveBoard(SensorEntity):
         """Set the state equal to the next departure."""
         liveboard = self._api_client.get_liveboard(self._station)
 
-        if liveboard is None or not liveboard["departures"]:
+        if liveboard is None or not liveboard.get("departures"):
             return
 
         next_departure = liveboard["departures"]["departure"][0]
@@ -165,6 +165,8 @@ class NMBSLiveBoard(SensorEntity):
 
 class NMBSSensor(SensorEntity):
     """Get the the total travel time for a given connection."""
+
+    _attr_unit_of_measurement = TIME_MINUTES
 
     def __init__(
         self, api_client, name, show_on_map, station_from, station_to, excl_vias
@@ -184,11 +186,6 @@ class NMBSSensor(SensorEntity):
     def name(self):
         """Return the name of the sensor."""
         return self._name
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return TIME_MINUTES
 
     @property
     def icon(self):
@@ -269,7 +266,7 @@ class NMBSSensor(SensorEntity):
             self._station_from, self._station_to
         )
 
-        if connections is None or not connections["connection"]:
+        if connections is None or not connections.get("connection"):
             return
 
         if int(connections["connection"][0]["departure"]["left"]) > 0:

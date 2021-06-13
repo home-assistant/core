@@ -13,7 +13,8 @@
                 "data": {
                     "email": "E-Mail",
                     "password": "Passwort"
-                }
+                },
+                "title": "Verbinden Sie sich mit Ihrem Rituals-Konto"
             }
         }
     }
