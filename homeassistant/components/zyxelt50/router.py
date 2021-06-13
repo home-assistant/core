@@ -1,3 +1,6 @@
+""" The Zyxel T50 router """
+""" I used these as a starting point: https://github.com/ThomasRinsma/vmg8825scripts """
+
 import base64
 from datetime import timedelta
 import json
