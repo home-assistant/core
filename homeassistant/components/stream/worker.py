@@ -51,9 +51,7 @@ class SegmentBuffer:
         self._segment: Segment | None = None
         self._segment_last_write_pos: int = cast(int, None)
         self._part_start_dts: int = cast(int, None)
-        self._last_packet_dts: int = cast(int, None)
         self._part_has_keyframe = False
-        self._last_packet_was_keyframe = False
 
     @staticmethod
     def make_new_av(
@@ -95,9 +93,7 @@ class SegmentBuffer:
         """Initialize a new stream segment."""
         # Keep track of the number of segments we've processed
         self._sequence += 1
-        self._segment_start_dts = (
-            self._part_start_dts
-        ) = self._last_packet_dts = video_dts
+        self._segment_start_dts = self._part_start_dts = video_dts
         self._segment = None
         self._segment_last_write_pos = 0
         self._memory_file = BytesIO()
@@ -122,8 +118,6 @@ class SegmentBuffer:
         # Check for end of segment
         if packet.stream == self._input_video_stream:
 
-            self.check_flush_part(packet)
-
             if (
                 packet.is_keyframe
                 and (
@@ -134,18 +128,15 @@ class SegmentBuffer:
             ):
                 # Flush segment (also flushes the stub part segment)
                 self.flush(segment_duration, packet)
-
                 # Reinitialize
                 self.reset(packet.dts)
 
-            self._last_packet_dts = packet.dts
-            self._part_has_keyframe |= self._last_packet_was_keyframe
-            self._last_packet_was_keyframe = packet.is_keyframe
-
-        # Mux the packet
-        if packet.stream == self._input_video_stream:
+            # Mux the packet
             packet.stream = self._output_video_stream
             self._av_output.mux(packet)
+            self.check_flush_part(packet)
+            self._part_has_keyframe |= packet.is_keyframe
+
         elif packet.stream == self._input_audio_stream:
             packet.stream = self._output_audio_stream
             self._av_output.mux(packet)
@@ -171,10 +162,8 @@ class SegmentBuffer:
         else:  # These are the ends of the part segments
             self._segment.parts.append(
                 Part(
-                    # The end of a part segment will actually have occurred before the last video packet
                     duration=float(
-                        (self._last_packet_dts - self._part_start_dts)
-                        * packet.time_base
+                        (packet.dts - self._part_start_dts) * packet.time_base
                     ),
                     independent=self._part_has_keyframe,
                     data=self._memory_file.getbuffer()[
@@ -183,7 +172,7 @@ class SegmentBuffer:
                 )
             )
             self._segment_last_write_pos = byte_position
-            self._part_start_dts = self._last_packet_dts
+            self._part_start_dts = packet.dts
             self._part_has_keyframe = False
 
     def flush(self, duration: Fraction, packet: av.Packet) -> None:
@@ -195,7 +184,7 @@ class SegmentBuffer:
         self._segment.parts.append(
             Part(
                 duration=float((packet.dts - self._part_start_dts) * packet.time_base),
-                independent=self._part_has_keyframe | self._last_packet_was_keyframe,
+                independent=self._part_has_keyframe,
                 data=self._memory_file.getbuffer()[
                     self._segment_last_write_pos :
                 ].tobytes(),
