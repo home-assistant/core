@@ -30,6 +30,7 @@ async def test_reminders(spa, setup_entry, hass):
     assert state is not None
     assert state.state == STATE_OFF
     assert state.attributes["snoozed"] is False
+    assert state.attributes["days"] == 2
 
 
 @pytest.fixture

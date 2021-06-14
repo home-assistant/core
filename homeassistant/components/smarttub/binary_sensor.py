@@ -29,9 +29,11 @@ ATTR_CREATED_AT = "created_at"
 ATTR_UPDATED_AT = "updated_at"
 
 # how many days to snooze the reminder for
-ATTR_SNOOZE_DAYS = "days"
+ATTR_REMINDER_DAYS = "days"
 SNOOZE_REMINDER_SCHEMA = {
-    vol.Required(ATTR_SNOOZE_DAYS): vol.All(vol.Coerce(int), vol.Range(min=10, max=120))
+    vol.Required(ATTR_REMINDER_DAYS): vol.All(
+        vol.Coerce(int), vol.Range(min=10, max=120)
+    )
 }
 
 
@@ -117,6 +119,7 @@ class SmartTubReminder(SmartTubEntity, BinarySensorEntity):
         """Return the state attributes."""
         return {
             ATTR_REMINDER_SNOOZED: self.reminder.snoozed,
+            ATTR_REMINDER_DAYS: self.reminder.remaining_days,
         }
 
     async def async_snooze(self, days):
