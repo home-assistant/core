@@ -179,4 +179,7 @@ class NukiOpenerEntity(NukiDeviceEntity):
         rings the bell. This is similar to ring-to-open, except that it does
         not automatically deactivate
         """
-        self._nuki_device.activate_continuous_mode() if enable else self._nuki_device.deactivate_continuous_mode()
+        if enable:
+            self._nuki_device.activate_continuous_mode()
+        else:
+            self._nuki_device.deactivate_continuous_mode()
