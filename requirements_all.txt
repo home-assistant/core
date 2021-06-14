@@ -123,7 +123,7 @@ afsapi==0.0.4
 agent-py==0.0.23
 
 # homeassistant.components.geonetnz_quakes
-aio_geojson_geonetnz_quakes==0.12
+aio_geojson_geonetnz_quakes==0.13
 
 # homeassistant.components.geonetnz_volcano
 aio_geojson_geonetnz_volcano==0.6
@@ -208,6 +208,9 @@ aiolyric==1.0.7
 # homeassistant.components.modern_forms
 aiomodernforms==0.1.5
 
+# homeassistant.components.yamaha_musiccast
+aiomusiccast==0.6
+
 # homeassistant.components.keyboard_remote
 aionotify==0.2.0
 
@@ -263,7 +266,7 @@ ambiclimate==0.2.1
 amcrest==1.7.2
 
 # homeassistant.components.androidtv
-androidtv[async]==0.0.59
+androidtv[async]==0.0.60
 
 # homeassistant.components.anel_pwrctrl
 anel_pwrctrl-homeassistant==0.0.1.dev2
@@ -355,7 +358,7 @@ beautifulsoup4==4.9.3
 # beewi_smartclim==0.0.10
 
 # homeassistant.components.zha
-bellows==0.24.0
+bellows==0.25.0
 
 # homeassistant.components.bmw_connected_drive
 bimmer_connected==0.7.15
@@ -657,7 +660,7 @@ geopy==2.1.0
 georss_generic_client==0.6
 
 # homeassistant.components.ign_sismologia
-georss_ign_sismologia_client==0.2
+georss_ign_sismologia_client==0.3
 
 # homeassistant.components.qld_bushfire
 georss_qld_bushfire_alert_client==0.5
@@ -1330,7 +1333,7 @@ pycfdns==1.2.1
 pychannels==1.0.0
 
 # homeassistant.components.cast
-pychromecast==9.1.2
+pychromecast==9.2.0
 
 # homeassistant.components.pocketcasts
 pycketcasts==1.0.0
@@ -1357,7 +1360,7 @@ pycsspeechtts==1.0.4
 # pycups==1.9.73
 
 # homeassistant.components.daikin
-pydaikin==2.4.1
+pydaikin==2.4.2
 
 # homeassistant.components.danfoss_air
 pydanfossair==0.1.0
@@ -1469,7 +1472,7 @@ pyhomematic==0.1.73
 pyhomeworks==0.0.6
 
 # homeassistant.components.ialarm
-pyialarm==1.8.1
+pyialarm==1.9.0
 
 # homeassistant.components.icloud
 pyicloud==0.10.2
@@ -1584,9 +1587,6 @@ pymonoprice==0.3
 
 # homeassistant.components.msteams
 pymsteams==0.1.12
-
-# homeassistant.components.yamaha_musiccast
-pymusiccast==0.1.6
 
 # homeassistant.components.myq
 pymyq==3.0.4
@@ -2362,7 +2362,7 @@ wirelesstagpy==0.4.1
 withings-api==2.3.2
 
 # homeassistant.components.wled
-wled==0.5.0
+wled==0.6.0
 
 # homeassistant.components.wolflink
 wolf_smartset==0.1.8
@@ -2438,7 +2438,7 @@ zigpy-zigate==0.7.3
 zigpy-znp==0.5.1
 
 # homeassistant.components.zha
-zigpy==0.33.0
+zigpy==0.34.0
 
 # homeassistant.components.zoneminder
 zm-py==0.5.2
