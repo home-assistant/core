@@ -136,9 +136,8 @@ class Stream:
             raise ValueError(f"Stream is not configured for format '{fmt}'")
         if not self.access_token:
             self.access_token = secrets.token_hex()
-        return cast(
-            str, self.hass.data[DOMAIN][ATTR_ENDPOINTS][fmt].format(self.access_token)
-        )
+        endpoint_fmt: str = self.hass.data[DOMAIN][ATTR_ENDPOINTS][fmt]
+        return endpoint_fmt.format(self.access_token)
 
     def outputs(self) -> Mapping[str, StreamOutput]:
         """Return a copy of the stream outputs."""
