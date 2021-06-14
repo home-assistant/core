@@ -2,7 +2,8 @@
 from __future__ import annotations
 
 from abc import ABC
-from typing import Any, ClassVar, OrderedDict
+from collections import OrderedDict
+from typing import Any, ClassVar
 
 import voluptuous as vol
 from xknx import XKNX

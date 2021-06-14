@@ -58,19 +58,19 @@ class KNXNumber(KnxEntity, NumberEntity, RestoreEntity):
         super().__init__(_create_expose_sensor(xknx, config))
         self._unique_id = f"{self._device.sensor_value.group_address}"
 
-        self._min_value: float = config.get(
+        self._attr_min_value = config.get(
             NumberSchema.CONF_MIN,
             self._device.sensor_value.dpt_class.value_min,
         )
-        self._max_value: float = config.get(
+        self._attr_max_value = config.get(
             NumberSchema.CONF_MAX,
             self._device.sensor_value.dpt_class.value_max,
         )
-        self._step: float = config.get(
+        self._attr_step = config.get(
             NumberSchema.CONF_STEP,
             self._device.sensor_value.dpt_class.resolution,
         )
-        self._device.sensor_value.value = max(0, self._min_value)
+        self._device.sensor_value.value = max(0, self._attr_min_value)
 
     async def async_added_to_hass(self) -> None:
         """Restore last state."""
@@ -82,21 +82,6 @@ class KNXNumber(KnxEntity, NumberEntity, RestoreEntity):
                 self._device.sensor_value.value = float(last_state.state)
 
     @property
-    def min_value(self) -> float:
-        """Return the minimum value."""
-        return self._min_value
-
-    @property
-    def max_value(self) -> float:
-        """Return the maximum value."""
-        return self._max_value
-
-    @property
-    def step(self) -> float:
-        """Return the increment/decrement step."""
-        return self._step
-
-    @property
     def value(self) -> float:
         """Return the entity value to represent the entity state."""
         value = self._device.resolve_state()
@@ -105,9 +90,9 @@ class KNXNumber(KnxEntity, NumberEntity, RestoreEntity):
 
     async def async_set_value(self, value: float) -> None:
         """Set new value."""
-        if value < self._min_value or value > self._max_value:
+        if value < self._attr_min_value or value > self._attr_max_value:
             raise vol.Invalid(
                 f"Invalid value for {self.entity_id}: {value} "
-                f"(range {self._min_value} - {self._max_value})"
+                f"(range {self._attr_min_value} - {self._attr_max_value})"
             )
         await self._device.set(value)
