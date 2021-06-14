@@ -9,25 +9,20 @@
         },
         "flow_title": "{name}",
         "step": {
+            "confirm": {
+                "description": "Vuoi iniziare la configurazione?"
+            },
             "user": {
                 "data": {
                     "host": "Host"
                 },
-                "description": "Configura WLED per l'integrazione con Home Assistant."
+                "description": "Configura il tuo ventilatore Modern Forms per integrarlo con Home Assistant."
             },
             "zeroconf_confirm": {
-                "description": "Vuoi aggiungere il WLED chiamato `{name}` a Home Assistant?",
-                "title": "Dispositivo WLED rilevato"
+                "description": "Vuoi aggiungere il ventilatore di Modern Forms chiamato `{name}` a Home Assistant?",
+                "title": "Rilevato il dispositivo ventilatore di Modern Forms"
             }
         }
     },
-    "options": {
-        "step": {
-            "init": {
-                "data": {
-                    "keep_master_light": "Mantieni la luce principale, anche con 1 segmento LED."
-                }
-            }
-        }
-    }
+    "title": "Modern Forms"
 }
