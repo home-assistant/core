@@ -62,4 +62,6 @@ SERVICE_MULTICAST_SET_VALUE = "multicast_set_value"
 
 ATTR_BROADCAST = "broadcast"
 
+SERVICE_PING = "ping"
+
 ADDON_SLUG = "core_zwave_js"
