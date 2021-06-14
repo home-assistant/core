@@ -7,7 +7,7 @@
             "cannot_connect": "Verbindung fehlgeschlagen",
             "id_missing": "Dieses Samsung-Ger\u00e4t hat keine Seriennummer.",
             "not_supported": "Dieses Samsung TV-Ger\u00e4t wird derzeit nicht unterst\u00fctzt.",
-            "reauth_successful": "Erneute Authentifizierung war erfolgreich",
+            "reauth_successful": "Die erneute Authentifizierung war erfolgreich",
             "unknown": "Unerwarteter Fehler"
         },
         "error": {
