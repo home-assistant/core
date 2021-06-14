@@ -4,17 +4,20 @@ from __future__ import annotations
 import asyncio
 from collections import deque
 import datetime
-from typing import Callable
+from typing import TYPE_CHECKING
 
 from aiohttp import web
 import attr
 
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.util.decorator import Registry
 
 from .const import ATTR_STREAMS, DOMAIN
+
+if TYPE_CHECKING:
+    from . import Stream
 
 PROVIDERS = Registry()
 
@@ -59,34 +62,34 @@ class IdleTimer:
     """
 
     def __init__(
-        self, hass: HomeAssistant, timeout: int, idle_callback: Callable[[], None]
+        self, hass: HomeAssistant, timeout: int, idle_callback: CALLBACK_TYPE
     ) -> None:
         """Initialize IdleTimer."""
         self._hass = hass
         self._timeout = timeout
         self._callback = idle_callback
-        self._unsub = None
+        self._unsub: CALLBACK_TYPE | None = None
         self.idle = False
 
-    def start(self):
+    def start(self) -> None:
         """Start the idle timer if not already started."""
         self.idle = False
         if self._unsub is None:
             self._unsub = async_call_later(self._hass, self._timeout, self.fire)
 
-    def awake(self):
+    def awake(self) -> None:
         """Keep the idle time alive by resetting the timeout."""
         self.idle = False
         # Reset idle timeout
         self.clear()
         self._unsub = async_call_later(self._hass, self._timeout, self.fire)
 
-    def clear(self):
+    def clear(self) -> None:
         """Clear and disable the timer if it has not already fired."""
         if self._unsub is not None:
             self._unsub()
 
-    def fire(self, _now=None):
+    def fire(self, _now=None) -> None:
         """Invoke the idle timeout callback, called when the alarm fires."""
         self.idle = True
         self._unsub = None
@@ -172,7 +175,7 @@ class StreamOutput:
         self._event.set()
         self._event.clear()
 
-    def cleanup(self):
+    def cleanup(self) -> None:
         """Handle cleanup."""
         self._event.set()
         self.idle_timer.clear()
@@ -190,7 +193,9 @@ class StreamView(HomeAssistantView):
     requires_auth = False
     platform = None
 
-    async def get(self, request, token, sequence=None):
+    async def get(
+        self, request: web.Request, token: str, sequence: str = ""
+    ) -> web.StreamResponse:
         """Start a GET request."""
         hass = request.app["hass"]
 
@@ -207,6 +212,8 @@ class StreamView(HomeAssistantView):
 
         return await self.handle(request, stream, sequence)
 
-    async def handle(self, request, stream, sequence):
+    async def handle(
+        self, request: web.Request, stream: Stream, sequence: str
+    ) -> web.StreamResponse:
         """Handle the stream request."""
         raise NotImplementedError()
