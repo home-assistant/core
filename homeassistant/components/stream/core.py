@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING
 from aiohttp import web
 import attr
 
-from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.util.decorator import Registry

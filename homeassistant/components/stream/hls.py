@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 
 from aiohttp import web
 
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 
 from .const import (
     EXT_X_START,
@@ -14,7 +14,7 @@ from .const import (
     MAX_SEGMENTS,
     NUM_PLAYLIST_SEGMENTS,
 )
-from .core import PROVIDERS, HomeAssistant, IdleTimer, StreamOutput, StreamView
+from .core import PROVIDERS, IdleTimer, StreamOutput, StreamView
 from .fmp4utils import get_codec_string
 
 if TYPE_CHECKING:

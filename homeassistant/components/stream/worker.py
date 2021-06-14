@@ -206,7 +206,10 @@ class SegmentBuffer:
 
 
 def stream_worker(  # noqa: C901
-    source: str, options: dict, segment_buffer: SegmentBuffer, quit_event: Event
+    source: str,
+    options: dict[str, str],
+    segment_buffer: SegmentBuffer,
+    quit_event: Event,
 ) -> None:
     """Handle consuming streams."""
 
