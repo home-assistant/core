@@ -360,7 +360,7 @@ geopy==2.1.0
 georss_generic_client==0.6
 
 # homeassistant.components.ign_sismologia
-georss_ign_sismologia_client==0.2
+georss_ign_sismologia_client==0.3
 
 # homeassistant.components.qld_bushfire
 georss_qld_bushfire_alert_client==0.5
