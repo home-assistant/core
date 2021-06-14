@@ -326,7 +326,7 @@ class ModbusHub:
             result = self._call_type[use_call][ENTRY_FUNC](address, value, **kwargs)
         except ModbusException as exception_error:
             self._log_error(str(exception_error))
-            result = exception_error
+            return None
         if not hasattr(result, self._call_type[use_call][ENTRY_ATTR]):
             self._log_error(str(result))
             return None
