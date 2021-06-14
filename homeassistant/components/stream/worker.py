@@ -262,7 +262,7 @@ def stream_worker(  # noqa: C901
         found_audio = False
         try:
             container_packets = container.demux((video_stream, audio_stream))
-            first_packet = None
+            first_packet: av.Packet | None = None
             # Get to first video keyframe
             while first_packet is None:
                 packet = next(container_packets)
@@ -324,7 +324,7 @@ def stream_worker(  # noqa: C901
                 "Error demuxing stream while finding first packet: %s", str(ex)
             )
             return False
-        return True  # type: ignore
+        return True
 
     if not peek_first_dts():
         container.close()
