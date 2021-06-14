@@ -1,10 +1,9 @@
 """Component to allow numeric input for platforms."""
 from __future__ import annotations
 
-from abc import abstractmethod
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, final
 
 import voluptuous as vol
 
@@ -68,6 +67,12 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class NumberEntity(Entity):
     """Representation of a Number entity."""
 
+    _attr_max_value: float = DEFAULT_MAX_VALUE
+    _attr_min_value: float = DEFAULT_MIN_VALUE
+    _attr_state: None = None
+    _attr_step: float
+    _attr_value: float
+
     @property
     def capability_attributes(self) -> dict[str, Any]:
         """Return capability attributes."""
@@ -80,16 +85,18 @@ class NumberEntity(Entity):
     @property
     def min_value(self) -> float:
         """Return the minimum value."""
-        return DEFAULT_MIN_VALUE
+        return self._attr_min_value
 
     @property
     def max_value(self) -> float:
         """Return the maximum value."""
-        return DEFAULT_MAX_VALUE
+        return self._attr_max_value
 
     @property
     def step(self) -> float:
         """Return the increment/decrement step."""
+        if hasattr(self, "_attr_step"):
+            return self._attr_step
         step = DEFAULT_STEP
         value_range = abs(self.max_value - self.min_value)
         if value_range != 0:
@@ -98,14 +105,15 @@ class NumberEntity(Entity):
         return step
 
     @property
+    @final
     def state(self) -> float:
         """Return the entity state."""
         return self.value
 
     @property
-    @abstractmethod
     def value(self) -> float:
         """Return the entity value to represent the entity state."""
+        return self._attr_value
 
     def set_value(self, value: float) -> None:
         """Set new value."""
