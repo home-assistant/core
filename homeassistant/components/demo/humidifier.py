@@ -55,7 +55,7 @@ class DemoHumidifier(HumidifierEntity):
         available_modes: list[str] | None = None,
         is_on: bool = True,
         device_class: str | None = None,
-    ):
+    ) -> None:
         """Initialize the humidifier device."""
         self._attr_name = name
         self._attr_is_on = is_on
