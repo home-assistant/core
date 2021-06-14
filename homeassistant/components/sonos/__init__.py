@@ -151,11 +151,12 @@ async def async_setup_entry(  # noqa: C901
                 (SonosFavorites, data.favorites),
             ]:
                 if soco.household_id not in coord_dict:
-                    coord_dict[soco.household_id] = coordinator(hass, soco.household_id)
-                    coord_dict[soco.household_id].setup(soco)
+                    new_coordinator = coordinator(hass, soco.household_id)
+                    new_coordinator.setup(soco)
+                    coord_dict[soco.household_id] = new_coordinator
             speaker.setup()
-        except SoCoException as ex:
-            _LOGGER.debug("SoCoException, ex=%s", ex)
+        except (OSError, SoCoException):
+            _LOGGER.warning("Failed to add SonosSpeaker using %s", soco, exc_info=True)
 
     def _create_soco(ip_address: str, source: SoCoCreationSource) -> SoCo | None:
         """Create a soco instance and return if successful."""

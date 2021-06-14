@@ -35,8 +35,10 @@ class SonosAlarms(SonosHouseholdCoordinator):
 
     async def async_update_entities(self, soco: SoCo) -> bool:
         """Create and update alarms entities, return success."""
-        new_alarms = await self.hass.async_add_executor_job(self.update_cache, soco)
-        if new_alarms is None:
+        try:
+            new_alarms = await self.hass.async_add_executor_job(self.update_cache, soco)
+        except (OSError, SoCoException) as err:
+            _LOGGER.error("Could not refresh alarms using %s: %s", soco, err)
             return False
 
         for alarm in new_alarms:
@@ -47,18 +49,14 @@ class SonosAlarms(SonosHouseholdCoordinator):
         async_dispatcher_send(self.hass, f"{SONOS_ALARMS_UPDATED}-{self.household_id}")
         return True
 
-    def update_cache(self, soco: SoCo) -> set[Alarm] | None:
+    def update_cache(self, soco: SoCo) -> set[Alarm]:
         """Populate cache of known alarms.
 
         Prune deleted alarms and return new alarms.
         """
-        try:
-            soco_alarms = get_alarms(soco)
-        except (OSError, SoCoException) as exc:
-            _LOGGER.error("Could not refresh alarms using %s: %s", soco, exc)
-            return None
-
+        soco_alarms = get_alarms(soco)
         new_alarms = set()
+
         for alarm in soco_alarms:
             if alarm.alarm_id not in self._alarms:
                 new_alarms.add(alarm)

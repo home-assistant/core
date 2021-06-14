@@ -31,23 +31,22 @@ class SonosFavorites(SonosHouseholdCoordinator):
 
     async def async_update_entities(self, soco: SoCo) -> bool:
         """Update the cache and update entities."""
-        success = await self.hass.async_add_executor_job(self.update_cache, soco)
-        if not success:
+        try:
+            await self.hass.async_add_executor_job(self.update_cache, soco)
+        except (OSError, SoCoException) as err:
+            _LOGGER.warning("Error requesting favorites from %s: %s", soco, err)
             return False
+
         async_dispatcher_send(
             self.hass, f"{SONOS_FAVORITES_UPDATED}-{self.household_id}"
         )
         return True
 
-    def update_cache(self, soco: SoCo) -> bool:
-        """Request new Sonos favorites from a speaker, return success."""
-        try:
-            new_favorites = soco.music_library.get_sonos_favorites()
-        except (OSError, SoCoException) as err:
-            _LOGGER.warning("Error requesting favorites from %s: %s", soco, err)
-            return False
-
+    def update_cache(self, soco: SoCo) -> None:
+        """Request new Sonos favorites from a speaker."""
+        new_favorites = soco.music_library.get_sonos_favorites()
         self._favorites = []
+
         for fav in new_favorites:
             try:
                 # exclude non-playable favorites with no linked resources
@@ -62,4 +61,3 @@ class SonosFavorites(SonosHouseholdCoordinator):
             len(self._favorites),
             self.household_id,
         )
-        return True
