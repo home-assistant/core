@@ -34,7 +34,7 @@ async def test_record_stream(hass, hass_client, record_worker_sync):
 
     # Setup demo track
     source = generate_h264_video()
-    stream = create_stream(hass, source)
+    stream = create_stream(hass, source, {})
     with patch.object(hass.config, "is_allowed_path", return_value=True):
         await stream.async_record("/example/path")
 
@@ -56,7 +56,7 @@ async def test_record_lookback(
     await async_setup_component(hass, "stream", {"stream": {}})
 
     source = generate_h264_video()
-    stream = create_stream(hass, source)
+    stream = create_stream(hass, source, {})
 
     # Start an HLS feed to enable lookback
     stream.add_provider(HLS_PROVIDER)
@@ -85,7 +85,7 @@ async def test_recorder_timeout(hass, hass_client, stream_worker_sync):
         # Setup demo track
         source = generate_h264_video()
 
-        stream = create_stream(hass, source)
+        stream = create_stream(hass, source, {})
         with patch.object(hass.config, "is_allowed_path", return_value=True):
             await stream.async_record("/example/path")
         recorder = stream.add_provider(RECORDER_PROVIDER)
@@ -111,7 +111,7 @@ async def test_record_path_not_allowed(hass, hass_client):
 
     # Setup demo track
     source = generate_h264_video()
-    stream = create_stream(hass, source)
+    stream = create_stream(hass, source, {})
     with patch.object(
         hass.config, "is_allowed_path", return_value=False
     ), pytest.raises(HomeAssistantError):
@@ -203,7 +203,7 @@ async def test_record_stream_audio(
         source = generate_h264_video(
             container_format="mov", audio_codec=a_codec
         )  # mov can store PCM
-        stream = create_stream(hass, source)
+        stream = create_stream(hass, source, {})
         with patch.object(hass.config, "is_allowed_path", return_value=True):
             await stream.async_record("/example/path")
         recorder = stream.add_provider(RECORDER_PROVIDER)
@@ -234,7 +234,7 @@ async def test_record_stream_audio(
 async def test_recorder_log(hass, caplog):
     """Test starting a stream to record logs the url without username and password."""
     await async_setup_component(hass, "stream", {"stream": {}})
-    stream = create_stream(hass, "https://abcd:efgh@foo.bar")
+    stream = create_stream(hass, "https://abcd:efgh@foo.bar", {})
     with patch.object(hass.config, "is_allowed_path", return_value=True):
         await stream.async_record("/example/path")
     assert "https://abcd:efgh@foo.bar" not in caplog.text
