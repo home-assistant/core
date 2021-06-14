@@ -8,7 +8,6 @@ import voluptuous as vol
 
 from homeassistant.components.fan import SUPPORT_DIRECTION, SUPPORT_SET_SPEED, FanEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import callback
 import homeassistant.helpers.entity_platform as entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import HomeAssistantType
@@ -63,7 +62,9 @@ async def async_setup_entry(
         "async_clear_fan_sleep_timer",
     )
 
-    async_update_fan(config_entry, coordinator, {}, async_add_entities)
+    async_add_entities(
+        [ModernFormsFanEntity(entry_id=config_entry.entry_id, coordinator=coordinator)]
+    )
 
 
 class ModernFormsFanEntity(FanEntity, ModernFormsDeviceEntity):
@@ -161,18 +162,3 @@ class ModernFormsFanEntity(FanEntity, ModernFormsDeviceEntity):
     ) -> None:
         """Clear a Modern Forms fan sleep timer."""
         await self.coordinator.modern_forms.fan(sleep=CLEAR_TIMER)
-
-
-@callback
-def async_update_fan(
-    entry: ConfigEntry,
-    coordinator: ModernFormsDataUpdateCoordinator,
-    current: dict[str, ModernFormsFanEntity],
-    async_add_entities: AddEntitiesCallback,
-) -> None:
-    """Update Modern Forms Fan info."""
-    if not current:
-        current[entry.entry_id] = ModernFormsFanEntity(
-            entry_id=entry.entry_id, coordinator=coordinator
-        )
-        async_add_entities([current[entry.entry_id]])

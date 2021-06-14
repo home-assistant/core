@@ -39,14 +39,6 @@ async def test_unload_config_entry(
     assert not hass.data.get(DOMAIN)
 
 
-async def test_setting_unique_id(hass, aioclient_mock):
-    """Test we set unique ID if not set yet."""
-    entry = await init_integration(hass, aioclient_mock)
-
-    assert hass.data[DOMAIN]
-    assert entry.unique_id == "AA:BB:CC:DD:EE:FF"
-
-
 async def test_fan_only_device(hass, aioclient_mock):
     """Test we set unique ID if not set yet."""
     await init_integration(

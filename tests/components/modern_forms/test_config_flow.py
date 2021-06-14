@@ -14,8 +14,6 @@ from homeassistant.data_entry_flow import (
     RESULT_TYPE_FORM,
 )
 
-from . import init_integration
-
 from tests.common import load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
 
@@ -159,45 +157,3 @@ async def test_zeroconf_confirm_connection_error(
 
     assert result.get("type") == RESULT_TYPE_ABORT
     assert result.get("reason") == "cannot_connect"
-
-
-async def test_user_device_exists_abort(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Test we abort zeroconf flow if Modern Forms device already configured."""
-    aioclient_mock.post(
-        "http://192.168.1.123:80/mf",
-        text=load_fixture("modern_forms/device_info.json"),
-        headers={"Content-Type": CONTENT_TYPE_JSON},
-    )
-
-    await init_integration(hass, aioclient_mock)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={CONF_HOST: "192.168.1.123"},
-    )
-
-    assert result.get("type") == RESULT_TYPE_ABORT
-    assert result.get("reason") == "already_configured"
-
-
-async def test_zeroconf_with_mac_device_exists_abort(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Test we abort zeroconf flow if a Modern Forms device already configured."""
-    await init_integration(hass, aioclient_mock)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_ZEROCONF},
-        data={
-            "host": "192.168.1.123",
-            "hostname": "example.local.",
-            "properties": {CONF_MAC: "AA:BB:CC:DD:EE:FF"},
-        },
-    )
-
-    assert result.get("type") == RESULT_TYPE_ABORT
-    assert result.get("reason") == "already_configured"
