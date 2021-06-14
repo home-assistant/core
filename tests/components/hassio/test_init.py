@@ -179,6 +179,7 @@ async def test_setup_api_push_api_data_default(hass, aioclient_mock, hass_storag
     assert hassio_user.system_generated
     assert len(hassio_user.groups) == 1
     assert hassio_user.groups[0].id == GROUP_ID_ADMIN
+    assert hassio_user.name == "Supervisor"
     for token in hassio_user.refresh_tokens.values():
         if token.token == refresh_token:
             break
