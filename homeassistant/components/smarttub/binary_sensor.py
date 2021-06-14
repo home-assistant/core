@@ -67,7 +67,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     )
     platform.async_register_entity_service(
         "reset_reminder",
-        SNOOZE_REMINDER_SCHEMA,
+        RESET_REMINDER_SCHEMA,
         "async_reset",
     )
 
