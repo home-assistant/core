@@ -25,7 +25,7 @@ async def async_setup_platform(
             DemoSelect(
                 unique_id="speed",
                 name="Speed",
-                icon="mdi:volume-high",
+                icon="mdi:speedometer",
                 device_class="demo__speed",
                 current_option="ridiculous_speed",
                 options=[
