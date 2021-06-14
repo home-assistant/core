@@ -528,6 +528,9 @@ meteofrance-api==1.0.2
 # homeassistant.components.mfi
 mficlient==0.3.0
 
+# homeassistant.components.xiaomi_miio
+micloud==0.3
+
 # homeassistant.components.mill
 millheater==0.4.1
 
