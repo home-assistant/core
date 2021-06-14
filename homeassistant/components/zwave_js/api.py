@@ -138,6 +138,7 @@ def async_register_api(hass: HomeAssistant) -> None:
     """Register all of our api endpoints."""
     websocket_api.async_register_command(hass, websocket_network_status)
     websocket_api.async_register_command(hass, websocket_node_status)
+    websocket_api.async_register_command(hass, websocket_node_state)
     websocket_api.async_register_command(hass, websocket_node_metadata)
     websocket_api.async_register_command(hass, websocket_ping_node)
     websocket_api.async_register_command(hass, websocket_add_node)
@@ -164,6 +165,7 @@ def async_register_api(hass: HomeAssistant) -> None:
         hass, websocket_update_data_collection_preference
     )
     websocket_api.async_register_command(hass, websocket_data_collection_status)
+    websocket_api.async_register_command(hass, websocket_version_info)
     websocket_api.async_register_command(hass, websocket_abort_firmware_update)
     websocket_api.async_register_command(
         hass, websocket_subscribe_firmware_update_status
@@ -250,6 +252,28 @@ async def websocket_node_status(
     connection.send_result(
         msg[ID],
         data,
+    )
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "zwave_js/node_state",
+        vol.Required(ENTRY_ID): str,
+        vol.Required(NODE_ID): int,
+    }
+)
+@websocket_api.async_response
+@async_get_node
+async def websocket_node_state(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict,
+    node: Node,
+) -> None:
+    """Get the state data of a Z-Wave JS node."""
+    connection.send_result(
+        msg[ID],
+        node.data,
     )
 
 
@@ -1170,6 +1194,8 @@ class DumpView(HomeAssistantView):
 
     async def get(self, request: web.Request, config_entry_id: str) -> web.Response:
         """Dump the state of Z-Wave."""
+        if not request["hass_user"].is_admin:
+            raise Unauthorized()
         hass = request.app["hass"]
 
         if config_entry_id not in hass.data[DOMAIN]:
@@ -1186,6 +1212,35 @@ class DumpView(HomeAssistantView):
                 hdrs.CONTENT_DISPOSITION: 'attachment; filename="zwave_js_dump.json"',
             },
         )
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "zwave_js/version_info",
+        vol.Required(ENTRY_ID): str,
+    },
+)
+@websocket_api.async_response
+@async_get_entry
+async def websocket_version_info(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict,
+    entry: ConfigEntry,
+    client: Client,
+) -> None:
+    """Get version info from the Z-Wave JS server."""
+    version_info = {
+        "driver_version": client.version.driver_version,
+        "server_version": client.version.server_version,
+        "min_schema_version": client.version.min_schema_version,
+        "max_schema_version": client.version.max_schema_version,
+    }
+    connection.send_result(
+        msg[ID],
+        version_info,
+    )
 
 
 @websocket_api.require_admin
@@ -1287,7 +1342,7 @@ class FirmwareUploadView(HomeAssistantView):
             raise web_exceptions.HTTPBadRequest
 
         entry = hass.config_entries.async_get_entry(config_entry_id)
-        client = hass.data[DOMAIN][config_entry_id][DATA_CLIENT]
+        client: Client = hass.data[DOMAIN][config_entry_id][DATA_CLIENT]
         node = client.driver.controller.nodes.get(int(node_id))
         if not node:
             raise web_exceptions.HTTPNotFound
