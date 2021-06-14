@@ -48,7 +48,7 @@ async def test_fan_state(
 
     entry = entity_registry.async_get("fan.modernformsfan_fan")
     assert entry
-    assert entry.unique_id == "AA:BB:CC:DD:EE:FF_fan"
+    assert entry.unique_id == "AA:BB:CC:DD:EE:FF"
 
 
 async def test_change_state(
