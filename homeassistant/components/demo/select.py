@@ -26,6 +26,7 @@ async def async_setup_platform(
                 unique_id="speed",
                 name="Speed",
                 icon="mdi:volume-high",
+                device_class="demo__speed",
                 current_option="ridiculous_speed",
                 options=[
                     "light_speed",
@@ -56,6 +57,7 @@ class DemoSelect(SelectEntity):
         unique_id: str,
         name: str,
         icon: str,
+        device_class: str | None,
         current_option: str | None,
         options: list[str],
     ) -> None:
@@ -64,6 +66,7 @@ class DemoSelect(SelectEntity):
         self._attr_name = name or DEVICE_DEFAULT_NAME
         self._attr_current_option = current_option
         self._attr_icon = icon
+        self._attr_device_class = device_class
         self._attr_options = options
         self._attr_device_info = {
             "identifiers": {(DOMAIN, unique_id)},
