@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from abc import ABC
-from typing import Any, ClassVar
+from typing import Any, ClassVar, OrderedDict
 
 import voluptuous as vol
 from xknx import XKNX
@@ -69,6 +69,43 @@ ia_validator = vol.Any(
     vol.All(vol.Coerce(int), vol.Range(min=1, max=65535)),
     msg="value does not match pattern for KNX individual address '<area>.<line>.<device>' (eg.'1.1.100')",
 )
+
+
+def number_limit_sub_validator(entity_config: OrderedDict) -> OrderedDict:
+    """Validate a number entity configurations dependent on configured value type."""
+    value_type = entity_config[CONF_TYPE]
+    min_config: float | None = entity_config.get(NumberSchema.CONF_MIN)
+    max_config: float | None = entity_config.get(NumberSchema.CONF_MAX)
+    step_config: float | None = entity_config.get(NumberSchema.CONF_STEP)
+    dpt_class = DPTNumeric.parse_transcoder(value_type)
+
+    if dpt_class is None:
+        raise vol.Invalid(f"'type: {value_type}' is not a valid numeric sensor type.")
+    # Inifinity is not supported by Home Assistant frontend so user defined
+    # config is required if if xknx DPTNumeric subclass defines it as limit.
+    if min_config is None and dpt_class.value_min == float("-inf"):
+        raise vol.Invalid(f"'min' key required for value type '{value_type}'")
+    if min_config is not None and min_config < dpt_class.value_min:
+        raise vol.Invalid(
+            f"'min: {min_config}' undercuts possible minimum"
+            f" of value type '{value_type}': {dpt_class.value_min}"
+        )
+
+    if max_config is None and dpt_class.value_max == float("inf"):
+        raise vol.Invalid(f"'max' key required for value type '{value_type}'")
+    if max_config is not None and max_config > dpt_class.value_max:
+        raise vol.Invalid(
+            f"'max: {max_config}' exceeds possible maximum"
+            f" of value type '{value_type}': {dpt_class.value_max}"
+        )
+
+    if step_config is not None and step_config < dpt_class.resolution:
+        raise vol.Invalid(
+            f"'step: {step_config}' undercuts possible minimum step"
+            f" of value type '{value_type}': {dpt_class.resolution}"
+        )
+
+    return entity_config
 
 
 def numeric_type_validator(value: Any) -> str | int:
@@ -543,17 +580,20 @@ class NumberSchema(KNXPlatformSchema):
     CONF_STEP = "step"
     DEFAULT_NAME = "KNX Number"
 
-    ENTITY_SCHEMA = vol.Schema(
-        {
-            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-            vol.Optional(CONF_RESPOND_TO_READ, default=False): cv.boolean,
-            vol.Required(CONF_TYPE): numeric_type_validator,
-            vol.Required(KNX_ADDRESS): ga_list_validator,
-            vol.Optional(CONF_STATE_ADDRESS): ga_list_validator,
-            vol.Optional(CONF_MAX): vol.Coerce(float),
-            vol.Optional(CONF_MIN): vol.Coerce(float),
-            vol.Optional(CONF_STEP): cv.positive_float,
-        }
+    ENTITY_SCHEMA = vol.All(
+        vol.Schema(
+            {
+                vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+                vol.Optional(CONF_RESPOND_TO_READ, default=False): cv.boolean,
+                vol.Required(CONF_TYPE): numeric_type_validator,
+                vol.Required(KNX_ADDRESS): ga_list_validator,
+                vol.Optional(CONF_STATE_ADDRESS): ga_list_validator,
+                vol.Optional(CONF_MAX): vol.Coerce(float),
+                vol.Optional(CONF_MIN): vol.Coerce(float),
+                vol.Optional(CONF_STEP): cv.positive_float,
+            }
+        ),
+        number_limit_sub_validator,
     )
 
 

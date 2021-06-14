@@ -58,25 +58,16 @@ class KNXNumber(KnxEntity, NumberEntity, RestoreEntity):
         super().__init__(_create_expose_sensor(xknx, config))
         self._unique_id = f"{self._device.sensor_value.group_address}"
 
-        self._min_value: float = max(
-            config.get(
-                NumberSchema.CONF_MIN,
-                self._device.sensor_value.dpt_class.value_min,
-            ),
+        self._min_value: float = config.get(
+            NumberSchema.CONF_MIN,
             self._device.sensor_value.dpt_class.value_min,
         )
-        self._max_value: float = min(
-            config.get(
-                NumberSchema.CONF_MAX,
-                self._device.sensor_value.dpt_class.value_max,
-            ),
+        self._max_value: float = config.get(
+            NumberSchema.CONF_MAX,
             self._device.sensor_value.dpt_class.value_max,
         )
-        self._step: float = max(
-            config.get(
-                NumberSchema.CONF_STEP,
-                self._device.sensor_value.dpt_class.resolution,
-            ),
+        self._step: float = config.get(
+            NumberSchema.CONF_STEP,
             self._device.sensor_value.dpt_class.resolution,
         )
         self._device.sensor_value.value = max(0, self._min_value)
