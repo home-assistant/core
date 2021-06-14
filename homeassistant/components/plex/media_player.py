@@ -492,6 +492,10 @@ class PlexMediaPlayer(MediaPlayerEntity):
                 "Client is not currently accepting playback controls: %s", self.name
             )
             return
+        if not self.plex_server.has_token:
+            _LOGGER.warning(
+                "Plex integration configured without a token, playback may fail"
+            )
 
         src = json.loads(media_id)
         if isinstance(src, int):
