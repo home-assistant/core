@@ -800,6 +800,7 @@ omit =
     homeassistant/components/proliphix/climate.py
     homeassistant/components/progettihwsw/__init__.py
     homeassistant/components/progettihwsw/binary_sensor.py
+    homeassistant/components/progettihwsw/sensor.py
     homeassistant/components/progettihwsw/switch.py
     homeassistant/components/prometheus/*
     homeassistant/components/prowl/notify.py

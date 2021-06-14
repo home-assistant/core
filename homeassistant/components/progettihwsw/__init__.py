@@ -1,15 +1,17 @@
 """Automation manager for boards manufactured by ProgettiHWSW Italy."""
 
 from ProgettiHWSW.ProgettiHWSWAPI import ProgettiHWSWAPI
+from ProgettiHWSW.analog import AnalogInput
 from ProgettiHWSW.input import Input
 from ProgettiHWSW.relay import Relay
+from ProgettiHWSW.temperature import Temperature
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
 
-PLATFORMS = ["switch", "binary_sensor"]
+PLATFORMS = ["switch", "binary_sensor", "sensor"]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -44,3 +46,13 @@ def setup_input(api: ProgettiHWSWAPI, input_number: int) -> Input:
 def setup_switch(api: ProgettiHWSWAPI, switch_number: int, mode: str) -> Relay:
     """Initialize the output pin."""
     return api.get_relay(switch_number, mode)
+
+
+def setup_temperature(api: ProgettiHWSWAPI, input_number: int) -> Temperature:
+    """Initialize the output pin."""
+    return api.get_temp(input_number)
+
+
+def setup_analog(api: ProgettiHWSWAPI, input_number: int) -> AnalogInput:
+    """Initialize the output pin."""
+    return api.get_pot(input_number)

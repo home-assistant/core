@@ -1,5 +1,6 @@
 """Control switches."""
 
+import asyncio
 from datetime import timedelta
 import logging
 
@@ -21,13 +22,16 @@ _LOGGER = logging.getLogger(DOMAIN)
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the switches from a config entry."""
     board_api = hass.data[DOMAIN][config_entry.entry_id]
-    relay_count = config_entry.data["relay_count"]
+    relays = config_entry.data["relays"]
     switches = []
 
     async def async_update_data():
         """Fetch data from API endpoint of board."""
-        async with async_timeout.timeout(5):
-            return await board_api.get_switches()
+        try:
+            async with async_timeout.timeout(5):
+                return await board_api.get_switches()
+        except asyncio.TimeoutError:
+            return False
 
     coordinator = DataUpdateCoordinator(
         hass,
@@ -38,11 +42,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
     await coordinator.async_refresh()
 
-    for i in range(1, int(relay_count) + 1):
+    for i in relays:
         switches.append(
             ProgettihwswSwitch(
                 coordinator,
                 f"Relay #{i}",
+                board_api.create_unique_id(i, "switch"),
                 setup_switch(board_api, i, config_entry.data[f"relay_{str(i)}"]),
             )
         )
@@ -53,11 +58,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class ProgettihwswSwitch(CoordinatorEntity, SwitchEntity):
     """Represent a switch entity."""
 
-    def __init__(self, coordinator, name, switch: Relay):
+    def __init__(self, coordinator, name, unique_id, switch: Relay):
         """Initialize the values."""
         super().__init__(coordinator)
         self._switch = switch
         self._name = name
+        self._unique_id = unique_id
 
     async def async_turn_on(self, **kwargs):
         """Turn the switch on."""
@@ -80,6 +86,14 @@ class ProgettihwswSwitch(CoordinatorEntity, SwitchEntity):
         return self._name
 
     @property
+    def unique_id(self):
+        """Return a base64 encoded unique id number."""
+        return self._unique_id
+
+    @property
     def is_on(self):
         """Get switch state."""
-        return self.coordinator.data[self._switch.id]
+        if self.coordinator.data is False:
+            return False
+
+        return self.coordinator.data[str(self._switch.id)]

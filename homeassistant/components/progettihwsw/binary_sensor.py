@@ -1,5 +1,6 @@
 """Control binary sensor instances."""
 
+import asyncio
 from datetime import timedelta
 import logging
 
@@ -21,13 +22,16 @@ _LOGGER = logging.getLogger(DOMAIN)
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the binary sensors from a config entry."""
     board_api = hass.data[DOMAIN][config_entry.entry_id]
-    input_count = config_entry.data["input_count"]
+    inputs = config_entry.data["inputs"]
     binary_sensors = []
 
     async def async_update_data():
         """Fetch data from API endpoint of board."""
-        async with async_timeout.timeout(5):
-            return await board_api.get_inputs()
+        try:
+            async with async_timeout.timeout(5):
+                return await board_api.get_inputs()
+        except asyncio.TimeoutError:
+            return False
 
     coordinator = DataUpdateCoordinator(
         hass,
@@ -38,11 +42,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
     await coordinator.async_refresh()
 
-    for i in range(1, int(input_count) + 1):
+    for i in inputs:
         binary_sensors.append(
             ProgettihwswBinarySensor(
                 coordinator,
                 f"Input #{i}",
+                board_api.create_unique_id(i, "input"),
                 setup_input(board_api, i),
             )
         )
@@ -53,11 +58,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class ProgettihwswBinarySensor(CoordinatorEntity, BinarySensorEntity):
     """Represent a binary sensor."""
 
-    def __init__(self, coordinator, name, sensor: Input):
+    def __init__(self, coordinator, name, unique_id, sensor: Input):
         """Set initializing values."""
         super().__init__(coordinator)
         self._name = name
         self._sensor = sensor
+        self._unique_id = unique_id
 
     @property
     def name(self):
@@ -65,6 +71,14 @@ class ProgettihwswBinarySensor(CoordinatorEntity, BinarySensorEntity):
         return self._name
 
     @property
+    def unique_id(self):
+        """Return a base64 encoded unique id number."""
+        return self._unique_id
+
+    @property
     def is_on(self):
         """Get sensor state."""
-        return self.coordinator.data[self._sensor.id]
+        if self.coordinator.data is False:
+            return False
+
+        return self.coordinator.data[str(self._sensor.id)]

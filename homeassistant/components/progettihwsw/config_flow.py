@@ -14,19 +14,16 @@ DATA_SCHEMA = vol.Schema(
 
 async def validate_input(hass: core.HomeAssistant, data):
     """Validate the user host input."""
-
+    print("EXX")
     api_instance = ProgettiHWSWAPI(f'{data["host"]}:{data["port"]}')
     is_valid = await api_instance.check_board()
+
+    print(is_valid)
 
     if not is_valid:
         raise CannotConnect
 
-    return {
-        "title": is_valid["title"],
-        "relay_count": is_valid["relay_count"],
-        "input_count": is_valid["input_count"],
-        "is_old": is_valid["is_old"],
-    }
+    return is_valid
 
 
 class ProgettiHWSWConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -49,9 +46,10 @@ class ProgettiHWSWConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_create_entry(title=whole_data["title"], data=whole_data)
 
         relay_modes_schema = {}
-        for i in range(1, int(self.s1_in["relay_count"]) + 1):
+        relays = self.s1_in["relays"]
+        for relay_number in relays:
             relay_modes_schema[
-                vol.Required(f"relay_{str(i)}", default="bistable")
+                vol.Required(f"relay_{str(relay_number)}", default="bistable")
             ] = vol.In(
                 {
                     "bistable": "Bistable (ON/OFF Mode)",

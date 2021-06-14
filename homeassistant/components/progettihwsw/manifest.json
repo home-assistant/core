@@ -3,7 +3,7 @@
   "name": "ProgettiHWSW Automation",
   "documentation": "https://www.home-assistant.io/integrations/progettihwsw",
   "codeowners": ["@ardaseremet"],
-  "requirements": ["progettihwsw==0.1.1"],
+  "requirements": ["progettihwsw==0.1.2"],
   "config_flow": true,
   "iot_class": "local_polling"
 }
