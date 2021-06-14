@@ -75,7 +75,9 @@ async def async_initialize_triggers(
     for idx, conf in enumerate(trigger_config):
         platform = await _async_get_trigger_platform(hass, conf)
         trigger_id = conf.get(CONF_ID, f"{idx}")
-        info = {**info, "trigger_id": trigger_id}
+        trigger_idx = f"{idx}"
+        trigger_data = {"id": trigger_id, "idx": trigger_idx}
+        info = {**info, "trigger_data": trigger_data}
         triggers.append(platform.async_attach_trigger(hass, conf, action, info))
 
     attach_results = await asyncio.gather(*triggers, return_exceptions=True)
