@@ -93,7 +93,6 @@ def async_setup_forwarded(
                 "HTTP integration is not set-up for reverse proxies",
                 connected_ip,
             )
-            # Block this request in the future, for now we pass.
             raise HTTPBadRequest
 
         # Ensure the IP of the connected peer is trusted
@@ -102,7 +101,6 @@ def async_setup_forwarded(
                 "Received X-Forwarded-For header from an untrusted proxy %s",
                 connected_ip,
             )
-            # Not trusted, Block this request in the future, continue as normal
             raise HTTPBadRequest
 
         # Multiple X-Forwarded-For headers
