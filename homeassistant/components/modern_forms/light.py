@@ -12,7 +12,6 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import callback
 import homeassistant.helpers.entity_platform as entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import HomeAssistantType
@@ -72,7 +71,13 @@ async def async_setup_entry(
         "async_clear_light_sleep_timer",
     )
 
-    async_update_light(config_entry, coordinator, {}, async_add_entities)
+    async_add_entities(
+        [
+            ModernFormsLightEntity(
+                entry_id=config_entry.entry_id, coordinator=coordinator
+            )
+        ]
+    )
 
 
 class ModernFormsLightEntity(LightEntity, ModernFormsDeviceEntity):
@@ -136,18 +141,3 @@ class ModernFormsLightEntity(LightEntity, ModernFormsDeviceEntity):
     ) -> None:
         """Clear a Modern Forms light sleep timer."""
         await self.coordinator.modern_forms.light(sleep=CLEAR_TIMER)
-
-
-@callback
-def async_update_light(
-    entry: ConfigEntry,
-    coordinator: ModernFormsDataUpdateCoordinator,
-    current: dict[str, ModernFormsLightEntity],
-    async_add_entities: AddEntitiesCallback,
-) -> None:
-    """Update Modern Forms light."""
-    if not current:
-        current[entry.entry_id] = ModernFormsLightEntity(
-            entry_id=entry.entry_id, coordinator=coordinator
-        )
-        async_add_entities([current[entry.entry_id]])
