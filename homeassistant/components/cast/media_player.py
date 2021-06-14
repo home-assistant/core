@@ -482,10 +482,15 @@ class CastDevice(MediaPlayerEntity):
 
     def play_media(self, media_type, media_id, **kwargs):
         """Play media from a URL."""
+        extra = kwargs.get(ATTR_MEDIA_EXTRA, {})
+        metadata = extra.get("metadata")
+
         # We do not want this to be forwarded to a group
         if media_type == CAST_DOMAIN:
             try:
                 app_data = json.loads(media_id)
+                if metadata is not None:
+                    app_data["metadata"] = extra.get("metadata")
             except json.JSONDecodeError:
                 _LOGGER.error("Invalid JSON in media_content_id")
                 raise
