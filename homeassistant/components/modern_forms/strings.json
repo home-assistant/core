@@ -1,5 +1,4 @@
 {
-  "title": "Modern Forms",
   "config": {
     "flow_title": "{name}",
     "step": {
@@ -8,9 +7,6 @@
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
         }
-      },
-      "confirm": {
-        "description": "[%key:common::config_flow::description::confirm_setup%]"
       },
       "zeroconf_confirm": {
         "description": "Do you want to add the Modern Forms fan named `{name}` to Home Assistant?",
