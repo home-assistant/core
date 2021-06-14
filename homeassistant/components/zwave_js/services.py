@@ -1,6 +1,7 @@
 """Methods and classes related to executing Z-Wave commands and publishing these to hass."""
 from __future__ import annotations
 
+import asyncio
 import logging
 from typing import Any
 
@@ -294,6 +295,24 @@ class ZWaveServices:
             ),
         )
 
+        self._hass.services.async_register(
+            const.DOMAIN,
+            const.SERVICE_PING,
+            self.async_ping,
+            schema=vol.Schema(
+                vol.All(
+                    {
+                        vol.Optional(ATTR_DEVICE_ID): vol.All(
+                            cv.ensure_list, [cv.string]
+                        ),
+                        vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+                    },
+                    cv.has_at_least_one_key(ATTR_DEVICE_ID, ATTR_ENTITY_ID),
+                    get_nodes_from_service_data,
+                ),
+            ),
+        )
+
     async def async_set_config_parameter(self, service: ServiceCall) -> None:
         """Set a config value on a node."""
         nodes = service.data[const.ATTR_NODES]
@@ -418,3 +437,8 @@ class ZWaveServices:
 
         if success is False:
             raise SetValueFailed("Unable to set value via multicast")
+
+    async def async_ping(self, service: ServiceCall) -> None:
+        """Ping node(s)."""
+        nodes: set[ZwaveNode] = service.data[const.ATTR_NODES]
+        await asyncio.gather(*[node.async_ping() for node in nodes])
