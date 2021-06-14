@@ -208,6 +208,9 @@ aiolyric==1.0.7
 # homeassistant.components.modern_forms
 aiomodernforms==0.1.5
 
+# homeassistant.components.yamaha_musiccast
+aiomusiccast==0.6
+
 # homeassistant.components.keyboard_remote
 aionotify==0.2.0
 
@@ -1584,9 +1587,6 @@ pymonoprice==0.3
 
 # homeassistant.components.msteams
 pymsteams==0.1.12
-
-# homeassistant.components.yamaha_musiccast
-pymusiccast==0.1.6
 
 # homeassistant.components.myq
 pymyq==3.0.4

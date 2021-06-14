@@ -1212,6 +1212,7 @@ omit =
     homeassistant/components/xmpp/notify.py
     homeassistant/components/xs1/*
     homeassistant/components/yale_smart_alarm/alarm_control_panel.py
+    homeassistant/components/yamaha_musiccast/__init__.py
     homeassistant/components/yamaha_musiccast/media_player.py
     homeassistant/components/yandex_transport/*
     homeassistant/components/yeelightsunflower/light.py
