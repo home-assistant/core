@@ -68,11 +68,18 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     # Pump sensors
     for pump_num, pump_data in coordinator.data[SL_DATA.KEY_PUMPS].items():
         if pump_data["data"] != 0 and "currentWatts" in pump_data:
-            entities.extend(
-                ScreenLogicPumpSensor(coordinator, pump_num, pump_key)
-                for pump_key in pump_data
-                if pump_key in SUPPORTED_PUMP_SENSORS
-            )
+            for pump_key in pump_data:
+                enabled = True
+                if pump_data["pumpType"] == 1:  # Intelliflow VF
+                    if pump_key in ("currentRPM"):
+                        continue
+                elif pump_data["pumpType"] == 2:  # Intelliflow VS
+                    if pump_key in ("currentGPM"):
+                        continue
+                if pump_key in SUPPORTED_PUMP_SENSORS:
+                    entities.append(
+                        ScreenLogicPumpSensor(coordinator, pump_num, pump_key, enabled)
+                    )
 
     # IntelliChem sensors
     if equipment_flags & EQUIPMENT.FLAG_INTELLICHEM:
