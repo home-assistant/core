@@ -37,11 +37,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 pots = await board_api.get_pots()
                 if is_rfid:
                     rfid = await board_api.get_rfid()
-                return {
-                    "temps": temps,
-                    "pots": pots,
-                    "rfid": rfid if is_rfid else '0'
-                }
+                return {"temps": temps, "pots": pots, "rfid": rfid if is_rfid else "0"}
         except asyncio.TimeoutError:
             return False
 

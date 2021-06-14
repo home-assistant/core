@@ -15,10 +15,10 @@ from tests.common import MockConfigEntry
 mock_value_step_user = {
     "title": "2R Board",
     "rfid": True,
-    "relays": ['1', '2'],
-    "inputs": ['1', '2'],
-    "pots": ['1', '2'],
-    "temps": ['1', '2']
+    "relays": ["1", "2"],
+    "inputs": ["1", "2"],
+    "pots": ["1", "2"],
+    "temps": ["1", "2"],
 }
 
 
@@ -34,7 +34,7 @@ async def test_form(hass):
 
     mock_value_step_rm = {
         "relay_1": "bistable",  # Mocking a single relay board instance.
-        "relay_2": "bistable"
+        "relay_2": "bistable",
     }
 
     with patch(
@@ -62,7 +62,8 @@ async def test_form(hass):
     assert result3["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result3["data"]
     assert result3["data"]["title"] == "2R Board"
-    assert result3["data"]["relays"] == ['1', '2']
+    assert result3["data"]["relays"] == ["1", "2"]
+
 
 async def test_form_cannot_connect(hass):
     """Test we handle unexisting board."""

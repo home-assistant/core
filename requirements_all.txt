@@ -1191,7 +1191,7 @@ praw==7.2.0
 prayer_times_calculator==0.0.5
 
 # homeassistant.components.progettihwsw
-progettihwsw==0.1.1
+progettihwsw==0.1.2
 
 # homeassistant.components.proliphix
 proliphix==0.4.1
