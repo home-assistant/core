@@ -61,6 +61,7 @@ homeassistant.components.recorder.repack
 homeassistant.components.recorder.statistics
 homeassistant.components.remote.*
 homeassistant.components.scene.*
+homeassistant.components.select.*
 homeassistant.components.sensor.*
 homeassistant.components.slack.*
 homeassistant.components.sonos.media_player

@@ -91,6 +91,7 @@ NO_IOT_CLASS = [
     "scene",
     "script",
     "search",
+    "select",
     "sensor",
     "stt",
     "switch",
