@@ -56,7 +56,7 @@ async def async_attach_trigger(
     automation_info: dict,
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
-    trigger_id = automation_info.get("trigger_id") if automation_info else None
+    trigger_data = automation_info.get("trigger_data", {}) if automation_info else {}
     job = HassJob(action)
 
     if config[CONF_TYPE] == "turn_on":
@@ -69,9 +69,9 @@ async def async_attach_trigger(
                     job,
                     {
                         "trigger": {
+                            **trigger_data,
                             **config,
                             "description": f"{DOMAIN} - {entity_id}",
-                            "id": trigger_id,
                         }
                     },
                     event.context,
