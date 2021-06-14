@@ -281,7 +281,7 @@ def stream_worker(  # noqa: C901
                     first_packet = packet
                     initial_packets.append(packet)
             # Get first_dts from subsequent frame to first keyframe
-            while segment_start_dts is None or (  # type: ignore
+            while segment_start_dts is None or (
                 audio_stream
                 and not found_audio
                 and len(initial_packets) < PACKETS_TO_WAIT_FOR_AUDIO
