@@ -14,11 +14,8 @@ DATA_SCHEMA = vol.Schema(
 
 async def validate_input(hass: core.HomeAssistant, data):
     """Validate the user host input."""
-    print("EXX")
     api_instance = ProgettiHWSWAPI(f'{data["host"]}:{data["port"]}')
     is_valid = await api_instance.check_board()
-
-    print(is_valid)
 
     if not is_valid:
         raise CannotConnect
