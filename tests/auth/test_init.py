@@ -1001,3 +1001,21 @@ async def test_new_users(mock_hass):
         )
     )
     assert user_cred.is_admin
+
+
+async def test_rename_does_not_change_refresh_token(mock_hass):
+    """Test that we can rename without changing refresh token."""
+    manager = await auth.auth_manager_from_config(mock_hass, [], [])
+    user = MockUser().add_to_auth_manager(manager)
+    await manager.async_create_refresh_token(user, CLIENT_ID)
+
+    assert len(list(user.refresh_tokens.values())) == 1
+    token_before = list(user.refresh_tokens.values())[0]
+
+    await manager.async_update_user(user, name="new name")
+    assert user.name == "new name"
+
+    assert len(list(user.refresh_tokens.values())) == 1
+    token_after = list(user.refresh_tokens.values())[0]
+
+    assert token_before == token_after
