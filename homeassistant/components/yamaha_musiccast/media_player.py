@@ -579,7 +579,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
         Creates a new group if necessary. Used for join service.
         """
         _LOGGER.info(
-            self.entity_id + " wants to add the following entities " + str(entities)
+            "%s wants to add the following entities %s", self.entity_id, str(entities)
         )
         if not self.is_server and self.musiccast_zone_entity.is_server:
             # The MusicCast Distribution Module of this device is already in use. To use it as a server, we first
@@ -600,8 +600,10 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
                     await client.async_client_join(group, self)
                 except MusicCastGroupException:
                     _LOGGER.warning(
-                        "%s is struggling to update it's group data. Will try to proceed anyway"
+                        "%s is struggling to update its group data. Will retry perform the update",
+                        client.entity_id,
                     )
+                    await client.async_client_join(group, self)
 
         await self.coordinator.musiccast.mc_server_group_extend(
             self._zone_id,
@@ -613,11 +615,13 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
             group,
             self.get_distribution_num(),
         )
-        _LOGGER.debug(self.entity_id + " added the following entities " + str(entities))
+        _LOGGER.debug(
+            "%s added the following entities %s", self.entity_id, str(entities)
+        )
         _LOGGER.info(
-            self.entity_id
-            + " has now the following musiccast group "
-            + str(self.musiccast_group)
+            "%s has now the following musiccast group %s",
+            self.entity_id,
+            str(self.musiccast_group),
         )
 
         await self.update_all_mc_entities()
@@ -627,7 +631,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
 
         Stops the distribution if device is server. Used for unjoin service.
         """
-        _LOGGER.debug(self.entity_id + " called service unjoin.")
+        _LOGGER.debug("%s called service unjoin", self.entity_id)
         if self.is_server:
             await self.async_server_close_group()
 
@@ -653,7 +657,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
         it will leave that group first.
         """
         # If we should join the group, which is served by the main zone, we can simply select main_sync as input.
-        _LOGGER.debug(self.entity_id + " called service client join.")
+        _LOGGER.debug("%s called service client join", self.entity_id)
         if self.state == STATE_OFF:
             await self.async_turn_on()
         if self.ip_address == server.ip_address:
@@ -670,20 +674,21 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
         if self.musiccast_zone_entity.is_server:
             # If one of the zones of the device is a server, we need to unjoin first.
             _LOGGER.info(
-                self.musiccast_zone_entity.entity_id
-                + " is a server of a group and has to stop distribution "
-                "to use MusicCast for " + self.entity_id
+                "%s is a server of a group and has to stop distribution "
+                "to use MusicCast for %s",
+                self.musiccast_zone_entity.entity_id,
+                self.entity_id,
             )
             await self.musiccast_zone_entity.async_server_close_group()
 
         elif self.is_client:
             if self.coordinator.data.group_id == server.coordinator.data.group_id:
-                _LOGGER.warning(self.entity_id + " is already part of the group")
+                _LOGGER.warning("%s is already part of the group", self.entity_id)
                 return
             else:
                 _LOGGER.info(
-                    self.entity_id
-                    + " is client in a different group, will unjoin first"
+                    "%s is client in a different group, will unjoin first",
+                    self.entity_id,
                 )
                 await self.async_client_leave_group()
 
@@ -700,7 +705,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
             server.async_write_ha_state()
             return
 
-        _LOGGER.debug(self.entity_id + " will now join as a client.")
+        _LOGGER.debug("%s will now join as a client", self.entity_id)
         await self.coordinator.musiccast.mc_client_join(
             server.ip_address, group_id, self._zone_id
         )
@@ -714,7 +719,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
 
         Should only be called for clients.
         """
-        _LOGGER.debug(self.entity_id + " client leave called.")
+        _LOGGER.debug("%s client leave called", self.entity_id)
         if not force and (
             self.source == ATTR_MAIN_SYNC
             or len(
@@ -750,7 +755,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
 
         Should only be called for servers.
         """
-        _LOGGER.info(self.entity_id + " closes his group.")
+        _LOGGER.info("%s closes his group", self.entity_id)
         for client in self.musiccast_group:
             if client != self:
                 await client.async_client_leave_group()
@@ -758,7 +763,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
 
     async def async_check_client_list(self):
         """Let the server check if all its clients are still part of his group."""
-        _LOGGER.debug(self.entity_id + " updates his group members.")
+        _LOGGER.debug("%s updates his group members", self.entity_id)
         client_ips_for_removal = []
         for expected_client_ip in self.coordinator.data.group_client_list:
             if expected_client_ip not in [
@@ -769,9 +774,9 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
 
         if len(client_ips_for_removal):
             _LOGGER.info(
-                self.entity_id
-                + " says good bye to the following members "
-                + str(client_ips_for_removal)
+                "%s says good bye to the following members %s",
+                self.entity_id,
+                str(client_ips_for_removal),
             )
             await self.coordinator.musiccast.mc_server_group_reduce(
                 self._zone_id, client_ips_for_removal, self.get_distribution_num()
