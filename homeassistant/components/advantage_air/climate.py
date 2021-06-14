@@ -36,6 +36,14 @@ ADVANTAGE_AIR_HVAC_MODES = {
 }
 HASS_HVAC_MODES = {v: k for k, v in ADVANTAGE_AIR_HVAC_MODES.items()}
 
+AC_HVAC_MODES = [
+    HVAC_MODE_OFF,
+    HVAC_MODE_COOL,
+    HVAC_MODE_HEAT,
+    HVAC_MODE_FAN_ONLY,
+    HVAC_MODE_DRY,
+]
+
 ADVANTAGE_AIR_FAN_MODES = {
     "auto": FAN_AUTO,
     "low": FAN_LOW,
@@ -126,21 +134,8 @@ class AdvantageAirAC(AdvantageAirClimateEntity):
     def hvac_modes(self):
         """Return the supported HVAC modes."""
         if self._ac.get("myAutoModeEnabled"):
-            return [
-                HVAC_MODE_OFF,
-                HVAC_MODE_COOL,
-                HVAC_MODE_HEAT,
-                HVAC_MODE_FAN_ONLY,
-                HVAC_MODE_DRY,
-                HVAC_MODE_AUTO,
-            ]
-        return [
-            HVAC_MODE_OFF,
-            HVAC_MODE_COOL,
-            HVAC_MODE_HEAT,
-            HVAC_MODE_FAN_ONLY,
-            HVAC_MODE_DRY,
-        ]
+            return AC_HVAC_MODES + [HVAC_MODE_AUTO]
+        return AC_HVAC_MODES
 
     @property
     def fan_mode(self):
