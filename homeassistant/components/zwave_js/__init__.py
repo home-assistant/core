@@ -216,6 +216,8 @@ async def async_setup_entry(  # noqa: C901
                 hass.config_entries.async_forward_entry_setup(entry, SENSOR_DOMAIN)
             )
             await platform_setup_tasks[SENSOR_DOMAIN]
+        elif not platform_setup_tasks[SENSOR_DOMAIN].done():
+            await platform_setup_tasks[SENSOR_DOMAIN]
 
         # Create a node status sensor for each device
         async_dispatcher_send(
