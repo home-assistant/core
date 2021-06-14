@@ -215,8 +215,10 @@ async def async_setup_entry(  # noqa: C901
             platform_setup_tasks[SENSOR_DOMAIN] = hass.async_create_task(
                 hass.config_entries.async_forward_entry_setup(entry, SENSOR_DOMAIN)
             )
-            await platform_setup_tasks[SENSOR_DOMAIN]
-        elif not platform_setup_tasks[SENSOR_DOMAIN].done():
+
+        # This guard ensures that concurrent runs of this function all await the
+        # platform setup task
+        if not platform_setup_tasks[SENSOR_DOMAIN].done():
             await platform_setup_tasks[SENSOR_DOMAIN]
 
         # Create a node status sensor for each device
