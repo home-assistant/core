@@ -54,7 +54,7 @@ class DemoNumber(NumberEntity):
         min_value: float | None = None,
         max_value: float | None = None,
         step=None,
-    ):
+    ) -> None:
         """Initialize the Demo Number entity."""
         self._attr_assumed_state = assumed
         self._attr_icon = icon
