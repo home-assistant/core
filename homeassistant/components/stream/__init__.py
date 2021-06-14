@@ -26,7 +26,7 @@ from types import MappingProxyType
 from typing import cast
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.typing import ConfigType
 
@@ -66,9 +66,6 @@ def create_stream(
     if DOMAIN not in hass.config.components:
         raise HomeAssistantError("Stream integration is not set up.")
 
-    if options is None:
-        options = {}
-
     # For RTSP streams, prefer TCP
     if isinstance(stream_source, str) and stream_source[:7] == "rtsp://":
         options = {
@@ -104,7 +101,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async_setup_recorder(hass)
 
     @callback
-    def shutdown(event):
+    def shutdown(event: Event) -> None:
         """Stop all stream workers."""
         for stream in hass.data[DOMAIN][ATTR_STREAMS]:
             stream.keepalive = False
@@ -139,7 +136,9 @@ class Stream:
             raise ValueError(f"Stream is not configured for format '{fmt}'")
         if not self.access_token:
             self.access_token = secrets.token_hex()
-        return self.hass.data[DOMAIN][ATTR_ENDPOINTS][fmt].format(self.access_token)
+        return cast(
+            str, self.hass.data[DOMAIN][ATTR_ENDPOINTS][fmt].format(self.access_token)
+        )
 
     def outputs(self) -> Mapping[str, StreamOutput]:
         """Return a copy of the stream outputs."""
@@ -147,12 +146,14 @@ class Stream:
         # without concern about self._outputs being modified from another thread.
         return MappingProxyType(self._outputs.copy())
 
-    def add_provider(self, fmt: str, timeout=OUTPUT_IDLE_TIMEOUT) -> StreamOutput:
+    def add_provider(
+        self, fmt: str, timeout: int = OUTPUT_IDLE_TIMEOUT
+    ) -> StreamOutput:
         """Add provider output stream."""
         if not self._outputs.get(fmt):
 
             @callback
-            def idle_callback():
+            def idle_callback() -> None:
                 if (
                     not self.keepalive or fmt == RECORDER_PROVIDER
                 ) and fmt in self._outputs:

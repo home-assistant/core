@@ -7,7 +7,7 @@ from fractions import Fraction
 from io import BytesIO
 import logging
 from threading import Event
-from typing import Callable, cast
+from typing import Any, Callable, cast
 
 import av
 
@@ -45,9 +45,9 @@ class SegmentBuffer:
         self._memory_file: BytesIO = cast(BytesIO, None)
         self._av_output: av.container.OutputContainer = None
         self._input_video_stream: av.video.VideoStream = None
-        self._input_audio_stream = None  # av.audio.AudioStream | None
+        self._input_audio_stream: Any | None = None  # av.audio.AudioStream | None
         self._output_video_stream: av.video.VideoStream = None
-        self._output_audio_stream = None  # av.audio.AudioStream | None
+        self._output_audio_stream: Any | None = None  # av.audio.AudioStream | None
         self._segment: Segment | None = None
         self._segment_last_write_pos: int = cast(int, None)
         self._part_start_dts: int = cast(int, None)
@@ -82,7 +82,7 @@ class SegmentBuffer:
     def set_streams(
         self,
         video_stream: av.video.VideoStream,
-        audio_stream,
+        audio_stream: Any,
         # no type hint for audio_stream until https://github.com/PyAV-Org/PyAV/pull/775 is merged
     ) -> None:
         """Initialize output buffer with streams from container."""
@@ -281,7 +281,7 @@ def stream_worker(  # noqa: C901
                     first_packet = packet
                     initial_packets.append(packet)
             # Get first_dts from subsequent frame to first keyframe
-            while segment_start_dts is None or (
+            while segment_start_dts is None or (  # type: ignore
                 audio_stream
                 and not found_audio
                 and len(initial_packets) < PACKETS_TO_WAIT_FOR_AUDIO
@@ -318,14 +318,13 @@ def stream_worker(  # noqa: C901
                 _LOGGER.warning(
                     "Audio stream not found"
                 )  # Some streams declare an audio stream and never send any packets
-                audio_stream = None
 
         except (av.AVError, StopIteration) as ex:
             _LOGGER.error(
                 "Error demuxing stream while finding first packet: %s", str(ex)
             )
             return False
-        return True
+        return True  # type: ignore
 
     if not peek_first_dts():
         container.close()

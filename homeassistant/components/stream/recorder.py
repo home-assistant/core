@@ -23,7 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @callback
-def async_setup_recorder(hass) -> None:
+def async_setup_recorder(hass: HomeAssistant) -> None:
     """Only here so Provider Registry works."""
 
 

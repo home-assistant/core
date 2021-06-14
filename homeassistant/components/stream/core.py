@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections import deque
 import datetime
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from aiohttp import web
 import attr
@@ -89,7 +89,7 @@ class IdleTimer:
         if self._unsub is not None:
             self._unsub()
 
-    def fire(self, _now=None) -> None:
+    def fire(self, _now: Any = None) -> None:
         """Invoke the idle timeout callback, called when the alarm fires."""
         self.idle = True
         self._unsub = None
@@ -100,7 +100,10 @@ class StreamOutput:
     """Represents a stream output."""
 
     def __init__(
-        self, hass: HomeAssistant, idle_timer: IdleTimer, deque_maxlen: int = None
+        self,
+        hass: HomeAssistant,
+        idle_timer: IdleTimer,
+        deque_maxlen: int | None = None,
     ) -> None:
         """Initialize a stream output."""
         self._hass = hass
