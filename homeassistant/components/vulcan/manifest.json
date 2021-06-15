@@ -6,9 +6,6 @@
   "requirements": [
     "vulcan-api==2.0.0"
   ],
-  "ssdp": [],
-  "zeroconf": [],
-  "homekit": {},
   "dependencies": [],
   "codeowners": [
     "@Antoni-Czaplicki"
