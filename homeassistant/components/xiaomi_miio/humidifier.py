@@ -3,6 +3,7 @@ import asyncio
 from enum import Enum
 from functools import partial
 import logging
+import math
 
 from miio import AirHumidifier, AirHumidifierMiot, DeviceException
 from miio.airhumidifier import OperationMode as AirhumidifierOperationMode
@@ -25,6 +26,7 @@ from homeassistant.const import (
     CONF_TOKEN,
 )
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util.percentage import percentage_to_ranged_value
 
 from .const import (
     CONF_DEVICE,
@@ -189,6 +191,7 @@ class XiaomiGenericHumidifierDevice(XiaomiMiioEntity, HumidifierEntity):
         self._available_attributes = AVAILABLE_ATTRIBUTES
         self._min_humidity = DEFAULT_MIN_HUMIDITY
         self._max_humidity = DEFAULT_MAX_HUMIDITY
+        self._humidity_steps = 100
 
     @property
     def device_class(self):
@@ -283,6 +286,16 @@ class XiaomiGenericHumidifierDevice(XiaomiMiioEntity, HumidifierEntity):
             self._state = False
             self._skip_update = True
 
+    async def async_translate_humidity(self, humidity):
+        """Translate the target humidity to the first valid step."""
+        return (
+            math.ceil(percentage_to_ranged_value((1, self._humidity_steps), humidity))
+            * 100
+            / self._humidity_steps
+            if 0 < humidity <= 100
+            else None
+        )
+
 
 class XiaomiAirHumidifier(XiaomiGenericHumidifierDevice):
     """Representation of a Xiaomi Air Humidifier."""
@@ -300,12 +313,14 @@ class XiaomiAirHumidifier(XiaomiGenericHumidifierDevice):
             ]
             self._min_humidity = 30
             self._max_humidity = 80
+            self._humidity_steps = 10
         elif self._model in [MODEL_AIRHUMIDIFIER_CA4]:
             self._available_modes = [
                 mode.name for mode in AirhumidifierMiotOperationMode
             ]
             self._min_humidity = 30
             self._max_humidity = 80
+            self._humidity_steps = 100
         else:
             self._available_modes = [
                 mode.name
@@ -314,6 +329,7 @@ class XiaomiAirHumidifier(XiaomiGenericHumidifierDevice):
             ]
             self._min_humidity = 30
             self._max_humidity = 80
+            self._humidity_steps = 10
 
         self._state_attrs.update(
             {attribute: None for attribute in self._available_attributes}
@@ -363,11 +379,15 @@ class XiaomiAirHumidifier(XiaomiGenericHumidifierDevice):
 
     async def async_set_humidity(self, humidity) -> None:
         """Set the target humidity of the humidifier and set the mode to auto."""
-        _LOGGER.debug("Setting the humidity to: %s", humidity)
+        target_humidity = await self.async_translate_humidity(humidity)
+        if not target_humidity:
+            return
+
+        _LOGGER.debug("Setting the humidity to: %s", target_humidity)
         await self._try_command(
             "Setting operation mode of the miio device failed.",
             self._device.set_target_humidity,
-            humidity,
+            target_humidity,
         )
         if (
             self.supported_features & SUPPORT_MODES == 0
@@ -429,12 +449,15 @@ class XiaomiAirHumidifierMiot(XiaomiAirHumidifier):
 
     async def async_set_humidity(self, humidity) -> None:
         """Set the target humidity of the humidifier and set the mode to auto."""
-        _LOGGER.debug("Setting the humidity to: %s", humidity)
+        target_humidity = await self.async_translate_humidity(humidity)
+        if not target_humidity:
+            return
 
+        _LOGGER.debug("Setting the humidity to: %s", target_humidity)
         await self._try_command(
             "Setting operation mode of the miio device failed.",
             self._device.set_target_humidity,
-            humidity,
+            target_humidity,
         )
         if (
             self.supported_features & SUPPORT_MODES == 0
