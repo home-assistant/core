@@ -98,8 +98,8 @@ class Device(CoordinatorEntity, LightEntity):
 
     async def async_turn_on(self, **kwargs):
         """Async function to set on to light."""
-        self._on = True
-        payload = {"on": self._on}
+        self._attr_is_on = True
+        payload = {"on": True}
         if ATTR_BRIGHTNESS in kwargs:
             self._brightness = math.floor(kwargs[ATTR_BRIGHTNESS] / 255 * 100)
             payload["brightness"] = self._brightness
