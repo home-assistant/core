@@ -128,11 +128,16 @@ class EcobeeSensor(SensorEntity):
     async def async_update(self):
         """Get the latest state of the sensor."""
         await self.data.update()
-        for sensor in self.data.ecobee.get_remote_sensors(self.index):
-            if sensor["name"] != self.sensor_name:
-                continue
-            for item in sensor["capability"]:
-                if item["type"] != self.type:
+        thermostat = self.data.ecobee.get_thermostat(self.index)
+        if not thermostat["runtime"]["connected"]:
+            # If the thermostat is disconnected, sensor data is stale
+            self._state = "unknown"
+        else:
+            for sensor in self.data.ecobee.get_remote_sensors(self.index):
+                if sensor["name"] != self.sensor_name:
                     continue
-                self._state = item["value"]
-                break
+                for item in sensor["capability"]:
+                    if item["type"] != self.type:
+                        continue
+                    self._state = item["value"]
+                    break

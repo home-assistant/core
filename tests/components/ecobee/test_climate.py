@@ -21,6 +21,7 @@ def ecobee_fixture():
             "currentClimateRef": "c1",
         },
         "runtime": {
+            "connected": True,
             "actualTemperature": 300,
             "actualHumidity": 15,
             "desiredHeat": 400,
