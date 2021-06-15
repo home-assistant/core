@@ -34,8 +34,7 @@ effect:
           max: 255
     reverse:
       name: Reverse effect
-      description:
-        Reverse the effect. Either true to reverse or false otherwise.
+      description: Reverse the effect. Either true to reverse or false otherwise.
       default: false
       selector:
         boolean:
@@ -54,9 +53,9 @@ live:
       selector:
         select:
           options:
-            - Off
-            - On
-            - Off until Reboot
+            - "Off"
+            - "On"
+            - "Off until Reboot"
 
 preset:
   name: Set preset
