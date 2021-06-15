@@ -849,7 +849,7 @@ async def test_multicast_set_value(
             ],
             ATTR_COMMAND_CLASS: 117,
             ATTR_PROPERTY: "local",
-            ATTR_VALUE: "1",
+            ATTR_VALUE: "true",
         },
         blocking=True,
     )
