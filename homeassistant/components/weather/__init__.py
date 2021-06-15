@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import TypedDict, final
+from typing import Final, TypedDict, final
 
 from homeassistant.const import PRECISION_TENTHS, PRECISION_WHOLE, TEMP_CELSIUS
 from homeassistant.helpers.config_validation import (  # noqa: F401
@@ -35,15 +35,15 @@ ATTR_CONDITION_SUNNY = "sunny"
 ATTR_CONDITION_WINDY = "windy"
 ATTR_CONDITION_WINDY_VARIANT = "windy-variant"
 ATTR_FORECAST = "forecast"
-ATTR_FORECAST_CONDITION = "condition"
-ATTR_FORECAST_PRECIPITATION = "precipitation"
-ATTR_FORECAST_PRECIPITATION_PROBABILITY = "precipitation_probability"
-ATTR_FORECAST_PRESSURE = "pressure"
-ATTR_FORECAST_TEMP = "temperature"
-ATTR_FORECAST_TEMP_LOW = "templow"
-ATTR_FORECAST_TIME = "datetime"
-ATTR_FORECAST_WIND_BEARING = "wind_bearing"
-ATTR_FORECAST_WIND_SPEED = "wind_speed"
+ATTR_FORECAST_CONDITION: Final = "condition"
+ATTR_FORECAST_PRECIPITATION: Final = "precipitation"
+ATTR_FORECAST_PRECIPITATION_PROBABILITY: Final = "precipitation_probability"
+ATTR_FORECAST_PRESSURE: Final = "pressure"
+ATTR_FORECAST_TEMP: Final = "temperature"
+ATTR_FORECAST_TEMP_LOW: Final = "templow"
+ATTR_FORECAST_TIME: Final = "datetime"
+ATTR_FORECAST_WIND_BEARING: Final = "wind_bearing"
+ATTR_FORECAST_WIND_SPEED: Final = "wind_speed"
 ATTR_WEATHER_ATTRIBUTION = "attribution"
 ATTR_WEATHER_HUMIDITY = "humidity"
 ATTR_WEATHER_OZONE = "ozone"
