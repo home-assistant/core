@@ -27,10 +27,37 @@ _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(seconds=60)
 
 
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry):
+    """Migrate an old config entry."""
+    version = config_entry.version
+
+    _LOGGER.debug("Migrating from version %s", version)
+
+    if version == 1:
+        version = config_entry.version = 2
+
+        hass.config_entries.async_update_entry(
+            config_entry,
+            data={
+                CONF_HOST: config_entry.data[CONF_HOST],
+                "serial": config_entry.data["serial"],
+                "upnp_description": None,
+            },
+        )
+
+    _LOGGER.info("Migration to version %s successful", version)
+
+    return True
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up MusicCast from a config entry."""
 
-    client = MusicCastDevice(entry.data[CONF_HOST], async_get_clientsession(hass))
+    client = MusicCastDevice(
+        entry.data[CONF_HOST],
+        async_get_clientsession(hass),
+        entry.data["upnp_description"],
+    )
     coordinator = MusicCastDataUpdateCoordinator(hass, client=client)
     await coordinator.async_config_entry_first_refresh()
 

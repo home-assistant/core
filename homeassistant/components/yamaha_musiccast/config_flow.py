@@ -23,10 +23,11 @@ _LOGGER = logging.getLogger(__name__)
 class MusicCastFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a MusicCast config flow."""
 
-    VERSION = 1
+    VERSION = 2
 
     serial_number: str | None = None
     host: str
+    upnp_description: str | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -65,6 +66,7 @@ class MusicCastFlowHandler(ConfigFlow, domain=DOMAIN):
                 data={
                     CONF_HOST: host,
                     "serial": serial_number,
+                    "upnp_description": self.upnp_description,
                 },
             )
 
@@ -89,8 +91,14 @@ class MusicCastFlowHandler(ConfigFlow, domain=DOMAIN):
 
         self.serial_number = discovery_info[ssdp.ATTR_UPNP_SERIAL]
         self.host = urlparse(discovery_info[ssdp.ATTR_SSDP_LOCATION]).hostname
+        self.upnp_description = discovery_info[ssdp.ATTR_SSDP_LOCATION]
         await self.async_set_unique_id(self.serial_number)
-        self._abort_if_unique_id_configured({CONF_HOST: self.host})
+        self._abort_if_unique_id_configured(
+            {
+                CONF_HOST: self.host,
+                "upnp_description": self.upnp_description,
+            }
+        )
         self.context.update(
             {
                 "title_placeholders": {
@@ -109,6 +117,7 @@ class MusicCastFlowHandler(ConfigFlow, domain=DOMAIN):
                 data={
                     CONF_HOST: self.host,
                     "serial": self.serial_number,
+                    "upnp_description": self.upnp_description,
                 },
             )
 

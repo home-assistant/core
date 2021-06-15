@@ -122,23 +122,6 @@ async def async_setup_platform(
             )
         )
 
-    platform = entity_platform.async_get_current_platform()
-    platform.async_register_entity_service(
-        SERVICE_RECALL_NETUSB_PRESET,
-        {
-            vol.Required("preset"): int,
-        },
-        "recall_netusb_preset",
-    )
-
-    platform.async_register_entity_service(
-        SERVICE_STORE_NETUSB_PRESET,
-        {
-            vol.Required("preset"): int,
-        },
-        "store_netusb_preset",
-    )
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -160,6 +143,23 @@ async def async_setup_entry(
         )
 
     async_add_entities(media_players)
+
+    platform = entity_platform.async_get_current_platform()
+    platform.async_register_entity_service(
+        SERVICE_RECALL_NETUSB_PRESET,
+        {
+            vol.Required("preset"): int,
+        },
+        "recall_netusb_preset",
+    )
+
+    platform.async_register_entity_service(
+        SERVICE_STORE_NETUSB_PRESET,
+        {
+            vol.Required("preset"): int,
+        },
+        "store_netusb_preset",
+    )
 
 
 class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
@@ -364,10 +364,26 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
                     index = "0"
 
                 await self.coordinator.musiccast.play_list_media(index, self._zone_id)
+                return
 
-            elif parts[0] == "presets":
+            if parts[0] == "presets":
                 index = parts[1]
                 await self.recall_netusb_preset(index)
+                return
+
+            if parts[0] == "http":
+                if self._zone_id != DEFAULT_ZONE:
+                    raise HomeAssistantError(
+                        "Playing URLs is only supported on the main zone"
+                    )
+                await self.coordinator.musiccast.play_url_media(
+                    media_id, "HomeAssistant"
+                )
+                return
+
+        raise HomeAssistantError(
+            "Only media from the media browser and http URLs are supported"
+        )
 
     async def async_browse_media(self, media_content_type=None, media_content_id=None):
         """Implement the websocket media browsing helper."""
