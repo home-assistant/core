@@ -102,7 +102,7 @@ class AzureEventHub:
         entities_filter: vol.Schema,
         send_interval: int,
         max_delay: int,
-    ):
+    ) -> None:
         """Initialize the listener."""
         self.hass = hass
         self.queue = asyncio.PriorityQueue()

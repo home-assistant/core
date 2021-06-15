@@ -7,7 +7,6 @@ push_alarm_state:
     entity_id:
       description: Name of the alarm control panel which state has to be updated.
       required: true
-      example: "alarm_control_panel.downstairs"
       selector:
         entity:
           domain: alarm_control_panel

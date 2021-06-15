@@ -89,7 +89,6 @@ alarm_display_message:
     clear:
       name: Clear
       description: 0=clear message, 1=clear message with * key, 2=Display until timeout
-      example: 1
       default: 2
       selector:
         number:
@@ -98,14 +97,12 @@ alarm_display_message:
     beep:
       name: Beep
       description: 0=no beep, 1=beep
-      example: 1
       default: 0
       selector:
         boolean:
     timeout:
       name: Timeout
       description: Time to display message, 0=forever, max 65535
-      example: 4242
       default: 0
       selector:
         number:
@@ -164,7 +161,6 @@ speak_word:
       name: Word number
       description: Word number to speak.
       required: true
-      example: 142
       selector:
         number:
           min: 1
@@ -197,7 +193,6 @@ sensor_counter_set:
       name: Value
       description: Value to set the counter to.
       required: true
-      example: 4242
       selector:
         number:
           min: 0

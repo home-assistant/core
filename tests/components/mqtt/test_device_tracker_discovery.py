@@ -359,4 +359,4 @@ async def test_setting_device_tracker_location_via_lat_lon_message(
     async_fire_mqtt_message(hass, "attributes-topic", '{"latitude":32.87336}')
     state = hass.states.get("device_tracker.test")
     assert state.attributes["latitude"] == 32.87336
-    assert state.state == STATE_NOT_HOME
+    assert state.state == STATE_UNKNOWN

@@ -49,7 +49,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the Harmony config flow."""
         self.harmony_config = {}
 
@@ -159,7 +159,7 @@ def _options_from_user_input(user_input):
 class OptionsFlowHandler(config_entries.OptionsFlow):
     """Handle a option flow for Harmony."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry):
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize options flow."""
         self.config_entry = config_entry
 

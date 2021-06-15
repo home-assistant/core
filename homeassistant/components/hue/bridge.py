@@ -23,6 +23,7 @@ from .const import (
     CONF_ALLOW_UNREACHABLE,
     DEFAULT_ALLOW_HUE_GROUPS,
     DEFAULT_ALLOW_UNREACHABLE,
+    DOMAIN,
     LOGGER,
 )
 from .errors import AuthenticationRequired, CannotConnect
@@ -107,6 +108,7 @@ class HueBridge:
         if bridge.sensors is not None:
             self.sensor_manager = SensorManager(self)
 
+        hass.data.setdefault(DOMAIN, {})[self.config_entry.entry_id] = self
         hass.config_entries.async_setup_platforms(self.config_entry, PLATFORMS)
 
         self.parallel_updates_semaphore = asyncio.Semaphore(
@@ -173,9 +175,14 @@ class HueBridge:
 
         # If setup was successful, we set api variable, forwarded entry and
         # register service
-        return await self.hass.config_entries.async_unload_platforms(
+        unload_success = await self.hass.config_entries.async_unload_platforms(
             self.config_entry, PLATFORMS
         )
+
+        if unload_success:
+            self.hass.data[DOMAIN].pop(self.config_entry.entry_id)
+
+        return unload_success
 
     async def hue_activate_scene(self, data, skip_reload=False, hide_warnings=False):
         """Service to call directly into bridge to set scenes."""

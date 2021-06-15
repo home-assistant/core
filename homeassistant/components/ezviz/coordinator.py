@@ -3,7 +3,7 @@ from datetime import timedelta
 import logging
 
 from async_timeout import timeout
-from pyezviz.client import HTTPError, InvalidURL, PyEzvizError
+from pyezviz.exceptions import HTTPError, InvalidURL, PyEzvizError
 
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 

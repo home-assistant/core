@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 import sqlite3
 from unittest.mock import patch
 
+import pytest
 from sqlalchemy.exc import DatabaseError, OperationalError, SQLAlchemyError
 
 from homeassistant.components import recorder
@@ -16,6 +17,7 @@ from homeassistant.components.recorder import (
     SERVICE_DISABLE,
     SERVICE_ENABLE,
     SERVICE_PURGE,
+    SERVICE_PURGE_ENTITIES,
     SQLITE_URL_PREFIX,
     Recorder,
     run_information,
@@ -682,6 +684,7 @@ def test_auto_purge_disabled(hass_recorder):
     dt_util.set_default_time_zone(original_tz)
 
 
+@pytest.mark.parametrize("enable_statistics", [True])
 def test_auto_statistics(hass_recorder):
     """Test periodic statistics scheduling."""
     hass = hass_recorder()
@@ -820,6 +823,7 @@ def test_has_services(hass_recorder):
     assert hass.services.has_service(DOMAIN, SERVICE_DISABLE)
     assert hass.services.has_service(DOMAIN, SERVICE_ENABLE)
     assert hass.services.has_service(DOMAIN, SERVICE_PURGE)
+    assert hass.services.has_service(DOMAIN, SERVICE_PURGE_ENTITIES)
 
 
 def test_service_disable_events_not_recording(hass, hass_recorder):

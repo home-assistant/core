@@ -56,7 +56,6 @@ MOCK_CONFIG = MockConfigEntry(domain=DOMAIN, data=MOCK_DATA, entry_id=MOCK_ENTRY
 MOCK_LOCATION = location.LocationInfo(
     "0.0.0.0",
     "US",
-    "United States",
     "CA",
     "California",
     "San Diego",

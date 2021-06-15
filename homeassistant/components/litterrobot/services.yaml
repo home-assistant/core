@@ -18,7 +18,6 @@ set_sleep_mode:
       name: Enabled
       description: Whether sleep mode should be enabled.
       required: true
-      example: true
       selector:
         boolean:
     start_time:
@@ -40,11 +39,6 @@ set_wait_time:
       name: Minutes
       description: Minutes to wait.
       required: true
-      example: 7
-      values:
-        - 3
-        - 7
-        - 15
       default: 7
       selector:
         select:

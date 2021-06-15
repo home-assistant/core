@@ -4,11 +4,7 @@ from unittest.mock import patch
 from huisbaasje import HuisbaasjeException
 
 from homeassistant.components import huisbaasje
-from homeassistant.config_entries import (
-    ENTRY_STATE_LOADED,
-    ENTRY_STATE_NOT_LOADED,
-    ENTRY_STATE_SETUP_ERROR,
-)
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_ID, CONF_PASSWORD, CONF_USERNAME, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -45,16 +41,15 @@ async def test_setup_entry(hass: HomeAssistant):
                 CONF_PASSWORD: "password",
             },
             source="test",
-            system_options={},
         )
         config_entry.add_to_hass(hass)
 
-        assert config_entry.state == ENTRY_STATE_NOT_LOADED
+        assert config_entry.state is ConfigEntryState.NOT_LOADED
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
         # Assert integration is loaded
-        assert config_entry.state == ENTRY_STATE_LOADED
+        assert config_entry.state is ConfigEntryState.LOADED
         assert huisbaasje.DOMAIN in hass.config.components
         assert huisbaasje.DOMAIN in hass.data
         assert config_entry.entry_id in hass.data[huisbaasje.DOMAIN]
@@ -85,16 +80,15 @@ async def test_setup_entry_error(hass: HomeAssistant):
                 CONF_PASSWORD: "password",
             },
             source="test",
-            system_options={},
         )
         config_entry.add_to_hass(hass)
 
-        assert config_entry.state == ENTRY_STATE_NOT_LOADED
+        assert config_entry.state is ConfigEntryState.NOT_LOADED
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
         # Assert integration is loaded with error
-        assert config_entry.state == ENTRY_STATE_SETUP_ERROR
+        assert config_entry.state is ConfigEntryState.SETUP_ERROR
         assert huisbaasje.DOMAIN not in hass.data
 
         # Assert entities are not loaded
@@ -126,20 +120,19 @@ async def test_unload_entry(hass: HomeAssistant):
                 CONF_PASSWORD: "password",
             },
             source="test",
-            system_options={},
         )
         config_entry.add_to_hass(hass)
 
         # Load config entry
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
-        assert config_entry.state == ENTRY_STATE_LOADED
+        assert config_entry.state is ConfigEntryState.LOADED
         entities = hass.states.async_entity_ids("sensor")
         assert len(entities) == 14
 
         # Unload config entry
         await hass.config_entries.async_unload(config_entry.entry_id)
-        assert config_entry.state == ENTRY_STATE_NOT_LOADED
+        assert config_entry.state is ConfigEntryState.NOT_LOADED
         entities = hass.states.async_entity_ids("sensor")
         assert len(entities) == 14
         for entity in entities:

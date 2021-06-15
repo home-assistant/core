@@ -53,7 +53,9 @@ async def async_setup_entry(
 class BondFan(BondEntity, FanEntity):
     """Representation of a Bond fan."""
 
-    def __init__(self, hub: BondHub, device: BondDevice, bpup_subs: BPUPSubscriptions):
+    def __init__(
+        self, hub: BondHub, device: BondDevice, bpup_subs: BPUPSubscriptions
+    ) -> None:
         """Create HA entity representing Bond fan."""
         super().__init__(hub, device, bpup_subs)
 

@@ -29,7 +29,7 @@ class GuardianDataUpdateCoordinator(DataUpdateCoordinator[dict]):
         api_coro: Callable[..., Awaitable],
         api_lock: asyncio.Lock,
         valve_controller_uid: str,
-    ):
+    ) -> None:
         """Initialize."""
         super().__init__(
             hass,

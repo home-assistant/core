@@ -1,7 +1,6 @@
 """Support for Generic Modbus Thermostats."""
 from __future__ import annotations
 
-from datetime import timedelta
 import logging
 import struct
 from typing import Any
@@ -14,24 +13,21 @@ from homeassistant.components.climate.const import (
 from homeassistant.const import (
     CONF_NAME,
     CONF_OFFSET,
-    CONF_SCAN_INTERVAL,
-    CONF_SLAVE,
     CONF_STRUCTURE,
     CONF_TEMPERATURE_UNIT,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from .base_platform import BasePlatform
 from .const import (
     ATTR_TEMPERATURE,
     CALL_TYPE_REGISTER_HOLDING,
     CALL_TYPE_WRITE_REGISTERS,
     CONF_CLIMATES,
-    CONF_CURRENT_TEMP,
-    CONF_CURRENT_TEMP_REGISTER_TYPE,
     CONF_DATA_COUNT,
     CONF_DATA_TYPE,
     CONF_MAX_TEMP,
@@ -99,23 +95,17 @@ async def async_setup_platform(
     async_add_entities(entities)
 
 
-class ModbusThermostat(ClimateEntity):
+class ModbusThermostat(BasePlatform, RestoreEntity, ClimateEntity):
     """Representation of a Modbus Thermostat."""
 
     def __init__(
         self,
         hub: ModbusHub,
         config: dict[str, Any],
-    ):
+    ) -> None:
         """Initialize the modbus thermostat."""
-        self._hub: ModbusHub = hub
-        self._name = config[CONF_NAME]
-        self._slave = config.get(CONF_SLAVE)
+        super().__init__(hub, config)
         self._target_temperature_register = config[CONF_TARGET_TEMP]
-        self._current_temperature_register = config[CONF_CURRENT_TEMP]
-        self._current_temperature_register_type = config[
-            CONF_CURRENT_TEMP_REGISTER_TYPE
-        ]
         self._target_temperature = None
         self._current_temperature = None
         self._data_type = config[CONF_DATA_TYPE]
@@ -123,26 +113,18 @@ class ModbusThermostat(ClimateEntity):
         self._count = config[CONF_DATA_COUNT]
         self._precision = config[CONF_PRECISION]
         self._scale = config[CONF_SCALE]
-        self._scan_interval = timedelta(seconds=config[CONF_SCAN_INTERVAL])
         self._offset = config[CONF_OFFSET]
         self._unit = config[CONF_TEMPERATURE_UNIT]
         self._max_temp = config[CONF_MAX_TEMP]
         self._min_temp = config[CONF_MIN_TEMP]
         self._temp_step = config[CONF_STEP]
-        self._available = True
 
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
-        async_track_time_interval(self.hass, self.async_update, self._scan_interval)
-
-    @property
-    def should_poll(self):
-        """Return True if entity has to be polled for state.
-
-        False if entity pushes its state to HA.
-        """
-        # Handle polling directly in this entity
-        return False
+        await self.async_base_added_to_hass()
+        state = await self.async_get_last_state()
+        if state and state.attributes.get(ATTR_TEMPERATURE):
+            self._target_temperature = float(state.attributes[ATTR_TEMPERATURE])
 
     @property
     def supported_features(self):
@@ -163,11 +145,6 @@ class ModbusThermostat(ClimateEntity):
         """Set new target hvac mode."""
         # Home Assistant expects this method.
         # We'll keep it here to avoid getting exceptions.
-
-    @property
-    def name(self):
-        """Return the name of the climate device."""
-        return self._name
 
     @property
     def current_temperature(self):
@@ -208,18 +185,14 @@ class ModbusThermostat(ClimateEntity):
         )
         byte_string = struct.pack(self._structure, target_temperature)
         register_value = struct.unpack(">h", byte_string[0:2])[0]
-        self._available = await self._hub.async_pymodbus_call(
+        result = await self._hub.async_pymodbus_call(
             self._slave,
             self._target_temperature_register,
             register_value,
             CALL_TYPE_WRITE_REGISTERS,
         )
+        self._available = result is not None
         await self.async_update()
-
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self._available
 
     async def async_update(self, now=None):
         """Update Target & Current Temperature."""
@@ -229,7 +202,7 @@ class ModbusThermostat(ClimateEntity):
             CALL_TYPE_REGISTER_HOLDING, self._target_temperature_register
         )
         self._current_temperature = await self._async_read_register(
-            self._current_temperature_register_type, self._current_temperature_register
+            self._input_type, self._address
         )
 
         self.async_write_ha_state()

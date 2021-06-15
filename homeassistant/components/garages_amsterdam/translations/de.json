@@ -1,0 +1,18 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert",
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "unknown": "Unerwarteter Fehler"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "garage_name": "Name der Garage"
+                },
+                "title": "W\u00e4hlen Sie eine Garage zur \u00dcberwachung aus"
+            }
+        }
+    },
+    "title": "Garages Amsterdam"
+}

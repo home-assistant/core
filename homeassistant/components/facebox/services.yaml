@@ -5,7 +5,6 @@ teach_face:
     entity_id:
       name: Entity
       description: The facebox entity to teach.
-      example: "image_processing.facebox"
       selector:
         entity:
           integration: facebox

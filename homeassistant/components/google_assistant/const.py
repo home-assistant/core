@@ -99,6 +99,7 @@ ERR_PROTOCOL_ERROR = "protocolError"
 ERR_UNKNOWN_ERROR = "unknownError"
 ERR_FUNCTION_NOT_SUPPORTED = "functionNotSupported"
 ERR_UNSUPPORTED_INPUT = "unsupportedInput"
+ERR_NO_AVAILABLE_CHANNEL = "noAvailableChannel"
 
 ERR_ALREADY_DISARMED = "alreadyDisarmed"
 ERR_ALREADY_ARMED = "alreadyArmed"

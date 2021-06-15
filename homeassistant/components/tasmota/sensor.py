@@ -1,16 +1,19 @@
 """Support for Tasmota sensors."""
 from __future__ import annotations
 
+import logging
+
 from hatasmota import const as hc, status_sensor
 
 from homeassistant.components import sensor
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_CO2,
+    DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_POWER,
@@ -40,19 +43,26 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.util import dt as dt_util
 
 from .const import DATA_REMOVE_DISCOVER_COMPONENT
 from .discovery import TASMOTA_DISCOVERY_ENTITY_NEW
 from .mixins import TasmotaAvailability, TasmotaDiscoveryUpdate
 
+_LOGGER = logging.getLogger(__name__)
+
 DEVICE_CLASS = "device_class"
+STATE_CLASS = "state_class"
 ICON = "icon"
 
 # A Tasmota sensor type may be mapped to either a device class or an icon, not both
 SENSOR_DEVICE_CLASS_ICON_MAP = {
     hc.SENSOR_AMBIENT: {DEVICE_CLASS: DEVICE_CLASS_ILLUMINANCE},
     hc.SENSOR_APPARENT_POWERUSAGE: {DEVICE_CLASS: DEVICE_CLASS_POWER},
-    hc.SENSOR_BATTERY: {DEVICE_CLASS: DEVICE_CLASS_BATTERY},
+    hc.SENSOR_BATTERY: {
+        DEVICE_CLASS: DEVICE_CLASS_BATTERY,
+        STATE_CLASS: STATE_CLASS_MEASUREMENT,
+    },
     hc.SENSOR_CCT: {ICON: "mdi:temperature-kelvin"},
     hc.SENSOR_CO2: {DEVICE_CLASS: DEVICE_CLASS_CO2},
     hc.SENSOR_COLOR_BLUE: {ICON: "mdi:palette"},
@@ -63,7 +73,10 @@ SENSOR_DEVICE_CLASS_ICON_MAP = {
     hc.SENSOR_DISTANCE: {ICON: "mdi:leak"},
     hc.SENSOR_ECO2: {ICON: "mdi:molecule-co2"},
     hc.SENSOR_FREQUENCY: {ICON: "mdi:current-ac"},
-    hc.SENSOR_HUMIDITY: {DEVICE_CLASS: DEVICE_CLASS_HUMIDITY},
+    hc.SENSOR_HUMIDITY: {
+        DEVICE_CLASS: DEVICE_CLASS_HUMIDITY,
+        STATE_CLASS: STATE_CLASS_MEASUREMENT,
+    },
     hc.SENSOR_ILLUMINANCE: {DEVICE_CLASS: DEVICE_CLASS_ILLUMINANCE},
     hc.SENSOR_STATUS_IP: {ICON: "mdi:ip-network"},
     hc.SENSOR_STATUS_LINK_COUNT: {ICON: "mdi:counter"},
@@ -80,8 +93,14 @@ SENSOR_DEVICE_CLASS_ICON_MAP = {
     hc.SENSOR_PM2_5: {ICON: "mdi:air-filter"},
     hc.SENSOR_POWERFACTOR: {ICON: "mdi:alpha-f-circle-outline"},
     hc.SENSOR_POWERUSAGE: {DEVICE_CLASS: DEVICE_CLASS_POWER},
-    hc.SENSOR_PRESSURE: {DEVICE_CLASS: DEVICE_CLASS_PRESSURE},
-    hc.SENSOR_PRESSUREATSEALEVEL: {DEVICE_CLASS: DEVICE_CLASS_PRESSURE},
+    hc.SENSOR_PRESSURE: {
+        DEVICE_CLASS: DEVICE_CLASS_PRESSURE,
+        STATE_CLASS: STATE_CLASS_MEASUREMENT,
+    },
+    hc.SENSOR_PRESSUREATSEALEVEL: {
+        DEVICE_CLASS: DEVICE_CLASS_PRESSURE,
+        STATE_CLASS: STATE_CLASS_MEASUREMENT,
+    },
     hc.SENSOR_PROXIMITY: {ICON: "mdi:ruler"},
     hc.SENSOR_REACTIVE_POWERUSAGE: {DEVICE_CLASS: DEVICE_CLASS_POWER},
     hc.SENSOR_STATUS_LAST_RESTART_TIME: {DEVICE_CLASS: DEVICE_CLASS_TIMESTAMP},
@@ -89,14 +108,20 @@ SENSOR_DEVICE_CLASS_ICON_MAP = {
     hc.SENSOR_STATUS_SIGNAL: {DEVICE_CLASS: DEVICE_CLASS_SIGNAL_STRENGTH},
     hc.SENSOR_STATUS_RSSI: {ICON: "mdi:access-point"},
     hc.SENSOR_STATUS_SSID: {ICON: "mdi:access-point-network"},
-    hc.SENSOR_TEMPERATURE: {DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE},
-    hc.SENSOR_TODAY: {DEVICE_CLASS: DEVICE_CLASS_POWER},
-    hc.SENSOR_TOTAL: {DEVICE_CLASS: DEVICE_CLASS_POWER},
+    hc.SENSOR_TEMPERATURE: {
+        DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
+        STATE_CLASS: STATE_CLASS_MEASUREMENT,
+    },
+    hc.SENSOR_TODAY: {DEVICE_CLASS: DEVICE_CLASS_ENERGY},
+    hc.SENSOR_TOTAL: {
+        DEVICE_CLASS: DEVICE_CLASS_ENERGY,
+        STATE_CLASS: STATE_CLASS_MEASUREMENT,
+    },
     hc.SENSOR_TOTAL_START_TIME: {ICON: "mdi:progress-clock"},
     hc.SENSOR_TVOC: {ICON: "mdi:air-filter"},
     hc.SENSOR_VOLTAGE: {ICON: "mdi:alpha-v-circle-outline"},
     hc.SENSOR_WEIGHT: {ICON: "mdi:scale"},
-    hc.SENSOR_YESTERDAY: {DEVICE_CLASS: DEVICE_CLASS_POWER},
+    hc.SENSOR_YESTERDAY: {DEVICE_CLASS: DEVICE_CLASS_ENERGY},
 }
 
 SENSOR_UNIT_MAP = {
@@ -150,6 +175,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class TasmotaSensor(TasmotaAvailability, TasmotaDiscoveryUpdate, SensorEntity):
     """Representation of a Tasmota sensor."""
 
+    _attr_last_reset = None
+
     def __init__(self, **kwds):
         """Initialize the Tasmota sensor."""
         self._state = None
@@ -162,6 +189,18 @@ class TasmotaSensor(TasmotaAvailability, TasmotaDiscoveryUpdate, SensorEntity):
     def state_updated(self, state, **kwargs):
         """Handle state updates."""
         self._state = state
+        if "last_reset" in kwargs:
+            try:
+                last_reset = dt_util.as_utc(
+                    dt_util.parse_datetime(kwargs["last_reset"])
+                )
+                if last_reset is None:
+                    raise ValueError
+                self._attr_last_reset = last_reset
+            except ValueError:
+                _LOGGER.warning(
+                    "Invalid last_reset timestamp '%s'", kwargs["last_reset"]
+                )
         self.async_write_ha_state()
 
     @property
@@ -171,6 +210,14 @@ class TasmotaSensor(TasmotaAvailability, TasmotaDiscoveryUpdate, SensorEntity):
             self._tasmota_entity.quantity, {}
         )
         return class_or_icon.get(DEVICE_CLASS)
+
+    @property
+    def state_class(self) -> str | None:
+        """Return the state class of the sensor."""
+        class_or_icon = SENSOR_DEVICE_CLASS_ICON_MAP.get(
+            self._tasmota_entity.quantity, {}
+        )
+        return class_or_icon.get(STATE_CLASS)
 
     @property
     def entity_registry_enabled_default(self) -> bool:

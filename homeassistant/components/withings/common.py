@@ -480,7 +480,7 @@ class ConfigEntryWithingsApi(AbstractWithingsApi):
         hass: HomeAssistant,
         config_entry: ConfigEntry,
         implementation: AbstractOAuth2Implementation,
-    ):
+    ) -> None:
         """Initialize object."""
         self._hass = hass
         self._config_entry = config_entry
@@ -564,7 +564,7 @@ class DataManager:
         api: ConfigEntryWithingsApi,
         user_id: int,
         webhook_config: WebhookConfig,
-    ):
+    ) -> None:
         """Initialize the data manager."""
         self._hass = hass
         self._api = api

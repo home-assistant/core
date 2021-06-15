@@ -14,7 +14,7 @@ class AsyncConfigEntryAuth(AuthenticationManager):
         self,
         websession: ClientSession,
         oauth_session: config_entry_oauth2_flow.OAuth2Session,
-    ):
+    ) -> None:
         """Initialize xbox auth."""
         # Leaving out client credentials as they are handled by Home Assistant
         super().__init__(websession, "", "", "")

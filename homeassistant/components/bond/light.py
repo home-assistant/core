@@ -87,7 +87,7 @@ class BondBaseLight(BondEntity, LightEntity):
         device: BondDevice,
         bpup_subs: BPUPSubscriptions,
         sub_device: str | None = None,
-    ):
+    ) -> None:
         """Create HA entity representing Bond light."""
         super().__init__(hub, device, bpup_subs, sub_device)
         self._light: int | None = None
@@ -112,7 +112,7 @@ class BondLight(BondBaseLight, BondEntity, LightEntity):
         device: BondDevice,
         bpup_subs: BPUPSubscriptions,
         sub_device: str | None = None,
-    ):
+    ) -> None:
         """Create HA entity representing Bond light."""
         super().__init__(hub, device, bpup_subs, sub_device)
         self._brightness: int | None = None
@@ -193,7 +193,9 @@ class BondUpLight(BondBaseLight, BondEntity, LightEntity):
 class BondFireplace(BondEntity, LightEntity):
     """Representation of a Bond-controlled fireplace."""
 
-    def __init__(self, hub: BondHub, device: BondDevice, bpup_subs: BPUPSubscriptions):
+    def __init__(
+        self, hub: BondHub, device: BondDevice, bpup_subs: BPUPSubscriptions
+    ) -> None:
         """Create HA entity representing Bond fireplace."""
         super().__init__(hub, device, bpup_subs)
 

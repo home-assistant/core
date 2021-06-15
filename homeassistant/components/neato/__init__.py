@@ -108,7 +108,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigType) -> bool:
 class NeatoHub:
     """A My Neato hub wrapper class."""
 
-    def __init__(self, hass: HomeAssistant, neato: Account):
+    def __init__(self, hass: HomeAssistant, neato: Account) -> None:
         """Initialize the Neato hub."""
         self._hass = hass
         self.my_neato: Account = neato

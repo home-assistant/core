@@ -57,6 +57,7 @@ async def mock_modbus(hass, mock_pymodbus):
     yield mock_pymodbus
 
 
+# dataclass
 class ReadResult:
     """Storage class for register read results."""
 
@@ -80,6 +81,7 @@ async def base_test(
     config_modbus=None,
     scan_interval=None,
     expect_init_to_fail=False,
+    expect_setup_to_fail=False,
 ):
     """Run test on device for given config."""
 
@@ -131,7 +133,10 @@ async def base_test(
                     {array_name_discovery: [{**config_device}]}
                 )
                 config_device = None
-            assert await async_setup_component(hass, DOMAIN, config_modbus)
+            assert (
+                await async_setup_component(hass, DOMAIN, config_modbus)
+                is not expect_setup_to_fail
+            )
             await hass.async_block_till_done()
 
             # setup platform old style
@@ -151,7 +156,7 @@ async def base_test(
                 assert await async_setup_component(hass, entity_domain, config_device)
                 await hass.async_block_till_done()
 
-        assert DOMAIN in hass.config.components
+        assert (DOMAIN in hass.config.components) is not expect_setup_to_fail
         if config_device is not None:
             entity_id = f"{entity_domain}.{device_name}"
             device = hass.states.get(entity_id)
@@ -184,6 +189,7 @@ async def base_config_test(
     method_discovery=False,
     config_modbus=None,
     expect_init_to_fail=False,
+    expect_setup_to_fail=False,
 ):
     """Check config of device for given config."""
 
@@ -200,6 +206,7 @@ async def base_config_test(
         check_config_only=True,
         config_modbus=config_modbus,
         expect_init_to_fail=expect_init_to_fail,
+        expect_setup_to_fail=expect_setup_to_fail,
     )
 
 

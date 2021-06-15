@@ -52,28 +52,19 @@ async def async_get_actions(hass: HomeAssistant, device_id: str) -> list[dict]:
 
         state = hass.states.get(entry.entity_id)
 
-        actions.append(
-            {
-                CONF_DEVICE_ID: device_id,
-                CONF_DOMAIN: DOMAIN,
-                CONF_ENTITY_ID: entry.entity_id,
-                CONF_TYPE: "set_humidity",
-            }
-        )
+        base_action = {
+            CONF_DEVICE_ID: device_id,
+            CONF_DOMAIN: DOMAIN,
+            CONF_ENTITY_ID: entry.entity_id,
+        }
+        actions.append({**base_action, CONF_TYPE: "set_humidity"})
 
         # We need a state or else we can't populate the available modes.
         if state is None:
             continue
 
         if state.attributes[ATTR_SUPPORTED_FEATURES] & const.SUPPORT_MODES:
-            actions.append(
-                {
-                    CONF_DEVICE_ID: device_id,
-                    CONF_DOMAIN: DOMAIN,
-                    CONF_ENTITY_ID: entry.entity_id,
-                    CONF_TYPE: "set_mode",
-                }
-            )
+            actions.append({**base_action, CONF_TYPE: "set_mode"})
 
     return actions
 

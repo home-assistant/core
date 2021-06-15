@@ -144,7 +144,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 class InputBoolean(ToggleEntity, RestoreEntity):
     """Representation of a boolean input."""
 
-    def __init__(self, config: dict | None):
+    def __init__(self, config: dict | None) -> None:
         """Initialize a boolean input."""
         self._config = config
         self.editable = True

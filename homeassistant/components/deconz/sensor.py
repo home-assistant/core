@@ -14,7 +14,11 @@ from pydeconz.sensor import (
     Thermostat,
 )
 
-from homeassistant.components.sensor import DOMAIN, SensorEntity
+from homeassistant.components.sensor import (
+    DOMAIN,
+    STATE_CLASS_MEASUREMENT,
+    SensorEntity,
+)
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     ATTR_VOLTAGE,
@@ -58,6 +62,12 @@ ICON = {
     Daylight: "mdi:white-balance-sunny",
     Pressure: "mdi:gauge",
     Temperature: "mdi:thermometer",
+}
+
+STATE_CLASS = {
+    Humidity: STATE_CLASS_MEASUREMENT,
+    Pressure: STATE_CLASS_MEASUREMENT,
+    Temperature: STATE_CLASS_MEASUREMENT,
 }
 
 UNIT_OF_MEASUREMENT = {
@@ -162,6 +172,11 @@ class DeconzSensor(DeconzDevice, SensorEntity):
         return ICON.get(type(self._device))
 
     @property
+    def state_class(self):
+        """Return the state class of the sensor."""
+        return STATE_CLASS.get(type(self._device))
+
+    @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this sensor."""
         return UNIT_OF_MEASUREMENT.get(type(self._device))
@@ -234,6 +249,11 @@ class DeconzTemperature(DeconzDevice, SensorEntity):
         return DEVICE_CLASS_TEMPERATURE
 
     @property
+    def state_class(self):
+        """Return the state class of the sensor."""
+        return STATE_CLASS_MEASUREMENT
+
+    @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this sensor."""
         return TEMP_CELSIUS
@@ -281,6 +301,11 @@ class DeconzBattery(DeconzDevice, SensorEntity):
     def device_class(self):
         """Return the class of the sensor."""
         return DEVICE_CLASS_BATTERY
+
+    @property
+    def state_class(self):
+        """Return the state class of the sensor."""
+        return STATE_CLASS_MEASUREMENT
 
     @property
     def unit_of_measurement(self):

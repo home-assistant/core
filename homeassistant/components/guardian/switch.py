@@ -86,7 +86,7 @@ class ValveControllerSwitch(ValveControllerEntity, SwitchEntity):
         entry: ConfigEntry,
         client: Client,
         coordinators: dict[str, DataUpdateCoordinator],
-    ):
+    ) -> None:
         """Initialize."""
         super().__init__(
             entry, coordinators, "valve", "Valve Controller", None, "mdi:water"

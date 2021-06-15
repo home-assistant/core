@@ -5,6 +5,7 @@ import json
 from unittest.mock import patch, sentinel
 
 import pytest
+from pytest import approx
 
 from homeassistant.components import history, recorder
 from homeassistant.components.recorder.history import get_significant_states
@@ -826,3 +827,120 @@ async def test_entity_ids_limit_via_api_with_skip_initial_state(hass, hass_clien
     assert len(response_json) == 2
     assert response_json[0][0]["entity_id"] == "light.kitchen"
     assert response_json[1][0]["entity_id"] == "light.cow"
+
+
+async def test_statistics_during_period(hass, hass_ws_client):
+    """Test statistics_during_period."""
+    now = dt_util.utcnow()
+
+    await hass.async_add_executor_job(init_recorder_component, hass)
+    await async_setup_component(
+        hass,
+        "history",
+        {"history": {}},
+    )
+    await async_setup_component(hass, "sensor", {})
+    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+    hass.states.async_set(
+        "sensor.test",
+        10,
+        attributes={"device_class": "temperature", "state_class": "measurement"},
+    )
+    await hass.async_block_till_done()
+
+    await hass.async_add_executor_job(trigger_db_commit, hass)
+    await hass.async_block_till_done()
+
+    hass.data[recorder.DATA_INSTANCE].do_adhoc_statistics(period="hourly", start=now)
+    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "history/statistics_during_period",
+            "start_time": now.isoformat(),
+            "end_time": now.isoformat(),
+            "statistic_id": "sensor.test",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {"statistics": {}}
+
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "history/statistics_during_period",
+            "start_time": now.isoformat(),
+            "statistic_id": "sensor.test",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {
+        "statistics": {
+            "sensor.test": [
+                {
+                    "statistic_id": "sensor.test",
+                    "start": now.isoformat(),
+                    "mean": approx(10.0),
+                    "min": approx(10.0),
+                    "max": approx(10.0),
+                    "last_reset": None,
+                    "state": None,
+                    "sum": None,
+                }
+            ]
+        }
+    }
+
+
+async def test_statistics_during_period_bad_start_time(hass, hass_ws_client):
+    """Test statistics_during_period."""
+    await hass.async_add_executor_job(init_recorder_component, hass)
+    await async_setup_component(
+        hass,
+        "history",
+        {"history": {}},
+    )
+    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "history/statistics_during_period",
+            "start_time": "cats",
+        }
+    )
+    response = await client.receive_json()
+    assert not response["success"]
+    assert response["error"]["code"] == "invalid_start_time"
+
+
+async def test_statistics_during_period_bad_end_time(hass, hass_ws_client):
+    """Test statistics_during_period."""
+    now = dt_util.utcnow()
+
+    await hass.async_add_executor_job(init_recorder_component, hass)
+    await async_setup_component(
+        hass,
+        "history",
+        {"history": {}},
+    )
+    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "history/statistics_during_period",
+            "start_time": now.isoformat(),
+            "end_time": "dogs",
+        }
+    )
+    response = await client.receive_json()
+    assert not response["success"]
+    assert response["error"]["code"] == "invalid_end_time"

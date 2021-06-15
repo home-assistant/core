@@ -5,10 +5,17 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import ATTR_LAST_RESET, SensorEntity
+from homeassistant.components.sensor import (
+    ATTR_LAST_RESET,
+    STATE_CLASS_MEASUREMENT,
+    SensorEntity,
+)
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_NAME,
+    DEVICE_CLASS_ENERGY,
+    ENERGY_KILO_WATT_HOUR,
+    ENERGY_WATT_HOUR,
     EVENT_HOMEASSISTANT_START,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
@@ -52,6 +59,11 @@ ATTR_STATUS = "status"
 ATTR_PERIOD = "meter_period"
 ATTR_LAST_PERIOD = "last_period"
 ATTR_TARIFF = "tariff"
+
+DEVICE_CLASS_MAP = {
+    ENERGY_WATT_HOUR: DEVICE_CLASS_ENERGY,
+    ENERGY_KILO_WATT_HOUR: DEVICE_CLASS_ENERGY,
+}
 
 ICON = "mdi:counter"
 
@@ -119,7 +131,7 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
         self._sensor_source_id = source_entity
         self._state = 0
         self._last_period = 0
-        self._last_reset = dt_util.now()
+        self._last_reset = dt_util.utcnow()
         self._collecting = None
         if name:
             self._name = name
@@ -225,7 +237,7 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
         if self._tariff_entity != entity_id:
             return
         _LOGGER.debug("Reset utility meter <%s>", self.entity_id)
-        self._last_reset = dt_util.now()
+        self._last_reset = dt_util.utcnow()
         self._last_period = str(self._state)
         self._state = 0
         self.async_write_ha_state()
@@ -272,8 +284,8 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
             self._state = Decimal(state.state)
             self._unit_of_measurement = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
             self._last_period = state.attributes.get(ATTR_LAST_PERIOD)
-            self._last_reset = dt_util.parse_datetime(
-                state.attributes.get(ATTR_LAST_RESET)
+            self._last_reset = dt_util.as_utc(
+                dt_util.parse_datetime(state.attributes.get(ATTR_LAST_RESET))
             )
             if state.attributes.get(ATTR_STATUS) == COLLECTING:
                 # Fake cancellation function to init the meter in similar state
@@ -312,6 +324,16 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
     def state(self):
         """Return the state of the sensor."""
         return self._state
+
+    @property
+    def device_class(self):
+        """Return the device class of the sensor."""
+        return DEVICE_CLASS_MAP.get(self.unit_of_measurement)
+
+    @property
+    def state_class(self):
+        """Return the device class of the sensor."""
+        return STATE_CLASS_MEASUREMENT
 
     @property
     def unit_of_measurement(self):

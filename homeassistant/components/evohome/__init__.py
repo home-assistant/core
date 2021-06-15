@@ -180,7 +180,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def load_auth_tokens(store) -> tuple[dict, dict | None]:
         app_storage = await store.async_load()
-        tokens = dict(app_storage if app_storage else {})
+        tokens = dict(app_storage or {})
 
         if tokens.pop(CONF_USERNAME, None) != config[DOMAIN][CONF_USERNAME]:
             # any tokens won't be valid, and store might be be corrupt
@@ -406,10 +406,12 @@ class EvoBroker:
         # evohomeasync2 uses naive/local datetimes
         access_token_expires = _dt_local_to_aware(self.client.access_token_expires)
 
-        app_storage = {CONF_USERNAME: self.client.username}
-        app_storage[REFRESH_TOKEN] = self.client.refresh_token
-        app_storage[ACCESS_TOKEN] = self.client.access_token
-        app_storage[ACCESS_TOKEN_EXPIRES] = access_token_expires.isoformat()
+        app_storage = {
+            CONF_USERNAME: self.client.username,
+            REFRESH_TOKEN: self.client.refresh_token,
+            ACCESS_TOKEN: self.client.access_token,
+            ACCESS_TOKEN_EXPIRES: access_token_expires.isoformat(),
+        }
 
         if self.client_v1 and self.client_v1.user_data:
             app_storage[USER_DATA] = {

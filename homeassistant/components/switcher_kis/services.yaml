@@ -26,7 +26,6 @@ turn_on_with_timer:
       name: Timer
       description: 'Time to turn on.'
       required: true
-      example: '30'
       selector:
         number:
           min: 1

@@ -121,7 +121,7 @@ class PlenticoreUpdateCoordinator(DataUpdateCoordinator):
         name: str,
         update_inverval: timedelta,
         plenticore: Plenticore,
-    ):
+    ) -> None:
         """Create a new update coordinator for plenticore data."""
         super().__init__(
             hass=hass,

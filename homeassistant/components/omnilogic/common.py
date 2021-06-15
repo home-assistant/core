@@ -35,7 +35,7 @@ class OmniLogicUpdateCoordinator(DataUpdateCoordinator):
         name: str,
         config_entry: ConfigEntry,
         polling_interval: int,
-    ):
+    ) -> None:
         """Initialize the global Omnilogic data updater."""
         self.api = api
         self.config_entry = config_entry
@@ -89,7 +89,7 @@ class OmniLogicEntity(CoordinatorEntity):
         name: str,
         item_id: tuple,
         icon: str,
-    ):
+    ) -> None:
         """Initialize the OmniLogic Entity."""
         super().__init__(coordinator)
 

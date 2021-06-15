@@ -538,6 +538,11 @@ class PlexServer:
         return self._plex_server
 
     @property
+    def has_token(self):
+        """Return if a token is used to connect to this Plex server."""
+        return self._token is not None
+
+    @property
     def accounts(self):
         """Return accounts associated with the Plex server."""
         return set(self._accounts)

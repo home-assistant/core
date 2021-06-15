@@ -44,7 +44,7 @@ class VeraSensor(VeraDevice[veraApi.VeraSensor], SensorEntity):
 
     def __init__(
         self, vera_device: veraApi.VeraSensor, controller_data: ControllerData
-    ):
+    ) -> None:
         """Initialize the sensor."""
         self.current_value = None
         self._temperature_units = None

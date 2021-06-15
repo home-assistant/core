@@ -37,7 +37,7 @@ class FirmataPinEntity(FirmataEntity):
         config_entry: ConfigEntry,
         name: str,
         pin: FirmataPinType,
-    ):
+    ) -> None:
         """Initialize the pin entity."""
         super().__init__(api)
         self._name = name

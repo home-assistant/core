@@ -2,11 +2,7 @@
 from pycfdns.exceptions import CloudflareConnectionException
 
 from homeassistant.components.cloudflare.const import DOMAIN, SERVICE_UPDATE_RECORDS
-from homeassistant.config_entries import (
-    ENTRY_STATE_LOADED,
-    ENTRY_STATE_NOT_LOADED,
-    ENTRY_STATE_SETUP_RETRY,
-)
+from homeassistant.config_entries import ConfigEntryState
 
 from . import ENTRY_CONFIG, init_integration
 
@@ -18,12 +14,12 @@ async def test_unload_entry(hass, cfupdate):
     entry = await init_integration(hass)
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    assert entry.state == ENTRY_STATE_LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entry.state == ENTRY_STATE_NOT_LOADED
+    assert entry.state is ConfigEntryState.NOT_LOADED
     assert not hass.data.get(DOMAIN)
 
 
@@ -37,7 +33,7 @@ async def test_async_setup_raises_entry_not_ready(hass, cfupdate):
     instance.get_zone_id.side_effect = CloudflareConnectionException()
     await hass.config_entries.async_setup(entry.entry_id)
 
-    assert entry.state == ENTRY_STATE_SETUP_RETRY
+    assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_integration_services(hass, cfupdate):
@@ -45,7 +41,7 @@ async def test_integration_services(hass, cfupdate):
     instance = cfupdate.return_value
 
     entry = await init_integration(hass)
-    assert entry.state == ENTRY_STATE_LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     await hass.services.async_call(
         DOMAIN,

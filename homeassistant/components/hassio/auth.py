@@ -34,7 +34,7 @@ def async_setup_auth_view(hass: HomeAssistant, user: User):
 class HassIOBaseAuth(HomeAssistantView):
     """Hass.io view to handle auth requests."""
 
-    def __init__(self, hass: HomeAssistant, user: User):
+    def __init__(self, hass: HomeAssistant, user: User) -> None:
         """Initialize WebView."""
         self.hass = hass
         self.user = user

@@ -32,6 +32,8 @@ def escape_characteristic_name(char_name):
 class HomeKitEntity(Entity):
     """Representation of a Home Assistant HomeKit device."""
 
+    _attr_should_poll = False
+
     def __init__(self, accessory, devinfo):
         """Initialise a generic HomeKit device."""
         self._accessory = accessory
@@ -98,14 +100,6 @@ class HomeKitEntity(Entity):
         """
         payload = self.service.build_update(characteristics)
         return await self._accessory.put_characteristics(payload)
-
-    @property
-    def should_poll(self) -> bool:
-        """Return False.
-
-        Data update is triggered from HKDevice.
-        """
-        return False
 
     def setup(self):
         """Configure an entity baed on its HomeKit characteristics metadata."""
