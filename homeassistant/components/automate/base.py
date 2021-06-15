@@ -22,22 +22,9 @@ class AutomateBase(entity.Entity):
         self.roller = roller
 
     @property
-    def title(self):
-        """Return the title of the device shown in the integrations list."""
-        return f"{self.roller.name} ({self.roller.devicetype})"
-
-    @property
     def available(self) -> bool:
         """Return True if roller and hub is available."""
         return self.roller.online and self.roller.hub.connected
-
-    # pylint: disable=no-self-use
-    def include_entity(self) -> bool:
-        """Return True (default) if entity should be included.
-
-        Overridden by superclasses.
-        """
-        return True
 
     async def async_remove_and_unregister(self):
         """Unregister from entity and device registry and call entity remove function."""

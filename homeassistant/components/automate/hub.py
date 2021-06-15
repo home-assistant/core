@@ -20,7 +20,7 @@ class PulseHub:
         """Initialize the system."""
         self.config_entry = config_entry
         self.hass = hass
-        self.api: Optional[aiopulse2.Hub] = None
+        self.api: aiopulse2.Hub | None = None
         self.tasks = []
         self.current_rollers = {}
         self.cleanup_callbacks = []
