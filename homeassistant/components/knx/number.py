@@ -90,9 +90,9 @@ class KNXNumber(KnxEntity, NumberEntity, RestoreEntity):
 
     async def async_set_value(self, value: float) -> None:
         """Set new value."""
-        if value < self._attr_min_value or value > self._attr_max_value:
+        if value < self.min_value or value > self.max_value:
             raise vol.Invalid(
                 f"Invalid value for {self.entity_id}: {value} "
-                f"(range {self._attr_min_value} - {self._attr_max_value})"
+                f"(range {self.min_value} - {self.max_value})"
             )
         await self._device.set(value)
