@@ -1204,7 +1204,7 @@ class XiaomiAirPurifierMiot(XiaomiAirPurifier):
         fan_level = math.ceil(percentage_to_ranged_value((1, 3), percentage))
         if fan_level:
             await self._try_command(
-                "Setting operation mode of the miio device failed.",
+                "Setting fan level of the miio device failed.",
                 self._device.set_fan_level,
                 fan_level,
             )
