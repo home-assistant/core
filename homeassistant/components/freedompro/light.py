@@ -59,11 +59,6 @@ class Device(CoordinatorEntity, LightEntity):
         return support
 
     @property
-    def is_on(self):
-        """Return the status of the light."""
-        return self._on
-
-    @property
     def hs_color(self):
         """Return the status of the light hs_color."""
         return [self._hue, self._saturation]
