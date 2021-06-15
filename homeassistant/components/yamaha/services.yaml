@@ -20,14 +20,19 @@ enable_output:
       selector:
         boolean:
 menu_cursor:
+  name: Menu cursor
   description: Control the cursor in a menu
+  target:
+    entity:
+      integration: yamaha
+      domain: media_player
   fields:
-    entity_id:
-      description: Name(s) of the entities to send menu cursor commands.
-      example: media_player.yamaha
     cursor:
+      name: Cursor
       description: Name of the cursor key to press ('up', 'down', 'left', 'right', 'select', 'return')
       example: down
+      selector:
+        text:
 select_scene:
   name: Select scene
   description: "Select a scene on the receiver"
