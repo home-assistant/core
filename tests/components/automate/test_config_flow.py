@@ -5,7 +5,7 @@ from homeassistant import config_entries, setup
 from homeassistant.components.automate.const import DOMAIN
 
 
-def mock_Hub(testfunc=None):
+def mock_hub(testfunc=None):
     """Mock aiopulse2.Hub."""
     Hub = Mock()
     Hub.name = "Name of the device"
@@ -28,9 +28,7 @@ async def test_form(hass):
     assert result["type"] == "form"
     assert result["errors"] is None
 
-    with patch("aiopulse2.Hub", return_value=mock_Hub()), patch(
-        "homeassistant.components.automate.async_setup", return_value=True
-    ) as mock_setup, patch(
+    with patch("aiopulse2.Hub", return_value=mock_hub()), patch(
         "homeassistant.components.automate.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -47,7 +45,6 @@ async def test_form(hass):
         "host": "1.1.1.1",
     }
     await hass.async_block_till_done()
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -60,7 +57,7 @@ async def test_form_cannot_connect(hass):
     def raise_error():
         raise ConnectionRefusedError
 
-    with patch("aiopulse2.Hub", return_value=mock_Hub(raise_error)):
+    with patch("aiopulse2.Hub", return_value=mock_hub(raise_error)):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
