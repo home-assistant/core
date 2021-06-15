@@ -2,8 +2,13 @@
 
 from unittest.mock import patch
 
-from pyezviz.client import HTTPError, InvalidURL, PyEzvizError
-from pyezviz.test_cam_rtsp import AuthTestResultFailed, InvalidHost
+from pyezviz.exceptions import (
+    AuthTestResultFailed,
+    HTTPError,
+    InvalidHost,
+    InvalidURL,
+    PyEzvizError,
+)
 
 from homeassistant.components.ezviz.const import (
     ATTR_SERIAL,
