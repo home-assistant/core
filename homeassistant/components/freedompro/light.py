@@ -21,7 +21,7 @@ from .const import DOMAIN
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up Freedompro light."""
     api_key = entry.data[CONF_API_KEY]
-    coordinator = hass.data[DOMAIN][entry.entry_id][COORDINATOR]
+    coordinator = hass.data[DOMAIN][entry.entry_id]
     devices = [
         Device(hass, api_key, device, coordinator)
         for device in coordinator.data
