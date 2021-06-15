@@ -118,6 +118,7 @@ class WhoisSensor(SensorEntity):
             expiration_date = response["expiration_date"]
             if isinstance(expiration_date, list):
                 attrs[ATTR_EXPIRES] = expiration_date[0].isoformat()
+                expiration_date = expiration_date[0]
             else:
                 attrs[ATTR_EXPIRES] = expiration_date.isoformat()
 
