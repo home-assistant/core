@@ -21,10 +21,9 @@ class Hub:
 
     async def authenticate(self) -> bool:
         """Freedompro Hub class authenticate."""
-        result = await get_list(
+        return await get_list(
             aiohttp_client.async_get_clientsession(self._hass), self._api_key
         )
-        return result
 
 
 async def validate_input(hass: core.HomeAssistant, data):
