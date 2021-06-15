@@ -25,6 +25,7 @@
     "step": {
       "init": {
         "data": {
+          "override_type": "Override type",
           "command_off": "Week profile with 'off' setting",
           "command_on_zone_1": "Normal week profile for zone 1",
           "command_on_zone_2": "Normal week profile for zone 2",
@@ -59,7 +60,7 @@
           "command_on_zone_31": "Normal week profile for zone 31",
           "command_on_zone_32": "Normal week profile for zone 32"
         },
-        "description": "Set week profiles for off and on. Zones:\n\n{zones}"
+        "description": "Select override type \"Now\" to end override on next week profile change.\n\nSet week profiles used to turn zones off and on. Zones:\n\n{zones}"
       }
     }
   }

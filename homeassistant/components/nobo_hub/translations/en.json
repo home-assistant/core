@@ -57,9 +57,10 @@
                     "command_on_zone_6": "Normal week profile for zone 6",
                     "command_on_zone_7": "Normal week profile for zone 7",
                     "command_on_zone_8": "Normal week profile for zone 8",
-                    "command_on_zone_9": "Normal week profile for zone 9"
+                    "command_on_zone_9": "Normal week profile for zone 9",
+                    "override_type": "Override type"
                 },
-                "description": "Set week profiles for off and on. Zones:\n\n{zones}"
+                "description": "Select override type \"Now\" to end override on next week profile change.\n\nSet week profiles used to turn zones off and on. Zones:\n\n{zones}"
             }
         }
     }

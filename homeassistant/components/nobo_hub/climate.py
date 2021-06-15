@@ -42,6 +42,8 @@ from .const import (
     ATTR_TARGET_TYPE,
     ATTR_TEMP_COMFORT_C,
     ATTR_TEMP_ECO_C,
+    CONF_OVERRIDE_TYPE,
+    CONF_OVERRIDE_TYPE_NOW,
     DOMAIN,
 )
 
@@ -69,6 +71,12 @@ async def async_setup_entry(
 
     # Setup connection with hub
     hub = hass.data[DOMAIN][config_entry.entry_id]
+
+    override_type = (
+        nobo.API.OVERRIDE_TYPE_NOW
+        if config_entry.options.get(CONF_OVERRIDE_TYPE) == CONF_OVERRIDE_TYPE_NOW
+        else nobo.API.OVERRIDE_TYPE_CONSTANT
+    )
 
     # Find OFF command (week profile) to use for all zones:
     command_off_name = config_entry.options.get(CONF_COMMAND_OFF)
@@ -103,7 +111,9 @@ async def async_setup_entry(
 
     # Add zones as entities
     async_add_devices(
-        NoboZone(zone_id, hub, command_off_id, command_on_by_id.get(zone_id))
+        NoboZone(
+            zone_id, hub, command_off_id, command_on_by_id.get(zone_id), override_type
+        )
         for zone_id in hub.zones
     )
 
@@ -165,7 +175,9 @@ class NoboZone(ClimateEntity):
     _attr_supported_features = SUPPORT_FLAGS
     _attr_temperature_unit = TEMP_CELSIUS
 
-    def __init__(self, zone_id, hub: nobo, command_off_id, command_on_id):
+    def __init__(
+        self, zone_id, hub: nobo, command_off_id, command_on_id, override_type
+    ):
         """Initialize the climate device."""
         self._id = zone_id
         self._nobo = hub
@@ -174,6 +186,7 @@ class NoboZone(ClimateEntity):
         self._attr_hvac_mode = HVAC_MODE_AUTO
         self._command_off_id = command_off_id
         self._command_on_id = command_on_id
+        self._override_type = override_type
 
         # Register for callbacks before initial update to avoid race condition.
         self._nobo.register_callback(self._after_update)
@@ -245,7 +258,7 @@ class NoboZone(ClimateEntity):
                 mode = nobo.API.OVERRIDE_MODE_NORMAL
             await self._nobo.async_create_override(
                 mode,
-                nobo.API.OVERRIDE_TYPE_CONSTANT,
+                self._override_type,
                 nobo.API.OVERRIDE_TARGET_ZONE,
                 self._id,
             )

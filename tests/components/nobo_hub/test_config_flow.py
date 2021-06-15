@@ -4,7 +4,7 @@ from unittest.mock import Mock, PropertyMock, patch
 from pynobo import nobo
 
 from homeassistant import config_entries, setup
-from homeassistant.components.nobo_hub.const import CONF_WEEK_PROFILE_NONE, DOMAIN
+from homeassistant.components.nobo_hub.const import CONF_OVERRIDE_TYPE, CONF_WEEK_PROFILE_NONE, DOMAIN
 from homeassistant.const import CONF_COMMAND_OFF, CONF_COMMAND_ON
 from homeassistant.core import HomeAssistant
 
@@ -221,6 +221,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
+            CONF_OVERRIDE_TYPE: "Constant",
             CONF_COMMAND_OFF: "Off",
             CONF_COMMAND_ON + "_zone_1": "Kitchen On",
             CONF_COMMAND_ON + "_zone_2": "Bedrooms On",
@@ -228,6 +229,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     )
 
     assert result["type"] == "create_entry"
+    assert result["data"][CONF_OVERRIDE_TYPE] == "Constant"
     assert result["data"][CONF_COMMAND_OFF] == "Off"
     assert result["data"][CONF_COMMAND_ON] == {
         "Kitchen": "Kitchen On",
@@ -238,6 +240,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
+            CONF_OVERRIDE_TYPE: "Now",
             CONF_COMMAND_OFF: CONF_WEEK_PROFILE_NONE,
             CONF_COMMAND_ON + "_zone_1": CONF_WEEK_PROFILE_NONE,
             CONF_COMMAND_ON + "_zone_2": CONF_WEEK_PROFILE_NONE,
@@ -245,6 +248,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     )
 
     assert result["type"] == "create_entry"
+    assert result["data"][CONF_OVERRIDE_TYPE] == "Now"
     assert result["data"][CONF_COMMAND_OFF] is None
     assert result["data"][CONF_COMMAND_ON] == {
         "Kitchen": None,

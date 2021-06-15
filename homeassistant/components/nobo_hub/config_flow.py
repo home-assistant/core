@@ -14,7 +14,14 @@ from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 
-from .const import CONF_SERIAL, CONF_WEEK_PROFILE_NONE, DOMAIN
+from .const import (
+    CONF_OVERRIDE_TYPE,
+    CONF_OVERRIDE_TYPE_CONSTANT,
+    CONF_OVERRIDE_TYPE_NOW,
+    CONF_SERIAL,
+    CONF_WEEK_PROFILE_NONE,
+    DOMAIN,
+)
 
 DATA_NOBO_HUB_IMPL = "nobo_hub_flow_implementation"
 DEVICE_INPUT = "device_input"
@@ -159,9 +166,17 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                         hub.zones[zone]["name"].replace("\xa0", " ")
                     ] = on_command
 
-            data = {CONF_COMMAND_OFF: off_command, CONF_COMMAND_ON: on_commands}
+            data = {
+                CONF_OVERRIDE_TYPE: user_input.get(CONF_OVERRIDE_TYPE),
+                CONF_COMMAND_OFF: off_command,
+                CONF_COMMAND_ON: on_commands,
+            }
 
             return self.async_create_entry(title="", data=data)
+
+        override_type = self.config_entry.options.get(CONF_OVERRIDE_TYPE)
+        if override_type != CONF_OVERRIDE_TYPE_NOW:
+            override_type = CONF_OVERRIDE_TYPE_CONSTANT
 
         profile_names.insert(0, CONF_WEEK_PROFILE_NONE)
         profiles = vol.Schema(vol.In(profile_names))
@@ -171,6 +186,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             off_command = CONF_WEEK_PROFILE_NONE
         schema = vol.Schema(
             {
+                vol.Required(CONF_OVERRIDE_TYPE, default=override_type): vol.In(
+                    [CONF_OVERRIDE_TYPE_CONSTANT, CONF_OVERRIDE_TYPE_NOW]
+                ),
                 # Ideally we should use vol.Optional, but resetting the field in the UI
                 # will default to the old value instead of setting to None.
                 vol.Required(CONF_COMMAND_OFF, default=off_command): profiles,
