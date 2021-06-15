@@ -3,7 +3,7 @@ import json
 from unittest.mock import MagicMock
 
 import pytest
-from wled import Device as WLEDDevice, WLEDConnectionError, WLEDError
+from wled import Device as WLEDDevice, WLEDConnectionError, WLEDError, Live
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -16,6 +16,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.components.wled.const import (
     ATTR_INTENSITY,
+    ATTR_LIVE,
     ATTR_PALETTE,
     ATTR_PLAYLIST,
     ATTR_PRESET,
@@ -25,6 +26,7 @@ from homeassistant.components.wled.const import (
     DOMAIN,
     SCAN_INTERVAL,
     SERVICE_EFFECT,
+    SERVICE_LIVE,
     SERVICE_PRESET,
 )
 from homeassistant.const import (
@@ -589,6 +591,75 @@ async def test_preset_service_error(
     assert "Invalid response from API" in caplog.text
     assert mock_wled.preset.call_count == 1
     mock_wled.preset.assert_called_with(preset=1)
+
+
+async def test_live_service(
+    hass: HomeAssistant, init_integration: MockConfigEntry, mock_wled: MagicMock
+) -> None:
+    """Test the live override service of a WLED light."""
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_LIVE,
+        {
+            ATTR_ENTITY_ID: "light.wled_rgb_light_master",
+            ATTR_LIVE: "off",
+        },
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    assert mock_wled.live.call_count == 2
+    mock_wled.live.assert_called_with(live="off")
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_LIVE,
+        {
+            ATTR_ENTITY_ID: "light.wled_rgb_light_master",
+            ATTR_LIVE: "on",
+        },
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    assert mock_wled.live.call_count == 1
+    mock_wled.live.assert_called_with(live="on")
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_LIVE,
+        {
+            ATTR_ENTITY_ID: "light.wled_rgb_light_master",
+            ATTR_LIVE: "off_until_reboot",
+        },
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    assert mock_wled.live.call_count == 3
+    mock_wled.live.assert_called_with(live="off_until_reboot")
+
+
+async def test_live_service_error(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_wled: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test error handling of the WLED live override service."""
+    mock_wled.live.side_effect = WLEDError
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_LIVE,
+        {ATTR_ENTITY_ID: "light.wled_rgb_light_master", ATTR_LIVE: "off"},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("light.wled_rgb_light_master")
+    assert state
+    assert state.lor == Live.OFF
+    assert "Invalid response from API" in caplog.text
+    assert mock_wled.live.call_count == 1
+    mock_wled.live.assert_called_with(live="off")
 
 
 @pytest.mark.parametrize("mock_wled", ["wled/rgb_single_segment.json"], indirect=True)
