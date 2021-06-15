@@ -1,7 +1,9 @@
 """Weather component that handles meteorological data for your location."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
-from typing import final
+from typing import TypedDict, final
 
 from homeassistant.const import PRECISION_TENTHS, PRECISION_WHOLE, TEMP_CELSIUS
 from homeassistant.helpers.config_validation import (  # noqa: F401
@@ -58,6 +60,20 @@ ENTITY_ID_FORMAT = DOMAIN + ".{}"
 SCAN_INTERVAL = timedelta(seconds=30)
 
 
+class Forecast(TypedDict, total=False):
+    """Typed weather forecast dict."""
+
+    condition: str | None
+    datetime: str
+    precipitation_probability: int | None
+    precipitation: float | None
+    pressure: float | None
+    temperature: float
+    templow: float | None
+    wind_bearing: float | str | None
+    wind_speed: float | None
+
+
 async def async_setup(hass, config):
     """Set up the weather component."""
     component = hass.data[DOMAIN] = EntityComponent(
@@ -80,59 +96,75 @@ async def async_unload_entry(hass, entry):
 class WeatherEntity(Entity):
     """ABC for weather data."""
 
+    _attr_attribution: str | None = None
+    _attr_condition: str
+    _attr_forecast: list[Forecast] | None = None
+    _attr_humidity: float | None = None
+    _attr_ozone: float | None = None
+    _attr_precision: float
+    _attr_pressure: float | None = None
+    _attr_state: None = None
+    _attr_temperature_unit: str
+    _attr_temperature: float
+    _attr_visibility: float | None = None
+    _attr_wind_bearing: float | str | None = None
+    _attr_wind_speed: float | None = None
+
     @property
-    def temperature(self):
+    def temperature(self) -> float:
         """Return the platform temperature."""
-        raise NotImplementedError()
+        return self._attr_temperature
 
     @property
-    def temperature_unit(self):
+    def temperature_unit(self) -> str:
         """Return the unit of measurement."""
-        raise NotImplementedError()
+        return self._attr_temperature_unit
 
     @property
-    def pressure(self):
+    def pressure(self) -> float | None:
         """Return the pressure."""
-        return None
+        return self._attr_pressure
 
     @property
-    def humidity(self):
+    def humidity(self) -> float | None:
         """Return the humidity."""
-        raise NotImplementedError()
+        return self._attr_humidity
 
     @property
-    def wind_speed(self):
+    def wind_speed(self) -> float | None:
         """Return the wind speed."""
-        return None
+        return self._attr_wind_speed
 
     @property
-    def wind_bearing(self):
+    def wind_bearing(self) -> float | str | None:
         """Return the wind bearing."""
-        return None
+        return self._attr_wind_bearing
 
     @property
-    def ozone(self):
+    def ozone(self) -> float | None:
         """Return the ozone level."""
-        return None
+        return self._attr_ozone
 
     @property
-    def attribution(self):
+    def attribution(self) -> str | None:
         """Return the attribution."""
-        return None
+        return self._attr_attribution
 
     @property
-    def visibility(self):
+    def visibility(self) -> float | None:
         """Return the visibility."""
-        return None
+        return self._attr_visibility
 
     @property
-    def forecast(self):
+    def forecast(self) -> list[Forecast] | None:
         """Return the forecast."""
-        return None
+        return self._attr_forecast
 
     @property
-    def precision(self):
+    def precision(self) -> float:
         """Return the precision of the temperature value."""
+        if hasattr(self, "_attr_precision"):
+            return self._attr_precision
         return (
             PRECISION_TENTHS
             if self.temperature_unit == TEMP_CELSIUS
@@ -201,11 +233,12 @@ class WeatherEntity(Entity):
         return data
 
     @property
+    @final
     def state(self):
         """Return the current state."""
         return self.condition
 
     @property
-    def condition(self):
+    def condition(self) -> str:
         """Return the current condition."""
-        raise NotImplementedError()
+        return self._attr_condition
