@@ -46,6 +46,7 @@ from .const import (
     FORECAST_MODE_ONECALL_DAILY,
     FORECAST_MODE_ONECALL_HOURLY,
     WEATHER_CODE_SUNNY_OR_CLEAR_NIGHT,
+    TEMP_CELSIUS,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -179,10 +180,10 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
 
         return forecast
 
-    @staticmethod
-    def _fmt_dewpoint(dewpoint):
+    def _fmt_dewpoint(self, dewpoint):
         if dewpoint is not None:
-            return round(dewpoint / 100, 1)
+            dewpoint = dewpoint - 273.15
+            return self.hass.config.units.temperature(round(dewpoint, 1), TEMP_CELSIUS)
         return None
 
     @staticmethod
