@@ -2,6 +2,7 @@
 
 CONF_CURRENCIES = "account_balance_currencies"
 CONF_EXCHANGE_RATES = "exchange_rate_currencies"
+CONF_OPTIONS = "options"
 DOMAIN = "coinbase"
 
 # These are constants used by the previous YAML configuration

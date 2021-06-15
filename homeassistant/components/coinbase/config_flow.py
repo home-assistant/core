@@ -16,6 +16,7 @@ from .const import (
     API_RATES,
     CONF_CURRENCIES,
     CONF_EXCHANGE_RATES,
+    CONF_OPTIONS,
     CONF_YAML_API_TOKEN,
     DOMAIN,
     RATES,
@@ -80,13 +81,18 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def async_step_user(self, user_input=None, options=None):
+    async def async_step_user(self, user_input=None):
         """Handle the initial step."""
         errors = {}
         if user_input is None:
             return self.async_show_form(
                 step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
             )
+
+        options = {}
+
+        if CONF_OPTIONS in user_input:
+            options = user_input.pop(CONF_OPTIONS)
 
         try:
             info = await validate_api(self.hass, user_input)
@@ -113,16 +119,18 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_API_KEY: config[CONF_API_KEY],
             CONF_API_TOKEN: config[CONF_YAML_API_TOKEN],
         }
-        options = {
+        cleaned_data[CONF_OPTIONS] = {
             CONF_CURRENCIES: [],
             CONF_EXCHANGE_RATES: [],
         }
         if CONF_CURRENCIES in config:
-            options[CONF_CURRENCIES] = config[CONF_CURRENCIES]
+            cleaned_data[CONF_OPTIONS][CONF_CURRENCIES] = config[CONF_CURRENCIES]
         if CONF_EXCHANGE_RATES in config:
-            options[CONF_EXCHANGE_RATES] = config[CONF_EXCHANGE_RATES]
+            cleaned_data[CONF_OPTIONS][CONF_EXCHANGE_RATES] = config[
+                CONF_EXCHANGE_RATES
+            ]
 
-        return await self.async_step_user(user_input=cleaned_data, options=options)
+        return await self.async_step_user(user_input=cleaned_data)
 
     @staticmethod
     @callback
