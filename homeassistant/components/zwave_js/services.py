@@ -66,6 +66,14 @@ BITMASK_SCHEMA = vol.All(
     lambda value: int(value, 16),
 )
 
+VALUE_SCHEMA = vol.Any(
+    vol.Coerce(int),
+    vol.Coerce(float),
+    cv.boolean,
+    BITMASK_SCHEMA,
+    cv.string,
+)
+
 
 class ZWaveServices:
     """Class that holds our services (Zwave Commands) that should be published to hass."""
@@ -250,13 +258,7 @@ class ZWaveServices:
                             vol.Coerce(int), str
                         ),
                         vol.Optional(const.ATTR_ENDPOINT): vol.Coerce(int),
-                        vol.Required(const.ATTR_VALUE): vol.Any(
-                            vol.Coerce(int),
-                            vol.Coerce(float),
-                            cv.boolean,
-                            BITMASK_SCHEMA,
-                            cv.string,
-                        ),
+                        vol.Required(const.ATTR_VALUE): VALUE_SCHEMA,
                         vol.Optional(const.ATTR_WAIT_FOR_RESULT): vol.Coerce(
                             cv.boolean
                         ),
@@ -287,9 +289,7 @@ class ZWaveServices:
                             vol.Coerce(int), str
                         ),
                         vol.Optional(const.ATTR_ENDPOINT): vol.Coerce(int),
-                        vol.Required(const.ATTR_VALUE): vol.Any(
-                            vol.Coerce(int), vol.Coerce(float), cv.boolean, cv.string
-                        ),
+                        vol.Required(const.ATTR_VALUE): VALUE_SCHEMA,
                     },
                     vol.Any(
                         cv.has_at_least_one_key(ATTR_DEVICE_ID, ATTR_ENTITY_ID),
