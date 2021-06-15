@@ -249,9 +249,12 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
         if preset == -1:
             preset = None
 
+        lor: int | None = self.coordinator.data.state.lor
+
         segment = self.coordinator.data.state.segments[self._segment]
         return {
             ATTR_INTENSITY: segment.intensity,
+            ATTR_LIVE: lor,
             ATTR_PALETTE: segment.palette.name,
             ATTR_PLAYLIST: playlist,
             ATTR_PRESET: preset,
