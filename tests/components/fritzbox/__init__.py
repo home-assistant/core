@@ -1,8 +1,14 @@
 """Tests for the AVM Fritz!Box integration."""
+from __future__ import annotations
+
+from typing import Any
 from unittest.mock import Mock
 
 from homeassistant.components.fritzbox.const import DOMAIN
 from homeassistant.const import CONF_DEVICES, CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import HomeAssistant
+
+from tests.common import MockConfigEntry
 
 MOCK_CONFIG = {
     DOMAIN: {
@@ -15,6 +21,28 @@ MOCK_CONFIG = {
         ]
     }
 }
+
+
+async def setup_config_entry(
+    hass: HomeAssistant,
+    data: dict[str, Any],
+    unique_id: str = "any",
+    device: Mock = None,
+    fritz: Mock = None,
+) -> bool:
+    """Do setup of a MockConfigEntry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=data,
+        unique_id=unique_id,
+    )
+    entry.add_to_hass(hass)
+    if device is not None and fritz is not None:
+        fritz().get_devices.return_value = [device]
+    result = await hass.config_entries.async_setup(entry.entry_id)
+    if device is not None:
+        await hass.async_block_till_done()
+    return result
 
 
 class FritzDeviceBinarySensorMock(Mock):
@@ -64,6 +92,7 @@ class FritzDeviceSensorMock(Mock):
     """Mock of a AVM Fritz!Box sensor device."""
 
     ain = "fake_ain"
+    battery_level = 23
     device_lock = "fake_locked_device"
     fw_version = "1.2.3"
     has_alarm = False

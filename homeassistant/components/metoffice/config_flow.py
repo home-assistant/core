@@ -7,7 +7,7 @@ from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.helpers import config_validation as cv
 
-from .const import DOMAIN  # pylint: disable=unused-import
+from .const import DOMAIN
 from .data import MetOfficeData
 
 _LOGGER = logging.getLogger(__name__)
@@ -34,7 +34,6 @@ class MetOfficeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Met Office weather integration."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""

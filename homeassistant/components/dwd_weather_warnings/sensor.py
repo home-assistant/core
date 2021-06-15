@@ -15,10 +15,9 @@ import logging
 from dwdwfsapi import DwdWeatherWarningsAPI
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_MONITORED_CONDITIONS, CONF_NAME
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -87,7 +86,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(sensors, True)
 
 
-class DwdWeatherWarningsSensor(Entity):
+class DwdWeatherWarningsSensor(SensorEntity):
     """Representation of a DWD-Weather-Warnings sensor."""
 
     def __init__(self, api, name, sensor_type):

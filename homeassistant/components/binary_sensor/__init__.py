@@ -1,7 +1,9 @@
 """Component to interface with binary sensors."""
+from __future__ import annotations
 
 from datetime import timedelta
 import logging
+from typing import final
 
 import voluptuous as vol
 
@@ -12,6 +14,7 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 )
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.typing import StateType
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
@@ -147,20 +150,19 @@ async def async_unload_entry(hass, entry):
 class BinarySensorEntity(Entity):
     """Represent a binary sensor."""
 
-    @property
-    def is_on(self):
-        """Return true if the binary sensor is on."""
-        return None
+    _attr_is_on: bool | None = None
+    _attr_state: None = None
 
     @property
-    def state(self):
+    def is_on(self) -> bool | None:
+        """Return true if the binary sensor is on."""
+        return self._attr_is_on
+
+    @final
+    @property
+    def state(self) -> StateType:
         """Return the state of the binary sensor."""
         return STATE_ON if self.is_on else STATE_OFF
-
-    @property
-    def device_class(self):
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        return None
 
 
 class BinarySensorDevice(BinarySensorEntity):

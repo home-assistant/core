@@ -1,6 +1,7 @@
 """Support for the Roku media player."""
+from __future__ import annotations
+
 import logging
-from typing import List, Optional
 
 import voluptuous as vol
 
@@ -36,9 +37,10 @@ from homeassistant.const import (
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.network import is_internal_request
 
-from . import RokuDataUpdateCoordinator, RokuEntity, roku_exception_handler
+from . import RokuDataUpdateCoordinator, roku_exception_handler
 from .browse_media import build_item_response, library_payload
 from .const import ATTR_KEYWORD, DOMAIN, SERVICE_SEARCH
+from .entity import RokuEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -65,7 +67,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     unique_id = coordinator.data.info.serial_number
     async_add_entities([RokuMediaPlayer(unique_id, coordinator)], True)
 
-    platform = entity_platform.current_platform.get()
+    platform = entity_platform.async_get_current_platform()
 
     platform.async_register_entity_service(
         SERVICE_SEARCH,
@@ -81,11 +83,11 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
         """Initialize the Roku device."""
         super().__init__(
             coordinator=coordinator,
-            name=coordinator.data.info.name,
             device_id=unique_id,
         )
 
-        self._unique_id = unique_id
+        self._attr_name = coordinator.data.info.name
+        self._attr_unique_id = unique_id
 
     def _media_playback_trackable(self) -> bool:
         """Detect if we have enough media data to track playback."""
@@ -95,12 +97,7 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
         return self.coordinator.data.media.duration > 0
 
     @property
-    def unique_id(self) -> str:
-        """Return the unique ID for this entity."""
-        return self._unique_id
-
-    @property
-    def device_class(self) -> Optional[str]:
+    def device_class(self) -> str | None:
         """Return the class of this device."""
         if self.coordinator.data.info.device_type == "tv":
             return DEVICE_CLASS_TV
@@ -230,7 +227,7 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
         return None
 
     @property
-    def source_list(self) -> List:
+    def source_list(self) -> list:
         """List of available input sources."""
         return ["Home"] + sorted(app.name for app in self.coordinator.data.apps)
 

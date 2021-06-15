@@ -1,0 +1,18 @@
+{
+    "config": {
+        "error": {
+            "invalid_credentials": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s",
+            "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API kulcs",
+                    "api_user": "Habitica API felhaszn\u00e1l\u00f3i azonos\u00edt\u00f3ja",
+                    "url": "URL"
+                }
+            }
+        }
+    },
+    "title": "Habitica"
+}

@@ -1,0 +1,19 @@
+{
+    "config": {
+        "error": {
+            "invalid_auth": "Autentikasi tidak valid",
+            "service": "Terjadi kesalahan saat mencoba menjangkau SmartHab. Layanan mungkin sedang mengalami gangguan. Periksa koneksi Anda.",
+            "unknown": "Kesalahan yang tidak diharapkan"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "email": "Email",
+                    "password": "Kata Sandi"
+                },
+                "description": "Untuk alasan teknis, pastikan untuk menggunakan akun sekunder khusus untuk penyiapan Home Assistant Anda. Anda dapat membuatnya dari aplikasi SmartHab.",
+                "title": "Siapkan SmartHab"
+            }
+        }
+    }
+}

@@ -1,6 +1,7 @@
 """Support for Eight Sleep sensors."""
 import logging
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import PERCENTAGE, TEMP_CELSIUS, TEMP_FAHRENHEIT
 
 from . import (
@@ -66,7 +67,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(all_sensors, True)
 
 
-class EightHeatSensor(EightSleepHeatEntity):
+class EightHeatSensor(EightSleepHeatEntity, SensorEntity):
     """Representation of an eight sleep heat-based sensor."""
 
     def __init__(self, name, eight, sensor):
@@ -119,7 +120,7 @@ class EightHeatSensor(EightSleepHeatEntity):
         }
 
 
-class EightUserSensor(EightSleepUserEntity):
+class EightUserSensor(EightSleepUserEntity, SensorEntity):
     """Representation of an eight sleep user-based sensor."""
 
     def __init__(self, name, eight, sensor, units):
@@ -289,7 +290,7 @@ class EightUserSensor(EightSleepUserEntity):
         return state_attr
 
 
-class EightRoomSensor(EightSleepUserEntity):
+class EightRoomSensor(EightSleepUserEntity, SensorEntity):
     """Representation of an eight sleep room sensor."""
 
     def __init__(self, name, eight, sensor, units):

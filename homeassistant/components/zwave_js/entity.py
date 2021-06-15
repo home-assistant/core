@@ -1,7 +1,7 @@
 """Generic Z-Wave Entity Class."""
+from __future__ import annotations
 
 import logging
-from typing import List, Optional, Union
 
 from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.model.value import Value as ZwaveValue, get_value_id
@@ -30,12 +30,24 @@ class ZWaveBaseEntity(Entity):
         self.config_entry = config_entry
         self.client = client
         self.info = info
-        self._name = self.generate_name()
-        self._unique_id = get_unique_id(
-            self.client.driver.controller.home_id, self.info.primary_value.value_id
-        )
         # entities requiring additional values, can add extra ids to this list
         self.watched_value_ids = {self.info.primary_value.value_id}
+
+        if self.info.additional_value_ids_to_watch:
+            self.watched_value_ids = self.watched_value_ids.union(
+                self.info.additional_value_ids_to_watch
+            )
+
+        # Entity class attributes
+        self._attr_name = self.generate_name()
+        self._attr_unique_id = get_unique_id(
+            self.client.driver.controller.home_id, self.info.primary_value.value_id
+        )
+        self._attr_assumed_state = self.info.assumed_state
+        # device is precreated in main handler
+        self._attr_device_info = {
+            "identifiers": {get_device_id(self.client, self.info.node)},
+        }
 
     @callback
     def on_value_update(self) -> None:
@@ -46,7 +58,6 @@ class ZWaveBaseEntity(Entity):
 
     async def async_poll_value(self, refresh_all_values: bool) -> None:
         """Poll a value."""
-        assert self.hass
         if not refresh_all_values:
             self.hass.async_create_task(
                 self.info.node.async_poll_value(self.info.primary_value)
@@ -75,7 +86,6 @@ class ZWaveBaseEntity(Entity):
 
     async def async_added_to_hass(self) -> None:
         """Call when entity is added."""
-        assert self.hass  # typing
         # Add value_changed callbacks.
         self.async_on_remove(
             self.info.node.on(EVENT_VALUE_UPDATED, self._value_changed)
@@ -88,19 +98,12 @@ class ZWaveBaseEntity(Entity):
             )
         )
 
-    @property
-    def device_info(self) -> dict:
-        """Return device information for the device registry."""
-        # device is precreated in main handler
-        return {
-            "identifiers": {get_device_id(self.client, self.info.node)},
-        }
-
     def generate_name(
         self,
         include_value_name: bool = False,
-        alternate_value_name: Optional[str] = None,
-        additional_info: Optional[List[str]] = None,
+        alternate_value_name: str | None = None,
+        additional_info: list[str] | None = None,
+        name_suffix: str | None = None,
     ) -> str:
         """Generate entity name."""
         if additional_info is None:
@@ -110,6 +113,8 @@ class ZWaveBaseEntity(Entity):
             or self.info.node.device_config.description
             or f"Node {self.info.node.node_id}"
         )
+        if name_suffix:
+            name = f"{name} {name_suffix}"
         if include_value_name:
             value_name = (
                 alternate_value_name
@@ -126,16 +131,6 @@ class ZWaveBaseEntity(Entity):
             name += f" ({self.info.primary_value.endpoint})"
 
         return name
-
-    @property
-    def name(self) -> str:
-        """Return default name from device name and value name combination."""
-        return self._name
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique_id of the entity."""
-        return self._unique_id
 
     @property
     def available(self) -> bool:
@@ -169,13 +164,13 @@ class ZWaveBaseEntity(Entity):
     @callback
     def get_zwave_value(
         self,
-        value_property: Union[str, int],
-        command_class: Optional[int] = None,
-        endpoint: Optional[int] = None,
-        value_property_key: Optional[int] = None,
+        value_property: str | int,
+        command_class: int | None = None,
+        endpoint: int | None = None,
+        value_property_key: int | None = None,
         add_to_watched_value_ids: bool = True,
         check_all_endpoints: bool = False,
-    ) -> Optional[ZwaveValue]:
+    ) -> ZwaveValue | None:
         """Return specific ZwaveValue on this ZwaveNode."""
         # use commandclass and endpoint from primary value if omitted
         return_value = None

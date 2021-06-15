@@ -1,0 +1,14 @@
+{
+    "system_health": {
+        "info": {
+            "docker": "Docker",
+            "hassio": "\u05de\u05e4\u05e7\u05d7",
+            "installation_type": "\u05e1\u05d5\u05d2 \u05d4\u05ea\u05e7\u05e0\u05d4",
+            "os_name": "\u05de\u05e9\u05e4\u05d7\u05ea \u05de\u05e2\u05e8\u05db\u05ea \u05d4\u05e4\u05e2\u05dc\u05d4",
+            "os_version": "\u05d2\u05d9\u05e8\u05e1\u05ea \u05de\u05e2\u05e8\u05db\u05ea \u05d4\u05e4\u05e2\u05dc\u05d4",
+            "python_version": "\u05d2\u05e8\u05e1\u05ea \u05e4\u05d9\u05d9\u05ea\u05d5\u05df",
+            "timezone": "\u05d0\u05d6\u05d5\u05e8 \u05d6\u05de\u05df",
+            "version": "\u05d2\u05d9\u05e8\u05e1\u05d4"
+        }
+    }
+}

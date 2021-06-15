@@ -1,11 +1,14 @@
 """StarLine Account."""
+from __future__ import annotations
+
 from datetime import datetime, timedelta
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable
 
 from starline import StarlineApi, StarlineDevice
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.event import async_track_time_interval
 
 from .const import (
@@ -23,14 +26,14 @@ from .const import (
 class StarlineAccount:
     """StarLine Account class."""
 
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry):
+    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         """Initialize StarLine account."""
         self._hass: HomeAssistant = hass
         self._config_entry: ConfigEntry = config_entry
         self._update_interval: int = DEFAULT_SCAN_INTERVAL
         self._update_obd_interval: int = DEFAULT_SCAN_OBD_INTERVAL
-        self._unsubscribe_auto_updater: Optional[Callable] = None
-        self._unsubscribe_auto_obd_updater: Optional[Callable] = None
+        self._unsubscribe_auto_updater: Callable | None = None
+        self._unsubscribe_auto_obd_updater: Callable | None = None
         self._api: StarlineApi = StarlineApi(
             config_entry.data[DATA_USER_ID], config_entry.data[DATA_SLNET_TOKEN]
         )
@@ -114,7 +117,7 @@ class StarlineAccount:
 
     def unload(self):
         """Unload StarLine API."""
-        _LOGGER.debug("Unloading StarLine API.")
+        _LOGGER.debug("Unloading StarLine API")
         if self._unsubscribe_auto_updater is not None:
             self._unsubscribe_auto_updater()
             self._unsubscribe_auto_updater = None
@@ -123,7 +126,7 @@ class StarlineAccount:
             self._unsubscribe_auto_obd_updater = None
 
     @staticmethod
-    def device_info(device: StarlineDevice) -> Dict[str, Any]:
+    def device_info(device: StarlineDevice) -> DeviceInfo:
         """Device information for entities."""
         return {
             "identifiers": {(DOMAIN, device.device_id)},
@@ -134,7 +137,7 @@ class StarlineAccount:
         }
 
     @staticmethod
-    def gps_attrs(device: StarlineDevice) -> Dict[str, Any]:
+    def gps_attrs(device: StarlineDevice) -> dict[str, Any]:
         """Attributes for device tracker."""
         return {
             "updated": datetime.utcfromtimestamp(device.position["ts"]).isoformat(),
@@ -142,7 +145,7 @@ class StarlineAccount:
         }
 
     @staticmethod
-    def balance_attrs(device: StarlineDevice) -> Dict[str, Any]:
+    def balance_attrs(device: StarlineDevice) -> dict[str, Any]:
         """Attributes for balance sensor."""
         return {
             "operator": device.balance.get("operator"),
@@ -151,7 +154,7 @@ class StarlineAccount:
         }
 
     @staticmethod
-    def gsm_attrs(device: StarlineDevice) -> Dict[str, Any]:
+    def gsm_attrs(device: StarlineDevice) -> dict[str, Any]:
         """Attributes for GSM sensor."""
         return {
             "raw": device.gsm_level,
@@ -161,7 +164,7 @@ class StarlineAccount:
         }
 
     @staticmethod
-    def engine_attrs(device: StarlineDevice) -> Dict[str, Any]:
+    def engine_attrs(device: StarlineDevice) -> dict[str, Any]:
         """Attributes for engine switch."""
         return {
             "autostart": device.car_state.get("r_start"),
@@ -169,6 +172,6 @@ class StarlineAccount:
         }
 
     @staticmethod
-    def errors_attrs(device: StarlineDevice) -> Dict[str, Any]:
+    def errors_attrs(device: StarlineDevice) -> dict[str, Any]:
         """Attributes for errors sensor."""
         return {"errors": device.errors.get("errors")}

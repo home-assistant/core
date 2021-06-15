@@ -53,7 +53,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         ):
             async_add_entities([AxisBinarySensor(event, device)])
 
-    device.listeners.append(
+    config_entry.async_on_unload(
         async_dispatcher_connect(hass, device.signal_new_event, async_add_sensor)
     )
 
@@ -65,6 +65,8 @@ class AxisBinarySensor(AxisEventBase, BinarySensorEntity):
         """Initialize the Axis binary sensor."""
         super().__init__(event, device)
         self.cancel_scheduled_update = None
+
+        self._attr_device_class = DEVICE_CLASS.get(self.event.CLASS)
 
     @callback
     def update_callback(self, no_delay=False):
@@ -126,9 +128,4 @@ class AxisBinarySensor(AxisEventBase, BinarySensorEntity):
                 ):
                     return f"{self.device.name} {self.event.TYPE} {event_data[self.event.id].name}"
 
-        return super().name
-
-    @property
-    def device_class(self):
-        """Return the class of the sensor."""
-        return DEVICE_CLASS.get(self.event.CLASS)
+        return self._attr_name

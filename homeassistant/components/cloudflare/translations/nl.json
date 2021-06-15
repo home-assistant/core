@@ -9,7 +9,7 @@
             "invalid_auth": "Ongeldige authenticatie",
             "invalid_zone": "Ongeldige zone"
         },
-        "flow_title": "Cloudflare: {name}",
+        "flow_title": "{name}",
         "step": {
             "records": {
                 "data": {
@@ -21,12 +21,14 @@
                 "data": {
                     "api_token": "API-token"
                 },
+                "description": "Voor deze integratie is een API-token vereist dat is gemaakt met Zone:Zone:Lezen en Zone:DNS:Bewerk machtigingen voor alle zones in uw account.",
                 "title": "Verbinden met Cloudflare"
             },
             "zone": {
                 "data": {
                     "zone": "Zone"
-                }
+                },
+                "title": "Kies de zone die u wilt bijwerken"
             }
         }
     }

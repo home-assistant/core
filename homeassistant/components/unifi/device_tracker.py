@@ -85,7 +85,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             add_device_entities(controller, async_add_entities, devices)
 
     for signal in (controller.signal_update, controller.signal_options_update):
-        controller.listeners.append(async_dispatcher_connect(hass, signal, items_added))
+        config_entry.async_on_unload(
+            async_dispatcher_connect(hass, signal, items_added)
+        )
 
     items_added()
 
@@ -205,10 +207,13 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
             elif not self.heartbeat_check:
                 self.schedule_update = True
 
-        elif not self.client.event and self.client.last_updated == SOURCE_DATA:
-            if self.is_wired == self.client.is_wired:
-                self._is_connected = True
-                self.schedule_update = True
+        elif (
+            not self.client.event
+            and self.client.last_updated == SOURCE_DATA
+            and self.is_wired == self.client.is_wired
+        ):
+            self._is_connected = True
+            self.schedule_update = True
 
         if self.schedule_update:
             self.schedule_update = False

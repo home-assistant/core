@@ -1,7 +1,7 @@
 """The tests for Alarm control panel device actions."""
 import pytest
 
-from homeassistant.components.alarm_control_panel import DOMAIN
+from homeassistant.components.alarm_control_panel import DOMAIN, const
 import homeassistant.components.automation as automation
 from homeassistant.const import (
     CONF_PLATFORM,
@@ -38,7 +38,30 @@ def entity_reg(hass):
     return mock_registry(hass)
 
 
-async def test_get_actions(hass, device_reg, entity_reg):
+@pytest.mark.parametrize(
+    "set_state,features_reg,features_state,expected_action_types",
+    [
+        (False, 0, 0, ["disarm"]),
+        (False, const.SUPPORT_ALARM_ARM_AWAY, 0, ["disarm", "arm_away"]),
+        (False, const.SUPPORT_ALARM_ARM_HOME, 0, ["disarm", "arm_home"]),
+        (False, const.SUPPORT_ALARM_ARM_NIGHT, 0, ["disarm", "arm_night"]),
+        (False, const.SUPPORT_ALARM_TRIGGER, 0, ["disarm", "trigger"]),
+        (True, 0, 0, ["disarm"]),
+        (True, 0, const.SUPPORT_ALARM_ARM_AWAY, ["disarm", "arm_away"]),
+        (True, 0, const.SUPPORT_ALARM_ARM_HOME, ["disarm", "arm_home"]),
+        (True, 0, const.SUPPORT_ALARM_ARM_NIGHT, ["disarm", "arm_night"]),
+        (True, 0, const.SUPPORT_ALARM_TRIGGER, ["disarm", "trigger"]),
+    ],
+)
+async def test_get_actions(
+    hass,
+    device_reg,
+    entity_reg,
+    set_state,
+    features_reg,
+    features_state,
+    expected_action_types,
+):
     """Test we get the expected actions from a alarm_control_panel."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
@@ -46,41 +69,26 @@ async def test_get_actions(hass, device_reg, entity_reg):
         config_entry_id=config_entry.entry_id,
         connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_reg.async_get_or_create(DOMAIN, "test", "5678", device_id=device_entry.id)
-    hass.states.async_set(
-        "alarm_control_panel.test_5678", "attributes", {"supported_features": 15}
+    entity_reg.async_get_or_create(
+        DOMAIN,
+        "test",
+        "5678",
+        device_id=device_entry.id,
+        supported_features=features_reg,
     )
-    expected_actions = [
+    if set_state:
+        hass.states.async_set(
+            f"{DOMAIN}.test_5678", "attributes", {"supported_features": features_state}
+        )
+    expected_actions = []
+    expected_actions += [
         {
             "domain": DOMAIN,
-            "type": "arm_away",
+            "type": action,
             "device_id": device_entry.id,
-            "entity_id": "alarm_control_panel.test_5678",
-        },
-        {
-            "domain": DOMAIN,
-            "type": "arm_home",
-            "device_id": device_entry.id,
-            "entity_id": "alarm_control_panel.test_5678",
-        },
-        {
-            "domain": DOMAIN,
-            "type": "arm_night",
-            "device_id": device_entry.id,
-            "entity_id": "alarm_control_panel.test_5678",
-        },
-        {
-            "domain": DOMAIN,
-            "type": "disarm",
-            "device_id": device_entry.id,
-            "entity_id": "alarm_control_panel.test_5678",
-        },
-        {
-            "domain": DOMAIN,
-            "type": "trigger",
-            "device_id": device_entry.id,
-            "entity_id": "alarm_control_panel.test_5678",
-        },
+            "entity_id": f"{DOMAIN}.test_5678",
+        }
+        for action in expected_action_types
     ]
     actions = await async_get_device_automations(hass, "action", device_entry.id)
     assert_lists_same(actions, expected_actions)
@@ -116,7 +124,9 @@ async def test_get_actions_arm_night_only(hass, device_reg, entity_reg):
     assert_lists_same(actions, expected_actions)
 
 
-async def test_get_action_capabilities(hass, device_reg, entity_reg):
+async def test_get_action_capabilities(
+    hass, device_reg, entity_reg, enable_custom_integrations
+):
     """Test we get the expected capabilities from a sensor trigger."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
@@ -154,7 +164,9 @@ async def test_get_action_capabilities(hass, device_reg, entity_reg):
         assert capabilities == expected_capabilities[action["type"]]
 
 
-async def test_get_action_capabilities_arm_code(hass, device_reg, entity_reg):
+async def test_get_action_capabilities_arm_code(
+    hass, device_reg, entity_reg, enable_custom_integrations
+):
     """Test we get the expected capabilities from a sensor trigger."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
@@ -198,7 +210,7 @@ async def test_get_action_capabilities_arm_code(hass, device_reg, entity_reg):
         assert capabilities == expected_capabilities[action["type"]]
 
 
-async def test_action(hass):
+async def test_action(hass, enable_custom_integrations):
     """Test for turn_on and turn_off actions."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()

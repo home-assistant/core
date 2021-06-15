@@ -1,5 +1,4 @@
 """The foscam component."""
-import asyncio
 
 from libpyfoscam import FoscamCamera
 
@@ -14,19 +13,11 @@ from .const import CONF_RTSP_PORT, DOMAIN, LOGGER, SERVICE_PTZ, SERVICE_PTZ_PRES
 PLATFORMS = ["camera"]
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the foscam component."""
-    hass.data.setdefault(DOMAIN, {})
-    return True
-
-
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up foscam from a config entry."""
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, platform)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
+    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = entry.data
 
     return True
@@ -34,15 +25,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, platform)
-                for platform in PLATFORMS
-            ]
-        )
-    )
-
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
 
@@ -53,26 +36,26 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     return unload_ok
 
 
-async def async_migrate_entry(hass, config_entry: ConfigEntry):
+async def async_migrate_entry(hass, entry: ConfigEntry):
     """Migrate old entry."""
-    LOGGER.debug("Migrating from version %s", config_entry.version)
+    LOGGER.debug("Migrating from version %s", entry.version)
 
-    if config_entry.version == 1:
+    if entry.version == 1:
         # Change unique id
         @callback
         def update_unique_id(entry):
-            return {"new_unique_id": config_entry.entry_id}
+            return {"new_unique_id": entry.entry_id}
 
-        await async_migrate_entries(hass, config_entry.entry_id, update_unique_id)
+        await async_migrate_entries(hass, entry.entry_id, update_unique_id)
 
-        config_entry.unique_id = None
+        entry.unique_id = None
 
         # Get RTSP port from the camera or use the fallback one and store it in data
         camera = FoscamCamera(
-            config_entry.data[CONF_HOST],
-            config_entry.data[CONF_PORT],
-            config_entry.data[CONF_USERNAME],
-            config_entry.data[CONF_PASSWORD],
+            entry.data[CONF_HOST],
+            entry.data[CONF_PORT],
+            entry.data[CONF_USERNAME],
+            entry.data[CONF_PASSWORD],
             verbose=False,
         )
 
@@ -83,11 +66,11 @@ async def async_migrate_entry(hass, config_entry: ConfigEntry):
         if ret != 0:
             rtsp_port = response.get("rtspPort") or response.get("mediaPort")
 
-        config_entry.data = {**config_entry.data, CONF_RTSP_PORT: rtsp_port}
+        entry.data = {**entry.data, CONF_RTSP_PORT: rtsp_port}
 
         # Change entry version
-        config_entry.version = 2
+        entry.version = 2
 
-    LOGGER.info("Migration to version %s successful", config_entry.version)
+    LOGGER.info("Migration to version %s successful", entry.version)
 
     return True

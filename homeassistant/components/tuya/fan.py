@@ -1,6 +1,7 @@
 """Support for Tuya fans."""
+from __future__ import annotations
+
 from datetime import timedelta
-from typing import Optional
 
 from homeassistant.components.fan import (
     DOMAIN as SENSOR_DOMAIN,
@@ -124,7 +125,7 @@ class TuyaFanDevice(TuyaDevice, FanEntity):
         return self._tuya.state()
 
     @property
-    def percentage(self) -> Optional[int]:
+    def percentage(self) -> int | None:
         """Return the current speed."""
         if not self.is_on:
             return 0

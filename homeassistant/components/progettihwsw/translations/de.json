@@ -26,13 +26,15 @@
                     "relay_7": "Relais 7",
                     "relay_8": "Relais 8",
                     "relay_9": "Relais 9"
-                }
+                },
+                "title": "Relais einrichten"
             },
             "user": {
                 "data": {
                     "host": "Host",
                     "port": "Port"
-                }
+                },
+                "title": "Board einrichten"
             }
         }
     }

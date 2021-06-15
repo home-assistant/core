@@ -99,7 +99,7 @@ class ImageProcessingAlprEntity(ImageProcessingEntity):
         return "alpr"
 
     @property
-    def state_attributes(self):
+    def extra_state_attributes(self):
         """Return device specific state attributes."""
         return {ATTR_PLATES: self.plates, ATTR_VEHICLES: self.vehicles}
 
@@ -183,7 +183,6 @@ class OpenAlprLocalEntity(ImageProcessingAlprEntity):
 
         alpr = await asyncio.create_subprocess_exec(
             *self._cmd,
-            loop=self.hass.loop,
             stdin=asyncio.subprocess.PIPE,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.DEVNULL,

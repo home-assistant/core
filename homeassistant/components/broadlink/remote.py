@@ -34,7 +34,6 @@ from homeassistant.components.remote import (
 )
 from homeassistant.const import CONF_HOST, STATE_OFF
 from homeassistant.core import callback
-from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.storage import Store
@@ -110,12 +109,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         Store(hass, CODE_STORAGE_VERSION, f"broadlink_remote_{device.unique_id}_codes"),
         Store(hass, FLAG_STORAGE_VERSION, f"broadlink_remote_{device.unique_id}_flags"),
     )
-
-    loaded = await remote.async_load_storage_files()
-    if not loaded:
-        _LOGGER.error("Failed to create '%s Remote' entity: Storage error", device.name)
-        return
-
     async_add_entities([remote], False)
 
 
@@ -128,6 +121,7 @@ class BroadlinkRemote(RemoteEntity, RestoreEntity):
         self._coordinator = device.update_manager.coordinator
         self._code_storage = codes
         self._flag_storage = flags
+        self._storage_loaded = False
         self._codes = {}
         self._flags = defaultdict(int)
         self._state = True
@@ -214,12 +208,12 @@ class BroadlinkRemote(RemoteEntity, RestoreEntity):
         return code_list
 
     @callback
-    def get_codes(self):
+    def _get_codes(self):
         """Return a dictionary of codes."""
         return self._codes
 
     @callback
-    def get_flags(self):
+    def _get_flags(self):
         """Return a dictionary of toggle flags.
 
         A toggle flag indicates whether the remote should send an
@@ -250,16 +244,13 @@ class BroadlinkRemote(RemoteEntity, RestoreEntity):
         self._state = False
         self.async_write_ha_state()
 
-    async def async_load_storage_files(self):
-        """Load codes and toggle flags from storage files."""
-        try:
-            self._codes.update(await self._code_storage.async_load() or {})
-            self._flags.update(await self._flag_storage.async_load() or {})
-
-        except HomeAssistantError:
-            return False
-
-        return True
+    async def _async_load_storage(self):
+        """Load code and flag storage from disk."""
+        # Exception is intentionally not trapped to
+        # provide feedback if something fails.
+        self._codes.update(await self._code_storage.async_load() or {})
+        self._flags.update(await self._flag_storage.async_load() or {})
+        self._storage_loaded = True
 
     async def async_send_command(self, command, **kwargs):
         """Send a list of commands to a device."""
@@ -276,6 +267,9 @@ class BroadlinkRemote(RemoteEntity, RestoreEntity):
                 "%s canceled: %s entity is turned off", service, self.entity_id
             )
             return
+
+        if not self._storage_loaded:
+            await self._async_load_storage()
 
         try:
             code_list = self._extract_codes(commands, device)
@@ -312,7 +306,7 @@ class BroadlinkRemote(RemoteEntity, RestoreEntity):
             at_least_one_sent = True
 
         if at_least_one_sent:
-            self._flag_storage.async_delay_save(self.get_flags, FLAG_SAVE_DELAY)
+            self._flag_storage.async_delay_save(self._get_flags, FLAG_SAVE_DELAY)
 
     async def async_learn_command(self, **kwargs):
         """Learn a list of commands from a remote."""
@@ -328,6 +322,9 @@ class BroadlinkRemote(RemoteEntity, RestoreEntity):
                 "%s canceled: %s entity is turned off", service, self.entity_id
             )
             return
+
+        if not self._storage_loaded:
+            await self._async_load_storage()
 
         async with self._lock:
             if command_type == COMMAND_TYPE_IR:
@@ -390,7 +387,7 @@ class BroadlinkRemote(RemoteEntity, RestoreEntity):
 
             raise TimeoutError(
                 "No infrared code received within "
-                f"{LEARNING_TIMEOUT.seconds} seconds"
+                f"{LEARNING_TIMEOUT.total_seconds()} seconds"
             )
 
         finally:
@@ -428,7 +425,7 @@ class BroadlinkRemote(RemoteEntity, RestoreEntity):
                 )
                 raise TimeoutError(
                     "No radiofrequency found within "
-                    f"{LEARNING_TIMEOUT.seconds} seconds"
+                    f"{LEARNING_TIMEOUT.total_seconds()} seconds"
                 )
 
         finally:
@@ -463,7 +460,7 @@ class BroadlinkRemote(RemoteEntity, RestoreEntity):
 
             raise TimeoutError(
                 "No radiofrequency code received within "
-                f"{LEARNING_TIMEOUT.seconds} seconds"
+                f"{LEARNING_TIMEOUT.total_seconds()} seconds"
             )
 
         finally:
@@ -485,6 +482,9 @@ class BroadlinkRemote(RemoteEntity, RestoreEntity):
                 self.entity_id,
             )
             return
+
+        if not self._storage_loaded:
+            await self._async_load_storage()
 
         try:
             codes = self._codes[device]
@@ -516,6 +516,6 @@ class BroadlinkRemote(RemoteEntity, RestoreEntity):
         if not codes:
             del self._codes[device]
             if self._flags.pop(device, None) is not None:
-                self._flag_storage.async_delay_save(self.get_flags, FLAG_SAVE_DELAY)
+                self._flag_storage.async_delay_save(self._get_flags, FLAG_SAVE_DELAY)
 
-        self._code_storage.async_delay_save(self.get_codes, CODE_SAVE_DELAY)
+        self._code_storage.async_delay_save(self._get_codes, CODE_SAVE_DELAY)

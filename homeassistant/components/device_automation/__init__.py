@@ -1,8 +1,11 @@
 """Helpers for device automations."""
+from __future__ import annotations
+
 import asyncio
+from collections.abc import MutableMapping
 from functools import wraps
 from types import ModuleType
-from typing import Any, List, MutableMapping
+from typing import Any
 
 import voluptuous as vol
 import voluptuous_serialize
@@ -22,7 +25,7 @@ from .exceptions import DeviceNotFound, InvalidDeviceAutomationConfig
 DOMAIN = "device_automation"
 
 
-TRIGGER_BASE_SCHEMA = vol.Schema(
+DEVICE_TRIGGER_BASE_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_PLATFORM): "device",
         vol.Required(CONF_DOMAIN): str,
@@ -116,7 +119,7 @@ async def _async_get_device_automations(hass, automation_type, device_id):
     )
 
     domains = set()
-    automations: List[MutableMapping[str, Any]] = []
+    automations: list[MutableMapping[str, Any]] = []
     device = device_registry.async_get(device_id)
 
     if device is None:

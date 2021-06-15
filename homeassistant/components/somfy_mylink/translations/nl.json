@@ -8,14 +8,15 @@
             "invalid_auth": "Ongeldige authenticatie",
             "unknown": "Onverwachte fout"
         },
-        "flow_title": "Somfy MyLink {mac} ({ip})",
+        "flow_title": "{mac} ({ip})",
         "step": {
             "user": {
                 "data": {
                     "host": "Host",
                     "port": "Poort",
                     "system_id": "Systeem-ID"
-                }
+                },
+                "description": "De systeem-id kan worden verkregen in de MyLink app onder Integratie door een niet-Cloud service te selecteren."
             }
         }
     },
@@ -25,14 +26,26 @@
         },
         "step": {
             "entity_config": {
+                "data": {
+                    "reverse": "Rolluik is omgekeerd"
+                },
                 "description": "Configureer opties voor `{entity_id}`",
                 "title": "Entiteit configureren"
             },
             "init": {
                 "data": {
-                    "entity_id": "Configureer een specifieke entiteit."
+                    "default_reverse": "Standaard omkeerstatus voor niet-geconfigureerde rolluiken",
+                    "entity_id": "Configureer een specifieke entiteit.",
+                    "target_id": "Configureer opties voor een rolluik."
                 },
                 "title": "Configureer MyLink-opties"
+            },
+            "target_config": {
+                "data": {
+                    "reverse": "Rolluik is omgekeerd"
+                },
+                "description": "Configureer opties voor ' {target_name} '",
+                "title": "Configureer MyLink Cover"
             }
         }
     },

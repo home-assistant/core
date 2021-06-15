@@ -1,14 +1,15 @@
 """Support for MQTT message handling."""
+from __future__ import annotations
+
 import asyncio
 from functools import lru_cache, partial, wraps
 import inspect
 from itertools import groupby
 import logging
 from operator import attrgetter
-import os
 import ssl
 import time
-from typing import Any, Callable, List, Optional, Union
+from typing import Any, Callable, Union
 import uuid
 
 import attr
@@ -29,11 +30,18 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import CoreState, Event, HassJob, ServiceCall, callback
+from homeassistant.core import (
+    CoreState,
+    Event,
+    HassJob,
+    HomeAssistant,
+    ServiceCall,
+    callback,
+)
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.helpers import config_validation as cv, event, template
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType, ServiceDataType
+from homeassistant.helpers.typing import ConfigType, ServiceDataType
 from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util
 from homeassistant.util.async_ import run_callback_threadsafe
@@ -212,7 +220,6 @@ MQTT_RW_PLATFORM_SCHEMA = MQTT_BASE_PLATFORM_SCHEMA.extend(
         vol.Required(CONF_COMMAND_TOPIC): valid_publish_topic,
         vol.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
         vol.Optional(CONF_STATE_TOPIC): valid_subscribe_topic,
-        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
     }
 )
 
@@ -243,7 +250,7 @@ def _build_publish_data(topic: Any, qos: int, retain: bool) -> ServiceDataType:
 
 
 @bind_hass
-def publish(hass: HomeAssistantType, topic, payload, qos=None, retain=None) -> None:
+def publish(hass: HomeAssistant, topic, payload, qos=None, retain=None) -> None:
     """Publish message to an MQTT topic."""
     hass.add_job(async_publish, hass, topic, payload, qos, retain)
 
@@ -251,7 +258,7 @@ def publish(hass: HomeAssistantType, topic, payload, qos=None, retain=None) -> N
 @callback
 @bind_hass
 def async_publish(
-    hass: HomeAssistantType, topic: Any, payload, qos=None, retain=None
+    hass: HomeAssistant, topic: Any, payload, qos=None, retain=None
 ) -> None:
     """Publish message to an MQTT topic."""
     data = _build_publish_data(topic, qos, retain)
@@ -261,7 +268,7 @@ def async_publish(
 
 @bind_hass
 def publish_template(
-    hass: HomeAssistantType, topic, payload_template, qos=None, retain=None
+    hass: HomeAssistant, topic, payload_template, qos=None, retain=None
 ) -> None:
     """Publish message to an MQTT topic."""
     hass.add_job(async_publish_template, hass, topic, payload_template, qos, retain)
@@ -269,7 +276,7 @@ def publish_template(
 
 @bind_hass
 def async_publish_template(
-    hass: HomeAssistantType, topic, payload_template, qos=None, retain=None
+    hass: HomeAssistant, topic, payload_template, qos=None, retain=None
 ) -> None:
     """Publish message to an MQTT topic using a template payload."""
     data = _build_publish_data(topic, qos, retain)
@@ -306,11 +313,11 @@ def wrap_msg_callback(msg_callback: MessageCallbackType) -> MessageCallbackType:
 
 @bind_hass
 async def async_subscribe(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     topic: str,
     msg_callback: MessageCallbackType,
     qos: int = DEFAULT_QOS,
-    encoding: Optional[str] = "utf-8",
+    encoding: str | None = "utf-8",
 ):
     """Subscribe to an MQTT topic.
 
@@ -351,7 +358,7 @@ async def async_subscribe(
 
 @bind_hass
 def subscribe(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     topic: str,
     msg_callback: MessageCallbackType,
     qos: int = DEFAULT_QOS,
@@ -370,7 +377,7 @@ def subscribe(
 
 
 async def _async_setup_discovery(
-    hass: HomeAssistantType, conf: ConfigType, config_entry
+    hass: HomeAssistant, conf: ConfigType, config_entry
 ) -> bool:
     """Try to start the discovery of MQTT devices.
 
@@ -383,9 +390,9 @@ async def _async_setup_discovery(
     return success
 
 
-async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Start the MQTT protocol service."""
-    conf: Optional[ConfigType] = config.get(DOMAIN)
+    conf: ConfigType | None = config.get(DOMAIN)
 
     websocket_api.async_register_command(hass, websocket_subscribe)
     websocket_api.async_register_command(hass, websocket_remove_device)
@@ -540,7 +547,7 @@ class MQTT:
 
     def __init__(
         self,
-        hass: HomeAssistantType,
+        hass: HomeAssistant,
         config_entry,
         conf,
     ) -> None:
@@ -552,7 +559,7 @@ class MQTT:
         self.hass = hass
         self.config_entry = config_entry
         self.conf = conf
-        self.subscriptions: List[Subscription] = []
+        self.subscriptions: list[Subscription] = []
         self.connected = False
         self._ha_started = asyncio.Event()
         self._last_subscribe = time.time()
@@ -624,18 +631,7 @@ class MQTT:
 
         certificate = self.conf.get(CONF_CERTIFICATE)
 
-        # For cloudmqtt.com, secured connection, auto fill in certificate
-        if (
-            certificate is None
-            and 19999 < self.conf[CONF_PORT] < 30000
-            and self.conf[CONF_BROKER].endswith(".cloudmqtt.com")
-        ):
-            certificate = os.path.join(
-                os.path.dirname(__file__), "addtrustexternalcaroot.crt"
-            )
-
-        # When the certificate is set to auto, use bundled certs from certifi
-        elif certificate == "auto":
+        if certificate == "auto":
             certificate = certifi.where()
 
         client_key = self.conf.get(CONF_CLIENT_KEY)
@@ -730,7 +726,7 @@ class MQTT:
         topic: str,
         msg_callback: MessageCallbackType,
         qos: int,
-        encoding: Optional[str] = None,
+        encoding: str | None = None,
     ) -> Callable[[], None]:
         """Set up a subscription to a topic with the provided qos.
 

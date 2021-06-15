@@ -7,7 +7,7 @@
         "error": {
             "cannot_connect": "Ha fallat la connexi\u00f3"
         },
-        "flow_title": "WLED: {name}",
+        "flow_title": "{name}",
         "step": {
             "user": {
                 "data": {
@@ -18,6 +18,15 @@
             "zeroconf_confirm": {
                 "description": "Vols afegir el WLED `{name}` a Home Assistant?",
                 "title": "Dispositiu WLED descobert"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "keep_master_light": "Mant\u00e9 el llum principal, fins i tot amb 1 segment LED."
+                }
             }
         }
     }

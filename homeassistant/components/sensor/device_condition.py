@@ -1,5 +1,5 @@
 """Provides device conditions for sensors."""
-from typing import Dict, List
+from __future__ import annotations
 
 import voluptuous as vol
 
@@ -7,8 +7,6 @@ from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
 )
 from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
-    ATTR_UNIT_OF_MEASUREMENT,
     CONF_ABOVE,
     CONF_BELOW,
     CONF_ENTITY_ID,
@@ -25,11 +23,11 @@ from homeassistant.const import (
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_SIGNAL_STRENGTH,
     DEVICE_CLASS_TEMPERATURE,
-    DEVICE_CLASS_TIMESTAMP,
     DEVICE_CLASS_VOLTAGE,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, HomeAssistantError, callback
 from homeassistant.helpers import condition, config_validation as cv
+from homeassistant.helpers.entity import get_device_class, get_unit_of_measurement
 from homeassistant.helpers.entity_registry import (
     async_entries_for_device,
     async_get_registry,
@@ -54,7 +52,6 @@ CONF_IS_POWER_FACTOR = "is_power_factor"
 CONF_IS_PRESSURE = "is_pressure"
 CONF_IS_SIGNAL_STRENGTH = "is_signal_strength"
 CONF_IS_TEMPERATURE = "is_temperature"
-CONF_IS_TIMESTAMP = "is_timestamp"
 CONF_IS_VOLTAGE = "is_voltage"
 CONF_IS_VALUE = "is_value"
 
@@ -71,7 +68,6 @@ ENTITY_CONDITIONS = {
     DEVICE_CLASS_PRESSURE: [{CONF_TYPE: CONF_IS_PRESSURE}],
     DEVICE_CLASS_SIGNAL_STRENGTH: [{CONF_TYPE: CONF_IS_SIGNAL_STRENGTH}],
     DEVICE_CLASS_TEMPERATURE: [{CONF_TYPE: CONF_IS_TEMPERATURE}],
-    DEVICE_CLASS_TIMESTAMP: [{CONF_TYPE: CONF_IS_TIMESTAMP}],
     DEVICE_CLASS_VOLTAGE: [{CONF_TYPE: CONF_IS_VOLTAGE}],
     DEVICE_CLASS_NONE: [{CONF_TYPE: CONF_IS_VALUE}],
 }
@@ -94,7 +90,6 @@ CONDITION_SCHEMA = vol.All(
                     CONF_IS_PRESSURE,
                     CONF_IS_SIGNAL_STRENGTH,
                     CONF_IS_TEMPERATURE,
-                    CONF_IS_TIMESTAMP,
                     CONF_IS_VOLTAGE,
                     CONF_IS_VALUE,
                 ]
@@ -109,9 +104,9 @@ CONDITION_SCHEMA = vol.All(
 
 async def async_get_conditions(
     hass: HomeAssistant, device_id: str
-) -> List[Dict[str, str]]:
+) -> list[dict[str, str]]:
     """List device conditions."""
-    conditions: List[Dict[str, str]] = []
+    conditions: list[dict[str, str]] = []
     entity_registry = await async_get_registry(hass)
     entries = [
         entry
@@ -120,17 +115,11 @@ async def async_get_conditions(
     ]
 
     for entry in entries:
-        device_class = DEVICE_CLASS_NONE
-        state = hass.states.get(entry.entity_id)
-        unit_of_measurement = (
-            state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) if state else None
-        )
+        device_class = get_device_class(hass, entry.entity_id) or DEVICE_CLASS_NONE
+        unit_of_measurement = get_unit_of_measurement(hass, entry.entity_id)
 
-        if not state or not unit_of_measurement:
+        if not unit_of_measurement:
             continue
-
-        if ATTR_DEVICE_CLASS in state.attributes:
-            device_class = state.attributes[ATTR_DEVICE_CLASS]
 
         templates = ENTITY_CONDITIONS.get(
             device_class, ENTITY_CONDITIONS[DEVICE_CLASS_NONE]
@@ -171,15 +160,14 @@ def async_condition_from_config(
 
 async def async_get_condition_capabilities(hass, config):
     """List condition capabilities."""
-    state = hass.states.get(config[CONF_ENTITY_ID])
-    unit_of_measurement = (
-        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) if state else None
-    )
+    try:
+        unit_of_measurement = get_unit_of_measurement(hass, config[CONF_ENTITY_ID])
+    except HomeAssistantError:
+        unit_of_measurement = None
 
-    if not state or not unit_of_measurement:
+    if not unit_of_measurement:
         raise InvalidDeviceAutomationConfig(
-            "No state or unit of measurement found for "
-            f"condition entity {config[CONF_ENTITY_ID]}"
+            "No unit of measurement found for condition entity {config[CONF_ENTITY_ID]}"
         )
 
     return {

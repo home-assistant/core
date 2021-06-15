@@ -13,24 +13,21 @@ async def test_creating_entry_sets_up_climate_discovery(hass):
     with patch(
         "homeassistant.components.hisense_aehw4a1.config_flow.AehW4a1.discovery",
         return_value=["1.2.3.4"],
-    ):
-        with patch(
-            "homeassistant.components.hisense_aehw4a1.climate.async_setup_entry",
-            return_value=True,
-        ) as mock_setup:
-            result = await hass.config_entries.flow.async_init(
-                hisense_aehw4a1.DOMAIN, context={"source": config_entries.SOURCE_USER}
-            )
+    ), patch(
+        "homeassistant.components.hisense_aehw4a1.climate.async_setup_entry",
+        return_value=True,
+    ) as mock_setup:
+        result = await hass.config_entries.flow.async_init(
+            hisense_aehw4a1.DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
 
-            # Confirmation form
-            assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        # Confirmation form
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
 
-            result = await hass.config_entries.flow.async_configure(
-                result["flow_id"], {}
-            )
-            assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
 
-            await hass.async_block_till_done()
+        await hass.async_block_till_done()
 
     assert len(mock_setup.mock_calls) == 1
 
@@ -40,17 +37,16 @@ async def test_configuring_hisense_w4a1_create_entry(hass):
     with patch(
         "homeassistant.components.hisense_aehw4a1.config_flow.AehW4a1.check",
         return_value=True,
-    ):
-        with patch(
-            "homeassistant.components.hisense_aehw4a1.async_setup_entry",
-            return_value=True,
-        ) as mock_setup:
-            await async_setup_component(
-                hass,
-                hisense_aehw4a1.DOMAIN,
-                {"hisense_aehw4a1": {"ip_address": ["1.2.3.4"]}},
-            )
-            await hass.async_block_till_done()
+    ), patch(
+        "homeassistant.components.hisense_aehw4a1.async_setup_entry",
+        return_value=True,
+    ) as mock_setup:
+        await async_setup_component(
+            hass,
+            hisense_aehw4a1.DOMAIN,
+            {"hisense_aehw4a1": {"ip_address": ["1.2.3.4"]}},
+        )
+        await hass.async_block_till_done()
 
     assert len(mock_setup.mock_calls) == 1
 
@@ -60,17 +56,16 @@ async def test_configuring_hisense_w4a1_not_creates_entry_for_device_not_found(h
     with patch(
         "homeassistant.components.hisense_aehw4a1.config_flow.AehW4a1.check",
         side_effect=exceptions.ConnectionError,
-    ):
-        with patch(
-            "homeassistant.components.hisense_aehw4a1.async_setup_entry",
-            return_value=True,
-        ) as mock_setup:
-            await async_setup_component(
-                hass,
-                hisense_aehw4a1.DOMAIN,
-                {"hisense_aehw4a1": {"ip_address": ["1.2.3.4"]}},
-            )
-            await hass.async_block_till_done()
+    ), patch(
+        "homeassistant.components.hisense_aehw4a1.async_setup_entry",
+        return_value=True,
+    ) as mock_setup:
+        await async_setup_component(
+            hass,
+            hisense_aehw4a1.DOMAIN,
+            {"hisense_aehw4a1": {"ip_address": ["1.2.3.4"]}},
+        )
+        await hass.async_block_till_done()
 
     assert len(mock_setup.mock_calls) == 0
 

@@ -114,8 +114,9 @@ Result will be a long-lived access token:
 }
 
 """
+from __future__ import annotations
+
 from datetime import timedelta
-from typing import Union
 import uuid
 
 from aiohttp import web
@@ -183,7 +184,7 @@ RESULT_TYPE_USER = "user"
 
 @bind_hass
 def create_auth_code(
-    hass, client_id: str, credential_or_user: Union[Credentials, User]
+    hass, client_id: str, credential_or_user: Credentials | User
 ) -> str:
     """Create an authorization code to fetch tokens."""
     return hass.data[DOMAIN](client_id, credential_or_user)

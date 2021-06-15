@@ -10,6 +10,13 @@
             "unknown": "Ootamatu t\u00f5rge"
         },
         "step": {
+            "pair": {
+                "data": {
+                    "pin": "PIN kood"
+                },
+                "description": "Sisesta teleris kuvatav PIN-kood",
+                "title": "Paarita"
+            },
             "user": {
                 "data": {
                     "api_version": "API versioon",

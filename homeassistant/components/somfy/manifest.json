@@ -7,6 +7,10 @@
   "codeowners": ["@tetienne"],
   "requirements": ["pymfy==0.9.3"],
   "zeroconf": [
-    {"type": "_kizbox._tcp.local.", "name": "gateway*"}
-  ]
+    {
+      "type": "_kizbox._tcp.local.",
+      "name": "gateway*"
+    }
+  ],
+  "iot_class": "cloud_polling"
 }

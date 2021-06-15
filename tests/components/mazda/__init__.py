@@ -42,6 +42,15 @@ async def init_integration(hass: HomeAssistant, use_nickname=True) -> MockConfig
     )
     client_mock.get_vehicles = AsyncMock(return_value=get_vehicles_fixture)
     client_mock.get_vehicle_status = AsyncMock(return_value=get_vehicle_status_fixture)
+    client_mock.lock_doors = AsyncMock()
+    client_mock.unlock_doors = AsyncMock()
+    client_mock.send_poi = AsyncMock()
+    client_mock.start_charging = AsyncMock()
+    client_mock.start_engine = AsyncMock()
+    client_mock.stop_charging = AsyncMock()
+    client_mock.stop_engine = AsyncMock()
+    client_mock.turn_off_hazard_lights = AsyncMock()
+    client_mock.turn_on_hazard_lights = AsyncMock()
 
     with patch(
         "homeassistant.components.mazda.config_flow.MazdaAPI",
@@ -50,4 +59,4 @@ async def init_integration(hass: HomeAssistant, use_nickname=True) -> MockConfig
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    return config_entry
+    return client_mock

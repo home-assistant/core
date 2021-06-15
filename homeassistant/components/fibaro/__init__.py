@@ -1,7 +1,8 @@
 """Support for the Fibaro devices."""
+from __future__ import annotations
+
 from collections import defaultdict
 import logging
-from typing import Optional
 
 from fiblary3.client.v4.client import Client as FibaroClient, StateHandler
 import voluptuous as vol
@@ -496,7 +497,7 @@ class FibaroDevice(Entity):
         return self.fibaro_device.unique_id_str
 
     @property
-    def name(self) -> Optional[str]:
+    def name(self) -> str | None:
         """Return the name of the device."""
         return self._name
 

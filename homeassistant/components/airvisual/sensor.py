@@ -1,4 +1,5 @@
 """Support for AirVisual air quality sensors."""
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
@@ -138,7 +139,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(sensors, True)
 
 
-class AirVisualGeographySensor(AirVisualEntity):
+class AirVisualGeographySensor(AirVisualEntity, SensorEntity):
     """Define an AirVisual sensor related to geography data via the Cloud API."""
 
     def __init__(self, coordinator, config_entry, kind, name, icon, unit, locale):
@@ -153,12 +154,13 @@ class AirVisualGeographySensor(AirVisualEntity):
             }
         )
         self._config_entry = config_entry
-        self._icon = icon
         self._kind = kind
         self._locale = locale
         self._name = name
         self._state = None
-        self._unit = unit
+
+        self._attr_icon = icon
+        self._attr_unit_of_measurement = unit
 
     @property
     def available(self):
@@ -195,7 +197,7 @@ class AirVisualGeographySensor(AirVisualEntity):
 
         if self._kind == SENSOR_KIND_LEVEL:
             aqi = data[f"aqi{self._locale}"]
-            self._state, self._icon = async_get_pollutant_level_info(aqi)
+            self._state, self._attr_icon = async_get_pollutant_level_info(aqi)
         elif self._kind == SENSOR_KIND_AQI:
             self._state = data[f"aqi{self._locale}"]
         elif self._kind == SENSOR_KIND_POLLUTANT:
@@ -236,23 +238,19 @@ class AirVisualGeographySensor(AirVisualEntity):
             self._attrs.pop(ATTR_LONGITUDE, None)
 
 
-class AirVisualNodeProSensor(AirVisualEntity):
+class AirVisualNodeProSensor(AirVisualEntity, SensorEntity):
     """Define an AirVisual sensor related to a Node/Pro unit."""
 
     def __init__(self, coordinator, kind, name, device_class, unit):
         """Initialize."""
         super().__init__(coordinator)
 
-        self._device_class = device_class
         self._kind = kind
         self._name = name
         self._state = None
-        self._unit = unit
 
-    @property
-    def device_class(self):
-        """Return the device class."""
-        return self._device_class
+        self._attr_device_class = device_class
+        self._attr_unit_of_measurement = unit
 
     @property
     def device_info(self):

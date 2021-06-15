@@ -1,11 +1,14 @@
 """Support for sending data to an Influx database."""
+from __future__ import annotations
+
+from contextlib import suppress
 from dataclasses import dataclass
 import logging
 import math
 import queue
 import threading
 import time
-from typing import Any, Callable, Dict, List
+from typing import Any, Callable
 
 from influxdb import InfluxDBClient, exceptions
 from influxdb_client import InfluxDBClient as InfluxDBClientV2
@@ -100,7 +103,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-def create_influx_url(conf: Dict) -> Dict:
+def create_influx_url(conf: dict) -> dict:
     """Build URL used from config inputs and default when necessary."""
     if conf[CONF_API_VERSION] == API_VERSION_2:
         if CONF_SSL not in conf:
@@ -125,7 +128,7 @@ def create_influx_url(conf: Dict) -> Dict:
     return conf
 
 
-def validate_version_specific_config(conf: Dict) -> Dict:
+def validate_version_specific_config(conf: dict) -> dict:
     """Ensure correct config fields are provided based on API version used."""
     if conf[CONF_API_VERSION] == API_VERSION_2:
         if CONF_TOKEN not in conf:
@@ -193,7 +196,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def _generate_event_to_json(conf: Dict) -> Callable[[Dict], str]:
+def _generate_event_to_json(conf: dict) -> Callable[[dict], str]:
     """Build event to json converter and add to config."""
     entity_filter = convert_include_exclude_filter(conf)
     tags = conf.get(CONF_TAGS)
@@ -208,7 +211,7 @@ def _generate_event_to_json(conf: Dict) -> Callable[[Dict], str]:
         conf[CONF_COMPONENT_CONFIG_GLOB],
     )
 
-    def event_to_json(event: Dict) -> str:
+    def event_to_json(event: dict) -> str:
         """Convert event into json in format Influx expects."""
         state = event.data.get(EVENT_NEW_STATE)
         if (
@@ -302,11 +305,9 @@ def _generate_event_to_json(conf: Dict) -> Callable[[Dict], str]:
                         )
 
                 # Infinity and NaN are not valid floats in InfluxDB
-                try:
+                with suppress(KeyError, TypeError):
                     if not math.isfinite(json[INFLUX_CONF_FIELDS][key]):
                         del json[INFLUX_CONF_FIELDS][key]
-                except (KeyError, TypeError):
-                    pass
 
         json[INFLUX_CONF_TAGS].update(tags)
 
@@ -319,13 +320,13 @@ def _generate_event_to_json(conf: Dict) -> Callable[[Dict], str]:
 class InfluxClient:
     """An InfluxDB client wrapper for V1 or V2."""
 
-    data_repositories: List[str]
+    data_repositories: list[str]
     write: Callable[[str], None]
-    query: Callable[[str, str], List[Any]]
+    query: Callable[[str, str], list[Any]]
     close: Callable[[], None]
 
 
-def get_influx_connection(conf, test_write=False, test_read=False):
+def get_influx_connection(conf, test_write=False, test_read=False):  # noqa: C901
     """Create the correct influx connection for the API version."""
     kwargs = {
         CONF_TIMEOUT: TIMEOUT,
@@ -380,10 +381,8 @@ def get_influx_connection(conf, test_write=False, test_read=False):
         if test_write:
             # Try to write b"" to influx. If we can connect and creds are valid
             # Then invalid inputs is returned. Anything else is a broken config
-            try:
+            with suppress(ValueError):
                 write_v2(b"")
-            except ValueError:
-                pass
             write_api = influx.write_api(write_options=ASYNCHRONOUS)
 
         if test_read:
@@ -528,7 +527,7 @@ class InfluxThread(threading.Thread):
 
         dropped = 0
 
-        try:
+        with suppress(queue.Empty):
             while len(json) < BATCH_BUFFER_SIZE and not self.shutdown:
                 timeout = None if count == 0 else self.batch_timeout()
                 item = self.queue.get(timeout=timeout)
@@ -546,9 +545,6 @@ class InfluxThread(threading.Thread):
                             json.append(event_json)
                     else:
                         dropped += 1
-
-        except queue.Empty:
-            pass
 
         if dropped:
             _LOGGER.warning(CATCHING_UP_MESSAGE, dropped)

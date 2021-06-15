@@ -3,5 +3,6 @@
   "name": "OpenWrt (ubus)",
   "documentation": "https://www.home-assistant.io/integrations/ubus",
   "requirements": ["openwrt-ubus-rpc==0.0.2"],
-  "codeowners": ["@noltari"]
+  "codeowners": ["@noltari"],
+  "iot_class": "local_polling"
 }

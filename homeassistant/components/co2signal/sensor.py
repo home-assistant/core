@@ -4,7 +4,7 @@ import logging
 import CO2Signal
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONF_LATITUDE,
@@ -13,7 +13,6 @@ from homeassistant.const import (
     ENERGY_KILO_WATT_HOUR,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 CONF_COUNTRY_CODE = "country_code"
 
@@ -52,8 +51,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(devs, True)
 
 
-class CO2Sensor(Entity):
+class CO2Sensor(SensorEntity):
     """Implementation of the CO2Signal sensor."""
+
+    _attr_icon = "mdi:molecule-co2"
+    _attr_unit_of_measurement = CO2_INTENSITY_UNIT
 
     def __init__(self, token, country_code, lat, lon):
         """Initialize the sensor."""
@@ -76,19 +78,9 @@ class CO2Sensor(Entity):
         return self._friendly_name
 
     @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return "mdi:molecule-co2"
-
-    @property
     def state(self):
         """Return the state of the device."""
         return self._data
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of this entity, if any."""
-        return CO2_INTENSITY_UNIT
 
     @property
     def extra_state_attributes(self):

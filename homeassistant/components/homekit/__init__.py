@@ -50,6 +50,7 @@ from . import (  # noqa: F401
     type_lights,
     type_locks,
     type_media_players,
+    type_remotes,
     type_security_systems,
     type_sensors,
     type_switches,
@@ -58,7 +59,7 @@ from . import (  # noqa: F401
 from .accessories import HomeBridge, HomeDriver, get_accessory
 from .aidmanager import AccessoryAidStorage
 from .const import (
-    ATTR_INTERGRATION,
+    ATTR_INTEGRATION,
     ATTR_MANUFACTURER,
     ATTR_MODEL,
     ATTR_SOFTWARE_VERSION,
@@ -94,7 +95,6 @@ from .const import (
     SERVICE_HOMEKIT_RESET_ACCESSORY,
     SERVICE_HOMEKIT_START,
     SHUTDOWN_TIMEOUT,
-    UNDO_UPDATE_LISTENER,
 )
 from .util import (
     accessory_friendly_name,
@@ -116,6 +116,8 @@ STATUS_READY = 0
 STATUS_RUNNING = 1
 STATUS_STOPPED = 2
 STATUS_WAIT = 3
+
+PORT_CLEANUP_CHECK_INTERVAL_SECS = 1
 
 
 def _has_all_unique_names_and_ports(bridges):
@@ -229,7 +231,7 @@ def _async_update_config_entry_if_from_yaml(hass, entries_by_name, conf):
     return False
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up HomeKit from a config entry."""
     _async_import_options_from_data_if_missing(hass, entry)
 
@@ -273,12 +275,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         entry.title,
     )
 
-    hass.data[DOMAIN][entry.entry_id] = {
-        HOMEKIT: homekit,
-        UNDO_UPDATE_LISTENER: entry.add_update_listener(_async_update_listener),
-    }
+    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, homekit.async_stop)
+    )
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, homekit.async_stop)
+    hass.data[DOMAIN][entry.entry_id] = {HOMEKIT: homekit}
 
     if hass.state == CoreState.running:
         await homekit.async_start()
@@ -295,23 +297,24 @@ async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry):
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     dismiss_setup_message(hass, entry.entry_id)
-
-    hass.data[DOMAIN][entry.entry_id][UNDO_UPDATE_LISTENER]()
-
     homekit = hass.data[DOMAIN][entry.entry_id][HOMEKIT]
 
     if homekit.status == STATUS_RUNNING:
         await homekit.async_stop()
 
+    logged_shutdown_wait = False
     for _ in range(0, SHUTDOWN_TIMEOUT):
-        if not await hass.async_add_executor_job(
-            port_is_available, entry.data[CONF_PORT]
-        ):
+        if await hass.async_add_executor_job(port_is_available, entry.data[CONF_PORT]):
+            break
+
+        if not logged_shutdown_wait:
             _LOGGER.info("Waiting for the HomeKit server to shutdown")
-            await asyncio.sleep(1)
+            logged_shutdown_wait = True
+
+        await asyncio.sleep(PORT_CLEANUP_CHECK_INTERVAL_SECS)
 
     hass.data[DOMAIN].pop(entry.entry_id)
 
@@ -453,7 +456,7 @@ class HomeKit:
         self.bridge = None
         self.driver = None
 
-    def setup(self, zeroconf_instance):
+    def setup(self, async_zeroconf_instance):
         """Set up bridge and accessory driver."""
         ip_addr = self._ip_address or get_local_ip()
         persist_file = get_persist_fullpath_for_entry_id(self.hass, self._entry_id)
@@ -468,7 +471,7 @@ class HomeKit:
             port=self._port,
             persist_file=persist_file,
             advertised_address=self._advertise_ip,
-            zeroconf_instance=zeroconf_instance,
+            async_zeroconf_instance=async_zeroconf_instance,
         )
 
         # If we do not load the mac address will be wrong
@@ -530,7 +533,7 @@ class HomeKit:
                 "The bridge %s has entity %s. For best performance, "
                 "and to prevent unexpected unavailability, create and "
                 "pair a separate HomeKit instance in accessory mode for "
-                "this entity.",
+                "this entity",
                 self._name,
                 state.entity_id,
             )
@@ -592,11 +595,12 @@ class HomeKit:
         if self.status != STATUS_READY:
             return
         self.status = STATUS_WAIT
-        zc_instance = await zeroconf.async_get_instance(self.hass)
-        await self.hass.async_add_executor_job(self.setup, zc_instance)
+        async_zc_instance = await zeroconf.async_get_async_instance(self.hass)
+        await self.hass.async_add_executor_job(self.setup, async_zc_instance)
         self.aid_storage = AccessoryAidStorage(self.hass, self._entry_id)
         await self.aid_storage.async_initialize()
-        await self._async_create_accessories()
+        if not await self._async_create_accessories():
+            return
         self._async_register_bridge()
         _LOGGER.debug("Driver start for %s", self._name)
         await self.driver.async_start()
@@ -663,6 +667,13 @@ class HomeKit:
         """Create the accessories."""
         entity_states = await self.async_configure_accessories()
         if self._homekit_mode == HOMEKIT_MODE_ACCESSORY:
+            if not entity_states:
+                _LOGGER.error(
+                    "HomeKit %s cannot startup: entity not available: %s",
+                    self._name,
+                    self._filter.config,
+                )
+                return False
             state = entity_states[0]
             conf = self._config.pop(state.entity_id, {})
             acc = get_accessory(self.hass, self.driver, state, STANDALONE_AID, conf)
@@ -672,7 +683,9 @@ class HomeKit:
                 self.add_bridge_accessory(state)
             acc = self.bridge
 
-        await self.hass.async_add_executor_job(self.driver.add_accessory, acc)
+        # No need to load/persist as we do it in setup
+        self.driver.accessory = acc
+        return True
 
     async def async_stop(self, *args):
         """Stop the accessory driver."""
@@ -763,9 +776,9 @@ class HomeKit:
                 integration = await async_get_integration(
                     self.hass, ent_reg_ent.platform
                 )
-                ent_cfg[ATTR_INTERGRATION] = integration.name
+                ent_cfg[ATTR_INTEGRATION] = integration.name
             except IntegrationNotFound:
-                ent_cfg[ATTR_INTERGRATION] = ent_reg_ent.platform
+                ent_cfg[ATTR_INTEGRATION] = ent_reg_ent.platform
 
 
 class HomeKitPairingQRView(HomeAssistantView):

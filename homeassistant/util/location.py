@@ -3,16 +3,16 @@ Module with location helpers.
 
 detect_location_info and elevation are mocked by default during tests.
 """
+from __future__ import annotations
+
 import asyncio
 import collections
 import math
-from typing import Any, Dict, Optional, Tuple
+from typing import Any
 
 import aiohttp
 
-ELEVATION_URL = "https://api.open-elevation.com/api/v1/lookup"
-IP_API = "http://ip-api.com/json"
-IPAPI = "https://ipapi.co/json/"
+WHOAMI_URL = "https://whoami.home-assistant.io/v1"
 
 # Constants from https://github.com/maurycyp/vincenty
 # Earth ellipsoid according to WGS 84
@@ -32,7 +32,6 @@ LocationInfo = collections.namedtuple(
     [
         "ip",
         "country_code",
-        "country_name",
         "region_code",
         "region_name",
         "city",
@@ -47,12 +46,9 @@ LocationInfo = collections.namedtuple(
 
 async def async_detect_location_info(
     session: aiohttp.ClientSession,
-) -> Optional[LocationInfo]:
+) -> LocationInfo | None:
     """Detect location information."""
-    data = await _get_ipapi(session)
-
-    if data is None:
-        data = await _get_ip_api(session)
+    data = await _get_whoami(session)
 
     if data is None:
         return None
@@ -63,8 +59,8 @@ async def async_detect_location_info(
 
 
 def distance(
-    lat1: Optional[float], lon1: Optional[float], lat2: float, lon2: float
-) -> Optional[float]:
+    lat1: float | None, lon1: float | None, lat2: float, lon2: float
+) -> float | None:
     """Calculate the distance in meters between two points.
 
     Async friendly.
@@ -81,8 +77,8 @@ def distance(
 # Source: https://github.com/maurycyp/vincenty
 # License: https://github.com/maurycyp/vincenty/blob/master/LICENSE
 def vincenty(
-    point1: Tuple[float, float], point2: Tuple[float, float], miles: bool = False
-) -> Optional[float]:
+    point1: tuple[float, float], point2: tuple[float, float], miles: bool = False
+) -> float | None:
     """
     Vincenty formula (inverse method) to calculate the distance.
 
@@ -162,56 +158,26 @@ def vincenty(
     return round(s, 6)
 
 
-async def _get_ipapi(session: aiohttp.ClientSession) -> Optional[Dict[str, Any]]:
-    """Query ipapi.co for location data."""
+async def _get_whoami(session: aiohttp.ClientSession) -> dict[str, Any] | None:
+    """Query whoami.home-assistant.io for location data."""
     try:
-        resp = await session.get(IPAPI, timeout=5)
+        resp = await session.get(WHOAMI_URL, timeout=30)
     except (aiohttp.ClientError, asyncio.TimeoutError):
         return None
 
     try:
         raw_info = await resp.json()
     except (aiohttp.ClientError, ValueError):
-        return None
-
-    # ipapi allows 30k free requests/month. Some users exhaust those.
-    if raw_info.get("latitude") == "Sign up to access":
         return None
 
     return {
         "ip": raw_info.get("ip"),
         "country_code": raw_info.get("country"),
-        "country_name": raw_info.get("country_name"),
         "region_code": raw_info.get("region_code"),
         "region_name": raw_info.get("region"),
         "city": raw_info.get("city"),
-        "zip_code": raw_info.get("postal"),
+        "zip_code": raw_info.get("postal_code"),
         "time_zone": raw_info.get("timezone"),
-        "latitude": raw_info.get("latitude"),
-        "longitude": raw_info.get("longitude"),
-    }
-
-
-async def _get_ip_api(session: aiohttp.ClientSession) -> Optional[Dict[str, Any]]:
-    """Query ip-api.com for location data."""
-    try:
-        resp = await session.get(IP_API, timeout=5)
-    except (aiohttp.ClientError, asyncio.TimeoutError):
-        return None
-
-    try:
-        raw_info = await resp.json()
-    except (aiohttp.ClientError, ValueError):
-        return None
-    return {
-        "ip": raw_info.get("query"),
-        "country_code": raw_info.get("countryCode"),
-        "country_name": raw_info.get("country"),
-        "region_code": raw_info.get("region"),
-        "region_name": raw_info.get("regionName"),
-        "city": raw_info.get("city"),
-        "zip_code": raw_info.get("zip"),
-        "time_zone": raw_info.get("timezone"),
-        "latitude": raw_info.get("lat"),
-        "longitude": raw_info.get("lon"),
+        "latitude": float(raw_info.get("latitude")),
+        "longitude": float(raw_info.get("longitude")),
     }

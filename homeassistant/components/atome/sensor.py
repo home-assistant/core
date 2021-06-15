@@ -5,7 +5,7 @@ import logging
 from pyatome.client import AtomeClient, PyAtomeError
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
@@ -15,7 +15,6 @@ from homeassistant.const import (
     POWER_WATT,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -39,8 +38,6 @@ DAILY_TYPE = "day"
 WEEKLY_TYPE = "week"
 MONTHLY_TYPE = "month"
 YEARLY_TYPE = "year"
-
-ICON = "mdi:flash"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -78,7 +75,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class AtomeData:
     """Stores data retrieved from Neurio sensor."""
 
-    def __init__(self, client: AtomeClient):
+    def __init__(self, client: AtomeClient) -> None:
         """Initialize the data."""
         self.atome_client = client
         self._live_power = None
@@ -215,8 +212,10 @@ class AtomeData:
             _LOGGER.error("Missing last value in values: %s: %s", values, error)
 
 
-class AtomeSensor(Entity):
+class AtomeSensor(SensorEntity):
     """Representation of a sensor entity for Atome."""
+
+    _attr_device_class = DEVICE_CLASS_POWER
 
     def __init__(self, data, name, sensor_type):
         """Initialize the sensor."""
@@ -251,16 +250,6 @@ class AtomeSensor(Entity):
     def unit_of_measurement(self):
         """Return the unit of measurement."""
         return self._unit_of_measurement
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return ICON
-
-    @property
-    def device_class(self):
-        """Return the device class."""
-        return DEVICE_CLASS_POWER
 
     def update(self):
         """Update device state."""

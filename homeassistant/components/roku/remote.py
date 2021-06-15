@@ -1,18 +1,20 @@
 """Support for the Roku remote."""
-from typing import Callable, List
+from __future__ import annotations
 
 from homeassistant.components.remote import ATTR_NUM_REPEATS, RemoteEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import RokuDataUpdateCoordinator, RokuEntity, roku_exception_handler
+from . import RokuDataUpdateCoordinator, roku_exception_handler
 from .const import DOMAIN
+from .entity import RokuEntity
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: Callable[[List, bool], None],
+    async_add_entities: AddEntitiesCallback,
 ) -> bool:
     """Load Roku remote based on a config entry."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
@@ -27,16 +29,11 @@ class RokuRemote(RokuEntity, RemoteEntity):
         """Initialize the Roku device."""
         super().__init__(
             device_id=unique_id,
-            name=coordinator.data.info.name,
             coordinator=coordinator,
         )
 
-        self._unique_id = unique_id
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique ID for this entity."""
-        return self._unique_id
+        self._attr_name = coordinator.data.info.name
+        self._attr_unique_id = unique_id
 
     @property
     def is_on(self) -> bool:
@@ -56,7 +53,7 @@ class RokuRemote(RokuEntity, RemoteEntity):
         await self.coordinator.async_request_refresh()
 
     @roku_exception_handler
-    async def async_send_command(self, command: List, **kwargs) -> None:
+    async def async_send_command(self, command: list, **kwargs) -> None:
         """Send a command to one device."""
         num_repeats = kwargs[ATTR_NUM_REPEATS]
 

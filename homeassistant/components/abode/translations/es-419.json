@@ -3,7 +3,22 @@
         "abort": {
             "single_instance_allowed": "Solo se permite una \u00fanica configuraci\u00f3n de Abode."
         },
+        "error": {
+            "invalid_mfa_code": "C\u00f3digo MFA no v\u00e1lido"
+        },
         "step": {
+            "mfa": {
+                "data": {
+                    "mfa_code": "C\u00f3digo MFA (6 d\u00edgitos)"
+                },
+                "title": "Ingrese su c\u00f3digo MFA para Abode"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Contrase\u00f1a"
+                },
+                "title": "Complete su informaci\u00f3n de inicio de sesi\u00f3n de Abode"
+            },
             "user": {
                 "data": {
                     "password": "Contrase\u00f1a",

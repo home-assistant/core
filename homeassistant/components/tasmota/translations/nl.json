@@ -3,8 +3,14 @@
         "abort": {
             "single_instance_allowed": "Is al geconfigureerd. Er is maar een configuratie mogelijk"
         },
+        "error": {
+            "invalid_discovery_topic": "Ongeldig onderwerpvoorvoegsel voor ontdekken"
+        },
         "step": {
             "config": {
+                "data": {
+                    "discovery_prefix": "Discovery-onderwerpvoorvoegsel"
+                },
                 "description": "Vul de Tasmota gegevens in",
                 "title": "Tasmota"
             },

@@ -1,5 +1,5 @@
 """Home Assistant Switcher Component Switch platform."""
-from typing import Callable, Dict
+from __future__ import annotations
 
 from aioswitcher.api import SwitcherV2Api
 from aioswitcher.api.messages import SwitcherV2ControlResponseMSG
@@ -13,36 +13,27 @@ from aioswitcher.consts import (
 from aioswitcher.devices import SwitcherV2Device
 import voluptuous as vol
 
-from homeassistant.components.switch import ATTR_CURRENT_POWER_W, SwitchEntity
+from homeassistant.components.switch import SwitchEntity
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.typing import HomeAssistantType, ServiceCallType
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import (
-    ATTR_AUTO_OFF_SET,
-    ATTR_ELECTRIC_CURRENT,
-    ATTR_REMAINING_TIME,
+from .const import (
+    CONF_AUTO_OFF,
+    CONF_TIMER_MINUTES,
     DATA_DEVICE,
+    DEVICE_PROPERTIES_TO_HA_ATTRIBUTES,
     DOMAIN,
+    SERVICE_SET_AUTO_OFF_NAME,
+    SERVICE_TURN_ON_WITH_TIMER_NAME,
     SIGNAL_SWITCHER_DEVICE_UPDATE,
 )
 
-CONF_AUTO_OFF = "auto_off"
-CONF_TIMER_MINUTES = "timer_minutes"
-
-DEVICE_PROPERTIES_TO_HA_ATTRIBUTES = {
-    "power_consumption": ATTR_CURRENT_POWER_W,
-    "electric_current": ATTR_ELECTRIC_CURRENT,
-    "remaining_time": ATTR_REMAINING_TIME,
-    "auto_off_set": ATTR_AUTO_OFF_SET,
-}
-
-SERVICE_SET_AUTO_OFF_NAME = "set_auto_off"
 SERVICE_SET_AUTO_OFF_SCHEMA = {
     vol.Required(CONF_AUTO_OFF): cv.time_period_str,
 }
 
-SERVICE_TURN_ON_WITH_TIMER_NAME = "turn_on_with_timer"
 SERVICE_TURN_ON_WITH_TIMER_SCHEMA = {
     vol.Required(CONF_TIMER_MINUTES): vol.All(
         cv.positive_int, vol.Range(min=1, max=150)
@@ -51,16 +42,16 @@ SERVICE_TURN_ON_WITH_TIMER_SCHEMA = {
 
 
 async def async_setup_platform(
-    hass: HomeAssistantType,
-    config: Dict,
-    async_add_entities: Callable,
-    discovery_info: Dict,
+    hass: HomeAssistant,
+    config: dict,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: dict,
 ) -> None:
     """Set up the switcher platform for the switch component."""
     if discovery_info is None:
         return
 
-    async def async_set_auto_off_service(entity, service_call: ServiceCallType) -> None:
+    async def async_set_auto_off_service(entity, service_call: ServiceCall) -> None:
         """Use for handling setting device auto-off service calls."""
         async with SwitcherV2Api(
             hass.loop,
@@ -72,7 +63,7 @@ async def async_setup_platform(
             await swapi.set_auto_shutdown(service_call.data[CONF_AUTO_OFF])
 
     async def async_turn_on_with_timer_service(
-        entity, service_call: ServiceCallType
+        entity, service_call: ServiceCall
     ) -> None:
         """Use for handling turning device on with a timer service calls."""
         async with SwitcherV2Api(
@@ -89,7 +80,7 @@ async def async_setup_platform(
     device_data = hass.data[DOMAIN][DATA_DEVICE]
     async_add_entities([SwitcherControl(hass.data[DOMAIN][DATA_DEVICE])])
 
-    platform = entity_platform.current_platform.get()
+    platform = entity_platform.async_get_current_platform()
 
     platform.async_register_entity_service(
         SERVICE_SET_AUTO_OFF_NAME,
@@ -139,7 +130,7 @@ class SwitcherControl(SwitchEntity):
         return self._device_data.power_consumption
 
     @property
-    def extra_state_attributes(self) -> Dict:
+    def extra_state_attributes(self) -> dict:
         """Return the optional state attributes."""
         attribs = {}
 
@@ -173,11 +164,11 @@ class SwitcherControl(SwitchEntity):
                 self._state = self._device_data.state
                 self.async_write_ha_state()
 
-    async def async_turn_on(self, **kwargs: Dict) -> None:
+    async def async_turn_on(self, **kwargs: dict) -> None:
         """Turn the entity on."""
         await self._control_device(True)
 
-    async def async_turn_off(self, **kwargs: Dict) -> None:
+    async def async_turn_off(self, **kwargs: dict) -> None:
         """Turn the entity off."""
         await self._control_device(False)
 

@@ -41,20 +41,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for foscam."""
 
     VERSION = 2
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     async def _validate_and_create(self, data):
         """Validate the user input allows us to connect.
 
         Data has the keys from DATA_SCHEMA with values provided by the user.
         """
-
-        for entry in self.hass.config_entries.async_entries(DOMAIN):
-            if (
-                entry.data[CONF_HOST] == data[CONF_HOST]
-                and entry.data[CONF_PORT] == data[CONF_PORT]
-            ):
-                raise AbortFlow("already_configured")
+        self._async_abort_entries_match(
+            {CONF_HOST: data[CONF_HOST], CONF_PORT: data[CONF_PORT]}
+        )
 
         camera = FoscamCamera(
             data[CONF_HOST],
@@ -127,16 +122,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return await self._validate_and_create(import_config)
 
         except CannotConnect:
-            LOGGER.error("Error importing foscam platform config: cannot connect.")
+            LOGGER.error("Error importing foscam platform config: cannot connect")
             return self.async_abort(reason="cannot_connect")
 
         except InvalidAuth:
-            LOGGER.error("Error importing foscam platform config: invalid auth.")
+            LOGGER.error("Error importing foscam platform config: invalid auth")
             return self.async_abort(reason="invalid_auth")
 
         except InvalidResponse:
             LOGGER.exception(
-                "Error importing foscam platform config: invalid response from camera."
+                "Error importing foscam platform config: invalid response from camera"
             )
             return self.async_abort(reason="invalid_response")
 
@@ -145,7 +140,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         except Exception:  # pylint: disable=broad-except
             LOGGER.exception(
-                "Error importing foscam platform config: unexpected exception."
+                "Error importing foscam platform config: unexpected exception"
             )
             return self.async_abort(reason="unknown")
 

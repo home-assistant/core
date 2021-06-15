@@ -1,0 +1,52 @@
+{
+    "config": {
+        "abort": {
+            "already_configured_account": "Konto wurde bereits konfiguriert",
+            "ezviz_cloud_account_missing": "Ezviz-Cloud-Konto fehlt. Bitte konfigurieren Sie das Ezviz-Cloud-Konto neu",
+            "unknown": "Unerwarteter Fehler"
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "invalid_auth": "Ung\u00fcltige Authentifizierung",
+            "invalid_host": "Ung\u00fcltiger Hostname oder IP-Adresse"
+        },
+        "flow_title": "{serial}",
+        "step": {
+            "confirm": {
+                "data": {
+                    "password": "Passwort",
+                    "username": "Benutzername"
+                },
+                "description": "RTSP-Anmeldeinformationen f\u00fcr Ezviz-Kamera {serial} mit IP {ip_address} eingeben",
+                "title": "Entdeckte Ezviz-Kamera"
+            },
+            "user": {
+                "data": {
+                    "password": "Passwort",
+                    "url": "URL",
+                    "username": "Benutzername"
+                },
+                "title": "Verbinden mit Ezviz Cloud"
+            },
+            "user_custom_url": {
+                "data": {
+                    "password": "Passwort",
+                    "url": "URL",
+                    "username": "Benutzername"
+                },
+                "description": "URL Region manuell festlegen",
+                "title": "Verbinden mit benutzerdefinierter Ezviz-URL"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "ffmpeg_arguments": "An ffmpeg \u00fcbergebene Argumente f\u00fcr Kameras",
+                    "timeout": "Anfrage-Timeout (Sekunden)"
+                }
+            }
+        }
+    }
+}

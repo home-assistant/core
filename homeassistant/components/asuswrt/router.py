@@ -1,7 +1,9 @@
 """Represent the AsusWrt router."""
+from __future__ import annotations
+
 from datetime import datetime, timedelta
 import logging
-from typing import Any, Dict, Optional
+from typing import Any
 
 from aioasuswrt.asuswrt import AsusWrt
 
@@ -19,11 +21,11 @@ from homeassistant.const import (
     CONF_PROTOCOL,
     CONF_USERNAME,
 )
-from homeassistant.core import CALLBACK_TYPE, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
@@ -74,7 +76,7 @@ class AsusWrtSensorDataHandler:
 
     async def _get_bytes(self):
         """Fetch byte information from the router."""
-        ret_dict: Dict[str, Any] = {}
+        ret_dict: dict[str, Any] = {}
         try:
             datas = await self._api.async_get_bytes_total()
         except OSError as exc:
@@ -87,7 +89,7 @@ class AsusWrtSensorDataHandler:
 
     async def _get_rates(self):
         """Fetch rates information from the router."""
-        ret_dict: Dict[str, Any] = {}
+        ret_dict: dict[str, Any] = {}
         try:
             rates = await self._api.async_get_current_transfer_rates()
         except OSError as exc:
@@ -185,7 +187,7 @@ class AsusWrtDevInfo:
 class AsusWrtRouter:
     """Representation of a AsusWrt router."""
 
-    def __init__(self, hass: HomeAssistantType, entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize a AsusWrt router."""
         self.hass = hass
         self._entry = entry
@@ -193,13 +195,15 @@ class AsusWrtRouter:
         self._api: AsusWrt = None
         self._protocol = entry.data[CONF_PROTOCOL]
         self._host = entry.data[CONF_HOST]
+        self._model = "Asus Router"
+        self._sw_v = None
 
-        self._devices: Dict[str, Any] = {}
+        self._devices: dict[str, Any] = {}
         self._connected_devices = 0
         self._connect_error = False
 
         self._sensors_data_handler: AsusWrtSensorDataHandler = None
-        self._sensors_coordinator: Dict[str, Any] = {}
+        self._sensors_coordinator: dict[str, Any] = {}
 
         self._on_close = []
 
@@ -221,6 +225,14 @@ class AsusWrtRouter:
 
         if not self._api.is_connected:
             raise ConfigEntryNotReady
+
+        # System
+        model = await _get_nvram_info(self._api, "MODEL")
+        if model and "model" in model:
+            self._model = model["model"]
+        firmware = await _get_nvram_info(self._api, "FIRMWARE")
+        if firmware and "firmver" in firmware and "buildno" in firmware:
+            self._sw_v = f"{firmware['firmver']} (build {firmware['buildno']})"
 
         # Load tracked entities from registry
         entity_registry = await self.hass.helpers.entity_registry.async_get_registry()
@@ -245,7 +257,7 @@ class AsusWrtRouter:
             async_track_time_interval(self.hass, self.update_all, SCAN_INTERVAL)
         )
 
-    async def update_all(self, now: Optional[datetime] = None) -> None:
+    async def update_all(self, now: datetime | None = None) -> None:
         """Update all AsusWrt platforms."""
         await self.update_devices()
 
@@ -339,9 +351,8 @@ class AsusWrtRouter:
 
     async def close(self) -> None:
         """Close the connection."""
-        if self._api is not None:
-            if self._protocol == PROTOCOL_TELNET:
-                self._api.connection.disconnect()
+        if self._api is not None and self._protocol == PROTOCOL_TELNET:
+            self._api.connection.disconnect()
         self._api = None
 
         for func in self._on_close:
@@ -353,7 +364,7 @@ class AsusWrtRouter:
         """Add a function to call when router is closed."""
         self._on_close.append(func)
 
-    def update_options(self, new_options: Dict) -> bool:
+    def update_options(self, new_options: dict) -> bool:
         """Update router options."""
         req_reload = False
         for name, new_opt in new_options.items():
@@ -367,13 +378,14 @@ class AsusWrtRouter:
         return req_reload
 
     @property
-    def device_info(self) -> Dict[str, Any]:
+    def device_info(self) -> DeviceInfo:
         """Return the device information."""
         return {
             "identifiers": {(DOMAIN, "AsusWRT")},
             "name": self._host,
-            "model": "Asus Router",
+            "model": self._model,
             "manufacturer": "Asus",
+            "sw_version": self._sw_v,
         }
 
     @property
@@ -392,12 +404,12 @@ class AsusWrtRouter:
         return self._host
 
     @property
-    def devices(self) -> Dict[str, Any]:
+    def devices(self) -> dict[str, Any]:
         """Return devices."""
         return self._devices
 
     @property
-    def sensors_coordinator(self) -> Dict[str, Any]:
+    def sensors_coordinator(self) -> dict[str, Any]:
         """Return sensors coordinators."""
         return self._sensors_coordinator
 
@@ -407,7 +419,18 @@ class AsusWrtRouter:
         return self._api
 
 
-def get_api(conf: Dict, options: Optional[Dict] = None) -> AsusWrt:
+async def _get_nvram_info(api: AsusWrt, info_type: str) -> dict[str, Any]:
+    """Get AsusWrt router info from nvram."""
+    info = {}
+    try:
+        info = await api.async_get_nvram(info_type)
+    except (OSError, UnicodeDecodeError) as exc:
+        _LOGGER.warning("Error calling method async_get_nvram(%s): %s", info_type, exc)
+
+    return info
+
+
+def get_api(conf: dict, options: dict | None = None) -> AsusWrt:
     """Get the AsusWrt API."""
     opt = options or {}
 

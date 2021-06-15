@@ -7,10 +7,9 @@ import pylast as lastfm
 from pylast import WSError
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_API_KEY
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,7 +51,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(entities, True)
 
 
-class LastfmSensor(Entity):
+class LastfmSensor(SensorEntity):
     """A class for the Last.fm account."""
 
     def __init__(self, user, lastfm_api):

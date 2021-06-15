@@ -16,8 +16,14 @@
                 "data": {
                     "forecast": "Pron\u00f3stico del tiempo"
                 },
-                "description": "Debido a las limitaciones de la versi\u00f3n gratuita de la clave API de AccuWeather, cuando habilita el pron\u00f3stico del tiempo, las actualizaciones de datos se realizar\u00e1n cada 64 minutos en lugar de cada 32 minutos."
+                "description": "Debido a las limitaciones de la versi\u00f3n gratuita de la clave API de AccuWeather, cuando habilita el pron\u00f3stico del tiempo, las actualizaciones de datos se realizar\u00e1n cada 64 minutos en lugar de cada 32 minutos.",
+                "title": "Opciones de AccuWeather"
             }
+        }
+    },
+    "system_health": {
+        "info": {
+            "remaining_requests": "Solicitudes permitidas restantes"
         }
     }
 }

@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Any, Callable
 
 from homeassistant.components.alarm_control_panel import (
     FORMAT_NUMBER,
@@ -12,32 +11,23 @@ from homeassistant.components.alarm_control_panel.const import (
     SUPPORT_ALARM_ARM_AWAY,
     SUPPORT_ALARM_ARM_HOME,
 )
-from homeassistant.const import (
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_DISARMED,
-    STATE_ALARM_PENDING,
-)
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import Entity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_ALARM, CONF_GIID, DOMAIN, LOGGER
+from .const import ALARM_STATE_TO_HA, CONF_GIID, DOMAIN, LOGGER
 from .coordinator import VerisureDataUpdateCoordinator
 
 
-def setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: dict[str, Any],
-    add_entities: Callable[[list[Entity], bool], None],
-    discovery_info: dict[str, Any] | None = None,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the Verisure platform."""
-    coordinator = hass.data[DOMAIN]
-    alarms = []
-    if int(coordinator.config.get(CONF_ALARM, 1)):
-        alarms.append(VerisureAlarm(coordinator))
-    add_entities(alarms)
+    """Set up Verisure alarm control panel from a config entry."""
+    async_add_entities([VerisureAlarm(coordinator=hass.data[DOMAIN][entry.entry_id])])
 
 
 class VerisureAlarm(CoordinatorEntity, AlarmControlPanelEntity):
@@ -45,57 +35,24 @@ class VerisureAlarm(CoordinatorEntity, AlarmControlPanelEntity):
 
     coordinator: VerisureDataUpdateCoordinator
 
-    def __init__(self, coordinator: VerisureDataUpdateCoordinator) -> None:
-        """Initialize the Verisure alarm panel."""
-        super().__init__(coordinator)
-        self._state = None
+    _attr_code_format = FORMAT_NUMBER
+    _attr_name = "Verisure Alarm"
+    _attr_supported_features = SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY
 
     @property
-    def name(self) -> str:
-        """Return the name of the device."""
-        giid = self.coordinator.config.get(CONF_GIID)
-        if giid is not None:
-            aliass = {
-                i["giid"]: i["alias"] for i in self.coordinator.verisure.installations
-            }
-            if giid in aliass:
-                return "{} alarm".format(aliass[giid])
-
-            LOGGER.error("Verisure installation giid not found: %s", giid)
-
-        return "{} alarm".format(self.coordinator.verisure.installations[0]["alias"])
+    def device_info(self) -> DeviceInfo:
+        """Return device information about this entity."""
+        return {
+            "name": "Verisure Alarm",
+            "manufacturer": "Verisure",
+            "model": "VBox",
+            "identifiers": {(DOMAIN, self.coordinator.entry.data[CONF_GIID])},
+        }
 
     @property
-    def state(self) -> str | None:
-        """Return the state of the device."""
-        status = self.coordinator.data["alarm"]["statusType"]
-        if status == "DISARMED":
-            self._state = STATE_ALARM_DISARMED
-        elif status == "ARMED_HOME":
-            self._state = STATE_ALARM_ARMED_HOME
-        elif status == "ARMED_AWAY":
-            self._state = STATE_ALARM_ARMED_AWAY
-        elif status == "PENDING":
-            self._state = STATE_ALARM_PENDING
-        else:
-            LOGGER.error("Unknown alarm state %s", status)
-
-        return self._state
-
-    @property
-    def supported_features(self) -> int:
-        """Return the list of supported features."""
-        return SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY
-
-    @property
-    def code_format(self) -> str:
-        """Return one or more digits/characters."""
-        return FORMAT_NUMBER
-
-    @property
-    def changed_by(self) -> str | None:
-        """Return the last change triggered by."""
-        return self.coordinator.data["alarm"]["name"]
+    def unique_id(self) -> str:
+        """Return the unique ID for this entity."""
+        return self.coordinator.entry.data[CONF_GIID]
 
     async def _async_set_arm_state(self, state: str, code: str | None = None) -> None:
         """Send set arm state command."""
@@ -124,3 +81,17 @@ class VerisureAlarm(CoordinatorEntity, AlarmControlPanelEntity):
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         await self._async_set_arm_state("ARMED_AWAY", code)
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._attr_state = ALARM_STATE_TO_HA.get(
+            self.coordinator.data["alarm"]["statusType"]
+        )
+        self._attr_changed_by = self.coordinator.data["alarm"].get("name")
+        super()._handle_coordinator_update()
+
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass."""
+        await super().async_added_to_hass()
+        self._handle_coordinator_update()

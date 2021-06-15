@@ -1,5 +1,6 @@
 """Sensor for Shelly."""
 from homeassistant.components import sensor
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     DEGREE,
@@ -8,7 +9,7 @@ from homeassistant.const import (
     LIGHT_LUX,
     PERCENTAGE,
     POWER_WATT,
-    SIGNAL_STRENGTH_DECIBELS,
+    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     VOLT,
 )
 
@@ -29,6 +30,7 @@ SENSORS = {
         name="Battery",
         unit=PERCENTAGE,
         device_class=sensor.DEVICE_CLASS_BATTERY,
+        state_class=sensor.STATE_CLASS_MEASUREMENT,
         removal_condition=lambda settings, _: settings.get("external_power") == 1,
     ),
     ("device", "deviceTemp"): BlockAttributeDescription(
@@ -36,6 +38,7 @@ SENSORS = {
         unit=temperature_unit,
         value=lambda value: round(value, 1),
         device_class=sensor.DEVICE_CLASS_TEMPERATURE,
+        state_class=sensor.STATE_CLASS_MEASUREMENT,
         default_enabled=False,
     ),
     ("emeter", "current"): BlockAttributeDescription(
@@ -43,12 +46,14 @@ SENSORS = {
         unit=ELECTRICAL_CURRENT_AMPERE,
         value=lambda value: value,
         device_class=sensor.DEVICE_CLASS_CURRENT,
+        state_class=sensor.STATE_CLASS_MEASUREMENT,
     ),
     ("light", "power"): BlockAttributeDescription(
         name="Power",
         unit=POWER_WATT,
         value=lambda value: round(value, 1),
         device_class=sensor.DEVICE_CLASS_POWER,
+        state_class=sensor.STATE_CLASS_MEASUREMENT,
         default_enabled=False,
     ),
     ("device", "power"): BlockAttributeDescription(
@@ -56,60 +61,70 @@ SENSORS = {
         unit=POWER_WATT,
         value=lambda value: round(value, 1),
         device_class=sensor.DEVICE_CLASS_POWER,
+        state_class=sensor.STATE_CLASS_MEASUREMENT,
     ),
     ("emeter", "power"): BlockAttributeDescription(
         name="Power",
         unit=POWER_WATT,
         value=lambda value: round(value, 1),
         device_class=sensor.DEVICE_CLASS_POWER,
+        state_class=sensor.STATE_CLASS_MEASUREMENT,
     ),
     ("emeter", "voltage"): BlockAttributeDescription(
         name="Voltage",
         unit=VOLT,
         value=lambda value: round(value, 1),
         device_class=sensor.DEVICE_CLASS_VOLTAGE,
+        state_class=sensor.STATE_CLASS_MEASUREMENT,
     ),
     ("emeter", "powerFactor"): BlockAttributeDescription(
         name="Power Factor",
         unit=PERCENTAGE,
         value=lambda value: round(value * 100, 1),
         device_class=sensor.DEVICE_CLASS_POWER_FACTOR,
+        state_class=sensor.STATE_CLASS_MEASUREMENT,
     ),
     ("relay", "power"): BlockAttributeDescription(
         name="Power",
         unit=POWER_WATT,
         value=lambda value: round(value, 1),
         device_class=sensor.DEVICE_CLASS_POWER,
+        state_class=sensor.STATE_CLASS_MEASUREMENT,
     ),
     ("roller", "rollerPower"): BlockAttributeDescription(
         name="Power",
         unit=POWER_WATT,
         value=lambda value: round(value, 1),
         device_class=sensor.DEVICE_CLASS_POWER,
+        state_class=sensor.STATE_CLASS_MEASUREMENT,
     ),
     ("device", "energy"): BlockAttributeDescription(
         name="Energy",
         unit=ENERGY_KILO_WATT_HOUR,
         value=lambda value: round(value / 60 / 1000, 2),
         device_class=sensor.DEVICE_CLASS_ENERGY,
+        state_class=sensor.STATE_CLASS_MEASUREMENT,
     ),
     ("emeter", "energy"): BlockAttributeDescription(
         name="Energy",
         unit=ENERGY_KILO_WATT_HOUR,
         value=lambda value: round(value / 1000, 2),
         device_class=sensor.DEVICE_CLASS_ENERGY,
+        state_class=sensor.STATE_CLASS_MEASUREMENT,
     ),
     ("emeter", "energyReturned"): BlockAttributeDescription(
         name="Energy Returned",
         unit=ENERGY_KILO_WATT_HOUR,
         value=lambda value: round(value / 1000, 2),
         device_class=sensor.DEVICE_CLASS_ENERGY,
+        state_class=sensor.STATE_CLASS_MEASUREMENT,
     ),
     ("light", "energy"): BlockAttributeDescription(
         name="Energy",
         unit=ENERGY_KILO_WATT_HOUR,
         value=lambda value: round(value / 60 / 1000, 2),
         device_class=sensor.DEVICE_CLASS_ENERGY,
+        state_class=sensor.STATE_CLASS_MEASUREMENT,
         default_enabled=False,
     ),
     ("relay", "energy"): BlockAttributeDescription(
@@ -117,42 +132,48 @@ SENSORS = {
         unit=ENERGY_KILO_WATT_HOUR,
         value=lambda value: round(value / 60 / 1000, 2),
         device_class=sensor.DEVICE_CLASS_ENERGY,
+        state_class=sensor.STATE_CLASS_MEASUREMENT,
     ),
     ("roller", "rollerEnergy"): BlockAttributeDescription(
         name="Energy",
         unit=ENERGY_KILO_WATT_HOUR,
         value=lambda value: round(value / 60 / 1000, 2),
         device_class=sensor.DEVICE_CLASS_ENERGY,
+        state_class=sensor.STATE_CLASS_MEASUREMENT,
     ),
     ("sensor", "concentration"): BlockAttributeDescription(
         name="Gas Concentration",
         unit=CONCENTRATION_PARTS_PER_MILLION,
-        value=lambda value: value,
         icon="mdi:gauge",
-        # "sensorOp" is "normal" when the Shelly Gas is working properly and taking measurements.
-        available=lambda block: block.sensorOp == "normal",
+        state_class=sensor.STATE_CLASS_MEASUREMENT,
     ),
     ("sensor", "extTemp"): BlockAttributeDescription(
         name="Temperature",
         unit=temperature_unit,
         value=lambda value: round(value, 1),
         device_class=sensor.DEVICE_CLASS_TEMPERATURE,
+        state_class=sensor.STATE_CLASS_MEASUREMENT,
+        available=lambda block: block.extTemp != 999,
     ),
     ("sensor", "humidity"): BlockAttributeDescription(
         name="Humidity",
         unit=PERCENTAGE,
         value=lambda value: round(value, 1),
         device_class=sensor.DEVICE_CLASS_HUMIDITY,
+        state_class=sensor.STATE_CLASS_MEASUREMENT,
+        available=lambda block: block.extTemp != 999,
     ),
     ("sensor", "luminosity"): BlockAttributeDescription(
         name="Luminosity",
         unit=LIGHT_LUX,
         device_class=sensor.DEVICE_CLASS_ILLUMINANCE,
+        state_class=sensor.STATE_CLASS_MEASUREMENT,
     ),
     ("sensor", "tilt"): BlockAttributeDescription(
         name="Tilt",
         unit=DEGREE,
         icon="mdi:angle-acute",
+        state_class=sensor.STATE_CLASS_MEASUREMENT,
     ),
     ("relay", "totalWorkTime"): BlockAttributeDescription(
         name="Lamp Life",
@@ -168,15 +189,23 @@ SENSORS = {
         unit=VOLT,
         value=lambda value: round(value, 1),
         device_class=sensor.DEVICE_CLASS_VOLTAGE,
+        state_class=sensor.STATE_CLASS_MEASUREMENT,
+    ),
+    ("sensor", "sensorOp"): BlockAttributeDescription(
+        name="Operation",
+        icon="mdi:cog-transfer",
+        value=lambda value: value,
+        extra_state_attributes=lambda block: {"self_test": block.selfTest},
     ),
 }
 
 REST_SENSORS = {
     "rssi": RestAttributeDescription(
         name="RSSI",
-        unit=SIGNAL_STRENGTH_DECIBELS,
+        unit=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         value=lambda status, _: status["wifi_sta"]["rssi"],
         device_class=sensor.DEVICE_CLASS_SIGNAL_STRENGTH,
+        state_class=sensor.STATE_CLASS_MEASUREMENT,
         default_enabled=False,
     ),
     "uptime": RestAttributeDescription(
@@ -203,7 +232,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         )
 
 
-class ShellySensor(ShellyBlockAttributeEntity):
+class ShellySensor(ShellyBlockAttributeEntity, SensorEntity):
     """Represent a shelly sensor."""
 
     @property
@@ -211,8 +240,18 @@ class ShellySensor(ShellyBlockAttributeEntity):
         """Return value of sensor."""
         return self.attribute_value
 
+    @property
+    def state_class(self):
+        """State class of sensor."""
+        return self.description.state_class
 
-class ShellyRestSensor(ShellyRestAttributeEntity):
+    @property
+    def unit_of_measurement(self):
+        """Return unit of sensor."""
+        return self._unit
+
+
+class ShellyRestSensor(ShellyRestAttributeEntity, SensorEntity):
     """Represent a shelly REST sensor."""
 
     @property
@@ -220,8 +259,18 @@ class ShellyRestSensor(ShellyRestAttributeEntity):
         """Return value of sensor."""
         return self.attribute_value
 
+    @property
+    def state_class(self):
+        """State class of sensor."""
+        return self.description.state_class
 
-class ShellySleepingSensor(ShellySleepingBlockAttributeEntity):
+    @property
+    def unit_of_measurement(self):
+        """Return unit of sensor."""
+        return self.description.unit
+
+
+class ShellySleepingSensor(ShellySleepingBlockAttributeEntity, SensorEntity):
     """Represent a shelly sleeping sensor."""
 
     @property
@@ -231,3 +280,13 @@ class ShellySleepingSensor(ShellySleepingBlockAttributeEntity):
             return self.attribute_value
 
         return self.last_state
+
+    @property
+    def state_class(self):
+        """State class of sensor."""
+        return self.description.state_class
+
+    @property
+    def unit_of_measurement(self):
+        """Return unit of sensor."""
+        return self._unit

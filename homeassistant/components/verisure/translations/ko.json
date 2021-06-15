@@ -1,0 +1,47 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\uacc4\uc815\uc774 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
+            "reauth_successful": "\uc7ac\uc778\uc99d\uc5d0 \uc131\uacf5\ud588\uc2b5\ub2c8\ub2e4"
+        },
+        "error": {
+            "invalid_auth": "\uc778\uc99d\uc774 \uc798\ubabb\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
+            "unknown": "\uc608\uc0c1\uce58 \ubabb\ud55c \uc624\ub958\uac00 \ubc1c\uc0dd\ud588\uc2b5\ub2c8\ub2e4"
+        },
+        "step": {
+            "installation": {
+                "data": {
+                    "giid": "\uc124\uce58"
+                },
+                "description": "Home Assistant\uac00 My Pages \uacc4\uc815\uc5d0\uc11c \uc5ec\ub7ec \uac00\uc9c0 Verisure \uc124\uce58\ub97c \ubc1c\uacac\ud588\uc2b5\ub2c8\ub2e4. Home Assistant\uc5d0 \ucd94\uac00\ud560 \uc124\uce58\ub97c \uc120\ud0dd\ud574\uc8fc\uc138\uc694."
+            },
+            "reauth_confirm": {
+                "data": {
+                    "description": "Verisure My Pages \uacc4\uc815\uc73c\ub85c \ub2e4\uc2dc \uc778\uc99d\ud574\uc8fc\uc138\uc694.",
+                    "email": "\uc774\uba54\uc77c",
+                    "password": "\ube44\ubc00\ubc88\ud638"
+                }
+            },
+            "user": {
+                "data": {
+                    "description": "Verisure My Pages \uacc4\uc815\uc73c\ub85c \ub85c\uadf8\uc778\ud558\uae30.",
+                    "email": "\uc774\uba54\uc77c",
+                    "password": "\ube44\ubc00\ubc88\ud638"
+                }
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "code_format_mismatch": "\uae30\ubcf8 PIN \ucf54\ub4dc\uac00 \ud544\uc694\ud55c \uc790\ub9bf\uc218\uc640 \uc77c\uce58\ud558\uc9c0 \uc54a\uc2b5\ub2c8\ub2e4"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "lock_code_digits": "\uc7a0\uae08\uc7a5\uce58\uc6a9 PIN \ucf54\ub4dc\uc758 \uc790\ub9bf\uc218",
+                    "lock_default_code": "\uc7a0\uae08\uc7a5\uce58\uc5d0 \ub300\ud55c \uae30\ubcf8 PIN \ucf54\ub4dc (\uc81c\uacf5\ub41c PIN\uc774 \uc5c6\ub294 \uacbd\uc6b0 \uc0ac\uc6a9)"
+                }
+            }
+        }
+    }
+}

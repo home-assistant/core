@@ -37,7 +37,7 @@ class PhilipsTVRemote(RemoteEntity):
         coordinator: PhilipsTVDataUpdateCoordinator,
         system: SystemType,
         unique_id: str,
-    ):
+    ) -> None:
         """Initialize the Philips TV."""
         self._tv = coordinator.api
         self._coordinator = coordinator
@@ -52,10 +52,9 @@ class PhilipsTVRemote(RemoteEntity):
     @property
     def is_on(self):
         """Return true if device is on."""
-        if self._tv.on:
-            if self._tv.powerstate == "On" or self._tv.powerstate is None:
-                return True
-        return False
+        return bool(
+            self._tv.on and (self._tv.powerstate == "On" or self._tv.powerstate is None)
+        )
 
     @property
     def should_poll(self):

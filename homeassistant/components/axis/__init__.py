@@ -13,11 +13,6 @@ from .device import AxisNetworkDevice
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass, config):
-    """Old way to set up Axis devices."""
-    return True
-
-
 async def async_setup_entry(hass, config_entry):
     """Set up the Axis component."""
     hass.data.setdefault(AXIS_DOMAIN, {})
@@ -31,7 +26,9 @@ async def async_setup_entry(hass, config_entry):
 
     await device.async_update_device_registry()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, device.shutdown)
+    config_entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, device.shutdown)
+    )
 
     return True
 

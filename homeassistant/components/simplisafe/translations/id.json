@@ -1,0 +1,45 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Akun SimpliSafe ini sudah digunakan.",
+            "reauth_successful": "Autentikasi ulang berhasil"
+        },
+        "error": {
+            "identifier_exists": "Akun sudah terdaftar",
+            "invalid_auth": "Autentikasi tidak valid",
+            "still_awaiting_mfa": "Masih menunggu pengeklikan dari email MFA",
+            "unknown": "Kesalahan yang tidak diharapkan"
+        },
+        "step": {
+            "mfa": {
+                "description": "Periksa email Anda untuk mendapatkan tautan dari SimpliSafe. Setelah memverifikasi tautan, kembali ke sini untuk menyelesaikan instalasi integrasi.",
+                "title": "Autentikasi Multi-Faktor SimpliSafe"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Kata Sandi"
+                },
+                "description": "Token akses Anda telah kedaluwarsa atau dicabut. Masukkan kata sandi Anda untuk menautkan kembali akun Anda.",
+                "title": "Autentikasi Ulang Integrasi"
+            },
+            "user": {
+                "data": {
+                    "code": "Kode (digunakan di antarmuka Home Assistant)",
+                    "password": "Kata Sandi",
+                    "username": "Email"
+                },
+                "title": "Isi informasi Anda."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "code": "Kode (digunakan di antarmuka Home Assistant)"
+                },
+                "title": "Konfigurasikan SimpliSafe"
+            }
+        }
+    }
+}

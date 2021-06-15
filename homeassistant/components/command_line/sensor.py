@@ -6,7 +6,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_COMMAND,
     CONF_NAME,
@@ -17,7 +17,6 @@ from homeassistant.const import (
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import template
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.reload import setup_reload_service
 
 from . import check_output_or_log
@@ -63,7 +62,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     )
 
 
-class CommandSensor(Entity):
+class CommandSensor(SensorEntity):
     """Representation of a sensor that is using shell commands."""
 
     def __init__(

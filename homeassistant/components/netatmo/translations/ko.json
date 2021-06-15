@@ -4,7 +4,7 @@
             "authorize_url_timeout": "\uc778\uc99d URL \uc0dd\uc131 \uc2dc\uac04\uc774 \ucd08\uacfc\ub418\uc5c8\uc2b5\ub2c8\ub2e4.",
             "missing_configuration": "\uad6c\uc131\uc694\uc18c\uac00 \uad6c\uc131\ub418\uc9c0 \uc54a\uc558\uc2b5\ub2c8\ub2e4. \uc124\uba85\uc11c\ub97c \ucc38\uace0\ud574\uc8fc\uc138\uc694.",
             "no_url_available": "\uc0ac\uc6a9 \uac00\ub2a5\ud55c URL\uc774 \uc5c6\uc2b5\ub2c8\ub2e4. \uc774 \uc624\ub958\uc5d0 \ub300\ud55c \uc790\uc138\ud55c \ub0b4\uc6a9\uc740 [\ub3c4\uc6c0\ub9d0 \uc139\uc158]({docs_url}) \uc744(\ub97c) \ucc38\uc870\ud574\uc8fc\uc138\uc694.",
-            "single_instance_allowed": "\uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4. \ud558\ub098\uc758 \uad6c\uc131\ub9cc \uac00\ub2a5\ud569\ub2c8\ub2e4."
+            "single_instance_allowed": "\uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4. \ud558\ub098\uc758 \uc778\uc2a4\ud134\uc2a4\ub9cc \uad6c\uc131\ud560 \uc218 \uc788\uc2b5\ub2c8\ub2e4."
         },
         "create_entry": {
             "default": "\uc131\uacf5\uc801\uc73c\ub85c \uc778\uc99d\ub418\uc5c8\uc2b5\ub2c8\ub2e4"
@@ -13,6 +13,28 @@
             "pick_implementation": {
                 "title": "\uc778\uc99d \ubc29\ubc95 \uc120\ud0dd\ud558\uae30"
             }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "away": "\uc678\ucd9c",
+            "hg": "\ub3d9\ud30c \ubc29\uc9c0",
+            "schedule": "\uc77c\uc815"
+        },
+        "trigger_type": {
+            "alarm_started": "{entity_name}\uc774(\uac00) \uc54c\ub78c\uc744 \uac10\uc9c0\ud588\uc744 \ub54c",
+            "animal": "{entity_name}\uc774(\uac00) \ub3d9\ubb3c\uc744 \uac10\uc9c0\ud588\uc744 \ub54c",
+            "cancel_set_point": "{entity_name}\uc774(\uac00) \uc77c\uc815\uc744 \uc7ac\uac1c\ud560 \ub54c",
+            "human": "{entity_name}\uc774(\uac00) \uc0ac\ub78c\uc744 \uac10\uc9c0\ud588\uc744 \ub54c",
+            "movement": "{entity_name}\uc774(\uac00) \uc6c0\uc9c1\uc784\uc744 \uac10\uc9c0\ud588\uc744 \ub54c",
+            "outdoor": "{entity_name}\uc774(\uac00) \uc2e4\uc678\uc758 \uc774\ubca4\ud2b8\ub97c \uac10\uc9c0\ud588\uc744 \ub54c",
+            "person": "{entity_name}\uc774(\uac00) \uc0ac\ub78c\uc744 \uac10\uc9c0\ud588\uc744 \ub54c",
+            "person_away": "{entity_name}\uc774(\uac00) \uc0ac\ub78c\uc774 \ub5a0\ub0ac\uc74c\uc744 \uac10\uc9c0\ud588\uc744 \ub54c",
+            "set_point": "{entity_name}\uc758 \ubaa9\ud45c \uc628\ub3c4\uac00 \uc218\ub3d9\uc73c\ub85c \uc124\uc815\ub418\uc5c8\uc744 \ub54c",
+            "therm_mode": "{entity_name}\uc774(\uac00) {subtype}(\uc73c)\ub85c \uc804\ud658\ub418\uc5c8\uc744 \ub54c",
+            "turned_off": "{entity_name}\uc774(\uac00) \uaebc\uc84c\uc744 \ub54c",
+            "turned_on": "{entity_name}\uc774(\uac00) \ucf1c\uc84c\uc744 \ub54c",
+            "vehicle": "{entity_name}\uc774(\uac00) \ucc28\ub7c9\uc744 \uac10\uc9c0\ud588\uc744 \ub54c"
         }
     },
     "options": {
@@ -27,16 +49,16 @@
                     "mode": "\uacc4\uc0b0\ud558\uae30",
                     "show_on_map": "\uc9c0\ub3c4\uc5d0 \ud45c\uc2dc\ud558\uae30"
                 },
-                "description": "\uc9c0\uc5ed\uc5d0 \ub300\ud55c \uacf5\uc6a9 \ub0a0\uc528 \uc13c\uc11c\ub97c \uad6c\uc131\ud569\ub2c8\ub2e4.",
-                "title": "Netamo \uacf5\uc6a9 \ub0a0\uc528 \uc13c\uc11c"
+                "description": "\uc9c0\uc5ed\uc5d0 \ub300\ud55c \uacf5\uacf5 \uae30\uc0c1 \uc13c\uc11c\ub97c \uad6c\uc131\ud569\ub2c8\ub2e4.",
+                "title": "Netamo \uacf5\uacf5 \uae30\uc0c1 \uc13c\uc11c"
             },
             "public_weather_areas": {
                 "data": {
                     "new_area": "\uc9c0\uc5ed \uc774\ub984",
                     "weather_areas": "\ub0a0\uc528 \uc9c0\uc5ed"
                 },
-                "description": "\uacf5\uc6a9 \ub0a0\uc528 \uc13c\uc11c\ub97c \uad6c\uc131\ud569\ub2c8\ub2e4.",
-                "title": "Netamo \uacf5\uc6a9 \ub0a0\uc528 \uc13c\uc11c"
+                "description": "\uacf5\uacf5 \uae30\uc0c1 \uc13c\uc11c\ub97c \uad6c\uc131\ud569\ub2c8\ub2e4.",
+                "title": "Netamo \uacf5\uacf5 \uae30\uc0c1 \uc13c\uc11c"
             }
         }
     }

@@ -1,8 +1,8 @@
 """Support for Roku."""
-import asyncio
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
-from typing import Any, Dict
 
 from rokuecp import Roku, RokuConnectionError, RokuError
 from rokuecp.models import Device
@@ -10,26 +10,14 @@ from rokuecp.models import Device
 from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
 from homeassistant.components.remote import DOMAIN as REMOTE_DOMAIN
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_NAME, CONF_HOST
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.const import CONF_HOST
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.typing import HomeAssistantType
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-    UpdateFailed,
-)
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.dt import utcnow
 
-from .const import (
-    ATTR_IDENTIFIERS,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    ATTR_SOFTWARE_VERSION,
-    ATTR_SUGGESTED_AREA,
-    DOMAIN,
-)
+from .const import DOMAIN
 
 CONFIG_SCHEMA = cv.deprecated(DOMAIN)
 
@@ -38,44 +26,26 @@ SCAN_INTERVAL = timedelta(seconds=15)
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass: HomeAssistantType, config: Dict) -> bool:
-    """Set up the Roku integration."""
-    hass.data.setdefault(DOMAIN, {})
-    return True
-
-
-async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Roku from a config entry."""
-    coordinator = RokuDataUpdateCoordinator(hass, host=entry.data[CONF_HOST])
-    await coordinator.async_refresh()
+    hass.data.setdefault(DOMAIN, {})
+    coordinator = hass.data[DOMAIN].get(entry.entry_id)
+    if not coordinator:
+        coordinator = RokuDataUpdateCoordinator(hass, host=entry.data[CONF_HOST])
+        hass.data[DOMAIN][entry.entry_id] = coordinator
 
-    if not coordinator.last_update_success:
-        raise ConfigEntryNotReady
+    await coordinator.async_config_entry_first_refresh()
 
-    hass.data[DOMAIN][entry.entry_id] = coordinator
-
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, platform)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, platform)
-                for platform in PLATFORMS
-            ]
-        )
-    )
-
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
-
     return unload_ok
 
 
@@ -100,10 +70,10 @@ class RokuDataUpdateCoordinator(DataUpdateCoordinator[Device]):
 
     def __init__(
         self,
-        hass: HomeAssistantType,
+        hass: HomeAssistant,
         *,
         host: str,
-    ):
+    ) -> None:
         """Initialize global Roku data updater."""
         self.roku = Roku(host=host, session=async_get_clientsession(hass))
 
@@ -132,35 +102,3 @@ class RokuDataUpdateCoordinator(DataUpdateCoordinator[Device]):
             return data
         except RokuError as error:
             raise UpdateFailed(f"Invalid response from API: {error}") from error
-
-
-class RokuEntity(CoordinatorEntity):
-    """Defines a base Roku entity."""
-
-    def __init__(
-        self, *, device_id: str, name: str, coordinator: RokuDataUpdateCoordinator
-    ) -> None:
-        """Initialize the Roku entity."""
-        super().__init__(coordinator)
-        self._device_id = device_id
-        self._name = name
-
-    @property
-    def name(self) -> str:
-        """Return the name of the entity."""
-        return self._name
-
-    @property
-    def device_info(self) -> Dict[str, Any]:
-        """Return device information about this Roku device."""
-        if self._device_id is None:
-            return None
-
-        return {
-            ATTR_IDENTIFIERS: {(DOMAIN, self._device_id)},
-            ATTR_NAME: self.name,
-            ATTR_MANUFACTURER: self.coordinator.data.info.brand,
-            ATTR_MODEL: self.coordinator.data.info.model_name,
-            ATTR_SOFTWARE_VERSION: self.coordinator.data.info.version,
-            ATTR_SUGGESTED_AREA: self.coordinator.data.info.device_location,
-        }

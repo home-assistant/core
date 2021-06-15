@@ -11,6 +11,7 @@ from decimal import Decimal
 from itertools import chain, repeat
 from unittest.mock import DEFAULT, MagicMock
 
+from homeassistant import config_entries
 from homeassistant.components.dsmr.const import DOMAIN
 from homeassistant.components.dsmr.sensor import DerivativeDSMREntity
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
@@ -39,7 +40,7 @@ async def test_setup_platform(hass, dsmr_connection_fixture):
 
     serial_data = {"serial_id": "1234", "serial_id_gas": "5678"}
 
-    with patch("homeassistant.components.dsmr.async_setup", return_value=True), patch(
+    with patch(
         "homeassistant.components.dsmr.async_setup_entry", return_value=True
     ), patch(
         "homeassistant.components.dsmr.config_flow._validate_dsmr_connection",
@@ -59,7 +60,7 @@ async def test_setup_platform(hass, dsmr_connection_fixture):
 
     entry = conf_entries[0]
 
-    assert entry.state == "loaded"
+    assert entry.state == config_entries.ConfigEntryState.LOADED
     assert entry.data == {**entry_data, **serial_data}
 
 
@@ -625,4 +626,4 @@ async def test_reconnect(hass, dsmr_connection_fixture):
 
     await hass.config_entries.async_unload(mock_entry.entry_id)
 
-    assert mock_entry.state == "not_loaded"
+    assert mock_entry.state == config_entries.ConfigEntryState.NOT_LOADED

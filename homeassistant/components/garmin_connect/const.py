@@ -1,4 +1,6 @@
 """Constants for the Garmin Connect integration."""
+from datetime import timedelta
+
 from homeassistant.const import (
     DEVICE_CLASS_TIMESTAMP,
     LENGTH_METERS,
@@ -8,7 +10,8 @@ from homeassistant.const import (
 )
 
 DOMAIN = "garmin_connect"
-ATTRIBUTION = "Data provided by garmin.com"
+ATTRIBUTION = "connect.garmin.com"
+DEFAULT_UPDATE_INTERVAL = timedelta(minutes=10)
 
 GARMIN_ENTITY_LIST = {
     "totalSteps": ["Total Steps", "steps", "mdi:walk", None, True],
@@ -42,14 +45,14 @@ GARMIN_ENTITY_LIST = {
     ],
     "wellnessStartTimeLocal": [
         "Wellness Start Time",
-        "",
+        None,
         "mdi:clock",
         DEVICE_CLASS_TIMESTAMP,
         False,
     ],
     "wellnessEndTimeLocal": [
         "Wellness End Time",
-        "",
+        None,
         "mdi:clock",
         DEVICE_CLASS_TIMESTAMP,
         False,
@@ -299,7 +302,7 @@ GARMIN_ENTITY_LIST = {
     "latestSpo2": ["Latest SPO2", PERCENTAGE, "mdi:diabetes", None, True],
     "latestSpo2ReadingTimeLocal": [
         "Latest SPO2 Time",
-        "",
+        None,
         "mdi:diabetes",
         DEVICE_CLASS_TIMESTAMP,
         False,
@@ -334,7 +337,7 @@ GARMIN_ENTITY_LIST = {
     ],
     "latestRespirationTimeGMT": [
         "Latest Respiration Update",
-        "",
+        None,
         "mdi:progress-clock",
         DEVICE_CLASS_TIMESTAMP,
         False,
@@ -348,5 +351,5 @@ GARMIN_ENTITY_LIST = {
     "physiqueRating": ["Physique Rating", "", "mdi:numeric", None, False],
     "visceralFat": ["Visceral Fat", "", "mdi:food", None, False],
     "metabolicAge": ["Metabolic Age", "", "mdi:calendar-heart", None, False],
-    "nextAlarm": ["Next Alarm Time", "", "mdi:alarm", DEVICE_CLASS_TIMESTAMP, True],
+    "nextAlarm": ["Next Alarm Time", None, "mdi:alarm", DEVICE_CLASS_TIMESTAMP, True],
 }

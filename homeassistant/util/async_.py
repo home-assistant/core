@@ -1,12 +1,15 @@
 """Asyncio utilities."""
+from __future__ import annotations
+
 from asyncio import Semaphore, coroutines, ensure_future, gather, get_running_loop
 from asyncio.events import AbstractEventLoop
+from collections.abc import Awaitable, Coroutine
 import concurrent.futures
 import functools
 import logging
 import threading
 from traceback import extract_stack
-from typing import Any, Awaitable, Callable, Coroutine, TypeVar
+from typing import Any, Callable, TypeVar
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,7 +41,7 @@ def fire_coroutine_threadsafe(coro: Coroutine, loop: AbstractEventLoop) -> None:
 
 def run_callback_threadsafe(
     loop: AbstractEventLoop, callback: Callable[..., T], *args: Any
-) -> "concurrent.futures.Future[T]":
+) -> concurrent.futures.Future[T]:  # pylint: disable=unsubscriptable-object
     """Submit a callback object to a given event loop.
 
     Return a concurrent.futures.Future to access the result.
@@ -133,6 +136,10 @@ def check_loop() -> None:
         found_frame.filename[index:],
         found_frame.lineno,
         found_frame.line.strip(),
+    )
+    raise RuntimeError(
+        f"I/O must be done in the executor; Use `await hass.async_add_executor_job()` "
+        f"at {found_frame.filename[index:]}, line {found_frame.lineno}: {found_frame.line.strip()}"
     )
 
 

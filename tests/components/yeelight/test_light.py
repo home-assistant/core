@@ -353,11 +353,7 @@ async def test_device_types(hass: HomeAssistant):
         entity_id=ENTITY_LIGHT,
     ):
         config_entry = MockConfigEntry(
-            domain=DOMAIN,
-            data={
-                **CONFIG_ENTRY_DATA,
-                CONF_NIGHTLIGHT_SWITCH: False,
-            },
+            domain=DOMAIN, data={**CONFIG_ENTRY_DATA, CONF_NIGHTLIGHT_SWITCH: False}
         )
         config_entry.add_to_hass(hass)
 
@@ -383,11 +379,7 @@ async def test_device_types(hass: HomeAssistant):
         if nightlight_properties is None:
             return
         config_entry = MockConfigEntry(
-            domain=DOMAIN,
-            data={
-                **CONFIG_ENTRY_DATA,
-                CONF_NIGHTLIGHT_SWITCH: True,
-            },
+            domain=DOMAIN, data={**CONFIG_ENTRY_DATA, CONF_NIGHTLIGHT_SWITCH: True}
         )
         config_entry.add_to_hass(hass)
         await _async_setup(config_entry)
@@ -430,6 +422,8 @@ async def test_device_types(hass: HomeAssistant):
             "effect_list": YEELIGHT_MONO_EFFECT_LIST,
             "supported_features": SUPPORT_YEELIGHT,
             "brightness": bright,
+            "color_mode": "brightness",
+            "supported_color_modes": ["brightness"],
         },
     )
 
@@ -441,6 +435,8 @@ async def test_device_types(hass: HomeAssistant):
             "effect_list": YEELIGHT_MONO_EFFECT_LIST,
             "supported_features": SUPPORT_YEELIGHT,
             "brightness": bright,
+            "color_mode": "brightness",
+            "supported_color_modes": ["brightness"],
         },
     )
 
@@ -463,8 +459,14 @@ async def test_device_types(hass: HomeAssistant):
             "hs_color": hs_color,
             "rgb_color": rgb_color,
             "xy_color": xy_color,
+            "color_mode": "hs",
+            "supported_color_modes": ["color_temp", "hs"],
         },
-        {"supported_features": 0},
+        {
+            "supported_features": 0,
+            "color_mode": "onoff",
+            "supported_color_modes": ["onoff"],
+        },
     )
 
     # WhiteTemp
@@ -483,11 +485,15 @@ async def test_device_types(hass: HomeAssistant):
             ),
             "brightness": current_brightness,
             "color_temp": ct,
+            "color_mode": "color_temp",
+            "supported_color_modes": ["color_temp"],
         },
         {
             "effect_list": YEELIGHT_TEMP_ONLY_EFFECT_LIST,
             "supported_features": SUPPORT_YEELIGHT,
             "brightness": nl_br,
+            "color_mode": "brightness",
+            "supported_color_modes": ["brightness"],
         },
     )
 
@@ -512,11 +518,15 @@ async def test_device_types(hass: HomeAssistant):
             ),
             "brightness": current_brightness,
             "color_temp": ct,
+            "color_mode": "color_temp",
+            "supported_color_modes": ["color_temp"],
         },
         {
             "effect_list": YEELIGHT_TEMP_ONLY_EFFECT_LIST,
             "supported_features": SUPPORT_YEELIGHT,
             "brightness": nl_br,
+            "color_mode": "brightness",
+            "supported_color_modes": ["brightness"],
         },
     )
     await _async_test(
@@ -532,6 +542,8 @@ async def test_device_types(hass: HomeAssistant):
             "hs_color": bg_hs_color,
             "rgb_color": bg_rgb_color,
             "xy_color": bg_xy_color,
+            "color_mode": "hs",
+            "supported_color_modes": ["color_temp", "hs"],
         },
         name=f"{UNIQUE_NAME} ambilight",
         entity_id=f"{ENTITY_LIGHT}_ambilight",
@@ -557,16 +569,13 @@ async def test_effects(hass: HomeAssistant):
                                 {YEELIGHT_SLEEP_TRANSACTION: [800]},
                             ],
                         },
-                    },
-                ],
-            },
+                    }
+                ]
+            }
         },
     )
 
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=CONFIG_ENTRY_DATA,
-    )
+    config_entry = MockConfigEntry(domain=DOMAIN, data=CONFIG_ENTRY_DATA)
     config_entry.add_to_hass(hass)
 
     mocked_bulb = _mocked_bulb()

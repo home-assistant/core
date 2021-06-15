@@ -1,6 +1,7 @@
 """Provides a sensor to track various status aspects of a UPS."""
 import logging
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import ATTR_STATE, CONF_RESOURCES, STATE_UNKNOWN
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -76,7 +77,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities, True)
 
 
-class NUTSensor(CoordinatorEntity):
+class NUTSensor(CoordinatorEntity, SensorEntity):
     """Representation of a sensor entity for NUT status values."""
 
     def __init__(
@@ -97,10 +98,13 @@ class NUTSensor(CoordinatorEntity):
         self._firmware = firmware
         self._model = model
         self._device_name = name
-        self._name = f"{name} {SENSOR_TYPES[sensor_type][SENSOR_NAME]}"
-        self._unit = SENSOR_TYPES[sensor_type][SENSOR_UNIT]
         self._data = data
         self._unique_id = unique_id
+
+        self._attr_device_class = SENSOR_TYPES[self._type][SENSOR_DEVICE_CLASS]
+        self._attr_icon = SENSOR_TYPES[self._type][SENSOR_ICON]
+        self._attr_name = f"{name} {SENSOR_TYPES[sensor_type][SENSOR_NAME]}"
+        self._attr_unit_of_measurement = SENSOR_TYPES[sensor_type][SENSOR_UNIT]
 
     @property
     def device_info(self):
@@ -127,25 +131,6 @@ class NUTSensor(CoordinatorEntity):
         return f"{self._unique_id}_{self._type}"
 
     @property
-    def name(self):
-        """Return the name of the UPS sensor."""
-        return self._name
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        if SENSOR_TYPES[self._type][SENSOR_DEVICE_CLASS]:
-            # The UI will assign an icon
-            # if it has a class
-            return None
-        return SENSOR_TYPES[self._type][SENSOR_ICON]
-
-    @property
-    def device_class(self):
-        """Device class of the sensor."""
-        return SENSOR_TYPES[self._type][SENSOR_DEVICE_CLASS]
-
-    @property
     def state(self):
         """Return entity state from ups."""
         if not self._data.status:
@@ -153,11 +138,6 @@ class NUTSensor(CoordinatorEntity):
         if self._type == KEY_STATUS_DISPLAY:
             return _format_display_state(self._data.status)
         return self._data.status.get(self._type)
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of this entity, if any."""
-        return self._unit
 
     @property
     def extra_state_attributes(self):

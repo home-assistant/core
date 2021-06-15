@@ -338,3 +338,78 @@ async def test_reload_fails_to_read_configuration(hass):
 
 def _get_fixtures_base_path():
     return path.dirname(path.dirname(path.dirname(__file__)))
+
+
+@respx.mock
+async def test_multiple_rest_endpoints(hass):
+    """Test multiple rest endpoints."""
+
+    respx.get("http://date.jsontest.com").respond(
+        status_code=200,
+        json={
+            "date": "03-17-2021",
+            "milliseconds_since_epoch": 1616008268573,
+            "time": "07:11:08 PM",
+        },
+    )
+
+    respx.get("http://time.jsontest.com").respond(
+        status_code=200,
+        json={
+            "date": "03-17-2021",
+            "milliseconds_since_epoch": 1616008299665,
+            "time": "07:11:39 PM",
+        },
+    )
+    respx.get("http://localhost").respond(
+        status_code=200,
+        json={
+            "value": "1",
+        },
+    )
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: [
+                {
+                    "resource": "http://date.jsontest.com",
+                    "sensor": [
+                        {
+                            "name": "JSON Date",
+                            "value_template": "{{ value_json.date }}",
+                        },
+                        {
+                            "name": "JSON Date Time",
+                            "value_template": "{{ value_json.time }}",
+                        },
+                    ],
+                },
+                {
+                    "resource": "http://time.jsontest.com",
+                    "sensor": [
+                        {
+                            "name": "JSON Time",
+                            "value_template": "{{ value_json.time }}",
+                        },
+                    ],
+                },
+                {
+                    "resource": "http://localhost",
+                    "binary_sensor": [
+                        {
+                            "name": "Binary Sensor",
+                            "value_template": "{{ value_json.value }}",
+                        },
+                    ],
+                },
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all()) == 4
+
+    assert hass.states.get("sensor.json_date").state == "03-17-2021"
+    assert hass.states.get("sensor.json_date_time").state == "07:11:08 PM"
+    assert hass.states.get("sensor.json_time").state == "07:11:39 PM"
+    assert hass.states.get("binary_sensor.binary_sensor").state == "on"

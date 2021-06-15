@@ -10,7 +10,7 @@ from homeassistant.helpers import config_validation as cv, template
 CONF_EVENT_TYPE = "event_type"
 CONF_EVENT_CONTEXT = "context"
 
-TRIGGER_SCHEMA = vol.Schema(
+TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_PLATFORM): "event",
         vol.Required(CONF_EVENT_TYPE): vol.All(cv.ensure_list, [cv.template]),
@@ -31,6 +31,7 @@ async def async_attach_trigger(
     hass, config, action, automation_info, *, platform_type="event"
 ):
     """Listen for events based on configuration."""
+    trigger_data = automation_info.get("trigger_data", {}) if automation_info else {}
     variables = None
     if automation_info:
         variables = automation_info.get("variables")
@@ -92,6 +93,7 @@ async def async_attach_trigger(
             job,
             {
                 "trigger": {
+                    **trigger_data,
                     "platform": platform_type,
                     "event": event,
                     "description": f"event '{event.event_type}'",

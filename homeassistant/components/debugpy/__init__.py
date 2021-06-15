@@ -1,8 +1,9 @@
 """The Remote Python Debugger integration."""
+from __future__ import annotations
+
 from asyncio import Event
 import logging
 from threading import Thread
-from typing import Optional
 
 import debugpy
 import voluptuous as vol
@@ -40,7 +41,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     conf = config[DOMAIN]
 
     async def debug_start(
-        call: Optional[ServiceCall] = None, *, wait: bool = True
+        call: ServiceCall | None = None, *, wait: bool = True
     ) -> None:
         """Start the debugger."""
         debugpy.listen((conf[CONF_HOST], conf[CONF_PORT]))

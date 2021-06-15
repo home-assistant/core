@@ -6,7 +6,7 @@ import pybbox
 import requests
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONF_MONITORED_VARIABLES,
@@ -15,7 +15,6 @@ from homeassistant.const import (
     DEVICE_CLASS_TIMESTAMP,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 from homeassistant.util.dt import utcnow
 
@@ -86,7 +85,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(sensors, True)
 
 
-class BboxUptimeSensor(Entity):
+class BboxUptimeSensor(SensorEntity):
     """Bbox uptime sensor."""
 
     def __init__(self, bbox_data, sensor_type, name):
@@ -133,7 +132,7 @@ class BboxUptimeSensor(Entity):
         self._state = uptime.replace(microsecond=0).isoformat()
 
 
-class BboxSensor(Entity):
+class BboxSensor(SensorEntity):
     """Implementation of a Bbox sensor."""
 
     def __init__(self, bbox_data, sensor_type, name):
