@@ -68,7 +68,7 @@ class Forecast(TypedDict, total=False):
     precipitation_probability: int | None
     precipitation: float | None
     pressure: float | None
-    temperature: float
+    temperature: float | None
     templow: float | None
     wind_bearing: float | str | None
     wind_speed: float | None
@@ -97,7 +97,7 @@ class WeatherEntity(Entity):
     """ABC for weather data."""
 
     _attr_attribution: str | None = None
-    _attr_condition: str
+    _attr_condition: str | None
     _attr_forecast: list[Forecast] | None = None
     _attr_humidity: float | None = None
     _attr_ozone: float | None = None
@@ -105,13 +105,13 @@ class WeatherEntity(Entity):
     _attr_pressure: float | None = None
     _attr_state: None = None
     _attr_temperature_unit: str
-    _attr_temperature: float
+    _attr_temperature: float | None
     _attr_visibility: float | None = None
     _attr_wind_bearing: float | str | None = None
     _attr_wind_speed: float | None = None
 
     @property
-    def temperature(self) -> float:
+    def temperature(self) -> float | None:
         """Return the platform temperature."""
         return self._attr_temperature
 
@@ -234,11 +234,11 @@ class WeatherEntity(Entity):
 
     @property
     @final
-    def state(self):
+    def state(self) -> str | None:
         """Return the current state."""
         return self.condition
 
     @property
-    def condition(self) -> str:
+    def condition(self) -> str | None:
         """Return the current condition."""
         return self._attr_condition
