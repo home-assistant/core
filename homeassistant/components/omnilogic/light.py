@@ -107,7 +107,7 @@ class OmniLogicLightControl(OmniLogicEntity, LightEntity):
         self._last_action = 0
         self._state_delay = 60
 
-        return None
+        return None  # pylint: disable=useless-return
 
     @property
     def is_on(self):
