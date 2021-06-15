@@ -28,10 +28,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     undo_listener = entry.add_update_listener(update_listener)
 
-    hass.data[DOMAIN][entry.entry_id] = {
-        COORDINATOR: coordinator,
-        UNDO_UPDATE_LISTENER: undo_listener,
-    }
+    hass.data[DOMAIN][entry.entry_id] = coordinator
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS))
 
