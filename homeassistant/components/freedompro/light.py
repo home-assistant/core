@@ -42,30 +42,20 @@ class Device(CoordinatorEntity, LightEntity):
         self._api_key = api_key
         self._attr_name = device["name"]
         self._attr_unique_id = device["uid"]
-        self._attr_type = device["type"]
-        self._attr_characteristics = device["characteristics"]
+        self._type = device["type"]
+        self._characteristics = device["characteristics"]
         self._on = False
         self._brightness = 0
         self._saturation = 0
         self._hue = 0
 
     @property
-    def name(self):
-        """Return the name of the Freedompro light."""
-        return self._attr_name
-
-    @property
-    def unique_id(self):
-        """Return a unique identifier for this light."""
-        return self._attr_unique_id
-
-    @property
     def supported_features(self):
         """Supported features for lock."""
         support = 0
-        if "brightness" in self._attr_characteristics:
+        if "brightness" in self._characteristics:
             support |= SUPPORT_BRIGHTNESS
-        if "hue" in self._attr_characteristics:
+        if "hue" in self._characteristics:
             support |= SUPPORT_COLOR
         return support
 
@@ -76,7 +66,7 @@ class Device(CoordinatorEntity, LightEntity):
             (
                 device
                 for device in self.coordinator.data
-                if device.get("uid") == self._uid
+                if device.get("uid") == self._attr_unique_id
             ),
             None,
         )
@@ -93,7 +83,7 @@ class Device(CoordinatorEntity, LightEntity):
             (
                 device
                 for device in self.coordinator.data
-                if device.get("uid") == self._uid
+                if device.get("uid") == self._attr_unique_id
             ),
             None,
         )
@@ -110,7 +100,7 @@ class Device(CoordinatorEntity, LightEntity):
             (
                 device
                 for device in self.coordinator.data
-                if device.get("uid") == self._uid
+                if device.get("uid") == self._attr_unique_id
             ),
             None,
         )
@@ -138,7 +128,7 @@ class Device(CoordinatorEntity, LightEntity):
         await put_state(
             self._session,
             self._api_key,
-            self._uid,
+            self._attr_unique_id,
             payload,
         )
         await self.coordinator.async_request_refresh()
@@ -151,7 +141,7 @@ class Device(CoordinatorEntity, LightEntity):
         await put_state(
             self._session,
             self._api_key,
-            self._uid,
+            self._attr_unique_id,
             payload,
         )
         await self.coordinator.async_request_refresh()
