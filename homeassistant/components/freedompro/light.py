@@ -7,11 +7,12 @@ from pyfreedompro import put_state
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_HS_COLOR,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR,
+    COLOR_MODE_BRIGHTNESS,
+    COLOR_MODE_HS,
     LightEntity,
 )
 from homeassistant.const import CONF_API_KEY
+from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -52,14 +53,29 @@ class Device(CoordinatorEntity, LightEntity):
         """Supported features for lock."""
         support = 0
         if "brightness" in self._characteristics:
-            support |= SUPPORT_BRIGHTNESS
+            support |= COLOR_MODE_BRIGHTNESS
         if "hue" in self._characteristics:
-            support |= SUPPORT_COLOR
+            support |= COLOR_MODE_HS
         return support
 
     @property
     def is_on(self):
         """Return the status of the light."""
+        return self._on
+
+    @property
+    def brightness(self):
+        """Return the status of the light brightness."""
+        return math.floor(self._brightness / 100 * 255)
+
+    @property
+    def hs_color(self):
+        """Return the status of the light hs_color."""
+        return [self._hue, self._saturation]
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
         device = next(
             (
                 device
@@ -72,43 +88,13 @@ class Device(CoordinatorEntity, LightEntity):
             state = device["state"]
             if "on" in state:
                 self._on = state["on"]
-        return self._on
-
-    @property
-    def brightness(self):
-        """Return the status of the light brightness."""
-        device = next(
-            (
-                device
-                for device in self.coordinator.data
-                if device["uid"] == self._attr_unique_id
-            ),
-            None,
-        )
-        if device is not None and "state" in device:
-            state = device["state"]
             if "brightness" in state:
                 self._brightness = state["brightness"]
-        return math.floor(self._brightness / 100 * 255)
-
-    @property
-    def hs_color(self):
-        """Return the status of the light hs_color."""
-        device = next(
-            (
-                device
-                for device in self.coordinator.data
-                if device["uid"] == self._attr_unique_id
-            ),
-            None,
-        )
-        if device is not None and "state" in device:
-            state = device["state"]
             if "hue" in state:
                 self._hue = state["hue"]
             if "saturation" in state:
                 self._saturation = state["saturation"]
-        return [self._hue, self._saturation]
+        super()._handle_coordinator_update()
 
     async def async_turn_on(self, **kwargs):
         """Async function to set on to light."""
