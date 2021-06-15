@@ -102,7 +102,7 @@ class Device(CoordinatorEntity, LightEntity):
         payload = {"on": True}
         if ATTR_BRIGHTNESS in kwargs:
             self._brightness = math.floor(kwargs[ATTR_BRIGHTNESS] / 255 * 100)
-            payload["brightness"] = self._brightness
+            payload["brightness"] = self.brightness
         if ATTR_HS_COLOR in kwargs:
             self._saturation = math.floor(kwargs[ATTR_HS_COLOR][1])
             self._hue = math.floor(kwargs[ATTR_HS_COLOR][0])
