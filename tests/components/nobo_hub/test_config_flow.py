@@ -213,7 +213,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     assert result["step_id"] == "init"
     assert result["description_placeholders"]["zones"] == "1: Kitchen\r2: Bedrooms\r"
     schema = result["data_schema"].schema
-    profiles = {"", "Off", "Kitchen On", "Bedrooms On"}
+    profiles = {"<None>", "Off", "Kitchen On", "Bedrooms On"}
     assert set(schema[CONF_COMMAND_OFF].schema.container) == profiles
     assert set(schema[CONF_COMMAND_ON + "_zone_1"].schema.container) == profiles
     assert set(schema[CONF_COMMAND_ON + "_zone_2"].schema.container) == profiles
@@ -232,4 +232,21 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     assert result["data"][CONF_COMMAND_ON] == {
         "Kitchen": "Kitchen On",
         "Bedrooms": "Bedrooms On",
+    }
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_COMMAND_OFF: "<None>",
+            CONF_COMMAND_ON + "_zone_1": "<None>",
+            CONF_COMMAND_ON + "_zone_2": "<None>",
+        },
+    )
+
+    assert result["type"] == "create_entry"
+    assert result["data"][CONF_COMMAND_OFF] is None
+    assert result["data"][CONF_COMMAND_ON] == {
+        "Kitchen": None,
+        "Bedrooms": None,
     }

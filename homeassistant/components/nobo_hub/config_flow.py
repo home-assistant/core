@@ -141,35 +141,35 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         """Manage the options."""
 
         hub = self.hass.data[DOMAIN][self.config_entry.entry_id]
+        profile_names = [
+            k["name"].replace("\xa0", " ") for k in hub.week_profiles.values()
+        ]
 
         if user_input is not None:
-            off_command = (
-                ""
-                if user_input.get(CONF_COMMAND_OFF) == "Default"
-                else user_input.get(CONF_COMMAND_OFF)
-            )
-
+            off_command = user_input.get(CONF_COMMAND_OFF)
+            if off_command not in profile_names:
+                off_command = None
             on_commands = {}
-            for key, value in user_input.items():
-                if key.startswith(CONF_COMMAND_ON + "_zone_") and value != "Default":
+            for key, on_command in user_input.items():
+                if key.startswith(CONF_COMMAND_ON + "_zone_"):
                     zone = key[16:]
-                    on_commands[hub.zones[zone]["name"].replace("\xa0", " ")] = value
+                    if on_command not in profile_names:
+                        on_command = None
+                    on_commands[
+                        hub.zones[zone]["name"].replace("\xa0", " ")
+                    ] = on_command
 
             data = {CONF_COMMAND_OFF: off_command, CONF_COMMAND_ON: on_commands}
 
             return self.async_create_entry(title="", data=data)
 
-        off_command = self.config_entry.options.get(CONF_COMMAND_OFF)
-        on_commands = self.config_entry.options.get(CONF_COMMAND_ON)
-        if on_commands is None:
-            on_commands = {}
-
-        profile_names = [
-            k["name"].replace("\xa0", " ") for k in hub.week_profiles.values()
-        ]
-        profile_names.insert(0, "")
+        # Can't use "" here, because if selected by user, the old value will be used instead.
+        profile_names.insert(0, "<None>")
         profiles = vol.Schema(vol.In(profile_names))
 
+        off_command = self.config_entry.options.get(CONF_COMMAND_OFF)
+        if off_command not in profile_names:
+            off_command = "<None>"
         schema = vol.Schema(
             {
                 vol.Optional(CONF_COMMAND_OFF, default=off_command): profiles,
@@ -177,9 +177,16 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         )
 
         placeholder = ""
+        on_commands = self.config_entry.options.get(CONF_COMMAND_ON)
+        if on_commands is None:
+            on_commands = {}
         for zone in hub.zones:
             name = hub.zones[zone]["name"].replace("\xa0", " ")
-            on_command = on_commands[name] if name in on_commands else ""
+            on_command = (
+                on_commands[name]
+                if name in on_commands and on_commands[name] in profile_names
+                else "<None>"
+            )
             schema = schema.extend(
                 {
                     vol.Optional(
