@@ -887,8 +887,8 @@ class XiaomiAirPurifier(XiaomiGenericDevice):
             # SUPPORT_SET_SPEED was disabled
             # the device supports preset_modes only
             self._preset_modes = PRESET_MODES_AIRPURIFIER_3
-            self._supported_features = SUPPORT_PRESET_MODE
-            self._speed_count = 1
+            self._supported_features = SUPPORT_SET_SPEED | SUPPORT_PRESET_MODE
+            self._speed_count = 3
             # the speed_list attribute is deprecated, support will end with release 2021.7
             self._speed_list = OPERATION_MODES_AIRPURIFIER_3
         elif self._model == MODEL_AIRPURIFIER_V3:
@@ -1168,6 +1168,15 @@ class XiaomiAirPurifierMiot(XiaomiAirPurifier):
     }
 
     @property
+    def percentage(self):
+        """Return the current percentage based speed."""
+        if self._state:
+            fan_level = self._state_attrs[ATTR_FAN_LEVEL]
+            return ranged_value_to_percentage((1, 3), fan_level)
+
+        return None
+
+    @property
     def preset_mode(self):
         """Get the active preset mode."""
         if self._state:
@@ -1186,6 +1195,19 @@ class XiaomiAirPurifierMiot(XiaomiAirPurifier):
             return AirpurifierMiotOperationMode(self._state_attrs[ATTR_MODE]).name
 
         return None
+
+    async def async_set_percentage(self, percentage: int) -> None:
+        """Set the percentage of the fan.
+
+        This method is a coroutine.
+        """
+        fan_level = math.ceil(percentage_to_ranged_value((1, 3), percentage))
+        if fan_level:
+            await self._try_command(
+                "Setting operation mode of the miio device failed.",
+                self._device.set_fan_level,
+                fan_level,
+            )
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode of the fan.
