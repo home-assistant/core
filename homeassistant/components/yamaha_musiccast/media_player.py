@@ -5,15 +5,26 @@ import logging
 
 from aiomusiccast import MusicCastGroupException
 from aiomusiccast.features import ZoneFeature
+from aiomusiccast import MusicCastMediaContent
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
+from homeassistant.components.media_player import (
+    PLATFORM_SCHEMA,
+    BrowseMedia,
+    MediaPlayerEntity,
+)
 from homeassistant.components.media_player.const import (
+    MEDIA_CLASS_DIRECTORY,
+    MEDIA_CLASS_TRACK,
+    MEDIA_TYPE_MUSIC,
     REPEAT_MODE_OFF,
+    SUPPORT_BROWSE_MEDIA,
+    SUPPORT_CLEAR_PLAYLIST,
     SUPPORT_GROUPING,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
+    SUPPORT_PLAY_MEDIA,
     SUPPORT_PREVIOUS_TRACK,
     SUPPORT_REPEAT_SET,
     SUPPORT_SELECT_SOUND_MODE,
@@ -43,6 +54,7 @@ from homeassistant.helpers.typing import DiscoveryInfoType
 from homeassistant.util import uuid
 
 from . import MusicCastDataUpdateCoordinator, MusicCastDeviceEntity
+from ...helpers import entity_platform
 from .const import (
     ATTR_MAIN_SYNC,
     ATTR_MC_LINK,
@@ -51,6 +63,9 @@ from .const import (
     HA_REPEAT_MODE_TO_MC_MAPPING,
     INTERVAL_SECONDS,
     MC_REPEAT_MODE_TO_HA_MAPPING,
+    MEDIA_CLASS_MAPPING,
+    SERVICE_RECALL_NETUSB_PRESET,
+    SERVICE_STORE_NETUSB_PRESET,
     NULL_GROUP,
 )
 
@@ -67,6 +82,8 @@ MUSIC_PLAYER_BASE_SUPPORT = (
     | SUPPORT_SELECT_SOURCE
     | SUPPORT_STOP
     | SUPPORT_GROUPING
+    | SUPPORT_BROWSE_MEDIA
+    | SUPPORT_PLAY_MEDIA
 )
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -104,6 +121,23 @@ async def async_setup_platform(
                 DOMAIN, context={"source": SOURCE_IMPORT}, data=config
             )
         )
+
+    platform = entity_platform.async_get_current_platform()
+    platform.async_register_entity_service(
+        SERVICE_RECALL_NETUSB_PRESET,
+        {
+            vol.Required("preset"): int,
+        },
+        "recall_netusb_preset",
+    )
+
+    platform.async_register_entity_service(
+        SERVICE_STORE_NETUSB_PRESET,
+        {
+            vol.Required("preset"): int,
+        },
+        "store_netusb_preset",
+    )
 
 
 async def async_setup_entry(
@@ -197,6 +231,16 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
     @property
     def _is_tuner(self):
         return self.coordinator.data.zones[self._zone_id].input == "tuner"
+
+    @property
+    def media_content_id(self):
+        """Return the content ID of current playing media."""
+        return None
+
+    @property
+    def media_content_type(self):
+        """Return the content type of current playing media."""
+        return MEDIA_TYPE_MUSIC
 
     @property
     def state(self):
@@ -307,6 +351,78 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
             raise HomeAssistantError(
                 "Service shuffle is not supported for non NetUSB sources."
             )
+
+    async def async_play_media(self, media_type: str, media_id: str, **kwargs) -> None:
+        """Play media."""
+        if media_id:
+            parts = media_id.split(":")
+
+            if parts[0] == "list":
+                index = parts[3]
+
+                if index == "-1":
+                    index = "0"
+
+                await self.coordinator.musiccast.play_list_media(index, self._zone_id)
+
+            elif parts[0] == "presets":
+                index = parts[1]
+                await self.recall_netusb_preset(index)
+
+    async def async_browse_media(self, media_content_type=None, media_content_id=None):
+        """Implement the websocket media browsing helper."""
+
+        media_content_provider = MusicCastMediaContent(
+            self.coordinator.musiccast, self._zone_id
+        )
+
+        if media_content_id and media_content_type != "categories":
+            media_content_path = media_content_id.split(":")
+            media_content_provider = await MusicCastMediaContent.browse_media(
+                self.coordinator.musiccast, self._zone_id, media_content_path, 24
+            )
+
+        else:
+            media_content_provider = media_content_provider.categories(
+                self.coordinator.musiccast, self._zone_id
+            )
+
+        children = [
+            BrowseMedia(
+                title=child.title,
+                media_class=MEDIA_CLASS_MAPPING.get(child.content_type),
+                media_content_id=child.content_id,
+                media_content_type=MEDIA_CLASS_TRACK
+                if child.can_play
+                else MEDIA_CLASS_DIRECTORY,
+                can_play=child.can_play,
+                can_expand=child.can_browse,
+                thumbnail=child.thumbnail,
+            )
+            for child in media_content_provider.children
+        ]
+
+        overview = BrowseMedia(
+            title=media_content_provider.title,
+            media_class=MEDIA_CLASS_MAPPING.get(media_content_provider.content_type),
+            media_content_id=media_content_provider.content_id,
+            media_content_type=MEDIA_CLASS_TRACK
+            if media_content_provider.can_play
+            else MEDIA_CLASS_DIRECTORY,
+            can_play=False,
+            can_expand=media_content_provider.can_browse,
+            children=children,
+        )
+
+        return overview
+
+    async def recall_netusb_preset(self, preset):
+        """Play the selected preset."""
+        await self.coordinator.musiccast.recall_netusb_preset(self._zone_id, preset)
+
+    async def store_netusb_preset(self, preset):
+        """Play the selected preset."""
+        await self.coordinator.musiccast.store_netusb_preset(preset)
 
     async def async_select_sound_mode(self, sound_mode):
         """Select sound mode."""

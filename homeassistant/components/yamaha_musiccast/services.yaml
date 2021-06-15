@@ -1,0 +1,39 @@
+recall_netusb_preset:
+  description: Recall a net-usb preset.
+  fields:
+    entity_id:
+      description: Name of the mediaplayer.
+      example: "media_player.living_room"
+      required: true
+      selector:
+        entity:
+          integration: yamaha_musiccast
+          domain: media_player
+    preset:
+      description: Preset Number.
+      example: 2
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 40
+
+store_netusb_preset:
+  description: Store a net-usb preset.
+  fields:
+    entity_id:
+      description: Name of the mediaplayer.
+      example: "media_player.living_room"
+      required: true
+      selector:
+        entity:
+          integration: yamaha_musiccast
+          domain: media_player
+    preset:
+      description: Preset Number.
+      required: true
+      example: 2
+      selector:
+        number:
+          min: 0
+          max: 40

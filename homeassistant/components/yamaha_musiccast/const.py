@@ -1,6 +1,8 @@
 """Constants for the MusicCast integration."""
 
 from homeassistant.components.media_player.const import (
+    MEDIA_CLASS_DIRECTORY,
+    MEDIA_CLASS_TRACK,
     REPEAT_MODE_ALL,
     REPEAT_MODE_OFF,
     REPEAT_MODE_ONE,
@@ -31,3 +33,11 @@ INTERVAL_SECONDS = "interval_seconds"
 MC_REPEAT_MODE_TO_HA_MAPPING = {
     val: key for key, val in HA_REPEAT_MODE_TO_MC_MAPPING.items()
 }
+
+MEDIA_CLASS_MAPPING = {
+    "track": MEDIA_CLASS_TRACK,
+    "directory": MEDIA_CLASS_DIRECTORY,
+    "categories": "categories",
+}
+SERVICE_RECALL_NETUSB_PRESET = "recall_netusb_preset"
+SERVICE_STORE_NETUSB_PRESET = "store_netusb_preset"
