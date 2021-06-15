@@ -11,9 +11,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     """Set up the demo switches."""
     async_add_entities(
         [
-            DemoSwitch("swith1", "Decorative Lights", True, None, True),
+            DemoSwitch("switch1", "Decorative Lights", True, None, True),
             DemoSwitch(
-                "swith2",
+                "switch2",
                 "AC",
                 False,
                 "mdi:air-conditioner",
@@ -42,11 +42,12 @@ class DemoSwitch(SwitchEntity):
         icon: str | None,
         assumed: bool,
         device_class: str | None = None,
-    ):
+    ) -> None:
         """Initialize the Demo switch."""
         self._attr_assumed_state = assumed
         self._attr_device_class = device_class
         self._attr_icon = icon
+        self._attr_is_on = state
         self._attr_name = name or DEVICE_DEFAULT_NAME
         self._attr_today_energy_kwh = 15
         self._attr_unique_id = unique_id
