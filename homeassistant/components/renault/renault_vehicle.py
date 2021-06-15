@@ -1,6 +1,7 @@
 """Proxy to handle account communication with Renault servers."""
 from __future__ import annotations
 
+import asyncio
 from datetime import timedelta
 import logging
 
@@ -94,14 +95,31 @@ class RenaultVehicleProxy:
                     # Polling interval. Will only be polled if there are subscribers.
                     update_interval=self._scan_interval,
                 )
+        # Check all coordinators
+        await asyncio.gather(
+            *[
+                self.coordinators[key].async_config_entry_first_refresh()
+                for key in self.coordinators
+            ]
+        )
         for key in list(self.coordinators):
             # list() to avoid Runtime iteration error
-            await self.coordinators[key].async_refresh()
-            if self.coordinators[key].not_supported:
-                # Remove endpoint if it is not supported for this vehicle.
+            coordinator = self.coordinators[key]
+            if coordinator.not_supported:
+                # Remove endpoint as it is not supported for this vehicle.
+                LOGGER.error(
+                    "Ignoring endpoint %s as it is not supported for this vehicle: %s",
+                    coordinator.name,
+                    coordinator.last_exception,
+                )
                 del self.coordinators[key]
-            elif self.coordinators[key].access_denied:
-                # Remove endpoint if it is denied for this vehicle.
+            elif coordinator.access_denied:
+                # Remove endpoint as it is denied for this vehicle.
+                LOGGER.error(
+                    "Ignoring endpoint %s as it is denied for this vehicle: %s",
+                    coordinator.name,
+                    coordinator.last_exception,
+                )
                 del self.coordinators[key]
 
     async def endpoint_available(self, endpoint: str) -> bool:

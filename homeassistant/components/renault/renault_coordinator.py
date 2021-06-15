@@ -62,3 +62,11 @@ class RenaultDataUpdateCoordinator(DataUpdateCoordinator[T]):
         except KamereonResponseException as err:
             # Other Renault errors.
             raise UpdateFailed(f"Error communicating with API: {err}") from err
+
+    async def async_config_entry_first_refresh(self) -> None:
+        """Refresh data for the first time when a config entry is setup.
+
+        Contrary to base implementation, we are not raising ConfigEntryNotReady
+        but only updating the `access_denied` and `not_supported` flags.
+        """
+        await self._async_refresh(log_failures=False, raise_on_auth_failed=True)
