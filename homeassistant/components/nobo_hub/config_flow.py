@@ -9,18 +9,12 @@ from pynobo import nobo
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import (
-    CONF_COMMAND_OFF,
-    CONF_COMMAND_ON,
-    CONF_HOST,
-    CONF_IP_ADDRESS,
-    CONF_NAME,
-)
+from homeassistant.const import CONF_COMMAND_OFF, CONF_COMMAND_ON, CONF_IP_ADDRESS
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 
-from .const import CONF_SERIAL, DOMAIN, HUB
+from .const import CONF_SERIAL, DOMAIN
 
 DATA_NOBO_HUB_IMPL = "nobo_hub_flow_implementation"
 DEVICE_INPUT = "device_input"
@@ -32,45 +26,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Nobø Ecohub."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
     def __init__(self):
         """Initialize the config flow."""
         self.discovered_hubs = None
-
-    async def async_step_import(self, config: dict) -> FlowResult:
-        """Import a configuration from config.yaml."""
-
-        serial = config.get(CONF_HOST)
-        ip_address = config.get(CONF_IP_ADDRESS)
-        if ip_address == "discover":
-            ip_address = None
-
-        if isinstance(serial, str) and len(serial) == 3:
-            # For the new config we always store the entire serial number.
-            # Look for all hubs right away so we can store the result on the flow object.
-            if self.discovered_hubs is None:
-                self.discovered_hubs = await nobo.async_discover_hubs(
-                    loop=self.hass.loop
-                )
-            for (discovered_ip, serial_prefix) in self.discovered_hubs:
-                if ip_address is None or ip_address == discovered_ip:
-                    serial = serial_prefix + serial
-                    break
-
-        user_input = {
-            CONF_SERIAL: serial,
-            CONF_IP_ADDRESS: ip_address,
-        }
-        if config.get(CONF_COMMAND_OFF) is not None:
-            user_input[CONF_COMMAND_OFF] = config.get(CONF_COMMAND_OFF)
-        if config.get(CONF_COMMAND_ON) is not None:
-            user_input[CONF_COMMAND_ON] = config.get(CONF_COMMAND_ON)
-
-        self.context.update(
-            {"title_placeholders": {CONF_NAME: f"YAML import {DOMAIN}"}}
-        )
-        return await self.async_step_user(user_input=user_input)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -181,7 +140,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
     async def async_step_init(self, user_input=None):
         """Manage the options."""
 
-        hub = self.hass.data[DOMAIN][self.config_entry.entry_id][HUB]
+        hub = self.hass.data[DOMAIN][self.config_entry.entry_id]
 
         if user_input is not None:
             off_command = (
