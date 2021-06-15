@@ -2,6 +2,7 @@
 from datetime import timedelta
 import logging
 
+from miio import AirHumidifier, AirHumidifierMiot
 from miio.gateway.gateway import GatewayException
 
 from homeassistant import config_entries, core
@@ -20,6 +21,7 @@ from .const import (
     MODELS_AIR_MONITOR,
     MODELS_FAN,
     MODELS_HUMIDIFIER,
+    MODELS_HUMIDIFIER_MIOT,
     MODELS_LIGHT,
     MODELS_SWITCH,
     MODELS_VACUUM,
@@ -35,6 +37,9 @@ HUMIDIFIER_PLATFORMS = ["humidifier", "sensor"]
 LIGHT_PLATFORMS = ["light"]
 VACUUM_PLATFORMS = ["vacuum"]
 AIR_MONITOR_PLATFORMS = ["air_quality", "sensor"]
+
+# global MIIO_DEVICE_CACHE
+MIIO_DEVICE_CACHE = {}
 
 
 async def async_setup_entry(
@@ -77,6 +82,21 @@ def get_platforms(config_entry):
                 return AIR_MONITOR_PLATFORMS
 
     return []
+
+
+async def async_create_miio_device(config_entry):
+    """Set up one mio device to service multiple entities."""
+    model = config_entry.data[CONF_MODEL]
+    host = config_entry.data[CONF_HOST]
+    token = config_entry.data[CONF_TOKEN]
+    device = None
+    if model in MODELS_HUMIDIFIER:
+        if model in MODELS_HUMIDIFIER_MIOT:
+            device = AirHumidifierMiot(host, token)
+        elif model.startswith("zhimi.humidifier."):
+            device = AirHumidifier(host, token, model=model)
+    if device:
+        MIIO_DEVICE_CACHE[config_entry.unique_id] = device
 
 
 async def async_setup_gateway_entry(
@@ -159,6 +179,7 @@ async def async_setup_device_entry(
 ):
     """Set up the Xiaomi Miio device component from a config entry."""
     platforms = get_platforms(entry)
+    await async_create_miio_device(entry)
 
     if not platforms:
         return False

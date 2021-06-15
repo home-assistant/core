@@ -5,7 +5,7 @@ from functools import partial
 import logging
 import math
 
-from miio import AirHumidifier, AirHumidifierMiot, DeviceException
+from miio import DeviceException
 from miio.airhumidifier import OperationMode as AirhumidifierOperationMode
 from miio.airhumidifier_miot import OperationMode as AirhumidifierMiotOperationMode
 import voluptuous as vol
@@ -28,6 +28,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.percentage import percentage_to_ranged_value
 
+from . import MIIO_DEVICE_CACHE
 from .const import (
     CONF_DEVICE,
     CONF_FLOW_TYPE,
@@ -113,12 +114,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         _LOGGER.debug("Initializing with host %s (token %s...)", host, token[:5])
 
         if model in MODELS_HUMIDIFIER_MIOT:
-            air_humidifier = AirHumidifierMiot(host, token)
+            air_humidifier = MIIO_DEVICE_CACHE[config_entry.unique_id]
             entity = XiaomiAirHumidifierMiot(
                 name, air_humidifier, config_entry, unique_id
             )
         elif model.startswith("zhimi.humidifier."):
-            air_humidifier = AirHumidifier(host, token, model=model)
+            air_humidifier = MIIO_DEVICE_CACHE[config_entry.unique_id]
             entity = XiaomiAirHumidifier(name, air_humidifier, config_entry, unique_id)
         else:
             _LOGGER.error(
@@ -408,7 +409,7 @@ class XiaomiAirHumidifier(XiaomiGenericHumidifierDevice):
             return
 
         if mode not in AirhumidifierOperationMode:
-            _LOGGER.warning("Mode %s is not a valid operation mode.", mode)
+            _LOGGER.warning("Mode %s is not a valid operation mode", mode)
             return
 
         _LOGGER.debug("Setting the operation mode to: %s", mode)
@@ -478,7 +479,7 @@ class XiaomiAirHumidifierMiot(XiaomiAirHumidifier):
             return
 
         if mode not in self.REVERSE_MODE_MAPPING:
-            _LOGGER.warning("Mode %s is not a valid operation mode.", mode)
+            _LOGGER.warning("Mode %s is not a valid operation mode", mode)
             return
 
         _LOGGER.debug("Setting the operation mode to: %s", mode)
