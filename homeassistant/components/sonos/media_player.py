@@ -13,7 +13,6 @@ from pysonos.core import (
     PLAY_MODE_BY_MEANING,
     PLAY_MODES,
 )
-from pysonos.exceptions import SoCoException, SoCoUPnPException
 import voluptuous as vol
 
 from homeassistant.components.media_player import MediaPlayerEntity
@@ -48,7 +47,6 @@ from homeassistant.components.plex.services import play_on_sonos
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TIME, STATE_IDLE, STATE_PAUSED, STATE_PLAYING
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_platform, service
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -528,34 +526,23 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             play_on_sonos(self.hass, media_type, media_id, self.name)  # type: ignore[no-untyped-call]
             return
 
-        def play(method, uri, clear_queue=False):
-            """Wrap exceptions and optionally clear the playback queue."""
-            try:
-                if clear_queue:
-                    soco.clear_queue()
-                method(uri)
-                if clear_queue:
-                    soco.play_from_queue(0)
-            except (OSError, SoCoException, SoCoUPnPException) as err:
-                raise HomeAssistantError(
-                    f"Could not play media '{uri}': {err}"
-                ) from err
-
         share_link = self.speaker.share_link
         if share_link.is_share_link(media_id):
             if kwargs.get(ATTR_MEDIA_ENQUEUE):
-                play(share_link.add_share_link_to_queue, media_id)
+                share_link.add_share_link_to_queue(media_id)
             else:
-                play(share_link.add_share_link_to_queue, media_id, clear_queue=True)
+                soco.clear_queue()
+                share_link.add_share_link_to_queue(media_id)
+                soco.play_from_queue(0)
         elif media_type in (MEDIA_TYPE_MUSIC, MEDIA_TYPE_TRACK):
             if kwargs.get(ATTR_MEDIA_ENQUEUE):
-                play(soco.add_uri_to_queue, media_id)
+                soco.add_uri_to_queue(media_id)
             else:
-                play(soco.play_uri, media_id)
+                soco.play_uri(media_id)
         elif media_type == MEDIA_TYPE_PLAYLIST:
             if media_id.startswith("S:"):
                 item = get_media(self.media.library, media_id, media_type)  # type: ignore[no-untyped-call]
-                play(soco.play_uri, item.get_uri())
+                soco.play_uri(item.get_uri())
                 return
             try:
                 playlists = soco.get_sonos_playlists()
@@ -563,7 +550,9 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             except StopIteration:
                 _LOGGER.error('Could not find a Sonos playlist named "%s"', media_id)
             else:
-                play(soco.add_to_queue, playlist, clear_queue=True)
+                soco.clear_queue()
+                soco.add_to_queue(playlist)
+                soco.play_from_queue(0)
         elif media_type in PLAYABLE_MEDIA_TYPES:
             item = get_media(self.media.library, media_id, media_type)  # type: ignore[no-untyped-call]
 
@@ -571,7 +560,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
                 _LOGGER.error('Could not find "%s" in the library', media_id)
                 return
 
-            play(soco.play_uri, item.get_uri())
+            soco.play_uri(item.get_uri())
         else:
             _LOGGER.error('Sonos does not support a media type of "%s"', media_type)
 
