@@ -5,19 +5,17 @@ import logging
 from apcaccess import status
 import voluptuous as vol
 
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SCAN_INTERVAL
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_HOST = "localhost"
 DEFAULT_PORT = 3551
+DEFAULT_SCAN_INTERVAL = timedelta(seconds=60)
 DOMAIN = "apcupsd"
 
 KEY_STATUS = "STATFLAG"
-
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
 VALUE_ONLINE = 8
 
@@ -27,6 +25,9 @@ CONFIG_SCHEMA = vol.Schema(
             {
                 vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
                 vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+                vol.Optional(
+                    CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
+                ): vol.All(cv.time_period, cv.positive_timedelta),
             }
         )
     },
@@ -34,11 +35,12 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass, config):
+async def async_setup(hass, config):
     """Use config values to set up a function enabling status retrieval."""
     conf = config[DOMAIN]
     host = conf[CONF_HOST]
     port = conf[CONF_PORT]
+    scan_interval = conf[CONF_SCAN_INTERVAL]
 
     apcups_data = APCUPSdData(host, port)
     hass.data[DOMAIN] = apcups_data
@@ -46,10 +48,22 @@ def setup(hass, config):
     # It doesn't really matter why we're not able to get the status, just that
     # we can't.
     try:
-        apcups_data.update(no_throttle=True)
+        await apcups_data._update_status()
     except Exception:  # pylint: disable=broad-except
         _LOGGER.exception("Failure while testing APCUPSd status retrieval")
-        return False
+        return True
+
+    async def update_status_callback(now):
+        # It doesn't really matter why we're not able to get the status, just that
+        # we can't.
+        try:
+            await apcups_data._update_status()
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception("Failure while testing APCUPSd status retrieval")
+            return True
+
+    hass.helpers.event.async_track_time_interval(update_status_callback, scan_interval)
+
     return True
 
 
@@ -72,14 +86,12 @@ class APCUPSdData:
     @property
     def status(self):
         """Get latest update if throttle allows. Return status."""
-        self.update()
         return self._status
 
     def _get_status(self):
         """Get the status from APCUPSd and parse it into a dict."""
         return self._parse(self._get(host=self._host, port=self._port))
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self, **kwargs):
+    async def _update_status(self, **kwargs):
         """Fetch the latest status from APCUPSd."""
         self._status = self._get_status()
