@@ -79,6 +79,7 @@ homeassistant.components.ssdp.*
 homeassistant.components.stream.*
 homeassistant.components.sun.*
 homeassistant.components.switch.*
+homeassistant.components.switcher_kis.*
 homeassistant.components.synology_dsm.*
 homeassistant.components.systemmonitor.*
 homeassistant.components.tag.*
