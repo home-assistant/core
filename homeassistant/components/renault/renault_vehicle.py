@@ -94,7 +94,7 @@ class RenaultVehicleProxy:
                     # Polling interval. Will only be polled if there are subscribers.
                     update_interval=self._scan_interval,
                 )
-        for key in list(self.coordinators.keys()):
+        for key in self.coordinators:
             await self.coordinators[key].async_refresh()
             if self.coordinators[key].not_supported:
                 # Remove endpoint if it is not supported for this vehicle.
