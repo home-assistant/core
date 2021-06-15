@@ -102,7 +102,7 @@ class EcobeeBinarySensor(BinarySensorEntity):
         thermostat = self.data.ecobee.get_thermostat(self.index)
         if not thermostat["runtime"]["connected"]:
             # If the thermostat is disconnected, sensor data is stale
-            self._state = False
+            self._state = "false"
         else:
             for sensor in self.data.ecobee.get_remote_sensors(self.index):
                 if sensor["name"] != self.sensor_name:
