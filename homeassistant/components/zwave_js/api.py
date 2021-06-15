@@ -255,6 +255,7 @@ async def websocket_node_status(
     )
 
 
+@websocket_api.require_admin
 @websocket_api.websocket_command(
     {
         vol.Required(TYPE): "zwave_js/node_state",
