@@ -23,7 +23,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         latitude=entry.data[CONF_LATITUDE],
         longitude=entry.data[CONF_LONGITUDE],
         declination=entry.data[CONF_DECLINATION],
-        azimuth=entry.data[CONF_AZIMUTH],
+        azimuth=(entry.data[CONF_AZIMUTH] - 180),
         kwp=(entry.data[CONF_MODULES_POWER] / 1000),
         damping=0,
     )

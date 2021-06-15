@@ -60,7 +60,7 @@ class ForecastSolarFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                         vol.Coerce(int), vol.Range(min=0, max=90)
                     ),
                     vol.Optional(CONF_AZIMUTH, default=0): vol.All(
-                        vol.Coerce(int), vol.Range(min=-180, max=180)
+                        vol.Coerce(int), vol.Range(min=0, max=360)
                     ),
                     vol.Required(CONF_MODULES_POWER): vol.Coerce(int),
                 }
@@ -97,7 +97,7 @@ class ForecastSolarOptionFlowHandler(config_entries.OptionsFlow):
                         default=self.entry.options.get(
                             CONF_AZIMUTH, self.entry.data[CONF_AZIMUTH]
                         ),
-                    ): vol.All(vol.Coerce(int), vol.Range(min=-180, max=180)),
+                    ): vol.All(vol.Coerce(int), vol.Range(min=-0, max=360)),
                     vol.Required(
                         CONF_MODULES_POWER,
                         default=self.entry.options.get(
