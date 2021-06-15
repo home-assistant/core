@@ -107,6 +107,8 @@ class OmniLogicLightControl(OmniLogicEntity, LightEntity):
         self._last_action = 0
         self._state_delay = 60
 
+        return None
+
     @property
     def is_on(self):
         """Return if the light is on."""
