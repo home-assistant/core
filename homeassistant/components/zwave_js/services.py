@@ -177,7 +177,7 @@ class ZWaveServices:
                             vol.Coerce(int), BITMASK_SCHEMA
                         ),
                         vol.Required(const.ATTR_CONFIG_VALUE): vol.Any(
-                            vol.Coerce(int), cv.string
+                            vol.Coerce(int), BITMASK_SCHEMA, cv.string
                         ),
                     },
                     cv.has_at_least_one_key(ATTR_DEVICE_ID, ATTR_ENTITY_ID),
@@ -204,7 +204,7 @@ class ZWaveServices:
                             {
                                 vol.Any(
                                     vol.Coerce(int), BITMASK_SCHEMA, cv.string
-                                ): vol.Any(vol.Coerce(int), cv.string)
+                                ): vol.Any(vol.Coerce(int), BITMASK_SCHEMA, cv.string)
                             },
                         ),
                     },
@@ -224,7 +224,7 @@ class ZWaveServices:
                         vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
                         vol.Optional(
                             const.ATTR_REFRESH_ALL_VALUES, default=False
-                        ): bool,
+                        ): cv.boolean,
                     },
                     validate_entities,
                 )
@@ -251,9 +251,15 @@ class ZWaveServices:
                         ),
                         vol.Optional(const.ATTR_ENDPOINT): vol.Coerce(int),
                         vol.Required(const.ATTR_VALUE): vol.Any(
-                            bool, vol.Coerce(int), vol.Coerce(float), cv.string
+                            vol.Coerce(int),
+                            vol.Coerce(float),
+                            cv.boolean,
+                            BITMASK_SCHEMA,
+                            cv.string,
                         ),
-                        vol.Optional(const.ATTR_WAIT_FOR_RESULT): vol.Coerce(bool),
+                        vol.Optional(const.ATTR_WAIT_FOR_RESULT): vol.Coerce(
+                            cv.boolean
+                        ),
                     },
                     cv.has_at_least_one_key(ATTR_DEVICE_ID, ATTR_ENTITY_ID),
                     get_nodes_from_service_data,
@@ -282,7 +288,7 @@ class ZWaveServices:
                         ),
                         vol.Optional(const.ATTR_ENDPOINT): vol.Coerce(int),
                         vol.Required(const.ATTR_VALUE): vol.Any(
-                            bool, vol.Coerce(int), vol.Coerce(float), cv.string
+                            vol.Coerce(int), vol.Coerce(float), cv.boolean, cv.string
                         ),
                     },
                     vol.Any(

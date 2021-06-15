@@ -51,6 +51,7 @@ from .const import (
     EVENT_DEVICE_ADDED_TO_REGISTRY,
 )
 from .helpers import async_enable_statistics, update_data_collection_preference
+from .services import BITMASK_SCHEMA
 
 # general API constants
 ID = "id"
@@ -924,7 +925,7 @@ async def websocket_refresh_node_cc_values(
         vol.Required(NODE_ID): int,
         vol.Required(PROPERTY): int,
         vol.Optional(PROPERTY_KEY): int,
-        vol.Required(VALUE): int,
+        vol.Required(VALUE): vol.Any(int, BITMASK_SCHEMA),
     }
 )
 @websocket_api.async_response
