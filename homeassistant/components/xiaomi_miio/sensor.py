@@ -135,6 +135,11 @@ HUMIDIFIER_SENSOR_TYPES = {
 HUMIDIFIER_ATTRIBUTES = {
     ATTR_HUMIDITY: "humidity",
     ATTR_TEMPERATURE: "temperature",
+}
+
+HUMIDIFIER_ATTRIBUTES_MIOT = {
+    ATTR_HUMIDITY: "humidity",
+    ATTR_TEMPERATURE: "temperature",
     ATTR_WATER_LEVEL: "water_level",
 }
 
@@ -194,10 +199,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         token = config_entry.data[CONF_TOKEN]
         if model in MODELS_HUMIDIFIER_MIOT:
             device = AirHumidifierMiot(host, token)
+            attributes = HUMIDIFIER_ATTRIBUTES_MIOT
         elif model.startswith("zhimi.humidifier."):
             device = AirHumidifier(host, token)
+            attributes = HUMIDIFIER_ATTRIBUTES
         if device:
-            for attribute in HUMIDIFIER_ATTRIBUTES:
+            for attribute in attributes:
                 entities.append(
                     XiaomiHumidifierSensor(
                         f"{config_entry.title}_{attribute}",
