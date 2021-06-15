@@ -16,12 +16,7 @@ from homeassistant.util import dt as dt_util
 
 from .conftest import check_valid_state
 
-from tests.common import (
-    MockConfigEntry,
-    assert_setup_component,
-    date_util,
-    mock_registry,
-)
+from tests.common import MockConfigEntry, date_util, mock_registry
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
@@ -53,8 +48,7 @@ async def test_sensor_availability(
         return mock_data["return_time"]
 
     with patch("homeassistant.util.dt.utcnow", new=mock_now):
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        assert_setup_component(1, DOMAIN)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
 
         # check migration
         current_entries = hass.config_entries.async_entries(DOMAIN)
@@ -153,14 +147,13 @@ async def test_multi_sensor_migration(
     caplog.clear()
     with caplog.at_level(logging.WARNING):
         with patch("homeassistant.util.dt.utcnow", new=mock_now):
-            await hass.config_entries.async_setup(config_entry_1.entry_id)
+            assert await hass.config_entries.async_setup(config_entry_1.entry_id)
             assert len(caplog.messages) == 2
-            assert_setup_component(1, DOMAIN)
 
             # check migration with removal of extra sensors
             assert len(entity_reg.entities) == 1
-            assert entity1.entity_id in entity_reg.entities.keys()
-            assert entity2.entity_id not in entity_reg.entities.keys()
+            assert entity1.entity_id in entity_reg.entities
+            assert entity2.entity_id not in entity_reg.entities
 
             current_entries = hass.config_entries.async_entries(DOMAIN)
             assert len(current_entries) == 1
