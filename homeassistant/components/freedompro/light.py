@@ -22,13 +22,11 @@ async def async_setup_entry(hass, entry, async_add_entities):
     """Set up Freedompro light."""
     api_key = entry.data[CONF_API_KEY]
     coordinator = hass.data[DOMAIN][entry.entry_id]
-    devices = [
+    async_add_entities(
         Device(hass, api_key, device, coordinator)
         for device in coordinator.data
         if device["type"] == "lightbulb"
-    ]
-
-    async_add_entities(devices, False)
+    )
 
 
 class Device(CoordinatorEntity, LightEntity):
