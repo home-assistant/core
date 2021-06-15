@@ -84,7 +84,7 @@ class Device(CoordinatorEntity, LightEntity):
             if "on" in state:
                 self._on = state["on"]
             if "brightness" in state:
-                self._brightness = state["brightness"]
+                self._attr_brightness = math.floor(state["brightness"] / 100 * 255)
             if "hue" in state:
                 self._hue = state["hue"]
             if "saturation" in state:
