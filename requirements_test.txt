@@ -14,7 +14,7 @@ pylint==2.8.3
 pipdeptree==1.0.0
 pylint-strict-informational==0.1
 pytest-aiohttp==0.3.0
-pytest-cov==2.10.1
+pytest-cov==2.12.1
 pytest-test-groups==1.0.3
 pytest-sugar==0.9.4
 pytest-timeout==1.4.2
