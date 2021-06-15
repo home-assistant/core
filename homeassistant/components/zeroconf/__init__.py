@@ -126,7 +126,8 @@ async def _async_get_instance(hass: HomeAssistant, **zcargs: Any) -> HaAsyncZero
 
     async def _async_stop_zeroconf(_event: Event) -> None:
         """Stop Zeroconf."""
-        zeroconf.ha_close()
+        # Restore the original close
+        zeroconf.close = zeroconf.ha_close
         await aio_zc.ha_async_close()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_stop_zeroconf)
