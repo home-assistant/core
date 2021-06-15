@@ -36,7 +36,6 @@ async def validate_input(hass: core.HomeAssistant, data):
             raise InvalidAuth
         if result["code"] == -200:
             raise CannotConnect
-    return {"title": "Freedompro"}
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
