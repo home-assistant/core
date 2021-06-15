@@ -56,8 +56,12 @@ class ForecastSolarFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     vol.Optional(
                         CONF_LONGITUDE, default=self.hass.config.longitude
                     ): cv.longitude,
-                    vol.Required(CONF_DECLINATION): vol.Coerce(int),
-                    vol.Required(CONF_AZIMUTH): vol.Coerce(int),
+                    vol.Optional(CONF_DECLINATION, default=0): vol.All(
+                        vol.Coerce(int), vol.Range(min=0, max=90)
+                    ),
+                    vol.Optional(CONF_AZIMUTH, default=0): vol.All(
+                        vol.Coerce(int), vol.Range(min=-180, max=180)
+                    ),
                     vol.Required(CONF_MODULES_POWER): vol.Coerce(int),
                 }
             ),
@@ -82,18 +86,18 @@ class ForecastSolarOptionFlowHandler(config_entries.OptionsFlow):
             step_id="init",
             data_schema=vol.Schema(
                 {
-                    vol.Required(
+                    vol.Optional(
                         CONF_DECLINATION,
                         default=self.entry.options.get(
                             CONF_DECLINATION, self.entry.data[CONF_DECLINATION]
                         ),
-                    ): vol.Coerce(int),
-                    vol.Required(
+                    ): vol.All(vol.Coerce(int), vol.Range(min=0, max=90)),
+                    vol.Optional(
                         CONF_AZIMUTH,
                         default=self.entry.options.get(
                             CONF_AZIMUTH, self.entry.data[CONF_AZIMUTH]
                         ),
-                    ): vol.Coerce(int),
+                    ): vol.All(vol.Coerce(int), vol.Range(min=-180, max=180)),
                     vol.Required(
                         CONF_MODULES_POWER,
                         default=self.entry.options.get(
