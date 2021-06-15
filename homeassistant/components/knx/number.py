@@ -70,7 +70,7 @@ class KNXNumber(KnxEntity, NumberEntity, RestoreEntity):
             NumberSchema.CONF_STEP,
             self._device.sensor_value.dpt_class.resolution,
         )
-        self._device.sensor_value.value = max(0, self._attr_min_value)
+        self._device.sensor_value.value = max(0, self.min_value)
 
     async def async_added_to_hass(self) -> None:
         """Restore last state."""
