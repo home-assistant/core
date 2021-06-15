@@ -66,14 +66,14 @@ class Device(CoordinatorEntity, LightEntity):
             (
                 device
                 for device in self.coordinator.data
-                if device.get("uid") == self._attr_unique_id
+                if device["uid"] == self._attr_unique_id
             ),
             None,
         )
         if device is not None and "state" in device:
-            state = device.get("state")
+            state = device["state"]
             if "on" in state:
-                self._on = state.get("on")
+                self._on = state["on"]
         return self._on
 
     @property
@@ -83,14 +83,14 @@ class Device(CoordinatorEntity, LightEntity):
             (
                 device
                 for device in self.coordinator.data
-                if device.get("uid") == self._attr_unique_id
+                if device["uid"] == self._attr_unique_id
             ),
             None,
         )
         if device is not None and "state" in device:
-            state = device.get("state")
+            state = device["state"]
             if "brightness" in state:
-                self._brightness = state.get("brightness")
+                self._brightness = state["brightness"]
         return math.floor(self._brightness / 100 * 255)
 
     @property
@@ -100,16 +100,16 @@ class Device(CoordinatorEntity, LightEntity):
             (
                 device
                 for device in self.coordinator.data
-                if device.get("uid") == self._attr_unique_id
+                if device["uid"] == self._attr_unique_id
             ),
             None,
         )
         if device is not None and "state" in device:
-            state = device.get("state")
+            state = device["state"]
             if "hue" in state:
-                self._hue = state.get("hue")
+                self._hue = state["hue"]
             if "saturation" in state:
-                self._saturation = state.get("saturation")
+                self._saturation = state["saturation"]
         return [self._hue, self._saturation]
 
     async def async_turn_on(self, **kwargs):
