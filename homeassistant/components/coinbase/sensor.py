@@ -1,4 +1,6 @@
 """Support for Coinbase sensors."""
+import logging
+
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import ATTR_ATTRIBUTION
 
@@ -13,6 +15,8 @@ from .const import (
     CONF_EXCHANGE_RATES,
     DOMAIN,
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 ATTR_NATIVE_BALANCE = "Balance in native currency"
 
@@ -36,16 +40,25 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     entities = []
 
+    provided_currencies = [
+        account[API_ACCOUNT_CURRENCY] for account in instance.accounts
+    ]
+
     if CONF_CURRENCIES in config_entry.options:
         desired_currencies = config_entry.options[CONF_CURRENCIES]
     else:
-        desired_currencies = [
-            account[API_ACCOUNT_CURRENCY] for account in instance.accounts
-        ]
+        desired_currencies = provided_currencies
 
     exchange_native_currency = instance.exchange_rates.currency
 
     for currency in desired_currencies:
+        if currency not in provided_currencies:
+            _LOGGER.warning(
+                "The currency %s is no longer provided by your account, please check "
+                "your settings in Coinbase's developer tools",
+                currency,
+            )
+            break
         entities.append(AccountSensor(instance, currency))
 
     if CONF_EXCHANGE_RATES in config_entry.options:
