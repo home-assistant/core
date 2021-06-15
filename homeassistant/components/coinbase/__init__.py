@@ -1,7 +1,6 @@
 """The Coinbase integration."""
 from __future__ import annotations
 
-import asyncio
 from datetime import timedelta
 import logging
 
@@ -13,6 +12,7 @@ from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_API_TOKEN
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import Throttle
 
 from .const import (
@@ -49,7 +49,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Coinbase component."""
     if DOMAIN not in config:
         return True
@@ -64,7 +64,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Coinbase from a config entry."""
 
     client = await hass.async_add_executor_job(
@@ -72,30 +72,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         entry.data[CONF_API_KEY],
         entry.data[CONF_API_TOKEN],
     )
-    if DOMAIN not in hass.data:
-        hass.data[DOMAIN] = {}
+
+    hass.data.setdefault(DOMAIN, {})
 
     hass.data[DOMAIN][entry.entry_id] = await hass.async_add_executor_job(
         CoinbaseData, client
     )
-    for component in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
-        )
+
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS
-            ]
-        )
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
 
