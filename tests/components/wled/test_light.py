@@ -601,7 +601,7 @@ async def test_live_service(
         DOMAIN,
         SERVICE_LIVE,
         {
-            ATTR_ENTITY_ID: "light.wled_rgb_light_master",
+            ATTR_ENTITY_ID: "light.wled_rgb_light_segment_0",
             ATTR_LIVE: "off",
         },
         blocking=True,
@@ -614,7 +614,7 @@ async def test_live_service(
         DOMAIN,
         SERVICE_LIVE,
         {
-            ATTR_ENTITY_ID: "light.wled_rgb_light_master",
+            ATTR_ENTITY_ID: "light.wled_rgb_light_segment_0",
             ATTR_LIVE: "on",
         },
         blocking=True,
@@ -627,7 +627,7 @@ async def test_live_service(
         DOMAIN,
         SERVICE_LIVE,
         {
-            ATTR_ENTITY_ID: "light.wled_rgb_light_master",
+            ATTR_ENTITY_ID: "light.wled_rgb_light_segment_0",
             ATTR_LIVE: "off_until_reboot",
         },
         blocking=True,
@@ -649,14 +649,14 @@ async def test_live_service_error(
     await hass.services.async_call(
         DOMAIN,
         SERVICE_LIVE,
-        {ATTR_ENTITY_ID: "light.wled_rgb_light_master", ATTR_LIVE: "off"},
+        {ATTR_ENTITY_ID: "light.wled_rgb_light_segment_0", ATTR_LIVE: "off"},
         blocking=True,
     )
     await hass.async_block_till_done()
 
-    state = hass.states.get("light.wled_rgb_light_master")
+    state = hass.states.get("light.wled_rgb_light_segment_0")
     assert state
-    assert state.lor == Live.OFF
+    assert state.live == Live.OFF
     assert "Invalid response from API" in caplog.text
     assert mock_wled.live.call_count == 1
     mock_wled.live.assert_called_with(live="off")
