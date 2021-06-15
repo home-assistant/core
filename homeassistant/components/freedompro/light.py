@@ -40,10 +40,10 @@ class Device(CoordinatorEntity, LightEntity):
         self._hass = hass
         self._session = aiohttp_client.async_get_clientsession(self._hass)
         self._api_key = api_key
-        self._name = device.get("name")
-        self._uid = device.get("uid")
-        self._type = device.get("type")
-        self._characteristics = device.get("characteristics")
+        self._attr_name = device["name"]
+        self._attr_unique_id = device["uid"]
+        self._attr_type = device["type"]
+        self._attr_characteristics = device["characteristics"]
         self._on = False
         self._brightness = 0
         self._saturation = 0
@@ -52,20 +52,20 @@ class Device(CoordinatorEntity, LightEntity):
     @property
     def name(self):
         """Return the name of the Freedompro light."""
-        return self._name
+        return self._attr_name
 
     @property
     def unique_id(self):
         """Return a unique identifier for this light."""
-        return self._uid
+        return self._attr_unique_id
 
     @property
     def supported_features(self):
         """Supported features for lock."""
         support = 0
-        if "brightness" in self._characteristics:
+        if "brightness" in self._attr_characteristics:
             support |= SUPPORT_BRIGHTNESS
-        if "hue" in self._characteristics:
+        if "hue" in self._attr_characteristics:
             support |= SUPPORT_COLOR
         return support
 

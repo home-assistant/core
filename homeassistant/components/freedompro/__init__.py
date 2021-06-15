@@ -15,9 +15,7 @@ from .const import COORDINATOR, DOMAIN, UNDO_UPDATE_LISTENER
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [
-    "light",
-]
+PLATFORMS = ["light"]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
@@ -86,27 +84,15 @@ class FreedomproDataUpdateCoordinator(DataUpdateCoordinator):
             else:
                 raise UpdateFailed()
 
-            result = await get_states(
-                aiohttp_client.async_get_clientsession(self._hass), self._api_key
-            )
+        result = await get_states(
+            aiohttp_client.async_get_clientsession(self._hass), self._api_key
+        )
 
-            for device in self._devices:
-                dev = next(
-                    (dev for dev in result if dev["uid"] == device["uid"]),
-                    None,
-                )
-                if dev is not None and "state" in dev:
-                    device["state"] = dev["state"]
-        else:
-            result = await get_states(
-                aiohttp_client.async_get_clientsession(self._hass), self._api_key
+        for device in self._devices:
+            dev = next(
+                (dev for dev in result if dev["uid"] == device["uid"]),
+                None,
             )
-
-            for device in self._devices:
-                dev = next(
-                    (dev for dev in result if dev["uid"] == device["uid"]),
-                    None,
-                )
-                if dev is not None and "state" in dev:
-                    device["state"] = dev["state"]
+            if dev is not None and "state" in dev:
+                device["state"] = dev["state"]
         return self._devices
