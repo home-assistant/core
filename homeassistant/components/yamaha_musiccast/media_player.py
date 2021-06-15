@@ -34,6 +34,7 @@ from homeassistant.const import (
     STATE_PLAYING,
 )
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import service
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -41,16 +42,22 @@ from homeassistant.helpers.typing import DiscoveryInfoType, HomeAssistantType
 from homeassistant.util import uuid
 
 from . import MusicCastDataUpdateCoordinator, MusicCastDeviceEntity
+from ...core import ServiceCall
 from .const import (
     ATTR_MAIN_SYNC,
+    ATTR_MASTER,
     ATTR_MC_LINK,
     ATTR_MUSICCAST_GROUP,
     DEFAULT_ZONE,
     DOMAIN,
     HA_REPEAT_MODE_TO_MC_MAPPING,
     INTERVAL_SECONDS,
+    JOIN_SERVICE_SCHEMA,
     MC_REPEAT_MODE_TO_HA_MAPPING,
     NULL_GROUP,
+    SERVICE_JOIN,
+    SERVICE_UNJOIN,
+    UNJOIN_SERVICE_SCHEMA,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -129,6 +136,56 @@ async def async_setup_entry(
         )
 
     async_add_entities(media_players)
+
+    @service.verify_domain_control(hass, DOMAIN)
+    async def async_group_service_handle(service_call: ServiceCall):
+        """Handle services."""
+        entity_ids = service_call.data.get("entity_id", [])
+        if not entity_ids:
+            return
+
+        all_entities = []
+        for coord in hass.data[DOMAIN].values():
+            all_entities += coord.entities
+
+        entities = [entity for entity in all_entities if entity.entity_id in entity_ids]
+
+        if service_call.service == SERVICE_JOIN:
+            master_id = service_call.data[ATTR_MASTER]
+            master = next(
+                (entity for entity in all_entities if entity.entity_id == master_id),
+                None,
+            )
+            if master and isinstance(master, MusicCastDeviceEntity):
+                await master.async_server_join(entities)
+            else:
+                _LOGGER.error(
+                    "Invalid master specified for join service: %s",
+                    service_call.data[ATTR_MASTER],
+                )
+        elif service_call.service == SERVICE_UNJOIN:
+            for entity in entities:
+                if isinstance(entity, MusicCastDeviceEntity):
+                    await entity.async_unjoin()
+                else:
+                    _LOGGER.error(
+                        "Invalid entity specified for unjoin service: %s",
+                        entity,
+                    )
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_JOIN,
+        async_group_service_handle,
+        JOIN_SERVICE_SCHEMA,
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_UNJOIN,
+        async_group_service_handle,
+        UNJOIN_SERVICE_SCHEMA,
+    )
 
 
 class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
