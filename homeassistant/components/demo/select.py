@@ -19,7 +19,7 @@ async def async_setup_platform(
     async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType = None,
 ) -> None:
-    """Set up the demo Number entity."""
+    """Set up the demo Select entity."""
     async_add_entities(
         [
             DemoSelect(

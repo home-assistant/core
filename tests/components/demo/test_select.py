@@ -18,7 +18,7 @@ ENTITY_SPEED = "select.speed"
 
 @pytest.fixture(autouse=True)
 async def setup_demo_select(hass: HomeAssistant) -> None:
-    """Initialize setup demo Number entity."""
+    """Initialize setup demo select entity."""
     assert await async_setup_component(hass, DOMAIN, {"select": {"platform": "demo"}})
     await hass.async_block_till_done()
 
