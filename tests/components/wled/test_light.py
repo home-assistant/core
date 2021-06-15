@@ -3,7 +3,7 @@ import json
 from unittest.mock import MagicMock
 
 import pytest
-from wled import Device as WLEDDevice, WLEDConnectionError, WLEDError, Live
+from wled import Device as WLEDDevice, Live, WLEDConnectionError, WLEDError
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,

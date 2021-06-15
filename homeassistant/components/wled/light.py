@@ -5,7 +5,6 @@ from functools import partial
 from typing import Any, Tuple, cast
 
 import voluptuous as vol
-
 from wled import Live
 
 from homeassistant.components.light import (
