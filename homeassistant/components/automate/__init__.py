@@ -10,12 +10,6 @@ from .hub import PulseHub
 PLATFORMS = ["cover"]
 
 
-async def async_setup(hass: HomeAssistant, config: dict) -> bool:
-    """Set up the Automate Pulse Hub v2 component."""
-    hass.data.setdefault(DOMAIN, {})
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Automate Pulse Hub v2 from a config entry."""
     hub = PulseHub(hass, entry)
