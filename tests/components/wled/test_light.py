@@ -607,7 +607,7 @@ async def test_live_service(
         blocking=True,
     )
     await hass.async_block_till_done()
-    assert mock_wled.live.call_count == 2
+    assert mock_wled.live.call_count == 1
     mock_wled.live.assert_called_with(live="off")
 
     await hass.services.async_call(
@@ -620,7 +620,7 @@ async def test_live_service(
         blocking=True,
     )
     await hass.async_block_till_done()
-    assert mock_wled.live.call_count == 1
+    assert mock_wled.live.call_count == 2
     mock_wled.live.assert_called_with(live="on")
 
     await hass.services.async_call(
