@@ -329,7 +329,12 @@ class XiaomiAirHumidifier(XiaomiGenericHumidifierDevice):
     def target_humidity(self):
         """Return the current target humidity."""
         if self._state:
-            return self._state_attrs[ATTR_TARGET_HUMIDITY]
+            if (
+                AirhumidifierOperationMode(self._state_attrs[ATTR_MODE])
+                == AirhumidifierOperationMode.Auto
+            ):
+                return self._state_attrs[ATTR_TARGET_HUMIDITY]
+        return None
 
     @property
     def min_humidity(self):
@@ -342,13 +347,24 @@ class XiaomiAirHumidifier(XiaomiGenericHumidifierDevice):
         return 80
 
     async def async_set_humidity(self, humidity) -> None:
-        """Set the mode of the humidifier."""
+        """Set the target humidity of the humidifier and set the mode to auto."""
         _LOGGER.debug("Setting the humidity to: %s", humidity)
 
         await self._try_command(
             "Setting operation mode of the miio device failed.",
             self._device.set_target_humidity,
             humidity,
+        )
+        if (
+            self.supported_features & SUPPORT_MODES == 0
+            or AirhumidifierOperationMode(self._state_attrs[ATTR_MODE])
+            == AirhumidifierOperationMode.Auto
+        ):
+            return
+        await self._try_command(
+            "Setting operation mode of the miio device to auto failed.",
+            self._device.set_mode,
+            AirhumidifierOperationMode.Auto,
         )
 
     async def async_set_mode(self, mode) -> None:
@@ -357,7 +373,6 @@ class XiaomiAirHumidifier(XiaomiGenericHumidifierDevice):
             return
 
         _LOGGER.debug("Setting the operation mode to: %s", mode)
-
         await self._try_command(
             "Setting operation mode of the miio device failed.",
             self._device.set_mode,
@@ -382,8 +397,43 @@ class XiaomiAirHumidifierMiot(XiaomiAirHumidifier):
         """Return the current mode."""
         return AirhumidifierMiotOperationMode(self._state_attrs[ATTR_MODE]).name
 
+    @property
+    def target_humidity(self):
+        """Return the current target humidity."""
+        if self._state:
+            if (
+                AirhumidifierMiotOperationMode(self._state_attrs[ATTR_MODE])
+                == AirhumidifierMiotOperationMode.Auto
+            ):
+                return self._state_attrs[ATTR_TARGET_HUMIDITY]
+        return None
+
+    async def async_set_humidity(self, humidity) -> None:
+        """Set the target humidity of the humidifier and set the mode to auto."""
+        _LOGGER.debug("Setting the humidity to: %s", humidity)
+
+        await self._try_command(
+            "Setting operation mode of the miio device failed.",
+            self._device.set_target_humidity,
+            humidity,
+        )
+        if (
+            self.supported_features & SUPPORT_MODES == 0
+            or AirhumidifierMiotOperationMode(self._state_attrs[ATTR_MODE])
+            == AirhumidifierMiotOperationMode.Auto
+        ):
+            return
+        await self._try_command(
+            "Setting operation mode of the miio device to auto failed.",
+            self._device.set_mode,
+            AirhumidifierMiotOperationMode.Auto,
+        )
+
     async def async_set_mode(self, mode: str) -> None:
         """Set the mode of the fan."""
+        if self.supported_features & SUPPORT_MODES == 0:
+            return
+
         if self._state:
             await self._try_command(
                 "Setting operation mode of the miio device failed.",
