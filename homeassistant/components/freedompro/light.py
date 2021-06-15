@@ -119,8 +119,8 @@ class Device(CoordinatorEntity, LightEntity):
 
     async def async_turn_off(self, **kwargs):
         """Async function to set off to light."""
-        self._on = False
-        payload = {"on": self._on}
+        self._attr_is_on = False
+        payload = {"on": False}
         payload = json.dumps(payload)
         await put_state(
             self._session,
