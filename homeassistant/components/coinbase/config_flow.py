@@ -81,7 +81,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(self, user_input=None, options=None):
         """Handle the initial step."""
         errors = {}
         if user_input is None:
@@ -102,8 +102,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = "unknown"
         else:
             return self.async_create_entry(
-                title=info["title"],
-                data=user_input,
+                title=info["title"], data=user_input, options=options
             )
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
@@ -111,15 +110,20 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, config):
         """Handle import of Coinbase config from YAML."""
-        cleaned_data = {}
-        cleaned_data[CONF_API_KEY] = config[CONF_API_KEY]
-        cleaned_data[CONF_API_TOKEN] = config[CONF_YAML_API_TOKEN]
+        cleaned_data = {
+            CONF_API_KEY: config[CONF_API_KEY],
+            CONF_API_TOKEN: config[CONF_YAML_API_TOKEN],
+        }
+        options = {
+            CONF_CURRENCIES: [],
+            CONF_EXCHANGE_RATES: [],
+        }
         if CONF_CURRENCIES in config:
-            cleaned_data[CONF_CURRENCIES] = config[CONF_CURRENCIES]
+            options[CONF_CURRENCIES] = config[CONF_CURRENCIES]
         if CONF_EXCHANGE_RATES in config:
-            cleaned_data[CONF_EXCHANGE_RATES] = config[CONF_EXCHANGE_RATES]
+            options[CONF_EXCHANGE_RATES] = config[CONF_EXCHANGE_RATES]
 
-        return await self.async_step_user(user_input=cleaned_data)
+        return await self.async_step_user(user_input=cleaned_data, options=options)
 
     @staticmethod
     @callback
