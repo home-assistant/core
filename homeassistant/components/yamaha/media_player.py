@@ -186,7 +186,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     # Register Service 'menu_cursor'
     platform.async_register_entity_service(
         SERVICE_MENU_CURSOR,
-        {vol.Required(ATTR_CURSOR): vol.In(CURSOR_TYPE_MAP.keys())},
+        {vol.Required(ATTR_CURSOR): vol.In(CURSOR_TYPE_MAP)},
         YamahaDevice.menu_cursor.__name__,
     )
 
