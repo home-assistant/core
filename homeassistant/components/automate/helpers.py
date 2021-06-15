@@ -25,8 +25,7 @@ def async_add_automate_entities(
             _LOGGER.debug("New %s %s", entity_class.__name__, unique_id)
             new_item = entity_class(roller)
             current.add(unique_id)
-            if new_item.include_entity():
-                new_items.append(new_item)
+            new_items.append(new_item)
 
     async_add_entities(new_items)
 
