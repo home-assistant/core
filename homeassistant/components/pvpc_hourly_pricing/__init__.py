@@ -88,7 +88,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             for entity_id, reg_entry in ent_reg.entities.items():
                 if reg_entry.config_entry_id == entry.entry_id:
                     ent_reg.async_remove(entity_id)
-                    _LOGGER.error(
+                    _LOGGER.warning(
                         "Old PVPC Sensor %s is removed "
                         "(another one already exists, using the same tariff)",
                         entity_id,
