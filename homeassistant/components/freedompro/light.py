@@ -64,11 +64,6 @@ class Device(CoordinatorEntity, LightEntity):
         return self._on
 
     @property
-    def brightness(self):
-        """Return the status of the light brightness."""
-        return math.floor(self._brightness / 100 * 255)
-
-    @property
     def hs_color(self):
         """Return the status of the light hs_color."""
         return [self._hue, self._saturation]
