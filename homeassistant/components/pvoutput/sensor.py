@@ -1,5 +1,6 @@
 """Support for getting collected information from PVOutput."""
 from collections import namedtuple
+import datetime
 from datetime import timedelta
 import logging
 
@@ -125,7 +126,18 @@ class PvoutputSensor(SensorEntity):
     def _async_update_from_rest_data(self):
         """Update state from the rest data."""
         try:
-            self.pvcoutput = self.status._make(self.rest.data.split(","))
+            raw_data = self.rest.data.split(",")
+            # ["20210615", "21:20", "23608", "24", "NaN", "NaN", "0.007", "56.5", "242.0"]
+            # If the retrieved datetime is older than 5 minutes, set the power to 0.
+            reading_datetime = datetime.datetime.strptime(
+                raw_data[0] + raw_data[1], "%Y%m%d%H:%M"
+            )
+            if datetime.datetime.now() > reading_datetime + timedelta(minutes=5):
+                _LOGGER.debug(
+                    "Collected data was older than 5 minutes, so set the power to 0"
+                )
+                raw_data[3] = "NaN"
+            self.pvcoutput = self.status._make(raw_data)
         except TypeError:
             self.pvcoutput = None
             _LOGGER.error("Unable to fetch data from PVOutput. %s", self.rest.data)
