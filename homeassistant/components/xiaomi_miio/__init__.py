@@ -19,6 +19,7 @@ from .const import (
     KEY_COORDINATOR,
     MODELS_AIR_MONITOR,
     MODELS_FAN,
+    MODELS_HUMIDIFIER,
     MODELS_LIGHT,
     MODELS_SWITCH,
     MODELS_VACUUM,
@@ -30,6 +31,7 @@ _LOGGER = logging.getLogger(__name__)
 GATEWAY_PLATFORMS = ["alarm_control_panel", "light", "sensor", "switch"]
 SWITCH_PLATFORMS = ["switch"]
 FAN_PLATFORMS = ["fan"]
+HUMIDIFIER_PLATFORMS = ["humidifier", "sensor"]
 LIGHT_PLATFORMS = ["light"]
 VACUUM_PLATFORMS = ["vacuum"]
 AIR_MONITOR_PLATFORMS = ["air_quality", "sensor"]
@@ -61,6 +63,8 @@ def get_platforms(config_entry):
     if flow_type == CONF_DEVICE:
         if model in MODELS_SWITCH:
             return SWITCH_PLATFORMS
+        if model in MODELS_HUMIDIFIER:
+            return HUMIDIFIER_PLATFORMS
         if model in MODELS_FAN:
             return FAN_PLATFORMS
         if model in MODELS_LIGHT:
