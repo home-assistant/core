@@ -42,18 +42,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
-    """
-    Set up the electricity price sensor from configuration.yaml.
-
-    ```yaml
-    pvpc_hourly_pricing:
-      - name: PVPC manual ve
-        tariff: electric_car
-      - name: PVPC manual nocturna
-        tariff: discrimination
-        timeout: 3
-    ```
-    """
+    """Set up the electricity price sensor from configuration.yaml."""
     for conf in config.get(DOMAIN, []):
         hass.async_create_task(
             hass.config_entries.flow.async_init(
