@@ -85,7 +85,7 @@ class OmniLogicLightControl(OmniLogicEntity, LightEntity):
         icon: str,
         item_id: tuple,
         state_key: str,
-    ):
+    ) -> None:
         """Initialize Entities."""
         super().__init__(
             coordinator=coordinator,
@@ -106,8 +106,6 @@ class OmniLogicLightControl(OmniLogicEntity, LightEntity):
         self._state = None
         self._last_action = 0
         self._state_delay = 60
-
-        return None  # pylint: disable=useless-return
 
     @property
     def is_on(self):
