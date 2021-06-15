@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from collections import deque
-from collections.abc import Coroutine
+from collections.abc import Callable, Coroutine
 import logging
 from typing import Any
 
@@ -24,7 +24,7 @@ class SonosHouseholdCoordinator:
         self.hass = hass
         self.household_id = household_id
         self._processed_events = deque(maxlen=5)
-        self.async_poll: Coroutine | None = None
+        self.async_poll: Callable[[], Coroutine[None, None, None]] | None = None
 
     def setup(self, soco: SoCo) -> None:
         """Set up the SonosAlarm instance."""

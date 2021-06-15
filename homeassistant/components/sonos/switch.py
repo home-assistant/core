@@ -206,4 +206,4 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
             self.alarm.enabled = turn_on
             await self.hass.async_add_executor_job(self.alarm.save)
         except (OSError, SoCoException, SoCoUPnPException) as exc:
-            _LOGGER.error("Could not update %s: %s", self.entity_id, exc, exc_info=True)
+            _LOGGER.error("Could not update %s: %s", self.entity_id, exc)

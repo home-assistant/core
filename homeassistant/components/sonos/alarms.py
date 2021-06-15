@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 import logging
+from typing import Any
 
 from pysonos import SoCo
 from pysonos.alarms import Alarm, get_alarms
@@ -19,7 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 class SonosAlarms(SonosHouseholdCoordinator):
     """Coordinator class for Sonos alarms."""
 
-    def __init__(self, *args) -> None:
+    def __init__(self, *args: Any) -> None:
         """Initialize the data."""
         super().__init__(*args)
         self._alarms: dict[str, Alarm] = {}
