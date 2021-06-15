@@ -608,7 +608,7 @@ async def test_live_service(
     )
     await hass.async_block_till_done()
     assert mock_wled.live.call_count == 1
-    mock_wled.live.assert_called_with(live="off")
+    mock_wled.live.assert_called_with(live=0)
 
     await hass.services.async_call(
         DOMAIN,
@@ -621,7 +621,7 @@ async def test_live_service(
     )
     await hass.async_block_till_done()
     assert mock_wled.live.call_count == 2
-    mock_wled.live.assert_called_with(live="on")
+    mock_wled.live.assert_called_with(live=1)
 
     await hass.services.async_call(
         DOMAIN,
@@ -634,7 +634,7 @@ async def test_live_service(
     )
     await hass.async_block_till_done()
     assert mock_wled.live.call_count == 3
-    mock_wled.live.assert_called_with(live="off_until_reboot")
+    mock_wled.live.assert_called_with(live=2)
 
 
 async def test_live_service_error(
