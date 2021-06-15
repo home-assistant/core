@@ -190,7 +190,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 thermostat["name"],
                 thermostat["modelNumber"],
             )
-        entities.append(Thermostat(data, index))
+        entities.append(Thermostat(data, index, thermostat))
 
     async_add_entities(entities, True)
 
@@ -304,11 +304,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class Thermostat(ClimateEntity):
     """A thermostat class for Ecobee."""
 
-    def __init__(self, data, thermostat_index):
+    def __init__(self, data, thermostat_index, thermostat):
         """Initialize the thermostat."""
         self.data = data
         self.thermostat_index = thermostat_index
-        self.thermostat = self.data.ecobee.get_thermostat(self.thermostat_index)
+        self.thermostat = thermostat
         self._name = self.thermostat["name"]
         self.vacation = None
         self._last_active_hvac_mode = HVAC_MODE_HEAT_COOL
