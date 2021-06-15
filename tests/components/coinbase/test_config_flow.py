@@ -309,9 +309,8 @@ async def test_yaml_import(hass):
         )
     assert result["type"] == "create_entry"
     assert result["title"] == "Test User"
-    assert result["data"] == {
-        CONF_API_KEY: "123456",
-        CONF_API_TOKEN: "AbCDeF",
+    assert result["data"] == {CONF_API_KEY: "123456", CONF_API_TOKEN: "AbCDeF"}
+    assert result["options"] == {
         CONF_CURRENCIES: ["BTC", "USD"],
         CONF_EXCHANGE_RATES: ["ATOM", "BTC"],
     }
