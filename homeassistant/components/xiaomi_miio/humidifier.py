@@ -408,7 +408,7 @@ class XiaomiAirHumidifier(XiaomiGenericHumidifierDevice):
             return
 
         if mode not in AirhumidifierOperationMode:
-            _LOGGER.warning(f"Mode {mode} is not a valid operation mode.")
+            _LOGGER.warning("Mode %s is not a valid operation mode.", mode)
             return
 
         _LOGGER.debug("Setting the operation mode to: %s", mode)
@@ -478,7 +478,7 @@ class XiaomiAirHumidifierMiot(XiaomiAirHumidifier):
             return
 
         if mode not in self.REVERSE_MODE_MAPPING:
-            _LOGGER.warning(f"Mode {mode} is not a valid operation mode.")
+            _LOGGER.warning("Mode %s is not a valid operation mode.", mode)
             return
 
         _LOGGER.debug("Setting the operation mode to: %s", mode)
