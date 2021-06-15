@@ -635,7 +635,7 @@ gTTS==2.2.2
 garages-amsterdam==2.1.1
 
 # homeassistant.components.garmin_connect
-garminconnect_aio==0.1.4
+garminconnect_ha==0.1.6
 
 # homeassistant.components.geniushub
 geniushub-client==0.6.30
@@ -1352,7 +1352,7 @@ pycsspeechtts==1.0.4
 # pycups==1.9.73
 
 # homeassistant.components.daikin
-pydaikin==2.4.1
+pydaikin==2.4.2
 
 # homeassistant.components.danfoss_air
 pydanfossair==0.1.0
@@ -1464,7 +1464,7 @@ pyhomematic==0.1.72
 pyhomeworks==0.0.6
 
 # homeassistant.components.ialarm
-pyialarm==1.8.1
+pyialarm==1.9.0
 
 # homeassistant.components.icloud
 pyicloud==0.10.2
