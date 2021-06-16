@@ -105,6 +105,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class XiaomiGenericHumidifierDevice(XiaomiMiioEntity, HumidifierEntity):
     """Representation of a generic Xiaomi humidifier device."""
 
+    _attr_device_class = DEVICE_CLASS_HUMIDIFIER
+    _attr_supported_features = SUPPORT_MODES
+    _attr_should_poll = True
+
     def __init__(self, name, device, entry, unique_id, coordinator):
         """Initialize the generic Xiaomi device."""
         super().__init__(name, device, entry, unique_id, coordinator=coordinator)
@@ -119,21 +123,6 @@ class XiaomiGenericHumidifierDevice(XiaomiMiioEntity, HumidifierEntity):
         self._min_humidity = DEFAULT_MIN_HUMIDITY
         self._max_humidity = DEFAULT_MAX_HUMIDITY
         self._humidity_steps = 100
-
-    @property
-    def device_class(self):
-        """Return the device class."""
-        return DEVICE_CLASS_HUMIDIFIER
-
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        return SUPPORT_MODES
-
-    @property
-    def should_poll(self):
-        """Poll the device."""
-        return True
 
     @property
     def available(self):

@@ -89,7 +89,7 @@ class SensorType:
     state_class: str = None
 
 
-GATEWAY_SENSOR_TYPES = {
+SENSOR_TYPES = {
     "temperature": SensorType(
         unit=TEMP_CELSIUS,
         icon=None,
@@ -110,21 +110,6 @@ GATEWAY_SENSOR_TYPES = {
     ),
     "load_power": SensorType(
         unit=POWER_WATT, icon=None, device_class=DEVICE_CLASS_POWER
-    ),
-}
-
-HUMIDIFIER_SENSOR_TYPES = {
-    "temperature": SensorType(
-        unit=TEMP_CELSIUS,
-        icon=None,
-        device_class=DEVICE_CLASS_TEMPERATURE,
-        state_class=STATE_CLASS_MEASUREMENT,
-    ),
-    "humidity": SensorType(
-        unit=PERCENTAGE,
-        icon="mdi:water-percent",
-        device_class=DEVICE_CLASS_HUMIDITY,
-        state_class=STATE_CLASS_MEASUREMENT,
     ),
     "water_level": SensorType(
         unit=PERCENTAGE,
@@ -183,7 +168,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         sub_devices = gateway.devices
         coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
         for sub_device in sub_devices.values():
-            sensor_variables = set(sub_device.status) & set(GATEWAY_SENSOR_TYPES)
+            sensor_variables = set(sub_device.status) & set(SENSOR_TYPES)
             if sensor_variables:
                 entities.extend(
                     [
@@ -251,10 +236,6 @@ class XiaomiHumidifierSensor(XiaomiGenericSensor, XiaomiMiioEntity):
         """Initialize the entity."""
         super().__init__(name, device, entry, unique_id, attribute, coordinator)
 
-        self._icon = HUMIDIFIER_SENSOR_TYPES[self._attribute].icon
-        self._unit_of_measurement = HUMIDIFIER_SENSOR_TYPES[self._attribute].unit
-        self._device_class = HUMIDIFIER_SENSOR_TYPES[self._attribute].device_class
-        self._state_class = HUMIDIFIER_SENSOR_TYPES[self._attribute].state_class
         self._available = None
         self._state = None
         self._state_attrs = {}
@@ -276,12 +257,22 @@ class XiaomiHumidifierSensor(XiaomiGenericSensor, XiaomiMiioEntity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
-        return self._unit_of_measurement
+        return SENSOR_TYPES[self._attribute].unit
 
     @property
     def icon(self):
-        """Return the icon to use for device if any."""
-        return self._icon
+        """Return the icon to use in the frontend."""
+        return SENSOR_TYPES[self._attribute].icon
+
+    @property
+    def device_class(self):
+        """Return the device class of this entity."""
+        return SENSOR_TYPES[self._attribute].device_class
+
+    @property
+    def state_class(self):
+        """Return the state class of this entity."""
+        return SENSOR_TYPES[self._attribute].state_class
 
     @property
     def available(self):
@@ -353,7 +344,7 @@ class XiaomiAirQualityMonitor(XiaomiMiioEntity, SensorEntity):
 
     @property
     def icon(self):
-        """Return the icon to use for device if any."""
+        """Return the icon to use in the frontend."""
         return self._icon
 
     @property
@@ -411,22 +402,22 @@ class XiaomiGatewaySensor(XiaomiGatewayDevice, SensorEntity):
     @property
     def icon(self):
         """Return the icon to use in the frontend."""
-        return GATEWAY_SENSOR_TYPES[self._data_key].icon
+        return SENSOR_TYPES[self._data_key].icon
 
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
-        return GATEWAY_SENSOR_TYPES[self._data_key].unit
+        return SENSOR_TYPES[self._data_key].unit
 
     @property
     def device_class(self):
         """Return the device class of this entity."""
-        return GATEWAY_SENSOR_TYPES[self._data_key].device_class
+        return SENSOR_TYPES[self._data_key].device_class
 
     @property
     def state_class(self):
         """Return the state class of this entity."""
-        return GATEWAY_SENSOR_TYPES[self._data_key].state_class
+        return SENSOR_TYPES[self._data_key].state_class
 
     @property
     def state(self):
