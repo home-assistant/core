@@ -43,7 +43,10 @@ async def async_setup_entry(
         get_entities, entry.data["username"], entry.data["password"]
     )
 
-    async_add_entities(entities)
+    async_add_entities(
+       [FrigidaireClimate(client, appliance) for appliance in appliances], 
+       update_before_add=True
+    )
 
 
 class FrigidaireClimate(ClimateEntity):
