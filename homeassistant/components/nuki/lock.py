@@ -61,7 +61,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
         "lock_n_go",
         "set_continuous_mode",
         {
-            vol.Optional(ATTR_ENABLE, default=False): cv.boolean,
+            vol.Required(ATTR_ENABLE): cv.boolean,
         },
         "set_continuous_mode",
     )
