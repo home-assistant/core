@@ -191,7 +191,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         if device:
             for attribute in attributes:
                 entities.append(
-                    XiaomiHumidifierSensor(
+                    XiaomiGenericSensor(
                         f"{config_entry.title}_{attribute}",
                         device,
                         config_entry,
@@ -214,25 +214,17 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 
 class XiaomiGenericSensor(XiaomiMiioEntity, SensorEntity):
-    """Representation of a Xiaomi generic sensor."""
+    """Representation of a Xiaomi Humidifier sensor."""
 
     def __init__(self, name, device, entry, unique_id, attribute, coordinator):
         """Initialize the entity."""
         super().__init__(name, device, entry, unique_id, coordinator)
+
         self._name = name
         self._device = device
         self._entry = entry
         self._unique_id = unique_id
         self._attribute = attribute
-
-
-class XiaomiHumidifierSensor(XiaomiGenericSensor, XiaomiMiioEntity):
-    """Representation of a Xiaomi Humidifier sensor."""
-
-    def __init__(self, name, device, entry, unique_id, attribute, coordinator):
-        """Initialize the entity."""
-        super().__init__(name, device, entry, unique_id, attribute, coordinator)
-
         self._available = None
         self._state = None
         self._state_attrs = {}
