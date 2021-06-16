@@ -1,6 +1,8 @@
 """Support for KNX/IP numeric values."""
 from __future__ import annotations
 
+from typing import cast
+
 import voluptuous as vol
 from xknx import XKNX
 from xknx.devices import NumericValue
@@ -84,9 +86,8 @@ class KNXNumber(KnxEntity, NumberEntity, RestoreEntity):
     @property
     def value(self) -> float:
         """Return the entity value to represent the entity state."""
-        value = self._device.resolve_state()
-        # self._device.sensor_value.value is initialized so this should never be None
-        return value if value is not None else 0
+        # self._device.sensor_value.value is set in __init__ so it is never None
+        return cast(float, self._device.resolve_state())
 
     async def async_set_value(self, value: float) -> None:
         """Set new value."""
