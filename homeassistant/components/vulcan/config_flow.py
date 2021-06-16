@@ -145,11 +145,11 @@ class VulcanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Allow user to select saved credentials."""
         credentials_list = {}
         for entry in self.hass.config_entries.async_entries(DOMAIN):
-            credentials_list[entry] = entry.data.get("account")["UserName"]
+            credentials_list[entry.entry_id] = entry.data.get("account")["UserName"]
 
         errors = {}
         if user_input is not None:
-            entry = user_input["credentials"]
+            entry = self.hass.config_entries.async_get_entry(user_input["credentials"])
             keystore = Keystore.load(entry.data.get("keystore"))
             account = Account.load(entry.data.get("account"))
             client = Vulcan(keystore, account)
@@ -178,8 +178,8 @@ class VulcanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     title=f"{_student.pupil.first_name} {_student.pupil.last_name}",
                     data={
                         "student_id": str(_student.pupil.id),
-                        "keystore": self.keystore.as_dict,
-                        "account": self.account.as_dict,
+                        "keystore": keystore.as_dict,
+                        "account": account.as_dict,
                     },
                 )
             # pylint:disable=attribute-defined-outside-init
