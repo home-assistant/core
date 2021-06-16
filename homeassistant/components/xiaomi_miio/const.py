@@ -19,7 +19,6 @@ KEY_COORDINATOR = "coordinator"
 KEY_DEVICE = "device"
 
 ATTR_AVAILABLE = "available"
-ATTR_MIO_DEVICE = "miio_device"
 
 # Cloud
 SERVER_COUNTRY_CODES = ["cn", "de", "i2", "ru", "sg", "us"]
