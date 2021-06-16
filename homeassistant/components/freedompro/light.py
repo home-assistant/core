@@ -9,6 +9,7 @@ from homeassistant.components.light import (
     ATTR_HS_COLOR,
     COLOR_MODE_BRIGHTNESS,
     COLOR_MODE_HS,
+    COLOR_MODE_ONOFF,
     LightEntity,
 )
 from homeassistant.const import CONF_API_KEY
@@ -43,25 +44,29 @@ class Device(CoordinatorEntity, LightEntity):
         self._attr_unique_id = device["uid"]
         self._type = device["type"]
         self._characteristics = device["characteristics"]
-        self._on = False
-        self._brightness = 0
+        self._attr_is_on = False
+        self._attr_brightness = 0
         self._saturation = 0
         self._hue = 0
-
-    @property
-    def supported_features(self):
-        """Supported features for lock."""
-        support = 0
-        if "brightness" in self._characteristics:
-            support |= COLOR_MODE_BRIGHTNESS
-        if "hue" in self._characteristics:
-            support |= COLOR_MODE_HS
-        return support
 
     @property
     def hs_color(self):
         """Return the status of the light hs_color."""
         return [self._hue, self._saturation]
+
+    @property
+    def color_mode(self):
+        """Return the color mode of the light."""
+        if "hue" in self._characteristics:
+            return COLOR_MODE_HS
+        if "brightness" in self._characteristics:
+            return COLOR_MODE_BRIGHTNESS
+        return COLOR_MODE_ONOFF
+
+    @property
+    def supported_color_modes(self):
+        """Flag supported color modes."""
+        return {self.color_mode}
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -92,7 +97,7 @@ class Device(CoordinatorEntity, LightEntity):
         payload = {"on": True}
         if ATTR_BRIGHTNESS in kwargs:
             self._attr_brightness = math.floor(kwargs[ATTR_BRIGHTNESS] / 255 * 100)
-            payload["brightness"] = self.brightness
+            payload["brightness"] = self._attr_brightness
         if ATTR_HS_COLOR in kwargs:
             self._saturation = math.floor(kwargs[ATTR_HS_COLOR][1])
             self._hue = math.floor(kwargs[ATTR_HS_COLOR][0])
