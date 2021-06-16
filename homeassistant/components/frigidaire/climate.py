@@ -241,7 +241,7 @@ class FrigidaireClimate(ClimateEntity):
         try:
             details = self._client.get_appliance_details(self._appliance)
             self._details = details
-            self._available = True
+            self._attr_available = True
         except (frigidaire.FrigidaireException):
             _LOGGER.error("Failed to connect to Frigidaire servers")
             self._available = False
