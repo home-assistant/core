@@ -279,7 +279,9 @@ MODBUS_SCHEMA = vol.Schema(
         vol.Optional(CONF_BINARY_SENSORS): vol.All(
             cv.ensure_list, [BINARY_SENSOR_SCHEMA]
         ),
-        vol.Optional(CONF_CLIMATES): vol.All(cv.ensure_list, [CLIMATE_SCHEMA]),
+        vol.Optional(CONF_CLIMATES): vol.All(
+            cv.ensure_list, [vol.All(CLIMATE_SCHEMA, sensor_schema_validator)]
+        ),
         vol.Optional(CONF_COVERS): vol.All(cv.ensure_list, [COVERS_SCHEMA]),
         vol.Optional(CONF_LIGHTS): vol.All(cv.ensure_list, [LIGHT_SCHEMA]),
         vol.Optional(CONF_SENSORS): vol.All(
