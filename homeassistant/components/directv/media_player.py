@@ -91,10 +91,10 @@ class DIRECTVMediaPlayer(DIRECTVEntity, MediaPlayerEntity):
         """Initialize DirecTV media player."""
         super().__init__(
             dtv=dtv,
-            name=name,
             address=address,
         )
 
+        self._attr_name = name
         self._attr_device_class = DEVICE_CLASS_RECEIVER
         self._attr_available = False
         self._attr_assumed_state = None
@@ -139,11 +139,6 @@ class DIRECTVMediaPlayer(DIRECTVEntity, MediaPlayerEntity):
             ATTR_MEDIA_RECORDED: self.media_recorded,
             ATTR_MEDIA_START_TIME: self.media_start_time,
         }
-
-    @property
-    def name(self):
-        """Return the name of the device."""
-        return self._name
 
     @property
     def unique_id(self):
