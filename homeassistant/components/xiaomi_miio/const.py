@@ -15,10 +15,15 @@ CONF_MANUAL = "manual"
 # Options flow
 CONF_CLOUD_SUBDEVICES = "cloud_subdevices"
 
+# Keys
 KEY_COORDINATOR = "coordinator"
 KEY_DEVICE = "device"
 
+# Attributes
 ATTR_AVAILABLE = "available"
+
+# Status
+SUCCESS = ["ok"]
 
 # Cloud
 SERVER_COUNTRY_CODES = ["cn", "de", "i2", "ru", "sg", "us"]

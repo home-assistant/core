@@ -1,10 +1,8 @@
 """Support for Xiaomi Mi Air Purifier and Xiaomi Mi Air Humidifier with humidifier entity."""
 from enum import Enum
-from functools import partial
 import logging
 import math
 
-from miio import DeviceException
 from miio.airhumidifier import OperationMode as AirhumidifierOperationMode
 from miio.airhumidifier_miot import OperationMode as AirhumidifierMiotOperationMode
 
@@ -46,8 +44,6 @@ ATTR_MODEL = "model"
 ATTR_TARGET_HUMIDITY = "target_humidity"
 ATTR_TRANS_LEVEL = "trans_level"
 ATTR_HARDWARE_VERSION = "hardware_version"
-
-SUCCESS = ["ok"]
 
 SERVICE_TO_METHOD = {
     SERVICE_SET_TARGET_HUMIDITY: {
@@ -141,23 +137,6 @@ class XiaomiGenericHumidifierDevice(XiaomiMiioEntity, HumidifierEntity):
             return value.value
 
         return value
-
-    async def _try_command(self, mask_error, func, *args, **kwargs):
-        """Call a miio device command handling error messages."""
-        try:
-            result = await self.hass.async_add_executor_job(
-                partial(func, *args, **kwargs)
-            )
-
-            _LOGGER.debug("Response received from miio device: %s", result)
-
-            return result == SUCCESS
-        except DeviceException as exc:
-            if self._available:
-                _LOGGER.error(mask_error, exc)
-                self._available = False
-
-            return False
 
     @property
     def available_modes(self) -> list:
