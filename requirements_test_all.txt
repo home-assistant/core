@@ -636,7 +636,7 @@ pilight==0.1.1
 # homeassistant.components.seven_segments
 # homeassistant.components.sighthound
 # homeassistant.components.tensorflow
-pillow==8.1.2
+pillow==8.2.0
 
 # homeassistant.components.plex
 plexapi==4.5.1
@@ -704,7 +704,7 @@ pyMetEireann==0.2
 pyMetno==0.8.3
 
 # homeassistant.components.rfxtrx
-pyRFXtrx==0.26.1
+pyRFXtrx==0.27.0
 
 # homeassistant.components.tibber
 pyTibber==0.17.0
@@ -776,7 +776,7 @@ pyeconet==0.1.14
 pyeverlights==0.1.0
 
 # homeassistant.components.ezviz
-pyezviz==0.1.8.7
+pyezviz==0.1.8.9
 
 # homeassistant.components.fido
 pyfido==2.1.1
