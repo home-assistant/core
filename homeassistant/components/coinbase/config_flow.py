@@ -59,7 +59,7 @@ async def validate_options(
 
     client = hass.data[DOMAIN][config_entry.entry_id].client
 
-    accounts = get_accounts(client)
+    accounts = await hass.async_add_executor_job(get_accounts, client)
 
     accounts_currencies = [account[API_ACCOUNT_CURRENCY] for account in accounts]
     available_rates = await hass.async_add_executor_job(client.get_exchange_rates)
