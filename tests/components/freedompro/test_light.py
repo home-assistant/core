@@ -8,12 +8,10 @@ from homeassistant.components.light import (
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, STATE_OFF, STATE_ON
 from homeassistant.helpers import entity_registry as er
 
-from tests.components.freedompro import init_integration
 
-
-async def test_light_get_state(hass):
+async def test_light_get_state(hass, init_integration):
     """Test states of the light."""
-    await init_integration(hass)
+    init_integration
     registry = er.async_get(hass)
 
     entity_id = "light.lightbulb"
@@ -30,9 +28,9 @@ async def test_light_get_state(hass):
     )
 
 
-async def test_light_set_on(hass):
+async def test_light_set_on(hass, init_integration):
     """Test set on of the light."""
-    await init_integration(hass)
+    init_integration
     registry = er.async_get(hass)
 
     entity_id = "light.lightbulb"
@@ -60,9 +58,9 @@ async def test_light_set_on(hass):
     assert state.state == STATE_ON
 
 
-async def test_light_set_off(hass):
+async def test_light_set_off(hass, init_integration):
     """Test set off of the light."""
-    await init_integration(hass)
+    init_integration
     registry = er.async_get(hass)
 
     entity_id = "light.bedroomlight"
@@ -90,9 +88,9 @@ async def test_light_set_off(hass):
     assert state.state == STATE_OFF
 
 
-async def test_light_set_brightness(hass):
+async def test_light_set_brightness(hass, init_integration):
     """Test set brightness of the light."""
-    await init_integration(hass)
+    init_integration
     registry = er.async_get(hass)
 
     entity_id = "light.lightbulb"
@@ -121,9 +119,9 @@ async def test_light_set_brightness(hass):
     assert int(state.attributes[ATTR_BRIGHTNESS]) == 0
 
 
-async def test_light_set_hue(hass):
+async def test_light_set_hue(hass, init_integration):
     """Test set brightness of the light."""
-    await init_integration(hass)
+    init_integration
     registry = er.async_get(hass)
 
     entity_id = "light.lightbulb"

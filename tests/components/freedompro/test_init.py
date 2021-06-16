@@ -6,17 +6,16 @@ from homeassistant.components.freedompro.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 
 from tests.common import MockConfigEntry
-from tests.components.freedompro import init_integration
 
 LOGGER = logging.getLogger(__name__)
 
 ENTITY_ID = f"{DOMAIN}.fake_name"
 
 
-async def test_async_setup_entry(hass):
+async def test_async_setup_entry(hass, init_integration):
     """Test a successful setup entry."""
-    await init_integration(hass)
-
+    entry = init_integration
+    assert entry is not None
     state = hass.states
     assert state is not None
 
@@ -43,9 +42,9 @@ async def test_config_not_ready(hass):
         assert entry.state == ConfigEntryState.SETUP_RETRY
 
 
-async def test_unload_entry(hass):
+async def test_unload_entry(hass, init_integration):
     """Test successful unload of entry."""
-    entry = await init_integration(hass)
+    entry = init_integration
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert entry.state == ConfigEntryState.LOADED
