@@ -80,11 +80,6 @@ class FrigidaireClimate(ClimateEntity):
         return convert[unit]
 
     @property
-    def available(self):
-        """Return True if entity is available."""
-        return self._available
-
-    @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
         return (
