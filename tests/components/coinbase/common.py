@@ -1,7 +1,4 @@
 """Collection of helpers."""
-
-from unittest.mock import patch
-
 from homeassistant.components.coinbase.const import (
     CONF_CURRENCIES,
     CONF_EXCHANGE_RATES,
@@ -9,14 +6,46 @@ from homeassistant.components.coinbase.const import (
 )
 from homeassistant.const import CONF_API_KEY, CONF_API_TOKEN
 
-from .const import (
-    GOOD_CURRENCY,
-    GOOD_CURRENCY_2,
-    GOOD_EXCHNAGE_RATE,
-    GOOD_EXCHNAGE_RATE_2,
-)
+from .const import GOOD_EXCHNAGE_RATE, GOOD_EXCHNAGE_RATE_2, MOCK_ACCOUNTS_RESPONSE
 
 from tests.common import MockConfigEntry
+
+
+class MockPagination:
+    """Mock pagination result."""
+
+    def __init__(self, value=None):
+        """Load simple pagination for tests."""
+        self.next_starting_after = value
+
+
+class MockGetAccounts:
+    """Mock accounts with pagination."""
+
+    def __init__(self, starting_after=0):
+        """Init mocked object, forced to return two at a time."""
+        if (target_end := starting_after + 2) >= (
+            max_end := len(MOCK_ACCOUNTS_RESPONSE)
+        ):
+            end = max_end
+            self.pagination = MockPagination(value=None)
+        else:
+            end = target_end
+            self.pagination = MockPagination(value=target_end)
+
+        self.accounts = {
+            "data": MOCK_ACCOUNTS_RESPONSE[starting_after:end],
+        }
+        self.started_at = starting_after
+
+    def __getitem__(self, item):
+        """Handle subscript request."""
+        return self.accounts[item]
+
+
+def mocked_get_accounts(_, **kwargs):
+    """Return simplied accounts using mock."""
+    return MockGetAccounts(**kwargs)
 
 
 def mock_get_current_user():
@@ -25,44 +54,6 @@ def mock_get_current_user():
         "id": "123456-abcdef",
         "name": "Test User",
     }
-
-
-class Mock_pagination:
-    """Mock pagination result."""
-
-    def __init__(self):
-        """Load simple pagination for tests."""
-        self.next_starting_after = None
-
-
-class Mock_get_accounts:
-    """Mock accounts with pagination."""
-
-    def __init__(self):
-        """Init mocked object."""
-        self.pagination = Mock_pagination()
-        self.accounts = {
-            "data": [
-                {
-                    "balance": {"amount": "0.00001", "currency": GOOD_CURRENCY},
-                    "currency": "BTC",
-                    "id": "123456789",
-                    "name": "BTC Wallet",
-                    "native_balance": {"amount": "100.12", "currency": GOOD_CURRENCY},
-                },
-                {
-                    "balance": {"amount": "9.90", "currency": GOOD_CURRENCY_2},
-                    "currency": "USD",
-                    "id": "987654321",
-                    "name": "USD Wallet",
-                    "native_balance": {"amount": "9.90", "currency": GOOD_CURRENCY_2},
-                },
-            ],
-        }
-
-    def __getitem__(self, item):
-        """Handle subscript request."""
-        return self.accounts[item]
 
 
 def mock_get_exchange_rates():
@@ -87,17 +78,7 @@ async def init_mock_coinbase(hass):
     )
     config_entry.add_to_hass(hass)
 
-    with patch(
-        "coinbase.wallet.client.Client.get_current_user",
-        return_value=mock_get_current_user(),
-    ), patch(
-        "coinbase.wallet.client.Client.get_accounts",
-        return_value=Mock_get_accounts(),
-    ), patch(
-        "coinbase.wallet.client.Client.get_exchange_rates",
-        return_value=mock_get_exchange_rates(),
-    ):
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
 
     return config_entry

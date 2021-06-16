@@ -12,10 +12,10 @@ from homeassistant.const import CONF_API_KEY
 from homeassistant.setup import async_setup_component
 
 from .common import (
-    Mock_get_accounts,
     init_mock_coinbase,
     mock_get_current_user,
     mock_get_exchange_rates,
+    mocked_get_accounts,
 )
 from .const import (
     GOOD_CURRENCY,
@@ -40,7 +40,7 @@ async def test_setup(hass):
         return_value=mock_get_current_user(),
     ), patch(
         "coinbase.wallet.client.Client.get_accounts",
-        return_value=Mock_get_accounts(),
+        new=mocked_get_accounts,
     ), patch(
         "coinbase.wallet.client.Client.get_exchange_rates",
         return_value=mock_get_exchange_rates(),
@@ -58,7 +58,17 @@ async def test_setup(hass):
 
 async def test_unload_entry(hass):
     """Test successful unload of entry."""
-    entry = await init_mock_coinbase(hass)
+    with patch(
+        "coinbase.wallet.client.Client.get_current_user",
+        return_value=mock_get_current_user(),
+    ), patch(
+        "coinbase.wallet.client.Client.get_accounts",
+        new=mocked_get_accounts,
+    ), patch(
+        "coinbase.wallet.client.Client.get_exchange_rates",
+        return_value=mock_get_exchange_rates(),
+    ):
+        entry = await init_mock_coinbase(hass)
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert entry.state == config_entries.ConfigEntryState.LOADED
