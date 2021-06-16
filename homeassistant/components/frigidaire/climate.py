@@ -37,7 +37,7 @@ async def async_setup_entry(
     def get_entities(username: str, password: str) -> frigidaire.Frigidaire:
 		return client.get_appliances()
 
-    entities = await hass.async_add_executor_job(
+    appliances = await hass.async_add_executor_job(
         get_entities, entry.data["username"], entry.data["password"]
     )
 
