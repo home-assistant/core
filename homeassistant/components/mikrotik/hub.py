@@ -34,9 +34,12 @@ from .const import (
     CMD_PING,
     CONF_ARP_PING,
     CONF_DETECTION_TIME,
-    CONF_FORCE_DHCP,
+    CONF_REPEATER_MODE,
+    CONF_TRACK_WIRED,
+    DEFAULT_ARP_PING,
     DEFAULT_DETECTION_TIME,
     DEFAULT_SCAN_INTERVAL,
+    DEFAULT_TRACK_WIRED,
     DHCP,
     DOMAIN,
     IDENTITY,
@@ -64,6 +67,7 @@ class MikrotikHubData:
         self.config_entry: ConfigEntry = config_entry
         self.api = api
         self.host: str = self.config_entry.data[CONF_HOST]
+        self.repeater_mode: bool = self.config_entry.data[CONF_REPEATER_MODE]
         self.support_capsman: bool = False
         self.support_wireless: bool = False
         self.hostname: str | None = None
@@ -84,12 +88,14 @@ class MikrotikHubData:
     @property
     def arp_enabled(self) -> bool:
         """Return arp_ping option setting."""
-        return self.config_entry.options[CONF_ARP_PING]
+        return self.config_entry.options.get(CONF_ARP_PING, DEFAULT_ARP_PING)
 
     @property
-    def force_dhcp(self) -> bool:
+    def track_wired(self) -> bool:
         """Return force_dhcp option setting."""
-        return self.config_entry.options[CONF_FORCE_DHCP]
+        if self.support_capsman or self.support_wireless:
+            return self.config_entry.options.get(CONF_TRACK_WIRED, DEFAULT_TRACK_WIRED)
+        return True
 
     def get_info(self, param: str) -> str | None:
         """Return device model name."""
@@ -153,7 +159,7 @@ class MikrotikHubData:
             _LOGGER.error("Mikrotik %s connection error %s", self.host, api_error)
             raise CannotConnect from api_error
         except librouteros.exceptions.ProtocolError as api_error:
-            _LOGGER.warning(
+            _LOGGER.debug(
                 "Mikrotik %s failed to retrieve data. cmd=[%s] Error: %s",
                 self.host,
                 cmd,
@@ -167,35 +173,41 @@ class MikrotikHubData:
         if not self.api:
             self.api = get_api(self.hass, self.config_entry.data)
 
-        hub_clients = wireless_clients = arp_clients = dhcp_clients = {}
+        hub_clients = tracked_clients = []
+        wireless_clients = wired_clients = arp_clients = dhcp_clients = {}
         all_clients: dict[str, MikrotikClient] = self.hass.data[DOMAIN][CLIENTS]
 
         dhcp_clients = self.get_list_from_interface(DHCP)
+
         if self.arp_enabled:
             _LOGGER.debug("Getting ARP device list")
             arp_clients = self.get_list_from_interface(ARP)
 
         if self.support_capsman:
             _LOGGER.debug("Hub is a CAPSMAN Manager")
-            hub_clients = wireless_clients = self.get_list_from_interface(CAPSMAN)
+            wireless_clients = self.get_list_from_interface(CAPSMAN)
         elif self.support_wireless:
             _LOGGER.debug("Hub supports WIRELESS Interface")
-            hub_clients = wireless_clients = self.get_list_from_interface(WIRELESS)
+            wireless_clients = self.get_list_from_interface(WIRELESS)
 
-        if not hub_clients or self.force_dhcp:
-            _LOGGER.debug("using DHCP for scanning devices")
-            hub_clients = dhcp_clients
+        if self.track_wired:
+            _LOGGER.debug("Getting wired devices from DHCP")
+            wired_clients = {
+                mac: dhcp_clients[mac]
+                for mac in set(dhcp_clients) - set(wireless_clients)
+            }
 
-        tracked_clients = []
+        hub_clients = list(set(wireless_clients) | set(wired_clients))
+
         for mac in hub_clients:
-            if mac not in all_clients:
+            if not self.repeater_mode and mac not in all_clients:
                 tracked_clients.append(mac)
-                print(f"{self.host} - {mac}")
                 all_clients[mac] = MikrotikClient(
                     mac, dhcp_params=dhcp_clients.get(mac)
                 )
 
-        for mac in hub_clients:
+            if mac not in all_clients:
+                continue
 
             # update device if connected through wireless
             if mac in wireless_clients:
@@ -222,8 +234,6 @@ class MikrotikHubData:
                     active=True,
                     host=self.host,
                 )
-        if "98:09:CF:0C:98:0F" in tracked_clients:
-            print(f"{self.host}- oneplus")
         return tracked_clients
 
 
@@ -255,28 +265,16 @@ class MikrotikHub(DataUpdateCoordinator):
     @property
     def option_detection_time(self):
         """Config entry option defining number of seconds from last seen to away."""
-        return timedelta(seconds=self.config_entry.options[CONF_DETECTION_TIME])
+        return timedelta(
+            seconds=self.config_entry.options.get(
+                CONF_DETECTION_TIME, DEFAULT_DETECTION_TIME
+            )
+        )
 
     @property
     def api(self):
         """Represent Mikrotik data object."""
         return self._mk_data
-
-    async def async_add_options(self):
-        """Populate default options for Mikrotik."""
-        if not self.config_entry.options:
-            data = dict(self.config_entry.data)
-            options = {
-                CONF_ARP_PING: data.pop(CONF_ARP_PING, False),
-                CONF_FORCE_DHCP: data.pop(CONF_FORCE_DHCP, False),
-                CONF_DETECTION_TIME: data.pop(
-                    CONF_DETECTION_TIME, DEFAULT_DETECTION_TIME
-                ),
-            }
-
-            self.hass.config_entries.async_update_entry(
-                self.config_entry, data=data, options=options
-            )
 
     async def async_update(self):
         """Update Mikrotik devices information."""
@@ -299,7 +297,6 @@ class MikrotikHub(DataUpdateCoordinator):
             raise ConfigEntryAuthFailed from err
 
         self._mk_data = MikrotikHubData(self.hass, self.config_entry, api)
-        await self.async_add_options()
         await self.hass.async_add_executor_job(self._mk_data.get_hub_details)
 
         return True

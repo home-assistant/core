@@ -7,7 +7,11 @@ from homeassistant.components.device_tracker.config_entry import ScannerEntity
 from homeassistant.components.device_tracker.const import SOURCE_TYPE_ROUTER
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceRegistry
+from homeassistant.helpers.device_registry import (
+    CONNECTION_NETWORK_MAC,
+    DeviceEntry,
+    DeviceRegistry,
+)
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_registry import RegistryEntry
 import homeassistant.util.dt as dt_util
@@ -27,23 +31,6 @@ async def async_setup_entry(
     all_clients: dict[str, MikrotikClient] = hass.data[DOMAIN][CLIENTS]
     tracked: dict[str, MikrotikClientTracker] = {}
 
-    # entity_registry = hass.helpers.entity_registry.async_get(hass)
-
-    # # Restore clients that is not a part of active clients list.
-    # for entity in entity_registry.entities.values():
-
-    #     if (
-    #         entity.config_entry_id == config_entry.entry_id
-    #         and entity.domain == DEVICE_TRACKER
-    #     ):
-
-    #         if (
-    #             entity.unique_id in hub.clients
-    #             or entity.unique_id not in all_clients
-    #         ):
-    #             continue
-    #         hub.api.restore_device(entity.unique_id)
-
     # Restore clients that is not a part of active clients list.
     entity_registry = hass.helpers.entity_registry.async_get(hass)
     hub_clients: list[
@@ -51,7 +38,6 @@ async def async_setup_entry(
     ] = hass.helpers.entity_registry.async_entries_for_config_entry(
         entity_registry, config_entry.entry_id
     )
-    # print(hub.data)
     for entity in hub_clients:
         if entity.unique_id not in hub.data:
             hub.data.append(entity.unique_id)
@@ -63,7 +49,6 @@ async def async_setup_entry(
 
     config_entry.async_on_unload(hub.async_add_listener(update_hub))
 
-    # hass.helpers.dispatcher.async_dispatcher_connect(hass, "mikrotik-clients-updated", update_hub)
     update_hub()
 
 
@@ -93,15 +78,13 @@ class MikrotikClientTracker(ScannerEntity):
         self.client = client
         self.host = self.client.host
         self.hub = hub
-        # self.unsub_dispatcher = None
-        self.this_device = None
+        self.this_device: DeviceEntry | None = None
 
     @property
     def is_connected(self) -> bool:
         """Return true if the client is connected to the network."""
-        # client = self.hass.data[DOMAIN][CLIENTS][self.client.mac]
-        if self.client.mac == "98:09:CF:0C:98:0F":
-            print(self.client.last_seen)
+        # if self.client.mac == "98:09:CF:0C:98:0F":
+        #     print(self.client.last_seen)
         if (
             self.client.last_seen
             and (dt_util.utcnow() - self.client.last_seen)
@@ -156,7 +139,7 @@ class MikrotikClientTracker(ScannerEntity):
             "default_name": self.name,
         }
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Client entity created."""
         _LOGGER.debug("New network device tracker %s (%s)", self.name, self.unique_id)
 
@@ -175,7 +158,7 @@ class MikrotikClientTracker(ScannerEntity):
             return
 
         _LOGGER.debug("Updating via_device_id for %s", self.name)
-        if not self.this_device:
+        if self.this_device is None:
             self.this_device = device_registry.async_get_device(
                 {(DOMAIN, self.client.mac)}, set()
             )
@@ -185,7 +168,7 @@ class MikrotikClientTracker(ScannerEntity):
         self.host = self.client.host
 
     @callback
-    def _update_callback(self):
+    def _update_callback(self) -> None:
         """Update device state and related hub_id."""
         if self.client.host and self.host != self.client.host:
             self.async_update_device_details()

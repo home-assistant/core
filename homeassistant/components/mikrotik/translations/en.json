@@ -16,7 +16,8 @@
                     "password": "Password",
                     "port": "Port",
                     "username": "Username",
-                    "verify_ssl": "Use ssl"
+                    "verify_ssl": "Use ssl",
+                    "repeater_mode": "Set Hub as repeater"
                 },
                 "title": "Set up Mikrotik Router"
             }
@@ -28,7 +29,8 @@
                 "data": {
                     "arp_ping": "Enable ARP ping",
                     "detection_time": "Consider home interval",
-                    "force_dhcp": "Force scanning using DHCP"
+                    "scan_interval": "Update interval in seconds, minimum 10",
+                    "track_wired": "Track wired devices"
                 }
             }
         }

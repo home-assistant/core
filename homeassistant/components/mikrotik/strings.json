@@ -9,7 +9,8 @@
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]",
           "port": "[%key:common::config_flow::data::port%]",
-          "verify_ssl": "Use ssl"
+          "verify_ssl": "Use ssl",
+          "repeater_mode": "Set Hub as repeater"
         }
       }
     },
@@ -26,9 +27,10 @@
     "step": {
       "device_tracker": {
         "data": {
+          "track_wired": "Track wired devices",
           "arp_ping": "Enable ARP ping",
-          "force_dhcp": "Force scanning using DHCP",
-          "detection_time": "Consider home interval"
+          "detection_time": "Consider home interval",
+          "scan_interval": "Update interval in seconds, minimum 10"
         }
       }
     }
