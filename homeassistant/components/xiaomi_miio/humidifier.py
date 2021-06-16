@@ -28,11 +28,11 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.percentage import percentage_to_ranged_value
 
-from . import MIIO_DEVICE_CACHE
 from .const import (
     CONF_DEVICE,
     CONF_FLOW_TYPE,
     DOMAIN,
+    KEY_DEVICE,
     MODEL_AIRHUMIDIFIER_CA1,
     MODEL_AIRHUMIDIFIER_CA4,
     MODEL_AIRHUMIDIFIER_CB1,
@@ -114,12 +114,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         _LOGGER.debug("Initializing with host %s (token %s...)", host, token[:5])
 
         if model in MODELS_HUMIDIFIER_MIOT:
-            air_humidifier = MIIO_DEVICE_CACHE[config_entry.unique_id]
+            air_humidifier = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
             entity = XiaomiAirHumidifierMiot(
                 name, air_humidifier, config_entry, unique_id
             )
         elif model.startswith("zhimi.humidifier."):
-            air_humidifier = MIIO_DEVICE_CACHE[config_entry.unique_id]
+            air_humidifier = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
             entity = XiaomiAirHumidifier(name, air_humidifier, config_entry, unique_id)
         else:
             _LOGGER.error(

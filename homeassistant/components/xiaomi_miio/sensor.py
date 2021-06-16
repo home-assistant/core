@@ -38,13 +38,13 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 
-from . import MIIO_DEVICE_CACHE
 from .const import (
     CONF_DEVICE,
     CONF_FLOW_TYPE,
     CONF_GATEWAY,
     DOMAIN,
     KEY_COORDINATOR,
+    KEY_DEVICE,
     MODELS_HUMIDIFIER_MIOT,
 )
 from .device import XiaomiMiioEntity
@@ -199,10 +199,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         host = config_entry.data[CONF_HOST]
         token = config_entry.data[CONF_TOKEN]
         if model in MODELS_HUMIDIFIER_MIOT:
-            device = MIIO_DEVICE_CACHE[config_entry.unique_id]
+            device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
+            coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
             attributes = HUMIDIFIER_ATTRIBUTES_MIOT
         elif model.startswith("zhimi.humidifier."):
-            device = MIIO_DEVICE_CACHE[config_entry.unique_id]
+            device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
+            coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
             attributes = HUMIDIFIER_ATTRIBUTES
         if device:
             for attribute in attributes:
