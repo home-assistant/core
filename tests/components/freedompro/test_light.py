@@ -6,6 +6,7 @@ from homeassistant.components.light import (
     SERVICE_TURN_ON,
 )
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, STATE_OFF, STATE_ON
+from homeassistant.helpers import entity_registry as er
 
 from tests.components.freedompro import init_integration
 
@@ -13,7 +14,7 @@ from tests.components.freedompro import init_integration
 async def test_light_get_state(hass):
     """Test states of the light."""
     await init_integration(hass)
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = er.async_get(hass)
 
     entity_id = "light.lightbulb"
     state = hass.states.get(entity_id)
@@ -32,7 +33,7 @@ async def test_light_get_state(hass):
 async def test_light_set_on(hass):
     """Test set on of the light."""
     await init_integration(hass)
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = er.async_get(hass)
 
     entity_id = "light.lightbulb"
     state = hass.states.get(entity_id)
@@ -62,7 +63,7 @@ async def test_light_set_on(hass):
 async def test_light_set_off(hass):
     """Test set off of the light."""
     await init_integration(hass)
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = er.async_get(hass)
 
     entity_id = "light.bedroomlight"
     state = hass.states.get(entity_id)
@@ -92,7 +93,7 @@ async def test_light_set_off(hass):
 async def test_light_set_brightness(hass):
     """Test set brightness of the light."""
     await init_integration(hass)
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = er.async_get(hass)
 
     entity_id = "light.lightbulb"
     state = hass.states.get(entity_id)
@@ -123,7 +124,7 @@ async def test_light_set_brightness(hass):
 async def test_light_set_hue(hass):
     """Test set brightness of the light."""
     await init_integration(hass)
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = er.async_get(hass)
 
     entity_id = "light.lightbulb"
     state = hass.states.get(entity_id)
