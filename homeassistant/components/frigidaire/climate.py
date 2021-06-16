@@ -59,7 +59,6 @@ class FrigidaireClimate(ClimateEntity):
         self._client = client
         self._appliance = appliance
         self._details = None
-        self._available = False
 
     @property
     def supported_features(self):
