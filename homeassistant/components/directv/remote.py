@@ -55,7 +55,7 @@ class DIRECTVRemote(DIRECTVEntity, RemoteEntity):
         if address == "0":
             self._attr_unique_id = self.dtv.device.info.receiver_id
         else:
-            self._attr_unique_id = self._address
+            self._attr_unique_id = address
 
         self._attr_name = name
         self._attr_available = False
