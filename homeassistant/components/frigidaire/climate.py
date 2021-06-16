@@ -35,9 +35,7 @@ async def async_setup_entry(
     hass.data.setdefault(DOMAIN, {})
 
     def get_entities(username: str, password: str) -> frigidaire.Frigidaire:
-        client = frigidaire.Frigidaire(username, password)
-        appliances = client.get_appliances()
-        return [FrigidaireClimate(client, appliance) for appliance in appliances]
+		return client.get_appliances()
 
     entities = await hass.async_add_executor_job(
         get_entities, entry.data["username"], entry.data["password"]
