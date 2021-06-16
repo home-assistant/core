@@ -1,6 +1,9 @@
 """Base DirecTV Entity."""
 from __future__ import annotations
 
+from directv import DIRECTV
+
+from homeassistant.const import ATTR_NAME
 from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .const import (
