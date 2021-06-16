@@ -32,7 +32,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up frigidaire from a config entry."""
-    hass.data.setdefault(DOMAIN, {})
+    client = hass.data[DOMAIN][entry.entry_id]
 
     def get_entities(username: str, password: str) -> frigidaire.Frigidaire:
 		return client.get_appliances()
