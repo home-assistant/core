@@ -12,14 +12,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import (
-    ATTR_IDENTIFIERS,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    ATTR_SOFTWARE_VERSION,
-    ATTR_VIA_DEVICE,
-    DOMAIN,
-)
+from .const import DOMAIN
 
 CONFIG_SCHEMA = cv.deprecated(DOMAIN)
 
