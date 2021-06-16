@@ -1,6 +1,8 @@
 """This platform allows several cover to be grouped into one cover."""
 from __future__ import annotations
 
+from typing import Any
+
 import voluptuous as vol
 
 from homeassistant.components.cover import (
@@ -38,14 +40,13 @@ from homeassistant.const import (
     STATE_OPEN,
     STATE_OPENING,
 )
-from homeassistant.core import CoreState, State
+from homeassistant.core import CoreState, Event, HomeAssistant, State
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.typing import ConfigType
 
 from . import GroupEntity
-
-# mypy: allow-incomplete-defs, allow-untyped-calls, allow-untyped-defs
-# mypy: no-check-untyped-defs
 
 KEY_OPEN_CLOSE = "open_close"
 KEY_STOP = "stop"
@@ -62,7 +63,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: dict[str, Any] | None = None,
+) -> None:
     """Set up the Group Cover platform."""
     async_add_entities([CoverGroup(config[CONF_NAME], config[CONF_ENTITIES])])
 
@@ -70,17 +76,14 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class CoverGroup(GroupEntity, CoverEntity):
     """Representation of a CoverGroup."""
 
-    def __init__(self, name, entities):
-        """Initialize a CoverGroup entity."""
-        self._name = name
-        self._is_closed = False
-        self._is_closing = False
-        self._is_opening = False
-        self._cover_position: int | None = 100
-        self._tilt_position = None
-        self._supported_features = 0
-        self._assumed_state = True
+    _attr_is_closed: bool | None = False
+    _attr_is_opening: bool | None = False
+    _attr_is_closing: bool | None = False
+    _attr_current_cover_position: int | None = 100
+    _attr_assumed_state: bool = True
 
+    def __init__(self, name: str, entities: list[str]) -> None:
+        """Initialize a CoverGroup entity."""
         self._entities = entities
         self._covers: dict[str, set[str]] = {
             KEY_OPEN_CLOSE: set(),
@@ -93,11 +96,16 @@ class CoverGroup(GroupEntity, CoverEntity):
             KEY_POSITION: set(),
         }
 
-    async def _update_supported_features_event(self, event):
+        self._attr_name = name
+        self._attr_extra_state_attributes = {ATTR_ENTITY_ID: entities}
+
+    async def _update_supported_features_event(self, event: Event) -> None:
         self.async_set_context(event.context)
-        await self.async_update_supported_features(
-            event.data.get("entity_id"), event.data.get("new_state")
-        )
+        entity = event.data.get("entity_id")
+        if entity is not None:
+            await self.async_update_supported_features(
+                entity, event.data.get("new_state")
+            )
 
     async def async_update_supported_features(
         self,
@@ -146,7 +154,7 @@ class CoverGroup(GroupEntity, CoverEntity):
         if update_state:
             await self.async_defer_or_update_ha_state()
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register listeners."""
         for entity_id in self._entities:
             new_state = self.hass.states.get(entity_id)
@@ -166,73 +174,28 @@ class CoverGroup(GroupEntity, CoverEntity):
             return
         await super().async_added_to_hass()
 
-    @property
-    def name(self):
-        """Return the name of the cover."""
-        return self._name
-
-    @property
-    def assumed_state(self):
-        """Enable buttons even if at end position."""
-        return self._assumed_state
-
-    @property
-    def supported_features(self):
-        """Flag supported features for the cover."""
-        return self._supported_features
-
-    @property
-    def is_closed(self):
-        """Return if all covers in group are closed."""
-        return self._is_closed
-
-    @property
-    def is_opening(self):
-        """Return if the cover is opening or not."""
-        return self._is_opening
-
-    @property
-    def is_closing(self):
-        """Return if the cover is closing or not."""
-        return self._is_closing
-
-    @property
-    def current_cover_position(self) -> int | None:
-        """Return current position for all covers."""
-        return self._cover_position
-
-    @property
-    def current_cover_tilt_position(self):
-        """Return current tilt position for all covers."""
-        return self._tilt_position
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes for the cover group."""
-        return {ATTR_ENTITY_ID: self._entities}
-
-    async def async_open_cover(self, **kwargs):
+    async def async_open_cover(self, **kwargs: Any) -> None:
         """Move the covers up."""
         data = {ATTR_ENTITY_ID: self._covers[KEY_OPEN_CLOSE]}
         await self.hass.services.async_call(
             DOMAIN, SERVICE_OPEN_COVER, data, blocking=True, context=self._context
         )
 
-    async def async_close_cover(self, **kwargs):
+    async def async_close_cover(self, **kwargs: Any) -> None:
         """Move the covers down."""
         data = {ATTR_ENTITY_ID: self._covers[KEY_OPEN_CLOSE]}
         await self.hass.services.async_call(
             DOMAIN, SERVICE_CLOSE_COVER, data, blocking=True, context=self._context
         )
 
-    async def async_stop_cover(self, **kwargs):
+    async def async_stop_cover(self, **kwargs: Any) -> None:
         """Fire the stop action."""
         data = {ATTR_ENTITY_ID: self._covers[KEY_STOP]}
         await self.hass.services.async_call(
             DOMAIN, SERVICE_STOP_COVER, data, blocking=True, context=self._context
         )
 
-    async def async_set_cover_position(self, **kwargs):
+    async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Set covers position."""
         data = {
             ATTR_ENTITY_ID: self._covers[KEY_POSITION],
@@ -246,28 +209,28 @@ class CoverGroup(GroupEntity, CoverEntity):
             context=self._context,
         )
 
-    async def async_open_cover_tilt(self, **kwargs):
+    async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Tilt covers open."""
         data = {ATTR_ENTITY_ID: self._tilts[KEY_OPEN_CLOSE]}
         await self.hass.services.async_call(
             DOMAIN, SERVICE_OPEN_COVER_TILT, data, blocking=True, context=self._context
         )
 
-    async def async_close_cover_tilt(self, **kwargs):
+    async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Tilt covers closed."""
         data = {ATTR_ENTITY_ID: self._tilts[KEY_OPEN_CLOSE]}
         await self.hass.services.async_call(
             DOMAIN, SERVICE_CLOSE_COVER_TILT, data, blocking=True, context=self._context
         )
 
-    async def async_stop_cover_tilt(self, **kwargs):
+    async def async_stop_cover_tilt(self, **kwargs: Any) -> None:
         """Stop cover tilt."""
         data = {ATTR_ENTITY_ID: self._tilts[KEY_STOP]}
         await self.hass.services.async_call(
             DOMAIN, SERVICE_STOP_COVER_TILT, data, blocking=True, context=self._context
         )
 
-    async def async_set_cover_tilt_position(self, **kwargs):
+    async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Set tilt position."""
         data = {
             ATTR_ENTITY_ID: self._tilts[KEY_POSITION],
@@ -281,31 +244,31 @@ class CoverGroup(GroupEntity, CoverEntity):
             context=self._context,
         )
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update state and attributes."""
-        self._assumed_state = False
+        self._attr_assumed_state = False
 
-        self._is_closed = True
-        self._is_closing = False
-        self._is_opening = False
+        self._attr_is_closed = True
+        self._attr_is_closing = False
+        self._attr_is_opening = False
         for entity_id in self._entities:
             state = self.hass.states.get(entity_id)
             if not state:
                 continue
             if state.state == STATE_OPEN:
-                self._is_closed = False
+                self._attr_is_closed = False
                 break
             if state.state == STATE_CLOSING:
-                self._is_closing = True
+                self._attr_is_closing = True
                 break
             if state.state == STATE_OPENING:
-                self._is_opening = True
+                self._attr_is_opening = True
                 break
 
-        self._cover_position = None
+        self._attr_current_cover_position = None
         if self._covers[KEY_POSITION]:
-            position = -1
-            self._cover_position = 0 if self.is_closed else 100
+            position: int | None = -1
+            self._attr_current_cover_position = 0 if self.is_closed else 100
             for entity_id in self._covers[KEY_POSITION]:
                 state = self.hass.states.get(entity_id)
                 if state is None:
@@ -314,16 +277,16 @@ class CoverGroup(GroupEntity, CoverEntity):
                 if position == -1:
                     position = pos
                 elif position != pos:
-                    self._assumed_state = True
+                    self._attr_assumed_state = True
                     break
             else:
                 if position != -1:
-                    self._cover_position = position
+                    self._attr_current_cover_position = position
 
-        self._tilt_position = None
+        self._attr_current_cover_tilt_position = None
         if self._tilts[KEY_POSITION]:
             position = -1
-            self._tilt_position = 100
+            self._attr_current_cover_tilt_position = 100
             for entity_id in self._tilts[KEY_POSITION]:
                 state = self.hass.states.get(entity_id)
                 if state is None:
@@ -332,11 +295,11 @@ class CoverGroup(GroupEntity, CoverEntity):
                 if position == -1:
                     position = pos
                 elif position != pos:
-                    self._assumed_state = True
+                    self._attr_assumed_state = True
                     break
             else:
                 if position != -1:
-                    self._tilt_position = position
+                    self._attr_current_cover_tilt_position = position
 
         supported_features = 0
         supported_features |= (
@@ -351,13 +314,13 @@ class CoverGroup(GroupEntity, CoverEntity):
         supported_features |= (
             SUPPORT_SET_TILT_POSITION if self._tilts[KEY_POSITION] else 0
         )
-        self._supported_features = supported_features
+        self._attr_supported_features = supported_features
 
-        if not self._assumed_state:
+        if not self._attr_assumed_state:
             for entity_id in self._entities:
                 state = self.hass.states.get(entity_id)
                 if state is None:
                     continue
                 if state and state.attributes.get(ATTR_ASSUMED_STATE):
-                    self._assumed_state = True
+                    self._attr_assumed_state = True
                     break
