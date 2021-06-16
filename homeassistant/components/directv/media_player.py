@@ -94,6 +94,11 @@ class DIRECTVMediaPlayer(DIRECTVEntity, MediaPlayerEntity):
             address=address,
         )
 
+        if address == "0":
+            self._attr_unique_id = self.dtv.device.info.receiver_id
+        else:
+            self._attr_unique_id = address
+
         self._attr_name = name
         self._attr_device_class = DEVICE_CLASS_RECEIVER
         self._attr_available = False
@@ -139,14 +144,6 @@ class DIRECTVMediaPlayer(DIRECTVEntity, MediaPlayerEntity):
             ATTR_MEDIA_RECORDED: self.media_recorded,
             ATTR_MEDIA_START_TIME: self.media_start_time,
         }
-
-    @property
-    def unique_id(self):
-        """Return a unique ID to use for this media player."""
-        if self._address == "0":
-            return self.dtv.device.info.receiver_id
-
-        return self._address
 
     # MediaPlayerEntity properties and methods
     @property
