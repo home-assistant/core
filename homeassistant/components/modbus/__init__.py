@@ -114,6 +114,7 @@ BASE_SCHEMA = vol.Schema({vol.Optional(CONF_NAME, default=DEFAULT_HUB): cv.strin
 BASE_COMPONENT_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_NAME): cv.string,
+        vol.Required(CONF_ADDRESS): cv.positive_int,
         vol.Optional(CONF_SLAVE): cv.positive_int,
         vol.Optional(
             CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
@@ -122,9 +123,72 @@ BASE_COMPONENT_SCHEMA = vol.Schema(
 )
 
 
+BASE_STRUCT_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
+    {
+        vol.Optional(CONF_INPUT_TYPE, default=CALL_TYPE_REGISTER_HOLDING): vol.In(
+            [
+                CALL_TYPE_REGISTER_HOLDING,
+                CALL_TYPE_REGISTER_INPUT,
+            ]
+        ),
+        vol.Optional(CONF_COUNT, default=1): cv.positive_int,
+        vol.Optional(CONF_DATA_TYPE, default=DATA_TYPE_INT): vol.In(
+            [
+                DATA_TYPE_INT,
+                DATA_TYPE_UINT,
+                DATA_TYPE_FLOAT,
+                DATA_TYPE_STRING,
+                DATA_TYPE_CUSTOM,
+            ]
+        ),
+        vol.Optional(CONF_STRUCTURE): cv.string,
+        vol.Optional(CONF_SCALE, default=1): number_validator,
+        vol.Optional(CONF_OFFSET, default=0): number_validator,
+        vol.Optional(CONF_PRECISION, default=0): cv.positive_int,
+        vol.Optional(CONF_SWAP, default=CONF_SWAP_NONE): vol.In(
+            [
+                CONF_SWAP_NONE,
+                CONF_SWAP_BYTE,
+                CONF_SWAP_WORD,
+                CONF_SWAP_WORD_BYTE,
+            ]
+        ),
+    }
+)
+
+
+BASE_SWITCH_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
+    {
+        vol.Optional(CONF_WRITE_TYPE, default=CALL_TYPE_REGISTER_HOLDING): vol.In(
+            [
+                CALL_TYPE_REGISTER_HOLDING,
+                CALL_TYPE_COIL,
+            ]
+        ),
+        vol.Optional(CONF_COMMAND_OFF, default=0x00): cv.positive_int,
+        vol.Optional(CONF_COMMAND_ON, default=0x01): cv.positive_int,
+        vol.Optional(CONF_VERIFY): vol.Maybe(
+            {
+                vol.Optional(CONF_ADDRESS): cv.positive_int,
+                vol.Optional(CONF_INPUT_TYPE): vol.In(
+                    [
+                        CALL_TYPE_REGISTER_HOLDING,
+                        CALL_TYPE_DISCRETE,
+                        CALL_TYPE_REGISTER_INPUT,
+                        CALL_TYPE_COIL,
+                    ]
+                ),
+                vol.Optional(CONF_STATE_OFF): cv.positive_int,
+                vol.Optional(CONF_STATE_ON): cv.positive_int,
+                vol.Optional(CONF_DELAY, default=0): cv.positive_int,
+            }
+        ),
+    }
+)
+
+
 CLIMATE_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
     {
-        vol.Required(CONF_ADDRESS): cv.positive_int,
         vol.Optional(CONF_INPUT_TYPE, default=CALL_TYPE_REGISTER_HOLDING): vol.In(
             [
                 CALL_TYPE_REGISTER_HOLDING,
@@ -149,7 +213,6 @@ CLIMATE_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
 
 COVERS_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
     {
-        vol.Required(CONF_ADDRESS): cv.positive_int,
         vol.Optional(CONF_INPUT_TYPE, default=CALL_TYPE_REGISTER_HOLDING,): vol.In(
             [
                 CALL_TYPE_REGISTER_HOLDING,
@@ -169,118 +232,29 @@ COVERS_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
     }
 )
 
-SWITCH_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
+SWITCH_SCHEMA = BASE_SWITCH_SCHEMA.extend(
     {
-        vol.Required(CONF_ADDRESS): cv.positive_int,
         vol.Optional(CONF_DEVICE_CLASS): SWITCH_DEVICE_CLASSES_SCHEMA,
-        vol.Optional(CONF_WRITE_TYPE, default=CALL_TYPE_REGISTER_HOLDING): vol.In(
-            [CALL_TYPE_REGISTER_HOLDING, CALL_TYPE_COIL]
-        ),
-        vol.Optional(CONF_COMMAND_OFF, default=0x00): cv.positive_int,
-        vol.Optional(CONF_COMMAND_ON, default=0x01): cv.positive_int,
-        vol.Optional(CONF_VERIFY): vol.Maybe(
-            {
-                vol.Optional(CONF_ADDRESS): cv.positive_int,
-                vol.Optional(CONF_INPUT_TYPE): vol.In(
-                    [
-                        CALL_TYPE_REGISTER_HOLDING,
-                        CALL_TYPE_DISCRETE,
-                        CALL_TYPE_REGISTER_INPUT,
-                        CALL_TYPE_COIL,
-                    ]
-                ),
-                vol.Optional(CONF_STATE_OFF): cv.positive_int,
-                vol.Optional(CONF_STATE_ON): cv.positive_int,
-                vol.Optional(CONF_DELAY, default=0): cv.positive_int,
-            }
-        ),
     }
 )
 
-LIGHT_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
-    {
-        vol.Required(CONF_ADDRESS): cv.positive_int,
-        vol.Optional(CONF_WRITE_TYPE, default=CALL_TYPE_REGISTER_HOLDING): vol.In(
-            [CALL_TYPE_REGISTER_HOLDING, CALL_TYPE_COIL]
-        ),
-        vol.Optional(CONF_COMMAND_OFF, default=0x00): cv.positive_int,
-        vol.Optional(CONF_COMMAND_ON, default=0x01): cv.positive_int,
-        vol.Optional(CONF_VERIFY): vol.Maybe(
-            {
-                vol.Optional(CONF_ADDRESS): cv.positive_int,
-                vol.Optional(CONF_INPUT_TYPE): vol.In(
-                    [
-                        CALL_TYPE_REGISTER_HOLDING,
-                        CALL_TYPE_DISCRETE,
-                        CALL_TYPE_REGISTER_INPUT,
-                        CALL_TYPE_COIL,
-                    ]
-                ),
-                vol.Optional(CONF_STATE_OFF): cv.positive_int,
-                vol.Optional(CONF_STATE_ON): cv.positive_int,
-            }
-        ),
-    }
-)
+LIGHT_SCHEMA = BASE_SWITCH_SCHEMA.extend({})
 
-FAN_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
-    {
-        vol.Required(CONF_ADDRESS): cv.positive_int,
-        vol.Optional(CONF_WRITE_TYPE, default=CALL_TYPE_REGISTER_HOLDING): vol.In(
-            [CALL_TYPE_REGISTER_HOLDING, CALL_TYPE_COIL]
-        ),
-        vol.Optional(CONF_COMMAND_OFF, default=0x00): cv.positive_int,
-        vol.Optional(CONF_COMMAND_ON, default=0x01): cv.positive_int,
-        vol.Optional(CONF_VERIFY): vol.Maybe(
-            {
-                vol.Optional(CONF_ADDRESS): cv.positive_int,
-                vol.Optional(CONF_INPUT_TYPE): vol.In(
-                    [
-                        CALL_TYPE_REGISTER_HOLDING,
-                        CALL_TYPE_DISCRETE,
-                        CALL_TYPE_REGISTER_INPUT,
-                        CALL_TYPE_COIL,
-                    ]
-                ),
-                vol.Optional(CONF_STATE_OFF): cv.positive_int,
-                vol.Optional(CONF_STATE_ON): cv.positive_int,
-            }
-        ),
-    }
-)
+FAN_SCHEMA = BASE_SWITCH_SCHEMA.extend({})
 
-SENSOR_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
-    {
-        vol.Required(CONF_ADDRESS): cv.positive_int,
-        vol.Optional(CONF_COUNT, default=1): cv.positive_int,
-        vol.Optional(CONF_DATA_TYPE, default=DATA_TYPE_INT): vol.In(
-            [
-                DATA_TYPE_INT,
-                DATA_TYPE_UINT,
-                DATA_TYPE_FLOAT,
-                DATA_TYPE_STRING,
-                DATA_TYPE_CUSTOM,
-            ]
-        ),
-        vol.Optional(CONF_DEVICE_CLASS): SENSOR_DEVICE_CLASSES_SCHEMA,
-        vol.Optional(CONF_OFFSET, default=0): number_validator,
-        vol.Optional(CONF_PRECISION, default=0): cv.positive_int,
-        vol.Optional(CONF_INPUT_TYPE, default=CALL_TYPE_REGISTER_HOLDING): vol.In(
-            [CALL_TYPE_REGISTER_HOLDING, CALL_TYPE_REGISTER_INPUT]
-        ),
-        vol.Optional(CONF_REVERSE_ORDER): cv.boolean,
-        vol.Optional(CONF_SWAP, default=CONF_SWAP_NONE): vol.In(
-            [CONF_SWAP_NONE, CONF_SWAP_BYTE, CONF_SWAP_WORD, CONF_SWAP_WORD_BYTE]
-        ),
-        vol.Optional(CONF_SCALE, default=1): number_validator,
-        vol.Optional(CONF_STRUCTURE): cv.string,
-        vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
-    }
+SENSOR_SCHEMA = vol.All(
+    cv.deprecated(CONF_REVERSE_ORDER),
+    BASE_STRUCT_SCHEMA.extend(
+        {
+            vol.Optional(CONF_DEVICE_CLASS): SENSOR_DEVICE_CLASSES_SCHEMA,
+            vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+            vol.Optional(CONF_REVERSE_ORDER): cv.boolean,
+        }
+    ),
 )
 
 BINARY_SENSOR_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
     {
-        vol.Required(CONF_ADDRESS): cv.positive_int,
         vol.Optional(CONF_DEVICE_CLASS): BINARY_SENSOR_DEVICE_CLASSES_SCHEMA,
         vol.Optional(CONF_INPUT_TYPE, default=CALL_TYPE_COIL): vol.In(
             [CALL_TYPE_COIL, CALL_TYPE_DISCRETE]

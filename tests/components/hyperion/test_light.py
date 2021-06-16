@@ -241,7 +241,7 @@ async def test_setup_config_entry_dynamic_instances(hass: HomeAssistant) -> None
     assert hass.states.get(TEST_ENTITY_ID_3) is not None
 
 
-async def test_light_basic_properies(hass: HomeAssistant) -> None:
+async def test_light_basic_properties(hass: HomeAssistant) -> None:
     """Test the basic properties."""
     client = create_mock_client()
     await setup_test_config_entry(hass, hyperion_client=client)

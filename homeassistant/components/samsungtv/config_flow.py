@@ -291,13 +291,14 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             bridge = SamsungTVBridge.get_bridge(
                 self._reauth_entry.data[CONF_METHOD], self._reauth_entry.data[CONF_HOST]
             )
-            result = bridge.try_connect()
+            result = await self.hass.async_add_executor_job(bridge.try_connect)
             if result == RESULT_SUCCESS:
                 new_data = dict(self._reauth_entry.data)
                 new_data[CONF_TOKEN] = bridge.token
                 self.hass.config_entries.async_update_entry(
                     self._reauth_entry, data=new_data
                 )
+                await self.hass.config_entries.async_reload(self._reauth_entry.entry_id)
                 return self.async_abort(reason="reauth_successful")
             if result not in (RESULT_AUTH_MISSING, RESULT_CANNOT_CONNECT):
                 return self.async_abort(reason=result)

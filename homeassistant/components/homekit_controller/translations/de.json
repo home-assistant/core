@@ -18,7 +18,7 @@
             "unable_to_pair": "Koppeln fehltgeschlagen, bitte versuche es erneut",
             "unknown_error": "Das Ger\u00e4t meldete einen unbekannten Fehler. Die Kopplung ist fehlgeschlagen."
         },
-        "flow_title": "HomeKit-Zubeh\u00f6r: {name}",
+        "flow_title": "{name}",
         "step": {
             "busy_error": {
                 "description": "Brechen Sie das Pairing auf allen Controllern ab oder versuchen Sie, das Ger\u00e4t neu zu starten, und fahren Sie dann fort, das Pairing fortzusetzen.",
@@ -44,7 +44,7 @@
                 "data": {
                     "device": "Ger\u00e4t"
                 },
-                "description": "W\u00e4hle das Ger\u00e4t aus, mit dem du die Kopplung herstellen m\u00f6chtest",
+                "description": "HomeKit Controller kommuniziert \u00fcber das lokale Netzwerk mit einer sicheren verschl\u00fcsselten Verbindung ohne separaten HomeKit Controller oder iCloud. W\u00e4hle das Ger\u00e4t aus, mit dem du die Kopplung herstellen m\u00f6chtest",
                 "title": "Ger\u00e4teauswahl"
             }
         }

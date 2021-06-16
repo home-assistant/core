@@ -366,6 +366,11 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         """Channel currently playing."""
         return self.media.channel or None
 
+    @property
+    def media_playlist(self) -> str | None:
+        """Title of playlist currently playing."""
+        return self.media.playlist_name
+
     @property  # type: ignore[misc]
     def media_artist(self) -> str | None:
         """Artist of current playing media, music track only."""

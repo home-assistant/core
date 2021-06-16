@@ -3,6 +3,11 @@ from enum import Enum
 from typing import Final
 
 from homeassistant.components.climate.const import (
+    CURRENT_HVAC_COOL,
+    CURRENT_HVAC_DRY,
+    CURRENT_HVAC_FAN,
+    CURRENT_HVAC_HEAT,
+    CURRENT_HVAC_OFF,
     HVAC_MODE_AUTO,
     HVAC_MODE_COOL,
     HVAC_MODE_DRY,
@@ -66,6 +71,14 @@ CONTROLLER_MODES: Final = {
     "Off": HVAC_MODE_OFF,
     "Fan only": HVAC_MODE_FAN_ONLY,
     "Dry": HVAC_MODE_DRY,
+}
+
+CURRENT_HVAC_ACTIONS: Final = {
+    "Heat": CURRENT_HVAC_HEAT,
+    "Cool": CURRENT_HVAC_COOL,
+    "Off": CURRENT_HVAC_OFF,
+    "Fan only": CURRENT_HVAC_FAN,
+    "Dry": CURRENT_HVAC_DRY,
 }
 
 PRESET_MODES: Final = {

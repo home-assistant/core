@@ -477,7 +477,7 @@ async def test_stop_no_wait(hass, count):
 
     # Can't assert just yet because we haven't verified stopping works yet.
     # If assert fails we can hang test if async_stop doesn't work.
-    script_was_runing = script_obj.is_running
+    script_was_running = script_obj.is_running
     were_no_events = len(events) == 0
 
     # Begin the process of stopping the script (which should stop all runs), and then
@@ -487,7 +487,7 @@ async def test_stop_no_wait(hass, count):
 
     await hass.async_block_till_done()
 
-    assert script_was_runing
+    assert script_was_running
     assert were_no_events
     assert not script_obj.is_running
     assert len(events) == 0
@@ -1189,8 +1189,8 @@ async def test_wait_template_with_utcnow(hass):
     start_time = dt_util.utcnow().replace(minute=1) + timedelta(hours=48)
 
     try:
-        non_maching_time = start_time.replace(hour=3)
-        with patch("homeassistant.util.dt.utcnow", return_value=non_maching_time):
+        non_matching_time = start_time.replace(hour=3)
+        with patch("homeassistant.util.dt.utcnow", return_value=non_matching_time):
             hass.async_create_task(script_obj.async_run(context=Context()))
             await asyncio.wait_for(wait_started_flag.wait(), 1)
             assert script_obj.is_running
@@ -1221,17 +1221,17 @@ async def test_wait_template_with_utcnow_no_match(hass):
     timed_out = False
 
     try:
-        non_maching_time = start_time.replace(hour=3)
-        with patch("homeassistant.util.dt.utcnow", return_value=non_maching_time):
+        non_matching_time = start_time.replace(hour=3)
+        with patch("homeassistant.util.dt.utcnow", return_value=non_matching_time):
             hass.async_create_task(script_obj.async_run(context=Context()))
             await asyncio.wait_for(wait_started_flag.wait(), 1)
             assert script_obj.is_running
 
-        second_non_maching_time = start_time.replace(hour=4)
+        second_non_matching_time = start_time.replace(hour=4)
         with patch(
-            "homeassistant.util.dt.utcnow", return_value=second_non_maching_time
+            "homeassistant.util.dt.utcnow", return_value=second_non_matching_time
         ):
-            async_fire_time_changed(hass, second_non_maching_time)
+            async_fire_time_changed(hass, second_non_matching_time)
 
         with timeout(0.1):
             await hass.async_block_till_done()

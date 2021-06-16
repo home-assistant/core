@@ -25,16 +25,6 @@ def find_box(
         index += int.from_bytes(box_header[0:4], byteorder="big")
 
 
-def get_init_and_moof_data(segment: memoryview) -> tuple[bytes, bytes]:
-    """Get the init and moof data from a segment."""
-    moof_location = next(find_box(segment, b"moof"), 0)
-    mfra_location = next(find_box(segment, b"mfra"), len(segment))
-    return (
-        segment[:moof_location].tobytes(),
-        segment[moof_location:mfra_location].tobytes(),
-    )
-
-
 def get_codec_string(mp4_bytes: bytes) -> str:
     """Get RFC 6381 codec string."""
     codecs = []
