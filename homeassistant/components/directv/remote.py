@@ -52,11 +52,7 @@ class DIRECTVRemote(DIRECTVEntity, RemoteEntity):
             address=address,
         )
 
-        if address == "0":
-            self._attr_unique_id = self.dtv.device.info.receiver_id
-        else:
-            self._attr_unique_id = address
-
+        self._attr_unique_id = self._device_id
         self._attr_name = name
         self._attr_available = False
         self._attr_is_on = True
