@@ -49,25 +49,6 @@ class Device(CoordinatorEntity, LightEntity):
         self._saturation = 0
         self._hue = 0
 
-    @property
-    def hs_color(self):
-        """Return the status of the light hs_color."""
-        return [self._hue, self._saturation]
-
-    @property
-    def color_mode(self):
-        """Return the color mode of the light."""
-        if "hue" in self._characteristics:
-            return COLOR_MODE_HS
-        if "brightness" in self._characteristics:
-            return COLOR_MODE_BRIGHTNESS
-        return COLOR_MODE_ONOFF
-
-    @property
-    def supported_color_modes(self):
-        """Flag supported color modes."""
-        return {self.color_mode}
-
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
