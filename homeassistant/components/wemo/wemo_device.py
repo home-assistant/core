@@ -2,6 +2,7 @@
 import logging
 
 from pywemo import PyWeMoException, WeMoDevice
+from pywemo.subscribe import EVENT_TYPE_LONG_PRESS
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -12,8 +13,9 @@ from homeassistant.const import (
     CONF_UNIQUE_ID,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.dispatcher import dispatcher_send
 
-from .const import DOMAIN, WEMO_SUBSCRIPTION_EVENT
+from .const import DOMAIN, SIGNAL_WEMO_STATE_PUSH, WEMO_SUBSCRIPTION_EVENT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,19 +31,25 @@ class DeviceWrapper:
         self.device_info = _device_info(wemo)
         self.supports_long_press = wemo.supports_long_press()
 
-    def _subscription_callback(
+    def subscription_callback(
         self, _device: WeMoDevice, event_type: str, params: str
     ) -> None:
-        self.hass.bus.fire(
-            WEMO_SUBSCRIPTION_EVENT,
-            {
-                CONF_DEVICE_ID: self.device_id,
-                CONF_NAME: self.wemo.name,
-                CONF_TYPE: event_type,
-                CONF_PARAMS: params,
-                CONF_UNIQUE_ID: self.wemo.serialnumber,
-            },
-        )
+        """Receives push notifications from WeMo devices."""
+        if event_type == EVENT_TYPE_LONG_PRESS:
+            self.hass.bus.fire(
+                WEMO_SUBSCRIPTION_EVENT,
+                {
+                    CONF_DEVICE_ID: self.device_id,
+                    CONF_NAME: self.wemo.name,
+                    CONF_TYPE: event_type,
+                    CONF_PARAMS: params,
+                    CONF_UNIQUE_ID: self.wemo.serialnumber,
+                },
+            )
+        else:
+            dispatcher_send(
+                self.hass, SIGNAL_WEMO_STATE_PUSH, self.device_id, event_type, params
+            )
 
 
 def _device_info(wemo: WeMoDevice):
@@ -67,9 +75,7 @@ async def async_register_device(
 
     device = DeviceWrapper(hass, wemo, entry.id)
     hass.data[DOMAIN].setdefault("devices", {})[entry.id] = device
-    registry.on(
-        wemo, None, device._subscription_callback  # pylint: disable=protected-access
-    )
+    registry.on(wemo, None, device.subscription_callback)
 
     if device.supports_long_press:
         try:

@@ -13,9 +13,10 @@ from homeassistant.components.homeassistant import (
     DOMAIN as HA_DOMAIN,
     SERVICE_UPDATE_ENTITY,
 )
-from homeassistant.components.wemo.const import WEMO_SUBSCRIPTION_EVENT
+from homeassistant.components.wemo.const import SIGNAL_WEMO_STATE_PUSH
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_UNAVAILABLE
 from homeassistant.core import callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.setup import async_setup_component
 
 
@@ -25,18 +26,18 @@ def _perform_registry_callback(hass, pywemo_registry, pywemo_device):
     async def async_callback():
         event = asyncio.Event()
 
-        async def event_callback(e):
+        async def event_callback(e, *args):
             event.set()
 
-        stop_event_listener = hass.bus.async_listen(
-            WEMO_SUBSCRIPTION_EVENT, event_callback
+        stop_dispatcher_listener = async_dispatcher_connect(
+            hass, SIGNAL_WEMO_STATE_PUSH, event_callback
         )
         # Cause a state update callback to be triggered by the device.
         await hass.async_add_executor_job(
             pywemo_registry.callbacks[pywemo_device.name], pywemo_device, "", ""
         )
         await event.wait()
-        stop_event_listener()
+        stop_dispatcher_listener()
 
     return async_callback
 

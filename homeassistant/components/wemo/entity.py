@@ -10,11 +10,10 @@ import async_timeout
 from pywemo import WeMoDevice
 from pywemo.exceptions import ActionException
 
-from homeassistant.const import CONF_DEVICE_ID, CONF_PARAMS, CONF_TYPE
-from homeassistant.core import callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo, Entity
 
-from .const import DOMAIN as WEMO_DOMAIN, WEMO_SUBSCRIPTION_EVENT
+from .const import DOMAIN as WEMO_DOMAIN, SIGNAL_WEMO_STATE_PUSH
 from .wemo_device import DeviceWrapper
 
 _LOGGER = logging.getLogger(__name__)
@@ -128,7 +127,6 @@ class WemoSubscriptionEntity(WemoEntity):
         super().__init__(device.wemo)
         self._device_id = device.device_id
         self._device_info = device.device_info
-        self._stop_event_listener = None
 
     @property
     def unique_id(self) -> str:
@@ -174,27 +172,23 @@ class WemoSubscriptionEntity(WemoEntity):
         """Wemo device added to Home Assistant."""
         await super().async_added_to_hass()
 
-        @callback
-        def event_filter(event):
-            return self._device_id == event.data.get(CONF_DEVICE_ID)
-
-        self._stop_event_listener = self.hass.bus.async_listen(
-            WEMO_SUBSCRIPTION_EVENT, self._async_subscription_callback, event_filter
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, SIGNAL_WEMO_STATE_PUSH, self._async_subscription_callback
+            )
         )
 
-    async def async_will_remove_from_hass(self) -> None:
-        """Wemo device removed from hass."""
-        await super().async_will_remove_from_hass()
-        self._stop_event_listener()
-
-    async def _async_subscription_callback(self, event) -> None:
+    async def _async_subscription_callback(
+        self, device_id: str, event_type: str, params: str
+    ) -> None:
         """Update the state by the Wemo device."""
+        # Only respond events for this device.
+        if device_id != self._device_id:
+            return
         # If an update is in progress, we don't do anything
         if self._update_lock.locked():
             return
 
-        event_type = event.data.get(CONF_TYPE)
-        params = event.data.get(CONF_PARAMS)
         _LOGGER.debug("Subscription event (%s) for %s", event_type, self.name)
         updated = await self.hass.async_add_executor_job(
             self.wemo.subscription_update, event_type, params
