@@ -94,11 +94,7 @@ class DIRECTVMediaPlayer(DIRECTVEntity, MediaPlayerEntity):
             address=address,
         )
 
-        if address == "0":
-            self._attr_unique_id = self.dtv.device.info.receiver_id
-        else:
-            self._attr_unique_id = address
-
+        self._attr_unique_id = self._device_id
         self._attr_name = name
         self._attr_device_class = DEVICE_CLASS_RECEIVER
         self._attr_available = False
