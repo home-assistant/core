@@ -19,16 +19,16 @@ class Hub:
         self._hass = hass
         self._api_key = api_key
 
-    async def authenticate(self) -> bool:
+    async def authenticate(self):
         """Freedompro Hub class authenticate."""
         return await get_list(
             aiohttp_client.async_get_clientsession(self._hass), self._api_key
         )
 
 
-async def validate_input(hass: core.HomeAssistant, data):
+async def validate_input(hass: core.HomeAssistant, api_key):
     """Validate api key."""
-    hub = Hub(hass, data[CONF_API_KEY])
+    hub = Hub(hass, api_key)
     result = await hub.authenticate()
     if result["state"] is False:
         if result["code"] == -201:
@@ -52,7 +52,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         try:
-            await validate_input(self.hass, user_input)
+            await validate_input(self.hass, user_input[CONF_API_KEY])
         except CannotConnect:
             errors["base"] = "cannot_connect"
         except InvalidAuth:
