@@ -95,8 +95,10 @@ class DIRECTVMediaPlayer(DIRECTVEntity, MediaPlayerEntity):
             address=address,
         )
 
-        self._assumed_state = None
-        self._available = False
+        self._attr_device_class = DEVICE_CLASS_RECEIVER
+        self._attr_available = False
+        self._attr_assumed_state = None
+
         self._is_recorded = None
         self._is_standby = True
         self._last_position = None
@@ -107,13 +109,14 @@ class DIRECTVMediaPlayer(DIRECTVEntity, MediaPlayerEntity):
 
     async def async_update(self):
         """Retrieve latest state."""
+        self._attr_available = self._state.available
+
         self._state = await self.dtv.state(self._address)
-        self._available = self._state.available
         self._is_standby = self._state.standby
         self._program = self._state.program
 
         if self._is_standby:
-            self._assumed_state = False
+            self._attr_assumed_state = False
             self._is_recorded = None
             self._last_position = None
             self._last_update = None
@@ -123,7 +126,7 @@ class DIRECTVMediaPlayer(DIRECTVEntity, MediaPlayerEntity):
             self._is_recorded = self._program.recorded
             self._last_position = self._program.position
             self._last_update = self._state.at
-            self._assumed_state = self._is_recorded
+            self._attr_assumed_state = self._is_recorded
 
     @property
     def extra_state_attributes(self):
@@ -141,11 +144,6 @@ class DIRECTVMediaPlayer(DIRECTVEntity, MediaPlayerEntity):
     def name(self):
         """Return the name of the device."""
         return self._name
-
-    @property
-    def device_class(self) -> str | None:
-        """Return the class of this device."""
-        return DEVICE_CLASS_RECEIVER
 
     @property
     def unique_id(self):
@@ -169,16 +167,6 @@ class DIRECTVMediaPlayer(DIRECTVEntity, MediaPlayerEntity):
             return STATE_PAUSED
 
         return STATE_PLAYING
-
-    @property
-    def available(self):
-        """Return if able to retrieve information from DVR or not."""
-        return self._available
-
-    @property
-    def assumed_state(self):
-        """Return if we assume the state or not."""
-        return self._assumed_state
 
     @property
     def media_content_id(self):
