@@ -39,7 +39,6 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     if len(appliances) == 0:
         raise CannotConnect
 
-    return {"devices": len(appliances), "errors": {}}
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
