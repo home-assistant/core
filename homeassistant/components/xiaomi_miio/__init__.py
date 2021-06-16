@@ -2,7 +2,8 @@
 from datetime import timedelta
 import logging
 
-from miio import AirHumidifier, AirHumidifierMiot
+import async_timeout
+from miio import AirHumidifier, AirHumidifierMiot, DeviceException
 from miio.gateway.gateway import GatewayException
 
 from homeassistant import config_entries, core
@@ -97,14 +98,16 @@ async def async_create_miio_device_and_coordinator(
         elif model.startswith("zhimi.humidifier."):
             device = AirHumidifier(host, token, model=model)
 
-    def update_data():
-        """Fetch data from the subdevice."""
-        data = {}
-        return data
-
     async def async_update_data():
         """Fetch data from the subdevice using async_add_executor_job."""
-        return await hass.async_add_executor_job(update_data)
+        device = hass.data[DOMAIN][entry.entry_id][KEY_DEVICE]
+        # On state change the device doesn't provide the new state immediately.
+        try:
+            async with async_timeout.timeout(10):
+                return await hass.async_add_executor_job(device.status)
+
+        except DeviceException as ex:
+            _LOGGER.error("Got exception while fetching the state: %s", ex)
 
     # Create update miio device and coordinator
     coordinator = DataUpdateCoordinator(

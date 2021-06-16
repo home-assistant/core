@@ -5,6 +5,7 @@ from miio import Device, DeviceException
 
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import CONF_MAC, CONF_MODEL, DOMAIN
 
@@ -53,11 +54,13 @@ class ConnectXiaomiDevice:
         return True
 
 
-class XiaomiMiioEntity(Entity):
+class XiaomiMiioEntity(CoordinatorEntity, Entity):
     """Representation of a base Xiaomi Miio Entity."""
 
-    def __init__(self, name, device, entry, unique_id):
+    def __init__(self, name, device, entry, unique_id, coordinator=None):
         """Initialize the Xiaomi Miio Device."""
+        if coordinator:
+            super().__init__(coordinator)
         self._device = device
         self._model = entry.data[CONF_MODEL]
         self._mac = entry.data[CONF_MAC]

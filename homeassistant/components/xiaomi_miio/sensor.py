@@ -36,6 +36,7 @@ from homeassistant.const import (
     PRESSURE_HPA,
     TEMP_CELSIUS,
 )
+from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
 from .const import (
@@ -164,9 +165,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Xiaomi sensor from a config entry."""
     entities = []
 
-    model = config_entry.data[CONF_MODEL]
-    device = None
-
     if config_entry.data[CONF_FLOW_TYPE] == CONF_GATEWAY:
         gateway = hass.data[DOMAIN][config_entry.entry_id][CONF_GATEWAY]
         # Gateway illuminance sensor
@@ -198,6 +196,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     elif config_entry.data[CONF_FLOW_TYPE] == CONF_DEVICE:
         host = config_entry.data[CONF_HOST]
         token = config_entry.data[CONF_TOKEN]
+        model = config_entry.data[CONF_MODEL]
+        device = None
         if model in MODELS_HUMIDIFIER_MIOT:
             device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
             coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
@@ -215,6 +215,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                         config_entry,
                         f"{attribute}_{config_entry.unique_id}",
                         attribute,
+                        hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR],
                     )
                 )
         else:
@@ -230,23 +231,47 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities, update_before_add=True)
 
 
-class XiaomiHumidifierSensor(XiaomiMiioEntity, SensorEntity):
+class XiaomiGenericSensor(XiaomiMiioEntity, SensorEntity):
+    """Representation of a Xiaomi generic sensor."""
+
+    def __init__(self, name, device, entry, unique_id, attribute, coordinator):
+        """Initialize the entity."""
+        super().__init__(name, device, entry, unique_id, coordinator)
+        self._name = name
+        self._device = device
+        self._entry = entry
+        self._unique_id = unique_id
+        self._attribute = attribute
+
+
+class XiaomiHumidifierSensor(XiaomiGenericSensor, XiaomiMiioEntity):
     """Representation of a Xiaomi Humidifier sensor."""
 
-    def __init__(self, name, device, entry, unique_id, attribute):
+    def __init__(self, name, device, entry, unique_id, attribute, coordinator):
         """Initialize the entity."""
-        super().__init__(name, device, entry, unique_id)
+        super().__init__(name, device, entry, unique_id, attribute, coordinator)
 
-        self._name = name
-        self._icon = HUMIDIFIER_SENSOR_TYPES[attribute].icon
-        self._unit_of_measurement = HUMIDIFIER_SENSOR_TYPES[attribute].unit
-        self._device_class = HUMIDIFIER_SENSOR_TYPES[attribute].device_class
-        self._state_class = HUMIDIFIER_SENSOR_TYPES[attribute].state_class
+        self._icon = HUMIDIFIER_SENSOR_TYPES[self._attribute].icon
+        self._unit_of_measurement = HUMIDIFIER_SENSOR_TYPES[self._attribute].unit
+        self._device_class = HUMIDIFIER_SENSOR_TYPES[self._attribute].device_class
+        self._state_class = HUMIDIFIER_SENSOR_TYPES[self._attribute].state_class
         self._available = None
         self._state = None
         self._state_attrs = {}
         self._skip_update = False
-        self._attribute = attribute
+        self.coordinator.async_add_listener(self.update)
+
+    @callback
+    def update(self):
+        """Fetch state from the device."""
+        # On state change the device doesn't provide the new state immediately.
+        state = self.coordinator.data
+        if not state:
+            return
+        _LOGGER.debug("Got new state: %s", state)
+        self._available = True
+        self._state = state.is_on
+        self._state = self._extract_value_from_attribute(state, self._attribute)
 
     @property
     def unit_of_measurement(self):
@@ -297,25 +322,6 @@ class XiaomiHumidifierSensor(XiaomiMiioEntity, SensorEntity):
                 self._available = False
 
             return False
-
-    async def async_update(self):
-        """Fetch state from the device."""
-        # On state change the device doesn't provide the new state immediately.
-        if self._skip_update:
-            self._skip_update = False
-            return
-
-        try:
-            state = await self.hass.async_add_executor_job(self._device.status)
-            _LOGGER.debug("Got new state: %s", state)
-
-            self._available = True
-            self._state = self._extract_value_from_attribute(state, self._attribute)
-
-        except DeviceException as ex:
-            if self._available:
-                self._available = False
-                _LOGGER.error("Got exception while fetching the state: %s", ex)
 
 
 class XiaomiAirQualityMonitor(XiaomiMiioEntity, SensorEntity):

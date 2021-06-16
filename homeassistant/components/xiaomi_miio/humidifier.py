@@ -1,5 +1,4 @@
 """Support for Xiaomi Mi Air Purifier and Xiaomi Mi Air Humidifier with humidifier entity."""
-import asyncio
 from enum import Enum
 from functools import partial
 import logging
@@ -17,13 +16,15 @@ from homeassistant.components.humidifier.const import (
     SUPPORT_MODES,
 )
 from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODE, CONF_HOST, CONF_TOKEN
+from homeassistant.const import ATTR_MODE, CONF_HOST, CONF_TOKEN
+from homeassistant.core import callback
 from homeassistant.util.percentage import percentage_to_ranged_value
 
 from .const import (
     CONF_DEVICE,
     CONF_FLOW_TYPE,
     DOMAIN,
+    KEY_COORDINATOR,
     KEY_DEVICE,
     MODEL_AIRHUMIDIFIER_CA1,
     MODEL_AIRHUMIDIFIER_CA4,
@@ -95,64 +96,34 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         if model in MODELS_HUMIDIFIER_MIOT:
             air_humidifier = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
             entity = XiaomiAirHumidifierMiot(
-                name, air_humidifier, config_entry, unique_id
+                name,
+                air_humidifier,
+                config_entry,
+                unique_id,
+                hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR],
             )
-        elif model.startswith("zhimi.humidifier."):
-            air_humidifier = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
-            entity = XiaomiAirHumidifier(name, air_humidifier, config_entry, unique_id)
         else:
-            _LOGGER.error(
-                "Unsupported humidifier device found! Please create an issue at "
-                "https://github.com/syssi/xiaomi_airpurifier/issues "
-                "and provide the following data: %s",
-                model,
+            air_humidifier = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
+            entity = XiaomiAirHumidifier(
+                name,
+                air_humidifier,
+                config_entry,
+                unique_id,
+                hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR],
             )
-            return
 
         hass.data[DATA_KEY][host] = entity
         entities.append(entity)
-
-        async def async_service_handler(service):
-            """Map services to methods."""
-            method = SERVICE_TO_METHOD[service.service]
-            params = {
-                key: value
-                for key, value in service.data.items()
-                if key != ATTR_ENTITY_ID
-            }
-            entity_ids = service.data.get(ATTR_ENTITY_ID)
-            if entity_ids:
-                entities = [
-                    entity
-                    for entity in hass.data[DATA_KEY].values()
-                    if entity.entity_id in entity_ids
-                ]
-            else:
-                entities = hass.data[DATA_KEY].values()
-
-            update_tasks = []
-
-            for entity in entities:
-                entity_method = getattr(entity, method["method"], None)
-                if not entity_method:
-                    continue
-                await entity_method(**params)
-                update_tasks.append(
-                    hass.async_create_task(entity.async_update_ha_state(True))
-                )
-
-            if update_tasks:
-                await asyncio.wait(update_tasks)
 
     async_add_entities(entities, update_before_add=True)
 
 
 class XiaomiGenericHumidifierDevice(XiaomiMiioEntity, HumidifierEntity):
-    """Representation of a generic Xiaomi device."""
+    """Representation of a generic Xiaomi humidifier device."""
 
-    def __init__(self, name, device, entry, unique_id):
+    def __init__(self, name, device, entry, unique_id, coordinator):
         """Initialize the generic Xiaomi device."""
-        super().__init__(name, device, entry, unique_id)
+        super().__init__(name, device, entry, unique_id, coordinator=coordinator)
 
         self._available = False
         self._state = None
@@ -243,6 +214,7 @@ class XiaomiGenericHumidifierDevice(XiaomiMiioEntity, HumidifierEntity):
         result = await self._try_command(
             "Turning the miio device on failed.", self._device.on
         )
+        await self.coordinator.async_request_refresh()
 
         if result:
             self._state = True
@@ -253,6 +225,7 @@ class XiaomiGenericHumidifierDevice(XiaomiMiioEntity, HumidifierEntity):
         result = await self._try_command(
             "Turning the miio device off failed.", self._device.off
         )
+        await self.coordinator.async_request_refresh()
 
         if result:
             self._state = False
@@ -269,13 +242,12 @@ class XiaomiGenericHumidifierDevice(XiaomiMiioEntity, HumidifierEntity):
         )
 
 
-class XiaomiAirHumidifier(XiaomiGenericHumidifierDevice):
+class XiaomiAirHumidifier(XiaomiGenericHumidifierDevice, HumidifierEntity):
     """Representation of a Xiaomi Air Humidifier."""
 
-    def __init__(self, name, device, entry, unique_id):
+    def __init__(self, name, device, entry, unique_id, coordinator):
         """Initialize the plug switch."""
-        super().__init__(name, device, entry, unique_id)
-
+        super().__init__(name, device, entry, unique_id, coordinator)
         if self._model in [MODEL_AIRHUMIDIFIER_CA1, MODEL_AIRHUMIDIFIER_CB1]:
             self._available_modes = []
             self._available_modes = [
@@ -306,31 +278,23 @@ class XiaomiAirHumidifier(XiaomiGenericHumidifierDevice):
         self._state_attrs.update(
             {attribute: None for attribute in self._available_attributes}
         )
+        self.coordinator.async_add_listener(self.update)
 
-    async def async_update(self):
+    @callback
+    def update(self):
         """Fetch state from the device."""
-        # On state change the device doesn't provide the new state immediately.
-        if self._skip_update:
-            self._skip_update = False
+        state = self.coordinator.data
+        if not state:
             return
-
-        try:
-            state = await self.hass.async_add_executor_job(self._device.status)
-            _LOGGER.debug("Got new state: %s", state)
-
-            self._available = True
-            self._state = state.is_on
-            self._state_attrs.update(
-                {
-                    key: self._extract_value_from_attribute(state, value)
-                    for key, value in self._available_attributes.items()
-                }
-            )
-
-        except DeviceException as ex:
-            if self._available:
-                self._available = False
-                _LOGGER.error("Got exception while fetching the state: %s", ex)
+        _LOGGER.debug("Got new state: %s", state)
+        self._available = True
+        self._state = state.is_on
+        self._state_attrs.update(
+            {
+                key: self._extract_value_from_attribute(state, value)
+                for key, value in self._available_attributes.items()
+            }
+        )
 
     @property
     def mode(self):
@@ -373,6 +337,7 @@ class XiaomiAirHumidifier(XiaomiGenericHumidifierDevice):
             self._device.set_mode,
             AirhumidifierOperationMode.Auto,
         )
+        await self.coordinator.async_request_refresh()
 
     async def async_set_mode(self, mode) -> None:
         """Set the mode of the humidifier."""
@@ -389,6 +354,7 @@ class XiaomiAirHumidifier(XiaomiGenericHumidifierDevice):
             self._device.set_mode,
             AirhumidifierOperationMode[mode.title()],
         )
+        await self.coordinator.async_request_refresh()
 
 
 class XiaomiAirHumidifierMiot(XiaomiAirHumidifier):
@@ -443,6 +409,7 @@ class XiaomiAirHumidifierMiot(XiaomiAirHumidifier):
             self._device.set_mode,
             AirhumidifierMiotOperationMode.Auto,
         )
+        await self.coordinator.async_request_refresh()
 
     async def async_set_mode(self, mode) -> None:
         """Set the mode of the fan."""
@@ -460,3 +427,4 @@ class XiaomiAirHumidifierMiot(XiaomiAirHumidifier):
                 self._device.set_mode,
                 self.REVERSE_MODE_MAPPING[mode],
             )
+        await self.coordinator.async_request_refresh()
