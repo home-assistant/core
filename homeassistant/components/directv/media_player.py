@@ -29,7 +29,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from . import DIRECTVEntity
 from .const import (
     ATTR_MEDIA_CURRENTLY_RECORDING,
     ATTR_MEDIA_RATING,
@@ -37,6 +36,7 @@ from .const import (
     ATTR_MEDIA_START_TIME,
     DOMAIN,
 )
+from .entity import DIRECTVEntity
 
 _LOGGER = logging.getLogger(__name__)
 
