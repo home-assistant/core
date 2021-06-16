@@ -46,8 +46,13 @@ class Device(CoordinatorEntity, LightEntity):
         self._characteristics = device["characteristics"]
         self._attr_is_on = False
         self._attr_brightness = 0
-        self._saturation = 0
-        self._hue = 0
+        color_mode = COLOR_MODE_ONOFF
+        if "hue" in self._characteristics:
+            color_mode = COLOR_MODE_HS
+        elif "brightness" in self._characteristics:
+            color_mode = COLOR_MODE_BRIGHTNESS
+        self._attr_color_mode = color_mode
+        self._attr_supported_color_modes = {color_mode}
 
     @callback
     def _handle_coordinator_update(self) -> None:
