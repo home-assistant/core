@@ -183,7 +183,7 @@ class XiaomiGenericHumidifierDevice(XiaomiMiioEntity, HumidifierEntity):
             self._state = False
             self._skip_update = True
 
-    async def async_translate_humidity(self, humidity):
+    def translate_humidity(self, humidity):
         """Translate the target humidity to the first valid step."""
         return (
             math.ceil(percentage_to_ranged_value((1, self._humidity_steps), humidity))
@@ -267,7 +267,7 @@ class XiaomiAirHumidifier(XiaomiGenericHumidifierDevice, HumidifierEntity):
 
     async def async_set_humidity(self, humidity) -> None:
         """Set the target humidity of the humidifier and set the mode to auto."""
-        target_humidity = await self.async_translate_humidity(humidity)
+        target_humidity = self.translate_humidity(humidity)
         if not target_humidity:
             return
 
@@ -339,7 +339,7 @@ class XiaomiAirHumidifierMiot(XiaomiAirHumidifier):
 
     async def async_set_humidity(self, humidity) -> None:
         """Set the target humidity of the humidifier and set the mode to auto."""
-        target_humidity = await self.async_translate_humidity(humidity)
+        target_humidity = self.translate_humidity(humidity)
         if not target_humidity:
             return
 
