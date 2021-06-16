@@ -1,7 +1,6 @@
 """Support for Xiaomi Mi Air Quality Monitor (PM2.5) and Humidifier."""
 from dataclasses import dataclass
 from enum import Enum
-from functools import partial
 import logging
 
 from miio import AirQualityMonitor, DeviceException
@@ -73,8 +72,6 @@ ATTR_NIGHT_TIME_END = "night_time_end"
 ATTR_SENSOR_STATE = "sensor_state"
 ATTR_WATER_LEVEL = "water_level"
 ATTR_HUMIDITY = "humidity"
-
-SUCCESS = ["ok"]
 
 CONF_MODEL = "model"
 
@@ -296,23 +293,6 @@ class XiaomiHumidifierSensor(XiaomiGenericSensor, XiaomiMiioEntity):
             return value.value
 
         return value
-
-    async def _try_command(self, mask_error, func, *args, **kwargs):
-        """Call a miio device command handling error messages."""
-        try:
-            result = await self.hass.async_add_executor_job(
-                partial(func, *args, **kwargs)
-            )
-
-            _LOGGER.debug("Response received from miio device: %s", result)
-
-            return result == SUCCESS
-        except DeviceException as exc:
-            if self._available:
-                _LOGGER.error(mask_error, exc)
-                self._available = False
-
-            return False
 
 
 class XiaomiAirQualityMonitor(XiaomiMiioEntity, SensorEntity):

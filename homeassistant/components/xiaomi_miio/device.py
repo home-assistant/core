@@ -1,4 +1,5 @@
 """Code to handle a Xiaomi Device."""
+from functools import partial
 import logging
 
 from miio import Device, DeviceException
@@ -7,7 +8,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_MAC, CONF_MODEL, DOMAIN
+from .const import CONF_MAC, CONF_MODEL, DOMAIN, SUCCESS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -67,6 +68,7 @@ class XiaomiMiioEntity(CoordinatorEntity, Entity):
         self._device_id = entry.unique_id
         self._unique_id = unique_id
         self._name = name
+        self._available = None
 
     @property
     def unique_id(self):
@@ -92,3 +94,20 @@ class XiaomiMiioEntity(CoordinatorEntity, Entity):
             device_info["connections"] = {(dr.CONNECTION_NETWORK_MAC, self._mac)}
 
         return device_info
+
+    async def _try_command(self, mask_error, func, *args, **kwargs):
+        """Call a miio device command handling error messages."""
+        try:
+            result = await self.hass.async_add_executor_job(
+                partial(func, *args, **kwargs)
+            )
+
+            _LOGGER.debug("Response received from miio device: %s", result)
+
+            return result == SUCCESS
+        except DeviceException as exc:
+            if self._available:
+                _LOGGER.error(mask_error, exc)
+                self._available = False
+
+            return False
