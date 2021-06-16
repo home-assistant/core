@@ -85,10 +85,8 @@ class Device(CoordinatorEntity, LightEntity):
                 self._attr_is_on = state["on"]
             if "brightness" in state:
                 self._attr_brightness = math.floor(state["brightness"] / 100 * 255)
-            if "hue" in state:
-                self._hue = state["hue"]
-            if "saturation" in state:
-                self._saturation = state["saturation"]
+            if "hue" in state and "saturation" in state:
+                self._attr_hs_color = (state["hue"], state["saturation"])
         super()._handle_coordinator_update()
 
     async def async_added_to_hass(self) -> None:
