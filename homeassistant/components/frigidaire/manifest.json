@@ -6,9 +6,6 @@
   "requirements": [
     "frigidaire==0.8"
   ],
-  "ssdp": [],
-  "zeroconf": [],
-  "homekit": {},
   "dependencies": [],
   "codeowners": [
     "@bm1549"
