@@ -1203,6 +1203,7 @@ omit =
     homeassistant/components/xiaomi_miio/device_tracker.py
     homeassistant/components/xiaomi_miio/fan.py
     homeassistant/components/xiaomi_miio/gateway.py
+    homeassistant/components/xiaomi_miio/humidifier.py
     homeassistant/components/xiaomi_miio/light.py
     homeassistant/components/xiaomi_miio/remote.py
     homeassistant/components/xiaomi_miio/sensor.py

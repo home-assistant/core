@@ -16,6 +16,7 @@ CONF_MANUAL = "manual"
 CONF_CLOUD_SUBDEVICES = "cloud_subdevices"
 
 KEY_COORDINATOR = "coordinator"
+KEY_DEVICE = "device"
 
 ATTR_AVAILABLE = "available"
 ATTR_MIO_DEVICE = "miio_device"

@@ -18,6 +18,7 @@ from .const import (
     CONF_MODEL,
     DOMAIN,
     KEY_COORDINATOR,
+    KEY_DEVICE,
     MODELS_AIR_MONITOR,
     MODELS_FAN,
     MODELS_HUMIDIFIER,
@@ -38,9 +39,6 @@ LIGHT_PLATFORMS = ["light"]
 VACUUM_PLATFORMS = ["vacuum"]
 AIR_MONITOR_PLATFORMS = ["air_quality", "sensor"]
 
-# global MIIO_DEVICE_CACHE
-MIIO_DEVICE_CACHE = {}
-
 
 async def async_setup_entry(
     hass: core.HomeAssistant, entry: config_entries.ConfigEntry
@@ -58,7 +56,7 @@ async def async_setup_entry(
     )
 
 
-def get_platforms(config_entry):
+async def async_get_platforms(config_entry):
     """Return the platforms belonging to a config_entry."""
     model = config_entry.data[CONF_MODEL]
     flow_type = config_entry.data[CONF_FLOW_TYPE]
@@ -84,19 +82,45 @@ def get_platforms(config_entry):
     return []
 
 
-async def async_create_miio_device(config_entry):
-    """Set up one mio device to service multiple entities."""
-    model = config_entry.data[CONF_MODEL]
-    host = config_entry.data[CONF_HOST]
-    token = config_entry.data[CONF_TOKEN]
+async def async_create_miio_device_and_coordinator(
+    hass: core.HomeAssistant, entry: config_entries.ConfigEntry
+):
+    """Set up a data coordinator and one mio device to service multiple entities."""
+    model = entry.data[CONF_MODEL]
+    host = entry.data[CONF_HOST]
+    token = entry.data[CONF_TOKEN]
+    name = entry.title
     device = None
     if model in MODELS_HUMIDIFIER:
         if model in MODELS_HUMIDIFIER_MIOT:
             device = AirHumidifierMiot(host, token)
         elif model.startswith("zhimi.humidifier."):
             device = AirHumidifier(host, token, model=model)
-    if device:
-        MIIO_DEVICE_CACHE[config_entry.unique_id] = device
+
+    def update_data():
+        """Fetch data from the subdevice."""
+        data = {}
+        return data
+
+    async def async_update_data():
+        """Fetch data from the subdevice using async_add_executor_job."""
+        return await hass.async_add_executor_job(update_data)
+
+    # Create update miio device and coordinator
+    coordinator = DataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        # Name of the data. For logging purposes.
+        name=name,
+        update_method=async_update_data,
+        # Polling interval. Will only be polled if there are subscribers.
+        update_interval=timedelta(seconds=10),
+    )
+
+    hass.data[DOMAIN][entry.entry_id] = {
+        KEY_DEVICE: device,
+        KEY_COORDINATOR: coordinator,
+    }
 
 
 async def async_setup_gateway_entry(
@@ -178,8 +202,8 @@ async def async_setup_device_entry(
     hass: core.HomeAssistant, entry: config_entries.ConfigEntry
 ):
     """Set up the Xiaomi Miio device component from a config entry."""
-    platforms = get_platforms(entry)
-    await async_create_miio_device(entry)
+    platforms = await async_get_platforms(entry)
+    await async_create_miio_device_and_coordinator(hass, entry)
 
     if not platforms:
         return False
@@ -195,7 +219,7 @@ async def async_unload_entry(
     hass: core.HomeAssistant, config_entry: config_entries.ConfigEntry
 ):
     """Unload a config entry."""
-    platforms = get_platforms(config_entry)
+    platforms = await async_get_platforms(config_entry)
 
     unload_ok = await hass.config_entries.async_unload_platforms(
         config_entry, platforms
