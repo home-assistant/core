@@ -67,9 +67,9 @@ BITMASK_SCHEMA = vol.All(
 )
 
 VALUE_SCHEMA = vol.Any(
+    bool,
     vol.Coerce(int),
     vol.Coerce(float),
-    cv.boolean,
     BITMASK_SCHEMA,
     cv.string,
 )
@@ -259,9 +259,7 @@ class ZWaveServices:
                         ),
                         vol.Optional(const.ATTR_ENDPOINT): vol.Coerce(int),
                         vol.Required(const.ATTR_VALUE): VALUE_SCHEMA,
-                        vol.Optional(const.ATTR_WAIT_FOR_RESULT): vol.Coerce(
-                            cv.boolean
-                        ),
+                        vol.Optional(const.ATTR_WAIT_FOR_RESULT): cv.boolean,
                     },
                     cv.has_at_least_one_key(ATTR_DEVICE_ID, ATTR_ENTITY_ID),
                     get_nodes_from_service_data,

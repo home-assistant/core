@@ -838,37 +838,6 @@ async def test_multicast_set_value(
 
     client.async_send_command.reset_mock()
 
-    # Test successful multicast call with "bool"
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_MULTICAST_SET_VALUE,
-        {
-            ATTR_ENTITY_ID: [
-                CLIMATE_DANFOSS_LC13_ENTITY,
-                CLIMATE_RADIO_THERMOSTAT_ENTITY,
-            ],
-            ATTR_COMMAND_CLASS: 117,
-            ATTR_PROPERTY: "local",
-            ATTR_VALUE: "true",
-        },
-        blocking=True,
-    )
-
-    assert len(client.async_send_command.call_args_list) == 1
-    args = client.async_send_command.call_args[0][0]
-    assert args["command"] == "multicast_group.set_value"
-    assert args["nodeIDs"] == [
-        climate_radio_thermostat_ct100_plus_different_endpoints.node_id,
-        climate_danfoss_lc_13.node_id,
-    ]
-    assert args["valueId"] == {
-        "commandClass": 117,
-        "property": "local",
-    }
-    assert args["value"] is True
-
-    client.async_send_command.reset_mock()
-
     # Test successful broadcast call
     await hass.services.async_call(
         DOMAIN,
