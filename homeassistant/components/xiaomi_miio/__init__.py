@@ -97,9 +97,11 @@ async def async_create_miio_device_and_coordinator(
             device = AirHumidifierMiot(host, token)
         elif model.startswith("zhimi.humidifier."):
             device = AirHumidifier(host, token, model=model)
+    else:
+        return
 
     async def async_update_data():
-        """Fetch data from the subdevice using async_add_executor_job."""
+        """Fetch data from the device using async_add_executor_job."""
         device = hass.data[DOMAIN][entry.entry_id][KEY_DEVICE]
         # On state change the device doesn't provide the new state immediately.
         try:
