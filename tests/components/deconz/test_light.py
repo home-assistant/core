@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.deconz.const import CONF_ALLOW_DECONZ_GROUPS
+from homeassistant.components.deconz.const import ATTR_ON, CONF_ALLOW_DECONZ_GROUPS
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_MODE,
@@ -89,6 +89,7 @@ async def test_no_lights_or_groups(hass, aioclient_mock):
                 "attributes": {
                     ATTR_BRIGHTNESS: 254,
                     ATTR_COLOR_TEMP: 375,
+                    ATTR_EFFECT_LIST: [EFFECT_COLORLOOP],
                     ATTR_SUPPORTED_COLOR_MODES: [
                         COLOR_MODE_COLOR_TEMP,
                         COLOR_MODE_HS,
@@ -367,6 +368,7 @@ async def test_light_state_change(hass, aioclient_mock, mock_deconz_websocket):
                 "call": {
                     ATTR_ENTITY_ID: "light.hue_go",
                     ATTR_BRIGHTNESS: 200,
+                    ATTR_COLOR_TEMP: 200,
                     ATTR_TRANSITION: 5,
                     ATTR_FLASH: FLASH_SHORT,
                     ATTR_EFFECT: EFFECT_COLORLOOP,
@@ -374,6 +376,7 @@ async def test_light_state_change(hass, aioclient_mock, mock_deconz_websocket):
             },
             {
                 "bri": 200,
+                "ct": 200,
                 "transitiontime": 50,
                 "alert": "select",
                 "effect": "colorloop",
@@ -622,27 +625,84 @@ async def test_configuration_tool(hass, aioclient_mock):
     assert len(hass.states.async_all()) == 0
 
 
-async def test_lights_and_groups(hass, aioclient_mock, mock_deconz_websocket):
-    """Test that lights or groups entities are created."""
+@pytest.mark.parametrize(
+    "input,expected",
+    [
+        (
+            {
+                "lights": ["1", "2", "3"],
+            },
+            {
+                "entity_id": "light.group",
+                "state": ATTR_ON,
+                "attributes": {
+                    ATTR_MIN_MIREDS: 153,
+                    ATTR_MAX_MIREDS: 500,
+                    ATTR_SUPPORTED_COLOR_MODES: [COLOR_MODE_COLOR_TEMP, COLOR_MODE_XY],
+                    ATTR_COLOR_MODE: COLOR_MODE_COLOR_TEMP,
+                    ATTR_BRIGHTNESS: 255,
+                    ATTR_EFFECT_LIST: [EFFECT_COLORLOOP],
+                    "all_on": False,
+                    "is_deconz_group": True,
+                    ATTR_SUPPORTED_FEATURES: 44,
+                },
+            },
+        ),
+        (
+            {
+                "lights": ["3", "1", "2"],
+            },
+            {
+                "entity_id": "light.group",
+                "state": ATTR_ON,
+                "attributes": {
+                    ATTR_MIN_MIREDS: 153,
+                    ATTR_MAX_MIREDS: 500,
+                    ATTR_SUPPORTED_COLOR_MODES: [COLOR_MODE_COLOR_TEMP, COLOR_MODE_XY],
+                    ATTR_COLOR_MODE: COLOR_MODE_COLOR_TEMP,
+                    ATTR_BRIGHTNESS: 50,
+                    ATTR_EFFECT_LIST: [EFFECT_COLORLOOP],
+                    "all_on": False,
+                    "is_deconz_group": True,
+                    ATTR_SUPPORTED_FEATURES: 44,
+                },
+            },
+        ),
+        (
+            {
+                "lights": ["2", "3", "1"],
+            },
+            {
+                "entity_id": "light.group",
+                "state": ATTR_ON,
+                "attributes": {
+                    ATTR_MIN_MIREDS: 153,
+                    ATTR_MAX_MIREDS: 500,
+                    ATTR_SUPPORTED_COLOR_MODES: [COLOR_MODE_COLOR_TEMP, COLOR_MODE_XY],
+                    ATTR_COLOR_MODE: COLOR_MODE_XY,
+                    ATTR_HS_COLOR: (52.0, 100.0),
+                    ATTR_RGB_COLOR: (255, 221, 0),
+                    ATTR_XY_COLOR: (0.5, 0.5),
+                    "all_on": False,
+                    "is_deconz_group": True,
+                    ATTR_SUPPORTED_FEATURES: 44,
+                },
+            },
+        ),
+    ],
+)
+async def test_groups(hass, aioclient_mock, input, expected):
+    """Test that different group entities are created with expected values."""
     data = {
         "groups": {
-            "1": {
+            "0": {
                 "id": "Light group id",
-                "name": "Light group",
+                "name": "Group",
                 "type": "LightGroup",
                 "state": {"all_on": False, "any_on": True},
                 "action": {},
                 "scenes": [],
-                "lights": ["1", "2"],
-            },
-            "2": {
-                "id": "Empty group id",
-                "name": "Empty group",
-                "type": "LightGroup",
-                "state": {},
-                "action": {},
-                "scenes": [],
-                "lights": [],
+                "lights": input["lights"],
             },
         },
         "lights": {
@@ -650,7 +710,7 @@ async def test_lights_and_groups(hass, aioclient_mock, mock_deconz_websocket):
                 "name": "RGB light",
                 "state": {
                     "on": True,
-                    "bri": 255,
+                    "bri": 50,
                     "colormode": "xy",
                     "effect": "colorloop",
                     "xy": (0.5, 0.5),
@@ -663,53 +723,191 @@ async def test_lights_and_groups(hass, aioclient_mock, mock_deconz_websocket):
                 "ctmax": 454,
                 "ctmin": 155,
                 "name": "Tunable white light",
-                "state": {"on": True, "colormode": "ct", "ct": 2500, "reachable": True},
+                "state": {
+                    "on": True,
+                    "colormode": "ct",
+                    "ct": 2500,
+                    "reachable": True,
+                },
                 "type": "Tunable white light",
                 "uniqueid": "00:00:00:00:00:00:00:01-00",
             },
             "3": {
-                "name": "On off switch",
-                "type": "On/Off plug-in unit",
-                "state": {"reachable": True},
+                "name": "Dimmable light",
+                "type": "Dimmable light",
+                "state": {"bri": 255, "on": True, "reachable": True},
                 "uniqueid": "00:00:00:00:00:00:00:02-00",
-            },
-            "4": {
-                "name": "On off light",
-                "state": {"on": True, "reachable": True},
-                "type": "On and Off light",
-                "uniqueid": "00:00:00:00:00:00:00:03-00",
-            },
-            "5": {
-                "ctmax": 1000,
-                "ctmin": 0,
-                "name": "Tunable white light with bad maxmin values",
-                "state": {"on": True, "colormode": "ct", "ct": 2500, "reachable": True},
-                "type": "Tunable white light",
-                "uniqueid": "00:00:00:00:00:00:00:04-00",
             },
         },
     }
     with patch.dict(DECONZ_WEB_REQUEST, data):
         config_entry = await setup_deconz_integration(hass, aioclient_mock)
 
-    assert len(hass.states.async_all()) == 6
+    assert len(hass.states.async_all()) == 4
 
-    # assert hass.states.get("light.light_group").state == STATE_ON
-    # assert hass.states.get("light.light_group").attributes["all_on"] is False
-
-    # empty_group = hass.states.get("light.empty_group")
-    # assert empty_group is None
+    group = hass.states.get(expected["entity_id"])
+    assert group.state == expected["state"]
+    for attribute, expected_value in expected["attributes"].items():
+        assert group.attributes[attribute] == expected_value
 
     await hass.config_entries.async_unload(config_entry.entry_id)
 
     states = hass.states.async_all()
-    assert len(states) == 6
     for state in states:
         assert state.state == STATE_UNAVAILABLE
 
     await hass.config_entries.async_remove(config_entry.entry_id)
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 0
+
+
+@pytest.mark.parametrize(
+    "input,expected",
+    [
+        (  # Turn on group with short color loop
+            {
+                "lights": ["1", "2", "3"],
+                "group_on": False,
+                "service": SERVICE_TURN_ON,
+                "call": {
+                    ATTR_ENTITY_ID: "light.group",
+                    ATTR_BRIGHTNESS: 200,
+                    ATTR_COLOR_TEMP: 200,
+                    ATTR_TRANSITION: 5,
+                    ATTR_FLASH: FLASH_SHORT,
+                    ATTR_EFFECT: EFFECT_COLORLOOP,
+                },
+            },
+            {
+                "bri": 200,
+                "ct": 200,
+                "transitiontime": 50,
+                "alert": "select",
+                "effect": "colorloop",
+            },
+        ),
+        (  # Turn on group with hs colors
+            {
+                "lights": ["1", "2", "3"],
+                "group_on": False,
+                "service": SERVICE_TURN_ON,
+                "call": {
+                    ATTR_ENTITY_ID: "light.group",
+                    ATTR_HS_COLOR: (250, 50),
+                },
+            },
+            {
+                "hue": 45510,
+                "on": True,
+                "sat": 127,
+            },
+        ),
+        (  # Turn on group with short color loop
+            {
+                "lights": ["3", "2", "1"],
+                "group_on": False,
+                "service": SERVICE_TURN_ON,
+                "call": {
+                    ATTR_ENTITY_ID: "light.group",
+                    ATTR_HS_COLOR: (250, 50),
+                },
+            },
+            {
+                "hue": 45510,
+                "on": True,
+                "sat": 127,
+            },
+        ),
+    ],
+)
+async def test_group_service_calls(hass, aioclient_mock, input, expected):
+    """Verify expected group web request from different service calls."""
+    data = {
+        "groups": {
+            "0": {
+                "id": "Light group id",
+                "name": "Group",
+                "type": "LightGroup",
+                "state": {"all_on": False, "any_on": input["group_on"]},
+                "action": {},
+                "scenes": [],
+                "lights": input["lights"],
+            },
+        },
+        "lights": {
+            "1": {
+                "name": "RGB light",
+                "state": {
+                    "bri": 255,
+                    "colormode": "xy",
+                    "effect": "colorloop",
+                    "hue": 53691,
+                    "on": True,
+                    "reachable": True,
+                    "sat": 141,
+                    "xy": (0.5, 0.5),
+                },
+                "type": "Extended color light",
+                "uniqueid": "00:00:00:00:00:00:00:00-00",
+            },
+            "2": {
+                "ctmax": 454,
+                "ctmin": 155,
+                "name": "Tunable white light",
+                "state": {
+                    "on": True,
+                    "colormode": "ct",
+                    "ct": 2500,
+                    "reachable": True,
+                },
+                "type": "Tunable white light",
+                "uniqueid": "00:00:00:00:00:00:00:01-00",
+            },
+            "3": {
+                "name": "Dimmable light",
+                "type": "Dimmable light",
+                "state": {"bri": 254, "on": True, "reachable": True},
+                "uniqueid": "00:00:00:00:00:00:00:02-00",
+            },
+        },
+    }
+    with patch.dict(DECONZ_WEB_REQUEST, data):
+        config_entry = await setup_deconz_integration(hass, aioclient_mock)
+
+    mock_deconz_put_request(aioclient_mock, config_entry.data, "/groups/0/action")
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        input["service"],
+        input["call"],
+        blocking=True,
+    )
+    if expected:
+        assert aioclient_mock.mock_calls[1][2] == expected
+    else:
+        assert len(aioclient_mock.mock_calls) == 1  # not called
+
+
+async def test_empty_group(hass, aioclient_mock):
+    """Verify that a group without a list of lights is not created."""
+    data = {
+        "groups": {
+            "0": {
+                "id": "Empty group id",
+                "name": "Empty group",
+                "type": "LightGroup",
+                "state": {},
+                "action": {},
+                "scenes": [],
+                "lights": [],
+            },
+        },
+    }
+    with patch.dict(DECONZ_WEB_REQUEST, data):
+        await setup_deconz_integration(hass, aioclient_mock)
+
+    assert len(hass.states.async_all()) == 0
+    assert not hass.states.get("light.empty_group")
 
 
 async def test_disable_light_groups(hass, aioclient_mock):
@@ -801,7 +999,7 @@ async def test_non_color_light_reports_color(
                 "devicemembership": [],
                 "etag": "81e42cf1b47affb72fa72bc2e25ba8bf",
                 "lights": ["0", "1"],
-                "name": "All",
+                "name": "Group",
                 "scenes": [],
                 "state": {"all_on": False, "any_on": True},
                 "type": "LightGroup",
@@ -863,7 +1061,7 @@ async def test_non_color_light_reports_color(
         await setup_deconz_integration(hass, aioclient_mock)
 
     assert len(hass.states.async_all()) == 3
-    assert hass.states.get("light.all").attributes[ATTR_COLOR_TEMP] == 307
+    assert hass.states.get("light.group").attributes[ATTR_COLOR_TEMP] == 250
 
     # Updating a scene will return a faulty color value for a non-color light causing an exception in hs_color
     event_changed_light = {
@@ -886,8 +1084,8 @@ async def test_non_color_light_reports_color(
 
     # Bug is fixed if we reach this point, but device won't have neither color temp nor color
     with pytest.raises(KeyError):
-        assert hass.states.get("light.all").attributes[ATTR_COLOR_TEMP]
-        assert hass.states.get("light.all").attributes[ATTR_HS_COLOR]
+        assert hass.states.get("light.group").attributes[ATTR_COLOR_TEMP]
+        assert hass.states.get("light.group").attributes[ATTR_HS_COLOR]
 
 
 async def test_verify_group_supported_features(hass, aioclient_mock):
@@ -896,7 +1094,7 @@ async def test_verify_group_supported_features(hass, aioclient_mock):
         "groups": {
             "1": {
                 "id": "Group1",
-                "name": "group",
+                "name": "Group",
                 "type": "LightGroup",
                 "state": {"all_on": False, "any_on": True},
                 "action": {},
