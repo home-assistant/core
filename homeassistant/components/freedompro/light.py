@@ -49,6 +49,25 @@ class Device(CoordinatorEntity, LightEntity):
         self._saturation = 0
         self._hue = 0
 
+        device = next(
+            (
+                device
+                for device in self.coordinator.data
+                if device["uid"] == self._attr_unique_id
+            ),
+            None,
+        )
+        if device is not None and "state" in device:
+            state = device["state"]
+            if "on" in state:
+                self._attr_is_on = state["on"]
+            if "brightness" in state:
+                self._attr_brightness = math.floor(state["brightness"] / 100 * 255)
+            if "hue" in state:
+                self._hue = state["hue"]
+            if "saturation" in state:
+                self._saturation = state["saturation"]
+
     @property
     def hs_color(self):
         """Return the status of the light hs_color."""

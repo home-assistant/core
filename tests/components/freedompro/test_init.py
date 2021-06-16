@@ -3,11 +3,7 @@ import logging
 from unittest.mock import patch
 
 from homeassistant.components.freedompro.const import DOMAIN
-from homeassistant.config_entries import (
-    ENTRY_STATE_LOADED,
-    ENTRY_STATE_NOT_LOADED,
-    ENTRY_STATE_SETUP_RETRY,
-)
+from homeassistant.config_entries import ConfigEntryState
 
 from tests.common import MockConfigEntry
 from tests.components.freedompro import init_integration
@@ -44,7 +40,7 @@ async def test_config_not_ready(hass):
     ):
         entry.add_to_hass(hass)
         await hass.config_entries.async_setup(entry.entry_id)
-        assert entry.state == ENTRY_STATE_SETUP_RETRY
+        assert entry.state == ConfigEntryState.SETUP_RETRY
 
 
 async def test_unload_entry(hass):
@@ -52,9 +48,9 @@ async def test_unload_entry(hass):
     entry = await init_integration(hass)
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    assert entry.state == ENTRY_STATE_LOADED
+    assert entry.state == ConfigEntryState.LOADED
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entry.state == ENTRY_STATE_NOT_LOADED
+    assert entry.state == ConfigEntryState.NOT_LOADED
