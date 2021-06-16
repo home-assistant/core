@@ -292,7 +292,7 @@ class DIRECTVMediaPlayer(DIRECTVEntity, MediaPlayerEntity):
         if self._is_client:
             raise NotImplementedError()
 
-        _LOGGER.debug("Turn on %s", self._name)
+        _LOGGER.debug("Turn on %s", self.name)
         await self.dtv.remote("poweron", self._address)
 
     async def async_turn_off(self):
@@ -300,32 +300,32 @@ class DIRECTVMediaPlayer(DIRECTVEntity, MediaPlayerEntity):
         if self._is_client:
             raise NotImplementedError()
 
-        _LOGGER.debug("Turn off %s", self._name)
+        _LOGGER.debug("Turn off %s", self.name)
         await self.dtv.remote("poweroff", self._address)
 
     async def async_media_play(self):
         """Send play command."""
-        _LOGGER.debug("Play on %s", self._name)
+        _LOGGER.debug("Play on %s", self.name)
         await self.dtv.remote("play", self._address)
 
     async def async_media_pause(self):
         """Send pause command."""
-        _LOGGER.debug("Pause on %s", self._name)
+        _LOGGER.debug("Pause on %s", self.name)
         await self.dtv.remote("pause", self._address)
 
     async def async_media_stop(self):
         """Send stop command."""
-        _LOGGER.debug("Stop on %s", self._name)
+        _LOGGER.debug("Stop on %s", self.name)
         await self.dtv.remote("stop", self._address)
 
     async def async_media_previous_track(self):
         """Send rewind command."""
-        _LOGGER.debug("Rewind on %s", self._name)
+        _LOGGER.debug("Rewind on %s", self.name)
         await self.dtv.remote("rew", self._address)
 
     async def async_media_next_track(self):
         """Send fast forward command."""
-        _LOGGER.debug("Fast forward on %s", self._name)
+        _LOGGER.debug("Fast forward on %s", self.name)
         await self.dtv.remote("ffwd", self._address)
 
     async def async_play_media(self, media_type, media_id, **kwargs):
@@ -338,5 +338,5 @@ class DIRECTVMediaPlayer(DIRECTVEntity, MediaPlayerEntity):
             )
             return
 
-        _LOGGER.debug("Changing channel on %s to %s", self._name, media_id)
+        _LOGGER.debug("Changing channel on %s to %s", self.name, media_id)
         await self.dtv.tune(media_id, self._address)
