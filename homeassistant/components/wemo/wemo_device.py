@@ -13,7 +13,7 @@ from homeassistant.const import (
     CONF_UNIQUE_ID,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import async_get_registry
+from homeassistant.helpers.device_registry import async_get as async_get_device_registry
 from homeassistant.helpers.dispatcher import dispatcher_send
 
 from .const import DOMAIN, SIGNAL_WEMO_STATE_PUSH, WEMO_SUBSCRIPTION_EVENT
@@ -66,7 +66,7 @@ async def async_register_device(
     hass: HomeAssistant, config_entry: ConfigEntry, wemo: WeMoDevice
 ) -> DeviceWrapper:
     """Register a device with home assistant and enable pywemo event callbacks."""
-    device_registry = await async_get_registry(hass)
+    device_registry = async_get_device_registry(hass)
     entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id, **_device_info(wemo)
     )
