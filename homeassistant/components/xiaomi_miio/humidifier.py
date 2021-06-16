@@ -8,9 +8,8 @@ import math
 from miio import DeviceException
 from miio.airhumidifier import OperationMode as AirhumidifierOperationMode
 from miio.airhumidifier_miot import OperationMode as AirhumidifierMiotOperationMode
-import voluptuous as vol
 
-from homeassistant.components.humidifier import PLATFORM_SCHEMA, HumidifierEntity
+from homeassistant.components.humidifier import HumidifierEntity
 from homeassistant.components.humidifier.const import (
     DEFAULT_MAX_HUMIDITY,
     DEFAULT_MIN_HUMIDITY,
@@ -18,14 +17,7 @@ from homeassistant.components.humidifier.const import (
     SUPPORT_MODES,
 )
 from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ATTR_MODE,
-    CONF_HOST,
-    CONF_NAME,
-    CONF_TOKEN,
-)
-import homeassistant.helpers.config_validation as cv
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODE, CONF_HOST, CONF_TOKEN
 from homeassistant.util.percentage import percentage_to_ranged_value
 
 from .const import (
@@ -36,7 +28,6 @@ from .const import (
     MODEL_AIRHUMIDIFIER_CA1,
     MODEL_AIRHUMIDIFIER_CA4,
     MODEL_AIRHUMIDIFIER_CB1,
-    MODELS_FAN,
     MODELS_HUMIDIFIER_MIOT,
     SERVICE_SET_TARGET_HUMIDITY,
 )
@@ -48,16 +39,6 @@ DEFAULT_NAME = "Xiaomi Miio Device"
 DATA_KEY = "fan.xiaomi_miio"
 
 CONF_MODEL = "model"
-
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_TOKEN): vol.All(cv.string, vol.Length(min=32, max=32)),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_MODEL): vol.In(MODELS_FAN),
-    }
-)
 
 ATTR_MODEL = "model"
 
@@ -78,8 +59,6 @@ AVAILABLE_ATTRIBUTES = {
     ATTR_MODE: "mode",
     ATTR_TARGET_HUMIDITY: "target_humidity",
 }
-
-AIRHUMIDIFIER_SERVICE_SCHEMA = vol.Schema({vol.Optional(ATTR_ENTITY_ID): cv.entity_ids})
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -164,14 +143,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
             if update_tasks:
                 await asyncio.wait(update_tasks)
-
-        for air_humidifier_service in SERVICE_TO_METHOD:
-            schema = SERVICE_TO_METHOD[air_humidifier_service].get(
-                "schema", AIRHUMIDIFIER_SERVICE_SCHEMA
-            )
-            hass.services.async_register(
-                DOMAIN, air_humidifier_service, async_service_handler, schema=schema
-            )
 
     async_add_entities(entities, update_before_add=True)
 
