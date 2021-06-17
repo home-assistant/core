@@ -164,7 +164,7 @@ class SegmentBuffer:
             # We could put the next two lines in self.flush_part, but they are
             # already done by reset() in the case of flushing the stub part,
             # so doing it here avoids doing it twice for the stub part.
-            self._memory_file_pos = self._memory_file.tell()
+            self._memory_file_pos = byte_position
             self._part_start_dts = packet.dts
 
     def flush_part(self, packet: av.Packet) -> None:
