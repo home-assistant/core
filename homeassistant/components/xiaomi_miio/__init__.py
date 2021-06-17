@@ -8,6 +8,7 @@ from miio.gateway.gateway import GatewayException
 
 from homeassistant import config_entries, core
 from homeassistant.const import CONF_HOST, CONF_TOKEN
+from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -57,7 +58,8 @@ async def async_setup_entry(
     )
 
 
-async def async_get_platforms(config_entry):
+@callback
+def get_platforms(config_entry):
     """Return the platforms belonging to a config_entry."""
     model = config_entry.data[CONF_MODEL]
     flow_type = config_entry.data[CONF_FLOW_TYPE]
@@ -83,7 +85,8 @@ async def async_get_platforms(config_entry):
     return []
 
 
-async def async_create_miio_device_and_coordinator(
+@callback
+def create_miio_device_and_coordinator(
     hass: core.HomeAssistant, entry: config_entries.ConfigEntry
 ):
     """Set up a data coordinator and one mio device to service multiple entities."""
@@ -207,8 +210,8 @@ async def async_setup_device_entry(
     hass: core.HomeAssistant, entry: config_entries.ConfigEntry
 ):
     """Set up the Xiaomi Miio device component from a config entry."""
-    platforms = await async_get_platforms(entry)
-    await async_create_miio_device_and_coordinator(hass, entry)
+    platforms = get_platforms(entry)
+    create_miio_device_and_coordinator(hass, entry)
 
     if not platforms:
         return False
@@ -224,7 +227,7 @@ async def async_unload_entry(
     hass: core.HomeAssistant, config_entry: config_entries.ConfigEntry
 ):
     """Unload a config entry."""
-    platforms = await async_get_platforms(config_entry)
+    platforms = get_platforms(config_entry)
 
     unload_ok = await hass.config_entries.async_unload_platforms(
         config_entry, platforms
