@@ -269,7 +269,7 @@ class XiaomiAirHumidifier(XiaomiGenericHumidifier, HumidifierEntity):
             )
         return None
 
-    async def async_set_humidity(self, humidity) -> None:
+    async def async_set_humidity(self, humidity: int) -> None:
         """Set the target humidity of the humidifier and set the mode to auto."""
         target_humidity = self.translate_humidity(humidity)
         if not target_humidity:
@@ -295,7 +295,7 @@ class XiaomiAirHumidifier(XiaomiGenericHumidifier, HumidifierEntity):
         )
         await self.coordinator.async_request_refresh()
 
-    async def async_set_mode(self, mode) -> None:
+    async def async_set_mode(self, mode: str) -> None:
         """Set the mode of the humidifier."""
         if self.supported_features & SUPPORT_MODES == 0 or not mode:
             return
@@ -342,7 +342,7 @@ class XiaomiAirHumidifierMiot(XiaomiAirHumidifier):
             )
         return None
 
-    async def async_set_humidity(self, humidity) -> None:
+    async def async_set_humidity(self, humidity: int) -> None:
         """Set the target humidity of the humidifier and set the mode to auto."""
         target_humidity = self.translate_humidity(humidity)
         if not target_humidity:
@@ -368,7 +368,7 @@ class XiaomiAirHumidifierMiot(XiaomiAirHumidifier):
         )
         await self.coordinator.async_request_refresh()
 
-    async def async_set_mode(self, mode) -> None:
+    async def async_set_mode(self, mode: str) -> None:
         """Set the mode of the fan."""
         if self.supported_features & SUPPORT_MODES == 0 or not mode:
             return
