@@ -1,4 +1,6 @@
 """Component to interface with locks that can be controlled remotely."""
+from __future__ import annotations
+
 from datetime import timedelta
 import functools as ft
 import logging
@@ -83,20 +85,25 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class LockEntity(Entity):
     """Base class for lock entities."""
 
+    _attr_changed_by: str | None = None
+    _attr_code_format: str | None = None
+    _attr_is_locked: bool | None = None
+    _attr_state: None = None
+
     @property
-    def changed_by(self):
+    def changed_by(self) -> str | None:
         """Last change triggered by."""
-        return None
+        return self._attr_changed_by
 
     @property
-    def code_format(self):
+    def code_format(self) -> str | None:
         """Regex for code format or None if no code is required."""
-        return None
+        return self._attr_code_format
 
     @property
-    def is_locked(self):
+    def is_locked(self) -> bool | None:
         """Return true if the lock is locked."""
-        return None
+        return self._attr_is_locked
 
     def lock(self, **kwargs):
         """Lock the lock."""
@@ -133,8 +140,9 @@ class LockEntity(Entity):
                 state_attr[attr] = value
         return state_attr
 
+    @final
     @property
-    def state(self):
+    def state(self) -> str | None:
         """Return the state."""
         locked = self.is_locked
         if locked is None:
