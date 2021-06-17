@@ -37,9 +37,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 flipr_ids = await self._authenticate_and_search_flipr()
             except HTTPError:
-                errors = {}
                 errors["base"] = "invalid_auth"
-                return self._show_setup_form(errors)
             except (Timeout, ConnectionError):
                 errors["base"] = "cannot_connect"
             except Exception as exception:  # pylint: disable=broad-except
