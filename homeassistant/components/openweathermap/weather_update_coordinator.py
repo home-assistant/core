@@ -18,6 +18,7 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_WIND_BEARING,
     ATTR_FORECAST_WIND_SPEED,
 )
+from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers import sun
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt
@@ -47,8 +48,6 @@ from .const import (
     FORECAST_MODE_ONECALL_HOURLY,
     WEATHER_CODE_SUNNY_OR_CLEAR_NIGHT,
 )
-
-from homeassistant.const import TEMP_CELSIUS
 
 _LOGGER = logging.getLogger(__name__)
 
