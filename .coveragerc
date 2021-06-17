@@ -122,6 +122,7 @@ omit =
     homeassistant/components/braviatv/__init__.py
     homeassistant/components/braviatv/const.py
     homeassistant/components/braviatv/media_player.py
+    homeassistant/components/braviatv/remote.py    
     homeassistant/components/broadlink/__init__.py
     homeassistant/components/broadlink/const.py
     homeassistant/components/broadlink/remote.py
