@@ -236,7 +236,7 @@ def get_forecast(ec_data, forecast_type):
             forecast_array.append(
                 {
                     ATTR_FORECAST_TIME: datetime.datetime.strptime(
-                        hour["period"], "%Y%m%d%H%M"
+                        hour["period"], "%Y%m%d%H%M%S"
                     )
                     .replace(tzinfo=dt.UTC)
                     .isoformat(),
