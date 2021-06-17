@@ -62,7 +62,7 @@ async def update_listener(hass: HomeAssistant, entry: ConfigEntry):
 class Alpha2BaseUpdateHandler:
     """Keep the base instance in one place and centralize the update."""
 
-    def __init__(self, hass: HomeAssistant, base: Alpha2Base):
+    def __init__(self, hass: HomeAssistant, base: Alpha2Base) -> None:
         """Initialize the base handle."""
         self._hass = hass
         self.base = base
