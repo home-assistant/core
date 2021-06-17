@@ -62,10 +62,6 @@ _LOGGER = logging.getLogger(__name__)
 def _get_dict(keys: list, values: list) -> dict[str, Any]:
     """Create a dict from a list of keys and values."""
     ret_dict: dict[str, Any] = dict.fromkeys(keys)
-    if not values:
-        return ret_dict
-    if len(values) < len(keys):
-        return ret_dict
 
     for index, key in enumerate(ret_dict):
         ret_dict[key] = values[index]
