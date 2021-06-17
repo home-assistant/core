@@ -5,6 +5,7 @@ import logging
 from plexapi.exceptions import NotFound
 import voluptuous as vol
 
+from homeassistant.components import websocket_api
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
@@ -15,6 +16,19 @@ from .const import (
     SERVICE_REFRESH_LIBRARY,
     SERVICE_SCAN_CLIENTS,
 )
+
+RECENTLY_ADDED_LOOKUP = {
+    "artist": "album",
+    "show": "episode",
+}
+
+RECENTLY_ADDED_COMMON_ATTRS = {
+    "title": "title",
+    "added": "addedAt",
+    "rating": "rating",
+    "released": "originallyAvailableAt",
+    "thumb_url": "thumbUrl",
+}
 
 REFRESH_LIBRARY_SCHEMA = vol.Schema(
     {vol.Optional("server_name"): str, vol.Required("library_name"): str}
@@ -43,6 +57,7 @@ async def async_setup_services(hass):
     hass.services.async_register(
         DOMAIN, SERVICE_SCAN_CLIENTS, async_scan_clients_service
     )
+    hass.components.websocket_api.async_register_command(websocket_get_recently_added)
 
     return True
 
@@ -139,3 +154,67 @@ def play_on_sonos(hass, content_type, content_id, speaker_name):
         _LOGGER.error(message)
         raise HomeAssistantError(message)
     sonos_speaker.playMedia(media)
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "plex/recently_added",
+        vol.Required("library_name"): str,
+        vol.Optional("items"): int,
+        vol.Optional("plex_server"): str,
+    }
+)
+@websocket_api.async_response
+async def websocket_get_recently_added(hass, connection, msg):
+    """Handle websocket command to request media items."""
+    result = await hass.async_add_executor_job(
+        _get_recently_added, hass, connection, msg
+    )
+    connection.send_result(msg["id"], result)
+
+
+def _get_recently_added(hass, connection, msg):
+    """Query specified library for recent items."""
+    library_name = msg["library_name"]
+    maxresults = msg.get("items", 5)
+
+    plex_server = get_plex_server(hass, msg.get("plex_server"))
+    library_section = plex_server.library.section(library_name)
+
+    itemtype = RECENTLY_ADDED_LOOKUP.get(library_section.type, library_section.type)
+    recents = library_section.recentlyAdded(libtype=itemtype, maxresults=maxresults)
+
+    recently_added = []
+    for item in recents:
+        itemdict = {}
+        for key, attr in RECENTLY_ADDED_COMMON_ATTRS.items():
+            if value := getattr(item, attr, None):
+                itemdict[key] = value
+
+        itemdict["media_content_id"] = json.dumps(
+            {
+                "plex_server": plex_server.friendly_name,
+                "plex_key": item.ratingKey,
+            }
+        )
+
+        if itemtype == "album":
+            runtime = trackcount = 0
+            for track in item:
+                trackcount += 1
+                runtime += track.duration
+            itemdict["tracks"] = trackcount
+            itemdict["artist"] = item.parentTitle
+        else:
+            runtime = item.duration
+
+        itemdict["runtime"] = int(runtime / 1000)  # Seconds
+
+        if itemtype == "episode":
+            itemdict["episode"] = item.seasonEpisode
+            itemdict["show"] = item.grandparentTitle
+            itemdict["thumb_url"] = item.season().thumbUrl
+
+        recently_added.append(itemdict)
+
+    return recently_added

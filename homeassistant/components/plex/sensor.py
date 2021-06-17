@@ -1,5 +1,4 @@
 """Support for Plex media server monitoring."""
-import json
 import logging
 
 from plexapi.exceptions import NotFound
@@ -34,20 +33,6 @@ LIBRARY_ICON_LOOKUP = {
     "photo": "mdi:image",
     "show": "mdi:television",
 }
-
-RECENTLY_ADDED_LOOKUP = {
-    "artist": "album",
-    "show": "episode",
-}
-
-RECENTLY_ADDED_COMMON_ATTRS = {
-    "title": "title",
-    "added": "addedAt",
-    "rating": "rating",
-    "released": "originallyAvailableAt",
-    "thumb_url": "thumbUrl",
-}
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -201,41 +186,6 @@ class PlexLibrarySectionSensor(SensorEntity):
             self._attributes[f"{libtype}s"] = self.library_section.totalViewSize(
                 libtype=libtype, includeCollections=False
             )
-
-        self._attributes["recently_added"] = []
-        itemtype = RECENTLY_ADDED_LOOKUP.get(self.library_type, self.library_type)
-        recents = self.library_section.recentlyAdded(libtype=itemtype, maxresults=5)
-        for item in recents:
-            itemdict = {}
-            for key, attr in RECENTLY_ADDED_COMMON_ATTRS.items():
-                if value := getattr(item, attr, None):
-                    itemdict[key] = value
-
-            itemdict["media_content_id"] = json.dumps(
-                {
-                    "plex_server": self.server_name,
-                    "plex_key": item.ratingKey,
-                }
-            )
-
-            if itemtype == "album":
-                runtime = trackcount = 0
-                for track in item:
-                    trackcount += 1
-                    runtime += track.duration
-                itemdict["tracks"] = trackcount
-                itemdict["artist"] = item.parentTitle
-            else:
-                runtime = item.duration
-
-            itemdict["runtime"] = int(runtime / 1000)  # Seconds
-
-            if itemtype == "episode":
-                itemdict["episode"] = item.seasonEpisode
-                itemdict["show"] = item.grandparentTitle
-                itemdict["show_thumb_url"] = item.season().thumbUrl
-
-            self._attributes["recently_added"].append(itemdict)
 
     @property
     def available(self):
