@@ -32,6 +32,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._username = user_input[CONF_EMAIL]
         self._password = user_input[CONF_PASSWORD]
 
+        errors = {}
         if not self._flipr_ids:
             try:
                 flipr_ids = await self._authenticate_and_search_flipr()
