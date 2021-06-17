@@ -124,6 +124,7 @@ from tests.common import mock_restore_cache
 )
 async def test_config_fan(hass, mock_modbus):
     """Run configuration test for fan."""
+    assert FAN_DOMAIN in hass.config.components
 
 
 @pytest.mark.parametrize("call_type", [CALL_TYPE_COIL, CALL_TYPE_REGISTER_HOLDING])

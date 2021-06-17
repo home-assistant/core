@@ -48,6 +48,7 @@ from tests.common import mock_restore_cache
 )
 async def test_config_climate(hass, mock_modbus):
     """Run configuration test for climate."""
+    assert CLIMATE_DOMAIN in hass.config.components
 
 
 @pytest.mark.parametrize(

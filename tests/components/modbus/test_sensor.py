@@ -128,6 +128,7 @@ from tests.common import mock_restore_cache
 )
 async def test_config_sensor(hass, mock_modbus):
     """Run configuration test for sensor."""
+    assert SENSOR_DOMAIN in hass.config.components
 
 
 @pytest.mark.parametrize(

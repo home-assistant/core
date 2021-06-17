@@ -61,6 +61,7 @@ from tests.common import mock_restore_cache
 )
 async def test_config_cover(hass, mock_modbus):
     """Run configuration test for cover."""
+    assert COVER_DOMAIN in hass.config.components
 
 
 @pytest.mark.parametrize(

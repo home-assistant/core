@@ -137,6 +137,7 @@ from tests.common import async_fire_time_changed, mock_restore_cache
 )
 async def test_config_switch(hass, mock_modbus):
     """Run configurationtest for switch."""
+    assert SWITCH_DOMAIN in hass.config.components
 
 
 @pytest.mark.parametrize("call_type", [CALL_TYPE_COIL, CALL_TYPE_REGISTER_HOLDING])

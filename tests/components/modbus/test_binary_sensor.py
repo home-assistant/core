@@ -50,6 +50,7 @@ from tests.common import mock_restore_cache
 )
 async def test_config_binary_sensor(hass, mock_modbus):
     """Run config test for binary sensor."""
+    assert SENSOR_DOMAIN in hass.config.components
 
 
 @pytest.mark.parametrize("do_type", [CALL_TYPE_COIL, CALL_TYPE_DISCRETE])
