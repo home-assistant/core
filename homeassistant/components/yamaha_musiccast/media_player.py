@@ -10,6 +10,7 @@ from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEn
 from homeassistant.components.media_player.const import (
     REPEAT_MODE_OFF,
     SUPPORT_CLEAR_PLAYLIST,
+    SUPPORT_GROUPING,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
@@ -34,7 +35,6 @@ from homeassistant.const import (
     STATE_PLAYING,
 )
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import service
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -42,22 +42,15 @@ from homeassistant.helpers.typing import DiscoveryInfoType, HomeAssistantType
 from homeassistant.util import uuid
 
 from . import MusicCastDataUpdateCoordinator, MusicCastDeviceEntity
-from ...core import ServiceCall
 from .const import (
     ATTR_MAIN_SYNC,
-    ATTR_MASTER,
     ATTR_MC_LINK,
-    ATTR_MUSICCAST_GROUP,
     DEFAULT_ZONE,
     DOMAIN,
     HA_REPEAT_MODE_TO_MC_MAPPING,
     INTERVAL_SECONDS,
-    JOIN_SERVICE_SCHEMA,
     MC_REPEAT_MODE_TO_HA_MAPPING,
     NULL_GROUP,
-    SERVICE_JOIN,
-    SERVICE_UNJOIN,
-    UNJOIN_SERVICE_SCHEMA,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -77,6 +70,7 @@ MUSIC_PLAYER_SUPPORT = (
     | SUPPORT_SELECT_SOUND_MODE
     | SUPPORT_SELECT_SOURCE
     | SUPPORT_STOP
+    | SUPPORT_GROUPING
 )
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -136,56 +130,6 @@ async def async_setup_entry(
         )
 
     async_add_entities(media_players)
-
-    @service.verify_domain_control(hass, DOMAIN)
-    async def async_group_service_handle(service_call: ServiceCall):
-        """Handle services."""
-        entity_ids = service_call.data.get("entity_id", [])
-        if not entity_ids:
-            return
-
-        all_entities = []
-        for coord in hass.data[DOMAIN].values():
-            all_entities += coord.entities
-
-        entities = [entity for entity in all_entities if entity.entity_id in entity_ids]
-
-        if service_call.service == SERVICE_JOIN:
-            master_id = service_call.data[ATTR_MASTER]
-            master = next(
-                (entity for entity in all_entities if entity.entity_id == master_id),
-                None,
-            )
-            if master and isinstance(master, MusicCastDeviceEntity):
-                await master.async_server_join(entities)
-            else:
-                _LOGGER.error(
-                    "Invalid master specified for join service: %s",
-                    service_call.data[ATTR_MASTER],
-                )
-        elif service_call.service == SERVICE_UNJOIN:
-            for entity in entities:
-                if isinstance(entity, MusicCastDeviceEntity):
-                    await entity.async_unjoin()
-                else:
-                    _LOGGER.error(
-                        "Invalid entity specified for unjoin service: %s",
-                        entity,
-                    )
-
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_JOIN,
-        async_group_service_handle,
-        JOIN_SERVICE_SCHEMA,
-    )
-
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_UNJOIN,
-        async_group_service_handle,
-        UNJOIN_SERVICE_SCHEMA,
-    )
 
 
 class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
@@ -593,6 +537,11 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
         return self
 
     @property
+    def group_members(self) -> list[str] | None:
+        """Return a list of entity_ids, which belong to the group of self."""
+        return [entity.entity_id for entity in self.musiccast_group]
+
+    @property
     def musiccast_group(self) -> list[MusicCastMediaPlayer]:
         """Return all media players of the current group, if the media player is server."""
         if self.is_client:
@@ -628,16 +577,25 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
                 await entity.async_check_client_list()
             entity.async_write_ha_state()
 
-    # Services and state attributes
+    # Services
 
-    async def async_server_join(self, entities):
+    async def async_join_players(self, group_members):
         """Add all clients given in entities to the group of the server.
 
         Creates a new group if necessary. Used for join service.
         """
         _LOGGER.info(
-            "%s wants to add the following entities %s", self.entity_id, str(entities)
+            "%s wants to add the following entities %s",
+            self.entity_id,
+            str(group_members),
         )
+
+        entities = [
+            entity
+            for entity in self.get_all_mc_entities()
+            if entity.entity_id in group_members
+        ]
+
         if not self.is_server and self.musiccast_zone_entity.is_server:
             # The MusicCast Distribution Module of this device is already in use. To use it as a server, we first
             # have to unjoin and wait until the servers are updated.
@@ -683,7 +641,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
 
         await self.update_all_mc_entities()
 
-    async def async_unjoin(self):
+    async def async_unjoin_player(self):
         """Leave the group.
 
         Stops the distribution if device is server. Used for unjoin service.
@@ -696,14 +654,6 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
             await self.async_client_leave_group()
 
         await self.update_all_mc_entities()
-
-    @property
-    def device_state_attributes(self):
-        """Return entity specific state attributes."""
-        attributes = {
-            ATTR_MUSICCAST_GROUP: [e.entity_id for e in self.musiccast_group],
-        }
-        return attributes
 
     # Internal client functions
 

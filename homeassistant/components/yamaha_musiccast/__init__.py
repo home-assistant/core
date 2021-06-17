@@ -133,11 +133,3 @@ class MusicCastDeviceEntity(MusicCastEntity):
             model=self.coordinator.data.model_name,
             sw_version=self.coordinator.data.system_version,
         )
-
-    async def async_server_join(self, entities):
-        """Let a server assign all given entities to its group."""
-        raise NotImplementedError
-
-    async def async_unjoin(self):
-        """Let the device leave a group."""
-        raise NotImplementedError
