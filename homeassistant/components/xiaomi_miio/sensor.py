@@ -227,7 +227,6 @@ class XiaomiGenericSensor(XiaomiCoordinatedMiioEntity, SensorEntity):
         self._attribute = attribute
         self._available = None
         self._state = None
-        self._state_attrs = {}
         self._skip_update = False
         self.coordinator.async_add_listener(self.update)
 
@@ -272,11 +271,6 @@ class XiaomiGenericSensor(XiaomiCoordinatedMiioEntity, SensorEntity):
     def state(self):
         """Return the state of the device."""
         return self._state
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes of the device."""
-        return self._state_attrs
 
     @staticmethod
     def _extract_value_from_attribute(state, attribute):
