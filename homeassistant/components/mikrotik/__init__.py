@@ -28,8 +28,13 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     if not await hub.async_setup():
         return False
 
+    hass.config_entries.async_update_entry(
+        config_entry, title=f"{hub.hub_data.hostname} ({hub.host})"
+    )
+
     hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = hub
     hass.data[DOMAIN].setdefault(CLIENTS, {})
+    await hub.async_add_mikrotik_clients_from_registry()
     await hub.async_config_entry_first_refresh()
     hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
 
@@ -38,9 +43,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         config_entry_id=config_entry.entry_id,
         identifiers={(DOMAIN, hub.host)},
         default_manufacturer=ATTR_MANUFACTURER,
-        default_model=hub.api.model,
-        default_name=hub.api.hostname,
-        sw_version=hub.api.firmware,
+        default_model=hub.hub_data.model,
+        default_name=hub.hub_data.hostname,
+        sw_version=hub.hub_data.firmware,
     )
 
     return True

@@ -12,10 +12,12 @@ from .const import CLIENT_ATTRIBUTES
 class MikrotikClient:
     """Represents a network client."""
 
-    def __init__(self, mac: str, dhcp_params: dict | None = None) -> None:
+    def __init__(
+        self, mac: str, host: str | None = None, dhcp_params: dict | None = None
+    ) -> None:
         """Initialize the client."""
         self._mac = mac
-        self.host: str | None = None
+        self.host = host
         self.dhcp_params: dict = dhcp_params or {}
         self.wireless_params: dict = {}
         self._last_seen: datetime | None = None
@@ -23,7 +25,7 @@ class MikrotikClient:
     @property
     def name(self):
         """Return client name."""
-        return self.dhcp_params.get("host-name", self.mac)
+        return self.dhcp_params.get("host-name")
 
     @property
     def ip_address(self):

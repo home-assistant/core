@@ -31,7 +31,7 @@ async def async_setup_entry(
     all_clients: dict[str, MikrotikClient] = hass.data[DOMAIN][CLIENTS]
     tracked: dict[str, MikrotikClientTracker] = {}
 
-    # Restore clients that is not a part of active clients list.
+    # Restore clients that are not a part of active clients list.
     entity_registry = hass.helpers.entity_registry.async_get(hass)
     hub_clients: list[
         RegistryEntry
@@ -41,6 +41,7 @@ async def async_setup_entry(
     for entity in hub_clients:
         if entity.unique_id not in hub.data:
             hub.data.append(entity.unique_id)
+            all_clients[entity.unique_id] = MikrotikClient(entity.unique_id)
 
     @callback
     def update_hub() -> None:
@@ -83,8 +84,8 @@ class MikrotikClientTracker(ScannerEntity):
     @property
     def is_connected(self) -> bool:
         """Return true if the client is connected to the network."""
-        # if self.client.mac == "98:09:CF:0C:98:0F":
-        #     print(self.client.last_seen)
+        if self.client.mac == "98:09:CF:0C:98:0F":
+            print(self.client.last_seen)
         if (
             self.client.last_seen
             and (dt_util.utcnow() - self.client.last_seen)
@@ -141,8 +142,6 @@ class MikrotikClientTracker(ScannerEntity):
 
     async def async_added_to_hass(self) -> None:
         """Client entity created."""
-        _LOGGER.debug("New network device tracker %s (%s)", self.name, self.unique_id)
-
         self.async_on_remove(self.hub.async_add_listener(self._update_callback))
 
     def async_update_device_details(self):

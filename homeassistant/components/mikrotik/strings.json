@@ -27,8 +27,8 @@
     "step": {
       "device_tracker": {
         "data": {
-          "track_wired": "Track wired devices",
-          "arp_ping": "Enable ARP ping",
+          "disable_tracking_wired": "Disable tracking wired devices",
+          "track_wired_mode": "Mode for tracking wired devices",
           "detection_time": "Consider home interval",
           "scan_interval": "Update interval in seconds, minimum 10"
         }
