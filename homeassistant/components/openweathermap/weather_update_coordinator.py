@@ -46,8 +46,9 @@ from .const import (
     FORECAST_MODE_ONECALL_DAILY,
     FORECAST_MODE_ONECALL_HOURLY,
     WEATHER_CODE_SUNNY_OR_CLEAR_NIGHT,
-    TEMP_CELSIUS,
 )
+
+from homeassistant.const import TEMP_CELSIUS
 
 _LOGGER = logging.getLogger(__name__)
 
