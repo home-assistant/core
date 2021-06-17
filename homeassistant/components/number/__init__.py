@@ -56,12 +56,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    return await hass.data[DOMAIN].async_setup_entry(entry)  # type: ignore
+    component: EntityComponent = hass.data[DOMAIN]
+    return await component.async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    return await hass.data[DOMAIN].async_unload_entry(entry)  # type: ignore
+    component: EntityComponent = hass.data[DOMAIN]
+    return await component.async_unload_entry(entry)
 
 
 class NumberEntity(Entity):
