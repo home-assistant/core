@@ -20,11 +20,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
-        """Initialize Flipr config flow."""
-        self._username = None
-        self._password = None
-        self._flipr_ids = None
+    _username: str | None = None
+    _password: str | None = None
+    _flipr_ids: str | None = None
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
