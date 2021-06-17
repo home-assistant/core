@@ -68,7 +68,7 @@ host_shutdown:
 
 snapshot_full:
   name: Create a full backup.
-  description: Create a full backup.
+  description: Create a full backup (deprecated, use backup_full instead).
   fields:
     name:
       name: Name
@@ -84,6 +84,52 @@ snapshot_full:
         text:
 
 snapshot_partial:
+  name: Create a partial backup.
+  description: Create a partial backup (deprecated, use backup_partial instead).
+  fields:
+    addons:
+      name: Add-ons
+      description: Optional list of addon slugs.
+      example: ["core_ssh", "core_samba", "core_mosquitto"]
+      selector:
+        object:
+    folders:
+      name: Folders
+      description: Optional list of directories.
+      example: ["homeassistant", "share"]
+      selector:
+        object:
+    name:
+      name: Name
+      description: Optional or it will be the current date and time.
+      example: "Partial backup 1"
+      selector:
+        text:
+    password:
+      name: Password
+      description: Optional password.
+      example: "password"
+      selector:
+        text:
+
+backup_full:
+  name: Create a full backup.
+  description: Create a full backup.
+  fields:
+    name:
+      name: Name
+      description: Optional or it will be the current date and time.
+      example: "backup 1"
+      selector:
+        text:
+    password:
+      name: Password
+      description: Optional password.
+      example: "password"
+      selector:
+        text:
+
+backup_partial:
   name: Create a partial backup.
   description: Create a partial backup.
   fields:

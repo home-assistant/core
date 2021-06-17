@@ -90,7 +90,7 @@ class HassIOView(HomeAssistantView):
                 "Content-Type"
             ] = request._stored_content_type  # pylint: disable=protected-access
 
-            # Snapshots are big, so we need to adjust the allowed size
+            # Backups are big, so we need to adjust the allowed size
             request._client_max_size = (  # pylint: disable=protected-access
                 MAX_UPLOAD_SIZE
             )
