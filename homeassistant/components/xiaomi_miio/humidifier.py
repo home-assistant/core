@@ -38,8 +38,6 @@ DATA_KEY = "fan.xiaomi_miio"
 
 CONF_MODEL = "model"
 
-ATTR_MODEL = "model"
-
 # Air Humidifier
 ATTR_TARGET_HUMIDITY = "target_humidity"
 ATTR_TRANS_LEVEL = "trans_level"
@@ -113,7 +111,7 @@ class XiaomiGenericHumidifier(XiaomiCoordinatedMiioEntity, HumidifierEntity):
 
         self._available = False
         self._state = None
-        self._state_attrs = {ATTR_MODEL: self._model}
+        self._state_attrs = {}
         self._skip_update = False
         self._available_modes = []
         self._mode = None
@@ -286,6 +284,7 @@ class XiaomiAirHumidifier(XiaomiGenericHumidifier, HumidifierEntity):
             or AirhumidifierOperationMode(self._state_attrs[ATTR_MODE])
             == AirhumidifierOperationMode.Auto
         ):
+            await self.coordinator.async_request_refresh()
             return
         _LOGGER.debug("Setting the operation mode to: Auto")
         await self._try_command(
@@ -359,6 +358,7 @@ class XiaomiAirHumidifierMiot(XiaomiAirHumidifier):
             or AirhumidifierMiotOperationMode(self._state_attrs[ATTR_MODE])
             == AirhumidifierMiotOperationMode.Auto
         ):
+            await self.coordinator.async_request_refresh()
             return
         _LOGGER.debug("Setting the operation mode to: Auto")
         await self._try_command(
