@@ -2,7 +2,7 @@
 import voluptuous as vol
 
 from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
-from homeassistant.const import PERCENTAGE
+from homeassistant.const import PERCENTAGE, TEMP_CELSIUS
 from homeassistant.helpers import config_validation as cv, entity_platform
 
 from .const import ADVANTAGE_AIR_STATE_OPEN, DOMAIN as ADVANTAGE_AIR_DOMAIN
@@ -25,9 +25,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         entities.append(AdvantageAirTimeTo(instance, ac_key, "On"))
         entities.append(AdvantageAirTimeTo(instance, ac_key, "Off"))
         for zone_key, zone in ac_device["zones"].items():
-            # Only show damper sensors when zone is in temperature control
+            # Only show damper and temp sensors when zone is in temperature control
             if zone["type"] != 0:
                 entities.append(AdvantageAirZoneVent(instance, ac_key, zone_key))
+                entities.append(AdvantageAirZoneTemp(instance, ac_key, zone_key))
             # Only show wireless signal strength sensors when using wireless sensors
             if zone["rssi"] > 0:
                 entities.append(AdvantageAirZoneSignal(instance, ac_key, zone_key))
@@ -144,3 +145,29 @@ class AdvantageAirZoneSignal(AdvantageAirEntity, SensorEntity):
         if self._zone["rssi"] >= 20:
             return "mdi:wifi-strength-1"
         return "mdi:wifi-strength-outline"
+
+
+class AdvantageAirZoneTemp(AdvantageAirEntity, SensorEntity):
+    """Representation of Advantage Air Zone wireless signal sensor."""
+
+    _attr_unit_of_measurement = TEMP_CELSIUS
+
+    @property
+    def name(self):
+        """Return the name."""
+        return f'{self._zone["name"]} Temperature'
+
+    @property
+    def unique_id(self):
+        """Return a unique id."""
+        return f'{self.coordinator.data["system"]["rid"]}-{self.ac_key}-{self.zone_key}-temp'
+
+    @property
+    def state(self):
+        """Return the current value of the measured temperature."""
+        return self._zone["measuredTemp"]
+
+    @property
+    def icon(self):
+        """Return a representative icon."""
+        return "mdi:thermometer"
