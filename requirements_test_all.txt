@@ -1286,7 +1286,7 @@ withings-api==2.3.2
 wled==0.6.0
 
 # homeassistant.components.wolflink
-wolf_smartset==0.1.8
+wolf_smartset==0.1.11
 
 # homeassistant.components.xbox
 xbox-webapi==2.0.11
