@@ -40,6 +40,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class AxisLight(AxisEventBase, LightEntity):
     """Representation of a light Axis event."""
 
+    _attr_should_poll = True
+
     def __init__(self, event, device):
         """Initialize the Axis light."""
         super().__init__(event, device)
@@ -48,6 +50,9 @@ class AxisLight(AxisEventBase, LightEntity):
 
         self.current_intensity = 0
         self.max_intensity = 0
+
+        light_type = device.api.vapix.light_control[self.light_id].light_type
+        self._attr_name = f"{device.name} {light_type} {event.TYPE} {event.id}"
 
         self._attr_supported_color_modes = {COLOR_MODE_BRIGHTNESS}
         self._attr_color_mode = COLOR_MODE_BRIGHTNESS
@@ -67,12 +72,6 @@ class AxisLight(AxisEventBase, LightEntity):
             self.light_id
         )
         self.max_intensity = max_intensity["data"]["ranges"][0]["high"]
-
-    @property
-    def name(self):
-        """Return the name of the light."""
-        light_type = self.device.api.vapix.light_control[self.light_id].light_type
-        return f"{self.device.name} {light_type} {self.event.TYPE} {self.event.id}"
 
     @property
     def is_on(self):
@@ -108,8 +107,3 @@ class AxisLight(AxisEventBase, LightEntity):
             )
         )
         self.current_intensity = current_intensity["data"]["intensity"]
-
-    @property
-    def should_poll(self):
-        """Brightness needs polling."""
-        return True

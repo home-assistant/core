@@ -41,7 +41,6 @@ from homeassistant.components.modbus.const import (
     CONF_DATA_TYPE,
     CONF_INPUT_TYPE,
     CONF_PARITY,
-    CONF_REVERSE_ORDER,
     CONF_STOPBITS,
     CONF_SWAP,
     CONF_SWAP_BYTE,
@@ -136,13 +135,6 @@ async def test_number_validator():
             CONF_NAME: TEST_SENSOR_NAME,
             CONF_COUNT: 2,
             CONF_DATA_TYPE: DATA_TYPE_INT,
-            CONF_REVERSE_ORDER: True,
-        },
-        {
-            CONF_NAME: TEST_SENSOR_NAME,
-            CONF_COUNT: 2,
-            CONF_DATA_TYPE: DATA_TYPE_INT,
-            CONF_REVERSE_ORDER: False,
         },
         {
             CONF_NAME: TEST_SENSOR_NAME,

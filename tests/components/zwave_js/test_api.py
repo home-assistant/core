@@ -119,6 +119,54 @@ async def test_node_status(hass, multisensor_6, integration, hass_ws_client):
     assert msg["error"]["code"] == ERR_NOT_LOADED
 
 
+async def test_node_state(hass, multisensor_6, integration, hass_ws_client):
+    """Test the node_state websocket command."""
+    entry = integration
+    ws_client = await hass_ws_client(hass)
+
+    node = multisensor_6
+    await ws_client.send_json(
+        {
+            ID: 3,
+            TYPE: "zwave_js/node_state",
+            ENTRY_ID: entry.entry_id,
+            NODE_ID: node.node_id,
+        }
+    )
+    msg = await ws_client.receive_json()
+    assert msg["result"] == node.data
+
+    # Test getting non-existent node fails
+    await ws_client.send_json(
+        {
+            ID: 4,
+            TYPE: "zwave_js/node_state",
+            ENTRY_ID: entry.entry_id,
+            NODE_ID: 99999,
+        }
+    )
+    msg = await ws_client.receive_json()
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERR_NOT_FOUND
+
+    # Test sending command with not loaded entry fails
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    await ws_client.send_json(
+        {
+            ID: 5,
+            TYPE: "zwave_js/node_state",
+            ENTRY_ID: entry.entry_id,
+            NODE_ID: node.node_id,
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERR_NOT_LOADED
+
+
 async def test_node_metadata(hass, wallmote_central_scene, integration, hass_ws_client):
     """Test the node metadata websocket command."""
     entry = integration
@@ -1131,13 +1179,62 @@ async def test_set_config_parameter(
 
     client.async_send_command_no_wait.reset_mock()
 
+    # Test that hex strings are accepted and converted as expected
+    client.async_send_command_no_wait.return_value = None
+
+    await ws_client.send_json(
+        {
+            ID: 2,
+            TYPE: "zwave_js/set_config_parameter",
+            ENTRY_ID: entry.entry_id,
+            NODE_ID: 52,
+            PROPERTY: 102,
+            PROPERTY_KEY: 1,
+            VALUE: "0x1",
+        }
+    )
+
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+
+    assert len(client.async_send_command_no_wait.call_args_list) == 1
+    args = client.async_send_command_no_wait.call_args[0][0]
+    assert args["command"] == "node.set_value"
+    assert args["nodeId"] == 52
+    assert args["valueId"] == {
+        "commandClassName": "Configuration",
+        "commandClass": 112,
+        "endpoint": 0,
+        "property": 102,
+        "propertyName": "Group 2: Send battery reports",
+        "propertyKey": 1,
+        "metadata": {
+            "type": "number",
+            "readable": True,
+            "writeable": True,
+            "valueSize": 4,
+            "min": 0,
+            "max": 1,
+            "default": 1,
+            "format": 0,
+            "allowManualEntry": True,
+            "label": "Group 2: Send battery reports",
+            "description": "Include battery information in periodic reports to Group 2",
+            "isFromConfig": True,
+        },
+        "value": 0,
+    }
+    assert args["value"] == 1
+
+    client.async_send_command_no_wait.reset_mock()
+
     with patch(
         "homeassistant.components.zwave_js.api.async_set_config_parameter",
     ) as set_param_mock:
         set_param_mock.side_effect = InvalidNewValue("test")
         await ws_client.send_json(
             {
-                ID: 2,
+                ID: 3,
                 TYPE: "zwave_js/set_config_parameter",
                 ENTRY_ID: entry.entry_id,
                 NODE_ID: 52,
@@ -1157,7 +1254,7 @@ async def test_set_config_parameter(
         set_param_mock.side_effect = NotFoundError("test")
         await ws_client.send_json(
             {
-                ID: 3,
+                ID: 4,
                 TYPE: "zwave_js/set_config_parameter",
                 ENTRY_ID: entry.entry_id,
                 NODE_ID: 52,
@@ -1177,7 +1274,7 @@ async def test_set_config_parameter(
         set_param_mock.side_effect = SetValueFailed("test")
         await ws_client.send_json(
             {
-                ID: 4,
+                ID: 5,
                 TYPE: "zwave_js/set_config_parameter",
                 ENTRY_ID: entry.entry_id,
                 NODE_ID: 52,
@@ -1197,7 +1294,7 @@ async def test_set_config_parameter(
     # Test getting non-existent node fails
     await ws_client.send_json(
         {
-            ID: 5,
+            ID: 6,
             TYPE: "zwave_js/set_config_parameter",
             ENTRY_ID: entry.entry_id,
             NODE_ID: 9999,
@@ -1216,7 +1313,7 @@ async def test_set_config_parameter(
 
     await ws_client.send_json(
         {
-            ID: 6,
+            ID: 7,
             TYPE: "zwave_js/set_config_parameter",
             ENTRY_ID: entry.entry_id,
             NODE_ID: 52,
@@ -1304,6 +1401,57 @@ async def test_dump_view(integration, hass_client):
     assert json.loads(await resp.text()) == [{"hello": "world"}, {"second": "msg"}]
 
 
+async def test_version_info(hass, integration, hass_ws_client, version_state):
+    """Test the HTTP dump node view."""
+    entry = integration
+    ws_client = await hass_ws_client(hass)
+
+    version_info = {
+        "driver_version": version_state["driverVersion"],
+        "server_version": version_state["serverVersion"],
+        "min_schema_version": 0,
+        "max_schema_version": 0,
+    }
+
+    await ws_client.send_json(
+        {
+            ID: 3,
+            TYPE: "zwave_js/version_info",
+            ENTRY_ID: entry.entry_id,
+        }
+    )
+    msg = await ws_client.receive_json()
+    assert msg["result"] == version_info
+
+    # Test getting non-existent entry fails
+    await ws_client.send_json(
+        {
+            ID: 4,
+            TYPE: "zwave_js/version_info",
+            ENTRY_ID: "INVALID",
+        }
+    )
+    msg = await ws_client.receive_json()
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERR_NOT_FOUND
+
+    # Test sending command with not loaded entry fails
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    await ws_client.send_json(
+        {
+            ID: 5,
+            TYPE: "zwave_js/version_info",
+            ENTRY_ID: entry.entry_id,
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERR_NOT_LOADED
+
+
 async def test_firmware_upload_view(
     hass, multisensor_6, integration, hass_client, firmware_file
 ):
@@ -1350,6 +1498,38 @@ async def test_firmware_upload_view_invalid_payload(
 
 @pytest.mark.parametrize(
     "method, url",
+    [("get", "/api/zwave_js/dump/{}")],
+)
+async def test_view_non_admin_user(
+    integration, hass_client, hass_admin_user, method, url
+):
+    """Test config entry level views for non-admin users."""
+    client = await hass_client()
+    # Verify we require admin user
+    hass_admin_user.groups = []
+    resp = await client.request(method, url.format(integration.entry_id))
+    assert resp.status == 401
+
+
+@pytest.mark.parametrize(
+    "method, url",
+    [("post", "/api/zwave_js/firmware/upload/{}/{}")],
+)
+async def test_node_view_non_admin_user(
+    multisensor_6, integration, hass_client, hass_admin_user, method, url
+):
+    """Test node level views for non-admin users."""
+    client = await hass_client()
+    # Verify we require admin user
+    hass_admin_user.groups = []
+    resp = await client.request(
+        method, url.format(integration.entry_id, multisensor_6.node_id)
+    )
+    assert resp.status == 401
+
+
+@pytest.mark.parametrize(
+    "method, url",
     [
         ("get", "/api/zwave_js/dump/INVALID"),
         ("post", "/api/zwave_js/firmware/upload/INVALID/1"),
@@ -1363,7 +1543,8 @@ async def test_view_invalid_entry_id(integration, hass_client, method, url):
 
 
 @pytest.mark.parametrize(
-    "method, url", [("post", "/api/zwave_js/firmware/upload/{}/111")]
+    "method, url",
+    [("post", "/api/zwave_js/firmware/upload/{}/111")],
 )
 async def test_view_invalid_node_id(integration, hass_client, method, url):
     """Test an invalid config entry id parameter."""

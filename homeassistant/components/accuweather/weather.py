@@ -13,6 +13,7 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_TIME,
     ATTR_FORECAST_WIND_BEARING,
     ATTR_FORECAST_WIND_SPEED,
+    Forecast,
     WeatherEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -156,12 +157,12 @@ class AccuWeatherEntity(CoordinatorEntity, WeatherEntity):
         return None
 
     @property
-    def forecast(self) -> list[dict[str, Any]] | None:
+    def forecast(self) -> list[Forecast] | None:
         """Return the forecast array."""
         if not self.coordinator.forecast:
             return None
         # remap keys from library to keys understood by the weather component
-        forecast = [
+        return [
             {
                 ATTR_FORECAST_TIME: utc_from_timestamp(item["EpochDate"]).isoformat(),
                 ATTR_FORECAST_TEMP: item["TemperatureMax"]["Value"],
@@ -183,7 +184,6 @@ class AccuWeatherEntity(CoordinatorEntity, WeatherEntity):
             }
             for item in self.coordinator.data[ATTR_FORECAST]
         ]
-        return forecast
 
     @staticmethod
     def _calc_precipitation(day: dict[str, Any]) -> float:

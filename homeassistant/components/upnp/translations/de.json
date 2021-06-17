@@ -9,7 +9,7 @@
             "one": "Ein",
             "other": "andere"
         },
-        "flow_title": "UPnP/IGD: {name}",
+        "flow_title": "{name}",
         "step": {
             "ssdp_confirm": {
                 "description": "M\u00f6chten Sie dieses UPnP/IGD-Ger\u00e4t einrichten?"

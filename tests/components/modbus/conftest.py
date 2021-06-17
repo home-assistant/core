@@ -97,12 +97,9 @@ async def base_test(
 
     mock_sync = mock.MagicMock()
     with mock.patch(
-        "homeassistant.components.modbus.modbus.ModbusTcpClient", return_value=mock_sync
-    ), mock.patch(
-        "homeassistant.components.modbus.modbus.ModbusSerialClient",
+        "homeassistant.components.modbus.modbus.ModbusTcpClient",
+        autospec=True,
         return_value=mock_sync,
-    ), mock.patch(
-        "homeassistant.components.modbus.modbus.ModbusUdpClient", return_value=mock_sync
     ):
 
         # Setup inputs for the sensor

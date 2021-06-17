@@ -224,6 +224,18 @@ async def async_start_addon(hass: HomeAssistant, slug: str) -> dict:
 
 @bind_hass
 @api_data
+async def async_restart_addon(hass: HomeAssistant, slug: str) -> dict:
+    """Restart add-on.
+
+    The caller of the function should handle HassioAPIError.
+    """
+    hassio = hass.data[DOMAIN]
+    command = f"/addons/{slug}/restart"
+    return await hassio.send_command(command, timeout=None)
+
+
+@bind_hass
+@api_data
 async def async_stop_addon(hass: HomeAssistant, slug: str) -> dict:
     """Stop add-on.
 
@@ -388,8 +400,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
             if not user.is_admin:
                 await hass.auth.async_update_user(user, group_ids=[GROUP_ID_ADMIN])
 
+            # Migrate old name
+            if user.name == "Hass.io":
+                await hass.auth.async_update_user(user, name="Supervisor")
+
     if refresh_token is None:
-        user = await hass.auth.async_create_system_user("Hass.io", [GROUP_ID_ADMIN])
+        user = await hass.auth.async_create_system_user("Supervisor", [GROUP_ID_ADMIN])
         refresh_token = await hass.auth.async_create_refresh_token(user)
         data["hassio_user"] = user.id
         await store.async_save(data)

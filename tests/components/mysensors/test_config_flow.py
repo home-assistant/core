@@ -270,16 +270,6 @@ async def test_fail_to_connect(hass: HomeAssistant) -> None:
             {
                 CONF_TCP_PORT: 5003,
                 CONF_DEVICE: "127.0.0.1",
-            },
-            CONF_VERSION,
-            "invalid_version",
-        ),
-        (
-            CONF_GATEWAY_TYPE_TCP,
-            "gw_tcp",
-            {
-                CONF_TCP_PORT: 5003,
-                CONF_DEVICE: "127.0.0.1",
                 CONF_VERSION: "4",
             },
             CONF_VERSION,
@@ -302,6 +292,7 @@ async def test_fail_to_connect(hass: HomeAssistant) -> None:
             {
                 CONF_TCP_PORT: 5003,
                 CONF_DEVICE: "127.0.0.",
+                CONF_VERSION: "2.4",
             },
             CONF_DEVICE,
             "invalid_ip",
@@ -312,6 +303,7 @@ async def test_fail_to_connect(hass: HomeAssistant) -> None:
             {
                 CONF_TCP_PORT: 5003,
                 CONF_DEVICE: "abcd",
+                CONF_VERSION: "2.4",
             },
             CONF_DEVICE,
             "invalid_ip",
