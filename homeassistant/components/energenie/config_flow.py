@@ -7,6 +7,8 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_NAME
 from homeassistant.exceptions import HomeAssistantError
 
+from .const import DOMAIN
+
 _LOGGER = logging.getLogger(__name__)
 
 DATA_SCHEMA = vol.Schema(
