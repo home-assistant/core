@@ -43,7 +43,7 @@ class SegmentBuffer:
         self._sequence = -1
         self._segment_start_dts: int = cast(int, None)
         self._memory_file: BytesIO = cast(BytesIO, None)
-        self._memory_file_pos: int = cast(int, None)
+        self._memory_file_pos = 0
         self._av_output: av.container.OutputContainer = None
         self._input_video_stream: av.video.VideoStream = None
         self._input_audio_stream: Any | None = None  # av.audio.AudioStream | None
