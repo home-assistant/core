@@ -238,7 +238,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
 
     @property
     def zone_id(self):
-        """Return the ip address of the musiccast device."""
+        """Return the zone id of the musiccast device."""
         return self._zone_id
 
     @property
