@@ -500,7 +500,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
         )
 
     @property
-    def other_zones(self):
+    def other_zones(self) -> list[MusicCastMediaPlayer]:
         """Return media player entities of the other zones of this device."""
         return [
             entity
