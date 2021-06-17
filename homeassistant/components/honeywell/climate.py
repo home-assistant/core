@@ -152,27 +152,34 @@ class HoneywellUSThermostat(ClimateEntity):
         self._heat_away_temp = heat_away_temp
         self._away = False
 
-        self._unique_id = homeassistant.helpers.device_registry.format_mac(
+        self._attr_unique_id = homeassistant.helpers.device_registry.format_mac(
             data.device.mac_address
         )
+        self._attr_name = data.device.name
+        self._attr_temperature_unit = (
+            TEMP_CELSIUS if data.device.temperature_unit == "C" else TEMP_FAHRENHEIT
+        )
+        self._attr_preset_modes = [PRESET_NONE, PRESET_AWAY]
+        self._attr_is_aux_heat = data.device.system_mode == "emheat"
 
         # not all honeywell HVACs support all modes
         mappings = [
             v for k, v in HVAC_MODE_TO_HW_MODE.items() if data.device.raw_ui_data[k]
         ]
         self._hvac_mode_map = {k: v for d in mappings for k, v in d.items()}
+        self._attr_hvac_modes = list(self._hvac_mode_map)
 
-        self._supported_features = (
+        self._attr_supported_features = (
             SUPPORT_PRESET_MODE
             | SUPPORT_TARGET_TEMPERATURE
             | SUPPORT_TARGET_TEMPERATURE_RANGE
         )
 
         if data.device._data["canControlHumidification"]:
-            self._supported_features |= SUPPORT_TARGET_HUMIDITY
+            self._attr_supported_features |= SUPPORT_TARGET_HUMIDITY
 
         if data.device.raw_ui_data["SwitchEmergencyHeatAllowed"]:
-            self._supported_features |= SUPPORT_AUX_HEAT
+            self._attr_supported_features |= SUPPORT_AUX_HEAT
 
         if not data.device._data["hasFan"]:
             return
@@ -181,22 +188,14 @@ class HoneywellUSThermostat(ClimateEntity):
         mappings = [v for k, v in FAN_MODE_TO_HW.items() if data.device.raw_fan_data[k]]
         self._fan_mode_map = {k: v for d in mappings for k, v in d.items()}
 
-        self._supported_features |= SUPPORT_FAN_MODE
+        self._attr_fan_modes = list(self._fan_mode_map)
+
+        self._attr_supported_features |= SUPPORT_FAN_MODE
 
     @property
     def _device(self):
         """Shortcut to access the device."""
         return self._data.device
-
-    @property
-    def unique_id(self) -> str | None:
-        """Return a unique ID."""
-        return self._unique_id
-
-    @property
-    def name(self) -> str | None:
-        """Return the name of the honeywell, if any."""
-        return self._device.name
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
@@ -207,11 +206,6 @@ class HoneywellUSThermostat(ClimateEntity):
         if self._device.raw_dr_data:
             data["dr_phase"] = self._device.raw_dr_data.get("Phase")
         return data
-
-    @property
-    def supported_features(self) -> int:
-        """Return the list of supported features."""
-        return self._supported_features
 
     @property
     def min_temp(self) -> float:
@@ -232,11 +226,6 @@ class HoneywellUSThermostat(ClimateEntity):
         return None
 
     @property
-    def temperature_unit(self) -> str:
-        """Return the unit of measurement."""
-        return TEMP_CELSIUS if self._device.temperature_unit == "C" else TEMP_FAHRENHEIT
-
-    @property
     def current_humidity(self) -> int | None:
         """Return the current humidity."""
         return self._device.current_humidity
@@ -245,11 +234,6 @@ class HoneywellUSThermostat(ClimateEntity):
     def hvac_mode(self) -> str:
         """Return hvac operation ie. heat, cool mode."""
         return HW_MODE_TO_HVAC_MODE[self._device.system_mode]
-
-    @property
-    def hvac_modes(self) -> list[str]:
-        """Return the list of available hvac operation modes."""
-        return list(self._hvac_mode_map)
 
     @property
     def hvac_action(self) -> str | None:
@@ -292,24 +276,9 @@ class HoneywellUSThermostat(ClimateEntity):
         return PRESET_AWAY if self._away else None
 
     @property
-    def preset_modes(self) -> list[str] | None:
-        """Return a list of available preset modes."""
-        return [PRESET_NONE, PRESET_AWAY]
-
-    @property
-    def is_aux_heat(self) -> str | None:
-        """Return true if aux heater."""
-        return self._device.system_mode == "emheat"
-
-    @property
     def fan_mode(self) -> str | None:
         """Return the fan setting."""
         return HW_FAN_MODE_TO_HA[self._device.fan_mode]
-
-    @property
-    def fan_modes(self) -> list[str] | None:
-        """Return the list of available fan modes."""
-        return list(self._fan_mode_map)
 
     def _is_permanent_hold(self) -> bool:
         heat_status = self._device.raw_ui_data.get("StatusHeat", 0)
