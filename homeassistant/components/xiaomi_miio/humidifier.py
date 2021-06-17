@@ -100,7 +100,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities, update_before_add=True)
 
 
-class XiaomiGenericHumidifierDevice(XiaomiCoordinatedMiioEntity, HumidifierEntity):
+class XiaomiGenericHumidifier(XiaomiCoordinatedMiioEntity, HumidifierEntity):
     """Representation of a generic Xiaomi humidifier device."""
 
     _attr_device_class = DEVICE_CLASS_HUMIDIFIER
@@ -196,7 +196,7 @@ class XiaomiGenericHumidifierDevice(XiaomiCoordinatedMiioEntity, HumidifierEntit
         )
 
 
-class XiaomiAirHumidifier(XiaomiGenericHumidifierDevice, HumidifierEntity):
+class XiaomiAirHumidifier(XiaomiGenericHumidifier, HumidifierEntity):
     """Representation of a Xiaomi Air Humidifier."""
 
     def __init__(self, name, device, entry, unique_id, coordinator):
