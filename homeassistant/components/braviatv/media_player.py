@@ -123,7 +123,6 @@ class BraviaTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
         """Initialize the entity."""
 
         self._name = name
-        self._coordinator = coordinator
         self._unique_id = unique_id
         self._device_info = device_info
 
@@ -147,100 +146,100 @@ class BraviaTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
     @property
     def state(self):
         """Return the state of the device."""
-        if self._coordinator.is_on:
-            return STATE_PLAYING if self._coordinator.playing else STATE_PAUSED
+        if self.coordinator.is_on:
+            return STATE_PLAYING if self.coordinator.playing else STATE_PAUSED
         return STATE_OFF
 
     @property
     def source(self):
         """Return the current input source."""
-        return self._coordinator.source
+        return self.coordinator.source
 
     @property
     def source_list(self):
         """List of available input sources."""
-        return self._coordinator.source_list
+        return self.coordinator.source_list
 
     @property
     def volume_level(self):
         """Volume level of the media player (0..1)."""
-        if self._coordinator.volume is not None:
-            return self._coordinator.volume / 100
+        if self.coordinator.volume is not None:
+            return self.coordinator.volume / 100
         return None
 
     @property
     def is_volume_muted(self):
         """Boolean if volume is currently muted."""
-        return self._coordinator.muted
+        return self.coordinator.muted
 
     @property
     def media_title(self):
         """Title of current playing media."""
         return_value = None
-        if self._coordinator.channel_name is not None:
-            return_value = self._coordinator.channel_name
-            if self._coordinator.program_name is not None:
-                return_value = f"{return_value}: {self._coordinator.program_name}"
+        if self.coordinator.channel_name is not None:
+            return_value = self.coordinator.channel_name
+            if self.coordinator.program_name is not None:
+                return_value = f"{return_value}: {self.coordinator.program_name}"
         return return_value
 
     @property
     def media_content_id(self):
         """Content ID of current playing media."""
-        return self._coordinator.channel_name
+        return self.coordinator.channel_name
 
     @property
     def media_duration(self):
         """Duration of current playing media in seconds."""
-        return self._coordinator.duration
+        return self.coordinator.duration
 
     async def async_turn_on(self):
         """Turn the device on."""
-        await self._coordinator.async_turn_on()
+        await self.coordinator.async_turn_on()
 
     async def async_turn_off(self):
         """Turn the device off."""
-        await self._coordinator.async_turn_off()
+        await self.coordinator.async_turn_off()
 
     async def async_set_volume_level(self, volume):
         """Set volume level, range 0..1."""
-        await self._coordinator.async_set_volume_level(volume)
+        await self.coordinator.async_set_volume_level(volume)
 
     async def async_volume_up(self):
         """Send volume up command."""
-        await self._coordinator.async_volume_up()
+        await self.coordinator.async_volume_up()
 
     async def async_volume_down(self):
         """Send volume down command."""
-        await self._coordinator.async_volume_down()
+        await self.coordinator.async_volume_down()
 
     async def async_mute_volume(self, mute):
         """Send mute command."""
-        await self._coordinator.async_volume_mute(mute)
+        await self.coordinator.async_volume_mute(mute)
 
     async def async_select_source(self, source):
         """Set the input source."""
-        await self._coordinator.async_select_source(source)
+        await self.coordinator.async_select_source(source)
 
     async def async_media_play_pause(self):
         """Send play/pause command."""
-        await self._coordinator.async_media_play_pause()
+        await self.coordinator.async_media_play_pause()
 
     async def async_media_play(self):
         """Send play command."""
-        await self._coordinator.async_media_play()
+        await self.coordinator.async_media_play()
 
     async def async_media_pause(self):
         """Send pause command."""
-        await self._coordinator.async_media_pause()
+        await self.coordinator.async_media_pause()
 
     async def async_media_stop(self):
         """Send media stop command to media player."""
-        await self._coordinator.async_media_stop()
+        await self.coordinator.async_media_stop()
 
     async def async_media_next_track(self):
         """Send next track command."""
-        await self._coordinator.async_media_next_track()
+        await self.coordinator.async_media_next_track()
 
     async def async_media_previous_track(self):
         """Send previous track command."""
-        await self._coordinator.async_media_previous_track()
+        await self.coordinator.async_media_previous_track()

@@ -29,7 +29,6 @@ class BraviaTVRemote(CoordinatorEntity, RemoteEntity):
     def __init__(self, coordinator, name, unique_id, device_info):
         """Initialize the entity."""
 
-        self._coordinator = coordinator
         self._name = name
         self._unique_id = unique_id
         self._device_info = device_info
@@ -54,17 +53,17 @@ class BraviaTVRemote(CoordinatorEntity, RemoteEntity):
     @property
     def is_on(self):
         """Return true if device is on."""
-        return self._coordinator.is_on
+        return self.coordinator.is_on
 
     async def async_turn_on(self, **kwargs):
         """Turn the device on."""
-        await self._coordinator.async_turn_on()
+        await self.coordinator.async_turn_on()
 
     async def async_turn_off(self, **kwargs):
         """Turn the device off."""
-        await self._coordinator.async_turn_off()
+        await self.coordinator.async_turn_off()
 
     async def async_send_command(self, command, **kwargs):
         """Send a command to device."""
         repeats = kwargs[ATTR_NUM_REPEATS]
-        await self._coordinator.async_send_command(command, repeats)
+        await self.coordinator.async_send_command(command, repeats)
