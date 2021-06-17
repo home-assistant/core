@@ -25,11 +25,6 @@ class CannotConnect(exceptions.HomeAssistantError):
     """Error to indicate we cannot connect."""
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up Alpha2 integration."""
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up a config entry."""
     base = Alpha2Base(entry.data["host"])
