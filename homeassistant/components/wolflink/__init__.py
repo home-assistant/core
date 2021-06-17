@@ -90,7 +90,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         except InvalidAuth as exception:
             raise UpdateFailed("Invalid authentication during update.") from exception
 
-    coordinator: DataUpdateCoordinator = DataUpdateCoordinator(
+    coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
         name=DOMAIN,
