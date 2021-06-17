@@ -1,6 +1,6 @@
 """Support for Modbus."""
+import asyncio
 import logging
-import threading
 
 from pymodbus.client.sync import ModbusSerialClient, ModbusTcpClient, ModbusUdpClient
 from pymodbus.constants import Defaults
@@ -17,8 +17,9 @@ from homeassistant.const import (
     CONF_TYPE,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.helpers.discovery import load_platform
-from homeassistant.helpers.event import call_later
+from homeassistant.core import callback
+from homeassistant.helpers.discovery import async_load_platform
+from homeassistant.helpers.event import async_call_later
 
 from .const import (
     ATTR_ADDRESS,
@@ -26,9 +27,20 @@ from .const import (
     ATTR_STATE,
     ATTR_UNIT,
     ATTR_VALUE,
+    CALL_TYPE_COIL,
+    CALL_TYPE_DISCRETE,
+    CALL_TYPE_REGISTER_HOLDING,
+    CALL_TYPE_REGISTER_INPUT,
+    CALL_TYPE_WRITE_COIL,
+    CALL_TYPE_WRITE_COILS,
+    CALL_TYPE_WRITE_REGISTER,
+    CALL_TYPE_WRITE_REGISTERS,
     CONF_BAUDRATE,
     CONF_BYTESIZE,
+    CONF_CLOSE_COMM_ON_ERROR,
     CONF_PARITY,
+    CONF_RETRIES,
+    CONF_RETRY_ON_EMPTY,
     CONF_STOPBITS,
     DEFAULT_HUB,
     MODBUS_DOMAIN as DOMAIN,
@@ -37,35 +49,44 @@ from .const import (
     SERVICE_WRITE_REGISTER,
 )
 
+ENTRY_FUNC = "func"
+ENTRY_ATTR = "attr"
+
 _LOGGER = logging.getLogger(__name__)
 
 
-def modbus_setup(
+async def async_modbus_setup(
     hass, config, service_write_register_schema, service_write_coil_schema
 ):
     """Set up Modbus component."""
 
     hass.data[DOMAIN] = hub_collect = {}
     for conf_hub in config[DOMAIN]:
-        hub_collect[conf_hub[CONF_NAME]] = ModbusHub(conf_hub)
+        my_hub = ModbusHub(hass, conf_hub)
+        hub_collect[conf_hub[CONF_NAME]] = my_hub
 
         # modbus needs to be activated before components are loaded
         # to avoid a racing problem
-        hub_collect[conf_hub[CONF_NAME]].setup(hass)
+        if not await my_hub.async_setup():
+            return False
 
         # load platforms
         for component, conf_key in PLATFORMS:
             if conf_key in conf_hub:
-                load_platform(hass, component, DOMAIN, conf_hub, config)
+                hass.async_create_task(
+                    async_load_platform(hass, component, DOMAIN, conf_hub, config)
+                )
 
-    def stop_modbus(event):
+    async def async_stop_modbus(event):
         """Stop Modbus service."""
 
         for client in hub_collect.values():
-            client.close()
+            await client.async_close()
             del client
 
-    def write_register(service):
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_stop_modbus)
+
+    async def async_write_register(service):
         """Write Modbus registers."""
         unit = int(float(service.data[ATTR_UNIT]))
         address = int(float(service.data[ATTR_ADDRESS]))
@@ -74,13 +95,22 @@ def modbus_setup(
             service.data[ATTR_HUB] if ATTR_HUB in service.data else DEFAULT_HUB
         )
         if isinstance(value, list):
-            hub_collect[client_name].write_registers(
-                unit, address, [int(float(i)) for i in value]
+            await hub_collect[client_name].async_pymodbus_call(
+                unit, address, [int(float(i)) for i in value], CALL_TYPE_WRITE_REGISTERS
             )
         else:
-            hub_collect[client_name].write_register(unit, address, int(float(value)))
+            await hub_collect[client_name].async_pymodbus_call(
+                unit, address, int(float(value)), CALL_TYPE_WRITE_REGISTER
+            )
 
-    def write_coil(service):
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_WRITE_REGISTER,
+        async_write_register,
+        schema=service_write_register_schema,
+    )
+
+    async def async_write_coil(service):
         """Write Modbus coil."""
         unit = service.data[ATTR_UNIT]
         address = service.data[ATTR_ADDRESS]
@@ -89,22 +119,16 @@ def modbus_setup(
             service.data[ATTR_HUB] if ATTR_HUB in service.data else DEFAULT_HUB
         )
         if isinstance(state, list):
-            hub_collect[client_name].write_coils(unit, address, state)
+            await hub_collect[client_name].async_pymodbus_call(
+                unit, address, state, CALL_TYPE_WRITE_COILS
+            )
         else:
-            hub_collect[client_name].write_coil(unit, address, state)
+            await hub_collect[client_name].async_pymodbus_call(
+                unit, address, state, CALL_TYPE_WRITE_COIL
+            )
 
-    # register function to gracefully stop modbus
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_modbus)
-
-    # Register services for modbus
-    hass.services.register(
-        DOMAIN,
-        SERVICE_WRITE_REGISTER,
-        write_register,
-        schema=service_write_register_schema,
-    )
-    hass.services.register(
-        DOMAIN, SERVICE_WRITE_COIL, write_coil, schema=service_write_coil_schema
+    hass.services.async_register(
+        DOMAIN, SERVICE_WRITE_COIL, async_write_coil, schema=service_write_coil_schema
     )
     return True
 
@@ -112,19 +136,23 @@ def modbus_setup(
 class ModbusHub:
     """Thread safe wrapper class for pymodbus."""
 
-    def __init__(self, client_config):
+    def __init__(self, hass, client_config):
         """Initialize the Modbus hub."""
 
         # generic configuration
         self._client = None
-        self._cancel_listener = None
+        self._async_cancel_listener = None
         self._in_error = False
-        self._lock = threading.Lock()
+        self._lock = asyncio.Lock()
+        self.hass = hass
         self._config_name = client_config[CONF_NAME]
         self._config_type = client_config[CONF_TYPE]
         self._config_port = client_config[CONF_PORT]
         self._config_timeout = client_config[CONF_TIMEOUT]
         self._config_delay = client_config[CONF_DELAY]
+        self._config_reset_socket = client_config[CONF_CLOSE_COMM_ON_ERROR]
+        self._config_retries = client_config[CONF_RETRIES]
+        self._config_retry_on_empty = client_config[CONF_RETRY_ON_EMPTY]
         Defaults.Timeout = client_config[CONF_TIMEOUT]
         if self._config_type == "serial":
             # serial configuration
@@ -137,20 +165,50 @@ class ModbusHub:
             # network configuration
             self._config_host = client_config[CONF_HOST]
 
-    @property
-    def name(self):
-        """Return the name of this hub."""
-        return self._config_name
+        self._call_type = {
+            CALL_TYPE_COIL: {
+                ENTRY_ATTR: "bits",
+                ENTRY_FUNC: None,
+            },
+            CALL_TYPE_DISCRETE: {
+                ENTRY_ATTR: "bits",
+                ENTRY_FUNC: None,
+            },
+            CALL_TYPE_REGISTER_HOLDING: {
+                ENTRY_ATTR: "registers",
+                ENTRY_FUNC: None,
+            },
+            CALL_TYPE_REGISTER_INPUT: {
+                ENTRY_ATTR: "registers",
+                ENTRY_FUNC: None,
+            },
+            CALL_TYPE_WRITE_COIL: {
+                ENTRY_ATTR: "value",
+                ENTRY_FUNC: None,
+            },
+            CALL_TYPE_WRITE_COILS: {
+                ENTRY_ATTR: "count",
+                ENTRY_FUNC: None,
+            },
+            CALL_TYPE_WRITE_REGISTER: {
+                ENTRY_ATTR: "value",
+                ENTRY_FUNC: None,
+            },
+            CALL_TYPE_WRITE_REGISTERS: {
+                ENTRY_ATTR: "count",
+                ENTRY_FUNC: None,
+            },
+        }
 
-    def _log_error(self, exception_error: ModbusException, error_state=True):
-        log_text = "Pymodbus: " + str(exception_error)
+    def _log_error(self, text: str, error_state=True):
+        log_text = f"Pymodbus: {text}"
         if self._in_error:
             _LOGGER.debug(log_text)
         else:
             _LOGGER.error(log_text)
             self._in_error = error_state
 
-    def setup(self, hass):
+    async def async_setup(self):
         """Set up pymodbus client."""
         try:
             if self._config_type == "serial":
@@ -162,7 +220,9 @@ class ModbusHub:
                     bytesize=self._config_bytesize,
                     parity=self._config_parity,
                     timeout=self._config_timeout,
-                    retry_on_empty=True,
+                    retries=self._config_retries,
+                    retry_on_empty=self._config_retry_on_empty,
+                    reset_socket=self._config_reset_socket,
                 )
             elif self._config_type == "rtuovertcp":
                 self._client = ModbusTcpClient(
@@ -170,183 +230,120 @@ class ModbusHub:
                     port=self._config_port,
                     framer=ModbusRtuFramer,
                     timeout=self._config_timeout,
+                    retries=self._config_retries,
+                    retry_on_empty=self._config_retry_on_empty,
+                    reset_socket=self._config_reset_socket,
                 )
             elif self._config_type == "tcp":
                 self._client = ModbusTcpClient(
                     host=self._config_host,
                     port=self._config_port,
                     timeout=self._config_timeout,
+                    retries=self._config_retries,
+                    retry_on_empty=self._config_retry_on_empty,
+                    reset_socket=self._config_reset_socket,
                 )
             elif self._config_type == "udp":
                 self._client = ModbusUdpClient(
                     host=self._config_host,
                     port=self._config_port,
                     timeout=self._config_timeout,
+                    retries=self._config_retries,
+                    retry_on_empty=self._config_retry_on_empty,
+                    reset_socket=self._config_reset_socket,
                 )
         except ModbusException as exception_error:
-            self._log_error(exception_error, error_state=False)
-            return
+            self._log_error(str(exception_error), error_state=False)
+            return False
 
-        # Connect device
-        self.connect()
+        async with self._lock:
+            if not await self.hass.async_add_executor_job(self._pymodbus_connect):
+                self._log_error("initial connect failed, no retry", error_state=False)
+                return False
+
+        self._call_type[CALL_TYPE_COIL][ENTRY_FUNC] = self._client.read_coils
+        self._call_type[CALL_TYPE_DISCRETE][
+            ENTRY_FUNC
+        ] = self._client.read_discrete_inputs
+        self._call_type[CALL_TYPE_REGISTER_HOLDING][
+            ENTRY_FUNC
+        ] = self._client.read_holding_registers
+        self._call_type[CALL_TYPE_REGISTER_INPUT][
+            ENTRY_FUNC
+        ] = self._client.read_input_registers
+        self._call_type[CALL_TYPE_WRITE_COIL][ENTRY_FUNC] = self._client.write_coil
+        self._call_type[CALL_TYPE_WRITE_COILS][ENTRY_FUNC] = self._client.write_coils
+        self._call_type[CALL_TYPE_WRITE_REGISTER][
+            ENTRY_FUNC
+        ] = self._client.write_register
+        self._call_type[CALL_TYPE_WRITE_REGISTERS][
+            ENTRY_FUNC
+        ] = self._client.write_registers
 
         # Start counting down to allow modbus requests.
         if self._config_delay:
-            self._cancel_listener = call_later(hass, self._config_delay, self.end_delay)
+            self._async_cancel_listener = async_call_later(
+                self.hass, self._config_delay, self.async_end_delay
+            )
+        return True
 
-    def end_delay(self, args):
+    @callback
+    def async_end_delay(self, args):
         """End startup delay."""
-        self._cancel_listener = None
+        self._async_cancel_listener = None
         self._config_delay = 0
 
-    def close(self):
+    def _pymodbus_close(self):
+        """Close sync. pymodbus."""
+        if self._client:
+            try:
+                self._client.close()
+            except ModbusException as exception_error:
+                self._log_error(str(exception_error))
+        self._client = None
+
+    async def async_close(self):
         """Disconnect client."""
-        if self._cancel_listener:
-            self._cancel_listener()
-            self._cancel_listener = None
-        with self._lock:
-            try:
-                if self._client:
-                    self._client.close()
-                    self._client = None
-            except ModbusException as exception_error:
-                self._log_error(exception_error)
-                return
+        if self._async_cancel_listener:
+            self._async_cancel_listener()
+            self._async_cancel_listener = None
 
-    def connect(self):
+        async with self._lock:
+            return await self.hass.async_add_executor_job(self._pymodbus_close)
+
+    def _pymodbus_connect(self):
         """Connect client."""
-        with self._lock:
-            try:
-                self._client.connect()
-            except ModbusException as exception_error:
-                self._log_error(exception_error, error_state=False)
-                return
+        try:
+            return self._client.connect()
+        except ModbusException as exception_error:
+            self._log_error(str(exception_error), error_state=False)
+            return False
 
-    def read_coils(self, unit, address, count):
-        """Read coils."""
+    def _pymodbus_call(self, unit, address, value, use_call):
+        """Call sync. pymodbus."""
+        kwargs = {"unit": unit} if unit else {}
+        try:
+            result = self._call_type[use_call][ENTRY_FUNC](address, value, **kwargs)
+        except ModbusException as exception_error:
+            self._log_error(str(exception_error))
+            return None
+        if not hasattr(result, self._call_type[use_call][ENTRY_ATTR]):
+            self._log_error(str(result))
+            return None
+        self._in_error = False
+        return result
+
+    async def async_pymodbus_call(self, unit, address, value, use_call):
+        """Convert async to sync pymodbus call."""
         if self._config_delay:
             return None
-        with self._lock:
-            kwargs = {"unit": unit} if unit else {}
-            try:
-                result = self._client.read_coils(address, count, **kwargs)
-            except ModbusException as exception_error:
-                self._log_error(exception_error)
-                result = exception_error
-            if not hasattr(result, "bits"):
-                self._log_error(result)
-                return None
-            self._in_error = False
-            return result
-
-    def read_discrete_inputs(self, unit, address, count):
-        """Read discrete inputs."""
-        if self._config_delay:
+        if not self._client.is_socket_open():
             return None
-        with self._lock:
-            kwargs = {"unit": unit} if unit else {}
-            try:
-                result = self._client.read_discrete_inputs(address, count, **kwargs)
-            except ModbusException as exception_error:
-                result = exception_error
-            if not hasattr(result, "bits"):
-                self._log_error(result)
-                return None
-            self._in_error = False
+        async with self._lock:
+            result = await self.hass.async_add_executor_job(
+                self._pymodbus_call, unit, address, value, use_call
+            )
+            if self._config_type == "serial":
+                # small delay until next request/response
+                await asyncio.sleep(30 / 1000)
             return result
-
-    def read_input_registers(self, unit, address, count):
-        """Read input registers."""
-        if self._config_delay:
-            return None
-        with self._lock:
-            kwargs = {"unit": unit} if unit else {}
-            try:
-                result = self._client.read_input_registers(address, count, **kwargs)
-            except ModbusException as exception_error:
-                result = exception_error
-            if not hasattr(result, "registers"):
-                self._log_error(result)
-                return None
-            self._in_error = False
-            return result
-
-    def read_holding_registers(self, unit, address, count):
-        """Read holding registers."""
-        if self._config_delay:
-            return None
-        with self._lock:
-            kwargs = {"unit": unit} if unit else {}
-            try:
-                result = self._client.read_holding_registers(address, count, **kwargs)
-            except ModbusException as exception_error:
-                result = exception_error
-            if not hasattr(result, "registers"):
-                self._log_error(result)
-                return None
-            self._in_error = False
-            return result
-
-    def write_coil(self, unit, address, value) -> bool:
-        """Write coil."""
-        if self._config_delay:
-            return False
-        with self._lock:
-            kwargs = {"unit": unit} if unit else {}
-            try:
-                result = self._client.write_coil(address, value, **kwargs)
-            except ModbusException as exception_error:
-                result = exception_error
-            if not hasattr(result, "value"):
-                self._log_error(result)
-                return False
-            self._in_error = False
-            return True
-
-    def write_coils(self, unit, address, values) -> bool:
-        """Write coil."""
-        if self._config_delay:
-            return False
-        with self._lock:
-            kwargs = {"unit": unit} if unit else {}
-            try:
-                result = self._client.write_coils(address, values, **kwargs)
-            except ModbusException as exception_error:
-                result = exception_error
-            if not hasattr(result, "count"):
-                self._log_error(result)
-                return False
-            self._in_error = False
-            return True
-
-    def write_register(self, unit, address, value) -> bool:
-        """Write register."""
-        if self._config_delay:
-            return False
-        with self._lock:
-            kwargs = {"unit": unit} if unit else {}
-            try:
-                result = self._client.write_register(address, value, **kwargs)
-            except ModbusException as exception_error:
-                result = exception_error
-            if not hasattr(result, "value"):
-                self._log_error(result)
-                return False
-            self._in_error = False
-            return True
-
-    def write_registers(self, unit, address, values) -> bool:
-        """Write registers."""
-        if self._config_delay:
-            return False
-        with self._lock:
-            kwargs = {"unit": unit} if unit else {}
-            try:
-                result = self._client.write_registers(address, values, **kwargs)
-            except ModbusException as exception_error:
-                result = exception_error
-            if not hasattr(result, "count"):
-                self._log_error(result)
-                return False
-            self._in_error = False
-            return True

@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.typing import UNDEFINED, DiscoveryInfoType, UndefinedType
 
-DiscoveryFunctionType = Callable[[], Union[Awaitable[bool], bool]]
+DiscoveryFunctionType = Callable[[HomeAssistant], Union[Awaitable[bool], bool]]
 
 _LOGGER = logging.getLogger(__name__)
 

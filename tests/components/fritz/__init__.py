@@ -106,23 +106,22 @@ class FritzConnectionMock:  # pylint: disable=too-few-public-methods
     def __init__(self):
         """Inint Mocking class."""
         type(self).modelname = mock.PropertyMock(return_value=self.MODELNAME)
-        self.call_action = mock.Mock(side_effect=self._side_effect_callaction)
-        type(self).actionnames = mock.PropertyMock(
-            side_effect=self._side_effect_actionnames
+        self.call_action = mock.Mock(side_effect=self._side_effect_call_action)
+        type(self).action_names = mock.PropertyMock(
+            side_effect=self._side_effect_action_names
         )
         services = {
             srv: None
-            for srv, _ in list(self.FRITZBOX_DATA.keys())
-            + list(self.FRITZBOX_DATA_INDEXED.keys())
+            for srv, _ in list(self.FRITZBOX_DATA) + list(self.FRITZBOX_DATA_INDEXED)
         }
         type(self).services = mock.PropertyMock(side_effect=[services])
 
-    def _side_effect_callaction(self, service, action, **kwargs):
+    def _side_effect_call_action(self, service, action, **kwargs):
         if kwargs:
             index = next(iter(kwargs.values()))
             return self.FRITZBOX_DATA_INDEXED[(service, action)][index]
 
         return self.FRITZBOX_DATA[(service, action)]
 
-    def _side_effect_actionnames(self):
-        return list(self.FRITZBOX_DATA.keys()) + list(self.FRITZBOX_DATA_INDEXED.keys())
+    def _side_effect_action_names(self):
+        return list(self.FRITZBOX_DATA) + list(self.FRITZBOX_DATA_INDEXED)

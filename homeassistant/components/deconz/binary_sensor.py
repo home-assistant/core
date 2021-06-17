@@ -127,6 +127,8 @@ class DeconzTampering(DeconzDevice, BinarySensorEntity):
 
     TYPE = DOMAIN
 
+    _attr_device_class = DEVICE_CLASS_PROBLEM
+
     @property
     def unique_id(self) -> str:
         """Return a unique identifier for this device."""
@@ -148,8 +150,3 @@ class DeconzTampering(DeconzDevice, BinarySensorEntity):
     def name(self) -> str:
         """Return the name of the sensor."""
         return f"{self._device.name} Tampered"
-
-    @property
-    def device_class(self) -> str:
-        """Return the class of the sensor."""
-        return DEVICE_CLASS_PROBLEM

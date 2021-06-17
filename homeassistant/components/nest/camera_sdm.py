@@ -56,7 +56,7 @@ async def async_setup_sdm_entry(
 class NestCamera(Camera):
     """Devices that support cameras."""
 
-    def __init__(self, device: Device):
+    def __init__(self, device: Device) -> None:
         """Initialize the camera."""
         super().__init__()
         self._device = device

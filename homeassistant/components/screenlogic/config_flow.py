@@ -188,7 +188,7 @@ class ScreenlogicConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 class ScreenLogicOptionsFlowHandler(config_entries.OptionsFlow):
     """Handles the options for the ScreenLogic integration."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry):
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Init the screen logic options flow."""
         self.config_entry = config_entry
 

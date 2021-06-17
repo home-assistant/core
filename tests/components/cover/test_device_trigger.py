@@ -4,7 +4,12 @@ from datetime import timedelta
 import pytest
 
 import homeassistant.components.automation as automation
-from homeassistant.components.cover import DOMAIN
+from homeassistant.components.cover import (
+    DOMAIN,
+    SUPPORT_OPEN,
+    SUPPORT_SET_POSITION,
+    SUPPORT_SET_TILT_POSITION,
+)
 from homeassistant.const import (
     CONF_PLATFORM,
     STATE_CLOSED,
@@ -47,12 +52,47 @@ def calls(hass):
     return async_mock_service(hass, "test", "automation")
 
 
-async def test_get_triggers(hass, device_reg, entity_reg):
+@pytest.mark.parametrize(
+    "set_state,features_reg,features_state,expected_trigger_types",
+    [
+        (False, SUPPORT_OPEN, 0, ["opened", "closed", "opening", "closing"]),
+        (
+            False,
+            SUPPORT_OPEN | SUPPORT_SET_POSITION,
+            0,
+            ["opened", "closed", "opening", "closing", "position"],
+        ),
+        (
+            False,
+            SUPPORT_OPEN | SUPPORT_SET_TILT_POSITION,
+            0,
+            ["opened", "closed", "opening", "closing", "tilt_position"],
+        ),
+        (True, 0, SUPPORT_OPEN, ["opened", "closed", "opening", "closing"]),
+        (
+            True,
+            0,
+            SUPPORT_OPEN | SUPPORT_SET_POSITION,
+            ["opened", "closed", "opening", "closing", "position"],
+        ),
+        (
+            True,
+            0,
+            SUPPORT_OPEN | SUPPORT_SET_TILT_POSITION,
+            ["opened", "closed", "opening", "closing", "tilt_position"],
+        ),
+    ],
+)
+async def test_get_triggers(
+    hass,
+    device_reg,
+    entity_reg,
+    set_state,
+    features_reg,
+    features_state,
+    expected_trigger_types,
+):
     """Test we get the expected triggers from a cover."""
-    platform = getattr(hass.components, f"test.{DOMAIN}")
-    platform.init()
-    ent = platform.ENTITIES[0]
-
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
     device_entry = device_reg.async_get_or_create(
@@ -60,161 +100,38 @@ async def test_get_triggers(hass, device_reg, entity_reg):
         connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
     entity_reg.async_get_or_create(
-        DOMAIN, "test", ent.unique_id, device_id=device_entry.id
+        DOMAIN,
+        "test",
+        "5678",
+        device_id=device_entry.id,
+        supported_features=features_reg,
     )
-    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    if set_state:
+        hass.states.async_set(
+            f"{DOMAIN}.test_5678",
+            "attributes",
+            {"supported_features": features_state},
+        )
 
-    expected_triggers = [
+    expected_triggers = []
+
+    expected_triggers += [
         {
             "platform": "device",
             "domain": DOMAIN,
-            "type": "opened",
+            "type": trigger,
             "device_id": device_entry.id,
-            "entity_id": f"{DOMAIN}.test_{ent.unique_id}",
-        },
-        {
-            "platform": "device",
-            "domain": DOMAIN,
-            "type": "closed",
-            "device_id": device_entry.id,
-            "entity_id": f"{DOMAIN}.test_{ent.unique_id}",
-        },
-        {
-            "platform": "device",
-            "domain": DOMAIN,
-            "type": "opening",
-            "device_id": device_entry.id,
-            "entity_id": f"{DOMAIN}.test_{ent.unique_id}",
-        },
-        {
-            "platform": "device",
-            "domain": DOMAIN,
-            "type": "closing",
-            "device_id": device_entry.id,
-            "entity_id": f"{DOMAIN}.test_{ent.unique_id}",
-        },
+            "entity_id": f"{DOMAIN}.test_5678",
+        }
+        for trigger in expected_trigger_types
     ]
     triggers = await async_get_device_automations(hass, "trigger", device_entry.id)
     assert_lists_same(triggers, expected_triggers)
 
 
-async def test_get_triggers_set_pos(hass, device_reg, entity_reg):
-    """Test we get the expected triggers from a cover."""
-    platform = getattr(hass.components, f"test.{DOMAIN}")
-    platform.init()
-    ent = platform.ENTITIES[1]
-
-    config_entry = MockConfigEntry(domain="test", data={})
-    config_entry.add_to_hass(hass)
-    device_entry = device_reg.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
-    )
-    entity_reg.async_get_or_create(
-        DOMAIN, "test", ent.unique_id, device_id=device_entry.id
-    )
-    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
-
-    expected_triggers = [
-        {
-            "platform": "device",
-            "domain": DOMAIN,
-            "type": "opened",
-            "device_id": device_entry.id,
-            "entity_id": f"{DOMAIN}.test_{ent.unique_id}",
-        },
-        {
-            "platform": "device",
-            "domain": DOMAIN,
-            "type": "closed",
-            "device_id": device_entry.id,
-            "entity_id": f"{DOMAIN}.test_{ent.unique_id}",
-        },
-        {
-            "platform": "device",
-            "domain": DOMAIN,
-            "type": "opening",
-            "device_id": device_entry.id,
-            "entity_id": f"{DOMAIN}.test_{ent.unique_id}",
-        },
-        {
-            "platform": "device",
-            "domain": DOMAIN,
-            "type": "closing",
-            "device_id": device_entry.id,
-            "entity_id": f"{DOMAIN}.test_{ent.unique_id}",
-        },
-        {
-            "platform": "device",
-            "domain": DOMAIN,
-            "type": "position",
-            "device_id": device_entry.id,
-            "entity_id": f"{DOMAIN}.test_{ent.unique_id}",
-        },
-    ]
-    triggers = await async_get_device_automations(hass, "trigger", device_entry.id)
-    assert_lists_same(triggers, expected_triggers)
-
-
-async def test_get_triggers_set_tilt_pos(hass, device_reg, entity_reg):
-    """Test we get the expected triggers from a cover."""
-    platform = getattr(hass.components, f"test.{DOMAIN}")
-    platform.init()
-    ent = platform.ENTITIES[2]
-
-    config_entry = MockConfigEntry(domain="test", data={})
-    config_entry.add_to_hass(hass)
-    device_entry = device_reg.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
-    )
-    entity_reg.async_get_or_create(
-        DOMAIN, "test", ent.unique_id, device_id=device_entry.id
-    )
-    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
-
-    expected_triggers = [
-        {
-            "platform": "device",
-            "domain": DOMAIN,
-            "type": "opened",
-            "device_id": device_entry.id,
-            "entity_id": f"{DOMAIN}.test_{ent.unique_id}",
-        },
-        {
-            "platform": "device",
-            "domain": DOMAIN,
-            "type": "closed",
-            "device_id": device_entry.id,
-            "entity_id": f"{DOMAIN}.test_{ent.unique_id}",
-        },
-        {
-            "platform": "device",
-            "domain": DOMAIN,
-            "type": "opening",
-            "device_id": device_entry.id,
-            "entity_id": f"{DOMAIN}.test_{ent.unique_id}",
-        },
-        {
-            "platform": "device",
-            "domain": DOMAIN,
-            "type": "closing",
-            "device_id": device_entry.id,
-            "entity_id": f"{DOMAIN}.test_{ent.unique_id}",
-        },
-        {
-            "platform": "device",
-            "domain": DOMAIN,
-            "type": "tilt_position",
-            "device_id": device_entry.id,
-            "entity_id": f"{DOMAIN}.test_{ent.unique_id}",
-        },
-    ]
-    triggers = await async_get_device_automations(hass, "trigger", device_entry.id)
-    assert_lists_same(triggers, expected_triggers)
-
-
-async def test_get_trigger_capabilities(hass, device_reg, entity_reg):
+async def test_get_trigger_capabilities(
+    hass, device_reg, entity_reg, enable_custom_integrations
+):
     """Test we get the expected capabilities from a cover trigger."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
@@ -245,7 +162,9 @@ async def test_get_trigger_capabilities(hass, device_reg, entity_reg):
         }
 
 
-async def test_get_trigger_capabilities_set_pos(hass, device_reg, entity_reg):
+async def test_get_trigger_capabilities_set_pos(
+    hass, device_reg, entity_reg, enable_custom_integrations
+):
     """Test we get the expected capabilities from a cover trigger."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
@@ -303,7 +222,9 @@ async def test_get_trigger_capabilities_set_pos(hass, device_reg, entity_reg):
             }
 
 
-async def test_get_trigger_capabilities_set_tilt_pos(hass, device_reg, entity_reg):
+async def test_get_trigger_capabilities_set_tilt_pos(
+    hass, device_reg, entity_reg, enable_custom_integrations
+):
     """Test we get the expected capabilities from a cover trigger."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
@@ -538,7 +459,7 @@ async def test_if_fires_on_state_change_with_for(hass, calls):
     )
 
 
-async def test_if_fires_on_position(hass, calls):
+async def test_if_fires_on_position(hass, calls, enable_custom_integrations):
     """Test for position triggers."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
@@ -665,7 +586,7 @@ async def test_if_fires_on_position(hass, calls):
     )
 
 
-async def test_if_fires_on_tilt_position(hass, calls):
+async def test_if_fires_on_tilt_position(hass, calls, enable_custom_integrations):
     """Test for tilt position triggers."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()

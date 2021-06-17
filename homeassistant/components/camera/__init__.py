@@ -160,7 +160,7 @@ async def async_get_stream_source(hass: HomeAssistant, entity_id: str) -> str | 
 @bind_hass
 async def async_get_mjpeg_stream(
     hass: HomeAssistant, request: web.Request, entity_id: str
-) -> web.StreamResponse:
+) -> web.StreamResponse | None:
     """Fetch an mjpeg stream from a camera entity."""
     camera = _get_camera_from_entity_id(hass, entity_id)
 
@@ -399,7 +399,7 @@ class Camera(Entity):
 
     async def handle_async_mjpeg_stream(
         self, request: web.Request
-    ) -> web.StreamResponse:
+    ) -> web.StreamResponse | None:
         """Serve an HTTP MJPEG stream from the camera.
 
         This method can be overridden by camera platforms to proxy
@@ -543,7 +543,10 @@ class CameraMjpegStream(CameraView):
         """Serve camera stream, possibly with interval."""
         interval_str = request.query.get("interval")
         if interval_str is None:
-            return await camera.handle_async_mjpeg_stream(request)
+            stream = await camera.handle_async_mjpeg_stream(request)
+            if stream is None:
+                raise web.HTTPBadGateway()
+            return stream
 
         try:
             # Compose camera stream from stills
@@ -693,10 +696,13 @@ async def async_handle_play_stream_service(
 
     # It is required to send a different payload for cast media players
     entity_ids = service_call.data[ATTR_MEDIA_PLAYER]
+    sources = entity_sources(hass)
     cast_entity_ids = [
         entity
-        for entity, source in entity_sources(hass).items()
-        if entity in entity_ids and source["domain"] == "cast"
+        for entity in entity_ids
+        # All entities should be in sources. This extra guard is to
+        # avoid people writing to the state machine and breaking it.
+        if entity in sources and sources[entity]["domain"] == "cast"
     ]
     other_entity_ids = list(set(entity_ids) - set(cast_entity_ids))
 

@@ -35,18 +35,9 @@ class VerisureAlarm(CoordinatorEntity, AlarmControlPanelEntity):
 
     coordinator: VerisureDataUpdateCoordinator
 
-    _changed_by: str | None = None
-    _state: str | None = None
-
-    @property
-    def name(self) -> str:
-        """Return the name of the entity."""
-        return "Verisure Alarm"
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique ID for this entity."""
-        return self.coordinator.entry.data[CONF_GIID]
+    _attr_code_format = FORMAT_NUMBER
+    _attr_name = "Verisure Alarm"
+    _attr_supported_features = SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -59,24 +50,9 @@ class VerisureAlarm(CoordinatorEntity, AlarmControlPanelEntity):
         }
 
     @property
-    def state(self) -> str | None:
-        """Return the state of the entity."""
-        return self._state
-
-    @property
-    def supported_features(self) -> int:
-        """Return the list of supported features."""
-        return SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY
-
-    @property
-    def code_format(self) -> str:
-        """Return one or more digits/characters."""
-        return FORMAT_NUMBER
-
-    @property
-    def changed_by(self) -> str | None:
-        """Return the last change triggered by."""
-        return self._changed_by
+    def unique_id(self) -> str:
+        """Return the unique ID for this entity."""
+        return self.coordinator.entry.data[CONF_GIID]
 
     async def _async_set_arm_state(self, state: str, code: str | None = None) -> None:
         """Send set arm state command."""
@@ -109,10 +85,10 @@ class VerisureAlarm(CoordinatorEntity, AlarmControlPanelEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        self._state = ALARM_STATE_TO_HA.get(
+        self._attr_state = ALARM_STATE_TO_HA.get(
             self.coordinator.data["alarm"]["statusType"]
         )
-        self._changed_by = self.coordinator.data["alarm"].get("name")
+        self._attr_changed_by = self.coordinator.data["alarm"].get("name")
         super()._handle_coordinator_update()
 
     async def async_added_to_hass(self) -> None:

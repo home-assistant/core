@@ -6,18 +6,17 @@ turn_on:
     Turn on one or more lights and adjust properties of the light, even when
     they are turned on already.
   target:
+    entity:
+      domain: light
   fields:
     transition:
       name: Transition
-      description: Duration in seconds it takes to get to next state.
-      example: 60
+      description: Duration it takes to get to next state.
       selector:
         number:
           min: 0
           max: 300
-          step: 1
           unit_of_measurement: seconds
-          mode: slider
     rgb_color:
       name: RGB-color
       description: A list containing three integers between 0 and 255 representing the RGB (red, green, blue) color for the light.
@@ -43,7 +42,6 @@ turn_on:
       name: Color name
       description: A human readable color name.
       advanced: true
-      example: "red"
       selector:
         select:
           options:
@@ -198,8 +196,7 @@ turn_on:
             - "yellowgreen"
     hs_color:
       name: Hue/Sat color
-      description:
-        Color for the light in hue/sat format. Hue is 0-360 and Sat is 0-100.
+      description: Color for the light in hue/sat format. Hue is 0-360 and Sat is 0-100.
       advanced: true
       example: "[300, 70]"
       selector:
@@ -215,77 +212,59 @@ turn_on:
       name: Color temperature (mireds)
       description: Color temperature for the light in mireds.
       advanced: true
-      example: 250
       selector:
         number:
           min: 153
           max: 500
-          step: 1
           unit_of_measurement: mireds
-          mode: slider
     kelvin:
       name: Color temperature (Kelvin)
       description: Color temperature for the light in Kelvin.
       advanced: true
-      example: 4000
       selector:
         number:
           min: 2000
           max: 6500
           step: 100
           unit_of_measurement: K
-          mode: slider
     brightness:
       name: Brightness value
       description:
-        Number between 0..255 indicating brightness, where 0 turns the light
+        Number indicating brightness, where 0 turns the light
         off, 1 is the minimum brightness and 255 is the maximum brightness
         supported by the light.
       advanced: true
-      example: 120
       selector:
         number:
           min: 0
           max: 255
-          step: 1
-          mode: slider
     brightness_pct:
       name: Brightness
       description:
-        Number between 0..100 indicating percentage of full brightness, where 0
+        Number indicating percentage of full brightness, where 0
         turns the light off, 1 is the minimum brightness and 100 is the maximum
         brightness supported by the light.
-      example: 47
       selector:
         number:
           min: 0
           max: 100
-          step: 1
           unit_of_measurement: "%"
-          mode: slider
     brightness_step:
       name: Brightness step value
-      description: Change brightness by an amount. Should be between -255..255.
+      description: Change brightness by an amount.
       advanced: true
-      example: -25.5
       selector:
         number:
           min: -225
           max: 255
-          step: 1
-          mode: slider
     brightness_step_pct:
       name: Brightness step
-      description:
-        Change brightness by a percentage. Should be between -100..100.
-      example: -10
+      description: Change brightness by a percentage.
       selector:
         number:
           min: -100
           max: 100
-          step: 1
           unit_of_measurement: "%"
-          mode: slider
     profile:
       name: Profile
       description: Name of a light profile to use.
@@ -295,12 +274,8 @@ turn_on:
         text:
     flash:
       name: Flash
-      description: If the light should flash. Valid values are short and long.
+      description: If the light should flash.
       advanced: true
-      example: short
-      values:
-        - short
-        - long
       selector:
         select:
           options:
@@ -309,37 +284,32 @@ turn_on:
     effect:
       name: Effect
       description: Light effect.
-      example: random
-      values:
-        - colorloop
-        - random
       selector:
-        text:
+        select:
+          options:
+            - colorloop
+            - random
+            - white
 
 turn_off:
   name: Turn off
   description: Turns off one or more lights.
   target:
+    entity:
+      domain: light
   fields:
     transition:
       name: Transition
-      description: Duration in seconds it takes to get to next state.
-      example: 60
+      description: Duration it takes to get to next state.
       selector:
         number:
           min: 0
           max: 300
-          step: 1
           unit_of_measurement: seconds
-          mode: slider
     flash:
       name: Flash
-      description: If the light should flash. Valid values are short and long.
+      description: If the light should flash.
       advanced: true
-      example: short
-      values:
-        - short
-        - long
       selector:
         select:
           options:
@@ -352,18 +322,17 @@ toggle:
     Toggles one or more lights, from on to off, or, off to on, based on their
     current state.
   target:
+    entity:
+      domain: light
   fields:
     transition:
       name: Transition
-      description: Duration in seconds it takes to get to next state.
-      example: 60
+      description: Duration it takes to get to next state.
       selector:
         number:
           min: 0
           max: 300
-          step: 1
           unit_of_measurement: seconds
-          mode: slider
     rgb_color:
       name: RGB-color
       description: Color for the light in RGB-format.
@@ -375,7 +344,6 @@ toggle:
       name: Color name
       description: A human readable color name.
       advanced: true
-      example: "red"
       selector:
         select:
           options:
@@ -530,8 +498,7 @@ toggle:
             - "yellowgreen"
     hs_color:
       name: Hue/Sat color
-      description:
-        Color for the light in hue/sat format. Hue is 0-360 and Sat is 0-100.
+      description: Color for the light in hue/sat format. Hue is 0-360 and Sat is 0-100.
       advanced: true
       example: "[300, 70]"
       selector:
@@ -547,65 +514,50 @@ toggle:
       name: Color temperature (mireds)
       description: Color temperature for the light in mireds.
       advanced: true
-      example: 250
       selector:
         number:
           min: 153
           max: 500
-          step: 1
           unit_of_measurement: mireds
-          mode: slider
     kelvin:
       name: Color temperature (Kelvin)
       description: Color temperature for the light in Kelvin.
       advanced: true
-      example: 4000
       selector:
         number:
           min: 2000
           max: 6500
           step: 100
           unit_of_measurement: K
-          mode: slider
     white_value:
       name: White level
-      description: Number between 0..255 indicating level of white.
+      description: Number indicating level of white.
       advanced: true
-      example: "250"
       selector:
         number:
           min: 0
           max: 255
-          step: 1
-          mode: slider
     brightness:
       name: Brightness value
-      description:
-        Number between 0..255 indicating brightness, where 0 turns the light
+      description: Number indicating brightness, where 0 turns the light
         off, 1 is the minimum brightness and 255 is the maximum brightness
         supported by the light.
       advanced: true
-      example: 120
       selector:
         number:
           min: 0
           max: 255
-          step: 1
-          mode: slider
     brightness_pct:
       name: Brightness
       description:
-        Number between 0..100 indicating percentage of full brightness, where 0
+        Number indicating percentage of full brightness, where 0
         turns the light off, 1 is the minimum brightness and 100 is the maximum
         brightness supported by the light.
-      example: 47
       selector:
         number:
           min: 0
           max: 100
-          step: 1
           unit_of_measurement: "%"
-          mode: slider
     profile:
       name: Profile
       description: Name of a light profile to use.
@@ -615,12 +567,8 @@ toggle:
         text:
     flash:
       name: Flash
-      description: If the light should flash. Valid values are short and long.
+      description: If the light should flash.
       advanced: true
-      example: short
-      values:
-        - short
-        - long
       selector:
         select:
           options:
@@ -629,9 +577,5 @@ toggle:
     effect:
       name: Effect
       description: Light effect.
-      example: random
-      values:
-        - colorloop
-        - random
       selector:
         text:

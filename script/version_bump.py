@@ -106,9 +106,15 @@ def write_version(version):
 
     major, minor, patch = str(version).split(".", 2)
 
-    content = re.sub("MAJOR_VERSION = .*\n", f"MAJOR_VERSION = {major}\n", content)
-    content = re.sub("MINOR_VERSION = .*\n", f"MINOR_VERSION = {minor}\n", content)
-    content = re.sub("PATCH_VERSION = .*\n", f'PATCH_VERSION = "{patch}"\n', content)
+    content = re.sub(
+        "MAJOR_VERSION: Final = .*\n", f"MAJOR_VERSION: Final = {major}\n", content
+    )
+    content = re.sub(
+        "MINOR_VERSION: Final = .*\n", f"MINOR_VERSION: Final = {minor}\n", content
+    )
+    content = re.sub(
+        "PATCH_VERSION: Final = .*\n", f'PATCH_VERSION: Final = "{patch}"\n', content
+    )
 
     with open("homeassistant/const.py", "wt") as fil:
         content = fil.write(content)

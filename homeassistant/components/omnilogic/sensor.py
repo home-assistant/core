@@ -61,7 +61,7 @@ class OmnilogicSensor(OmniLogicEntity, SensorEntity):
         unit: str,
         item_id: tuple,
         state_key: str,
-    ):
+    ) -> None:
         """Initialize Entities."""
         super().__init__(
             coordinator=coordinator,
@@ -136,7 +136,7 @@ class OmniLogicPumpSpeedSensor(OmnilogicSensor):
             self._unit = PERCENTAGE
             state = pump_speed
         elif pump_type == "DUAL":
-            self._unit = ""
+            self._unit = None
             if pump_speed == 0:
                 state = "off"
             elif pump_speed == self.coordinator.data[self._item_id].get(
@@ -217,7 +217,7 @@ class OmniLogicORPSensor(OmnilogicSensor):
         device_class: str,
         icon: str,
         unit: str,
-    ):
+    ) -> None:
         """Initialize the sensor."""
         super().__init__(
             coordinator=coordinator,

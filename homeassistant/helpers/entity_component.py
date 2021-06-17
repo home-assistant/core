@@ -76,7 +76,7 @@ class EntityComponent:
         domain: str,
         hass: HomeAssistant,
         scan_interval: timedelta = DEFAULT_SCAN_INTERVAL,
-    ):
+    ) -> None:
         """Initialize an entity component."""
         self.logger = logger
         self.hass = hass

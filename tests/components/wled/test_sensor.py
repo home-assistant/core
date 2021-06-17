@@ -1,11 +1,13 @@
 """Tests for the WLED sensor platform."""
 from datetime import datetime
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
 from homeassistant.components.sensor import (
     DEVICE_CLASS_CURRENT,
+    DEVICE_CLASS_SIGNAL_STRENGTH,
+    DEVICE_CLASS_TIMESTAMP,
     DOMAIN as SENSOR_DOMAIN,
 )
 from homeassistant.components.wled.const import (
@@ -21,21 +23,21 @@ from homeassistant.const import (
     DATA_BYTES,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
-from tests.components.wled import init_integration
-from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.common import MockConfigEntry
 
 
 async def test_sensors(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_wled: MagicMock,
 ) -> None:
     """Test the creation and values of the WLED sensors."""
-
-    entry = await init_integration(hass, aioclient_mock, skip_setup=True)
     registry = er.async_get(hass)
 
     # Pre-create registry entries for disabled by default sensors
@@ -88,9 +90,10 @@ async def test_sensors(
     )
 
     # Setup
+    mock_config_entry.add_to_hass(hass)
     test_time = datetime(2019, 11, 11, 9, 10, 32, tzinfo=dt_util.UTC)
     with patch("homeassistant.components.wled.sensor.utcnow", return_value=test_time):
-        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
     state = hass.states.get("sensor.wled_rgb_light_estimated_current")
@@ -108,7 +111,7 @@ async def test_sensors(
 
     state = hass.states.get("sensor.wled_rgb_light_uptime")
     assert state
-    assert state.attributes.get(ATTR_ICON) == "mdi:clock-outline"
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_TIMESTAMP
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
     assert state.state == "2019-11-11T09:10:00+00:00"
 
@@ -138,7 +141,7 @@ async def test_sensors(
 
     state = hass.states.get("sensor.wled_rgb_light_wifi_rssi")
     assert state
-    assert state.attributes.get(ATTR_ICON) == "mdi:wifi"
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_SIGNAL_STRENGTH
     assert (
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == SIGNAL_STRENGTH_DECIBELS_MILLIWATT
@@ -182,10 +185,9 @@ async def test_sensors(
     ),
 )
 async def test_disabled_by_default_sensors(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, entity_id: str
+    hass: HomeAssistant, init_integration: MockConfigEntry, entity_id: str
 ) -> None:
     """Test the disabled by default WLED sensors."""
-    await init_integration(hass, aioclient_mock)
     registry = er.async_get(hass)
 
     state = hass.states.get(entity_id)
@@ -195,3 +197,44 @@ async def test_disabled_by_default_sensors(
     assert entry
     assert entry.disabled
     assert entry.disabled_by == er.DISABLED_INTEGRATION
+
+
+@pytest.mark.parametrize(
+    "key",
+    [
+        "bssid",
+        "channel",
+        "rssi",
+        "signal",
+    ],
+)
+async def test_no_wifi_support(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_wled: MagicMock,
+    key: str,
+) -> None:
+    """Test missing Wi-Fi information from WLED device."""
+    registry = er.async_get(hass)
+
+    # Pre-create registry entries for disabled by default sensors
+    registry.async_get_or_create(
+        SENSOR_DOMAIN,
+        DOMAIN,
+        f"aabbccddeeff_wifi_{key}",
+        suggested_object_id=f"wled_rgb_light_wifi_{key}",
+        disabled_by=None,
+    )
+
+    # Remove Wi-Fi info
+    device = mock_wled.update.return_value
+    device.info.wifi = None
+
+    # Setup
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(f"sensor.wled_rgb_light_wifi_{key}")
+    assert state
+    assert state.state == STATE_UNKNOWN

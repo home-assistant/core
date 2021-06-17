@@ -224,44 +224,12 @@ def is_address(value):
         addr = (int(matcher.group("seg_id")), int(matcher.group("id")), is_group)
         conn_id = matcher.group("conn_id")
         return addr, conn_id
-    raise vol.error.Invalid("Not a valid address string.")
+    raise ValueError(f"{value} is not a valid address string")
 
 
-def is_relays_states_string(states_string):
+def is_states_string(states_string):
     """Validate the given states string and return states list."""
-    if len(states_string) == 8:
-        states = []
-        for state_string in states_string:
-            if state_string == "1":
-                state = "ON"
-            elif state_string == "0":
-                state = "OFF"
-            elif state_string == "T":
-                state = "TOGGLE"
-            elif state_string == "-":
-                state = "NOCHANGE"
-            else:
-                raise vol.error.Invalid("Not a valid relay state string.")
-            states.append(state)
-        return states
-    raise vol.error.Invalid("Wrong length of relay state string.")
-
-
-def is_key_lock_states_string(states_string):
-    """Validate the given states string and returns states list."""
-    if len(states_string) == 8:
-        states = []
-        for state_string in states_string:
-            if state_string == "1":
-                state = "ON"
-            elif state_string == "0":
-                state = "OFF"
-            elif state_string == "T":
-                state = "TOGGLE"
-            elif state_string == "-":
-                state = "NOCHANGE"
-            else:
-                raise vol.error.Invalid("Not a valid key lock state string.")
-            states.append(state)
-        return states
-    raise vol.error.Invalid("Wrong length of key lock state string.")
+    if len(states_string) != 8:
+        raise ValueError("Invalid length of states string")
+    states = {"1": "ON", "0": "OFF", "T": "TOGGLE", "-": "NOCHANGE"}
+    return [states[state_string] for state_string in states_string]

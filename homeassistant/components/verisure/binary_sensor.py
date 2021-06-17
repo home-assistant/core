@@ -39,22 +39,16 @@ class VerisureDoorWindowSensor(CoordinatorEntity, BinarySensorEntity):
 
     coordinator: VerisureDataUpdateCoordinator
 
+    _attr_device_class = DEVICE_CLASS_OPENING
+
     def __init__(
         self, coordinator: VerisureDataUpdateCoordinator, serial_number: str
     ) -> None:
         """Initialize the Verisure door window sensor."""
         super().__init__(coordinator)
+        self._attr_name = coordinator.data["door_window"][serial_number]["area"]
+        self._attr_unique_id = f"{serial_number}_door_window"
         self.serial_number = serial_number
-
-    @property
-    def name(self) -> str:
-        """Return the name of this entity."""
-        return self.coordinator.data["door_window"][self.serial_number]["area"]
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique ID for this entity."""
-        return f"{self.serial_number}_door_window"
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -68,11 +62,6 @@ class VerisureDoorWindowSensor(CoordinatorEntity, BinarySensorEntity):
             "identifiers": {(DOMAIN, self.serial_number)},
             "via_device": (DOMAIN, self.coordinator.entry.data[CONF_GIID]),
         }
-
-    @property
-    def device_class(self) -> str:
-        """Return the class of this entity."""
-        return DEVICE_CLASS_OPENING
 
     @property
     def is_on(self) -> bool:
@@ -95,10 +84,8 @@ class VerisureEthernetStatus(CoordinatorEntity, BinarySensorEntity):
 
     coordinator: VerisureDataUpdateCoordinator
 
-    @property
-    def name(self) -> str:
-        """Return the name of this entity."""
-        return "Verisure Ethernet status"
+    _attr_name = "Verisure Ethernet status"
+    _attr_device_class = DEVICE_CLASS_CONNECTIVITY
 
     @property
     def unique_id(self) -> str:
@@ -124,8 +111,3 @@ class VerisureEthernetStatus(CoordinatorEntity, BinarySensorEntity):
     def available(self) -> bool:
         """Return True if entity is available."""
         return super().available and self.coordinator.data["ethernet"] is not None
-
-    @property
-    def device_class(self) -> str:
-        """Return the class of this entity."""
-        return DEVICE_CLASS_CONNECTIVITY

@@ -61,7 +61,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if progress.get("context", {}).get(CONF_HOST) == self._discovered_ip:
                 return self.async_abort(reason="already_in_progress")
 
-        self._discovered_model = await self._async_try_connect(self._discovered_ip)
+        try:
+            self._discovered_model = await self._async_try_connect(self._discovered_ip)
+        except CannotConnect:
+            return self.async_abort(reason="cannot_connect")
+
         if not self.unique_id:
             return self.async_abort(reason="cannot_connect")
 
@@ -79,10 +83,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         self._set_confirm_only()
-        placeholders = {
-            "model": self._discovered_model,
-            "host": self._discovered_ip,
-        }
+        placeholders = {"model": self._discovered_model, "host": self._discovered_ip}
         self.context["title_placeholders"] = placeholders
         return self.async_show_form(
             step_id="discovery_confirm", description_placeholders=placeholders
@@ -101,8 +102,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             else:
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
-                    title=f"{model} {self.unique_id}",
-                    data=user_input,
+                    title=f"{model} {self.unique_id}", data=user_input
                 )
 
         user_input = user_input or {}
@@ -122,8 +122,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(unique_id)
             self._abort_if_unique_id_configured()
             return self.async_create_entry(
-                title=_async_unique_name(capabilities),
-                data={CONF_ID: unique_id},
+                title=_async_unique_name(capabilities), data={CONF_ID: unique_id}
             )
 
         configured_devices = {
@@ -219,19 +218,16 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 {
                     vol.Optional(CONF_MODEL, default=options[CONF_MODEL]): str,
                     vol.Required(
-                        CONF_TRANSITION,
-                        default=options[CONF_TRANSITION],
+                        CONF_TRANSITION, default=options[CONF_TRANSITION]
                     ): cv.positive_int,
                     vol.Required(
                         CONF_MODE_MUSIC, default=options[CONF_MODE_MUSIC]
                     ): bool,
                     vol.Required(
-                        CONF_SAVE_ON_CHANGE,
-                        default=options[CONF_SAVE_ON_CHANGE],
+                        CONF_SAVE_ON_CHANGE, default=options[CONF_SAVE_ON_CHANGE]
                     ): bool,
                     vol.Required(
-                        CONF_NIGHTLIGHT_SWITCH,
-                        default=options[CONF_NIGHTLIGHT_SWITCH],
+                        CONF_NIGHTLIGHT_SWITCH, default=options[CONF_NIGHTLIGHT_SWITCH]
                     ): bool,
                 }
             ),

@@ -77,7 +77,7 @@ class NZBGetSensor(NZBGetEntity, SensorEntity):
         sensor_type: str,
         sensor_name: str,
         unit_of_measurement: str | None = None,
-    ):
+    ) -> None:
         """Initialize a new NZBGet sensor."""
         self._sensor_type = sensor_type
         self._unique_id = f"{entry_id}_{sensor_type}"

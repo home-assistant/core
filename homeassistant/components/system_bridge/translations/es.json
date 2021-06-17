@@ -10,6 +10,7 @@
             "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida",
             "unknown": "Error inesperado"
         },
+        "flow_title": "{name}",
         "step": {
             "authenticate": {
                 "data": {
@@ -26,5 +27,6 @@
                 "description": "Por favor, introduce tus datos de conexi\u00f3n."
             }
         }
-    }
+    },
+    "title": "Pasarela del sistema"
 }

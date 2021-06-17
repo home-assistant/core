@@ -738,9 +738,7 @@ class GrowattData:
                     self.device_id, self.plant_id
                 )
 
-                mix_detail = self.api.mix_detail(
-                    self.device_id, self.plant_id, date=datetime.datetime.now()
-                )
+                mix_detail = self.api.mix_detail(self.device_id, self.plant_id)
                 # Get the chart data and work out the time of the last entry, use this as the last time data was published to the Growatt Server
                 mix_chart_entries = mix_detail["chartData"]
                 sorted_keys = sorted(mix_chart_entries)

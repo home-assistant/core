@@ -83,7 +83,7 @@ async def _async_handle_api_changed_error(
     )
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Tesla Powerwall from a config entry."""
 
     entry_id = entry.entry_id
@@ -176,7 +176,7 @@ async def _async_update_powerwall_data(
 def _login_and_fetch_base_info(power_wall: Powerwall, password: str):
     """Login to the powerwall and fetch the base info."""
     if password is not None:
-        power_wall.login("", password)
+        power_wall.login(password)
     power_wall.detect_and_pin_version()
     return call_base_info(power_wall)
 

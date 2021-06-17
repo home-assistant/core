@@ -37,6 +37,7 @@ from .const import (
     ATTR_PUSH_URL,
     DATA_CONFIG_ENTRIES,
     DATA_NOTIFY,
+    DATA_PUSH_CHANNEL,
     DOMAIN,
 )
 from .util import supports_push
@@ -119,7 +120,13 @@ class MobileAppNotificationService(BaseNotificationService):
         if kwargs.get(ATTR_DATA) is not None:
             data[ATTR_DATA] = kwargs.get(ATTR_DATA)
 
+        local_push_channels = self.hass.data[DOMAIN][DATA_PUSH_CHANNEL]
+
         for target in targets:
+            if target in local_push_channels:
+                local_push_channels[target](data)
+                continue
+
             entry = self.hass.data[DOMAIN][DATA_CONFIG_ENTRIES][target]
             entry_data = entry.data
 
@@ -127,7 +134,8 @@ class MobileAppNotificationService(BaseNotificationService):
             push_token = app_data[ATTR_PUSH_TOKEN]
             push_url = app_data[ATTR_PUSH_URL]
 
-            data[ATTR_PUSH_TOKEN] = push_token
+            target_data = dict(data)
+            target_data[ATTR_PUSH_TOKEN] = push_token
 
             reg_info = {
                 ATTR_APP_ID: entry_data[ATTR_APP_ID],
@@ -136,12 +144,12 @@ class MobileAppNotificationService(BaseNotificationService):
             if ATTR_OS_VERSION in entry_data:
                 reg_info[ATTR_OS_VERSION] = entry_data[ATTR_OS_VERSION]
 
-            data["registration_info"] = reg_info
+            target_data["registration_info"] = reg_info
 
             try:
                 with async_timeout.timeout(10):
                     response = await async_get_clientsession(self._hass).post(
-                        push_url, json=data
+                        push_url, json=target_data
                     )
                     result = await response.json()
 

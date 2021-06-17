@@ -39,8 +39,6 @@ WEEKLY_TYPE = "week"
 MONTHLY_TYPE = "month"
 YEARLY_TYPE = "year"
 
-ICON = "mdi:flash"
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_USERNAME): cv.string,
@@ -77,7 +75,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class AtomeData:
     """Stores data retrieved from Neurio sensor."""
 
-    def __init__(self, client: AtomeClient):
+    def __init__(self, client: AtomeClient) -> None:
         """Initialize the data."""
         self.atome_client = client
         self._live_power = None
@@ -217,6 +215,8 @@ class AtomeData:
 class AtomeSensor(SensorEntity):
     """Representation of a sensor entity for Atome."""
 
+    _attr_device_class = DEVICE_CLASS_POWER
+
     def __init__(self, data, name, sensor_type):
         """Initialize the sensor."""
         self._name = name
@@ -250,16 +250,6 @@ class AtomeSensor(SensorEntity):
     def unit_of_measurement(self):
         """Return the unit of measurement."""
         return self._unit_of_measurement
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return ICON
-
-    @property
-    def device_class(self):
-        """Return the device class."""
-        return DEVICE_CLASS_POWER
 
     def update(self):
         """Update device state."""

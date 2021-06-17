@@ -38,7 +38,7 @@
                     "entities": "Entiteiten",
                     "mode": "Mode"
                 },
-                "description": "Kies de entiteiten die u wilt opnemen. In de accessoiremodus is slechts een enkele entiteit inbegrepen. In de bridge-include-modus worden alle entiteiten in het domein opgenomen, tenzij specifieke entiteiten zijn geselecteerd. In de bridge-uitsluitingsmodus worden alle entiteiten in het domein opgenomen, behalve de uitgesloten entiteiten. Voor de beste prestaties is elke tv-mediaspeler en camera een apart HomeKit-accessoire.",
+                "description": "Kies de entiteiten die u wilt opnemen. In de accessoiremodus is slechts een enkele entiteit inbegrepen. In de bridge-include-modus worden alle entiteiten in het domein opgenomen, tenzij specifieke entiteiten zijn geselecteerd. In de bridge-uitsluitingsmodus worden alle entiteiten in het domein opgenomen, behalve de uitgesloten entiteiten. Voor de beste prestaties wordt voor elke media speler, activiteit gebaseerde afstandsbediening, slot en camera een afzonderlijke Homekit-accessoire gemaakt.",
                 "title": "Selecteer de entiteiten die u wilt opnemen"
             },
             "init": {

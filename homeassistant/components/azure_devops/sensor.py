@@ -109,7 +109,7 @@ class AzureDevOpsLatestBuildSensor(AzureDevOpsSensor):
 
     def __init__(
         self, client: DevOpsClient, organization: str, project: str, build: DevOpsBuild
-    ):
+    ) -> None:
         """Initialize Azure DevOps sensor."""
         self.build: DevOpsBuild = build
         super().__init__(

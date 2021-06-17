@@ -1,10 +1,15 @@
 """Config flow to configure SMHI component."""
+from __future__ import annotations
+
+from typing import Any
+
 from smhi.smhi_lib import Smhi, SmhiForecastException
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import slugify
@@ -13,10 +18,10 @@ from .const import DOMAIN, HOME_LOCATION_NAME
 
 
 @callback
-def smhi_locations(hass: HomeAssistant):
+def smhi_locations(hass: HomeAssistant) -> set[str]:
     """Return configurations of SMHI component."""
     return {
-        (slugify(entry.data[CONF_NAME]))
+        slugify(entry.data[CONF_NAME])
         for entry in hass.config_entries.async_entries(DOMAIN)
     }
 
@@ -28,9 +33,11 @@ class SmhiFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize SMHI forecast configuration flow."""
-        self._errors = {}
+        self._errors: dict[str, str] = {}
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle a flow initialized by the user."""
         self._errors = {}
 
@@ -79,8 +86,11 @@ class SmhiFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return name in smhi_locations(self.hass)
 
     async def _show_config_form(
-        self, name: str = None, latitude: str = None, longitude: str = None
-    ):
+        self,
+        name: str | None = None,
+        latitude: float | None = None,
+        longitude: float | None = None,
+    ) -> FlowResult:
         """Show the configuration form to edit location data."""
         return self.async_show_form(
             step_id="user",
@@ -94,7 +104,7 @@ class SmhiFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=self._errors,
         )
 
-    async def _check_location(self, longitude: str, latitude: str) -> bool:
+    async def _check_location(self, longitude: float, latitude: float) -> bool:
         """Return true if location is ok."""
         try:
             session = aiohttp_client.async_get_clientsession(self.hass)

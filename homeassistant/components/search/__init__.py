@@ -69,7 +69,7 @@ class Searcher:
         hass: HomeAssistant,
         device_reg: device_registry.DeviceRegistry,
         entity_reg: entity_registry.EntityRegistry,
-    ):
+    ) -> None:
         """Search results."""
         self.hass = hass
         self._device_reg = device_reg

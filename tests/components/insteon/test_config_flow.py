@@ -110,7 +110,7 @@ async def test_fail_on_existing(hass: HomeAssistant):
         options={},
     )
     config_entry.add_to_hass(hass)
-    assert config_entry.state == config_entries.ENTRY_STATE_NOT_LOADED
+    assert config_entry.state is config_entries.ConfigEntryState.NOT_LOADED
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -276,7 +276,7 @@ async def test_import_existing(hass: HomeAssistant):
         options={},
     )
     config_entry.add_to_hass(hass)
-    assert config_entry.state == config_entries.ENTRY_STATE_NOT_LOADED
+    assert config_entry.state is config_entries.ConfigEntryState.NOT_LOADED
 
     result = await _import_config(
         hass, {**MOCK_IMPORT_MINIMUM_HUB_V2, CONF_PORT: 25105, CONF_HUB_VERSION: 2}

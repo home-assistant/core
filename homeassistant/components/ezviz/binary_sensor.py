@@ -15,7 +15,6 @@ async def async_setup_entry(hass, entry, async_add_entities):
     """Set up Ezviz sensors based on a config entry."""
     coordinator = hass.data[DOMAIN][entry.entry_id][DATA_COORDINATOR]
     sensors = []
-    sensor_type_name = "None"
 
     for idx, camera in enumerate(coordinator.data):
         for name in camera:

@@ -52,7 +52,7 @@ QUERY_STATES = [
     States.last_updated,
 ]
 
-HISTORY_BAKERY = "history_bakery"
+HISTORY_BAKERY = "recorder_history_bakery"
 
 
 def async_setup(hass):

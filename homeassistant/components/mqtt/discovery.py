@@ -9,6 +9,7 @@ import time
 
 from homeassistant.const import CONF_DEVICE, CONF_PLATFORM
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import RESULT_TYPE_ABORT
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -274,7 +275,7 @@ async def async_start(  # noqa: C901
                 )
                 if (
                     result
-                    and result["type"] == "abort"
+                    and result["type"] == RESULT_TYPE_ABORT
                     and result["reason"]
                     in ["already_configured", "single_instance_allowed"]
                 ):

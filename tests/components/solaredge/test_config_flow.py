@@ -5,7 +5,6 @@ import pytest
 from requests.exceptions import ConnectTimeout, HTTPError
 
 from homeassistant import data_entry_flow
-from homeassistant.components.solaredge import config_flow
 from homeassistant.components.solaredge.const import CONF_SITE_ID, DEFAULT_NAME, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_API_KEY, CONF_NAME
@@ -25,13 +24,6 @@ def mock_controller():
     api.get_details.return_value = {"details": {"status": "active"}}
     with patch("solaredge.Solaredge", return_value=api):
         yield api
-
-
-def init_config_flow(hass: HomeAssistant) -> config_flow.SolarEdgeConfigFlow:
-    """Init a configuration flow."""
-    flow = config_flow.SolarEdgeConfigFlow()
-    flow.hass = hass
-    return flow
 
 
 async def test_user(hass: HomeAssistant, test_api: Mock) -> None:

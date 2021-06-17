@@ -68,7 +68,7 @@ async def async_setup_entry(
 class KulerskyLight(LightEntity):
     """Representation of an Kuler Sky Light."""
 
-    def __init__(self, light: pykulersky.Light):
+    def __init__(self, light: pykulersky.Light) -> None:
         """Initialize a Kuler Sky light."""
         self._light = light
         self._hs_color = None

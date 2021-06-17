@@ -1,7 +1,7 @@
 """Test UPnP/IGD config flow."""
 
 from datetime import timedelta
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import ssdp
@@ -35,6 +35,14 @@ async def test_flow_ssdp_discovery(hass: HomeAssistant):
     udn = "uuid:device_1"
     location = "dummy"
     mock_device = MockDevice(udn)
+    ssdp_discoveries = [
+        {
+            ssdp.ATTR_SSDP_LOCATION: location,
+            ssdp.ATTR_SSDP_ST: mock_device.device_type,
+            ssdp.ATTR_UPNP_UDN: mock_device.udn,
+            ssdp.ATTR_SSDP_USN: mock_device.usn,
+        }
+    ]
     discoveries = [
         {
             DISCOVERY_LOCATION: location,
@@ -49,7 +57,7 @@ async def test_flow_ssdp_discovery(hass: HomeAssistant):
     with patch.object(
         Device, "async_create_device", AsyncMock(return_value=mock_device)
     ), patch.object(
-        Device, "async_discover", AsyncMock(return_value=discoveries)
+        ssdp, "async_get_discovery_info_by_st", Mock(return_value=ssdp_discoveries)
     ), patch.object(
         Device, "async_supplement_discovery", AsyncMock(return_value=discoveries[0])
     ):
@@ -156,6 +164,14 @@ async def test_flow_user(hass: HomeAssistant):
     udn = "uuid:device_1"
     location = "dummy"
     mock_device = MockDevice(udn)
+    ssdp_discoveries = [
+        {
+            ssdp.ATTR_SSDP_LOCATION: location,
+            ssdp.ATTR_SSDP_ST: mock_device.device_type,
+            ssdp.ATTR_UPNP_UDN: mock_device.udn,
+            ssdp.ATTR_SSDP_USN: mock_device.usn,
+        }
+    ]
     discoveries = [
         {
             DISCOVERY_LOCATION: location,
@@ -171,7 +187,7 @@ async def test_flow_user(hass: HomeAssistant):
     with patch.object(
         Device, "async_create_device", AsyncMock(return_value=mock_device)
     ), patch.object(
-        Device, "async_discover", AsyncMock(return_value=discoveries)
+        ssdp, "async_get_discovery_info_by_st", Mock(return_value=ssdp_discoveries)
     ), patch.object(
         Device, "async_supplement_discovery", AsyncMock(return_value=discoveries[0])
     ):
@@ -202,6 +218,14 @@ async def test_flow_import(hass: HomeAssistant):
     udn = "uuid:device_1"
     mock_device = MockDevice(udn)
     location = "dummy"
+    ssdp_discoveries = [
+        {
+            ssdp.ATTR_SSDP_LOCATION: location,
+            ssdp.ATTR_SSDP_ST: mock_device.device_type,
+            ssdp.ATTR_UPNP_UDN: mock_device.udn,
+            ssdp.ATTR_SSDP_USN: mock_device.usn,
+        }
+    ]
     discoveries = [
         {
             DISCOVERY_LOCATION: location,
@@ -217,7 +241,7 @@ async def test_flow_import(hass: HomeAssistant):
     with patch.object(
         Device, "async_create_device", AsyncMock(return_value=mock_device)
     ), patch.object(
-        Device, "async_discover", AsyncMock(return_value=discoveries)
+        ssdp, "async_get_discovery_info_by_st", Mock(return_value=ssdp_discoveries)
     ), patch.object(
         Device, "async_supplement_discovery", AsyncMock(return_value=discoveries[0])
     ):
@@ -261,31 +285,19 @@ async def test_flow_import_already_configured(hass: HomeAssistant):
     assert result["reason"] == "already_configured"
 
 
-async def test_flow_import_incomplete(hass: HomeAssistant):
-    """Test config flow: incomplete discovery, configured through configuration.yaml."""
-    udn = "uuid:device_1"
-    mock_device = MockDevice(udn)
-    location = "dummy"
-    discoveries = [
-        {
-            DISCOVERY_LOCATION: location,
-            DISCOVERY_NAME: mock_device.name,
-            # DISCOVERY_ST: mock_device.device_type,
-            DISCOVERY_UDN: mock_device.udn,
-            DISCOVERY_UNIQUE_ID: mock_device.unique_id,
-            DISCOVERY_USN: mock_device.usn,
-            DISCOVERY_HOSTNAME: mock_device.hostname,
-        }
-    ]
-
-    with patch.object(Device, "async_discover", AsyncMock(return_value=discoveries)):
+async def test_flow_import_no_devices_found(hass: HomeAssistant):
+    """Test config flow: no devices found, configured through configuration.yaml."""
+    ssdp_discoveries = []
+    with patch.object(
+        ssdp, "async_get_discovery_info_by_st", Mock(return_value=ssdp_discoveries)
+    ):
         # Discovered via step import.
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_IMPORT}
         )
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-        assert result["reason"] == "incomplete_discovery"
+        assert result["reason"] == "no_devices_found"
 
 
 async def test_options_flow(hass: HomeAssistant):
@@ -294,15 +306,12 @@ async def test_options_flow(hass: HomeAssistant):
     udn = "uuid:device_1"
     location = "http://192.168.1.1/desc.xml"
     mock_device = MockDevice(udn)
-    discoveries = [
+    ssdp_discoveries = [
         {
-            DISCOVERY_LOCATION: location,
-            DISCOVERY_NAME: mock_device.name,
-            DISCOVERY_ST: mock_device.device_type,
-            DISCOVERY_UDN: mock_device.udn,
-            DISCOVERY_UNIQUE_ID: mock_device.unique_id,
-            DISCOVERY_USN: mock_device.usn,
-            DISCOVERY_HOSTNAME: mock_device.hostname,
+            ssdp.ATTR_SSDP_LOCATION: location,
+            ssdp.ATTR_SSDP_ST: mock_device.device_type,
+            ssdp.ATTR_UPNP_UDN: mock_device.udn,
+            ssdp.ATTR_SSDP_USN: mock_device.usn,
         }
     ]
     config_entry = MockConfigEntry(
@@ -321,7 +330,11 @@ async def test_options_flow(hass: HomeAssistant):
     }
     with patch.object(
         Device, "async_create_device", AsyncMock(return_value=mock_device)
-    ), patch.object(Device, "async_discover", AsyncMock(return_value=discoveries)):
+    ), patch.object(
+        ssdp,
+        "async_get_discovery_info_by_udn_st",
+        Mock(return_value=ssdp_discoveries[0]),
+    ):
         # Initialisation of component.
         await async_setup_component(hass, "upnp", config)
         await hass.async_block_till_done()

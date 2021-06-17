@@ -74,9 +74,7 @@ YAML_CONFIGURATION = {
     }
 }
 
-CONFIG_ENTRY_DATA = {
-    CONF_ID: ID,
-}
+CONFIG_ENTRY_DATA = {CONF_ID: ID}
 
 
 def _mocked_bulb(cannot_connect=False):

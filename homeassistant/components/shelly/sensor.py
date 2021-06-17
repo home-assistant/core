@@ -30,6 +30,7 @@ SENSORS = {
         name="Battery",
         unit=PERCENTAGE,
         device_class=sensor.DEVICE_CLASS_BATTERY,
+        state_class=sensor.STATE_CLASS_MEASUREMENT,
         removal_condition=lambda settings, _: settings.get("external_power") == 1,
     ),
     ("device", "deviceTemp"): BlockAttributeDescription(
@@ -37,6 +38,7 @@ SENSORS = {
         unit=temperature_unit,
         value=lambda value: round(value, 1),
         device_class=sensor.DEVICE_CLASS_TEMPERATURE,
+        state_class=sensor.STATE_CLASS_MEASUREMENT,
         default_enabled=False,
     ),
     ("emeter", "current"): BlockAttributeDescription(
@@ -44,12 +46,14 @@ SENSORS = {
         unit=ELECTRICAL_CURRENT_AMPERE,
         value=lambda value: value,
         device_class=sensor.DEVICE_CLASS_CURRENT,
+        state_class=sensor.STATE_CLASS_MEASUREMENT,
     ),
     ("light", "power"): BlockAttributeDescription(
         name="Power",
         unit=POWER_WATT,
         value=lambda value: round(value, 1),
         device_class=sensor.DEVICE_CLASS_POWER,
+        state_class=sensor.STATE_CLASS_MEASUREMENT,
         default_enabled=False,
     ),
     ("device", "power"): BlockAttributeDescription(
@@ -57,60 +61,70 @@ SENSORS = {
         unit=POWER_WATT,
         value=lambda value: round(value, 1),
         device_class=sensor.DEVICE_CLASS_POWER,
+        state_class=sensor.STATE_CLASS_MEASUREMENT,
     ),
     ("emeter", "power"): BlockAttributeDescription(
         name="Power",
         unit=POWER_WATT,
         value=lambda value: round(value, 1),
         device_class=sensor.DEVICE_CLASS_POWER,
+        state_class=sensor.STATE_CLASS_MEASUREMENT,
     ),
     ("emeter", "voltage"): BlockAttributeDescription(
         name="Voltage",
         unit=VOLT,
         value=lambda value: round(value, 1),
         device_class=sensor.DEVICE_CLASS_VOLTAGE,
+        state_class=sensor.STATE_CLASS_MEASUREMENT,
     ),
     ("emeter", "powerFactor"): BlockAttributeDescription(
         name="Power Factor",
         unit=PERCENTAGE,
         value=lambda value: round(value * 100, 1),
         device_class=sensor.DEVICE_CLASS_POWER_FACTOR,
+        state_class=sensor.STATE_CLASS_MEASUREMENT,
     ),
     ("relay", "power"): BlockAttributeDescription(
         name="Power",
         unit=POWER_WATT,
         value=lambda value: round(value, 1),
         device_class=sensor.DEVICE_CLASS_POWER,
+        state_class=sensor.STATE_CLASS_MEASUREMENT,
     ),
     ("roller", "rollerPower"): BlockAttributeDescription(
         name="Power",
         unit=POWER_WATT,
         value=lambda value: round(value, 1),
         device_class=sensor.DEVICE_CLASS_POWER,
+        state_class=sensor.STATE_CLASS_MEASUREMENT,
     ),
     ("device", "energy"): BlockAttributeDescription(
         name="Energy",
         unit=ENERGY_KILO_WATT_HOUR,
         value=lambda value: round(value / 60 / 1000, 2),
         device_class=sensor.DEVICE_CLASS_ENERGY,
+        state_class=sensor.STATE_CLASS_MEASUREMENT,
     ),
     ("emeter", "energy"): BlockAttributeDescription(
         name="Energy",
         unit=ENERGY_KILO_WATT_HOUR,
         value=lambda value: round(value / 1000, 2),
         device_class=sensor.DEVICE_CLASS_ENERGY,
+        state_class=sensor.STATE_CLASS_MEASUREMENT,
     ),
     ("emeter", "energyReturned"): BlockAttributeDescription(
         name="Energy Returned",
         unit=ENERGY_KILO_WATT_HOUR,
         value=lambda value: round(value / 1000, 2),
         device_class=sensor.DEVICE_CLASS_ENERGY,
+        state_class=sensor.STATE_CLASS_MEASUREMENT,
     ),
     ("light", "energy"): BlockAttributeDescription(
         name="Energy",
         unit=ENERGY_KILO_WATT_HOUR,
         value=lambda value: round(value / 60 / 1000, 2),
         device_class=sensor.DEVICE_CLASS_ENERGY,
+        state_class=sensor.STATE_CLASS_MEASUREMENT,
         default_enabled=False,
     ),
     ("relay", "energy"): BlockAttributeDescription(
@@ -118,23 +132,27 @@ SENSORS = {
         unit=ENERGY_KILO_WATT_HOUR,
         value=lambda value: round(value / 60 / 1000, 2),
         device_class=sensor.DEVICE_CLASS_ENERGY,
+        state_class=sensor.STATE_CLASS_MEASUREMENT,
     ),
     ("roller", "rollerEnergy"): BlockAttributeDescription(
         name="Energy",
         unit=ENERGY_KILO_WATT_HOUR,
         value=lambda value: round(value / 60 / 1000, 2),
         device_class=sensor.DEVICE_CLASS_ENERGY,
+        state_class=sensor.STATE_CLASS_MEASUREMENT,
     ),
     ("sensor", "concentration"): BlockAttributeDescription(
         name="Gas Concentration",
         unit=CONCENTRATION_PARTS_PER_MILLION,
         icon="mdi:gauge",
+        state_class=sensor.STATE_CLASS_MEASUREMENT,
     ),
     ("sensor", "extTemp"): BlockAttributeDescription(
         name="Temperature",
         unit=temperature_unit,
         value=lambda value: round(value, 1),
         device_class=sensor.DEVICE_CLASS_TEMPERATURE,
+        state_class=sensor.STATE_CLASS_MEASUREMENT,
         available=lambda block: block.extTemp != 999,
     ),
     ("sensor", "humidity"): BlockAttributeDescription(
@@ -142,17 +160,20 @@ SENSORS = {
         unit=PERCENTAGE,
         value=lambda value: round(value, 1),
         device_class=sensor.DEVICE_CLASS_HUMIDITY,
+        state_class=sensor.STATE_CLASS_MEASUREMENT,
         available=lambda block: block.extTemp != 999,
     ),
     ("sensor", "luminosity"): BlockAttributeDescription(
         name="Luminosity",
         unit=LIGHT_LUX,
         device_class=sensor.DEVICE_CLASS_ILLUMINANCE,
+        state_class=sensor.STATE_CLASS_MEASUREMENT,
     ),
     ("sensor", "tilt"): BlockAttributeDescription(
         name="Tilt",
         unit=DEGREE,
         icon="mdi:angle-acute",
+        state_class=sensor.STATE_CLASS_MEASUREMENT,
     ),
     ("relay", "totalWorkTime"): BlockAttributeDescription(
         name="Lamp Life",
@@ -168,6 +189,7 @@ SENSORS = {
         unit=VOLT,
         value=lambda value: round(value, 1),
         device_class=sensor.DEVICE_CLASS_VOLTAGE,
+        state_class=sensor.STATE_CLASS_MEASUREMENT,
     ),
     ("sensor", "sensorOp"): BlockAttributeDescription(
         name="Operation",
@@ -183,6 +205,7 @@ REST_SENSORS = {
         unit=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         value=lambda status, _: status["wifi_sta"]["rssi"],
         device_class=sensor.DEVICE_CLASS_SIGNAL_STRENGTH,
+        state_class=sensor.STATE_CLASS_MEASUREMENT,
         default_enabled=False,
     ),
     "uptime": RestAttributeDescription(
@@ -218,6 +241,11 @@ class ShellySensor(ShellyBlockAttributeEntity, SensorEntity):
         return self.attribute_value
 
     @property
+    def state_class(self):
+        """State class of sensor."""
+        return self.description.state_class
+
+    @property
     def unit_of_measurement(self):
         """Return unit of sensor."""
         return self._unit
@@ -230,6 +258,11 @@ class ShellyRestSensor(ShellyRestAttributeEntity, SensorEntity):
     def state(self):
         """Return value of sensor."""
         return self.attribute_value
+
+    @property
+    def state_class(self):
+        """State class of sensor."""
+        return self.description.state_class
 
     @property
     def unit_of_measurement(self):
@@ -247,6 +280,11 @@ class ShellySleepingSensor(ShellySleepingBlockAttributeEntity, SensorEntity):
             return self.attribute_value
 
         return self.last_state
+
+    @property
+    def state_class(self):
+        """State class of sensor."""
+        return self.description.state_class
 
     @property
     def unit_of_measurement(self):

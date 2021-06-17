@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import asyncio
+from dataclasses import dataclass
+from enum import Enum
 from functools import partial
 from typing import Any, Callable, TypeVar, cast
 
@@ -55,6 +57,26 @@ def api_error(error_message: str) -> Callable[[F], F]:
     return handle_hassio_api_error
 
 
+@dataclass
+class AddonInfo:
+    """Represent the current add-on info state."""
+
+    options: dict[str, Any]
+    state: AddonState
+    update_available: bool
+    version: str | None
+
+
+class AddonState(Enum):
+    """Represent the current state of the add-on."""
+
+    NOT_INSTALLED = "not_installed"
+    INSTALLING = "installing"
+    UPDATING = "updating"
+    NOT_RUNNING = "not_running"
+    RUNNING = "running"
+
+
 class AddonManager:
     """Manage the add-on.
 
@@ -93,25 +115,32 @@ class AddonManager:
         return discovery_info_config
 
     @api_error("Failed to get the Z-Wave JS add-on info")
-    async def async_get_addon_info(self) -> dict:
+    async def async_get_addon_info(self) -> AddonInfo:
         """Return and cache Z-Wave JS add-on info."""
         addon_info: dict = await async_get_addon_info(self._hass, ADDON_SLUG)
-        return addon_info
+        addon_state = self.async_get_addon_state(addon_info)
+        return AddonInfo(
+            options=addon_info["options"],
+            state=addon_state,
+            update_available=addon_info["update_available"],
+            version=addon_info["version"],
+        )
 
-    async def async_is_addon_running(self) -> bool:
-        """Return True if Z-Wave JS add-on is running."""
-        addon_info = await self.async_get_addon_info()
-        return bool(addon_info["state"] == "started")
+    @callback
+    def async_get_addon_state(self, addon_info: dict[str, Any]) -> AddonState:
+        """Return the current state of the Z-Wave JS add-on."""
+        addon_state = AddonState.NOT_INSTALLED
 
-    async def async_is_addon_installed(self) -> bool:
-        """Return True if Z-Wave JS add-on is installed."""
-        addon_info = await self.async_get_addon_info()
-        return addon_info["version"] is not None
+        if addon_info["version"] is not None:
+            addon_state = AddonState.NOT_RUNNING
+        if addon_info["state"] == "started":
+            addon_state = AddonState.RUNNING
+        if self._install_task and not self._install_task.done():
+            addon_state = AddonState.INSTALLING
+        if self._update_task and not self._update_task.done():
+            addon_state = AddonState.UPDATING
 
-    async def async_get_addon_options(self) -> dict:
-        """Get Z-Wave JS add-on options."""
-        addon_info = await self.async_get_addon_info()
-        return cast(dict, addon_info["options"])
+        return addon_state
 
     @api_error("Failed to set the Z-Wave JS add-on options")
     async def async_set_addon_options(self, config: dict) -> None:
@@ -164,13 +193,11 @@ class AddonManager:
     async def async_update_addon(self) -> None:
         """Update the Z-Wave JS add-on if needed."""
         addon_info = await self.async_get_addon_info()
-        addon_version = addon_info["version"]
-        update_available = addon_info["update_available"]
 
-        if addon_version is None:
+        if addon_info.version is None:
             raise AddonError("Z-Wave JS add-on is not installed")
 
-        if not update_available:
+        if not addon_info.update_available:
             return
 
         await self.async_create_snapshot()
@@ -215,14 +242,14 @@ class AddonManager:
 
     async def async_configure_addon(self, usb_path: str, network_key: str) -> None:
         """Configure and start Z-Wave JS add-on."""
-        addon_options = await self.async_get_addon_options()
+        addon_info = await self.async_get_addon_info()
 
         new_addon_options = {
             CONF_ADDON_DEVICE: usb_path,
             CONF_ADDON_NETWORK_KEY: network_key,
         }
 
-        if new_addon_options != addon_options:
+        if new_addon_options != addon_info.options:
             await self.async_set_addon_options(new_addon_options)
 
     @callback
@@ -246,8 +273,7 @@ class AddonManager:
     async def async_create_snapshot(self) -> None:
         """Create a partial snapshot of the Z-Wave JS add-on."""
         addon_info = await self.async_get_addon_info()
-        addon_version = addon_info["version"]
-        name = f"addon_{ADDON_SLUG}_{addon_version}"
+        name = f"addon_{ADDON_SLUG}_{addon_info.version}"
 
         LOGGER.debug("Creating snapshot: %s", name)
         await async_create_snapshot(

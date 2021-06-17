@@ -1,11 +1,11 @@
 repos:
   - repo: https://github.com/asottile/pyupgrade
-    rev: v2.14.0
+    rev: v2.16.0
     hooks:
       - id: pyupgrade
         args: [--py38-plus]
   - repo: https://github.com/psf/black
-    rev: 21.5b0
+    rev: 21.6b0
     hooks:
       - id: black
         args:
@@ -17,13 +17,13 @@ repos:
     hooks:
       - id: codespell
         args:
-          - --ignore-words-list=hass,alot,datas,dof,dur,ether,farenheit,hist,iff,ines,ist,lightsensor,mut,nd,pres,referer,ser,serie,te,technik,ue,uint,visability,wan,wanna,withing,iam,incomfort
+          - --ignore-words-list=hass,alot,datas,dof,dur,ether,farenheit,hist,iff,ines,ist,lightsensor,mut,nd,pres,referer,ser,serie,te,technik,ue,uint,visability,wan,wanna,withing,iam,incomfort,ba
           - --skip="./.*,*.csv,*.json"
           - --quiet-level=2
         exclude_types: [csv, json]
         exclude: ^tests/fixtures/
   - repo: https://gitlab.com/pycqa/flake8
-    rev: 3.9.1
+    rev: 3.9.2
     hooks:
       - id: flake8
         additional_dependencies:
@@ -31,7 +31,7 @@ repos:
           - pyflakes==2.3.1
           - flake8-docstrings==1.6.0
           - pydocstyle==6.0.0
-          - flake8-comprehensions==3.4.0
+          - flake8-comprehensions==3.5.0
           - flake8-noqa==1.1.0
           - mccabe==0.6.1
         files: ^(homeassistant|script|tests)/.+\.py$

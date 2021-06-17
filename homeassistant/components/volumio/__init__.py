@@ -13,7 +13,7 @@ from .const import DATA_INFO, DATA_VOLUMIO, DOMAIN
 PLATFORMS = ["media_player"]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Volumio from a config entry."""
 
     volumio = Volumio(

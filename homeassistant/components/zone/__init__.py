@@ -279,7 +279,7 @@ async def async_unload_entry(
 class Zone(entity.Entity):
     """Representation of a Zone."""
 
-    def __init__(self, config: dict):
+    def __init__(self, config: dict) -> None:
         """Initialize the zone."""
         self._config = config
         self.editable = True

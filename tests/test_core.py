@@ -233,6 +233,29 @@ async def test_async_add_job_pending_tasks_coro(hass):
     assert len(call_count) == 2
 
 
+async def test_async_create_task_pending_tasks_coro(hass):
+    """Add a coro to pending tasks."""
+    call_count = []
+
+    async def test_coro():
+        """Test Coro."""
+        call_count.append("call")
+
+    for _ in range(2):
+        hass.create_task(test_coro())
+
+    async def wait_finish_callback():
+        """Wait until all stuff is scheduled."""
+        await asyncio.sleep(0)
+        await asyncio.sleep(0)
+
+    await wait_finish_callback()
+
+    assert len(hass._pending_tasks) == 2
+    await hass.async_block_till_done()
+    assert len(call_count) == 2
+
+
 async def test_async_add_job_pending_tasks_executor(hass):
     """Run an executor in pending tasks."""
     call_count = []

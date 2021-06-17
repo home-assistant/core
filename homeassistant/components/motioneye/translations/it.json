@@ -11,6 +11,10 @@
             "unknown": "Errore imprevisto"
         },
         "step": {
+            "hassio_confirm": {
+                "description": "Vuoi configurare Home Assistant per connettersi al servizio motionEye fornito dal componente aggiuntivo: {addon}?",
+                "title": "motionEye tramite il componente aggiuntivo Home Assistant"
+            },
             "user": {
                 "data": {
                     "admin_password": "Amministratore Password",

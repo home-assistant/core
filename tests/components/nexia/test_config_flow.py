@@ -1,14 +1,17 @@
 """Test the nexia config flow."""
 from unittest.mock import MagicMock, patch
 
+from nexia.const import BRAND_ASAIR, BRAND_NEXIA
+import pytest
 from requests.exceptions import ConnectTimeout, HTTPError
 
 from homeassistant import config_entries, setup
-from homeassistant.components.nexia.const import DOMAIN
+from homeassistant.components.nexia.const import CONF_BRAND, DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
 
-async def test_form(hass):
+@pytest.mark.parametrize("brand", [BRAND_ASAIR, BRAND_NEXIA])
+async def test_form(hass, brand):
     """Test we get the form."""
     await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
@@ -29,13 +32,14 @@ async def test_form(hass):
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_USERNAME: "username", CONF_PASSWORD: "password"},
+            {CONF_BRAND: brand, CONF_USERNAME: "username", CONF_PASSWORD: "password"},
         )
         await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == "myhouse"
     assert result2["data"] == {
+        CONF_BRAND: brand,
         CONF_USERNAME: "username",
         CONF_PASSWORD: "password",
     }
@@ -51,7 +55,11 @@ async def test_form_invalid_auth(hass):
     with patch("homeassistant.components.nexia.config_flow.NexiaHome.login"):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_USERNAME: "username", CONF_PASSWORD: "password"},
+            {
+                CONF_BRAND: BRAND_NEXIA,
+                CONF_USERNAME: "username",
+                CONF_PASSWORD: "password",
+            },
         )
 
     assert result2["type"] == "form"
@@ -70,7 +78,11 @@ async def test_form_cannot_connect(hass):
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_USERNAME: "username", CONF_PASSWORD: "password"},
+            {
+                CONF_BRAND: BRAND_NEXIA,
+                CONF_USERNAME: "username",
+                CONF_PASSWORD: "password",
+            },
         )
 
     assert result2["type"] == "form"
@@ -91,7 +103,11 @@ async def test_form_invalid_auth_http_401(hass):
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_USERNAME: "username", CONF_PASSWORD: "password"},
+            {
+                CONF_BRAND: BRAND_NEXIA,
+                CONF_USERNAME: "username",
+                CONF_PASSWORD: "password",
+            },
         )
 
     assert result2["type"] == "form"
@@ -112,7 +128,11 @@ async def test_form_cannot_connect_not_found(hass):
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_USERNAME: "username", CONF_PASSWORD: "password"},
+            {
+                CONF_BRAND: BRAND_NEXIA,
+                CONF_USERNAME: "username",
+                CONF_PASSWORD: "password",
+            },
         )
 
     assert result2["type"] == "form"
@@ -131,7 +151,11 @@ async def test_form_broad_exception(hass):
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_USERNAME: "username", CONF_PASSWORD: "password"},
+            {
+                CONF_BRAND: BRAND_NEXIA,
+                CONF_USERNAME: "username",
+                CONF_PASSWORD: "password",
+            },
         )
 
     assert result2["type"] == "form"

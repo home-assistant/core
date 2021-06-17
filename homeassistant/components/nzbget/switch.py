@@ -41,7 +41,7 @@ class NZBGetDownloadSwitch(NZBGetEntity, SwitchEntity):
         coordinator: NZBGetDataUpdateCoordinator,
         entry_id: str,
         entry_name: str,
-    ):
+    ) -> None:
         """Initialize a new NZBGet switch."""
         self._unique_id = f"{entry_id}_download"
 

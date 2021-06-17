@@ -47,7 +47,8 @@ from homeassistant.const import (
     EVENT_TIMER_OUT_OF_SYNC,
     LENGTH_METERS,
     MATCH_ALL,
-    MAX_LENGTH_EVENT_TYPE,
+    MAX_LENGTH_EVENT_EVENT_TYPE,
+    MAX_LENGTH_STATE_STATE,
     __version__,
 )
 from homeassistant.exceptions import (
@@ -130,7 +131,7 @@ def valid_entity_id(entity_id: str) -> bool:
 
 def valid_state(state: str) -> bool:
     """Test if a state is valid."""
-    return len(state) < 256
+    return len(state) <= MAX_LENGTH_STATE_STATE
 
 
 def callback(func: CALLABLE_T) -> CALLABLE_T:
@@ -163,7 +164,7 @@ class HassJob:
 
     __slots__ = ("job_type", "target")
 
-    def __init__(self, target: Callable):
+    def __init__(self, target: Callable) -> None:
         """Create a job object."""
         if asyncio.iscoroutine(target):
             raise ValueError("Coroutine not allowed to be passed to HassJob")
@@ -373,8 +374,15 @@ class HomeAssistant:
 
         return task
 
+    def create_task(self, target: Awaitable) -> None:
+        """Add task to the executor pool.
+
+        target: target to call.
+        """
+        self.loop.call_soon_threadsafe(self.async_create_task, target)
+
     @callback
-    def async_create_task(self, target: Coroutine) -> asyncio.tasks.Task:
+    def async_create_task(self, target: Awaitable) -> asyncio.tasks.Task:
         """Create a task from within the eventloop.
 
         This method must be run in the event loop.
@@ -693,8 +701,10 @@ class EventBus:
 
         This method must be run in the event loop.
         """
-        if len(event_type) > MAX_LENGTH_EVENT_TYPE:
-            raise MaxLengthExceeded(event_type, "event_type", MAX_LENGTH_EVENT_TYPE)
+        if len(event_type) > MAX_LENGTH_EVENT_EVENT_TYPE:
+            raise MaxLengthExceeded(
+                event_type, "event_type", MAX_LENGTH_EVENT_EVENT_TYPE
+            )
 
         listeners = self._listeners.get(event_type, [])
 

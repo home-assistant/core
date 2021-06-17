@@ -13,13 +13,13 @@ from homeassistant.components.light import (
     ATTR_COLOR_TEMP,
     ATTR_EFFECT,
     ATTR_RGB_COLOR,
-    ATTR_RGBW_COLOR,
     ATTR_TRANSITION,
+    ATTR_WHITE,
     COLOR_MODE_BRIGHTNESS,
     COLOR_MODE_COLOR_TEMP,
     COLOR_MODE_ONOFF,
     COLOR_MODE_RGB,
-    COLOR_MODE_RGBW,
+    COLOR_MODE_WHITE,
     SUPPORT_EFFECT,
     SUPPORT_TRANSITION,
     LightEntity,
@@ -55,6 +55,22 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
 
+def clamp(value):
+    """Clamp value to the range 0..255."""
+    return min(max(value, 0), 255)
+
+
+def scale_brightness(brightness):
+    """Scale brightness from 0..255 to 1..100."""
+    brightness_normalized = brightness / DEFAULT_BRIGHTNESS_MAX
+    device_brightness = min(
+        round(brightness_normalized * TASMOTA_BRIGHTNESS_MAX),
+        TASMOTA_BRIGHTNESS_MAX,
+    )
+    # Make sure the brightness is not rounded down to 0
+    return max(device_brightness, 1)
+
+
 class TasmotaLight(
     TasmotaAvailability,
     TasmotaDiscoveryUpdate,
@@ -75,7 +91,6 @@ class TasmotaLight(
         self._white_value = None
         self._flash_times = None
         self._rgb = None
-        self._rgbw = None
 
         super().__init__(
             **kwds,
@@ -102,8 +117,7 @@ class TasmotaLight(
             self._color_mode = COLOR_MODE_RGB
 
         if light_type == LIGHT_TYPE_RGBW:
-            self._supported_color_modes.add(COLOR_MODE_RGBW)
-            self._color_mode = COLOR_MODE_RGBW
+            self._supported_color_modes.add(COLOR_MODE_WHITE)
 
         if light_type in [LIGHT_TYPE_COLDWARM, LIGHT_TYPE_RGBCW]:
             self._supported_color_modes.add(COLOR_MODE_COLOR_TEMP)
@@ -136,22 +150,7 @@ class TasmotaLight(
                 percent_bright = brightness / TASMOTA_BRIGHTNESS_MAX
                 self._brightness = percent_bright * 255
             if "color" in attributes:
-
-                def clamp(value):
-                    """Clamp value to the range 0..255."""
-                    return min(max(value, 0), 255)
-
-                rgb = attributes["color"]
-                # Tasmota's RGB color is adjusted for brightness, compensate
-                if self._brightness > 0:
-                    red_compensated = clamp(round(rgb[0] / self._brightness * 255))
-                    green_compensated = clamp(round(rgb[1] / self._brightness * 255))
-                    blue_compensated = clamp(round(rgb[2] / self._brightness * 255))
-                else:
-                    red_compensated = 0
-                    green_compensated = 0
-                    blue_compensated = 0
-                self._rgb = [red_compensated, green_compensated, blue_compensated]
+                self._rgb = attributes["color"][0:3]
             if "color_temp" in attributes:
                 self._color_temp = attributes["color_temp"]
             if "effect" in attributes:
@@ -160,7 +159,13 @@ class TasmotaLight(
                 white_value = float(attributes["white_value"])
                 percent_white = white_value / TASMOTA_BRIGHTNESS_MAX
                 self._white_value = percent_white * 255
-            if self._tasmota_entity.light_type == LIGHT_TYPE_RGBCW:
+            if self._tasmota_entity.light_type == LIGHT_TYPE_RGBW:
+                # Tasmota does not support RGBW mode, set mode to white or rgb
+                if self._white_value == 0:
+                    self._color_mode = COLOR_MODE_RGB
+                else:
+                    self._color_mode = COLOR_MODE_WHITE
+            elif self._tasmota_entity.light_type == LIGHT_TYPE_RGBCW:
                 # Tasmota does not support RGBWW mode, set mode to ct or rgb
                 if self._white_value == 0:
                     self._color_mode = COLOR_MODE_RGB
@@ -207,20 +212,23 @@ class TasmotaLight(
     @property
     def rgb_color(self):
         """Return the rgb color value."""
-        return self._rgb
-
-    @property
-    def rgbw_color(self):
-        """Return the rgbw color value."""
-        if self._rgb is None or self._white_value is None:
+        if self._rgb is None:
             return None
-        return [*self._rgb, self._white_value]
+        rgb = self._rgb
+        # Tasmota's RGB color is adjusted for brightness, compensate
+        if self._brightness > 0:
+            red_compensated = clamp(round(rgb[0] / self._brightness * 255))
+            green_compensated = clamp(round(rgb[1] / self._brightness * 255))
+            blue_compensated = clamp(round(rgb[2] / self._brightness * 255))
+        else:
+            red_compensated = 0
+            green_compensated = 0
+            blue_compensated = 0
+        return [red_compensated, green_compensated, blue_compensated]
 
     @property
     def force_update(self):
         """Force update."""
-        if self.color_mode == COLOR_MODE_RGBW:
-            return True
         return False
 
     @property
@@ -248,33 +256,14 @@ class TasmotaLight(
             rgb = kwargs[ATTR_RGB_COLOR]
             attributes["color"] = [rgb[0], rgb[1], rgb[2]]
 
-        if ATTR_RGBW_COLOR in kwargs and COLOR_MODE_RGBW in supported_color_modes:
-            rgbw = kwargs[ATTR_RGBW_COLOR]
-            # Tasmota does not support direct RGBW control, the light must be set to
-            # either white mode or color mode. Set the mode to white if white channel
-            # is on, and to color otheruse
-            if rgbw[3] == 0:
-                attributes["color"] = [rgbw[0], rgbw[1], rgbw[2]]
-            else:
-                white_value_normalized = rgbw[3] / DEFAULT_BRIGHTNESS_MAX
-                device_white_value = min(
-                    round(white_value_normalized * TASMOTA_BRIGHTNESS_MAX),
-                    TASMOTA_BRIGHTNESS_MAX,
-                )
-                attributes["white_value"] = device_white_value
+        if ATTR_WHITE in kwargs and COLOR_MODE_WHITE in supported_color_modes:
+            attributes["white_value"] = scale_brightness(kwargs[ATTR_WHITE])
 
         if ATTR_TRANSITION in kwargs:
             attributes["transition"] = kwargs[ATTR_TRANSITION]
 
         if ATTR_BRIGHTNESS in kwargs and brightness_supported(supported_color_modes):
-            brightness_normalized = kwargs[ATTR_BRIGHTNESS] / DEFAULT_BRIGHTNESS_MAX
-            device_brightness = min(
-                round(brightness_normalized * TASMOTA_BRIGHTNESS_MAX),
-                TASMOTA_BRIGHTNESS_MAX,
-            )
-            # Make sure the brightness is not rounded down to 0
-            device_brightness = max(device_brightness, 1)
-            attributes["brightness"] = device_brightness
+            attributes["brightness"] = scale_brightness(kwargs[ATTR_BRIGHTNESS])
 
         if ATTR_COLOR_TEMP in kwargs and COLOR_MODE_COLOR_TEMP in supported_color_modes:
             attributes["color_temp"] = int(kwargs[ATTR_COLOR_TEMP])

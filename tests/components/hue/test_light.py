@@ -179,7 +179,6 @@ async def setup_bridge(hass, mock_bridge):
         "Mock Title",
         {"host": "mock-host"},
         "test",
-        system_options={},
     )
     mock_bridge.config_entry = config_entry
     hass.data[hue.DOMAIN] = {config_entry.entry_id: mock_bridge}
@@ -269,6 +268,10 @@ async def test_groups(hass, mock_bridge):
     mock_bridge.allow_groups = True
     mock_bridge.mock_light_responses.append({})
     mock_bridge.mock_group_responses.append(GROUP_RESPONSE)
+    mock_bridge.api.groups._v2_resources = [
+        {"id_v1": "/groups/1", "id": "group-1-mock-id", "type": "room"},
+        {"id_v1": "/groups/2", "id": "group-2-mock-id", "type": "room"},
+    ]
 
     await setup_bridge(hass, mock_bridge)
     assert len(mock_bridge.mock_requests) == 2
@@ -284,6 +287,10 @@ async def test_groups(hass, mock_bridge):
     lamp_2 = hass.states.get("light.group_2")
     assert lamp_2 is not None
     assert lamp_2.state == "on"
+
+    ent_reg = er.async_get(hass)
+    assert ent_reg.async_get("light.group_1").unique_id == "group-1-mock-id"
+    assert ent_reg.async_get("light.group_2").unique_id == "group-2-mock-id"
 
 
 async def test_new_group_discovered(hass, mock_bridge):

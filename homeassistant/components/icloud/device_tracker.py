@@ -61,7 +61,7 @@ def add_entities(account, async_add_entities, tracked):
 class IcloudTrackerEntity(TrackerEntity):
     """Represent a tracked device."""
 
-    def __init__(self, account: IcloudAccount, device: IcloudDevice):
+    def __init__(self, account: IcloudAccount, device: IcloudDevice) -> None:
         """Set up the iCloud tracker entity."""
         self._account = account
         self._device = device

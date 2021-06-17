@@ -32,17 +32,17 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = ["sensor", "binary_sensor"]
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up wiffi from a config entry, config_entry contains data from config entry database."""
-    if not config_entry.update_listeners:
-        config_entry.add_update_listener(async_update_options)
+    if not entry.update_listeners:
+        entry.add_update_listener(async_update_options)
 
     # create api object
     api = WiffiIntegrationApi(hass)
-    api.async_setup(config_entry)
+    api.async_setup(entry)
 
     # store api object
-    hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = api
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = api
 
     try:
         await api.server.start_server()
@@ -50,29 +50,27 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
         if exc.errno != errno.EADDRINUSE:
             _LOGGER.error("Start_server failed, errno: %d", exc.errno)
             return False
-        _LOGGER.error("Port %s already in use", config_entry.data[CONF_PORT])
+        _LOGGER.error("Port %s already in use", entry.data[CONF_PORT])
         raise ConfigEntryNotReady from exc
 
-    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
 
-async def async_update_options(hass: HomeAssistant, config_entry: ConfigEntry):
+async def async_update_options(hass: HomeAssistant, entry: ConfigEntry):
     """Update options."""
-    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
-    api: WiffiIntegrationApi = hass.data[DOMAIN][config_entry.entry_id]
+    api: WiffiIntegrationApi = hass.data[DOMAIN][entry.entry_id]
     await api.server.close_server()
 
-    unload_ok = await hass.config_entries.async_unload_platforms(
-        config_entry, PLATFORMS
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        api = hass.data[DOMAIN].pop(config_entry.entry_id)
+        api = hass.data[DOMAIN].pop(entry.entry_id)
         api.shutdown()
 
     return unload_ok

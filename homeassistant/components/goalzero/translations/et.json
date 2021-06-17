@@ -1,7 +1,9 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Konto on juba seadistatud"
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
+            "invalid_host": "Tundmatu host",
+            "unknown": "Tundmatu viga"
         },
         "error": {
             "cannot_connect": "\u00dchendamine nurjus",
@@ -9,6 +11,10 @@
             "unknown": "Tundmatu viga"
         },
         "step": {
+            "confirm_discovery": {
+                "description": "Soovitatav on DHCP aadressi reserveerimine ruuteris. Kui seda pole seadistatud, v\u00f5ib seade osutuda k\u00e4ttesaamatuks kuni Home Assistant tuvastab uue IP-aadressi. Vaata ruuteri kasutusjuhendit.",
+                "title": "Goal Zero Yeti"
+            },
             "user": {
                 "data": {
                     "host": "",

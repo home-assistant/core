@@ -36,7 +36,7 @@ DEFAULT_CONFIG = {
     "ofln": "Offline",
     "onln": "Online",
     "state": ["OFF", "ON", "TOGGLE", "HOLD"],
-    "sw": "8.4.0.2",
+    "sw": "9.4.0.4",
     "swn": [None, None, None, None, None],
     "t": "tasmota_49A3BC",
     "ft": "%topic%/%prefix%/",

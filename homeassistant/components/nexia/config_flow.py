@@ -1,6 +1,7 @@
 """Config flow for Nexia integration."""
 import logging
 
+from nexia.const import BRAND_ASAIR, BRAND_NEXIA
 from nexia.home import NexiaHome
 from requests.exceptions import ConnectTimeout, HTTPError
 import voluptuous as vol
@@ -8,12 +9,20 @@ import voluptuous as vol
 from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
-from .const import DOMAIN
+from .const import BRAND_ASAIR_NAME, BRAND_NEXIA_NAME, CONF_BRAND, DOMAIN
 from .util import is_invalid_auth_code
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_SCHEMA = vol.Schema({CONF_USERNAME: str, CONF_PASSWORD: str})
+DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_USERNAME): str,
+        vol.Required(CONF_PASSWORD): str,
+        vol.Required(CONF_BRAND, default=BRAND_NEXIA): vol.In(
+            {BRAND_NEXIA: BRAND_NEXIA_NAME, BRAND_ASAIR: BRAND_ASAIR_NAME}
+        ),
+    }
+)
 
 
 async def validate_input(hass: core.HomeAssistant, data):
@@ -27,6 +36,7 @@ async def validate_input(hass: core.HomeAssistant, data):
         nexia_home = NexiaHome(
             username=data[CONF_USERNAME],
             password=data[CONF_PASSWORD],
+            brand=data[CONF_BRAND],
             auto_login=False,
             auto_update=False,
             device_name=hass.config.location_name,

@@ -155,7 +155,7 @@ def update_items(router: KeeneticRouter, async_add_entities, tracked: set[str]):
 class KeeneticTracker(ScannerEntity):
     """Representation of network device."""
 
-    def __init__(self, device: Device, router: KeeneticRouter):
+    def __init__(self, device: Device, router: KeeneticRouter) -> None:
         """Initialize the tracked device."""
         self._device = device
         self._router = router

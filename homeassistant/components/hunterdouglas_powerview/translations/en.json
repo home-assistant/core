@@ -7,6 +7,7 @@
             "cannot_connect": "Failed to connect",
             "unknown": "Unexpected error"
         },
+        "flow_title": "{name} ({host})",
         "step": {
             "link": {
                 "description": "Do you want to setup {name} ({host})?",

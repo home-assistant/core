@@ -1,6 +1,10 @@
 """Commands part of Websocket API."""
+from __future__ import annotations
+
 import asyncio
+from collections.abc import Callable
 import json
+from typing import Any
 
 import voluptuous as vol
 
@@ -8,7 +12,7 @@ from homeassistant.auth.permissions.const import CAT_ENTITIES, POLICY_READ
 from homeassistant.bootstrap import SIGNAL_BOOTSTRAP_INTEGRATONS
 from homeassistant.components.websocket_api.const import ERR_NOT_FOUND
 from homeassistant.const import EVENT_STATE_CHANGED, EVENT_TIME_CHANGED, MATCH_ALL
-from homeassistant.core import callback
+from homeassistant.core import Context, Event, HomeAssistant, callback
 from homeassistant.exceptions import (
     HomeAssistantError,
     ServiceNotFound,
@@ -17,19 +21,25 @@ from homeassistant.exceptions import (
 )
 from homeassistant.helpers import config_validation as cv, entity, template
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.event import TrackTemplate, async_track_template_result
+from homeassistant.helpers.event import (
+    TrackTemplate,
+    TrackTemplateResult,
+    async_track_template_result,
+)
 from homeassistant.helpers.json import ExtendedJSONEncoder
 from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.loader import IntegrationNotFound, async_get_integration
 from homeassistant.setup import DATA_SETUP_TIME, async_get_loaded_integrations
 
 from . import const, decorators, messages
-
-# mypy: allow-untyped-calls, allow-untyped-defs
+from .connection import ActiveConnection
 
 
 @callback
-def async_register_commands(hass, async_reg):
+def async_register_commands(
+    hass: HomeAssistant,
+    async_reg: Callable[[HomeAssistant, const.WebSocketCommandHandler], None],
+) -> None:
     """Register commands."""
     async_reg(hass, handle_call_service)
     async_reg(hass, handle_entity_source)
@@ -49,7 +59,7 @@ def async_register_commands(hass, async_reg):
     async_reg(hass, handle_unsubscribe_events)
 
 
-def pong_message(iden):
+def pong_message(iden: int) -> dict[str, Any]:
     """Return a pong message."""
     return {"id": iden, "type": "pong"}
 
@@ -61,7 +71,9 @@ def pong_message(iden):
         vol.Optional("event_type", default=MATCH_ALL): str,
     }
 )
-def handle_subscribe_events(hass, connection, msg):
+def handle_subscribe_events(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
     """Handle subscribe events command."""
     # Circular dep
     # pylint: disable=import-outside-toplevel
@@ -75,7 +87,7 @@ def handle_subscribe_events(hass, connection, msg):
     if event_type == EVENT_STATE_CHANGED:
 
         @callback
-        def forward_events(event):
+        def forward_events(event: Event) -> None:
             """Forward state changed events to websocket."""
             if not connection.user.permissions.check_entity(
                 event.data["entity_id"], POLICY_READ
@@ -87,7 +99,7 @@ def handle_subscribe_events(hass, connection, msg):
     else:
 
         @callback
-        def forward_events(event):
+        def forward_events(event: Event) -> None:
             """Forward events to websocket."""
             if event.event_type == EVENT_TIME_CHANGED:
                 return
@@ -107,11 +119,13 @@ def handle_subscribe_events(hass, connection, msg):
         vol.Required("type"): "subscribe_bootstrap_integrations",
     }
 )
-def handle_subscribe_bootstrap_integrations(hass, connection, msg):
+def handle_subscribe_bootstrap_integrations(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
     """Handle subscribe bootstrap integrations command."""
 
     @callback
-    def forward_bootstrap_integrations(message):
+    def forward_bootstrap_integrations(message: dict[str, Any]) -> None:
         """Forward bootstrap integrations to websocket."""
         connection.send_message(messages.event_message(msg["id"], message))
 
@@ -129,7 +143,9 @@ def handle_subscribe_bootstrap_integrations(hass, connection, msg):
         vol.Required("subscription"): cv.positive_int,
     }
 )
-def handle_unsubscribe_events(hass, connection, msg):
+def handle_unsubscribe_events(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
     """Handle unsubscribe events command."""
     subscription = msg["subscription"]
 
@@ -154,7 +170,9 @@ def handle_unsubscribe_events(hass, connection, msg):
     }
 )
 @decorators.async_response
-async def handle_call_service(hass, connection, msg):
+async def handle_call_service(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
     """Handle call service command."""
     blocking = True
     # We do not support templates.
@@ -206,7 +224,9 @@ async def handle_call_service(hass, connection, msg):
 
 @callback
 @decorators.websocket_command({vol.Required("type"): "get_states"})
-def handle_get_states(hass, connection, msg):
+def handle_get_states(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
     """Handle get states command."""
     if connection.user.permissions.access_all_entities("read"):
         states = hass.states.async_all()
@@ -223,7 +243,9 @@ def handle_get_states(hass, connection, msg):
 
 @decorators.websocket_command({vol.Required("type"): "get_services"})
 @decorators.async_response
-async def handle_get_services(hass, connection, msg):
+async def handle_get_services(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
     """Handle get services command."""
     descriptions = await async_get_all_descriptions(hass)
     connection.send_message(messages.result_message(msg["id"], descriptions))
@@ -231,14 +253,18 @@ async def handle_get_services(hass, connection, msg):
 
 @callback
 @decorators.websocket_command({vol.Required("type"): "get_config"})
-def handle_get_config(hass, connection, msg):
+def handle_get_config(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
     """Handle get config command."""
     connection.send_message(messages.result_message(msg["id"], hass.config.as_dict()))
 
 
 @decorators.websocket_command({vol.Required("type"): "manifest/list"})
 @decorators.async_response
-async def handle_manifest_list(hass, connection, msg):
+async def handle_manifest_list(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
     """Handle integrations command."""
     loaded_integrations = async_get_loaded_integrations(hass)
     integrations = await asyncio.gather(
@@ -253,7 +279,9 @@ async def handle_manifest_list(hass, connection, msg):
     {vol.Required("type"): "manifest/get", vol.Required("integration"): str}
 )
 @decorators.async_response
-async def handle_manifest_get(hass, connection, msg):
+async def handle_manifest_get(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
     """Handle integrations command."""
     try:
         integration = await async_get_integration(hass, msg["integration"])
@@ -264,7 +292,9 @@ async def handle_manifest_get(hass, connection, msg):
 
 @decorators.websocket_command({vol.Required("type"): "integration/setup_info"})
 @decorators.async_response
-async def handle_integration_setup_info(hass, connection, msg):
+async def handle_integration_setup_info(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
     """Handle integrations command."""
     connection.send_result(
         msg["id"],
@@ -277,7 +307,9 @@ async def handle_integration_setup_info(hass, connection, msg):
 
 @callback
 @decorators.websocket_command({vol.Required("type"): "ping"})
-def handle_ping(hass, connection, msg):
+def handle_ping(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
     """Handle ping command."""
     connection.send_message(pong_message(msg["id"]))
 
@@ -293,10 +325,12 @@ def handle_ping(hass, connection, msg):
     }
 )
 @decorators.async_response
-async def handle_render_template(hass, connection, msg):
+async def handle_render_template(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
     """Handle render_template command."""
     template_str = msg["template"]
-    template_obj = template.Template(template_str, hass)
+    template_obj = template.Template(template_str, hass)  # type: ignore[no-untyped-call]
     variables = msg.get("variables")
     timeout = msg.get("timeout")
     info = None
@@ -319,7 +353,7 @@ async def handle_render_template(hass, connection, msg):
             return
 
     @callback
-    def _template_listener(event, updates):
+    def _template_listener(event: Event, updates: list[TrackTemplateResult]) -> None:
         nonlocal info
         track_template_result = updates.pop()
         result = track_template_result.result
@@ -329,7 +363,7 @@ async def handle_render_template(hass, connection, msg):
 
         connection.send_message(
             messages.event_message(
-                msg["id"], {"result": result, "listeners": info.listeners}  # type: ignore
+                msg["id"], {"result": result, "listeners": info.listeners}  # type: ignore[attr-defined]
             )
         )
 
@@ -356,7 +390,9 @@ async def handle_render_template(hass, connection, msg):
 @decorators.websocket_command(
     {vol.Required("type"): "entity/source", vol.Optional("entity_id"): [cv.entity_id]}
 )
-def handle_entity_source(hass, connection, msg):
+def handle_entity_source(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
     """Handle entity source command."""
     raw_sources = entity.entity_sources(hass)
     entity_perm = connection.user.permissions.check_entity
@@ -395,7 +431,6 @@ def handle_entity_source(hass, connection, msg):
     connection.send_result(msg["id"], sources)
 
 
-@callback
 @decorators.websocket_command(
     {
         vol.Required("type"): "subscribe_trigger",
@@ -405,7 +440,9 @@ def handle_entity_source(hass, connection, msg):
 )
 @decorators.require_admin
 @decorators.async_response
-async def handle_subscribe_trigger(hass, connection, msg):
+async def handle_subscribe_trigger(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
     """Handle subscribe trigger command."""
     # Circular dep
     # pylint: disable=import-outside-toplevel
@@ -414,7 +451,9 @@ async def handle_subscribe_trigger(hass, connection, msg):
     trigger_config = await trigger.async_validate_trigger_config(hass, msg["trigger"])
 
     @callback
-    def forward_triggers(variables, context=None):
+    def forward_triggers(
+        variables: dict[str, Any], context: Context | None = None
+    ) -> None:
         """Forward events to websocket."""
         message = messages.event_message(
             msg["id"], {"variables": variables, "context": context}
@@ -450,7 +489,9 @@ async def handle_subscribe_trigger(hass, connection, msg):
 )
 @decorators.require_admin
 @decorators.async_response
-async def handle_test_condition(hass, connection, msg):
+async def handle_test_condition(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
     """Handle test condition command."""
     # Circular dep
     # pylint: disable=import-outside-toplevel
@@ -471,7 +512,9 @@ async def handle_test_condition(hass, connection, msg):
 )
 @decorators.require_admin
 @decorators.async_response
-async def handle_execute_script(hass, connection, msg):
+async def handle_execute_script(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
     """Handle execute script command."""
     # Circular dep
     # pylint: disable=import-outside-toplevel

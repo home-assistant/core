@@ -1,4 +1,6 @@
 """Support for Fritzbox binary sensors."""
+from __future__ import annotations
+
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_WINDOW,
     BinarySensorEntity,
@@ -21,7 +23,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the FRITZ!SmartHome binary sensor from ConfigEntry."""
-    entities = []
+    entities: list[FritzboxBinarySensor] = []
     coordinator = hass.data[FRITZBOX_DOMAIN][entry.entry_id][CONF_COORDINATOR]
 
     for ain, device in coordinator.data.items():
@@ -48,8 +50,8 @@ class FritzboxBinarySensor(FritzBoxEntity, BinarySensorEntity):
     """Representation of a binary FRITZ!SmartHome device."""
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if sensor is on."""
         if not self.device.present:
             return False
-        return self.device.alert_state
+        return self.device.alert_state  # type: ignore [no-any-return]

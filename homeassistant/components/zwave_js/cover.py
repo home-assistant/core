@@ -9,7 +9,10 @@ from zwave_js_server.model.value import Value as ZwaveValue
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
+    DEVICE_CLASS_BLIND,
     DEVICE_CLASS_GARAGE,
+    DEVICE_CLASS_SHUTTER,
+    DEVICE_CLASS_WINDOW,
     DOMAIN as COVER_DOMAIN,
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
@@ -76,6 +79,22 @@ def percent_to_zwave_position(value: int) -> int:
 class ZWaveCover(ZWaveBaseEntity, CoverEntity):
     """Representation of a Z-Wave Cover device."""
 
+    def __init__(
+        self,
+        config_entry: ConfigEntry,
+        client: ZwaveClient,
+        info: ZwaveDiscoveryInfo,
+    ) -> None:
+        """Initialize a ZWaveCover entity."""
+        super().__init__(config_entry, client, info)
+
+        # Entity class attributes
+        self._attr_device_class = DEVICE_CLASS_WINDOW
+        if self.info.platform_hint == "window_shutter":
+            self._attr_device_class = DEVICE_CLASS_SHUTTER
+        if self.info.platform_hint == "window_blind":
+            self._attr_device_class = DEVICE_CLASS_BLIND
+
     @property
     def is_closed(self) -> bool | None:
         """Return true if cover is closed."""
@@ -122,6 +141,9 @@ class ZWaveCover(ZWaveBaseEntity, CoverEntity):
 class ZwaveMotorizedBarrier(ZWaveBaseEntity, CoverEntity):
     """Representation of a Z-Wave motorized barrier device."""
 
+    _attr_supported_features = SUPPORT_OPEN | SUPPORT_CLOSE
+    _attr_device_class = DEVICE_CLASS_GARAGE
+
     def __init__(
         self,
         config_entry: ConfigEntry,
@@ -133,16 +155,6 @@ class ZwaveMotorizedBarrier(ZWaveBaseEntity, CoverEntity):
         self._target_state: ZwaveValue = self.get_zwave_value(
             "targetState", add_to_watched_value_ids=False
         )
-
-    @property
-    def supported_features(self) -> int | None:
-        """Flag supported features."""
-        return SUPPORT_OPEN | SUPPORT_CLOSE
-
-    @property
-    def device_class(self) -> str | None:
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        return DEVICE_CLASS_GARAGE
 
     @property
     def is_opening(self) -> bool | None:

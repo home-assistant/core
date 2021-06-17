@@ -104,7 +104,7 @@ async def test_purge_old_states_encounters_temporary_mysql_error(
     mysql_exception.orig = MagicMock(args=(1205, "retryable"))
 
     with patch(
-        "homeassistant.components.recorder.purge.time.sleep"
+        "homeassistant.components.recorder.util.time.sleep"
     ) as sleep_mock, patch(
         "homeassistant.components.recorder.purge._purge_old_recorder_runs",
         side_effect=[mysql_exception, None],
@@ -147,7 +147,7 @@ async def test_purge_old_states_encounters_operational_error(
         await async_wait_recording_done_without_instance(hass)
 
     assert "retrying" not in caplog.text
-    assert "Error purging history" in caplog.text
+    assert "Error executing purge" in caplog.text
 
 
 async def test_purge_old_events(
@@ -651,6 +651,122 @@ async def test_purge_filtered_events_state_changed(
         assert session.query(States).get(61).old_state_id is None
         assert session.query(States).get(62).old_state_id is None
         assert session.query(States).get(63).old_state_id == 62  # should have been kept
+
+
+async def test_purge_entities(
+    hass: HomeAssistant, async_setup_recorder_instance: SetupRecorderInstanceT
+):
+    """Test purging of specific entities."""
+    instance = await async_setup_recorder_instance(hass)
+
+    async def _purge_entities(hass, entity_ids, domains, entity_globs):
+        service_data = {
+            "entity_id": entity_ids,
+            "domains": domains,
+            "entity_globs": entity_globs,
+        }
+
+        await hass.services.async_call(
+            recorder.DOMAIN, recorder.SERVICE_PURGE_ENTITIES, service_data
+        )
+        await hass.async_block_till_done()
+
+        await async_recorder_block_till_done(hass, instance)
+        await async_wait_purge_done(hass, instance)
+
+    def _add_purge_records(hass: HomeAssistant) -> None:
+        with recorder.session_scope(hass=hass) as session:
+            # Add states and state_changed events that should be purged
+            for days in range(1, 4):
+                timestamp = dt_util.utcnow() - timedelta(days=days)
+                for event_id in range(1000, 1020):
+                    _add_state_and_state_changed_event(
+                        session,
+                        "sensor.purge_entity",
+                        "purgeme",
+                        timestamp,
+                        event_id * days,
+                    )
+                timestamp = dt_util.utcnow() - timedelta(days=days)
+                for event_id in range(10000, 10020):
+                    _add_state_and_state_changed_event(
+                        session,
+                        "purge_domain.entity",
+                        "purgeme",
+                        timestamp,
+                        event_id * days,
+                    )
+                timestamp = dt_util.utcnow() - timedelta(days=days)
+                for event_id in range(100000, 100020):
+                    _add_state_and_state_changed_event(
+                        session,
+                        "binary_sensor.purge_glob",
+                        "purgeme",
+                        timestamp,
+                        event_id * days,
+                    )
+
+    def _add_keep_records(hass: HomeAssistant) -> None:
+        with recorder.session_scope(hass=hass) as session:
+            # Add states and state_changed events that should be kept
+            timestamp = dt_util.utcnow() - timedelta(days=2)
+            for event_id in range(200, 210):
+                _add_state_and_state_changed_event(
+                    session,
+                    "sensor.keep",
+                    "keep",
+                    timestamp,
+                    event_id,
+                )
+
+    _add_purge_records(hass)
+    _add_keep_records(hass)
+
+    # Confirm standard service call
+    with session_scope(hass=hass) as session:
+        states = session.query(States)
+        assert states.count() == 190
+
+        await _purge_entities(
+            hass, "sensor.purge_entity", "purge_domain", "*purge_glob"
+        )
+        assert states.count() == 10
+
+        states_sensor_kept = session.query(States).filter(
+            States.entity_id == "sensor.keep"
+        )
+        assert states_sensor_kept.count() == 10
+
+    _add_purge_records(hass)
+
+    # Confirm each parameter purges only the associated records
+    with session_scope(hass=hass) as session:
+        states = session.query(States)
+        assert states.count() == 190
+
+        await _purge_entities(hass, "sensor.purge_entity", [], [])
+        assert states.count() == 130
+
+        await _purge_entities(hass, [], "purge_domain", [])
+        assert states.count() == 70
+
+        await _purge_entities(hass, [], [], "*purge_glob")
+        assert states.count() == 10
+
+        states_sensor_kept = session.query(States).filter(
+            States.entity_id == "sensor.keep"
+        )
+        assert states_sensor_kept.count() == 10
+
+    _add_purge_records(hass)
+
+    # Confirm calling service without arguments matches all records (default filter behaviour)
+    with session_scope(hass=hass) as session:
+        states = session.query(States)
+        assert states.count() == 190
+
+        await _purge_entities(hass, [], [], [])
+        assert states.count() == 0
 
 
 async def _add_test_states(hass: HomeAssistant, instance: recorder.Recorder):

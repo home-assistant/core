@@ -41,7 +41,9 @@ async def async_setup_entry(
 class VeraLock(VeraDevice[veraApi.VeraLock], LockEntity):
     """Representation of a Vera lock."""
 
-    def __init__(self, vera_device: veraApi.VeraLock, controller_data: ControllerData):
+    def __init__(
+        self, vera_device: veraApi.VeraLock, controller_data: ControllerData
+    ) -> None:
         """Initialize the Vera device."""
         self._state = None
         VeraDevice.__init__(self, vera_device, controller_data)

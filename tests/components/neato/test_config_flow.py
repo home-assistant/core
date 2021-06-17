@@ -152,6 +152,6 @@ async def test_reauth(
 
     assert result3["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result3["reason"] == "reauth_successful"
-    assert new_entry.state == "loaded"
+    assert new_entry.state == config_entries.ConfigEntryState.LOADED
     assert len(hass.config_entries.async_entries(NEATO_DOMAIN)) == 1
     assert len(mock_setup.mock_calls) == 1

@@ -93,7 +93,7 @@ def _update_query_interval(hass, interval):
         _LOGGER.warning(ex)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Tuya platform."""
 
     tuya = TuyaApi()

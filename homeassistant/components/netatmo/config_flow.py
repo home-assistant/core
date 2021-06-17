@@ -75,7 +75,7 @@ class NetatmoFlowHandler(
 class NetatmoOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle Netatmo options."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry):
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize Netatmo options flow."""
         self.config_entry = config_entry
         self.options = dict(config_entry.options)

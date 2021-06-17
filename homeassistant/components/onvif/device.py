@@ -41,7 +41,7 @@ from .models import PTZ, Capabilities, DeviceInfo, Profile, Resolution, Video
 class ONVIFDevice:
     """Manages an ONVIF device."""
 
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry = None):
+    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry = None) -> None:
         """Initialize the device."""
         self.hass: HomeAssistant = hass
         self.config_entry: ConfigEntry = config_entry
@@ -104,8 +104,11 @@ class ONVIFDevice:
 
             # Fetch basic device info and capabilities
             self.info = await self.async_get_device_info()
+            LOGGER.debug("Camera %s info = %s", self.name, self.info)
             self.capabilities = await self.async_get_capabilities()
+            LOGGER.debug("Camera %s capabilities = %s", self.name, self.capabilities)
             self.profiles = await self.async_get_profiles()
+            LOGGER.debug("Camera %s profiles = %s", self.name, self.profiles)
 
             # No camera profiles to add
             if not self.profiles:
@@ -166,7 +169,9 @@ class ONVIFDevice:
                 cdate = device_time.UTCDateTime
             else:
                 tzone = (
-                    dt_util.get_time_zone(device_time.TimeZone)
+                    dt_util.get_time_zone(
+                        device_time.TimeZone or str(dt_util.DEFAULT_TIME_ZONE)
+                    )
                     or dt_util.DEFAULT_TIME_ZONE
                 )
                 cdate = device_time.LocalDateTime

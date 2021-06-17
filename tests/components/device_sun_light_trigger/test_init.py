@@ -29,7 +29,7 @@ from tests.common import async_fire_time_changed
 
 
 @pytest.fixture
-def scanner(hass):
+def scanner(hass, enable_custom_integrations):
     """Initialize components."""
     scanner = getattr(hass.components, "test.device_tracker").get_scanner(None, None)
 
@@ -100,7 +100,7 @@ async def test_lights_on_when_sun_sets(hass, scanner):
     )
 
 
-async def test_lights_turn_off_when_everyone_leaves(hass):
+async def test_lights_turn_off_when_everyone_leaves(hass, enable_custom_integrations):
     """Test lights turn off when everyone leaves the house."""
     assert await async_setup_component(
         hass, "light", {light.DOMAIN: {CONF_PLATFORM: "test"}}
