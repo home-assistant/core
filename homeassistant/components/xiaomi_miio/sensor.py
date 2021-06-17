@@ -47,7 +47,7 @@ from .const import (
     KEY_DEVICE,
     MODELS_HUMIDIFIER_MIOT,
 )
-from .device import XiaomiMiioEntity
+from .device import XiaomiCoordinatedMiioEntity, XiaomiMiioEntity
 from .gateway import XiaomiGatewayDevice
 
 _LOGGER = logging.getLogger(__name__)
@@ -213,7 +213,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities, update_before_add=True)
 
 
-class XiaomiGenericSensor(XiaomiMiioEntity, SensorEntity):
+class XiaomiGenericSensor(XiaomiCoordinatedMiioEntity, SensorEntity):
     """Representation of a Xiaomi Humidifier sensor."""
 
     def __init__(self, name, device, entry, unique_id, attribute, coordinator):

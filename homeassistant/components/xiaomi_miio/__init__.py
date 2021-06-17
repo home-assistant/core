@@ -97,37 +97,36 @@ def create_miio_device_and_coordinator(
     device = None
     if model not in MODELS_HUMIDIFIER:
         return
+    if model in MODELS_HUMIDIFIER_MIOT:
+        device = AirHumidifierMiot(host, token)
     else:
-        if model in MODELS_HUMIDIFIER_MIOT:
-            device = AirHumidifierMiot(host, token)
-        else:
-            device = AirHumidifier(host, token, model=model)
+        device = AirHumidifier(host, token, model=model)
 
-        async def async_update_data():
-            """Fetch data from the device using async_add_executor_job."""
-            # On state change the device doesn't provide the new state immediately.
-            try:
-                async with async_timeout.timeout(10):
-                    return await hass.async_add_executor_job(device.status)
+    async def async_update_data():
+        """Fetch data from the device using async_add_executor_job."""
+        # On state change the device doesn't provide the new state immediately.
+        try:
+            async with async_timeout.timeout(10):
+                return await hass.async_add_executor_job(device.status)
 
-            except DeviceException as ex:
-                _LOGGER.error("Got exception while fetching the state: %s", ex)
+        except DeviceException as ex:
+            _LOGGER.error("Got exception while fetching the state: %s", ex)
 
-        # Create update miio device and coordinator
-        coordinator = DataUpdateCoordinator(
-            hass,
-            _LOGGER,
-            # Name of the data. For logging purposes.
-            name=name,
-            update_method=async_update_data,
-            # Polling interval. Will only be polled if there are subscribers.
-            update_interval=timedelta(seconds=10),
-        )
+    # Create update miio device and coordinator
+    coordinator = DataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        # Name of the data. For logging purposes.
+        name=name,
+        update_method=async_update_data,
+        # Polling interval. Will only be polled if there are subscribers.
+        update_interval=timedelta(seconds=10),
+    )
 
-        hass.data[DOMAIN][entry.entry_id] = {
-            KEY_DEVICE: device,
-            KEY_COORDINATOR: coordinator,
-        }
+    hass.data[DOMAIN][entry.entry_id] = {
+        KEY_DEVICE: device,
+        KEY_COORDINATOR: coordinator,
+    }
 
 
 async def async_setup_gateway_entry(

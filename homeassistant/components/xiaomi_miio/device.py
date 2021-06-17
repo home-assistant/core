@@ -55,13 +55,11 @@ class ConnectXiaomiDevice:
         return True
 
 
-class XiaomiMiioEntity(CoordinatorEntity, Entity):
+class XiaomiMiioEntity(Entity):
     """Representation of a base Xiaomi Miio Entity."""
 
-    def __init__(self, name, device, entry, unique_id, coordinator=None):
+    def __init__(self, name, device, entry, unique_id):
         """Initialize the Xiaomi Miio Device."""
-        if coordinator:
-            super().__init__(coordinator)
         self._device = device
         self._model = entry.data[CONF_MODEL]
         self._mac = entry.data[CONF_MAC]
@@ -94,6 +92,21 @@ class XiaomiMiioEntity(CoordinatorEntity, Entity):
             device_info["connections"] = {(dr.CONNECTION_NETWORK_MAC, self._mac)}
 
         return device_info
+
+
+class XiaomiCoordinatedMiioEntity(CoordinatorEntity, XiaomiMiioEntity):
+    """Representation of a base a coordinated Xiaomi Miio Entity."""
+
+    def __init__(self, name, device, entry, unique_id, coordinator):
+        """Initialize the coordinated Xiaomi Miio Device."""
+        super().__init__(coordinator)
+        self._device = device
+        self._model = entry.data[CONF_MODEL]
+        self._mac = entry.data[CONF_MAC]
+        self._device_id = entry.unique_id
+        self._unique_id = unique_id
+        self._name = name
+        self._available = None
 
     async def _try_command(self, mask_error, func, *args, **kwargs):
         """Call a miio device command handling error messages."""

@@ -29,7 +29,7 @@ from .const import (
     MODELS_HUMIDIFIER_MIOT,
     SERVICE_SET_TARGET_HUMIDITY,
 )
-from .device import XiaomiMiioEntity
+from .device import XiaomiCoordinatedMiioEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -58,47 +58,49 @@ AVAILABLE_ATTRIBUTES = {
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up the Fan from a config entry."""
+    """Set up the Humidifier from a config entry."""
     entities = []
 
-    if config_entry.data[CONF_FLOW_TYPE] == CONF_DEVICE:
-        if DATA_KEY not in hass.data:
-            hass.data[DATA_KEY] = {}
+    if not config_entry.data[CONF_FLOW_TYPE] == CONF_DEVICE:
+        return
 
-        host = config_entry.data[CONF_HOST]
-        token = config_entry.data[CONF_TOKEN]
-        name = config_entry.title
-        model = config_entry.data[CONF_MODEL]
-        unique_id = config_entry.unique_id
+    if DATA_KEY not in hass.data:
+        hass.data[DATA_KEY] = {}
 
-        _LOGGER.debug("Initializing with host %s (token %s...)", host, token[:5])
+    host = config_entry.data[CONF_HOST]
+    token = config_entry.data[CONF_TOKEN]
+    name = config_entry.title
+    model = config_entry.data[CONF_MODEL]
+    unique_id = config_entry.unique_id
 
-        if model in MODELS_HUMIDIFIER_MIOT:
-            air_humidifier = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
-            entity = XiaomiAirHumidifierMiot(
-                name,
-                air_humidifier,
-                config_entry,
-                unique_id,
-                hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR],
-            )
-        else:
-            air_humidifier = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
-            entity = XiaomiAirHumidifier(
-                name,
-                air_humidifier,
-                config_entry,
-                unique_id,
-                hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR],
-            )
+    _LOGGER.debug("Initializing with host %s (token %s...)", host, token[:5])
 
-        hass.data[DATA_KEY][host] = entity
-        entities.append(entity)
+    if model in MODELS_HUMIDIFIER_MIOT:
+        air_humidifier = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
+        entity = XiaomiAirHumidifierMiot(
+            name,
+            air_humidifier,
+            config_entry,
+            unique_id,
+            hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR],
+        )
+    else:
+        air_humidifier = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
+        entity = XiaomiAirHumidifier(
+            name,
+            air_humidifier,
+            config_entry,
+            unique_id,
+            hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR],
+        )
+
+    hass.data[DATA_KEY][host] = entity
+    entities.append(entity)
 
     async_add_entities(entities, update_before_add=True)
 
 
-class XiaomiGenericHumidifierDevice(XiaomiMiioEntity, HumidifierEntity):
+class XiaomiGenericHumidifierDevice(XiaomiCoordinatedMiioEntity, HumidifierEntity):
     """Representation of a generic Xiaomi humidifier device."""
 
     _attr_device_class = DEVICE_CLASS_HUMIDIFIER
