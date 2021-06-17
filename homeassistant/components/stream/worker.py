@@ -173,7 +173,7 @@ class SegmentBuffer:
             )
         )
         # The next two lines aren't actually needed for the stub part, as the
-        # variables will get immediately reset in reset()
+        # variables will get reset in reset(), but keeping them here is cleaner
         self._memory_file_pos = self._memory_file.tell()
         self._part_start_dts = packet.dts
         self._part_has_keyframe = False
