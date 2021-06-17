@@ -94,20 +94,3 @@ class FliprEntity(CoordinatorEntity):
         }
         self.info_type = info_type
         self.flipr_id = flipr_id
-
-    @property
-    def unique_id(self):
-        """Return a unique id."""
-        return self._unique_id
-
-    @property
-    def device_info(self):
-        """Define device information global to entities."""
-        return {
-            "identifiers": {
-                # Serial numbers are unique identifiers within a specific domain
-                (DOMAIN, self.flipr_id)
-            },
-            "name": NAME,
-            "manufacturer": MANUFACTURER,
-        }
