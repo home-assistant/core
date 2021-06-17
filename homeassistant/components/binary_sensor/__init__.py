@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import final
+from typing import Any, final
 
 import voluptuous as vol
 
@@ -16,9 +16,7 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 )
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.typing import StateType
-
-# mypy: allow-untyped-defs, no-check-untyped-defs
+from homeassistant.helpers.typing import ConfigType, StateType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -129,7 +127,7 @@ DEVICE_CLASSES = [
 DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.In(DEVICE_CLASSES))
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Track states and offer events for binary sensors."""
     component = hass.data[DOMAIN] = EntityComponent(
         logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL
@@ -172,9 +170,9 @@ class BinarySensorEntity(Entity):
 class BinarySensorDevice(BinarySensorEntity):
     """Represent a binary sensor (for backwards compatibility)."""
 
-    def __init_subclass__(cls, **kwargs):
+    def __init_subclass__(cls, **kwargs: Any):
         """Print deprecation warning."""
-        super().__init_subclass__(**kwargs)
+        super().__init_subclass__(**kwargs)  # type: ignore[call-arg]
         _LOGGER.warning(
             "BinarySensorDevice is deprecated, modify %s to extend BinarySensorEntity",
             cls.__name__,
