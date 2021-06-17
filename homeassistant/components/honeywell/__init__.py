@@ -76,13 +76,15 @@ class HoneywellService:
         self._password = password
         self.device = device
 
-    def _retry(self) -> bool:
+    async def _retry(self) -> bool:
         """Recreate a new somecomfort client.
 
         When we got an error, the best way to be sure that the next query
         will succeed, is to recreate a new somecomfort client.
         """
-        self._client = get_somecomfort_client(self._username, self._password)
+        self._client = await self._hass.async_add_executor_job(
+            get_somecomfort_client, self._username, self._password
+        )
 
         if self._client is None:
             return False
@@ -117,8 +119,12 @@ class HoneywellService:
                 retries -= 1
                 if retries == 0:
                     raise exp
-                if not self._retry():
+
+                result = await self._hass.async_add_executor_job(self._retry())
+
+                if not result:
                     raise exp
+
                 _LOGGER.error("SomeComfort update failed, Retrying - Error: %s", exp)
 
         _LOGGER.debug(
