@@ -189,7 +189,7 @@ def _change_work_mode(hass, call):
 @asyncio.coroutine
 def _exec_command(hass, call):
     if "command" not in call.data:
-        _LOGGER.error("No mode in call")
+        _LOGGER.error("No command in call")
         return
     if not ais_global.has_root():
         return
