@@ -55,7 +55,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if errors:
                 return self._show_setup_form(errors)
 
-            # If multiple flipr found (rare case), we concatene the ids to create multiple devices in this configuration.
+            # If multiple flipr found (rare case), we concatenate the ids to create multiple devices in this configuration.
             self._flipr_ids = ",".join(flipr_ids)
 
         # Check if already configured
