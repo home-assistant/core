@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import timedelta
 import functools as ft
 import logging
-from typing import final
+from typing import Any, final
 
 import voluptuous as vol
 
@@ -27,8 +27,7 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 )
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
-
-# mypy: allow-untyped-defs, no-check-untyped-defs
+from homeassistant.helpers.typing import ConfigType, StateType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,7 +48,7 @@ SUPPORT_OPEN = 1
 PROP_TO_ATTR = {"changed_by": ATTR_CHANGED_BY, "code_format": ATTR_CODE_FORMAT}
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Track states and offer events for locks."""
     component = hass.data[DOMAIN] = EntityComponent(
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
@@ -105,33 +104,33 @@ class LockEntity(Entity):
         """Return true if the lock is locked."""
         return self._attr_is_locked
 
-    def lock(self, **kwargs):
+    def lock(self, **kwargs: Any) -> None:
         """Lock the lock."""
         raise NotImplementedError()
 
-    async def async_lock(self, **kwargs):
+    async def async_lock(self, **kwargs: Any) -> None:
         """Lock the lock."""
         await self.hass.async_add_executor_job(ft.partial(self.lock, **kwargs))
 
-    def unlock(self, **kwargs):
+    def unlock(self, **kwargs: Any) -> None:
         """Unlock the lock."""
         raise NotImplementedError()
 
-    async def async_unlock(self, **kwargs):
+    async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the lock."""
         await self.hass.async_add_executor_job(ft.partial(self.unlock, **kwargs))
 
-    def open(self, **kwargs):
+    def open(self, **kwargs: Any) -> None:
         """Open the door latch."""
         raise NotImplementedError()
 
-    async def async_open(self, **kwargs):
+    async def async_open(self, **kwargs: Any) -> None:
         """Open the door latch."""
         await self.hass.async_add_executor_job(ft.partial(self.open, **kwargs))
 
     @final
     @property
-    def state_attributes(self):
+    def state_attributes(self) -> dict[str, StateType]:
         """Return the state attributes."""
         state_attr = {}
         for prop, attr in PROP_TO_ATTR.items():
@@ -153,9 +152,9 @@ class LockEntity(Entity):
 class LockDevice(LockEntity):
     """Representation of a lock (for backwards compatibility)."""
 
-    def __init_subclass__(cls, **kwargs):
+    def __init_subclass__(cls, **kwargs: Any):
         """Print deprecation warning."""
-        super().__init_subclass__(**kwargs)
+        super().__init_subclass__(**kwargs)  # type: ignore[call-arg]
         _LOGGER.warning(
             "LockDevice is deprecated, modify %s to extend LockEntity",
             cls.__name__,
