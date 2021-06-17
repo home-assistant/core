@@ -16,6 +16,7 @@ from homeassistant.const import ELECTRICAL_CURRENT_AMPERE, POWER_WATT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import DiscoveryInfoType, StateType
 
 from .const import DATA_DEVICE, DOMAIN, SIGNAL_SWITCHER_DEVICE_UPDATE
 
