@@ -183,7 +183,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
     def _fmt_dewpoint(self, dewpoint):
         if dewpoint is not None:
             dewpoint = dewpoint - 273.15
-            return self.hass.config.units.temperature(round(dewpoint, 1), TEMP_CELSIUS)
+            return round(self.hass.config.units.temperature(dewpoint, TEMP_CELSIUS), 1)
         return None
 
     @staticmethod
