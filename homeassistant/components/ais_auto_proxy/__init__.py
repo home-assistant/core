@@ -199,7 +199,7 @@ def _init_header(
     # Set X-Forwarded-For
     forward_for = request.headers.get(hdrs.X_FORWARDED_FOR)
     # Ingress information
-    headers[X_INGRESS_PATH] = f"/api/zigbee2mqtt/{token}"
+    headers["X-External-Path"] = f"/api/ais_auto_proxy/{token}"
     connected_ip = ip_address(request.transport.get_extra_info("peername")[0])
     if forward_for:
         forward_for = f"{forward_for}, {connected_ip!s}"
