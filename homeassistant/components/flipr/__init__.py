@@ -64,7 +64,6 @@ class FliprDataUpdateCoordinator(DataUpdateCoordinator):
 
         # Establishes the connection.
         self.client = FliprAPIRestClient(username, password)
-        self.hass = hass
         self.entry = entry
 
         super().__init__(
