@@ -43,13 +43,13 @@ class SegmentBuffer:
         self._sequence = -1
         self._segment_start_dts: int = cast(int, None)
         self._memory_file: BytesIO = cast(BytesIO, None)
+        self._memory_file_pos: int = cast(int, None)
         self._av_output: av.container.OutputContainer = None
         self._input_video_stream: av.video.VideoStream = None
         self._input_audio_stream: Any | None = None  # av.audio.AudioStream | None
         self._output_video_stream: av.video.VideoStream = None
         self._output_audio_stream: Any | None = None  # av.audio.AudioStream | None
         self._segment: Segment | None = None
-        self._segment_last_write_pos: int = cast(int, None)
         self._part_start_dts: int = cast(int, None)
         self._part_has_keyframe = False
 
@@ -95,8 +95,8 @@ class SegmentBuffer:
         self._sequence += 1
         self._segment_start_dts = self._part_start_dts = video_dts
         self._segment = None
-        self._segment_last_write_pos = 0
         self._memory_file = BytesIO()
+        self._memory_file_pos = 0
         self._av_output = self.make_new_av(
             memory_file=self._memory_file,
             sequence=self._sequence,
@@ -144,7 +144,7 @@ class SegmentBuffer:
     def check_flush_part(self, packet: av.Packet) -> None:
         """Check for and mark a part segment boundary and record its duration."""
         byte_position = self._memory_file.tell()
-        if self._segment_last_write_pos == byte_position:
+        if self._memory_file_pos == byte_position:
             return
         if self._segment is None:
             # We have our first non-zero byte position. This means the init has just
@@ -154,7 +154,7 @@ class SegmentBuffer:
                 stream_id=self._stream_id,
                 init=self._memory_file.getvalue(),
             )
-            self._segment_last_write_pos = byte_position
+            self._memory_file_pos = byte_position
             # Fetch the latest StreamOutputs, which may have changed since the
             # worker started.
             for stream_output in self._outputs_callback().values():
@@ -164,7 +164,7 @@ class SegmentBuffer:
             # We could put the next two lines in self.flush_part, but they are
             # already done by reset() in the case of flushing the stub part,
             # so doing it here avoids doing it twice for the stub part.
-            self._segment_last_write_pos = byte_position
+            self._memory_file_pos = self._memory_file.tell()
             self._part_start_dts = packet.dts
 
     def flush_part(self, packet: av.Packet) -> None:
@@ -174,9 +174,7 @@ class SegmentBuffer:
             Part(
                 duration=float((packet.dts - self._part_start_dts) * packet.time_base),
                 has_keyframe=self._part_has_keyframe,
-                data=self._memory_file.getbuffer()[
-                    self._segment_last_write_pos :
-                ].tobytes(),
+                data=self._memory_file.getbuffer()[self._memory_file_pos :].tobytes(),
             )
         )
         self._part_has_keyframe = False
