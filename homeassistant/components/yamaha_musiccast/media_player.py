@@ -602,7 +602,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
                 return server.musiccast_group
 
             return [self]
-        elif not self.is_server:
+        if not self.is_server:
             return [self]
         entities = self.get_all_mc_entities()
         clients = [entity for entity in entities if entity.is_part_of_group(self)]
@@ -722,11 +722,9 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
                 await self.async_select_source(ATTR_MAIN_SYNC)
                 server.async_write_ha_state()
                 return
-            else:
-                # It is not possible to join a group hosted by zone2 from main zone.
-                raise Exception(
-                    "Can not join a zone other than main of the same device."
-                )
+
+            # It is not possible to join a group hosted by zone2 from main zone.
+            raise Exception("Can not join a zone other than main of the same device.")
 
         if self.musiccast_zone_entity.is_server:
             # If one of the zones of the device is a server, we need to unjoin first.
@@ -742,12 +740,12 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
             if self.coordinator.data.group_id == server.coordinator.data.group_id:
                 _LOGGER.warning("%s is already part of the group", self.entity_id)
                 return
-            else:
-                _LOGGER.info(
-                    "%s is client in a different group, will unjoin first",
-                    self.entity_id,
-                )
-                await self.async_client_leave_group()
+
+            _LOGGER.info(
+                "%s is client in a different group, will unjoin first",
+                self.entity_id,
+            )
+            await self.async_client_leave_group()
 
         elif (
             self.ip_address in server.coordinator.data.group_client_list
@@ -782,6 +780,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
             or len(
                 [entity for entity in self.other_zones if entity.source == ATTR_MC_LINK]
             )
+            > 0
         ):
             # If we are only syncing to main or another zone is also using the musiccast module as client, don't
             # kill the client session, just select a dummy source.
@@ -829,7 +828,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
                 # The client is no longer part of the group. Prepare removal.
                 client_ips_for_removal.append(expected_client_ip)
 
-        if len(client_ips_for_removal):
+        if len(client_ips_for_removal) > 0:
             _LOGGER.info(
                 "%s says good bye to the following members %s",
                 self.entity_id,
