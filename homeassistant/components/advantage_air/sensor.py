@@ -153,6 +153,11 @@ class AdvantageAirZoneTemp(AdvantageAirEntity, SensorEntity):
     _attr_unit_of_measurement = TEMP_CELSIUS
 
     @property
+    def entity_registry_enabled_default(self):
+        """Disable this sensor by default."""
+        return False
+
+    @property
     def name(self):
         """Return the name."""
         return f'{self._zone["name"]} Temperature'
