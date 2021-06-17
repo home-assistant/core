@@ -43,9 +43,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_auth"
                 return self._show_setup_form(errors)
             except (Timeout, ConnectionError):
-                errors = {}
                 errors["base"] = "cannot_connect"
-                return self._show_setup_form(errors)
             except Exception as exception:  # pylint: disable=broad-except
                 errors = {}
                 errors["base"] = "unknown"
