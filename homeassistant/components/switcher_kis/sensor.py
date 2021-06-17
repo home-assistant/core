@@ -71,16 +71,14 @@ async def async_setup_platform(
     hass: HomeAssistant,
     config: dict,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: dict,
+    discovery_info: DiscoveryInfoType,
 ) -> None:
     """Set up Switcher sensor from config entry."""
     device_data = hass.data[DOMAIN][DATA_DEVICE]
 
     async_add_entities(
-        [
-            SwitcherSensorEntity(device_data, attribute, SENSORS[attribute])
-            for attribute in SENSORS
-        ]
+        SwitcherSensorEntity(device_data, attribute, SENSORS[attribute])
+        for attribute in SENSORS
     )
 
 
@@ -109,7 +107,7 @@ class SwitcherSensorEntity(SensorEntity):
         self._attr_unique_id = f"{self._device_data.device_id}-{self._device_data.mac_addr}-{self.attribute}"
 
     @property
-    def state(self):
+    def state(self) -> StateType:
         """Return value of sensor."""
         value = getattr(self._device_data, self.attribute)
         if value and value is not WAITING_TEXT:
