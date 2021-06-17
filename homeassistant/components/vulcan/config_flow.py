@@ -141,13 +141,14 @@ class VulcanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_select_saved_credentials(self, user_input=None):
+    async def async_step_select_saved_credentials(self, user_input=None, errors=None):
         """Allow user to select saved credentials."""
+        if errors is None:
+            errors = {}
         credentials_list = {}
         for entry in self.hass.config_entries.async_entries(DOMAIN):
             credentials_list[entry.entry_id] = entry.data.get("account")["UserName"]
 
-        errors = {}
         if user_input is not None:
             entry = self.hass.config_entries.async_get_entry(user_input["credentials"])
             keystore = Keystore.load(entry.data.get("keystore"))
@@ -164,7 +165,9 @@ class VulcanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 return await self.async_step_auth(errors={"base": "unknown"})
             except ClientConnectionError as err:
                 _LOGGER.error("Connection error: %s", err)
-                return await self.async_step_auth(errors={"base": "cannot_connect"})
+                return await self.async_step_select_saved_credentials(
+                    errors={"base": "cannot_connect"}
+                )
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 return await self.async_step_auth(errors={"base": "unknown"})
