@@ -290,8 +290,7 @@ class EzvizCamera(CoordinatorEntity, Camera, RestoreEntity):
             self.coordinator.ezviz_client.set_camera_defence(self._serial, 1)
 
         except InvalidHost as err:
-            _LOGGER.error("Error enabling motion detection")
-            raise InvalidHost from err
+            raise InvalidHost("Error enabling motion detection") from err
 
     def disable_motion_detection(self):
         """Disable motion detection."""
@@ -299,8 +298,7 @@ class EzvizCamera(CoordinatorEntity, Camera, RestoreEntity):
             self.coordinator.ezviz_client.set_camera_defence(self._serial, 0)
 
         except InvalidHost as err:
-            _LOGGER.error("Error disabling motion detection")
-            raise InvalidHost from err
+            raise InvalidHost("Error disabling motion detection") from err
 
     @property
     def unique_id(self):
@@ -354,32 +352,30 @@ class EzvizCamera(CoordinatorEntity, Camera, RestoreEntity):
             )
 
         except HTTPError as err:
-            _LOGGER.error("Cannot perform PTZ")
-            raise HTTPError from err
+            raise HTTPError("Cannot perform PTZ") from err
 
     def perform_sound_alarm(self, enable):
         """Sound the alarm on a camera."""
         try:
             self.coordinator.ezviz_client.sound_alarm(self._serial, enable)
         except HTTPError as err:
-            _LOGGER.debug("Cannot sound alarm")
-            raise HTTPError from err
+            raise HTTPError("Cannot sound alarm") from err
 
     def perform_wake_device(self):
         """Basically wakes the camera by querying the device."""
         try:
             self.coordinator.ezviz_client.get_detection_sensibility(self._serial)
         except (HTTPError, PyEzvizError) as err:
-            _LOGGER.error("Cannot wake device")
-            raise PyEzvizError from err
+            raise PyEzvizError("Cannot wake device") from err
 
     def perform_alarm_sound(self, level):
         """Enable/Disable movement sound alarm."""
         try:
             self.coordinator.ezviz_client.alarm_sound(self._serial, level, 1)
         except HTTPError as err:
-            _LOGGER.error("Cannot set alarm sound level for on movement detected")
-            raise HTTPError from err
+            raise HTTPError(
+                "Cannot set alarm sound level for on movement detected"
+            ) from err
 
     def perform_set_alarm_detection_sensibility(self, level, type_value):
         """Set camera detection sensibility level service."""
@@ -388,5 +384,4 @@ class EzvizCamera(CoordinatorEntity, Camera, RestoreEntity):
                 self._serial, level, type_value
             )
         except (HTTPError, PyEzvizError) as err:
-            _LOGGER.error("Cannot set detection sensitivity level")
-            raise PyEzvizError from err
+            raise PyEzvizError("Cannot set detection sensitivity level") from err
