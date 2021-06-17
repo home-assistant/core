@@ -21,10 +21,6 @@ PLATFORMS = ["climate"]
 UPDATE_INTERVAL = timedelta(seconds=60)
 
 
-class CannotConnect(exceptions.HomeAssistantError):
-    """Error to indicate we cannot connect."""
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up a config entry."""
     base = Alpha2Base(entry.data["host"])
