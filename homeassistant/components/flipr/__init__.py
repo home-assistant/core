@@ -86,7 +86,12 @@ class FliprEntity(CoordinatorEntity):
     def __init__(self, coordinator, flipr_id, info_type):
         """Initialize Flipr sensor."""
         super().__init__(coordinator)
-        self._unique_id = f"{flipr_id}-{info_type}"
+        self._attr_unique_id = f"{flipr_id}-{info_type}"
+        self._attr_device_info = {
+            "identifiers": {(DOMAIN, flipr_id)},
+            "name": NAME,
+            "manufacturer": MANUFACTURER,
+        }
         self.info_type = info_type
         self.flipr_id = flipr_id
 
