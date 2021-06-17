@@ -37,7 +37,7 @@ async def test_sensors(hass: HomeAssistant) -> None:
         data={
             CONF_EMAIL: "toto@toto.com",
             CONF_PASSWORD: "myPassword",
-            CONF_FLIPR_IDS: "myfliprid",
+            CONF_FLIPR_IDS: ["myfliprid"],
         },
     )
 

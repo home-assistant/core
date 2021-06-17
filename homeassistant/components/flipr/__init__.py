@@ -28,9 +28,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data.setdefault(DOMAIN, {})
 
-    flipr_ids = entry.data[CONF_FLIPR_IDS].split(",")
+    flipr_ids = entry.data[CONF_FLIPR_IDS]
 
     # Create all flipr_ids coordinators & devices present in the ConfigEntry
+    hass.data[DOMAIN][entry.entry_id] = {}
     for flipr_id in flipr_ids:
         coordinator = FliprDataUpdateCoordinator(hass, entry, flipr_id)
         await coordinator.async_config_entry_first_refresh()

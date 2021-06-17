@@ -41,10 +41,10 @@ SENSORS = {
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Defer sensor setup to the shared sensor module."""
-    flipr_ids = config_entry.data[CONF_FLIPR_IDS].split(",")
+    flipr_ids = config_entry.data[CONF_FLIPR_IDS]
 
     for flipr_id in flipr_ids:
-        coordinator = hass.data[DOMAIN][config_entry.entry_id + flipr_id]
+        coordinator = hass.data[DOMAIN][config_entry.entry_id][flipr_id]
 
         sensors_list = []
         for sensor in SENSORS:

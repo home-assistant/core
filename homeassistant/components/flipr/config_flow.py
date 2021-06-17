@@ -1,6 +1,6 @@
 """Config flow for Flipr integration."""
 import logging
-from typing import List
+from typing import List, Union
 
 from flipr_api import FliprAPIRestClient
 from requests.exceptions import HTTPError, Timeout
@@ -9,8 +9,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 
-from .const import CONF_FLIPR_IDS
-from .const import DOMAIN
+from .const import CONF_FLIPR_IDS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,9 +19,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    _username: str | None = None
-    _password: str | None = None
-    _flipr_ids: str | None = None
+    _username: Union[str, None] = None
+    _password: Union[str, None] = None
+    _flipr_ids: Union[List[str], None] = None
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
@@ -44,15 +43,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
                 _LOGGER.exception(exception)
 
-            if len(flipr_ids) == 0:
+            if not errors and len(flipr_ids) == 0:
                 # No flipr_id found. Tell the user with an error message.
                 errors["base"] = "no_flipr_id_found"
 
             if errors:
                 return self._show_setup_form(errors)
 
-            # If multiple flipr found (rare case), we concatenate the ids to create multiple devices in this configuration.
-            self._flipr_ids = ",".join(flipr_ids)
+            # If multiple flipr found (rare case), we store the ids list to create multiple devices in this configuration.
+            self._flipr_ids = flipr_ids
 
         # Check if already configured
         await self.async_set_unique_id(self._flipr_ids)
