@@ -13,6 +13,7 @@ def ecobee_fixture():
     """Set up ecobee mock."""
     vals = {
         "name": "Ecobee",
+        "modelNumber": "athenaSmart",
         "program": {
             "climates": [
                 {"name": "Climate1", "climateRef": "c1"},
@@ -64,7 +65,8 @@ def data_fixture(ecobee_fixture):
 @pytest.fixture(name="thermostat")
 def thermostat_fixture(data):
     """Set up ecobee thermostat object."""
-    return ecobee.Thermostat(data, 1)
+    thermostat = data.ecobee.get_thermostat(1)
+    return ecobee.Thermostat(data, 1, thermostat)
 
 
 async def test_name(thermostat):
