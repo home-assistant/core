@@ -105,7 +105,9 @@ async def async_setup_entry(
             )
         )
 
-    # Accumulated DC power
+    # Accumulated PV-DC power: The inverter does not provide a sum
+    # of all power of the PV strings. Hence a PlenticoreComputedSensor
+    # is used to provide this information from each existing PV string.
     dc_inputs = list(
         filter(
             lambda module_data_id: module_data_id[0] in available_process_data
@@ -117,24 +119,25 @@ async def async_setup_entry(
             ],
         )
     )
-    entities.append(
-        PlenticoreComputedSensor(
-            process_data_update_coordinator,
-            entry.entry_id,
-            entry.title,
-            dc_inputs,
-            "DC Sum Power",
-            {
-                ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
-                ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER,
-            },
-            plenticore.device_info,
-            lambda powers: PlenticoreDataFormatter.format_round(
-                sum(float(power) for power in powers)
-            ),
-            "dc_sum_power",
+    if dc_inputs:
+        entities.append(
+            PlenticoreComputedSensor(
+                process_data_update_coordinator,
+                entry.entry_id,
+                entry.title,
+                dc_inputs,
+                "DC Sum Power",
+                {
+                    ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
+                    ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER,
+                },
+                plenticore.device_info,
+                lambda powers: PlenticoreDataFormatter.format_round(
+                    sum(float(power) for power in powers)
+                ),
+                "dc_sum_power",
+            )
         )
-    )
 
     async_add_entities(entities)
 
@@ -235,7 +238,11 @@ class PlenticoreDataSensor(CoordinatorEntity, SensorEntity):
 
 
 class PlenticoreComputedSensor(CoordinatorEntity, SensorEntity):
-    """A sensor for computed values."""
+    """A sensor for computed values.
+
+    The callable computation is called with all values of module_data_ids and
+    returns a new value of this SensorEntity.
+    """
 
     def __init__(
         self,
