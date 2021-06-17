@@ -160,14 +160,14 @@ class SegmentBuffer:
             for stream_output in self._outputs_callback().values():
                 stream_output.put(self._segment)
         else:  # These are the ends of the part segments
-            self.flush_part(packet, byte_position)
+            self.flush_part(packet)
             # We could put the next two lines in self.flush_part, but they are
             # already done by reset() in the case of flushing the stub part,
             # so doing it here avoids doing it twice for the stub part.
             self._segment_last_write_pos = byte_position
             self._part_start_dts = packet.dts
 
-    def flush_part(self, packet: av.Packet, file_pos: int) -> None:
+    def flush_part(self, packet: av.Packet) -> None:
         """Output a part from the most recent bytes in the memory_file."""
         assert self._segment
         self._segment.parts.append(
@@ -175,7 +175,7 @@ class SegmentBuffer:
                 duration=float((packet.dts - self._part_start_dts) * packet.time_base),
                 has_keyframe=self._part_has_keyframe,
                 data=self._memory_file.getbuffer()[
-                    self._segment_last_write_pos : file_pos
+                    self._segment_last_write_pos :
                 ].tobytes(),
             )
         )
@@ -186,7 +186,7 @@ class SegmentBuffer:
         # Closing the av_output will write the remaining buffered data to the
         # memory_file as a new moof/mdat.
         self._av_output.close()
-        self.flush_part(packet, self._memory_file.tell())
+        self.flush_part(packet)
         self._memory_file.close()  # We don't need the BytesIO object anymore
         assert self._segment
         self._segment.duration = float(duration)
