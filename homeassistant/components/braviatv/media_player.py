@@ -220,10 +220,6 @@ class BraviaTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
         """Set the input source."""
         await self.coordinator.async_select_source(source)
 
-    async def async_media_play_pause(self):
-        """Send play/pause command."""
-        await self.coordinator.async_media_play_pause()
-
     async def async_media_play(self):
         """Send play command."""
         await self.coordinator.async_media_play()

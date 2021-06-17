@@ -113,6 +113,12 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
             ),
         )
 
+    def _send_command(self, command, repeats=1):
+        """Send a command to the TV."""
+        for _ in range(repeats):
+            for cmd in command:
+                self.braviarc.send_command(cmd)
+
     def _get_source(self):
         """Return the name of the source."""
         for key, value in self.content_mapping.items():
@@ -251,13 +257,6 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
             self.playing = False
             await self.async_request_refresh()
 
-    async def async_media_play_pause(self):
-        """Simulate play/pause command."""
-        if self.playing:
-            await self.async_media_pause()
-        else:
-            await self.async_media_play()
-
     async def async_media_next_track(self):
         """Send next track command."""
         async with self.state_lock:
@@ -278,12 +277,8 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
                 await self.hass.async_add_executor_job(self.braviarc.play_content, uri)
                 await self.async_request_refresh()
 
-    async def async_send_command(self, command, repeats=1):
+    async def async_send_command(self, command, repeats):
         """Send command to device."""
         async with self.state_lock:
-            for _ in range(repeats):
-                for cmd in command:
-                    await self.hass.async_add_executor_job(
-                        self.braviarc.send_command, cmd
-                    )
+            await self.hass.async_add_executor_job(self._send_command, command, repeats)
             await self.async_request_refresh()
