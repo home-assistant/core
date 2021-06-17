@@ -45,10 +45,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except (Timeout, ConnectionError):
                 errors["base"] = "cannot_connect"
             except Exception as exception:  # pylint: disable=broad-except
-                errors = {}
                 errors["base"] = "unknown"
                 _LOGGER.exception(exception)
-                return self._show_setup_form(errors)
 
             if len(flipr_ids) == 0:
                 # No flipr_id found. Tell the user with an error message.
