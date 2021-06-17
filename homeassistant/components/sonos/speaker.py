@@ -16,6 +16,7 @@ from pysonos.data_structures import DidlAudioBroadcast, DidlPlaylistContainer
 from pysonos.events_base import Event as SonosEvent, SubscriptionBase
 from pysonos.exceptions import SoCoException
 from pysonos.music_library import MusicLibrary
+from pysonos.plugins.sharelink import ShareLinkPlugin
 from pysonos.snapshot import Snapshot
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
@@ -147,6 +148,7 @@ class SonosSpeaker:
         self.soco = soco
         self.household_id: str = soco.household_id
         self.media = SonosMedia(soco)
+        self._share_link_plugin: ShareLinkPlugin | None = None
 
         # Synchronization helpers
         self._is_ready: bool = False
@@ -291,6 +293,13 @@ class SonosSpeaker:
     def is_coordinator(self) -> bool:
         """Return true if player is a coordinator."""
         return self.coordinator is None
+
+    @property
+    def share_link(self) -> ShareLinkPlugin:
+        """Cache the ShareLinkPlugin instance for this speaker."""
+        if not self._share_link_plugin:
+            self._share_link_plugin = ShareLinkPlugin(self.soco)
+        return self._share_link_plugin
 
     @property
     def subscription_address(self) -> str | None:
@@ -476,6 +485,8 @@ class SonosSpeaker:
         self, now: datetime.datetime | None = None, will_reconnect: bool = False
     ) -> None:
         """Make this player unavailable when it was not seen recently."""
+        self._share_link_plugin = None
+
         if self._seen_timer:
             self._seen_timer()
             self._seen_timer = None
