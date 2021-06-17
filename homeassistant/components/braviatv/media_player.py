@@ -36,8 +36,8 @@ from homeassistant.util.json import load_json
 
 from .const import (
     ATTR_MANUFACTURER,
-    BRAVIA_CLIENT,
     BRAVIA_CONFIG_FILE,
+    BRAVIA_COORDINATOR,
     DEFAULT_NAME,
     DOMAIN,
 )
@@ -99,7 +99,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Bravia TV Media Player from a config_entry."""
 
-    client = hass.data[DOMAIN][config_entry.entry_id][BRAVIA_CLIENT]
+    coordinator = hass.data[DOMAIN][config_entry.entry_id][BRAVIA_COORDINATOR]
     unique_id = config_entry.unique_id
     device_info = {
         "identifiers": {(DOMAIN, unique_id)},
@@ -109,7 +109,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     }
 
     async_add_entities(
-        [BraviaTVMediaPlayer(client, DEFAULT_NAME, unique_id, device_info)]
+        [BraviaTVMediaPlayer(coordinator, DEFAULT_NAME, unique_id, device_info)]
     )
 
 
@@ -117,16 +117,17 @@ class BraviaTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
     """Representation of a Bravia TV Media Player."""
 
     _attr_device_class = DEVICE_CLASS_TV
+    _attr_supported_features = SUPPORT_BRAVIA
 
-    def __init__(self, client, name, unique_id, device_info):
+    def __init__(self, coordinator, name, unique_id, device_info):
         """Initialize the entity."""
 
         self._name = name
-        self._client = client
+        self._coordinator = coordinator
         self._unique_id = unique_id
         self._device_info = device_info
 
-        super().__init__(client)
+        super().__init__(coordinator)
 
     @property
     def name(self):
@@ -146,105 +147,100 @@ class BraviaTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
     @property
     def state(self):
         """Return the state of the device."""
-        if self._client.is_on:
-            return STATE_PLAYING if self._client.playing else STATE_PAUSED
+        if self._coordinator.is_on:
+            return STATE_PLAYING if self._coordinator.playing else STATE_PAUSED
         return STATE_OFF
 
     @property
     def source(self):
         """Return the current input source."""
-        return self._client.source
+        return self._coordinator.source
 
     @property
     def source_list(self):
         """List of available input sources."""
-        return self._client.source_list
+        return self._coordinator.source_list
 
     @property
     def volume_level(self):
         """Volume level of the media player (0..1)."""
-        if self._client.volume is not None:
-            return self._client.volume / 100
+        if self._coordinator.volume is not None:
+            return self._coordinator.volume / 100
         return None
 
     @property
     def is_volume_muted(self):
         """Boolean if volume is currently muted."""
-        return self._client.muted
-
-    @property
-    def supported_features(self):
-        """Flag media player features that are supported."""
-        return SUPPORT_BRAVIA
+        return self._coordinator.muted
 
     @property
     def media_title(self):
         """Title of current playing media."""
         return_value = None
-        if self._client.channel_name is not None:
-            return_value = self._client.channel_name
-            if self._client.program_name is not None:
-                return_value = f"{return_value}: {self._client.program_name}"
+        if self._coordinator.channel_name is not None:
+            return_value = self._coordinator.channel_name
+            if self._coordinator.program_name is not None:
+                return_value = f"{return_value}: {self._coordinator.program_name}"
         return return_value
 
     @property
     def media_content_id(self):
         """Content ID of current playing media."""
-        return self._client.channel_name
+        return self._coordinator.channel_name
 
     @property
     def media_duration(self):
         """Duration of current playing media in seconds."""
-        return self._client.duration
+        return self._coordinator.duration
 
     async def async_turn_on(self):
         """Turn the device on."""
-        await self._client.async_turn_on()
+        await self._coordinator.async_turn_on()
 
     async def async_turn_off(self):
         """Turn the device off."""
-        await self._client.async_turn_off()
+        await self._coordinator.async_turn_off()
 
     async def async_set_volume_level(self, volume):
         """Set volume level, range 0..1."""
-        await self._client.async_set_volume_level(volume)
+        await self._coordinator.async_set_volume_level(volume)
 
     async def async_volume_up(self):
         """Send volume up command."""
-        await self._client.async_volume_up()
+        await self._coordinator.async_volume_up()
 
     async def async_volume_down(self):
         """Send volume down command."""
-        await self._client.async_volume_down()
+        await self._coordinator.async_volume_down()
 
     async def async_mute_volume(self, mute):
         """Send mute command."""
-        await self._client.async_volume_mute(mute)
+        await self._coordinator.async_volume_mute(mute)
 
     async def async_select_source(self, source):
         """Set the input source."""
-        await self._client.async_select_source(source)
+        await self._coordinator.async_select_source(source)
 
     async def async_media_play_pause(self):
         """Send play/pause command."""
-        await self._client.async_media_play_pause()
+        await self._coordinator.async_media_play_pause()
 
     async def async_media_play(self):
         """Send play command."""
-        await self._client.async_media_play()
+        await self._coordinator.async_media_play()
 
     async def async_media_pause(self):
         """Send pause command."""
-        await self._client.async_media_pause()
+        await self._coordinator.async_media_pause()
 
     async def async_media_stop(self):
         """Send media stop command to media player."""
-        await self._client.async_media_stop()
+        await self._coordinator.async_media_stop()
 
     async def async_media_next_track(self):
         """Send next track command."""
-        await self._client.async_media_next_track()
+        await self._coordinator.async_media_next_track()
 
     async def async_media_previous_track(self):
         """Send previous track command."""
-        await self._client.async_media_previous_track()
+        await self._coordinator.async_media_previous_track()

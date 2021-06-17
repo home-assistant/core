@@ -13,7 +13,7 @@ from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
-    BRAVIA_CLIENT,
+    BRAVIA_COORDINATOR,
     CLIENTID_PREFIX,
     CONF_IGNORED_SOURCES,
     DOMAIN,
@@ -34,14 +34,14 @@ async def async_setup_entry(hass, config_entry):
     pin = config_entry.data[CONF_PIN]
     ignored_sources = config_entry.options.get(CONF_IGNORED_SOURCES, [])
 
-    client = BraviaTVClient(hass, host, mac, pin, ignored_sources)
+    coordinator = BraviaTVCoordinator(hass, host, mac, pin, ignored_sources)
     undo_listener = config_entry.add_update_listener(update_listener)
 
-    await client.async_refresh()
+    await coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][config_entry.entry_id] = {
-        BRAVIA_CLIENT: client,
+        BRAVIA_COORDINATOR: coordinator,
         UNDO_UPDATE_LISTENER: undo_listener,
     }
 
@@ -69,8 +69,8 @@ async def update_listener(hass, config_entry):
     await hass.config_entries.async_reload(config_entry.entry_id)
 
 
-class BraviaTVClient(DataUpdateCoordinator[None]):
-    """Representation of a Bravia TV Client.
+class BraviaTVCoordinator(DataUpdateCoordinator[None]):
+    """Representation of a Bravia TV Coordinator.
 
     An instance is used per device to share the same power state between
     several platforms.
@@ -79,7 +79,6 @@ class BraviaTVClient(DataUpdateCoordinator[None]):
     def __init__(self, hass, host, mac, pin, ignored_sources):
         """Initialize Bravia TV Client."""
 
-        self.hass = hass
         self.braviarc = BraviaRC(host, mac)
         self.pin = pin
         self.ignored_sources = ignored_sources
@@ -114,21 +113,15 @@ class BraviaTVClient(DataUpdateCoordinator[None]):
             ),
         )
 
-    def get_braviarc(self):
-        """Return BraviaRC instance."""
-        return self.braviarc
-
     def _get_source(self):
         """Return the name of the source."""
         for key, value in self.content_mapping.items():
             if value == self.content_uri:
                 return key
 
-    async def _async_refresh_volume(self):
+    def _refresh_volume(self):
         """Refresh volume information."""
-        volume_info = await self.hass.async_add_executor_job(
-            self.braviarc.get_volume_info, self.audio_output
-        )
+        volume_info = self.braviarc.get_volume_info(self.audio_output)
         if volume_info is not None:
             self.audio_output = volume_info.get("target")
             self.volume = volume_info.get("volume")
@@ -138,12 +131,10 @@ class BraviaTVClient(DataUpdateCoordinator[None]):
             return True
         return False
 
-    async def _async_refresh_channels(self):
+    def _refresh_channels(self):
         """Refresh source and channels list."""
         if not self.source_list:
-            self.content_mapping = await self.hass.async_add_executor_job(
-                self.braviarc.load_source_list
-            )
+            self.content_mapping = self.braviarc.load_source_list()
             self.source_list = []
             if not self.content_mapping:
                 return False
@@ -152,11 +143,9 @@ class BraviaTVClient(DataUpdateCoordinator[None]):
                     self.source_list.append(key)
         return True
 
-    async def _async_refresh_playing_info(self):
+    def _refresh_playing_info(self):
         """Refresh playing information."""
-        playing_info = await self.hass.async_add_executor_job(
-            self.braviarc.get_playing_info
-        )
+        playing_info = self.braviarc.get_playing_info()
         self.program_name = playing_info.get("programTitle")
         self.channel_name = playing_info.get("title")
         self.program_media_type = playing_info.get("programMediaType")
@@ -168,23 +157,16 @@ class BraviaTVClient(DataUpdateCoordinator[None]):
         if not playing_info:
             self.channel_name = "App"
 
-    async def _async_update_data(self):
-        """Update TV info."""
-        if self.state_lock.locked():
-            return
-
-        power_status = await self.hass.async_add_executor_job(
-            self.braviarc.get_power_status
-        )
+    def _update_tv_data(self):
+        """Connect and update TV info."""
+        power_status = self.braviarc.get_power_status()
 
         if power_status != "off":
-            connected = await self.hass.async_add_executor_job(
-                self.braviarc.is_connected
-            )
+            connected = self.braviarc.is_connected()
             if not connected:
                 try:
-                    connected = await self.hass.async_add_executor_job(
-                        self.braviarc.connect, self.pin, CLIENTID_PREFIX, NICKNAME
+                    connected = self.braviarc.connect(
+                        self.pin, CLIENTID_PREFIX, NICKNAME
                     )
                 except NoIPControl:
                     _LOGGER.error("IP Control is disabled in the TV settings")
@@ -193,14 +175,18 @@ class BraviaTVClient(DataUpdateCoordinator[None]):
 
         if power_status == "active":
             self.is_on = True
-            if (
-                await self._async_refresh_volume()
-                and await self._async_refresh_channels()
-            ):
-                await self._async_refresh_playing_info()
+            if self._refresh_volume() and self._refresh_channels():
+                self._refresh_playing_info()
                 return
 
         self.is_on = False
+
+    async def _async_update_data(self):
+        """Fetch the latest data."""
+        if self.state_lock.locked():
+            return
+
+        await self.hass.async_add_executor_job(self._update_tv_data)
 
     async def async_turn_on(self):
         """Turn the device on."""
