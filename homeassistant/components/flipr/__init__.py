@@ -34,7 +34,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     for flipr_id in flipr_ids:
         coordinator = FliprDataUpdateCoordinator(hass, entry, flipr_id)
         await coordinator.async_config_entry_first_refresh()
-        hass.data[DOMAIN][entry.entry_id + flipr_id] = coordinator
+        hass.data[DOMAIN][entry.entry_id][flipr_id] = coordinator
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
