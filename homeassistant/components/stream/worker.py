@@ -183,6 +183,8 @@ class SegmentBuffer:
 
     def flush(self, duration: Fraction, packet: av.Packet) -> None:
         """Close the segment and give it a duration, making it complete."""
+        # Closing the av_output will write the remaining buffered data to the
+        # memory_file as a new moof/mdat.
         self._av_output.close()
         self.flush_part(packet, self._memory_file.tell())
         self._memory_file.close()  # We don't need the BytesIO object anymore
