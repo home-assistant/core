@@ -1553,15 +1553,15 @@ async def test_view_invalid_node_id(integration, hass_client, method, url):
     assert resp.status == 404
 
 
-async def test_subscribe_logs(hass, integration, client, hass_ws_client):
-    """Test the subscribe_logs websocket command."""
+async def test_subscribe_log_updates(hass, integration, client, hass_ws_client):
+    """Test the subscribe_log_updates websocket command."""
     entry = integration
     ws_client = await hass_ws_client(hass)
 
     client.async_send_command.return_value = {}
 
     await ws_client.send_json(
-        {ID: 1, TYPE: "zwave_js/subscribe_logs", ENTRY_ID: entry.entry_id}
+        {ID: 1, TYPE: "zwave_js/subscribe_log_updates", ENTRY_ID: entry.entry_id}
     )
 
     msg = await ws_client.receive_json()
@@ -1588,10 +1588,41 @@ async def test_subscribe_logs(hass, integration, client, hass_ws_client):
 
     msg = await ws_client.receive_json()
     assert msg["event"] == {
-        "message": ["test"],
-        "level": "debug",
-        "primary_tags": "tag",
-        "timestamp": "time",
+        "type": "log_message",
+        "log_message": {
+            "message": ["test"],
+            "level": "debug",
+            "primary_tags": "tag",
+            "timestamp": "time",
+        },
+    }
+
+    event = Event(
+        type="log config updated",
+        data={
+            "source": "driver",
+            "event": "log config updated",
+            "config": {
+                "enabled": False,
+                "level": "error",
+                "logToFile": True,
+                "filename": "test",
+                "forceConsole": True,
+            },
+        },
+    )
+    client.driver.receive_event(event)
+
+    msg = await ws_client.receive_json()
+    assert msg["event"] == {
+        "type": "log_config",
+        "log_config": {
+            "enabled": False,
+            "level": "error",
+            "log_to_file": True,
+            "filename": "test",
+            "force_console": True,
+        },
     }
 
     # Test sending command with not loaded entry fails
@@ -1599,7 +1630,7 @@ async def test_subscribe_logs(hass, integration, client, hass_ws_client):
     await hass.async_block_till_done()
 
     await ws_client.send_json(
-        {ID: 2, TYPE: "zwave_js/subscribe_logs", ENTRY_ID: entry.entry_id}
+        {ID: 2, TYPE: "zwave_js/subscribe_log_updates", ENTRY_ID: entry.entry_id}
     )
     msg = await ws_client.receive_json()
 
@@ -1750,16 +1781,6 @@ async def test_get_log_config(hass, client, integration, hass_ws_client):
     ws_client = await hass_ws_client(hass)
 
     # Test we can get log configuration
-    client.async_send_command.return_value = {
-        "success": True,
-        "config": {
-            "enabled": True,
-            "level": "error",
-            "logToFile": False,
-            "filename": "/test.txt",
-            "forceConsole": False,
-        },
-    }
     await ws_client.send_json(
         {
             ID: 1,
@@ -1773,9 +1794,9 @@ async def test_get_log_config(hass, client, integration, hass_ws_client):
 
     log_config = msg["result"]
     assert log_config["enabled"]
-    assert log_config["level"] == LogLevel.ERROR
+    assert log_config["level"] == LogLevel.INFO
     assert log_config["log_to_file"] is False
-    assert log_config["filename"] == "/test.txt"
+    assert log_config["filename"] == ""
     assert log_config["force_console"] is False
 
     # Test sending command with not loaded entry fails
