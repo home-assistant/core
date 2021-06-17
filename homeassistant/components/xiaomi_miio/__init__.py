@@ -105,7 +105,6 @@ def create_miio_device_and_coordinator(
 
         async def async_update_data():
             """Fetch data from the device using async_add_executor_job."""
-            device = hass.data[DOMAIN][entry.entry_id][KEY_DEVICE]
             # On state change the device doesn't provide the new state immediately.
             try:
                 async with async_timeout.timeout(10):
