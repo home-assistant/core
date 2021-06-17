@@ -40,7 +40,7 @@ def mock_pymodbus():
 
 
 @pytest.fixture
-async def mock_modbus(hass, mock_pymodbus):
+async def mock_modbus(hass, do_config):
     """Load integration modbus using mocked pymodbus."""
     config = {
         DOMAIN: [
@@ -49,12 +49,16 @@ async def mock_modbus(hass, mock_pymodbus):
                 CONF_HOST: "modbusTestHost",
                 CONF_PORT: 5501,
                 CONF_NAME: TEST_MODBUS_NAME,
+                **do_config,
             }
         ]
     }
-    assert await async_setup_component(hass, DOMAIN, config) is True
-    await hass.async_block_till_done()
-    yield mock_pymodbus
+    with mock.patch(
+        "homeassistant.components.modbus.modbus.ModbusTcpClient", autospec=True
+    ) as mock_pb:
+        assert await async_setup_component(hass, DOMAIN, config) is True
+        await hass.async_block_till_done()
+        yield mock_pb
 
 
 # dataclass
