@@ -92,7 +92,7 @@ class SwitcherSensorEntity(SensorEntity):
         device_data: SwitcherV2Device,
         attribute: str,
         description: AttributeDescription,
-    ):
+    ) -> None:
         """Initialize the entity."""
         self._device_data = device_data
         self.attribute = attribute
