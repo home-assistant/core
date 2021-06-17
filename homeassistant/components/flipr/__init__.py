@@ -46,9 +46,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     if unload_ok:
-        flipr_ids = entry.data[CONF_FLIPR_IDS].split(",")
-        for flipr_id in flipr_ids:
-            hass.data[DOMAIN].pop(entry.entry_id + flipr_id)
+        hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
 
