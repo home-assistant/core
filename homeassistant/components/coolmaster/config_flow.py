@@ -51,7 +51,7 @@ class CoolmasterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             result = await _validate_connection(self.hass, host)
             if not result:
                 errors["base"] = "no_units"
-        except (OSError, ConnectionRefusedError, TimeoutError):
+        except OSError:
             errors["base"] = "cannot_connect"
 
         if errors:

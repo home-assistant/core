@@ -291,6 +291,7 @@ FLOWS = [
     "xbox",
     "xiaomi_aqara",
     "xiaomi_miio",
+    "yamaha_musiccast",
     "yeelight",
     "zerproc",
     "zha",

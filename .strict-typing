@@ -50,6 +50,7 @@ homeassistant.components.media_player.*
 homeassistant.components.mysensors.*
 homeassistant.components.nam.*
 homeassistant.components.network.*
+homeassistant.components.no_ip.*
 homeassistant.components.notify.*
 homeassistant.components.number.*
 homeassistant.components.onewire.*
@@ -64,6 +65,7 @@ homeassistant.components.sensor.*
 homeassistant.components.slack.*
 homeassistant.components.sonos.media_player
 homeassistant.components.ssdp.*
+homeassistant.components.stream.*
 homeassistant.components.sun.*
 homeassistant.components.switch.*
 homeassistant.components.synology_dsm.*

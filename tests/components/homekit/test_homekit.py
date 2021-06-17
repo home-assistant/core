@@ -1205,7 +1205,7 @@ async def test_homekit_start_in_accessory_mode(
 async def test_homekit_start_in_accessory_mode_missing_entity(
     hass, hk_driver, mock_zeroconf, device_reg, caplog
 ):
-    """Test HomeKit start method in accessory mode."""
+    """Test HomeKit start method in accessory mode when entity is not available."""
     entry = await async_init_integration(hass)
 
     homekit = _mock_homekit(hass, entry, HOMEKIT_MODE_ACCESSORY)

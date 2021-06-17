@@ -6,7 +6,7 @@ ATTR_MODEL = "model"
 
 CONF_IGNORED_SOURCES = "ignored_sources"
 
-BRAVIARC = "braviarc"
+BRAVIA_COORDINATOR = "bravia_coordinator"
 BRAVIA_CONFIG_FILE = "bravia.conf"
 CLIENTID_PREFIX = "HomeAssistant"
 DEFAULT_NAME = f"{ATTR_MANUFACTURER} Bravia TV"

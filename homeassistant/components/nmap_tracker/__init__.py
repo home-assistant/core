@@ -259,10 +259,11 @@ class NmapDeviceScanner:
 
     def _increment_device_offline(self, ipv4, reason, dispatches):
         """Mark an IP offline."""
-        if ipv4 not in self.devices.ipv4_last_mac:
+        if not (formatted_mac := self.devices.ipv4_last_mac.get(ipv4)):
             return
-        formatted_mac = self.devices.ipv4_last_mac[ipv4]
-        device = self.devices.tracked[formatted_mac]
+        if not (device := self.devices.tracked.get(formatted_mac)):
+            # Device was unloaded
+            return
         device.offline_scans += 1
         if device.offline_scans < OFFLINE_SCANS_TO_MARK_UNAVAILABLE:
             return

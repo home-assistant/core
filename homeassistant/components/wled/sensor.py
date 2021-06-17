@@ -40,7 +40,7 @@ async def async_setup_entry(
         WLEDWifiSignalSensor(coordinator),
     ]
 
-    async_add_entities(sensors, True)
+    async_add_entities(sensors)
 
 
 class WLEDEstimatedCurrentSensor(WLEDEntity, SensorEntity):
