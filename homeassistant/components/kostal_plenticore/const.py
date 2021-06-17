@@ -35,7 +35,7 @@ SENSOR_PROCESS_DATA = [
     (
         "devices:local",
         "Dc_P",
-        "Solar Power",
+        "DC Power",
         {
             ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
             ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER,

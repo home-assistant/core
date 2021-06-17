@@ -126,7 +126,7 @@ async def async_setup_entry(
                 entry.entry_id,
                 entry.title,
                 dc_inputs,
-                "DC Sum Power",
+                "PV-DC Power",
                 {
                     ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
                     ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER,
@@ -135,7 +135,7 @@ async def async_setup_entry(
                 lambda powers: PlenticoreDataFormatter.format_round(
                     sum(float(power) for power in powers)
                 ),
-                "dc_sum_power",
+                "pv_dc_power",
             )
         )
 
