@@ -5,7 +5,7 @@ from collections.abc import Generator
 
 
 def find_box(
-    mp4_bytes: bytes | memoryview, target_type: bytes, box_start: int = 0
+    mp4_bytes: bytes, target_type: bytes, box_start: int = 0
 ) -> Generator[int, None, None]:
     """Find location of first box (or sub_box if box_start provided) of given type."""
     if box_start == 0:
