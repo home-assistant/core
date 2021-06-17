@@ -50,8 +50,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             if len(flipr_ids) == 0:
                 # No flipr_id found. Tell the user with an error message.
-                errors = {}
                 errors["base"] = "no_flipr_id_found"
+
+            if errors:
                 return self._show_setup_form(errors)
 
             # If multiple flipr found (rare case), we concatene the ids to create multiple devices in this configuration.
