@@ -121,6 +121,7 @@ G_AIS_DOM_PIN = ""
 G_AIS_IMG_PATH = "/data/data/pl.sviete.dom/files/home/AIS/www/img/"
 G_LOG_SETTINGS_INFO_FILE = "/.dom/.ais_log_settings_info"
 G_DB_SETTINGS_INFO_FILE = "/.dom/.ais_db_settings_info"
+G_USB_SETTINGS_INFO_FILE = "/.dom/.ais_usb_settings_info"
 
 # mqtt
 G_AIS_MQTT_CONFIG_DIR_PATH = "/data/data/pl.sviete.dom/files/usr/etc/mosquitto"
