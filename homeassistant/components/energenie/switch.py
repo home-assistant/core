@@ -5,7 +5,7 @@ from homeassistant.components.switch import DEVICE_CLASS_OUTLET, SwitchEntity
 from homeassistant.const import ATTR_ASSUMED_STATE, STATE_OFF, STATE_ON
 
 
-async def async_setup_entry(hass, config_entry, async_add_devices):
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up a config entry."""
     async_add_devices([EnergenieSwitch(hass, config_entry.data)], True)
 
