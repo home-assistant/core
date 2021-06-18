@@ -114,7 +114,7 @@ class XiaomiGenericHumidifier(XiaomiCoordinatedMiioEntity, HumidifierEntity):
     @property
     def available(self):
         """Return true when state is known."""
-        return self._available and self.coordinator.last_update_success
+        return super().available and self._available
 
     @property
     def is_on(self):
