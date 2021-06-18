@@ -71,7 +71,7 @@ class DemoSelect(SelectEntity):
             "name": name,
         }
 
-    async def async_select_option(self, option: str | None) -> None:
+    async def async_select_option(self, option: str) -> None:
         """Update the current selected option."""
         if option not in self.options:
             raise ValueError(f"Invalid option for {self.entity_id}: {option}")
