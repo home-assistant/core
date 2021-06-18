@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from typing import cast
 
-import voluptuous as vol
 from xknx import XKNX
 from xknx.devices import NumericValue
 
@@ -92,7 +91,7 @@ class KNXNumber(KnxEntity, NumberEntity, RestoreEntity):
     async def async_set_value(self, value: float) -> None:
         """Set new value."""
         if value < self.min_value or value > self.max_value:
-            raise vol.Invalid(
+            raise ValueError(
                 f"Invalid value for {self.entity_id}: {value} "
                 f"(range {self.min_value} - {self.max_value})"
             )
