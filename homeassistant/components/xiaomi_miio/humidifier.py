@@ -288,7 +288,7 @@ class XiaomiAirHumidifier(XiaomiGenericHumidifier, HumidifierEntity):
         if self.supported_features & SUPPORT_MODES == 0 or not mode:
             return
 
-        if mode not in AirhumidifierOperationMode:
+        if mode not in self._available_modes:
             _LOGGER.warning("Mode %s is not a valid operation mode", mode)
             return
 
