@@ -12,6 +12,7 @@ from homeassistant.components.modern_forms.const import (
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_FRIENDLY_NAME,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_ON,
@@ -35,6 +36,7 @@ async def test_light_state(
     state = hass.states.get("light.modernformsfan_light")
     assert state
     assert state.attributes.get(ATTR_BRIGHTNESS) == 128
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "ModernFormsFan Light"
     assert state.state == STATE_ON
 
     entry = entity_registry.async_get("light.modernformsfan_light")

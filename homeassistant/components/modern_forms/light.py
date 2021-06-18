@@ -8,7 +8,7 @@ import voluptuous as vol
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    SUPPORT_BRIGHTNESS,
+    COLOR_MODE_BRIGHTNESS,
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -91,10 +91,11 @@ class ModernFormsLightEntity(LightEntity, ModernFormsDeviceEntity):
             entry_id=entry_id,
             coordinator=coordinator,
             name=f"{coordinator.data.info.device_name} Light",
-            icon="mdi:lightbulb",
+            icon=None,
         )
         self._attr_unique_id = f"{self.coordinator.data.info.mac_address}"
-        self._attr_supported_features = SUPPORT_BRIGHTNESS
+        self._attr_color_mode = COLOR_MODE_BRIGHTNESS
+        self._attr_supported_color_modes = {COLOR_MODE_BRIGHTNESS}
 
     @property
     def brightness(self) -> int | None:
