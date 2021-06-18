@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from collections import deque
 from collections.abc import Iterator, Mapping
-from fractions import Fraction
 from io import BytesIO
 import logging
 from threading import Event
@@ -121,14 +120,11 @@ class SegmentBuffer:
 
             if (
                 packet.is_keyframe
-                and (
-                    segment_duration := (packet.dts - self._segment_start_dts)
-                    * packet.time_base
-                )
+                and (packet.dts - self._segment_start_dts) * packet.time_base
                 >= MIN_SEGMENT_DURATION
             ):
                 # Flush segment (also flushes the stub part segment)
-                self.flush(segment_duration, packet)
+                self.flush(packet)
                 # Reinitialize
                 self.reset(packet.dts)
 
@@ -181,7 +177,7 @@ class SegmentBuffer:
         self._part_start_dts = packet.dts
         self._part_has_keyframe = False
 
-    def flush(self, duration: Fraction, packet: av.Packet) -> None:
+    def flush(self, packet: av.Packet) -> None:
         """Close the segment and give it a duration, making it complete."""
         # Closing the av_output will write the remaining buffered data to the
         # memory_file as a new moof/mdat.
@@ -189,7 +185,9 @@ class SegmentBuffer:
         self.flush_part(packet)
         self._memory_file.close()  # We don't need the BytesIO object anymore
         assert self._segment
-        self._segment.duration = float(duration)
+        self._segment.duration = float(
+            (packet.dts - self._segment_start_dts) * packet.time_base
+        )
 
     def discontinuity(self) -> None:
         """Mark the stream as having been restarted."""
