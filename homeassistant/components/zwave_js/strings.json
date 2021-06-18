@@ -99,6 +99,10 @@
     }
   },
   "device_automation": {
+    "trigger_type": {
+      "entry_control_notification": "Sends a notification (Entry Control CC)",
+      "notification_notification": "Sends a notification (Notification CC)"
+    },
     "condition_type": {
       "node_status": "Node status",
       "config_parameter": "Config parameter {subtype} value",

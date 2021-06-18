@@ -1,0 +1,237 @@
+"""The tests for Z-Wave JS device triggers."""
+import pytest
+import voluptuous_serialize
+from zwave_js_server.const import CommandClass
+from zwave_js_server.event import Event
+from zwave_js_server.model.node import Node
+
+from homeassistant.components import automation
+from homeassistant.components.zwave_js import DOMAIN, device_trigger
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.device_registry import (
+    async_entries_for_config_entry,
+    async_get,
+)
+from homeassistant.setup import async_setup_component
+
+from tests.common import (
+    assert_lists_same,
+    async_get_device_automations,
+    async_mock_service,
+)
+
+
+@pytest.fixture
+def calls(hass):
+    """Track calls to a mock service."""
+    return async_mock_service(hass, "test", "automation")
+
+
+async def test_get_notification_notification_triggers(
+    hass, client, lock_schlage_be469, integration
+):
+    """Test we get the expected triggers from a zwave_js device with the Notification CC."""
+    node: Node = lock_schlage_be469
+    dev_reg = async_get(hass)
+    device = async_entries_for_config_entry(dev_reg, integration.entry_id)[0]
+    expected_trigger = {
+        "platform": "device",
+        "domain": DOMAIN,
+        "type": "notification_notification",
+        "device_id": device.id,
+        "node_id": node.node_id,
+        "command_class": CommandClass.NOTIFICATION,
+    }
+    triggers = await async_get_device_automations(hass, "trigger", device.id)
+    assert expected_trigger in triggers
+
+
+async def test_if_notification_notification_fires(
+    hass, client, lock_schlage_be469, integration, calls
+):
+    """Test for notification_notification trigger firing."""
+    node: Node = lock_schlage_be469
+    dev_reg = async_get(hass)
+    device = async_entries_for_config_entry(dev_reg, integration.entry_id)[0]
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        "platform": "device",
+                        "domain": DOMAIN,
+                        "device_id": device.id,
+                        "type": "notification_notification",
+                        "command_class": CommandClass.NOTIFICATION.value,
+                        "node_id": node.node_id,
+                        "type.": 6,
+                        "event": 5,
+                        "label": "Access Control",
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {
+                            "some": (
+                                "notification_notification - {{ trigger.platform}} - "
+                                "{{ trigger.event.event_type}} - "
+                                "{{ trigger.event.data.command_class }}"
+                            )
+                        },
+                    },
+                },
+            ]
+        },
+    )
+
+    # Publish fake Notification CC notification
+    event = Event(
+        type="notification",
+        data={
+            "source": "node",
+            "event": "notification",
+            "nodeId": node.node_id,
+            "ccId": 113,
+            "args": {
+                "type": 6,
+                "event": 5,
+                "label": "Access Control",
+                "eventLabel": "Keypad lock operation",
+                "parameters": {"userId": 1},
+            },
+        },
+    )
+    node.receive_event(event)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert calls[0].data[
+        "some"
+    ] == "notification_notification - device - zwave_js_notification - {}".format(
+        CommandClass.NOTIFICATION
+    )
+
+
+async def test_get_trigger_capabilities_notification_notification(
+    hass, client, lock_schlage_be469, integration
+):
+    """Test we get the expected capabilities from a notification_notification trigger."""
+    node: Node = lock_schlage_be469
+    dev_reg = async_get(hass)
+    device = async_entries_for_config_entry(dev_reg, integration.entry_id)[0]
+    capabilities = await device_trigger.async_get_trigger_capabilities(
+        hass,
+        {
+            "platform": "device",
+            "domain": DOMAIN,
+            "device_id": device.id,
+            "type": "notification_notification",
+            "command_class": CommandClass.NOTIFICATION.value,
+            "node_id": node.node_id,
+        },
+    )
+    assert capabilities and "extra_fields" in capabilities
+
+    assert_lists_same(
+        voluptuous_serialize.convert(
+            capabilities["extra_fields"], custom_serializer=cv.custom_serializer
+        ),
+        [
+            {"name": "type.", "optional": True, "type": "string"},
+            {"name": "label", "optional": True, "type": "string"},
+            {"name": "event", "optional": True, "type": "string"},
+            {"name": "event_label", "optional": True, "type": "string"},
+        ],
+    )
+
+
+async def test_if_entry_control_notification_fires(
+    hass, client, lock_schlage_be469, integration, calls
+):
+    """Test for entrry_control_notification trigger firing."""
+    node: Node = lock_schlage_be469
+    dev_reg = async_get(hass)
+    device = async_entries_for_config_entry(dev_reg, integration.entry_id)[0]
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        "platform": "device",
+                        "domain": DOMAIN,
+                        "device_id": device.id,
+                        "type": "entry_control_notification",
+                        "command_class": CommandClass.ENTRY_CONTROL.value,
+                        "node_id": node.node_id,
+                        "event_type": 5,
+                        "data_type": 2,
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {
+                            "some": (
+                                "notification_notification - {{ trigger.platform}} - "
+                                "{{ trigger.event.event_type}} - "
+                                "{{ trigger.event.data.command_class }}"
+                            )
+                        },
+                    },
+                },
+            ]
+        },
+    )
+
+    # Publish fake Entry Control CC notification
+    event = Event(
+        type="notification",
+        data={
+            "source": "node",
+            "event": "notification",
+            "nodeId": node.node_id,
+            "ccId": 111,
+            "args": {"eventType": 5, "dataType": 2, "eventData": "555"},
+        },
+    )
+    node.receive_event(event)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert calls[0].data[
+        "some"
+    ] == "notification_notification - device - zwave_js_notification - {}".format(
+        CommandClass.ENTRY_CONTROL
+    )
+
+
+async def test_get_trigger_capabilities_entry_control_notification(
+    hass, client, lock_schlage_be469, integration
+):
+    """Test we get the expected capabilities from a entry_control_notification trigger."""
+    node: Node = lock_schlage_be469
+    dev_reg = async_get(hass)
+    device = async_entries_for_config_entry(dev_reg, integration.entry_id)[0]
+    capabilities = await device_trigger.async_get_trigger_capabilities(
+        hass,
+        {
+            "platform": "device",
+            "domain": DOMAIN,
+            "device_id": device.id,
+            "type": "entry_control_notification",
+            "command_class": CommandClass.ENTRY_CONTROL.value,
+            "node_id": node.node_id,
+        },
+    )
+    assert capabilities and "extra_fields" in capabilities
+
+    assert_lists_same(
+        voluptuous_serialize.convert(
+            capabilities["extra_fields"], custom_serializer=cv.custom_serializer
+        ),
+        [
+            {"name": "event_type", "optional": True, "type": "string"},
+            {"name": "data_type", "optional": True, "type": "string"},
+        ],
+    )
