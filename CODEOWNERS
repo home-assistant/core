@@ -423,6 +423,7 @@ homeassistant/components/scrape/* @fabaff
 homeassistant/components/screenlogic/* @dieselrabbit
 homeassistant/components/script/* @home-assistant/core
 homeassistant/components/search/* @home-assistant/core
+homeassistant/components/select/* @home-assistant/core
 homeassistant/components/sense/* @kbickar
 homeassistant/components/sensibo/* @andrey-git
 homeassistant/components/sentry/* @dcramer @frenck
