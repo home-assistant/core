@@ -1,8 +1,6 @@
 """Demo platform that offers a fake select entity."""
 from __future__ import annotations
 
-import voluptuous as vol
-
 from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DEVICE_DEFAULT_NAME
@@ -76,7 +74,7 @@ class DemoSelect(SelectEntity):
     async def async_select_option(self, option: str | None) -> None:
         """Update the current selected option."""
         if option not in self.options:
-            raise vol.Invalid(f"Invalid option for {self.entity_id}: {option}")
+            raise ValueError(f"Invalid option for {self.entity_id}: {option}")
 
         self._attr_current_option = option
         self.async_write_ha_state()

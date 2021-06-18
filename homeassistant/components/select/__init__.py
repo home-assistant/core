@@ -89,10 +89,10 @@ class SelectEntity(Entity):
         """Return the selected entity option to represent the entity state."""
         return self._attr_current_option
 
-    def select_option(self, option: str | None) -> None:
+    def select_option(self, option: str) -> None:
         """Change the selected option."""
         raise NotImplementedError()
 
-    async def async_select_option(self, option: str | None) -> None:
+    async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         await self.hass.async_add_executor_job(self.select_option, option)

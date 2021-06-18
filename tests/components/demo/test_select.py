@@ -41,7 +41,7 @@ async def test_select_option_bad_attr(hass: HomeAssistant) -> None:
     assert state
     assert state.state == "ridiculous_speed"
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(ValueError):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SELECT_OPTION,
