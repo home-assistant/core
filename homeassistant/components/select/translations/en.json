@@ -1,0 +1,8 @@
+{
+    "device_automation": {
+        "trigger_type": {
+            "current_option_changed": "{entity_name} option changed"
+        }
+    },
+    "title": "Select"
+}

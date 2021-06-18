@@ -1,3 +1,8 @@
 {
-  "title": "Select"
+  "title": "Select",
+  "device_automation": {
+    "trigger_type": {
+      "current_option_changed": "{entity_name} option changed"
+    }
+  }
 }
