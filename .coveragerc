@@ -122,7 +122,7 @@ omit =
     homeassistant/components/braviatv/__init__.py
     homeassistant/components/braviatv/const.py
     homeassistant/components/braviatv/media_player.py
-    homeassistant/components/braviatv/remote.py    
+    homeassistant/components/braviatv/remote.py
     homeassistant/components/broadlink/__init__.py
     homeassistant/components/broadlink/const.py
     homeassistant/components/broadlink/remote.py
@@ -1211,6 +1211,8 @@ omit =
     homeassistant/components/xiaomi_miio/vacuum.py
     homeassistant/components/xiaomi_tv/media_player.py
     homeassistant/components/xmpp/notify.py
+    homeassistant/components/xmpp/__init__.py
+    homeassistant/components/xmpp/const.py
     homeassistant/components/xs1/*
     homeassistant/components/yale_smart_alarm/alarm_control_panel.py
     homeassistant/components/yamaha_musiccast/__init__.py

@@ -1,0 +1,12 @@
+send_message:
+  description: Send message to target room(s)
+  fields:
+    message:
+      description: The message to be sent.
+      example: This is a message I am sending to xmpp
+    target:
+      description: A list of room(s) to send the message to.
+      example: "hasstest@jabber.de"
+    is_groupchat:
+      description: If the target is a groupchat
+      example: true
