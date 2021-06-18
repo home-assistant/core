@@ -35,6 +35,7 @@ homeassistant.components.geo_location.*
 homeassistant.components.gios.*
 homeassistant.components.group.*
 homeassistant.components.history.*
+homeassistant.components.homeassistant.triggers.event
 homeassistant.components.http.*
 homeassistant.components.huawei_lte.*
 homeassistant.components.hyperion.*
