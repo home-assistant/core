@@ -1,7 +1,7 @@
 """Config flow to configure Motion Blinds using their WLAN API."""
 from socket import gaierror
 
-from motionblinds import MotionDiscovery, MotionMulticast
+from motionblinds import AsyncMotionMulticast, MotionDiscovery
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -131,9 +131,9 @@ class MotionBlindsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             # check socket interface
             if multicast_interface != DEFAULT_INTERFACE:
-                motion_multicast = MotionMulticast(interface=multicast_interface)
+                motion_multicast = AsyncMotionMulticast(interface=multicast_interface)
                 try:
-                    motion_multicast.Start_listen()
+                    await motion_multicast.Start_listen()
                     motion_multicast.Stop_listen()
                 except gaierror:
                     errors[CONF_INTERFACE] = "invalid_interface"
