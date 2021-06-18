@@ -20,6 +20,7 @@ from homeassistant.util.percentage import percentage_to_ranged_value
 from .const import (
     CONF_DEVICE,
     CONF_FLOW_TYPE,
+    CONF_MODEL,
     DOMAIN,
     KEY_COORDINATOR,
     KEY_DEVICE,
@@ -32,11 +33,6 @@ from .const import (
 from .device import XiaomiCoordinatedMiioEntity
 
 _LOGGER = logging.getLogger(__name__)
-
-DEFAULT_NAME = "Xiaomi Miio Device"
-DATA_KEY = "fan.xiaomi_miio"
-
-CONF_MODEL = "model"
 
 # Air Humidifier
 ATTR_TARGET_HUMIDITY = "target_humidity"
@@ -57,19 +53,16 @@ AVAILABLE_ATTRIBUTES = {
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Humidifier from a config entry."""
-    entities = []
-
     if not config_entry.data[CONF_FLOW_TYPE] == CONF_DEVICE:
         return
 
-    if DATA_KEY not in hass.data:
-        hass.data[DATA_KEY] = {}
-
+    entities = []
     host = config_entry.data[CONF_HOST]
     token = config_entry.data[CONF_TOKEN]
     name = config_entry.title
     model = config_entry.data[CONF_MODEL]
     unique_id = config_entry.unique_id
+    coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
 
     _LOGGER.debug("Initializing with host %s (token %s...)", host, token[:5])
 
@@ -80,7 +73,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             air_humidifier,
             config_entry,
             unique_id,
-            hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR],
+            coordinator,
         )
     else:
         air_humidifier = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
@@ -89,10 +82,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             air_humidifier,
             config_entry,
             unique_id,
-            hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR],
+            coordinator,
         )
 
-    hass.data[DATA_KEY][host] = entity
     entities.append(entity)
 
     async_add_entities(entities, update_before_add=True)
@@ -115,7 +107,6 @@ class XiaomiGenericHumidifier(XiaomiCoordinatedMiioEntity, HumidifierEntity):
         self._skip_update = False
         self._available_modes = []
         self._mode = None
-        self._available_attributes = AVAILABLE_ATTRIBUTES
         self._min_humidity = DEFAULT_MIN_HUMIDITY
         self._max_humidity = DEFAULT_MAX_HUMIDITY
         self._humidity_steps = 100
@@ -123,7 +114,7 @@ class XiaomiGenericHumidifier(XiaomiCoordinatedMiioEntity, HumidifierEntity):
     @property
     def available(self):
         """Return true when state is known."""
-        return self._available
+        return self._available and self.coordinator.last_update_success
 
     @property
     def is_on(self):
@@ -227,13 +218,10 @@ class XiaomiAirHumidifier(XiaomiGenericHumidifier, HumidifierEntity):
             self._max_humidity = 80
             self._humidity_steps = 10
 
-        self._attributes.update(
-            {attribute: None for attribute in self._available_attributes}
-        )
-        self.coordinator.async_add_listener(self.update)
+        self._attributes.update({attribute: None for attribute in AVAILABLE_ATTRIBUTES})
 
     @callback
-    def update(self):
+    def _handle_coordinator_update(self):
         """Fetch state from the device."""
         state = self.coordinator.data
         if not state:
@@ -244,9 +232,10 @@ class XiaomiAirHumidifier(XiaomiGenericHumidifier, HumidifierEntity):
         self._attributes.update(
             {
                 key: self._extract_value_from_attribute(state, value)
-                for key, value in self._available_attributes.items()
+                for key, value in AVAILABLE_ATTRIBUTES.items()
             }
         )
+        self.async_write_ha_state()
 
     @property
     def mode(self):

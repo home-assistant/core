@@ -42,6 +42,7 @@ from .const import (
     CONF_DEVICE,
     CONF_FLOW_TYPE,
     CONF_GATEWAY,
+    CONF_MODEL,
     DOMAIN,
     KEY_COORDINATOR,
     KEY_DEVICE,
@@ -72,8 +73,6 @@ ATTR_NIGHT_TIME_END = "night_time_end"
 ATTR_SENSOR_STATE = "sensor_state"
 ATTR_WATER_LEVEL = "water_level"
 ATTR_HUMIDITY = "humidity"
-
-CONF_MODEL = "model"
 
 
 @dataclass
@@ -228,10 +227,9 @@ class XiaomiGenericSensor(XiaomiCoordinatedMiioEntity, SensorEntity):
         self._available = None
         self._state = None
         self._skip_update = False
-        self.coordinator.async_add_listener(self.update)
 
     @callback
-    def update(self):
+    def _handle_coordinator_update(self):
         """Fetch state from the device."""
         # On state change the device doesn't provide the new state immediately.
         state = self.coordinator.data
@@ -241,6 +239,7 @@ class XiaomiGenericSensor(XiaomiCoordinatedMiioEntity, SensorEntity):
         self._available = True
         self._state = state.is_on
         self._state = self._extract_value_from_attribute(state, self._attribute)
+        self.async_write_ha_state()
 
     @property
     def unit_of_measurement(self):
@@ -265,7 +264,7 @@ class XiaomiGenericSensor(XiaomiCoordinatedMiioEntity, SensorEntity):
     @property
     def available(self):
         """Return true when state is known."""
-        return self._available
+        return self._available and self.coordinator.last_update_success
 
     @property
     def state(self):

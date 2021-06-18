@@ -94,7 +94,7 @@ class XiaomiMiioEntity(Entity):
         return device_info
 
 
-class XiaomiCoordinatedMiioEntity(CoordinatorEntity, XiaomiMiioEntity):
+class XiaomiCoordinatedMiioEntity(CoordinatorEntity, Entity):
     """Representation of a base a coordinated Xiaomi Miio Entity."""
 
     def __init__(self, name, device, entry, unique_id, coordinator):
@@ -107,6 +107,31 @@ class XiaomiCoordinatedMiioEntity(CoordinatorEntity, XiaomiMiioEntity):
         self._unique_id = unique_id
         self._name = name
         self._available = None
+
+    @property
+    def unique_id(self):
+        """Return an unique ID."""
+        return self._unique_id
+
+    @property
+    def name(self):
+        """Return the name of this entity, if any."""
+        return self._name
+
+    @property
+    def device_info(self):
+        """Return the device info."""
+        device_info = {
+            "identifiers": {(DOMAIN, self._device_id)},
+            "manufacturer": "Xiaomi",
+            "name": self._name,
+            "model": self._model,
+        }
+
+        if self._mac is not None:
+            device_info["connections"] = {(dr.CONNECTION_NETWORK_MAC, self._mac)}
+
+        return device_info
 
     async def _try_command(self, mask_error, func, *args, **kwargs):
         """Call a miio device command handling error messages."""

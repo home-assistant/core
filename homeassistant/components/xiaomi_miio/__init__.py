@@ -85,11 +85,10 @@ def get_platforms(config_entry):
     return []
 
 
-@callback
-def create_miio_device_and_coordinator(
+async def async_create_miio_device_and_coordinator(
     hass: core.HomeAssistant, entry: config_entries.ConfigEntry
 ):
-    """Set up a data coordinator and one mio device to service multiple entities."""
+    """Set up a data coordinator and one miio device to service multiple entities."""
     model = entry.data[CONF_MODEL]
     host = entry.data[CONF_HOST]
     token = entry.data[CONF_TOKEN]
@@ -122,11 +121,12 @@ def create_miio_device_and_coordinator(
         # Polling interval. Will only be polled if there are subscribers.
         update_interval=timedelta(seconds=10),
     )
-
     hass.data[DOMAIN][entry.entry_id] = {
         KEY_DEVICE: device,
         KEY_COORDINATOR: coordinator,
     }
+    # Trigger first data fetch
+    await coordinator.async_request_refresh()
 
 
 async def async_setup_gateway_entry(
@@ -209,7 +209,7 @@ async def async_setup_device_entry(
 ):
     """Set up the Xiaomi Miio device component from a config entry."""
     platforms = get_platforms(entry)
-    create_miio_device_and_coordinator(hass, entry)
+    await async_create_miio_device_and_coordinator(hass, entry)
 
     if not platforms:
         return False
