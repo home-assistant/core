@@ -6,6 +6,7 @@ from gtts import gTTS, gTTSError
 import voluptuous as vol
 
 from homeassistant.components.tts import CONF_LANG, PLATFORM_SCHEMA, Provider
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -92,25 +93,31 @@ SUPPORT_LANGUAGES = [
     "es-us",
 ]
 
+CONF_TLD = 'tld'
+DEFAULT_TLD = "com"
 DEFAULT_LANG = "en"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {vol.Optional(CONF_LANG, default=DEFAULT_LANG): vol.In(SUPPORT_LANGUAGES)}
+    {
+        vol.Optional(CONF_LANG, default=DEFAULT_LANG): vol.In(SUPPORT_LANGUAGES),
+        vol.Optional(CONF_TLD, default=DEFAULT_TLD): cv.string,
+    }
 )
 
 
 async def async_get_engine(hass, config, discovery_info=None):
     """Set up Google speech component."""
-    return GoogleProvider(hass, config[CONF_LANG])
+    return GoogleProvider(hass, config[CONF_LANG], config[CONF_TLD])
 
 
 class GoogleProvider(Provider):
     """The Google speech API provider."""
 
-    def __init__(self, hass, lang):
+    def __init__(self, hass, lang, tld):
         """Init Google TTS service."""
         self.hass = hass
         self._lang = lang
+        self._tld = tld
         self.name = "Google"
 
     @property
@@ -125,7 +132,12 @@ class GoogleProvider(Provider):
 
     def get_tts_audio(self, message, language, options=None):
         """Load TTS from google."""
-        tts = gTTS(text=message, lang=language)
+        tld = self._tld
+
+        if isinstance(options, dict) and CONF_TLD in options:
+            tld = options[CONF_TLD]
+
+        tts = gTTS(text=message, tld=tld, lang=language)
         mp3_data = BytesIO()
 
         try:
