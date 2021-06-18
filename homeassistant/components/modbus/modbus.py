@@ -5,7 +5,6 @@ import logging
 from pymodbus.client.sync import ModbusSerialClient, ModbusTcpClient, ModbusUdpClient
 from pymodbus.constants import Defaults
 from pymodbus.exceptions import ModbusException
-from pymodbus.transaction import ModbusRtuFramer
 
 from homeassistant.const import (
     CONF_DELAY,
@@ -41,7 +40,11 @@ from .const import (
     CONF_PARITY,
     CONF_RETRIES,
     CONF_RETRY_ON_EMPTY,
+    CONF_RTUOVERTCP,
+    CONF_SERIAL,
     CONF_STOPBITS,
+    CONF_TCP,
+    CONF_UDP,
     DEFAULT_HUB,
     MODBUS_DOMAIN as DOMAIN,
     PLATFORMS,
@@ -51,8 +54,52 @@ from .const import (
 
 ENTRY_FUNC = "func"
 ENTRY_ATTR = "attr"
+ENTRY_NAME = "name"
 
 _LOGGER = logging.getLogger(__name__)
+
+PYMODBUS_CALL = {
+    CALL_TYPE_COIL: {
+        ENTRY_ATTR: "bits",
+        ENTRY_NAME: "read_coils",
+        ENTRY_FUNC: None,
+    },
+    CALL_TYPE_DISCRETE: {
+        ENTRY_ATTR: "bits",
+        ENTRY_NAME: "read_discrete_inputs",
+        ENTRY_FUNC: None,
+    },
+    CALL_TYPE_REGISTER_HOLDING: {
+        ENTRY_ATTR: "registers",
+        ENTRY_NAME: "read_holding_registers",
+        ENTRY_FUNC: None,
+    },
+    CALL_TYPE_REGISTER_INPUT: {
+        ENTRY_ATTR: "registers",
+        ENTRY_NAME: "read_input_registers",
+        ENTRY_FUNC: None,
+    },
+    CALL_TYPE_WRITE_COIL: {
+        ENTRY_ATTR: "value",
+        ENTRY_NAME: "write_coil",
+        ENTRY_FUNC: None,
+    },
+    CALL_TYPE_WRITE_COILS: {
+        ENTRY_ATTR: "count",
+        ENTRY_NAME: "write_coils",
+        ENTRY_FUNC: None,
+    },
+    CALL_TYPE_WRITE_REGISTER: {
+        ENTRY_ATTR: "value",
+        ENTRY_NAME: "write_register",
+        ENTRY_FUNC: None,
+    },
+    CALL_TYPE_WRITE_REGISTERS: {
+        ENTRY_ATTR: "count",
+        ENTRY_NAME: "write_registers",
+        ENTRY_FUNC: None,
+    },
+}
 
 
 async def async_modbus_setup(
@@ -147,58 +194,39 @@ class ModbusHub:
         self.hass = hass
         self._config_name = client_config[CONF_NAME]
         self._config_type = client_config[CONF_TYPE]
-        self._config_port = client_config[CONF_PORT]
-        self._config_timeout = client_config[CONF_TIMEOUT]
         self._config_delay = client_config[CONF_DELAY]
-        self._config_reset_socket = client_config[CONF_CLOSE_COMM_ON_ERROR]
-        self._config_retries = client_config[CONF_RETRIES]
-        self._config_retry_on_empty = client_config[CONF_RETRY_ON_EMPTY]
-        Defaults.Timeout = client_config[CONF_TIMEOUT]
-        if self._config_type == "serial":
+        self._pb_call = PYMODBUS_CALL.copy()
+        self._pb_class = {
+            CONF_SERIAL: ModbusSerialClient,
+            CONF_TCP: ModbusTcpClient,
+            CONF_UDP: ModbusUdpClient,
+            CONF_RTUOVERTCP: ModbusTcpClient,
+        }
+        self._pb_params = {
+            "port": client_config[CONF_PORT],
+            "timeout": client_config[CONF_TIMEOUT],
+            "reset_socket": client_config[CONF_CLOSE_COMM_ON_ERROR],
+            "retries": client_config[CONF_RETRIES],
+            "retry_on_empty": client_config[CONF_RETRY_ON_EMPTY],
+        }
+        if self._config_type == CONF_SERIAL:
             # serial configuration
-            self._config_method = client_config[CONF_METHOD]
-            self._config_baudrate = client_config[CONF_BAUDRATE]
-            self._config_stopbits = client_config[CONF_STOPBITS]
-            self._config_bytesize = client_config[CONF_BYTESIZE]
-            self._config_parity = client_config[CONF_PARITY]
+            self._pb_params.update(
+                {
+                    "method": client_config[CONF_METHOD],
+                    "baudrate": client_config[CONF_BAUDRATE],
+                    "stopbits": client_config[CONF_STOPBITS],
+                    "bytesize": client_config[CONF_BYTESIZE],
+                    "parity": client_config[CONF_PARITY],
+                }
+            )
         else:
             # network configuration
-            self._config_host = client_config[CONF_HOST]
+            self._pb_params["host"] = client_config[CONF_HOST]
+            if self._config_type == CONF_RTUOVERTCP:
+                self._pb_params["host"] = "ModbusRtuFramer"
 
-        self._call_type = {
-            CALL_TYPE_COIL: {
-                ENTRY_ATTR: "bits",
-                ENTRY_FUNC: None,
-            },
-            CALL_TYPE_DISCRETE: {
-                ENTRY_ATTR: "bits",
-                ENTRY_FUNC: None,
-            },
-            CALL_TYPE_REGISTER_HOLDING: {
-                ENTRY_ATTR: "registers",
-                ENTRY_FUNC: None,
-            },
-            CALL_TYPE_REGISTER_INPUT: {
-                ENTRY_ATTR: "registers",
-                ENTRY_FUNC: None,
-            },
-            CALL_TYPE_WRITE_COIL: {
-                ENTRY_ATTR: "value",
-                ENTRY_FUNC: None,
-            },
-            CALL_TYPE_WRITE_COILS: {
-                ENTRY_ATTR: "count",
-                ENTRY_FUNC: None,
-            },
-            CALL_TYPE_WRITE_REGISTER: {
-                ENTRY_ATTR: "value",
-                ENTRY_FUNC: None,
-            },
-            CALL_TYPE_WRITE_REGISTERS: {
-                ENTRY_ATTR: "count",
-                ENTRY_FUNC: None,
-            },
-        }
+        Defaults.Timeout = client_config[CONF_TIMEOUT]
 
     def _log_error(self, text: str, error_state=True):
         log_text = f"Pymodbus: {text}"
@@ -211,74 +239,18 @@ class ModbusHub:
     async def async_setup(self):
         """Set up pymodbus client."""
         try:
-            if self._config_type == "serial":
-                self._client = ModbusSerialClient(
-                    method=self._config_method,
-                    port=self._config_port,
-                    baudrate=self._config_baudrate,
-                    stopbits=self._config_stopbits,
-                    bytesize=self._config_bytesize,
-                    parity=self._config_parity,
-                    timeout=self._config_timeout,
-                    retries=self._config_retries,
-                    retry_on_empty=self._config_retry_on_empty,
-                    reset_socket=self._config_reset_socket,
-                )
-            elif self._config_type == "rtuovertcp":
-                self._client = ModbusTcpClient(
-                    host=self._config_host,
-                    port=self._config_port,
-                    framer=ModbusRtuFramer,
-                    timeout=self._config_timeout,
-                    retries=self._config_retries,
-                    retry_on_empty=self._config_retry_on_empty,
-                    reset_socket=self._config_reset_socket,
-                )
-            elif self._config_type == "tcp":
-                self._client = ModbusTcpClient(
-                    host=self._config_host,
-                    port=self._config_port,
-                    timeout=self._config_timeout,
-                    retries=self._config_retries,
-                    retry_on_empty=self._config_retry_on_empty,
-                    reset_socket=self._config_reset_socket,
-                )
-            elif self._config_type == "udp":
-                self._client = ModbusUdpClient(
-                    host=self._config_host,
-                    port=self._config_port,
-                    timeout=self._config_timeout,
-                    retries=self._config_retries,
-                    retry_on_empty=self._config_retry_on_empty,
-                    reset_socket=self._config_reset_socket,
-                )
+            self._client = self._pb_class[self._config_type](**self._pb_params)
         except ModbusException as exception_error:
             self._log_error(str(exception_error), error_state=False)
             return False
+
+        for entry in self._pb_call.values():
+            entry[ENTRY_FUNC] = getattr(self._client, entry[ENTRY_NAME])
 
         async with self._lock:
             if not await self.hass.async_add_executor_job(self._pymodbus_connect):
                 self._log_error("initial connect failed, no retry", error_state=False)
                 return False
-
-        self._call_type[CALL_TYPE_COIL][ENTRY_FUNC] = self._client.read_coils
-        self._call_type[CALL_TYPE_DISCRETE][
-            ENTRY_FUNC
-        ] = self._client.read_discrete_inputs
-        self._call_type[CALL_TYPE_REGISTER_HOLDING][
-            ENTRY_FUNC
-        ] = self._client.read_holding_registers
-        self._call_type[CALL_TYPE_REGISTER_INPUT][
-            ENTRY_FUNC
-        ] = self._client.read_input_registers
-        self._call_type[CALL_TYPE_WRITE_COIL][ENTRY_FUNC] = self._client.write_coil
-        self._call_type[CALL_TYPE_WRITE_COILS][ENTRY_FUNC] = self._client.write_coils
-        self._call_type[CALL_TYPE_WRITE_REGISTER][
-            ENTRY_FUNC
-        ] = self._client.write_register
-        self._call_type[CALL_TYPE_WRITE_REGISTERS][
-            ENTRY_FUNC
-        ] = self._client.write_registers
 
         # Start counting down to allow modbus requests.
         if self._config_delay:
@@ -323,11 +295,11 @@ class ModbusHub:
         """Call sync. pymodbus."""
         kwargs = {"unit": unit} if unit else {}
         try:
-            result = self._call_type[use_call][ENTRY_FUNC](address, value, **kwargs)
+            result = self._pb_call[use_call][ENTRY_FUNC](address, value, **kwargs)
         except ModbusException as exception_error:
             self._log_error(str(exception_error))
             return None
-        if not hasattr(result, self._call_type[use_call][ENTRY_ATTR]):
+        if not hasattr(result, self._pb_call[use_call][ENTRY_ATTR]):
             self._log_error(str(result))
             return None
         self._in_error = False
