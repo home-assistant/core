@@ -50,3 +50,12 @@ exec_command:
       example: 'V16'
       selector:
         object:
+
+exec_tonos_command:
+  description: Przesłanie instrukcji sterującej do wzmacniacza TONOS
+  fields:
+    command:
+      description: Instrukcja sterująca
+      example: 'V0'
+      selector:
+        object:

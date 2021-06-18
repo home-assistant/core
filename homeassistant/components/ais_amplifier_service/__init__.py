@@ -4,7 +4,6 @@ Exposes Amplifier Srvice on AIS dom device
 For more details about this platform, please refer to the documentation at
 https://www.ai-speaker.com
 """
-import asyncio
 import logging
 import os
 
@@ -14,30 +13,27 @@ DOMAIN = "ais_amplifier_service"
 _LOGGER = logging.getLogger(__name__)
 
 
-@asyncio.coroutine
-def async_setup(hass, config):
+async def async_setup(hass, config):
     """Register the service."""
     config = config.get(DOMAIN, {})
 
-    @asyncio.coroutine
-    def change_work_mode(service):
-        yield from _change_work_mode(hass, service)
+    async def change_work_mode(service):
+        await _change_work_mode(hass, service)
 
-    @asyncio.coroutine
-    def change_sound_mode(service):
-        yield from _change_sound_mode(hass, service)
+    async def change_sound_mode(service):
+        await _change_sound_mode(hass, service)
 
-    @asyncio.coroutine
-    def exec_command(service):
-        yield from _exec_command(hass, service)
+    async def exec_command(service):
+        await _exec_command(hass, service)
 
-    @asyncio.coroutine
-    def change_audio_to_mono(service):
-        yield from _change_audio_to_mono(hass, service)
+    async def exec_tonos_command(service):
+        await _exec_tonos_command(hass, service)
 
-    @asyncio.coroutine
-    def get_audio_mono(service):
-        yield from _get_audio_mono(hass, service)
+    async def change_audio_to_mono(service):
+        await _change_audio_to_mono(hass, service)
+
+    async def get_audio_mono(service):
+        await _get_audio_mono(hass, service)
 
     # register services
     hass.services.async_register(DOMAIN, "change_work_mode", change_work_mode)
@@ -45,6 +41,7 @@ def async_setup(hass, config):
     hass.services.async_register(DOMAIN, "exec_command", exec_command)
     hass.services.async_register(DOMAIN, "change_audio_to_mono", change_audio_to_mono)
     hass.services.async_register(DOMAIN, "get_audio_mono", get_audio_mono)
+    hass.services.async_register(DOMAIN, "exec_tonos_command", exec_tonos_command)
 
     # temporarily suppress all kernel logging to the console
     if ais_global.has_root():
@@ -58,8 +55,7 @@ def async_setup(hass, config):
     return True
 
 
-@asyncio.coroutine
-def _change_sound_mode(hass, call):
+async def _change_sound_mode(hass, call):
     # set the mode
     if "mode" not in call.data:
         _LOGGER.error("No mode in call")
@@ -69,15 +65,15 @@ def _change_sound_mode(hass, call):
 
     mode = call.data["mode"]
     if mode not in (
-        "NORMAL",
-        "BOOST",
-        "TREBLE",
-        "POP",
-        "ROCK",
-        "CLASSIC",
-        "JAZZ",
-        "DANCE",
-        "R&P",
+            "NORMAL",
+            "BOOST",
+            "TREBLE",
+            "POP",
+            "ROCK",
+            "CLASSIC",
+            "JAZZ",
+            "DANCE",
+            "R&P",
     ):
         _LOGGER.error("Unrecognized mode in call: " + mode)
         return
@@ -96,8 +92,7 @@ def set_bt_mode():
     os.system(comm)
 
 
-@asyncio.coroutine
-def _change_audio_to_mono(hass, call):
+async def _change_audio_to_mono(hass, call):
     if "mode" not in call.data:
         mode = hass.states.get("input_boolean.ais_audio_mono").state
     else:
@@ -118,13 +113,12 @@ def _change_audio_to_mono(hass, call):
         info_text = "wyłączony"
 
     if ais_global.G_AIS_START_IS_DONE:
-        yield from hass.services.async_call(
+        await hass.services.async_call(
             "ais_ai_service", "say_it", {"text": "Dźwięk mono " + info_text}
         )
 
 
-@asyncio.coroutine
-def _get_audio_mono(hass, call):
+async def _get_audio_mono(hass, call):
     import subprocess
 
     try:
@@ -138,13 +132,13 @@ def _get_audio_mono(hass, call):
         else:
             mode = "0"
         if mode == "1":
-            yield from hass.services.async_call(
+            await hass.services.async_call(
                 "input_boolean",
                 "turn_on",
                 {"entity_id": "input_boolean.ais_audio_mono"},
             )
         else:
-            yield from hass.services.async_call(
+            await hass.services.async_call(
                 "input_boolean",
                 "turn_off",
                 {"entity_id": "input_boolean.ais_audio_mono"},
@@ -153,8 +147,7 @@ def _get_audio_mono(hass, call):
         _LOGGER.info("Can't get audio master_mono from system settings! " + str(e))
 
 
-@asyncio.coroutine
-def _change_work_mode(hass, call):
+async def _change_work_mode(hass, call):
     # set the mode
     if "mode" not in call.data:
         _LOGGER.error("No mode in call")
@@ -168,7 +161,7 @@ def _change_work_mode(hass, call):
         _LOGGER.error("Unrecognized mode in call: " + mode)
         return
     if mode == "BT":
-        yield from hass.services.async_call(
+        await hass.services.async_call(
             "ais_ai_service", "say_it", {"text": "Głośnik w trybie Bluetooth "}
         )
         # change 2 seconds after click
@@ -181,13 +174,12 @@ def _change_work_mode(hass, call):
         import time
 
         time.sleep(2)
-        yield from hass.services.async_call(
+        await hass.services.async_call(
             "ais_ai_service", "say_it", {"text": "Głośnik w trybie AUX-IN "}
         )
 
 
-@asyncio.coroutine
-def _exec_command(hass, call):
+async def _exec_command(hass, call):
     if "command" not in call.data:
         _LOGGER.error("No command in call")
         return
@@ -198,4 +190,17 @@ def _exec_command(hass, call):
     comm = r'su -c "stty -F /dev/ttyS0 9600 && echo COM+{}\r\n > /dev/ttyS0"'.format(
         command
     )
+    os.system(comm)
+
+
+async def _exec_tonos_command(hass, call):
+    if "command" not in call.data:
+        _LOGGER.error("No command in call")
+        return
+    if not ais_global.has_root():
+        return
+    command = call.data["command"]
+    # execute control instruction on amplifier via UART
+    comm = r'su -c "stty -F /dev/ttyS0 115200 && echo {} > /dev/ttyS0 && printf "\x0d" > /dev/ttyS0 && printf "\x0d" ' \
+           r'> /dev/ttyS0"'.format(command)
     os.system(comm)
