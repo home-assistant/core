@@ -30,6 +30,10 @@ QUERY_STATISTICS = [
     Statistics.sum,
 ]
 
+QUERY_STATISTIC_IDS = [
+    Statistics.statistic_id,
+]
+
 STATISTICS_BAKERY = "recorder_statistics_bakery"
 
 _LOGGER = logging.getLogger(__name__)
@@ -72,6 +76,26 @@ def compile_statistics(instance: Recorder, start: datetime.datetime) -> bool:
                 session.add(Statistics.from_stats(DOMAIN, entity_id, start, stat))
 
     return True
+
+
+def list_statistic_ids(hass, statistic_type=None):
+    """Return statistic_ids."""
+    with session_scope(hass=hass) as session:
+        baked_query = hass.data[STATISTICS_BAKERY](
+            lambda session: session.query(*QUERY_STATISTIC_IDS).distinct()
+        )
+
+        if statistic_type == "mean":
+            baked_query += lambda q: q.filter(Statistics.mean.isnot(None))
+        if statistic_type == "sum":
+            baked_query += lambda q: q.filter(Statistics.sum.isnot(None))
+
+        baked_query += lambda q: q.order_by(Statistics.statistic_id)
+
+        statistic_ids = []
+        result = execute(baked_query(session))
+        statistic_ids = [statistic_id[0] for statistic_id in result]
+        return statistic_ids
 
 
 def statistics_during_period(hass, start_time, end_time=None, statistic_ids=None):
