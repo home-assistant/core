@@ -1,7 +1,6 @@
 """The tests for the demo select component."""
 
 import pytest
-import voluptuous as vol
 
 from homeassistant.components.select.const import (
     ATTR_OPTION,
