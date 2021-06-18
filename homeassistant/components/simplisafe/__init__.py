@@ -390,7 +390,7 @@ class SimpliSafe:
                         "Unable to re-authenticate with SimpliSafe"
                     ) from err
                 except SimplipyError as err:
-                    raise UpdateFailed(f"SimpliSafe error while updating: {err}")
+                    raise UpdateFailed(f"SimpliSafe error while updating: {err}") from err
 
             if isinstance(result, EndpointUnavailable):
                 # In case the user attempts an action not allowed in their current plan,
