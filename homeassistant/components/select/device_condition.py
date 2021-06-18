@@ -26,7 +26,7 @@ CONDITION_SCHEMA = DEVICE_CONDITION_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_ENTITY_ID): cv.entity_id,
         vol.Required(CONF_TYPE): vol.In(CONDITION_TYPES),
-        vol.Optional(CONF_OPTION): str,
+        vol.Required(CONF_OPTION): str,
         vol.Optional(CONF_FOR): cv.positive_time_period_dict,
     }
 )
@@ -62,7 +62,7 @@ def async_condition_from_config(
     def test_is_state(hass: HomeAssistant, variables: TemplateVarsType) -> bool:
         """Test if an entity is a certain state."""
         return condition.state(
-            hass, config[CONF_ENTITY_ID], config.get(CONF_OPTION), config.get(CONF_FOR)
+            hass, config[CONF_ENTITY_ID], config[CONF_OPTION], config.get(CONF_FOR)
         )
 
     return test_is_state
@@ -79,7 +79,7 @@ async def async_get_condition_capabilities(
     return {
         "extra_fields": vol.Schema(
             {
-                vol.Optional(CONF_OPTION): vol.In(
+                vol.Required(CONF_OPTION): vol.In(
                     state.attributes.get(ATTR_OPTIONS, [])
                 ),
                 vol.Optional(CONF_FOR): cv.positive_time_period_dict,

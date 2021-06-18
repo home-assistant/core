@@ -173,7 +173,7 @@ async def test_get_condition_capabilities(hass: HomeAssistant) -> None:
     ) == [
         {
             "name": "option",
-            "optional": True,
+            "required": True,
             "type": "select",
             "options": [("option1", "option1"), ("option2", "option2")],
         },
