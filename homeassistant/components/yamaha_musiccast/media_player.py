@@ -382,7 +382,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
                 return
 
         raise HomeAssistantError(
-            "Only media from the media browser and http URLs are supported"
+            "Only media from media browser and http URLs are supported"
         )
 
     async def async_browse_media(self, media_content_type=None, media_content_id=None):
