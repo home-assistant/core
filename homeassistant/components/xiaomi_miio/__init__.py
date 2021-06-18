@@ -100,6 +100,12 @@ async def async_create_miio_device_and_coordinator(
         device = AirHumidifierMiot(host, token)
     else:
         device = AirHumidifier(host, token, model=model)
+        
+    # removing fan platform entity for humidifiers
+    entity_registry = await er.async_get_registry(hass)
+    entity_id = entity_registry.async_get_entity_id("fan", DOMAIN, entry.unique_id)
+    if entity_id:
+        entity_registry.async_remove(entity_id)
 
     async def async_update_data():
         """Fetch data from the device using async_add_executor_job."""
