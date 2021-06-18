@@ -22,6 +22,7 @@ from homeassistant.components.media_player.const import (
 )
 from homeassistant.const import CONF_CLIENT_ID, CONF_TOKEN, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.core import callback
+from homeassistant.helpers import entity_registry
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
@@ -531,6 +532,20 @@ class PlexServer:
             self.hass,
             PLEX_UPDATE_SENSOR_SIGNAL.format(self.machine_identifier),
         )
+
+    @callback
+    def async_available_media_players(self):
+        """Return a list of controllable media_player entity_ids."""
+        available_entities = []
+        ent_reg = entity_registry.async_get(self.hass)
+        for client_id in self._known_clients:
+            client_unique_id = f"{self.machine_identifier}:{client_id}"
+            if entity_id := ent_reg.async_get_entity_id(
+                MP_DOMAIN, DOMAIN, client_unique_id
+            ):
+                available_entities.append(entity_id)
+
+        return available_entities
 
     @property
     def plex_server(self):

@@ -6,7 +6,9 @@ from plexapi.exceptions import NotFound
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import (
@@ -167,20 +169,43 @@ def play_on_sonos(hass, content_type, content_id, speaker_name):
 @websocket_api.async_response
 async def websocket_get_recently_added(hass, connection, msg):
     """Handle websocket command to request media items."""
-    result = await hass.async_add_executor_job(
-        _get_recently_added, hass, connection, msg
-    )
-    connection.send_result(msg["id"], result)
-
-
-def _get_recently_added(hass, connection, msg):
-    """Query specified library for recent items."""
+    ent_reg = entity_registry.async_get(hass)
     library_name = msg["library_name"]
     maxresults = msg.get("items", 5)
 
     plex_server = get_plex_server(hass, msg.get("plex_server"))
-    library_section = plex_server.library.section(library_name)
 
+    library_section = await hass.async_add_executor_job(
+        plex_server.library.section, library_name
+    )
+
+    library_sensor_unique_id = (
+        f"library-{plex_server.machine_identifier}-{library_section.uuid}"
+    )
+    library_sensor_entity_id = ent_reg.async_get_entity_id(
+        SENSOR_DOMAIN, DOMAIN, library_sensor_unique_id
+    )
+    available_media_players = plex_server.async_available_media_players()
+
+    result = await hass.async_add_executor_job(
+        _get_recently_added,
+        plex_server,
+        library_section,
+        maxresults,
+        library_sensor_entity_id,
+        available_media_players,
+    )
+    connection.send_result(msg["id"], result)
+
+
+def _get_recently_added(
+    plex_server,
+    library_section,
+    maxresults,
+    library_sensor_entity_id,
+    available_media_players,
+):
+    """Query specified library for recent items, return websocket payload."""
     itemtype = RECENTLY_ADDED_LOOKUP.get(library_section.type, library_section.type)
     recents = library_section.recentlyAdded(libtype=itemtype, maxresults=maxresults)
 
@@ -191,6 +216,11 @@ def _get_recently_added(hass, connection, msg):
             if value := getattr(item, attr, None):
                 itemdict[key] = value
 
+        # State updates to the following entity_id can be used to trigger updates
+        itemdict["trigger_entity_id"] = library_sensor_entity_id
+
+        # A list of possible targets for media_player.play_media and the payload for this item
+        itemdict["available_media_players"] = available_media_players
         itemdict["media_content_id"] = json.dumps(
             {
                 "plex_server": plex_server.friendly_name,
