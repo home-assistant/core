@@ -122,7 +122,7 @@ omit =
     homeassistant/components/braviatv/__init__.py
     homeassistant/components/braviatv/const.py
     homeassistant/components/braviatv/media_player.py
-    homeassistant/components/braviatv/remote.py    
+    homeassistant/components/braviatv/remote.py
     homeassistant/components/broadlink/__init__.py
     homeassistant/components/broadlink/const.py
     homeassistant/components/broadlink/remote.py
@@ -849,6 +849,7 @@ omit =
     homeassistant/components/rituals_perfume_genie/binary_sensor.py
     homeassistant/components/rituals_perfume_genie/entity.py
     homeassistant/components/rituals_perfume_genie/number.py
+    homeassistant/components/rituals_perfume_genie/select.py
     homeassistant/components/rituals_perfume_genie/sensor.py
     homeassistant/components/rituals_perfume_genie/switch.py
     homeassistant/components/rituals_perfume_genie/__init__.py
