@@ -252,6 +252,7 @@ class XiaomiAirHumidifier(XiaomiGenericHumidifier, HumidifierEntity):
                 self._attributes[ATTR_TARGET_HUMIDITY]
                 if AirhumidifierOperationMode(self._attributes[ATTR_MODE])
                 == AirhumidifierOperationMode.Auto
+                or AirhumidifierOperationMode.Auto.name not in self.available_modes
                 else None
             )
         return None
@@ -272,6 +273,7 @@ class XiaomiAirHumidifier(XiaomiGenericHumidifier, HumidifierEntity):
             self.supported_features & SUPPORT_MODES == 0
             or AirhumidifierOperationMode(self._attributes[ATTR_MODE])
             == AirhumidifierOperationMode.Auto
+            or AirhumidifierOperationMode.Auto.name not in self.available_modes
         ):
             await self.coordinator.async_request_refresh()
             return
@@ -288,7 +290,7 @@ class XiaomiAirHumidifier(XiaomiGenericHumidifier, HumidifierEntity):
         if self.supported_features & SUPPORT_MODES == 0 or not mode:
             return
 
-        if mode not in self._available_modes:
+        if mode not in self.available_modes:
             _LOGGER.warning("Mode %s is not a valid operation mode", mode)
             return
 
