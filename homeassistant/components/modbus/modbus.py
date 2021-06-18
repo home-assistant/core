@@ -58,7 +58,7 @@ ENTRY_NAME = "name"
 
 _LOGGER = logging.getLogger(__name__)
 
-PYMODBUSCALL = {
+PYMODBUS_CALL = {
     CALL_TYPE_COIL: {
         ENTRY_ATTR: "bits",
         ENTRY_NAME: "read_coils",
@@ -195,7 +195,7 @@ class ModbusHub:
         self._config_name = client_config[CONF_NAME]
         self._config_type = client_config[CONF_TYPE]
         self._config_delay = client_config[CONF_DELAY]
-        self._pb_call = PYMODBUSCALL.copy()
+        self._pb_call = PYMODBUS_CALL.copy()
         self._pb_class = {
             CONF_SERIAL: ModbusSerialClient,
             CONF_TCP: ModbusTcpClient,
