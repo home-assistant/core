@@ -89,7 +89,6 @@ class SimpliSafeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         existing_entry = await self.async_set_unique_id(self._username)
         if existing_entry:
             self.hass.config_entries.async_update_entry(existing_entry, data=user_input)
-            # Reload the config entry (otherwise devices will remain unavailable):
             self.hass.async_create_task(
                 self.hass.config_entries.async_reload(existing_entry.entry_id)
             )
