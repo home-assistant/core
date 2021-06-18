@@ -168,10 +168,9 @@ async def prepare_usb_device(hass, device_info):
 
         # start zigbee2mqtt service
         # restart-delay 120000 millisecond == 2 minutes
-        cmd_to_run = (hass,
-            "pm2 restart zigbee || pm2 start /data/data/pl.sviete.dom/files/home/zigbee2mqtt/index.js "
-            "--name zigbee --output /dev/null --error /dev/null --restart-delay=120000"
-        )
+        cmd_to_run = ("pm2 restart zigbee || pm2 start /data/data/pl.sviete.dom/files/home/zigbee2mqtt/index.js "
+                      "--name zigbee --output /dev/null --error /dev/null --restart-delay=120000"
+                      )
         await _run(hass, cmd_to_run)
 
         #
@@ -429,35 +428,40 @@ async def async_setup(hass, config):
             },
         )
 
+    async def check_ais_usb_settings(call):
+        # USB settings
+        file_path = hass.config.config_dir + ais_global.G_USB_SETTINGS_INFO_FILE
+        default_usb_settings = False
+        if not os.path.isfile(file_path):
+            # create empty file
+            os.mknod(file_path)
+            default_usb_settings = True
+
+        if default_usb_settings and hass.services.has_service("input_boolean", "search"):
+            # set default values
+            hass.async_add_job(
+                hass.services.async_call(
+                    "input_boolean",
+                    "turn_on",
+                    {"entity_id": "input_boolean.ais_auto_service_for_usb"},
+                )
+            )
+            # set default values
+            hass.async_add_job(
+                hass.services.async_call(
+                    "input_boolean",
+                    "turn_on",
+                    {"entity_id": "input_boolean.ais_voice_notification_for_usb"},
+                )
+            )
+
     hass.services.async_register(DOMAIN, "stop_devices", stop_devices)
     hass.services.async_register(DOMAIN, "lsusb", lsusb)
     hass.services.async_register(DOMAIN, "mount_external_drives", mount_external_drives)
     hass.services.async_register(DOMAIN, "ls_flash_drives", ls_flash_drives)
+    hass.services.async_register(DOMAIN, "check_ais_usb_settings", check_ais_usb_settings)
 
     hass.async_add_job(usb_load_notifiers)
-
-    # USB settings
-    file_path = hass.config.config_dir + ais_global.G_USB_SETTINGS_INFO_FILE
-    if not os.path.isfile(file_path):
-        # create empty file
-        os.mknod(file_path)
-
-        # set default values
-        hass.async_add_job(
-            hass.services.async_call(
-                "input_boolean",
-                "turn_on",
-                {"entity_id": "input_boolean.ais_auto_service_for_usb"},
-            )
-        )
-        # set default values
-        hass.async_add_job(
-            hass.services.async_call(
-                "input_boolean",
-                "turn_on",
-                {"entity_id": "input_boolean.ais_voice_notification_for_usb"},
-            )
-        )
 
     return True
 
