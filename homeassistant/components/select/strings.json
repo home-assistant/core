@@ -3,6 +3,9 @@
   "device_automation": {
     "trigger_type": {
       "current_option_changed": "{entity_name} option changed"
+    },
+    "action_type": {
+      "select_option": "Change {entity_name} option"
     }
   }
 }
