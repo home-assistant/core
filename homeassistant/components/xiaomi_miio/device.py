@@ -94,7 +94,7 @@ class XiaomiMiioEntity(Entity):
         return device_info
 
 
-class XiaomiCoordinatedMiioEntity(CoordinatorEntity, Entity):
+class XiaomiCoordinatedMiioEntity(CoordinatorEntity):
     """Representation of a base a coordinated Xiaomi Miio Entity."""
 
     def __init__(self, name, device, entry, unique_id, coordinator):
