@@ -39,7 +39,7 @@ TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
 
 async def async_attach_trigger(hass, config, action, automation_info):
     """Listen for state changes based on configuration."""
-    trigger_id = automation_info.get("trigger_id") if automation_info else None
+    trigger_data = automation_info.get("trigger_data", {}) if automation_info else {}
     entities = {}
     removes = []
     job = HassJob(action)
@@ -51,11 +51,11 @@ async def async_attach_trigger(hass, config, action, automation_info):
             job,
             {
                 "trigger": {
+                    **trigger_data,
                     "platform": "time",
                     "now": now,
                     "description": description,
                     "entity_id": entity_id,
-                    "id": trigger_id,
                 }
             },
         )

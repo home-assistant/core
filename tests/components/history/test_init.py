@@ -834,11 +834,7 @@ async def test_statistics_during_period(hass, hass_ws_client):
     now = dt_util.utcnow()
 
     await hass.async_add_executor_job(init_recorder_component, hass)
-    await async_setup_component(
-        hass,
-        "history",
-        {"history": {}},
-    )
+    await async_setup_component(hass, "history", {})
     await async_setup_component(hass, "sensor", {})
     await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
     hass.states.async_set(
@@ -861,12 +857,12 @@ async def test_statistics_during_period(hass, hass_ws_client):
             "type": "history/statistics_during_period",
             "start_time": now.isoformat(),
             "end_time": now.isoformat(),
-            "statistic_id": "sensor.test",
+            "statistic_ids": ["sensor.test"],
         }
     )
     response = await client.receive_json()
     assert response["success"]
-    assert response["result"] == {"statistics": {}}
+    assert response["result"] == {}
 
     client = await hass_ws_client()
     await client.send_json(
@@ -874,26 +870,24 @@ async def test_statistics_during_period(hass, hass_ws_client):
             "id": 1,
             "type": "history/statistics_during_period",
             "start_time": now.isoformat(),
-            "statistic_id": "sensor.test",
+            "statistic_ids": ["sensor.test"],
         }
     )
     response = await client.receive_json()
     assert response["success"]
     assert response["result"] == {
-        "statistics": {
-            "sensor.test": [
-                {
-                    "statistic_id": "sensor.test",
-                    "start": now.isoformat(),
-                    "mean": approx(10.0),
-                    "min": approx(10.0),
-                    "max": approx(10.0),
-                    "last_reset": None,
-                    "state": None,
-                    "sum": None,
-                }
-            ]
-        }
+        "sensor.test": [
+            {
+                "statistic_id": "sensor.test",
+                "start": now.isoformat(),
+                "mean": approx(10.0),
+                "min": approx(10.0),
+                "max": approx(10.0),
+                "last_reset": None,
+                "state": None,
+                "sum": None,
+            }
+        ]
     }
 
 

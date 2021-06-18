@@ -179,19 +179,6 @@ async def async_setup_entry(  # noqa: C901
             if disc_info.assumed_state:
                 value_updates_disc_info.append(disc_info)
 
-        # We need to set up the sensor platform if it hasn't already been setup in
-        # order to create the node status sensor
-        if SENSOR_DOMAIN not in platform_setup_tasks:
-            platform_setup_tasks[SENSOR_DOMAIN] = hass.async_create_task(
-                hass.config_entries.async_forward_entry_setup(entry, SENSOR_DOMAIN)
-            )
-            await platform_setup_tasks[SENSOR_DOMAIN]
-
-        # Create a node status sensor for each device
-        async_dispatcher_send(
-            hass, f"{DOMAIN}_{entry.entry_id}_add_node_status_sensor", node
-        )
-
         # add listener for value updated events if necessary
         if value_updates_disc_info:
             unsubscribe_callbacks.append(
@@ -220,6 +207,25 @@ async def async_setup_entry(  # noqa: C901
 
     async def async_on_node_added(node: ZwaveNode) -> None:
         """Handle node added event."""
+        platform_setup_tasks = entry_hass_data[DATA_PLATFORM_SETUP]
+
+        # We need to set up the sensor platform if it hasn't already been setup in
+        # order to create the node status sensor
+        if SENSOR_DOMAIN not in platform_setup_tasks:
+            platform_setup_tasks[SENSOR_DOMAIN] = hass.async_create_task(
+                hass.config_entries.async_forward_entry_setup(entry, SENSOR_DOMAIN)
+            )
+
+        # This guard ensures that concurrent runs of this function all await the
+        # platform setup task
+        if not platform_setup_tasks[SENSOR_DOMAIN].done():
+            await platform_setup_tasks[SENSOR_DOMAIN]
+
+        # Create a node status sensor for each device
+        async_dispatcher_send(
+            hass, f"{DOMAIN}_{entry.entry_id}_add_node_status_sensor", node
+        )
+
         # we only want to run discovery when the node has reached ready state,
         # otherwise we'll have all kinds of missing info issues.
         if node.ready:

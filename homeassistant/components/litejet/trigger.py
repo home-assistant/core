@@ -31,7 +31,7 @@ TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
 
 async def async_attach_trigger(hass, config, action, automation_info):
     """Listen for events based on configuration."""
-    trigger_id = automation_info.get("trigger_id") if automation_info else None
+    trigger_data = automation_info.get("trigger_data", {}) if automation_info else {}
     number = config.get(CONF_NUMBER)
     held_more_than = config.get(CONF_HELD_MORE_THAN)
     held_less_than = config.get(CONF_HELD_LESS_THAN)
@@ -46,12 +46,12 @@ async def async_attach_trigger(hass, config, action, automation_info):
             job,
             {
                 "trigger": {
+                    **trigger_data,
                     CONF_PLATFORM: "litejet",
                     CONF_NUMBER: number,
                     CONF_HELD_MORE_THAN: held_more_than,
                     CONF_HELD_LESS_THAN: held_less_than,
                     "description": f"litejet switch #{number}",
-                    "id": trigger_id,
                 }
             },
         )

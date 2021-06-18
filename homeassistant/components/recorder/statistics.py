@@ -98,7 +98,7 @@ def list_statistic_ids(hass, statistic_type=None):
         return statistic_ids
 
 
-def statistics_during_period(hass, start_time, end_time=None, statistic_id=None):
+def statistics_during_period(hass, start_time, end_time=None, statistic_ids=None):
     """Return states changes during UTC period start_time - end_time."""
     with session_scope(hass=hass) as session:
         baked_query = hass.data[STATISTICS_BAKERY](
@@ -110,19 +110,19 @@ def statistics_during_period(hass, start_time, end_time=None, statistic_id=None)
         if end_time is not None:
             baked_query += lambda q: q.filter(Statistics.start < bindparam("end_time"))
 
-        if statistic_id is not None:
-            baked_query += lambda q: q.filter_by(statistic_id=bindparam("statistic_id"))
-            statistic_id = statistic_id.lower()
+        if statistic_ids is not None:
+            baked_query += lambda q: q.filter(
+                Statistics.statistic_id.in_(bindparam("statistic_ids"))
+            )
+            statistic_ids = [statistic_id.lower() for statistic_id in statistic_ids]
 
         baked_query += lambda q: q.order_by(Statistics.statistic_id, Statistics.start)
 
         stats = execute(
             baked_query(session).params(
-                start_time=start_time, end_time=end_time, statistic_id=statistic_id
+                start_time=start_time, end_time=end_time, statistic_ids=statistic_ids
             )
         )
-
-        statistic_ids = [statistic_id] if statistic_id is not None else None
 
         return _sorted_statistics_to_dict(stats, statistic_ids)
 

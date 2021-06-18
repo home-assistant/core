@@ -1,7 +1,11 @@
 """Provide functionality to stream HLS."""
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from aiohttp import web
 
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 
 from .const import (
     EXT_X_START,
@@ -10,12 +14,15 @@ from .const import (
     MAX_SEGMENTS,
     NUM_PLAYLIST_SEGMENTS,
 )
-from .core import PROVIDERS, HomeAssistant, IdleTimer, StreamOutput, StreamView
+from .core import PROVIDERS, IdleTimer, StreamOutput, StreamView
 from .fmp4utils import get_codec_string
+
+if TYPE_CHECKING:
+    from . import Stream
 
 
 @callback
-def async_setup_hls(hass):
+def async_setup_hls(hass: HomeAssistant) -> str:
     """Set up api endpoints."""
     hass.http.register_view(HlsPlaylistView())
     hass.http.register_view(HlsSegmentView())
@@ -32,12 +39,13 @@ class HlsMasterPlaylistView(StreamView):
     cors_allowed = True
 
     @staticmethod
-    def render(track):
+    def render(track: StreamOutput) -> str:
         """Render M3U8 file."""
         # Need to calculate max bandwidth as input_container.bit_rate doesn't seem to work
         # Calculate file size / duration and use a small multiplier to account for variation
         # hls spec already allows for 25% variation
-        segment = track.get_segment(track.sequences[-2])
+        if not (segment := track.get_segment(track.sequences[-2])):
+            return ""
         bandwidth = round(
             (len(segment.init) + sum(len(part.data) for part in segment.parts))
             * 8
@@ -52,7 +60,9 @@ class HlsMasterPlaylistView(StreamView):
         ]
         return "\n".join(lines) + "\n"
 
-    async def handle(self, request, stream, sequence):
+    async def handle(
+        self, request: web.Request, stream: Stream, sequence: str
+    ) -> web.Response:
         """Return m3u8 playlist."""
         track = stream.add_provider(HLS_PROVIDER)
         stream.start()
@@ -73,7 +83,7 @@ class HlsPlaylistView(StreamView):
     cors_allowed = True
 
     @staticmethod
-    def render(track):
+    def render(track: StreamOutput) -> str:
         """Render playlist."""
         # NUM_PLAYLIST_SEGMENTS+1 because most recent is probably not yet complete
         segments = list(track.get_segments())[-(NUM_PLAYLIST_SEGMENTS + 1) :]
@@ -130,7 +140,9 @@ class HlsPlaylistView(StreamView):
 
         return "\n".join(playlist) + "\n"
 
-    async def handle(self, request, stream, sequence):
+    async def handle(
+        self, request: web.Request, stream: Stream, sequence: str
+    ) -> web.Response:
         """Return m3u8 playlist."""
         track = stream.add_provider(HLS_PROVIDER)
         stream.start()
@@ -154,7 +166,9 @@ class HlsInitView(StreamView):
     name = "api:stream:hls:init"
     cors_allowed = True
 
-    async def handle(self, request, stream, sequence):
+    async def handle(
+        self, request: web.Request, stream: Stream, sequence: str
+    ) -> web.Response:
         """Return init.mp4."""
         track = stream.add_provider(HLS_PROVIDER)
         if not (segments := track.get_segments()):
@@ -170,7 +184,9 @@ class HlsSegmentView(StreamView):
     name = "api:stream:hls:segment"
     cors_allowed = True
 
-    async def handle(self, request, stream, sequence):
+    async def handle(
+        self, request: web.Request, stream: Stream, sequence: str
+    ) -> web.Response:
         """Return fmp4 segment."""
         track = stream.add_provider(HLS_PROVIDER)
         track.idle_timer.awake()

@@ -107,7 +107,7 @@ async def test_hls_stream(hass, hls_stream, stream_worker_sync):
 
     # Setup demo HLS track
     source = generate_h264_video()
-    stream = create_stream(hass, source)
+    stream = create_stream(hass, source, {})
 
     # Request stream
     stream.add_provider(HLS_PROVIDER)
@@ -148,7 +148,7 @@ async def test_stream_timeout(hass, hass_client, stream_worker_sync):
 
     # Setup demo HLS track
     source = generate_h264_video()
-    stream = create_stream(hass, source)
+    stream = create_stream(hass, source, {})
 
     # Request stream
     stream.add_provider(HLS_PROVIDER)
@@ -190,7 +190,7 @@ async def test_stream_timeout_after_stop(hass, hass_client, stream_worker_sync):
 
     # Setup demo HLS track
     source = generate_h264_video()
-    stream = create_stream(hass, source)
+    stream = create_stream(hass, source, {})
 
     # Request stream
     stream.add_provider(HLS_PROVIDER)
@@ -212,7 +212,7 @@ async def test_stream_keepalive(hass):
 
     # Setup demo HLS track
     source = "test_stream_keepalive_source"
-    stream = create_stream(hass, source)
+    stream = create_stream(hass, source, {})
     track = stream.add_provider(HLS_PROVIDER)
     track.num_segments = 2
 
@@ -247,7 +247,7 @@ async def test_hls_playlist_view_no_output(hass, hass_client, hls_stream):
     """Test rendering the hls playlist with no output segments."""
     await async_setup_component(hass, "stream", {"stream": {}})
 
-    stream = create_stream(hass, STREAM_SOURCE)
+    stream = create_stream(hass, STREAM_SOURCE, {})
     stream.add_provider(HLS_PROVIDER)
 
     hls_client = await hls_stream(stream)
@@ -261,7 +261,7 @@ async def test_hls_playlist_view(hass, hls_stream, stream_worker_sync):
     """Test rendering the hls playlist with 1 and 2 output segments."""
     await async_setup_component(hass, "stream", {"stream": {}})
 
-    stream = create_stream(hass, STREAM_SOURCE)
+    stream = create_stream(hass, STREAM_SOURCE, {})
     stream_worker_sync.pause()
     hls = stream.add_provider(HLS_PROVIDER)
 
@@ -295,7 +295,7 @@ async def test_hls_max_segments(hass, hls_stream, stream_worker_sync):
     """Test rendering the hls playlist with more segments than the segment deque can hold."""
     await async_setup_component(hass, "stream", {"stream": {}})
 
-    stream = create_stream(hass, STREAM_SOURCE)
+    stream = create_stream(hass, STREAM_SOURCE, {})
     stream_worker_sync.pause()
     hls = stream.add_provider(HLS_PROVIDER)
 
@@ -347,7 +347,7 @@ async def test_hls_playlist_view_discontinuity(hass, hls_stream, stream_worker_s
     """Test a discontinuity across segments in the stream with 3 segments."""
     await async_setup_component(hass, "stream", {"stream": {}})
 
-    stream = create_stream(hass, STREAM_SOURCE)
+    stream = create_stream(hass, STREAM_SOURCE, {})
     stream_worker_sync.pause()
     hls = stream.add_provider(HLS_PROVIDER)
 
@@ -389,7 +389,7 @@ async def test_hls_max_segments_discontinuity(hass, hls_stream, stream_worker_sy
     """Test a discontinuity with more segments than the segment deque can hold."""
     await async_setup_component(hass, "stream", {"stream": {}})
 
-    stream = create_stream(hass, STREAM_SOURCE)
+    stream = create_stream(hass, STREAM_SOURCE, {})
     stream_worker_sync.pause()
     hls = stream.add_provider(HLS_PROVIDER)
 

@@ -13,7 +13,6 @@ from homeassistant.components.alarm_control_panel.const import (
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    ATTR_SUPPORTED_FEATURES,
     CONF_CONDITION,
     CONF_DEVICE_ID,
     CONF_DOMAIN,
@@ -29,6 +28,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import condition, config_validation as cv, entity_registry
 from homeassistant.helpers.config_validation import DEVICE_CONDITION_BASE_SCHEMA
+from homeassistant.helpers.entity import get_supported_features
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
 from . import DOMAIN
@@ -70,13 +70,7 @@ async def async_get_conditions(
         if entry.domain != DOMAIN:
             continue
 
-        state = hass.states.get(entry.entity_id)
-
-        # We need a state or else we can't populate the different armed conditions
-        if state is None:
-            continue
-
-        supported_features = state.attributes[ATTR_SUPPORTED_FEATURES]
+        supported_features = get_supported_features(hass, entry.entity_id)
 
         # Add conditions for each entity that belongs to this integration
         base_condition = {

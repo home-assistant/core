@@ -7,7 +7,7 @@ from fractions import Fraction
 from io import BytesIO
 import logging
 from threading import Event
-from typing import Callable, cast
+from typing import Any, Callable, cast
 
 import av
 
@@ -45,9 +45,9 @@ class SegmentBuffer:
         self._memory_file: BytesIO = cast(BytesIO, None)
         self._av_output: av.container.OutputContainer = None
         self._input_video_stream: av.video.VideoStream = None
-        self._input_audio_stream = None  # av.audio.AudioStream | None
+        self._input_audio_stream: Any | None = None  # av.audio.AudioStream | None
         self._output_video_stream: av.video.VideoStream = None
-        self._output_audio_stream = None  # av.audio.AudioStream | None
+        self._output_audio_stream: Any | None = None  # av.audio.AudioStream | None
         self._segment: Segment | None = None
         self._segment_last_write_pos: int = cast(int, None)
         self._part_start_dts: int = cast(int, None)
@@ -82,7 +82,7 @@ class SegmentBuffer:
     def set_streams(
         self,
         video_stream: av.video.VideoStream,
-        audio_stream,
+        audio_stream: Any,
         # no type hint for audio_stream until https://github.com/PyAV-Org/PyAV/pull/775 is merged
     ) -> None:
         """Initialize output buffer with streams from container."""
@@ -206,7 +206,10 @@ class SegmentBuffer:
 
 
 def stream_worker(  # noqa: C901
-    source: str, options: dict, segment_buffer: SegmentBuffer, quit_event: Event
+    source: str,
+    options: dict[str, str],
+    segment_buffer: SegmentBuffer,
+    quit_event: Event,
 ) -> None:
     """Handle consuming streams."""
 
@@ -259,7 +262,7 @@ def stream_worker(  # noqa: C901
         found_audio = False
         try:
             container_packets = container.demux((video_stream, audio_stream))
-            first_packet = None
+            first_packet: av.Packet | None = None
             # Get to first video keyframe
             while first_packet is None:
                 packet = next(container_packets)
@@ -315,7 +318,6 @@ def stream_worker(  # noqa: C901
                 _LOGGER.warning(
                     "Audio stream not found"
                 )  # Some streams declare an audio stream and never send any packets
-                audio_stream = None
 
         except (av.AVError, StopIteration) as ex:
             _LOGGER.error(
