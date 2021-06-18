@@ -119,7 +119,7 @@ class LazyState(history_models.LazyState):
         vol.Required("type"): "history/statistics_during_period",
         vol.Required("start_time"): str,
         vol.Optional("end_time"): str,
-        vol.Optional("statistic_id"): str,
+        vol.Optional("statistic_ids"): [str],
     }
 )
 @websocket_api.async_response
@@ -152,9 +152,9 @@ async def ws_get_statistics_during_period(
         hass,
         start_time,
         end_time,
-        msg.get("statistic_id"),
+        msg.get("statistic_ids"),
     )
-    connection.send_result(msg["id"], {"statistics": statistics})
+    connection.send_result(msg["id"], statistics)
 
 
 class HistoryPeriodView(HomeAssistantView):
