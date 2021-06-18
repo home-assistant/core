@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from pyrituals import Diffuser
-import voluptuous as vol
 
 from homeassistant.components.number import NumberEntity
 from homeassistant.config_entries import ConfigEntry
@@ -69,7 +68,7 @@ class DiffuserPerfumeAmount(DiffuserEntity, NumberEntity):
         if value.is_integer() and MIN_PERFUME_AMOUNT <= value <= MAX_PERFUME_AMOUNT:
             await self._diffuser.set_perfume_amount(int(value))
         else:
-            raise vol.Invalid(
+            raise ValueError(
                 f"Can't set the perfume amount to {value}. "
                 f"Perfume amount must be an integer between {self.min_value} and {self.max_value}, inclusive"
             )

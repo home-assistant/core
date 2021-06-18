@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from pyrituals import Diffuser
-import voluptuous as vol
 
 from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
@@ -67,6 +66,6 @@ class DiffuserRoomSize(DiffuserEntity, SelectEntity):
                 }[option]
             )
         else:
-            raise vol.Invalid(
+            raise ValueError(
                 f"Can't set the room size to {option}. Allowed room sizes are: {self.options}"
             )
