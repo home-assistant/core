@@ -43,13 +43,14 @@ class SegmentBuffer:
         self._sequence = -1
         self._segment_start_dts: int = cast(int, None)
         self._memory_file: BytesIO = cast(BytesIO, None)
-        self._memory_file_pos = 0
         self._av_output: av.container.OutputContainer = None
         self._input_video_stream: av.video.VideoStream = None
         self._input_audio_stream: Any | None = None  # av.audio.AudioStream | None
         self._output_video_stream: av.video.VideoStream = None
         self._output_audio_stream: Any | None = None  # av.audio.AudioStream | None
         self._segment: Segment | None = None
+        # the following 3 member variables are used for Part formation
+        self._memory_file_pos: int = cast(int, None)
         self._part_start_dts: int = cast(int, None)
         self._part_has_keyframe = False
 
@@ -96,6 +97,7 @@ class SegmentBuffer:
         self._segment_start_dts = video_dts
         self._segment = None
         self._memory_file = BytesIO()
+        self._memory_file_pos = 0
         self._av_output = self.make_new_av(
             memory_file=self._memory_file,
             sequence=self._sequence,
@@ -159,9 +161,9 @@ class SegmentBuffer:
             for stream_output in self._outputs_callback().values():
                 stream_output.put(self._segment)
         else:  # These are the ends of the part segments
-            self.flush_part(packet, last_part=False)
+            self.flush_part(packet)
 
-    def flush_part(self, packet: av.Packet, last_part: bool) -> None:
+    def flush_part(self, packet: av.Packet) -> None:
         """Output a part from the most recent bytes in the memory_file."""
         assert self._segment
         self._memory_file.seek(self._memory_file_pos)
@@ -172,11 +174,11 @@ class SegmentBuffer:
                 data=self._memory_file.read(),
             )
         )
-        if last_part:
-            self._memory_file_pos = 0
-        else:
-            self._memory_file_pos = self._memory_file.tell()
-            self._part_start_dts = packet.dts
+        # the next two lines are actually not needed for the last part
+        # self._memory_file_pos gets reset in reset()
+        # self._part_start_dts gets reset when the new Segment is created
+        self._memory_file_pos = self._memory_file.tell()
+        self._part_start_dts = packet.dts
         self._part_has_keyframe = False
 
     def flush(self, duration: Fraction, packet: av.Packet) -> None:
@@ -184,7 +186,7 @@ class SegmentBuffer:
         # Closing the av_output will write the remaining buffered data to the
         # memory_file as a new moof/mdat.
         self._av_output.close()
-        self.flush_part(packet, last_part=True)
+        self.flush_part(packet)
         self._memory_file.close()  # We don't need the BytesIO object anymore
         assert self._segment
         self._segment.duration = float(duration)
