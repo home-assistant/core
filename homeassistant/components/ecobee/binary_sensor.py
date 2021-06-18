@@ -87,6 +87,12 @@ class EcobeeBinarySensor(BinarySensorEntity):
         return None
 
     @property
+    def available(self):
+        """Return true if device is available."""
+        thermostat = self.data.ecobee.get_thermostat(self.index)
+        return thermostat["runtime"]["connected"]
+
+    @property
     def is_on(self):
         """Return the status of the sensor."""
         return self._state == "true"
@@ -99,16 +105,11 @@ class EcobeeBinarySensor(BinarySensorEntity):
     async def async_update(self):
         """Get the latest state of the sensor."""
         await self.data.update()
-        thermostat = self.data.ecobee.get_thermostat(self.index)
-        if not thermostat["runtime"]["connected"]:
-            # If the thermostat is disconnected, sensor data is stale
-            self._state = "false"
-        else:
-            for sensor in self.data.ecobee.get_remote_sensors(self.index):
-                if sensor["name"] != self.sensor_name:
+        for sensor in self.data.ecobee.get_remote_sensors(self.index):
+            if sensor["name"] != self.sensor_name:
+                continue
+            for item in sensor["capability"]:
+                if item["type"] != "occupancy":
                     continue
-                for item in sensor["capability"]:
-                    if item["type"] != "occupancy":
-                        continue
-                    self._state = item["value"]
-                    break
+                self._state = item["value"]
+                break

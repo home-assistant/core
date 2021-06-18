@@ -99,6 +99,12 @@ class EcobeeSensor(SensorEntity):
         return None
 
     @property
+    def available(self):
+        """Return true if device is available."""
+        thermostat = self.data.ecobee.get_thermostat(self.index)
+        return thermostat["runtime"]["connected"]
+
+    @property
     def device_class(self):
         """Return the device class of the sensor."""
         if self.type in (DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_TEMPERATURE):
@@ -128,16 +134,11 @@ class EcobeeSensor(SensorEntity):
     async def async_update(self):
         """Get the latest state of the sensor."""
         await self.data.update()
-        thermostat = self.data.ecobee.get_thermostat(self.index)
-        if not thermostat["runtime"]["connected"]:
-            # If the thermostat is disconnected, sensor data is stale
-            self._state = "unknown"
-        else:
-            for sensor in self.data.ecobee.get_remote_sensors(self.index):
-                if sensor["name"] != self.sensor_name:
+        for sensor in self.data.ecobee.get_remote_sensors(self.index):
+            if sensor["name"] != self.sensor_name:
+                continue
+            for item in sensor["capability"]:
+                if item["type"] != self.type:
                     continue
-                for item in sensor["capability"]:
-                    if item["type"] != self.type:
-                        continue
-                    self._state = item["value"]
-                    break
+                self._state = item["value"]
+                break
