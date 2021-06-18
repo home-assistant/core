@@ -6,7 +6,7 @@ from proxmoxer import ProxmoxAPI
 from proxmoxer.backends.https import AuthenticationError
 from proxmoxer.core import ResourceException
 import requests.exceptions
-from requests.exceptions import ConnectTimeout, SSLError
+from requests.exceptions import ConnectTimeout, SSLError, ConnectionError
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -123,6 +123,9 @@ async def async_setup(hass: HomeAssistant, config: dict):
                 continue
             except ConnectTimeout:
                 _LOGGER.warning("Connection to host %s timed out during setup", host)
+                continue
+            except ConnectionError:
+                _LOGGER.warning("Host %s is not reachable", host)
                 continue
 
             hass.data[PROXMOX_CLIENTS][host] = proxmox_client
