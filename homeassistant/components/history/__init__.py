@@ -167,6 +167,7 @@ async def ws_get_statistics_during_period(
         vol.Optional("statistic_type"): str,
     }
 )
+@websocket_api.require_admin
 @websocket_api.async_response
 async def ws_get_list_statistic_ids(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
