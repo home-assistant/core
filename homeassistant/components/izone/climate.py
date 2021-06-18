@@ -9,6 +9,7 @@ import voluptuous as vol
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     FAN_AUTO,
+    FAN_TOP,
     FAN_HIGH,
     FAN_LOW,
     FAN_MEDIUM,
@@ -54,6 +55,7 @@ _IZONE_FAN_TO_HA = {
     Controller.Fan.LOW: FAN_LOW,
     Controller.Fan.MED: FAN_MEDIUM,
     Controller.Fan.HIGH: FAN_HIGH,
+    Controller.Fan.TOP: FAN_TOP,
     Controller.Fan.AUTO: FAN_AUTO,
 }
 
