@@ -138,7 +138,8 @@ async def async_get_trigger_capabilities(
                 }
             )
         }
-    elif config[CONF_TYPE] == ENTRY_CONTROL_NOTIFICATION:
+
+    if config[CONF_TYPE] == ENTRY_CONTROL_NOTIFICATION:
         return {
             "extra_fields": vol.Schema(
                 {
