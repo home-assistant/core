@@ -40,6 +40,7 @@ from .const import (
 )
 from .helpers import async_get_node_from_device_id
 
+# Trigger types
 ENTRY_CONTROL_NOTIFICATION = "event.entry_control_notification"
 NOTIFICATION_NOTIFICATION = "event.notification_notification"
 NODE_STATUS = "state.node_status"
@@ -121,6 +122,7 @@ async def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict]:
         CONF_DOMAIN: DOMAIN,
     }
 
+    # We can add a node status trigger if the node status sensor is enabled
     ent_reg = entity_registry.async_get(hass)
     entity_id = ent_reg.async_get_entity_id(
         SENSOR_DOMAIN,
@@ -161,6 +163,8 @@ async def async_attach_trigger(
     if ATTR_COMMAND_CLASS in config:
         event_data[ATTR_COMMAND_CLASS] = config[ATTR_COMMAND_CLASS]
 
+    # Take input data from automation trigger UI and add it to the trigger we are
+    # attaching to
     if trigger_type == "event":
         if config[CONF_TYPE] == ENTRY_CONTROL_NOTIFICATION:
             event_config[event.CONF_EVENT_TYPE] = ZWAVE_JS_NOTIFICATION_EVENT
@@ -199,6 +203,7 @@ async def async_get_trigger_capabilities(
     hass: HomeAssistant, config: ConfigType
 ) -> dict[str, vol.Schema]:
     """List trigger capabilities."""
+    # Add additional fields to the automation trigger UI
     if config[CONF_TYPE] == NOTIFICATION_NOTIFICATION:
         return {
             "extra_fields": vol.Schema(
