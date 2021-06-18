@@ -385,10 +385,12 @@ class SimpliSafe:
                 try:
                     self._api = await self._async_get_api()
                     return
-                except SimplipyError as err:
+                except InvalidCredentialsError as err:
                     raise ConfigEntryAuthFailed(
                         "Unable to re-authenticate with SimpliSafe"
                     ) from err
+                except SimplipyError as err:
+                    raise UpdateFailed(f"SimpliSafe error while updating: {err}")
 
             if isinstance(result, EndpointUnavailable):
                 # In case the user attempts an action not allowed in their current plan,
