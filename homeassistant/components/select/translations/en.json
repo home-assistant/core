@@ -3,6 +3,9 @@
         "action_type": {
             "select_option": "Change {entity_name} option"
         },
+        "condition_type": {
+            "selected_option": "Current {entity_name} selected option"
+        },
         "trigger_type": {
             "current_option_changed": "{entity_name} option changed"
         }
