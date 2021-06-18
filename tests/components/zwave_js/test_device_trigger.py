@@ -6,12 +6,14 @@ from zwave_js_server.event import Event
 from zwave_js_server.model.node import Node
 
 from homeassistant.components import automation
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.zwave_js import DOMAIN, device_trigger
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import (
     async_entries_for_config_entry,
-    async_get,
+    async_get as async_get_dev_reg,
 )
+from homeassistant.helpers.entity_registry import async_get as async_get_ent_reg
 from homeassistant.setup import async_setup_component
 
 from tests.common import (
@@ -32,12 +34,12 @@ async def test_get_notification_notification_triggers(
 ):
     """Test we get the expected triggers from a zwave_js device with the Notification CC."""
     node: Node = lock_schlage_be469
-    dev_reg = async_get(hass)
+    dev_reg = async_get_dev_reg(hass)
     device = async_entries_for_config_entry(dev_reg, integration.entry_id)[0]
     expected_trigger = {
         "platform": "device",
         "domain": DOMAIN,
-        "type": "notification_notification",
+        "type": "event.notification_notification",
         "device_id": device.id,
         "node_id": node.node_id,
         "command_class": CommandClass.NOTIFICATION,
@@ -49,9 +51,9 @@ async def test_get_notification_notification_triggers(
 async def test_if_notification_notification_fires(
     hass, client, lock_schlage_be469, integration, calls
 ):
-    """Test for notification_notification trigger firing."""
+    """Test for event.notification_notification trigger firing."""
     node: Node = lock_schlage_be469
-    dev_reg = async_get(hass)
+    dev_reg = async_get_dev_reg(hass)
     device = async_entries_for_config_entry(dev_reg, integration.entry_id)[0]
 
     assert await async_setup_component(
@@ -64,7 +66,7 @@ async def test_if_notification_notification_fires(
                         "platform": "device",
                         "domain": DOMAIN,
                         "device_id": device.id,
-                        "type": "notification_notification",
+                        "type": "event.notification_notification",
                         "command_class": CommandClass.NOTIFICATION.value,
                         "node_id": node.node_id,
                         "type.": 6,
@@ -75,7 +77,8 @@ async def test_if_notification_notification_fires(
                         "service": "test.automation",
                         "data_template": {
                             "some": (
-                                "notification_notification - {{ trigger.platform}} - "
+                                "event.notification_notification - "
+                                "{{ trigger.platform}} - "
                                 "{{ trigger.event.event_type}} - "
                                 "{{ trigger.event.data.command_class }}"
                             )
@@ -108,7 +111,7 @@ async def test_if_notification_notification_fires(
     assert len(calls) == 1
     assert calls[0].data[
         "some"
-    ] == "notification_notification - device - zwave_js_notification - {}".format(
+    ] == "event.notification_notification - device - zwave_js_notification - {}".format(
         CommandClass.NOTIFICATION
     )
 
@@ -118,7 +121,7 @@ async def test_get_trigger_capabilities_notification_notification(
 ):
     """Test we get the expected capabilities from a notification_notification trigger."""
     node: Node = lock_schlage_be469
-    dev_reg = async_get(hass)
+    dev_reg = async_get_dev_reg(hass)
     device = async_entries_for_config_entry(dev_reg, integration.entry_id)[0]
     capabilities = await device_trigger.async_get_trigger_capabilities(
         hass,
@@ -126,7 +129,7 @@ async def test_get_trigger_capabilities_notification_notification(
             "platform": "device",
             "domain": DOMAIN,
             "device_id": device.id,
-            "type": "notification_notification",
+            "type": "event.notification_notification",
             "command_class": CommandClass.NOTIFICATION.value,
             "node_id": node.node_id,
         },
@@ -149,9 +152,9 @@ async def test_get_trigger_capabilities_notification_notification(
 async def test_if_entry_control_notification_fires(
     hass, client, lock_schlage_be469, integration, calls
 ):
-    """Test for entrry_control_notification trigger firing."""
+    """Test for entry_control_notification trigger firing."""
     node: Node = lock_schlage_be469
-    dev_reg = async_get(hass)
+    dev_reg = async_get_dev_reg(hass)
     device = async_entries_for_config_entry(dev_reg, integration.entry_id)[0]
 
     assert await async_setup_component(
@@ -164,7 +167,7 @@ async def test_if_entry_control_notification_fires(
                         "platform": "device",
                         "domain": DOMAIN,
                         "device_id": device.id,
-                        "type": "entry_control_notification",
+                        "type": "event.entry_control_notification",
                         "command_class": CommandClass.ENTRY_CONTROL.value,
                         "node_id": node.node_id,
                         "event_type": 5,
@@ -174,7 +177,8 @@ async def test_if_entry_control_notification_fires(
                         "service": "test.automation",
                         "data_template": {
                             "some": (
-                                "notification_notification - {{ trigger.platform}} - "
+                                "event.notification_notification - "
+                                "{{ trigger.platform}} - "
                                 "{{ trigger.event.event_type}} - "
                                 "{{ trigger.event.data.command_class }}"
                             )
@@ -201,7 +205,7 @@ async def test_if_entry_control_notification_fires(
     assert len(calls) == 1
     assert calls[0].data[
         "some"
-    ] == "notification_notification - device - zwave_js_notification - {}".format(
+    ] == "event.notification_notification - device - zwave_js_notification - {}".format(
         CommandClass.ENTRY_CONTROL
     )
 
@@ -211,7 +215,7 @@ async def test_get_trigger_capabilities_entry_control_notification(
 ):
     """Test we get the expected capabilities from a entry_control_notification trigger."""
     node: Node = lock_schlage_be469
-    dev_reg = async_get(hass)
+    dev_reg = async_get_dev_reg(hass)
     device = async_entries_for_config_entry(dev_reg, integration.entry_id)[0]
     capabilities = await device_trigger.async_get_trigger_capabilities(
         hass,
@@ -219,7 +223,7 @@ async def test_get_trigger_capabilities_entry_control_notification(
             "platform": "device",
             "domain": DOMAIN,
             "device_id": device.id,
-            "type": "entry_control_notification",
+            "type": "event.entry_control_notification",
             "command_class": CommandClass.ENTRY_CONTROL.value,
             "node_id": node.node_id,
         },
@@ -235,3 +239,148 @@ async def test_get_trigger_capabilities_entry_control_notification(
             {"name": "data_type", "optional": True, "type": "string"},
         ],
     )
+
+
+async def test_get_node_status_triggers(hass, client, lock_schlage_be469, integration):
+    """Test we get the expected triggers from a device with node status sensor enabled."""
+    node: Node = lock_schlage_be469
+    dev_reg = async_get_dev_reg(hass)
+    device = async_entries_for_config_entry(dev_reg, integration.entry_id)[0]
+    ent_reg = async_get_ent_reg(hass)
+    entity_id = ent_reg.async_get_entity_id(
+        SENSOR_DOMAIN,
+        DOMAIN,
+        f"{client.driver.controller.home_id}.{node.node_id}.node_status",
+    )
+    ent_reg.async_update_entity(entity_id, **{"disabled_by": None})
+    await hass.config_entries.async_reload(integration.entry_id)
+    await hass.async_block_till_done()
+
+    expected_trigger = {
+        "platform": "device",
+        "domain": DOMAIN,
+        "type": "state.node_status",
+        "device_id": device.id,
+        "entity_id": entity_id,
+        "node_id": node.node_id,
+    }
+    triggers = await async_get_device_automations(hass, "trigger", device.id)
+    assert expected_trigger in triggers
+
+
+async def test_if_node_status_change_fires(
+    hass, client, lock_schlage_be469, integration, calls
+):
+    """Test for node_status trigger firing."""
+    node: Node = lock_schlage_be469
+    dev_reg = async_get_dev_reg(hass)
+    device = async_entries_for_config_entry(dev_reg, integration.entry_id)[0]
+    ent_reg = async_get_ent_reg(hass)
+    entity_id = ent_reg.async_get_entity_id(
+        SENSOR_DOMAIN,
+        DOMAIN,
+        f"{client.driver.controller.home_id}.{node.node_id}.node_status",
+    )
+    ent_reg.async_update_entity(entity_id, **{"disabled_by": None})
+    await hass.config_entries.async_reload(integration.entry_id)
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        "platform": "device",
+                        "domain": DOMAIN,
+                        "device_id": device.id,
+                        "entity_id": entity_id,
+                        "type": "state.node_status",
+                        "node_id": node.node_id,
+                        "from": "alive",
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {
+                            "some": (
+                                "state.node_status - "
+                                "{{ trigger.platform}} - "
+                                "{{ trigger.from_state.state }}"
+                            )
+                        },
+                    },
+                },
+            ]
+        },
+    )
+
+    # Test status change
+    event = Event(
+        "dead", data={"source": "node", "event": "dead", "nodeId": node.node_id}
+    )
+    node.receive_event(event)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert calls[0].data["some"] == "state.node_status - device - alive"
+
+
+async def test_get_trigger_capabilities_node_status(
+    hass, client, lock_schlage_be469, integration
+):
+    """Test we get the expected capabilities from a node_status trigger."""
+    node: Node = lock_schlage_be469
+    dev_reg = async_get_dev_reg(hass)
+    device = async_entries_for_config_entry(dev_reg, integration.entry_id)[0]
+    ent_reg = async_get_ent_reg(hass)
+    entity_id = ent_reg.async_get_entity_id(
+        SENSOR_DOMAIN,
+        DOMAIN,
+        f"{client.driver.controller.home_id}.{node.node_id}.node_status",
+    )
+    ent_reg.async_update_entity(entity_id, **{"disabled_by": None})
+    await hass.config_entries.async_reload(integration.entry_id)
+    await hass.async_block_till_done()
+
+    capabilities = await device_trigger.async_get_trigger_capabilities(
+        hass,
+        {
+            "platform": "device",
+            "domain": DOMAIN,
+            "device_id": device.id,
+            "entity_id": entity_id,
+            "type": "state.node_status",
+            "node_id": node.node_id,
+        },
+    )
+    assert capabilities and "extra_fields" in capabilities
+
+    assert voluptuous_serialize.convert(
+        capabilities["extra_fields"], custom_serializer=cv.custom_serializer
+    ) == [
+        {
+            "name": "from",
+            "optional": True,
+            "options": [
+                ("unknown", "unknown"),
+                ("asleep", "asleep"),
+                ("awake", "awake"),
+                ("dead", "dead"),
+                ("alive", "alive"),
+            ],
+            "type": "select",
+        },
+        {
+            "name": "to",
+            "optional": True,
+            "options": [
+                ("unknown", "unknown"),
+                ("asleep", "asleep"),
+                ("awake", "awake"),
+                ("dead", "dead"),
+                ("alive", "alive"),
+            ],
+            "type": "select",
+        },
+        {"name": "for", "optional": True, "type": "positive_time_period_dict"},
+    ]

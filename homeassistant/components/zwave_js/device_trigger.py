@@ -2,14 +2,27 @@
 from __future__ import annotations
 
 import voluptuous as vol
+from zwave_js_server.client import Client
 from zwave_js_server.const import CommandClass
+from zwave_js_server.model.node import NodeStatus
 
 from homeassistant.components.automation import AutomationActionType
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
-from homeassistant.components.homeassistant.triggers import event
-from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF_TYPE
+from homeassistant.components.homeassistant.triggers import event, state
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.const import (
+    CONF_DEVICE_ID,
+    CONF_DOMAIN,
+    CONF_ENTITY_ID,
+    CONF_PLATFORM,
+    CONF_TYPE,
+)
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
-from homeassistant.helpers import config_validation as cv, device_registry
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry,
+    entity_registry,
+)
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -21,13 +34,15 @@ from .const import (
     ATTR_LABEL,
     ATTR_NODE_ID,
     ATTR_TYPE,
+    DATA_CLIENT,
     DOMAIN,
     ZWAVE_JS_NOTIFICATION_EVENT,
 )
 from .helpers import async_get_node_from_device_id
 
-ENTRY_CONTROL_NOTIFICATION = "entry_control_notification"
-NOTIFICATION_NOTIFICATION = "notification_notification"
+ENTRY_CONTROL_NOTIFICATION = "event.entry_control_notification"
+NOTIFICATION_NOTIFICATION = "event.notification_notification"
+NODE_STATUS = "state.node_status"
 
 NOTIFICATION_EVENT_CC_MAPPINGS = (
     (ENTRY_CONTROL_NOTIFICATION, CommandClass.ENTRY_CONTROL),
@@ -37,11 +52,22 @@ NOTIFICATION_EVENT_CC_MAPPINGS = (
 BASE_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {
         vol.Required(ATTR_NODE_ID): int,
+    }
+)
+
+BASE_EVENT_SCHEMA = BASE_SCHEMA.extend(
+    {
         vol.Optional(ATTR_COMMAND_CLASS): vol.In([cc.value for cc in CommandClass]),
     }
 )
 
-NOTIFICATION_NOTIFICATION_SCHEMA = BASE_SCHEMA.extend(
+BASE_STATE_SCHEMA = BASE_SCHEMA.extend(
+    {
+        vol.Required(CONF_ENTITY_ID): cv.entity_id,
+    }
+)
+
+NOTIFICATION_NOTIFICATION_SCHEMA = BASE_EVENT_SCHEMA.extend(
     {
         vol.Required(CONF_TYPE): NOTIFICATION_NOTIFICATION,
         vol.Optional(f"{ATTR_TYPE}."): vol.Coerce(int),
@@ -51,7 +77,7 @@ NOTIFICATION_NOTIFICATION_SCHEMA = BASE_SCHEMA.extend(
     }
 )
 
-ENTRY_CONTROL_NOTIFICATION_SCHEMA = BASE_SCHEMA.extend(
+ENTRY_CONTROL_NOTIFICATION_SCHEMA = BASE_EVENT_SCHEMA.extend(
     {
         vol.Required(CONF_TYPE): ENTRY_CONTROL_NOTIFICATION,
         vol.Optional(ATTR_EVENT_TYPE): vol.Coerce(int),
@@ -59,16 +85,35 @@ ENTRY_CONTROL_NOTIFICATION_SCHEMA = BASE_SCHEMA.extend(
     }
 )
 
+NODE_STATUSES = [node_status.name.lower() for node_status in NodeStatus]
+
+NODE_STATUS_SCHEMA = BASE_STATE_SCHEMA.extend(
+    {
+        vol.Required(CONF_TYPE): NODE_STATUS,
+        vol.Optional(state.CONF_FROM): vol.In(NODE_STATUSES),
+        vol.Optional(state.CONF_TO): vol.In(NODE_STATUSES),
+        vol.Optional(state.CONF_FOR): cv.positive_time_period_dict,
+    }
+)
+
 TRIGGER_SCHEMA = vol.Any(
     ENTRY_CONTROL_NOTIFICATION_SCHEMA,
     NOTIFICATION_NOTIFICATION_SCHEMA,
+    NODE_STATUS_SCHEMA,
 )
 
 
 async def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict]:
     """List device triggers for Z-Wave JS devices."""
-    registry = device_registry.async_get(hass)
-    node = async_get_node_from_device_id(hass, device_id, registry)
+    dev_reg = device_registry.async_get(hass)
+    device = dev_reg.async_get(device_id)
+    assert device  # This is a safe assertion because we know we will get a device
+
+    entry_id = next(entry_id for entry_id in device.config_entries)
+    client: Client = hass.data[DOMAIN][entry_id][DATA_CLIENT]
+    node = async_get_node_from_device_id(hass, device_id, dev_reg)
+
+    triggers = []
     base_trigger = {
         CONF_PLATFORM: "device",
         CONF_DEVICE_ID: device_id,
@@ -76,12 +121,23 @@ async def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict]:
         CONF_DOMAIN: DOMAIN,
     }
 
+    ent_reg = entity_registry.async_get(hass)
+    entity_id = ent_reg.async_get_entity_id(
+        SENSOR_DOMAIN,
+        DOMAIN,
+        f"{client.driver.controller.home_id}.{node.node_id}.node_status",
+    )
+    if entity_id and (entity := ent_reg.async_get(entity_id)) and not entity.disabled:
+        triggers = [{**base_trigger, CONF_TYPE: NODE_STATUS, CONF_ENTITY_ID: entity_id}]
+
     # Handle notification event triggers
-    triggers = [
-        {**base_trigger, CONF_TYPE: event_type, ATTR_COMMAND_CLASS: command_class}
-        for event_type, command_class in NOTIFICATION_EVENT_CC_MAPPINGS
-        if any(cc.id == command_class for cc in node.command_classes)
-    ]
+    triggers.extend(
+        [
+            {**base_trigger, CONF_TYPE: event_type, ATTR_COMMAND_CLASS: command_class}
+            for event_type, command_class in NOTIFICATION_EVENT_CC_MAPPINGS
+            if any(cc.id == command_class for cc in node.command_classes)
+        ]
+    )
 
     return triggers
 
@@ -98,29 +154,45 @@ async def async_attach_trigger(
         event.CONF_PLATFORM: "event",
         event.CONF_EVENT_DATA: event_data,
     }
+    state_config = {state.CONF_PLATFORM: "state"}
+
+    trigger_type = config[CONF_TYPE].split(".")[0]
 
     if ATTR_COMMAND_CLASS in config:
         event_data[ATTR_COMMAND_CLASS] = config[ATTR_COMMAND_CLASS]
 
-    if config[CONF_TYPE] == ENTRY_CONTROL_NOTIFICATION:
-        event_config[event.CONF_EVENT_TYPE] = ZWAVE_JS_NOTIFICATION_EVENT
-        for param in (ATTR_EVENT_TYPE, ATTR_DATA_TYPE):
-            if (val := config.get(param)) is not None:
-                event_data[param] = val
-    elif config[CONF_TYPE] == NOTIFICATION_NOTIFICATION:
-        event_config[event.CONF_EVENT_TYPE] = ZWAVE_JS_NOTIFICATION_EVENT
-        for param in (ATTR_LABEL, ATTR_EVENT_LABEL):
-            if val := config.get(param):
-                event_data[param] = val
-        if (val := config.get(ATTR_EVENT)) is not None:
-            event_data[ATTR_EVENT] = val
-        if (val := config.get(f"{ATTR_TYPE}.")) is not None:
-            event_data[ATTR_TYPE] = val
+    if trigger_type == "event":
+        if config[CONF_TYPE] == ENTRY_CONTROL_NOTIFICATION:
+            event_config[event.CONF_EVENT_TYPE] = ZWAVE_JS_NOTIFICATION_EVENT
+            for param in (ATTR_EVENT_TYPE, ATTR_DATA_TYPE):
+                if (val := config.get(param)) is not None:
+                    event_data[param] = val
+        elif config[CONF_TYPE] == NOTIFICATION_NOTIFICATION:
+            event_config[event.CONF_EVENT_TYPE] = ZWAVE_JS_NOTIFICATION_EVENT
+            for param in (ATTR_LABEL, ATTR_EVENT_LABEL):
+                if val := config.get(param):
+                    event_data[param] = val
+            if (val := config.get(ATTR_EVENT)) is not None:
+                event_data[ATTR_EVENT] = val
+            if (val := config.get(f"{ATTR_TYPE}.")) is not None:
+                event_data[ATTR_TYPE] = val
 
-    event_config = event.TRIGGER_SCHEMA(event_config)
-    return await event.async_attach_trigger(  # type: ignore
-        hass, event_config, action, automation_info, platform_type="device"
-    )
+        event_config = event.TRIGGER_SCHEMA(event_config)
+        return await event.async_attach_trigger(  # type: ignore
+            hass, event_config, action, automation_info, platform_type="device"
+        )
+
+    if trigger_type == "state" and config[CONF_TYPE] == NODE_STATUS:
+        state_config[state.CONF_ENTITY_ID] = config[CONF_ENTITY_ID]
+        for param in (state.CONF_FOR, state.CONF_FROM, state.CONF_TO):
+            if val := config.get(param):
+                state_config[param] = val
+
+        return await state.async_attach_trigger(
+            hass, state_config, action, automation_info, platform_type="device"
+        )
+
+    raise Exception
 
 
 async def async_get_trigger_capabilities(
@@ -145,6 +217,17 @@ async def async_get_trigger_capabilities(
                 {
                     vol.Optional(ATTR_EVENT_TYPE): cv.string,
                     vol.Optional(ATTR_DATA_TYPE): cv.string,
+                }
+            )
+        }
+
+    if config[CONF_TYPE] == NODE_STATUS:
+        return {
+            "extra_fields": vol.Schema(
+                {
+                    vol.Optional(state.CONF_FROM): vol.In(NODE_STATUSES),
+                    vol.Optional(state.CONF_TO): vol.In(NODE_STATUSES),
+                    vol.Optional(state.CONF_FOR): cv.positive_time_period_dict,
                 }
             )
         }

@@ -100,8 +100,9 @@
   },
   "device_automation": {
     "trigger_type": {
-      "entry_control_notification": "Sends a notification (Entry Control CC)",
-      "notification_notification": "Sends a notification (Notification CC)"
+      "event.entry_control_notification": "Sent a notification (Entry Control CC)",
+      "event.notification_notification": "Sent a notification (Notification CC)",
+      "state.node_status": "Node status changed"
     },
     "condition_type": {
       "node_status": "Node status",
