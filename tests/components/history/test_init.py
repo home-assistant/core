@@ -944,3 +944,57 @@ async def test_statistics_during_period_bad_end_time(hass, hass_ws_client):
     response = await client.receive_json()
     assert not response["success"]
     assert response["error"]["code"] == "invalid_end_time"
+
+
+async def test_list_statistic_ids(hass, hass_ws_client):
+    """Test list_statistic_ids."""
+    now = dt_util.utcnow()
+
+    await hass.async_add_executor_job(init_recorder_component, hass)
+    await async_setup_component(hass, "history", {"history": {}})
+    await async_setup_component(hass, "sensor", {})
+    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+    hass.states.async_set(
+        "sensor.test",
+        10,
+        attributes={"device_class": "temperature", "state_class": "measurement"},
+    )
+    await hass.async_block_till_done()
+
+    await hass.async_add_executor_job(trigger_db_commit, hass)
+    await hass.async_block_till_done()
+
+    client = await hass_ws_client()
+    await client.send_json({"id": 1, "type": "history/list_statistic_ids"})
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {"statistic_ids": []}
+
+    hass.data[recorder.DATA_INSTANCE].do_adhoc_statistics(period="hourly", start=now)
+    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+
+    await client.send_json({"id": 2, "type": "history/list_statistic_ids"})
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {"statistic_ids": ["sensor.test"]}
+
+    await client.send_json(
+        {"id": 3, "type": "history/list_statistic_ids", "statistic_type": "dogs"}
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {"statistic_ids": ["sensor.test"]}
+
+    await client.send_json(
+        {"id": 4, "type": "history/list_statistic_ids", "statistic_type": "mean"}
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {"statistic_ids": ["sensor.test"]}
+
+    await client.send_json(
+        {"id": 5, "type": "history/list_statistic_ids", "statistic_type": "sum"}
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {"statistic_ids": []}
