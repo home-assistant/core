@@ -14,7 +14,10 @@ import voluptuous as vol
 from homeassistant.components import websocket_api
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.recorder import history, models as history_models
-from homeassistant.components.recorder.statistics import statistics_during_period
+from homeassistant.components.recorder.statistics import (
+    list_statistic_ids,
+    statistics_during_period,
+)
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.const import (
     CONF_DOMAINS,
@@ -105,6 +108,7 @@ async def async_setup(hass, config):
     hass.components.websocket_api.async_register_command(
         ws_get_statistics_during_period
     )
+    hass.components.websocket_api.async_register_command(ws_get_list_statistic_ids)
 
     return True
 
@@ -155,6 +159,26 @@ async def ws_get_statistics_during_period(
         msg.get("statistic_ids"),
     )
     connection.send_result(msg["id"], statistics)
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "history/list_statistic_ids",
+        vol.Optional("statistic_type"): str,
+    }
+)
+@websocket_api.require_admin
+@websocket_api.async_response
+async def ws_get_list_statistic_ids(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+) -> None:
+    """Fetch a list of available statistic_id."""
+    statistics = await hass.async_add_executor_job(
+        list_statistic_ids,
+        hass,
+        msg.get("statistic_type"),
+    )
+    connection.send_result(msg["id"], {"statistic_ids": statistics})
 
 
 class HistoryPeriodView(HomeAssistantView):
