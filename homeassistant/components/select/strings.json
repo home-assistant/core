@@ -6,6 +6,9 @@
     },
     "action_type": {
       "select_option": "Change {entity_name} option"
+    },
+    "condition_type": {
+      "selected_option": "Current {entity_name} selected option"
     }
   }
 }
