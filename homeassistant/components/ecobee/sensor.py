@@ -93,6 +93,12 @@ class EcobeeSensor(SensorEntity):
         return None
 
     @property
+    def available(self):
+        """Return true if device is available."""
+        thermostat = self.data.ecobee.get_thermostat(self.index)
+        return thermostat["runtime"]["connected"]
+
+    @property
     def device_class(self):
         """Return the device class of the sensor."""
         if self.type in (DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_TEMPERATURE):
