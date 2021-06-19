@@ -461,13 +461,22 @@ async def _execute_restart(hass, call):
 
 async def _restart_pm2_service(hass, call):
     service = call.data["service"]
+
     await hass.services.async_call(
         "ais_ai_service", "say_it", {"text": "Restartuje serwis " + service}
     )
-
-    subprocess.Popen(
-        "pm2 restart " + service, shell=True, stdout=None, stderr=None  # nosec
-    )
+    cmd_to_run = "pm2 restart " + service
+    if service == "zwave":
+        cmd_to_run = (
+            "pm2 restart zwave || pm2 start /data/data/pl.sviete.dom/files/home/zwavejs2mqtt/server/bin/www.js "
+            "--name zwave --output /dev/null --error /dev/null --restart-delay=120000"
+        )
+    elif service == "zigbee":
+        cmd_to_run = (
+            "pm2 restart zigbee || pm2 start /data/data/pl.sviete.dom/files/home/zigbee2mqtt/index.js "
+            "--name zigbee --output /dev/null --error /dev/null --restart-delay=120000"
+        )
+    await _run(cmd_to_run)
 
 
 async def _execute_stop(hass, call):
