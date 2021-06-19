@@ -16,6 +16,7 @@ from homeassistant.const import (
     CONF_TYPE,
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry,
@@ -181,7 +182,7 @@ async def async_attach_trigger(
             hass, state_config, action, automation_info, platform_type="device"
         )
 
-    raise Exception
+    raise HomeAssistantError("Trigger type not recognized")
 
 
 async def async_get_trigger_capabilities(
