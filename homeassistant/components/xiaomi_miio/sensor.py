@@ -90,31 +90,26 @@ class SensorType:
 SENSOR_TYPES = {
     "temperature": SensorType(
         unit=TEMP_CELSIUS,
-        icon=None,
         device_class=DEVICE_CLASS_TEMPERATURE,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
     "humidity": SensorType(
         unit=PERCENTAGE,
-        icon=None,
         device_class=DEVICE_CLASS_HUMIDITY,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
     "pressure": SensorType(
         unit=PRESSURE_HPA,
-        icon=None,
         device_class=DEVICE_CLASS_PRESSURE,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
     "load_power": SensorType(
         unit=POWER_WATT,
-        icon=None,
         device_class=DEVICE_CLASS_POWER,
     ),
     "water_level": SensorType(
         unit=PERCENTAGE,
         icon="mdi:water-check",
-        device_class=None,
         state_class=STATE_CLASS_MEASUREMENT,
         valid_min_value=0.0,
         valid_max_value=100.0,
