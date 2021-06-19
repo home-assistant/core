@@ -40,19 +40,8 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Screenlogic from a config entry."""
-    mac = entry.unique_id
-    # Attempt to re-discover named gateway to follow IP changes
-    discovered_gateways = hass.data[DOMAIN][DISCOVERED_GATEWAYS]
-    if mac in discovered_gateways:
-        connect_info = discovered_gateways[mac]
-    else:
-        _LOGGER.warning("Gateway rediscovery failed")
-        # Static connection defined or fallback from discovery
-        connect_info = {
-            SL_GATEWAY_NAME: name_for_mac(mac),
-            SL_GATEWAY_IP: entry.data[CONF_IP_ADDRESS],
-            SL_GATEWAY_PORT: entry.data[CONF_PORT],
-        }
+
+    connect_info = get_connect_info(hass, entry)
 
     try:
         gateway = ScreenLogicGateway(**connect_info)
@@ -99,6 +88,24 @@ async def async_update_listener(hass: HomeAssistant, entry: ConfigEntry):
     await hass.config_entries.async_reload(entry.entry_id)
 
 
+def get_connect_info(hass: HomeAssistant, entry: ConfigEntry):
+    mac = entry.unique_id
+    # Attempt to re-discover named gateway to follow IP changes
+    discovered_gateways = hass.data[DOMAIN][DISCOVERED_GATEWAYS]
+    if mac in discovered_gateways:
+        connect_info = discovered_gateways[mac]
+    else:
+        _LOGGER.warning("Gateway rediscovery failed")
+        # Static connection defined or fallback from discovery
+        connect_info = {
+            SL_GATEWAY_NAME: name_for_mac(mac),
+            SL_GATEWAY_IP: entry.data[CONF_IP_ADDRESS],
+            SL_GATEWAY_PORT: entry.data[CONF_PORT],
+        }
+
+    return connect_info
+
+
 class ScreenlogicDataUpdateCoordinator(DataUpdateCoordinator):
     """Class to manage the data update for the Screenlogic component."""
 
@@ -125,7 +132,17 @@ class ScreenlogicDataUpdateCoordinator(DataUpdateCoordinator):
             async with self.api_lock:
                 await self.hass.async_add_executor_job(self.gateway.update)
         except ScreenLogicError as error:
-            raise UpdateFailed(error) from error
+            _LOGGER.warning("ScreenLogicError - attempting reconnect")
+
+            try:
+                _LOGGER.warning("Re-connecting to the gateway %s:", connect_info)
+                connect_info = get_connect_info(self.hass, self.config_entry)
+                self.gateway = ScreenLogicGateway(**connect_info)
+                self.gateway.update()
+            except ScreenLogicError as error:
+                _LOGGER.error("Error while re-connecting to the gateway %s: %s", connect_info, error)
+                raise UpdateFailed(error) from error
+
         return self.gateway.get_data()
 
 
