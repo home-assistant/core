@@ -116,7 +116,9 @@ async def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict]:
         hass, device_id, ent_reg, dev_reg
     )
     if (entity := ent_reg.async_get(entity_id)) is not None and not entity.disabled:
-        triggers = [{**base_trigger, CONF_TYPE: NODE_STATUS, CONF_ENTITY_ID: entity_id}]
+        triggers.append(
+            {**base_trigger, CONF_TYPE: NODE_STATUS, CONF_ENTITY_ID: entity_id}
+        )
 
     # Handle notification event triggers
     triggers.extend(
