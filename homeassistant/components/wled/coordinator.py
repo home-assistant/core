@@ -9,6 +9,7 @@ from wled import WLED, Device as WLEDDevice, WLEDConnectionClosed, WLEDError
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, LOGGER, SCAN_INTERVAL
@@ -16,6 +17,8 @@ from .const import DOMAIN, LOGGER, SCAN_INTERVAL
 
 class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
     """Class to manage fetching WLED data from single endpoint."""
+
+    master_light: Entity | None = None
 
     def __init__(
         self,
@@ -32,6 +35,15 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
             LOGGER,
             name=DOMAIN,
             update_interval=SCAN_INTERVAL,
+        )
+
+    @property
+    def has_active_master_light(self) -> bool:
+        """Return if the coordinated device has an active master light."""
+        return (
+            self.master_light is not None
+            and self.master_light.enabled
+            and self.master_light.available
         )
 
     def update_listeners(self) -> None:
