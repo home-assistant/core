@@ -77,7 +77,7 @@ ATTR_HUMIDITY = "humidity"
 
 @dataclass
 class SensorType:
-    """Class that holds device specific info for a xiaomi aqara or humidifier sensor."""
+    """Class that holds device specific info for a xiaomi sensor."""
 
     unit: str = None
     icon: str = None
