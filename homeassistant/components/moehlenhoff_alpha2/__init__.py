@@ -75,10 +75,6 @@ class Alpha2BaseUpdateHandler:
             _LOGGER.debug("Heatarea: %s", heatarea)
             async_dispatcher_send(self._hass, SIGNAL_HEATAREA_DATA_UPDATED, heatarea)
 
-    def update(self):
-        """Pull the latest data from the Alpha2 base (sync version)."""
-        asyncio.run_coroutine_threadsafe(self.async_update(), self._loop)
-
     async def async_set_target_temperature(self, heatarea_id, target_temperature):
         """Set the target temperature of the given heatarea."""
         _LOGGER.info(
