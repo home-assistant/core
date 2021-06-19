@@ -89,11 +89,6 @@ class Alpha2Climate(ClimateEntity):
         pass
 
     @property
-    def hvac_action(self):
-        """Return the current running hvac operation if supported."""
-        return None
-
-    @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
         return float(self._data.get("T_TARGET", 0))
