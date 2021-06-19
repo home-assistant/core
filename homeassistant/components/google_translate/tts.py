@@ -7,92 +7,15 @@ import voluptuous as vol
 
 from homeassistant.components.tts import CONF_LANG, PLATFORM_SCHEMA, Provider
 
+from . import (
+    DOMAIN,
+    CONF_TLD,
+    CONF_SLOW,
+    DEFAULT_LANG,
+    SUPPORT_LANGUAGES,
+)
+
 _LOGGER = logging.getLogger(__name__)
-
-SUPPORT_LANGUAGES = [
-    "af",
-    "ar",
-    "bn",
-    "bs",
-    "ca",
-    "cs",
-    "cy",
-    "da",
-    "de",
-    "el",
-    "en",
-    "eo",
-    "es",
-    "et",
-    "fi",
-    "fr",
-    "gu",
-    "hi",
-    "hr",
-    "hu",
-    "hy",
-    "id",
-    "is",
-    "it",
-    "ja",
-    "jw",
-    "km",
-    "kn",
-    "ko",
-    "la",
-    "lv",
-    "mk",
-    "ml",
-    "mr",
-    "my",
-    "ne",
-    "nl",
-    "no",
-    "pl",
-    "pt",
-    "ro",
-    "ru",
-    "si",
-    "sk",
-    "sq",
-    "sr",
-    "su",
-    "sv",
-    "sw",
-    "ta",
-    "te",
-    "th",
-    "tl",
-    "tr",
-    "uk",
-    "ur",
-    "vi",
-    # dialects
-    "zh-CN",
-    "zh-cn",
-    "zh-tw",
-    "en-us",
-    "en-ca",
-    "en-uk",
-    "en-gb",
-    "en-au",
-    "en-gh",
-    "en-in",
-    "en-ie",
-    "en-nz",
-    "en-ng",
-    "en-ph",
-    "en-za",
-    "en-tz",
-    "fr-ca",
-    "fr-fr",
-    "pt-br",
-    "pt-pt",
-    "es-es",
-    "es-us",
-]
-
-DEFAULT_LANG = "en"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {vol.Optional(CONF_LANG, default=DEFAULT_LANG): vol.In(SUPPORT_LANGUAGES)}
@@ -101,16 +24,20 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_get_engine(hass, config, discovery_info=None):
     """Set up Google speech component."""
-    return GoogleProvider(hass, config[CONF_LANG])
+    config = {**hass.data[DOMAIN], **config}
+
+    return GoogleProvider(hass, config[CONF_LANG], config[CONF_TLD], config[CONF_SLOW])
 
 
 class GoogleProvider(Provider):
     """The Google speech API provider."""
 
-    def __init__(self, hass, lang):
+    def __init__(self, hass, lang, tld, slow=False):
         """Init Google TTS service."""
         self.hass = hass
         self._lang = lang
+        self._tld = tld
+        self._slow = slow
         self.name = "Google"
 
     @property
@@ -125,7 +52,12 @@ class GoogleProvider(Provider):
 
     def get_tts_audio(self, message, language, options=None):
         """Load TTS from google."""
-        tts = gTTS(text=message, lang=language)
+        tts = gTTS(
+            text=message,
+            tld=self._tld,
+            lang=language,
+            slow=self._slow,
+        )
         mp3_data = BytesIO()
 
         try:
