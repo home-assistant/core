@@ -37,7 +37,6 @@ async def async_get_conditions(
     hass: HomeAssistant, device_id: str
 ) -> list[dict[str, str]]:
     """List device conditions for Z-Wave JS devices."""
-
     ent_reg = entity_registry.async_get(hass)
     dev_reg = device_registry.async_get(hass)
     entity_id = async_get_node_status_sensor_entity_id(
