@@ -164,10 +164,11 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
         zc_args["ip_version"] = IPVersion.V4Only
 
     aio_zc = await _async_get_instance(hass, **zc_args)
+    zeroconf = cast(HaZeroconf, aio_zc.zeroconf)
     zeroconf_types, homekit_models = await asyncio.gather(
         async_get_zeroconf(hass), async_get_homekit(hass)
     )
-    discovery = ZeroconfDiscovery(hass, aio_zc, zeroconf_types, homekit_models, ipv6)
+    discovery = ZeroconfDiscovery(hass, zeroconf, zeroconf_types, homekit_models, ipv6)
     await discovery.async_setup()
 
     async def _async_zeroconf_hass_start(_event: Event) -> None:
@@ -288,14 +289,14 @@ class ZeroconfDiscovery:
     def __init__(
         self,
         hass: HomeAssistant,
-        aiozc: HaAsyncZeroconf,
+        zeroconf: HaZeroconf,
         zeroconf_types: dict[str, list[dict[str, str]]],
         homekit_models: dict[str, str],
         ipv6: bool,
     ) -> None:
         """Init discovery."""
         self.hass = hass
-        self.aiozc = aiozc
+        self.zeroconf = zeroconf
         self.zeroconf_types = zeroconf_types
         self.homekit_models = homekit_models
         self.ipv6 = ipv6
@@ -315,7 +316,7 @@ class ZeroconfDiscovery:
                 types.append(hk_type)
         _LOGGER.debug("Starting Zeroconf browser for: %s", types)
         self.async_service_browser = HaAsyncServiceBrowser(
-            self.ipv6, self.aiozc.zeroconf, types, handlers=[self.async_service_update]
+            self.ipv6, self.zeroconf, types, handlers=[self.async_service_update]
         )
 
     async def async_stop(self) -> None:
