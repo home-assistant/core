@@ -184,7 +184,7 @@ async def async_attach_trigger(
             hass, state_config, action, automation_info, platform_type="device"
         )
 
-    raise HomeAssistantError("Trigger type not recognized")
+    raise HomeAssistantError(f"Unhandled trigger type {trigger_type}")
 
 
 async def async_get_trigger_capabilities(
