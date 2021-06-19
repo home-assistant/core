@@ -45,6 +45,15 @@ async def test_switch_state(
     assert entry
     assert entry.unique_id == "AA:BB:CC:DD:EE:FF_adaptive_learning"
 
+    state = hass.states.get("switch.modernformsfan_reboot")
+    assert state
+    assert state.attributes.get(ATTR_ICON) == "mdi:restart"
+    assert state.state == STATE_OFF
+
+    entry = entity_registry.async_get("switch.modernformsfan_reboot")
+    assert entry
+    assert entry.unique_id == "AA:BB:CC:DD:EE:FF_reboot"
+
 
 async def test_switch_change_state(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
@@ -97,6 +106,28 @@ async def test_switch_change_state(
         )
         await hass.async_block_till_done()
         adaptive_learning_mock.assert_called_once_with(adaptive_learning=False)
+
+    # Reboot
+    with patch("aiomodernforms.ModernFormsDevice.reboot") as reboot_mock:
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "switch.modernformsfan_reboot"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        reboot_mock.assert_called_once()
+
+    # Reboot
+    with patch("aiomodernforms.ModernFormsDevice.reboot") as reboot_mock:
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: "switch.modernformsfan_reboot"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        reboot_mock.assert_not_called()
 
 
 async def test_switch_error(
