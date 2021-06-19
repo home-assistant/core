@@ -168,7 +168,7 @@ async def async_attach_trigger(
                 event_data[ATTR_TYPE] = val
 
         event_config = event.TRIGGER_SCHEMA(event_config)
-        return await event.async_attach_trigger(  # type: ignore
+        return await event.async_attach_trigger(
             hass, event_config, action, automation_info, platform_type="device"
         )
 
