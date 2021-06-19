@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import pytest
 import voluptuous_serialize
+from zwave_js_server.const import CommandClass
 from zwave_js_server.event import Event
 
 from homeassistant.components import automation
@@ -61,6 +62,12 @@ async def test_get_conditions(hass, client, lock_schlage_be469, integration) -> 
             "device_id": device.id,
             "value_id": value_id,
             "subtype": f"{value_id} ({name})",
+        },
+        {
+            "condition": "device",
+            "domain": DOMAIN,
+            "type": "value",
+            "device_id": device.id,
         },
     ]
     conditions = await async_get_device_automations(hass, "condition", device.id)
@@ -332,6 +339,50 @@ async def test_config_parameter_state(
     assert calls[1].data["some"] == "User Slot Status - event - test_event2"
 
 
+async def test_value_state(
+    hass, client, lock_schlage_be469, integration, calls
+) -> None:
+    """Test for value conditions."""
+    dev_reg = device_registry.async_get(hass)
+    device = device_registry.async_entries_for_config_entry(
+        dev_reg, integration.entry_id
+    )[0]
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {"platform": "event", "event_type": "test_event1"},
+                    "condition": [
+                        {
+                            "condition": "device",
+                            "domain": DOMAIN,
+                            "device_id": device.id,
+                            "type": "value",
+                            "command_class": "CONFIGURATION",
+                            "property": 3,
+                            "value": 255,
+                        }
+                    ],
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {
+                            "some": "value - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                        },
+                    },
+                },
+            ]
+        },
+    )
+
+    hass.bus.async_fire("test_event1")
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert calls[0].data["some"] == "value - event - test_event1"
+
+
 async def test_get_condition_capabilities_node_status(
     hass, client, lock_schlage_be469, integration
 ):
@@ -351,6 +402,44 @@ async def test_get_condition_capabilities_node_status(
         },
     )
     assert not capabilities
+
+
+async def test_get_condition_capabilities_value(
+    hass, client, lock_schlage_be469, integration
+):
+    """Test we get the expected capabilities from a config_parameter condition."""
+    dev_reg = device_registry.async_get(hass)
+    device = device_registry.async_entries_for_config_entry(
+        dev_reg, integration.entry_id
+    )[0]
+
+    capabilities = await device_condition.async_get_condition_capabilities(
+        hass,
+        {
+            "platform": "device",
+            "domain": DOMAIN,
+            "device_id": device.id,
+            "type": "value",
+        },
+    )
+    assert capabilities and "extra_fields" in capabilities
+
+    cc_options = [(cc.name, cc.name) for cc in CommandClass]
+
+    assert voluptuous_serialize.convert(
+        capabilities["extra_fields"], custom_serializer=cv.custom_serializer
+    ) == [
+        {
+            "name": "command_class",
+            "required": True,
+            "options": cc_options,
+            "type": "select",
+        },
+        {"name": "property", "required": True, "type": "string"},
+        {"name": "property_key", "optional": True, "type": "string"},
+        {"name": "endpoint", "optional": True, "type": "string"},
+        {"name": "value", "required": True, "type": "string"},
+    ]
 
 
 async def test_get_condition_capabilities_config_parameter(

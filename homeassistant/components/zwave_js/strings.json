@@ -104,7 +104,8 @@
       "awake": "Node is awake",
       "dead": "Node is dead",
       "alive": "Node is alive",
-      "config_parameter": "Config parameter {subtype} value"
+      "config_parameter": "Config parameter {subtype} value",
+      "value": "Z-Wave Value's value"
     }
   }
 }
