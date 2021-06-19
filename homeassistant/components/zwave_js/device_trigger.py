@@ -156,6 +156,8 @@ async def async_attach_trigger(
     if trigger_type == "event":
         if config[CONF_TYPE] == ENTRY_CONTROL_NOTIFICATION:
             event_config[event.CONF_EVENT_TYPE] = ZWAVE_JS_NOTIFICATION_EVENT
+            # We need to check explicitly for not None in these cases because 0 is a
+            # valid input
             for param in (ATTR_EVENT_TYPE, ATTR_DATA_TYPE):
                 if (val := config.get(param)) is not None:
                     event_data[param] = val
@@ -164,6 +166,8 @@ async def async_attach_trigger(
             for param in (ATTR_LABEL, ATTR_EVENT_LABEL):
                 if val := config.get(param):
                     event_data[param] = val
+            # We need to check explicitly for not None in these cases because 0 is a
+            # valid input
             if (val := config.get(ATTR_EVENT)) is not None:
                 event_data[ATTR_EVENT] = val
             if (val := config.get(f"{ATTR_TYPE}.")) is not None:
