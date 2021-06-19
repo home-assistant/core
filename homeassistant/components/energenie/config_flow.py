@@ -35,10 +35,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Socket number is not in range from 1-4")
                 errors["base"] = "invalid_range"
             except exc.EnergenieBadSocket:
-                _LOGGER.exception("Pimote addon could not be located.")
+                _LOGGER.exception("Pimote addon could not be located")
                 errors["base"] = "pimote_not_found"
 
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
-
