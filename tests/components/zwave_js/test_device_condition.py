@@ -2,11 +2,12 @@
 from __future__ import annotations
 
 import pytest
+import voluptuous_serialize
 from zwave_js_server.event import Event
 
 from homeassistant.components import automation
-from homeassistant.components.zwave_js import DOMAIN
-from homeassistant.helpers import device_registry
+from homeassistant.components.zwave_js import DOMAIN, device_condition
+from homeassistant.helpers import config_validation as cv, device_registry
 from homeassistant.setup import async_setup_component
 
 from tests.common import async_get_device_automations, async_mock_service
@@ -19,11 +20,15 @@ def calls(hass):
 
 
 async def test_get_conditions(hass, client, lock_schlage_be469, integration) -> None:
-    """Test we get the expected conditions from a zwave_js."""
+    """Test we get the expected onditions from a zwave_js."""
     dev_reg = device_registry.async_get(hass)
     device = device_registry.async_entries_for_config_entry(
         dev_reg, integration.entry_id
     )[0]
+    config_value = list(lock_schlage_be469.get_configuration_values().values())[0]
+    value_id = config_value.value_id
+    name = config_value.property_name
+
     expected_conditions = [
         {
             "condition": "device",
@@ -49,14 +54,24 @@ async def test_get_conditions(hass, client, lock_schlage_be469, integration) -> 
             "type": "dead",
             "device_id": device.id,
         },
+        {
+            "condition": "device",
+            "domain": DOMAIN,
+            "type": "config_parameter",
+            "device_id": device.id,
+            "value_id": value_id,
+            "subtype": f"{value_id} ({name})",
+        },
     ]
     conditions = await async_get_device_automations(hass, "condition", device.id)
     for condition in expected_conditions:
         assert condition in conditions
 
 
-async def test_if_state(hass, client, lock_schlage_be469, integration, calls) -> None:
-    """Test for turn_on and turn_off conditions."""
+async def test_node_status_state(
+    hass, client, lock_schlage_be469, integration, calls
+) -> None:
+    """Test for node_status conditions."""
     dev_reg = device_registry.async_get(hass)
     device = device_registry.async_entries_for_config_entry(
         dev_reg, integration.entry_id
@@ -206,3 +221,211 @@ async def test_if_state(hass, client, lock_schlage_be469, integration, calls) ->
     )
     lock_schlage_be469.receive_event(event)
     await hass.async_block_till_done()
+
+
+async def test_config_parameter_state(
+    hass, client, lock_schlage_be469, integration, calls
+) -> None:
+    """Test for config_parameter conditions."""
+    dev_reg = device_registry.async_get(hass)
+    device = device_registry.async_entries_for_config_entry(
+        dev_reg, integration.entry_id
+    )[0]
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {"platform": "event", "event_type": "test_event1"},
+                    "condition": [
+                        {
+                            "condition": "device",
+                            "domain": DOMAIN,
+                            "device_id": device.id,
+                            "type": "config_parameter",
+                            "value_id": f"{lock_schlage_be469.node_id}-112-0-3",
+                            "subtype": f"{lock_schlage_be469.node_id}-112-0-3 (Beeper)",
+                            "value": 255,
+                        }
+                    ],
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {
+                            "some": "Beeper - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                        },
+                    },
+                },
+                {
+                    "trigger": {"platform": "event", "event_type": "test_event2"},
+                    "condition": [
+                        {
+                            "condition": "device",
+                            "domain": DOMAIN,
+                            "device_id": device.id,
+                            "type": "config_parameter",
+                            "value_id": f"{lock_schlage_be469.node_id}-112-0-6",
+                            "subtype": f"{lock_schlage_be469.node_id}-112-0-6 (User Slot Status)",
+                            "value": 1,
+                        }
+                    ],
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {
+                            "some": "User Slot Status - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                        },
+                    },
+                },
+            ]
+        },
+    )
+
+    hass.bus.async_fire("test_event1")
+    hass.bus.async_fire("test_event2")
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert calls[0].data["some"] == "Beeper - event - test_event1"
+
+    # Flip Beeper state to not match condition
+    event = Event(
+        type="value updated",
+        data={
+            "source": "node",
+            "event": "value updated",
+            "nodeId": lock_schlage_be469.node_id,
+            "args": {
+                "commandClassName": "Configuration",
+                "commandClass": 112,
+                "endpoint": 0,
+                "property": 3,
+                "newValue": 0,
+                "prevValue": 255,
+            },
+        },
+    )
+    lock_schlage_be469.receive_event(event)
+
+    # Flip User Slot Status to match condition
+    event = Event(
+        type="value updated",
+        data={
+            "source": "node",
+            "event": "value updated",
+            "nodeId": lock_schlage_be469.node_id,
+            "args": {
+                "commandClassName": "Configuration",
+                "commandClass": 112,
+                "endpoint": 0,
+                "property": 6,
+                "newValue": 1,
+                "prevValue": 117440512,
+            },
+        },
+    )
+    lock_schlage_be469.receive_event(event)
+
+    hass.bus.async_fire("test_event1")
+    hass.bus.async_fire("test_event2")
+    await hass.async_block_till_done()
+    assert len(calls) == 2
+    assert calls[1].data["some"] == "User Slot Status - event - test_event2"
+
+
+async def test_get_condition_capabilities_node_status(
+    hass, client, lock_schlage_be469, integration
+):
+    """Test we don't get capabilities from a node_status condition."""
+    dev_reg = device_registry.async_get(hass)
+    device = device_registry.async_entries_for_config_entry(
+        dev_reg, integration.entry_id
+    )[0]
+
+    capabilities = await device_condition.async_get_condition_capabilities(
+        hass,
+        {
+            "platform": "device",
+            "domain": DOMAIN,
+            "device_id": device.id,
+            "type": "alive",
+        },
+    )
+    assert not capabilities
+
+
+async def test_get_condition_capabilities_config_parameter(
+    hass, client, climate_radio_thermostat_ct100_plus, integration
+):
+    """Test we get the expected capabilities from a config_parameter condition."""
+    node = climate_radio_thermostat_ct100_plus
+    dev_reg = device_registry.async_get(hass)
+    device = device_registry.async_entries_for_config_entry(
+        dev_reg, integration.entry_id
+    )[0]
+
+    capabilities = await device_condition.async_get_condition_capabilities(
+        hass,
+        {
+            "platform": "device",
+            "domain": DOMAIN,
+            "device_id": device.id,
+            "type": "config_parameter",
+            "value_id": f"{node.node_id}-112-0-1",
+            "subtype": f"{node.node_id}-112-0-1 (Temperature Reporting Threshold)",
+        },
+    )
+    assert capabilities and "extra_fields" in capabilities
+
+    assert voluptuous_serialize.convert(
+        capabilities["extra_fields"], custom_serializer=cv.custom_serializer
+    ) == [
+        {
+            "name": "value",
+            "required": True,
+            "options": [
+                (0, "Disabled"),
+                (1, "0.5° F"),
+                (2, "1.0° F"),
+                (3, "1.5° F"),
+                (4, "2.0° F"),
+            ],
+            "type": "select",
+        }
+    ]
+
+    capabilities = await device_condition.async_get_condition_capabilities(
+        hass,
+        {
+            "platform": "device",
+            "domain": DOMAIN,
+            "device_id": device.id,
+            "type": "config_parameter",
+            "value_id": f"{node.node_id}-112-0-10",
+            "subtype": f"{node.node_id}-112-0-10 (Temperature Reporting Filter)",
+        },
+    )
+    assert capabilities and "extra_fields" in capabilities
+
+    assert voluptuous_serialize.convert(
+        capabilities["extra_fields"], custom_serializer=cv.custom_serializer
+    ) == [
+        {
+            "name": "value",
+            "required": True,
+            "valueMin": 0,
+            "valueMax": 124,
+        }
+    ]
+
+    capabilities = await device_condition.async_get_condition_capabilities(
+        hass,
+        {
+            "platform": "device",
+            "domain": DOMAIN,
+            "device_id": device.id,
+            "type": "config_parameter",
+            "value_id": f"{node.node_id}-112-0-2",
+            "subtype": f"{node.node_id}-112-0-2 (HVAC Settings)",
+        },
+    )
+    assert not capabilities
