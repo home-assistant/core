@@ -363,6 +363,7 @@ async def test_get_condition_capabilities_config_parameter(
         dev_reg, integration.entry_id
     )[0]
 
+    # Test enumerated type param
     capabilities = await device_condition.async_get_condition_capabilities(
         hass,
         {
@@ -393,6 +394,7 @@ async def test_get_condition_capabilities_config_parameter(
         }
     ]
 
+    # Test range type param
     capabilities = await device_condition.async_get_condition_capabilities(
         hass,
         {
@@ -417,6 +419,7 @@ async def test_get_condition_capabilities_config_parameter(
         }
     ]
 
+    # Test undefined type param
     capabilities = await device_condition.async_get_condition_capabilities(
         hass,
         {
