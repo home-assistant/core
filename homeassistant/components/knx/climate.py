@@ -327,12 +327,12 @@ class KNXClimate(KnxEntity, ClimateEntity):
 
     async def async_added_to_hass(self) -> None:
         """Store register state change callback."""
-        super().async_added_to_hass()
+        await super().async_added_to_hass()
         if self._device.mode is not None:
             self._device.mode.register_device_updated_cb(self.after_update_callback)
 
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect device object when removed."""
-        super().async_will_remove_from_hass()
+        await super().async_will_remove_from_hass()
         if self._device.mode is not None:
             self._device.mode.unregister_device_updated_cb(self.after_update_callback)
