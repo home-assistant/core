@@ -38,7 +38,7 @@ async def async_setup_platform(
     async_add_entities(entities)
 
 
-def _create_expose_sensor(xknx: XKNX, config: ConfigType) -> NumericValue:
+def _create_numeric_value(xknx: XKNX, config: ConfigType) -> NumericValue:
     """Return a KNX NumericValue to be used within XKNX."""
     return NumericValue(
         xknx,
@@ -56,7 +56,7 @@ class KNXNumber(KnxEntity, NumberEntity, RestoreEntity):
     def __init__(self, xknx: XKNX, config: ConfigType) -> None:
         """Initialize a KNX number."""
         self._device: NumericValue
-        super().__init__(_create_expose_sensor(xknx, config))
+        super().__init__(_create_numeric_value(xknx, config))
         self._unique_id = f"{self._device.sensor_value.group_address}"
 
         self._attr_min_value = config.get(
