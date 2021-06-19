@@ -10,7 +10,9 @@
       "on_supervisor": {
         "title": "Select connection method",
         "description": "Do you want to use the Z-Wave JS Supervisor add-on?",
-        "data": { "use_addon": "Use the Z-Wave JS Supervisor add-on" }
+        "data": {
+          "use_addon": "Use the Z-Wave JS Supervisor add-on"
+        }
       },
       "install_addon": {
         "title": "The Z-Wave JS add-on installation has started"
@@ -22,7 +24,9 @@
           "network_key": "Network Key"
         }
       },
-      "start_addon": { "title": "The Z-Wave JS add-on is starting." },
+      "start_addon": {
+        "title": "The Z-Wave JS add-on is starting."
+      },
       "hassio_confirm": {
         "title": "Set up Z-Wave JS integration with the Z-Wave JS add-on"
       }
@@ -92,6 +96,15 @@
     "progress": {
       "install_addon": "Please wait while the Z-Wave JS add-on installation finishes. This can take several minutes.",
       "start_addon": "Please wait while the Z-Wave JS add-on start completes. This may take some seconds."
+    }
+  },
+  "device_automation": {
+    "condition_type": {
+      "unknown": "unknown",
+      "asleep": "asleep",
+      "awake": "awake",
+      "dead": "dead",
+      "alive": "alive"
     }
   }
 }
