@@ -36,6 +36,13 @@ class Alpha2Climate(ClimateEntity):
 
     target_temperature_step = 0.2
 
+    _attr_should_poll = False
+    _attr_supported_features = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
+    _attr_hvac_mode = HVAC_MODE_AUTO
+    _attr_hvac_modes = [HVAC_MODE_AUTO]
+    _attr_temperature_unit = TEMP_CELSIUS
+    _attr_preset_modes = [PRESET_NONE, PRESET_COMFORT, PRESET_ECO]
+
     def __init__(self, base_update_handler, data):
         """Initialize Alpha2 ClimateEntity."""
         self._base_update_handler = base_update_handler
@@ -58,16 +65,6 @@ class Alpha2Climate(ClimateEntity):
             self.async_schedule_update_ha_state()
 
     @property
-    def supported_features(self):
-        """Return the list of supported features."""
-        return SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
-
-    @property
-    def should_poll(self):
-        """Disable polling."""
-        return False
-
-    @property
     def name(self):
         """Return the name of the climate device."""
         return self._data["HEATAREA_NAME"]
@@ -83,24 +80,9 @@ class Alpha2Climate(ClimateEntity):
         return float(self._data.get("T_TARGET_MAX", 30))
 
     @property
-    def temperature_unit(self):
-        """Return the unit of measurement."""
-        return TEMP_CELSIUS
-
-    @property
     def current_temperature(self):
         """Return the current temperature."""
         return float(self._data.get("T_ACTUAL", 0))
-
-    @property
-    def hvac_mode(self):
-        """Return current operation mode."""
-        return HVAC_MODE_AUTO
-
-    @property
-    def hvac_modes(self):
-        """Return the list of available operation modes."""
-        return [HVAC_MODE_AUTO]
 
     def set_hvac_mode(self, hvac_mode: str):
         """Set new target hvac mode."""
@@ -141,11 +123,6 @@ class Alpha2Climate(ClimateEntity):
         if self._data["HEATAREA_MODE"] == 2:
             return PRESET_ECO
         return PRESET_NONE
-
-    @property
-    def preset_modes(self):
-        """Return available preset modes."""
-        return [PRESET_NONE, PRESET_COMFORT, PRESET_ECO]
 
     async def async_set_preset_mode(self, preset_mode):
         """Set new operation mode."""
