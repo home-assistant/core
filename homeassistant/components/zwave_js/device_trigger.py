@@ -180,6 +180,7 @@ async def async_attach_trigger(
             if val := config.get(param):
                 state_config[param] = val
 
+        state_config = state.TRIGGER_SCHEMA(state_config)
         return await state.async_attach_trigger(
             hass, state_config, action, automation_info, platform_type="device"
         )
