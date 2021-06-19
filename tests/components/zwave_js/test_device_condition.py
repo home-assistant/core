@@ -6,10 +6,7 @@ from zwave_js_server.event import Event
 
 from homeassistant.components import automation
 from homeassistant.components.zwave_js import DOMAIN
-from homeassistant.components.zwave_js.helpers import (
-    async_get_node_status_sensor_entity_id,
-)
-from homeassistant.helpers import device_registry, entity_registry
+from homeassistant.helpers import device_registry
 from homeassistant.setup import async_setup_component
 
 from tests.common import async_get_device_automations, async_mock_service
@@ -27,37 +24,30 @@ async def test_get_conditions(hass, client, lock_schlage_be469, integration) -> 
     device = device_registry.async_entries_for_config_entry(
         dev_reg, integration.entry_id
     )[0]
-    node_sensor_entity_id = async_get_node_status_sensor_entity_id(
-        hass, device.id, dev_reg=dev_reg
-    )
     expected_conditions = [
         {
             "condition": "device",
             "domain": DOMAIN,
             "type": "alive",
             "device_id": device.id,
-            "entity_id": node_sensor_entity_id,
         },
         {
             "condition": "device",
             "domain": DOMAIN,
             "type": "awake",
             "device_id": device.id,
-            "entity_id": node_sensor_entity_id,
         },
         {
             "condition": "device",
             "domain": DOMAIN,
             "type": "asleep",
             "device_id": device.id,
-            "entity_id": node_sensor_entity_id,
         },
         {
             "condition": "device",
             "domain": DOMAIN,
             "type": "dead",
             "device_id": device.id,
-            "entity_id": node_sensor_entity_id,
         },
     ]
     conditions = await async_get_device_automations(hass, "condition", device.id)
@@ -71,13 +61,6 @@ async def test_if_state(hass, client, lock_schlage_be469, integration, calls) ->
     device = device_registry.async_entries_for_config_entry(
         dev_reg, integration.entry_id
     )[0]
-    node_sensor_entity_id = async_get_node_status_sensor_entity_id(
-        hass, device.id, dev_reg=dev_reg
-    )
-
-    ent_reg = entity_registry.async_get(hass)
-    ent_reg.async_update_entity(node_sensor_entity_id, **{"disabled_by": None})
-    await hass.config_entries.async_reload(integration.entry_id)
 
     assert await async_setup_component(
         hass,
@@ -91,7 +74,6 @@ async def test_if_state(hass, client, lock_schlage_be469, integration, calls) ->
                             "condition": "device",
                             "domain": DOMAIN,
                             "device_id": device.id,
-                            "entity_id": node_sensor_entity_id,
                             "type": "alive",
                         }
                     ],
@@ -109,7 +91,6 @@ async def test_if_state(hass, client, lock_schlage_be469, integration, calls) ->
                             "condition": "device",
                             "domain": DOMAIN,
                             "device_id": device.id,
-                            "entity_id": node_sensor_entity_id,
                             "type": "awake",
                         }
                     ],
@@ -127,7 +108,6 @@ async def test_if_state(hass, client, lock_schlage_be469, integration, calls) ->
                             "condition": "device",
                             "domain": DOMAIN,
                             "device_id": device.id,
-                            "entity_id": node_sensor_entity_id,
                             "type": "asleep",
                         }
                     ],
@@ -145,7 +125,6 @@ async def test_if_state(hass, client, lock_schlage_be469, integration, calls) ->
                             "condition": "device",
                             "domain": DOMAIN,
                             "device_id": device.id,
-                            "entity_id": node_sensor_entity_id,
                             "type": "dead",
                         }
                     ],
