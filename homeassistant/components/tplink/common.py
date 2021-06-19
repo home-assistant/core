@@ -26,6 +26,7 @@ CONF_DISCOVERY = "discovery"
 CONF_LIGHT = "light"
 CONF_STRIP = "strip"
 CONF_SWITCH = "switch"
+MAX_DISCOVERY_RETRIES = 4
 
 
 class SmartDevices:
@@ -70,9 +71,6 @@ async def async_discover_devices(
     hass: HomeAssistant, existing_devices: SmartDevices
 ) -> SmartDevices:
     """Get devices through discovery."""
-    _LOGGER.debug("Discovering devices")
-    devices = await async_get_discoverable_devices(hass)
-    _LOGGER.info("Discovered %s TP-Link smart home device(s)", len(devices))
 
     lights = []
     switches = []
@@ -100,6 +98,19 @@ async def async_discover_devices(
             else:
                 _LOGGER.error("Unknown smart device type: %s", type(dev))
 
+    discovery_attempt = 0
+    devices = dict()
+    
+    while discovery_attempt < MAX_DISCOVERY_RETRIES:
+        discovery_attempt += 1
+        _LOGGER.debug("Discovering tplink devices, attempt %s of %s", discovery_attempt, MAX_DISCOVERY_RETRIES)
+        discovered_devices = await async_get_discoverable_devices(hass)
+        _LOGGER.info("Discovered %s TP-Link smart home device(s)", len(discovered_devices))
+        for ip in discovered_devices:
+            if ip not in devices:
+                devices[ip] = discovered_devices[ip]
+
+    _LOGGER.info("Found %s unique TP-Link smart home device(s) after %s discovery attempts", len(devices), discovery_attempt)
     await hass.async_add_executor_job(process_devices)
 
     return SmartDevices(lights, switches)
