@@ -6,6 +6,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_NAME
 from homeassistant.exceptions import HomeAssistantError
+from gpiozero import exc
 
 from .const import DOMAIN
 
@@ -22,34 +23,23 @@ DATA_SCHEMA = vol.Schema(
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for energenie."""
 
-    async def in_range(self, socket_number):
-        """Verify that input is between the range of 1 and 4."""
-        if 1 <= socket_number <= 4:
-            return True
-        raise InvalidRange
-
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
             try:
-                await self.in_range(user_input["socket_number"])
-                await self.async_set_unique_id(f'energenie-socket-{user_input["socket_number"]}')
-                self._abort_if_unique_id_configured()
+                self._async_abort_entries_match({"socket_number": user_input["socket_number"]})
                 return self.async_create_entry(
                     title=user_input["name"], data=user_input
                 )
-            except InvalidRange:
-                _LOGGER.exception("Socket number is not in range from 1-4")
+            except exc.BadPinFactory:
+                _LOGGER.exception("Socket number is not in range from 1-4.")
                 errors["base"] = "invalid_range"
-            except:
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
+            except exc.EnergenieBadSocket:
+                _LOGGER.exception("Pimote addon could not be located.")
+                errors["base"] = "pimote_not_found"
 
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
 
-
-class InvalidRange(HomeAssistantError):
-    """Socket Number doesn't match criteria."""
