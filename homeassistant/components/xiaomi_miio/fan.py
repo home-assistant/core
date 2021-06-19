@@ -49,8 +49,6 @@ from .const import (
     SERVICE_SET_BUZZER_ON,
     SERVICE_SET_CHILD_LOCK_OFF,
     SERVICE_SET_CHILD_LOCK_ON,
-    SERVICE_SET_DRY_OFF,
-    SERVICE_SET_DRY_ON,
     SERVICE_SET_EXTRA_FEATURES,
     SERVICE_SET_FAN_LED_OFF,
     SERVICE_SET_FAN_LED_ON,
@@ -59,8 +57,6 @@ from .const import (
     SERVICE_SET_LEARN_MODE_OFF,
     SERVICE_SET_LEARN_MODE_ON,
     SERVICE_SET_LED_BRIGHTNESS,
-    SERVICE_SET_MOTOR_SPEED,
-    SERVICE_SET_TARGET_HUMIDITY,
     SERVICE_SET_VOLUME,
 )
 from .device import XiaomiMiioEntity
@@ -408,16 +404,6 @@ SERVICE_TO_METHOD = {
     SERVICE_SET_EXTRA_FEATURES: {
         "method": "async_set_extra_features",
         "schema": SERVICE_SCHEMA_EXTRA_FEATURES,
-    },
-    SERVICE_SET_TARGET_HUMIDITY: {
-        "method": "async_set_target_humidity",
-        "schema": SERVICE_SCHEMA_TARGET_HUMIDITY,
-    },
-    SERVICE_SET_DRY_ON: {"method": "async_set_dry_on"},
-    SERVICE_SET_DRY_OFF: {"method": "async_set_dry_off"},
-    SERVICE_SET_MOTOR_SPEED: {
-        "method": "async_set_motor_speed",
-        "schema": SERVICE_SCHEMA_MOTOR_SPEED,
     },
 }
 
