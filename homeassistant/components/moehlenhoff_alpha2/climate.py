@@ -1,6 +1,8 @@
 """Support for Alpha2 room control unit via Alpha2 base."""
 import logging
 
+import aiohttp
+
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     HVAC_MODE_AUTO,
@@ -131,15 +133,18 @@ class Alpha2Climate(ClimateEntity):
             await self._base_update_handler.async_set_heatarea_mode(
                 self._data["ID"], heatarea_mode
             )
+        except aiohttp.web.HTTPRequestTimeout as http_err:
+            _LOGGER.error(
+                "Failed to set target temperature, base is unreachable: %s", http_err
+            )
+        except Exception as update_err:  # pylint: disable=broad-except
+            _LOGGER.error("Failed to set target temperature: %s", update_err)
+        else:
             self._data["HEATAREA_MODE"] = heatarea_mode
             if heatarea_mode == 1:
                 self._data["T_TARGET"] = self._data["T_HEAT_DAY"]
             elif heatarea_mode == 2:
                 self._data["T_TARGET"] = self._data["T_HEAT_NIGHT"]
-            return True
-        except Exception as update_err:  # pylint: disable=broad-except
-            _LOGGER.error("Setting target temperature failed: %s", update_err)
-            return False
 
     @property
     def device_state_attributes(self):
