@@ -132,27 +132,24 @@ class WLEDMasterLight(WLEDEntity, LightEntity):
     @wled_exception_handler
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the light."""
-        data: dict[str, bool | int] = {ATTR_ON: False}
-
+        transition = None
         if ATTR_TRANSITION in kwargs:
             # WLED uses 100ms per unit, so 10 = 1 second.
-            data[ATTR_TRANSITION] = round(kwargs[ATTR_TRANSITION] * 10)
+            transition = round(kwargs[ATTR_TRANSITION] * 10)
 
-        await self.coordinator.wled.master(**data)  # type: ignore[arg-type]
+        await self.coordinator.wled.master(on=False, transition=transition)
 
     @wled_exception_handler
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
-        data: dict[str, bool | int] = {ATTR_ON: True}
-
+        transition = None
         if ATTR_TRANSITION in kwargs:
             # WLED uses 100ms per unit, so 10 = 1 second.
-            data[ATTR_TRANSITION] = round(kwargs[ATTR_TRANSITION] * 10)
+            transition = round(kwargs[ATTR_TRANSITION] * 10)
 
-        if ATTR_BRIGHTNESS in kwargs:
-            data[ATTR_BRIGHTNESS] = kwargs[ATTR_BRIGHTNESS]
-
-        await self.coordinator.wled.master(**data)  # type: ignore[arg-type]
+        await self.coordinator.wled.master(
+            on=True, brightness=kwargs.get(ATTR_BRIGHTNESS), transition=transition
+        )
 
     async def async_effect(
         self,
@@ -171,9 +168,7 @@ class WLEDMasterLight(WLEDEntity, LightEntity):
         preset: int,
     ) -> None:
         """Set a WLED light to a saved preset."""
-        data = {ATTR_PRESET: preset}
-
-        await self.coordinator.wled.preset(**data)
+        await self.coordinator.wled.preset(preset=preset)
 
 
 class WLEDSegmentLight(WLEDEntity, LightEntity):
@@ -292,22 +287,22 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
     @wled_exception_handler
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the light."""
-        data: dict[str, bool | int] = {ATTR_ON: False}
-
+        transition = None
         if ATTR_TRANSITION in kwargs:
             # WLED uses 100ms per unit, so 10 = 1 second.
-            data[ATTR_TRANSITION] = round(kwargs[ATTR_TRANSITION] * 10)
+            transition = round(kwargs[ATTR_TRANSITION] * 10)
 
         # If there is a single segment, control via the master
         if (
             not self._keep_master_light
             and len(self.coordinator.data.state.segments) == 1
         ):
-            await self.coordinator.wled.master(**data)  # type: ignore[arg-type]
+            await self.coordinator.wled.master(on=False, transition=transition)
             return
 
-        data[ATTR_SEGMENT_ID] = self._segment
-        await self.coordinator.wled.segment(**data)  # type: ignore[arg-type]
+        await self.coordinator.wled.segment(
+            segment_id=self._segment, on=False, transition=transition
+        )
 
     @wled_exception_handler
     async def async_turn_on(self, **kwargs: Any) -> None:
@@ -364,24 +359,14 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
         speed: int | None = None,
     ) -> None:
         """Set the effect of a WLED light."""
-        data: dict[str, bool | int | str | None] = {ATTR_SEGMENT_ID: self._segment}
-
-        if effect is not None:
-            data[ATTR_EFFECT] = effect
-
-        if intensity is not None:
-            data[ATTR_INTENSITY] = intensity
-
-        if palette is not None:
-            data[ATTR_PALETTE] = palette
-
-        if reverse is not None:
-            data[ATTR_REVERSE] = reverse
-
-        if speed is not None:
-            data[ATTR_SPEED] = speed
-
-        await self.coordinator.wled.segment(**data)  # type: ignore[arg-type]
+        await self.coordinator.wled.segment(
+            segment_id=self._segment,
+            effect=effect,
+            intensity=intensity,
+            palette=palette,
+            reverse=reverse,
+            speed=speed,
+        )
 
     @wled_exception_handler
     async def async_preset(
@@ -389,9 +374,7 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
         preset: int,
     ) -> None:
         """Set a WLED light to a saved preset."""
-        data = {ATTR_PRESET: preset}
-
-        await self.coordinator.wled.preset(**data)
+        await self.coordinator.wled.preset(preset=preset)
 
 
 @callback
