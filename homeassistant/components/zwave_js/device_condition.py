@@ -75,16 +75,16 @@ async def async_get_conditions(
     hass: HomeAssistant, device_id: str
 ) -> list[dict[str, str]]:
     """List device conditions for Z-Wave JS devices."""
-    node = async_get_node_from_device_id(hass, device_id)
-
+    conditions = []
     base_condition = {
         CONF_CONDITION: "device",
         CONF_DEVICE_ID: device_id,
         CONF_DOMAIN: DOMAIN,
     }
+    node = async_get_node_from_device_id(hass, device_id)
 
     # Any value's value condition
-    conditions = [{**base_condition, CONF_TYPE: VALUE_TYPE}]
+    conditions.append({**base_condition, CONF_TYPE: VALUE_TYPE})
 
     # Node status conditions
     conditions.extend(
