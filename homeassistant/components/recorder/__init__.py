@@ -269,6 +269,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         db_url = "sqlite:///:memory:"
         keep_days = 1
     exclude = conf[CONF_EXCLUDE]
+    # TODO ais exclude merge_dct
+    # all_domains = exclude['domains']
+    # _LOGGER.error("all_domains " + str(all_domains))
+    # _LOGGER.error("all_domains " + str(type(all_domains)))
+
     exclude_t = exclude.get(CONF_EVENT_TYPES, [])
     instance = hass.data[DATA_INSTANCE] = Recorder(
         hass=hass,
