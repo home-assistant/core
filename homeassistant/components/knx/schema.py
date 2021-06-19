@@ -33,6 +33,7 @@ from .const import (
     CONF_KNX_ROUTING,
     CONF_KNX_TUNNELING,
     CONF_RESET_AFTER,
+    CONF_RESPOND_TO_READ,
     CONF_STATE_ADDRESS,
     CONF_SYNC_STATE,
     CONTROLLER_MODES,
@@ -540,6 +541,37 @@ class SceneSchema(KNXPlatformSchema):
             vol.Required(CONF_SCENE_NUMBER): vol.All(
                 vol.Coerce(int), vol.Range(min=1, max=64)
             ),
+        }
+    )
+
+
+class SelectSchema(KNXPlatformSchema):
+    """Voluptuous schema for KNX selects."""
+
+    PLATFORM_NAME = SupportedPlatforms.SELECT.value
+
+    CONF_OPTION = "option"
+    CONF_OPTIONS = "options"
+    CONF_PAYLOAD = "payload"
+    CONF_PAYLOAD_LENGTH = "payload_length"
+    DEFAULT_NAME = "KNX Select"
+
+    ENTITY_SCHEMA = vol.Schema(
+        {
+            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+            vol.Optional(CONF_SYNC_STATE, default=True): sync_state_validator,
+            vol.Optional(CONF_RESPOND_TO_READ, default=False): cv.boolean,
+            vol.Required(CONF_PAYLOAD_LENGTH): vol.All(
+                vol.Coerce(int), vol.Range(min=0, max=14)
+            ),
+            vol.Required(CONF_OPTIONS): [
+                {
+                    vol.Required(CONF_OPTION): str,
+                    vol.Required(CONF_PAYLOAD): int,
+                }
+            ],
+            vol.Required(KNX_ADDRESS): ga_list_validator,
+            vol.Optional(CONF_STATE_ADDRESS): ga_list_validator,
         }
     )
 
