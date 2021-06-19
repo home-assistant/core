@@ -100,7 +100,7 @@ class ConnectXiaomiGateway:
                 self._gateway_device.discover_devices()
 
         except DeviceException:
-            _LOGGER.error(
+            _LOGGER.exception(
                 "DeviceException during setup of xiaomi gateway with host %s",
                 self._host,
             )
