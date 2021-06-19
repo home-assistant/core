@@ -237,7 +237,6 @@ class XiaomiGenericSensor(XiaomiCoordinatedMiioEntity, SensorEntity):
             return
         _LOGGER.debug("Got new state: %s", state)
         self._available = True
-        self._state = state.is_on
         self._state = self._extract_value_from_attribute(state, self._attribute)
         self.async_write_ha_state()
 
