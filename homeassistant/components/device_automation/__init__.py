@@ -4,7 +4,6 @@ from __future__ import annotations
 import asyncio
 from collections.abc import MutableMapping
 from functools import wraps
-from types import ModuleType
 from typing import Any
 
 import voluptuous as vol
@@ -74,7 +73,7 @@ async def async_setup(hass, config):
 
 async def async_get_device_automation_platform(
     hass: HomeAssistant, domain: str, automation_type: str
-) -> ModuleType:
+) -> Any:
     """Load device automation platform for integration.
 
     Throws InvalidDeviceAutomationConfig if the integration is not found or does not support device automation.

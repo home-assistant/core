@@ -926,7 +926,7 @@ async def async_device_from_config(
     return trace_condition_function(
         cast(
             ConditionCheckerType,
-            platform.async_condition_from_config(config, config_validation),  # type: ignore
+            platform.async_condition_from_config(config, config_validation),
         )
     )
 
@@ -972,7 +972,9 @@ async def async_validate_condition_config(
         platform = await async_get_device_automation_platform(
             hass, config[CONF_DOMAIN], "condition"
         )
-        return cast(ConfigType, platform.CONDITION_SCHEMA(config))  # type: ignore
+        if hasattr(platform, "async_validate_condition_config"):
+            return await platform.async_validate_condition_config(hass, config)  # type: ignore
+        return cast(ConfigType, platform.CONDITION_SCHEMA(config))
 
     return config
 
