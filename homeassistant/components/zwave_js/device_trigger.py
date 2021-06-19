@@ -2,14 +2,12 @@
 from __future__ import annotations
 
 import voluptuous as vol
-from zwave_js_server.client import Client
 from zwave_js_server.const import CommandClass
 from zwave_js_server.model.node import NodeStatus
 
 from homeassistant.components.automation import AutomationActionType
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.components.homeassistant.triggers import event, state
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_DOMAIN,
@@ -34,11 +32,13 @@ from .const import (
     ATTR_LABEL,
     ATTR_NODE_ID,
     ATTR_TYPE,
-    DATA_CLIENT,
     DOMAIN,
     ZWAVE_JS_NOTIFICATION_EVENT,
 )
-from .helpers import async_get_node_from_device_id
+from .helpers import (
+    async_get_node_from_device_id,
+    async_get_node_status_sensor_entity_id,
+)
 
 # Trigger types
 ENTRY_CONTROL_NOTIFICATION = "event.entry_control_notification"
@@ -107,11 +107,6 @@ TRIGGER_SCHEMA = vol.Any(
 async def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict]:
     """List device triggers for Z-Wave JS devices."""
     dev_reg = device_registry.async_get(hass)
-    device = dev_reg.async_get(device_id)
-    assert device  # This is a safe assertion because we know we will get a device
-
-    entry_id = next(entry_id for entry_id in device.config_entries)
-    client: Client = hass.data[DOMAIN][entry_id][DATA_CLIENT]
     node = async_get_node_from_device_id(hass, device_id, dev_reg)
 
     triggers = []
@@ -124,12 +119,10 @@ async def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict]:
 
     # We can add a node status trigger if the node status sensor is enabled
     ent_reg = entity_registry.async_get(hass)
-    entity_id = ent_reg.async_get_entity_id(
-        SENSOR_DOMAIN,
-        DOMAIN,
-        f"{client.driver.controller.home_id}.{node.node_id}.node_status",
+    entity_id = async_get_node_status_sensor_entity_id(
+        hass, device_id, ent_reg, dev_reg
     )
-    if entity_id and (entity := ent_reg.async_get(entity_id)) and not entity.disabled:
+    if (entity := ent_reg.async_get(entity_id)) is not None and not entity.disabled:
         triggers = [{**base_trigger, CONF_TYPE: NODE_STATUS, CONF_ENTITY_ID: entity_id}]
 
     # Handle notification event triggers
