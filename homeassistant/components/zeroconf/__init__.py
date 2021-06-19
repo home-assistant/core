@@ -126,8 +126,6 @@ async def _async_get_instance(hass: HomeAssistant, **zcargs: Any) -> HaAsyncZero
 
     async def _async_stop_zeroconf(_event: Event) -> None:
         """Stop Zeroconf."""
-        # Restore the original close
-        zeroconf.close = zeroconf.ha_close
         await aio_zc.ha_async_close()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_stop_zeroconf)
@@ -317,7 +315,7 @@ class ZeroconfDiscovery:
                 types.append(hk_type)
         _LOGGER.debug("Starting Zeroconf browser for: %s", types)
         self.async_service_browser = HaAsyncServiceBrowser(
-            self.ipv6, self.aiozc, types, handlers=[self.async_service_update]
+            self.ipv6, self.aiozc.zeroconf, types, handlers=[self.async_service_update]
         )
 
     async def async_stop(self) -> None:
@@ -357,7 +355,7 @@ class ZeroconfDiscovery:
     ) -> None:
         """Process a zeroconf update."""
         async_service_info = AsyncServiceInfo(service_type, name)
-        await async_service_info.async_request(aiozc, 3000)
+        await async_service_info.async_request(aiozc.zeroconf, 3000)
 
         info = info_from_service(async_service_info)
         if not info:
