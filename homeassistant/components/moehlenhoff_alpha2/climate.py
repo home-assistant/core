@@ -86,7 +86,6 @@ class Alpha2Climate(ClimateEntity):
 
     def set_hvac_mode(self, hvac_mode: str):
         """Set new target hvac mode."""
-        pass
 
     @property
     def target_temperature(self):
