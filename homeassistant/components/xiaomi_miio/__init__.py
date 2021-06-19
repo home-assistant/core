@@ -81,7 +81,12 @@ def get_platforms(config_entry):
         for air_monitor_model in MODELS_AIR_MONITOR:
             if model.startswith(air_monitor_model):
                 return AIR_MONITOR_PLATFORMS
-
+    _LOGGER.error(
+        "Unsupported device found! Please create an issue at "
+        "https://github.com/syssi/xiaomi_airpurifier/issues "
+        "and provide the following data: %s",
+        model,
+    )
     return []
 
 
@@ -159,7 +164,7 @@ async def async_setup_gateway_entry(
     gateway_model = f"{gateway_info.model}-{gateway_info.hardware_version}"
 
     device_registry = await dr.async_get_registry(hass)
-    device_registry.async_get_or_create(
+    await device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, gateway_info.mac_address)},
         identifiers={(DOMAIN, gateway_id)},

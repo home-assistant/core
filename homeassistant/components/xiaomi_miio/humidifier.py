@@ -28,7 +28,6 @@ from .const import (
     MODEL_AIRHUMIDIFIER_CA4,
     MODEL_AIRHUMIDIFIER_CB1,
     MODELS_HUMIDIFIER_MIOT,
-    SERVICE_SET_TARGET_HUMIDITY,
 )
 from .device import XiaomiCoordinatedMiioEntity
 
@@ -36,14 +35,6 @@ _LOGGER = logging.getLogger(__name__)
 
 # Air Humidifier
 ATTR_TARGET_HUMIDITY = "target_humidity"
-ATTR_TRANS_LEVEL = "trans_level"
-ATTR_HARDWARE_VERSION = "hardware_version"
-
-SERVICE_TO_METHOD = {
-    SERVICE_SET_TARGET_HUMIDITY: {
-        "method": "async_set_target_humidity",
-    },
-}
 
 AVAILABLE_ATTRIBUTES = {
     ATTR_MODE: "mode",
@@ -95,7 +86,6 @@ class XiaomiGenericHumidifier(XiaomiCoordinatedMiioEntity, HumidifierEntity):
 
     _attr_device_class = DEVICE_CLASS_HUMIDIFIER
     _attr_supported_features = SUPPORT_MODES
-    _attr_should_poll = True
 
     def __init__(self, name, device, entry, unique_id, coordinator):
         """Initialize the generic Xiaomi device."""
@@ -263,9 +253,9 @@ class XiaomiAirHumidifier(XiaomiGenericHumidifier, HumidifierEntity):
         if not target_humidity:
             return
 
-        _LOGGER.debug("Setting the humidity to: %s", target_humidity)
+        _LOGGER.debug("Setting the target humidity to: %s", target_humidity)
         await self._try_command(
-            "Setting operation mode of the miio device failed.",
+            "Setting target humidity of the miio device failed.",
             self._device.set_target_humidity,
             target_humidity,
         )
