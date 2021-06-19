@@ -332,7 +332,7 @@ class ZeroconfDiscovery:
     @callback
     def async_service_update(
         self,
-        zeroconf: HaAsyncZeroconf,
+        zeroconf: HaZeroconf,
         service_type: str,
         name: str,
         state_change: ServiceStateChange,
@@ -351,11 +351,11 @@ class ZeroconfDiscovery:
         asyncio.create_task(self._process_service_update(zeroconf, service_type, name))
 
     async def _process_service_update(
-        self, aiozc: HaAsyncZeroconf, service_type: str, name: str
+        self, zeroconf: HaZeroconf, service_type: str, name: str
     ) -> None:
         """Process a zeroconf update."""
         async_service_info = AsyncServiceInfo(service_type, name)
-        await async_service_info.async_request(aiozc.zeroconf, 3000)
+        await async_service_info.async_request(zeroconf, 3000)
 
         info = info_from_service(async_service_info)
         if not info:
