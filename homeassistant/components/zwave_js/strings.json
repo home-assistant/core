@@ -100,11 +100,11 @@
   },
   "device_automation": {
     "condition_type": {
-      "unknown": "unknown",
-      "asleep": "asleep",
-      "awake": "awake",
-      "dead": "dead",
-      "alive": "alive"
+      "asleep": "Node is asleep",
+      "awake": "Node is awake",
+      "dead": "Node is dead",
+      "alive": "Node is alive",
+      "config_parameter": "Config parameter {subtype} value"
     }
   }
 }

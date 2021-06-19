@@ -51,7 +51,6 @@
             }
         }
     },
-<<<<<<< HEAD
     "options": {
         "abort": {
             "addon_get_discovery_info_failed": "Failed to get Z-Wave JS add-on discovery info.",
@@ -100,15 +99,15 @@
             "start_addon": {
                 "title": "The Z-Wave JS add-on is starting."
             }
-=======
+        }
+    },
     "device_automation": {
         "condition_type": {
-            "alive": "alive",
-            "asleep": "asleep",
-            "awake": "awake",
-            "dead": "dead",
-            "unknown": "unknown"
->>>>>>> 1f3d4e2824 (Initial support for zwave_js device conditions)
+            "alive": "Node is alive",
+            "asleep": "Node is asleep",
+            "awake": "Node is awake",
+            "config_parameter": "Config parameter {subtype} value",
+            "dead": "Node is dead"
         }
     },
     "title": "Z-Wave JS"
