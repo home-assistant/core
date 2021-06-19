@@ -50,7 +50,7 @@ CONFIG_PARAMETER_CONDITION_SCHEMA = DEVICE_CONDITION_BASE_SCHEMA.extend(
 VALUE_CONDITION_SCHEMA = DEVICE_CONDITION_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_TYPE): VALUE_TYPE,
-        vol.Required(ATTR_COMMAND_CLASS): cv.string,
+        vol.Required(ATTR_COMMAND_CLASS): vol.In([cc.name for cc in CommandClass]),
         vol.Required(ATTR_PROPERTY): vol.Any(vol.Coerce(int), cv.string),
         vol.Optional(ATTR_PROPERTY_KEY): vol.Any(vol.Coerce(int), cv.string),
         vol.Optional(ATTR_ENDPOINT): vol.Coerce(int),
