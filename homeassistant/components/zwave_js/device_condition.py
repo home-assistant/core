@@ -16,6 +16,7 @@ from homeassistant.components.zwave_js.const import (
 )
 from homeassistant.const import CONF_CONDITION, CONF_DEVICE_ID, CONF_DOMAIN, CONF_TYPE
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import condition, config_validation as cv
 from homeassistant.helpers.config_validation import DEVICE_CONDITION_BASE_SCHEMA
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
@@ -151,7 +152,10 @@ def async_condition_from_config(
         value = node.values[value_id]
         return bool(value.value == config[ATTR_VALUE])
 
-    return test_value
+    if condition_type == VALUE_TYPE:
+        return test_value
+
+    raise HomeAssistantError(f"Unhandled condition type {condition_type}")
 
 
 @callback
