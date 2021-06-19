@@ -83,6 +83,8 @@ class SensorType:
     icon: str = None
     device_class: str = None
     state_class: str = None
+    valid_min_value: float = None
+    valid_max_value: float = None
 
 
 SENSOR_TYPES = {
@@ -105,13 +107,17 @@ SENSOR_TYPES = {
         state_class=STATE_CLASS_MEASUREMENT,
     ),
     "load_power": SensorType(
-        unit=POWER_WATT, icon=None, device_class=DEVICE_CLASS_POWER
+        unit=POWER_WATT,
+        icon=None,
+        device_class=DEVICE_CLASS_POWER,
     ),
     "water_level": SensorType(
         unit=PERCENTAGE,
         icon="mdi:water-check",
         device_class=None,
         state_class=STATE_CLASS_MEASUREMENT,
+        valid_min_value=0.0,
+        valid_max_value=100.0,
     ),
 }
 
@@ -268,6 +274,16 @@ class XiaomiGenericSensor(XiaomiCoordinatedMiioEntity, SensorEntity):
     @property
     def state(self):
         """Return the state of the device."""
+        if (
+            SENSOR_TYPES[self._attribute].valid_min_value
+            and self._state < SENSOR_TYPES[self._attribute].valid_min_value
+        ):
+            return None
+        if (
+            SENSOR_TYPES[self._attribute].valid_max_value
+            and self._state > SENSOR_TYPES[self._attribute].valid_max_value
+        ):
+            return None
         return self._state
 
     @staticmethod
