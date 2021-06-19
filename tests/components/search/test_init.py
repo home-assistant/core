@@ -11,7 +11,7 @@ from homeassistant.setup import async_setup_component
 from tests.common import MockConfigEntry
 from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
 
-mock_entity_sources = {
+MOCK_ENTITY_SOURCES = {
     "light.platform_config_source": {
         "source": entity.SOURCE_PLATFORM_CONFIG,
         "domain": "wled",
@@ -356,13 +356,13 @@ async def test_area_lookup(hass):
         },
     )
 
-    searcher = search.Searcher(hass, device_reg, entity_reg, mock_entity_sources)
+    searcher = search.Searcher(hass, device_reg, entity_reg, MOCK_ENTITY_SOURCES)
     assert searcher.async_search("area", living_room_area.id) == {
         "script": {"script.wled"},
         "automation": {"automation.area_turn_on"},
     }
 
-    searcher = search.Searcher(hass, device_reg, entity_reg, mock_entity_sources)
+    searcher = search.Searcher(hass, device_reg, entity_reg, MOCK_ENTITY_SOURCES)
     assert searcher.async_search("automation", "automation.area_turn_on") == {
         "area": {living_room_area.id},
     }
