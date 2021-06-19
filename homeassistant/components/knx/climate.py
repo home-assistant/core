@@ -183,7 +183,7 @@ class KNXClimate(KnxEntity, ClimateEntity):
             f"{self._device.target_temperature.group_address}_"
             f"{self._device._setpoint_shift.group_address}"  # pylint: disable=protected-access
         )
-        self._unit_of_measurement = TEMP_CELSIUS
+        self._attr_temperature_unit = TEMP_CELSIUS
 
     @property
     def supported_features(self) -> int:
@@ -195,11 +195,6 @@ class KNXClimate(KnxEntity, ClimateEntity):
         await self._device.sync()
         if self._device.mode is not None:
             await self._device.mode.sync()
-
-    @property
-    def temperature_unit(self) -> str:
-        """Return the unit of measurement."""
-        return self._unit_of_measurement
 
     @property
     def current_temperature(self) -> float | None:
