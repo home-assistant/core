@@ -6,8 +6,10 @@ from zwave_js_server.event import Event
 from zwave_js_server.model.node import Node
 
 from homeassistant.components import automation
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.zwave_js import DOMAIN, device_trigger
+from homeassistant.components.zwave_js.helpers import (
+    async_get_node_status_sensor_entity_id,
+)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import (
     async_entries_for_config_entry,
@@ -33,7 +35,6 @@ async def test_get_notification_notification_triggers(
     hass, client, lock_schlage_be469, integration
 ):
     """Test we get the expected triggers from a zwave_js device with the Notification CC."""
-    node: Node = lock_schlage_be469
     dev_reg = async_get_dev_reg(hass)
     device = async_entries_for_config_entry(dev_reg, integration.entry_id)[0]
     expected_trigger = {
@@ -41,7 +42,6 @@ async def test_get_notification_notification_triggers(
         "domain": DOMAIN,
         "type": "event.notification_notification",
         "device_id": device.id,
-        "node_id": node.node_id,
         "command_class": CommandClass.NOTIFICATION,
     }
     triggers = await async_get_device_automations(hass, "trigger", device.id)
@@ -68,7 +68,6 @@ async def test_if_notification_notification_fires(
                         "device_id": device.id,
                         "type": "event.notification_notification",
                         "command_class": CommandClass.NOTIFICATION.value,
-                        "node_id": node.node_id,
                         "type.": 6,
                         "event": 5,
                         "label": "Access Control",
@@ -120,7 +119,6 @@ async def test_get_trigger_capabilities_notification_notification(
     hass, client, lock_schlage_be469, integration
 ):
     """Test we get the expected capabilities from a notification_notification trigger."""
-    node: Node = lock_schlage_be469
     dev_reg = async_get_dev_reg(hass)
     device = async_entries_for_config_entry(dev_reg, integration.entry_id)[0]
     capabilities = await device_trigger.async_get_trigger_capabilities(
@@ -131,7 +129,6 @@ async def test_get_trigger_capabilities_notification_notification(
             "device_id": device.id,
             "type": "event.notification_notification",
             "command_class": CommandClass.NOTIFICATION.value,
-            "node_id": node.node_id,
         },
     )
     assert capabilities and "extra_fields" in capabilities
@@ -169,7 +166,6 @@ async def test_if_entry_control_notification_fires(
                         "device_id": device.id,
                         "type": "event.entry_control_notification",
                         "command_class": CommandClass.ENTRY_CONTROL.value,
-                        "node_id": node.node_id,
                         "event_type": 5,
                         "data_type": 2,
                     },
@@ -214,7 +210,6 @@ async def test_get_trigger_capabilities_entry_control_notification(
     hass, client, lock_schlage_be469, integration
 ):
     """Test we get the expected capabilities from a entry_control_notification trigger."""
-    node: Node = lock_schlage_be469
     dev_reg = async_get_dev_reg(hass)
     device = async_entries_for_config_entry(dev_reg, integration.entry_id)[0]
     capabilities = await device_trigger.async_get_trigger_capabilities(
@@ -225,7 +220,6 @@ async def test_get_trigger_capabilities_entry_control_notification(
             "device_id": device.id,
             "type": "event.entry_control_notification",
             "command_class": CommandClass.ENTRY_CONTROL.value,
-            "node_id": node.node_id,
         },
     )
     assert capabilities and "extra_fields" in capabilities
@@ -243,14 +237,11 @@ async def test_get_trigger_capabilities_entry_control_notification(
 
 async def test_get_node_status_triggers(hass, client, lock_schlage_be469, integration):
     """Test we get the expected triggers from a device with node status sensor enabled."""
-    node: Node = lock_schlage_be469
     dev_reg = async_get_dev_reg(hass)
     device = async_entries_for_config_entry(dev_reg, integration.entry_id)[0]
     ent_reg = async_get_ent_reg(hass)
-    entity_id = ent_reg.async_get_entity_id(
-        SENSOR_DOMAIN,
-        DOMAIN,
-        f"{client.driver.controller.home_id}.{node.node_id}.node_status",
+    entity_id = async_get_node_status_sensor_entity_id(
+        hass, device.id, ent_reg, dev_reg
     )
     ent_reg.async_update_entity(entity_id, **{"disabled_by": None})
     await hass.config_entries.async_reload(integration.entry_id)
@@ -262,7 +253,6 @@ async def test_get_node_status_triggers(hass, client, lock_schlage_be469, integr
         "type": "state.node_status",
         "device_id": device.id,
         "entity_id": entity_id,
-        "node_id": node.node_id,
     }
     triggers = await async_get_device_automations(hass, "trigger", device.id)
     assert expected_trigger in triggers
@@ -276,10 +266,8 @@ async def test_if_node_status_change_fires(
     dev_reg = async_get_dev_reg(hass)
     device = async_entries_for_config_entry(dev_reg, integration.entry_id)[0]
     ent_reg = async_get_ent_reg(hass)
-    entity_id = ent_reg.async_get_entity_id(
-        SENSOR_DOMAIN,
-        DOMAIN,
-        f"{client.driver.controller.home_id}.{node.node_id}.node_status",
+    entity_id = async_get_node_status_sensor_entity_id(
+        hass, device.id, ent_reg, dev_reg
     )
     ent_reg.async_update_entity(entity_id, **{"disabled_by": None})
     await hass.config_entries.async_reload(integration.entry_id)
@@ -297,7 +285,6 @@ async def test_if_node_status_change_fires(
                         "device_id": device.id,
                         "entity_id": entity_id,
                         "type": "state.node_status",
-                        "node_id": node.node_id,
                         "from": "alive",
                     },
                     "action": {
@@ -329,14 +316,11 @@ async def test_get_trigger_capabilities_node_status(
     hass, client, lock_schlage_be469, integration
 ):
     """Test we get the expected capabilities from a node_status trigger."""
-    node: Node = lock_schlage_be469
     dev_reg = async_get_dev_reg(hass)
     device = async_entries_for_config_entry(dev_reg, integration.entry_id)[0]
     ent_reg = async_get_ent_reg(hass)
-    entity_id = ent_reg.async_get_entity_id(
-        SENSOR_DOMAIN,
-        DOMAIN,
-        f"{client.driver.controller.home_id}.{node.node_id}.node_status",
+    entity_id = async_get_node_status_sensor_entity_id(
+        hass, device.id, ent_reg, dev_reg
     )
     ent_reg.async_update_entity(entity_id, **{"disabled_by": None})
     await hass.config_entries.async_reload(integration.entry_id)
@@ -350,7 +334,6 @@ async def test_get_trigger_capabilities_node_status(
             "device_id": device.id,
             "entity_id": entity_id,
             "type": "state.node_status",
-            "node_id": node.node_id,
         },
     )
     assert capabilities and "extra_fields" in capabilities

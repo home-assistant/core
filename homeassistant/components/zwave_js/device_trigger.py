@@ -30,7 +30,6 @@ from .const import (
     ATTR_EVENT_LABEL,
     ATTR_EVENT_TYPE,
     ATTR_LABEL,
-    ATTR_NODE_ID,
     ATTR_TYPE,
     DOMAIN,
     ZWAVE_JS_NOTIFICATION_EVENT,
@@ -50,19 +49,13 @@ NOTIFICATION_EVENT_CC_MAPPINGS = (
     (NOTIFICATION_NOTIFICATION, CommandClass.NOTIFICATION),
 )
 
-BASE_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
-    {
-        vol.Required(ATTR_NODE_ID): int,
-    }
-)
-
-BASE_EVENT_SCHEMA = BASE_SCHEMA.extend(
+BASE_EVENT_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {
         vol.Optional(ATTR_COMMAND_CLASS): vol.In([cc.value for cc in CommandClass]),
     }
 )
 
-BASE_STATE_SCHEMA = BASE_SCHEMA.extend(
+BASE_STATE_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_ENTITY_ID): cv.entity_id,
     }
@@ -113,7 +106,6 @@ async def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict]:
     base_trigger = {
         CONF_PLATFORM: "device",
         CONF_DEVICE_ID: device_id,
-        ATTR_NODE_ID: node.node_id,
         CONF_DOMAIN: DOMAIN,
     }
 
