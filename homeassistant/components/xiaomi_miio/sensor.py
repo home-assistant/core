@@ -77,7 +77,7 @@ ATTR_HUMIDITY = "humidity"
 
 @dataclass
 class SensorType:
-    """Class that holds device specific info for a xiaomi sensor."""
+    """Class that holds device specific info for a xiaomi aqara or humidifier sensor."""
 
     unit: str = None
     icon: str = None
@@ -115,12 +115,12 @@ SENSOR_TYPES = {
     ),
 }
 
-HUMIDIFIER_ATTRIBUTES = {
+HUMIDIFIER_SENSORS = {
     ATTR_HUMIDITY: "humidity",
     ATTR_TEMPERATURE: "temperature",
 }
 
-HUMIDIFIER_ATTRIBUTES_MIOT = {
+HUMIDIFIER_SENSORS_MIOT = {
     ATTR_HUMIDITY: "humidity",
     ATTR_TEMPERATURE: "temperature",
     ATTR_WATER_LEVEL: "water_level",
@@ -179,26 +179,15 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         token = config_entry.data[CONF_TOKEN]
         model = config_entry.data[CONF_MODEL]
         device = None
+        sensors = []
         if model in MODELS_HUMIDIFIER_MIOT:
             device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
             coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
-            attributes = HUMIDIFIER_ATTRIBUTES_MIOT
+            sensors = HUMIDIFIER_SENSORS_MIOT
         elif model.startswith("zhimi.humidifier."):
             device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
             coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
-            attributes = HUMIDIFIER_ATTRIBUTES
-        if device:
-            for attribute in attributes:
-                entities.append(
-                    XiaomiGenericSensor(
-                        f"{config_entry.title}_{attribute}",
-                        device,
-                        config_entry,
-                        f"{attribute}_{config_entry.unique_id}",
-                        attribute,
-                        hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR],
-                    )
-                )
+            sensors = HUMIDIFIER_SENSORS
         else:
             unique_id = config_entry.unique_id
             name = config_entry.title
@@ -207,6 +196,17 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             device = AirQualityMonitor(host, token)
             entities.append(
                 XiaomiAirQualityMonitor(name, device, config_entry, unique_id)
+            )
+        for sensor in sensors:
+            entities.append(
+                XiaomiGenericSensor(
+                    f"{config_entry.title}_{sensor}",
+                    device,
+                    config_entry,
+                    f"{sensor}_{config_entry.unique_id}",
+                    sensor,
+                    hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR],
+                )
             )
 
     async_add_entities(entities, update_before_add=True)
