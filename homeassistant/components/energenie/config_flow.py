@@ -1,11 +1,11 @@
 """Config flow for Energenie integration."""
 import logging
 
+from gpiozero import exc
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_NAME
-from gpiozero import exc
 
 from .const import DOMAIN
 
