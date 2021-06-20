@@ -7,9 +7,14 @@ from zwave_js_server.model.node import Node
 
 from homeassistant.components import automation
 from homeassistant.components.zwave_js import DOMAIN, device_trigger
+from homeassistant.components.zwave_js.device_trigger import (
+    async_attach_trigger,
+    async_get_trigger_capabilities,
+)
 from homeassistant.components.zwave_js.helpers import (
     async_get_node_status_sensor_entity_id,
 )
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import (
     async_entries_for_config_entry,
@@ -367,3 +372,21 @@ async def test_get_trigger_capabilities_node_status(
         },
         {"name": "for", "optional": True, "type": "positive_time_period_dict"},
     ]
+
+
+async def test_failure_scenarrios(hass):
+    """Test failure scenarios."""
+    with pytest.raises(HomeAssistantError):
+        await async_attach_trigger(
+            hass, {"type": "failed.test", "device_id": "invalid_device_id"}, None, {}
+        )
+
+    assert (
+        await async_get_trigger_capabilities(
+            hass, {"type": "failed.test", "device_id": "invalid_device_id"}
+        )
+        == {}
+    )
+
+    with pytest.raises(HomeAssistantError):
+        async_get_node_status_sensor_entity_id(hass, "invalid_device_id")
