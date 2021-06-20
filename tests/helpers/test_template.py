@@ -590,6 +590,30 @@ def test_from_json(hass):
     assert actual_result == expected_result
 
 
+def test_to_yaml(hass):
+    """Test the object to YAML string filter."""
+
+    # Note that we're not testing the actual yaml.load and yaml.dump methods,
+    # only the filters, so we don't need to be exhaustive with our sample YAML.
+    expected_result = "Foo: Bar"
+    actual_result = template.Template(
+        "{{ {'Foo': 'Bar'} | to_yaml }}", hass
+    ).async_render()
+    assert actual_result == expected_result
+
+
+def test_from_yaml(hass):
+    """Test the YAML string to object filter."""
+
+    # Note that we're not testing the actual yaml.load and yaml.dump methods,
+    # only the filters, so we don't need to be exhaustive with our sample YAML.
+    expected_result = "Bar"
+    actual_result = template.Template(
+        "{{ ('Foo: Bar' | from_yaml).Foo }}", hass
+    ).async_render()
+    assert actual_result == expected_result
+
+
 def test_min(hass):
     """Test the min filter."""
     assert template.Template("{{ [1, 2, 3] | min }}", hass).async_render() == 1
