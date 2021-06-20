@@ -374,7 +374,7 @@ async def test_get_trigger_capabilities_node_status(
     ]
 
 
-async def test_failure_scenarrios(hass):
+async def test_failure_scenarios(hass):
     """Test failure scenarios."""
     with pytest.raises(HomeAssistantError):
         await async_attach_trigger(
