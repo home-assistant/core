@@ -304,7 +304,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 "on", "off", "auto", "minontime"
             ),
         },
-        Thermostat.set_ventilator_mode.__name__,
+        "set_ventilator_mode",
     )
 
     platform.async_register_entity_service(
@@ -312,7 +312,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         {
             vol.Required(ATTR_VENTILATOR_MIN_ON_TIME): vol.Coerce(int),
         },
-        Thermostat.set_ventilator_min_on_time.__name__,
+        "set_ventilator_min_on_time",
     )
 
     platform.async_register_entity_service(
@@ -320,7 +320,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         {
             vol.Required(ATTR_VENTILATOR_MIN_ON_TIME_HOME): vol.Coerce(int),
         },
-        Thermostat.set_ventilator_min_on_time_home.__name__,
+        "set_ventilator_min_on_time_home",
     )
 
     platform.async_register_entity_service(
@@ -328,7 +328,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         {
             vol.Required(ATTR_VENTILATOR_MIN_ON_TIME_AWAY): vol.Coerce(int),
         },
-        Thermostat.set_ventilator_min_on_time_away.__name__,
+        "set_ventilator_min_on_time_away",
     )
 
     platform.async_register_entity_service(
@@ -336,7 +336,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         {
             vol.Required(ATTR_IS_VENTILATOR_TIMER_ON): cv.boolean,
         },
-        Thermostat.set_ventilator_timer.__name__,
+        "set_ventilator_timer",
     )
 
 
