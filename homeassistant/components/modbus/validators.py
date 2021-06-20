@@ -17,6 +17,7 @@ from homeassistant.const import (
 
 from .const import (
     CONF_DATA_TYPE,
+    CONF_REGISTER_SIZE,
     CONF_SWAP,
     CONF_SWAP_BYTE,
     CONF_SWAP_NONE,
@@ -60,7 +61,7 @@ def sensor_schema_validator(config):
             f"Error in sensor {config[CONF_NAME]} structure: {str(err)}"
         ) from err
 
-    bytecount = config[CONF_COUNT] * 2
+    bytecount = config[CONF_COUNT] * config.get(CONF_REGISTER_SIZE, 2)
     if bytecount != size:
         raise vol.Invalid(
             f"Structure request {size} bytes, "

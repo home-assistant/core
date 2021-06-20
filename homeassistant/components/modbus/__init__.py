@@ -66,6 +66,7 @@ from .const import (
     CONF_MIN_TEMP,
     CONF_PARITY,
     CONF_PRECISION,
+    CONF_REGISTER_SIZE,
     CONF_RETRIES,
     CONF_RETRY_ON_EMPTY,
     CONF_REVERSE_ORDER,
@@ -136,6 +137,7 @@ BASE_STRUCT_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
             ]
         ),
         vol.Optional(CONF_COUNT, default=1): cv.positive_int,
+        vol.Optional(CONF_REGISTER_SIZE, default=2): cv.positive_int,
         vol.Optional(CONF_DATA_TYPE, default=DATA_TYPE_INT): vol.In(
             [
                 DATA_TYPE_INT,
