@@ -78,7 +78,6 @@ def create_parts(source):
         Part(
             duration=TEST_PART_DURATION,
             has_keyframe=next(independent_cycle),
-            http_range_start=http_range_from_part(i)[1],
             data=source[i * BYTERANGE_LENGTH : (i + 1) * BYTERANGE_LENGTH],
         )
         for i in range(NUM_PART_SEGMENTS)

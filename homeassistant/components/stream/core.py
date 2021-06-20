@@ -48,8 +48,6 @@ class Part:
 
     duration: float = attr.ib()
     has_keyframe: bool = attr.ib()
-    # http_range_start is byte offset from the end of the init
-    http_range_start: int = attr.ib()
     # video data (moof+mdat)
     data: bytes = attr.ib()
 
@@ -94,8 +92,10 @@ class Segment:
         # We can use the last part to quickly calculate the total data size.
         if not self.parts_by_http_range:
             return 0
-        last_part = next(reversed(self.parts_by_http_range.values()))
-        return last_part.http_range_start + len(last_part.data)
+        last_http_range_start, last_part = next(
+            reversed(self.parts_by_http_range.items())
+        )
+        return last_http_range_start + len(last_part.data)
 
     def get_bytes_without_init(self) -> bytes:
         """Return reconstructed data for all parts as bytes, without init."""

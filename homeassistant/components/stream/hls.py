@@ -138,16 +138,9 @@ class HlsPlaylistView(StreamView):
                     '.m4s",BYTERANGE-START=0'
                 )
             else:  # Next part is in the same segment
-                if segment_copy.parts_by_http_range:
-                    last_part = next(
-                        reversed(segment_copy.parts_by_http_range.values())
-                    )
-                    start = last_part.http_range_start + len(last_part.data)
-                else:
-                    start = 0
                 playlist.append(
                     f'#EXT-X-PRELOAD-HINT:TYPE=PART,URI="./segment/{segment_copy.sequence}'
-                    f'.m4s",BYTERANGE-START={start}'
+                    f'.m4s",BYTERANGE-START={segment_copy.data_size_without_init}'
                 )
         return "\n".join(playlist)
 
@@ -174,15 +167,15 @@ class HlsPlaylistView(StreamView):
                 ]
             playlist.append("{}")
         if ll_hls:
-            for part in itertools.islice(
-                segment.parts_by_http_range.values(),
+            for http_range_start, part in itertools.islice(
+                segment.parts_by_http_range.items(),
                 segment.hls_num_parts_rendered,
                 None,
             ):
                 playlist_parts.append(
                     f"#EXT-X-PART:DURATION={part.duration:.3f},URI="
                     f'"./segment/{segment.sequence}.m4s",BYTERANGE="{len(part.data)}'
-                    f'@{part.http_range_start}"{",INDEPENDENT=YES" if part.has_keyframe else ""}'
+                    f'@{http_range_start}"{",INDEPENDENT=YES" if part.has_keyframe else ""}'
                 )
         if segment.complete:
             playlist.pop()

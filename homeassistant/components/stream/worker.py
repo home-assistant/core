@@ -182,11 +182,11 @@ class SegmentBuffer:
             self._av_output.close()
         assert self._segment
         self._memory_file.seek(self._memory_file_pos)
-        http_range_start = self._memory_file_pos - len(self._segment.init)
-        self._segment.parts_by_http_range[http_range_start] = Part(
+        self._segment.parts_by_http_range[
+            self._memory_file_pos - len(self._segment.init)
+        ] = Part(
             duration=float((packet.dts - self._part_start_dts) * packet.time_base),
             has_keyframe=self._part_has_keyframe,
-            http_range_start=http_range_start,
             data=self._memory_file.read(),
         )
         if last_part:
