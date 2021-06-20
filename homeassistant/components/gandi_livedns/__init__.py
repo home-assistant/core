@@ -214,9 +214,7 @@ async def _update_gandi_livedns(
             body = await resp.text()
 
             if resp.status == 201:
-                _LOGGER.info(
-                    "Gandi live dns updated with ttl: %s ip: %s", rrttl, current_ip
-                )
+                _LOGGER.info("Record updated with ttl: %s ip: %s", rrttl, current_ip)
                 return True
 
             _LOGGER.warning("Updating %s failed: (%s) %s", url, resp.status, body)
