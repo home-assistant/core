@@ -439,7 +439,7 @@ async def test_if_basic_value_notification_fires(
         },
     )
 
-    # Publish fake Basic CC notification
+    # Publish fake Basic CC value notification
     event = Event(
         type="value notification",
         data={
@@ -565,7 +565,7 @@ async def test_if_central_scene_value_notification_fires(
         },
     )
 
-    # Publish fake Central Scene CC notification
+    # Publish fake Central Scene CC value notification
     event = Event(
         type="value notification",
         data={
@@ -706,7 +706,7 @@ async def test_if_scene_activation_value_notification_fires(
         },
     )
 
-    # Publish fake Scene Activation CC notification
+    # Publish fake Scene Activation CC value notification
     event = Event(
         type="value notification",
         data={
