@@ -120,8 +120,7 @@ async def async_discover_devices(
 
         if len(discovered_devices) >= target_discovery_qty:
             _LOGGER.info(
-                "Discovered at least as many devices on the network as exist in our device registry, no need to retry",
-                len(discovered_devices),
+                "Discovered at least as many devices on the network as exist in our device registry, no need to retry"
             )
             break
 
