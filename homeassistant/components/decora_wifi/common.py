@@ -1,5 +1,6 @@
 """Common code for decora_wifi."""
 
+import logging
 from typing import Dict, List
 
 # pylint: disable=import-error
@@ -14,6 +15,20 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN, LIGHT_DOMAIN, PLATFORMS
+
+_LOGGER = logging.getLogger(__name__)
+
+
+class DecoraWifiLoginFailed(Exception):
+    """Raised when DecoraWifiPlatform.login() fails to log in."""
+
+    pass
+
+
+class DecoraWifiCommFailed(Exception):
+    """Raised when DecoraWifiPlatform.login() fails to communicate with the myLeviton Service."""
+
+    pass
 
 
 class DecoraWifiPlatform:
@@ -94,6 +109,19 @@ class DecoraWifiPlatform:
         except ValueError as exc:
             raise DecoraWifiCommFailed from exc
 
+    def reauth(self):
+        """Reauthenticate this object's session."""
+        self.apilogout()
+        self._session = DecoraWiFiSession()
+        self._apilogin()
+
+    def refresh_devices(self):
+        """Refresh this object's devices."""
+        self._iot_switches: Dict[str, IotSwitch] = {
+            platform: [] for platform in PLATFORMS
+        }
+        self._apigetdevices()
+
     @staticmethod
     async def async_setup_decora_wifi(hass: HomeAssistant, email: str, password: str):
         """Set up a decora wifi session."""
@@ -126,15 +154,3 @@ class DecoraWifiEntity(Entity):
         self.async_on_remove(
             async_dispatcher_connect(self.hass, DOMAIN, self.async_write_ha_state)
         )
-
-
-class DecoraWifiLoginFailed(Exception):
-    """Raised when DecoraWifiPlatform.login() fails to log in."""
-
-    pass
-
-
-class DecoraWifiCommFailed(Exception):
-    """Raised when DecoraWifiPlatform.login() fails to communicate with the myLeviton Service."""
-
-    pass

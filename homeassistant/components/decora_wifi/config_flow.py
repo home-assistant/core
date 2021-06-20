@@ -55,12 +55,12 @@ class DecoraWifiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 password=self.data[CONF_PASSWORD],
             )
         except DecoraWifiLoginFailed:
-            errors["base"] = "Login Failed. Check Credentials."
+            errors["base"] = "invalid_auth"
             return self.async_show_form(
                 step_id="user", data_schema=vol.Schema(data_schema), errors=errors
             )
         except DecoraWifiCommFailed:
-            errors["base"] = "Communication with Decora Wifi Service Failed."
+            errors["base"] = "cannot_connect"
             return self.async_show_form(
                 step_id="user", data_schema=vol.Schema(data_schema), errors=errors
             )
@@ -93,12 +93,12 @@ class DecoraWifiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     password=self.data[CONF_PASSWORD],
                 )
             except DecoraWifiLoginFailed:
-                errors["base"] = "Login Failed. Check Credentials."
+                errors["base"] = "invalid_auth"
                 return self.async_show_form(
                     step_id="user", data_schema=vol.Schema(data_schema), errors=errors
                 )
             except DecoraWifiCommFailed:
-                errors["base"] = "Communication with Decora Wifi Service Failed."
+                errors["base"] = "cannot_connect"
                 return self.async_show_form(
                     step_id="user", data_schema=vol.Schema(data_schema), errors=errors
                 )
