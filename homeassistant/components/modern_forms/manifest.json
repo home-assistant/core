@@ -9,7 +9,6 @@
   "zeroconf": [
     {"type":"_easylink._tcp.local.", "name":"wac*"}
   ],
-  "dependencies": [],
   "codeowners": [
     "@wonderslug"
   ],

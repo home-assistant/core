@@ -15,10 +15,7 @@ set_fan_sleep_timer:
         number:
           min: 1
           max: 1440
-          step: 1
           unit_of_measurement: minutes
-          mode: slider
-
 clear_fan_sleep_timer:
   name: Clear fan sleep timer
   description: Clear the sleep timer on a Modern Forms fan.

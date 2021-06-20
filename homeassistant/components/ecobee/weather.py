@@ -17,7 +17,6 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.pressure import convert as pressure_convert
 
 from .const import (
-    _LOGGER,
     DOMAIN,
     ECOBEE_MODEL_TO_NAME,
     ECOBEE_WEATHER_SYMBOL_TO_HASS,
@@ -72,15 +71,8 @@ class EcobeeWeather(WeatherEntity):
         try:
             model = f"{ECOBEE_MODEL_TO_NAME[thermostat['modelNumber']]} Thermostat"
         except KeyError:
-            _LOGGER.error(
-                "Model number for ecobee thermostat %s not recognized. "
-                "Please visit this link and provide the following information: "
-                "https://github.com/home-assistant/core/issues/27172 "
-                "Unrecognized model number: %s",
-                thermostat["name"],
-                thermostat["modelNumber"],
-            )
-            return None
+            # Ecobee model is not in our list
+            model = None
 
         return {
             "identifiers": {(DOMAIN, thermostat["identifier"])},

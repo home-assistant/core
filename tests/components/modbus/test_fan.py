@@ -41,75 +41,90 @@ from tests.common import mock_restore_cache
     "do_config",
     [
         {
-            CONF_ADDRESS: 1234,
+            CONF_FANS: [
+                {
+                    CONF_NAME: "test_fan",
+                    CONF_ADDRESS: 1234,
+                }
+            ]
         },
         {
-            CONF_ADDRESS: 1234,
-            CONF_WRITE_TYPE: CALL_TYPE_COIL,
+            CONF_FANS: [
+                {
+                    CONF_NAME: "test_fan",
+                    CONF_ADDRESS: 1234,
+                    CONF_WRITE_TYPE: CALL_TYPE_COIL,
+                }
+            ]
         },
         {
-            CONF_ADDRESS: 1234,
-            CONF_SLAVE: 1,
-            CONF_COMMAND_OFF: 0x00,
-            CONF_COMMAND_ON: 0x01,
-            CONF_VERIFY: {
-                CONF_INPUT_TYPE: CALL_TYPE_REGISTER_HOLDING,
-                CONF_ADDRESS: 1235,
-                CONF_STATE_OFF: 0,
-                CONF_STATE_ON: 1,
-            },
+            CONF_FANS: [
+                {
+                    CONF_NAME: "test_fan",
+                    CONF_ADDRESS: 1234,
+                    CONF_SLAVE: 1,
+                    CONF_COMMAND_OFF: 0x00,
+                    CONF_COMMAND_ON: 0x01,
+                    CONF_VERIFY: {
+                        CONF_INPUT_TYPE: CALL_TYPE_REGISTER_HOLDING,
+                        CONF_ADDRESS: 1235,
+                        CONF_STATE_OFF: 0,
+                        CONF_STATE_ON: 1,
+                    },
+                }
+            ]
         },
         {
-            CONF_ADDRESS: 1234,
-            CONF_SLAVE: 1,
-            CONF_COMMAND_OFF: 0x00,
-            CONF_COMMAND_ON: 0x01,
-            CONF_VERIFY: {
-                CONF_INPUT_TYPE: CALL_TYPE_REGISTER_INPUT,
-                CONF_ADDRESS: 1235,
-                CONF_STATE_OFF: 0,
-                CONF_STATE_ON: 1,
-            },
+            CONF_FANS: [
+                {
+                    CONF_NAME: "test_fan",
+                    CONF_ADDRESS: 1234,
+                    CONF_SLAVE: 1,
+                    CONF_COMMAND_OFF: 0x00,
+                    CONF_COMMAND_ON: 0x01,
+                    CONF_VERIFY: {
+                        CONF_INPUT_TYPE: CALL_TYPE_REGISTER_INPUT,
+                        CONF_ADDRESS: 1235,
+                        CONF_STATE_OFF: 0,
+                        CONF_STATE_ON: 1,
+                    },
+                }
+            ]
         },
         {
-            CONF_ADDRESS: 1234,
-            CONF_SLAVE: 1,
-            CONF_COMMAND_OFF: 0x00,
-            CONF_COMMAND_ON: 0x01,
-            CONF_VERIFY: {
-                CONF_INPUT_TYPE: CALL_TYPE_DISCRETE,
-                CONF_ADDRESS: 1235,
-                CONF_STATE_OFF: 0,
-                CONF_STATE_ON: 1,
-            },
+            CONF_FANS: [
+                {
+                    CONF_NAME: "test_fan",
+                    CONF_ADDRESS: 1234,
+                    CONF_SLAVE: 1,
+                    CONF_COMMAND_OFF: 0x00,
+                    CONF_COMMAND_ON: 0x01,
+                    CONF_VERIFY: {
+                        CONF_INPUT_TYPE: CALL_TYPE_DISCRETE,
+                        CONF_ADDRESS: 1235,
+                        CONF_STATE_OFF: 0,
+                        CONF_STATE_ON: 1,
+                    },
+                }
+            ]
         },
         {
-            CONF_ADDRESS: 1234,
-            CONF_SLAVE: 1,
-            CONF_COMMAND_OFF: 0x00,
-            CONF_COMMAND_ON: 0x01,
-            CONF_VERIFY: None,
+            CONF_FANS: [
+                {
+                    CONF_NAME: "test_fan",
+                    CONF_ADDRESS: 1234,
+                    CONF_SLAVE: 1,
+                    CONF_COMMAND_OFF: 0x00,
+                    CONF_COMMAND_ON: 0x01,
+                    CONF_VERIFY: None,
+                }
+            ]
         },
     ],
 )
-async def test_config_fan(hass, do_config):
-    """Run test for fan."""
-    device_name = "test_fan"
-
-    device_config = {
-        CONF_NAME: device_name,
-        **do_config,
-    }
-
-    await base_config_test(
-        hass,
-        device_config,
-        device_name,
-        FAN_DOMAIN,
-        CONF_FANS,
-        None,
-        method_discovery=True,
-    )
+async def test_config_fan(hass, mock_modbus):
+    """Run configuration test for fan."""
+    assert FAN_DOMAIN in hass.config.components
 
 
 @pytest.mark.parametrize("call_type", [CALL_TYPE_COIL, CALL_TYPE_REGISTER_HOLDING])

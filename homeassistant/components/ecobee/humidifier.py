@@ -60,7 +60,7 @@ class EcobeeHumidifier(HumidifierEntity):
             model = f"{ECOBEE_MODEL_TO_NAME[self.thermostat['modelNumber']]} Thermostat"
         except KeyError:
             # Ecobee model is not in our list
-            return None
+            model = None
 
         return {
             "identifiers": {(DOMAIN, self.thermostat["identifier"])},
@@ -68,6 +68,11 @@ class EcobeeHumidifier(HumidifierEntity):
             "manufacturer": MANUFACTURER,
             "model": model,
         }
+
+    @property
+    def available(self):
+        """Return if device is available."""
+        return self.thermostat["runtime"]["connected"]
 
     async def async_update(self):
         """Get the latest state from the thermostat."""

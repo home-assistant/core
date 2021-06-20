@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections import OrderedDict, deque
+from collections import OrderedDict
 import datetime
 from enum import Enum
 import logging
@@ -11,7 +11,6 @@ from urllib.parse import urlparse
 
 import pysonos
 from pysonos import events_asyncio
-from pysonos.alarms import Alarm
 from pysonos.core import SoCo
 from pysonos.exceptions import SoCoException
 import voluptuous as vol
@@ -29,12 +28,12 @@ from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send, dispatcher_send
 
+from .alarms import SonosAlarms
 from .const import (
     DATA_SONOS,
     DISCOVERY_INTERVAL,
     DOMAIN,
     PLATFORMS,
-    SONOS_ALARM_UPDATE,
     SONOS_GROUP_UPDATE,
     SONOS_REBOOTED,
     SONOS_SEEN,
@@ -82,11 +81,10 @@ class SonosData:
 
     def __init__(self) -> None:
         """Initialize the data."""
-        # OrderedDict behavior used by SonosFavorites
+        # OrderedDict behavior used by SonosAlarms and SonosFavorites
         self.discovered: OrderedDict[str, SonosSpeaker] = OrderedDict()
         self.favorites: dict[str, SonosFavorites] = {}
-        self.alarms: dict[str, Alarm] = {}
-        self.processed_alarm_events = deque(maxlen=5)
+        self.alarms: dict[str, SonosAlarms] = {}
         self.topology_condition = asyncio.Condition()
         self.hosts_heartbeat = None
         self.ssdp_known: set[str] = set()
@@ -148,14 +146,17 @@ async def async_setup_entry(  # noqa: C901
             _LOGGER.debug("Adding new speaker: %s", speaker_info)
             speaker = SonosSpeaker(hass, soco, speaker_info)
             data.discovered[soco.uid] = speaker
-            if soco.household_id not in data.favorites:
-                data.favorites[soco.household_id] = SonosFavorites(
-                    hass, soco.household_id
-                )
-                data.favorites[soco.household_id].update()
+            for coordinator, coord_dict in [
+                (SonosAlarms, data.alarms),
+                (SonosFavorites, data.favorites),
+            ]:
+                if soco.household_id not in coord_dict:
+                    new_coordinator = coordinator(hass, soco.household_id)
+                    new_coordinator.setup(soco)
+                    coord_dict[soco.household_id] = new_coordinator
             speaker.setup()
-        except SoCoException as ex:
-            _LOGGER.debug("SoCoException, ex=%s", ex)
+        except (OSError, SoCoException):
+            _LOGGER.warning("Failed to add SonosSpeaker using %s", soco, exc_info=True)
 
     def _create_soco(ip_address: str, source: SoCoCreationSource) -> SoCo | None:
         """Create a soco instance and return if successful."""
@@ -236,10 +237,6 @@ async def async_setup_entry(  # noqa: C901
             _async_create_discovered_player(uid, discovered_ip, boot_seqnum)
         )
 
-    @callback
-    def _async_signal_update_alarms(event):
-        async_dispatcher_send(hass, SONOS_ALARM_UPDATE)
-
     async def setup_platforms_and_discovery():
         await asyncio.gather(
             *[
@@ -250,11 +247,6 @@ async def async_setup_entry(  # noqa: C901
         entry.async_on_unload(
             hass.bus.async_listen_once(
                 EVENT_HOMEASSISTANT_START, _async_signal_update_groups
-            )
-        )
-        entry.async_on_unload(
-            hass.bus.async_listen_once(
-                EVENT_HOMEASSISTANT_START, _async_signal_update_alarms
             )
         )
         entry.async_on_unload(

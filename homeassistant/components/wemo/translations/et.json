@@ -9,5 +9,10 @@
                 "description": "Kas soovid Wemo-t seadistada?"
             }
         }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "long_press": "Wemo nuppu vajutati 2 sekundit"
+        }
     }
 }

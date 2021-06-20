@@ -18,7 +18,7 @@ from .const import DEFAULT_NAME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_SCHEMA = vol.Schema({"host": str, "name": str})
+DATA_SCHEMA = vol.Schema({vol.Required("host"): str, vol.Required("name"): str})
 
 
 class GoalZeroFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
