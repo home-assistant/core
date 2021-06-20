@@ -4,7 +4,7 @@ from __future__ import annotations
 from typing import Any
 
 from xknx import XKNX
-from xknx.devices import Switch as XknxSwitch
+from xknx.devices import Sensor as XknxSensor, Switch as XknxSwitch
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import CONF_NAME, STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
@@ -54,6 +54,22 @@ class KNXSwitch(KnxEntity, SwitchEntity, RestoreEntity):
             )
         )
         self._unique_id = f"{self._device.switch.group_address}"
+        self._total_energy_sensor = XknxSensor(
+            xknx,
+            name="Total Energy kWh",
+            group_address_state=config.get(
+                SwitchSchema.CONF_TOTAL_ENERGY_USAGE_STATE_ADDRESS
+            ),
+            value_type="active_energy_kwh",
+        )
+        self._current_energy_sensor = XknxSensor(
+            xknx,
+            name="Current Energy W",
+            group_address_state=config.get(
+                SwitchSchema.CONF_CURRENT_POWER_STATE_ADDRESS
+            ),
+            value_type="power",
+        )
 
     async def async_added_to_hass(self) -> None:
         """Restore last state."""
@@ -64,10 +80,46 @@ class KNXSwitch(KnxEntity, SwitchEntity, RestoreEntity):
             if last_state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE):
                 self._device.switch.value = last_state.state == STATE_ON
 
+        if self._current_energy_sensor.sensor_value.readable:
+            self._current_energy_sensor.register_device_updated_cb(
+                self.after_update_callback
+            )
+
+        if self._total_energy_sensor.sensor_value.readable:
+            self._total_energy_sensor.register_device_updated_cb(
+                self.after_update_callback
+            )
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Disconnect device object when removed."""
+        await super().async_will_remove_from_hass()
+        self._total_energy_sensor.unregister_device_updated_cb(
+            self.after_update_callback
+        )
+        self._current_energy_sensor.unregister_device_updated_cb(
+            self.after_update_callback
+        )
+
     @property
     def is_on(self) -> bool:
         """Return true if device is on."""
         return bool(self._device.state)
+
+    @property
+    def current_power_w(self) -> float | None:
+        """Return the current power usage in W."""
+        if self._current_energy_sensor.sensor_value.readable:
+            return self._current_energy_sensor.resolve_state()
+
+        return None
+
+    @property
+    def today_energy_kwh(self) -> float | None:
+        """Return the today total energy usage in kWh."""
+        if self._total_energy_sensor.sensor_value.readable:
+            return self._total_energy_sensor.resolve_state()
+
+        return None
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""

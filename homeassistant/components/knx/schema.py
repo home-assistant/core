@@ -572,6 +572,8 @@ class SwitchSchema(KNXPlatformSchema):
 
     CONF_INVERT = CONF_INVERT
     CONF_STATE_ADDRESS = CONF_STATE_ADDRESS
+    CONF_CURRENT_POWER_STATE_ADDRESS = "current_power_state_address"
+    CONF_TOTAL_ENERGY_USAGE_STATE_ADDRESS = "total_energy_usage_state_address"
 
     DEFAULT_NAME = "KNX Switch"
     ENTITY_SCHEMA = vol.Schema(
@@ -580,6 +582,8 @@ class SwitchSchema(KNXPlatformSchema):
             vol.Optional(CONF_INVERT, default=False): cv.boolean,
             vol.Required(KNX_ADDRESS): ga_list_validator,
             vol.Optional(CONF_STATE_ADDRESS): ga_list_validator,
+            vol.Optional(CONF_CURRENT_POWER_STATE_ADDRESS): ga_list_validator,
+            vol.Optional(CONF_TOTAL_ENERGY_USAGE_STATE_ADDRESS): ga_list_validator,
         }
     )
 
