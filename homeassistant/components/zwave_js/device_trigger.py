@@ -39,6 +39,7 @@ from .const import (
     ATTR_VALUE,
     ATTR_VALUE_RAW,
     DOMAIN,
+    LOGGER,
     ZWAVE_JS_NOTIFICATION_EVENT,
     ZWAVE_JS_VALUE_NOTIFICATION_EVENT,
 )
@@ -164,6 +165,34 @@ def get_value_from_config(node: Node, config: ConfigType) -> Value:
     if value_id not in node.values:
         raise HomeAssistantError(f"Value {value_id} can't be found on node {node}")
     return node.values[value_id]
+
+
+async def async_validate_trigger_config(
+    hass: HomeAssistant, config: ConfigType
+) -> ConfigType:
+    """Validate config."""
+    trigger_type = config[CONF_TYPE]
+    node = async_get_node_from_device_id(hass, config[CONF_DEVICE_ID])
+    value = get_value_from_config(node, config) if ATTR_PROPERTY in config else None
+    range_validations = (
+        (BASIC_VALUE_NOTIFICATION, ATTR_VALUE),
+        (SCENE_ACTIVATION_VALUE_NOTIFICATION, CONF_SCENE_ID),
+    )
+    # Range validations
+    for trigger_type_check, key in range_validations:
+        if (
+            trigger_type == trigger_type_check
+            and (val := vol.Coerce(int)(config[key])) is not None
+            and (
+                (value.metadata.min is not None and value.metadata.min > val)
+                or (value.metadata.max is not None and value.metadata.max < val)
+            )
+        ):
+            raise vol.Invalid(
+                f"{key} must be within range of {value.metadata.min} to {value.metadata.max}"
+            )
+
+    return config
 
 
 async def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict]:
@@ -379,15 +408,7 @@ async def async_get_trigger_capabilities(
         }
 
     if config[CONF_TYPE] == BASIC_VALUE_NOTIFICATION:
-        return {
-            "extra_fields": vol.Schema(
-                {
-                    vol.Required(ATTR_VALUE): vol.Range(
-                        min=value.metadata.min, max=value.metadata.max
-                    )
-                }
-            )
-        }
+        return {"extra_fields": vol.Schema({vol.Required(ATTR_VALUE): cv.string})}
 
     if config[CONF_TYPE] == CENTRAL_SCENE_VALUE_NOTIFICATION:
         return {
@@ -401,14 +422,7 @@ async def async_get_trigger_capabilities(
         }
 
     if config[CONF_TYPE] == SCENE_ACTIVATION_VALUE_NOTIFICATION:
-        return {
-            "extra_fields": vol.Schema(
-                {
-                    vol.Required(CONF_SCENE_ID): vol.Range(
-                        min=value.metadata.min, max=value.metadata.max
-                    )
-                }
-            )
-        }
+        LOGGER.error("test")
+        return {"extra_fields": vol.Schema({vol.Required(CONF_SCENE_ID): cv.string})}
 
     return {}
