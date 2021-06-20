@@ -429,6 +429,12 @@ def wallmote_central_scene_state_fixture():
     return json.loads(load_fixture("zwave_js/wallmote_central_scene_state.json"))
 
 
+@pytest.fixture(name="ge_in_wall_dimmer_switch_state", scope="session")
+def ge_in_wall_dimmer_switch_state_fixture():
+    """Load the ge in-wall dimmer switch node state fixture data."""
+    return json.loads(load_fixture("zwave_js/ge_in_wall_dimmer_switch_state.json"))
+
+
 @pytest.fixture(name="client")
 def mock_client_fixture(controller_state, version_state, log_config_state):
     """Mock a client."""
@@ -785,6 +791,14 @@ def zen_31_fixture(client, zen_31_state):
 def wallmote_central_scene_fixture(client, wallmote_central_scene_state):
     """Mock a wallmote central scene node."""
     node = Node(client, copy.deepcopy(wallmote_central_scene_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="ge_in_wall_dimmer_switch")
+def ge_in_wall_dimmer_switch_fixture(client, ge_in_wall_dimmer_switch_state):
+    """Mock a ge in-wall dimmer switch scene node."""
+    node = Node(client, copy.deepcopy(ge_in_wall_dimmer_switch_state))
     client.driver.controller.nodes[node.node_id] = node
     return node
 

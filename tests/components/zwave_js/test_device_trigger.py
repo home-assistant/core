@@ -354,7 +354,6 @@ async def test_get_trigger_capabilities_node_status(
             "name": "from",
             "optional": True,
             "options": [
-                ("unknown", "unknown"),
                 ("asleep", "asleep"),
                 ("awake", "awake"),
                 ("dead", "dead"),
@@ -366,7 +365,6 @@ async def test_get_trigger_capabilities_node_status(
             "name": "to",
             "optional": True,
             "options": [
-                ("unknown", "unknown"),
                 ("asleep", "asleep"),
                 ("awake", "awake"),
                 ("dead", "dead"),
@@ -375,6 +373,139 @@ async def test_get_trigger_capabilities_node_status(
             "type": "select",
         },
         {"name": "for", "optional": True, "type": "positive_time_period_dict"},
+    ]
+
+
+async def test_get_basic_value_notification_triggers(
+    hass, client, ge_in_wall_dimmer_switch, integration
+):
+    """Test we get the expected triggers from a zwave_js device with the Basic CC."""
+    dev_reg = async_get_dev_reg(hass)
+    device = async_entries_for_config_entry(dev_reg, integration.entry_id)[0]
+    expected_trigger = {
+        "platform": "device",
+        "domain": DOMAIN,
+        "type": "event.basic_value_notification",
+        "device_id": device.id,
+        "command_class": CommandClass.BASIC,
+        "property": "event",
+        "property_key": None,
+        "endpoint": 0,
+        "subtype": "Endpoint 0",
+    }
+    triggers = await async_get_device_automations(hass, "trigger", device.id)
+    assert expected_trigger in triggers
+
+
+async def test_if_basic_value_notification_fires(
+    hass, client, ge_in_wall_dimmer_switch, integration, calls
+):
+    """Test for event.basic_value_notification trigger firing."""
+    node: Node = ge_in_wall_dimmer_switch
+    dev_reg = async_get_dev_reg(hass)
+    device = async_entries_for_config_entry(dev_reg, integration.entry_id)[0]
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        "platform": "device",
+                        "domain": DOMAIN,
+                        "type": "event.basic_value_notification",
+                        "device_id": device.id,
+                        "command_class": CommandClass.BASIC.value,
+                        "property": "event",
+                        "property_key": None,
+                        "endpoint": 0,
+                        "subtype": "Endpoint 0",
+                        "value": 0,
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {
+                            "some": (
+                                "event.basic_value_notification - "
+                                "{{ trigger.platform}} - "
+                                "{{ trigger.event.event_type}} - "
+                                "{{ trigger.event.data.command_class }}"
+                            )
+                        },
+                    },
+                },
+            ]
+        },
+    )
+
+    # Publish fake Basic CC notification
+    event = Event(
+        type="value notification",
+        data={
+            "source": "node",
+            "event": "value notification",
+            "nodeId": node.node_id,
+            "args": {
+                "commandClassName": "Basic",
+                "commandClass": 32,
+                "endpoint": 0,
+                "property": "event",
+                "propertyName": "event",
+                "value": 0,
+                "metadata": {
+                    "type": "number",
+                    "readable": True,
+                    "writeable": False,
+                    "label": "Event value",
+                    "min": 0,
+                    "max": 255,
+                },
+                "ccVersion": 1,
+            },
+        },
+    )
+    node.receive_event(event)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert calls[0].data[
+        "some"
+    ] == "event.basic_value_notification - device - zwave_js_value_notification - {}".format(
+        CommandClass.BASIC
+    )
+
+
+async def test_get_trigger_capabilities_basic_value_notification(
+    hass, client, ge_in_wall_dimmer_switch, integration
+):
+    """Test we get the expected capabilities from a basic_value_notification trigger."""
+    dev_reg = async_get_dev_reg(hass)
+    device = async_entries_for_config_entry(dev_reg, integration.entry_id)[0]
+    capabilities = await device_trigger.async_get_trigger_capabilities(
+        hass,
+        {
+            "platform": "device",
+            "domain": DOMAIN,
+            "type": "event.basic_value_notification",
+            "device_id": device.id,
+            "command_class": CommandClass.BASIC.value,
+            "property": "event",
+            "property_key": None,
+            "endpoint": 0,
+            "subtype": "Endpoint 0",
+        },
+    )
+    assert capabilities and "extra_fields" in capabilities
+
+    assert voluptuous_serialize.convert(
+        capabilities["extra_fields"], custom_serializer=cv.custom_serializer
+    ) == [
+        {
+            "name": "value",
+            "required": True,
+            "valueMin": 0,
+            "valueMax": 255,
+        },
     ]
 
 
@@ -582,7 +713,7 @@ async def test_if_scene_activation_value_notification_fires(
         },
     )
 
-    # Publish fake Central Scene CC notification
+    # Publish fake Scene Activation CC notification
     event = Event(
         type="value notification",
         data={

@@ -36,6 +36,7 @@ from .const import (
     ATTR_PROPERTY,
     ATTR_PROPERTY_KEY,
     ATTR_TYPE,
+    ATTR_VALUE,
     ATTR_VALUE_RAW,
     DOMAIN,
     ZWAVE_JS_NOTIFICATION_EVENT,
@@ -54,6 +55,7 @@ CONF_VALUE_ID = "value_id"
 # Trigger types
 ENTRY_CONTROL_NOTIFICATION = "event.entry_control_notification"
 NOTIFICATION_NOTIFICATION = "event.notification_notification"
+BASIC_VALUE_NOTIFICATION = "event.basic_value_notification"
 CENTRAL_SCENE_VALUE_NOTIFICATION = "event.central_scene_value_notification"
 SCENE_ACTIVATION_VALUE_NOTIFICATION = "event.scene_activation_value_notification"
 NODE_STATUS = "state.node_status"
@@ -96,6 +98,14 @@ BASE_VALUE_NOTIFICATION_EVENT_SCHEMA = BASE_EVENT_SCHEMA.extend(
     }
 )
 
+BASIC_VALUE_NOTIFICATION_SCHEMA = BASE_VALUE_NOTIFICATION_EVENT_SCHEMA.extend(
+    {
+        vol.Required(CONF_TYPE): BASIC_VALUE_NOTIFICATION,
+        vol.Required(ATTR_VALUE): vol.Coerce(int),
+        vol.Required(CONF_SUBTYPE): cv.string,
+    }
+)
+
 CENTRAL_SCENE_VALUE_NOTIFICATION_SCHEMA = BASE_VALUE_NOTIFICATION_EVENT_SCHEMA.extend(
     {
         vol.Required(CONF_TYPE): CENTRAL_SCENE_VALUE_NOTIFICATION,
@@ -121,7 +131,7 @@ BASE_STATE_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     }
 )
 
-NODE_STATUSES = ["asleep", "alive", "dead", "awake"]
+NODE_STATUSES = ["asleep", "awake", "dead", "alive"]
 
 NODE_STATUS_SCHEMA = BASE_STATE_SCHEMA.extend(
     {
@@ -135,6 +145,7 @@ NODE_STATUS_SCHEMA = BASE_STATE_SCHEMA.extend(
 TRIGGER_SCHEMA = vol.Any(
     ENTRY_CONTROL_NOTIFICATION_SCHEMA,
     NOTIFICATION_NOTIFICATION_SCHEMA,
+    BASIC_VALUE_NOTIFICATION_SCHEMA,
     CENTRAL_SCENE_VALUE_NOTIFICATION_SCHEMA,
     SCENE_ACTIVATION_VALUE_NOTIFICATION_SCHEMA,
     NODE_STATUS_SCHEMA,
@@ -224,6 +235,25 @@ async def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict]:
         ]
     )
 
+    # Handle basic value notification event triggers
+    # Nodes will only send Basic CC value notifications if a compatibility flag is set
+    if node.device_config.compat.get("treatBasicSetAsEvent", False):
+        triggers.extend(
+            [
+                {
+                    **base_trigger,
+                    CONF_TYPE: BASIC_VALUE_NOTIFICATION,
+                    ATTR_PROPERTY: value.property_,
+                    ATTR_PROPERTY_KEY: value.property_key,
+                    ATTR_ENDPOINT: value.endpoint,
+                    ATTR_COMMAND_CLASS: CommandClass.BASIC,
+                    CONF_SUBTYPE: f"Endpoint {value.endpoint}",
+                }
+                for value in node.get_command_class_values(CommandClass.BASIC).values()
+                if value.property_ == "event"
+            ]
+        )
+
     return triggers
 
 
@@ -266,6 +296,12 @@ async def async_attach_trigger(
             )
             if (val := config.get(f"{ATTR_TYPE}.")) not in ("", None):
                 event_data[ATTR_TYPE] = val
+        elif trigger_type == BASIC_VALUE_NOTIFICATION:
+            event_config[event.CONF_EVENT_TYPE] = ZWAVE_JS_VALUE_NOTIFICATION_EVENT
+            copy_available_params(
+                config, event_data, [ATTR_PROPERTY, ATTR_PROPERTY_KEY, ATTR_ENDPOINT]
+            )
+            event_data[ATTR_VALUE_RAW] = config[ATTR_VALUE]
         elif trigger_type == CENTRAL_SCENE_VALUE_NOTIFICATION:
             event_config[event.CONF_EVENT_TYPE] = ZWAVE_JS_VALUE_NOTIFICATION_EVENT
             copy_available_params(
@@ -338,6 +374,17 @@ async def async_get_trigger_capabilities(
                     vol.Optional(state.CONF_FROM): vol.In(NODE_STATUSES),
                     vol.Optional(state.CONF_TO): vol.In(NODE_STATUSES),
                     vol.Optional(state.CONF_FOR): cv.positive_time_period_dict,
+                }
+            )
+        }
+
+    if config[CONF_TYPE] == BASIC_VALUE_NOTIFICATION:
+        return {
+            "extra_fields": vol.Schema(
+                {
+                    vol.Required(ATTR_VALUE): vol.Range(
+                        min=value.metadata.min, max=value.metadata.max
+                    )
                 }
             )
         }
