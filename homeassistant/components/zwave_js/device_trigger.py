@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import voluptuous as vol
 from zwave_js_server.const import CommandClass
-from zwave_js_server.model.node import Node, NodeStatus
+from zwave_js_server.model.node import Node
 from zwave_js_server.model.value import Value, get_value_id
 
 from homeassistant.components.automation import AutomationActionType
@@ -63,15 +63,10 @@ NOTIFICATION_EVENT_CC_MAPPINGS = (
     (NOTIFICATION_NOTIFICATION, CommandClass.NOTIFICATION),
 )
 
+# Event based trigger schemas
 BASE_EVENT_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {
         vol.Optional(ATTR_COMMAND_CLASS): vol.In([cc.value for cc in CommandClass]),
-    }
-)
-
-BASE_STATE_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
-    {
-        vol.Required(CONF_ENTITY_ID): cv.entity_id,
     }
 )
 
@@ -119,7 +114,14 @@ SCENE_ACTIVATION_VALUE_NOTIFICATION_SCHEMA = (
     )
 )
 
-NODE_STATUSES = [node_status.name.lower() for node_status in NodeStatus]
+# State based trigger schemas
+BASE_STATE_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
+    {
+        vol.Required(CONF_ENTITY_ID): cv.entity_id,
+    }
+)
+
+NODE_STATUSES = ["asleep", "alive", "dead", "awake"]
 
 NODE_STATUS_SCHEMA = BASE_STATE_SCHEMA.extend(
     {
