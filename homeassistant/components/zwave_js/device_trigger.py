@@ -39,7 +39,6 @@ from .const import (
     ATTR_VALUE,
     ATTR_VALUE_RAW,
     DOMAIN,
-    LOGGER,
     ZWAVE_JS_NOTIFICATION_EVENT,
     ZWAVE_JS_VALUE_NOTIFICATION_EVENT,
 )
@@ -424,7 +423,6 @@ async def async_get_trigger_capabilities(
         }
 
     if config[CONF_TYPE] == SCENE_ACTIVATION_VALUE_NOTIFICATION:
-        LOGGER.error("test")
         return {"extra_fields": vol.Schema({vol.Required(CONF_SCENE_ID): cv.string})}
 
     return {}
