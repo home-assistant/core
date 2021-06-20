@@ -177,13 +177,8 @@ class AccuWeatherSensor(CoordinatorEntity, SensorEntity):
     def entity_registry_enabled_default(self) -> bool:
         """Return if the entity should be enabled when first added to the entity registry."""
         return self._description[ATTR_ENABLED]
-
-    async def async_added_to_hass(self) -> None:
-        """When entity is added to HASS."""
-        self.async_on_remove(self.coordinator.async_add_listener(self._update_callback))
-
     @callback
-    def _update_callback(self) -> None:
+    def _handle_coordinator_update(self) -> None:
         """Handle data update."""
         self._sensor_data = _get_sensor_data(
             self.coordinator.data, self.forecast_day, self.kind
@@ -195,8 +190,10 @@ def _get_sensor_data(
     sensors: dict[str, Any], forecast_day: int | None, kind: str
 ) -> Any:
     """Get sensor data."""
-    if forecast_day is None:
-        if kind == "Precipitation":
-            return sensors["PrecipitationSummary"][kind]
-        return sensors[kind]
-    return sensors[ATTR_FORECAST][forecast_day][kind]
+    if forecast_day is not None:
+        return sensors[ATTR_FORECAST][forecast_day][kind]
+
+    if kind == "Precipitation":
+        return sensors["PrecipitationSummary"][kind]
+
+    return sensors[kind]
