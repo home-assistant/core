@@ -23,15 +23,19 @@ import av
 
 from homeassistant.components.stream import Stream, create_stream
 from homeassistant.components.stream.const import (
+    CONF_LL_HLS,
+    CONF_PART_DURATION,
+    CONF_SEGMENT_DURATION,
     HLS_PROVIDER,
     MAX_MISSING_DTS,
     PACKETS_TO_WAIT_FOR_AUDIO,
-    TARGET_SEGMENT_DURATION,
+    TARGET_SEGMENT_DURATION_NON_LL_HLS,
 )
 from homeassistant.components.stream.worker import SegmentBuffer, stream_worker
 from homeassistant.setup import async_setup_component
 
 from tests.components.stream.common import generate_h264_video
+from tests.components.stream.test_ll_hls import TEST_PART_DURATION
 
 STREAM_SOURCE = "some-stream-source"
 # Formats here are arbitrary, not exercised by tests
@@ -42,7 +46,8 @@ AUDIO_SAMPLE_RATE = 11025
 KEYFRAME_INTERVAL = 1  # in seconds
 PACKET_DURATION = fractions.Fraction(1, VIDEO_FRAME_RATE)  # in seconds
 SEGMENT_DURATION = (
-    math.ceil(TARGET_SEGMENT_DURATION / KEYFRAME_INTERVAL) * KEYFRAME_INTERVAL
+    math.ceil(TARGET_SEGMENT_DURATION_NON_LL_HLS / KEYFRAME_INTERVAL)
+    * KEYFRAME_INTERVAL
 )  # in seconds
 TEST_SEQUENCE_LENGTH = 5 * VIDEO_FRAME_RATE
 LONGER_TEST_SEQUENCE_LENGTH = 20 * VIDEO_FRAME_RATE
@@ -635,7 +640,17 @@ async def test_worker_log(hass, caplog):
 
 async def test_durations(hass, record_worker_sync):
     """Test that the duration metadata matches the media."""
-    await async_setup_component(hass, "stream", {"stream": {}})
+    await async_setup_component(
+        hass,
+        "stream",
+        {
+            "stream": {
+                CONF_LL_HLS: True,
+                CONF_SEGMENT_DURATION: SEGMENT_DURATION,
+                CONF_PART_DURATION: TEST_PART_DURATION,
+            }
+        },
+    )
 
     source = generate_h264_video()
     stream = create_stream(hass, source, {})
@@ -650,7 +665,7 @@ async def test_durations(hass, record_worker_sync):
     # check that the Part duration metadata matches the durations in the media
     running_metadata_duration = 0
     for segment in complete_segments:
-        for part in segment.parts:
+        for part in segment.parts_by_http_range.values():
             av_part = av.open(io.BytesIO(segment.init + part.data))
             running_metadata_duration += part.duration
             # av_part.duration will just return the largest dts in av_part.
@@ -664,7 +679,9 @@ async def test_durations(hass, record_worker_sync):
     # check that the Part durations are consistent with the Segment durations
     for segment in complete_segments:
         assert math.isclose(
-            sum(part.duration for part in segment.parts), segment.duration, abs_tol=1e-6
+            sum(part.duration for part in segment.parts_by_http_range.values()),
+            segment.duration,
+            abs_tol=1e-6,
         )
 
     await record_worker_sync.join()
@@ -674,7 +691,19 @@ async def test_durations(hass, record_worker_sync):
 
 async def test_has_keyframe(hass, record_worker_sync):
     """Test that the has_keyframe metadata matches the media."""
-    await async_setup_component(hass, "stream", {"stream": {}})
+    await async_setup_component(
+        hass,
+        "stream",
+        {
+            "stream": {
+                CONF_LL_HLS: True,
+                CONF_SEGMENT_DURATION: SEGMENT_DURATION,
+                # Our test video has keyframes every second. Use smaller parts so we have more
+                # part boundaries to better test keyframe logic.
+                CONF_PART_DURATION: 0.25,
+            }
+        },
+    )
 
     source = generate_h264_video()
     stream = create_stream(hass, source, {})
@@ -683,15 +712,12 @@ async def test_has_keyframe(hass, record_worker_sync):
     with patch.object(hass.config, "is_allowed_path", return_value=True):
         await stream.async_record("/example/path")
 
-    # Our test video has keyframes every second. Use smaller parts so we have more
-    # part boundaries to better test keyframe logic.
-    with patch("homeassistant.components.stream.worker.TARGET_PART_DURATION", 0.25):
-        complete_segments = list(await record_worker_sync.get_segments())[:-1]
+    complete_segments = list(await record_worker_sync.get_segments())[:-1]
     assert len(complete_segments) >= 1
 
     # check that the Part has_keyframe metadata matches the keyframes in the media
     for segment in complete_segments:
-        for part in segment.parts:
+        for part in segment.parts_by_http_range.values():
             av_part = av.open(io.BytesIO(segment.init + part.data))
             media_has_keyframe = any(
                 packet.is_keyframe for packet in av_part.demux(av_part.streams.video[0])

@@ -3,10 +3,12 @@ from __future__ import annotations
 
 import asyncio
 from collections import deque
+from collections.abc import Generator
 import datetime
 from typing import TYPE_CHECKING
 
 from aiohttp import web
+import async_timeout
 import attr
 
 from homeassistant.components.http.view import HomeAssistantView
@@ -14,12 +16,30 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.util.decorator import Registry
 
-from .const import ATTR_STREAMS, DOMAIN, TARGET_SEGMENT_DURATION
+from .const import (
+    ATTR_STREAMS,
+    DOMAIN,
+    SEGMENT_DURATION_ADJUSTER,
+    TARGET_SEGMENT_DURATION_NON_LL_HLS,
+)
 
 if TYPE_CHECKING:
     from . import Stream
 
 PROVIDERS = Registry()
+
+
+class StreamConstants:
+    """Constants that are initialized when Stream is loaded."""
+
+    LL_HLS = False
+    # Round down a little to avoid missing the keyframe due to rounding
+    MIN_SEGMENT_DURATION = (
+        TARGET_SEGMENT_DURATION_NON_LL_HLS - SEGMENT_DURATION_ADJUSTER
+    )
+    TARGET_PART_DURATION = 0.0
+    HLS_ADVANCE_PART_LIMIT = 3
+    HLS_PART_TIMEOUT = TARGET_SEGMENT_DURATION_NON_LL_HLS
 
 
 @attr.s(slots=True)
@@ -28,6 +48,8 @@ class Part:
 
     duration: float = attr.ib()
     has_keyframe: bool = attr.ib()
+    # http_range_start is byte offset from the end of the init
+    http_range_start: int = attr.ib()
     # video data (moof+mdat)
     data: bytes = attr.ib()
 
@@ -42,17 +64,69 @@ class Segment:
     duration: float = attr.ib(default=0)
     # For detecting discontinuities across stream restarts
     stream_id: int = attr.ib(default=0)
-    parts: list[Part] = attr.ib(factory=list)
+    # Parts are stored in a dict indexed by http range start for easy
+    # lookup when requested by byterange
+    # As of Python 3.7, insertion order is preserved, and we insert
+    # in sequential order, so the Parts are ordered
+    parts_by_http_range: dict[int, Part] = attr.ib(factory=dict)
     start_time: datetime.datetime = attr.ib(factory=datetime.datetime.utcnow)
+    # Store text of this segment's hls playlist for reuse
+    hls_playlist: str = attr.ib(default=None)
+    hls_playlist_parts: str = attr.ib(default=None)
+    # Number of playlist parts rendered so far
+    hls_num_parts_rendered: int = attr.ib(default=0)
+    # Set to true when all the parts are rendered
+    hls_playlist_complete: bool = attr.ib(default=False)
 
     @property
     def complete(self) -> bool:
         """Return whether the Segment is complete."""
         return self.duration > 0
 
+    @property
+    def data_size_with_init(self) -> int:
+        """Return the size of all part data + init in bytes."""
+        return len(self.init) + self.data_size_without_init
+
+    @property
+    def data_size_without_init(self) -> int:
+        """Return the size of all part data without init in bytes."""
+        # We can use the last part to quickly calculate the total data size.
+        if not self.parts_by_http_range:
+            return 0
+        last_part = next(reversed(self.parts_by_http_range.values()))
+        return last_part.http_range_start + len(last_part.data)
+
     def get_bytes_without_init(self) -> bytes:
         """Return reconstructed data for all parts as bytes, without init."""
-        return b"".join([part.data for part in self.parts])
+        return b"".join([part.data for part in self.parts_by_http_range.values()])
+
+    def get_part_bytes(self, start_loc: int) -> bytes:
+        """Return part that begins at start_loc by looking up index in the part map.
+
+        Just a helper method for the remaining_data method below.
+        """
+        part = self.parts_by_http_range.get(start_loc)
+        return b"" if part is None else part.data
+
+    def get_aggregating_bytes(
+        self, start_loc: int, end_loc: int | float
+    ) -> Generator[bytes, None, None]:
+        """Yield available remaining data until segment is complete or end_loc is reached.
+
+        Begin at start_loc. End at end_loc (exclusive).
+        Used to help serve a range request on a segment.
+        """
+        pos = start_loc
+        # Since we use this from a non worker thread, we need to check complete before
+        # checking for new data. Use | instead of "or" to avoid short circuit evaluation.
+        while (not self.complete) | bool(bytes_to_write := self.get_part_bytes(pos)):
+            pos += len(bytes_to_write)
+            if pos >= end_loc:
+                assert isinstance(end_loc, int)
+                yield bytes_to_write[: len(bytes_to_write) - pos + end_loc]
+                return
+            yield bytes_to_write
 
 
 class IdleTimer:
@@ -110,6 +184,7 @@ class StreamOutput:
         self._hass = hass
         self.idle_timer = idle_timer
         self._event = asyncio.Event()
+        self._part_event = asyncio.Event()
         self._segments: deque[Segment] = deque(maxlen=deque_maxlen)
 
     @property
@@ -145,7 +220,7 @@ class StreamOutput:
     def target_duration(self) -> float:
         """Return the max duration of any given segment in seconds."""
         if not (durations := [s.duration for s in self._segments if s.complete]):
-            return TARGET_SEGMENT_DURATION
+            return StreamConstants.MIN_SEGMENT_DURATION
         return max(durations)
 
     def get_segment(self, sequence: int) -> Segment | None:
@@ -159,6 +234,20 @@ class StreamOutput:
     def get_segments(self) -> deque[Segment]:
         """Retrieve all segments."""
         return self._segments
+
+    async def part_recv(self, timeout: float | None = None) -> bool:
+        """Wait for an event signalling the latest part segment."""
+        try:
+            async with async_timeout.timeout(timeout):
+                await self._part_event.wait()
+        except asyncio.TimeoutError:
+            return False
+        return True
+
+    def part_put(self) -> None:
+        """Set event signalling the latest part segment."""
+        self._part_event.set()
+        self._part_event.clear()
 
     async def recv(self) -> bool:
         """Wait for and retrieve the latest segment."""

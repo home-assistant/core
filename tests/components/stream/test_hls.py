@@ -8,11 +8,12 @@ import pytest
 
 from homeassistant.components.stream import create_stream
 from homeassistant.components.stream.const import (
+    EXT_X_START_NON_LL_HLS,
     HLS_PROVIDER,
     MAX_SEGMENTS,
     NUM_PLAYLIST_SEGMENTS,
 )
-from homeassistant.components.stream.core import Part, Segment
+from homeassistant.components.stream.core import Part, Segment, StreamConstants
 from homeassistant.const import HTTP_NOT_FOUND
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -37,13 +38,13 @@ class HlsClient:
         self.http_client = http_client
         self.parsed_url = parsed_url
 
-    async def get(self, path=None):
+    async def get(self, path=None, headers=None):
         """Fetch the hls stream for the specified path."""
         url = self.parsed_url.path
         if path:
             # Strip off the master playlist suffix and replace with path
             url = "/".join(self.parsed_url.path.split("/")[:-1]) + path
-        return await self.http_client.get(url)
+        return await self.http_client.get(url, headers=headers)
 
 
 @pytest.fixture
@@ -74,22 +75,36 @@ def make_segment(segment, discontinuity=False):
     return "\n".join(response)
 
 
-def make_playlist(sequence, segments, discontinuity_sequence=0):
+def make_playlist(sequence, discontinuity_sequence=0, segments=None, hint=None):
     """Create a an hls playlist response for tests to assert on."""
     response = [
         "#EXTM3U",
         "#EXT-X-VERSION:6",
         "#EXT-X-INDEPENDENT-SEGMENTS",
         '#EXT-X-MAP:URI="init.mp4"',
-        "#EXT-X-TARGETDURATION:10",
+        f"#EXT-X-TARGETDURATION:{SEGMENT_DURATION}",
         f"#EXT-X-MEDIA-SEQUENCE:{sequence}",
         f"#EXT-X-DISCONTINUITY-SEQUENCE:{discontinuity_sequence}",
         "#EXT-X-PROGRAM-DATE-TIME:"
         + FAKE_TIME.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]
         + "Z",
-        f"#EXT-X-START:TIME-OFFSET=-{1.5*SEGMENT_DURATION:.3f}",
     ]
-    response.extend(segments)
+    if hint:
+        response.extend(
+            [
+                f"#EXT-X-PART-INF:PART-TARGET={StreamConstants.TARGET_PART_DURATION:.3f}",
+                f"#EXT-X-SERVER-CONTROL:CAN-BLOCK-RELOAD=YES,PART-HOLD-BACK={2*StreamConstants.TARGET_PART_DURATION:.3f}",
+                f"#EXT-X-START:TIME-OFFSET=-{3*StreamConstants.TARGET_PART_DURATION:.3f},PRECISE=YES",
+            ]
+        )
+    else:
+        response.append(
+            f"#EXT-X-START:TIME-OFFSET=-{EXT_X_START_NON_LL_HLS*SEGMENT_DURATION:.3f},PRECISE=YES",
+        )
+    if segments:
+        response.extend(segments)
+    if hint:
+        response.append(hint)
     response.append("")
     return "\n".join(response)
 
@@ -115,18 +130,23 @@ async def test_hls_stream(hass, hls_stream, stream_worker_sync):
 
     hls_client = await hls_stream(stream)
 
-    # Fetch playlist
-    playlist_response = await hls_client.get()
-    assert playlist_response.status == 200
+    # Fetch master playlist
+    master_playlist_response = await hls_client.get()
+    assert master_playlist_response.status == 200
 
     # Fetch init
-    playlist = await playlist_response.text()
+    master_playlist = await master_playlist_response.text()
     init_response = await hls_client.get("/init.mp4")
     assert init_response.status == 200
 
+    # Fetch playlist
+    playlist_url = "/" + master_playlist.splitlines()[-1]
+    playlist_response = await hls_client.get(playlist_url)
+    assert playlist_response.status == 200
+
     # Fetch segment
     playlist = await playlist_response.text()
-    segment_url = "/" + playlist.splitlines()[-1]
+    segment_url = "/" + [line for line in playlist.splitlines() if line][-1]
     segment_response = await hls_client.get(segment_url)
     assert segment_response.status == 200
 
@@ -243,7 +263,7 @@ async def test_stream_keepalive(hass):
     stream.stop()
 
 
-async def test_hls_playlist_view_no_output(hass, hass_client, hls_stream):
+async def test_hls_playlist_view_no_output(hass, hls_stream):
     """Test rendering the hls playlist with no output segments."""
     await async_setup_component(hass, "stream", {"stream": {}})
 
@@ -321,16 +341,20 @@ async def test_hls_max_segments(hass, hls_stream, stream_worker_sync):
     # Fetch the actual segments with a fake byte payload
     for segment in hls.get_segments():
         segment.init = INIT_BYTES
-        segment.parts = [
-            Part(
+        segment.parts_by_http_range = {
+            0: Part(
                 duration=SEGMENT_DURATION,
                 has_keyframe=True,
+                http_range_start=0,
                 data=FAKE_PAYLOAD,
             )
-        ]
+        }
 
     # The segment that fell off the buffer is not accessible
-    segment_response = await hls_client.get("/segment/0.m4s")
+    with patch(
+        "homeassistant.components.stream.core.StreamConstants.HLS_PART_TIMEOUT", 0.1
+    ):
+        segment_response = await hls_client.get("/segment/0.m4s")
     assert segment_response.status == 404
 
     # However all segments in the buffer are accessible, even those that were not in the playlist.

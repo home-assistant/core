@@ -15,13 +15,11 @@ from .const import (
     AUDIO_CODECS,
     MAX_MISSING_DTS,
     MAX_TIMESTAMP_GAP,
-    MIN_SEGMENT_DURATION,
     PACKETS_TO_WAIT_FOR_AUDIO,
     SEGMENT_CONTAINER_FORMAT,
     SOURCE_TIMEOUT,
-    TARGET_PART_DURATION,
 )
-from .core import Part, Segment, StreamOutput
+from .core import Part, Segment, StreamConstants, StreamOutput
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -63,19 +61,33 @@ class SegmentBuffer:
             mode="w",
             format=SEGMENT_CONTAINER_FORMAT,
             container_options={
-                # Removed skip_sidx - see https://github.com/home-assistant/core/pull/39970
-                # "cmaf" flag replaces several of the movflags used, but too recent to use for now
-                "movflags": "empty_moov+default_base_moof+frag_discont+negative_cts_offsets+skip_trailer",
-                # Sometimes the first segment begins with negative timestamps, and this setting just
-                # adjusts the timestamps in the output from that segment to start from 0. Helps from
-                # having to make some adjustments in test_durations
-                "avoid_negative_ts": "make_non_negative",
-                "fragment_index": str(sequence + 1),
-                "video_track_timescale": str(int(1 / input_vstream.time_base)),
-                # Create a fragments every TARGET_PART_DURATION. The data from each fragment is stored in
-                # a "Part" that can be combined with the data from all the other "Part"s, plus an init
-                # section, to reconstitute the data in a "Segment".
-                "frag_duration": str(int(TARGET_PART_DURATION * 1e6)),
+                **{
+                    # Removed skip_sidx - see https://github.com/home-assistant/core/pull/39970
+                    # "cmaf" flag replaces several of the movflags used, but too recent to use for now
+                    "movflags": "frag_custom+empty_moov+default_base_moof+frag_discont+negative_cts_offsets+skip_trailer",
+                    # Sometimes the first segment begins with negative timestamps, and this setting just
+                    # adjusts the timestamps in the output from that segment to start from 0. Helps from
+                    # having to make some adjustments in test_durations
+                    "avoid_negative_ts": "make_non_negative",
+                    "fragment_index": str(sequence + 1),
+                    "video_track_timescale": str(int(1 / input_vstream.time_base)),
+                },
+                # Only do extra fragmenting if we are using ll_hls
+                # Let ffmpeg do the work using frag_duration
+                # Fragment durations may exceed the 15% allowed variance but it seems ok
+                **(
+                    {
+                        "movflags": "empty_moov+default_base_moof+frag_discont+negative_cts_offsets+skip_trailer",
+                        # Create a fragment every TARGET_PART_DURATION. The data from each fragment is stored in
+                        # a "Part" that can be combined with the data from all the other "Part"s, plus an init
+                        # section, to reconstitute the data in a "Segment".
+                        "frag_duration": str(
+                            int(StreamConstants.TARGET_PART_DURATION * 1e6)
+                        ),
+                    }
+                    if StreamConstants.LL_HLS
+                    else {}
+                ),
             },
         )
 
@@ -120,7 +132,7 @@ class SegmentBuffer:
             if (
                 packet.is_keyframe
                 and (packet.dts - self._segment_start_dts) * packet.time_base
-                >= MIN_SEGMENT_DURATION
+                >= StreamConstants.MIN_SEGMENT_DURATION
             ):
                 # Flush segment (also flushes the stub part segment)
                 self.flush(packet, last_part=True)
@@ -170,22 +182,29 @@ class SegmentBuffer:
             self._av_output.close()
         assert self._segment
         self._memory_file.seek(self._memory_file_pos)
-        self._segment.parts.append(
-            Part(
-                duration=float((packet.dts - self._part_start_dts) * packet.time_base),
-                has_keyframe=self._part_has_keyframe,
-                data=self._memory_file.read(),
-            )
+        http_range_start = self._memory_file_pos - len(self._segment.init)
+        self._segment.parts_by_http_range[http_range_start] = Part(
+            duration=float((packet.dts - self._part_start_dts) * packet.time_base),
+            has_keyframe=self._part_has_keyframe,
+            http_range_start=http_range_start,
+            data=self._memory_file.read(),
         )
         if last_part:
+            # If we've written the last part, we can complete the segment and close
+            # the memory_file. For timing purposes with the hls methods, we should
+            # complete the segment before sending the part_put signal.
             self._segment.duration = float(
                 (packet.dts - self._segment_start_dts) * packet.time_base
             )
             self._memory_file.close()  # We don't need the BytesIO object anymore
         else:
+            # For the last part, these will get set again elsewhere so we can skip
+            # setting them here.
             self._memory_file_pos = self._memory_file.tell()
             self._part_start_dts = packet.dts
         self._part_has_keyframe = False
+        for output in self._outputs_callback().values():
+            output.part_put()
 
     def discontinuity(self) -> None:
         """Mark the stream as having been restarted."""

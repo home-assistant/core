@@ -25,23 +25,30 @@ import time
 from types import MappingProxyType
 from typing import cast
 
+import voluptuous as vol
+
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     ATTR_ENDPOINTS,
     ATTR_STREAMS,
+    CONF_LL_HLS,
+    CONF_PART_DURATION,
+    CONF_SEGMENT_DURATION,
     DOMAIN,
     HLS_PROVIDER,
     MAX_SEGMENTS,
     OUTPUT_IDLE_TIMEOUT,
     RECORDER_PROVIDER,
+    SEGMENT_DURATION_ADJUSTER,
     STREAM_RESTART_INCREMENT,
     STREAM_RESTART_RESET_TIME,
 )
-from .core import PROVIDERS, IdleTimer, StreamOutput
+from .core import PROVIDERS, IdleTimer, StreamConstants, StreamOutput
 from .hls import async_setup_hls
 
 _LOGGER = logging.getLogger(__name__)
@@ -78,6 +85,24 @@ def create_stream(
     return stream
 
 
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            {
+                vol.Optional(CONF_LL_HLS, default=False): cv.boolean,
+                vol.Optional(CONF_SEGMENT_DURATION, default=6): vol.All(
+                    cv.positive_float, vol.Range(min=2, max=10)
+                ),
+                vol.Optional(CONF_PART_DURATION, default=1): vol.All(
+                    cv.positive_float, vol.Range(min=0.2, max=1.5)
+                ),
+            }
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up stream."""
     # Set log level to error for libav
@@ -91,6 +116,18 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN][ATTR_ENDPOINTS] = {}
     hass.data[DOMAIN][ATTR_STREAMS] = []
+    if (conf := config.get(DOMAIN)) and conf[CONF_LL_HLS]:
+        StreamConstants.LL_HLS = True
+        assert isinstance(conf[CONF_SEGMENT_DURATION], float)
+        assert isinstance(conf[CONF_PART_DURATION], float)
+        StreamConstants.MIN_SEGMENT_DURATION = (
+            conf[CONF_SEGMENT_DURATION] - SEGMENT_DURATION_ADJUSTER
+        )
+        StreamConstants.TARGET_PART_DURATION = conf[CONF_PART_DURATION]
+        StreamConstants.HLS_ADVANCE_PART_LIMIT = max(
+            int(3 / StreamConstants.TARGET_PART_DURATION), 3
+        )
+        StreamConstants.HLS_PART_TIMEOUT = 2 * StreamConstants.TARGET_PART_DURATION
 
     # Setup HLS
     hls_endpoint = async_setup_hls(hass)

@@ -22,14 +22,13 @@ def generate_audio_frame(pcm_mulaw=False):
     return audio_frame
 
 
-def generate_h264_video(container_format="mp4"):
+def generate_h264_video(container_format="mp4", duration=5):
     """
     Generate a test video.
 
     See: http://docs.mikeboers.com/pyav/develop/cookbook/numpy.html
     """
 
-    duration = 5
     fps = 24
     total_frames = duration * fps
 
