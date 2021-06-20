@@ -188,7 +188,7 @@ async def async_validate_trigger_config(
             )
         ):
             raise vol.Invalid(
-                f"{key} must be within range of {value.metadata.min} to {value.metadata.max}"
+                f"`{key}` must be within range of {value.metadata.min} to {value.metadata.max}"
             )
 
     return config
