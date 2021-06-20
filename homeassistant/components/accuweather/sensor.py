@@ -12,7 +12,7 @@ from homeassistant.const import (
     CONF_NAME,
     DEVICE_CLASS_TEMPERATURE,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -81,16 +81,11 @@ class AccuWeatherSensor(CoordinatorEntity, SensorEntity):
     ) -> None:
         """Initialize."""
         super().__init__(coordinator)
+        self._sensor_data = _get_sensor_data(coordinator.data, forecast_day, kind)
         if forecast_day is None:
             self._description = SENSOR_TYPES[kind]
-            self._sensor_data: dict[str, Any]
-            if kind == "Precipitation":
-                self._sensor_data = coordinator.data["PrecipitationSummary"][kind]
-            else:
-                self._sensor_data = coordinator.data[kind]
         else:
             self._description = FORECAST_SENSOR_TYPES[kind]
-            self._sensor_data = coordinator.data[ATTR_FORECAST][forecast_day][kind]
         self._unit_system = API_METRIC if coordinator.is_metric else API_IMPERIAL
         self._name = name
         self.kind = kind
@@ -182,3 +177,24 @@ class AccuWeatherSensor(CoordinatorEntity, SensorEntity):
     def entity_registry_enabled_default(self) -> bool:
         """Return if the entity should be enabled when first added to the entity registry."""
         return self._description[ATTR_ENABLED]
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle data update."""
+        self._sensor_data = _get_sensor_data(
+            self.coordinator.data, self.forecast_day, self.kind
+        )
+        self.async_write_ha_state()
+
+
+def _get_sensor_data(
+    sensors: dict[str, Any], forecast_day: int | None, kind: str
+) -> Any:
+    """Get sensor data."""
+    if forecast_day is not None:
+        return sensors[ATTR_FORECAST][forecast_day][kind]
+
+    if kind == "Precipitation":
+        return sensors["PrecipitationSummary"][kind]
+
+    return sensors[kind]
