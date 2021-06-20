@@ -3,7 +3,6 @@
 import logging
 from typing import Dict, List
 
-# pylint: disable=import-error
 from decora_wifi import DecoraWiFiSession
 from decora_wifi.models.iot_switch import IotSwitch
 from decora_wifi.models.person import Person
