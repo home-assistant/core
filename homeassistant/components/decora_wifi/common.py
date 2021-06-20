@@ -1,114 +1,116 @@
 """Common code for decora_wifi."""
 
-import logging
-from typing import Dict
+from typing import Dict, List
 
 # pylint: disable=import-error
 from decora_wifi import DecoraWiFiSession
+from decora_wifi.models.iot_switch import IotSwitch
 from decora_wifi.models.person import Person
 from decora_wifi.models.residence import Residence
 from decora_wifi.models.residential_account import ResidentialAccount
 
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN, LIGHT_DOMAIN, PLATFORMS
 
-_LOGGER = logging.getLogger(__name__)
-
 
 class DecoraWifiPlatform:
-    """Class to hold the decora_wifi platform sessions and methods."""
+    """Class to hold decora_wifi platform sessions and related methods."""
 
-    _sessions: Dict[str, DecoraWiFiSession] = {}
+    def __init__(self, email: str, password: str) -> None:
+        """Iniialize session holder."""
+        self._session = DecoraWiFiSession()
+        self._email = email
+        self._password = password
+        self._iot_switches: Dict[str, IotSwitch] = {
+            platform: [] for platform in PLATFORMS
+        }
 
-    @staticmethod
-    async def async_login(hass, email, password):
-        """Log in a Decora Wifi session."""
-        session = DecoraWiFiSession()
+        self._apilogin()
+        self._apigetdevices()
 
-        def trylogin():
-            success = session.login(email, password)
-            return success
+    def __del__(self):
+        """Clean up the session on object deletion."""
+        self.apilogout()
 
+    @property
+    def lights(self) -> List[IotSwitch]:
+        """Get the lights."""
+        return self._iot_switches[LIGHT_DOMAIN]
+
+    @property
+    def activeplatforms(self) -> List[str]:
+        """Get the list of platforms which have devices defined."""
+        return [p for p in PLATFORMS if self._iot_switches[p]]
+
+    def _apilogin(self):
+        """Log in to decora_wifi session."""
         try:
-            success = await hass.async_add_executor_job(trylogin)
+            success = self._session.login(self._email, self._password)
 
-            # If login failed, notify user.
+            # If the call to the decora_wifi API's session.login returns None, there was a problem with the credentials.
             if success is None:
-                msg = "Failed to log into myLeviton Services. Check credentials."
-                _LOGGER.error(msg)
+                self._loggedin = False
                 raise DecoraWifiLoginFailed
-
+            self._loggedin = True
         except ValueError as exc:
-            _LOGGER.error("Failed to communicate with myLeviton Service")
             raise DecoraWifiCommFailed from exc
 
-        # Add the created session to the sessions dict.
-        DecoraWifiPlatform._sessions.update({email: session})
-
-        # Indicate success by returning true.
-        return True
-
-    @staticmethod
-    async def async_logout(hass, email):
+    def apilogout(self):
         """Log out of decora_wifi session."""
-        session = DecoraWifiPlatform._sessions.pop(email, None)
-
-        def trylogout():
-            Person.logout(session)
-            return True
-
         try:
-            if session is not None:
-                await hass.async_add_executor_job(trylogout)
-            else:
-                raise DecoraWifiSessionNotFound
-        except ValueError:
-            _LOGGER.error("Failed to log out of myLeviton Service.")
+            Person.logout(self._session)
+        except ValueError as exc:
+            raise DecoraWifiCommFailed from exc
 
-    @staticmethod
-    async def async_getdevices(hass, email):
-        """Get devices from the Decora Wifi service."""
-        session = DecoraWifiPlatform._sessions.get(email, None)
-        if session is None:
-            raise DecoraWifiSessionNotFound
-
-        iot_switches = {platform: [] for platform in PLATFORMS}
+    def _apigetdevices(self):
+        """Update the device library from the API."""
 
         try:
             # Gather all the available devices into the iot_switches dictionary...
-            perms = await hass.async_add_executor_job(
-                session.user.get_residential_permissions
-            )
+            perms = self._session.user.get_residential_permissions()
+
             for permission in perms:
                 if permission.residentialAccountId is not None:
-                    acct = ResidentialAccount(session, permission.residentialAccountId)
-                    residences = await hass.async_add_executor_job(acct.get_residences)
+                    acct = ResidentialAccount(
+                        self._session, permission.residentialAccountId
+                    )
+                    residences = acct.get_residences()
                     for r in residences:
-                        switches = await hass.async_add_executor_job(r.get_iot_switches)
+                        switches = r.get_iot_switches()
                         for s in switches:
                             # Add the switch to the appropriate list in the iot_switches dictionary.
-                            iot_switches[DecoraWifiPlatform.classifydevice(s)].append(s)
+                            platform = DecoraWifiPlatform.classifydevice(s)
+                            self._iot_switches[platform].append(s)
                 elif permission.residenceId is not None:
-                    residence = Residence(session, permission.residenceId)
-                    switches = await hass.async_add_executor_job(
-                        residence.get_iot_switches
-                    )
+                    residence = Residence(self._session, permission.residenceId)
+                    switches = residence.get_iot_switches()
                     for s in switches:
                         # Add the switch to the appropriate list in the iot_switches dictionary.
-                        iot_switches[DecoraWifiPlatform.classifydevice(s)].append(s)
-
+                        platform = DecoraWifiPlatform.classifydevice(s)
+                        self._iot_switches[platform].append(s)
         except ValueError as exc:
-            _LOGGER.error("Failed to communicate with myLeviton Service")
             raise DecoraWifiCommFailed from exc
 
-        return iot_switches
+    @staticmethod
+    async def async_setup_decora_wifi(hass: HomeAssistant, email: str, password: str):
+        """Set up a decora wifi session."""
+
+        def setupplatform() -> DecoraWifiPlatform:
+            return DecoraWifiPlatform(email, password)
+
+        return await hass.async_add_executor_job(setupplatform)
 
     @staticmethod
     def classifydevice(dev):
-        """Sort devices by device type."""
+        """Classify devices by platform."""
+        # The light platform is the only one currently implemented in the integration.
         return LIGHT_DOMAIN
+
+
+decorawifisessions: Dict[str, DecoraWifiPlatform] = {}
 
 
 class DecoraWifiEntity(Entity):
@@ -134,11 +136,5 @@ class DecoraWifiLoginFailed(Exception):
 
 class DecoraWifiCommFailed(Exception):
     """Raised when DecoraWifiPlatform.login() fails to communicate with the myLeviton Service."""
-
-    pass
-
-
-class DecoraWifiSessionNotFound(Exception):
-    """Raised when DecoraWifi fails to find a session in the sessions dictionary."""
 
     pass

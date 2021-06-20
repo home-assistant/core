@@ -11,30 +11,20 @@ from homeassistant.components.light import (
 )
 from homeassistant.const import CONF_USERNAME
 
-from .common import (
-    DecoraWifiCommFailed,
-    DecoraWifiEntity,
-    DecoraWifiPlatform,
-    DecoraWifiSessionNotFound,
-)
-from .const import LIGHT_DOMAIN
+from .common import DecoraWifiEntity, DecoraWifiPlatform, decorawifisessions
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up Decora Wifi lights based on a config entry."""
-
+    # Retrieve the platform session from the reference stored in data.
     email = entry.data[CONF_USERNAME]
+    session: DecoraWifiPlatform = decorawifisessions[email]
 
-    try:
-        devices = await DecoraWifiPlatform.async_getdevices(hass, email)
-    except DecoraWifiCommFailed:
-        _LOGGER.error("Communication with Decora Wifi platform failed.")
-    except DecoraWifiSessionNotFound:
-        _LOGGER.error("DecoraWifi Session not found.")
+    if session:
+        lights = session.lights
 
-    lights = devices[LIGHT_DOMAIN]
     entities = []
     if lights:
         for light in lights:
@@ -72,7 +62,7 @@ class DecoraWifiLight(DecoraWifiEntity, LightEntity):
         """Return true if switch is on."""
         return self._switch.power == "ON"
 
-    async def async_turn_on(self, **kwargs):
+    def turn_on(self, **kwargs):
         """Instruct the switch to turn on & adjust brightness."""
         attribs = {"power": "ON"}
 
@@ -87,29 +77,23 @@ class DecoraWifiLight(DecoraWifiEntity, LightEntity):
             transition = int(kwargs[ATTR_TRANSITION])
             attribs["fadeOnTime"] = attribs["fadeOffTime"] = transition
 
-        def tryupdate():
-            self._switch.update_attributes(attribs)
-
         try:
-            await self.hass.async_add_executor_job(tryupdate)
+            self._switch.update_attributes(attribs)
         except ValueError:
             _LOGGER.error("Failed to turn on myLeviton switch")
 
-    async def async_turn_off(self, **kwargs):
+    def turn_off(self, **kwargs):
         """Instruct the switch to turn off."""
         attribs = {"power": "OFF"}
 
-        def tryupdate():
-            self._switch.update_attributes(attribs)
-
         try:
-            self._switch.update_attributes(tryupdate)
+            self._switch.update_attributes(attribs)
         except ValueError:
             _LOGGER.error("Failed to turn off myLeviton switch")
 
-    async def async_update(self):
+    def update(self):
         """Fetch new state data for this switch."""
         try:
-            await self.hass.async_add_executor_job(self._switch.refresh)
+            self._switch.refresh()
         except ValueError:
             _LOGGER.error("Failed to update myLeviton switch data")

@@ -14,7 +14,12 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 
-from .common import DecoraWifiCommFailed, DecoraWifiPlatform, DecoraWifiSessionNotFound
+from .common import (
+    DecoraWifiCommFailed,
+    DecoraWifiLoginFailed,
+    DecoraWifiPlatform,
+    decorawifisessions,
+)
 from .const import CONF_OPTIONS, DEFAULT_SCAN_INTERVAL, DOMAIN, PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
@@ -78,34 +83,47 @@ async def async_setup_entry(hass: HomeAssistant, entry):
             )
         }
     )
-    devices = {}
 
-    try:
-        devices = await DecoraWifiPlatform.async_getdevices(hass, email)
-    except DecoraWifiCommFailed:
-        _LOGGER.error("Communication with Decora Wifi platform failed.")
-        return False
-    except DecoraWifiSessionNotFound:
-        # Re-login.
-        if await DecoraWifiPlatform.async_login(hass, email, password):
-            devices = await DecoraWifiPlatform.async_getdevices(hass, email)
-
-    # Forward the config entry for each device type present.
-    for p in PLATFORMS:
-        if devices[p]:
-            hass.async_create_task(
-                hass.config_entries.async_forward_entry_setup(entry, p)
+    # If a session is already setup, don't start a new one.
+    session = decorawifisessions.get(email, None)
+    if not session:
+        # Re-login
+        try:
+            # Attempt to log in.
+            session = await DecoraWifiPlatform.async_setup_decora_wifi(
+                hass,
+                email,
+                password,
             )
-    return True
+        except DecoraWifiLoginFailed:
+            _LOGGER.error("Login failed.")
+        except DecoraWifiCommFailed:
+            _LOGGER.error("Communication with myLeviton failed.")
+        decorawifisessions.update({email: session})
+
+    if session:
+        activeplatforms = session.activeplatforms
+        # Forward the config entry to each platform which has devices to set up.
+        hass.config_entries.async_setup_platforms(entry, activeplatforms)
+        return True
 
 
 async def async_unload_entry(hass, entry):
     """Unload a config entry."""
     conf_data = dict(entry.data)
     email = conf_data[CONF_USERNAME]
+    session: DecoraWifiPlatform = decorawifisessions.get(email, None)
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        await DecoraWifiPlatform.async_logout(hass, email)
+        if session:
+            try:
+                # Attempt to log out.
+                await hass.async_create_task(session.apilogout)
+            except DecoraWifiCommFailed:
+                _LOGGER.warning(
+                    "Communication with myLeviton failed while attempting to logout."
+                )
+            decorawifisessions.pop(email)
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok

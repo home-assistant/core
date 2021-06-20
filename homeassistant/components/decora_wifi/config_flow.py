@@ -4,7 +4,12 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
-from .common import DecoraWifiCommFailed, DecoraWifiLoginFailed, DecoraWifiPlatform
+from .common import (
+    DecoraWifiCommFailed,
+    DecoraWifiLoginFailed,
+    DecoraWifiPlatform,
+    decorawifisessions,
+)
 from .const import CONF_TITLE, DOMAIN
 
 
@@ -44,7 +49,7 @@ class DecoraWifiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             # Attempt to log in with the credentials provided by the user.
-            self.session = await DecoraWifiPlatform.async_login(
+            self.session = await DecoraWifiPlatform.async_setup_decora_wifi(
                 self.hass,
                 email=self.data[CONF_USERNAME],
                 password=self.data[CONF_PASSWORD],
@@ -59,6 +64,7 @@ class DecoraWifiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_show_form(
                 step_id="user", data_schema=vol.Schema(data_schema), errors=errors
             )
+        decorawifisessions.update({self.data[CONF_USERNAME]: self.session})
 
         # Normal config entry setup
         return self.async_create_entry(
@@ -79,8 +85,9 @@ class DecoraWifiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             and user_input.get(CONF_PASSWORD)
         ):
             self.data.update(user_input)
+
             try:
-                self.session = await DecoraWifiPlatform.async_login(
+                self.session = await DecoraWifiPlatform.async_setup_decora_wifi(
                     self.hass,
                     email=self.data[CONF_USERNAME],
                     password=self.data[CONF_PASSWORD],
@@ -95,6 +102,7 @@ class DecoraWifiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_show_form(
                     step_id="user", data_schema=vol.Schema(data_schema), errors=errors
                 )
+            decorawifisessions.update({self.data[CONF_USERNAME]: self.session})
 
             # Login attempt succeeded. Complete the entry setup.
             self.hass.config_entries.async_update_entry(
