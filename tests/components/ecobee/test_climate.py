@@ -369,28 +369,28 @@ async def test_set_ventilator_mode_on(thermostat, data):
 
 
 async def test_set_ventilator_min_on_time(thermostat, data):
-    """Test set ventilator mode to on."""
+    """Test set ventilator minimum on time."""
     data.reset_mock()
     thermostat.set_ventilator_min_on_time(50)
     data.ecobee.set_ventilator_min_on_time.assert_has_calls([mock.call(1, 50)])
 
 
 async def test_set_ventilator_min_on_time_home(thermostat, data):
-    """Test set ventilator mode to on."""
+    """Test set ventilator minimum on time when home."""
     data.reset_mock()
     thermostat.set_ventilator_min_on_time_home(40)
     data.ecobee.set_ventilator_min_on_time_home.assert_has_calls([mock.call(1, 40)])
 
 
 async def test_set_ventilator_min_on_time_away(thermostat, data):
-    """Test set ventilator mode to on."""
+    """Test set ventilator minimum on time when away."""
     data.reset_mock()
     thermostat.set_ventilator_min_on_time_away(30)
     data.ecobee.set_ventilator_min_on_time_away.assert_has_calls([mock.call(1, 30)])
 
 
 async def test_set_ventilator_timer_on(thermostat, data):
-    """Test set ventilator mode to on."""
+    """Test set ventilator timer."""
     data.reset_mock()
     thermostat.set_ventilator_timer(True)
     data.ecobee.set_ventilator_timer.assert_has_calls([mock.call(1, True)])
