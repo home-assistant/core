@@ -177,6 +177,7 @@ class AccuWeatherSensor(CoordinatorEntity, SensorEntity):
     def entity_registry_enabled_default(self) -> bool:
         """Return if the entity should be enabled when first added to the entity registry."""
         return self._description[ATTR_ENABLED]
+
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle data update."""
