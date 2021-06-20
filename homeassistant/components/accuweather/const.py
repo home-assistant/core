@@ -48,12 +48,10 @@ ATTR_LABEL: Final = "label"
 ATTR_UNIT_IMPERIAL: Final = "unit_imperial"
 ATTR_UNIT_METRIC: Final = "unit_metric"
 CONF_FORECAST: Final = "forecast"
-COORDINATOR: Final = "coordinator"
 DOMAIN: Final = "accuweather"
 MANUFACTURER: Final = "AccuWeather, Inc."
 MAX_FORECAST_DAYS: Final = 4
 NAME: Final = "AccuWeather"
-UNDO_UPDATE_LISTENER: Final = "undo_update_listener"
 
 CONDITION_CLASSES: Final[dict[str, list[int]]] = {
     ATTR_CONDITION_CLEAR_NIGHT: [33, 34, 37],
