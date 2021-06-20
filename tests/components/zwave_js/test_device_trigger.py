@@ -1,4 +1,7 @@
 """The tests for Z-Wave JS device triggers."""
+import logging
+from unittest.mock import patch
+
 import pytest
 import voluptuous_serialize
 from zwave_js_server.const import CommandClass
@@ -10,6 +13,7 @@ from homeassistant.components.zwave_js import DOMAIN, device_trigger
 from homeassistant.components.zwave_js.device_trigger import (
     async_attach_trigger,
     async_get_trigger_capabilities,
+    get_value_from_config,
 )
 from homeassistant.components.zwave_js.helpers import (
     async_get_node_status_sensor_entity_id,
@@ -374,6 +378,280 @@ async def test_get_trigger_capabilities_node_status(
     ]
 
 
+async def test_get_central_scene_value_notification_triggers(
+    hass, client, wallmote_central_scene, integration
+):
+    """Test we get the expected triggers from a zwave_js device with the Central Scene CC."""
+    dev_reg = async_get_dev_reg(hass)
+    device = async_entries_for_config_entry(dev_reg, integration.entry_id)[0]
+    expected_trigger = {
+        "platform": "device",
+        "domain": DOMAIN,
+        "type": "event.central_scene_value_notification",
+        "device_id": device.id,
+        "command_class": CommandClass.CENTRAL_SCENE,
+        "property": "scene",
+        "property_key": "001",
+        "endpoint": 0,
+        "subtype": "Endpoint 0 Scene 001",
+    }
+    triggers = await async_get_device_automations(hass, "trigger", device.id)
+    assert expected_trigger in triggers
+
+
+async def test_if_central_scene_value_notification_fires(
+    hass, client, wallmote_central_scene, integration, calls
+):
+    """Test for event.central_scene_value_notification trigger firing."""
+    node: Node = wallmote_central_scene
+    dev_reg = async_get_dev_reg(hass)
+    device = async_entries_for_config_entry(dev_reg, integration.entry_id)[0]
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        "platform": "device",
+                        "domain": DOMAIN,
+                        "device_id": device.id,
+                        "type": "event.central_scene_value_notification",
+                        "command_class": CommandClass.CENTRAL_SCENE.value,
+                        "property": "scene",
+                        "property_key": "001",
+                        "endpoint": 0,
+                        "subtype": "Endpoint 0 Scene 001",
+                        "action": 0,
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {
+                            "some": (
+                                "event.central_scene_value_notification - "
+                                "{{ trigger.platform}} - "
+                                "{{ trigger.event.event_type}} - "
+                                "{{ trigger.event.data.command_class }}"
+                            )
+                        },
+                    },
+                },
+            ]
+        },
+    )
+
+    # Publish fake Central Scene CC notification
+    event = Event(
+        type="value notification",
+        data={
+            "source": "node",
+            "event": "value notification",
+            "nodeId": node.node_id,
+            "args": {
+                "commandClassName": "Central Scene",
+                "commandClass": 91,
+                "endpoint": 0,
+                "property": "scene",
+                "propertyName": "scene",
+                "propertyKey": "001",
+                "propertyKey": "001",
+                "value": 0,
+                "metadata": {
+                    "type": "number",
+                    "readable": True,
+                    "writeable": False,
+                    "min": 0,
+                    "max": 255,
+                    "label": "Scene 004",
+                    "states": {
+                        "0": "KeyPressed",
+                        "1": "KeyReleased",
+                        "2": "KeyHeldDown",
+                    },
+                },
+                "ccVersion": 1,
+            },
+        },
+    )
+    node.receive_event(event)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert calls[0].data[
+        "some"
+    ] == "event.central_scene_value_notification - device - zwave_js_value_notification - {}".format(
+        CommandClass.CENTRAL_SCENE
+    )
+
+
+async def test_get_trigger_capabilities_central_scene_value_notification(
+    hass, client, wallmote_central_scene, integration
+):
+    """Test we get the expected capabilities from a central_scene_value_notification trigger."""
+    dev_reg = async_get_dev_reg(hass)
+    device = async_entries_for_config_entry(dev_reg, integration.entry_id)[0]
+    capabilities = await device_trigger.async_get_trigger_capabilities(
+        hass,
+        {
+            "platform": "device",
+            "domain": DOMAIN,
+            "type": "event.central_scene_value_notification",
+            "device_id": device.id,
+            "command_class": CommandClass.CENTRAL_SCENE.value,
+            "property": "scene",
+            "property_key": "001",
+            "endpoint": 0,
+            "subtype": "Endpoint 0 Scene 001",
+        },
+    )
+    assert capabilities and "extra_fields" in capabilities
+
+    assert voluptuous_serialize.convert(
+        capabilities["extra_fields"], custom_serializer=cv.custom_serializer
+    ) == [
+        {
+            "name": "action",
+            "required": True,
+            "type": "select",
+            "options": [(0, "KeyPressed"), (1, "KeyReleased"), (2, "KeyHeldDown")],
+        },
+    ]
+
+
+async def test_get_scene_activation_value_notification_triggers(
+    hass, client, hank_binary_switch, integration
+):
+    """Test we get the expected triggers from a zwave_js device with the SceneActivation CC."""
+    dev_reg = async_get_dev_reg(hass)
+    device = async_entries_for_config_entry(dev_reg, integration.entry_id)[0]
+    expected_trigger = {
+        "platform": "device",
+        "domain": DOMAIN,
+        "type": "event.scene_activation_value_notification",
+        "device_id": device.id,
+        "command_class": CommandClass.SCENE_ACTIVATION.value,
+        "property": "sceneId",
+        "property_key": None,
+        "endpoint": 0,
+        "subtype": "Endpoint 0",
+    }
+    triggers = await async_get_device_automations(hass, "trigger", device.id)
+    logging.getLogger(__name__).error(triggers)
+    assert expected_trigger in triggers
+
+
+async def test_if_scene_activation_value_notification_fires(
+    hass, client, hank_binary_switch, integration, calls
+):
+    """Test for event.scene_activation_value_notification trigger firing."""
+    node: Node = hank_binary_switch
+    dev_reg = async_get_dev_reg(hass)
+    device = async_entries_for_config_entry(dev_reg, integration.entry_id)[0]
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        "platform": "device",
+                        "domain": DOMAIN,
+                        "device_id": device.id,
+                        "type": "event.scene_activation_value_notification",
+                        "command_class": CommandClass.SCENE_ACTIVATION.value,
+                        "property": "sceneId",
+                        "property_key": None,
+                        "endpoint": 0,
+                        "subtype": "Endpoint 0",
+                        "scene_id": 1,
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {
+                            "some": (
+                                "event.scene_activation_value_notification - "
+                                "{{ trigger.platform}} - "
+                                "{{ trigger.event.event_type}} - "
+                                "{{ trigger.event.data.command_class }}"
+                            )
+                        },
+                    },
+                },
+            ]
+        },
+    )
+
+    # Publish fake Central Scene CC notification
+    event = Event(
+        type="value notification",
+        data={
+            "source": "node",
+            "event": "value notification",
+            "nodeId": node.node_id,
+            "args": {
+                "commandClassName": "Scene Activation",
+                "commandClass": 43,
+                "endpoint": 0,
+                "property": "sceneId",
+                "propertyName": "sceneId",
+                "value": 1,
+                "metadata": {
+                    "type": "number",
+                    "readable": True,
+                    "writeable": True,
+                    "min": 1,
+                    "max": 255,
+                    "label": "Scene ID",
+                },
+                "ccVersion": 1,
+            },
+        },
+    )
+    node.receive_event(event)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert calls[0].data[
+        "some"
+    ] == "event.scene_activation_value_notification - device - zwave_js_value_notification - {}".format(
+        CommandClass.SCENE_ACTIVATION
+    )
+
+
+async def test_get_trigger_capabilities_scene_activation_value_notification(
+    hass, client, hank_binary_switch, integration
+):
+    """Test we get the expected capabilities from a scene_activation_value_notification trigger."""
+    dev_reg = async_get_dev_reg(hass)
+    device = async_entries_for_config_entry(dev_reg, integration.entry_id)[0]
+    capabilities = await device_trigger.async_get_trigger_capabilities(
+        hass,
+        {
+            "platform": "device",
+            "domain": DOMAIN,
+            "type": "event.scene_activation_value_notification",
+            "device_id": device.id,
+            "command_class": CommandClass.SCENE_ACTIVATION.value,
+            "property": "sceneId",
+            "property_key": None,
+            "endpoint": 0,
+            "subtype": "Endpoint 0",
+        },
+    )
+    assert capabilities and "extra_fields" in capabilities
+
+    assert voluptuous_serialize.convert(
+        capabilities["extra_fields"], custom_serializer=cv.custom_serializer
+    ) == [
+        {
+            "name": "scene_id",
+            "required": True,
+            "valueMin": 1,
+            "valueMax": 255,
+        },
+    ]
+
+
 async def test_failure_scenarios(hass):
     """Test failure scenarios."""
     with pytest.raises(HomeAssistantError):
@@ -381,12 +659,43 @@ async def test_failure_scenarios(hass):
             hass, {"type": "failed.test", "device_id": "invalid_device_id"}, None, {}
         )
 
-    assert (
-        await async_get_trigger_capabilities(
-            hass, {"type": "failed.test", "device_id": "invalid_device_id"}
+    with pytest.raises(HomeAssistantError):
+        await async_attach_trigger(
+            hass,
+            {"type": "event.failed_type", "device_id": "invalid_device_id"},
+            None,
+            {},
         )
-        == {}
-    )
+
+    with patch(
+        "homeassistant.components.zwave_js.device_trigger.async_get_node_from_device_id",
+        return_value=None,
+    ), patch(
+        "homeassistant.components.zwave_js.device_trigger.get_value_from_config",
+        return_value=None,
+    ):
+        assert (
+            await async_get_trigger_capabilities(
+                hass, {"type": "failed.test", "device_id": "invalid_device_id"}
+            )
+            == {}
+        )
 
     with pytest.raises(HomeAssistantError):
         async_get_node_status_sensor_entity_id(hass, "invalid_device_id")
+
+
+async def test_get_value_from_config_failure(
+    hass, client, hank_binary_switch, integration
+):
+    """Test get_value_from_config invalid value ID."""
+    with pytest.raises(HomeAssistantError):
+        get_value_from_config(
+            hank_binary_switch,
+            {
+                "command_class": CommandClass.SCENE_ACTIVATION.value,
+                "property": "sceneId",
+                "property_key": None,
+                "endpoint": 10,
+            },
+        )

@@ -102,6 +102,8 @@
     "trigger_type": {
       "event.entry_control_notification": "Sent a notification (Entry Control CC)",
       "event.notification_notification": "Sent a notification (Notification CC)",
+      "event.central_scene_value_notification": "Action on {subtype}",
+      "event.scene_activation_value_notification": "Scene Activation on {subtype}",
       "state.node_status": "Node status changed"
     },
     "condition_type": {

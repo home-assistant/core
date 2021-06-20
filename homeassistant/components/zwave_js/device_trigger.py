@@ -3,7 +3,8 @@ from __future__ import annotations
 
 import voluptuous as vol
 from zwave_js_server.const import CommandClass
-from zwave_js_server.model.node import NodeStatus
+from zwave_js_server.model.node import Node, NodeStatus
+from zwave_js_server.model.value import Value, get_value_id
 
 from homeassistant.components.automation import AutomationActionType
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
@@ -27,22 +28,34 @@ from homeassistant.helpers.typing import ConfigType
 from .const import (
     ATTR_COMMAND_CLASS,
     ATTR_DATA_TYPE,
+    ATTR_ENDPOINT,
     ATTR_EVENT,
     ATTR_EVENT_LABEL,
     ATTR_EVENT_TYPE,
     ATTR_LABEL,
+    ATTR_PROPERTY,
+    ATTR_PROPERTY_KEY,
     ATTR_TYPE,
+    ATTR_VALUE_RAW,
     DOMAIN,
     ZWAVE_JS_NOTIFICATION_EVENT,
+    ZWAVE_JS_VALUE_NOTIFICATION_EVENT,
 )
 from .helpers import (
     async_get_node_from_device_id,
     async_get_node_status_sensor_entity_id,
 )
 
+CONF_ACTION = "action"
+CONF_SCENE_ID = "scene_id"
+CONF_SUBTYPE = "subtype"
+CONF_VALUE_ID = "value_id"
+
 # Trigger types
 ENTRY_CONTROL_NOTIFICATION = "event.entry_control_notification"
 NOTIFICATION_NOTIFICATION = "event.notification_notification"
+CENTRAL_SCENE_VALUE_NOTIFICATION = "event.central_scene_value_notification"
+SCENE_ACTIVATION_VALUE_NOTIFICATION = "event.scene_activation_value_notification"
 NODE_STATUS = "state.node_status"
 
 NOTIFICATION_EVENT_CC_MAPPINGS = (
@@ -80,6 +93,32 @@ ENTRY_CONTROL_NOTIFICATION_SCHEMA = BASE_EVENT_SCHEMA.extend(
     }
 )
 
+BASE_VALUE_NOTIFICATION_EVENT_SCHEMA = BASE_EVENT_SCHEMA.extend(
+    {
+        vol.Required(ATTR_PROPERTY): vol.Any(int, str),
+        vol.Required(ATTR_PROPERTY_KEY): vol.Any(None, int, str),
+        vol.Required(ATTR_ENDPOINT): vol.Coerce(int),
+    }
+)
+
+CENTRAL_SCENE_VALUE_NOTIFICATION_SCHEMA = BASE_VALUE_NOTIFICATION_EVENT_SCHEMA.extend(
+    {
+        vol.Required(CONF_TYPE): CENTRAL_SCENE_VALUE_NOTIFICATION,
+        vol.Required(CONF_ACTION): vol.Coerce(int),
+        vol.Required(CONF_SUBTYPE): cv.string,
+    }
+)
+
+SCENE_ACTIVATION_VALUE_NOTIFICATION_SCHEMA = (
+    BASE_VALUE_NOTIFICATION_EVENT_SCHEMA.extend(
+        {
+            vol.Required(CONF_TYPE): SCENE_ACTIVATION_VALUE_NOTIFICATION,
+            vol.Required(CONF_SCENE_ID): vol.Coerce(int),
+            vol.Required(CONF_SUBTYPE): cv.string,
+        }
+    )
+)
+
 NODE_STATUSES = [node_status.name.lower() for node_status in NodeStatus]
 
 NODE_STATUS_SCHEMA = BASE_STATE_SCHEMA.extend(
@@ -94,8 +133,24 @@ NODE_STATUS_SCHEMA = BASE_STATE_SCHEMA.extend(
 TRIGGER_SCHEMA = vol.Any(
     ENTRY_CONTROL_NOTIFICATION_SCHEMA,
     NOTIFICATION_NOTIFICATION_SCHEMA,
+    CENTRAL_SCENE_VALUE_NOTIFICATION_SCHEMA,
+    SCENE_ACTIVATION_VALUE_NOTIFICATION_SCHEMA,
     NODE_STATUS_SCHEMA,
 )
+
+
+def get_value_from_config(node: Node, config: ConfigType) -> Value:
+    """Get a Z-Wave JS Value from a config."""
+    value_id = get_value_id(
+        node,
+        config[ATTR_COMMAND_CLASS],
+        config[ATTR_PROPERTY],
+        config.get(ATTR_ENDPOINT),
+        config.get(ATTR_PROPERTY_KEY),
+    )
+    if value_id not in node.values:
+        raise HomeAssistantError(f"Value {value_id} can't be found on node {node}")
+    return node.values[value_id]
 
 
 async def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict]:
@@ -129,7 +184,52 @@ async def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict]:
         ]
     )
 
+    # Handle central scene value notification event triggers
+    triggers.extend(
+        [
+            {
+                **base_trigger,
+                CONF_TYPE: CENTRAL_SCENE_VALUE_NOTIFICATION,
+                ATTR_PROPERTY: value.property_,
+                ATTR_PROPERTY_KEY: value.property_key,
+                ATTR_ENDPOINT: value.endpoint,
+                ATTR_COMMAND_CLASS: CommandClass.CENTRAL_SCENE,
+                CONF_SUBTYPE: f"Endpoint {value.endpoint} Scene {value.property_key}",
+            }
+            for value in node.get_command_class_values(
+                CommandClass.CENTRAL_SCENE
+            ).values()
+            if value.property_ == "scene"
+        ]
+    )
+
+    # Handle scene activation value notification event triggers
+    triggers.extend(
+        [
+            {
+                **base_trigger,
+                CONF_TYPE: SCENE_ACTIVATION_VALUE_NOTIFICATION,
+                ATTR_PROPERTY: value.property_,
+                ATTR_PROPERTY_KEY: value.property_key,
+                ATTR_ENDPOINT: value.endpoint,
+                ATTR_COMMAND_CLASS: CommandClass.SCENE_ACTIVATION,
+                CONF_SUBTYPE: f"Endpoint {value.endpoint}",
+            }
+            for value in node.get_command_class_values(
+                CommandClass.SCENE_ACTIVATION
+            ).values()
+            if value.property_ == "sceneId"
+        ]
+    )
+
     return triggers
+
+
+def copy_available_params(input: dict, output: dict, params: list[str]) -> None:
+    """Copy available params from input into output."""
+    for param in params:
+        if (val := input.get(param)) not in ("", None):
+            output[param] = val
 
 
 async def async_attach_trigger(
@@ -139,44 +239,58 @@ async def async_attach_trigger(
     automation_info: dict,
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
+    trigger_type = config[CONF_TYPE]
+    trigger_platform = trigger_type.split(".")[0]
+
     event_data = {CONF_DEVICE_ID: config[CONF_DEVICE_ID]}
     event_config = {
         event.CONF_PLATFORM: "event",
         event.CONF_EVENT_DATA: event_data,
     }
-    state_config = {state.CONF_PLATFORM: "state"}
-
-    trigger_type = config[CONF_TYPE].split(".")[0]
 
     if ATTR_COMMAND_CLASS in config:
         event_data[ATTR_COMMAND_CLASS] = config[ATTR_COMMAND_CLASS]
 
     # Take input data from automation trigger UI and add it to the trigger we are
     # attaching to
-    if trigger_type == "event":
-        if config[CONF_TYPE] == ENTRY_CONTROL_NOTIFICATION:
+    if trigger_platform == "event":
+        if trigger_type == ENTRY_CONTROL_NOTIFICATION:
             event_config[event.CONF_EVENT_TYPE] = ZWAVE_JS_NOTIFICATION_EVENT
-            for param in (ATTR_EVENT_TYPE, ATTR_DATA_TYPE):
-                if (val := config.get(param)) not in ("", None):
-                    event_data[param] = val
-        elif config[CONF_TYPE] == NOTIFICATION_NOTIFICATION:
+            copy_available_params(config, event_data, [ATTR_EVENT_TYPE, ATTR_DATA_TYPE])
+        elif trigger_type == NOTIFICATION_NOTIFICATION:
             event_config[event.CONF_EVENT_TYPE] = ZWAVE_JS_NOTIFICATION_EVENT
-            for param in (ATTR_LABEL, ATTR_EVENT_LABEL, ATTR_EVENT):
-                if (val := config.get(param)) not in ("", None):
-                    event_data[param] = val
+            copy_available_params(
+                config, event_data, [ATTR_LABEL, ATTR_EVENT_LABEL, ATTR_EVENT]
+            )
             if (val := config.get(f"{ATTR_TYPE}.")) not in ("", None):
                 event_data[ATTR_TYPE] = val
+        elif trigger_type == CENTRAL_SCENE_VALUE_NOTIFICATION:
+            event_config[event.CONF_EVENT_TYPE] = ZWAVE_JS_VALUE_NOTIFICATION_EVENT
+            copy_available_params(
+                config, event_data, [ATTR_PROPERTY, ATTR_PROPERTY_KEY, ATTR_ENDPOINT]
+            )
+            event_data[ATTR_VALUE_RAW] = config[CONF_ACTION]
+        elif trigger_type == SCENE_ACTIVATION_VALUE_NOTIFICATION:
+            event_config[event.CONF_EVENT_TYPE] = ZWAVE_JS_VALUE_NOTIFICATION_EVENT
+            copy_available_params(
+                config, event_data, [ATTR_PROPERTY, ATTR_PROPERTY_KEY, ATTR_ENDPOINT]
+            )
+            event_data[ATTR_VALUE_RAW] = config[CONF_SCENE_ID]
+        else:
+            raise HomeAssistantError(f"Unhandled trigger type {trigger_type}")
 
         event_config = event.TRIGGER_SCHEMA(event_config)
         return await event.async_attach_trigger(
             hass, event_config, action, automation_info, platform_type="device"
         )
 
-    if trigger_type == "state" and config[CONF_TYPE] == NODE_STATUS:
+    state_config = {state.CONF_PLATFORM: "state"}
+
+    if trigger_platform == "state" and trigger_type == NODE_STATUS:
         state_config[state.CONF_ENTITY_ID] = config[CONF_ENTITY_ID]
-        for param in (state.CONF_FOR, state.CONF_FROM, state.CONF_TO):
-            if val := config.get(param):
-                state_config[param] = val
+        copy_available_params(
+            config, state_config, [state.CONF_FOR, state.CONF_FROM, state.CONF_TO]
+        )
 
         state_config = state.TRIGGER_SCHEMA(state_config)
         return await state.async_attach_trigger(
@@ -190,6 +304,8 @@ async def async_get_trigger_capabilities(
     hass: HomeAssistant, config: ConfigType
 ) -> dict[str, vol.Schema]:
     """List trigger capabilities."""
+    node = async_get_node_from_device_id(hass, config[CONF_DEVICE_ID])
+    value = get_value_from_config(node, config) if ATTR_PROPERTY in config else None
     # Add additional fields to the automation trigger UI
     if config[CONF_TYPE] == NOTIFICATION_NOTIFICATION:
         return {
@@ -220,6 +336,28 @@ async def async_get_trigger_capabilities(
                     vol.Optional(state.CONF_FROM): vol.In(NODE_STATUSES),
                     vol.Optional(state.CONF_TO): vol.In(NODE_STATUSES),
                     vol.Optional(state.CONF_FOR): cv.positive_time_period_dict,
+                }
+            )
+        }
+
+    if config[CONF_TYPE] == CENTRAL_SCENE_VALUE_NOTIFICATION:
+        return {
+            "extra_fields": vol.Schema(
+                {
+                    vol.Required(CONF_ACTION): vol.In(
+                        {int(k): v for k, v in value.metadata.states.items()}
+                    )
+                }
+            )
+        }
+
+    if config[CONF_TYPE] == SCENE_ACTIVATION_VALUE_NOTIFICATION:
+        return {
+            "extra_fields": vol.Schema(
+                {
+                    vol.Required(CONF_SCENE_ID): vol.Range(
+                        min=value.metadata.min, max=value.metadata.max
+                    )
                 }
             )
         }
