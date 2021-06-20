@@ -54,22 +54,26 @@ class KNXSwitch(KnxEntity, SwitchEntity, RestoreEntity):
             )
         )
         self._unique_id = f"{self._device.switch.group_address}"
-        self._total_energy_sensor = XknxSensor(
-            xknx,
-            name="Total Energy kWh",
-            group_address_state=config.get(
-                SwitchSchema.CONF_TOTAL_ENERGY_USAGE_STATE_ADDRESS
-            ),
-            value_type="active_energy_kwh",
-        )
-        self._current_energy_sensor = XknxSensor(
-            xknx,
-            name="Current Energy W",
-            group_address_state=config.get(
-                SwitchSchema.CONF_CURRENT_POWER_STATE_ADDRESS
-            ),
-            value_type="power",
-        )
+        self._total_energy_sensor: XknxSensor | None = None
+        if _total_engergy_ga := config.get(
+            SwitchSchema.CONF_TOTAL_ENERGY_USAGE_STATE_ADDRESS
+        ):
+            self._total_energy_sensor = XknxSensor(
+                xknx,
+                name="Total Energy kWh",
+                group_address_state=_total_engergy_ga,
+                value_type="active_energy_kwh",
+            )
+        self._current_energy_sensor: XknxSensor | None = None
+        if _current_energy_ga := config.get(
+            SwitchSchema.CONF_CURRENT_POWER_STATE_ADDRESS
+        ):
+            self._current_energy_sensor = XknxSensor(
+                xknx,
+                name="Current Energy W",
+                group_address_state=_current_energy_ga,
+                value_type="power",
+            )
 
     async def async_added_to_hass(self) -> None:
         """Restore last state."""
@@ -80,12 +84,12 @@ class KNXSwitch(KnxEntity, SwitchEntity, RestoreEntity):
             if last_state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE):
                 self._device.switch.value = last_state.state == STATE_ON
 
-        if self._current_energy_sensor.sensor_value.readable:
+        if self._current_energy_sensor:
             self._current_energy_sensor.register_device_updated_cb(
                 self.after_update_callback
             )
 
-        if self._total_energy_sensor.sensor_value.readable:
+        if self._total_energy_sensor:
             self._total_energy_sensor.register_device_updated_cb(
                 self.after_update_callback
             )
@@ -93,12 +97,15 @@ class KNXSwitch(KnxEntity, SwitchEntity, RestoreEntity):
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect device object when removed."""
         await super().async_will_remove_from_hass()
-        self._total_energy_sensor.unregister_device_updated_cb(
-            self.after_update_callback
-        )
-        self._current_energy_sensor.unregister_device_updated_cb(
-            self.after_update_callback
-        )
+        if self._current_energy_sensor:
+            self._current_energy_sensor.unregister_device_updated_cb(
+                self.after_update_callback
+            )
+
+        if self._total_energy_sensor:
+            self._total_energy_sensor.unregister_device_updated_cb(
+                self.after_update_callback
+            )
 
     @property
     def is_on(self) -> bool:
@@ -108,7 +115,7 @@ class KNXSwitch(KnxEntity, SwitchEntity, RestoreEntity):
     @property
     def current_power_w(self) -> float | None:
         """Return the current power usage in W."""
-        if self._current_energy_sensor.sensor_value.readable:
+        if self._current_energy_sensor:
             return self._current_energy_sensor.resolve_state()
 
         return None
@@ -116,7 +123,7 @@ class KNXSwitch(KnxEntity, SwitchEntity, RestoreEntity):
     @property
     def today_energy_kwh(self) -> float | None:
         """Return the today total energy usage in kWh."""
-        if self._total_energy_sensor.sensor_value.readable:
+        if self._total_energy_sensor:
             return self._total_energy_sensor.resolve_state()
 
         return None
