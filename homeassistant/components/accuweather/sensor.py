@@ -81,7 +81,7 @@ class AccuWeatherSensor(CoordinatorEntity, SensorEntity):
     ) -> None:
         """Initialize."""
         super().__init__(coordinator)
-        self._sensor_data = self._get_sensor_data(coordinator.data, forecast_day, kind)
+        self._sensor_data = _get_sensor_data(coordinator.data, forecast_day, kind)
         if forecast_day is None:
             self._description = SENSOR_TYPES[kind]
         else:
@@ -185,17 +185,18 @@ class AccuWeatherSensor(CoordinatorEntity, SensorEntity):
     @callback
     def _update_callback(self) -> None:
         """Handle data update."""
-        self._sensor_data = self._get_sensor_data(
+        self._sensor_data = _get_sensor_data(
             self.coordinator.data, self.forecast_day, self.kind
         )
         self.async_write_ha_state()
 
-    def _get_sensor_data(
-        self, sensors: dict[str, Any], forecast_day: int | None, kind: str
-    ) -> Any:
-        """Get sensor data."""
-        if forecast_day is None:
-            if kind == "Precipitation":
-                return sensors["PrecipitationSummary"][kind]
-            return sensors[kind]
-        return sensors[ATTR_FORECAST][forecast_day][kind]
+
+def _get_sensor_data(
+    sensors: dict[str, Any], forecast_day: int | None, kind: str
+) -> Any:
+    """Get sensor data."""
+    if forecast_day is None:
+        if kind == "Precipitation":
+            return sensors["PrecipitationSummary"][kind]
+        return sensors[kind]
+    return sensors[ATTR_FORECAST][forecast_day][kind]
