@@ -1,0 +1,7 @@
+{
+  "domain": "gandi_livedns",
+  "name": "Gandi live DNS",
+  "documentation": "https://www.home-assistant.io/integrations/gandi_livedns",
+  "codeowners": ["@flexy2dd"],
+  "iot_class": "cloud_polling"
+}
