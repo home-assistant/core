@@ -286,11 +286,13 @@ async def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict]:
     return triggers
 
 
-def copy_available_params(input: dict, output: dict, params: list[str]) -> None:
+def copy_available_params(
+    input_dict: dict, output_dict: dict, params: list[str]
+) -> None:
     """Copy available params from input into output."""
     for param in params:
-        if (val := input.get(param)) not in ("", None):
-            output[param] = val
+        if (val := input_dict.get(param)) not in ("", None):
+            output_dict[param] = val
 
 
 async def async_attach_trigger(
