@@ -14,7 +14,7 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.util.decorator import Registry
 
-from .const import ATTR_STREAMS, DOMAIN
+from .const import ATTR_STREAMS, DOMAIN, TARGET_SEGMENT_DURATION
 
 if TYPE_CHECKING:
     from . import Stream
@@ -28,6 +28,7 @@ class Part:
 
     duration: float = attr.ib()
     has_keyframe: bool = attr.ib()
+    # video data (moof+mdat)
     data: bytes = attr.ib()
 
 
@@ -50,7 +51,7 @@ class Segment:
         return self.duration > 0
 
     def get_bytes_without_init(self) -> bytes:
-        """Return reconstructed data for entire segment as bytes."""
+        """Return reconstructed data for all parts as bytes, without init."""
         return b"".join([part.data for part in self.parts])
 
 
@@ -141,17 +142,16 @@ class StreamOutput:
         return None
 
     @property
-    def target_duration(self) -> int:
+    def target_duration(self) -> float:
         """Return the max duration of any given segment in seconds."""
-        segment_length = len(self._segments)
-        if not segment_length:
-            return 1
-        durations = [s.duration for s in self._segments]
-        return round(max(durations)) or 1
+        if not (durations := [s.duration for s in self._segments if s.complete]):
+            return TARGET_SEGMENT_DURATION
+        return max(durations)
 
     def get_segment(self, sequence: int) -> Segment | None:
         """Retrieve a specific segment."""
-        for segment in self._segments:
+        # Most hits will come in the most recent segments, so iterate reversed
+        for segment in reversed(self._segments):
             if segment.sequence == sequence:
                 return segment
         return None
