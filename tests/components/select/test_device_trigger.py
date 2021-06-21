@@ -184,7 +184,30 @@ async def test_get_trigger_capabilities(hass: HomeAssistant) -> None:
 
     # Test when entity doesn't exists
     capabilities = await async_get_trigger_capabilities(hass, config)
-    assert capabilities == {}
+    assert capabilities
+    assert "extra_fields" in capabilities
+    assert voluptuous_serialize.convert(
+        capabilities["extra_fields"], custom_serializer=cv.custom_serializer
+    ) == [
+        {
+            "name": "from",
+            "optional": True,
+            "type": "select",
+            "options": [],
+        },
+        {
+            "name": "to",
+            "optional": True,
+            "type": "select",
+            "options": [],
+        },
+        {
+            "name": "for",
+            "optional": True,
+            "type": "positive_time_period_dict",
+            "optional": True,
+        },
+    ]
 
     # Mock an entity
     hass.states.async_set("select.test", "option1", {"options": ["option1", "option2"]})
