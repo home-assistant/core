@@ -5,7 +5,6 @@ import logging
 from proxmoxer import ProxmoxAPI
 from proxmoxer.backends.https import AuthenticationError
 from proxmoxer.core import ResourceException
-import requests.exceptions
 from requests.exceptions import ConnectTimeout, SSLError, ConnectionError
 import voluptuous as vol
 
@@ -232,7 +231,7 @@ def call_api_container_vm(proxmox, node_name, vm_id, machine_type):
             status = proxmox.nodes(node_name).qemu(vm_id).status.current.get()
         elif machine_type == TYPE_CONTAINER:
             status = proxmox.nodes(node_name).lxc(vm_id).status.current.get()
-    except (ResourceException, requests.exceptions.ConnectionError):
+    except (ResourceException, ConnectionError):
         return None
 
     return status
