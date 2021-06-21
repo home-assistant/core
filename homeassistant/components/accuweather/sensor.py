@@ -28,7 +28,6 @@ from .const import (
     ATTR_UNIT_IMPERIAL,
     ATTR_UNIT_METRIC,
     ATTRIBUTION,
-    COORDINATOR,
     DOMAIN,
     FORECAST_SENSOR_TYPES,
     MANUFACTURER,
@@ -46,9 +45,7 @@ async def async_setup_entry(
     """Add AccuWeather entities from a config_entry."""
     name: str = entry.data[CONF_NAME]
 
-    coordinator: AccuWeatherDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
-        COORDINATOR
-    ]
+    coordinator: AccuWeatherDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     sensors: list[AccuWeatherSensor] = []
     for sensor in SENSOR_TYPES:
