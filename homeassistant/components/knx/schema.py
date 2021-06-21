@@ -74,13 +74,14 @@ ia_validator = vol.Any(
 
 def select_options_sub_validator(entity_config: OrderedDict) -> OrderedDict:
     """Validate a select entity options configuration."""
-    payload_length = entity_config[SelectSchema.CONF_PAYLOAD_LENGTH]
     options_seen = set()
     payloads_seen = set()
+    payload_length = entity_config[SelectSchema.CONF_PAYLOAD_LENGTH]
     if payload_length == 0:
         max_payload = 0x3F
     else:
         max_payload = 256 ** payload_length - 1
+
     for opt in entity_config[SelectSchema.CONF_OPTIONS]:
         option = opt[SelectSchema.CONF_OPTION]
         payload = opt[SelectSchema.CONF_PAYLOAD]
@@ -89,14 +90,12 @@ def select_options_sub_validator(entity_config: OrderedDict) -> OrderedDict:
                 f"'payload: {payload}' for 'option: {option}' exceeds possible"
                 f" maximum of 'payload_length: {payload_length}': {max_payload}"
             )
-        if payload in payloads_seen:
-            raise vol.Invalid(f"duplicate item for 'payload' not allowed: {payload}")
-        else:
-            payloads_seen.add(payload)
         if option in options_seen:
             raise vol.Invalid(f"duplicate item for 'option' not allowed: {option}")
-        else:
-            options_seen.add(option)
+        options_seen.add(option)
+        if payload in payloads_seen:
+            raise vol.Invalid(f"duplicate item for 'payload' not allowed: {payload}")
+        payloads_seen.add(payload)
     return entity_config
 
 
