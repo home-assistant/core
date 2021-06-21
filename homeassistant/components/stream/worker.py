@@ -182,9 +182,7 @@ class SegmentBuffer:
             self._av_output.close()
         assert self._segment
         self._memory_file.seek(self._memory_file_pos)
-        self._segment.parts_by_byterange[
-            self._memory_file_pos - len(self._segment.init)
-        ] = Part(
+        self._segment.parts_by_byterange[self._segment.data_size] = Part(
             duration=float((packet.dts - self._part_start_dts) * packet.time_base),
             has_keyframe=self._part_has_keyframe,
             data=self._memory_file.read(),
