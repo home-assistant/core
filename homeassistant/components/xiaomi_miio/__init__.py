@@ -130,7 +130,7 @@ async def async_create_miio_device_and_coordinator(
         name=name,
         update_method=async_update_data,
         # Polling interval. Will only be polled if there are subscribers.
-        update_interval=timedelta(seconds=10),
+        update_interval=timedelta(seconds=60),
     )
     hass.data[DOMAIN][entry.entry_id] = {
         KEY_DEVICE: device,
@@ -199,7 +199,7 @@ async def async_setup_gateway_entry(
         name=name,
         update_method=async_update_data,
         # Polling interval. Will only be polled if there are subscribers.
-        update_interval=timedelta(seconds=60),
+        update_interval=timedelta(seconds=10),
     )
 
     hass.data[DOMAIN][entry.entry_id] = {
