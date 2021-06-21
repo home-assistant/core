@@ -40,11 +40,8 @@ class Alpha2BaseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by the user."""
         errors = {}
         if user_input is not None:
-            try:
-                for entry in self._async_current_entries(include_ignore=False):
-                    if entry.data["host"] == user_input["host"]:
-                        return self.async_abort(reason="already_configured")
-
+            self._async_abort_entries_match({"host": user_input["host"]})
+                try:
                 result = await validate_input(user_input)
                 if result.get("error"):
                     errors["base"] = result["error"]
