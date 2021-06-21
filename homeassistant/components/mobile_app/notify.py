@@ -46,7 +46,7 @@ from .const import (
     DOMAIN,
 )
 from .helpers import _encrypt_dict
-from .util import supports_legacy_push, supports_push
+from .util import supports_push
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,9 +57,6 @@ def push_registrations(hass):
 
     for webhook_id, entry in hass.data[DOMAIN][DATA_CONFIG_ENTRIES].items():
         if not supports_push(hass, webhook_id):
-            continue
-
-        if not supports_legacy_push(hass, webhook_id):
             continue
 
         targets[entry.data[ATTR_DEVICE_NAME]] = webhook_id

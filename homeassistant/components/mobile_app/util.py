@@ -34,18 +34,19 @@ def webhook_id_from_device_id(hass, device_id: str) -> str | None:
 
 
 @callback
-def supports_legacy_push(hass, webhook_id: str) -> bool:
-    """Return if push notifications is supported by searching app_data."""
-    config_entry = hass.data[DOMAIN][DATA_CONFIG_ENTRIES][webhook_id]
-    app_data = config_entry.data[ATTR_APP_DATA]
-    return ATTR_PUSH_TOKEN in app_data and ATTR_PUSH_URL in app_data
-
-
-@callback
 def supports_push(hass, webhook_id: str) -> bool:
     """Return if push notifications is supported by push_config."""
     config_entry = hass.data[DOMAIN][DATA_CONFIG_ENTRIES][webhook_id]
-    return ATTR_PUSH_CONFIG in config_entry.data
+    entry_data = config_entry.data
+
+    if ATTR_PUSH_CONFIG in entry_data:
+        return True
+
+    app_data = entry_data[ATTR_APP_DATA]
+    if ATTR_PUSH_TOKEN in app_data and ATTR_PUSH_URL in app_data:
+        return True
+
+    return False
 
 
 @callback
