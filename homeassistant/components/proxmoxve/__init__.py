@@ -5,7 +5,8 @@ import logging
 from proxmoxer import ProxmoxAPI
 from proxmoxer.backends.https import AuthenticationError
 from proxmoxer.core import ResourceException
-from requests.exceptions import ConnectTimeout, SSLError, ConnectionError
+import requests.exceptions
+from requests.exceptions import ConnectTimeout, SSLError
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -123,7 +124,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
             except ConnectTimeout:
                 _LOGGER.warning("Connection to host %s timed out during setup", host)
                 continue
-            except ConnectionError:
+            except requests.exception.ConnectionError:
                 _LOGGER.warning("Host %s is not reachable", host)
                 continue
 
@@ -231,7 +232,7 @@ def call_api_container_vm(proxmox, node_name, vm_id, machine_type):
             status = proxmox.nodes(node_name).qemu(vm_id).status.current.get()
         elif machine_type == TYPE_CONTAINER:
             status = proxmox.nodes(node_name).lxc(vm_id).status.current.get()
-    except (ResourceException, ConnectionError):
+    except (ResourceException, requests.exception.ConnectionError):
         return None
 
     return status
