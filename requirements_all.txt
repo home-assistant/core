@@ -105,7 +105,7 @@ adafruit-circuitpython-dht==3.6.0
 adafruit-circuitpython-mcp230xx==2.2.2
 
 # homeassistant.components.androidtv
-adb-shell[async]==0.3.1
+adb-shell[async]==0.3.4
 
 # homeassistant.components.alarmdecoder
 adext==0.4.2
@@ -2369,7 +2369,7 @@ wirelesstagpy==0.4.1
 withings-api==2.3.2
 
 # homeassistant.components.wled
-wled==0.6.0
+wled==0.7.0
 
 # homeassistant.components.wolflink
 wolf_smartset==0.1.11

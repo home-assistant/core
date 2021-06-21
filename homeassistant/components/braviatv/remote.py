@@ -3,13 +3,13 @@
 from homeassistant.components.remote import ATTR_NUM_REPEATS, RemoteEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import ATTR_MANUFACTURER, BRAVIA_COORDINATOR, DEFAULT_NAME, DOMAIN
+from .const import ATTR_MANUFACTURER, DEFAULT_NAME, DOMAIN
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Bravia TV Remote from a config entry."""
 
-    coordinator = hass.data[DOMAIN][config_entry.entry_id][BRAVIA_COORDINATOR]
+    coordinator = hass.data[DOMAIN][config_entry.entry_id]
     unique_id = config_entry.unique_id
     device_info = {
         "identifiers": {(DOMAIN, unique_id)},
