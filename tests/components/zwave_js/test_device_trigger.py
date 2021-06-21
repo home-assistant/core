@@ -499,7 +499,15 @@ async def test_get_trigger_capabilities_basic_value_notification(
 
     assert voluptuous_serialize.convert(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
-    ) == [{"name": "value", "required": True, "type": "string"}]
+    ) == [
+        {
+            "name": "value",
+            "required": True,
+            "type": "integer",
+            "valueMin": 0,
+            "valueMax": 255,
+        }
+    ]
 
 
 async def test_get_central_scene_value_notification_triggers(
@@ -766,7 +774,15 @@ async def test_get_trigger_capabilities_scene_activation_value_notification(
 
     assert voluptuous_serialize.convert(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
-    ) == [{"name": "scene_id", "required": True, "type": "string"}]
+    ) == [
+        {
+            "name": "scene_id",
+            "required": True,
+            "type": "integer",
+            "valueMin": 1,
+            "valueMax": 255,
+        }
+    ]
 
 
 async def test_failure_scenarios(hass):

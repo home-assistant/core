@@ -166,34 +166,6 @@ def get_value_from_config(node: Node, config: ConfigType) -> Value:
     return node.values[value_id]
 
 
-async def async_validate_trigger_config(
-    hass: HomeAssistant, config: ConfigType
-) -> ConfigType:
-    """Validate config."""
-    trigger_type = config[CONF_TYPE]
-    node = async_get_node_from_device_id(hass, config[CONF_DEVICE_ID])
-    value = get_value_from_config(node, config) if ATTR_PROPERTY in config else None
-    range_validations = (
-        (BASIC_VALUE_NOTIFICATION, ATTR_VALUE),
-        (SCENE_ACTIVATION_VALUE_NOTIFICATION, CONF_SCENE_ID),
-    )
-    # Range validations
-    for trigger_type_check, key in range_validations:
-        if (
-            trigger_type == trigger_type_check
-            and (val := vol.Coerce(int)(config[key])) is not None
-            and (
-                (value.metadata.min is not None and value.metadata.min > val)
-                or (value.metadata.max is not None and value.metadata.max < val)
-            )
-        ):
-            raise vol.Invalid(
-                f"`{key}` must be within range of {value.metadata.min} to {value.metadata.max}"
-            )
-
-    return config
-
-
 async def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict]:
     """List device triggers for Z-Wave JS devices."""
     dev_reg = device_registry.async_get(hass)
@@ -409,7 +381,16 @@ async def async_get_trigger_capabilities(
         }
 
     if config[CONF_TYPE] == BASIC_VALUE_NOTIFICATION:
-        return {"extra_fields": vol.Schema({vol.Required(ATTR_VALUE): cv.string})}
+        return {
+            "extra_fields": vol.Schema(
+                {
+                    vol.Required(ATTR_VALUE): vol.All(
+                        vol.Coerce(int),
+                        vol.Range(min=value.metadata.min, max=value.metadata.max),
+                    )
+                }
+            )
+        }
 
     if config[CONF_TYPE] == CENTRAL_SCENE_VALUE_NOTIFICATION:
         return {
@@ -423,6 +404,15 @@ async def async_get_trigger_capabilities(
         }
 
     if config[CONF_TYPE] == SCENE_ACTIVATION_VALUE_NOTIFICATION:
-        return {"extra_fields": vol.Schema({vol.Required(CONF_SCENE_ID): cv.string})}
+        return {
+            "extra_fields": vol.Schema(
+                {
+                    vol.Required(CONF_SCENE_ID): vol.All(
+                        vol.Coerce(int),
+                        vol.Range(min=value.metadata.min, max=value.metadata.max),
+                    )
+                }
+            )
+        }
 
     return {}
