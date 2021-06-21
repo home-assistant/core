@@ -815,6 +815,7 @@ class YeelightColorLightSupport(YeelightGenericLight):
             return COLOR_MODE_COLOR_TEMP
         if color_mode == 3:  # hsv
             return COLOR_MODE_HS
+        _LOGGER.debug("Light reported unknown color mode: %s", color_mode)
         return COLOR_MODE_UNKNOWN
 
     @property
