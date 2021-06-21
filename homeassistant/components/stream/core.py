@@ -246,6 +246,12 @@ class StreamOutput:
 
     def part_put(self) -> None:
         """Set event signalling the latest part segment."""
+        self._hass.loop.call_soon_threadsafe(self._async_part_put)
+
+    @callback
+    def _async_part_put(self) -> None:
+        """Call part_put from the event loop."""
+        # Start idle timeout when we start receiving data
         self._part_event.set()
         self._part_event.clear()
 
