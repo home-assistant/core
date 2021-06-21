@@ -41,7 +41,7 @@ class Alpha2BaseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
             self._async_abort_entries_match({"host": user_input["host"]})
-                try:
+            try:
                 result = await validate_input(user_input)
                 if result.get("error"):
                     errors["base"] = result["error"]
