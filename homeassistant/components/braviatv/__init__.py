@@ -12,14 +12,7 @@ from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PIN
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import (
-    BRAVIA_COORDINATOR,
-    CLIENTID_PREFIX,
-    CONF_IGNORED_SOURCES,
-    DOMAIN,
-    NICKNAME,
-    UNDO_UPDATE_LISTENER,
-)
+from .const import CLIENTID_PREFIX, CONF_IGNORED_SOURCES, DOMAIN, NICKNAME
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,15 +28,12 @@ async def async_setup_entry(hass, config_entry):
     ignored_sources = config_entry.options.get(CONF_IGNORED_SOURCES, [])
 
     coordinator = BraviaTVCoordinator(hass, host, mac, pin, ignored_sources)
-    undo_listener = config_entry.add_update_listener(update_listener)
+    config_entry.async_on_unload(config_entry.add_update_listener(update_listener))
 
     await coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][config_entry.entry_id] = {
-        BRAVIA_COORDINATOR: coordinator,
-        UNDO_UPDATE_LISTENER: undo_listener,
-    }
+    hass.data[DOMAIN][config_entry.entry_id] = coordinator
 
     hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
 
@@ -55,8 +45,6 @@ async def async_unload_entry(hass, config_entry):
     unload_ok = await hass.config_entries.async_unload_platforms(
         config_entry, PLATFORMS
     )
-
-    hass.data[DOMAIN][config_entry.entry_id][UNDO_UPDATE_LISTENER]()
 
     if unload_ok:
         hass.data[DOMAIN].pop(config_entry.entry_id)
