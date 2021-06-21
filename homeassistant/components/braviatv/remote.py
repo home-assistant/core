@@ -29,31 +29,12 @@ class BraviaTVRemote(CoordinatorEntity, RemoteEntity):
     def __init__(self, coordinator, name, unique_id, device_info):
         """Initialize the entity."""
 
-        self._name = name
-        self._unique_id = unique_id
-        self._device_info = device_info
+        self._attr_device_info = device_info
+        self._attr_is_on = coordinator.is_on
+        self._attr_name = name
+        self._attr_unique_id = unique_id
 
         super().__init__(coordinator)
-
-    @property
-    def unique_id(self):
-        """Return the unique ID of the device."""
-        return self._unique_id
-
-    @property
-    def device_info(self):
-        """Return device specific attributes."""
-        return self._device_info
-
-    @property
-    def name(self):
-        """Return the name of the device."""
-        return self._name
-
-    @property
-    def is_on(self):
-        """Return true if device is on."""
-        return self.coordinator.is_on
 
     async def async_turn_on(self, **kwargs):
         """Turn the device on."""

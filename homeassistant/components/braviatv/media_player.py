@@ -116,26 +116,16 @@ class BraviaTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
     def __init__(self, coordinator, name, unique_id, device_info):
         """Initialize the entity."""
 
-        self._name = name
-        self._unique_id = unique_id
-        self._device_info = device_info
+        self._attr_device_info = device_info
+        self._attr_is_volume_muted = coordinator.muted
+        self._attr_media_content_id = coordinator.channel_name
+        self._attr_media_duration = coordinator.duration
+        self._attr_name = name
+        self._attr_source = coordinator.source
+        self._attr_source_list = coordinator.source_list
+        self._attr_unique_id = unique_id
 
         super().__init__(coordinator)
-
-    @property
-    def name(self):
-        """Return the name of the device."""
-        return self._name
-
-    @property
-    def unique_id(self):
-        """Return a unique_id for this entity."""
-        return self._unique_id
-
-    @property
-    def device_info(self):
-        """Return the device info."""
-        return self._device_info
 
     @property
     def state(self):
@@ -145,26 +135,11 @@ class BraviaTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
         return STATE_OFF
 
     @property
-    def source(self):
-        """Return the current input source."""
-        return self.coordinator.source
-
-    @property
-    def source_list(self):
-        """List of available input sources."""
-        return self.coordinator.source_list
-
-    @property
     def volume_level(self):
         """Volume level of the media player (0..1)."""
         if self.coordinator.volume is not None:
             return self.coordinator.volume / 100
         return None
-
-    @property
-    def is_volume_muted(self):
-        """Boolean if volume is currently muted."""
-        return self.coordinator.muted
 
     @property
     def media_title(self):
@@ -175,16 +150,6 @@ class BraviaTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
             if self.coordinator.program_name is not None:
                 return_value = f"{return_value}: {self.coordinator.program_name}"
         return return_value
-
-    @property
-    def media_content_id(self):
-        """Content ID of current playing media."""
-        return self.coordinator.channel_name
-
-    @property
-    def media_duration(self):
-        """Duration of current playing media in seconds."""
-        return self.coordinator.duration
 
     async def async_turn_on(self):
         """Turn the device on."""
