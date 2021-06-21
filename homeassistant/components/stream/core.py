@@ -3,9 +3,9 @@ from __future__ import annotations
 
 import asyncio
 from collections import deque
-from collections.abc import Generator
+from collections.abc import Generator, Iterable
 import datetime
-from typing import TYPE_CHECKING, Iterable
+from typing import TYPE_CHECKING
 
 from aiohttp import web
 import async_timeout
