@@ -285,7 +285,7 @@ class FluxLight(LightEntity):
         # Show warning if effect set with rgb, brightness, or white level
         if effect and (brightness or rgb or rgbw):
             _LOGGER.warning(
-                "brightness, RGB and RGBW are ignored when"
+                "Brightness, RGB and RGBW are ignored when"
                 " an effect is specified for a flux bulb"
             )
 
