@@ -245,7 +245,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 ais_global.G_DB_SETTINGS_INFO = json.load(json_file)
         db_url = ais_global.G_DB_SETTINGS_INFO["dbUrl"]
         if db_url == "sqlite:///:memory:":
-            keep_days = 2
+            keep_days = 5
         else:
             if db_url.startswith("sqlite://///"):
                 # DB in file
@@ -257,13 +257,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     )
                     # enable recorder in memory
                     db_url = "sqlite:///:memory:"
-                    keep_days = 1
+                    keep_days = 5
                 else:
                     keep_days = 10
                     if "dbKeepDays" in ais_global.G_DB_SETTINGS_INFO:
                         keep_days = int(ais_global.G_DB_SETTINGS_INFO["dbKeepDays"])
-        include = ais_global.G_DB_SETTINGS_INFO.get("dbInclude", ais_global.G_AIS_INCLUDE_DB_FILTER)
-        exclude = ais_global.G_DB_SETTINGS_INFO.get("dbExclude", ais_global.G_AIS_EXCLUDE_DB_FILTER)
+        db_include = ais_global.G_DB_SETTINGS_INFO.get("dbInclude", {})
+        db_exclude = ais_global.G_DB_SETTINGS_INFO.get("dbExclude", {})
 
     except Exception as e:
         # enable recorder in memory
@@ -271,12 +271,22 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             "Get recorder config from file error, enable recorder in memory " + str(e)
         )
         db_url = "sqlite:///:memory:"
-        keep_days = 1
-        include = ais_global.G_AIS_INCLUDE_DB_FILTER
-        exclude = ais_global.G_AIS_EXCLUDE_DB_FILTER
+        keep_days = 5
+        db_include = ais_global.G_AIS_INCLUDE_DB_DEFAULT
+        db_exclude = ais_global.G_AIS_EXCLUDE_DB_DEFAULT
 
-    exclude["entity_globs"] = []
-    include["entity_globs"] = []
+    # ais exclude
+    exclude = ais_global.G_AIS_EXCLUDE_DB_DEFAULT
+    include = {"domains": [], "entity_globs": [], "entities": []}
+    if db_include != {}:
+        include[ATTR_DOMAINS].extend(db_include.get(ATTR_DOMAINS, {}))
+        include[ATTR_ENTITY_GLOBS].extend(db_include.get(ATTR_ENTITY_GLOBS, {}))
+        include["entities"].extend(db_include.get("entities", {}))
+    if db_exclude != {}:
+        exclude[ATTR_DOMAINS].extend(db_exclude.get(ATTR_DOMAINS, {}))
+        exclude[ATTR_ENTITY_GLOBS].extend(db_exclude.get(ATTR_ENTITY_GLOBS, {}))
+        exclude["entities"].extend(db_exclude.get("entities", {}))
+
     conf[CONF_EXCLUDE] = exclude
     conf[CONF_INCLUDE] = include
     entity_filter = convert_include_exclude_filter(conf)

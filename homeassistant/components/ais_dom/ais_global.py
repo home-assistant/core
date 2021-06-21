@@ -132,7 +132,7 @@ G_AIS_SUPLA_MQTT_CONFIG_FILE_NAME = "supla.conf"
 G_AUTOMATION_CONFIG = None
 
 # DB
-G_AIS_INCLUDE_DB_FILTER = {
+G_AIS_INCLUDE_DB_DEFAULT = {
     "domains": [
         "automation",
         "binary_sensor",
@@ -144,16 +144,43 @@ G_AIS_INCLUDE_DB_FILTER = {
         "sensor",
         "switch",
     ],
-    "entities": ["sun.sun"],
+    "entity_globs": ["sun.su*"],
+    "entities": ["sensor.version_info"],
 }
 
-G_AIS_EXCLUDE_DB_FILTER_EMPTY = {"domains": "ais_*", "entities": "sensor.version_info"}
-G_AIS_EXCLUDE_DB_FILTER = {
-    "domains": ["ais_*", "media_player", "group"],
-    "entities": [
-        "sun.sun",
-        "sensor.date",
-        "sensor.time",
+G_AIS_EXCLUDE_DB_DEFAULT_EMPTY = {
+    "domains": ["ais_ai_service"],
+    "entity_globs": ["sensor.ais_*"],
+    "entities": ["sensor.time"],
+    "event_types": ["call_service"],
+}
+G_AIS_EXCLUDE_DB_DEFAULT = {
+    "domains": [
+            "ais_ai_service",
+            "ais_amplifier_service",
+            "ais_audiobooks_service",
+            "ais_bookmarks",
+            "ais_cloud",
+            "ais_dom",
+            "ais_dom_device",
+            "ais_drives_service",
+            "ais_exo_player",
+            "ais_files",
+            "ais_google_home",
+            "ais_help",
+            "ais_host",
+            "ais_ingress",
+            "ais_knowledge_service",
+            "ais_mdns",
+            "ais_shell_command",
+            "ais_spotify_service",
+            "ais_updater",
+            "ais_usb",
+            "ais_wifi_service",
+            "ais_yt_service",
+            "media_player",
+            "group"],
+    "entity_globs": [
         "automation.ais_*",
         "binary_sensor.ais_*",
         "group.ais_*",
@@ -164,6 +191,9 @@ G_AIS_EXCLUDE_DB_FILTER = {
         "script.ais_*",
         "sensor.ais*",
         "timer.ais_*",
+    ],
+    "entities": [
+        "sensor.time",
         "input_select.book_autor",
         "group.audiobooks_player",
         "input_select.podcast_type",
@@ -210,7 +240,7 @@ G_AIS_EXCLUDE_DB_FILTER = {
         "binary_sensor.updater",
         "weather.dom",
         "binary_sensor.selected_entity",
-    ],
+    ]
 }
 
 

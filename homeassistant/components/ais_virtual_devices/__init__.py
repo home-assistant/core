@@ -566,13 +566,13 @@ async def async_setup(hass, config):
         if "dbShowLogbook" not in ais_global.G_DB_SETTINGS_INFO:
             ais_global.G_DB_SETTINGS_INFO["dbShowLogbook"] = False
         if "dbInclude" not in ais_global.G_DB_SETTINGS_INFO:
-            ais_global.G_DB_SETTINGS_INFO["dbInclude"] = ais_global.G_AIS_INCLUDE_DB_FILTER
+            ais_global.G_DB_SETTINGS_INFO["dbInclude"] = ais_global.G_AIS_INCLUDE_DB_DEFAULT
         if "dbExclude" not in ais_global.G_DB_SETTINGS_INFO:
-            ais_global.G_DB_SETTINGS_INFO["dbExclude"] = ais_global.G_AIS_EXCLUDE_DB_FILTER_EMPTY
+            ais_global.G_DB_SETTINGS_INFO["dbExclude"] = ais_global.G_AIS_EXCLUDE_DB_DEFAULT_EMPTY
     except Exception as e:
         _LOGGER.info("Error get db settings info " + str(e))
-        ais_global.G_DB_SETTINGS_INFO = {"dbInclude": ais_global.G_AIS_INCLUDE_DB_FILTER,
-                                         "dbExclude": ais_global.G_AIS_EXCLUDE_DB_FILTER_EMPTY}
+        ais_global.G_DB_SETTINGS_INFO = {"dbInclude": ais_global.G_AIS_INCLUDE_DB_DEFAULT,
+                                         "dbExclude": ais_global.G_AIS_EXCLUDE_DB_DEFAULT_EMPTY}
 
     if ais_global.G_DB_SETTINGS_INFO is not None:
         # set the logs settings info
@@ -582,6 +582,7 @@ async def async_setup(hass, config):
 
         if (
                 not hass.services.has_service("recorder", "purge")
+                and "dbEngine" in ais_global.G_DB_SETTINGS_INFO
                 and len(ais_global.G_DB_SETTINGS_INFO["dbEngine"]) > 1
         ):
             hass.async_create_task(
@@ -590,7 +591,7 @@ async def async_setup(hass, config):
                 )
             )
 
-        if ais_global.G_DB_SETTINGS_INFO["dbShowLogbook"]:
+        if "dbShowLogbook" in ais_global.G_DB_SETTINGS_INFO:
             # logbook
             if "logbook" not in hass.data.get(hass.components.frontend.DATA_PANELS, {}):
                 hass.async_create_task(
@@ -599,7 +600,7 @@ async def async_setup(hass, config):
                     )
                 )
 
-        if ais_global.G_DB_SETTINGS_INFO["dbShowHistory"]:
+        if "dbShowHistory" in ais_global.G_DB_SETTINGS_INFO:
             # history
             if "history" not in hass.data.get(hass.components.frontend.DATA_PANELS, {}):
                 hass.async_create_task(

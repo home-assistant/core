@@ -360,24 +360,32 @@ class AisDbConfigView(HomeAssistantView):
             "dbShowLogbook": message.get("dbShowLogbook", False),
             "dbShowHistory": message.get("dbShowHistory", False),
             "dbUrl": "",
-            "dbInclude": message.get("dbInclude", ais_global.G_AIS_INCLUDE_DB_FILTER),
-            "dbExclude": message.get("dbExclude", ais_global.G_AIS_EXCLUDE_DB_FILTER_EMPTY),
+            "dbInclude": message.get("dbInclude", ais_global.G_AIS_INCLUDE_DB_DEFAULT),
+            "dbExclude": message.get("dbExclude", ais_global.G_AIS_EXCLUDE_DB_DEFAULT_EMPTY),
         }
 
         # 0 validate filters
-        filter_schema = vol.Schema({
+        filter_schema_include = vol.Schema({
+            vol.Optional(CONF_DOMAINS, default=[]): vol.All(cv.ensure_list, [cv.string]),
+            vol.Optional("entity_globs", default=[]): vol.All(cv.ensure_list, [cv.string]),
+            vol.Optional("entities", default=[]): cv.entity_ids,
+        }
+        )
+        filter_schema_exclude = vol.Schema({
                 vol.Optional(CONF_DOMAINS, default=[]): vol.All(cv.ensure_list, [cv.string]),
-                vol.Optional(CONF_ENTITIES, default=[]): vol.All(cv.ensure_list, [cv.string]),
+                vol.Optional("entity_globs", default=[]): vol.All(cv.ensure_list, [cv.string]),
+                vol.Optional("entities", default=[]): cv.entity_ids,
+                vol.Optional("event_types", default=[]): vol.All(cv.ensure_list, [cv.string]),
             }
         )
         try:
-            filter_schema(db_connection["dbInclude"])
+            filter_schema_include(db_connection["dbInclude"])
         except Exception as e:
             error_info = "Invalid include filter: " + str(e)
 
         if error_info == "":
             try:
-                filter_schema(db_connection["dbExclude"])
+                filter_schema_exclude(db_connection["dbExclude"])
             except Exception as e:
                 error_info = "Invalid exclude filter: " + str(e)
 
@@ -394,7 +402,7 @@ class AisDbConfigView(HomeAssistantView):
                 db_connection["dbUser"] = ""
                 db_connection["dbServerIp"] = ""
                 db_connection["dbServerName"] = ""
-                db_connection["dbKeepDays"] = "2"
+                db_connection["dbKeepDays"] = "5"
                 db_connection["dbShowLogbook"] = False
                 db_connection["dbShowHistory"] = False
                 return_info = "Zapis do bazy wyłączony."
@@ -405,7 +413,7 @@ class AisDbConfigView(HomeAssistantView):
                 db_connection["dbUser"] = ""
                 db_connection["dbServerIp"] = ""
                 db_connection["dbServerName"] = ""
-                db_connection["dbKeepDays"] = "2"
+                db_connection["dbKeepDays"] = "5"
                 return_info = "Zapis właczony do bazy w pamięci."
             elif db_connection["dbEngine"] == "SQLite (file)":
                 db_connection["dbUrl"] = (
