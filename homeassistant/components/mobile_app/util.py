@@ -45,8 +45,7 @@ def supports_legacy_push(hass, webhook_id: str) -> bool:
 def supports_push(hass, webhook_id: str) -> bool:
     """Return if push notifications is supported by push_config."""
     config_entry = hass.data[DOMAIN][DATA_CONFIG_ENTRIES][webhook_id]
-    push_config = config_entry.data[ATTR_PUSH_CONFIG]
-    return len(push_config) > 0
+    return ATTR_PUSH_CONFIG in config_entry.data
 
 
 @callback

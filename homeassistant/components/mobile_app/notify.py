@@ -45,7 +45,7 @@ from .const import (
     DATA_PUSH_CHANNEL,
     DOMAIN,
 )
-from .helpers import _encrypt_payload
+from .helpers import _encrypt_dict
 from .util import supports_legacy_push, supports_push
 
 _LOGGER = logging.getLogger(__name__)
@@ -160,7 +160,7 @@ class MobileAppNotificationService(BaseNotificationService):
             if data[ATTR_MESSAGE] in cleartext_commands:
                 data = {"command": data[ATTR_MESSAGE]}
             elif should_encrypt:
-                enc_data = _encrypt_payload(entry_data[CONF_SECRET], data)
+                enc_data = _encrypt_dict(entry_data[CONF_SECRET], data)
                 data = {"encrypted": True, "encrypted_data": enc_data}
 
             target_data = dict(data)

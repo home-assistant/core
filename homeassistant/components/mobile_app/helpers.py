@@ -90,6 +90,11 @@ def _decrypt_payload(key: str, ciphertext: str) -> dict[str, str]:
         return None
 
 
+def _encrypt_dict(reg_secret: str, dict: dict) -> str:
+    string = json.dumps(dict, cls=JSONEncoder)
+    return _encrypt_payload(reg_secret, string)
+
+
 def _encrypt_payload(reg_secret: str, payload: str) -> str:
     """Encrypt cleartext payload."""
     keylen, encrypt = setup_encrypt()
