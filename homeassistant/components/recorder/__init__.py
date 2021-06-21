@@ -21,6 +21,7 @@ from homeassistant.components import persistent_notification
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_EXCLUDE,
+    CONF_INCLUDE,
     EVENT_HOMEASSISTANT_FINAL_WRITE,
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
@@ -218,7 +219,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the recorder."""
     hass.data[DOMAIN] = {}
     conf = config[DOMAIN]
-    entity_filter = convert_include_exclude_filter(conf)
+    # entity_filter = convert_include_exclude_filter(conf)
     auto_purge = conf[CONF_AUTO_PURGE]
     keep_days = conf[CONF_PURGE_KEEP_DAYS]
     # commit_interval = conf[CONF_COMMIT_INTERVAL]
@@ -239,7 +240,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         if ais_global.G_DB_SETTINGS_INFO is None:
             with open(
-                hass.config.config_dir + ais_global.G_DB_SETTINGS_INFO_FILE
+                    hass.config.config_dir + ais_global.G_DB_SETTINGS_INFO_FILE
             ) as json_file:
                 ais_global.G_DB_SETTINGS_INFO = json.load(json_file)
         db_url = ais_global.G_DB_SETTINGS_INFO["dbUrl"]
@@ -261,6 +262,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     keep_days = 10
                     if "dbKeepDays" in ais_global.G_DB_SETTINGS_INFO:
                         keep_days = int(ais_global.G_DB_SETTINGS_INFO["dbKeepDays"])
+        include = ais_global.G_DB_SETTINGS_INFO.get("dbInclude", ais_global.G_AIS_INCLUDE_DB_FILTER)
+        exclude = ais_global.G_DB_SETTINGS_INFO.get("dbExclude", ais_global.G_AIS_EXCLUDE_DB_FILTER)
+
     except Exception as e:
         # enable recorder in memory
         _LOGGER.error(
@@ -268,11 +272,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         )
         db_url = "sqlite:///:memory:"
         keep_days = 1
+        include = ais_global.G_AIS_INCLUDE_DB_FILTER
+        exclude = ais_global.G_AIS_EXCLUDE_DB_FILTER
+
+    exclude["entity_globs"] = []
+    include["entity_globs"] = []
+    conf[CONF_EXCLUDE] = exclude
+    conf[CONF_INCLUDE] = include
+    entity_filter = convert_include_exclude_filter(conf)
+
     exclude = conf[CONF_EXCLUDE]
-    # TODO ais exclude merge_dct
-    # all_domains = exclude['domains']
-    # _LOGGER.error("all_domains " + str(all_domains))
-    # _LOGGER.error("all_domains " + str(type(all_domains)))
 
     exclude_t = exclude.get(CONF_EVENT_TYPES, [])
     instance = hass.data[DATA_INSTANCE] = Recorder(
@@ -381,16 +390,16 @@ class Recorder(threading.Thread):
     """A threaded recorder class."""
 
     def __init__(
-        self,
-        hass: HomeAssistant,
-        auto_purge: bool,
-        keep_days: int,
-        commit_interval: int,
-        uri: str,
-        db_max_retries: int,
-        db_retry_wait: int,
-        entity_filter: Callable[[str], bool],
-        exclude_t: list[str],
+            self,
+            hass: HomeAssistant,
+            auto_purge: bool,
+            keep_days: int,
+            commit_interval: int,
+            uri: str,
+            db_max_retries: int,
+            db_retry_wait: int,
+            entity_filter: Callable[[str], bool],
+            exclude_t: list[str],
     ) -> None:
         """Initialize the recorder."""
         threading.Thread.__init__(self, name="Recorder")

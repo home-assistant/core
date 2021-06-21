@@ -131,6 +131,88 @@ G_AIS_SUPLA_MQTT_CONFIG_FILE_NAME = "supla.conf"
 
 G_AUTOMATION_CONFIG = None
 
+# DB
+G_AIS_INCLUDE_DB_FILTER = {
+    "domains": [
+        "automation",
+        "binary_sensor",
+        "climate",
+        "cover",
+        "device_tracker",
+        "light",
+        "person",
+        "sensor",
+        "switch",
+    ],
+    "entities": ["sun.sun"],
+}
+
+G_AIS_EXCLUDE_DB_FILTER_EMPTY = {"domains": "ais_*", "entities": "sensor.version_info"}
+G_AIS_EXCLUDE_DB_FILTER = {
+    "domains": ["ais_*", "media_player", "group"],
+    "entities": [
+        "sun.sun",
+        "sensor.date",
+        "sensor.time",
+        "automation.ais_*",
+        "binary_sensor.ais_*",
+        "group.ais_*",
+        "group.all_ais_*",
+        "input_boolean.ais_*",
+        "input_select.ais_*",
+        "input_text.ais_*",
+        "script.ais_*",
+        "sensor.ais*",
+        "timer.ais_*",
+        "input_select.book_autor",
+        "group.audiobooks_player",
+        "input_select.podcast_type",
+        "input_select.radio_type",
+        "sensor.daytodisplay",
+        "group.day_info",
+        "group.local_audio",
+        "group.radio_player",
+        "group.podcast_player",
+        "group.music_player",
+        "group.internet_status",
+        "group.audio_player",
+        "group.dom_system_version",
+        "sensor.radiolist",
+        "sensor.podcastnamelist",
+        "sensor.youtubelist",
+        "sensor.spotifysearchlist",
+        "sensor.spotifylist",
+        "sensor.rssnewslist",
+        "input_select.rss_news_category",
+        "input_select.rss_news_channel",
+        "sensor.selected_entity",
+        "sensor.wersja_kordynatora",
+        "sensor.status_serwisu_zigbee2mqtt",
+        "sensor.gate_pairing_pin",
+        "persistent_notification.config_entry_discovery",
+        "sensor.audiobookschapterslist",
+        "automation.zigbee_tryb_parowania",
+        "automation.zigbee_wylaczenie_trybu_parowania",
+        "input_number.assistant_rate",
+        "input_number.media_player_speed",
+        "timer.ais_dom_pin_join",
+        "media_player.wbudowany_glosnik",
+        "input_number.assistant_tone",
+        "timer.zigbee_permit_join",
+        "input_select.book_name",
+        "sensor.podcastlist",
+        "sensor.audiobookslist",
+        "sensor.rssnewstext",
+        "switch.zigbee_tryb_parowania",
+        "input_select.book_chapter",
+        "input_select.assistant_voice",
+        "input_select.media_player_sound_mode",
+        "binary_sensor.updater",
+        "weather.dom",
+        "binary_sensor.selected_entity",
+    ],
+}
+
 
 def set_ais_android_id_dom_file_path(path):
     global G_AIS_SECURE_ANDROID_ID_DOM_FILE
@@ -169,8 +251,7 @@ def get_ais_gate_model():
 
     try:
         ws_resp = requests.get(
-            G_HTTP_REST_SERVICE_BASE_URL.format("127.0.0.1"),
-            timeout=10,
+            G_HTTP_REST_SERVICE_BASE_URL.format("127.0.0.1"), timeout=10
         )
         data = ws_resp.json()
         ais_model = data.get("Model")
