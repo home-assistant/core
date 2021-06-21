@@ -56,6 +56,7 @@ from .const import (
     ATTR_MANUFACTURER,
     ATTR_MODEL,
     ATTR_OS_VERSION,
+    ATTR_PUSH_CONFIG,
     ATTR_SENSOR_ATTRIBUTES,
     ATTR_SENSOR_DEVICE_CLASS,
     ATTR_SENSOR_ICON,
@@ -86,6 +87,7 @@ from .const import (
     ERR_ENCRYPTION_REQUIRED,
     ERR_INVALID_FORMAT,
     ERR_SENSOR_NOT_REGISTERED,
+    PUSH_CONFIG_SCHEMA,
     SIGNAL_LOCATION_UPDATE,
     SIGNAL_SENSOR_UPDATE,
 )
@@ -335,6 +337,9 @@ async def webhook_update_location(hass, config_entry, data):
         vol.Required(ATTR_MANUFACTURER): cv.string,
         vol.Required(ATTR_MODEL): cv.string,
         vol.Optional(ATTR_OS_VERSION): cv.string,
+        vol.Optional(ATTR_PUSH_CONFIG): vol.All(
+            cv.ensure_list, [PUSH_CONFIG_SCHEMA]
+        ),  # Added in 2021.3
     }
 )
 async def webhook_update_registration(hass, config_entry, data):
