@@ -405,7 +405,7 @@ async def test_different_endpoint_migration_status_sensor(
         client.driver.controller.emit("node added", event)
         await hass.async_block_till_done()
 
-        # Check that new RegistryEntry is using new unique ID format
+        # Check that the RegistryEntry is using the same unique ID
         entity_entry = ent_reg.async_get(SENSOR_NAME)
         assert entity_entry.unique_id == old_unique_id
 
