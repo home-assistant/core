@@ -293,6 +293,12 @@ class HlsPlaylistView(StreamView):
         return web.Response(
             body=None,
             status=400,
+            # Successful responses to blocking Playlist requests should be cached
+            # for six Target Durations. Unsuccessful responses (such as 404s) should
+            # be cached for four Target Durations.  Successful responses to non-blocking
+            # Playlist requests should be cached for half the Target Duration.
+            # Unsuccessful responses to non-blocking Playlist requests should be
+            # cached for for one Target Duration.
             headers={
                 "Cache-Control": f"max-age={(4 if blocking else 1)*target_duration:.0f}"
             },
