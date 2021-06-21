@@ -407,6 +407,14 @@ class SonosSpeaker:
         """Update device properties from an event."""
         if more_info := event.variables.get("more_info"):
             battery_dict = dict(x.split(":") for x in more_info.split(","))
+            if "BattChg" not in battery_dict:
+                _LOGGER.debug(
+                    "Unknown device properties update for %s (%s), please report an issue: '%s'",
+                    self.zone_name,
+                    self.model_name,
+                    more_info,
+                )
+                return
             await self.async_update_battery_info(battery_dict)
         self.async_write_entity_states()
 
