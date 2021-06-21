@@ -1,11 +1,97 @@
 """Test the frigidaire config flow."""
 from unittest.mock import patch
 
+import frigidaire
+
 from homeassistant import config_entries, setup
-from homeassistant.components.frigidaire.config_flow import CannotConnect, InvalidAuth
 from homeassistant.components.frigidaire.const import DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import RESULT_TYPE_FORM
+
+FAKE_APPLIANCE = frigidaire.Appliance(
+    {
+        "appliance_id": "test",
+        "appliance_type": "test",
+        "pnc": "test",
+        "elc": "test",
+        "sn": "test",
+        "mac": "test",
+        "cpv": "test",
+        "nickname": "test",
+    }
+)
+
+FAKE_APPLIANCE_DETAIL_CONTAINERS = [
+    {
+        "propertyName": "Coefficient",
+        "tId": "1",
+        "group": 0,
+        "numberValue": 72,
+        "translation": "Coefficient",
+    },
+    {
+        "propertyName": "Unit",
+        "tId": "0",
+        "group": 0,
+        "numberValue": 1,
+        "translation": "Unit",
+    },
+    {
+        "propertyName": "Exponent",
+        "tId": "3",
+        "group": 0,
+        "numberValue": 0,
+        "translation": "Exponent",
+    },
+]
+
+FAKE_APPLIANCE_DETAILS = frigidaire.ApplianceDetails(
+    [
+        frigidaire.ApplianceDetail(
+            {
+                "stringValue": "Fahrenheit",
+                "numberValue": 1,
+                "spkTimestamp": 1622052985620,
+                "description": "Temperature Representation",
+                "haclCode": "0420",
+                "source": "AC1",
+                "containers": [],
+            }
+        ),
+        frigidaire.ApplianceDetail(
+            {
+                "stringValue": None,
+                "numberValue": 0,
+                "spkTimestamp": 1624311177889,
+                "description": "AC-Mode",
+                "haclCode": "1000",
+                "source": "AC1",
+                "containers": [],
+            }
+        ),
+        frigidaire.ApplianceDetail(
+            {
+                "stringValue": None,
+                "numberValue": None,
+                "spkTimestamp": 1624312954475,
+                "description": "Ambient Temperature",
+                "haclCode": "0430",
+                "source": "AC1",
+                "containers": FAKE_APPLIANCE_DETAIL_CONTAINERS,
+            }
+        ),
+        frigidaire.ApplianceDetail(
+            {
+                "stringValue": None,
+                "numberValue": None,
+                "spkTimestamp": 1624312954475,
+                "description": "Target Temperature",
+                "haclCode": "0432",
+                "source": "AC1",
+                "containers": FAKE_APPLIANCE_DETAIL_CONTAINERS,
+            }
+        ),
+    ]
+)
 
 
 async def test_form(hass: HomeAssistant) -> None:
@@ -15,25 +101,14 @@ async def test_form(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == "form"
-    assert result["errors"] == {}
+    assert result["errors"] is None
 
-    with patch(
-        "homeassistant.components.frigidaire.config_flow.ConfigFlow.async_step_user",
-        return_value={
-            "type": RESULT_TYPE_FORM,
-            "title": "Name of the device",
-            "flow_id": "",
-            "handler": "",
-            "step_id": "",
-            "data_schema": "",
-            "errors": {},
-            "description_placeholders": "",
-            "last_step": True,
-            "data": {
-                "username": "test-username",
-                "password": "test-password",
-            },
-        },
+    with patch("frigidaire.Frigidaire.authenticate", return_value=None,), patch(
+        "frigidaire.Frigidaire.get_appliances",
+        return_value=[FAKE_APPLIANCE],
+    ), patch(
+        "frigidaire.Frigidaire.get_appliance_details",
+        return_value=FAKE_APPLIANCE_DETAILS,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -44,12 +119,7 @@ async def test_form(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "form"
-    assert result2["title"] == "Name of the device"
-    assert result2["data"] == {
-        "username": "test-username",
-        "password": "test-password",
-    }
+    assert result2["type"] == "create_entry"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -60,8 +130,8 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.frigidaire.config_flow.validate_input",
-        side_effect=InvalidAuth,
+        "frigidaire.Frigidaire.authenticate",
+        side_effect=frigidaire.FrigidaireException,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -82,9 +152,9 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.frigidaire.config_flow.validate_input",
-        side_effect=CannotConnect,
-    ):
+        "frigidaire.Frigidaire.authenticate",
+        return_value=None,
+    ), patch("frigidaire.Frigidaire.get_appliances", return_value=[]):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
