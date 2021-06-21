@@ -112,6 +112,8 @@ async def async_get_action_capabilities(
     hass: HomeAssistant, config: ConfigType
 ) -> dict[str, vol.Schema]:
     """List action capabilities."""
+    # We need to refer to the state directly because ATTR_CODE_ARM_REQUIRED is not a
+    # capability attribute
     state = hass.states.get(config[CONF_ENTITY_ID])
     code_required = state.attributes.get(ATTR_CODE_ARM_REQUIRED) if state else False
 
