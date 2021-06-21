@@ -5,7 +5,7 @@ import asyncio
 from collections import deque
 from collections.abc import Generator
 import datetime
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Iterable
 
 from aiohttp import web
 import async_timeout
@@ -67,6 +67,7 @@ class Segment:
     # in sequential order, so the Parts are ordered
     parts_by_byterange: dict[int, Part] = attr.ib(factory=dict)
     start_time: datetime.datetime = attr.ib(factory=datetime.datetime.utcnow)
+    _stream_outputs: Iterable[StreamOutput] = attr.ib(factory=list)
     # Store text of this segment's hls playlist for reuse
     hls_playlist: str = attr.ib(default=None)
     hls_playlist_parts: str = attr.ib(default=None)
@@ -74,6 +75,11 @@ class Segment:
     hls_num_parts_rendered: int = attr.ib(default=0)
     # Set to true when all the parts are rendered
     hls_playlist_complete: bool = attr.ib(default=False)
+
+    def __attrs_post_init__(self) -> None:
+        """Run after init."""
+        for output in self._stream_outputs:
+            output.put(self)
 
     @property
     def complete(self) -> bool:
@@ -95,6 +101,20 @@ class Segment:
             reversed(self.parts_by_byterange.items())
         )
         return last_http_range_start + len(last_part.data)
+
+    def add_part(
+        self,
+        part: Part,
+        duration: float,
+    ) -> None:
+        """Add a part to the Segment.
+
+        Duration is non zero only for the last part.
+        """
+        self.parts_by_byterange[self.data_size] = part
+        self.duration = duration
+        for output in self._stream_outputs:
+            output.part_put()
 
     def get_data(self) -> bytes:
         """Return reconstructed data for all parts as bytes, without init."""
@@ -255,7 +275,7 @@ class StreamOutput:
         self._part_event.clear()
 
     async def recv(self) -> bool:
-        """Wait for and retrieve the latest segment."""
+        """Wait for the latest segment."""
         await self._event.wait()
         return self.last_segment is not None
 

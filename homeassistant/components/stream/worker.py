@@ -160,13 +160,12 @@ class SegmentBuffer:
                 sequence=self._sequence,
                 stream_id=self._stream_id,
                 init=self._memory_file.getvalue(),
+                # Fetch the latest StreamOutputs, which may have changed since the
+                # worker started.
+                stream_outputs=self._outputs_callback().values(),
             )
             self._memory_file_pos = self._memory_file.tell()
             self._part_start_dts = self._segment_start_dts
-            # Fetch the latest StreamOutputs, which may have changed since the
-            # worker started.
-            for stream_output in self._outputs_callback().values():
-                stream_output.put(self._segment)
         else:  # These are the ends of the part segments
             self.flush(packet, last_part=False)
 
@@ -182,18 +181,18 @@ class SegmentBuffer:
             self._av_output.close()
         assert self._segment
         self._memory_file.seek(self._memory_file_pos)
-        self._segment.parts_by_byterange[self._segment.data_size] = Part(
-            duration=float((packet.dts - self._part_start_dts) * packet.time_base),
-            has_keyframe=self._part_has_keyframe,
-            data=self._memory_file.read(),
+        self._segment.add_part(
+            Part(
+                duration=float((packet.dts - self._part_start_dts) * packet.time_base),
+                has_keyframe=self._part_has_keyframe,
+                data=self._memory_file.read(),
+            ),
+            duration=float((packet.dts - self._segment_start_dts) * packet.time_base)
+            if last_part
+            else 0,
         )
         if last_part:
-            # If we've written the last part, we can complete the segment and close
-            # the memory_file. For timing purposes with the hls methods, we should
-            # complete the segment before sending the part_put signal.
-            self._segment.duration = float(
-                (packet.dts - self._segment_start_dts) * packet.time_base
-            )
+            # If we've written the last part, we can close the memory_file.
             self._memory_file.close()  # We don't need the BytesIO object anymore
         else:
             # For the last part, these will get set again elsewhere so we can skip
@@ -201,8 +200,6 @@ class SegmentBuffer:
             self._memory_file_pos = self._memory_file.tell()
             self._part_start_dts = packet.dts
         self._part_has_keyframe = False
-        for output in self._outputs_callback().values():
-            output.part_put()
 
     def discontinuity(self) -> None:
         """Mark the stream as having been restarted."""
