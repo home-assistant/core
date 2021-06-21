@@ -137,7 +137,7 @@ async def async_create_miio_device_and_coordinator(
         KEY_COORDINATOR: coordinator,
     }
     # Trigger first data fetch
-    await coordinator.async_request_refresh()
+    await coordinator.async_config_entry_first_refresh()
 
 
 async def async_setup_gateway_entry(
