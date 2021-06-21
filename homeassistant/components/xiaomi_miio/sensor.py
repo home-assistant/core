@@ -201,7 +201,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         for sensor in sensors:
             entities.append(
                 XiaomiGenericSensor(
-                    f"{config_entry.title} {sensor.replace("_", " ").title()}",
+                    f"{config_entry.title} {sensor.replace('_', ' ').title()}",
                     device,
                     config_entry,
                     f"{sensor}_{config_entry.unique_id}",
