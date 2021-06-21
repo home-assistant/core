@@ -25,6 +25,8 @@ SEGMENT_DURATION_ADJUSTER = 0.1  # Used to avoid missing keyframe boundaries
 # 1.5 should put us in the middle of the second to last segment even with
 # variable keyframe intervals.
 EXT_X_START_NON_LL_HLS = 1.5
+# Number of part durations to start before the end of the playlist with LL-HLS
+EXT_X_START_LL_HLS = 3
 
 
 PACKETS_TO_WAIT_FOR_AUDIO = 20  # Some streams have an audio stream with no audio

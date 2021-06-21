@@ -11,6 +11,7 @@ from aiohttp import web
 from homeassistant.core import HomeAssistant, callback
 
 from .const import (
+    EXT_X_START_LL_HLS,
     EXT_X_START_NON_LL_HLS,
     FORMAT_CONTENT_TYPE,
     HLS_PROVIDER,
@@ -243,7 +244,7 @@ class HlsPlaylistView(StreamView):
                 [
                     f"#EXT-X-PART-INF:PART-TARGET={part_duration:.3f}",
                     f"#EXT-X-SERVER-CONTROL:CAN-BLOCK-RELOAD=YES,PART-HOLD-BACK={2*part_duration:.3f}",
-                    f"#EXT-X-START:TIME-OFFSET=-{3*part_duration:.3f},PRECISE=YES",
+                    f"#EXT-X-START:TIME-OFFSET=-{EXT_X_START_LL_HLS*part_duration:.3f},PRECISE=YES",
                 ]
             )
         else:
