@@ -120,7 +120,7 @@ class HlsPlaylistView(StreamView):
         """
         # Create a copy of the segment with the parts frozen so we can iterate safely
         segment_copy = copy(segment)
-        segment_copy.parts_by_http_range = segment_copy.parts_by_http_range.copy()
+        segment_copy.parts_by_byterange = segment_copy.parts_by_byterange.copy()
         (
             segment.hls_playlist,
             segment.hls_playlist_parts,
@@ -138,7 +138,7 @@ class HlsPlaylistView(StreamView):
                 start = 0
             else:  # Next part is in the same segment
                 sequence = segment_copy.sequence
-                start = segment_copy.data_size_without_init
+                start = segment_copy.data_size
             playlist.append(
                 f'#EXT-X-PRELOAD-HINT:TYPE=PART,URI="./segment/{sequence}'
                 f'.m4s",BYTERANGE-START={start}'
@@ -169,7 +169,7 @@ class HlsPlaylistView(StreamView):
             playlist.append("{}")
         if ll_hls:
             for http_range_start, part in itertools.islice(
-                segment.parts_by_http_range.items(),
+                segment.parts_by_byterange.items(),
                 segment.hls_num_parts_rendered,
                 None,
             ):
@@ -193,7 +193,7 @@ class HlsPlaylistView(StreamView):
         return (
             "\n".join(playlist),
             "\n".join(playlist_parts),
-            len(segment.parts_by_http_range),
+            len(segment.parts_by_byterange),
             segment.complete,
         )
 
@@ -205,7 +205,7 @@ class HlsPlaylistView(StreamView):
 
         # Create a copy of the last segment with the parts frozen for rendering playlist
         segments[-1] = copy(segments[-1])
-        segments[-1].parts_by_http_range = segments[-1].parts_by_http_range.copy()
+        segments[-1].parts_by_byterange = segments[-1].parts_by_byterange.copy()
 
         # To cap the number of complete segments at NUM_PLAYLIST_SEGMENTS,
         # remove the first segment if the last segment is actually complete
@@ -235,7 +235,7 @@ class HlsPlaylistView(StreamView):
                     (
                         p.duration
                         for s in segments
-                        for p in s.parts_by_http_range.values()
+                        for p in s.parts_by_byterange.values()
                     ),
                     default=StreamConstants.TARGET_PART_DURATION,
                 )
@@ -358,7 +358,7 @@ class HlsPlaylistView(StreamView):
             (last_segment := track.last_segment)
             and hls_msn == last_segment.sequence
             and hls_part
-            >= len(last_segment.parts_by_http_range)
+            >= len(last_segment.parts_by_byterange)
             - 1
             + StreamConstants.HLS_ADVANCE_PART_LIMIT
         ):
@@ -368,7 +368,7 @@ class HlsPlaylistView(StreamView):
         while (
             (last_segment := track.last_segment)
             and hls_msn == last_segment.sequence
-            and hls_part >= len(last_segment.parts_by_http_range)
+            and hls_part >= len(last_segment.parts_by_byterange)
         ):
             if not await track.part_recv(timeout=StreamConstants.HLS_PART_TIMEOUT):
                 return self.not_found(blocking_request, track.target_duration)
@@ -380,8 +380,8 @@ class HlsPlaylistView(StreamView):
         # request as one for Part Index 0 of the following Parent Segment.
         if hls_msn + 1 == last_segment.sequence:
             if not (previous_segment := track.get_segment(hls_msn)) or (
-                hls_part >= len(previous_segment.parts_by_http_range)
-                and not last_segment.parts_by_http_range
+                hls_part >= len(previous_segment.parts_by_byterange)
+                and not last_segment.parts_by_byterange
                 and not await track.part_recv(timeout=StreamConstants.HLS_PART_TIMEOUT)
             ):
                 return self.not_found(blocking_request, track.target_duration)
@@ -451,15 +451,13 @@ class HlsSegmentView(StreamView):
         # currently available data.
         # If these conditions aren't met then we return a 416.
         # http_range_start can be None, so use a copy that uses 0 instead of None
-        if (
-            http_start := request.http_range.start or 0
-        ) > segment.data_size_without_init or (
-            segment.complete and http_start >= segment.data_size_without_init
+        if (http_start := request.http_range.start or 0) > segment.data_size or (
+            segment.complete and http_start >= segment.data_size
         ):
             return web.HTTPRequestRangeNotSatisfiable(
                 headers={
                     "Cache-Control": f"max-age={track.target_duration:.0f}",
-                    "Content-Range": f"bytes */{segment.data_size_without_init}",
+                    "Content-Range": f"bytes */{segment.data_size}",
                 }
             )
         headers = {
@@ -470,9 +468,7 @@ class HlsSegmentView(StreamView):
             if segment.complete:
                 # This is a request for a full segment which is already complete
                 # We should return a standard 200 response.
-                return web.Response(
-                    body=segment.get_bytes_without_init(), headers=headers
-                )
+                return web.Response(body=segment.get_data(), headers=headers)
             # Otherwise we still return a 200 response, but it is aggregating
             status = 200
         else:
@@ -483,19 +479,15 @@ class HlsSegmentView(StreamView):
                 # This is a special case for establishing current range. We should only
                 # get this on a HEAD request. Our clients probably won't send this type
                 # of request, but we can try to respond correctly.
-                headers[
-                    "Content-Range"
-                ] = f"bytes {http_start}-{segment.data_size_without_init-1}/*"
+                headers["Content-Range"] = f"bytes {http_start}-{segment.data_size-1}/*"
                 return web.Response(headers=headers, status=206)
             status = 206
             if segment.complete:
                 # If the segment is complete we have total size
                 headers["Content-Range"] = (
                     f"bytes {http_start}-"
-                    + str(
-                        min(request.http_range.stop, segment.data_size_without_init) - 1
-                    )
-                    + f"/{segment.data_size_without_init}"
+                    + str(min(request.http_range.stop, segment.data_size) - 1)
+                    + f"/{segment.data_size}"
                 )
             else:
                 # If we don't have the total size we use a *

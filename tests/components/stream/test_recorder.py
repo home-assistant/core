@@ -122,7 +122,7 @@ def add_parts_to_segment(segment, source):
     """Add relevant part data to segment for testing recorder."""
     moof_locs = list(find_box(source.getbuffer(), b"moof")) + [len(source.getbuffer())]
     segment.init = source.getbuffer()[: moof_locs[0]].tobytes()
-    segment.parts_by_http_range = {
+    segment.parts_by_byterange = {
         moof_locs[i]: Part(
             duration=None,
             has_keyframe=None,
@@ -218,7 +218,7 @@ async def test_record_stream_audio(
             stream_worker_sync.resume()
 
         result = av.open(
-            BytesIO(last_segment.init + last_segment.get_bytes_without_init()),
+            BytesIO(last_segment.init + last_segment.get_data()),
             "r",
             format="mp4",
         )

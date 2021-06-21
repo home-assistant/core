@@ -59,13 +59,13 @@ def create_segment(sequence, start_time=FAKE_TIME):
 
 def add_part_to_segment(segment, part):
     """Add a single part to the segment."""
-    segment.parts_by_http_range[segment.data_size_without_init] = part
+    segment.parts_by_byterange[segment.data_size] = part
 
 
 def complete_segment(segment):
     """Completes a segment by setting its duration."""
     segment.duration = sum(
-        part.duration for part in segment.parts_by_http_range.values()
+        part.duration for part in segment.parts_by_byterange.values()
     )
 
 
@@ -262,7 +262,7 @@ async def test_ll_hls_playlist_view(hass, hls_stream, stream_worker_sync):
         sequence=0,
         segments=[
             make_segment_with_parts(
-                i, len(segment.parts_by_http_range), PART_INDEPENDENT_PERIOD
+                i, len(segment.parts_by_byterange), PART_INDEPENDENT_PERIOD
             )
             for i in range(2)
         ],
@@ -284,7 +284,7 @@ async def test_ll_hls_playlist_view(hass, hls_stream, stream_worker_sync):
         sequence=0,
         segments=[
             make_segment_with_parts(
-                i, len(segment.parts_by_http_range), PART_INDEPENDENT_PERIOD
+                i, len(segment.parts_by_byterange), PART_INDEPENDENT_PERIOD
             )
             for i in range(3)
         ],
@@ -466,13 +466,13 @@ async def test_ll_hls_playlist_rollover_part(
         *(
             [
                 hls_client.get(
-                    f"/playlist.m3u8?_HLS_msn=1&_HLS_part={len(segment.parts_by_http_range)-1}"
+                    f"/playlist.m3u8?_HLS_msn=1&_HLS_part={len(segment.parts_by_byterange)-1}"
                 ),
                 hls_client.get(
-                    f"/playlist.m3u8?_HLS_msn=1&_HLS_part={len(segment.parts_by_http_range)}"
+                    f"/playlist.m3u8?_HLS_msn=1&_HLS_part={len(segment.parts_by_byterange)}"
                 ),
                 hls_client.get(
-                    f"/playlist.m3u8?_HLS_msn=1&_HLS_part={len(segment.parts_by_http_range)+1}"
+                    f"/playlist.m3u8?_HLS_msn=1&_HLS_part={len(segment.parts_by_byterange)+1}"
                 ),
                 hls_client.get("/playlist.m3u8?_HLS_msn=2&_HLS_part=0"),
             ]
@@ -634,7 +634,7 @@ async def test_get_part_segments(hass, hls_stream, stream_worker_sync, hls_sync)
         + "/*"
         for part in range(num_completed_parts)
     )
-    parts = list(segment.parts_by_http_range.values())
+    parts = list(segment.parts_by_byterange.values())
     assert all(
         [await responses[i].read() == parts[i].data for i in range(len(responses))]
     )
@@ -644,24 +644,22 @@ async def test_get_part_segments(hass, hls_stream, stream_worker_sync, hls_sync)
     # Request should succeed but length will be limited to the segment length
     response = await hls_client.get(
         "/segment/0.m4s",
-        headers={"Range": f"bytes=0-{hls.get_segment(0).data_size_without_init+1}"},
+        headers={"Range": f"bytes=0-{hls.get_segment(0).data_size+1}"},
     )
     assert response.status == 206
     assert (
         response.headers["Content-Range"]
-        == f"bytes 0-{hls.get_segment(0).data_size_without_init-1}/{hls.get_segment(0).data_size_without_init}"
+        == f"bytes 0-{hls.get_segment(0).data_size-1}/{hls.get_segment(0).data_size}"
     )
-    assert (await response.read()) == hls.get_segment(0).get_bytes_without_init()
+    assert (await response.read()) == hls.get_segment(0).get_data()
 
     # Request with start range past end of current segment
     # Since this is beyond the data we have (the largest starting position will be
     # from a hinted request, and even that will have a starting position at
-    # segment.data_size_without_init), we expect a 416.
+    # segment.data_size), we expect a 416.
     response = await hls_client.get(
         "/segment/1.m4s",
-        headers={
-            "Range": f"bytes={segment.data_size_without_init+1}-{VERY_LARGE_LAST_BYTE_POS}"
-        },
+        headers={"Range": f"bytes={segment.data_size+1}-{VERY_LARGE_LAST_BYTE_POS}"},
     )
     assert response.status == 416
 
@@ -682,7 +680,7 @@ async def test_get_part_segments(hass, hls_stream, stream_worker_sync, hls_sync)
     # Make valid request for the current hint. This should succeed, but since
     # it is open ended, it won't finish until the segment is complete.
     hls_sync.reset_request_pool(1)
-    request_start = segment.data_size_without_init
+    request_start = segment.data_size
     request = asyncio.create_task(
         hls_client.get(
             "/segment/1.m4s",
@@ -734,8 +732,7 @@ async def test_get_part_segments(hass, hls_stream, stream_worker_sync, hls_sync)
     assert responses[1].status == 200
     assert "Content-Range" not in responses[1].headers
     assert (
-        await response.read()
-        == ALT_SEQUENCE_BYTES[: hls.get_segment(2).data_size_without_init]
+        await response.read() == ALT_SEQUENCE_BYTES[: hls.get_segment(2).data_size]
         for response in responses
     )
 

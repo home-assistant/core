@@ -62,11 +62,10 @@ class Segment:
     duration: float = attr.ib(default=0)
     # For detecting discontinuities across stream restarts
     stream_id: int = attr.ib(default=0)
-    # Parts are stored in a dict indexed by http range start for easy
-    # lookup when requested by byterange
+    # Parts are stored in a dict indexed by byterange for easy lookup
     # As of Python 3.7, insertion order is preserved, and we insert
     # in sequential order, so the Parts are ordered
-    parts_by_http_range: dict[int, Part] = attr.ib(factory=dict)
+    parts_by_byterange: dict[int, Part] = attr.ib(factory=dict)
     start_time: datetime.datetime = attr.ib(factory=datetime.datetime.utcnow)
     # Store text of this segment's hls playlist for reuse
     hls_playlist: str = attr.ib(default=None)
@@ -84,29 +83,29 @@ class Segment:
     @property
     def data_size_with_init(self) -> int:
         """Return the size of all part data + init in bytes."""
-        return len(self.init) + self.data_size_without_init
+        return len(self.init) + self.data_size
 
     @property
-    def data_size_without_init(self) -> int:
+    def data_size(self) -> int:
         """Return the size of all part data without init in bytes."""
         # We can use the last part to quickly calculate the total data size.
-        if not self.parts_by_http_range:
+        if not self.parts_by_byterange:
             return 0
         last_http_range_start, last_part = next(
-            reversed(self.parts_by_http_range.items())
+            reversed(self.parts_by_byterange.items())
         )
         return last_http_range_start + len(last_part.data)
 
-    def get_bytes_without_init(self) -> bytes:
+    def get_data(self) -> bytes:
         """Return reconstructed data for all parts as bytes, without init."""
-        return b"".join([part.data for part in self.parts_by_http_range.values()])
+        return b"".join([part.data for part in self.parts_by_byterange.values()])
 
     def get_part_bytes(self, start_loc: int) -> bytes:
         """Return part that begins at start_loc by looking up index in the part map.
 
         Just a helper method for the remaining_data method below.
         """
-        part = self.parts_by_http_range.get(start_loc)
+        part = self.parts_by_byterange.get(start_loc)
         return b"" if part is None else part.data
 
     def get_aggregating_bytes(
