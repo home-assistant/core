@@ -133,15 +133,15 @@ class HlsPlaylistView(StreamView):
         # pylint: disable=undefined-loop-variable
         if ll_hls:
             if segment_copy.complete:  # Next part belongs to next segment
-                playlist.append(
-                    f'#EXT-X-PRELOAD-HINT:TYPE=PART,URI="./segment/{segment_copy.sequence+1}'
-                    '.m4s",BYTERANGE-START=0'
-                )
+                sequence = segment_copy.sequence + 1
+                start = 0
             else:  # Next part is in the same segment
-                playlist.append(
-                    f'#EXT-X-PRELOAD-HINT:TYPE=PART,URI="./segment/{segment_copy.sequence}'
-                    f'.m4s",BYTERANGE-START={segment_copy.data_size_without_init}'
-                )
+                sequence = segment_copy.sequence
+                start = segment_copy.data_size_without_init
+            playlist.append(
+                f'#EXT-X-PRELOAD-HINT:TYPE=PART,URI="./segment/{sequence}'
+                f'.m4s",BYTERANGE-START={start}'
+            )
         return "\n".join(playlist)
 
     @staticmethod
