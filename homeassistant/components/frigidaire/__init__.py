@@ -14,12 +14,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})
 
     def setup(username: str, password: str) -> frigidaire.Frigidaire:
-        frigidaire.Frigidaire(username, password)
+        hass.data[DOMAIN][entry.entry_id] = frigidaire.Frigidaire(username, password)
 
-    client = await hass.async_add_executor_job(
+    await hass.async_add_executor_job(
         setup, entry.data["username"], entry.data["password"]
     )
-    hass.data[DOMAIN][entry.entry_id] = client
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 

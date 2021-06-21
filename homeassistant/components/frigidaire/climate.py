@@ -22,6 +22,7 @@ from homeassistant.components.climate.const import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 
@@ -35,15 +36,15 @@ async def async_setup_entry(
     client = hass.data[DOMAIN][entry.entry_id]
 
     def get_entities(username: str, password: str) -> frigidaire.Frigidaire:
-		return client.get_appliances()
+        return client.get_appliances()
 
     appliances = await hass.async_add_executor_job(
         get_entities, entry.data["username"], entry.data["password"]
     )
 
     async_add_entities(
-       [FrigidaireClimate(client, appliance) for appliance in appliances], 
-       update_before_add=True
+        [FrigidaireClimate(client, appliance) for appliance in appliances],
+        update_before_add=True,
     )
 
 
@@ -53,17 +54,73 @@ class FrigidaireClimate(ClimateEntity):
     def __init__(self, client, appliance):
         """Build FrigidaireClimate.
 
-        data: initially-fetched data.
+        client: the client used to contact the frigidaire API
+        appliance: the basic information about the frigidaire appliance, used to contact the API
         """
 
         self._client = client
         self._appliance = appliance
         self._details = None
 
+        # Entity Class Attributes
+        self._attr_unique_id = appliance.appliance_id
+        self._attr_name = appliance.nickname
+        self._attr_supported_features = SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE
+        self._attr_target_temperature_step = 1
+
+        # Although we can access the Frigidaire API to get updates, they are
+        # not reflected immediately after making a request. To improve the UX
+        # around this, we set assume_state to True
+        self._attr_assumed_state = True
+
+        self._attr_fan_modes = [
+            FAN_AUTO,
+            FAN_LOW,
+            FAN_MEDIUM,
+            FAN_HIGH,
+        ]
+
+        self._attr_hvac_modes = [
+            HVAC_MODE_OFF,
+            HVAC_MODE_COOL,
+            HVAC_MODE_AUTO,
+            HVAC_MODE_FAN_ONLY,
+        ]
+
+    @property
+    def assumed_state(self):
+        """Return True if unable to access real state of the entity."""
+        return self._attr_assumed_state
+
+    @property
+    def unique_id(self):
+        """Return unique ID based on Frigidaire ID."""
+        return self._attr_unique_id
+
+    @property
+    def name(self):
+        """Return the name of the entity."""
+        return self._attr_name
+
     @property
     def supported_features(self):
         """Return the list of supported features."""
-        return SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE
+        return self._attr_supported_features
+
+    @property
+    def hvac_modes(self):
+        """List of available operation modes."""
+        return self._attr_hvac_modes
+
+    @property
+    def target_temperature_step(self):
+        """Return the supported step of target temperature."""
+        return self._attr_target_temperature_step
+
+    @property
+    def fan_modes(self):
+        """List of available fan modes."""
+        return self._attr_fan_modes
 
     @property
     def temperature_unit(self):
@@ -87,11 +144,6 @@ class FrigidaireClimate(ClimateEntity):
             .containers.for_id(frigidaire.ContainerId.TEMPERATURE)
             .number_value
         )
-
-    @property
-    def target_temperature_step(self):
-        """Return the supported step of target temperature."""
-        return 1
 
     @property
     def hvac_mode(self):
@@ -119,16 +171,6 @@ class FrigidaireClimate(ClimateEntity):
         )
 
     @property
-    def hvac_modes(self):
-        """List of available operation modes."""
-        return [
-            HVAC_MODE_OFF,
-            HVAC_MODE_COOL,
-            HVAC_MODE_AUTO,
-            HVAC_MODE_FAN_ONLY,
-        ]
-
-    @property
     def fan_mode(self):
         """Return the fan setting."""
         convert = {
@@ -146,21 +188,6 @@ class FrigidaireClimate(ClimateEntity):
         return convert[fan_speed.number_value]
 
     @property
-    def fan_modes(self):
-        """List of available fan modes."""
-        return [
-            FAN_AUTO,
-            FAN_LOW,
-            FAN_MEDIUM,
-            FAN_HIGH,
-        ]
-
-    @property
-    def name(self):
-        """Return the name of the entity."""
-        return self._appliance.nickname
-
-    @property
     def min_temp(self):
         """Return the minimum temperature."""
         if self.temperature_unit == TEMP_FAHRENHEIT:
@@ -175,11 +202,6 @@ class FrigidaireClimate(ClimateEntity):
             return 90
         else:
             return 32
-
-    @property
-    def unique_id(self):
-        """Return unique ID based on Frigidaire ID."""
-        return self._appliance.appliance_id
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
