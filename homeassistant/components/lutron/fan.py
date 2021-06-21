@@ -1,64 +1,32 @@
 """Support for Lutron fans."""
-from bisect import bisect_left
-from typing import Optional
 
 from homeassistant.components.fan import (
-    SPEED_HIGH,
-    SPEED_LOW,
-    SPEED_MEDIUM,
-    SPEED_OFF,
+    DOMAIN,
     SUPPORT_SET_SPEED,
     FanEntity,
 )
+from homeassistant.util.percentage import (
+    ordered_list_item_to_percentage,
+    percentage_to_ordered_list_item,
+)
 
-from . import LUTRON_CONTROLLER, LUTRON_DEVICES, LutronDevice
+from . import LUTRON_CONTROLLER, LUTRON_DEVICES, LutronDevice, DOMAIN as LUTRON_DOMAIN
 
-# This currently omits the Medium-High setting of 75%.
-FAN_OFF, FAN_LOW, FAN_MEDIUM, FAN_HIGH = 0, 25, 50, 100
+FAN_OFF, FAN_LOW, FAN_MEDIUM, FAN_MEDIUM_HIGH, FAN_HIGH = 0, 25, 50, 75, 100
 
-VALUE_TO_SPEED = {
-    None: SPEED_OFF,
-    FAN_OFF: SPEED_OFF,
-    FAN_LOW: SPEED_LOW,
-    FAN_MEDIUM: SPEED_MEDIUM,
-    FAN_HIGH: SPEED_HIGH,
-}
-
-SPEED_TO_VALUE = {
-    SPEED_OFF: FAN_OFF,
-    SPEED_LOW: FAN_LOW,
-    SPEED_MEDIUM: FAN_MEDIUM,
-    SPEED_HIGH: FAN_HIGH,
-}
-
-FAN_SPEEDS = list(SPEED_TO_VALUE.keys())
-
+DEFAULT_ON_PERCENTAGE = 50
+ORDERED_NAMED_FAN_SPEEDS = [FAN_LOW, FAN_MEDIUM, FAN_MEDIUM_HIGH, FAN_HIGH]
 
 def setup_platform(hass, config, add_entities, discovery_info=None) -> None:
     """Set up the Lutron fans."""
     devs = []
 
     # Add Lutron Fans
-    for (area_name, device) in hass.data[LUTRON_DEVICES]["fan"]:
+    for (area_name, device) in hass.data[LUTRON_DEVICES][DOMAIN]:
         dev = LutronFan(area_name, device, hass.data[LUTRON_CONTROLLER])
         devs.append(dev)
 
     add_entities(devs, True)
-
-
-def to_lutron_speed(speed: str) -> int:
-    """Convert the given Home Assistant fan speed (off, low, medium, high) to Lutron (0-100)."""
-    return SPEED_TO_VALUE[speed]
-
-
-def to_hass_speed(speed: float) -> str:
-    """Convert the given Lutron (0.0-100.0) light level to Home Assistant (0-255)."""
-    discrete_speeds = list(VALUE_TO_SPEED.keys())
-    discrete_speeds.remove(None)
-    idx = bisect_left(discrete_speeds, speed)
-
-    return VALUE_TO_SPEED[discrete_speeds[idx]]
-
 
 class LutronFan(LutronDevice, FanEntity):
     """Representation of a Lutron Fan controller. Including Fan Speed."""
@@ -74,45 +42,50 @@ class LutronFan(LutronDevice, FanEntity):
         return {"lutron_integration_id": self._lutron_device.id}
 
     @property
+    def speed_count(self) -> int:
+        """Return the number of speeds the fan supports."""
+        return len(ORDERED_NAMED_FAN_SPEEDS)
+
+    @property
     def supported_features(self) -> int:
         """Flag supported features. Speed Only."""
         return SUPPORT_SET_SPEED
 
     @property
-    def speed(self) -> Optional[str]:
-        """Return the speed of the fan."""
-        new_speed = to_hass_speed(self._lutron_device.last_level())
-        if new_speed != SPEED_OFF:
-            self._prev_speed = new_speed
-        return new_speed
-
-    @property
-    def speed_list(self) -> list:
-        """Get the list of available speeds."""
-        return FAN_SPEEDS
+    def percentage(self) -> int:
+        """Return the current speed percentage. Must be a value between 0 (off) and 100"""
+        return self._lutron_device.last_level()
 
     @property
     def is_on(self) -> bool:
         """Return true if device is on."""
         return self._lutron_device.last_level() > 0
 
-    def turn_on(self, speed: str = None, **kwargs) -> None:
+    def turn_on(
+        self,
+        speed: str = None,
+        percentage: int = None,
+        preset_mode: str = None,
+        **kwargs
+    ) -> None:
         """Turn the fan on."""
-        if speed is not None:
-            new_speed = speed
-        elif not self._prev_speed:
-            new_speed = SPEED_MEDIUM
-        else:
-            new_speed = self._prev_speed
+        if percentage is None:
+            percentage = DEFAULT_ON_PERCENTAGE
 
-        self.set_speed(new_speed)
+        self.set_percentage(percentage)
 
     def turn_off(self, **kwargs) -> None:
         """Turn the fan off."""
-        self.set_speed(SPEED_OFF)
+        self.set_percentage(0)
 
-    def set_speed(self, speed: str) -> None:
+    def set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan."""
-        if speed is not SPEED_OFF:
-            self._prev_speed = speed
-        self._lutron_device.level = to_lutron_speed(speed)
+
+        if percentage == 0:
+            named_speed = FAN_OFF
+        else:
+            named_speed = percentage_to_ordered_list_item(
+                ORDERED_NAMED_FAN_SPEEDS, percentage
+            )
+
+        self._lutron_device.level = percentage
