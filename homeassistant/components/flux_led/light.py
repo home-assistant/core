@@ -7,23 +7,20 @@ import voluptuous as vol
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP,
     ATTR_EFFECT,
-    ATTR_HS_COLOR,
-    ATTR_WHITE_VALUE,
+    ATTR_RGB_COLOR,
+    ATTR_RGBW_COLOR,
+    COLOR_MODE_BRIGHTNESS,
+    COLOR_MODE_RGB,
+    COLOR_MODE_RGBW,
     EFFECT_COLORLOOP,
     EFFECT_RANDOM,
     PLATFORM_SCHEMA,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR,
-    SUPPORT_COLOR_TEMP,
     SUPPORT_EFFECT,
-    SUPPORT_WHITE_VALUE,
     LightEntity,
 )
 from homeassistant.const import ATTR_MODE, CONF_DEVICES, CONF_NAME, CONF_PROTOCOL
 import homeassistant.helpers.config_validation as cv
-import homeassistant.util.color as color_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,7 +32,7 @@ CONF_TRANSITION = "transition"
 
 DOMAIN = "flux_led"
 
-SUPPORT_FLUX_LED = SUPPORT_BRIGHTNESS | SUPPORT_EFFECT | SUPPORT_COLOR
+SUPPORT_FLUX_LED = SUPPORT_EFFECT
 
 MODE_RGB = "rgb"
 MODE_RGBW = "rgbw"
@@ -204,6 +201,16 @@ class FluxLight(LightEntity):
             else:
                 self._mode = MODE_RGB
 
+        if self._mode == MODE_RGB:
+            self._attr_supported_color_modes = {COLOR_MODE_RGB}
+            self._attr_color_mode = COLOR_MODE_RGB
+        elif self._mode == MODE_RGBW:
+            self._attr_supported_color_modes = {COLOR_MODE_RGBW}
+            self._attr_color_mode = COLOR_MODE_RGBW
+        else:
+            self._attr_supported_color_modes = {COLOR_MODE_BRIGHTNESS}
+            self._attr_color_mode = COLOR_MODE_BRIGHTNESS
+
     def _disconnect(self):
         """Disconnect from Flux light."""
         self._bulb = None
@@ -232,25 +239,16 @@ class FluxLight(LightEntity):
         return self._bulb.brightness
 
     @property
-    def hs_color(self):
+    def rgb_color(self):
         """Return the color property."""
-        return color_util.color_RGB_to_hs(*self._bulb.getRgb())
+        rgb = self._bulb.getRgb()
+        return (rgb[0], rgb[1], rgb[2])
 
     @property
-    def supported_features(self):
-        """Flag supported features."""
-        if self._mode == MODE_RGBW:
-            return SUPPORT_FLUX_LED | SUPPORT_WHITE_VALUE | SUPPORT_COLOR_TEMP
-
-        if self._mode == MODE_WHITE:
-            return SUPPORT_BRIGHTNESS
-
-        return SUPPORT_FLUX_LED
-
-    @property
-    def white_value(self):
-        """Return the white value of this light between 0..255."""
-        return self._bulb.getRgbw()[3]
+    def rgbw_color(self):
+        """Return the color property."""
+        rgbw = self._bulb.getRgbw()
+        return (rgbw[0], rgbw[1], rgbw[2], rgbw[3])
 
     @property
     def effect_list(self):
@@ -279,32 +277,15 @@ class FluxLight(LightEntity):
         if not self.is_on:
             self._bulb.turnOn()
 
-        hs_color = kwargs.get(ATTR_HS_COLOR)
-
-        if hs_color:
-            rgb = color_util.color_hs_to_RGB(*hs_color)
-        else:
-            rgb = None
-
         brightness = kwargs.get(ATTR_BRIGHTNESS)
         effect = kwargs.get(ATTR_EFFECT)
-        white = kwargs.get(ATTR_WHITE_VALUE)
-        color_temp = kwargs.get(ATTR_COLOR_TEMP)
-
-        # handle special modes
-        if color_temp is not None:
-            if brightness is None:
-                brightness = self.brightness
-            if color_temp > COLOR_TEMP_WARM_VS_COLD_WHITE_CUT_OFF:
-                self._bulb.setRgbw(w=brightness)
-            else:
-                self._bulb.setRgbw(w2=brightness)
-            return
+        rgb = kwargs.get(ATTR_RGB_COLOR)
+        rgbw = kwargs.get(ATTR_RGBW_COLOR)
 
         # Show warning if effect set with rgb, brightness, or white level
-        if effect and (brightness or white or rgb):
+        if effect and (brightness or rgb or rgbw):
             _LOGGER.warning(
-                "RGB, brightness and white level are ignored when"
+                "brightness, RGB and RGBW are ignored when"
                 " an effect is specified for a flux bulb"
             )
 
@@ -337,8 +318,8 @@ class FluxLight(LightEntity):
         if rgb is None:
             rgb = self._bulb.getRgb()
 
-        if white is None and self._mode == MODE_RGBW:
-            white = self.white_value
+        if rgbw is None and self._mode == MODE_RGBW:
+            rgbw = self._bulb.getRgbw()
 
         # handle W only mode (use brightness instead of white value)
         if self._mode == MODE_WHITE:
@@ -346,7 +327,7 @@ class FluxLight(LightEntity):
 
         # handle RGBW mode
         elif self._mode == MODE_RGBW:
-            self._bulb.setRgbw(*tuple(rgb), w=white, brightness=brightness)
+            self._bulb.setRgbw(*tuple(rgbw), brightness=brightness)
 
         # handle RGB mode
         else:
