@@ -124,7 +124,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
             except ConnectTimeout:
                 _LOGGER.warning("Connection to host %s timed out during setup", host)
                 continue
-            except requests.exception.ConnectionError:
+            except requests.exceptions.ConnectionError:
                 _LOGGER.warning("Host %s is not reachable", host)
                 continue
 
@@ -232,7 +232,7 @@ def call_api_container_vm(proxmox, node_name, vm_id, machine_type):
             status = proxmox.nodes(node_name).qemu(vm_id).status.current.get()
         elif machine_type == TYPE_CONTAINER:
             status = proxmox.nodes(node_name).lxc(vm_id).status.current.get()
-    except (ResourceException, requests.exception.ConnectionError):
+    except (ResourceException, requests.exceptions.ConnectionError):
         return None
 
     return status
