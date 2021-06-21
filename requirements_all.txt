@@ -1253,7 +1253,7 @@ pyMetEireann==0.2
 pyMetno==0.8.3
 
 # homeassistant.components.rfxtrx
-pyRFXtrx==0.26.1
+pyRFXtrx==0.27.0
 
 # homeassistant.components.switchmate
 # pySwitchmate==0.4.6
@@ -1352,7 +1352,7 @@ pycsspeechtts==1.0.4
 # pycups==1.9.73
 
 # homeassistant.components.daikin
-pydaikin==2.4.2
+pydaikin==2.4.3
 
 # homeassistant.components.danfoss_air
 pydanfossair==0.1.0
