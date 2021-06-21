@@ -4,7 +4,7 @@ from __future__ import annotations
 from abc import abstractmethod
 from collections.abc import Mapping
 import logging
-from typing import Any, Callable
+from typing import Any
 
 from pyclimacell.const import CURRENT
 
@@ -135,7 +135,7 @@ class BaseClimaCellSensorEntity(ClimaCellEntity, SensorEntity):
         ):
             conversion = self.sensor_type[ATTR_METRIC_CONVERSION]
             # When conversion is a callable, we assume it's a single input function
-            if isinstance(conversion, Callable):
+            if callable(conversion):
                 return round(conversion(state), 4)
 
             return round(state * conversion, 4)
