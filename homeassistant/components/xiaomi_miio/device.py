@@ -124,7 +124,7 @@ class XiaomiCoordinatedMiioEntity(CoordinatorEntity):
         device_info = {
             "identifiers": {(DOMAIN, self._device_id)},
             "manufacturer": "Xiaomi",
-            "name": self._name,
+            "name": self._device_name,
             "model": self._model,
         }
 
