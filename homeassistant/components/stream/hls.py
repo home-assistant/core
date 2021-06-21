@@ -293,6 +293,7 @@ class HlsPlaylistView(StreamView):
         return web.Response(
             body=None,
             status=400,
+            # From Appendix B.1 of the RFC:
             # Successful responses to blocking Playlist requests should be cached
             # for six Target Durations. Unsuccessful responses (such as 404s) should
             # be cached for four Target Durations.  Successful responses to non-blocking
@@ -373,7 +374,7 @@ class HlsPlaylistView(StreamView):
                 return self.not_found(blocking_request, track.target_duration)
         # Now we should have msn.part >= hls_msn.hls_part. However, in the case
         # that we have a rollover part request from the previous segment, we need
-        # to make sure that the new segment has a part. From the RFC:
+        # to make sure that the new segment has a part. From 6.2.5.2 of the RFC:
         # If the Client requests a Part Index greater than that of the final
         # Partial Segment of the Parent Segment, the Server MUST treat the
         # request as one for Part Index 0 of the following Parent Segment.
