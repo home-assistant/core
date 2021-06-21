@@ -214,8 +214,8 @@ class TasmotaLight(
         """Return the hs color value."""
         if self._hs is None:
             return None
-        hs = self._hs
-        return [hs[0], hs[1]]
+        hs_color = self._hs
+        return [hs_color[0], hs_color[1]]
 
     @property
     def force_update(self):
@@ -244,8 +244,8 @@ class TasmotaLight(
         attributes = {}
 
         if ATTR_HS_COLOR in kwargs and COLOR_MODE_HS in supported_color_modes:
-            hs = kwargs[ATTR_HS_COLOR]
-            attributes["color_hs"] = [hs[0], hs[1]]
+            hs_color = kwargs[ATTR_HS_COLOR]
+            attributes["color_hs"] = [hs_color[0], hs_color[1]]
 
         if ATTR_WHITE in kwargs and COLOR_MODE_WHITE in supported_color_modes:
             attributes["white_value"] = scale_brightness(kwargs[ATTR_WHITE])
