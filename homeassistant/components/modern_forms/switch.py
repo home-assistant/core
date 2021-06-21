@@ -137,7 +137,7 @@ class ModernFormsRebootSwitch(ModernFormsSwitch):
     @modernforms_exception_handler
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the Modern Forms reboot switch."""
-        pass
+        pass  # pylint: disable=unnecessary-pass
 
     @modernforms_exception_handler
     async def async_turn_on(self, **kwargs: Any) -> None:
