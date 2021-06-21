@@ -9,6 +9,7 @@ from huisbaasje.const import (
 )
 
 from homeassistant.const import (
+    DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_POWER,
     ENERGY_KILO_WATT_HOUR,
     TIME_HOURS,
@@ -70,34 +71,34 @@ SENSORS_INFO = [
     },
     {
         "name": "Huisbaasje Energy Today",
+        "device_class": DEVICE_CLASS_ENERGY,
         "unit_of_measurement": ENERGY_KILO_WATT_HOUR,
         "source_type": SOURCE_TYPE_ELECTRICITY,
         "sensor_type": SENSOR_TYPE_THIS_DAY,
-        "icon": "mdi:counter",
         "precision": 1,
     },
     {
         "name": "Huisbaasje Energy This Week",
+        "device_class": DEVICE_CLASS_ENERGY,
         "unit_of_measurement": ENERGY_KILO_WATT_HOUR,
         "source_type": SOURCE_TYPE_ELECTRICITY,
         "sensor_type": SENSOR_TYPE_THIS_WEEK,
-        "icon": "mdi:counter",
         "precision": 1,
     },
     {
         "name": "Huisbaasje Energy This Month",
+        "device_class": DEVICE_CLASS_ENERGY,
         "unit_of_measurement": ENERGY_KILO_WATT_HOUR,
         "source_type": SOURCE_TYPE_ELECTRICITY,
         "sensor_type": SENSOR_TYPE_THIS_MONTH,
-        "icon": "mdi:counter",
         "precision": 1,
     },
     {
         "name": "Huisbaasje Energy This Year",
+        "device_class": DEVICE_CLASS_ENERGY,
         "unit_of_measurement": ENERGY_KILO_WATT_HOUR,
         "source_type": SOURCE_TYPE_ELECTRICITY,
         "sensor_type": SENSOR_TYPE_THIS_YEAR,
-        "icon": "mdi:counter",
         "precision": 1,
     },
     {

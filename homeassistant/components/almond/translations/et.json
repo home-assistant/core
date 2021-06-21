@@ -8,8 +8,8 @@
         },
         "step": {
             "hassio_confirm": {
-                "description": "Kas soovid seadistada Home Assistant-i \u00fchendust Almondiga mida pakub Hass.io lisandmoodul: {addon} ?",
-                "title": "Almond Hass.io lisandmooduli kaudu"
+                "description": "Kas soovid seadistada Home Assistant-i \u00fchendust Almondiga mida pakub lisandmoodul: {addon} ?",
+                "title": "Almond  Home Assistanti lisandmooduli abil"
             },
             "pick_implementation": {
                 "title": "Vali tuvastusmeetod"

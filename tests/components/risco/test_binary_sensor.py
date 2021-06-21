@@ -4,6 +4,7 @@ from unittest.mock import PropertyMock, patch
 from homeassistant.components.risco import CannotConnectError, UnauthorizedError
 from homeassistant.components.risco.const import DOMAIN
 from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
 
 from .util import TEST_CONFIG, TEST_SITE_UUID, setup_risco
@@ -26,7 +27,7 @@ async def test_cannot_connect(hass):
         config_entry.add_to_hass(hass)
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
-        registry = await hass.helpers.entity_registry.async_get_registry()
+        registry = er.async_get(hass)
         assert not registry.async_is_registered(FIRST_ENTITY_ID)
         assert not registry.async_is_registered(SECOND_ENTITY_ID)
 
@@ -42,14 +43,14 @@ async def test_unauthorized(hass):
         config_entry.add_to_hass(hass)
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
-        registry = await hass.helpers.entity_registry.async_get_registry()
+        registry = er.async_get(hass)
         assert not registry.async_is_registered(FIRST_ENTITY_ID)
         assert not registry.async_is_registered(SECOND_ENTITY_ID)
 
 
 async def test_setup(hass, two_zone_alarm):  # noqa: F811
     """Test entity setup."""
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = er.async_get(hass)
 
     assert not registry.async_is_registered(FIRST_ENTITY_ID)
     assert not registry.async_is_registered(SECOND_ENTITY_ID)
@@ -59,7 +60,7 @@ async def test_setup(hass, two_zone_alarm):  # noqa: F811
     assert registry.async_is_registered(FIRST_ENTITY_ID)
     assert registry.async_is_registered(SECOND_ENTITY_ID)
 
-    registry = await hass.helpers.device_registry.async_get_registry()
+    registry = dr.async_get(hass)
     device = registry.async_get_device({(DOMAIN, TEST_SITE_UUID + "_zone_0")})
     assert device is not None
     assert device.manufacturer == "Risco"

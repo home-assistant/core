@@ -1,7 +1,10 @@
 """Module to handle installing requirements."""
+from __future__ import annotations
+
 import asyncio
+from collections.abc import Iterable
 import os
-from typing import Any, Dict, Iterable, List, Optional, Set, Union, cast
+from typing import Any, cast
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -15,7 +18,7 @@ DATA_PIP_LOCK = "pip_lock"
 DATA_PKG_CACHE = "pkg_cache"
 DATA_INTEGRATIONS_WITH_REQS = "integrations_with_reqs"
 CONSTRAINT_FILE = "package_constraints.txt"
-DISCOVERY_INTEGRATIONS: Dict[str, Iterable[str]] = {
+DISCOVERY_INTEGRATIONS: dict[str, Iterable[str]] = {
     "dhcp": ("dhcp",),
     "mqtt": ("mqtt",),
     "ssdp": ("ssdp",),
@@ -26,7 +29,7 @@ DISCOVERY_INTEGRATIONS: Dict[str, Iterable[str]] = {
 class RequirementsNotFound(HomeAssistantError):
     """Raised when a component is not found."""
 
-    def __init__(self, domain: str, requirements: List[str]) -> None:
+    def __init__(self, domain: str, requirements: list[str]) -> None:
         """Initialize a component not found error."""
         super().__init__(f"Requirements for {domain} not found: {requirements}.")
         self.domain = domain
@@ -34,7 +37,7 @@ class RequirementsNotFound(HomeAssistantError):
 
 
 async def async_get_integration_with_requirements(
-    hass: HomeAssistant, domain: str, done: Optional[Set[str]] = None
+    hass: HomeAssistant, domain: str, done: set[str] | None = None
 ) -> Integration:
     """Get an integration with all requirements installed, including the dependencies.
 
@@ -56,12 +59,13 @@ async def async_get_integration_with_requirements(
     if cache is None:
         cache = hass.data[DATA_INTEGRATIONS_WITH_REQS] = {}
 
-    int_or_evt: Union[Integration, asyncio.Event, None, UndefinedType] = cache.get(
+    int_or_evt: Integration | asyncio.Event | None | UndefinedType = cache.get(
         domain, UNDEFINED
     )
 
     if isinstance(int_or_evt, asyncio.Event):
         await int_or_evt.wait()
+
         int_or_evt = cache.get(domain, UNDEFINED)
 
         # When we have waited and it's UNDEFINED, it doesn't exist
@@ -75,6 +79,22 @@ async def async_get_integration_with_requirements(
 
     event = cache[domain] = asyncio.Event()
 
+    try:
+        await _async_process_integration(hass, integration, done)
+    except Exception:
+        del cache[domain]
+        event.set()
+        raise
+
+    cache[domain] = integration
+    event.set()
+    return integration
+
+
+async def _async_process_integration(
+    hass: HomeAssistant, integration: Integration, done: set[str]
+) -> None:
+    """Process an integration and requirements."""
     if integration.requirements:
         await async_process_requirements(
             hass, integration.domain, integration.requirements
@@ -94,21 +114,28 @@ async def async_get_integration_with_requirements(
         ):
             deps_to_check.append(check_domain)
 
-    if deps_to_check:
-        await asyncio.gather(
-            *[
-                async_get_integration_with_requirements(hass, dep, done)
-                for dep in deps_to_check
-            ]
-        )
+    if not deps_to_check:
+        return
 
-    cache[domain] = integration
-    event.set()
-    return integration
+    results = await asyncio.gather(
+        *[
+            async_get_integration_with_requirements(hass, dep, done)
+            for dep in deps_to_check
+        ],
+        return_exceptions=True,
+    )
+    for result in results:
+        if not isinstance(result, BaseException):
+            continue
+        if not isinstance(result, IntegrationNotFound) or not (
+            not integration.is_built_in
+            and result.domain in integration.after_dependencies
+        ):
+            raise result
 
 
 async def async_process_requirements(
-    hass: HomeAssistant, name: str, requirements: List[str]
+    hass: HomeAssistant, name: str, requirements: list[str]
 ) -> None:
     """Install the requirements for a component or platform.
 
@@ -126,7 +153,7 @@ async def async_process_requirements(
             if pkg_util.is_installed(req):
                 continue
 
-            def _install(req: str, kwargs: Dict[str, Any]) -> bool:
+            def _install(req: str, kwargs: dict[str, Any]) -> bool:
                 """Install requirement."""
                 return pkg_util.install_package(req, **kwargs)
 
@@ -136,7 +163,7 @@ async def async_process_requirements(
                 raise RequirementsNotFound(name, [req])
 
 
-def pip_kwargs(config_dir: Optional[str]) -> Dict[str, Any]:
+def pip_kwargs(config_dir: str | None) -> dict[str, Any]:
     """Return keyword arguments for PIP install."""
     is_docker = pkg_util.is_docker_env()
     kwargs = {

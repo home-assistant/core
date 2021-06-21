@@ -14,7 +14,8 @@
             "user": {
                 "data": {
                     "protocol": "Protocolo"
-                }
+                },
+                "title": "Elija el protocolo AlarmDecoder"
             }
         }
     },

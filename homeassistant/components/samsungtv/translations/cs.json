@@ -10,7 +10,7 @@
         "flow_title": "Samsung TV: {model}",
         "step": {
             "confirm": {
-                "description": "Chcete nastavit televizi Samsung {model} ? Pokud jste Home Assistant doposud nikdy nep\u0159ipojili, m\u011bla by se v\u00e1m na televizi zobrazit \u017e\u00e1dost o povolen\u00ed. Ru\u010dn\u00ed konfigurace pro tuto televizi budou p\u0159eps\u00e1ny.",
+                "description": "Chcete nastavit {device}? Pokud jste Home Assistant doposud nikdy nep\u0159ipojili, m\u011bla by se v\u00e1m na televizi zobrazit \u017e\u00e1dost o povolen\u00ed.",
                 "title": "Samsung TV"
             },
             "user": {

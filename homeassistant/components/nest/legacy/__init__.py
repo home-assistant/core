@@ -249,7 +249,9 @@ async def async_setup_legacy_entry(hass, entry):
         """Stop Nest update event listener."""
         nest.update_event.set()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shut_down)
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shut_down)
+    )
 
     _LOGGER.debug("async_setup_nest is done")
 
@@ -362,11 +364,6 @@ class NestSensorDevice(Entity):
     def name(self):
         """Return the name of the nest, if any."""
         return self._name
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        return self._unit
 
     @property
     def should_poll(self):

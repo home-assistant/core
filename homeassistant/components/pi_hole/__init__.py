@@ -1,5 +1,4 @@
 """The pi_hole component."""
-import asyncio
 import logging
 
 from hole import Hole
@@ -53,7 +52,10 @@ PI_HOLE_SCHEMA = vol.Schema(
 )
 
 CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.Schema(vol.All(cv.ensure_list, [PI_HOLE_SCHEMA]))},
+    vol.All(
+        cv.deprecated(DOMAIN),
+        {DOMAIN: vol.Schema(vol.All(cv.ensure_list, [PI_HOLE_SCHEMA]))},
+    ),
     extra=vol.ALLOW_EXTRA,
 )
 
@@ -126,23 +128,15 @@ async def async_setup_entry(hass, entry):
         DATA_KEY_COORDINATOR: coordinator,
     }
 
-    for platform in _async_platforms(entry):
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, platform)
-        )
+    hass.config_entries.async_setup_platforms(entry, _async_platforms(entry))
 
     return True
 
 
 async def async_unload_entry(hass, entry):
     """Unload Pi-hole entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, platform)
-                for platform in _async_platforms(entry)
-            ]
-        )
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        entry, _async_platforms(entry)
     )
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)

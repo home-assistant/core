@@ -1,4 +1,5 @@
 """Support to interact with a Music Player Daemon."""
+from contextlib import suppress
 from datetime import timedelta
 import hashlib
 import logging
@@ -129,10 +130,8 @@ class MpdDevice(MediaPlayerEntity):
 
     def _disconnect(self):
         """Disconnect from MPD."""
-        try:
+        with suppress(mpd.ConnectionError):
             self._client.disconnect()
-        except mpd.ConnectionError:
-            pass
         self._is_connected = False
         self._status = None
 
@@ -168,7 +167,7 @@ class MpdDevice(MediaPlayerEntity):
                 self._commands = list(await self._client.commands())
 
             await self._fetch_status()
-        except (mpd.ConnectionError, OSError, BrokenPipeError, ValueError) as error:
+        except (mpd.ConnectionError, OSError, ValueError) as error:
             # Cleanly disconnect in case connection is not in valid state
             _LOGGER.debug("Error updating status: %s", error)
             self._disconnect()

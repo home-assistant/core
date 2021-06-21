@@ -15,6 +15,28 @@
             }
         }
     },
+    "device_automation": {
+        "trigger_subtype": {
+            "away": "poza domem",
+            "hg": "ochrona przed mrozem",
+            "schedule": "harmonogram"
+        },
+        "trigger_type": {
+            "alarm_started": "{entity_name} wykryje alarm",
+            "animal": "{entity_name} wykryje zwierz\u0119",
+            "cancel_set_point": "{entity_name} wznowi sw\u00f3j harmonogram",
+            "human": "{entity_name} wykryje cz\u0142owieka",
+            "movement": "{entity_name} wykryje ruch",
+            "outdoor": "{entity_name} wykryje zdarzenie zewn\u0119trzne",
+            "person": "{entity_name} wykryje osob\u0119",
+            "person_away": "{entity_name} wykryje, \u017ce osoba wysz\u0142a",
+            "set_point": "temperatura docelowa {entity_name} zosta\u0142a ustawiona r\u0119cznie",
+            "therm_mode": "{entity_name} prze\u0142\u0105czy\u0142(a) si\u0119 na \u201e{subtype}\u201d",
+            "turned_off": "{entity_name} zostanie wy\u0142\u0105czony",
+            "turned_on": "{entity_name} zostanie w\u0142\u0105czony",
+            "vehicle": "{entity_name} wykryje pojazd"
+        }
+    },
     "options": {
         "step": {
             "public_weather": {

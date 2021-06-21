@@ -22,7 +22,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import Context, CoreState, State
-from homeassistant.helpers import collection, entity_registry
+from homeassistant.helpers import collection, entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from tests.common import mock_component, mock_restore_cache
@@ -589,7 +589,7 @@ async def test_ws_delete(hass, hass_ws_client, storage_setup):
 
     assert resp["success"]
     assert len(hass.states.async_entity_ids("person")) == 0
-    ent_reg = await hass.helpers.entity_registry.async_get_registry()
+    ent_reg = er.async_get(hass)
     assert not ent_reg.async_is_registered("person.tracked_person")
 
 
@@ -681,7 +681,7 @@ async def test_update_person_when_user_removed(
 async def test_removing_device_tracker(hass, storage_setup):
     """Test we automatically remove removed device trackers."""
     storage_collection = hass.data[DOMAIN][1]
-    reg = await entity_registry.async_get_registry(hass)
+    reg = er.async_get(hass)
     entry = reg.async_get_or_create(
         "device_tracker", "mobile_app", "bla", suggested_object_id="pixel"
     )

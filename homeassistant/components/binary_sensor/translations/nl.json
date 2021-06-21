@@ -57,7 +57,7 @@
             "moving": "{entity_name} begon te bewegen",
             "no_gas": "{entity_name} is gestopt met het detecteren van gas",
             "no_light": "{entity_name} gestopt met het detecteren van licht",
-            "no_motion": "{entity_name} gestopt met het detecteren van beweging",
+            "no_motion": "{entity_name} is gestopt met het detecteren van beweging",
             "no_problem": "{entity_name} gestopt met het detecteren van het probleem",
             "no_smoke": "{entity_name} gestopt met het detecteren van rook",
             "no_sound": "{entity_name} gestopt met het detecteren van geluid",

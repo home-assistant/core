@@ -1,5 +1,5 @@
 """Provides device actions for switches."""
-from typing import List
+from __future__ import annotations
 
 import voluptuous as vol
 
@@ -25,6 +25,6 @@ async def async_call_action_from_config(
     )
 
 
-async def async_get_actions(hass: HomeAssistant, device_id: str) -> List[dict]:
+async def async_get_actions(hass: HomeAssistant, device_id: str) -> list[dict]:
     """List device actions."""
     return await toggle_entity.async_get_actions(hass, device_id, DOMAIN)

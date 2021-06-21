@@ -3,9 +3,10 @@
   "name": "RMV",
   "documentation": "https://www.home-assistant.io/integrations/rmvtransport",
   "requirements": [
-    "PyRMVtransport==0.3.1"
+    "PyRMVtransport==0.3.2"
   ],
   "codeowners": [
     "@cgtobi"
-  ]
+  ],
+  "iot_class": "cloud_polling"
 }

@@ -1,5 +1,5 @@
 """Support for ONVIF binary sensors."""
-from typing import Optional
+from __future__ import annotations
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.core import callback
@@ -55,7 +55,7 @@ class ONVIFBinarySensor(ONVIFBaseEntity, BinarySensorEntity):
         return self.device.events.get_uid(self.uid).name
 
     @property
-    def device_class(self) -> Optional[str]:
+    def device_class(self) -> str | None:
         """Return the class of this device, from component DEVICE_CLASSES."""
         return self.device.events.get_uid(self.uid).device_class
 

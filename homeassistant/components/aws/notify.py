@@ -28,10 +28,7 @@ _LOGGER = logging.getLogger(__name__)
 async def get_available_regions(hass, service):
     """Get available regions for a service."""
     session = aiobotocore.get_session()
-    # get_available_regions is not a coroutine since it does not perform
-    # network I/O. But it still perform file I/O heavily, so put it into
-    # an executor thread to unblock event loop
-    return await hass.async_add_executor_job(session.get_available_regions, service)
+    return await session.get_available_regions(service)
 
 
 async def async_get_service(hass, config, discovery_info=None):

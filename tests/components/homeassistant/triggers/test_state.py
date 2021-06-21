@@ -55,6 +55,7 @@ async def test_if_fires_on_entity_change(hass, calls):
                                 "from_state.state",
                                 "to_state.state",
                                 "for",
+                                "id",
                             )
                         )
                     },
@@ -68,7 +69,7 @@ async def test_if_fires_on_entity_change(hass, calls):
     await hass.async_block_till_done()
     assert len(calls) == 1
     assert calls[0].context.parent_id == context.id
-    assert calls[0].data["some"] == "state - test.entity - hello - world - None"
+    assert calls[0].data["some"] == "state - test.entity - hello - world - None - 0"
 
     await hass.services.async_call(
         automation.DOMAIN,
@@ -506,7 +507,7 @@ async def test_if_fires_on_entity_change_with_for(hass, calls):
     await hass.async_block_till_done()
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=10))
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
 
 
 async def test_if_fires_on_entity_change_with_for_without_to(hass, calls):

@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Sudah dikonfigurasi. Hanya satu konfigurasi yang diizinkan."
+        },
+        "error": {
+            "pin_request_failed": "Terjadi kesalahan saat meminta PIN dari ecobee. Verifikasi apakah kunci API sudah benar.",
+            "token_request_failed": "Kesalahan saat meminta token dari ecobee. Coba lagi"
+        },
+        "step": {
+            "authorize": {
+                "description": "Otorisasi aplikasi ini di https://www.ecobee.com/consumerportal/index.html dengan kode PIN:\n\n{pin}\n\nKemudian, tekan Kirim.",
+                "title": "Otorisasi aplikasi di ecobee.com"
+            },
+            "user": {
+                "data": {
+                    "api_key": "Kunci API"
+                },
+                "description": "Masukkan kunci API yang diperoleh dari ecobee.com.",
+                "title": "Kunci API ecobee"
+            }
+        }
+    }
+}

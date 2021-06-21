@@ -20,3 +20,9 @@ DEFAULT_MAX_TEMP = 40
 DEFAULT_LIGHT_EFFECT = "purple"
 # default to 50% brightness
 DEFAULT_LIGHT_BRIGHTNESS = 128
+
+ATTR_ERRORS = "errors"
+ATTR_LIGHTS = "lights"
+ATTR_PUMPS = "pumps"
+ATTR_REMINDERS = "reminders"
+ATTR_STATUS = "status"

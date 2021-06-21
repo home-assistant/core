@@ -16,7 +16,7 @@ from .const import (
     ATTR_CID,
     ATTR_MAC,
     ATTR_MODEL,
-    BRAVIARC,
+    BRAVIA_COORDINATOR,
     CLIENTID_PREFIX,
     CONF_IGNORED_SOURCES,
     DOMAIN,
@@ -29,7 +29,7 @@ _LOGGER = logging.getLogger(__name__)
 def host_valid(host):
     """Return True if hostname or IP address is valid."""
     try:
-        if ipaddress.ip_address(host).version == (4 or 6):
+        if ipaddress.ip_address(host).version in [4, 6]:
             return True
     except ValueError:
         disallowed = re.compile(r"[^a-zA-Z\d\-]")
@@ -40,7 +40,6 @@ class BraviaTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for BraviaTV integration."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     def __init__(self):
         """Initialize."""
@@ -161,7 +160,10 @@ class BraviaTVOptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_init(self, user_input=None):
         """Manage the options."""
-        self.braviarc = self.hass.data[DOMAIN][self.config_entry.entry_id][BRAVIARC]
+        coordinator = self.hass.data[DOMAIN][self.config_entry.entry_id][
+            BRAVIA_COORDINATOR
+        ]
+        self.braviarc = coordinator.braviarc
         connected = await self.hass.async_add_executor_job(self.braviarc.is_connected)
         if not connected:
             await self.hass.async_add_executor_job(

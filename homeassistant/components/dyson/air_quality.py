@@ -88,6 +88,6 @@ class DysonAirSensor(DysonEntity, AirQualityEntity):
         return int(self._device.environmental_state.volatile_organic_compounds)
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device state attributes."""
         return {ATTR_VOC: self.volatile_organic_compounds}

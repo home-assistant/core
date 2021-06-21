@@ -1,6 +1,7 @@
 """Config flow for ONVIF."""
+from __future__ import annotations
+
 from pprint import pformat
-from typing import List
 from urllib.parse import urlparse
 
 from onvif.exceptions import ONVIFError
@@ -21,7 +22,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 
-# pylint: disable=unused-import
 from .const import (
     CONF_DEVICE_ID,
     CONF_RTSP_TRANSPORT,
@@ -36,7 +36,7 @@ from .device import get_device
 CONF_MANUAL_INPUT = "Manually configure ONVIF device"
 
 
-def wsdiscovery() -> List[Service]:
+def wsdiscovery() -> list[Service]:
     """Get ONVIF Profile S devices from network."""
     discovery = WSDiscovery(ttl=4)
     discovery.start()
@@ -49,7 +49,7 @@ def wsdiscovery() -> List[Service]:
 
 async def async_discovery(hass) -> bool:
     """Return if there are devices that can be discovered."""
-    LOGGER.debug("Starting ONVIF discovery...")
+    LOGGER.debug("Starting ONVIF discovery")
     services = await hass.async_add_executor_job(wsdiscovery)
 
     devices = []
@@ -76,7 +76,6 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a ONVIF config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     @staticmethod
     @callback
@@ -207,9 +206,12 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             if not self.device_id:
                 try:
                     network_interfaces = await device_mgmt.GetNetworkInterfaces()
-                    for interface in network_interfaces:
-                        if interface.Enabled:
-                            self.device_id = interface.Info.HwAddress
+                    interface = next(
+                        filter(lambda interface: interface.Enabled, network_interfaces),
+                        None,
+                    )
+                    if interface:
+                        self.device_id = interface.Info.HwAddress
                 except Fault as fault:
                     if "not implemented" not in fault.message:
                         raise fault
@@ -249,8 +251,6 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             if not h264:
                 return self.async_abort(reason="no_h264")
 
-            await device.close()
-
             title = f"{self.onvif_config[CONF_NAME]} - {self.device_id}"
             return self.async_create_entry(title=title, data=self.onvif_config)
 
@@ -260,13 +260,14 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 self.onvif_config[CONF_NAME],
                 err,
             )
-            await device.close()
             return self.async_abort(reason="onvif_error")
 
         except Fault:
             errors["base"] = "cannot_connect"
 
-        await device.close()
+        finally:
+            await device.close()
+
         return self.async_show_form(step_id="auth", errors=errors)
 
     async def async_step_import(self, user_input):

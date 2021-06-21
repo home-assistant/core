@@ -6,6 +6,7 @@
         "error": {
             "invalid_auth": "Ongeldige authenticatie"
         },
+        "flow_title": "{ip}",
         "step": {
             "user": {
                 "data": {
@@ -20,6 +21,9 @@
     "options": {
         "step": {
             "init": {
+                "data": {
+                    "zone_run_time": "Standaardlooptijd van de zone (in seconden)"
+                },
                 "title": "Configureer RainMachine"
             }
         }

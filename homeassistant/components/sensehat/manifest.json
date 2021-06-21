@@ -3,5 +3,6 @@
   "name": "Sense HAT",
   "documentation": "https://www.home-assistant.io/integrations/sensehat",
   "requirements": ["sense-hat==2.2.0"],
-  "codeowners": []
+  "codeowners": [],
+  "iot_class": "assumed_state"
 }

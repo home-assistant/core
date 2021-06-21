@@ -14,8 +14,13 @@
             "user": {
                 "data": {
                     "host": "Hoszt",
-                    "port": "Port"
+                    "port": "Port",
+                    "ssl": "SSL tan\u00fas\u00edtv\u00e1ny haszn\u00e1lata",
+                    "verify_ssl": "SSL-tan\u00fas\u00edtv\u00e1ny ellen\u0151rz\u00e9se"
                 }
+            },
+            "zeroconf_confirm": {
+                "description": "Be szeretn\u00e9d \u00e1ll\u00edtani a {name}-t?"
             }
         }
     }

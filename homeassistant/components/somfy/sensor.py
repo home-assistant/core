@@ -3,6 +3,7 @@
 from pymfy.api.devices.category import Category
 from pymfy.api.devices.thermostat import Thermostat
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import DEVICE_CLASS_BATTERY, PERCENTAGE
 
 from . import SomfyEntity
@@ -26,8 +27,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(sensors)
 
 
-class SomfyThermostatBatterySensor(SomfyEntity):
+class SomfyThermostatBatterySensor(SomfyEntity, SensorEntity):
     """Representation of a Somfy thermostat battery."""
+
+    _attr_device_class = DEVICE_CLASS_BATTERY
+    _attr_unit_of_measurement = PERCENTAGE
 
     def __init__(self, coordinator, device_id, api):
         """Initialize the Somfy device."""
@@ -43,13 +47,3 @@ class SomfyThermostatBatterySensor(SomfyEntity):
     def state(self) -> int:
         """Return the state of the sensor."""
         return self._climate.get_battery()
-
-    @property
-    def device_class(self) -> str:
-        """Return the device class of the sensor."""
-        return DEVICE_CLASS_BATTERY
-
-    @property
-    def unit_of_measurement(self) -> str:
-        """Return the unit of measurement of the sensor."""
-        return PERCENTAGE

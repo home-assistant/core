@@ -113,7 +113,7 @@ class XmppNotificationService(BaseNotificationService):
         )
 
 
-async def async_send_message(
+async def async_send_message(  # noqa: C901
     sender,
     password,
     recipients,
@@ -165,7 +165,7 @@ async def async_send_message(
             if message:
                 self.send_text_message()
 
-            self.disconnect(wait=True)
+            self.disconnect()
 
         async def send_file(self, timeout=None):
             """Send file via XMPP.
@@ -174,7 +174,7 @@ async def async_send_message(
             HTTP Upload (XEP_0363)
             """
             if room:
-                self.plugin["xep_0045"].join_muc(room, sender, wait=True)
+                self.plugin["xep_0045"].join_muc(room, sender)
 
             try:
                 # Uploading with XEP_0363
@@ -335,7 +335,7 @@ async def async_send_message(
             try:
                 if room:
                     _LOGGER.debug("Joining room %s", room)
-                    self.plugin["xep_0045"].join_muc(room, sender, wait=True)
+                    self.plugin["xep_0045"].join_muc(room, sender)
                     self.send_message(mto=room, mbody=message, mtype="groupchat")
                 else:
                     for recipient in recipients:

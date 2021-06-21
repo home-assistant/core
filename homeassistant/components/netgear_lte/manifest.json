@@ -3,5 +3,6 @@
   "name": "NETGEAR LTE",
   "documentation": "https://www.home-assistant.io/integrations/netgear_lte",
   "requirements": ["eternalegypt==0.0.12"],
-  "codeowners": []
+  "codeowners": [],
+  "iot_class": "local_polling"
 }

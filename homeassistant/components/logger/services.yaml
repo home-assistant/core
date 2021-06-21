@@ -5,7 +5,6 @@ set_default_level:
     level:
       name: Level
       description: Default severity level for all integrations.
-      example: debug
       selector:
         select:
           options:
@@ -21,23 +20,59 @@ set_level:
   description: Set log level for integrations.
   fields:
     homeassistant.core:
+      name: Home Assistant Core
       description:
         "Example on how to change the logging level for a Home Assistant Core
-        integrations. Possible values are debug, info, warn, warning, error,
-        fatal, critical."
-      example: debug
+        integrations."
+      selector:
+        select:
+          options:
+            - 'debug'
+            - 'critical'
+            - 'error'
+            - 'fatal'
+            - 'info'
+            - 'warn'
+            - 'warning'
     homeassistant.components.mqtt:
+      name: Home Assistant components mqtt
       description:
-        "Example on how to change the logging level for an Integration. Possible
-        values are debug, info, warn, warning, error, fatal, critical."
-      example: warning
+        "Example on how to change the logging level for an Integration."
+      selector:
+        select:
+          options:
+            - 'debug'
+            - 'critical'
+            - 'error'
+            - 'fatal'
+            - 'info'
+            - 'warn'
+            - 'warning'
     custom_components.my_integration:
+      name: Custom components "my_integation"
       description:
-        "Example on how to change the logging level for a Custom Integration.
-        Possible values are debug, info, warn, warning, error, fatal, critical."
-      example: debug
+        "Example on how to change the logging level for a Custom Integration."
+      selector:
+        select:
+          options:
+            - 'debug'
+            - 'critical'
+            - 'error'
+            - 'fatal'
+            - 'info'
+            - 'warn'
+            - 'warning'
     aiohttp:
+      name: aioHttp
       description:
-        "Example on how to change the logging level for a Python module.
-        Possible values are debug, info, warn, warning, error, fatal, critical."
-      example: error
+        "Example on how to change the logging level for a Python module."
+      selector:
+        select:
+          options:
+            - 'debug'
+            - 'critical'
+            - 'error'
+            - 'fatal'
+            - 'info'
+            - 'warn'
+            - 'warning'

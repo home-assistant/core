@@ -2,13 +2,16 @@
 from unittest.mock import AsyncMock, patch
 
 import ambiclimate
+import pytest
 
-from homeassistant import data_entry_flow
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.ambiclimate import config_flow
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.setup import async_setup_component
 from homeassistant.util import aiohttp
+
+from tests.common import MockConfigEntry
 
 
 async def init_config_flow(hass):
@@ -40,12 +43,15 @@ async def test_abort_if_already_setup(hass):
     """Test we abort if Ambiclimate is already setup."""
     flow = await init_config_flow(hass)
 
-    with patch.object(hass.config_entries, "async_entries", return_value=[{}]):
-        result = await flow.async_step_user()
+    MockConfigEntry(domain=config_flow.DOMAIN).add_to_hass(hass)
+    result = await hass.config_entries.flow.async_init(
+        config_flow.DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
+    )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
 
-    with patch.object(hass.config_entries, "async_entries", return_value=[{}]):
+    with pytest.raises(data_entry_flow.AbortFlow):
         result = await flow.async_step_code()
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
@@ -103,11 +109,11 @@ async def test_abort_invalid_code(hass):
 
 async def test_already_setup(hass):
     """Test when already setup."""
-    config_flow.register_flow_implementation(hass, None, None)
-    flow = await init_config_flow(hass)
-
-    with patch.object(hass.config_entries, "async_entries", return_value=True):
-        result = await flow.async_step_user()
+    MockConfigEntry(domain=config_flow.DOMAIN).add_to_hass(hass)
+    result = await hass.config_entries.flow.async_init(
+        config_flow.DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
+    )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"

@@ -29,7 +29,6 @@ class MikrotikFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a Mikrotik config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     @staticmethod
     @callback
@@ -41,7 +40,7 @@ class MikrotikFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by the user."""
         errors = {}
         if user_input is not None:
-            for entry in self.hass.config_entries.async_entries(DOMAIN):
+            for entry in self._async_current_entries():
                 if entry.data[CONF_HOST] == user_input[CONF_HOST]:
                     return self.async_abort(reason="already_configured")
                 if entry.data[CONF_NAME] == user_input[CONF_NAME]:
@@ -78,7 +77,9 @@ class MikrotikFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, import_config):
         """Import Miktortik from config."""
 
-        import_config[CONF_DETECTION_TIME] = import_config[CONF_DETECTION_TIME].seconds
+        import_config[CONF_DETECTION_TIME] = import_config[
+            CONF_DETECTION_TIME
+        ].total_seconds()
         return await self.async_step_user(user_input=import_config)
 
 

@@ -37,7 +37,10 @@ async def test_if_fires_on_event(hass, calls):
         {
             automation.DOMAIN: {
                 "trigger": {"platform": "event", "event_type": "test_event"},
-                "action": {"service": "test.automation"},
+                "action": {
+                    "service": "test.automation",
+                    "data_template": {"id": "{{ trigger.id}}"},
+                },
             }
         },
     )
@@ -57,6 +60,7 @@ async def test_if_fires_on_event(hass, calls):
     hass.bus.async_fire("test_event")
     await hass.async_block_till_done()
     assert len(calls) == 1
+    assert calls[0].data["id"] == 0
 
 
 async def test_if_fires_on_templated_event(hass, calls):

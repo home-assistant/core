@@ -1,0 +1,55 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Perangkat sudah dikonfigurasi"
+        },
+        "error": {
+            "cannot_connect": "Gagal terhubung",
+            "invalid_auth": "Autentikasi tidak valid",
+            "unknown": "Kesalahan yang tidak diharapkan"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Kata Sandi",
+                    "pin": "Kode PIN",
+                    "username": "Nama Pengguna"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "ha_to_risco": {
+                "data": {
+                    "armed_away": "Diaktifkan untuk Keluar",
+                    "armed_custom_bypass": "Diaktifkan Khusus",
+                    "armed_home": "Diaktifkan untuk Di Rumah",
+                    "armed_night": "Diaktifkan untuk Malam"
+                },
+                "description": "Pilih status mana yang akan disetel pada Risco ketika mengaktifkan alarm Home Assistant",
+                "title": "Petakan status Home Assistant ke status Risco"
+            },
+            "init": {
+                "data": {
+                    "code_arm_required": "Membutuhkan Kode PIN untuk mengaktifkan",
+                    "code_disarm_required": "Membutuhkan Kode PIN untuk menonaktifkan",
+                    "scan_interval": "Seberapa sering untuk mengambil dari Risco (dalam detik)"
+                },
+                "title": "Konfigurasi opsi"
+            },
+            "risco_to_ha": {
+                "data": {
+                    "A": "Grup A",
+                    "B": "Grup B",
+                    "C": "Grup C",
+                    "D": "Grup D",
+                    "arm": "Diaktifkan (Keluar)",
+                    "partial_arm": "Diaktifkan Sebagian (Di Rumah)"
+                },
+                "description": "Pilih status mana untuk masing-masing status yang akan dilaporkan oleh Home Assistant ke Risco",
+                "title": "Petakan status Risco ke status Home Assistant"
+            }
+        }
+    }
+}

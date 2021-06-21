@@ -1,15 +1,18 @@
 {
     "config": {
         "abort": {
-            "no_devices_found": "Nincs eszk\u00f6z a h\u00e1l\u00f3zaton",
-            "unknown": "V\u00e1ratlan hiba"
+            "already_configured_device": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
+            "already_in_progress": "A konfigur\u00e1ci\u00f3 m\u00e1r folyamatban van.",
+            "no_devices_found": "Nem tal\u00e1lhat\u00f3 eszk\u00f6z a h\u00e1l\u00f3zaton",
+            "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
         },
         "error": {
             "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
-            "invalid_auth": "Azonos\u00edt\u00e1s nem siker\u00fclt",
+            "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s",
             "no_devices_found": "Nem tal\u00e1lhat\u00f3 eszk\u00f6z a h\u00e1l\u00f3zaton",
-            "unknown": "V\u00e1ratlan hiba"
+            "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
         },
+        "flow_title": "Apple TV: {name}",
         "step": {
             "confirm": {
                 "title": "Apple TV sikeresen hozz\u00e1adva"
@@ -19,7 +22,7 @@
             },
             "pair_with_pin": {
                 "data": {
-                    "pin": "PIN K\u00f3d"
+                    "pin": "PIN-k\u00f3d"
                 },
                 "title": "P\u00e1ros\u00edt\u00e1s"
             },

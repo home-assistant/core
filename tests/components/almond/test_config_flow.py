@@ -49,7 +49,7 @@ async def test_hassio(hass):
     """Test that Hass.io can discover this integration."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": "hassio"},
+        context={"source": config_entries.SOURCE_HASSIO},
         data={"addon": "Almond add-on", "host": "almond-addon", "port": "1234"},
     )
 

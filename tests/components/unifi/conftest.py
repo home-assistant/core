@@ -1,5 +1,6 @@
 """Fixtures for UniFi methods."""
-from typing import Optional
+from __future__ import annotations
+
 from unittest.mock import patch
 
 from aiounifi.websocket import SIGNAL_CONNECTION_STATE, SIGNAL_DATA
@@ -11,7 +12,7 @@ def mock_unifi_websocket():
     """No real websocket allowed."""
     with patch("aiounifi.controller.WSClient") as mock:
 
-        def make_websocket_call(data: Optional[dict] = None, state: str = ""):
+        def make_websocket_call(data: dict | None = None, state: str = ""):
             """Generate a websocket call."""
             if data:
                 mock.return_value.data = data

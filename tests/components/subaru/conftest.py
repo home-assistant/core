@@ -1,4 +1,5 @@
 """Common functions needed to setup tests for Subaru component."""
+from datetime import timedelta
 from unittest.mock import patch
 
 import pytest
@@ -9,6 +10,7 @@ from homeassistant.components.subaru.const import (
     CONF_COUNTRY,
     CONF_UPDATE_ENABLED,
     DOMAIN,
+    FETCH_INTERVAL,
     VEHICLE_API_GEN,
     VEHICLE_HAS_EV,
     VEHICLE_HAS_REMOTE_SERVICE,
@@ -16,13 +18,14 @@ from homeassistant.components.subaru.const import (
     VEHICLE_HAS_SAFETY_SERVICE,
     VEHICLE_NAME,
 )
-from homeassistant.config_entries import ENTRY_STATE_LOADED
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_DEVICE_ID, CONF_PASSWORD, CONF_PIN, CONF_USERNAME
 from homeassistant.setup import async_setup_component
+import homeassistant.util.dt as dt_util
 
 from .api_responses import TEST_VIN_2_EV, VEHICLE_DATA, VEHICLE_STATUS_EV
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 MOCK_API = "homeassistant.components.subaru.SubaruAPI."
 MOCK_API_CONNECT = f"{MOCK_API}connect"
@@ -36,7 +39,7 @@ MOCK_API_GET_EV_STATUS = f"{MOCK_API}get_ev_status"
 MOCK_API_GET_RES_STATUS = f"{MOCK_API}get_res_status"
 MOCK_API_GET_REMOTE_STATUS = f"{MOCK_API}get_remote_status"
 MOCK_API_GET_SAFETY_STATUS = f"{MOCK_API}get_safety_status"
-MOCK_API_GET_GET_DATA = f"{MOCK_API}get_data"
+MOCK_API_GET_DATA = f"{MOCK_API}get_data"
 MOCK_API_UPDATE = f"{MOCK_API}update"
 MOCK_API_FETCH = f"{MOCK_API}fetch"
 
@@ -65,6 +68,12 @@ TEST_OPTIONS = {
 }
 
 TEST_ENTITY_ID = "sensor.test_vehicle_2_odometer"
+
+
+def advance_time_to_next_fetch(hass):
+    """Fast forward time to next fetch."""
+    future = dt_util.utcnow() + timedelta(seconds=FETCH_INTERVAL + 30)
+    async_fire_time_changed(hass, future)
 
 
 async def setup_subaru_integration(
@@ -110,7 +119,7 @@ async def setup_subaru_integration(
         MOCK_API_GET_SAFETY_STATUS,
         return_value=vehicle_data[VEHICLE_HAS_SAFETY_SERVICE],
     ), patch(
-        MOCK_API_GET_GET_DATA,
+        MOCK_API_GET_DATA,
         return_value=vehicle_status,
     ), patch(
         MOCK_API_UPDATE,
@@ -135,5 +144,5 @@ async def ev_entry(hass):
     assert DOMAIN in hass.config_entries.async_domains()
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert hass.config_entries.async_get_entry(entry.entry_id)
-    assert entry.state == ENTRY_STATE_LOADED
+    assert entry.state is ConfigEntryState.LOADED
     return entry

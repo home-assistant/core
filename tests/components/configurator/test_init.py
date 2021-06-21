@@ -8,18 +8,18 @@ async def test_request_least_info(hass):
     """Test request config with least amount of data."""
     request_id = configurator.async_request_config(hass, "Test Request", lambda _: None)
 
-    assert 1 == len(
-        hass.services.async_services().get(configurator.DOMAIN, [])
+    assert (
+        len(hass.services.async_services().get(configurator.DOMAIN, [])) == 1
     ), "No new service registered"
 
     states = hass.states.async_all()
 
-    assert 1 == len(states), "Expected a new state registered"
+    assert len(states) == 1, "Expected a new state registered"
 
     state = states[0]
 
-    assert configurator.STATE_CONFIGURE == state.state
-    assert request_id == state.attributes.get(configurator.ATTR_CONFIGURE_ID)
+    assert state.state == configurator.STATE_CONFIGURE
+    assert state.attributes.get(configurator.ATTR_CONFIGURE_ID) == request_id
 
 
 async def test_request_all_info(hass):
@@ -49,11 +49,11 @@ async def test_request_all_info(hass):
     }
 
     states = hass.states.async_all()
-    assert 1 == len(states)
+    assert len(states) == 1
     state = states[0]
 
-    assert configurator.STATE_CONFIGURE == state.state
-    assert exp_attr == state.attributes
+    assert state.state == configurator.STATE_CONFIGURE
+    assert state.attributes == exp_attr
 
 
 async def test_callback_called_on_configure(hass):
@@ -70,7 +70,7 @@ async def test_callback_called_on_configure(hass):
     )
 
     await hass.async_block_till_done()
-    assert 1 == len(calls), "Callback not called"
+    assert len(calls) == 1, "Callback not called"
 
 
 async def test_state_change_on_notify_errors(hass):
@@ -80,9 +80,9 @@ async def test_state_change_on_notify_errors(hass):
     configurator.async_notify_errors(hass, request_id, error)
 
     states = hass.states.async_all()
-    assert 1 == len(states)
+    assert len(states) == 1
     state = states[0]
-    assert error == state.attributes.get(configurator.ATTR_ERRORS)
+    assert state.attributes.get(configurator.ATTR_ERRORS) == error
 
 
 async def test_notify_errors_fail_silently_on_bad_request_id(hass):
@@ -94,11 +94,11 @@ async def test_request_done_works(hass):
     """Test if calling request done works."""
     request_id = configurator.async_request_config(hass, "Test Request", lambda _: None)
     configurator.async_request_done(hass, request_id)
-    assert 1 == len(hass.states.async_all())
+    assert len(hass.states.async_all()) == 1
 
     hass.bus.async_fire(EVENT_TIME_CHANGED)
     await hass.async_block_till_done()
-    assert 0 == len(hass.states.async_all())
+    assert len(hass.states.async_all()) == 0
 
 
 async def test_request_done_fail_silently_on_bad_request_id(hass):

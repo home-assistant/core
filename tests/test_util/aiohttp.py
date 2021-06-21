@@ -288,7 +288,7 @@ def mock_aiohttp_client():
         return session
 
     with mock.patch(
-        "homeassistant.helpers.aiohttp_client.async_create_clientsession",
+        "homeassistant.helpers.aiohttp_client._async_create_clientsession",
         side_effect=create_session,
     ):
         yield mocker

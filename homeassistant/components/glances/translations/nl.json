@@ -1,10 +1,10 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Host is al geconfigureerd."
+            "already_configured": "Apparaat is al geconfigureerd"
         },
         "error": {
-            "cannot_connect": "Kan geen verbinding maken met host",
+            "cannot_connect": "Kan geen verbinding maken",
             "wrong_version": "Versie niet ondersteund (alleen 2 of 3)"
         },
         "step": {
@@ -14,9 +14,9 @@
                     "name": "Naam",
                     "password": "Wachtwoord",
                     "port": "Poort",
-                    "ssl": "Gebruik SSL / TLS om verbinding te maken met het Glances-systeem",
+                    "ssl": "Gebruik een SSL-certificaat",
                     "username": "Gebruikersnaam",
-                    "verify_ssl": "Controleer de certificering van het systeem",
+                    "verify_ssl": "SSL-certificaat verifi\u00ebren",
                     "version": "Glances API-versie (2 of 3)"
                 },
                 "title": "Glances instellen"

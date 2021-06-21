@@ -1,5 +1,7 @@
 """Configuration for HEOS tests."""
-from typing import Dict, Sequence
+from __future__ import annotations
+
+from typing import Sequence
 from unittest.mock import Mock, patch as patch
 
 from pyheos import Dispatcher, Heos, HeosPlayer, HeosSource, InputSource, const
@@ -86,7 +88,7 @@ def player_fixture(quick_selects):
 
 
 @pytest.fixture(name="favorites")
-def favorites_fixture() -> Dict[int, HeosSource]:
+def favorites_fixture() -> dict[int, HeosSource]:
     """Create favorites fixture."""
     station = Mock(HeosSource)
     station.type = const.TYPE_STATION
@@ -131,7 +133,7 @@ def discovery_data_fixture() -> dict:
 
 
 @pytest.fixture(name="quick_selects")
-def quick_selects_fixture() -> Dict[int, str]:
+def quick_selects_fixture() -> dict[int, str]:
     """Create a dict of quick selects for testing."""
     return {
         1: "Quick Select 1",
@@ -153,12 +155,12 @@ def playlists_fixture() -> Sequence[HeosSource]:
 
 
 @pytest.fixture(name="change_data")
-def change_data_fixture() -> Dict:
+def change_data_fixture() -> dict:
     """Create player change data for testing."""
     return {const.DATA_MAPPED_IDS: {}, const.DATA_NEW: []}
 
 
 @pytest.fixture(name="change_data_mapped_ids")
-def change_data_mapped_ids_fixture() -> Dict:
+def change_data_mapped_ids_fixture() -> dict:
     """Create player change data for testing."""
     return {const.DATA_MAPPED_IDS: {101: 1}, const.DATA_NEW: []}

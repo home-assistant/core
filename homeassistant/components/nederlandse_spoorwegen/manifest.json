@@ -3,5 +3,6 @@
   "name": "Nederlandse Spoorwegen (NS)",
   "documentation": "https://www.home-assistant.io/integrations/nederlandse_spoorwegen",
   "requirements": ["nsapi==3.0.4"],
-  "codeowners": ["@YarmoM"]
+  "codeowners": ["@YarmoM"],
+  "iot_class": "cloud_polling"
 }

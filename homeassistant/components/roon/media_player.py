@@ -7,6 +7,7 @@ import voluptuous as vol
 from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     SUPPORT_BROWSE_MEDIA,
+    SUPPORT_GROUPING,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
@@ -42,6 +43,7 @@ from .media_browser import browse_media
 
 SUPPORT_ROON = (
     SUPPORT_BROWSE_MEDIA
+    | SUPPORT_GROUPING
     | SUPPORT_PAUSE
     | SUPPORT_VOLUME_SET
     | SUPPORT_STOP
@@ -59,12 +61,8 @@ SUPPORT_ROON = (
 
 _LOGGER = logging.getLogger(__name__)
 
-SERVICE_JOIN = "join"
-SERVICE_UNJOIN = "unjoin"
 SERVICE_TRANSFER = "transfer"
 
-ATTR_JOIN = "join_ids"
-ATTR_UNJOIN = "unjoin_ids"
 ATTR_TRANSFER = "transfer_id"
 
 
@@ -74,17 +72,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     media_players = set()
 
     # Register entity services
-    platform = entity_platform.current_platform.get()
-    platform.async_register_entity_service(
-        SERVICE_JOIN,
-        {vol.Required(ATTR_JOIN): vol.All(cv.ensure_list, [cv.entity_id])},
-        "join",
-    )
-    platform.async_register_entity_service(
-        SERVICE_UNJOIN,
-        {vol.Optional(ATTR_UNJOIN): vol.All(cv.ensure_list, [cv.entity_id])},
-        "unjoin",
-    )
+    platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(
         SERVICE_TRANSFER,
         {vol.Required(ATTR_TRANSFER): cv.entity_id},
@@ -163,6 +151,13 @@ class RoonDevice(MediaPlayerEntity):
     def supported_features(self):
         """Flag media player features that are supported."""
         return SUPPORT_ROON
+
+    @property
+    def group_members(self):
+        """Return the grouped players."""
+
+        roon_names = self._server.roonapi.grouped_zone_names(self._output_id)
+        return [self._server.entity_id(roon_name) for roon_name in roon_names]
 
     @property
     def device_info(self):
@@ -465,7 +460,7 @@ class RoonDevice(MediaPlayerEntity):
             return
 
         for source in self.player_data["source_controls"]:
-            if source["supports_standby"] and not source["status"] == "indeterminate":
+            if source["supports_standby"] and source["status"] != "indeterminate":
                 self._server.roonapi.standby(self.output_id, source["control_key"])
                 return
 
@@ -491,8 +486,8 @@ class RoonDevice(MediaPlayerEntity):
                     path_list,
                 )
 
-    def join(self, join_ids):
-        """Add another Roon player to this player's join group."""
+    def join_players(self, group_members):
+        """Join `group_members` as a player group with the current player."""
 
         zone_data = self._server.roonapi.zone_by_output_id(self._output_id)
         if zone_data is None:
@@ -511,7 +506,7 @@ class RoonDevice(MediaPlayerEntity):
                     sync_available[zone["display_name"]] = output["output_id"]
 
         names = []
-        for entity_id in join_ids:
+        for entity_id in group_members:
             name = self._server.roon_name(entity_id)
             if name is None:
                 _LOGGER.error("No roon player found for %s", entity_id)
@@ -531,43 +526,17 @@ class RoonDevice(MediaPlayerEntity):
             [self._output_id] + [sync_available[name] for name in names]
         )
 
-    def unjoin(self, unjoin_ids=None):
-        """Remove a Roon player to this player's join group."""
+    def unjoin_player(self):
+        """Remove this player from any group."""
 
-        zone_data = self._server.roonapi.zone_by_output_id(self._output_id)
-        if zone_data is None:
-            _LOGGER.error("No zone data for %s", self.name)
+        if not self._server.roonapi.is_grouped(self._output_id):
+            _LOGGER.error(
+                "Can't unjoin player %s because it's not in a group",
+                self.name,
+            )
             return
 
-        join_group = {
-            output["display_name"]: output["output_id"]
-            for output in zone_data["outputs"]
-            if output["display_name"] != self.name
-        }
-
-        if unjoin_ids is None:
-            # unjoin everything
-            names = list(join_group)
-        else:
-            names = []
-            for entity_id in unjoin_ids:
-                name = self._server.roon_name(entity_id)
-                if name is None:
-                    _LOGGER.error("No roon player found for %s", entity_id)
-                    return
-
-                if name not in join_group:
-                    _LOGGER.error(
-                        "Can't unjoin player %s from %s because it's not in the joined group %s",
-                        name,
-                        self.name,
-                        list(join_group),
-                    )
-                    return
-                names.append(name)
-
-        _LOGGER.debug("Unjoining %s from %s", names, self.name)
-        self._server.roonapi.ungroup_outputs([join_group[name] for name in names])
+        self._server.roonapi.ungroup_outputs([self._output_id])
 
     async def async_transfer(self, transfer_id):
         """Transfer playback from this roon player to another."""

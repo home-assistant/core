@@ -1,0 +1,168 @@
+name: Build wheels
+
+# yamllint disable-line rule:truthy
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 4 * * *"
+  push:
+    branches:
+      - dev
+      - rc
+    paths:
+      - "requirements.txt"
+      - "requirements_all.txt"
+
+jobs:
+  init:
+    name: Initialize wheels builder
+    runs-on: ubuntu-latest
+    outputs:
+      architectures: ${{ steps.info.outputs.architectures }}
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v2.3.4
+
+      - name: Get information
+        id: info
+        uses: home-assistant/actions/helpers/info@master
+
+      - name: Create requirements_diff file
+        run: |
+          if [[ ${{ github.event_name }} =~ (schedule|workflow_dispatch) ]]; then
+            touch requirements_diff.txt
+          else
+            curl -s -o requirements_diff.txt https://raw.githubusercontent.com/home-assistant/core/master/requirements.txt
+          fi
+
+      - name: Write env-file
+        run: |
+          (
+            echo "GRPC_BUILD_WITH_BORING_SSL_ASM=false"
+            echo "GRPC_PYTHON_BUILD_SYSTEM_OPENSSL=true"
+            echo "GRPC_PYTHON_BUILD_WITH_CYTHON=true"
+            echo "GRPC_PYTHON_DISABLE_LIBC_COMPATIBILITY=true"
+          ) > .env_file
+
+      - name: Upload env_file
+        uses: actions/upload-artifact@v2.2.4
+        with:
+          name: env_file
+          path: ./.env_file
+
+      - name: Upload requirements_diff
+        uses: actions/upload-artifact@v2.2.4
+        with:
+          name: requirements_diff
+          path: ./requirements_diff.txt
+
+  core:
+    name: Build wheels with ${{ matrix.tag }} (${{ matrix.arch }}) for core
+    needs: init
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: ${{ fromJson(needs.init.outputs.architectures) }}
+        tag:
+          - "3.8-alpine3.12"
+          - "3.9-alpine3.13"
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v2.3.4
+
+      - name: Download env_file
+        uses: actions/download-artifact@v2
+        with:
+          name: env_file
+
+      - name: Download requirements_diff
+        uses: actions/download-artifact@v2
+        with:
+          name: requirements_diff
+
+      - name: Build wheels
+        uses: home-assistant/wheels@2021.06.0
+        with:
+          tag: ${{ matrix.tag }}
+          arch: ${{ matrix.arch }}
+          wheels-host: wheels.hass.io
+          wheels-key: ${{ secrets.WHEELS_KEY }}
+          wheels-user: wheels
+          env-file: true
+          apk: "build-base;cmake;git;linux-headers;bluez-dev;libffi-dev;openssl-dev;glib-dev;eudev-dev;libxml2-dev;libxslt-dev"
+          pip: "Cython;numpy"
+          skip-binary: aiohttp
+          constraints: "homeassistant/package_constraints.txt"
+          requirements-diff: 'requirements_diff.txt'
+          requirements: "requirements.txt"
+
+  integrations:
+    name: Build wheels with ${{ matrix.tag }} (${{ matrix.arch }}) for integrations
+    needs: init
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: ${{ fromJson(needs.init.outputs.architectures) }}
+        tag:
+          - "3.8-alpine3.12"
+          - "3.9-alpine3.13"
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v2.3.4
+
+      - name: Download env_file
+        uses: actions/download-artifact@v2
+        with:
+          name: env_file
+
+      - name: Download requirements_diff
+        uses: actions/download-artifact@v2
+        with:
+          name: requirements_diff
+
+      - name: Uncomment packages
+        run: |
+          requirement_files="requirements_all.txt requirements_diff.txt"
+          for requirement_file in ${requirement_files}; do
+            sed -i "s|# pybluez|pybluez|g" ${requirement_file}
+            sed -i "s|# bluepy|bluepy|g" ${requirement_file}
+            sed -i "s|# beacontools|beacontools|g" ${requirement_file}
+            sed -i "s|# RPi.GPIO|RPi.GPIO|g" ${requirement_file}
+            sed -i "s|# raspihats|raspihats|g" ${requirement_file}
+            sed -i "s|# rpi-rf|rpi-rf|g" ${requirement_file}
+            sed -i "s|# blinkt|blinkt|g" ${requirement_file}
+            sed -i "s|# fritzconnection|fritzconnection|g" ${requirement_file}
+            sed -i "s|# pyuserinput|pyuserinput|g" ${requirement_file}
+            sed -i "s|# evdev|evdev|g" ${requirement_file}
+            sed -i "s|# smbus-cffi|smbus-cffi|g" ${requirement_file}
+            sed -i "s|# i2csense|i2csense|g" ${requirement_file}
+            sed -i "s|# python-eq3bt|python-eq3bt|g" ${requirement_file}
+            sed -i "s|# pycups|pycups|g" ${requirement_file}
+            sed -i "s|# homekit|homekit|g" ${requirement_file}
+            sed -i "s|# decora_wifi|decora_wifi|g" ${requirement_file}
+            sed -i "s|# decora|decora|g" ${requirement_file}
+            sed -i "s|# avion|avion|g" ${requirement_file}
+            sed -i "s|# PySwitchbot|PySwitchbot|g" ${requirement_file}
+            sed -i "s|# pySwitchmate|pySwitchmate|g" ${requirement_file}
+            sed -i "s|# face_recognition|face_recognition|g" ${requirement_file}
+            sed -i "s|# bme680|bme680|g" ${requirement_file}
+            sed -i "s|# python-gammu|python-gammu|g" ${requirement_file}
+          done
+
+      - name: Build wheels
+        uses: home-assistant/wheels@2021.06.0
+        with:
+          tag: ${{ matrix.tag }}
+          arch: ${{ matrix.arch }}
+          wheels-host: wheels.hass.io
+          wheels-key: ${{ secrets.WHEELS_KEY }}
+          wheels-user: wheels
+          env-file: true
+          apk: "build-base;cmake;git;linux-headers;libexecinfo-dev;bluez-dev;libffi-dev;openssl-dev;glib-dev;eudev-dev;libxml2-dev;libxslt-dev;libpng-dev;libjpeg-turbo-dev;tiff-dev;autoconf;automake;cups-dev;gmp-dev;mpfr-dev;mpc1-dev;ffmpeg-dev;gammu-dev"
+          pip: "Cython;numpy;scikit-build"
+          skip-binary: aiohttp
+          constraints: "homeassistant/package_constraints.txt"
+          requirements-diff: 'requirements_diff.txt'
+          requirements: "requirements_all.txt"

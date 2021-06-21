@@ -75,13 +75,12 @@ async def test_chain(hass, values):
             await hass.async_block_till_done()
 
         state = hass.states.get("sensor.test")
-        assert "18.05" == state.state
+        assert state.state == "18.05"
 
 
 async def test_chain_history(hass, values, missing=False):
     """Test if filter chaining works."""
     config = {
-        "history": {},
         "sensor": {
             "platform": "filter",
             "name": "test",
@@ -94,7 +93,6 @@ async def test_chain_history(hass, values, missing=False):
         },
     }
     await async_init_recorder_component(hass)
-    assert_setup_component(1, "history")
 
     t_0 = dt_util.utcnow() - timedelta(minutes=1)
     t_1 = dt_util.utcnow() - timedelta(minutes=2)
@@ -114,26 +112,25 @@ async def test_chain_history(hass, values, missing=False):
         }
 
     with patch(
-        "homeassistant.components.history.state_changes_during_period",
+        "homeassistant.components.recorder.history.state_changes_during_period",
+        return_value=fake_states,
+    ), patch(
+        "homeassistant.components.recorder.history.get_last_state_changes",
         return_value=fake_states,
     ):
-        with patch(
-            "homeassistant.components.history.get_last_state_changes",
-            return_value=fake_states,
-        ):
-            with assert_setup_component(1, "sensor"):
-                assert await async_setup_component(hass, "sensor", config)
-                await hass.async_block_till_done()
+        with assert_setup_component(1, "sensor"):
+            assert await async_setup_component(hass, "sensor", config)
+            await hass.async_block_till_done()
 
-            for value in values:
-                hass.states.async_set(config["sensor"]["entity_id"], value.state)
-                await hass.async_block_till_done()
+        for value in values:
+            hass.states.async_set(config["sensor"]["entity_id"], value.state)
+            await hass.async_block_till_done()
 
-            state = hass.states.get("sensor.test")
-            if missing:
-                assert "18.05" == state.state
-            else:
-                assert "17.05" == state.state
+        state = hass.states.get("sensor.test")
+        if missing:
+            assert state.state == "18.05"
+        else:
+            assert state.state == "17.05"
 
 
 async def test_source_state_none(hass, values):
@@ -209,7 +206,6 @@ async def test_chain_history_missing(hass, values):
 async def test_history_time(hass):
     """Test loading from history based on a time window."""
     config = {
-        "history": {},
         "sensor": {
             "platform": "filter",
             "name": "test",
@@ -218,7 +214,6 @@ async def test_history_time(hass):
         },
     }
     await async_init_recorder_component(hass)
-    assert_setup_component(1, "history")
 
     t_0 = dt_util.utcnow() - timedelta(minutes=1)
     t_1 = dt_util.utcnow() - timedelta(minutes=2)
@@ -232,20 +227,19 @@ async def test_history_time(hass):
         ]
     }
     with patch(
-        "homeassistant.components.history.state_changes_during_period",
+        "homeassistant.components.recorder.history.state_changes_during_period",
+        return_value=fake_states,
+    ), patch(
+        "homeassistant.components.recorder.history.get_last_state_changes",
         return_value=fake_states,
     ):
-        with patch(
-            "homeassistant.components.history.get_last_state_changes",
-            return_value=fake_states,
-        ):
-            with assert_setup_component(1, "sensor"):
-                assert await async_setup_component(hass, "sensor", config)
-                await hass.async_block_till_done()
-
+        with assert_setup_component(1, "sensor"):
+            assert await async_setup_component(hass, "sensor", config)
             await hass.async_block_till_done()
-            state = hass.states.get("sensor.test")
-            assert "18.0" == state.state
+
+        await hass.async_block_till_done()
+        state = hass.states.get("sensor.test")
+        assert state.state == "18.0"
 
 
 async def test_setup(hass):
@@ -316,7 +310,7 @@ async def test_outlier(values):
     filt = OutlierFilter(window_size=3, precision=2, entity=None, radius=4.0)
     for state in values:
         filtered = filt.filter_state(state)
-    assert 21 == filtered.state
+    assert filtered.state == 21
 
 
 def test_outlier_step(values):
@@ -331,7 +325,7 @@ def test_outlier_step(values):
     values[-1].state = 22
     for state in values:
         filtered = filt.filter_state(state)
-    assert 22 == filtered.state
+    assert filtered.state == 22
 
 
 def test_initial_outlier(values):
@@ -340,7 +334,7 @@ def test_initial_outlier(values):
     out = ha.State("sensor.test_monitored", 4000)
     for state in [out] + values:
         filtered = filt.filter_state(state)
-    assert 21 == filtered.state
+    assert filtered.state == 21
 
 
 def test_unknown_state_outlier(values):
@@ -352,7 +346,7 @@ def test_unknown_state_outlier(values):
             filtered = filt.filter_state(state)
         except ValueError:
             assert state.state == "unknown"
-    assert 21 == filtered.state
+    assert filtered.state == 21
 
 
 def test_precision_zero(values):
@@ -372,7 +366,7 @@ def test_lowpass(values):
             filtered = filt.filter_state(state)
         except ValueError:
             assert state.state == "unknown"
-    assert 18.05 == filtered.state
+    assert filtered.state == 18.05
 
 
 def test_range(values):
@@ -438,7 +432,7 @@ def test_time_sma(values):
     )
     for state in values:
         filtered = filt.filter_state(state)
-    assert 21.5 == filtered.state
+    assert filtered.state == 21.5
 
 
 async def test_reload(hass):

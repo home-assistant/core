@@ -1,5 +1,6 @@
 """Rest API for Home Assistant."""
 import asyncio
+from contextlib import suppress
 import json
 import logging
 
@@ -37,7 +38,6 @@ from homeassistant.helpers import template
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.service import async_get_all_descriptions
-from homeassistant.helpers.state import AsyncTrackStates
 from homeassistant.helpers.system_info import async_get_system_info
 
 _LOGGER = logging.getLogger(__name__)
@@ -197,15 +197,11 @@ class APIDiscoveryView(HomeAssistantView):
             ATTR_VERSION: __version__,
         }
 
-        try:
+        with suppress(NoURLAvailableError):
             data["external_url"] = get_url(hass, allow_internal=False)
-        except NoURLAvailableError:
-            pass
 
-        try:
+        with suppress(NoURLAvailableError):
             data["internal_url"] = get_url(hass, allow_external=False)
-        except NoURLAvailableError:
-            pass
 
         # Set old base URL based on external or internal
         data["base_url"] = data["external_url"] or data["internal_url"]
@@ -367,20 +363,27 @@ class APIDomainServicesView(HomeAssistantView):
 
         Returns a list of changed states.
         """
-        hass = request.app["hass"]
+        hass: ha.HomeAssistant = request.app["hass"]
         body = await request.text()
         try:
             data = json.loads(body) if body else None
         except ValueError:
             return self.json_message("Data should be valid JSON.", HTTP_BAD_REQUEST)
 
-        with AsyncTrackStates(hass) as changed_states:
-            try:
-                await hass.services.async_call(
-                    domain, service, data, blocking=True, context=self.context(request)
-                )
-            except (vol.Invalid, ServiceNotFound) as ex:
-                raise HTTPBadRequest() from ex
+        context = self.context(request)
+
+        try:
+            await hass.services.async_call(
+                domain, service, data, blocking=True, context=context
+            )
+        except (vol.Invalid, ServiceNotFound) as ex:
+            raise HTTPBadRequest() from ex
+
+        changed_states = []
+
+        for state in hass.states.async_all():
+            if state.context is context:
+                changed_states.append(state)
 
         return self.json(changed_states)
 

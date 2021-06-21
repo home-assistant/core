@@ -11,14 +11,21 @@
         "flow_title": "Smile: {name}",
         "step": {
             "user": {
+                "data": {
+                    "flow_type": "\uc5f0\uacb0 \uc720\ud615"
+                },
                 "description": "\uc81c\ud488:",
                 "title": "Plugwise \uc720\ud615"
             },
             "user_gateway": {
                 "data": {
                     "host": "IP \uc8fc\uc18c",
-                    "port": "\ud3ec\ud2b8"
-                }
+                    "password": "Smile ID",
+                    "port": "\ud3ec\ud2b8",
+                    "username": "Smile \uc0ac\uc6a9\uc790 \uc774\ub984"
+                },
+                "description": "\uc785\ub825\ud574\uc8fc\uc138\uc694",
+                "title": "Smile\uc5d0 \uc5f0\uacb0\ud558\uae30"
             }
         }
     },
@@ -28,7 +35,7 @@
                 "data": {
                     "scan_interval": "\uc2a4\uce94 \uac04\uaca9 (\ucd08)"
                 },
-                "description": "Plugwise \uc635\uc158 \uc870\uc815"
+                "description": "Plugwise \uc635\uc158 \uc870\uc815\ud558\uae30"
             }
         }
     }

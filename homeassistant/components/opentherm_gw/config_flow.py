@@ -19,14 +19,18 @@ from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
 from . import DOMAIN
-from .const import CONF_FLOOR_TEMP, CONF_PRECISION
+from .const import (
+    CONF_FLOOR_TEMP,
+    CONF_READ_PRECISION,
+    CONF_SET_PRECISION,
+    CONF_TEMPORARY_OVRD_MODE,
+)
 
 
 class OpenThermGwConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """OpenTherm Gateway Config Flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
     @staticmethod
     @callback
@@ -41,7 +45,7 @@ class OpenThermGwConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             device = info[CONF_DEVICE]
             gw_id = cv.slugify(info.get(CONF_ID, name))
 
-            entries = [e.data for e in self.hass.config_entries.async_entries(DOMAIN)]
+            entries = [e.data for e in self._async_current_entries()]
 
             if gw_id in [e[CONF_ID] for e in entries]:
                 return self._show_form({"base": "id_exists"})
@@ -121,14 +125,29 @@ class OpenThermGwOptionsFlow(config_entries.OptionsFlow):
             data_schema=vol.Schema(
                 {
                     vol.Optional(
-                        CONF_PRECISION,
-                        default=self.config_entry.options.get(CONF_PRECISION, 0),
+                        CONF_READ_PRECISION,
+                        default=self.config_entry.options.get(CONF_READ_PRECISION, 0),
                     ): vol.All(
                         vol.Coerce(float),
                         vol.In(
                             [0, PRECISION_TENTHS, PRECISION_HALVES, PRECISION_WHOLE]
                         ),
                     ),
+                    vol.Optional(
+                        CONF_SET_PRECISION,
+                        default=self.config_entry.options.get(CONF_SET_PRECISION, 0),
+                    ): vol.All(
+                        vol.Coerce(float),
+                        vol.In(
+                            [0, PRECISION_TENTHS, PRECISION_HALVES, PRECISION_WHOLE]
+                        ),
+                    ),
+                    vol.Optional(
+                        CONF_TEMPORARY_OVRD_MODE,
+                        default=self.config_entry.options.get(
+                            CONF_TEMPORARY_OVRD_MODE, True
+                        ),
+                    ): bool,
                     vol.Optional(
                         CONF_FLOOR_TEMP,
                         default=self.config_entry.options.get(CONF_FLOOR_TEMP, False),

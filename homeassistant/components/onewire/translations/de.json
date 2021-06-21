@@ -12,12 +12,14 @@
                 "data": {
                     "host": "Host",
                     "port": "Port"
-                }
+                },
+                "title": "owserver-Details einstellen"
             },
             "user": {
                 "data": {
                     "type": "Verbindungstyp"
-                }
+                },
+                "title": "1-Wire einrichten"
             }
         }
     }

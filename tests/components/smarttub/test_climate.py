@@ -33,7 +33,7 @@ from homeassistant.const import (
 from . import trigger_update
 
 
-async def test_thermostat_update(spa, setup_entry, hass):
+async def test_thermostat_update(spa, spa_state, setup_entry, hass):
     """Test the thermostat entity."""
 
     entity_id = f"climate.{spa.brand}_{spa.model}_thermostat"
@@ -42,7 +42,7 @@ async def test_thermostat_update(spa, setup_entry, hass):
 
     assert state.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_HEAT
 
-    spa.get_status.return_value.heater = "OFF"
+    spa_state.heater = "OFF"
     await trigger_update(hass)
     state = hass.states.get(entity_id)
 
@@ -85,11 +85,11 @@ async def test_thermostat_update(spa, setup_entry, hass):
     )
     spa.set_heat_mode.assert_called_with(smarttub.Spa.HeatMode.ECONOMY)
 
-    spa.get_status.return_value.heat_mode = smarttub.Spa.HeatMode.ECONOMY
+    spa_state.heat_mode = smarttub.Spa.HeatMode.ECONOMY
     await trigger_update(hass)
     state = hass.states.get(entity_id)
     assert state.attributes.get(ATTR_PRESET_MODE) == PRESET_ECO
 
-    spa.get_status.side_effect = smarttub.APIError
+    spa.get_status_full.side_effect = smarttub.APIError
     await trigger_update(hass)
     # should not fail

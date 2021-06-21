@@ -15,9 +15,17 @@
           "client_id": "Client ID",
           "password": "[%key:common::config_flow::data::password%]"
         }
-      }
+      },
+      "reauth_confirm": {
+        "description": "The password for {username} is no longer valid.",
+        "title": "Reauthenticate your Flume Account",
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      }      
     },
     "abort": {
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
     }
   }

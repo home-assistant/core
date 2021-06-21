@@ -77,7 +77,7 @@ def _precheck_image(image, opts):
     if imgfmt not in ("PNG", "JPEG"):
         _LOGGER.warning("Image is of unsupported type: %s", imgfmt)
         raise ValueError()
-    if not img.mode == "RGB":
+    if img.mode != "RGB":
         img = img.convert("RGB")
     return img
 

@@ -2,7 +2,8 @@
     "config": {
         "abort": {
             "authorize_url_timeout": "Time-out tijdens genereren autorisatie url.",
-            "missing_configuration": "De Netatmo-component is niet geconfigureerd. Gelieve de documentatie volgen."
+            "missing_configuration": "De component is niet geconfigureerd. Gelieve de documentatie volgen.",
+            "reauth_successful": "Herauthenticatie was succesvol"
         },
         "create_entry": {
             "default": "Succesvol geauthenticeerd"
@@ -10,6 +11,10 @@
         "step": {
             "pick_implementation": {
                 "title": "Kies een authenticatie methode"
+            },
+            "reauth_confirm": {
+                "description": "De Lyric-integratie moet uw account opnieuw verifi\u00ebren.",
+                "title": "Verifieer de integratie opnieuw"
             }
         }
     }

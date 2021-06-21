@@ -1,7 +1,7 @@
 """Support for DSMR Reader through MQTT."""
 from homeassistant.components import mqtt
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.core import callback
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 
 from .definitions import DEFINITIONS
@@ -19,7 +19,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(sensors)
 
 
-class DSMRSensor(Entity):
+class DSMRSensor(SensorEntity):
     """Representation of a DSMR sensor that is updated via MQTT."""
 
     def __init__(self, topic):

@@ -17,6 +17,7 @@
                     "mode": "Modus",
                     "name": "Name der Integration"
                 },
+                "description": "Richten Sie die OpenWeatherMap-Integration ein. Zum Generieren des API-Schl\u00fcssels gehen Sie auf https://openweathermap.org/appid",
                 "title": "OpenWeatherMap"
             }
         }

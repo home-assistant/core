@@ -23,6 +23,7 @@ from homeassistant.const import (
     HTTP_INTERNAL_SERVER_ERROR,
     STATE_UNAVAILABLE,
 )
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
@@ -35,7 +36,7 @@ from tests.components.airly import init_integration
 async def test_air_quality(hass, aioclient_mock):
     """Test states of the air_quality."""
     await init_integration(hass, aioclient_mock)
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = er.async_get(hass)
 
     state = hass.states.get("air_quality.home")
     assert state

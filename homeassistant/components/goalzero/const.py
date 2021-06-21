@@ -15,9 +15,6 @@ DATA_KEY_API = "api"
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
 
 BINARY_SENSOR_DICT = {
-    "v12PortStatus": ["12V Port Status", DEVICE_CLASS_POWER, None],
-    "usbPortStatus": ["USB Port Status", DEVICE_CLASS_POWER, None],
-    "acPortStatus": ["AC Port Status", DEVICE_CLASS_POWER, None],
     "backlight": ["Backlight", None, "mdi:clock-digital"],
     "app_online": [
         "App Online",
@@ -25,4 +22,11 @@ BINARY_SENSOR_DICT = {
         None,
     ],
     "isCharging": ["Charging", DEVICE_CLASS_BATTERY_CHARGING, None],
+    "inputDetected": ["Input Detected", DEVICE_CLASS_POWER, None],
+}
+
+SWITCH_DICT = {
+    "v12PortStatus": "12V Port Status",
+    "usbPortStatus": "USB Port Status",
+    "acPortStatus": "AC Port Status",
 }

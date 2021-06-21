@@ -1,6 +1,6 @@
 """Support for Vilfo Router sensors."""
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import ATTR_ICON
-from homeassistant.helpers.entity import Entity
 
 from .const import (
     ATTR_API_DATA_FIELD,
@@ -27,7 +27,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(sensors, True)
 
 
-class VilfoRouterSensor(Entity):
+class VilfoRouterSensor(SensorEntity):
     """Define a Vilfo Router Sensor."""
 
     def __init__(self, sensor_type, api):

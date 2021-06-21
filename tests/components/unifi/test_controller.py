@@ -313,13 +313,10 @@ async def test_reset_after_successful_setup(hass, aioclient_mock):
     config_entry = await setup_unifi_integration(hass, aioclient_mock)
     controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
 
-    assert len(controller.listeners) == 6
-
     result = await controller.async_reset()
     await hass.async_block_till_done()
 
     assert result is True
-    assert len(controller.listeners) == 0
 
 
 async def test_reset_fails(hass, aioclient_mock):

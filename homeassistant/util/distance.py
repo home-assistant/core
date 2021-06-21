@@ -1,6 +1,8 @@
 """Distance util functions."""
+from __future__ import annotations
+
 from numbers import Number
-from typing import Callable, Dict
+from typing import Callable
 
 from homeassistant.const import (
     LENGTH,
@@ -26,7 +28,7 @@ VALID_UNITS = [
     LENGTH_YARD,
 ]
 
-TO_METERS: Dict[str, Callable[[float], float]] = {
+TO_METERS: dict[str, Callable[[float], float]] = {
     LENGTH_METERS: lambda meters: meters,
     LENGTH_MILES: lambda miles: miles * 1609.344,
     LENGTH_YARD: lambda yards: yards * 0.9144,
@@ -37,7 +39,7 @@ TO_METERS: Dict[str, Callable[[float], float]] = {
     LENGTH_MILLIMETERS: lambda millimeters: millimeters * 0.001,
 }
 
-METERS_TO: Dict[str, Callable[[float], float]] = {
+METERS_TO: dict[str, Callable[[float], float]] = {
     LENGTH_METERS: lambda meters: meters,
     LENGTH_MILES: lambda meters: meters * 0.000621371,
     LENGTH_YARD: lambda meters: meters * 1.09361,

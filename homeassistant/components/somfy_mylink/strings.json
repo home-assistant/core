@@ -1,7 +1,6 @@
 {
-  "title": "Somfy MyLink",
   "config": {
-    "flow_title": "Somfy MyLink {mac} ({ip})",
+    "flow_title": "{mac} ({ip})",
     "step": {
       "user": {
         "description": "The System ID can be obtained in the MyLink app under Integration by selecting any non-Cloud service.",

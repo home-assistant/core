@@ -47,7 +47,7 @@ async def test_setup(hass):
     await hass.async_block_till_done()
     moldind = hass.states.get("sensor.mold_indicator")
     assert moldind
-    assert PERCENTAGE == moldind.attributes.get("unit_of_measurement")
+    assert moldind.attributes.get("unit_of_measurement") == PERCENTAGE
 
 
 async def test_invalidcalib(hass):

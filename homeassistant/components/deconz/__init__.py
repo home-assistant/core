@@ -1,6 +1,4 @@
 """Support for deCONZ devices."""
-import voluptuous as vol
-
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_HOST,
@@ -14,15 +12,6 @@ from .config_flow import get_master_gateway
 from .const import CONF_GROUP_ID_BASE, CONF_MASTER_GATEWAY, DOMAIN
 from .gateway import DeconzGateway
 from .services import async_setup_services, async_unload_services
-
-CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.Schema({}, extra=vol.ALLOW_EXTRA)}, extra=vol.ALLOW_EXTRA
-)
-
-
-async def async_setup(hass, config):
-    """Old way of setting up deCONZ integrations."""
-    return True
 
 
 async def async_setup_entry(hass, config_entry):
@@ -50,7 +39,9 @@ async def async_setup_entry(hass, config_entry):
 
     await async_setup_services(hass)
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, gateway.shutdown)
+    config_entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, gateway.shutdown)
+    )
 
     return True
 

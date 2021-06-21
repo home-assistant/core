@@ -3,6 +3,7 @@ import copy
 
 import voluptuous as vol
 
+from homeassistant.const import CONF_TYPE
 from homeassistant.helpers import config_validation as cv, intent, script, template
 
 DOMAIN = "intent_script"
@@ -12,7 +13,6 @@ CONF_SPEECH = "speech"
 
 CONF_ACTION = "action"
 CONF_CARD = "card"
-CONF_TYPE = "type"
 CONF_TITLE = "title"
 CONF_CONTENT = "content"
 CONF_TEXT = "text"

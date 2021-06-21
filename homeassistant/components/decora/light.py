@@ -62,7 +62,7 @@ def retry(method):
                 return method(device, *args, **kwargs)
             except (decora.decoraException, AttributeError, BTLEException):
                 _LOGGER.warning(
-                    "Decora connect error for device %s. Reconnecting...",
+                    "Decora connect error for device %s. Reconnecting",
                     device.name,
                 )
                 # pylint: disable=protected-access

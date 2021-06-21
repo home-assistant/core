@@ -1,0 +1,19 @@
+{
+    "config": {
+        "error": {
+            "unknown": "Ov\u00e4ntat fel"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "L\u00f6senord"
+                }
+            },
+            "user": {
+                "data": {
+                    "password": "L\u00f6senord"
+                }
+            }
+        }
+    }
+}

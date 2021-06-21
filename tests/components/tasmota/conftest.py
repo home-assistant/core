@@ -4,7 +4,6 @@ from unittest.mock import patch
 from hatasmota.discovery import get_status_sensor_entities
 import pytest
 
-from homeassistant import config_entries
 from homeassistant.components.tasmota.const import (
     CONF_DISCOVERY_PREFIX,
     DEFAULT_PREFIX,
@@ -64,7 +63,6 @@ async def setup_tasmota_helper(hass):
     hass.config.components.add("tasmota")
 
     entry = MockConfigEntry(
-        connection_class=config_entries.CONN_CLASS_LOCAL_PUSH,
         data={CONF_DISCOVERY_PREFIX: DEFAULT_PREFIX},
         domain=DOMAIN,
         title="Tasmota",

@@ -10,7 +10,6 @@
         "step": {
             "user": {
                 "data": {
-                    "email": "E-posta",
                     "host": "Ana Bilgisayar",
                     "port": "Port"
                 },

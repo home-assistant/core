@@ -8,11 +8,12 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_TEMPERATURE,
     PLATFORM_SCHEMA,
+    STATE_CLASS_MEASUREMENT,
+    SensorEntity,
 )
 from homeassistant.const import CONF_HOST, PERCENTAGE, TEMP_CELSIUS
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
 from .helpers import import_device
@@ -20,11 +21,21 @@ from .helpers import import_device
 _LOGGER = logging.getLogger(__name__)
 
 SENSOR_TYPES = {
-    "temperature": ("Temperature", TEMP_CELSIUS, DEVICE_CLASS_TEMPERATURE),
-    "air_quality": ("Air Quality", None, None),
-    "humidity": ("Humidity", PERCENTAGE, DEVICE_CLASS_HUMIDITY),
-    "light": ("Light", None, DEVICE_CLASS_ILLUMINANCE),
-    "noise": ("Noise", None, None),
+    "temperature": (
+        "Temperature",
+        TEMP_CELSIUS,
+        DEVICE_CLASS_TEMPERATURE,
+        STATE_CLASS_MEASUREMENT,
+    ),
+    "air_quality": ("Air Quality", None, None, None),
+    "humidity": (
+        "Humidity",
+        PERCENTAGE,
+        DEVICE_CLASS_HUMIDITY,
+        STATE_CLASS_MEASUREMENT,
+    ),
+    "light": ("Light", None, DEVICE_CLASS_ILLUMINANCE, None),
+    "noise": ("Noise", None, None, None),
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -51,12 +62,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     sensors = [
         BroadlinkSensor(device, monitored_condition)
         for monitored_condition in sensor_data
-        if sensor_data[monitored_condition] or device.api.type == "A1"
+        if sensor_data[monitored_condition] != 0 or device.api.type == "A1"
     ]
     async_add_entities(sensors)
 
 
-class BroadlinkSensor(Entity):
+class BroadlinkSensor(SensorEntity):
     """Representation of a Broadlink sensor."""
 
     def __init__(self, device, monitored_condition):
@@ -100,6 +111,11 @@ class BroadlinkSensor(Entity):
     def device_class(self):
         """Return device class."""
         return SENSOR_TYPES[self._monitored_condition][2]
+
+    @property
+    def state_class(self):
+        """Return state class."""
+        return SENSOR_TYPES[self._monitored_condition][3]
 
     @property
     def device_info(self):

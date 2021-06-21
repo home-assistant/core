@@ -56,7 +56,7 @@ class MobileAppEntity(TrackerEntity, RestoreEntity):
         return self._data.get(ATTR_BATTERY)
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return device specific attributes."""
         attrs = {}
         for key in ATTR_KEYS:
@@ -94,7 +94,9 @@ class MobileAppEntity(TrackerEntity, RestoreEntity):
     @property
     def location_name(self):
         """Return a location name for the current location of the device."""
-        return self._data.get(ATTR_LOCATION_NAME)
+        if location_name := self._data.get(ATTR_LOCATION_NAME):
+            return location_name
+        return None
 
     @property
     def name(self):

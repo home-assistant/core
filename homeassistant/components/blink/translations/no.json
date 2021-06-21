@@ -14,7 +14,7 @@
                 "data": {
                     "2fa": "Totrinnsbekreftelse kode"
                 },
-                "description": "Skriv inn pin-koden som ble sendt til din e-posten",
+                "description": "Skriv inn PIN-koden som er sendt til e-posten din",
                 "title": "Totrinnsbekreftelse"
             },
             "user": {

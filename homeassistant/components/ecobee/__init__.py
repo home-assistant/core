@@ -1,5 +1,4 @@
 """Support for ecobee."""
-import asyncio
 from datetime import timedelta
 
 from pyecobee import ECOBEE_API_KEY, ECOBEE_REFRESH_TOKEN, Ecobee, ExpiredTokenError
@@ -60,10 +59,7 @@ async def async_setup_entry(hass, entry):
 
     hass.data[DOMAIN] = data
 
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, platform)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
@@ -109,14 +105,9 @@ class EcobeeData:
         return False
 
 
-async def async_unload_entry(hass, config_entry):
+async def async_unload_entry(hass, entry):
     """Unload the config entry and platforms."""
-    hass.data.pop(DOMAIN)
-
-    tasks = []
-    for platform in PLATFORMS:
-        tasks.append(
-            hass.config_entries.async_forward_entry_unload(config_entry, platform)
-        )
-
-    return all(await asyncio.gather(*tasks))
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unload_ok:
+        hass.data.pop(DOMAIN)
+    return unload_ok

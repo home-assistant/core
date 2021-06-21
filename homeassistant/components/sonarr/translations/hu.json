@@ -1,7 +1,39 @@
 {
     "config": {
         "abort": {
-            "already_configured": "A szolg\u00e1ltat\u00e1s m\u00e1r konfigur\u00e1lva van"
+            "already_configured": "A szolg\u00e1ltat\u00e1s m\u00e1r konfigur\u00e1lva van",
+            "reauth_successful": "Az \u00fajrahiteles\u00edt\u00e9s sikeres volt",
+            "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
+        },
+        "error": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s"
+        },
+        "flow_title": "Sonarr: {name}",
+        "step": {
+            "reauth_confirm": {
+                "title": "Integr\u00e1ci\u00f3 \u00fajrahiteles\u00edt\u00e9se"
+            },
+            "user": {
+                "data": {
+                    "api_key": "API kulcs",
+                    "base_path": "El\u00e9r\u00e9si \u00fat az API-hoz",
+                    "host": "Hoszt",
+                    "port": "Port",
+                    "ssl": "SSL tan\u00fas\u00edtv\u00e1ny haszn\u00e1lata",
+                    "verify_ssl": "SSL-tan\u00fas\u00edtv\u00e1ny ellen\u0151rz\u00e9se"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "upcoming_days": "A megjelen\u00edteni k\u00edv\u00e1nt k\u00f6vetkez\u0151 napok sz\u00e1ma",
+                    "wanted_max_items": "A megjelen\u00edteni k\u00edv\u00e1nt elemek maxim\u00e1lis sz\u00e1ma"
+                }
+            }
         }
     }
 }

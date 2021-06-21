@@ -37,7 +37,7 @@
     },
     "options": {
         "error": {
-            "already_configured_device": "\u88dd\u7f6e\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "already_configured_device": "\u88dd\u7f6e\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
             "invalid_event_code": "\u4e8b\u4ef6\u4ee3\u78bc\u7121\u6548",
             "invalid_input_2262_off": "\u547d\u4ee4\u95dc\u9589\u8f38\u5165\u7121\u6548",
             "invalid_input_2262_on": "\u547d\u4ee4\u958b\u555f\u8f38\u5165\u7121\u6548",

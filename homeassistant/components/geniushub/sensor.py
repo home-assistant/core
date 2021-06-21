@@ -1,9 +1,13 @@
 """Support for Genius Hub sensor devices."""
-from datetime import timedelta
-from typing import Any, Dict
+from __future__ import annotations
 
+from datetime import timedelta
+from typing import Any
+
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import DEVICE_CLASS_BATTERY, PERCENTAGE
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
 
 from . import DOMAIN, GeniusDevice, GeniusEntity
@@ -18,7 +22,7 @@ GH_LEVEL_MAPPING = {
 
 
 async def async_setup_platform(
-    hass: HomeAssistantType, config: ConfigType, async_add_entities, discovery_info=None
+    hass: HomeAssistant, config: ConfigType, async_add_entities, discovery_info=None
 ) -> None:
     """Set up the Genius Hub sensor entities."""
     if discovery_info is None:
@@ -36,7 +40,7 @@ async def async_setup_platform(
     async_add_entities(sensors + issues, update_before_add=True)
 
 
-class GeniusBattery(GeniusDevice):
+class GeniusBattery(GeniusDevice, SensorEntity):
     """Representation of a Genius Hub sensor."""
 
     def __init__(self, broker, device, state_attr) -> None:
@@ -86,7 +90,7 @@ class GeniusBattery(GeniusDevice):
         return level if level != 255 else 0
 
 
-class GeniusIssue(GeniusEntity):
+class GeniusIssue(GeniusEntity, SensorEntity):
     """Representation of a Genius Hub sensor."""
 
     def __init__(self, broker, level) -> None:
@@ -106,7 +110,7 @@ class GeniusIssue(GeniusEntity):
         return len(self._issues)
 
     @property
-    def device_state_attributes(self) -> Dict[str, Any]:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device state attributes."""
         return {f"{self._level}_list": self._issues}
 

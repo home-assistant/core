@@ -2,10 +2,10 @@
 
 import logging
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_PIN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import Entity
 
 from .const import CONF_DIFFERENTIAL, CONF_PIN_MODE, DOMAIN
 from .entity import FirmataPinEntity
@@ -42,7 +42,7 @@ async def async_setup_entry(
         async_add_entities(new_entities)
 
 
-class FirmataSensor(FirmataPinEntity, Entity):
+class FirmataSensor(FirmataPinEntity, SensorEntity):
     """Representation of a sensor on a Firmata board."""
 
     async def async_added_to_hass(self) -> None:

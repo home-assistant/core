@@ -3,7 +3,6 @@ from typing import Any
 from unittest.mock import patch
 
 import arrow
-import pytz
 from withings_api.common import (
     GetSleepSummaryData,
     GetSleepSummarySerie,
@@ -27,7 +26,9 @@ from homeassistant.components.withings.common import (
 )
 from homeassistant.components.withings.const import Measurement
 from homeassistant.core import HomeAssistant, State
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_registry import EntityRegistry
+from homeassistant.util import dt as dt_util
 
 from .common import ComponentFactory, new_profile_config
 
@@ -188,7 +189,7 @@ PERSON0 = new_profile_config(
             ),
         ),
         more=False,
-        timezone=pytz.UTC,
+        timezone=dt_util.UTC,
         updatetime=arrow.get("2019-08-01"),
         offset=0,
     ),
@@ -197,7 +198,7 @@ PERSON0 = new_profile_config(
         offset=0,
         series=(
             GetSleepSummarySerie(
-                timezone=pytz.UTC,
+                timezone=dt_util.UTC,
                 model=SleepModel.SLEEP_MONITOR,
                 startdate=arrow.get("2019-02-01"),
                 enddate=arrow.get("2019-02-01"),
@@ -224,7 +225,7 @@ PERSON0 = new_profile_config(
                 ),
             ),
             GetSleepSummarySerie(
-                timezone=pytz.UTC,
+                timezone=dt_util.UTC,
                 model=SleepModel.SLEEP_MONITOR,
                 startdate=arrow.get("2019-02-01"),
                 enddate=arrow.get("2019-02-01"),
@@ -301,12 +302,10 @@ def async_assert_state_equals(
 
 
 async def test_sensor_default_enabled_entities(
-    hass: HomeAssistant, component_factory: ComponentFactory
+    hass: HomeAssistant, component_factory: ComponentFactory, current_request_with_host
 ) -> None:
     """Test entities enabled by default."""
-    entity_registry: EntityRegistry = (
-        await hass.helpers.entity_registry.async_get_registry()
-    )
+    entity_registry: EntityRegistry = er.async_get(hass)
 
     await component_factory.configure_component(profile_configs=(PERSON0,))
 
@@ -344,12 +343,10 @@ async def test_sensor_default_enabled_entities(
 
 
 async def test_all_entities(
-    hass: HomeAssistant, component_factory: ComponentFactory
+    hass: HomeAssistant, component_factory: ComponentFactory, current_request_with_host
 ) -> None:
     """Test all entities."""
-    entity_registry: EntityRegistry = (
-        await hass.helpers.entity_registry.async_get_registry()
-    )
+    entity_registry: EntityRegistry = er.async_get(hass)
 
     with patch(
         "homeassistant.components.withings.sensor.BaseWithingsSensor.entity_registry_enabled_default"

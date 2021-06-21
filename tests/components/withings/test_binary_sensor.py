@@ -8,22 +8,21 @@ from homeassistant.components.withings.common import (
 from homeassistant.components.withings.const import Measurement
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_registry import EntityRegistry
 
 from .common import ComponentFactory, new_profile_config
 
 
 async def test_binary_sensor(
-    hass: HomeAssistant, component_factory: ComponentFactory
+    hass: HomeAssistant, component_factory: ComponentFactory, current_request_with_host
 ) -> None:
     """Test binary sensor."""
     in_bed_attribute = WITHINGS_MEASUREMENTS_MAP[Measurement.IN_BED]
     person0 = new_profile_config("person0", 0)
     person1 = new_profile_config("person1", 1)
 
-    entity_registry: EntityRegistry = (
-        await hass.helpers.entity_registry.async_get_registry()
-    )
+    entity_registry: EntityRegistry = er.async_get(hass)
 
     await component_factory.configure_component(profile_configs=(person0, person1))
     assert not await async_get_entity_id(hass, in_bed_attribute, person0.user_id)

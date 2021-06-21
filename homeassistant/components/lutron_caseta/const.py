@@ -9,7 +9,6 @@ CONF_CA_CERTS = "ca_certs"
 STEP_IMPORT_FAILED = "import_failed"
 ERROR_CANNOT_CONNECT = "cannot_connect"
 ABORT_REASON_CANNOT_CONNECT = "cannot_connect"
-ABORT_REASON_ALREADY_CONFIGURED = "already_configured"
 
 BRIDGE_LEAP = "leap"
 BRIDGE_LIP = "lip"
@@ -31,7 +30,6 @@ ATTR_ACTION = "action"
 ACTION_PRESS = "press"
 ACTION_RELEASE = "release"
 
-CONF_TYPE = "type"
 CONF_SUBTYPE = "subtype"
 
 BRIDGE_TIMEOUT = 35

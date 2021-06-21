@@ -1,12 +1,13 @@
 """Implement device conditions for binary sensor."""
-from typing import Dict, List
+from __future__ import annotations
 
 import voluptuous as vol
 
 from homeassistant.components.device_automation.const import CONF_IS_OFF, CONF_IS_ON
-from homeassistant.const import ATTR_DEVICE_CLASS, CONF_ENTITY_ID, CONF_FOR, CONF_TYPE
+from homeassistant.const import CONF_ENTITY_ID, CONF_FOR, CONF_TYPE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import condition, config_validation as cv
+from homeassistant.helpers.entity import get_device_class
 from homeassistant.helpers.entity_registry import (
     async_entries_for_device,
     async_get_registry,
@@ -205,9 +206,9 @@ CONDITION_SCHEMA = cv.DEVICE_CONDITION_BASE_SCHEMA.extend(
 
 async def async_get_conditions(
     hass: HomeAssistant, device_id: str
-) -> List[Dict[str, str]]:
+) -> list[dict[str, str]]:
     """List device conditions."""
-    conditions: List[Dict[str, str]] = []
+    conditions: list[dict[str, str]] = []
     entity_registry = await async_get_registry(hass)
     entries = [
         entry
@@ -216,10 +217,7 @@ async def async_get_conditions(
     ]
 
     for entry in entries:
-        device_class = DEVICE_CLASS_NONE
-        state = hass.states.get(entry.entity_id)
-        if state and ATTR_DEVICE_CLASS in state.attributes:
-            device_class = state.attributes[ATTR_DEVICE_CLASS]
+        device_class = get_device_class(hass, entry.entity_id) or DEVICE_CLASS_NONE
 
         templates = ENTITY_CONDITIONS.get(
             device_class, ENTITY_CONDITIONS[DEVICE_CLASS_NONE]

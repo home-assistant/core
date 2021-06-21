@@ -11,7 +11,7 @@
         },
         "error": {
             "cannot_connect": "\uc5f0\uacb0\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4",
-            "connection_upgrade": "\ud504\ub9b0\ud130\uc5d0 \uc5f0\uacb0\ud560 \uc218 \uc5c6\uc2b5\ub2c8\ub2e4. SSL/TLS \uc635\uc158\uc744 \ud655\uc778\ud558\uace0 \ub2e4\uc2dc \uc2dc\ub3c4\ud574\uc8fc\uc138\uc694."
+            "connection_upgrade": "\ud504\ub9b0\ud130\uc5d0 \uc5f0\uacb0\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4. SSL/TLS \uc635\uc158\uc744 \ud655\uc778\ud558\uace0 \ub2e4\uc2dc \uc2dc\ub3c4\ud574\uc8fc\uc138\uc694."
         },
         "flow_title": "\ud504\ub9b0\ud130: {name}",
         "step": {
@@ -27,7 +27,7 @@
                 "title": "\ud504\ub9b0\ud130 \uc5f0\uacb0\ud558\uae30"
             },
             "zeroconf_confirm": {
-                "description": "{name} \uc744(\ub97c) \uc124\uc815\ud558\uc2dc\uaca0\uc2b5\ub2c8\uae4c?",
+                "description": "{name}\uc744(\ub97c) \uc124\uc815\ud558\uc2dc\uaca0\uc2b5\ub2c8\uae4c?",
                 "title": "\ubc1c\uacac\ub41c \ud504\ub9b0\ud130"
             }
         }

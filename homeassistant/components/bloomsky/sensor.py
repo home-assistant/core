@@ -1,7 +1,7 @@
 """Support the sensor of a BloomSky weather station."""
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     AREA_SQUARE_METERS,
     CONF_MONITORED_CONDITIONS,
@@ -12,7 +12,6 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 from . import DOMAIN
 
@@ -70,7 +69,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             add_entities([BloomSkySensor(bloomsky, device, variable)], True)
 
 
-class BloomSkySensor(Entity):
+class BloomSkySensor(SensorEntity):
     """Representation of a single sensor in a BloomSky device."""
 
     def __init__(self, bs, device, sensor_name):

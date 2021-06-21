@@ -3,5 +3,6 @@
   "name": "GitLab-CI",
   "documentation": "https://www.home-assistant.io/integrations/gitlab_ci",
   "requirements": ["python-gitlab==1.6.0"],
-  "codeowners": []
+  "codeowners": [],
+  "iot_class": "cloud_polling"
 }

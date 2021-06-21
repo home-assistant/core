@@ -1,7 +1,11 @@
 {
     "config": {
+        "abort": {
+            "single_instance_allowed": "M\u00e1r konfigur\u00e1lva van. Csak egy konfigur\u00e1ci\u00f3 lehets\u00e9ges.",
+            "webhook_not_internet_accessible": "A Home Assistant rendszerednek el\u00e9rhet\u0151nek kell lennie az internetr\u0151l a webhook \u00fczenetek fogad\u00e1s\u00e1hoz."
+        },
         "create_entry": {
-            "default": "Ha esem\u00e9nyeket szeretne k\u00fcldeni a Home Assistant alkalmaz\u00e1snak, be kell \u00e1ll\u00edtania a webhook funkci\u00f3t a Traccar-ban. \n\n Haszn\u00e1lja a k\u00f6vetkez\u0151 URL-t: \" {webhook_url} \" \n\n Tov\u00e1bbi r\u00e9szletek\u00e9rt l\u00e1sd a [dokument\u00e1ci\u00f3t] ( {docs_url} )."
+            "default": "Ha esem\u00e9nyeket szeretne k\u00fcldeni a Home Assistant alkalmaz\u00e1snak, be kell \u00e1ll\u00edtania a webhook funkci\u00f3t a Traccar-ban. \n\n Haszn\u00e1lja a k\u00f6vetkez\u0151 URL-t: `{webhook_url}`\n\n Tov\u00e1bbi r\u00e9szletek\u00e9rt l\u00e1sd a [dokument\u00e1ci\u00f3t]({docs_url})."
         }
     }
 }

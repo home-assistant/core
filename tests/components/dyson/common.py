@@ -1,6 +1,6 @@
 """Common utils for Dyson tests."""
+from __future__ import annotations
 
-from typing import Optional, Type
 from unittest import mock
 from unittest.mock import MagicMock
 
@@ -37,7 +37,7 @@ CONFIG = {
 
 
 @callback
-def async_get_basic_device(spec: Type[DysonDevice]) -> DysonDevice:
+def async_get_basic_device(spec: type[DysonDevice]) -> DysonDevice:
     """Return a basic device with common fields filled out."""
     device = MagicMock(spec=spec)
     device.serial = SERIAL
@@ -88,7 +88,7 @@ def async_get_purecool_device() -> DysonPureCool:
 
 
 async def async_update_device(
-    hass: HomeAssistant, device: DysonDevice, state_type: Optional[Type] = None
+    hass: HomeAssistant, device: DysonDevice, state_type: type | None = None
 ) -> None:
     """Update the device using callback function."""
     callbacks = [args[0][0] for args in device.add_message_listener.call_args_list]

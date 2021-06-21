@@ -60,7 +60,7 @@ class IhcLight(IHCDevice, LightEntity):
         self._ihc_on_id = ihc_on_id
         self._brightness = 0
         self._dimmable = dimmable
-        self._state = None
+        self._state = False
 
     @property
     def brightness(self) -> int:

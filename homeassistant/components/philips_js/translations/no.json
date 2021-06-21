@@ -10,6 +10,13 @@
             "unknown": "Uventet feil"
         },
         "step": {
+            "pair": {
+                "data": {
+                    "pin": "PIN kode"
+                },
+                "description": "Angi PIN-koden som vises p\u00e5 TV-en",
+                "title": "Par"
+            },
             "user": {
                 "data": {
                     "api_version": "API-versjon",

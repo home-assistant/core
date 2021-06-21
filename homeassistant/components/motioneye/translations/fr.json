@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Le service est d\u00e9j\u00e0 configur\u00e9"
+        },
+        "error": {
+            "invalid_url": "URL invalide"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "admin_password": "Admin Mot de passe",
+                    "admin_username": "Admin Nom d'utilisateur",
+                    "surveillance_password": "Surveillance Mot de passe",
+                    "surveillance_username": "Surveillance Nom d'utilisateur"
+                }
+            }
+        }
+    }
+}

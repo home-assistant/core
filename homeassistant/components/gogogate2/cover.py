@@ -1,8 +1,14 @@
 """Support for Gogogate2 garage Doors."""
-from typing import Callable, List, Optional
+from __future__ import annotations
 
-from gogogate2_api.common import AbstractDoor, DoorStatus, get_configured_doors
-import voluptuous as vol
+import logging
+
+from ismartgate.common import (
+    AbstractDoor,
+    DoorStatus,
+    TransitionDoorStatus,
+    get_configured_doors,
+)
 
 from homeassistant.components.cover import (
     DEVICE_CLASS_GARAGE,
@@ -11,51 +17,24 @@ from homeassistant.components.cover import (
     SUPPORT_OPEN,
     CoverEntity,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import (
-    CONF_DEVICE,
-    CONF_IP_ADDRESS,
-    CONF_PASSWORD,
-    CONF_USERNAME,
-)
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .common import (
     DeviceDataUpdateCoordinator,
     GoGoGate2Entity,
+    cover_unique_id,
     get_data_update_coordinator,
 )
-from .const import DEVICE_TYPE_GOGOGATE2, DEVICE_TYPE_ISMARTGATE, DOMAIN
 
-COVER_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_IP_ADDRESS): cv.string,
-        vol.Required(CONF_DEVICE, default=DEVICE_TYPE_GOGOGATE2): vol.In(
-            (DEVICE_TYPE_GOGOGATE2, DEVICE_TYPE_ISMARTGATE)
-        ),
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Required(CONF_USERNAME): cv.string,
-    }
-)
-
-
-async def async_setup_platform(
-    hass: HomeAssistant, config: dict, add_entities: Callable, discovery_info=None
-) -> None:
-    """Convert old style file configs to new style configs."""
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
-        )
-    )
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: Callable[[List[Entity], Optional[bool]], None],
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the config entry."""
     data_update_coordinator = get_data_update_coordinator(hass, config_entry)
@@ -78,7 +57,8 @@ class DeviceCover(GoGoGate2Entity, CoverEntity):
         door: AbstractDoor,
     ) -> None:
         """Initialize the object."""
-        super().__init__(config_entry, data_update_coordinator, door)
+        unique_id = cover_unique_id(config_entry, door)
+        super().__init__(config_entry, data_update_coordinator, door, unique_id)
         self._api = data_update_coordinator.api
         self._is_available = True
 
@@ -90,11 +70,10 @@ class DeviceCover(GoGoGate2Entity, CoverEntity):
     @property
     def is_closed(self):
         """Return true if cover is closed, else False."""
-        door = self._get_door()
-
-        if door.status == DoorStatus.OPENED:
+        door_status = self._get_door_status()
+        if door_status == DoorStatus.OPENED:
             return False
-        if door.status == DoorStatus.CLOSED:
+        if door_status == DoorStatus.CLOSED:
             return True
 
         return None
@@ -102,8 +81,7 @@ class DeviceCover(GoGoGate2Entity, CoverEntity):
     @property
     def device_class(self):
         """Return the class of this device, from component DEVICE_CLASSES."""
-        door = self._get_door()
-        if door.gate:
+        if self._get_door().gate:
             return DEVICE_CLASS_GATE
 
         return DEVICE_CLASS_GARAGE
@@ -113,15 +91,32 @@ class DeviceCover(GoGoGate2Entity, CoverEntity):
         """Flag supported features."""
         return SUPPORT_OPEN | SUPPORT_CLOSE
 
+    @property
+    def is_closing(self):
+        """Return if the cover is closing or not."""
+        return self._get_door_status() == TransitionDoorStatus.CLOSING
+
+    @property
+    def is_opening(self):
+        """Return if the cover is opening or not."""
+        return self._get_door_status() == TransitionDoorStatus.OPENING
+
     async def async_open_cover(self, **kwargs):
         """Open the door."""
         await self._api.async_open_door(self._get_door().door_id)
+        await self.coordinator.async_refresh()
 
     async def async_close_cover(self, **kwargs):
         """Close the door."""
         await self._api.async_close_door(self._get_door().door_id)
+        await self.coordinator.async_refresh()
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return {"door_id": self._get_door().door_id}
+
+    def _get_door_status(self) -> AbstractDoor:
+        return self._api.async_get_door_statuses_from_info(self.coordinator.data)[
+            self._door.door_id
+        ]

@@ -95,7 +95,7 @@ LOCK_ALARM_TYPE = {
     "27": "Auto re-lock",
     "33": "User deleted: ",
     "112": "Master code changed or User added: ",
-    "113": "Duplicate Pin-code: ",
+    "113": "Duplicate PIN code: ",
     "130": "RF module, power restored",
     "144": "Unlocked by NFC Tag or Card by user ",
     "161": "Tamper Alarm: ",
@@ -291,17 +291,17 @@ class ZwaveLock(ZWaveDeviceEntity, LockEntity):
             if self._state_workaround:
                 self._state = LOCK_STATUS.get(str(notification_data))
                 _LOGGER.debug("workaround: lock state set to %s", self._state)
-            if self._v2btze:
-                if (
-                    self.values.v2btze_advanced
-                    and self.values.v2btze_advanced.data == CONFIG_ADVANCED
-                ):
-                    self._state = LOCK_STATUS.get(str(notification_data))
-                    _LOGGER.debug(
-                        "Lock state set from Access Control value and is %s, get=%s",
-                        str(notification_data),
-                        self.state,
-                    )
+            if (
+                self._v2btze
+                and self.values.v2btze_advanced
+                and self.values.v2btze_advanced.data == CONFIG_ADVANCED
+            ):
+                self._state = LOCK_STATUS.get(str(notification_data))
+                _LOGGER.debug(
+                    "Lock state set from Access Control value and is %s, get=%s",
+                    str(notification_data),
+                    self.state,
+                )
 
         if self._track_message_workaround:
             this_message = self.node.stats["lastReceivedMessage"][5]
@@ -374,9 +374,9 @@ class ZwaveLock(ZWaveDeviceEntity, LockEntity):
         self.values.primary.data = False
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device specific state attributes."""
-        data = super().device_state_attributes
+        data = super().extra_state_attributes
         if self._notification:
             data[ATTR_NOTIFICATION] = self._notification
         if self._lock_status:

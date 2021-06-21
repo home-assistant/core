@@ -1,20 +1,40 @@
 """Support for esphome sensors."""
-import math
-from typing import Optional
+from __future__ import annotations
 
-from aioesphomeapi import SensorInfo, SensorState, TextSensorInfo, TextSensorState
+import math
+
+from aioesphomeapi import (
+    SensorInfo,
+    SensorState,
+    SensorStateClass,
+    TextSensorInfo,
+    TextSensorState,
+)
 import voluptuous as vol
 
-from homeassistant.components.sensor import DEVICE_CLASSES
+from homeassistant.components.sensor import (
+    DEVICE_CLASS_TIMESTAMP,
+    DEVICE_CLASSES,
+    STATE_CLASS_MEASUREMENT,
+    SensorEntity,
+)
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.util import dt
 
-from . import EsphomeEntity, esphome_state_property, platform_async_setup_entry
+from . import (
+    EsphomeEntity,
+    esphome_map_enum,
+    esphome_state_property,
+    platform_async_setup_entry,
+)
+
+ICON_SCHEMA = vol.Schema(cv.icon)
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up esphome sensors based on a config entry."""
     await platform_async_setup_entry(
@@ -41,7 +61,15 @@ async def async_setup_entry(
 # pylint: disable=invalid-overridden-method
 
 
-class EsphomeSensor(EsphomeEntity):
+@esphome_map_enum
+def _state_classes():
+    return {
+        SensorStateClass.NONE: None,
+        SensorStateClass.MEASUREMENT: STATE_CLASS_MEASUREMENT,
+    }
+
+
+class EsphomeSensor(EsphomeEntity, SensorEntity):
     """A sensor implementation for esphome."""
 
     @property
@@ -49,7 +77,7 @@ class EsphomeSensor(EsphomeEntity):
         return super()._static_info
 
     @property
-    def _state(self) -> Optional[SensorState]:
+    def _state(self) -> SensorState | None:
         return super()._state
 
     @property
@@ -57,7 +85,7 @@ class EsphomeSensor(EsphomeEntity):
         """Return the icon."""
         if not self._static_info.icon or self._static_info.device_class:
             return None
-        return vol.Schema(cv.icon)(self._static_info.icon)
+        return ICON_SCHEMA(self._static_info.icon)
 
     @property
     def force_update(self) -> bool:
@@ -65,12 +93,14 @@ class EsphomeSensor(EsphomeEntity):
         return self._static_info.force_update
 
     @esphome_state_property
-    def state(self) -> Optional[str]:
+    def state(self) -> str | None:
         """Return the state of the entity."""
         if math.isnan(self._state.state):
             return None
         if self._state.missing_state:
             return None
+        if self.device_class == DEVICE_CLASS_TIMESTAMP:
+            return dt.utc_from_timestamp(self._state.state).isoformat()
         return f"{self._state.state:.{self._static_info.accuracy_decimals}f}"
 
     @property
@@ -87,8 +117,15 @@ class EsphomeSensor(EsphomeEntity):
             return None
         return self._static_info.device_class
 
+    @property
+    def state_class(self) -> str | None:
+        """Return the state class of this entity."""
+        if not self._static_info.state_class:
+            return None
+        return _state_classes.from_esphome(self._static_info.state_class)
 
-class EsphomeTextSensor(EsphomeEntity):
+
+class EsphomeTextSensor(EsphomeEntity, SensorEntity):
     """A text sensor implementation for ESPHome."""
 
     @property
@@ -96,7 +133,7 @@ class EsphomeTextSensor(EsphomeEntity):
         return super()._static_info
 
     @property
-    def _state(self) -> Optional[TextSensorState]:
+    def _state(self) -> TextSensorState | None:
         return super()._state
 
     @property
@@ -105,7 +142,7 @@ class EsphomeTextSensor(EsphomeEntity):
         return self._static_info.icon
 
     @esphome_state_property
-    def state(self) -> Optional[str]:
+    def state(self) -> str | None:
         """Return the state of the entity."""
         if self._state.missing_state:
             return None

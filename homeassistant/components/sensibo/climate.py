@@ -191,7 +191,7 @@ class SensiboClimate(ClimateEntity):
         return self._external_state or super().state
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return {"battery": self.current_battery}
 

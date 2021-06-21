@@ -6,5 +6,28 @@
   "requirements": ["pysmartapp==0.3.3", "pysmartthings==0.7.6"],
   "dependencies": ["webhook"],
   "after_dependencies": ["cloud"],
-  "codeowners": ["@andrewsayre"]
+  "codeowners": ["@andrewsayre"],
+  "iot_class": "cloud_push",
+  "dhcp": [
+    {
+      "hostname": "st*",
+      "macaddress": "24FD5B*"
+    },
+    {
+      "hostname": "smartthings*",
+      "macaddress": "24FD5B*"
+    },
+    {
+      "hostname": "hub*",
+      "macaddress": "24FD5B*"
+    },
+    {
+      "hostname": "hub*",
+      "macaddress": "D052A8*"
+    },
+    {
+      "hostname": "hub*",
+      "macaddress": "286D97*"
+    }    
+  ]
 }

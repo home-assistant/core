@@ -5,9 +5,6 @@
         },
         "step": {
             "user": {
-                "data": {
-                    "name": "Numm vum Sensor"
-                },
                 "description": "Soll den Ariichtungs Prozess gestart ginn?",
                 "title": "Lokal IP Adresse"
             }

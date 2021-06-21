@@ -1,13 +1,13 @@
 """Support for AlarmDecoder sensors (Shows Panel Display)."""
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
 
 from .const import SIGNAL_PANEL_MESSAGE
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
 ):
     """Set up for AlarmDecoder sensor."""
 
@@ -16,7 +16,7 @@ async def async_setup_entry(
     return True
 
 
-class AlarmDecoderSensor(Entity):
+class AlarmDecoderSensor(SensorEntity):
     """Representation of an AlarmDecoder keypad."""
 
     def __init__(self):

@@ -2,7 +2,7 @@
 from unittest.mock import patch
 
 from homeassistant.components.totalconnect.const import DOMAIN
-from homeassistant.config_entries import ENTRY_STATE_SETUP_ERROR
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.setup import async_setup_component
 
 from .common import CONFIG_DATA
@@ -26,4 +26,4 @@ async def test_reauth_started(hass):
         assert await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
 
-    assert mock_entry.state == ENTRY_STATE_SETUP_ERROR
+    assert mock_entry.state is ConfigEntryState.SETUP_ERROR

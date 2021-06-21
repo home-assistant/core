@@ -32,3 +32,21 @@ def mock_simple_nws_config():
         instance.station = "ABC"
         instance.stations = ["ABC"]
         yield mock_nws
+
+
+@pytest.fixture()
+def no_sensor():
+    """Remove sensors."""
+    with patch(
+        "homeassistant.components.nws.sensor.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
+        yield mock_setup_entry
+
+
+@pytest.fixture()
+def no_weather():
+    """Remove weather."""
+    with patch(
+        "homeassistant.components.nws.weather.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
+        yield mock_setup_entry

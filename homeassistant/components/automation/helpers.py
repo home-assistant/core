@@ -10,6 +10,6 @@ DATA_BLUEPRINTS = "automation_blueprints"
 
 @singleton(DATA_BLUEPRINTS)
 @callback
-def async_get_blueprints(hass: HomeAssistant) -> blueprint.DomainBlueprints:  # type: ignore
+def async_get_blueprints(hass: HomeAssistant) -> blueprint.DomainBlueprints:
     """Get automation blueprints."""
-    return blueprint.DomainBlueprints(hass, DOMAIN, LOGGER)  # type: ignore
+    return blueprint.DomainBlueprints(hass, DOMAIN, LOGGER)

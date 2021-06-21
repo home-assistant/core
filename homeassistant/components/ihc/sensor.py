@@ -1,6 +1,6 @@
 """Support for IHC sensors."""
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import CONF_UNIT_OF_MEASUREMENT
-from homeassistant.helpers.entity import Entity
 
 from . import IHC_CONTROLLER, IHC_INFO
 from .ihcdevice import IHCDevice
@@ -26,7 +26,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(devices)
 
 
-class IHCSensor(IHCDevice, Entity):
+class IHCSensor(IHCDevice, SensorEntity):
     """Implementation of the IHC sensor."""
 
     def __init__(

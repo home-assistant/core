@@ -3,5 +3,6 @@
   "name": "Lyft",
   "documentation": "https://www.home-assistant.io/integrations/lyft",
   "requirements": ["lyft_rides==0.2"],
-  "codeowners": []
+  "codeowners": [],
+  "iot_class": "cloud_polling"
 }

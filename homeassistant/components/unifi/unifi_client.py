@@ -1,5 +1,6 @@
 """Base class for UniFi clients."""
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
+from homeassistant.helpers.entity import DeviceInfo
 
 from .unifi_entity_base import UniFiBase
 
@@ -44,7 +45,7 @@ class UniFiClient(UniFiBase):
         return self.controller.available
 
     @property
-    def device_info(self) -> dict:
+    def device_info(self) -> DeviceInfo:
         """Return a client description for device registry."""
         return {
             "connections": {(CONNECTION_NETWORK_MAC, self.client.mac)},

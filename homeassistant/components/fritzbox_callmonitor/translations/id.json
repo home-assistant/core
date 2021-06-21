@@ -1,0 +1,41 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Perangkat sudah dikonfigurasi",
+            "insufficient_permissions": "Izin pengguna tidak memadai untuk mengakses pengaturan dan buku telepon AVM FRITZ!Box.",
+            "no_devices_found": "Tidak ada perangkat yang ditemukan di jaringan"
+        },
+        "error": {
+            "invalid_auth": "Autentikasi tidak valid"
+        },
+        "flow_title": "Pantau panggilan AVM FRITZ!Box: {name}",
+        "step": {
+            "phonebook": {
+                "data": {
+                    "phonebook": "Buku telepon"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Kata Sandi",
+                    "port": "Port",
+                    "username": "Nama Pengguna"
+                }
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "malformed_prefixes": "Format prefiks salah, periksa formatnya."
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "prefixes": "Prefiks (daftar yang dipisahkan koma)"
+                },
+                "title": "Konfigurasikan Prefiks"
+            }
+        }
+    }
+}

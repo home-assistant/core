@@ -1,4 +1,5 @@
 """Support for Daikin AC sensors."""
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_ICON,
@@ -6,7 +7,6 @@ from homeassistant.const import (
     CONF_TYPE,
     CONF_UNIT_OF_MEASUREMENT,
 )
-from homeassistant.helpers.entity import Entity
 
 from . import DOMAIN as DAIKIN_DOMAIN, DaikinApi
 from .const import (
@@ -49,7 +49,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities([DaikinSensor.factory(daikin_api, sensor) for sensor in sensors])
 
 
-class DaikinSensor(Entity):
+class DaikinSensor(SensorEntity):
     """Representation of a Sensor."""
 
     @staticmethod

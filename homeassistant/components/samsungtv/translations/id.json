@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Perangkat sudah dikonfigurasi",
+            "already_in_progress": "Alur konfigurasi sedang berlangsung",
+            "auth_missing": "Home Assistant tidak diizinkan untuk tersambung ke TV Samsung ini. Periksa setelan TV Anda untuk mengotorisasi Home Assistant.",
+            "cannot_connect": "Gagal terhubung",
+            "not_supported": "Perangkat TV Samsung ini saat ini tidak didukung."
+        },
+        "flow_title": "TV Samsung: {model}",
+        "step": {
+            "confirm": {
+                "description": "Apakah Anda ingin menyiapkan TV Samsung {model}? Jika Anda belum pernah menyambungkan Home Assistant sebelumnya, Anda akan melihat dialog di TV yang meminta otorisasi. Konfigurasi manual untuk TV ini akan ditimpa.",
+                "title": "TV Samsung"
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "name": "Nama"
+                },
+                "description": "Masukkan informasi TV Samsung Anda. Jika Anda belum pernah menyambungkan Home Assistant sebelumnya, Anda akan melihat dialog di TV yang meminta otorisasi."
+            }
+        }
+    }
+}

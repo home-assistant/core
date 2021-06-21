@@ -33,6 +33,7 @@
             "invalid_serial": "Porta seriale non valida",
             "invalid_subscribe_topic": "Argomento di sottoscrizione non valido",
             "invalid_version": "Versione di MySensors non valida",
+            "mqtt_required": "L'integrazione MQTT non \u00e8 configurata",
             "not_a_number": "Per favore inserisci un numero",
             "port_out_of_range": "Il numero di porta deve essere almeno 1 e al massimo 65535",
             "same_topic": "Gli argomenti di sottoscrizione e pubblicazione sono gli stessi",

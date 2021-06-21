@@ -18,15 +18,15 @@ async def test_sensor_setup(hass, requests_mock):
     device_mock = MagicMock()
     sleepiq.setup_platform(hass, CONFIG, device_mock, MagicMock())
     devices = device_mock.call_args[0][0]
-    assert 2 == len(devices)
+    assert len(devices) == 2
 
     left_side = devices[1]
-    assert "SleepNumber ILE Test1 Is In Bed" == left_side.name
-    assert "on" == left_side.state
+    assert left_side.name == "SleepNumber ILE Test1 Is In Bed"
+    assert left_side.state == "on"
 
     right_side = devices[0]
-    assert "SleepNumber ILE Test2 Is In Bed" == right_side.name
-    assert "off" == right_side.state
+    assert right_side.name == "SleepNumber ILE Test2 Is In Bed"
+    assert right_side.state == "off"
 
 
 async def test_setup_single(hass, requests_mock):
@@ -38,8 +38,8 @@ async def test_setup_single(hass, requests_mock):
     device_mock = MagicMock()
     sleepiq.setup_platform(hass, CONFIG, device_mock, MagicMock())
     devices = device_mock.call_args[0][0]
-    assert 1 == len(devices)
+    assert len(devices) == 1
 
     right_side = devices[0]
-    assert "SleepNumber ILE Test1 Is In Bed" == right_side.name
-    assert "on" == right_side.state
+    assert right_side.name == "SleepNumber ILE Test1 Is In Bed"
+    assert right_side.state == "on"

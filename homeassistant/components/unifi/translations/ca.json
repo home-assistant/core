@@ -10,7 +10,7 @@
             "service_unavailable": "[%key::common::config_flow::error::cannot_connect%]",
             "unknown_client_mac": "No hi ha cap client disponible en aquesta adre\u00e7a MAC"
         },
-        "flow_title": "Xarxa UniFi {site} ({host})",
+        "flow_title": "{site} ({host})",
         "step": {
             "user": {
                 "data": {

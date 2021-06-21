@@ -23,8 +23,8 @@ async def test_fan(hass, client, in_wall_smart_fan_control, integration):
         blocking=True,
     )
 
-    assert len(client.async_send_command_no_wait.call_args_list) == 1
-    args = client.async_send_command_no_wait.call_args[0][0]
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args[0][0]
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 17
     assert args["valueId"] == {
@@ -45,7 +45,7 @@ async def test_fan(hass, client, in_wall_smart_fan_control, integration):
     }
     assert args["value"] == 66
 
-    client.async_send_command_no_wait.reset_mock()
+    client.async_send_command.reset_mock()
 
     # Test setting unknown speed
     with pytest.raises(ValueError):
@@ -56,7 +56,7 @@ async def test_fan(hass, client, in_wall_smart_fan_control, integration):
             blocking=True,
         )
 
-    client.async_send_command_no_wait.reset_mock()
+    client.async_send_command.reset_mock()
 
     # Test turn on no speed
     await hass.services.async_call(
@@ -66,8 +66,8 @@ async def test_fan(hass, client, in_wall_smart_fan_control, integration):
         blocking=True,
     )
 
-    assert len(client.async_send_command_no_wait.call_args_list) == 1
-    args = client.async_send_command_no_wait.call_args[0][0]
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args[0][0]
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 17
     assert args["valueId"] == {
@@ -88,7 +88,7 @@ async def test_fan(hass, client, in_wall_smart_fan_control, integration):
     }
     assert args["value"] == 255
 
-    client.async_send_command_no_wait.reset_mock()
+    client.async_send_command.reset_mock()
 
     # Test turning off
     await hass.services.async_call(
@@ -98,8 +98,8 @@ async def test_fan(hass, client, in_wall_smart_fan_control, integration):
         blocking=True,
     )
 
-    assert len(client.async_send_command_no_wait.call_args_list) == 1
-    args = client.async_send_command_no_wait.call_args[0][0]
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args[0][0]
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 17
     assert args["valueId"] == {
@@ -120,7 +120,7 @@ async def test_fan(hass, client, in_wall_smart_fan_control, integration):
     }
     assert args["value"] == 0
 
-    client.async_send_command_no_wait.reset_mock()
+    client.async_send_command.reset_mock()
 
     # Test speed update from value updated event
     event = Event(
@@ -146,7 +146,7 @@ async def test_fan(hass, client, in_wall_smart_fan_control, integration):
     assert state.state == "on"
     assert state.attributes[ATTR_SPEED] == "high"
 
-    client.async_send_command_no_wait.reset_mock()
+    client.async_send_command.reset_mock()
 
     event = Event(
         type="value updated",

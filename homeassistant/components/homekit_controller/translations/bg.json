@@ -34,5 +34,19 @@
             }
         }
     },
+    "device_automation": {
+        "trigger_subtype": {
+            "button1": "\u0411\u0443\u0442\u043e\u043d 1",
+            "button10": "\u0411\u0443\u0442\u043e\u043d 10",
+            "button2": "\u0411\u0443\u0442\u043e\u043d 2",
+            "button3": "\u0411\u0443\u0442\u043e\u043d 3",
+            "button4": "\u0411\u0443\u0442\u043e\u043d 4",
+            "button5": "\u0411\u0443\u0442\u043e\u043d 5",
+            "button6": "\u0411\u0443\u0442\u043e\u043d 6",
+            "button7": "\u0411\u0443\u0442\u043e\u043d 7",
+            "button8": "\u0411\u0443\u0442\u043e\u043d 8",
+            "button9": "\u0411\u0443\u0442\u043e\u043d 9"
+        }
+    },
     "title": "HomeKit \u0443\u0441\u0442\u0440\u043e\u0439\u0441\u0442\u0432\u043e"
 }

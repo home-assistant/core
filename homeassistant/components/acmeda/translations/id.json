@@ -1,0 +1,15 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "Tidak ada perangkat yang ditemukan di jaringan"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "id": "ID Host"
+                },
+                "title": "Pilih hub untuk ditambahkan"
+            }
+        }
+    }
+}

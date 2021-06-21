@@ -144,7 +144,7 @@ class ThresholdSensor(BinarySensorEntity):
             return TYPE_UPPER
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the sensor."""
         return {
             ATTR_ENTITY_ID: self._entity_id,

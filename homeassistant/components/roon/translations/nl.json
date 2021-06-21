@@ -4,7 +4,6 @@
             "already_configured": "Apparaat is al toegevoegd"
         },
         "error": {
-            "duplicate_entry": "Die host is al toegevoegd.",
             "invalid_auth": "Ongeldige authencatie",
             "unknown": "Onverwachte fout"
         },

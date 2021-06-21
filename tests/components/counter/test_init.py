@@ -21,7 +21,7 @@ from homeassistant.components.counter import (
 )
 from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_ICON, ATTR_NAME
 from homeassistant.core import Context, CoreState, State
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from tests.common import mock_restore_cache
@@ -114,16 +114,16 @@ async def test_config_options(hass):
     assert state_2 is not None
     assert state_3 is not None
 
-    assert 0 == int(state_1.state)
+    assert int(state_1.state) == 0
     assert ATTR_ICON not in state_1.attributes
     assert ATTR_FRIENDLY_NAME not in state_1.attributes
 
-    assert 10 == int(state_2.state)
-    assert "Hello World" == state_2.attributes.get(ATTR_FRIENDLY_NAME)
-    assert "mdi:work" == state_2.attributes.get(ATTR_ICON)
+    assert int(state_2.state) == 10
+    assert state_2.attributes.get(ATTR_FRIENDLY_NAME) == "Hello World"
+    assert state_2.attributes.get(ATTR_ICON) == "mdi:work"
 
-    assert DEFAULT_INITIAL == state_3.attributes.get(ATTR_INITIAL)
-    assert DEFAULT_STEP == state_3.attributes.get(ATTR_STEP)
+    assert state_3.attributes.get(ATTR_INITIAL) == DEFAULT_INITIAL
+    assert state_3.attributes.get(ATTR_STEP) == DEFAULT_STEP
 
 
 async def test_methods(hass):
@@ -135,31 +135,31 @@ async def test_methods(hass):
     entity_id = "counter.test_1"
 
     state = hass.states.get(entity_id)
-    assert 0 == int(state.state)
+    assert int(state.state) == 0
 
     async_increment(hass, entity_id)
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
-    assert 1 == int(state.state)
+    assert int(state.state) == 1
 
     async_increment(hass, entity_id)
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
-    assert 2 == int(state.state)
+    assert int(state.state) == 2
 
     async_decrement(hass, entity_id)
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
-    assert 1 == int(state.state)
+    assert int(state.state) == 1
 
     async_reset(hass, entity_id)
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
-    assert 0 == int(state.state)
+    assert int(state.state) == 0
 
 
 async def test_methods_with_config(hass):
@@ -173,25 +173,25 @@ async def test_methods_with_config(hass):
     entity_id = "counter.test"
 
     state = hass.states.get(entity_id)
-    assert 10 == int(state.state)
+    assert int(state.state) == 10
 
     async_increment(hass, entity_id)
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
-    assert 15 == int(state.state)
+    assert int(state.state) == 15
 
     async_increment(hass, entity_id)
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
-    assert 20 == int(state.state)
+    assert int(state.state) == 20
 
     async_decrement(hass, entity_id)
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
-    assert 15 == int(state.state)
+    assert int(state.state) == 15
 
 
 async def test_initial_state_overrules_restore_state(hass):
@@ -370,7 +370,7 @@ async def test_configure(hass, hass_admin_user):
     state = hass.states.get("counter.test")
     assert state is not None
     assert state.state == "10"
-    assert 10 == state.attributes.get("maximum")
+    assert state.attributes.get("maximum") == 10
 
     # update max
     await hass.services.async_call(
@@ -384,7 +384,7 @@ async def test_configure(hass, hass_admin_user):
     state = hass.states.get("counter.test")
     assert state is not None
     assert state.state == "0"
-    assert 0 == state.attributes.get("maximum")
+    assert state.attributes.get("maximum") == 0
 
     # disable max
     await hass.services.async_call(
@@ -413,7 +413,7 @@ async def test_configure(hass, hass_admin_user):
     state = hass.states.get("counter.test")
     assert state is not None
     assert state.state == "5"
-    assert 5 == state.attributes.get("minimum")
+    assert state.attributes.get("minimum") == 5
 
     # disable min
     await hass.services.async_call(
@@ -430,7 +430,7 @@ async def test_configure(hass, hass_admin_user):
     assert state.attributes.get("minimum") is None
 
     # update step
-    assert 1 == state.attributes.get("step")
+    assert state.attributes.get("step") == 1
     await hass.services.async_call(
         "counter",
         "configure",
@@ -442,7 +442,7 @@ async def test_configure(hass, hass_admin_user):
     state = hass.states.get("counter.test")
     assert state is not None
     assert state.state == "5"
-    assert 3 == state.attributes.get("step")
+    assert state.attributes.get("step") == 3
 
     # update value
     await hass.services.async_call(
@@ -469,7 +469,7 @@ async def test_configure(hass, hass_admin_user):
     state = hass.states.get("counter.test")
     assert state is not None
     assert state.state == "6"
-    assert 5 == state.attributes.get("initial")
+    assert state.attributes.get("initial") == 5
 
     # update all
     await hass.services.async_call(
@@ -490,10 +490,10 @@ async def test_configure(hass, hass_admin_user):
     state = hass.states.get("counter.test")
     assert state is not None
     assert state.state == "5"
-    assert 5 == state.attributes.get("step")
-    assert 0 == state.attributes.get("minimum")
-    assert 9 == state.attributes.get("maximum")
-    assert 6 == state.attributes.get("initial")
+    assert state.attributes.get("step") == 5
+    assert state.attributes.get("minimum") == 0
+    assert state.attributes.get("maximum") == 9
+    assert state.attributes.get("initial") == 6
 
 
 async def test_load_from_storage(hass, storage_setup):
@@ -569,7 +569,7 @@ async def test_ws_delete(hass, hass_ws_client, storage_setup):
 
     input_id = "from_storage"
     input_entity_id = f"{DOMAIN}.{input_id}"
-    ent_reg = await entity_registry.async_get_registry(hass)
+    ent_reg = er.async_get(hass)
 
     state = hass.states.get(input_entity_id)
     assert state is not None
@@ -606,7 +606,7 @@ async def test_update_min_max(hass, hass_ws_client, storage_setup):
 
     input_id = "from_storage"
     input_entity_id = f"{DOMAIN}.{input_id}"
-    ent_reg = await entity_registry.async_get_registry(hass)
+    ent_reg = er.async_get(hass)
 
     state = hass.states.get(input_entity_id)
     assert state is not None
@@ -683,7 +683,7 @@ async def test_create(hass, hass_ws_client, storage_setup):
 
     counter_id = "new_counter"
     input_entity_id = f"{DOMAIN}.{counter_id}"
-    ent_reg = await entity_registry.async_get_registry(hass)
+    ent_reg = er.async_get(hass)
 
     state = hass.states.get(input_entity_id)
     assert state is None

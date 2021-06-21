@@ -18,5 +18,14 @@
                 "title": "AEMET OpenData"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "station_updates": "Obtener datos de las estaciones meteorol\u00f3gicas de AEMET"
+                }
+            }
+        }
     }
 }

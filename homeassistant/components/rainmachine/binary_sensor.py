@@ -1,12 +1,12 @@
 """This platform provides binary sensors for key RainMachine data."""
 from functools import partial
-from typing import Callable
 
 from regenmaschine.controller import Controller
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import RainMachineEntity
@@ -73,7 +73,7 @@ BINARY_SENSORS = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: Callable
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up RainMachine binary sensors based on a config entry."""
     controller = hass.data[DOMAIN][DATA_CONTROLLER][entry.entry_id]

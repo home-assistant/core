@@ -12,5 +12,14 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Update-interval in seconden, minimaal 30"
+                }
+            }
+        }
     }
 }

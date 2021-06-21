@@ -277,7 +277,7 @@ class VolvoEntity(Entity):
         return True
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return device specific state attributes."""
         return dict(
             self.instrument.attributes,

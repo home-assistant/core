@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\uc704\uce58\uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4."
+            "already_configured": "\uc704\uce58\uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4"
         },
         "error": {
             "invalid_api_key": "API \ud0a4\uac00 \uc798\ubabb\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
@@ -18,6 +18,13 @@
                 "description": "Airly \uacf5\uae30 \ud488\uc9c8 \ud1b5\ud569 \uad6c\uc131\uc694\uc18c\ub97c \uc124\uc815\ud569\ub2c8\ub2e4. API \ud0a4\ub97c \uc0dd\uc131\ud558\ub824\uba74 https://developer.airly.eu/register \ub85c \uc774\ub3d9\ud574\uc8fc\uc138\uc694",
                 "title": "Airly"
             }
+        }
+    },
+    "system_health": {
+        "info": {
+            "can_reach_server": "Airly \uc11c\ubc84 \uc5f0\uacb0",
+            "requests_per_day": "\uc77c\uc77c \ud5c8\uc6a9 \uc694\uccad \ud69f\uc218",
+            "requests_remaining": "\ub0a8\uc740 \ud5c8\uc6a9 \uc694\uccad \ud69f\uc218"
         }
     }
 }

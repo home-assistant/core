@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Integrasi MELCloud sudah dikonfigurasi untuk email ini. Token akses telah disegarkan."
+        },
+        "error": {
+            "cannot_connect": "Gagal terhubung",
+            "invalid_auth": "Autentikasi tidak valid",
+            "unknown": "Kesalahan yang tidak diharapkan"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Kata Sandi",
+                    "username": "Email"
+                },
+                "description": "Hubungkan menggunakan akun MELCloud Anda.",
+                "title": "Hubungkan ke MELCloud"
+            }
+        }
+    }
+}

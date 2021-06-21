@@ -218,7 +218,7 @@ class TensorFlowImageProcessor(ImageProcessingEntity):
         if name:
             self._name = name
         else:
-            self._name = "TensorFlow {}".format(split_entity_id(camera_entity)[1])
+            self._name = f"TensorFlow {split_entity_id(camera_entity)[1]}"
         self._category_index = category_index
         self._min_confidence = config.get(CONF_CONFIDENCE)
         self._file_out = config.get(CONF_FILE_OUT)
@@ -279,7 +279,7 @@ class TensorFlowImageProcessor(ImageProcessingEntity):
         return self._total_matches
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return device specific state attributes."""
         return {
             ATTR_MATCHES: self._matches,
@@ -336,7 +336,7 @@ class TensorFlowImageProcessor(ImageProcessingEntity):
         """Process the image."""
         model = self.hass.data[DOMAIN][CONF_MODEL]
         if not model:
-            _LOGGER.debug("Model not yet ready.")
+            _LOGGER.debug("Model not yet ready")
             return
 
         start = time.perf_counter()

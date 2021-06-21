@@ -1355,3 +1355,147 @@ async def test_blueprint_automation(hass, calls):
     assert automation.entities_in_automation(hass, "automation.automation_0") == [
         "light.kitchen"
     ]
+
+
+async def test_blueprint_automation_bad_config(hass, caplog):
+    """Test blueprint automation with bad inputs."""
+    assert await async_setup_component(
+        hass,
+        "automation",
+        {
+            "automation": {
+                "use_blueprint": {
+                    "path": "test_event_service.yaml",
+                    "input": {
+                        "trigger_event": "blueprint_event",
+                        "service_to_call": {"dict": "not allowed"},
+                    },
+                }
+            }
+        },
+    )
+    assert "generated invalid automation" in caplog.text
+
+
+async def test_trigger_service(hass, calls):
+    """Test the automation trigger service."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "alias": "hello",
+                "trigger": {"platform": "event", "event_type": "test_event"},
+                "action": {
+                    "service": "test.automation",
+                    "data_template": {"trigger": "{{ trigger }}"},
+                },
+            }
+        },
+    )
+    context = Context()
+    await hass.services.async_call(
+        "automation",
+        "trigger",
+        {"entity_id": "automation.hello"},
+        blocking=True,
+        context=context,
+    )
+
+    assert len(calls) == 1
+    assert calls[0].data.get("trigger") == {"platform": None}
+    assert calls[0].context.parent_id is context.id
+
+
+async def test_trigger_condition_implicit_id(hass, calls):
+    """Test triggers."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": [
+                    {"platform": "event", "event_type": "test_event1"},
+                    {"platform": "event", "event_type": "test_event2"},
+                    {"platform": "event", "event_type": "test_event3"},
+                ],
+                "action": {
+                    "choose": [
+                        {
+                            "conditions": {"condition": "trigger", "id": [0, "2"]},
+                            "sequence": {
+                                "service": "test.automation",
+                                "data": {"param": "one"},
+                            },
+                        },
+                        {
+                            "conditions": {"condition": "trigger", "id": "1"},
+                            "sequence": {
+                                "service": "test.automation",
+                                "data": {"param": "two"},
+                            },
+                        },
+                    ]
+                },
+            }
+        },
+    )
+
+    hass.bus.async_fire("test_event1")
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert calls[-1].data.get("param") == "one"
+
+    hass.bus.async_fire("test_event2")
+    await hass.async_block_till_done()
+    assert len(calls) == 2
+    assert calls[-1].data.get("param") == "two"
+
+    hass.bus.async_fire("test_event3")
+    await hass.async_block_till_done()
+    assert len(calls) == 3
+    assert calls[-1].data.get("param") == "one"
+
+
+async def test_trigger_condition_explicit_id(hass, calls):
+    """Test triggers."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": [
+                    {"platform": "event", "event_type": "test_event1", "id": "one"},
+                    {"platform": "event", "event_type": "test_event2", "id": "two"},
+                ],
+                "action": {
+                    "choose": [
+                        {
+                            "conditions": {"condition": "trigger", "id": "one"},
+                            "sequence": {
+                                "service": "test.automation",
+                                "data": {"param": "one"},
+                            },
+                        },
+                        {
+                            "conditions": {"condition": "trigger", "id": "two"},
+                            "sequence": {
+                                "service": "test.automation",
+                                "data": {"param": "two"},
+                            },
+                        },
+                    ]
+                },
+            }
+        },
+    )
+
+    hass.bus.async_fire("test_event1")
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert calls[-1].data.get("param") == "one"
+
+    hass.bus.async_fire("test_event2")
+    await hass.async_block_till_done()
+    assert len(calls) == 2
+    assert calls[-1].data.get("param") == "two"

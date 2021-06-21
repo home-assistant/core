@@ -4,7 +4,7 @@ import secrets
 from homeassistant import config_entries
 from homeassistant.const import CONF_WEBHOOK_ID
 
-from .const import DOMAIN  # pylint: disable=unused-import
+from .const import DOMAIN
 from .helper import supports_encryption
 
 CONF_SECRET = "secret"

@@ -4,11 +4,10 @@ from datetime import timedelta
 from epsonprinter_pkg.epsonprinterapi import EpsonPrinterAPI
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_HOST, CONF_MONITORED_CONDITIONS, PERCENTAGE
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 MONITORED_CONDITIONS = {
     "black": ["Ink level Black", PERCENTAGE, "mdi:water"],
@@ -45,7 +44,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(sensors, True)
 
 
-class EpsonPrinterCartridge(Entity):
+class EpsonPrinterCartridge(SensorEntity):
     """Representation of a cartridge sensor."""
 
     def __init__(self, api, cartridgeidx):

@@ -161,12 +161,7 @@ class RainCloudEntity(Entity):
         self.schedule_update_ha_state(True)
 
     @property
-    def unit_of_measurement(self):
-        """Return the units of measurement."""
-        return UNIT_OF_MEASUREMENT_MAP.get(self._sensor_type)
-
-    @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return {ATTR_ATTRIBUTION: ATTRIBUTION, "identifier": self.data.serial}
 

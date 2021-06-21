@@ -1,4 +1,5 @@
 """Support for Amcrest IP camera binary sensors."""
+from contextlib import suppress
 from datetime import timedelta
 import logging
 
@@ -38,6 +39,8 @@ BINARY_SENSOR_AUDIO_DETECTED_POLLED = "audio_detected_polled"
 BINARY_SENSOR_MOTION_DETECTED = "motion_detected"
 BINARY_SENSOR_MOTION_DETECTED_POLLED = "motion_detected_polled"
 BINARY_SENSOR_ONLINE = "online"
+BINARY_SENSOR_CROSSLINE_DETECTED = "crossline_detected"
+BINARY_SENSOR_CROSSLINE_DETECTED_POLLED = "crossline_detected_polled"
 BINARY_POLLED_SENSORS = [
     BINARY_SENSOR_AUDIO_DETECTED_POLLED,
     BINARY_SENSOR_MOTION_DETECTED_POLLED,
@@ -45,11 +48,18 @@ BINARY_POLLED_SENSORS = [
 ]
 _AUDIO_DETECTED_PARAMS = ("Audio Detected", DEVICE_CLASS_SOUND, "AudioMutation")
 _MOTION_DETECTED_PARAMS = ("Motion Detected", DEVICE_CLASS_MOTION, "VideoMotion")
+_CROSSLINE_DETECTED_PARAMS = (
+    "CrossLine Detected",
+    DEVICE_CLASS_MOTION,
+    "CrossLineDetection",
+)
 BINARY_SENSORS = {
     BINARY_SENSOR_AUDIO_DETECTED: _AUDIO_DETECTED_PARAMS,
     BINARY_SENSOR_AUDIO_DETECTED_POLLED: _AUDIO_DETECTED_PARAMS,
     BINARY_SENSOR_MOTION_DETECTED: _MOTION_DETECTED_PARAMS,
     BINARY_SENSOR_MOTION_DETECTED_POLLED: _MOTION_DETECTED_PARAMS,
+    BINARY_SENSOR_CROSSLINE_DETECTED: _CROSSLINE_DETECTED_PARAMS,
+    BINARY_SENSOR_CROSSLINE_DETECTED_POLLED: _CROSSLINE_DETECTED_PARAMS,
     BINARY_SENSOR_ONLINE: ("Online", DEVICE_CLASS_CONNECTIVITY, None),
 }
 BINARY_SENSORS = {
@@ -58,6 +68,7 @@ BINARY_SENSORS = {
 }
 _EXCLUSIVE_OPTIONS = [
     {BINARY_SENSOR_MOTION_DETECTED, BINARY_SENSOR_MOTION_DETECTED_POLLED},
+    {BINARY_SENSOR_CROSSLINE_DETECTED, BINARY_SENSOR_CROSSLINE_DETECTED_POLLED},
 ]
 
 _UPDATE_MSG = "Updating %s binary sensor"
@@ -144,10 +155,8 @@ class AmcrestBinarySensor(BinarySensorEntity):
             # Send a command to the camera to test if we can still communicate with it.
             # Override of Http.command() in __init__.py will set self._api.available
             # accordingly.
-            try:
-                self._api.current_time
-            except AmcrestError:
-                pass
+            with suppress(AmcrestError):
+                self._api.current_time  # pylint: disable=pointless-statement
         self._state = self._api.available
 
     def _update_others(self):

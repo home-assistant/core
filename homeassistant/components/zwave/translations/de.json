@@ -13,8 +13,7 @@
                     "network_key": "Netzwerkschl\u00fcssel (leer lassen, um automatisch zu generieren)",
                     "usb_path": "USB-Ger\u00e4t Pfad"
                 },
-                "description": "Informationen zu den Konfigurationsvariablen findest du unter https://www.home-assistant.io/docs/z-wave/installation/",
-                "title": "Z-Wave einrichten"
+                "description": "Diese Integration wird nicht mehr gepflegt. Verwenden Sie bei Neuinstallationen stattdessen Z-Wave JS.\n\nSiehe https://www.home-assistant.io/docs/z-wave/installation/ f\u00fcr Informationen zu den Konfigurationsvariablen"
             }
         }
     },

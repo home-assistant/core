@@ -1,0 +1,33 @@
+{
+    "config": {
+        "flow_title": "ScreenLogic {name}",
+        "step": {
+            "gateway_entry": {
+                "data": {
+                    "ip_address": "Direcci\u00f3n IP",
+                    "port": "Puerto"
+                },
+                "description": "Introduzca la informaci\u00f3n de su portal ScreenLogic.",
+                "title": "ScreenLogic"
+            },
+            "gateway_select": {
+                "data": {
+                    "selected_gateway": "Portal"
+                },
+                "description": "Se descubrieron los siguientes portales ScreenLogic. Seleccione uno para configurarlo, \u00f3 elija configurar manualmente el portal ScreenLogic.",
+                "title": "ScreenLogic"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Segundos entre escaneos"
+                },
+                "description": "Especificar la configuraci\u00f3n para {gateway_name}",
+                "title": "ScreenLogic"
+            }
+        }
+    }
+}

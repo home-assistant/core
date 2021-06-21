@@ -1,5 +1,4 @@
 """Support for EcoNet products."""
-import asyncio
 from datetime import timedelta
 import logging
 
@@ -13,7 +12,7 @@ from pyeconet.errors import (
     PyeconetError,
 )
 
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, TEMP_FAHRENHEIT
 from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import dispatcher_send
@@ -24,7 +23,7 @@ from .const import API_CLIENT, DOMAIN, EQUIPMENT
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["binary_sensor", "sensor", "water_heater"]
+PLATFORMS = ["climate", "binary_sensor", "sensor", "water_heater"]
 PUSH_UPDATE = "econet.push_update"
 
 INTERVAL = timedelta(minutes=60)
@@ -54,16 +53,15 @@ async def async_setup_entry(hass, config_entry):
         raise ConfigEntryNotReady from err
 
     try:
-        equipment = await api.get_equipment_by_type([EquipmentType.WATER_HEATER])
+        equipment = await api.get_equipment_by_type(
+            [EquipmentType.WATER_HEATER, EquipmentType.THERMOSTAT]
+        )
     except (ClientError, GenericHTTPError, InvalidResponseFormat) as err:
         raise ConfigEntryNotReady from err
     hass.data[DOMAIN][API_CLIENT][config_entry.entry_id] = api
     hass.data[DOMAIN][EQUIPMENT][config_entry.entry_id] = equipment
 
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, platform)
-        )
+    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
 
     api.subscribe()
 
@@ -72,6 +70,9 @@ async def async_setup_entry(hass, config_entry):
         dispatcher_send(hass, PUSH_UPDATE)
 
     for _eqip in equipment[EquipmentType.WATER_HEATER]:
+        _eqip.set_update_callback(update_published)
+
+    for _eqip in equipment[EquipmentType.THERMOSTAT]:
         _eqip.set_update_callback(update_published)
 
     async def resubscribe(now):
@@ -83,25 +84,21 @@ async def async_setup_entry(hass, config_entry):
         """Fetch the latest changes from the API."""
         await api.refresh_equipment()
 
-    async_track_time_interval(hass, resubscribe, INTERVAL)
-    async_track_time_interval(hass, fetch_update, INTERVAL + timedelta(minutes=1))
+    config_entry.async_on_unload(async_track_time_interval(hass, resubscribe, INTERVAL))
+    config_entry.async_on_unload(
+        async_track_time_interval(hass, fetch_update, INTERVAL + timedelta(minutes=1))
+    )
 
     return True
 
 
 async def async_unload_entry(hass, entry):
     """Unload a EcoNet config entry."""
-    tasks = [
-        hass.config_entries.async_forward_entry_unload(entry, platform)
-        for platform in PLATFORMS
-    ]
-
-    await asyncio.gather(*tasks)
-
-    hass.data[DOMAIN][API_CLIENT].pop(entry.entry_id)
-    hass.data[DOMAIN][EQUIPMENT].pop(entry.entry_id)
-
-    return True
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unload_ok:
+        hass.data[DOMAIN][API_CLIENT].pop(entry.entry_id)
+        hass.data[DOMAIN][EQUIPMENT].pop(entry.entry_id)
+    return unload_ok
 
 
 class EcoNetEntity(Entity):
@@ -148,6 +145,11 @@ class EcoNetEntity(Entity):
     def unique_id(self):
         """Return the unique ID of the entity."""
         return f"{self._econet.device_id}_{self._econet.device_name}"
+
+    @property
+    def temperature_unit(self):
+        """Return the unit of measurement."""
+        return TEMP_FAHRENHEIT
 
     @property
     def should_poll(self) -> bool:

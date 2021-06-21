@@ -57,6 +57,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class HomeKitTelevision(HomeKitEntity, MediaPlayerEntity):
     """Representation of a HomeKit Controller Television."""
 
+    _attr_device_class = DEVICE_CLASS_TV
+
     def get_characteristic_types(self):
         """Define the homekit characteristics the entity cares about."""
         return [
@@ -69,11 +71,6 @@ class HomeKitTelevision(HomeKitEntity, MediaPlayerEntity):
             CharacteristicsTypes.CONFIGURED_NAME,
             CharacteristicsTypes.IDENTIFIER,
         ]
-
-    @property
-    def device_class(self):
-        """Define the device class for a HomeKit enabled TV."""
-        return DEVICE_CLASS_TV
 
     @property
     def supported_features(self):
@@ -93,9 +90,11 @@ class HomeKitTelevision(HomeKitEntity, MediaPlayerEntity):
             if TargetMediaStateValues.STOP in self.supported_media_states:
                 features |= SUPPORT_STOP
 
-        if self.service.has(CharacteristicsTypes.REMOTE_KEY):
-            if RemoteKeyValues.PLAY_PAUSE in self.supported_remote_keys:
-                features |= SUPPORT_PAUSE | SUPPORT_PLAY
+        if (
+            self.service.has(CharacteristicsTypes.REMOTE_KEY)
+            and RemoteKeyValues.PLAY_PAUSE in self.supported_remote_keys
+        ):
+            features |= SUPPORT_PAUSE | SUPPORT_PLAY
 
         return features
 

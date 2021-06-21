@@ -124,7 +124,7 @@ class PwThermostat(SmileGateway, ClimateEntity):
         return SUPPORT_FLAGS
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device specific state attributes."""
         attributes = {}
         if self._schema_names:

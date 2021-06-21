@@ -96,7 +96,7 @@ class StiebelEltron(ClimateEntity):
         )
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return device specific state attributes."""
         return {"filter_alarm": self._filter_alarm}
 

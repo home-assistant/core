@@ -45,6 +45,7 @@
         "step": {
             "init": {
                 "data": {
+                    "effect_show_list": "Kuvatavad Hyperioni efektid",
                     "priority": "V\u00e4rvide ja efektide puhul on kasutatavad Hyperioni eelistused"
                 }
             }

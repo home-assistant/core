@@ -1,6 +1,6 @@
 {
   "config": {
-    "flow_title": "Logitech Harmony Hub {name}",
+    "flow_title": "{name}",
     "step": {
       "user": {
         "title": "Setup Logitech Harmony Hub",

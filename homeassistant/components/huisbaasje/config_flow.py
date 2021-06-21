@@ -8,7 +8,7 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_ID, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.data_entry_flow import AbortFlow
 
-from .const import DOMAIN  # pylint: disable=unused-import
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,7 +21,6 @@ class HuisbaasjeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Huisbaasje."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initiated by the user."""
@@ -32,9 +31,18 @@ class HuisbaasjeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             user_id = await self._validate_input(user_input)
-
-            _LOGGER.info("Input for Huisbaasje is valid!")
-
+        except HuisbaasjeConnectionException as exception:
+            _LOGGER.warning(exception)
+            errors["base"] = "cannot_connect"
+        except HuisbaasjeException as exception:
+            _LOGGER.warning(exception)
+            errors["base"] = "invalid_auth"
+        except AbortFlow:
+            raise
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception("Unexpected exception")
+            errors["base"] = "unknown"
+        else:
             # Set user id as unique id
             await self.async_set_unique_id(user_id)
             self._abort_if_unique_id_configured()
@@ -48,17 +56,6 @@ class HuisbaasjeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     CONF_PASSWORD: user_input[CONF_PASSWORD],
                 },
             )
-        except HuisbaasjeConnectionException as exception:
-            _LOGGER.warning(exception)
-            errors["base"] = "connection_exception"
-        except HuisbaasjeException as exception:
-            _LOGGER.warning(exception)
-            errors["base"] = "invalid_auth"
-        except AbortFlow as exception:
-            raise exception
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Unexpected exception")
-            errors["base"] = "unknown"
 
         return await self._show_setup_form(user_input, errors)
 
@@ -72,7 +69,6 @@ class HuisbaasjeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         Data has the keys from DATA_SCHEMA with values provided by the user.
         """
-
         username = user_input[CONF_USERNAME]
         password = user_input[CONF_PASSWORD]
 

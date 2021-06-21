@@ -4,7 +4,9 @@
             "already_configured": "Este aeropuerto ya est\u00e1 configurado."
         },
         "error": {
-            "invalid_airport": "El c\u00f3digo del aeropuerto no es v\u00e1lido"
+            "cannot_connect": "Fallo al conectar",
+            "invalid_airport": "El c\u00f3digo del aeropuerto no es v\u00e1lido",
+            "unknown": "Error inesperado"
         },
         "step": {
             "user": {

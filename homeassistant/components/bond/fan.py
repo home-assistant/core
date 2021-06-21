@@ -1,7 +1,9 @@
 """Support for Bond fans."""
+from __future__ import annotations
+
 import logging
 import math
-from typing import Any, Callable, List, Optional, Tuple
+from typing import Any
 
 from bond_api import Action, BPUPSubscriptions, DeviceType, Direction
 
@@ -15,6 +17,7 @@ from homeassistant.components.fan import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.percentage import (
     int_states_in_range,
     percentage_to_ranged_value,
@@ -31,14 +34,14 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: Callable[[List[Entity], bool], None],
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Bond fan devices."""
     data = hass.data[DOMAIN][entry.entry_id]
     hub: BondHub = data[HUB]
     bpup_subs: BPUPSubscriptions = data[BPUP_SUBS]
 
-    fans: List[Entity] = [
+    fans: list[Entity] = [
         BondFan(hub, device, bpup_subs)
         for device in hub.devices
         if DeviceType.is_fan(device.type)
@@ -50,13 +53,15 @@ async def async_setup_entry(
 class BondFan(BondEntity, FanEntity):
     """Representation of a Bond fan."""
 
-    def __init__(self, hub: BondHub, device: BondDevice, bpup_subs: BPUPSubscriptions):
+    def __init__(
+        self, hub: BondHub, device: BondDevice, bpup_subs: BPUPSubscriptions
+    ) -> None:
         """Create HA entity representing Bond fan."""
         super().__init__(hub, device, bpup_subs)
 
-        self._power: Optional[bool] = None
-        self._speed: Optional[int] = None
-        self._direction: Optional[int] = None
+        self._power: bool | None = None
+        self._speed: int | None = None
+        self._direction: int | None = None
 
     def _apply_state(self, state: dict) -> None:
         self._power = state.get("power")
@@ -75,7 +80,7 @@ class BondFan(BondEntity, FanEntity):
         return features
 
     @property
-    def _speed_range(self) -> Tuple[int, int]:
+    def _speed_range(self) -> tuple[int, int]:
         """Return the range of speeds."""
         return (1, self._device.props.get("max_speed", 3))
 
@@ -92,7 +97,7 @@ class BondFan(BondEntity, FanEntity):
         return int_states_in_range(self._speed_range)
 
     @property
-    def current_direction(self) -> Optional[str]:
+    def current_direction(self) -> str | None:
         """Return fan rotation direction."""
         direction = None
         if self._direction == Direction.FORWARD:
@@ -125,9 +130,9 @@ class BondFan(BondEntity, FanEntity):
 
     async def async_turn_on(
         self,
-        speed: Optional[str] = None,
-        percentage: Optional[int] = None,
-        preset_mode: Optional[str] = None,
+        speed: str | None = None,
+        percentage: int | None = None,
+        preset_mode: str | None = None,
         **kwargs: Any,
     ) -> None:
         """Turn on the fan."""

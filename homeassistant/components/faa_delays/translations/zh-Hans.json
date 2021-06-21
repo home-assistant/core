@@ -1,0 +1,9 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "\u8fde\u63a5\u5931\u8d25",
+            "invalid_airport": "\u822a\u73ed\u53f7\u65e0\u6548",
+            "unknown": "\u9884\u671f\u5916\u7684\u9519\u8bef"
+        }
+    }
+}
