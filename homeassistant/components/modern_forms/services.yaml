@@ -8,7 +8,7 @@ set_light_sleep_timer:
   fields:
     sleep_time:
       name: Sleep Time
-      description: Number of seconds to set the timer.
+      description: Number of minutes to set the timer.
       required: true
       example: "900"
       selector:
@@ -33,7 +33,7 @@ set_fan_sleep_timer:
   fields:
     sleep_time:
       name: Sleep Time
-      description: Number of seconds to set the timer.
+      description: Number of minutes to set the timer.
       required: true
       example: "900"
       selector:
