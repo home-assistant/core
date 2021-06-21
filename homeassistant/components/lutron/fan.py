@@ -1,21 +1,18 @@
 """Support for Lutron fans."""
 
-from homeassistant.components.fan import (
-    DOMAIN,
-    SUPPORT_SET_SPEED,
-    FanEntity,
-)
+from homeassistant.components.fan import DOMAIN, SUPPORT_SET_SPEED, FanEntity
 from homeassistant.util.percentage import (
     ordered_list_item_to_percentage,
     percentage_to_ordered_list_item,
 )
 
-from . import LUTRON_CONTROLLER, LUTRON_DEVICES, LutronDevice, DOMAIN as LUTRON_DOMAIN
+from . import DOMAIN as LUTRON_DOMAIN, LUTRON_CONTROLLER, LUTRON_DEVICES, LutronDevice
 
 FAN_OFF, FAN_LOW, FAN_MEDIUM, FAN_MEDIUM_HIGH, FAN_HIGH = 0, 25, 50, 75, 100
 
 DEFAULT_ON_PERCENTAGE = 50
 ORDERED_NAMED_FAN_SPEEDS = [FAN_LOW, FAN_MEDIUM, FAN_MEDIUM_HIGH, FAN_HIGH]
+
 
 def setup_platform(hass, config, add_entities, discovery_info=None) -> None:
     """Set up the Lutron fans."""
@@ -27,6 +24,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None) -> None:
         devs.append(dev)
 
     add_entities(devs, True)
+
 
 class LutronFan(LutronDevice, FanEntity):
     """Representation of a Lutron Fan controller. Including Fan Speed."""
