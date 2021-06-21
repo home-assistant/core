@@ -34,13 +34,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.json import load_json
 
-from .const import (
-    ATTR_MANUFACTURER,
-    BRAVIA_CONFIG_FILE,
-    BRAVIA_COORDINATOR,
-    DEFAULT_NAME,
-    DOMAIN,
-)
+from .const import ATTR_MANUFACTURER, BRAVIA_CONFIG_FILE, DEFAULT_NAME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -99,7 +93,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Bravia TV Media Player from a config_entry."""
 
-    coordinator = hass.data[DOMAIN][config_entry.entry_id][BRAVIA_COORDINATOR]
+    coordinator = hass.data[DOMAIN][config_entry.entry_id]
     unique_id = config_entry.unique_id
     device_info = {
         "identifiers": {(DOMAIN, unique_id)},
