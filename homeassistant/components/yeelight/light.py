@@ -611,12 +611,12 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
             )
 
     @_cmd
-    def set_hs(self, hs, duration) -> None:
+    def set_hs(self, hs_color, duration) -> None:
         """Set bulb's color."""
-        if hs and COLOR_MODE_HS in self.supported_color_modes:
-            _LOGGER.debug("Setting HS: %s", hs)
+        if hs_color and COLOR_MODE_HS in self.supported_color_modes:
+            _LOGGER.debug("Setting HS: %s", hs_color)
             self._bulb.set_hsv(
-                hs[0], hs[1], duration=duration, light_type=self.light_type
+                hs_color[0], hs_color[1], duration=duration, light_type=self.light_type
             )
 
     @_cmd
@@ -800,7 +800,7 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
             _LOGGER.error("Unable to set scene: %s", ex)
 
 
-class YeelightColorLightSupport:
+class YeelightColorLightSupport(YeelightGenericLight):
     """Representation of a Color Yeelight light support."""
 
     _attr_supported_color_modes = {COLOR_MODE_COLOR_TEMP, COLOR_MODE_HS, COLOR_MODE_RGB}
