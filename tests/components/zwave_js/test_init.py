@@ -369,6 +369,47 @@ async def test_old_entity_migration(
         assert ent_reg.async_get_entity_id("sensor", DOMAIN, old_unique_id) is None
 
 
+async def test_different_endpoint_migration_status_sensor(
+    hass, hank_binary_switch_state, client, integration
+):
+    """Test that the different endpoint migration logic skips over the status sensor."""
+    node = Node(client, hank_binary_switch_state)
+
+    ent_reg = er.async_get(hass)
+    dev_reg = dr.async_get(hass)
+    device = dev_reg.async_get_or_create(
+        config_entry_id=integration.entry_id, identifiers={get_device_id(client, node)}
+    )
+
+    SENSOR_NAME = "sensor.smart_plug_with_two_usb_ports_status_sensor"
+    entity_name = SENSOR_NAME.split(".")[1]
+
+    # Create entity RegistryEntry using fake endpoint
+    old_unique_id = f"{client.driver.controller.home_id}.32.node_status"
+    entity_entry = ent_reg.async_get_or_create(
+        "sensor",
+        DOMAIN,
+        old_unique_id,
+        suggested_object_id=entity_name,
+        config_entry=integration,
+        original_name=entity_name,
+        device_id=device.id,
+    )
+    assert entity_entry.entity_id == SENSOR_NAME
+    assert entity_entry.unique_id == old_unique_id
+
+    # Do this twice to make sure re-interview doesn't do anything weird
+    for i in range(0, 2):
+        # Add a ready node, unique ID should be migrated
+        event = {"node": node}
+        client.driver.controller.emit("node added", event)
+        await hass.async_block_till_done()
+
+        # Check that the RegistryEntry is using the same unique ID
+        entity_entry = ent_reg.async_get(SENSOR_NAME)
+        assert entity_entry.unique_id == old_unique_id
+
+
 async def test_skip_old_entity_migration_for_multiple(
     hass, hank_binary_switch_state, client, integration
 ):
