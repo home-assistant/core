@@ -35,7 +35,7 @@ def webhook_id_from_device_id(hass, device_id: str) -> str | None:
 
 @callback
 def supports_push(hass, webhook_id: str) -> bool:
-    """Return if push notifications is supported by push_config."""
+    """Return if push notifications is supported."""
     config_entry = hass.data[DOMAIN][DATA_CONFIG_ENTRIES][webhook_id]
     entry_data = config_entry.data
 
