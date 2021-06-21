@@ -31,7 +31,6 @@ from .const import (
     ATTR_FORECAST,
     ATTRIBUTION,
     CONDITION_CLASSES,
-    COORDINATOR,
     DOMAIN,
     MANUFACTURER,
     NAME,
@@ -46,9 +45,7 @@ async def async_setup_entry(
     """Add a AccuWeather weather entity from a config_entry."""
     name: str = entry.data[CONF_NAME]
 
-    coordinator: AccuWeatherDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
-        COORDINATOR
-    ]
+    coordinator: AccuWeatherDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities([AccuWeatherEntity(name, coordinator)])
 
