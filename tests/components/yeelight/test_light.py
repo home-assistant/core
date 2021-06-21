@@ -169,7 +169,91 @@ async def test_services(hass: HomeAssistant, caplog):
                 == err_count + 1
             )
 
-    # turn_on
+    # turn_on rgb_color
+    brightness = 100
+    rgb_color = (0, 128, 255)
+    transition = 2
+    await hass.services.async_call(
+        "light",
+        SERVICE_TURN_ON,
+        {
+            ATTR_ENTITY_ID: ENTITY_LIGHT,
+            ATTR_BRIGHTNESS: brightness,
+            ATTR_RGB_COLOR: rgb_color,
+            ATTR_FLASH: FLASH_LONG,
+            ATTR_EFFECT: EFFECT_STOP,
+            ATTR_TRANSITION: transition,
+        },
+        blocking=True,
+    )
+    mocked_bulb.turn_on.assert_called_once_with(
+        duration=transition * 1000,
+        light_type=LightType.Main,
+        power_mode=PowerMode.NORMAL,
+    )
+    mocked_bulb.turn_on.reset_mock()
+    mocked_bulb.start_music.assert_called_once()
+    mocked_bulb.start_music.reset_mock()
+    mocked_bulb.set_brightness.assert_called_once_with(
+        brightness / 255 * 100, duration=transition * 1000, light_type=LightType.Main
+    )
+    mocked_bulb.set_brightness.reset_mock()
+    mocked_bulb.set_color_temp.assert_not_called()
+    mocked_bulb.set_color_temp.reset_mock()
+    mocked_bulb.set_hsv.assert_not_called()
+    mocked_bulb.set_hsv.reset_mock()
+    mocked_bulb.set_rgb.assert_called_once_with(
+        *rgb_color, duration=transition * 1000, light_type=LightType.Main
+    )
+    mocked_bulb.set_rgb.reset_mock()
+    mocked_bulb.start_flow.assert_called_once()  # flash
+    mocked_bulb.start_flow.reset_mock()
+    mocked_bulb.stop_flow.assert_called_once_with(light_type=LightType.Main)
+    mocked_bulb.stop_flow.reset_mock()
+
+    # turn_on hs_color
+    brightness = 100
+    hs_color = (180, 100)
+    transition = 2
+    await hass.services.async_call(
+        "light",
+        SERVICE_TURN_ON,
+        {
+            ATTR_ENTITY_ID: ENTITY_LIGHT,
+            ATTR_BRIGHTNESS: brightness,
+            ATTR_HS_COLOR: hs_color,
+            ATTR_FLASH: FLASH_LONG,
+            ATTR_EFFECT: EFFECT_STOP,
+            ATTR_TRANSITION: transition,
+        },
+        blocking=True,
+    )
+    mocked_bulb.turn_on.assert_called_once_with(
+        duration=transition * 1000,
+        light_type=LightType.Main,
+        power_mode=PowerMode.NORMAL,
+    )
+    mocked_bulb.turn_on.reset_mock()
+    mocked_bulb.start_music.assert_called_once()
+    mocked_bulb.start_music.reset_mock()
+    mocked_bulb.set_brightness.assert_called_once_with(
+        brightness / 255 * 100, duration=transition * 1000, light_type=LightType.Main
+    )
+    mocked_bulb.set_brightness.reset_mock()
+    mocked_bulb.set_color_temp.assert_not_called()
+    mocked_bulb.set_color_temp.reset_mock()
+    mocked_bulb.set_hsv.assert_called_once_with(
+        *hs_color, duration=transition * 1000, light_type=LightType.Main
+    )
+    mocked_bulb.set_hsv.reset_mock()
+    mocked_bulb.set_rgb.assert_not_called()
+    mocked_bulb.set_rgb.reset_mock()
+    mocked_bulb.start_flow.assert_called_once()  # flash
+    mocked_bulb.start_flow.reset_mock()
+    mocked_bulb.stop_flow.assert_called_once_with(light_type=LightType.Main)
+    mocked_bulb.stop_flow.reset_mock()
+
+    # turn_on color_temp
     brightness = 100
     color_temp = 200
     transition = 1
@@ -201,6 +285,8 @@ async def test_services(hass: HomeAssistant, caplog):
         duration=transition * 1000,
         light_type=LightType.Main,
     )
+    mocked_bulb.set_hsv.assert_not_called()
+    mocked_bulb.set_rgb.assert_not_called()
     mocked_bulb.start_flow.assert_called_once()  # flash
     mocked_bulb.stop_flow.assert_called_once_with(light_type=LightType.Main)
 
