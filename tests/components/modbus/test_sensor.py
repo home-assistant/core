@@ -202,7 +202,7 @@ async def test_config_sensor(hass, mock_modbus):
                 CONF_STRUCTURE: "2s",
                 CONF_SWAP: CONF_SWAP_WORD,
             },
-            "Error in sensor test_sensor swap(word) not possible due to the registers count: 1, needed: 2",
+            "Error in sensor test_sensor swap(word) not possible due to the registers size: 2, needed: 4 bytes",
         ),
     ],
 )
@@ -669,11 +669,11 @@ async def test_restore_state_sensor(hass):
     [
         (
             CONF_SWAP_WORD,
-            "Error in sensor modbus_test_sensor swap(word) not possible due to the registers count: 1, needed: 2",
+            "Error in sensor modbus_test_sensor swap(word) not possible due to the registers size: 2, needed: 4 bytes",
         ),
         (
             CONF_SWAP_WORD_BYTE,
-            "Error in sensor modbus_test_sensor swap(word_byte) not possible due to the registers count: 1, needed: 2",
+            "Error in sensor modbus_test_sensor swap(word_byte) not possible due to the registers size: 2, needed: 4 bytes",
         ),
     ],
 )

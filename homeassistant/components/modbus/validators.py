@@ -72,14 +72,14 @@ def sensor_schema_validator(config):
 
     if config.get(CONF_SWAP) != CONF_SWAP_NONE:
         if swap_type == CONF_SWAP_BYTE:
-            regs_needed = 1
+            bytes_needed = 2
         else:  # CONF_SWAP_WORD_BYTE, CONF_SWAP_WORD
-            regs_needed = 2
-        if config[CONF_COUNT] < regs_needed or (config[CONF_COUNT] % regs_needed) != 0:
+            bytes_needed = 4
+        if bytecount < bytes_needed:
             raise vol.Invalid(
                 f"Error in sensor {config[CONF_NAME]} swap({swap_type}) "
                 f"not possible due to the registers "
-                f"count: {config[CONF_COUNT]}, needed: {regs_needed}"
+                f"size: {config.get(CONF_REGISTER_SIZE)}, needed: {bytes_needed} bytes"
             )
 
     return {
