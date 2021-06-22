@@ -255,13 +255,17 @@ class FritzBoxPortSwitch(FritzBoxBaseSwitch, SwitchEntity):
             self._attr_is_on = self.port_mapping["NewEnabled"] is True
             self._is_available = True
 
-            self._attributes["internalIP"] = self.port_mapping["NewInternalClient"]
-            self._attributes["internalPort"] = self.port_mapping["NewInternalPort"]
-            self._attributes["externalPort"] = self.port_mapping["NewExternalPort"]
-            self._attributes["protocol"] = self.port_mapping["NewProtocol"]
-            self._attributes["description"] = self.port_mapping[
-                "NewPortMappingDescription"
-            ]
+            attributes_dict = {
+                "NewInternalClient": "internalIP",
+                "NewInternalPort": "internalPort",
+                "NewExternalPort": "externalPort",
+                "NewProtocol": "protocol",
+                "NewPortMappingDescription": "description",
+            }
+
+            for key in attributes_dict:
+                self._attributes[attributes_dict[key]] = self.port_mapping[key]
+
         except FritzConnectionException:
             _LOGGER.error(
                 "Authorization Error: Please check the provided credentials and verify that you can log into the web interface"
