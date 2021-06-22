@@ -413,7 +413,7 @@ class FritzBoxBaseSwitch:
         return self._is_available
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return device attributes."""
         return self._attributes
 
