@@ -2,14 +2,13 @@
 from __future__ import annotations
 
 import logging
-from typing import cast
+from typing import Union, cast
 
 from homeassistant.components.air_quality import DOMAIN as PLATFORM, AirQualityEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import NAMDataUpdateCoordinator
@@ -69,23 +68,25 @@ class NAMAirQuality(CoordinatorEntity, AirQualityEntity):
         self.sensor_type = sensor_type
 
     @property
-    def particulate_matter_2_5(self) -> StateType:
+    def particulate_matter_2_5(self) -> int | None:
         """Return the particulate matter 2.5 level."""
         return cast(
-            StateType, getattr(self.coordinator.data, f"{self.sensor_type}{SUFFIX_P2}")
+            Union[int, None],
+            getattr(self.coordinator.data, f"{self.sensor_type}{SUFFIX_P2}"),
         )
 
     @property
-    def particulate_matter_10(self) -> StateType:
+    def particulate_matter_10(self) -> int | None:
         """Return the particulate matter 10 level."""
         return cast(
-            StateType, getattr(self.coordinator.data, f"{self.sensor_type}{SUFFIX_P1}")
+            Union[int, None],
+            getattr(self.coordinator.data, f"{self.sensor_type}{SUFFIX_P1}"),
         )
 
     @property
-    def carbon_dioxide(self) -> StateType:
+    def carbon_dioxide(self) -> int | None:
         """Return the particulate matter 10 level."""
-        return cast(StateType, self.coordinator.data.mhz14a_carbon_dioxide)
+        return cast(Union[int, None], self.coordinator.data.mhz14a_carbon_dioxide)
 
     @property
     def available(self) -> bool:
