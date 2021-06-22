@@ -321,9 +321,9 @@ class FritzBoxDeflectionSwitch(FritzBoxBaseSwitch, SwitchEntity):
 
         try:
             resp = await self.hass.async_add_executor_job(
-                lambda: self.fritzbox_tools.connection.call_action(
-                    "X_AVM-DE_OnTel:1", "GetDeflections"
-                )
+                self.fritzbox_tools.connection.call_action,
+                "X_AVM-DE_OnTel:1",
+                "GetDeflections",
             )
             self.dict_of_deflection = xmltodict.parse(resp["NewDeflectionList"])[
                 "List"
