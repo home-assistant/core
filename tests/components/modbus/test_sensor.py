@@ -9,6 +9,7 @@ from homeassistant.components.modbus.const import (
     CONF_DATA_TYPE,
     CONF_INPUT_TYPE,
     CONF_PRECISION,
+    CONF_REGISTER_SIZE,
     CONF_REGISTERS,
     CONF_SCALE,
     CONF_SWAP,
@@ -554,6 +555,35 @@ async def test_all_sensor(hass, cfg, regs, expected):
             },
             [0x0101],
             "257",
+        ),
+        (
+            {
+                CONF_COUNT: 1,
+                CONF_REGISTER_SIZE: 4,
+                CONF_DATA_TYPE: DATA_TYPE_CUSTOM,
+                CONF_STRUCTURE: ">L",
+            },
+            [0x4996, 0x02D2],
+            "1234567890",
+        ),
+        (
+            {
+                CONF_COUNT: 2,
+                CONF_REGISTER_SIZE: 4,
+                CONF_DATA_TYPE: DATA_TYPE_CUSTOM,
+                CONF_STRUCTURE: ">2L",
+            },
+            [0x4996, 0x02D2, 0x4996, 0x02D2],
+            "1234567890,1234567890",
+        ),
+        (
+            {
+                CONF_COUNT: 1,
+                CONF_REGISTER_SIZE: 10,
+                CONF_DATA_TYPE: DATA_TYPE_STRING,
+            },
+            [0x534E, 0x3132, 0x3334, 0x3536, 0x3738],
+            "SN12345678",
         ),
     ],
 )

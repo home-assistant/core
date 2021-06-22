@@ -34,8 +34,9 @@ _LOGGER = logging.getLogger(__name__)
 def sensor_schema_validator(config):
     """Sensor schema validator."""
 
+    bytecount = config[CONF_COUNT] * config.get(CONF_REGISTER_SIZE, 2)
     if config[CONF_DATA_TYPE] == DATA_TYPE_STRING:
-        structure = str(config[CONF_COUNT] * 2) + "s"
+        structure = str(bytecount) + "s"
     elif config[CONF_DATA_TYPE] != DATA_TYPE_CUSTOM:
         try:
             structure = (
@@ -61,7 +62,6 @@ def sensor_schema_validator(config):
             f"Error in sensor {config[CONF_NAME]} structure: {str(err)}"
         ) from err
 
-    bytecount = config[CONF_COUNT] * config.get(CONF_REGISTER_SIZE, 2)
     if bytecount != size:
         raise vol.Invalid(
             f"Structure request {size} bytes, "
