@@ -8,7 +8,6 @@ import logging
 from aioswitcher.bridge import SwitcherV2Bridge
 import voluptuous as vol
 
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import CONF_DEVICE_ID, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
@@ -65,7 +64,8 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
         return False
     hass.data[DOMAIN] = {DATA_DEVICE: device_data}
 
-    hass.async_create_task(async_load_platform(hass, SWITCH_DOMAIN, DOMAIN, {}, config))
+    hass.async_create_task(async_load_platform(hass, "switch", DOMAIN, {}, config))
+    hass.async_create_task(async_load_platform(hass, "sensor", DOMAIN, {}, config))
 
     @callback
     def device_updates(timestamp: datetime | None) -> None:
