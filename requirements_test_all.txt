@@ -100,7 +100,7 @@ aioeafm==0.1.2
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==2.8.0
+aioesphomeapi==2.9.0
 
 # homeassistant.components.flo
 aioflo==0.4.1
@@ -420,7 +420,7 @@ hangups==0.4.14
 hass-nabucasa==0.43.0
 
 # homeassistant.components.tasmota
-hatasmota==0.2.16
+hatasmota==0.2.18
 
 # homeassistant.components.jewish_calendar
 hdate==0.10.2
@@ -566,7 +566,7 @@ nessclient==0.9.15
 netdisco==2.8.3
 
 # homeassistant.components.nam
-nettigo-air-monitor==0.2.6
+nettigo-air-monitor==1.0.0
 
 # homeassistant.components.nexia
 nexia==0.9.7
@@ -765,7 +765,7 @@ pycoolmasternet-async==0.1.2
 pydaikin==2.4.3
 
 # homeassistant.components.deconz
-pydeconz==79
+pydeconz==80
 
 # homeassistant.components.dexcom
 pydexcom==0.2.0
