@@ -425,6 +425,11 @@ class FritzBoxProfileSwitch(FritzBoxBaseSwitch, SwitchEntity):
             lambda: self.fritzbox_tools.fritz_profiles[self.profile].set_state(state)
         )
 
+    @property
+    def entity_registry_enabled_default(self) -> bool:
+        """Return if the entity should be enabled when first added to the entity registry."""
+        return False
+
 
 class FritzBoxWifiSwitch(FritzBoxBaseSwitch, SwitchEntity):
     """Defines a FRITZ!Box Tools Wifi switch."""
