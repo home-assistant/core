@@ -400,7 +400,6 @@ class FritzBoxBaseSwitch:
 
         return {
             "connections": {(CONNECTION_NETWORK_MAC, self.fritzbox_tools.mac)},
-            "identifiers": {(DOMAIN, self.fritzbox_tools.unique_id)},
             "name": self._friendly_name,
             "manufacturer": "AVM",
             "model": self.fritzbox_tools.model,
