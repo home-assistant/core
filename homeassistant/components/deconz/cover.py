@@ -67,23 +67,18 @@ class DeconzCover(DeconzDevice, CoverEntity):
         """Set up cover device."""
         super().__init__(device, gateway)
 
-        self._features = SUPPORT_OPEN
-        self._features |= SUPPORT_CLOSE
-        self._features |= SUPPORT_STOP
-        self._features |= SUPPORT_SET_POSITION
+        self._attr_supported_features = SUPPORT_OPEN
+        self._attr_supported_features |= SUPPORT_CLOSE
+        self._attr_supported_features |= SUPPORT_STOP
+        self._attr_supported_features |= SUPPORT_SET_POSITION
 
         if self._device.tilt is not None:
-            self._features |= SUPPORT_OPEN_TILT
-            self._features |= SUPPORT_CLOSE_TILT
-            self._features |= SUPPORT_STOP_TILT
-            self._features |= SUPPORT_SET_TILT_POSITION
+            self._attr_supported_features |= SUPPORT_OPEN_TILT
+            self._attr_supported_features |= SUPPORT_CLOSE_TILT
+            self._attr_supported_features |= SUPPORT_STOP_TILT
+            self._attr_supported_features |= SUPPORT_SET_TILT_POSITION
 
         self._attr_device_class = DEVICE_CLASS.get(self._device.type)
-
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        return self._features
 
     @property
     def current_cover_position(self):
