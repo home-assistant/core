@@ -5,12 +5,12 @@ import logging
 
 import datapoint
 
+from homeassistant.components.metoffice.helpers import fetch_data, fetch_site
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from homeassistant.util import utcnow
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
     DEFAULT_SCAN_INTERVAL,
@@ -22,7 +22,6 @@ from .const import (
     MODE_3HOURLY,
     MODE_DAILY,
 )
-from .data import MetOfficeData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,19 +39,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     connection = datapoint.connection(api_key=api_key)
 
     site = await hass.async_add_executor_job(
-        _fetch_site, connection, latitude, longitude
+        fetch_site, connection, latitude, longitude
     )
     if site is None:
         raise ConfigEntryNotReady()
 
     async def async_update_3hourly():
         return await hass.async_add_executor_job(
-            _fetch_data, connection, site, MODE_3HOURLY
+            fetch_data, connection, site, MODE_3HOURLY
         )
 
     async def async_update_daily():
         return await hass.async_add_executor_job(
-            _fetch_data, connection, site, MODE_DAILY
+            fetch_data, connection, site, MODE_DAILY
         )
 
     metoffice_hourly_coordinator = DataUpdateCoordinator(
@@ -98,33 +97,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         if not hass.data[DOMAIN]:
             hass.data.pop(DOMAIN)
     return unload_ok
-
-
-def _fetch_site(connection, latitude, longitude):
-    try:
-        return connection.get_nearest_forecast_site(
-            latitude=latitude, longitude=longitude
-        )
-    except datapoint.exceptions.APIException as err:
-        _LOGGER.error("Received error from Met Office Datapoint: %s", err)
-        return None
-
-
-def _fetch_data(connection, site, mode):
-    try:
-        forecast = connection.get_forecast_for_site(site.id, mode)
-    except (ValueError, datapoint.exceptions.APIException) as err:
-        _LOGGER.error("Check Met Office connection: %s", err.args)
-        raise UpdateFailed(err)
-    else:
-        time_now = utcnow()
-        return MetOfficeData(
-            forecast.now(),
-            [
-                timestep
-                for day in forecast.days
-                for timestep in day.timesteps
-                if timestep.date > time_now
-            ],
-            site,
-        )
