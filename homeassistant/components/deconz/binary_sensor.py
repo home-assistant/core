@@ -129,6 +129,12 @@ class DeconzTampering(DeconzDevice, BinarySensorEntity):
 
     _attr_device_class = DEVICE_CLASS_PROBLEM
 
+    def __init__(self, device, gateway):
+        """Initialize deCONZ binary sensor."""
+        super().__init__(device, gateway)
+
+        self._attr_name = f"{self._device.name} Tampered"
+
     @property
     def unique_id(self) -> str:
         """Return a unique identifier for this device."""
@@ -145,8 +151,3 @@ class DeconzTampering(DeconzDevice, BinarySensorEntity):
     def is_on(self) -> bool:
         """Return the state of the sensor."""
         return self._device.tampered
-
-    @property
-    def name(self) -> str:
-        """Return the name of the sensor."""
-        return f"{self._device.name} Tampered"

@@ -59,6 +59,8 @@ class DeconzDevice(DeconzBase, Entity):
         super().__init__(device, gateway)
         self.gateway.entities[self.TYPE].add(self.unique_id)
 
+        self._attr_name = self._device.name
+
     @property
     def entity_registry_enabled_default(self) -> bool:
         """Return if the entity should be enabled when first added to the entity registry.
@@ -95,8 +97,3 @@ class DeconzDevice(DeconzBase, Entity):
     def available(self):
         """Return True if device is available."""
         return self.gateway.available and self._device.reachable
-
-    @property
-    def name(self):
-        """Return the name of the device."""
-        return self._device.name

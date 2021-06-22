@@ -223,6 +223,12 @@ class DeconzTemperature(DeconzDevice, SensorEntity):
 
     TYPE = DOMAIN
 
+    def __init__(self, device, gateway):
+        """Initialize deCONZ temperature sensor."""
+        super().__init__(device, gateway)
+
+        self._attr_name = f"{self._device.name} Temperature"
+
     @property
     def unique_id(self):
         """Return a unique identifier for this device."""
@@ -241,11 +247,6 @@ class DeconzTemperature(DeconzDevice, SensorEntity):
         return self._device.secondary_temperature
 
     @property
-    def name(self):
-        """Return the name of the temperature sensor."""
-        return f"{self._device.name} Temperature"
-
-    @property
     def state_class(self):
         """Return the state class of the sensor."""
         return STATE_CLASS_MEASUREMENT
@@ -262,6 +263,12 @@ class DeconzBattery(DeconzDevice, SensorEntity):
     _attr_device_class = DEVICE_CLASS_BATTERY
 
     TYPE = DOMAIN
+
+    def __init__(self, device, gateway):
+        """Initialize deCONZ battery level sensor."""
+        super().__init__(device, gateway)
+
+        self._attr_name = f"{self._device.name} Battery Level"
 
     @callback
     def async_update_callback(self, force_update=False):
@@ -290,11 +297,6 @@ class DeconzBattery(DeconzDevice, SensorEntity):
     def state(self):
         """Return the state of the battery."""
         return self._device.battery
-
-    @property
-    def name(self):
-        """Return the name of the battery."""
-        return f"{self._device.name} Battery Level"
 
     @property
     def state_class(self):
