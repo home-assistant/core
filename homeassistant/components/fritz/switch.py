@@ -203,8 +203,8 @@ async def get_entities_list(fritzbox_tools, device_friendly_name) -> list:
             )
             if network_info:
                 ssid = network_info["NewSSID"]
-                if ssid in networks and network_info:
-                    networks[i] = ssid + " " + std_table[network_info["NewStandard"]]
+                if ssid in networks:
+                    networks[i] = f'{ssid} {std_table[network_info["NewStandard"]]}'
                 else:
                     networks[i] = ssid
 
