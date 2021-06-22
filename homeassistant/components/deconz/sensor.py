@@ -149,6 +149,11 @@ class DeconzSensor(DeconzDevice, SensorEntity):
 
     TYPE = DOMAIN
 
+    def __init__(self, device, gateway):
+        """Initialize deCONZ binary sensor."""
+        super().__init__(device, gateway)
+        self._attr_device_class = DEVICE_CLASS.get(type(self._device))
+
     @callback
     def async_update_callback(self, force_update=False):
         """Update the sensor's state."""
@@ -160,11 +165,6 @@ class DeconzSensor(DeconzDevice, SensorEntity):
     def state(self):
         """Return the state of the sensor."""
         return self._device.state
-
-    @property
-    def device_class(self):
-        """Return the class of the sensor."""
-        return DEVICE_CLASS.get(type(self._device))
 
     @property
     def icon(self):
@@ -219,6 +219,8 @@ class DeconzTemperature(DeconzDevice, SensorEntity):
     Extra temperature sensor on certain Xiaomi devices.
     """
 
+    _attr_device_class = DEVICE_CLASS_TEMPERATURE
+
     TYPE = DOMAIN
 
     @property
@@ -244,11 +246,6 @@ class DeconzTemperature(DeconzDevice, SensorEntity):
         return f"{self._device.name} Temperature"
 
     @property
-    def device_class(self):
-        """Return the class of the sensor."""
-        return DEVICE_CLASS_TEMPERATURE
-
-    @property
     def state_class(self):
         """Return the state class of the sensor."""
         return STATE_CLASS_MEASUREMENT
@@ -261,6 +258,8 @@ class DeconzTemperature(DeconzDevice, SensorEntity):
 
 class DeconzBattery(DeconzDevice, SensorEntity):
     """Battery class for when a device is only represented as an event."""
+
+    _attr_device_class = DEVICE_CLASS_BATTERY
 
     TYPE = DOMAIN
 
@@ -296,11 +295,6 @@ class DeconzBattery(DeconzDevice, SensorEntity):
     def name(self):
         """Return the name of the battery."""
         return f"{self._device.name} Battery Level"
-
-    @property
-    def device_class(self):
-        """Return the class of the sensor."""
-        return DEVICE_CLASS_BATTERY
 
     @property
     def state_class(self):

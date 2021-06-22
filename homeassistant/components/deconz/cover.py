@@ -22,6 +22,12 @@ from .const import COVER_TYPES, DAMPERS, NEW_LIGHT, WINDOW_COVERS
 from .deconz_device import DeconzDevice
 from .gateway import get_gateway_from_config_entry
 
+DEVICE_CLASS = {
+    DAMPERS[0]: DEVICE_CLASS_DAMPER,
+    WINDOW_COVERS[0]: DEVICE_CLASS_SHADE,
+    WINDOW_COVERS[1]: DEVICE_CLASS_SHADE,
+}
+
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up covers for deCONZ component."""
@@ -72,18 +78,12 @@ class DeconzCover(DeconzDevice, CoverEntity):
             self._features |= SUPPORT_STOP_TILT
             self._features |= SUPPORT_SET_TILT_POSITION
 
+        self._attr_device_class = DEVICE_CLASS.get(self._device.type)
+
     @property
     def supported_features(self):
         """Flag supported features."""
         return self._features
-
-    @property
-    def device_class(self):
-        """Return the class of the cover."""
-        if self._device.type in DAMPERS:
-            return DEVICE_CLASS_DAMPER
-        if self._device.type in WINDOW_COVERS:
-            return DEVICE_CLASS_SHADE
 
     @property
     def current_cover_position(self):
