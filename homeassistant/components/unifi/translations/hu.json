@@ -8,7 +8,7 @@
             "faulty_credentials": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s",
             "service_unavailable": "Sikertelen csatlakoz\u00e1s"
         },
-        "flow_title": "UniFi Network {site} ({host})",
+        "flow_title": "{site} ({host})",
         "step": {
             "user": {
                 "data": {
