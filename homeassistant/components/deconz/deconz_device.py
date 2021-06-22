@@ -50,6 +50,8 @@ class DeconzBase:
 class DeconzDevice(DeconzBase, Entity):
     """Representation of a deCONZ device."""
 
+    _attr_should_poll = False
+
     TYPE = ""
 
     def __init__(self, device, gateway):
@@ -98,8 +100,3 @@ class DeconzDevice(DeconzBase, Entity):
     def name(self):
         """Return the name of the device."""
         return self._device.name
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
