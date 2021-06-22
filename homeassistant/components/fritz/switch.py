@@ -40,7 +40,7 @@ def service_call_action(
     try:
         service_append = ":1" if service_suffix else ""
         return fritzbox_tools.connection.call_action(
-            (service_name + service_append), action_name, **kwargs
+            f"{service_name}{service_append}", action_name, **kwargs
         )
     except Exception:  # pylint: disable=broad-except
         _LOGGER.error(
