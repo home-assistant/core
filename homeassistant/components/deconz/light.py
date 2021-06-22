@@ -39,6 +39,7 @@ from .deconz_device import DeconzDevice
 from .gateway import get_gateway_from_config_entry
 
 CONTROLLER = ["Configuration tool"]
+DECONZ_GROUP = "is_deconz_group"
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -239,7 +240,7 @@ class DeconzBaseLight(DeconzDevice, LightEntity):
     @property
     def extra_state_attributes(self):
         """Return the device state attributes."""
-        return {"is_deconz_group": self._device.type == "LightGroup"}
+        return {DECONZ_GROUP: self._device.type == "LightGroup"}
 
 
 class DeconzLight(DeconzBaseLight):
