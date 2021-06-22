@@ -27,7 +27,6 @@ async def async_setup_entry(
     switches = [
         ModernFormsAwaySwitch(entry.entry_id, coordinator),
         ModernFormsAdaptiveLearningSwitch(entry.entry_id, coordinator),
-        ModernFormsRebootSwitch(entry.entry_id, coordinator),
     ]
     async_add_entities(switches)
 
@@ -112,34 +111,3 @@ class ModernFormsAdaptiveLearningSwitch(ModernFormsSwitch):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the Modern Forms Adaptive Learning switch."""
         await self.coordinator.modern_forms.adaptive_learning(adaptive_learning=True)
-
-
-class ModernFormsRebootSwitch(ModernFormsSwitch):
-    """Defines a Modern Forms Reboot switch."""
-
-    def __init__(
-        self, entry_id: str, coordinator: ModernFormsDataUpdateCoordinator
-    ) -> None:
-        """Initialize Modern Forms Reboot switch."""
-        super().__init__(
-            coordinator=coordinator,
-            entry_id=entry_id,
-            icon="mdi:restart",
-            key="reboot",
-            name=f"{coordinator.data.info.device_name} Reboot",
-        )
-
-    @property
-    def is_on(self) -> bool:
-        """Return false as the switch will never be on."""
-        return False
-
-    @modernforms_exception_handler
-    async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn off the Modern Forms reboot switch."""
-        pass  # pylint: disable=unnecessary-pass
-
-    @modernforms_exception_handler
-    async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn on the Modern Forms Reboot switch."""
-        await self.coordinator.modern_forms.reboot()
