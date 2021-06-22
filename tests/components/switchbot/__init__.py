@@ -1,11 +1,12 @@
 """Tests for the switchbot integration."""
 from unittest.mock import patch
 
-from homeassistant.components.switchbot.const import DOMAIN
 from homeassistant.const import CONF_MAC, CONF_NAME, CONF_PASSWORD, CONF_SENSOR_TYPE
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
+
+DOMAIN = "switchbot"
 
 ENTRY_CONFIG = {
     CONF_NAME: "test-name",

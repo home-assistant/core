@@ -24,7 +24,7 @@ PyQRCode==1.2.1
 PyRMVtransport==0.3.2
 
 # homeassistant.components.switchbot
-# PySwitchbot==0.10.0
+# PySwitchbot==0.11.0
 
 # homeassistant.components.transport_nsw
 PyTransportNSW==0.1.1
@@ -861,7 +861,6 @@ pyfttt==0.3
 
 # homeassistant.components.bluetooth_le_tracker
 # homeassistant.components.skybeacon
-# homeassistant.components.switchbot
 pygatt[GATTTOOL]==4.0.5
 
 # homeassistant.components.hvv_departures

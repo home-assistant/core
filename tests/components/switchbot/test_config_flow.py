@@ -1,8 +1,8 @@
 """Test the switchbot config flow."""
 
-from pygatt.exceptions import NotConnectedError
+from unittest.mock import patch
 
-from homeassistant.components.switchbot.const import DOMAIN
+from homeassistant.components.switchbot.config_flow import NotConnectedError
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import CONF_MAC, CONF_NAME, CONF_PASSWORD, CONF_SENSOR_TYPE
 from homeassistant.data_entry_flow import (
@@ -12,10 +12,12 @@ from homeassistant.data_entry_flow import (
 )
 from homeassistant.setup import async_setup_component
 
-from . import USER_INPUT, YAML_CONFIG, _patch_async_setup_entry
+from . import USER_INPUT, YAML_CONFIG, _patch_async_setup_entry, init_integration
+
+DOMAIN = "switchbot"
 
 
-async def test_user_form(hass, switchbot_config_flow):
+async def test_user_form(hass):
     """Test the user initiated form with password."""
     await async_setup_component(hass, "persistent_notification", {})
 
@@ -110,3 +112,39 @@ async def test_user_form_exception(hass, switchbot_config_flow):
 
     assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "unknown"
+
+
+async def test_options_flow(hass):
+    """Test updating options."""
+    with patch("homeassistant.components.switchbot.PLATFORMS", []):
+        entry = await init_integration(hass)
+
+    assert entry.options["update_time"] == 60
+    assert entry.options["retry_count"] == 3
+    assert entry.options["retry_timeout"] == 5
+    assert entry.options["scan_timeout"] == 5
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "init"
+    assert result["errors"] is None
+
+    with _patch_async_setup_entry() as mock_setup_entry:
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={
+                "update_time": 60,
+                "retry_count": 3,
+                "retry_timeout": 5,
+                "scan_timeout": 5,
+            },
+        )
+    await hass.async_block_till_done()
+
+    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["data"]["update_time"] == 60
+    assert result["data"]["retry_count"] == 3
+    assert result["data"]["retry_timeout"] == 5
+    assert result["data"]["scan_timeout"] == 5
+
+    assert len(mock_setup_entry.mock_calls) == 0

@@ -7,7 +7,8 @@
         "data": {
           "name": "[%key:common::config_flow::data::name%]",
           "password": "[%key:common::config_flow::data::password%]",
-          "mac": "Device MAC address"
+          "mac": "Device MAC address",
+          "type": "Device type"
         }
       }
     },
@@ -17,6 +18,18 @@
     "abort": {
       "already_configured_device": "[%key:common::config_flow::abort::already_configured_device%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "update_time": "Time between updates (seconds)",
+          "retry_count": "Retry count",
+          "retry_timeout": "Timeout between retries",
+          "scan_timeout": "How long to scan for advertisement data"
+        }
+      }
     }
   }
 }
