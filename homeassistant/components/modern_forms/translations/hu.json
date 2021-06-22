@@ -2,17 +2,19 @@
     "config": {
         "abort": {
             "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
-            "no_devices_found": "Nem tal\u00e1lhat\u00f3 eszk\u00f6z a h\u00e1l\u00f3zaton"
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s"
         },
         "error": {
-            "one": "hiba",
-            "other": ""
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s"
         },
         "flow_title": "{name}",
         "step": {
+            "confirm": {
+                "description": "El szeretn\u00e9d kezdeni a be\u00e1ll\u00edt\u00e1st?"
+            },
             "user": {
                 "data": {
-                    "usn": "Eszk\u00f6z"
+                    "host": "Hoszt"
                 }
             }
         }

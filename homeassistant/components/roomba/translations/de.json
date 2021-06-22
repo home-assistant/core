@@ -45,8 +45,8 @@
                     "host": "Host",
                     "password": "Passwort"
                 },
-                "description": "Das Abrufen der BLID und des Kennworts erfolgt manuell. Befolgen Sie die in der Dokumentation beschriebenen Schritte unter: https://www.home-assistant.io/integrations/roomba/#retrieving-your-credentials",
-                "title": "Stellen Sie eine Verbindung zum Ger\u00e4t her"
+                "description": "W\u00e4hlen Sie einen Roomba oder Braava aus.",
+                "title": "Automatisch mit dem Ger\u00e4t verbinden"
             }
         }
     },
