@@ -35,7 +35,7 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = ["binary_sensor", "sensor"]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Aurora from a config entry."""
 
     conf = entry.data
@@ -95,7 +95,7 @@ class AuroraDataUpdateCoordinator(DataUpdateCoordinator):
         latitude: float,
         longitude: float,
         threshold: float,
-    ):
+    ) -> None:
         """Initialize the data updater."""
 
         super().__init__(
@@ -128,7 +128,7 @@ class AuroraEntity(CoordinatorEntity):
         coordinator: AuroraDataUpdateCoordinator,
         name: str,
         icon: str,
-    ):
+    ) -> None:
         """Initialize the Aurora Entity."""
 
         super().__init__(coordinator=coordinator)

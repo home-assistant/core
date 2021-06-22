@@ -6,7 +6,6 @@ write_coil:
       name: Address
       description: Address of the register to write to.
       required: true
-      example: 0
       selector:
         number:
           min: 1
@@ -22,7 +21,6 @@ write_coil:
       name: Unit
       description: Address of the modbus unit.
       required: true
-      example: 21
       selector:
         number:
           min: 1
@@ -42,7 +40,6 @@ write_register:
       name: Address
       description: Address of the holding register to write to.
       required: true
-      example: 0
       selector:
         number:
           min: 1
@@ -51,7 +48,6 @@ write_register:
       name: Unit
       description: Address of the modbus unit.
       required: true
-      example: 21
       selector:
         number:
           min: 1

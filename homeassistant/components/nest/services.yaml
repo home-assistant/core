@@ -7,7 +7,6 @@ set_away_mode:
     away_mode:
       name: Away mode
       description: New mode to set.
-      example: "away"
       required: true
       selector:
         select:
@@ -28,14 +27,12 @@ set_eta:
     eta:
       name: ETA
       description: Estimated time of arrival from now.
-      example: "00:10:30"
       required: true
       selector:
         time:
     eta_window:
       name: ETA window
       description: Estimated time of arrival window.
-      example: "00:05"
       default: "00:01"
       selector:
         time:

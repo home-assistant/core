@@ -7,9 +7,8 @@ lock_n_go:
       domain: lock
   fields:
     unlatch:
-      name: unlatch
+      name: Unlatch
       description: Whether to unlatch the lock.
-      example: false
       default: false
       selector:
         boolean:

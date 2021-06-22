@@ -61,7 +61,7 @@ class OmnilogicSensor(OmniLogicEntity, SensorEntity):
         unit: str,
         item_id: tuple,
         state_key: str,
-    ):
+    ) -> None:
         """Initialize Entities."""
         super().__init__(
             coordinator=coordinator,
@@ -217,7 +217,7 @@ class OmniLogicORPSensor(OmnilogicSensor):
         device_class: str,
         icon: str,
         unit: str,
-    ):
+    ) -> None:
         """Initialize the sensor."""
         super().__init__(
             coordinator=coordinator,

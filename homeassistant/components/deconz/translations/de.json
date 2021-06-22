@@ -11,7 +11,7 @@
         "error": {
             "no_key": "Es konnte kein API-Schl\u00fcssel abgerufen werden"
         },
-        "flow_title": "deCONZ Zigbee Gateway",
+        "flow_title": "{host}",
         "step": {
             "hassio_confirm": {
                 "description": "M\u00f6chtest du Home Assistant so konfigurieren, dass er eine Verbindung mit dem deCONZ Gateway herstellt, der vom Supervisor Add-on {addon} bereitgestellt wird?",

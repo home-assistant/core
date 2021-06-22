@@ -6,7 +6,6 @@ import logging
 from pymfy.api.devices.category import Category
 import voluptuous as vol
 
-from homeassistant.components.somfy import config_flow
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_OPTIMISTIC
 from homeassistant.core import HomeAssistant, callback
@@ -21,7 +20,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from . import api
+from . import api, config_flow
 from .const import API, COORDINATOR, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -70,7 +69,7 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Somfy from a config entry."""
     # Backwards compat
     if "auth_implementation" not in entry.data:

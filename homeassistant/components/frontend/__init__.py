@@ -36,6 +36,9 @@ mimetypes.add_type("application/javascript", ".js")
 
 DOMAIN = "frontend"
 CONF_THEMES = "themes"
+CONF_THEMES_MODES = "modes"
+CONF_THEMES_LIGHT = "light"
+CONF_THEMES_DARK = "dark"
 CONF_EXTRA_HTML_URL = "extra_html_url"
 CONF_EXTRA_HTML_URL_ES5 = "extra_html_url_es5"
 CONF_EXTRA_MODULE_URL = "extra_module_url"
@@ -66,14 +69,39 @@ PRIMARY_COLOR = "primary-color"
 
 _LOGGER = logging.getLogger(__name__)
 
+EXTENDED_THEME_SCHEMA = vol.Schema(
+    {
+        # Theme variables that apply to all modes
+        cv.string: cv.string,
+        # Mode specific theme variables
+        vol.Optional(CONF_THEMES_MODES): vol.Schema(
+            {
+                vol.Optional(CONF_THEMES_LIGHT): vol.Schema({cv.string: cv.string}),
+                vol.Optional(CONF_THEMES_DARK): vol.Schema({cv.string: cv.string}),
+            }
+        ),
+    }
+)
+
+THEME_SCHEMA = vol.Schema(
+    {
+        cv.string: (
+            vol.Any(
+                # Legacy theme scheme
+                {cv.string: cv.string},
+                # New extended schema with mode support
+                EXTENDED_THEME_SCHEMA,
+            )
+        )
+    }
+)
+
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
             {
                 vol.Optional(CONF_FRONTEND_REPO): cv.isdir,
-                vol.Optional(CONF_THEMES): vol.Schema(
-                    {cv.string: {cv.string: cv.string}}
-                ),
+                vol.Optional(CONF_THEMES): THEME_SCHEMA,
                 vol.Optional(CONF_EXTRA_MODULE_URL): vol.All(
                     cv.ensure_list, [cv.string]
                 ),

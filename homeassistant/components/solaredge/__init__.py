@@ -25,17 +25,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         response = await hass.async_add_executor_job(
             api.get_details, entry.data[CONF_SITE_ID]
         )
-    except KeyError as ex:
-        LOGGER.error("Missing details data in SolarEdge response")
-        raise ConfigEntryNotReady from ex
     except (ConnectTimeout, HTTPError) as ex:
         LOGGER.error("Could not retrieve details from SolarEdge API")
         raise ConfigEntryNotReady from ex
 
-    if response["details"]["status"].lower() != "active":
+    if "details" not in response:
+        LOGGER.error("Missing details data in SolarEdge response")
+        raise ConfigEntryNotReady
+
+    if response["details"].get("status", "").lower() != "active":
         LOGGER.error("SolarEdge site is not active")
         return False
-    LOGGER.debug("Credentials correct and site is active")
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {DATA_API_CLIENT: api}
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)

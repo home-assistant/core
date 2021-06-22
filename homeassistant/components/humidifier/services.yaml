@@ -24,7 +24,6 @@ set_humidity:
     humidity:
       description: New target humidity for humidifier device.
       required: true
-      example: 50
       selector:
         number:
           min: 0

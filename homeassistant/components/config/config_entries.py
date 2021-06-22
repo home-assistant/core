@@ -1,4 +1,6 @@
 """Http views to control the config manager."""
+from __future__ import annotations
+
 import aiohttp.web_exceptions
 import voluptuous as vol
 
@@ -7,7 +9,7 @@ from homeassistant.auth.permissions.const import CAT_CONFIG_ENTRIES, POLICY_EDIT
 from homeassistant.components import websocket_api
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import HTTP_FORBIDDEN, HTTP_NOT_FOUND
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import Unauthorized
 from homeassistant.helpers.data_entry_flow import (
     FlowManagerIndexView,
@@ -31,8 +33,6 @@ async def async_setup(hass):
     hass.components.websocket_api.async_register_command(config_entry_disable)
     hass.components.websocket_api.async_register_command(config_entry_update)
     hass.components.websocket_api.async_register_command(config_entries_progress)
-    hass.components.websocket_api.async_register_command(system_options_list)
-    hass.components.websocket_api.async_register_command(system_options_update)
     hass.components.websocket_api.async_register_command(ignore_config_flow)
 
     return True
@@ -231,28 +231,21 @@ def config_entries_progress(hass, connection, msg):
     )
 
 
-@websocket_api.require_admin
-@websocket_api.async_response
-@websocket_api.websocket_command(
-    {"type": "config_entries/system_options/list", "entry_id": str}
-)
-async def system_options_list(hass, connection, msg):
-    """List all system options for a config entry."""
-    entry_id = msg["entry_id"]
-    entry = hass.config_entries.async_get_entry(entry_id)
-
-    if entry:
-        connection.send_result(msg["id"], entry.system_options.as_dict())
-
-
-def send_entry_not_found(connection, msg_id):
+def send_entry_not_found(
+    connection: websocket_api.ActiveConnection, msg_id: int
+) -> None:
     """Send Config entry not found error."""
     connection.send_error(
         msg_id, websocket_api.const.ERR_NOT_FOUND, "Config entry not found"
     )
 
 
-def get_entry(hass, connection, entry_id, msg_id):
+def get_entry(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    entry_id: str,
+    msg_id: int,
+) -> config_entries.ConfigEntry | None:
     """Get entry, send error message if it doesn't exist."""
     entry = hass.config_entries.async_get_entry(entry_id)
     if entry is None:
@@ -264,30 +257,12 @@ def get_entry(hass, connection, entry_id, msg_id):
 @websocket_api.async_response
 @websocket_api.websocket_command(
     {
-        "type": "config_entries/system_options/update",
+        "type": "config_entries/update",
         "entry_id": str,
-        vol.Optional("disable_new_entities"): bool,
+        vol.Optional("title"): str,
+        vol.Optional("pref_disable_new_entities"): bool,
+        vol.Optional("pref_disable_polling"): bool,
     }
-)
-async def system_options_update(hass, connection, msg):
-    """Update config entry system options."""
-    changes = dict(msg)
-    changes.pop("id")
-    changes.pop("type")
-    changes.pop("entry_id")
-
-    entry = get_entry(hass, connection, msg["entry_id"], msg["id"])
-    if entry is None:
-        return
-
-    hass.config_entries.async_update_entry(entry, system_options=changes)
-    connection.send_result(msg["id"], entry.system_options.as_dict())
-
-
-@websocket_api.require_admin
-@websocket_api.async_response
-@websocket_api.websocket_command(
-    {"type": "config_entries/update", "entry_id": str, vol.Optional("title"): str}
 )
 async def config_entry_update(hass, connection, msg):
     """Update config entry."""
@@ -300,8 +275,25 @@ async def config_entry_update(hass, connection, msg):
     if entry is None:
         return
 
+    old_disable_polling = entry.pref_disable_polling
+
     hass.config_entries.async_update_entry(entry, **changes)
-    connection.send_result(msg["id"], entry_json(entry))
+
+    result = {
+        "config_entry": entry_json(entry),
+        "require_restart": False,
+    }
+
+    if (
+        old_disable_polling != entry.pref_disable_polling
+        and entry.state is config_entries.ConfigEntryState.LOADED
+    ):
+        if not await hass.config_entries.async_reload(entry.entry_id):
+            result["require_restart"] = (
+                entry.state is config_entries.ConfigEntryState.FAILED_UNLOAD
+            )
+
+    connection.send_result(msg["id"], result)
 
 
 @websocket_api.require_admin
@@ -385,9 +377,11 @@ def entry_json(entry: config_entries.ConfigEntry) -> dict:
         "domain": entry.domain,
         "title": entry.title,
         "source": entry.source,
-        "state": entry.state,
+        "state": entry.state.value,
         "supports_options": supports_options,
         "supports_unload": entry.supports_unload,
+        "pref_disable_new_entities": entry.pref_disable_new_entities,
+        "pref_disable_polling": entry.pref_disable_polling,
         "disabled_by": entry.disabled_by,
         "reason": entry.reason,
     }

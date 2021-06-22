@@ -48,15 +48,20 @@ INTEGRATION_SERVICES = [
 # Entity specific methods (valid for most Groups/ISY Scenes, Lights, Switches, Fans)
 SERVICE_SEND_RAW_NODE_COMMAND = "send_raw_node_command"
 SERVICE_SEND_NODE_COMMAND = "send_node_command"
+SERVICE_GET_ZWAVE_PARAMETER = "get_zwave_parameter"
+SERVICE_SET_ZWAVE_PARAMETER = "set_zwave_parameter"
+SERVICE_RENAME_NODE = "rename_node"
 
 # Services valid only for dimmable lights.
 SERVICE_SET_ON_LEVEL = "set_on_level"
 SERVICE_SET_RAMP_RATE = "set_ramp_rate"
 
+CONF_PARAMETER = "parameter"
 CONF_PARAMETERS = "parameters"
 CONF_VALUE = "value"
 CONF_INIT = "init"
 CONF_ISY = "isy"
+CONF_SIZE = "size"
 
 VALID_NODE_COMMANDS = [
     "beep",
@@ -81,6 +86,7 @@ VALID_PROGRAM_COMMANDS = [
     "enable_run_at_startup",
     "disable_run_at_startup",
 ]
+VALID_PARAMETER_SIZES = [1, 2, 4]
 
 
 def valid_isy_commands(value: Any) -> str:
@@ -114,6 +120,16 @@ SERVICE_SEND_RAW_NODE_COMMAND_SCHEMA = {
 
 SERVICE_SEND_NODE_COMMAND_SCHEMA = {
     vol.Required(CONF_COMMAND): vol.In(VALID_NODE_COMMANDS)
+}
+
+SERVICE_RENAME_NODE_SCHEMA = {vol.Required(CONF_NAME): cv.string}
+
+SERVICE_GET_ZWAVE_PARAMETER_SCHEMA = {vol.Required(CONF_PARAMETER): vol.Coerce(int)}
+
+SERVICE_SET_ZWAVE_PARAMETER_SCHEMA = {
+    vol.Required(CONF_PARAMETER): vol.Coerce(int),
+    vol.Required(CONF_VALUE): vol.Coerce(int),
+    vol.Required(CONF_SIZE): vol.All(vol.Coerce(int), vol.In(VALID_PARAMETER_SIZES)),
 }
 
 SERVICE_SET_VARIABLE_SCHEMA = vol.All(
@@ -375,6 +391,42 @@ def async_setup_services(hass: HomeAssistant):  # noqa: C901
         service=SERVICE_SEND_NODE_COMMAND,
         schema=cv.make_entity_service_schema(SERVICE_SEND_NODE_COMMAND_SCHEMA),
         service_func=_async_send_node_command,
+    )
+
+    async def _async_get_zwave_parameter(call: ServiceCall):
+        await hass.helpers.service.entity_service_call(
+            async_get_platforms(hass, DOMAIN), "async_get_zwave_parameter", call
+        )
+
+    hass.services.async_register(
+        domain=DOMAIN,
+        service=SERVICE_GET_ZWAVE_PARAMETER,
+        schema=cv.make_entity_service_schema(SERVICE_GET_ZWAVE_PARAMETER_SCHEMA),
+        service_func=_async_get_zwave_parameter,
+    )
+
+    async def _async_set_zwave_parameter(call: ServiceCall):
+        await hass.helpers.service.entity_service_call(
+            async_get_platforms(hass, DOMAIN), "async_set_zwave_parameter", call
+        )
+
+    hass.services.async_register(
+        domain=DOMAIN,
+        service=SERVICE_SET_ZWAVE_PARAMETER,
+        schema=cv.make_entity_service_schema(SERVICE_SET_ZWAVE_PARAMETER_SCHEMA),
+        service_func=_async_set_zwave_parameter,
+    )
+
+    async def _async_rename_node(call: ServiceCall):
+        await hass.helpers.service.entity_service_call(
+            async_get_platforms(hass, DOMAIN), "async_rename_node", call
+        )
+
+    hass.services.async_register(
+        domain=DOMAIN,
+        service=SERVICE_RENAME_NODE,
+        schema=cv.make_entity_service_schema(SERVICE_RENAME_NODE_SCHEMA),
+        service_func=_async_rename_node,
     )
 
 

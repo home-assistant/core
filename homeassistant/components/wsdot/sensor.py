@@ -73,6 +73,8 @@ class WashingtonStateTransportSensor(SensorEntity):
     can read them and make them available.
     """
 
+    _attr_icon = ICON
+
     def __init__(self, name, access_code):
         """Initialize the sensor."""
         self._data = {}
@@ -90,14 +92,11 @@ class WashingtonStateTransportSensor(SensorEntity):
         """Return the state of the sensor."""
         return self._state
 
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return ICON
-
 
 class WashingtonStateTravelTimeSensor(WashingtonStateTransportSensor):
     """Travel time sensor from WSDOT."""
+
+    _attr_unit_of_measurement = TIME_MINUTES
 
     def __init__(self, name, access_code, travel_time_id):
         """Construct a travel time sensor."""
@@ -134,11 +133,6 @@ class WashingtonStateTravelTimeSensor(WashingtonStateTransportSensor):
                 self._data.get(ATTR_TIME_UPDATED)
             )
             return attrs
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit this state is expressed in."""
-        return TIME_MINUTES
 
 
 def _parse_wsdot_timestamp(timestamp):

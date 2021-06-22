@@ -36,5 +36,13 @@
                 "title": "ISY994 Alternativer"
             }
         }
+    },
+    "system_health": {
+        "info": {
+            "device_connected": "ISY tilkoblet",
+            "host_reachable": "Verten kan n\u00e5s",
+            "last_heartbeat": "Tidspunkt for siste hjerteslag",
+            "websocket_status": "Event Socket Status"
+        }
     }
 }

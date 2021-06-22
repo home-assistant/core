@@ -38,7 +38,7 @@ class HuisbaasjeSensor(CoordinatorEntity, SensorEntity):
         unit_of_measurement: str = POWER_WATT,
         icon: str = "mdi:lightning-bolt",
         precision: int = 0,
-    ):
+    ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
         self._user_id = user_id

@@ -159,7 +159,7 @@ class ImageServeView(HomeAssistantView):
 
     def __init__(
         self, image_folder: pathlib.Path, image_collection: ImageStorageCollection
-    ):
+    ) -> None:
         """Initialize image serve view."""
         self.transform_lock = asyncio.Lock()
         self.image_folder = image_folder

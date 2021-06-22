@@ -18,6 +18,7 @@ from homeassistant.components import (
     media_player,
     scene,
     script,
+    select,
     sensor,
     switch,
     vacuum,
@@ -26,6 +27,10 @@ from homeassistant.components.climate import const as climate
 from homeassistant.components.google_assistant import const, error, helpers, trait
 from homeassistant.components.google_assistant.error import SmartHomeError
 from homeassistant.components.humidifier import const as humidifier
+from homeassistant.components.media_player.const import (
+    MEDIA_TYPE_CHANNEL,
+    SERVICE_PLAY_MEDIA,
+)
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
@@ -1425,6 +1430,7 @@ async def test_fan_speed(hass):
                 ],
                 "speed": "low",
                 "percentage": 33,
+                "percentage_step": 1.0,
             },
         ),
         BASIC_CONFIG,
@@ -1794,6 +1800,80 @@ async def test_modes_input_select(hass):
     assert calls[0].data == {"entity_id": "input_select.bla", "option": "xyz"}
 
 
+async def test_modes_select(hass):
+    """Test Select Mode trait."""
+    assert helpers.get_google_type(select.DOMAIN, None) is not None
+    assert trait.ModesTrait.supported(select.DOMAIN, None, None, None)
+
+    trt = trait.ModesTrait(
+        hass,
+        State("select.bla", "unavailable"),
+        BASIC_CONFIG,
+    )
+    assert trt.sync_attributes() == {"availableModes": []}
+
+    trt = trait.ModesTrait(
+        hass,
+        State(
+            "select.bla",
+            "abc",
+            attributes={select.ATTR_OPTIONS: ["abc", "123", "xyz"]},
+        ),
+        BASIC_CONFIG,
+    )
+
+    attribs = trt.sync_attributes()
+    assert attribs == {
+        "availableModes": [
+            {
+                "name": "option",
+                "name_values": [
+                    {
+                        "name_synonym": ["option", "setting", "mode", "value"],
+                        "lang": "en",
+                    }
+                ],
+                "settings": [
+                    {
+                        "setting_name": "abc",
+                        "setting_values": [{"setting_synonym": ["abc"], "lang": "en"}],
+                    },
+                    {
+                        "setting_name": "123",
+                        "setting_values": [{"setting_synonym": ["123"], "lang": "en"}],
+                    },
+                    {
+                        "setting_name": "xyz",
+                        "setting_values": [{"setting_synonym": ["xyz"], "lang": "en"}],
+                    },
+                ],
+                "ordered": False,
+            }
+        ]
+    }
+
+    assert trt.query_attributes() == {
+        "currentModeSettings": {"option": "abc"},
+        "on": True,
+    }
+
+    assert trt.can_execute(
+        trait.COMMAND_MODES,
+        params={"updateModeSettings": {"option": "xyz"}},
+    )
+
+    calls = async_mock_service(hass, select.DOMAIN, select.SERVICE_SELECT_OPTION)
+    await trt.execute(
+        trait.COMMAND_MODES,
+        BASIC_DATA,
+        {"updateModeSettings": {"option": "xyz"}},
+        {},
+    )
+
+    assert len(calls) == 1
+    assert calls[0].data == {"entity_id": "select.bla", "option": "xyz"}
+
+
 async def test_modes_humidifier(hass):
     """Test Humidifier Mode trait."""
     assert helpers.get_google_type(humidifier.DOMAIN, None) is not None
@@ -1945,6 +2025,97 @@ async def test_sound_modes(hass):
         "entity_id": "media_player.living_room",
         "sound_mode": "stereo",
     }
+
+
+async def test_preset_modes(hass):
+    """Test Mode trait for fan preset modes."""
+    assert helpers.get_google_type(fan.DOMAIN, None) is not None
+    assert trait.ModesTrait.supported(fan.DOMAIN, fan.SUPPORT_PRESET_MODE, None, None)
+
+    trt = trait.ModesTrait(
+        hass,
+        State(
+            "fan.living_room",
+            STATE_ON,
+            attributes={
+                fan.ATTR_PRESET_MODES: ["auto", "whoosh"],
+                fan.ATTR_PRESET_MODE: "auto",
+                ATTR_SUPPORTED_FEATURES: fan.SUPPORT_PRESET_MODE,
+            },
+        ),
+        BASIC_CONFIG,
+    )
+
+    attribs = trt.sync_attributes()
+    assert attribs == {
+        "availableModes": [
+            {
+                "name": "preset mode",
+                "name_values": [
+                    {"name_synonym": ["preset mode", "mode", "preset"], "lang": "en"}
+                ],
+                "settings": [
+                    {
+                        "setting_name": "auto",
+                        "setting_values": [{"setting_synonym": ["auto"], "lang": "en"}],
+                    },
+                    {
+                        "setting_name": "whoosh",
+                        "setting_values": [
+                            {"setting_synonym": ["whoosh"], "lang": "en"}
+                        ],
+                    },
+                ],
+                "ordered": False,
+            }
+        ]
+    }
+
+    assert trt.query_attributes() == {
+        "currentModeSettings": {"preset mode": "auto"},
+        "on": True,
+    }
+
+    assert trt.can_execute(
+        trait.COMMAND_MODES,
+        params={"updateModeSettings": {"preset mode": "auto"}},
+    )
+
+    calls = async_mock_service(hass, fan.DOMAIN, fan.SERVICE_SET_PRESET_MODE)
+    await trt.execute(
+        trait.COMMAND_MODES,
+        BASIC_DATA,
+        {"updateModeSettings": {"preset mode": "auto"}},
+        {},
+    )
+
+    assert len(calls) == 1
+    assert calls[0].data == {
+        "entity_id": "fan.living_room",
+        "preset_mode": "auto",
+    }
+
+
+async def test_traits_unknown_domains(hass, caplog):
+    """Test Mode trait for unsupported domain."""
+    trt = trait.ModesTrait(
+        hass,
+        State(
+            "switch.living_room",
+            STATE_ON,
+        ),
+        BASIC_CONFIG,
+    )
+
+    assert trt.supported("not_supported_domain", False, None, None) is False
+    await trt.execute(
+        trait.COMMAND_MODES,
+        BASIC_DATA,
+        {"updateModeSettings": {}},
+        {},
+    )
+    assert "Received an Options command for unrecognised domain" in caplog.text
+    caplog.clear()
 
 
 async def test_openclose_cover(hass):
@@ -2653,3 +2824,52 @@ async def test_media_state(hass, state):
         "activityState": trt.activity_lookup.get(state),
         "playbackState": trt.playback_lookup.get(state),
     }
+
+
+async def test_channel(hass):
+    """Test Channel trait support."""
+    assert helpers.get_google_type(media_player.DOMAIN, None) is not None
+    assert trait.ChannelTrait.supported(
+        media_player.DOMAIN,
+        media_player.SUPPORT_PLAY_MEDIA,
+        media_player.DEVICE_CLASS_TV,
+        None,
+    )
+    assert (
+        trait.ChannelTrait.supported(
+            media_player.DOMAIN, media_player.SUPPORT_PLAY_MEDIA, None, None
+        )
+        is False
+    )
+    assert trait.ChannelTrait.supported(media_player.DOMAIN, 0, None, None) is False
+
+    trt = trait.ChannelTrait(hass, State("media_player.demo", STATE_ON), BASIC_CONFIG)
+
+    assert trt.sync_attributes() == {
+        "availableChannels": [],
+        "commandOnlyChannels": True,
+    }
+    assert trt.query_attributes() == {}
+
+    media_player_calls = async_mock_service(
+        hass, media_player.DOMAIN, SERVICE_PLAY_MEDIA
+    )
+    await trt.execute(
+        trait.COMMAND_SELECT_CHANNEL, BASIC_DATA, {"channelNumber": "1"}, {}
+    )
+    assert len(media_player_calls) == 1
+    assert media_player_calls[0].data == {
+        ATTR_ENTITY_ID: "media_player.demo",
+        media_player.ATTR_MEDIA_CONTENT_ID: "1",
+        media_player.ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_CHANNEL,
+    }
+
+    with pytest.raises(SmartHomeError, match="Channel is not available"):
+        await trt.execute(
+            trait.COMMAND_SELECT_CHANNEL, BASIC_DATA, {"channelCode": "Channel 3"}, {}
+        )
+    assert len(media_player_calls) == 1
+
+    with pytest.raises(SmartHomeError, match="Unsupported command"):
+        await trt.execute("Unknown command", BASIC_DATA, {"channelNumber": "1"}, {})
+    assert len(media_player_calls) == 1

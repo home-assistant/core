@@ -11,9 +11,9 @@ import async_timeout
 from pyalmond import AbstractAlmondWebAuth, AlmondLocalAuth, WebAlmondAPI
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.auth.const import GROUP_ID_ADMIN
 from homeassistant.components import conversation
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_CLIENT_ID,
     CONF_CLIENT_SECRET,
@@ -94,14 +94,14 @@ async def async_setup(hass, config):
         hass.async_create_task(
             hass.config_entries.flow.async_init(
                 DOMAIN,
-                context={"source": config_entries.SOURCE_IMPORT},
+                context={"source": SOURCE_IMPORT},
                 data={"type": TYPE_LOCAL, "host": conf[CONF_HOST]},
             )
         )
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: config_entries.ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Almond config entry."""
     websession = aiohttp_client.async_get_clientsession(hass)
 
@@ -150,7 +150,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: config_entries.ConfigEnt
 
 
 async def _configure_almond_for_ha(
-    hass: HomeAssistant, entry: config_entries.ConfigEntry, api: WebAlmondAPI
+    hass: HomeAssistant, entry: ConfigEntry, api: WebAlmondAPI
 ):
     """Configure Almond to connect to HA."""
     try:
@@ -231,7 +231,7 @@ class AlmondOAuth(AbstractAlmondWebAuth):
         host: str,
         websession: ClientSession,
         oauth_session: config_entry_oauth2_flow.OAuth2Session,
-    ):
+    ) -> None:
         """Initialize Almond auth."""
         super().__init__(host, websession)
         self._oauth_session = oauth_session
@@ -248,8 +248,8 @@ class AlmondAgent(conversation.AbstractConversationAgent):
     """Almond conversation agent."""
 
     def __init__(
-        self, hass: HomeAssistant, api: WebAlmondAPI, entry: config_entries.ConfigEntry
-    ):
+        self, hass: HomeAssistant, api: WebAlmondAPI, entry: ConfigEntry
+    ) -> None:
         """Initialize the agent."""
         self.hass = hass
         self.api = api

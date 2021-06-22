@@ -10,10 +10,7 @@ from homeassistant.components.vacuum import (
     SERVICE_START,
     STATE_DOCKED,
 )
-from homeassistant.config_entries import (
-    ENTRY_STATE_SETUP_ERROR,
-    ENTRY_STATE_SETUP_RETRY,
-)
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID
 
 from .common import CONFIG, VACUUM_ENTITY_ID
@@ -46,8 +43,8 @@ async def test_unload_entry(hass, mock_account):
 @pytest.mark.parametrize(
     "side_effect,expected_state",
     (
-        (LitterRobotLoginException, ENTRY_STATE_SETUP_ERROR),
-        (LitterRobotException, ENTRY_STATE_SETUP_RETRY),
+        (LitterRobotLoginException, ConfigEntryState.SETUP_ERROR),
+        (LitterRobotException, ConfigEntryState.SETUP_RETRY),
     ),
 )
 async def test_entry_not_setup(hass, side_effect, expected_state):
@@ -63,4 +60,4 @@ async def test_entry_not_setup(hass, side_effect, expected_state):
         side_effect=side_effect,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
-        assert entry.state == expected_state
+        assert entry.state is expected_state

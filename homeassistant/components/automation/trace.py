@@ -21,7 +21,7 @@ class AutomationTrace(ActionTrace):
         config: dict[str, Any],
         blueprint_inputs: dict[str, Any],
         context: Context,
-    ):
+    ) -> None:
         """Container for automation trace."""
         key = ("automation", item_id)
         super().__init__(key, config, blueprint_inputs, context)

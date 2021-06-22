@@ -19,6 +19,14 @@ from .onewirehub import OneWireHub
 
 DEVICE_SWITCHES: dict[str, list[DeviceComponentDescription]] = {
     # Family : { owfs path }
+    "05": [
+        {
+            "path": "PIO",
+            "name": "PIO",
+            "type": SWITCH_TYPE_PIO,
+            "default_disabled": True,
+        },
+    ],
     "12": [
         {
             "path": "PIO.A",

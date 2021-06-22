@@ -8,7 +8,7 @@
             "one": "hiba",
             "other": ""
         },
-        "flow_title": "UPnP/IGD: {name}",
+        "flow_title": "{name}",
         "step": {
             "user": {
                 "data": {

@@ -17,12 +17,14 @@ from homeassistant.components import (
     media_player,
     scene,
     script,
+    select,
     sensor,
     switch,
     vacuum,
 )
 from homeassistant.components.climate import const as climate
 from homeassistant.components.humidifier import const as humidifier
+from homeassistant.components.media_player.const import MEDIA_TYPE_CHANNEL
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_CODE,
@@ -71,6 +73,7 @@ from .const import (
     ERR_ALREADY_DISARMED,
     ERR_ALREADY_STOPPED,
     ERR_CHALLENGE_NOT_SETUP,
+    ERR_NO_AVAILABLE_CHANNEL,
     ERR_NOT_SUPPORTED,
     ERR_UNSUPPORTED_INPUT,
     ERR_VALUE_OUT_OF_RANGE,
@@ -99,6 +102,7 @@ TRAIT_ARMDISARM = f"{PREFIX_TRAITS}ArmDisarm"
 TRAIT_HUMIDITY_SETTING = f"{PREFIX_TRAITS}HumiditySetting"
 TRAIT_TRANSPORT_CONTROL = f"{PREFIX_TRAITS}TransportControl"
 TRAIT_MEDIA_STATE = f"{PREFIX_TRAITS}MediaState"
+TRAIT_CHANNEL = f"{PREFIX_TRAITS}Channel"
 
 PREFIX_COMMANDS = "action.devices.commands."
 COMMAND_ONOFF = f"{PREFIX_COMMANDS}OnOff"
@@ -118,6 +122,7 @@ COMMAND_THERMOSTAT_TEMPERATURE_SET_RANGE = (
 COMMAND_THERMOSTAT_SET_MODE = f"{PREFIX_COMMANDS}ThermostatSetMode"
 COMMAND_LOCKUNLOCK = f"{PREFIX_COMMANDS}LockUnlock"
 COMMAND_FANSPEED = f"{PREFIX_COMMANDS}SetFanSpeed"
+COMMAND_FANSPEEDRELATIVE = f"{PREFIX_COMMANDS}SetFanSpeedRelative"
 COMMAND_MODES = f"{PREFIX_COMMANDS}SetModes"
 COMMAND_INPUT = f"{PREFIX_COMMANDS}SetInput"
 COMMAND_NEXT_INPUT = f"{PREFIX_COMMANDS}NextInput"
@@ -137,7 +142,7 @@ COMMAND_MEDIA_SEEK_TO_POSITION = f"{PREFIX_COMMANDS}mediaSeekToPosition"
 COMMAND_MEDIA_SHUFFLE = f"{PREFIX_COMMANDS}mediaShuffle"
 COMMAND_MEDIA_STOP = f"{PREFIX_COMMANDS}mediaStop"
 COMMAND_SET_HUMIDITY = f"{PREFIX_COMMANDS}SetHumidity"
-
+COMMAND_SELECT_CHANNEL = f"{PREFIX_COMMANDS}selectChannel"
 
 TRAITS = []
 
@@ -1273,10 +1278,9 @@ class FanSpeedTrait(_Trait):
         reversible = False
 
         if domain == fan.DOMAIN:
+            # The use of legacy speeds is deprecated in the schema, support will be removed after a quarter (2021.7)
             modes = self.state.attributes.get(fan.ATTR_SPEED_LIST, [])
             for mode in modes:
-                if mode not in self.speed_synonyms:
-                    continue
                 speed = {
                     "speed_name": mode,
                     "speed_values": [
@@ -1318,6 +1322,7 @@ class FanSpeedTrait(_Trait):
             if speed is not None:
                 response["on"] = speed != fan.SPEED_OFF
                 response["currentFanSpeedSetting"] = speed
+            if percent is not None:
                 response["currentFanSpeedPercent"] = percent
         return response
 
@@ -1366,6 +1371,7 @@ class ModesTrait(_Trait):
     commands = [COMMAND_MODES]
 
     SYNONYMS = {
+        "preset mode": ["preset mode", "mode", "preset"],
         "sound mode": ["sound mode", "effects"],
         "option": ["option", "setting", "mode", "value"],
     }
@@ -1373,7 +1379,13 @@ class ModesTrait(_Trait):
     @staticmethod
     def supported(domain, features, device_class, _):
         """Test if state is supported."""
+        if domain == fan.DOMAIN and features & fan.SUPPORT_PRESET_MODE:
+            return True
+
         if domain == input_select.DOMAIN:
+            return True
+
+        if domain == select.DOMAIN:
             return True
 
         if domain == humidifier.DOMAIN and features & humidifier.SUPPORT_MODES:
@@ -1416,8 +1428,10 @@ class ModesTrait(_Trait):
         modes = []
 
         for domain, attr, name in (
+            (fan.DOMAIN, fan.ATTR_PRESET_MODES, "preset mode"),
             (media_player.DOMAIN, media_player.ATTR_SOUND_MODE_LIST, "sound mode"),
             (input_select.DOMAIN, input_select.ATTR_OPTIONS, "option"),
+            (select.DOMAIN, select.ATTR_OPTIONS, "option"),
             (humidifier.DOMAIN, humidifier.ATTR_AVAILABLE_MODES, "mode"),
             (light.DOMAIN, light.ATTR_EFFECT_LIST, "effect"),
         ):
@@ -1442,10 +1456,15 @@ class ModesTrait(_Trait):
         response = {}
         mode_settings = {}
 
-        if self.state.domain == media_player.DOMAIN:
+        if self.state.domain == fan.DOMAIN:
+            if fan.ATTR_PRESET_MODES in attrs:
+                mode_settings["preset mode"] = attrs.get(fan.ATTR_PRESET_MODE)
+        elif self.state.domain == media_player.DOMAIN:
             if media_player.ATTR_SOUND_MODE_LIST in attrs:
                 mode_settings["sound mode"] = attrs.get(media_player.ATTR_SOUND_MODE)
         elif self.state.domain == input_select.DOMAIN:
+            mode_settings["option"] = self.state.state
+        elif self.state.domain == select.DOMAIN:
             mode_settings["option"] = self.state.state
         elif self.state.domain == humidifier.DOMAIN:
             if ATTR_MODE in attrs:
@@ -1463,14 +1482,42 @@ class ModesTrait(_Trait):
         """Execute a SetModes command."""
         settings = params.get("updateModeSettings")
 
+        if self.state.domain == fan.DOMAIN:
+            preset_mode = settings["preset mode"]
+            await self.hass.services.async_call(
+                fan.DOMAIN,
+                fan.SERVICE_SET_PRESET_MODE,
+                {
+                    ATTR_ENTITY_ID: self.state.entity_id,
+                    fan.ATTR_PRESET_MODE: preset_mode,
+                },
+                blocking=True,
+                context=data.context,
+            )
+            return
+
         if self.state.domain == input_select.DOMAIN:
-            option = params["updateModeSettings"]["option"]
+            option = settings["option"]
             await self.hass.services.async_call(
                 input_select.DOMAIN,
                 input_select.SERVICE_SELECT_OPTION,
                 {
                     ATTR_ENTITY_ID: self.state.entity_id,
                     input_select.ATTR_OPTION: option,
+                },
+                blocking=True,
+                context=data.context,
+            )
+            return
+
+        if self.state.domain == select.DOMAIN:
+            option = settings["option"]
+            await self.hass.services.async_call(
+                select.DOMAIN,
+                select.SERVICE_SELECT_OPTION,
+                {
+                    ATTR_ENTITY_ID: self.state.entity_id,
+                    select.ATTR_OPTION: option,
                 },
                 blocking=True,
                 context=data.context,
@@ -1505,26 +1552,25 @@ class ModesTrait(_Trait):
             )
             return
 
-        if self.state.domain != media_player.DOMAIN:
-            _LOGGER.info(
-                "Received an Options command for unrecognised domain %s",
-                self.state.domain,
-            )
-            return
+        if self.state.domain == media_player.DOMAIN:
+            sound_mode = settings.get("sound mode")
+            if sound_mode:
+                await self.hass.services.async_call(
+                    media_player.DOMAIN,
+                    media_player.SERVICE_SELECT_SOUND_MODE,
+                    {
+                        ATTR_ENTITY_ID: self.state.entity_id,
+                        media_player.ATTR_SOUND_MODE: sound_mode,
+                    },
+                    blocking=True,
+                    context=data.context,
+                )
 
-        sound_mode = settings.get("sound mode")
-
-        if sound_mode:
-            await self.hass.services.async_call(
-                media_player.DOMAIN,
-                media_player.SERVICE_SELECT_SOUND_MODE,
-                {
-                    ATTR_ENTITY_ID: self.state.entity_id,
-                    media_player.ATTR_SOUND_MODE: sound_mode,
-                },
-                blocking=True,
-                context=data.context,
-            )
+        _LOGGER.info(
+            "Received an Options command for unrecognised domain %s",
+            self.state.domain,
+        )
+        return
 
 
 @register_trait
@@ -2070,3 +2116,59 @@ class MediaStateTrait(_Trait):
             "activityState": self.activity_lookup.get(self.state.state, "INACTIVE"),
             "playbackState": self.playback_lookup.get(self.state.state, "STOPPED"),
         }
+
+
+@register_trait
+class ChannelTrait(_Trait):
+    """Trait to get media playback state.
+
+    https://developers.google.com/actions/smarthome/traits/channel
+    """
+
+    name = TRAIT_CHANNEL
+    commands = [COMMAND_SELECT_CHANNEL]
+
+    @staticmethod
+    def supported(domain, features, device_class, _):
+        """Test if state is supported."""
+        if (
+            domain == media_player.DOMAIN
+            and (features & media_player.SUPPORT_PLAY_MEDIA)
+            and device_class == media_player.DEVICE_CLASS_TV
+        ):
+            return True
+
+        return False
+
+    def sync_attributes(self):
+        """Return attributes for a sync request."""
+        return {"availableChannels": [], "commandOnlyChannels": True}
+
+    def query_attributes(self):
+        """Return channel query attributes."""
+        return {}
+
+    async def execute(self, command, data, params, challenge):
+        """Execute an setChannel command."""
+        if command == COMMAND_SELECT_CHANNEL:
+            channel_number = params.get("channelNumber")
+        else:
+            raise SmartHomeError(ERR_NOT_SUPPORTED, "Unsupported command")
+
+        if not channel_number:
+            raise SmartHomeError(
+                ERR_NO_AVAILABLE_CHANNEL,
+                "Channel is not available",
+            )
+
+        await self.hass.services.async_call(
+            media_player.DOMAIN,
+            media_player.SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: self.state.entity_id,
+                media_player.ATTR_MEDIA_CONTENT_ID: channel_number,
+                media_player.ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_CHANNEL,
+            },
+            blocking=True,
+            context=data.context,
+        )

@@ -3,9 +3,9 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import DEVICE_CLASS_TIMESTAMP
+from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_ICON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -14,8 +14,11 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from . import BrotherDataUpdateCoordinator
 from .const import (
     ATTR_COUNTER,
+    ATTR_ENABLED,
+    ATTR_LABEL,
     ATTR_MANUFACTURER,
     ATTR_REMAINING_PAGES,
+    ATTR_UNIT,
     ATTR_UPTIME,
     ATTRS_MAP,
     DATA_CONFIG_ENTRY,
@@ -57,17 +60,17 @@ class BrotherPrinterSensor(CoordinatorEntity, SensorEntity):
     ) -> None:
         """Initialize."""
         super().__init__(coordinator)
-        self._description = SENSOR_TYPES[kind]
-        self._name = f"{coordinator.data.model} {self._description['label']}"
-        self._unique_id = f"{coordinator.data.serial.lower()}_{kind}"
-        self._device_info = device_info
-        self.kind = kind
+        description = SENSOR_TYPES[kind]
         self._attrs: dict[str, Any] = {}
-
-    @property
-    def name(self) -> str:
-        """Return the name."""
-        return self._name
+        self._attr_device_class = description.get(ATTR_DEVICE_CLASS)
+        self._attr_device_info = device_info
+        self._attr_entity_registry_enabled_default = description[ATTR_ENABLED]
+        self._attr_icon = description[ATTR_ICON]
+        self._attr_name = f"{coordinator.data.model} {description[ATTR_LABEL]}"
+        self._attr_state_class = description[ATTR_STATE_CLASS]
+        self._attr_unique_id = f"{coordinator.data.serial.lower()}_{kind}"
+        self._attr_unit_of_measurement = description[ATTR_UNIT]
+        self.kind = kind
 
     @property
     def state(self) -> Any:
@@ -75,13 +78,6 @@ class BrotherPrinterSensor(CoordinatorEntity, SensorEntity):
         if self.kind == ATTR_UPTIME:
             return getattr(self.coordinator.data, self.kind).isoformat()
         return getattr(self.coordinator.data, self.kind)
-
-    @property
-    def device_class(self) -> str | None:
-        """Return the class of this sensor."""
-        if self.kind == ATTR_UPTIME:
-            return DEVICE_CLASS_TIMESTAMP
-        return None
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
@@ -93,28 +89,3 @@ class BrotherPrinterSensor(CoordinatorEntity, SensorEntity):
             )
             self._attrs[ATTR_COUNTER] = getattr(self.coordinator.data, drum_counter)
         return self._attrs
-
-    @property
-    def icon(self) -> str | None:
-        """Return the icon."""
-        return self._description["icon"]
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique_id for this entity."""
-        return self._unique_id
-
-    @property
-    def unit_of_measurement(self) -> str | None:
-        """Return the unit the value is expressed in."""
-        return self._description["unit"]
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device info."""
-        return self._device_info
-
-    @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Return if the entity should be enabled when first added to the entity registry."""
-        return self._description["enabled"]

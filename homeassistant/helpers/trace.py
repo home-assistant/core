@@ -15,7 +15,7 @@ import homeassistant.util.dt as dt_util
 class TraceElement:
     """Container for trace data."""
 
-    def __init__(self, variables: TemplateVarsType, path: str):
+    def __init__(self, variables: TemplateVarsType, path: str) -> None:
         """Container for trace data."""
         self._child_key: tuple[str, str] | None = None
         self._child_run_id: str | None = None

@@ -20,7 +20,6 @@ send_raw_node_command:
     value:
       name: Value
       description: The integer value to be sent with the command.
-      example: 255
       selector:
         number:
           min: 0
@@ -35,7 +34,6 @@ send_raw_node_command:
     unit_of_measurement:
       name: Unit of measurement
       description: The ISY Unit of Measurement (UOM) to send with the command, if required.
-      example: 67
       selector:
         number:
           min: 0
@@ -53,7 +51,6 @@ send_node_command:
       name: Command
       description: The command to be sent to the device.
       required: true
-      example: "fast_on"
       selector:
         select:
           options:
@@ -68,6 +65,76 @@ send_node_command:
             - "fast_off"
             - "fast_on"
             - "query"
+get_zwave_parameter:
+  name: Get Z-Wave Parameter
+  description: >-
+    Request a Z-Wave Device parameter via the ISY. The parameter value will be returned as a entity extra state attribute with the name "ZW_#"
+    where "#" is the parameter number.
+  target:
+    entity:
+      integration: isy994
+  fields:
+    parameter:
+      name: Parameter
+      description: The parameter number to retrieve from the device.
+      example: 8
+      selector:
+        number:
+          min: 1
+          max: 255
+set_zwave_parameter:
+  name: Set Z-Wave Parameter
+  description: >-
+    Update a Z-Wave Device parameter via the ISY. The parameter value will also be returned as a entity extra state attribute with the name "ZW_#"
+    where "#" is the parameter number.
+  target:
+    entity:
+      integration: isy994
+  fields:
+    parameter:
+      name: Parameter
+      description: The parameter number to set on the end device.
+      required: true
+      example: 8
+      selector:
+        number:
+          min: 1
+          max: 255
+    value:
+      name: Value
+      description: The value to set for the parameter. May be an integer or byte string (e.g. "0xFFFF").
+      required: true
+      example: 33491663
+      selector:
+        text:
+    size:
+      name: Size
+      description: The size of the parameter, either 1, 2, or 4 bytes.
+      required: true
+      example: 4
+      selector:
+        select:
+          options:
+            - "1"
+            - "2"
+            - "4"
+rename_node:
+  name: Rename Node on ISY994
+  description: >-
+    Rename a node or group (scene) on the ISY994. Note: this will not automatically change the Home Assistant Entity Name or Entity ID to match.
+    The entity name and ID will only be updated after calling `isy994.reload` or restarting Home Assistant, and ONLY IF you have not already customized the
+    name within Home Assistant.
+  target:
+    entity:
+      integration: isy994
+  fields:
+    name:
+      name: New Name
+      description: The new name to use within the ISY994.
+      required: true
+      example: "Front Door Light"
+      selector:
+        text:
 set_on_level:
   name: Set On Level
   description: Send a ISY set_on_level command to a Node.
@@ -80,7 +147,6 @@ set_on_level:
       name: Value
       description: integer value to set.
       required: true
-      example: 255
       selector:
         number:
           min: 0
@@ -97,7 +163,6 @@ set_ramp_rate:
       name: Value
       description: Integer value to set, see PyISY/ISY documentation for values to actual ramp times.
       required: true
-      example: 30
       selector:
         number:
           min: 0
@@ -125,7 +190,6 @@ set_variable:
     address:
       name: Address
       description: The address of the variable for which to set the value.
-      example: 5
       selector:
         number:
           min: 0
@@ -133,7 +197,6 @@ set_variable:
     type:
       name: Type
       description: The variable type, 1 = Integer, 2 = State.
-      example: 2
       selector:
         number:
           min: 1
@@ -147,7 +210,6 @@ set_variable:
     init:
       name: Init
       description: If True, the initial (init) value will be updated instead of the current value.
-      example: false
       default: false
       selector:
         boolean:
@@ -155,7 +217,6 @@ set_variable:
       name: Value
       description: The integer value to be sent.
       required: true
-      example: 255
       selector:
         number:
           min: 0
@@ -176,15 +237,18 @@ send_program_command:
       name: Address
       description: The address of the program to control (use either address or name).
       example: "04B1"
+      selector:
+        text:
     name:
       name: Name
       description: The name of the program to control (use either address or name).
       example: "My Program"
+      selector:
+        text:
     command:
       name: Command
       description: The ISY Program Command to be sent.
       required: true
-      example: "run"
       selector:
         select:
           options:
@@ -209,7 +273,6 @@ run_network_resource:
     address:
       name: Address
       description: The address of the network resource to execute (use either address or name).
-      example: 121
       selector:
         number:
           min: 0

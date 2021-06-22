@@ -8,7 +8,7 @@ from aiohomekit.utils import clamp_enum_to_char
 import voluptuous as vol
 
 from homeassistant.components.automation import AutomationActionType
-from homeassistant.components.device_automation import TRIGGER_BASE_SCHEMA
+from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF_TYPE
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.typing import ConfigType
@@ -16,6 +16,7 @@ from homeassistant.helpers.typing import ConfigType
 from .const import DOMAIN, KNOWN_DEVICES, TRIGGERS
 
 TRIGGER_TYPES = {
+    "doorbell",
     "button1",
     "button2",
     "button3",
@@ -32,7 +33,7 @@ TRIGGER_SUBTYPES = {"single_press", "double_press", "long_press"}
 CONF_IID = "iid"
 CONF_SUBTYPE = "subtype"
 
-TRIGGER_SCHEMA = TRIGGER_BASE_SCHEMA.extend(
+TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_TYPE): vol.In(TRIGGER_TYPES),
         vol.Required(CONF_SUBTYPE): vol.In(TRIGGER_SUBTYPES),
@@ -75,13 +76,15 @@ class TriggerSource:
         automation_info: dict,
     ) -> CALLBACK_TYPE:
         """Attach a trigger."""
-        trigger_id = automation_info.get("trigger_id") if automation_info else None
+        trigger_data = (
+            automation_info.get("trigger_data", {}) if automation_info else {}
+        )
 
         def event_handler(char):
             if config[CONF_SUBTYPE] != HK_TO_HA_INPUT_EVENT_VALUES[char["value"]]:
                 return
             self._hass.async_create_task(
-                action({"trigger": {**config, "id": trigger_id}})
+                action({"trigger": {**trigger_data, **config}})
             )
 
         trigger = self._triggers[config[CONF_TYPE], config[CONF_SUBTYPE]]

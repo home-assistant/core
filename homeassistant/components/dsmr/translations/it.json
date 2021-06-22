@@ -2,6 +2,14 @@
     "config": {
         "abort": {
             "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato"
+        },
+        "error": {
+            "one": "Pi\u00f9",
+            "other": "Altri"
+        },
+        "step": {
+            "one": "Pi\u00f9",
+            "other": "Altri"
         }
     },
     "options": {

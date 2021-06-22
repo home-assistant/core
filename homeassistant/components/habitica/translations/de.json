@@ -8,8 +8,11 @@
             "user": {
                 "data": {
                     "api_key": "API-Schl\u00fcssel",
+                    "api_user": "Habitica API-Benutzer-ID",
+                    "name": "Override f\u00fcr den Benutzernamen von Habitica. Wird f\u00fcr Serviceaufrufe verwendet",
                     "url": "URL"
-                }
+                },
+                "description": "Verbinden Sie Ihr Habitica-Profil, um die \u00dcberwachung des Profils und der Aufgaben Ihres Benutzers zu erm\u00f6glichen. Beachten Sie, dass api_id und api_key von https://habitica.com/user/settings/api bezogen werden m\u00fcssen."
             }
         }
     },

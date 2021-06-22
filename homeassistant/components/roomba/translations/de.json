@@ -9,7 +9,7 @@
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen"
         },
-        "flow_title": "iRobot {name} ({host})",
+        "flow_title": "{name} ({host})",
         "step": {
             "init": {
                 "data": {
@@ -19,7 +19,7 @@
                 "title": "Automatisch mit dem Ger\u00e4t verbinden"
             },
             "link": {
-                "description": "Halte die Home-Taste von {name} gedr\u00fcckt, bis das Ger\u00e4t einen Ton erzeugt (ca. zwei Sekunden).",
+                "description": "Halte die Home-Taste von {name} gedr\u00fcckt, bis das Ger\u00e4t einen Ton erzeugt (ca. zwei Sekunden) und sende die Best\u00e4tigung innerhalb von 30 Sekunden ab.",
                 "title": "Passwort abrufen"
             },
             "link_manual": {
@@ -34,6 +34,7 @@
                     "blid": "BLID",
                     "host": "Host"
                 },
+                "description": "Es wurde kein Roomba oder Braava in Ihrem Netzwerk entdeckt. Die BLID ist der Teil des Ger\u00e4te-Hostnamens nach `iRobot-` oder `Roomba-`. Bitte folgen Sie den Schritten, die in der Dokumentation unter: {auth_help_url}",
                 "title": "Manuell mit dem Ger\u00e4t verbinden"
             },
             "user": {
@@ -44,8 +45,8 @@
                     "host": "Host",
                     "password": "Passwort"
                 },
-                "description": "Das Abrufen der BLID und des Kennworts erfolgt manuell. Befolgen Sie die in der Dokumentation beschriebenen Schritte unter: https://www.home-assistant.io/integrations/roomba/#retrieving-your-credentials",
-                "title": "Stellen Sie eine Verbindung zum Ger\u00e4t her"
+                "description": "W\u00e4hlen Sie einen Roomba oder Braava aus.",
+                "title": "Automatisch mit dem Ger\u00e4t verbinden"
             }
         }
     },

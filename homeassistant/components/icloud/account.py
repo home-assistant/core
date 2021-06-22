@@ -85,7 +85,7 @@ class IcloudAccount:
         max_interval: int,
         gps_accuracy_threshold: int,
         config_entry: ConfigEntry,
-    ):
+    ) -> None:
         """Initialize an iCloud account."""
         self.hass = hass
         self._username = username
@@ -374,7 +374,7 @@ class IcloudAccount:
 class IcloudDevice:
     """Representation of a iCloud device."""
 
-    def __init__(self, account: IcloudAccount, device: AppleDevice, status):
+    def __init__(self, account: IcloudAccount, device: AppleDevice, status) -> None:
         """Initialize the iCloud device."""
         self._account = account
 

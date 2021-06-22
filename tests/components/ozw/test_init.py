@@ -65,16 +65,16 @@ async def test_unload_entry(hass, generic_data, switch_msg, caplog):
         title="Z-Wave",
     )
     entry.add_to_hass(hass)
-    assert entry.state == config_entries.ENTRY_STATE_NOT_LOADED
+    assert entry.state is config_entries.ConfigEntryState.NOT_LOADED
 
     receive_message = await setup_ozw(hass, entry=entry, fixture=generic_data)
 
-    assert entry.state == config_entries.ENTRY_STATE_LOADED
+    assert entry.state is config_entries.ConfigEntryState.LOADED
     assert len(hass.states.async_entity_ids("switch")) == 1
 
     await hass.config_entries.async_unload(entry.entry_id)
 
-    assert entry.state == config_entries.ENTRY_STATE_NOT_LOADED
+    assert entry.state is config_entries.ConfigEntryState.NOT_LOADED
     entities = hass.states.async_entity_ids("switch")
     assert len(entities) == 1
     for entity in entities:
@@ -98,7 +98,7 @@ async def test_unload_entry(hass, generic_data, switch_msg, caplog):
     await setup_ozw(hass, entry=entry, fixture=generic_data)
     await hass.async_block_till_done()
 
-    assert entry.state == config_entries.ENTRY_STATE_LOADED
+    assert entry.state is config_entries.ConfigEntryState.LOADED
     assert len(hass.states.async_entity_ids("switch")) == 1
     for record in caplog.records:
         assert record.levelname != "ERROR"
@@ -113,12 +113,12 @@ async def test_remove_entry(hass, stop_addon, uninstall_addon, caplog):
         data={"integration_created_addon": False},
     )
     entry.add_to_hass(hass)
-    assert entry.state == config_entries.ENTRY_STATE_NOT_LOADED
+    assert entry.state is config_entries.ConfigEntryState.NOT_LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
     await hass.config_entries.async_remove(entry.entry_id)
 
-    assert entry.state == config_entries.ENTRY_STATE_NOT_LOADED
+    assert entry.state is config_entries.ConfigEntryState.NOT_LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
 
     # test successful remove with created add-on
@@ -134,7 +134,7 @@ async def test_remove_entry(hass, stop_addon, uninstall_addon, caplog):
 
     assert stop_addon.call_count == 1
     assert uninstall_addon.call_count == 1
-    assert entry.state == config_entries.ENTRY_STATE_NOT_LOADED
+    assert entry.state is config_entries.ConfigEntryState.NOT_LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
     stop_addon.reset_mock()
     uninstall_addon.reset_mock()
@@ -148,7 +148,7 @@ async def test_remove_entry(hass, stop_addon, uninstall_addon, caplog):
 
     assert stop_addon.call_count == 1
     assert uninstall_addon.call_count == 0
-    assert entry.state == config_entries.ENTRY_STATE_NOT_LOADED
+    assert entry.state is config_entries.ConfigEntryState.NOT_LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
     assert "Failed to stop the OpenZWave add-on" in caplog.text
     stop_addon.side_effect = None
@@ -164,7 +164,7 @@ async def test_remove_entry(hass, stop_addon, uninstall_addon, caplog):
 
     assert stop_addon.call_count == 1
     assert uninstall_addon.call_count == 1
-    assert entry.state == config_entries.ENTRY_STATE_NOT_LOADED
+    assert entry.state is config_entries.ConfigEntryState.NOT_LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
     assert "Failed to uninstall the OpenZWave add-on" in caplog.text
 
@@ -210,7 +210,7 @@ async def test_setup_entry_without_addon_info(hass, get_addon_discovery_info):
         assert not await hass.config_entries.async_setup(entry.entry_id)
 
     assert mock_client.return_value.start_client.call_count == 0
-    assert entry.state == config_entries.ENTRY_STATE_SETUP_RETRY
+    assert entry.state is config_entries.ConfigEntryState.SETUP_RETRY
 
 
 async def test_unload_entry_with_addon(
@@ -224,15 +224,15 @@ async def test_unload_entry_with_addon(
     )
     entry.add_to_hass(hass)
 
-    assert entry.state == config_entries.ENTRY_STATE_NOT_LOADED
+    assert entry.state is config_entries.ConfigEntryState.NOT_LOADED
 
     with patch("homeassistant.components.ozw.MQTTClient", autospec=True) as mock_client:
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
     assert mock_client.return_value.start_client.call_count == 1
-    assert entry.state == config_entries.ENTRY_STATE_LOADED
+    assert entry.state is config_entries.ConfigEntryState.LOADED
 
     await hass.config_entries.async_unload(entry.entry_id)
 
-    assert entry.state == config_entries.ENTRY_STATE_NOT_LOADED
+    assert entry.state is config_entries.ConfigEntryState.NOT_LOADED

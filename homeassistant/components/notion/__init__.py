@@ -141,7 +141,7 @@ class NotionEntity(CoordinatorEntity):
         system_id: str,
         name: str,
         device_class: str,
-    ):
+    ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
         self._attrs = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}

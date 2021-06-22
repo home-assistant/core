@@ -9,6 +9,10 @@
           "surveillance_username": "Surveillance [%key:common::config_flow::data::username%]",
           "surveillance_password": "Surveillance [%key:common::config_flow::data::password%]"
         }
+      },
+      "hassio_confirm": {
+        "title": "motionEye via Home Assistant add-on",
+        "description": "Do you want to configure Home Assistant to connect to the motionEye service provided by the add-on: {addon}?"
       }
     },
     "error": {

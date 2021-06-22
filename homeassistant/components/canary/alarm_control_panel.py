@@ -1,7 +1,14 @@
 """Support for Canary alarm."""
 from __future__ import annotations
 
-from canary.api import LOCATION_MODE_AWAY, LOCATION_MODE_HOME, LOCATION_MODE_NIGHT
+from typing import Any
+
+from canary.api import (
+    LOCATION_MODE_AWAY,
+    LOCATION_MODE_HOME,
+    LOCATION_MODE_NIGHT,
+    Location,
+)
 
 from homeassistant.components.alarm_control_panel import AlarmControlPanelEntity
 from homeassistant.components.alarm_control_panel.const import (
@@ -44,29 +51,33 @@ async def async_setup_entry(
 class CanaryAlarm(CoordinatorEntity, AlarmControlPanelEntity):
     """Representation of a Canary alarm control panel."""
 
-    def __init__(self, coordinator, location):
+    coordinator: CanaryDataUpdateCoordinator
+
+    def __init__(
+        self, coordinator: CanaryDataUpdateCoordinator, location: Location
+    ) -> None:
         """Initialize a Canary security camera."""
         super().__init__(coordinator)
-        self._location_id = location.location_id
-        self._location_name = location.name
+        self._location_id: str = location.location_id
+        self._location_name: str = location.name
 
     @property
-    def location(self):
+    def location(self) -> Location:
         """Return information about the location."""
         return self.coordinator.data["locations"][self._location_id]
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the alarm."""
         return self._location_name
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str:
         """Return the unique ID of the alarm."""
         return str(self._location_id)
 
     @property
-    def state(self):
+    def state(self) -> str | None:
         """Return the state of the device."""
         if self.location.is_private:
             return STATE_ALARM_DISARMED
@@ -87,25 +98,25 @@ class CanaryAlarm(CoordinatorEntity, AlarmControlPanelEntity):
         return SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY | SUPPORT_ALARM_ARM_NIGHT
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return {"private": self.location.is_private}
 
-    def alarm_disarm(self, code=None):
+    def alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         self.coordinator.canary.set_location_mode(
             self._location_id, self.location.mode.name, True
         )
 
-    def alarm_arm_home(self, code=None):
+    def alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
         self.coordinator.canary.set_location_mode(self._location_id, LOCATION_MODE_HOME)
 
-    def alarm_arm_away(self, code=None):
+    def alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         self.coordinator.canary.set_location_mode(self._location_id, LOCATION_MODE_AWAY)
 
-    def alarm_arm_night(self, code=None):
+    def alarm_arm_night(self, code: str | None = None) -> None:
         """Send arm night command."""
         self.coordinator.canary.set_location_mode(
             self._location_id, LOCATION_MODE_NIGHT

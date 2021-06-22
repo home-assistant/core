@@ -27,17 +27,21 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class CoronavirusSensor(CoordinatorEntity, SensorEntity):
     """Sensor representing corona virus data."""
 
-    name = None
-    unique_id = None
+    _attr_unit_of_measurement = "people"
 
     def __init__(self, coordinator, country, info_type):
         """Initialize coronavirus sensor."""
         super().__init__(coordinator)
+        self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
+        self._attr_icon = SENSORS[info_type]
+        self._attr_unique_id = f"{country}-{info_type}"
         if country == OPTION_WORLDWIDE:
-            self.name = f"Worldwide Coronavirus {info_type}"
+            self._attr_name = f"Worldwide Coronavirus {info_type}"
         else:
-            self.name = f"{coordinator.data[country].country} Coronavirus {info_type}"
-        self.unique_id = f"{country}-{info_type}"
+            self._attr_name = (
+                f"{coordinator.data[country].country} Coronavirus {info_type}"
+            )
+
         self.country = country
         self.info_type = info_type
 
@@ -62,18 +66,3 @@ class CoronavirusSensor(CoordinatorEntity, SensorEntity):
             return sum_cases
 
         return getattr(self.coordinator.data[self.country], self.info_type)
-
-    @property
-    def icon(self):
-        """Return the icon."""
-        return SENSORS[self.info_type]
-
-    @property
-    def unit_of_measurement(self):
-        """Return unit of measurement."""
-        return "people"
-
-    @property
-    def extra_state_attributes(self):
-        """Return device attributes."""
-        return {ATTR_ATTRIBUTION: ATTRIBUTION}

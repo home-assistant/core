@@ -11,7 +11,7 @@ from homeassistant.components.yeelight import (
     DOMAIN,
     NIGHTLIGHT_SWITCH_TYPE_LIGHT,
 )
-from homeassistant.config_entries import ENTRY_STATE_SETUP_RETRY
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     CONF_DEVICES,
     CONF_HOST,
@@ -45,12 +45,7 @@ from tests.common import MockConfigEntry
 async def test_ip_changes_fallback_discovery(hass: HomeAssistant):
     """Test Yeelight ip changes and we fallback to discovery."""
     config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_ID: ID,
-            CONF_HOST: "5.5.5.5",
-        },
-        unique_id=ID,
+        domain=DOMAIN, data={CONF_ID: ID, CONF_HOST: "5.5.5.5"}, unique_id=ID
     )
     config_entry.add_to_hass(hass)
 
@@ -60,12 +55,7 @@ async def test_ip_changes_fallback_discovery(hass: HomeAssistant):
         side_effect=[OSError, CAPABILITIES, CAPABILITIES]
     )
 
-    _discovered_devices = [
-        {
-            "capabilities": CAPABILITIES,
-            "ip": IP_ADDRESS,
-        }
-    ]
+    _discovered_devices = [{"capabilities": CAPABILITIES, "ip": IP_ADDRESS}]
     with patch(f"{MODULE}.Bulb", return_value=mocked_bulb), patch(
         f"{MODULE}.discover_bulbs", return_value=_discovered_devices
     ):
@@ -92,12 +82,7 @@ async def test_ip_changes_fallback_discovery(hass: HomeAssistant):
 
 async def test_ip_changes_id_missing_cannot_fallback(hass: HomeAssistant):
     """Test Yeelight ip changes and we fallback to discovery."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_HOST: "5.5.5.5",
-        },
-    )
+    config_entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: "5.5.5.5"})
     config_entry.add_to_hass(hass)
 
     mocked_bulb = _mocked_bulb(True)
@@ -110,7 +95,7 @@ async def test_ip_changes_id_missing_cannot_fallback(hass: HomeAssistant):
         assert not await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert config_entry.state == ENTRY_STATE_SETUP_RETRY
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_setup_discovery(hass: HomeAssistant):
@@ -170,10 +155,7 @@ async def test_unique_ids_device(hass: HomeAssistant):
     """Test Yeelight unique IDs from yeelight device IDs."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
-        data={
-            **CONFIG_ENTRY_DATA,
-            CONF_NIGHTLIGHT_SWITCH: True,
-        },
+        data={**CONFIG_ENTRY_DATA, CONF_NIGHTLIGHT_SWITCH: True},
         unique_id=ID,
     )
     config_entry.add_to_hass(hass)
@@ -197,11 +179,7 @@ async def test_unique_ids_device(hass: HomeAssistant):
 async def test_unique_ids_entry(hass: HomeAssistant):
     """Test Yeelight unique IDs from entry IDs."""
     config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            **CONFIG_ENTRY_DATA,
-            CONF_NIGHTLIGHT_SWITCH: True,
-        },
+        domain=DOMAIN, data={**CONFIG_ENTRY_DATA, CONF_NIGHTLIGHT_SWITCH: True}
     )
     config_entry.add_to_hass(hass)
 
@@ -231,12 +209,7 @@ async def test_unique_ids_entry(hass: HomeAssistant):
 async def test_bulb_off_while_adding_in_ha(hass: HomeAssistant):
     """Test Yeelight off while adding to ha, for example on HA start."""
     config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            **CONFIG_ENTRY_DATA,
-            CONF_HOST: IP_ADDRESS,
-        },
-        unique_id=ID,
+        domain=DOMAIN, data={**CONFIG_ENTRY_DATA, CONF_HOST: IP_ADDRESS}, unique_id=ID
     )
     config_entry.add_to_hass(hass)
 

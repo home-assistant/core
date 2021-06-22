@@ -30,7 +30,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class HarmonyActivitySwitch(ConnectionStateMixin, SwitchEntity):
     """Switch representation of a Harmony activity."""
 
-    def __init__(self, name: str, activity: dict, data: HarmonyData):
+    def __init__(self, name: str, activity: dict, data: HarmonyData) -> None:
         """Initialize HarmonyActivitySwitch class."""
         super().__init__()
         self._name = name

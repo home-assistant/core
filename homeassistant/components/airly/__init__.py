@@ -136,7 +136,7 @@ class AirlyDataUpdateCoordinator(DataUpdateCoordinator):
         longitude: float,
         update_interval: timedelta,
         use_nearest: bool,
-    ):
+    ) -> None:
         """Initialize."""
         self.latitude = latitude
         self.longitude = longitude

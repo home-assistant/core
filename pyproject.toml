@@ -27,7 +27,9 @@ init-hook='from pylint.config.find_default_config_files import find_default_conf
 load-plugins = [
     "pylint.extensions.typing",
     "pylint_strict_informational",
-    "hass_logger"
+    "hass_constructor",
+    "hass_imports",
+    "hass_logger",
 ]
 persistent = false
 extension-pkg-whitelist = [

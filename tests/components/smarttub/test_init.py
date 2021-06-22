@@ -7,11 +7,7 @@ from smarttub import LoginFailed
 
 from homeassistant.components import smarttub
 from homeassistant.components.smarttub.const import DOMAIN
-from homeassistant.config_entries import (
-    ENTRY_STATE_SETUP_ERROR,
-    ENTRY_STATE_SETUP_RETRY,
-    SOURCE_REAUTH,
-)
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.setup import async_setup_component
 
 
@@ -30,7 +26,7 @@ async def test_setup_entry_not_ready(setup_component, hass, config_entry, smartt
 
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
-    assert config_entry.state == ENTRY_STATE_SETUP_RETRY
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_setup_auth_failed(setup_component, hass, config_entry, smarttub_api):
@@ -40,7 +36,7 @@ async def test_setup_auth_failed(setup_component, hass, config_entry, smarttub_a
     config_entry.add_to_hass(hass)
     with patch.object(hass.config_entries.flow, "async_init") as mock_flow_init:
         await hass.config_entries.async_setup(config_entry.entry_id)
-        assert config_entry.state == ENTRY_STATE_SETUP_ERROR
+        assert config_entry.state is ConfigEntryState.SETUP_ERROR
         mock_flow_init.assert_called_with(
             DOMAIN,
             context={

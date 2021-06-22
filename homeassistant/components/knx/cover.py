@@ -12,7 +12,6 @@ from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
     DEVICE_CLASS_BLIND,
-    DEVICE_CLASSES,
     SUPPORT_CLOSE,
     SUPPORT_CLOSE_TILT,
     SUPPORT_OPEN,
@@ -86,7 +85,7 @@ def _async_migrate_unique_id(
 class KNXCover(KnxEntity, CoverEntity):
     """Representation of a KNX cover."""
 
-    def __init__(self, xknx: XKNX, config: ConfigType):
+    def __init__(self, xknx: XKNX, config: ConfigType) -> None:
         """Initialize the cover."""
         self._device: XknxCover
         super().__init__(
@@ -127,7 +126,7 @@ class KNXCover(KnxEntity, CoverEntity):
     @property
     def device_class(self) -> str | None:
         """Return the class of this device, from component DEVICE_CLASSES."""
-        if self._device_class in DEVICE_CLASSES:
+        if self._device_class:
             return self._device_class
         if self._device.supports_angle:
             return DEVICE_CLASS_BLIND

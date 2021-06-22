@@ -31,6 +31,28 @@ MOCK_OWPROXY_DEVICES = {
         ],
         SENSOR_DOMAIN: [],
     },
+    "05.111111111111": {
+        "inject_reads": [
+            b"DS2405",  # read device type
+        ],
+        "device_info": {
+            "identifiers": {(DOMAIN, "05.111111111111")},
+            "manufacturer": "Maxim Integrated",
+            "model": "DS2405",
+            "name": "05.111111111111",
+        },
+        SWITCH_DOMAIN: [
+            {
+                "entity_id": "switch.05_111111111111_pio",
+                "unique_id": "/05.111111111111/PIO",
+                "injected_value": b"    1",
+                "result": STATE_ON,
+                "unit": None,
+                "class": None,
+                "disabled": True,
+            },
+        ],
+    },
     "10.111111111111": {
         "inject_reads": [
             b"DS18S20",  # read device type
@@ -772,6 +794,36 @@ MOCK_OWPROXY_DEVICES = {
                 "result": "41.4",
                 "unit": PERCENTAGE,
                 "class": DEVICE_CLASS_HUMIDITY,
+            },
+        ],
+    },
+    "7E.222222222222": {
+        "inject_reads": [
+            b"EDS",  # read type
+            b"EDS0066",  # read device_type - note EDS specific
+        ],
+        "device_info": {
+            "identifiers": {(DOMAIN, "7E.222222222222")},
+            "manufacturer": "Maxim Integrated",
+            "model": "EDS",
+            "name": "7E.222222222222",
+        },
+        SENSOR_DOMAIN: [
+            {
+                "entity_id": "sensor.7e_222222222222_temperature",
+                "unique_id": "/7E.222222222222/EDS0066/temperature",
+                "injected_value": b"    13.9375",
+                "result": "13.9",
+                "unit": TEMP_CELSIUS,
+                "class": DEVICE_CLASS_TEMPERATURE,
+            },
+            {
+                "entity_id": "sensor.7e_222222222222_pressure",
+                "unique_id": "/7E.222222222222/EDS0066/pressure",
+                "injected_value": b"  1012.21",
+                "result": "1012.2",
+                "unit": PRESSURE_MBAR,
+                "class": DEVICE_CLASS_PRESSURE,
             },
         ],
     },

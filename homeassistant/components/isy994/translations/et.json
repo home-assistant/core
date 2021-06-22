@@ -36,5 +36,13 @@
                 "title": "ISY994 valikud"
             }
         }
+    },
+    "system_health": {
+        "info": {
+            "device_connected": "ISY on \u00fchendatud",
+            "host_reachable": "Host on saadaval",
+            "last_heartbeat": "Viimatise suhtluse aeg",
+            "websocket_status": "S\u00fcndmuse sokli olek"
+        }
     }
 }

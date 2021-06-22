@@ -18,7 +18,6 @@ set_climate_timer:
       name: Temperature
       description: Temperature to set climate entity to
       required: true
-      example: 25
       selector:
         number:
           min: 0
@@ -45,7 +44,6 @@ set_water_heater_timer:
     temperature:
       name: Temperature
       description: Temperature to set heater to
-      example: 25
       selector:
         number:
           min: 0
@@ -64,7 +62,6 @@ set_climate_temperature_offset:
     offset:
       name: Offset
       description: Offset you would like (depending on your device).
-      example: -1.2
       default: 0
       selector:
         number:

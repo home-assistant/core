@@ -73,7 +73,6 @@ exposure_register:
       name: "Entity"
       description: "Entity id whose state or attribute shall be exposed."
       required: true
-      example: "light.kitchen"
       selector:
         entity:
     attribute:

@@ -2,16 +2,14 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Coroutine, Iterable
+from collections.abc import Coroutine
 from contextlib import suppress
 import fnmatch
 import ipaddress
-from ipaddress import ip_address
 import logging
 import socket
 from typing import Any, TypedDict, cast
 
-from pyroute2 import IPRoute
 import voluptuous as vol
 from zeroconf import (
     InterfaceChoice,
@@ -23,6 +21,8 @@ from zeroconf import (
 )
 
 from homeassistant import config_entries, util
+from homeassistant.components import network
+from homeassistant.components.network.models import Adapter
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STARTED,
@@ -34,7 +34,6 @@ from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.loader import async_get_homekit, async_get_zeroconf, bind_hass
-from homeassistant.util.network import is_loopback
 
 from .models import HaAsyncZeroconf, HaServiceBrowser, HaZeroconf
 from .usage import install_multiple_zeroconf_catcher
@@ -69,11 +68,14 @@ MAX_NAME_LEN = 63
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN: vol.Schema(
-            {
-                vol.Optional(CONF_DEFAULT_INTERFACE): cv.boolean,
-                vol.Optional(CONF_IPV6, default=DEFAULT_IPV6): cv.boolean,
-            }
+        DOMAIN: vol.All(
+            cv.deprecated(CONF_DEFAULT_INTERFACE),
+            vol.Schema(
+                {
+                    vol.Optional(CONF_DEFAULT_INTERFACE): cv.boolean,
+                    vol.Optional(CONF_IPV6, default=DEFAULT_IPV6): cv.boolean,
+                }
+            ),
         )
     },
     extra=vol.ALLOW_EXTRA,
@@ -132,49 +134,11 @@ async def _async_get_instance(hass: HomeAssistant, **zcargs: Any) -> HaAsyncZero
     return aio_zc
 
 
-def _get_ip_route(dst_ip: str) -> Any:
-    """Get ip next hop."""
-    return IPRoute().route("get", dst=dst_ip)
-
-
-def _first_ip_nexthop_from_route(routes: Iterable) -> None | str:
-    """Find the first RTA_PREFSRC in the routes."""
-    _LOGGER.debug("Routes: %s", routes)
-    for route in routes:
-        for key, value in route["attrs"]:
-            if key == "RTA_PREFSRC":
-                return cast(str, value)
-    return None
-
-
-async def async_detect_interfaces_setting(hass: HomeAssistant) -> InterfaceChoice:
-    """Auto detect the interfaces setting when unset."""
-    routes = []
-    try:
-        routes = await hass.async_add_executor_job(_get_ip_route, MDNS_TARGET_IP)
-    except Exception as ex:  # pylint: disable=broad-except
-        _LOGGER.debug(
-            "The system could not auto detect routing data on your operating system; Zeroconf will broadcast on all interfaces",
-            exc_info=ex,
-        )
-        return InterfaceChoice.All
-
-    if not (first_ip := _first_ip_nexthop_from_route(routes)):
-        _LOGGER.debug(
-            "The system could not auto detect the nexthop for %s on your operating system; Zeroconf will broadcast on all interfaces",
-            MDNS_TARGET_IP,
-        )
-        return InterfaceChoice.All
-
-    if is_loopback(ip_address(first_ip)):
-        _LOGGER.debug(
-            "The next hop for %s is %s; Zeroconf will broadcast on all interfaces",
-            MDNS_TARGET_IP,
-            first_ip,
-        )
-        return InterfaceChoice.All
-
-    return InterfaceChoice.Default
+def _async_use_default_interface(adapters: list[Adapter]) -> bool:
+    for adapter in adapters:
+        if adapter["enabled"] and not adapter["default"]:
+            return False
+    return True
 
 
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
@@ -182,10 +146,18 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     zc_config = config.get(DOMAIN, {})
     zc_args: dict = {}
 
-    if CONF_DEFAULT_INTERFACE not in zc_config:
-        zc_args["interfaces"] = await async_detect_interfaces_setting(hass)
-    elif zc_config[CONF_DEFAULT_INTERFACE]:
+    adapters = await network.async_get_adapters(hass)
+    if _async_use_default_interface(adapters):
         zc_args["interfaces"] = InterfaceChoice.Default
+    else:
+        interfaces = zc_args["interfaces"] = []
+        for adapter in adapters:
+            if not adapter["enabled"]:
+                continue
+            if ipv4s := adapter["ipv4"]:
+                interfaces.append(ipv4s[0]["address"])
+            elif ipv6s := adapter["ipv6"]:
+                interfaces.append(ipv6s[0]["scope_id"])
     if not zc_config.get(CONF_IPV6, DEFAULT_IPV6):
         zc_args["ip_version"] = IPVersion.V4Only
 

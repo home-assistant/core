@@ -8,7 +8,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import WLEDDataUpdateCoordinator, WLEDDeviceEntity, wled_exception_handler
 from .const import (
     ATTR_DURATION,
     ATTR_FADE,
@@ -16,6 +15,9 @@ from .const import (
     ATTR_UDP_PORT,
     DOMAIN,
 )
+from .coordinator import WLEDDataUpdateCoordinator
+from .helpers import wled_exception_handler
+from .models import WLEDEntity
 
 PARALLEL_UPDATES = 1
 
@@ -29,49 +31,23 @@ async def async_setup_entry(
     coordinator: WLEDDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     switches = [
-        WLEDNightlightSwitch(entry.entry_id, coordinator),
-        WLEDSyncSendSwitch(entry.entry_id, coordinator),
-        WLEDSyncReceiveSwitch(entry.entry_id, coordinator),
+        WLEDNightlightSwitch(coordinator),
+        WLEDSyncSendSwitch(coordinator),
+        WLEDSyncReceiveSwitch(coordinator),
     ]
-    async_add_entities(switches, True)
+    async_add_entities(switches)
 
 
-class WLEDSwitch(WLEDDeviceEntity, SwitchEntity):
-    """Defines a WLED switch."""
-
-    def __init__(
-        self,
-        *,
-        entry_id: str,
-        coordinator: WLEDDataUpdateCoordinator,
-        name: str,
-        icon: str,
-        key: str,
-    ) -> None:
-        """Initialize WLED switch."""
-        self._key = key
-        super().__init__(
-            entry_id=entry_id, coordinator=coordinator, name=name, icon=icon
-        )
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique ID for this sensor."""
-        return f"{self.coordinator.data.info.mac_address}_{self._key}"
-
-
-class WLEDNightlightSwitch(WLEDSwitch):
+class WLEDNightlightSwitch(WLEDEntity, SwitchEntity):
     """Defines a WLED nightlight switch."""
 
-    def __init__(self, entry_id: str, coordinator: WLEDDataUpdateCoordinator) -> None:
+    _attr_icon = "mdi:weather-night"
+
+    def __init__(self, coordinator: WLEDDataUpdateCoordinator) -> None:
         """Initialize WLED nightlight switch."""
-        super().__init__(
-            coordinator=coordinator,
-            entry_id=entry_id,
-            icon="mdi:weather-night",
-            key="nightlight",
-            name=f"{coordinator.data.info.name} Nightlight",
-        )
+        super().__init__(coordinator=coordinator)
+        self._attr_name = f"{coordinator.data.info.name} Nightlight"
+        self._attr_unique_id = f"{coordinator.data.info.mac_address}_nightlight"
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
@@ -98,18 +74,16 @@ class WLEDNightlightSwitch(WLEDSwitch):
         await self.coordinator.wled.nightlight(on=True)
 
 
-class WLEDSyncSendSwitch(WLEDSwitch):
+class WLEDSyncSendSwitch(WLEDEntity, SwitchEntity):
     """Defines a WLED sync send switch."""
 
-    def __init__(self, entry_id: str, coordinator: WLEDDataUpdateCoordinator) -> None:
+    _attr_icon = "mdi:upload-network-outline"
+
+    def __init__(self, coordinator: WLEDDataUpdateCoordinator) -> None:
         """Initialize WLED sync send switch."""
-        super().__init__(
-            coordinator=coordinator,
-            entry_id=entry_id,
-            icon="mdi:upload-network-outline",
-            key="sync_send",
-            name=f"{coordinator.data.info.name} Sync Send",
-        )
+        super().__init__(coordinator=coordinator)
+        self._attr_name = f"{coordinator.data.info.name} Sync Send"
+        self._attr_unique_id = f"{coordinator.data.info.mac_address}_sync_send"
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
@@ -132,18 +106,16 @@ class WLEDSyncSendSwitch(WLEDSwitch):
         await self.coordinator.wled.sync(send=True)
 
 
-class WLEDSyncReceiveSwitch(WLEDSwitch):
+class WLEDSyncReceiveSwitch(WLEDEntity, SwitchEntity):
     """Defines a WLED sync receive switch."""
 
-    def __init__(self, entry_id: str, coordinator: WLEDDataUpdateCoordinator):
+    _attr_icon = "mdi:download-network-outline"
+
+    def __init__(self, coordinator: WLEDDataUpdateCoordinator) -> None:
         """Initialize WLED sync receive switch."""
-        super().__init__(
-            coordinator=coordinator,
-            entry_id=entry_id,
-            icon="mdi:download-network-outline",
-            key="sync_receive",
-            name=f"{coordinator.data.info.name} Sync Receive",
-        )
+        super().__init__(coordinator=coordinator)
+        self._attr_name = f"{coordinator.data.info.name} Sync Receive"
+        self._attr_unique_id = f"{coordinator.data.info.mac_address}_sync_receive"
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:

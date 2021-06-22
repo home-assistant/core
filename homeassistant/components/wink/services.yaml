@@ -147,8 +147,7 @@ siren_set_auto_shutoff:
     auto_shutoff:
       name: Auto shutoff
       description: >-
-        The time in seconds to sound the siren. One of [None, -1, 30, 60, 120]
-        (None and -1 are forever. Use None for gocontrol, and -1 for Dome)
+        The time in seconds to sound the siren. (None and -1 are forever. Use None for gocontrol, and -1 for Dome)
       required: true
       selector:
         select:
@@ -382,7 +381,7 @@ set_lock_alarm_state:
           domain: lock
     enabled:
       name: Enabled
-      description: enable or disable. true or false.
+      description: enable or disable.
       required: true
       selector:
         boolean:
@@ -400,7 +399,7 @@ set_lock_beeper_state:
           domain: lock
     enabled:
       name: Enabled
-      description: enable or disable. true or false.
+      description: enable or disable.
       required: true
       selector:
         boolean:

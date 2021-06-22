@@ -51,7 +51,7 @@ class DeviceDataUpdateCoordinator(DataUpdateCoordinator):
         update_interval: timedelta,
         update_method: Callable[[], Awaitable] | None = None,
         request_refresh_debouncer: Debouncer | None = None,
-    ):
+    ) -> None:
         """Initialize the data update coordinator."""
         DataUpdateCoordinator.__init__(
             self,

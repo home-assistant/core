@@ -74,7 +74,7 @@ class Bmp280Sensor(SensorEntity):
         name: str,
         unit_of_measurement: str,
         device_class: str,
-    ):
+    ) -> None:
         """Initialize the sensor."""
         self._bmp280 = bmp280
         self._name = name
@@ -112,7 +112,7 @@ class Bmp280Sensor(SensorEntity):
 class Bmp280TemperatureSensor(Bmp280Sensor):
     """Representation of a Bosch BMP280 Temperature Sensor."""
 
-    def __init__(self, bmp280: Adafruit_BMP280_I2C, name: str):
+    def __init__(self, bmp280: Adafruit_BMP280_I2C, name: str) -> None:
         """Initialize the entity."""
         super().__init__(
             bmp280, f"{name} Temperature", TEMP_CELSIUS, DEVICE_CLASS_TEMPERATURE
@@ -137,7 +137,7 @@ class Bmp280TemperatureSensor(Bmp280Sensor):
 class Bmp280PressureSensor(Bmp280Sensor):
     """Representation of a Bosch BMP280 Barometric Pressure Sensor."""
 
-    def __init__(self, bmp280: Adafruit_BMP280_I2C, name: str):
+    def __init__(self, bmp280: Adafruit_BMP280_I2C, name: str) -> None:
         """Initialize the entity."""
         super().__init__(
             bmp280, f"{name} Pressure", PRESSURE_HPA, DEVICE_CLASS_PRESSURE

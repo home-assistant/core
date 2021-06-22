@@ -81,30 +81,25 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class MillHeater(ClimateEntity):
     """Representation of a Mill Thermostat device."""
 
+    _attr_fan_modes = [FAN_ON, HVAC_MODE_OFF]
+    _attr_max_temp = MAX_TEMP
+    _attr_min_temp = MIN_TEMP
+    _attr_supported_features = SUPPORT_FLAGS
+    _attr_target_temperature_step = 1
+    _attr_temperature_unit = TEMP_CELSIUS
+
     def __init__(self, heater, mill_data_connection):
         """Initialize the thermostat."""
         self._heater = heater
         self._conn = mill_data_connection
 
-    @property
-    def supported_features(self):
-        """Return the list of supported features."""
-        return SUPPORT_FLAGS
+        self._attr_unique_id = heater.device_id
+        self._attr_name = heater.name
 
     @property
     def available(self):
         """Return True if entity is available."""
         return self._heater.available
-
-    @property
-    def unique_id(self):
-        """Return a unique ID."""
-        return self._heater.device_id
-
-    @property
-    def name(self):
-        """Return the name of the entity."""
-        return self._heater.name
 
     @property
     def extra_state_attributes(self):
@@ -125,19 +120,9 @@ class MillHeater(ClimateEntity):
         return res
 
     @property
-    def temperature_unit(self):
-        """Return the unit of measurement which this thermostat uses."""
-        return TEMP_CELSIUS
-
-    @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
         return self._heater.set_temp
-
-    @property
-    def target_temperature_step(self):
-        """Return the supported step of target temperature."""
-        return 1
 
     @property
     def current_temperature(self):
@@ -148,21 +133,6 @@ class MillHeater(ClimateEntity):
     def fan_mode(self):
         """Return the fan setting."""
         return FAN_ON if self._heater.fan_status == 1 else HVAC_MODE_OFF
-
-    @property
-    def fan_modes(self):
-        """List of available fan modes."""
-        return [FAN_ON, HVAC_MODE_OFF]
-
-    @property
-    def min_temp(self):
-        """Return the minimum temperature."""
-        return MIN_TEMP
-
-    @property
-    def max_temp(self):
-        """Return the maximum temperature."""
-        return MAX_TEMP
 
     @property
     def hvac_action(self):
