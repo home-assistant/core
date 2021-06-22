@@ -585,6 +585,30 @@ async def test_all_sensor(hass, cfg, regs, expected):
             [0x534E, 0x3132, 0x3334, 0x3536, 0x3738],
             "SN12345678",
         ),
+        (
+            {
+                CONF_COUNT: 4,
+                CONF_REGISTER_SIZE: 4,
+                CONF_PRECISION: 2,
+                CONF_DATA_TYPE: DATA_TYPE_CUSTOM,
+                CONF_STRUCTURE: ">4f",
+            },
+            # floats: 7.931250095367432, 10.600000381469727,
+            #         1.000879611487865e-28, 10.566553115844727
+            [0x40FD, 0xCCCD, 0x4129, 0x999A, 0x10FD, 0xC0CD, 0x4129, 0x109A],
+            "7.93,10.60,0.00,10.57",
+        ),
+        (
+            {
+                CONF_COUNT: 2,
+                CONF_REGISTER_SIZE: 4,
+                CONF_PRECISION: 0,
+                CONF_DATA_TYPE: DATA_TYPE_CUSTOM,
+                CONF_STRUCTURE: ">2i",
+            },
+            [0x0000, 0x0100, 0x0000, 0x0032],
+            "256,50",
+        ),
     ],
 )
 async def test_struct_sensor(hass, cfg, regs, expected):
