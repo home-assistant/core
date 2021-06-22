@@ -219,7 +219,7 @@ def _discover(netdisco, zeroconf_instance, zeroconf_types):
     results = []
     try:
         netdisco.scan(
-            zeroconf_instance=zeroconf_instance, suppress_mdns_services=zeroconf_types
+            zeroconf_instance=zeroconf_instance, suppress_mdns_types=zeroconf_types
         )
 
         for disc in netdisco.discover():
