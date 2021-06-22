@@ -71,13 +71,10 @@ async def test_save_preferences(hass, hass_ws_client, hass_storage) -> None:
             },
             {
                 "stat_consumption": "home_meter",
-                "tariff_kwh_peak": 2,
-                "tariff_kwh_off_peak": 4,
-                "tariff_time_peak_start": "18:00",
-                "tariff_time_peak_stop": "3:00",
-                "cost_management_day": 1.2,
-                "cost_delivery_cost_day": 3.4,
-                "discount_energy_tax_day": 5.6,
+                "stat_tariff": None,
+                "cost_management_day": 0,
+                "cost_delivery_cost_day": 0,
+                "discount_energy_tax_day": 0,
             },
         ],
         "device_consumption": [{"stat_consumption": "some_device_usage"}],
@@ -88,7 +85,12 @@ async def test_save_preferences(hass, hass_ws_client, hass_storage) -> None:
                 "stat_return_to_grid": "returned_to_grid_stat",
                 "stat_predicted_generation": "predicted_stat",
             },
-            {"type": "wind", "stat_generation": "my_wind_geneeration"},
+            {
+                "type": "wind",
+                "stat_generation": "my_wind_geneeration",
+                "stat_return_to_grid": None,
+                "stat_predicted_generation": None,
+            },
         ],
     }
 

@@ -26,19 +26,7 @@ HOME_CONSUMPTION_SCHEMA = vol.All(
     vol.Schema(
         {
             vol.Required("stat_consumption"): str,
-            # Tariff. Either first, or the others.
-            vol.Optional("stat_tariff"): vol.Any(None, str),
-            vol.Inclusive("tariff_kwh_peak", "simple-tariff"): vol.Any(
-                None, vol.Coerce(float)
-            ),
-            vol.Inclusive("tariff_kwh_off_peak", "simple-tariff"): vol.Any(
-                None, vol.Coerce(float)
-            ),
-            vol.Inclusive("tariff_time_peak_start", "simple-tariff"): vol.Any(
-                None, str
-            ),
-            vol.Inclusive("tariff_time_peak_stop", "simple-tariff"): vol.Any(None, str),
-            # Costs
+            vol.Required("stat_tariff"): vol.Any(None, str),
             vol.Required("cost_management_day"): vol.Coerce(float),
             vol.Required("cost_delivery_cost_day"): vol.Coerce(float),
             vol.Required("discount_energy_tax_day"): vol.Coerce(float),
@@ -55,8 +43,8 @@ PRODUCTION_SCHEMA = vol.Schema(
     {
         vol.Required("type"): vol.In(("solar", "wind")),
         vol.Required("stat_generation"): str,
-        vol.Optional("stat_return_to_grid"): vol.Any(str, None),
-        vol.Optional("stat_predicted_generation"): vol.Any(str, None),
+        vol.Required("stat_return_to_grid"): vol.Any(str, None),
+        vol.Required("stat_predicted_generation"): vol.Any(str, None),
     }
 )
 
@@ -77,13 +65,6 @@ class EnergyHomeConsumption(TypedDict):
 
     # Points at a sensor that contains the cost
     stat_tariff: str | None
-
-    # Basic tariff configuration, mutually exclusive with stat_tariff.
-    # More complicated tariffs should get their own stat.
-    tariff_kwh_peak: float | None
-    tariff_kwh_off_peak: float | None
-    tariff_time_peak_start: str | None
-    tariff_time_peak_stop: str | None
 
     cost_management_day: float
     cost_delivery_cost_day: float
