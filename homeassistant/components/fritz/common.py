@@ -41,6 +41,14 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
+class ClassSetupMissing(Exception):
+    """Raised when a Class func is called before setup."""
+
+    def __init__(self):
+        """Init custom exception."""
+        super().__init__("Function called before Class setup")
+
+
 @dataclass
 class Device:
     """FRITZ!Box device class."""
@@ -74,7 +82,7 @@ class FritzBoxTools:
         self._cancel_scan: CALLBACK_TYPE | None = None
         self._devices: dict[str, Any] = {}
         self._options: MappingProxyType[str, Any] | None = None
-        self._unique_id: str
+        self._unique_id: str | None = None
         self.connection: FritzConnection = None
         self.fritz_hosts: FritzHosts = None
         self.fritz_status: FritzStatus = None
@@ -84,8 +92,8 @@ class FritzBoxTools:
         self.port: int = port
         self.username: str = username
         self._mac: str | None = None
-        self._model: str
-        self._sw_version: str
+        self._model: str | None = None
+        self._sw_version: str | None = None
 
     async def async_setup(self) -> Any:
         """Wrap up FritzboxTools class setup."""
@@ -134,21 +142,29 @@ class FritzBoxTools:
     @property
     def unique_id(self) -> str:
         """Return unique id."""
+        if not self._unique_id:
+            raise ClassSetupMissing()
         return self._unique_id
 
     @property
     def model(self) -> str:
         """Return device model."""
+        if not self._model:
+            raise ClassSetupMissing()
         return self._model
 
     @property
     def sw_version(self) -> str:
         """Return SW version."""
+        if not self._sw_version:
+            raise ClassSetupMissing()
         return self._sw_version
 
     @property
     def mac(self) -> str:
         """Return device Mac address."""
+        if not self._unique_id:
+            raise ClassSetupMissing()
         return self._unique_id
 
     @property
