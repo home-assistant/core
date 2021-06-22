@@ -143,7 +143,7 @@ async def test_sensor(hass):
 
     entry = registry.async_get("sensor.nettigo_air_monitor_dht22_humidity")
     assert entry
-    assert entry.unique_id == "aa:bb:cc:dd:ee:ff-humidity"
+    assert entry.unique_id == "aa:bb:cc:dd:ee:ff-dht22_humidity"
 
     state = hass.states.get("sensor.nettigo_air_monitor_dht22_temperature")
     assert state
@@ -154,7 +154,7 @@ async def test_sensor(hass):
 
     entry = registry.async_get("sensor.nettigo_air_monitor_dht22_temperature")
     assert entry
-    assert entry.unique_id == "aa:bb:cc:dd:ee:ff-temperature"
+    assert entry.unique_id == "aa:bb:cc:dd:ee:ff-dht22_temperature"
 
     state = hass.states.get("sensor.nettigo_air_monitor_heca_humidity")
     assert state
@@ -302,3 +302,30 @@ async def test_manual_update_entity(hass):
         )
 
     assert mock_get_data.call_count == 1
+
+
+async def test_unique_id_migration(hass):
+    """Test states of the unique_id migration."""
+    registry = er.async_get(hass)
+
+    registry.async_get_or_create(
+        SENSOR_DOMAIN,
+        DOMAIN,
+        "aa:bb:cc:dd:ee:ff-temperature",
+        suggested_object_id="nettigo_air_monitor_dht22_temperature",
+        disabled_by=None,
+    )
+
+    registry.async_get_or_create(
+        SENSOR_DOMAIN,
+        DOMAIN,
+        "aa:bb:cc:dd:ee:ff-humidity",
+        suggested_object_id="nettigo_air_monitor_dht22_humidity",
+        disabled_by=None,
+    )
+
+    await init_integration(hass)
+
+    entry = registry.async_get("sensor.nettigo_air_monitor_dht22_temperature")
+    assert entry
+    assert entry.unique_id == "aa:bb:cc:dd:ee:ff-dht22_temperature"

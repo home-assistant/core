@@ -4,7 +4,13 @@ from unittest.mock import patch
 
 from nettigo_air_monitor import ApiError
 
-from homeassistant.components.air_quality import ATTR_CO2, ATTR_PM_2_5, ATTR_PM_10
+from homeassistant.components.air_quality import (
+    ATTR_CO2,
+    ATTR_PM_2_5,
+    ATTR_PM_10,
+    DOMAIN as AIR_QUALITY_DOMAIN,
+)
+from homeassistant.components.nam.const import DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_UNIT_OF_MEASUREMENT,
@@ -39,7 +45,7 @@ async def test_air_quality(hass):
 
     entry = registry.async_get("air_quality.nettigo_air_monitor_sds011")
     assert entry
-    assert entry.unique_id == "aa:bb:cc:dd:ee:ff-sds"
+    assert entry.unique_id == "aa:bb:cc:dd:ee:ff-sds011"
 
     state = hass.states.get("air_quality.nettigo_air_monitor_sps30")
     assert state
@@ -146,3 +152,22 @@ async def test_manual_update_entity(hass):
         )
 
     assert mock_get_data.call_count == 1
+
+
+async def test_unique_id_migration(hass):
+    """Test states of the unique_id migration."""
+    registry = er.async_get(hass)
+
+    registry.async_get_or_create(
+        AIR_QUALITY_DOMAIN,
+        DOMAIN,
+        "aa:bb:cc:dd:ee:ff-sds",
+        suggested_object_id="nettigo_air_monitor_sds011",
+        disabled_by=None,
+    )
+
+    await init_integration(hass)
+
+    entry = registry.async_get("air_quality.nettigo_air_monitor_sds011")
+    assert entry
+    assert entry.unique_id == "aa:bb:cc:dd:ee:ff-sds011"
