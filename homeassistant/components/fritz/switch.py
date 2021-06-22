@@ -203,10 +203,10 @@ async def async_setup_entry(
                 [FritzBoxWifiSwitch(fritzbox_tools, entry.title, net, networks[net])],
             )
 
-    hass.async_add_executor_job(_create_wifi_switches)
-    hass.async_add_executor_job(_create_port_switches)
-    hass.async_add_executor_job(_create_deflection_switches)
-    hass.async_add_executor_job(_create_profile_switches)
+    await hass.async_add_executor_job(_create_wifi_switches)
+    await hass.async_add_executor_job(_create_port_switches)
+    await hass.async_add_executor_job(_create_deflection_switches)
+    await hass.async_add_executor_job(_create_profile_switches)
 
 
 class FritzBoxPortSwitch(FritzBoxBaseSwitch, SwitchEntity):
@@ -275,7 +275,7 @@ class FritzBoxPortSwitch(FritzBoxBaseSwitch, SwitchEntity):
 
         self.port_mapping["NewEnabled"] = "1" if turn_on else "0"
         try:
-            self.hass.async_add_executor_job(
+            await self.hass.async_add_executor_job(
                 lambda: self.fritzbox_tools.connection.call_action(
                     self.connection_type, "AddPortMapping", **self.port_mapping
                 )
@@ -363,7 +363,7 @@ class FritzBoxDeflectionSwitch(FritzBoxBaseSwitch, SwitchEntity):
 
     async def _async_switch_on_off_executor(self, turn_on: bool) -> None:
         """Handle deflection switch."""
-        self.hass.async_add_executor_job(
+        await self.hass.async_add_executor_job(
             lambda: self.fritzbox_tools.connection.call_action(
                 "X_AVM-DE_OnTel:1",
                 "SetDeflectionEnable",
@@ -477,7 +477,7 @@ class FritzBoxWifiSwitch(FritzBoxBaseSwitch, SwitchEntity):
 
     async def _async_switch_on_off_executor(self, turn_on: bool) -> None:
         """Handle wifi switch."""
-        self.hass.async_add_executor_job(
+        await self.hass.async_add_executor_job(
             lambda: self._fritzbox_tools.connection.call_action(
                 f"WLANConfiguration{self._network_num}",
                 "SetEnable",
