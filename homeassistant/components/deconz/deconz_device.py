@@ -34,8 +34,6 @@ class DeconzBase:
         if self.serial is None:
             return None
 
-        bridgeid = self.gateway.api.config.bridgeid
-
         return {
             "connections": {(CONNECTION_ZIGBEE, self.serial)},
             "identifiers": {(DECONZ_DOMAIN, self.serial)},
@@ -43,7 +41,7 @@ class DeconzBase:
             "model": self._device.modelid,
             "name": self._device.name,
             "sw_version": self._device.swversion,
-            "via_device": (DECONZ_DOMAIN, bridgeid),
+            "via_device": (DECONZ_DOMAIN, self.gateway.api.config.bridgeid),
         }
 
 
