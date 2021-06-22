@@ -600,6 +600,17 @@ async def test_all_sensor(hass, cfg, regs, expected):
         ),
         (
             {
+                CONF_COUNT: 1,
+                CONF_PRECISION: 0,
+                CONF_REGISTER_SIZE: 4,
+                CONF_DATA_TYPE: DATA_TYPE_CUSTOM,
+                CONF_STRUCTURE: ">i",
+            },
+            [0x0000, 0x0100],
+            "256",
+        ),
+        (
+            {
                 CONF_COUNT: 2,
                 CONF_REGISTER_SIZE: 4,
                 CONF_PRECISION: 0,
