@@ -18,7 +18,7 @@ import homeassistant.util.dt as dt_util
 
 DOMAIN = "discovery"
 
-SCAN_INTERVAL = timedelta(seconds=10)
+SCAN_INTERVAL = timedelta(seconds=300)
 SERVICE_APPLE_TV = "apple_tv"
 SERVICE_DAIKIN = "daikin"
 SERVICE_DLNA_DMR = "dlna_dmr"
@@ -112,8 +112,6 @@ CONFIG_SCHEMA = vol.Schema(
     },
     extra=vol.ALLOW_EXTRA,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup(hass, config):
@@ -220,11 +218,9 @@ def _discover(netdisco, zeroconf_instance, zeroconf_types):
     """Discover devices."""
     results = []
     try:
-        _LOGGER.warning("Doing scan with types suppressed: %s", zeroconf_types)
         netdisco.scan(
             zeroconf_instance=zeroconf_instance, suppress_mdns_types=zeroconf_types
         )
-        _LOGGER.warning("Done scan with types suppressed: %s", zeroconf_types)
 
         for disc in netdisco.discover():
             for service in netdisco.get_info(disc):
