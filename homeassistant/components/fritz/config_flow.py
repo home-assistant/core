@@ -26,7 +26,6 @@ from .common import FritzBoxTools
 from .const import (
     DEFAULT_HOST,
     DEFAULT_PORT,
-    DEFAULT_USERNAME,
     DOMAIN,
     ERROR_AUTH_INVALID,
     ERROR_CANNOT_CONNECT,
@@ -66,9 +65,6 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
             username=self._username,
             password=self._password,
         )
-
-        if not self.fritz_tools:
-            return None
 
         try:
             await self.fritz_tools.async_setup()
@@ -221,13 +217,10 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
         return await self.async_step_reauth_confirm()
 
     def _show_setup_form_reauth_confirm(
-        self, user_input: dict[str, Any] | None, errors: dict[str, str] | None = None
+        self, user_input: dict[str, Any], errors: dict[str, str] | None = None
     ) -> FlowResult:
         """Show the reauth form to the user."""
-        if user_input:
-            default_username = user_input.get(CONF_USERNAME)
-        else:
-            default_username = DEFAULT_USERNAME
+        default_username = user_input.get(CONF_USERNAME)
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=vol.Schema(
