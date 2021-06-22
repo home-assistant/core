@@ -81,15 +81,15 @@ async def test_save_preferences(hass, hass_ws_client, hass_storage) -> None:
         "production": [
             {
                 "type": "solar",
-                "stat_generation": "my_solar_generation",
+                "stat_production": "my_solar_production",
                 "stat_return_to_grid": "returned_to_grid_stat",
-                "stat_predicted_generation": "predicted_stat",
+                "stat_predicted_production": "predicted_stat",
             },
             {
                 "type": "wind",
-                "stat_generation": "my_wind_geneeration",
+                "stat_production": "my_wind_geneeration",
                 "stat_return_to_grid": None,
-                "stat_predicted_generation": None,
+                "stat_predicted_production": None,
             },
         ],
     }

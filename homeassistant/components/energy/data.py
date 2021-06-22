@@ -42,9 +42,9 @@ DEVICE_CONSUMPTION_SCHEMA = vol.Schema(
 PRODUCTION_SCHEMA = vol.Schema(
     {
         vol.Required("type"): vol.In(("solar", "wind")),
-        vol.Required("stat_generation"): str,
+        vol.Required("stat_production"): str,
         vol.Required("stat_return_to_grid"): vol.Any(str, None),
-        vol.Required("stat_predicted_generation"): vol.Any(str, None),
+        vol.Required("stat_predicted_production"): vol.Any(str, None),
     }
 )
 
@@ -83,9 +83,9 @@ class EnergyProduction(TypedDict):
 
     type: str  # "solar" | "wind"
 
-    stat_generation: str
+    stat_production: str
     stat_return_to_grid: str | None
-    stat_predicted_generation: str | None
+    stat_predicted_production: str | None
 
 
 class EnergyPreferences(TypedDict):
