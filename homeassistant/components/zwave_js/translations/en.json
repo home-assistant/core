@@ -61,7 +61,7 @@
             "event.notification.entry_control": "Sent a notification (Entry Control CC)",
             "event.notification.notification": "Sent a notification (Notification CC)",
             "event.value_notification.basic": "Basic CC event on {subtype}",
-            "event.value_notification.central_scene": "Action on {subtype}",
+            "event.value_notification.central_scene": "Central Scene action on {subtype}",
             "event.value_notification.scene_activation": "Scene Activation on {subtype}",
             "state.node_status": "Node status changed"
         }
