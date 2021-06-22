@@ -122,7 +122,7 @@ omit =
     homeassistant/components/braviatv/__init__.py
     homeassistant/components/braviatv/const.py
     homeassistant/components/braviatv/media_player.py
-    homeassistant/components/braviatv/remote.py    
+    homeassistant/components/braviatv/remote.py
     homeassistant/components/broadlink/__init__.py
     homeassistant/components/broadlink/const.py
     homeassistant/components/broadlink/remote.py
@@ -992,6 +992,7 @@ omit =
     homeassistant/components/swiss_public_transport/sensor.py
     homeassistant/components/swisscom/device_tracker.py
     homeassistant/components/switchbot/switch.py
+    homeassistant/components/switcher_kis/sensor.py
     homeassistant/components/switcher_kis/switch.py
     homeassistant/components/switchmate/switch.py
     homeassistant/components/syncthing/__init__.py
