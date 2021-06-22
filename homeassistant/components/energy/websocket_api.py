@@ -9,9 +9,15 @@ import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv
 
-from .data import EnergyDataUpdate, EnergyManager, async_get_manager
+from .data import (
+    DEVICE_CONSUMPTION_SCHEMA,
+    HOME_CONSUMPTION_SCHEMA,
+    PRODUCTION_SCHEMA,
+    EnergyManager,
+    EnergyPreferencesUpdate,
+    async_get_manager,
+)
 
 EnergyWebSocketCommandHandler = Callable[
     [HomeAssistant, websocket_api.ActiveConnection, Dict[str, Any], "EnergyManager"],
@@ -75,17 +81,10 @@ def ws_get_prefs(
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "energy/save_prefs",
-        vol.Optional("stat_house_energy_meter"): vol.Any(str, None),
-        vol.Optional("stat_solar_generatation"): vol.Any(str, None),
-        vol.Optional("stat_solar_return_to_grid"): vol.Any(str, None),
-        vol.Optional("stat_solar_predicted_generation"): vol.Any(str, None),
-        vol.Optional("stat_device_consumption"): [str],
-        vol.Optional("schedule_tariff"): None,
-        vol.Optional("cost_kwh_low_tariff"): vol.Any(cv.positive_float, None),
-        vol.Optional("cost_kwh_normal_tariff"): vol.Any(cv.positive_float, None),
-        vol.Optional("cost_grid_management_day"): cv.positive_float,
-        vol.Optional("cost_delivery_cost_day"): cv.positive_float,
-        vol.Optional("cost_discount_energy_tax_day"): cv.positive_float,
+        vol.Optional("currency"): str,
+        vol.Optional("home_consumption"): vol.Any(None, [HOME_CONSUMPTION_SCHEMA]),
+        vol.Optional("device_consumption"): vol.Any(None, [DEVICE_CONSUMPTION_SCHEMA]),
+        vol.Optional("production"): vol.Any(None, [PRODUCTION_SCHEMA]),
     }
 )
 @_ws_with_manager
@@ -99,5 +98,5 @@ def ws_save_prefs(
     """Handle get prefs command."""
     msg_id = msg.pop("id")
     msg.pop("type")
-    manager.async_update(cast(EnergyDataUpdate, msg))
+    manager.async_update(cast(EnergyPreferencesUpdate, msg))
     connection.send_result(msg_id, manager.data)

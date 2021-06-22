@@ -26,7 +26,7 @@ async def test_get_preferences_no_data(hass, hass_ws_client) -> None:
     assert msg["error"] == {"code": "not_found", "message": "No prefs"}
 
 
-async def test_get_preferences(hass, hass_ws_client, hass_storage) -> None:
+async def test_get_preferences_default(hass, hass_ws_client, hass_storage) -> None:
     """Test we get preferences."""
     hass_storage[data.STORAGE_KEY] = {
         "version": 1,
@@ -48,25 +48,55 @@ async def test_save_preferences(hass, hass_ws_client, hass_storage) -> None:
     """Test we can save preferences."""
     client = await hass_ws_client(hass)
 
-    new_prefs = {
-        "stat_house_energy_meter": "mock_stat_house",
-        "stat_solar_generatation": "mock_stat_solar_gen",
-        "stat_solar_return_to_grid": "mock_stat_solar_grid",
-        "stat_solar_predicted_generation": "mock_stat_solar_predict",
-        "stat_device_consumption": ["mock_stat_dev_cons"],
-        "schedule_tariff": None,
-        "cost_kwh_low_tariff": 2,
-        "cost_kwh_normal_tariff": 3,
-        "cost_grid_management_day": 4,
-        "cost_delivery_cost_day": 5,
-        "cost_discount_energy_tax_day": 6,
-    }
+    # Test saving default prefs is also valid.
+    default_prefs = data.EnergyManager.default_preferences()
 
-    await client.send_json({"id": 5, "type": "energy/save_prefs", **new_prefs})
+    await client.send_json({"id": 5, "type": "energy/save_prefs", **default_prefs})
 
     msg = await client.receive_json()
 
     assert msg["id"] == 5
+    assert msg["success"]
+    assert msg["result"] == default_prefs
+
+    new_prefs = {
+        "currency": "$",
+        "home_consumption": [
+            {
+                "stat_consumption": "heat_pump_meter",
+                "stat_tariff": "heat_pump_kwh_cost",
+                "cost_management_day": 1.2,
+                "cost_delivery_cost_day": 3.4,
+                "discount_energy_tax_day": 5.6,
+            },
+            {
+                "stat_consumption": "home_meter",
+                "tariff_kwh_low": 2,
+                "tariff_kwh_high": 4,
+                "tariff_time_start": "18:00",
+                "tariff_time_stop": "3:00",
+                "cost_management_day": 1.2,
+                "cost_delivery_cost_day": 3.4,
+                "discount_energy_tax_day": 5.6,
+            },
+        ],
+        "device_consumption": [{"stat_consumption": "some_device_usage"}],
+        "production": [
+            {
+                "type": "solar",
+                "stat_generation": "my_solar_generation",
+                "stat_return_to_grid": "returned_to_grid_stat",
+                "stat_predicted_generation": "predicted_stat",
+            },
+            {"type": "wind", "stat_generation": "my_wind_geneeration"},
+        ],
+    }
+
+    await client.send_json({"id": 6, "type": "energy/save_prefs", **new_prefs})
+
+    msg = await client.receive_json()
+
+    assert msg["id"] == 6
     assert msg["success"]
     assert msg["result"] == new_prefs
 
