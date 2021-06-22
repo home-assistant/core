@@ -42,6 +42,4 @@ class PiHoleBinarySensor(PiHoleEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return if the service is on."""
-        if self.api.data.get("status") == "enabled":
-            return True
-        return False
+        return self.api.data.get("status") == "enabled"  # type: ignore[no-any-return]

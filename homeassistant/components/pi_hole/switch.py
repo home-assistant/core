@@ -76,9 +76,7 @@ class PiHoleSwitch(PiHoleEntity, SwitchEntity):
     @property
     def is_on(self) -> bool:
         """Return if the service is on."""
-        if self.api.data.get("status") == "enabled":
-            return True
-        return False
+        return self.api.data.get("status") == "enabled"  # type: ignore[no-any-return]
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the service."""
