@@ -55,7 +55,7 @@ CONF_VALUE_ID = "value_id"
 # Trigger types
 ENTRY_CONTROL_NOTIFICATION = "event.notification.entry_control"
 NOTIFICATION_NOTIFICATION = "event.notification.notification"
-BASIC_VALUE_NOTIFICATION = "event.basic_value_notification"
+BASIC_VALUE_NOTIFICATION = "event.value_notification. basic"
 CENTRAL_SCENE_VALUE_NOTIFICATION = "event.value_notification.central_scene"
 SCENE_ACTIVATION_VALUE_NOTIFICATION = "event.value_notification.scene_activation"
 NODE_STATUS = "state.node_status"

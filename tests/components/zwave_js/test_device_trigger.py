@@ -385,7 +385,7 @@ async def test_get_basic_value_notification_triggers(
     expected_trigger = {
         "platform": "device",
         "domain": DOMAIN,
-        "type": "event.basic_value_notification",
+        "type": "event.value_notification. basic",
         "device_id": device.id,
         "command_class": CommandClass.BASIC,
         "property": "event",
@@ -400,7 +400,7 @@ async def test_get_basic_value_notification_triggers(
 async def test_if_basic_value_notification_fires(
     hass, client, ge_in_wall_dimmer_switch, integration, calls
 ):
-    """Test for event.basic_value_notification trigger firing."""
+    """Test for event.value_notification. basic trigger firing."""
     node: Node = ge_in_wall_dimmer_switch
     dev_reg = async_get_dev_reg(hass)
     device = async_entries_for_config_entry(dev_reg, integration.entry_id)[0]
@@ -414,7 +414,7 @@ async def test_if_basic_value_notification_fires(
                     "trigger": {
                         "platform": "device",
                         "domain": DOMAIN,
-                        "type": "event.basic_value_notification",
+                        "type": "event.value_notification. basic",
                         "device_id": device.id,
                         "command_class": CommandClass.BASIC.value,
                         "property": "event",
@@ -427,7 +427,7 @@ async def test_if_basic_value_notification_fires(
                         "service": "test.automation",
                         "data_template": {
                             "some": (
-                                "event.basic_value_notification - "
+                                "event.value_notification. basic - "
                                 "{{ trigger.platform}} - "
                                 "{{ trigger.event.event_type}} - "
                                 "{{ trigger.event.data.command_class }}"
@@ -470,7 +470,7 @@ async def test_if_basic_value_notification_fires(
     assert len(calls) == 1
     assert calls[0].data[
         "some"
-    ] == "event.basic_value_notification - device - zwave_js_value_notification - {}".format(
+    ] == "event.value_notification. basic - device - zwave_js_value_notification - {}".format(
         CommandClass.BASIC
     )
 
@@ -478,7 +478,7 @@ async def test_if_basic_value_notification_fires(
 async def test_get_trigger_capabilities_basic_value_notification(
     hass, client, ge_in_wall_dimmer_switch, integration
 ):
-    """Test we get the expected capabilities from a basic_value_notification trigger."""
+    """Test we get the expected capabilities from a value_notification. basic trigger."""
     dev_reg = async_get_dev_reg(hass)
     device = async_entries_for_config_entry(dev_reg, integration.entry_id)[0]
     capabilities = await device_trigger.async_get_trigger_capabilities(
@@ -486,7 +486,7 @@ async def test_get_trigger_capabilities_basic_value_notification(
         {
             "platform": "device",
             "domain": DOMAIN,
-            "type": "event.basic_value_notification",
+            "type": "event.value_notification. basic",
             "device_id": device.id,
             "command_class": CommandClass.BASIC.value,
             "property": "event",
