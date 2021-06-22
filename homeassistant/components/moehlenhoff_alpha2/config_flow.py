@@ -26,6 +26,9 @@ async def validate_input(data):
         await base.update_data()
     except (aiohttp.client_exceptions.ClientConnectorError, asyncio.TimeoutError):
         return {"error": "cannot_connect"}
+    except Exception:  # pylint: disable=broad-except
+        _LOGGER.exception("Unexpected exception")
+        return {"error": "unknown"}
 
     # Return info that you want to store in the config entry.
     return {"title": base.name}
@@ -41,17 +44,11 @@ class Alpha2BaseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
             self._async_abort_entries_match({"host": user_input["host"]})
-            try:
-                result = await validate_input(user_input)
-                if result.get("error"):
-                    errors["base"] = result["error"]
-                else:
-                    return self.async_create_entry(
-                        title=result["title"], data=user_input
-                    )
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
+            result = await validate_input(user_input)
+            if result.get("error"):
+                errors["base"] = result["error"]
+            else:
+                return self.async_create_entry(title=result["title"], data=user_input)
 
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
