@@ -562,7 +562,7 @@ nessclient==0.9.15
 netdisco==2.8.3
 
 # homeassistant.components.nam
-nettigo-air-monitor==0.2.6
+nettigo-air-monitor==1.0.0
 
 # homeassistant.components.nexia
 nexia==0.9.7
