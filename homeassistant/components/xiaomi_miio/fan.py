@@ -906,7 +906,7 @@ class XiaomiAirPurifier(XiaomiGenericDevice):
         if value % 10 != 0:
             value = int((str(value))[:-1] + "0")
 
-        self._state_attrs[ATTR_MOTOR_SPEED] = percentage
+        self._state_attrs[ATTR_MOTOR_SPEED] = value
 
         await self._try_command(
             "Setting percentage of the miio device failed.",
