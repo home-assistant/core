@@ -9,14 +9,17 @@
             "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s",
             "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
         },
-        "flow_title": "{ip_address}",
+        "flow_title": "Bosch SHC: {name}",
         "step": {
+            "reauth_confirm": {
+                "title": "Integr\u00e1ci\u00f3 \u00fajrahiteles\u00edt\u00e9se"
+            },
             "user": {
                 "data": {
-                    "ip_address": "IP c\u00edm",
-                    "password": "Jelsz\u00f3"
+                    "host": "Hoszt"
                 }
             }
         }
-    }
+    },
+    "title": "Bosch SHC"
 }
