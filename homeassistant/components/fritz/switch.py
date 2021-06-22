@@ -34,7 +34,7 @@ def service_call_action(
     """Return service details."""
 
     service_append = "1" if service_suffix else ""
-    if (service_name + service_append) not in fritzbox_tools.connection.services:
+    if f"{service_name}{service_append}" not in fritzbox_tools.connection.services:
         return None
 
     try:
