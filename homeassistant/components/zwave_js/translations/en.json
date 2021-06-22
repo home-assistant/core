@@ -58,11 +58,11 @@
             "value": "Current value of a Z-Wave Value"
         },
         "trigger_type": {
-            "event.basic_value_notification": "Basic CC event on {subtype}",
-            "event.central_scene_value_notification": "Action on {subtype}",
-            "event.entry_control_notification": "Sent a notification (Entry Control CC)",
-            "event.notification_notification": "Sent a notification (Notification CC)",
-            "event.scene_activation_value_notification": "Scene Activation on {subtype}",
+            "event.notification.entry_control": "Sent a notification (Entry Control CC)",
+            "event.notification.notification": "Sent a notification (Notification CC)",
+            "event.value_notification.basic": "Basic CC event on {subtype}",
+            "event.value_notification.central_scene": "Action on {subtype}",
+            "event.value_notification.scene_activation": "Scene Activation on {subtype}",
             "state.node_status": "Node status changed"
         }
     },
