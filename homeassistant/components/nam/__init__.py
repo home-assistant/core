@@ -9,8 +9,8 @@ from aiohttp.client_exceptions import ClientConnectorError
 import async_timeout
 from nettigo_air_monitor import (
     ApiError,
-    DictToObj,
     InvalidSensorData,
+    NAMSensors,
     NettigoAirMonitor,
 )
 
@@ -75,7 +75,7 @@ class NAMDataUpdateCoordinator(DataUpdateCoordinator):
             hass, _LOGGER, name=DOMAIN, update_interval=DEFAULT_UPDATE_INTERVAL
         )
 
-    async def _async_update_data(self) -> DictToObj:
+    async def _async_update_data(self) -> NAMSensors:
         """Update data via library."""
         try:
             # Device firmware uses synchronous code and doesn't respond to http queries
@@ -85,8 +85,6 @@ class NAMDataUpdateCoordinator(DataUpdateCoordinator):
                 data = await self.nam.async_update()
         except (ApiError, ClientConnectorError, InvalidSensorData) as error:
             raise UpdateFailed(error) from error
-
-        _LOGGER.debug(data)
 
         return data
 
