@@ -5,6 +5,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components.deconz.const import ATTR_ON, CONF_ALLOW_DECONZ_GROUPS
+from homeassistant.components.deconz.light import DECONZ_GROUP
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_MODE,
@@ -30,6 +31,9 @@ from homeassistant.components.light import (
     FLASH_SHORT,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    SUPPORT_EFFECT,
+    SUPPORT_FLASH,
+    SUPPORT_TRANSITION,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -98,8 +102,10 @@ async def test_no_lights_or_groups(hass, aioclient_mock):
                     ATTR_COLOR_MODE: COLOR_MODE_COLOR_TEMP,
                     ATTR_MIN_MIREDS: 153,
                     ATTR_MAX_MIREDS: 500,
-                    ATTR_SUPPORTED_FEATURES: 44,
-                    "is_deconz_group": False,
+                    ATTR_SUPPORTED_FEATURES: SUPPORT_TRANSITION
+                    | SUPPORT_FLASH
+                    | SUPPORT_EFFECT,
+                    DECONZ_GROUP: False,
                 },
             },
         ),
@@ -148,8 +154,10 @@ async def test_no_lights_or_groups(hass, aioclient_mock):
                     ATTR_HS_COLOR: (29.691, 38.039),
                     ATTR_RGB_COLOR: (255, 206, 158),
                     ATTR_XY_COLOR: (0.427, 0.373),
-                    "is_deconz_group": False,
-                    ATTR_SUPPORTED_FEATURES: 44,
+                    DECONZ_GROUP: False,
+                    ATTR_SUPPORTED_FEATURES: SUPPORT_TRANSITION
+                    | SUPPORT_FLASH
+                    | SUPPORT_EFFECT,
                 },
             },
         ),
@@ -186,8 +194,10 @@ async def test_no_lights_or_groups(hass, aioclient_mock):
                     ATTR_HS_COLOR: (294.938, 55.294),
                     ATTR_RGB_COLOR: (243, 113, 255),
                     ATTR_XY_COLOR: (0.357, 0.188),
-                    "is_deconz_group": False,
-                    ATTR_SUPPORTED_FEATURES: 44,
+                    DECONZ_GROUP: False,
+                    ATTR_SUPPORTED_FEATURES: SUPPORT_TRANSITION
+                    | SUPPORT_FLASH
+                    | SUPPORT_EFFECT,
                 },
             },
         ),
@@ -225,8 +235,8 @@ async def test_no_lights_or_groups(hass, aioclient_mock):
                     ATTR_COLOR_MODE: COLOR_MODE_COLOR_TEMP,
                     ATTR_BRIGHTNESS: 254,
                     ATTR_COLOR_TEMP: 396,
-                    "is_deconz_group": False,
-                    ATTR_SUPPORTED_FEATURES: 40,
+                    DECONZ_GROUP: False,
+                    ATTR_SUPPORTED_FEATURES: SUPPORT_TRANSITION | SUPPORT_FLASH,
                 },
             },
         ),
@@ -251,8 +261,8 @@ async def test_no_lights_or_groups(hass, aioclient_mock):
                     ATTR_SUPPORTED_COLOR_MODES: [COLOR_MODE_BRIGHTNESS],
                     ATTR_COLOR_MODE: COLOR_MODE_BRIGHTNESS,
                     ATTR_BRIGHTNESS: 254,
-                    "is_deconz_group": False,
-                    ATTR_SUPPORTED_FEATURES: 40,
+                    DECONZ_GROUP: False,
+                    ATTR_SUPPORTED_FEATURES: SUPPORT_TRANSITION | SUPPORT_FLASH,
                 },
             },
         ),
@@ -276,7 +286,7 @@ async def test_no_lights_or_groups(hass, aioclient_mock):
                 "attributes": {
                     ATTR_SUPPORTED_COLOR_MODES: [COLOR_MODE_ONOFF],
                     ATTR_COLOR_MODE: COLOR_MODE_ONOFF,
-                    "is_deconz_group": False,
+                    DECONZ_GROUP: False,
                     ATTR_SUPPORTED_FEATURES: 0,
                 },
             },
@@ -643,7 +653,7 @@ async def test_configuration_tool(hass, aioclient_mock):
                     ATTR_BRIGHTNESS: 255,
                     ATTR_EFFECT_LIST: [EFFECT_COLORLOOP],
                     "all_on": False,
-                    "is_deconz_group": True,
+                    DECONZ_GROUP: True,
                     ATTR_SUPPORTED_FEATURES: 44,
                 },
             },
@@ -663,8 +673,10 @@ async def test_configuration_tool(hass, aioclient_mock):
                     ATTR_BRIGHTNESS: 50,
                     ATTR_EFFECT_LIST: [EFFECT_COLORLOOP],
                     "all_on": False,
-                    "is_deconz_group": True,
-                    ATTR_SUPPORTED_FEATURES: 44,
+                    DECONZ_GROUP: True,
+                    ATTR_SUPPORTED_FEATURES: SUPPORT_TRANSITION
+                    | SUPPORT_FLASH
+                    | SUPPORT_EFFECT,
                 },
             },
         ),
@@ -684,8 +696,10 @@ async def test_configuration_tool(hass, aioclient_mock):
                     ATTR_RGB_COLOR: (255, 221, 0),
                     ATTR_XY_COLOR: (0.5, 0.5),
                     "all_on": False,
-                    "is_deconz_group": True,
-                    ATTR_SUPPORTED_FEATURES: 44,
+                    DECONZ_GROUP: True,
+                    ATTR_SUPPORTED_FEATURES: SUPPORT_TRANSITION
+                    | SUPPORT_FLASH
+                    | SUPPORT_EFFECT,
                 },
             },
         ),
@@ -1138,4 +1152,7 @@ async def test_verify_group_supported_features(hass, aioclient_mock):
     assert len(hass.states.async_all()) == 4
 
     assert hass.states.get("light.group").state == STATE_ON
-    assert hass.states.get("light.group").attributes[ATTR_SUPPORTED_FEATURES] == 44
+    assert (
+        hass.states.get("light.group").attributes[ATTR_SUPPORTED_FEATURES]
+        == SUPPORT_TRANSITION | SUPPORT_FLASH | SUPPORT_EFFECT
+    )
