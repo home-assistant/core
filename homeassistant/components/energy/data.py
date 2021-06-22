@@ -27,9 +27,7 @@ HOME_CONSUMPTION_SCHEMA = vol.All(
         {
             vol.Required("stat_consumption"): str,
             vol.Required("stat_tariff"): vol.Any(None, str),
-            vol.Required("cost_management_day"): vol.Coerce(float),
-            vol.Required("cost_delivery_cost_day"): vol.Coerce(float),
-            vol.Required("discount_energy_tax_day"): vol.Coerce(float),
+            vol.Required("cost_adjustment_day"): vol.Coerce(float),
         }
     ),
     ensure_home_valid_tariffs,
@@ -66,9 +64,7 @@ class EnergyHomeConsumption(TypedDict):
     # Points at a sensor that contains the cost
     stat_tariff: str | None
 
-    cost_management_day: float
-    cost_delivery_cost_day: float
-    discount_energy_tax_day: float
+    cost_adjustment_day: float
 
 
 class EnergyDeviceConsumption(TypedDict):
@@ -118,7 +114,6 @@ class EnergyManager:
     def default_preferences() -> EnergyPreferences:
         """Return default preferences."""
         return {
-            # TODO Can we default this based on timezones or GPS?
             "currency": "€",
             "home_consumption": [],
             "device_consumption": [],
