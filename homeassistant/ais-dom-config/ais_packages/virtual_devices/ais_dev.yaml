@@ -2,12 +2,6 @@ input_boolean:
   ais_quiet_mode:
     name: Tryb nocny
     icon: mdi:volume-off
-  ais_auto_service_for_usb:
-    name: Automatyczny start usług dla urządzeń USB
-    icon: mdi:usb
-  ais_voice_notification_for_usb:
-    name: Powiadomienia głosowe o urządzeniach USB
-    icon: mdi:usb
 
 input_datetime:
   ais_quiet_mode_start:

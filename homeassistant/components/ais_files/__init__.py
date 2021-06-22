@@ -52,6 +52,7 @@ async def async_setup(hass, config):
     hass.http.register_view(FileReadView)
     hass.http.register_view(FileWriteView)
     hass.http.register_view(AisDbConfigView)
+    hass.http.register_view(AisUsbConfigView)
 
     return True
 
@@ -542,5 +543,48 @@ class AisDbConfigView(HomeAssistantView):
             return_info += "Dziennik wyłączony."
             if panel_logbook:
                 hass.components.frontend.async_remove_panel("logbook")
+
+        return self.json({"info": return_info, "error": error_info})
+
+
+class AisUsbConfigView(HomeAssistantView):
+    """View to write the usb settings."""
+    requires_auth = False
+
+    url = "/api/ais_file/ais_usb_view"
+    name = "api:ais_file:ais_usb_view"
+
+    async def get(self, request):
+        return self.json(ais_global.G_USB_SETTINGS_INFO)
+
+    async def post(self, request):
+        """Retrieve the file."""
+        hass = request.app["hass"]
+        return_info = "ok"
+        error_info = ""
+        auto_start = True
+        voice_notification = True
+        try:
+            data = await request.json()
+            auto_start = data.get("usbAutoStartServices", True)
+            voice_notification = data.get("usbVoiceNotification", True)
+        except ValueError:
+            return self.json({"info": "", "error": "Invalid JSON"})
+
+        try:
+            usb_settings = {
+                "usbAutoStartServices": auto_start,
+                "usbVoiceNotification": voice_notification,
+            }
+            with open(
+                    hass.config.config_dir + ais_global.G_USB_SETTINGS_INFO_FILE, "w"
+            ) as outfile:
+                json.dump(usb_settings, outfile)
+
+        except Exception as e:
+            _LOGGER.error("Error save_usb_settings " + str(e))
+            return self.json({"info": "", "error": str(e)})
+
+        ais_global.G_USB_SETTINGS_INFO = usb_settings
 
         return self.json({"info": return_info, "error": error_info})

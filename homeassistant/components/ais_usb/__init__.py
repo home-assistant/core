@@ -32,8 +32,7 @@ if platform.machine() == "x86_64":
 
 
 async def _run(hass, cmd):
-    ais_auto_service_for_usb = hass.states.get("input_boolean.ais_auto_service_for_usb").state
-    if ais_auto_service_for_usb == "off" and cmd.startswith("pm2"):
+    if not ais_global.G_USB_SETTINGS_INFO.get("usbAutoStartServices", True) and cmd.startswith("pm2"):
         pass
     else:
         cmd_process = await asyncio.create_subprocess_shell(
@@ -104,8 +103,7 @@ def get_device_number(devoce_id):
 
 
 async def say_it(hass, text):
-    ais_voice_notification_for_usb = hass.states.get("input_boolean.ais_voice_notification_for_usb").state
-    if ais_voice_notification_for_usb == "off":
+    if not ais_global.G_USB_SETTINGS_INFO.get("usbVoiceNotification", True):
         pass
     else:
         await hass.services.async_call(
@@ -429,31 +427,18 @@ async def async_setup(hass, config):
         )
 
     async def check_ais_usb_settings(call):
-        # USB settings
+        # get USB settings from file
         file_path = hass.config.config_dir + ais_global.G_USB_SETTINGS_INFO_FILE
-        default_usb_settings = False
-        if not os.path.isfile(file_path):
-            # create empty file
-            os.mknod(file_path)
-            default_usb_settings = True
-
-        if default_usb_settings and hass.services.has_service("input_boolean", "search"):
-            # set default values
-            hass.async_add_job(
-                hass.services.async_call(
-                    "input_boolean",
-                    "turn_on",
-                    {"entity_id": "input_boolean.ais_auto_service_for_usb"},
-                )
-            )
-            # set default values
-            hass.async_add_job(
-                hass.services.async_call(
-                    "input_boolean",
-                    "turn_on",
-                    {"entity_id": "input_boolean.ais_voice_notification_for_usb"},
-                )
-            )
+        try:
+            with open(file_path, "r") as usb_settings_file:
+                ais_global.G_USB_SETTINGS_INFO = json.loads(usb_settings_file.read())
+                _LOGGER.error(ais_global.G_USB_SETTINGS_INFO)
+        except Exception:
+            with open(
+                    hass.config.config_dir + ais_global.G_USB_SETTINGS_INFO_FILE, "w"
+            ) as outfile:
+                json.dump({"usbAutoStartServices": True, "usbVoiceNotification": True}, outfile)
+            ais_global.G_USB_SETTINGS_INFO = {"usbAutoStartServices": True, "usbVoiceNotification": True}
 
     hass.services.async_register(DOMAIN, "stop_devices", stop_devices)
     hass.services.async_register(DOMAIN, "lsusb", lsusb)

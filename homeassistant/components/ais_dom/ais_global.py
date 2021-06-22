@@ -113,6 +113,7 @@ G_AIS_HOME_DIR = "/data/data/pl.sviete.dom/files/home"
 G_REMOTE_DRIVES_DOM_PATH = "/data/data/pl.sviete.dom/files/home/dom/dyski-wymienne"
 G_LOG_SETTINGS_INFO = None
 G_DB_SETTINGS_INFO = None
+G_USB_SETTINGS_INFO = {"usbAutoStartServices": True, "usbVoiceNotification": True}
 
 #
 G_AIS_DOM_PIN = ""
