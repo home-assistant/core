@@ -132,20 +132,14 @@ class ScreenlogicDataUpdateCoordinator(DataUpdateCoordinator):
         try:
             async with self.api_lock:
                 await self.hass.async_add_executor_job(self.gateway.update)
-        except ScreenLogicError:
-            _LOGGER.warning("ScreenLogicError - attempting reconnect")
+        except ScreenLogicError as error:
+            _LOGGER.warning("ScreenLogicError - attempting reconnect: %s", error)
 
+            connect_info = get_connect_info(self.hass, self.config_entry)
             try:
-                _LOGGER.warning("Re-connecting to the gateway")
-                connect_info = get_connect_info(self.hass, self.config_entry)
                 self.gateway = ScreenLogicGateway(**connect_info)
                 self.gateway.update()
             except ScreenLogicError as error:
-                _LOGGER.error(
-                    "Error while re-connecting to the gateway %s: %s",
-                    connect_info,
-                    error,
-                )
                 raise UpdateFailed(error) from error
 
         return self.gateway.get_data()
