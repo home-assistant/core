@@ -22,21 +22,27 @@ from homeassistant.const import (
 
 from .model import SensorDescription
 
+SUFFIX_P0: Final = "_p0"
+SUFFIX_P1: Final = "_p1"
+SUFFIX_P2: Final = "_p2"
+SUFFIX_P4: Final = "_p4"
+
 ATTR_BME280_HUMIDITY: Final = "bme280_humidity"
 ATTR_BME280_PRESSURE: Final = "bme280_pressure"
 ATTR_BME280_TEMPERATURE: Final = "bme280_temperature"
 ATTR_BMP280_PRESSURE: Final = "bmp280_pressure"
 ATTR_BMP280_TEMPERATURE: Final = "bmp280_temperature"
-ATTR_DHT22_HUMIDITY: Final = "humidity"
-ATTR_DHT22_TEMPERATURE: Final = "temperature"
+ATTR_DHT22_HUMIDITY: Final = "dht22_humidity"
+ATTR_DHT22_TEMPERATURE: Final = "dht22_temperature"
 ATTR_HECA_HUMIDITY: Final = "heca_humidity"
 ATTR_HECA_TEMPERATURE: Final = "heca_temperature"
-ATTR_MHZ14A_CARBON_DIOXIDE: Final = "conc_co2_ppm"
+ATTR_SDS011: Final = "sds011"
 ATTR_SHT3X_HUMIDITY: Final = "sht3x_humidity"
 ATTR_SHT3X_TEMPERATURE: Final = "sht3x_temperature"
 ATTR_SIGNAL_STRENGTH: Final = "signal"
-ATTR_SPS30_P0: Final = "sps30_p0"
-ATTR_SPS30_P4: Final = "sps30_p4"
+ATTR_SPS30: Final = "sps30"
+ATTR_SPS30_P0: Final = f"{ATTR_SPS30}{SUFFIX_P0}"
+ATTR_SPS30_P4: Final = f"{ATTR_SPS30}{SUFFIX_P4}"
 ATTR_UPTIME: Final = "uptime"
 
 ATTR_ENABLED: Final = "enabled"
@@ -48,10 +54,15 @@ DEFAULT_UPDATE_INTERVAL: Final = timedelta(minutes=6)
 DOMAIN: Final = "nam"
 MANUFACTURER: Final = "Nettigo"
 
-SUFFIX_P1: Final = "_p1"
-SUFFIX_P2: Final = "_p2"
+AIR_QUALITY_SENSORS: Final[dict[str, str]] = {
+    ATTR_SDS011: "SDS011",
+    ATTR_SPS30: "SPS30",
+}
 
-AIR_QUALITY_SENSORS: Final[dict[str, str]] = {"sds": "SDS011", "sps30": "SPS30"}
+MIGRATION_SENSORS: Final = [
+    ("temperature", ATTR_DHT22_TEMPERATURE),
+    ("humidity", ATTR_DHT22_HUMIDITY),
+]
 
 SENSORS: Final[dict[str, SensorDescription]] = {
     ATTR_BME280_HUMIDITY: {
