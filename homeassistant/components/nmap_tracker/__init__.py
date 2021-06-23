@@ -235,9 +235,11 @@ class NmapDeviceScanner:
                 for signal, formatted_mac in dispatches:
                     async_dispatcher_send(self._hass, signal, formatted_mac)
 
+        _LOGGER.warning("Finished scan")
         if not self._finished_first_scan:
+            _LOGGER.warning("Finished first scan")
             self._finished_first_scan = True
-            self._mark_missing_devices_as_not_home()
+            self._async_mark_missing_devices_as_not_home()
 
     @callback
     def _async_mark_missing_devices_as_not_home(self):
@@ -245,12 +247,14 @@ class NmapDeviceScanner:
         # scan we mark devices that were not found as not_home
         # from unavailable
         registry = er.async_get(self._hass)
-        for entity in registry.entities:
-            if entity.config_entry.entry_id != self._entry_id:
+        for entry in registry.entities.values():
+            _LOGGER.warning("checking %s", entry)
+            if entry.config_entry.entry_id != self._entry_id:
                 continue
-            if entity.unique_id not in self.devices.tracked:
+            _LOGGER.warning("checking unique id of %s : %s", entry, entry.unique_id)
+            if entry.unique_id not in self.devices.tracked:
                 async_dispatcher_send(
-                    self._hass, self.signal_device_new, entity.unique_id
+                    self._hass, self.signal_device_new, entry.unique_id
                 )
 
     def _run_nmap_scan(self):
