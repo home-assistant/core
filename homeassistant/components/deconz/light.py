@@ -273,14 +273,12 @@ class DeconzGroup(DeconzBaseLight):
     @property
     def device_info(self):
         """Return a device description for device registry."""
-        bridgeid = self.gateway.api.config.bridgeid
-
         return {
             "identifiers": {(DECONZ_DOMAIN, self.unique_id)},
             "manufacturer": "Dresden Elektronik",
             "model": "deCONZ group",
             "name": self._device.name,
-            "via_device": (DECONZ_DOMAIN, bridgeid),
+            "via_device": (DECONZ_DOMAIN, self.gateway.api.config.bridgeid),
         }
 
     @property
