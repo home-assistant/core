@@ -170,11 +170,11 @@ async def async_get_condition_capabilities(
     if config[CONF_TYPE] == CONFIG_PARAMETER_TYPE:
         value_id = config[CONF_VALUE_ID]
         config_value = cast(ConfigurationValue, node.values[value_id])
-        min = config_value.metadata.min
-        max = config_value.metadata.max
+        min_ = config_value.metadata.min
+        max_ = config_value.metadata.max
 
         if config_value.configuration_value_type == ConfigurationValueType.RANGE:
-            value_schema = vol.Range(min=min, max=max)
+            value_schema = vol.Range(min=min_, max=max_)
         elif (
             config_value.configuration_value_type == ConfigurationValueType.MANUAL_ENTRY
         ):
@@ -182,11 +182,11 @@ async def async_get_condition_capabilities(
                 vol.In(
                     {
                         i: config_value.metadata.states.get(str(i)) or i
-                        for i in range(min, max + 1)
+                        for i in range(min_, max_ + 1)
                     }
                 )
                 if config_value.metadata.states
-                else vol.Range(min=min, max=max)
+                else vol.Range(min=min_, max=max_)
             )
         elif config_value.configuration_value_type == ConfigurationValueType.ENUMERATED:
             value_schema = vol.In(
