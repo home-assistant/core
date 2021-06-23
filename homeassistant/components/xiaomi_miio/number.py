@@ -4,7 +4,6 @@ from enum import Enum
 import logging
 
 from homeassistant.components.number import NumberEntity
-from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_HOST, CONF_TOKEN
 from homeassistant.core import callback
 
@@ -67,21 +66,6 @@ NUMBER_TYPES = {
         service=SERVICE_SET_MOTOR_SPEED,
     ),
 }
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Import Miio configuration from YAML."""
-    _LOGGER.warning(
-        "Loading Xiaomi Miio Fan via platform setup is deprecated. "
-        "Please remove it from your configuration"
-    )
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=config,
-        )
-    )
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
