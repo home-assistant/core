@@ -162,6 +162,11 @@ class NmapDeviceScanner:
         """Signal specific per nmap tracker entry to signal new device."""
         return f"{DOMAIN}-device-new-{self._entry_id}"
 
+    @property
+    def signal_device_missing(self) -> str:
+        """Signal specific per nmap tracker entry to signal a missing device."""
+        return f"{DOMAIN}-device-missing-{self._entry_id}"
+
     @callback
     def _async_get_vendor(self, mac_address):
         """Lookup the vendor."""
@@ -257,10 +262,10 @@ class NmapDeviceScanner:
                     self._async_get_vendor(entry.unique_id),
                     "Device not found in initial scan",
                     now,
-                    0,
+                    1,
                 )
                 async_dispatcher_send(
-                    self._hass, self.signal_device_new, entry.unique_id
+                    self._hass, self.signal_device_missing, entry.unique_id
                 )
 
     def _run_nmap_scan(self):

@@ -63,12 +63,22 @@ async def async_setup_entry(
     nmap_tracker = hass.data[DOMAIN][entry.entry_id]
 
     @callback
-    def update_router(mac_address):
-        """Update the values of the router."""
-        async_add_entities([NmapTrackerEntity(nmap_tracker, mac_address)])
+    def device_new(mac_address):
+        """Signal a new device."""
+        async_add_entities([NmapTrackerEntity(nmap_tracker, mac_address, True)])
+
+    @callback
+    def device_missing(mac_address):
+        """Signal a missing device."""
+        async_add_entities([NmapTrackerEntity(nmap_tracker, mac_address, False)])
 
     entry.async_on_unload(
-        async_dispatcher_connect(hass, nmap_tracker.signal_device_new, update_router)
+        async_dispatcher_connect(hass, nmap_tracker.signal_device_new, device_new)
+    )
+    entry.async_on_unload(
+        async_dispatcher_connect(
+            hass, nmap_tracker.signal_device_missing, device_missing
+        )
     )
 
 
@@ -82,13 +92,14 @@ def short_hostname(hostname):
 class NmapTrackerEntity(ScannerEntity):
     """An Nmap Tracker entity."""
 
-    def __init__(self, nmap_tracker: NmapDeviceScanner, mac_address: str) -> None:
+    def __init__(
+        self, nmap_tracker: NmapDeviceScanner, mac_address: str, active: bool
+    ) -> None:
         """Initialize an nmap tracker entity."""
         self._mac_address = mac_address
         self._nmap_tracker = nmap_tracker
         self._tracked = self._nmap_tracker.devices.tracked
-        self._active = False
-        self._had_any_update = False
+        self._active = active
 
     @property
     def _device(self) -> bool:
@@ -171,13 +182,11 @@ class NmapTrackerEntity(ScannerEntity):
     @callback
     def async_on_demand_update(self, online: bool):
         """Update state."""
-        self._had_any_update = True
         self.async_process_update(online)
         self.async_write_ha_state()
 
     async def async_added_to_hass(self):
         """Register state update callback."""
-        self.async_process_update(True)
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
