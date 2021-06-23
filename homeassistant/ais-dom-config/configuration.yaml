@@ -116,3 +116,6 @@ input_text:
 tag:
 timer:
 my:
+
+tts:
+  - platform: ais_tts_local
