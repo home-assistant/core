@@ -252,7 +252,8 @@ class NmapDeviceScanner:
             if entry.config_entry_id != self._entry_id:
                 continue
             _LOGGER.warning("checking unique id of %s : %s", entry, entry.unique_id)
-            if entry.unique_id not in self.devices.tracked:
+            if entry.unique_id not in self.devices.tracked:           
+                self.devices.config_entry_owner[entry.unique_id] = self._entry_id   
                 self.devices.tracked[entry.unique_id] = NmapDevice(
                     entry.unique_id,
                     entry.name,
