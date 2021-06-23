@@ -407,7 +407,7 @@ async def test_get_condition_capabilities_node_status(
 async def test_get_condition_capabilities_value(
     hass, client, lock_schlage_be469, integration
 ):
-    """Test we get the expected capabilities from a config_parameter condition."""
+    """Test we get the expected capabilities from a value condition."""
     dev_reg = device_registry.async_get(hass)
     device = device_registry.async_entries_for_config_entry(
         dev_reg, integration.entry_id
