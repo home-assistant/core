@@ -45,6 +45,7 @@ SUPPORTED_COMPONENTS = [
     "lock",
     "number",
     "scene",
+    "select",
     "sensor",
     "switch",
     "tag",

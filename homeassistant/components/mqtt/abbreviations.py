@@ -92,6 +92,7 @@ ABBREVIATIONS = {
     "name": "name",
     "off_dly": "off_delay",
     "on_cmd_type": "on_command_type",
+    "ops": "options",
     "opt": "optimistic",
     "osc_cmd_t": "oscillation_command_topic",
     "osc_cmd_tpl": "oscillation_command_template",
