@@ -581,33 +581,14 @@ class Thermostat(ClimateEntity):
     def extra_state_attributes(self):
         """Return device specific state attributes."""
         status = self.thermostat["equipmentStatus"]
-        attributes = {
+        return {
             "fan": self.fan,
             "climate_mode": self._preset_modes[
                 self.thermostat["program"]["currentClimateRef"]
             ],
             "equipment_running": status,
             "fan_min_on_time": self.thermostat["settings"]["fanMinOnTime"],
-            "ventilator_type": self.thermostat["settings"]["ventilatorType"],
         }
-        if self.thermostat["settings"]["ventilatorType"] != "none":
-            attributes["vent"] = self.thermostat["settings"]["vent"]
-            attributes["ventilator_min_on_time"] = self.thermostat["settings"][
-                "ventilatorMinOnTime"
-            ]
-            attributes["ventilator_min_on_time_home"] = self.thermostat["settings"][
-                "ventilatorMinOnTimeHome"
-            ]
-            attributes["ventilator_min_on_time_away"] = self.thermostat["settings"][
-                "ventilatorMinOnTimeAway"
-            ]
-            attributes["is_ventilator_timer_on"] = self.thermostat["settings"][
-                "isVentilatorTimerOn"
-            ]
-            attributes["ventilator_off_date_time"] = self.thermostat["settings"][
-                "ventilatorOffDateTime"
-            ]
-        return attributes
 
     @property
     def is_aux_heat(self):

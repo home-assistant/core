@@ -34,7 +34,6 @@ def ecobee_fixture():
             "fanMinOnTime": 10,
             "heatCoolMinDelta": 50,
             "holdAction": "nextTransition",
-            "ventilatorType": "none",
         },
         "equipmentStatus": "fan",
         "events": [
@@ -156,7 +155,6 @@ async def test_extra_state_attributes(ecobee_fixture, thermostat):
         "climate_mode": "Climate1",
         "fan_min_on_time": 10,
         "equipment_running": "heatPump2",
-        "ventilator_type": "none",
     } == thermostat.extra_state_attributes
 
     ecobee_fixture["equipmentStatus"] = "auxHeat2"
@@ -165,7 +163,6 @@ async def test_extra_state_attributes(ecobee_fixture, thermostat):
         "climate_mode": "Climate1",
         "fan_min_on_time": 10,
         "equipment_running": "auxHeat2",
-        "ventilator_type": "none",
     } == thermostat.extra_state_attributes
 
     ecobee_fixture["equipmentStatus"] = "compCool1"
@@ -174,7 +171,6 @@ async def test_extra_state_attributes(ecobee_fixture, thermostat):
         "climate_mode": "Climate1",
         "fan_min_on_time": 10,
         "equipment_running": "compCool1",
-        "ventilator_type": "none",
     } == thermostat.extra_state_attributes
     ecobee_fixture["equipmentStatus"] = ""
     assert {
@@ -182,7 +178,6 @@ async def test_extra_state_attributes(ecobee_fixture, thermostat):
         "climate_mode": "Climate1",
         "fan_min_on_time": 10,
         "equipment_running": "",
-        "ventilator_type": "none",
     } == thermostat.extra_state_attributes
 
     ecobee_fixture["equipmentStatus"] = "Unknown"
@@ -191,7 +186,6 @@ async def test_extra_state_attributes(ecobee_fixture, thermostat):
         "climate_mode": "Climate1",
         "fan_min_on_time": 10,
         "equipment_running": "Unknown",
-        "ventilator_type": "none",
     } == thermostat.extra_state_attributes
 
     ecobee_fixture["program"]["currentClimateRef"] = "c2"
@@ -200,28 +194,6 @@ async def test_extra_state_attributes(ecobee_fixture, thermostat):
         "climate_mode": "Climate2",
         "fan_min_on_time": 10,
         "equipment_running": "Unknown",
-        "ventilator_type": "none",
-    } == thermostat.extra_state_attributes
-
-    ecobee_fixture["settings"]["ventilatorType"] = "ventilator"
-    ecobee_fixture["settings"]["vent"] = "auto"
-    ecobee_fixture["settings"]["ventilatorMinOnTime"] = 50
-    ecobee_fixture["settings"]["ventilatorMinOnTimeHome"] = 20
-    ecobee_fixture["settings"]["ventilatorMinOnTimeAway"] = 10
-    ecobee_fixture["settings"]["isVentilatorTimerOn"] = True
-    ecobee_fixture["settings"]["ventilatorOffDateTime"] = "2014-01-01 00:00:00"
-    assert {
-        "fan": "off",
-        "climate_mode": "Climate2",
-        "fan_min_on_time": 10,
-        "equipment_running": "Unknown",
-        "ventilator_type": "ventilator",
-        "vent": "auto",
-        "ventilator_min_on_time": 50,
-        "ventilator_min_on_time_home": 20,
-        "ventilator_min_on_time_away": 10,
-        "is_ventilator_timer_on": True,
-        "ventilator_off_date_time": "2014-01-01 00:00:00",
     } == thermostat.extra_state_attributes
 
 
