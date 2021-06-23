@@ -74,7 +74,7 @@ async def test_invalid_topic(hass, mqtt_mock, caplog, topic, log):
         assert not mock_dispatcher_send.called
         if log:
             assert (
-                f"Received message on illegal discovery topics '{topic}'" in caplog.text
+                f"Received message on illegal discovery topic '{topic}'" in caplog.text
             )
         else:
             assert "Received message on illegal discovery topic'" not in caplog.text
