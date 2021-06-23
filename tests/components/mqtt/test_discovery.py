@@ -55,18 +55,30 @@ async def test_subscribing_config_topic(hass, mqtt_mock):
     assert discovery_topic + "/+/+/+/config" in topics
 
 
-async def test_invalid_topic(hass, mqtt_mock):
+@pytest.mark.parametrize(
+    "topic, log",
+    [
+        ("homeassistant/binary_sensor/bla/not_config", False),
+        ("homeassistant/binary_sensor/rörkrökare/config", True),
+    ],
+)
+async def test_invalid_topic(hass, mqtt_mock, caplog, topic, log):
     """Test sending to invalid topic."""
     with patch(
         "homeassistant.components.mqtt.discovery.async_dispatcher_send"
     ) as mock_dispatcher_send:
         mock_dispatcher_send = AsyncMock(return_value=None)
 
-        async_fire_mqtt_message(
-            hass, "homeassistant/binary_sensor/bla/not_config", "{}"
-        )
+        async_fire_mqtt_message(hass, topic, "{}")
         await hass.async_block_till_done()
         assert not mock_dispatcher_send.called
+        if log:
+            assert (
+                f"Received message on illegal discovery topic '{topic}'" in caplog.text
+            )
+        else:
+            assert "Received message on illegal discovery topic'" not in caplog.text
+        caplog.clear()
 
 
 async def test_invalid_json(hass, mqtt_mock, caplog):
