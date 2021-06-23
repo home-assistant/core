@@ -97,7 +97,7 @@ class FritzBoxTools:
 
     async def async_setup(self) -> None
         """Wrap up FritzboxTools class setup."""
-        return await self.hass.async_add_executor_job(self.setup)
+        await self.hass.async_add_executor_job(self.setup)
 
     def setup(self) -> None:
         """Set up FritzboxTools class."""
