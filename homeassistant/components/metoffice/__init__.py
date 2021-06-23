@@ -5,7 +5,6 @@ import logging
 
 import datapoint
 
-from homeassistant.components.metoffice.helpers import fetch_data, fetch_site
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.core import HomeAssistant
@@ -22,6 +21,8 @@ from .const import (
     MODE_3HOURLY,
     MODE_DAILY,
 )
+from .data import MetOfficeData
+from .helpers import fetch_data, fetch_site
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,12 +45,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if site is None:
         raise ConfigEntryNotReady()
 
-    async def async_update_3hourly():
+    async def async_update_3hourly() -> MetOfficeData:
         return await hass.async_add_executor_job(
             fetch_data, connection, site, MODE_3HOURLY
         )
 
-    async def async_update_daily():
+    async def async_update_daily() -> MetOfficeData:
         return await hass.async_add_executor_job(
             fetch_data, connection, site, MODE_DAILY
         )
