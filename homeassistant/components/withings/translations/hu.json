@@ -12,6 +12,7 @@
         "error": {
             "already_configured": "A fi\u00f3k m\u00e1r konfigur\u00e1lva van"
         },
+        "flow_title": "{profile}",
         "step": {
             "pick_implementation": {
                 "title": "V\u00e1lassz hiteles\u00edt\u00e9si m\u00f3dszert"

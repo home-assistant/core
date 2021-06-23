@@ -3,12 +3,19 @@ from __future__ import annotations
 
 import math
 
-from aioesphomeapi import SensorInfo, SensorState, TextSensorInfo, TextSensorState
+from aioesphomeapi import (
+    SensorInfo,
+    SensorState,
+    SensorStateClass,
+    TextSensorInfo,
+    TextSensorState,
+)
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
     DEVICE_CLASS_TIMESTAMP,
     DEVICE_CLASSES,
+    STATE_CLASS_MEASUREMENT,
     SensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -16,7 +23,12 @@ from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import dt
 
-from . import EsphomeEntity, esphome_state_property, platform_async_setup_entry
+from . import (
+    EsphomeEntity,
+    EsphomeEnumMapper,
+    esphome_state_property,
+    platform_async_setup_entry,
+)
 
 ICON_SCHEMA = vol.Schema(cv.icon)
 
@@ -47,6 +59,14 @@ async def async_setup_entry(
 
 # https://github.com/PyCQA/pylint/issues/3150 for all @esphome_state_property
 # pylint: disable=invalid-overridden-method
+
+
+_STATE_CLASSES: EsphomeEnumMapper[SensorStateClass] = EsphomeEnumMapper(
+    {
+        SensorStateClass.NONE: None,
+        SensorStateClass.MEASUREMENT: STATE_CLASS_MEASUREMENT,
+    }
+)
 
 
 class EsphomeSensor(EsphomeEntity, SensorEntity):
@@ -96,6 +116,13 @@ class EsphomeSensor(EsphomeEntity, SensorEntity):
         if self._static_info.device_class not in DEVICE_CLASSES:
             return None
         return self._static_info.device_class
+
+    @property
+    def state_class(self) -> str | None:
+        """Return the state class of this entity."""
+        if not self._static_info.state_class:
+            return None
+        return _STATE_CLASSES.from_esphome(self._static_info.state_class)
 
 
 class EsphomeTextSensor(EsphomeEntity, SensorEntity):

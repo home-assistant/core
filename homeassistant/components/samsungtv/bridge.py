@@ -184,7 +184,9 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
         if self._remote is None:
             # We need to create a new instance to reconnect.
             try:
-                LOGGER.debug("Create SamsungRemote")
+                LOGGER.debug(
+                    "Create SamsungTVLegacyBridge for %s (%s)", CONF_NAME, self.host
+                )
                 self._remote = Remote(self.config.copy())
             # This is only happening when the auth was switched to DENY
             # A removed auth will lead to socket timeout because waiting for auth popup is just an open socket
@@ -199,7 +201,7 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
 
     def stop(self):
         """Stop Bridge."""
-        LOGGER.debug("Stopping SamsungRemote")
+        LOGGER.debug("Stopping SamsungTVLegacyBridge")
         self.close_remote()
 
 
@@ -272,7 +274,7 @@ class SamsungTVWSBridge(SamsungTVBridge):
             # We need to create a new instance to reconnect.
             try:
                 LOGGER.debug(
-                    "Create SamsungTVWS for %s (%s)", VALUE_CONF_NAME, self.host
+                    "Create SamsungTVWSBridge for %s (%s)", CONF_NAME, self.host
                 )
                 self._remote = SamsungTVWS(
                     host=self.host,
@@ -293,5 +295,5 @@ class SamsungTVWSBridge(SamsungTVBridge):
 
     def stop(self):
         """Stop Bridge."""
-        LOGGER.debug("Stopping SamsungTVWS")
+        LOGGER.debug("Stopping SamsungTVWSBridge")
         self.close_remote()

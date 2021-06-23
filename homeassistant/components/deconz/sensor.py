@@ -65,6 +65,8 @@ ICON = {
 }
 
 STATE_CLASS = {
+    Humidity: STATE_CLASS_MEASUREMENT,
+    Pressure: STATE_CLASS_MEASUREMENT,
     Temperature: STATE_CLASS_MEASUREMENT,
 }
 
@@ -299,6 +301,11 @@ class DeconzBattery(DeconzDevice, SensorEntity):
     def device_class(self):
         """Return the class of the sensor."""
         return DEVICE_CLASS_BATTERY
+
+    @property
+    def state_class(self):
+        """Return the state class of the sensor."""
+        return STATE_CLASS_MEASUREMENT
 
     @property
     def unit_of_measurement(self):

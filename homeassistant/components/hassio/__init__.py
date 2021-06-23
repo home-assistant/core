@@ -22,10 +22,11 @@ from homeassistant.const import (
     SERVICE_HOMEASSISTANT_RESTART,
     SERVICE_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import DOMAIN as HASS_DOMAIN, Config, HomeAssistant, callback
+from homeassistant.core import DOMAIN as HASS_DOMAIN, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, recorder
 from homeassistant.helpers.device_registry import DeviceRegistry, async_get_registry
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.loader import bind_hass
 from homeassistant.util.dt import utcnow
@@ -70,6 +71,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 DATA_CORE_INFO = "hassio_core_info"
 DATA_HOST_INFO = "hassio_host_info"
+DATA_STORE = "hassio_store"
 DATA_INFO = "hassio_info"
 DATA_OS_INFO = "hassio_os_info"
 DATA_SUPERVISOR_INFO = "hassio_supervisor_info"
@@ -222,6 +224,18 @@ async def async_start_addon(hass: HomeAssistant, slug: str) -> dict:
 
 @bind_hass
 @api_data
+async def async_restart_addon(hass: HomeAssistant, slug: str) -> dict:
+    """Restart add-on.
+
+    The caller of the function should handle HassioAPIError.
+    """
+    hassio = hass.data[DOMAIN]
+    command = f"/addons/{slug}/restart"
+    return await hassio.send_command(command, timeout=None)
+
+
+@bind_hass
+@api_data
 async def async_stop_addon(hass: HomeAssistant, slug: str) -> dict:
     """Stop add-on.
 
@@ -292,6 +306,16 @@ def get_host_info(hass):
 
 @callback
 @bind_hass
+def get_store(hass):
+    """Return store information.
+
+    Async friendly.
+    """
+    return hass.data.get(DATA_STORE)
+
+
+@callback
+@bind_hass
 def get_supervisor_info(hass):
     """Return Supervisor information.
 
@@ -338,7 +362,7 @@ def get_supervisor_ip():
     return os.environ["SUPERVISOR"].partition(":")[0]
 
 
-async def async_setup(hass: HomeAssistant, config: Config) -> bool:  # noqa: C901
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa: C901
     """Set up the Hass.io component."""
     # Check local setup
     for env in ("HASSIO", "HASSIO_TOKEN"):
@@ -376,8 +400,12 @@ async def async_setup(hass: HomeAssistant, config: Config) -> bool:  # noqa: C90
             if not user.is_admin:
                 await hass.auth.async_update_user(user, group_ids=[GROUP_ID_ADMIN])
 
+            # Migrate old name
+            if user.name == "Hass.io":
+                await hass.auth.async_update_user(user, name="Supervisor")
+
     if refresh_token is None:
-        user = await hass.auth.async_create_system_user("Hass.io", [GROUP_ID_ADMIN])
+        user = await hass.auth.async_create_system_user("Supervisor", [GROUP_ID_ADMIN])
         refresh_token = await hass.auth.async_create_refresh_token(user)
         data["hassio_user"] = user.id
         await store.async_save(data)
@@ -455,6 +483,7 @@ async def async_setup(hass: HomeAssistant, config: Config) -> bool:  # noqa: C90
         try:
             hass.data[DATA_INFO] = await hassio.get_info()
             hass.data[DATA_HOST_INFO] = await hassio.get_host_info()
+            hass.data[DATA_STORE] = await hassio.get_store()
             hass.data[DATA_CORE_INFO] = await hassio.get_core_info()
             hass.data[DATA_SUPERVISOR_INFO] = await hassio.get_supervisor_info()
             hass.data[DATA_OS_INFO] = await hassio.get_os_info()
@@ -626,10 +655,22 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self) -> dict[str, Any]:
         """Update data via library."""
         new_data = {}
-        addon_data = get_supervisor_info(self.hass)
+        supervisor_info = get_supervisor_info(self.hass)
+        store_data = get_store(self.hass)
+
+        repositories = {
+            repo[ATTR_SLUG]: repo[ATTR_NAME]
+            for repo in store_data.get("repositories", [])
+        }
 
         new_data["addons"] = {
-            addon[ATTR_SLUG]: addon for addon in addon_data.get("addons", [])
+            addon[ATTR_SLUG]: {
+                **addon,
+                ATTR_REPOSITORY: repositories.get(
+                    addon.get(ATTR_REPOSITORY), addon.get(ATTR_REPOSITORY, "")
+                ),
+            }
+            for addon in supervisor_info.get("addons", [])
         }
         if self.is_hass_os:
             new_data["os"] = get_os_info(self.hass)

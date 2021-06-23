@@ -46,6 +46,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class XBeeTemperatureSensor(SensorEntity):
     """Representation of XBee Pro temperature sensor."""
 
+    _attr_unit_of_measurement = TEMP_CELSIUS
+
     def __init__(self, config, device):
         """Initialize the sensor."""
         self._config = config
@@ -61,11 +63,6 @@ class XBeeTemperatureSensor(SensorEntity):
     def state(self):
         """Return the state of the sensor."""
         return self._temp
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement the value is expressed in."""
-        return TEMP_CELSIUS
 
     def update(self):
         """Get the latest data."""

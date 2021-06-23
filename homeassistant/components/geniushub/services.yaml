@@ -10,7 +10,6 @@ set_zone_mode:
       name: Entity
       description: The zone's entity_id.
       required: true
-      example: climate.kitchen
       selector:
         entity:
           integration: geniushub
@@ -19,7 +18,6 @@ set_zone_mode:
       name: Mode
       description: "One of: off, timer or footprint."
       required: true
-      example: timer
       selector:
         select:
           options:
@@ -36,7 +34,6 @@ set_zone_override:
       name: Entity
       description: The zone's entity_id.
       required: true
-      example: climate.bathroom
       selector:
         entity:
           integration: geniushub
@@ -45,7 +42,6 @@ set_zone_override:
       name: Temperature
       description: The target temperature.
       required: true
-      example: 19.2
       selector:
         number:
           min: 4

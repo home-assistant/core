@@ -1014,6 +1014,50 @@ async def test_no_command_topic(hass, mqtt_mock):
     assert hass.states.get("cover.test").attributes["supported_features"] == 240
 
 
+async def test_no_payload_close(hass, mqtt_mock):
+    """Test with no close payload."""
+    assert await async_setup_component(
+        hass,
+        cover.DOMAIN,
+        {
+            cover.DOMAIN: {
+                "platform": "mqtt",
+                "name": "test",
+                "command_topic": "command-topic",
+                "qos": 0,
+                "payload_open": "OPEN",
+                "payload_close": None,
+                "payload_stop": "STOP",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get("cover.test").attributes["supported_features"] == 9
+
+
+async def test_no_payload_open(hass, mqtt_mock):
+    """Test with no open payload."""
+    assert await async_setup_component(
+        hass,
+        cover.DOMAIN,
+        {
+            cover.DOMAIN: {
+                "platform": "mqtt",
+                "name": "test",
+                "command_topic": "command-topic",
+                "qos": 0,
+                "payload_open": None,
+                "payload_close": "CLOSE",
+                "payload_stop": "STOP",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get("cover.test").attributes["supported_features"] == 10
+
+
 async def test_no_payload_stop(hass, mqtt_mock):
     """Test with no stop payload."""
     assert await async_setup_component(

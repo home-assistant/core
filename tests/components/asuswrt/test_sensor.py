@@ -36,23 +36,35 @@ CONFIG_DATA = {
     CONF_MODE: "router",
 }
 
-MOCK_DEVICES = {
-    "a1:b1:c1:d1:e1:f1": Device("a1:b1:c1:d1:e1:f1", "192.168.1.2", "Test"),
-    "a2:b2:c2:d2:e2:f2": Device("a2:b2:c2:d2:e2:f2", "192.168.1.3", "TestTwo"),
-}
 MOCK_BYTES_TOTAL = [60000000000, 50000000000]
 MOCK_CURRENT_TRANSFER_RATES = [20000000, 10000000]
 
 
+@pytest.fixture(name="mock_devices")
+def mock_devices_fixture():
+    """Mock a list of devices."""
+    return {
+        "a1:b1:c1:d1:e1:f1": Device("a1:b1:c1:d1:e1:f1", "192.168.1.2", "Test"),
+        "a2:b2:c2:d2:e2:f2": Device("a2:b2:c2:d2:e2:f2", "192.168.1.3", "TestTwo"),
+    }
+
+
 @pytest.fixture(name="connect")
-def mock_controller_connect():
+def mock_controller_connect(mock_devices):
     """Mock a successful connection."""
     with patch("homeassistant.components.asuswrt.router.AsusWrt") as service_mock:
         service_mock.return_value.connection.async_connect = AsyncMock()
         service_mock.return_value.is_connected = True
         service_mock.return_value.connection.disconnect = Mock()
+        service_mock.return_value.async_get_nvram = AsyncMock(
+            return_value={
+                "model": "abcd",
+                "firmver": "efg",
+                "buildno": "123",
+            }
+        )
         service_mock.return_value.async_get_connected_devices = AsyncMock(
-            return_value=MOCK_DEVICES
+            return_value=mock_devices
         )
         service_mock.return_value.async_get_bytes_total = AsyncMock(
             return_value=MOCK_BYTES_TOTAL
@@ -63,7 +75,7 @@ def mock_controller_connect():
         yield service_mock
 
 
-async def test_sensors(hass, connect):
+async def test_sensors(hass, connect, mock_devices):
     """Test creating an AsusWRT sensor."""
     entity_reg = er.async_get(hass)
 
@@ -134,10 +146,11 @@ async def test_sensors(hass, connect):
     assert hass.states.get(f"{sensor_prefix}_devices_connected").state == "2"
 
     # add one device and remove another
-    MOCK_DEVICES.pop("a1:b1:c1:d1:e1:f1")
-    MOCK_DEVICES["a3:b3:c3:d3:e3:f3"] = Device(
+    mock_devices.pop("a1:b1:c1:d1:e1:f1")
+    mock_devices["a3:b3:c3:d3:e3:f3"] = Device(
         "a3:b3:c3:d3:e3:f3", "192.168.1.4", "TestThree"
     )
+
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
     await hass.async_block_till_done()
 

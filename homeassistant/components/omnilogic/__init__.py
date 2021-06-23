@@ -23,7 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = ["sensor", "switch"]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Omnilogic from a config entry."""
 
     conf = entry.data

@@ -9,6 +9,7 @@ from typing import Any, Callable
 import aioshelly
 import async_timeout
 
+from homeassistant.components.sensor import ATTR_STATE_CLASS
 from homeassistant.core import callback
 from homeassistant.helpers import (
     device_registry,
@@ -168,6 +169,7 @@ class RestAttributeDescription:
     unit: str | None = None
     value: Callable[[dict, Any], Any] | None = None
     device_class: str | None = None
+    state_class: str | None = None
     default_enabled: bool = True
     extra_state_attributes: Callable[[dict], dict | None] | None = None
 
@@ -429,6 +431,7 @@ class ShellySleepingBlockAttributeEntity(ShellyBlockAttributeEntity, RestoreEnti
 
         if last_state is not None:
             self.last_state = last_state.state
+            self.description.state_class = last_state.attributes.get(ATTR_STATE_CLASS)
 
     @callback
     def _update_callback(self):

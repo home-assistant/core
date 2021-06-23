@@ -184,6 +184,8 @@ class IPPPrinterSensor(IPPSensor):
 class IPPUptimeSensor(IPPSensor):
     """Defines a IPP uptime sensor."""
 
+    _attr_device_class = DEVICE_CLASS_TIMESTAMP
+
     def __init__(
         self, entry_id: str, unique_id: str, coordinator: IPPDataUpdateCoordinator
     ) -> None:
@@ -203,8 +205,3 @@ class IPPUptimeSensor(IPPSensor):
         """Return the state of the sensor."""
         uptime = utcnow() - timedelta(seconds=self.coordinator.data.info.uptime)
         return uptime.replace(microsecond=0).isoformat()
-
-    @property
-    def device_class(self) -> str | None:
-        """Return the class of this sensor."""
-        return DEVICE_CLASS_TIMESTAMP

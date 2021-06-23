@@ -108,8 +108,6 @@ refresh_value:
     refresh_all_values:
       name: Refresh all values?
       description: Whether to refresh all values (true) or just the primary value (false)
-      required: false
-      example: true
       default: false
       selector:
         boolean:
@@ -159,7 +157,63 @@ set_value:
     wait_for_result:
       name: Wait for result?
       description: Whether or not to wait for a response from the node. If not included in the payload, the integration will decide whether to wait or not. If set to `true`, note that the service call can take a while if setting a value on an asleep battery device.
-      example: false
       required: false
       selector:
         boolean:
+
+multicast_set_value:
+  name: Set a value on multiple Z-Wave devices via multicast (Advanced)
+  description: Allow for changing any value that Z-Wave JS recognizes on multiple Z-Wave devices using multicast, so all devices receive the message simultaneously. This service has minimal validation so only use this service if you know what you are doing.
+  target:
+    entity:
+      integration: zwave_js
+  fields:
+    broadcast:
+      name: Broadcast?
+      description: Whether command should be broadcast to all devices on the networrk.
+      example: true
+      required: false
+      selector:
+        boolean:
+    command_class:
+      name: Command Class
+      description: The ID of the command class for the value.
+      example: 117
+      required: true
+      selector:
+        text:
+    endpoint:
+      name: Endpoint
+      description: The endpoint for the value.
+      example: 1
+      required: false
+      selector:
+        text:
+    property:
+      name: Property
+      description: The ID of the property for the value.
+      example: currentValue
+      required: true
+      selector:
+        text:
+    property_key:
+      name: Property Key
+      description: The ID of the property key for the value
+      example: 1
+      required: false
+      selector:
+        text:
+    value:
+      name: Value
+      description: The new value to set.
+      example: "ffbb99"
+      required: true
+      selector:
+        object:
+
+ping:
+  name: Ping a node
+  description: Forces Z-Wave JS to try to reach a node. This can be used to update the status of the node in Z-Wave JS when you think it doesn't accurately reflect reality, e.g. reviving a failed/dead node or marking the node as asleep.
+  target:
+    entity:
+      integration: zwave_js

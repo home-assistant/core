@@ -6,7 +6,6 @@ from homeassistant.components.modbus.const import (
     CALL_TYPE_COIL,
     CALL_TYPE_DISCRETE,
     CONF_INPUT_TYPE,
-    CONF_INPUTS,
 )
 from homeassistant.const import (
     CONF_ADDRESS,
@@ -25,35 +24,33 @@ from .conftest import ReadResult, base_config_test, base_test, prepare_service_u
 from tests.common import mock_restore_cache
 
 
-@pytest.mark.parametrize("do_discovery", [False, True])
 @pytest.mark.parametrize(
-    "do_options",
+    "do_config",
     [
-        {},
         {
-            CONF_SLAVE: 10,
-            CONF_INPUT_TYPE: CALL_TYPE_DISCRETE,
-            CONF_DEVICE_CLASS: "door",
+            CONF_BINARY_SENSORS: [
+                {
+                    CONF_NAME: "test_sensor",
+                    CONF_ADDRESS: 51,
+                }
+            ]
+        },
+        {
+            CONF_BINARY_SENSORS: [
+                {
+                    CONF_NAME: "test_sensor",
+                    CONF_ADDRESS: 51,
+                    CONF_SLAVE: 10,
+                    CONF_INPUT_TYPE: CALL_TYPE_DISCRETE,
+                    CONF_DEVICE_CLASS: "door",
+                }
+            ]
         },
     ],
 )
-async def test_config_binary_sensor(hass, do_discovery, do_options):
-    """Run test for binary sensor."""
-    sensor_name = "test_sensor"
-    config_sensor = {
-        CONF_NAME: sensor_name,
-        CONF_ADDRESS: 51,
-        **do_options,
-    }
-    await base_config_test(
-        hass,
-        config_sensor,
-        sensor_name,
-        SENSOR_DOMAIN,
-        CONF_BINARY_SENSORS,
-        CONF_INPUTS,
-        method_discovery=do_discovery,
-    )
+async def test_config_binary_sensor(hass, mock_modbus):
+    """Run config test for binary sensor."""
+    assert SENSOR_DOMAIN in hass.config.components
 
 
 @pytest.mark.parametrize("do_type", [CALL_TYPE_COIL, CALL_TYPE_DISCRETE])
@@ -95,7 +92,7 @@ async def test_all_binary_sensor(hass, do_type, regs, expected):
         sensor_name,
         SENSOR_DOMAIN,
         CONF_BINARY_SENSORS,
-        CONF_INPUTS,
+        None,
         regs,
         expected,
         method_discovery=True,

@@ -179,6 +179,7 @@ class Battery(Sensor):
 
     SENSOR_ATTR = "battery_percentage_remaining"
     _device_class = DEVICE_CLASS_BATTERY
+    _state_class = STATE_CLASS_MEASUREMENT
     _unit = PERCENTAGE
 
     @staticmethod
@@ -241,6 +242,7 @@ class Humidity(Sensor):
     SENSOR_ATTR = "measured_value"
     _device_class = DEVICE_CLASS_HUMIDITY
     _divisor = 100
+    _state_class = STATE_CLASS_MEASUREMENT
     _unit = PERCENTAGE
 
 
@@ -282,6 +284,7 @@ class Pressure(Sensor):
     SENSOR_ATTR = "measured_value"
     _device_class = DEVICE_CLASS_PRESSURE
     _decimals = 0
+    _state_class = STATE_CLASS_MEASUREMENT
     _unit = PRESSURE_HPA
 
 

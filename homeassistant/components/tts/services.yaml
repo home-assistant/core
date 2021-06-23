@@ -6,8 +6,7 @@ say:
   fields:
     entity_id:
       name: Entity
-      description: Name(s) of media player entities.
-      example: "media_player.floor"
+      description: Name(s) of media player entities.\
       required: true
       selector:
         entity:
@@ -22,7 +21,6 @@ say:
     cache:
       name: Cache
       description: Control file cache of this message.
-      example: "true"
       default: false
       selector:
         boolean:

@@ -14,7 +14,7 @@ from .const import DOMAIN
 PLATFORMS = ["binary_sensor"]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: dict):
+async def async_setup_entry(hass: HomeAssistant, entry: dict) -> bool:
     """Set up Mullvad VPN integration."""
 
     async def async_get_mullvad_api_data():

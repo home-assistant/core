@@ -20,7 +20,14 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from sqlalchemy.orm.session import Session
 
-from homeassistant.const import MAX_LENGTH_EVENT_TYPE
+from homeassistant.const import (
+    MAX_LENGTH_EVENT_CONTEXT_ID,
+    MAX_LENGTH_EVENT_EVENT_TYPE,
+    MAX_LENGTH_EVENT_ORIGIN,
+    MAX_LENGTH_STATE_DOMAIN,
+    MAX_LENGTH_STATE_ENTITY_ID,
+    MAX_LENGTH_STATE_STATE,
+)
 from homeassistant.core import Context, Event, EventOrigin, State, split_entity_id
 from homeassistant.helpers.json import JSONEncoder
 import homeassistant.util.dt as dt_util
@@ -63,14 +70,14 @@ class Events(Base):  # type: ignore
     }
     __tablename__ = TABLE_EVENTS
     event_id = Column(Integer, Identity(), primary_key=True)
-    event_type = Column(String(MAX_LENGTH_EVENT_TYPE))
+    event_type = Column(String(MAX_LENGTH_EVENT_EVENT_TYPE))
     event_data = Column(Text().with_variant(mysql.LONGTEXT, "mysql"))
-    origin = Column(String(32))
+    origin = Column(String(MAX_LENGTH_EVENT_ORIGIN))
     time_fired = Column(DATETIME_TYPE, index=True)
     created = Column(DATETIME_TYPE, default=dt_util.utcnow)
-    context_id = Column(String(36), index=True)
-    context_user_id = Column(String(36), index=True)
-    context_parent_id = Column(String(36), index=True)
+    context_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID), index=True)
+    context_user_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID), index=True)
+    context_parent_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID), index=True)
 
     __table_args__ = (
         # Used for fetching events at a specific time
@@ -130,9 +137,9 @@ class States(Base):  # type: ignore
     }
     __tablename__ = TABLE_STATES
     state_id = Column(Integer, Identity(), primary_key=True)
-    domain = Column(String(64))
-    entity_id = Column(String(255))
-    state = Column(String(255))
+    domain = Column(String(MAX_LENGTH_STATE_DOMAIN))
+    entity_id = Column(String(MAX_LENGTH_STATE_ENTITY_ID))
+    state = Column(String(MAX_LENGTH_STATE_STATE))
     attributes = Column(Text().with_variant(mysql.LONGTEXT, "mysql"))
     event_id = Column(
         Integer, ForeignKey("events.event_id", ondelete="CASCADE"), index=True

@@ -486,3 +486,14 @@ async def test_rgbw_light(hass, client, zen_31, integration):
     assert args["value"] == 255
 
     client.async_send_command.reset_mock()
+
+
+async def test_light_none_color_value(hass, light_color_null_values, integration):
+    """Test the light entity can handle None value in current color Value."""
+    entity_id = "light.repeater"
+    state = hass.states.get(entity_id)
+
+    assert state
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == SUPPORT_TRANSITION
+    assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == ["hs"]

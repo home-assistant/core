@@ -1,6 +1,9 @@
 {
     "thermostatList": [
-        {"name": "ecobee",
+        {
+            "identifier": 8675309,
+            "name": "ecobee",
+            "modelNumber": "athenaSmart",
             "program": {
                 "climates": [
                     {"name": "Climate1", "climateRef": "c1"},
@@ -9,6 +12,7 @@
                 "currentClimateRef": "c1"
             },
             "runtime": {
+                "connected": true,
                 "actualTemperature": 300,
                 "actualHumidity": 15,
                 "desiredHeat": 400,
@@ -24,7 +28,7 @@
                 "heatCoolMinDelta": 50,
                 "holdAction": "nextTransition",
                 "hasHumidifier": true,
-                "humidifierMode": "off",
+                "humidifierMode": "manual",
                 "humidity": "30"
             },
             "equipmentStatus": "fan",
@@ -37,7 +41,28 @@
                     "endDate": "2022-01-01 10:00:00",
                     "startDate": "2022-02-02 11:00:00"
                 }
-            ]}
+            ],
+            "remoteSensors": [
+                {
+                    "id": "rs:100",
+                    "name": "Remote Sensor 1",
+                    "type": "ecobee3_remote_sensor",
+                    "code": "WKRP",
+                    "inUse": false,
+                    "capability": [
+                        {
+                            "id": "1",
+                            "type": "temperature",
+                            "value": "782"
+                        }, {
+                            "id": "2",
+                            "type": "occupancy",
+                            "value": "false"
+                        }
+                    ]
+                }
+            ]
+        }
     ]
-
 }
+

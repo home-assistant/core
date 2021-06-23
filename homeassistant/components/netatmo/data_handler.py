@@ -95,11 +95,13 @@ class NetatmoDataHandler:
         for data_class in islice(self._queue, 0, BATCH_SIZE):
             if data_class[NEXT_SCAN] > time():
                 continue
-            self.data_classes[data_class["name"]][NEXT_SCAN] = (
-                time() + data_class["interval"]
-            )
 
-            await self.async_fetch_data(data_class["name"])
+            if data_class_name := data_class["name"]:
+                self.data_classes[data_class_name][NEXT_SCAN] = (
+                    time() + data_class["interval"]
+                )
+
+                await self.async_fetch_data(data_class_name)
 
         self._queue.rotate(BATCH_SIZE)
 
@@ -130,6 +132,9 @@ class NetatmoDataHandler:
 
     async def async_fetch_data(self, data_class_entry):
         """Fetch data and notify."""
+        if self.data[data_class_entry] is None:
+            return
+
         try:
             await self.data[data_class_entry].async_update()
 
@@ -153,7 +158,13 @@ class NetatmoDataHandler:
     ):
         """Register data class."""
         if data_class_entry in self.data_classes:
-            self.data_classes[data_class_entry]["subscriptions"].append(update_callback)
+            if (
+                update_callback
+                not in self.data_classes[data_class_entry]["subscriptions"]
+            ):
+                self.data_classes[data_class_entry]["subscriptions"].append(
+                    update_callback
+                )
             return
 
         self.data_classes[data_class_entry] = {

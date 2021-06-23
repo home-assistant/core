@@ -5,7 +5,11 @@ from unittest.mock import patch
 from nettigo_air_monitor import ApiError
 
 from homeassistant.components.nam.const import DOMAIN
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.sensor import (
+    ATTR_STATE_CLASS,
+    DOMAIN as SENSOR_DOMAIN,
+    STATE_CLASS_MEASUREMENT,
+)
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
@@ -57,6 +61,7 @@ async def test_sensor(hass):
     assert state
     assert state.state == "45.7"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_HUMIDITY
+    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
 
     entry = registry.async_get("sensor.nettigo_air_monitor_bme280_humidity")
@@ -67,6 +72,7 @@ async def test_sensor(hass):
     assert state
     assert state.state == "7.6"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_TEMPERATURE
+    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
 
     entry = registry.async_get("sensor.nettigo_air_monitor_bme280_temperature")
@@ -77,6 +83,7 @@ async def test_sensor(hass):
     assert state
     assert state.state == "1011"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_PRESSURE
+    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PRESSURE_HPA
 
     entry = registry.async_get("sensor.nettigo_air_monitor_bme280_pressure")
@@ -87,6 +94,7 @@ async def test_sensor(hass):
     assert state
     assert state.state == "5.6"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_TEMPERATURE
+    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
 
     entry = registry.async_get("sensor.nettigo_air_monitor_bmp280_temperature")
@@ -97,6 +105,7 @@ async def test_sensor(hass):
     assert state
     assert state.state == "1022"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_PRESSURE
+    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PRESSURE_HPA
 
     entry = registry.async_get("sensor.nettigo_air_monitor_bmp280_pressure")
@@ -107,6 +116,7 @@ async def test_sensor(hass):
     assert state
     assert state.state == "34.7"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_HUMIDITY
+    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
 
     entry = registry.async_get("sensor.nettigo_air_monitor_sht3x_humidity")
@@ -117,6 +127,7 @@ async def test_sensor(hass):
     assert state
     assert state.state == "6.3"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_TEMPERATURE
+    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
 
     entry = registry.async_get("sensor.nettigo_air_monitor_sht3x_temperature")
@@ -127,26 +138,29 @@ async def test_sensor(hass):
     assert state
     assert state.state == "46.2"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_HUMIDITY
+    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
 
     entry = registry.async_get("sensor.nettigo_air_monitor_dht22_humidity")
     assert entry
-    assert entry.unique_id == "aa:bb:cc:dd:ee:ff-humidity"
+    assert entry.unique_id == "aa:bb:cc:dd:ee:ff-dht22_humidity"
 
     state = hass.states.get("sensor.nettigo_air_monitor_dht22_temperature")
     assert state
     assert state.state == "6.3"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_TEMPERATURE
+    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
 
     entry = registry.async_get("sensor.nettigo_air_monitor_dht22_temperature")
     assert entry
-    assert entry.unique_id == "aa:bb:cc:dd:ee:ff-temperature"
+    assert entry.unique_id == "aa:bb:cc:dd:ee:ff-dht22_temperature"
 
     state = hass.states.get("sensor.nettigo_air_monitor_heca_humidity")
     assert state
     assert state.state == "50.0"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_HUMIDITY
+    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
 
     entry = registry.async_get("sensor.nettigo_air_monitor_heca_humidity")
@@ -157,6 +171,7 @@ async def test_sensor(hass):
     assert state
     assert state.state == "8.0"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_TEMPERATURE
+    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
 
     entry = registry.async_get("sensor.nettigo_air_monitor_heca_temperature")
@@ -167,6 +182,7 @@ async def test_sensor(hass):
     assert state
     assert state.state == "-72"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_SIGNAL_STRENGTH
+    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
     assert (
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == SIGNAL_STRENGTH_DECIBELS_MILLIWATT
@@ -183,6 +199,7 @@ async def test_sensor(hass):
         == (utcnow() - timedelta(seconds=456987)).replace(microsecond=0).isoformat()
     )
     assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_TIMESTAMP
+    assert state.attributes.get(ATTR_STATE_CLASS) is None
 
     entry = registry.async_get("sensor.nettigo_air_monitor_uptime")
     assert entry
@@ -285,3 +302,36 @@ async def test_manual_update_entity(hass):
         )
 
     assert mock_get_data.call_count == 1
+
+
+async def test_unique_id_migration(hass):
+    """Test states of the unique_id migration."""
+    registry = er.async_get(hass)
+
+    registry.async_get_or_create(
+        SENSOR_DOMAIN,
+        DOMAIN,
+        "aa:bb:cc:dd:ee:ff-temperature",
+        suggested_object_id="nettigo_air_monitor_dht22_temperature",
+        disabled_by=None,
+    )
+
+    registry.async_get_or_create(
+        SENSOR_DOMAIN,
+        DOMAIN,
+        "aa:bb:cc:dd:ee:ff-humidity",
+        suggested_object_id="nettigo_air_monitor_dht22_humidity",
+        disabled_by=None,
+    )
+
+    await init_integration(hass)
+
+    entry = registry.async_get("sensor.nettigo_air_monitor_dht22_temperature")
+    assert entry
+    assert entry.unique_id == "aa:bb:cc:dd:ee:ff-dht22_temperature"
+
+    await init_integration(hass)
+
+    entry = registry.async_get("sensor.nettigo_air_monitor_dht22_humidity")
+    assert entry
+    assert entry.unique_id == "aa:bb:cc:dd:ee:ff-dht22_humidity"

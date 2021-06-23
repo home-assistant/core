@@ -17,7 +17,6 @@ CONF_WANTED_MAX_ITEMS = "wanted_max_items"
 
 # Data
 DATA_SONARR = "sonarr"
-DATA_UNDO_UPDATE_LISTENER = "undo_update_listener"
 
 # Defaults
 DEFAULT_BASE_PATH = "/api"

@@ -72,7 +72,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up TPLink from a config entry."""
     config_data = hass.data[DOMAIN].get(ATTR_CONFIG)
 
@@ -101,7 +101,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             "Got %s lights: %s", len(lights), ", ".join(d.host for d in lights)
         )
 
-        hass.async_create_task(forward_setup(config_entry, "light"))
+        hass.async_create_task(forward_setup(entry, "light"))
 
     if switches:
         _LOGGER.debug(
@@ -110,7 +110,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             ", ".join(d.host for d in switches),
         )
 
-        hass.async_create_task(forward_setup(config_entry, "switch"))
+        hass.async_create_task(forward_setup(entry, "switch"))
 
     return True
 

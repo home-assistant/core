@@ -94,7 +94,6 @@ DEFAULT_TILT_MIN = 0
 DEFAULT_TILT_OPEN_POSITION = 100
 DEFAULT_TILT_OPTIMISTIC = False
 
-OPEN_CLOSE_FEATURES = SUPPORT_OPEN | SUPPORT_CLOSE
 TILT_FEATURES = (
     SUPPORT_OPEN_TILT
     | SUPPORT_CLOSE_TILT
@@ -151,8 +150,12 @@ PLATFORM_SCHEMA = vol.All(
             vol.Optional(CONF_GET_POSITION_TOPIC): mqtt.valid_subscribe_topic,
             vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
             vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
-            vol.Optional(CONF_PAYLOAD_CLOSE, default=DEFAULT_PAYLOAD_CLOSE): cv.string,
-            vol.Optional(CONF_PAYLOAD_OPEN, default=DEFAULT_PAYLOAD_OPEN): cv.string,
+            vol.Optional(CONF_PAYLOAD_CLOSE, default=DEFAULT_PAYLOAD_CLOSE): vol.Any(
+                cv.string, None
+            ),
+            vol.Optional(CONF_PAYLOAD_OPEN, default=DEFAULT_PAYLOAD_OPEN): vol.Any(
+                cv.string, None
+            ),
             vol.Optional(CONF_PAYLOAD_STOP, default=DEFAULT_PAYLOAD_STOP): vol.Any(
                 cv.string, None
             ),
@@ -474,8 +477,10 @@ class MqttCover(MqttEntity, CoverEntity):
         """Flag supported features."""
         supported_features = 0
         if self._config.get(CONF_COMMAND_TOPIC) is not None:
-            supported_features = OPEN_CLOSE_FEATURES
-
+            if self._config.get(CONF_PAYLOAD_OPEN) is not None:
+                supported_features |= SUPPORT_OPEN
+            if self._config.get(CONF_PAYLOAD_CLOSE) is not None:
+                supported_features |= SUPPORT_CLOSE
             if self._config.get(CONF_PAYLOAD_STOP) is not None:
                 supported_features |= SUPPORT_STOP
 

@@ -81,10 +81,16 @@ GATEWAY_SENSOR_TYPES = {
         state_class=STATE_CLASS_MEASUREMENT,
     ),
     "humidity": SensorType(
-        unit=PERCENTAGE, icon=None, device_class=DEVICE_CLASS_HUMIDITY
+        unit=PERCENTAGE,
+        icon=None,
+        device_class=DEVICE_CLASS_HUMIDITY,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     "pressure": SensorType(
-        unit=PRESSURE_HPA, icon=None, device_class=DEVICE_CLASS_PRESSURE
+        unit=PRESSURE_HPA,
+        icon=None,
+        device_class=DEVICE_CLASS_PRESSURE,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     "load_power": SensorType(
         unit=POWER_WATT, icon=None, device_class=DEVICE_CLASS_POWER
@@ -267,6 +273,9 @@ class XiaomiGatewaySensor(XiaomiGatewayDevice, SensorEntity):
 class XiaomiGatewayIlluminanceSensor(SensorEntity):
     """Representation of the gateway device's illuminance sensor."""
 
+    _attr_device_class = DEVICE_CLASS_ILLUMINANCE
+    _attr_unit_of_measurement = UNIT_LUMEN
+
     def __init__(self, gateway_device, gateway_name, gateway_device_id):
         """Initialize the entity."""
         self._gateway = gateway_device
@@ -295,16 +304,6 @@ class XiaomiGatewayIlluminanceSensor(SensorEntity):
     def available(self):
         """Return true when state is known."""
         return self._available
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of this entity."""
-        return UNIT_LUMEN
-
-    @property
-    def device_class(self):
-        """Return the device class of this entity."""
-        return DEVICE_CLASS_ILLUMINANCE
 
     @property
     def state(self):

@@ -4,7 +4,7 @@ from __future__ import annotations
 from typing import Final
 
 MAJOR_VERSION: Final = 2021
-MINOR_VERSION: Final = 6
+MINOR_VERSION: Final = 7
 PATCH_VERSION: Final = "0.dev0"
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
@@ -26,9 +26,14 @@ ENTITY_MATCH_ALL: Final = "all"
 # If no name is specified
 DEVICE_DEFAULT_NAME: Final = "Unnamed Device"
 
-# Max characters for an event_type (changing this requires a recorder
-# database migration)
-MAX_LENGTH_EVENT_TYPE: Final = 64
+# Max characters for data stored in the recorder (changes to these limits would require
+# a database migration)
+MAX_LENGTH_EVENT_EVENT_TYPE: Final = 64
+MAX_LENGTH_EVENT_ORIGIN: Final = 32
+MAX_LENGTH_EVENT_CONTEXT_ID: Final = 36
+MAX_LENGTH_STATE_DOMAIN: Final = 64
+MAX_LENGTH_STATE_ENTITY_ID: Final = 255
+MAX_LENGTH_STATE_STATE: Final = 255
 
 # Sun events
 SUN_EVENT_SUNSET: Final = "sunset"
@@ -230,16 +235,17 @@ EVENT_TIME_CHANGED: Final = "time_changed"
 DEVICE_CLASS_BATTERY: Final = "battery"
 DEVICE_CLASS_CO: Final = "carbon_monoxide"
 DEVICE_CLASS_CO2: Final = "carbon_dioxide"
+DEVICE_CLASS_CURRENT: Final = "current"
+DEVICE_CLASS_ENERGY: Final = "energy"
 DEVICE_CLASS_HUMIDITY: Final = "humidity"
 DEVICE_CLASS_ILLUMINANCE: Final = "illuminance"
+DEVICE_CLASS_MONETARY: Final = "monetary"
+DEVICE_CLASS_POWER_FACTOR: Final = "power_factor"
+DEVICE_CLASS_POWER: Final = "power"
+DEVICE_CLASS_PRESSURE: Final = "pressure"
 DEVICE_CLASS_SIGNAL_STRENGTH: Final = "signal_strength"
 DEVICE_CLASS_TEMPERATURE: Final = "temperature"
 DEVICE_CLASS_TIMESTAMP: Final = "timestamp"
-DEVICE_CLASS_PRESSURE: Final = "pressure"
-DEVICE_CLASS_POWER: Final = "power"
-DEVICE_CLASS_CURRENT: Final = "current"
-DEVICE_CLASS_ENERGY: Final = "energy"
-DEVICE_CLASS_POWER_FACTOR: Final = "power_factor"
 DEVICE_CLASS_VOLTAGE: Final = "voltage"
 
 # #### STATES ####

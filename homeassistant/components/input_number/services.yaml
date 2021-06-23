@@ -23,7 +23,6 @@ set_value:
       name: Value
       description: The target value the entity should be set to.
       required: true
-      example: 42
       selector:
         number:
           min: 0

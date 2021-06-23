@@ -35,6 +35,16 @@ def bypass_setup_fixture():
         yield
 
 
+@pytest.fixture(name="bypass_platform_setup")
+def bypass_platform_setup_fixture():
+    """Bypass platform setup."""
+    with patch(
+        "homeassistant.components.waze_travel_time.sensor.async_setup_entry",
+        return_value=True,
+    ):
+        yield
+
+
 @pytest.fixture(name="mock_update")
 def mock_update_fixture():
     """Mock an update to the sensor."""

@@ -16,7 +16,6 @@ from .const import (
     ATTR_CID,
     ATTR_MAC,
     ATTR_MODEL,
-    BRAVIARC,
     CLIENTID_PREFIX,
     CONF_IGNORED_SOURCES,
     DOMAIN,
@@ -160,7 +159,8 @@ class BraviaTVOptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_init(self, user_input=None):
         """Manage the options."""
-        self.braviarc = self.hass.data[DOMAIN][self.config_entry.entry_id][BRAVIARC]
+        coordinator = self.hass.data[DOMAIN][self.config_entry.entry_id]
+        self.braviarc = coordinator.braviarc
         connected = await self.hass.async_add_executor_job(self.braviarc.is_connected)
         if not connected:
             await self.hass.async_add_executor_job(

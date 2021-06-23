@@ -401,8 +401,6 @@ async def test_ongoing_floating_event_returned(mock_now, hass, calendar):
     await hass.async_block_till_done()
 
     state = hass.states.get("calendar.private")
-    print(dt.DEFAULT_TIME_ZONE)
-    print(state)
     assert state.name == calendar.name
     assert state.state == STATE_ON
     assert dict(state.attributes) == {

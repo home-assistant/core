@@ -56,17 +56,13 @@ async def test_discovery(hass: HomeAssistant):
     assert not result["errors"]
 
     with _patch_discovery(f"{MODULE_CONFIG_FLOW}.yeelight"):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {},
-        )
+        result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
     assert result2["type"] == "form"
     assert result2["step_id"] == "pick_device"
     assert not result2["errors"]
 
     with patch(f"{MODULE}.async_setup", return_value=True) as mock_setup, patch(
-        f"{MODULE}.async_setup_entry",
-        return_value=True,
+        f"{MODULE}.async_setup_entry", return_value=True
     ) as mock_setup_entry:
         result3 = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_DEVICE: ID}
@@ -87,10 +83,7 @@ async def test_discovery(hass: HomeAssistant):
     assert not result["errors"]
 
     with _patch_discovery(f"{MODULE_CONFIG_FLOW}.yeelight"):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {},
-        )
+        result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
     assert result2["type"] == "abort"
     assert result2["reason"] == "no_devices_found"
 
@@ -102,10 +95,7 @@ async def test_discovery_no_device(hass: HomeAssistant):
     )
 
     with _patch_discovery(f"{MODULE_CONFIG_FLOW}.yeelight", no_device=True):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {},
-        )
+        result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
     assert result2["type"] == "abort"
     assert result2["reason"] == "no_devices_found"
@@ -138,8 +128,7 @@ async def test_import(hass: HomeAssistant):
     with patch(f"{MODULE_CONFIG_FLOW}.yeelight.Bulb", return_value=mocked_bulb), patch(
         f"{MODULE}.async_setup", return_value=True
     ) as mock_setup, patch(
-        f"{MODULE}.async_setup_entry",
-        return_value=True,
+        f"{MODULE}.async_setup_entry", return_value=True
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=config
@@ -200,10 +189,7 @@ async def test_manual(hass: HomeAssistant):
     mocked_bulb = _mocked_bulb()
     with patch(f"{MODULE_CONFIG_FLOW}.yeelight.Bulb", return_value=mocked_bulb), patch(
         f"{MODULE}.async_setup", return_value=True
-    ), patch(
-        f"{MODULE}.async_setup_entry",
-        return_value=True,
-    ):
+    ), patch(f"{MODULE}.async_setup_entry", return_value=True):
         result4 = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_HOST: IP_ADDRESS}
         )
@@ -279,10 +265,7 @@ async def test_manual_no_capabilities(hass: HomeAssistant):
     type(mocked_bulb).get_capabilities = MagicMock(return_value=None)
     with patch(f"{MODULE_CONFIG_FLOW}.yeelight.Bulb", return_value=mocked_bulb), patch(
         f"{MODULE}.async_setup", return_value=True
-    ), patch(
-        f"{MODULE}.async_setup_entry",
-        return_value=True,
-    ):
+    ), patch(f"{MODULE}.async_setup_entry", return_value=True):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_HOST: IP_ADDRESS}
         )
@@ -354,16 +337,13 @@ async def test_discovered_by_dhcp_or_homekit(hass, source, data):
     mocked_bulb = _mocked_bulb()
     with patch(f"{MODULE_CONFIG_FLOW}.yeelight.Bulb", return_value=mocked_bulb):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": source},
-            data=data,
+            DOMAIN, context={"source": source}, data=data
         )
     assert result["type"] == RESULT_TYPE_FORM
     assert result["errors"] is None
 
     with patch(f"{MODULE}.async_setup", return_value=True) as mock_async_setup, patch(
-        f"{MODULE}.async_setup_entry",
-        return_value=True,
+        f"{MODULE}.async_setup_entry", return_value=True
     ) as mock_async_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
     assert result2["type"] == "create_entry"
@@ -393,9 +373,7 @@ async def test_discovered_by_dhcp_or_homekit_failed_to_get_id(hass, source, data
     type(mocked_bulb).get_capabilities = MagicMock(return_value=None)
     with patch(f"{MODULE_CONFIG_FLOW}.yeelight.Bulb", return_value=mocked_bulb):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": source},
-            data=data,
+            DOMAIN, context={"source": source}, data=data
         )
     assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "cannot_connect"
