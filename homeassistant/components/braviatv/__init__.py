@@ -85,7 +85,7 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
         self.audio_output = None
         self.min_volume = None
         self.max_volume = None
-        self.volume = None
+        self.volume_level = None
         self.is_on = False
         # Assume that the TV is in Play mode
         self.playing = True
@@ -117,8 +117,9 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
         """Refresh volume information."""
         volume_info = self.braviarc.get_volume_info(self.audio_output)
         if volume_info is not None:
+            volume = volume_info.get("volume")
+            self.volume_level = volume / 100 if volume is not None else None
             self.audio_output = volume_info.get("target")
-            self.volume = volume_info.get("volume")
             self.min_volume = volume_info.get("minVolume")
             self.max_volume = volume_info.get("maxVolume")
             self.muted = volume_info.get("mute")

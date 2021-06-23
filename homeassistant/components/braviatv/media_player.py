@@ -142,9 +142,7 @@ class BraviaTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
     @property
     def volume_level(self):
         """Volume level of the media player (0..1)."""
-        if self.coordinator.volume is not None:
-            return self.coordinator.volume / 100
-        return None
+        return self.coordinator.volume_level
 
     @property
     def is_volume_muted(self):
