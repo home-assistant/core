@@ -147,8 +147,6 @@ class XiaomiGenericHumidifier(XiaomiCoordinatedMiioEntity, HumidifierEntity):
         result = await self._try_command(
             "Turning the miio device on failed.", self._device.on
         )
-        await self.coordinator.async_request_refresh()
-
         if result:
             self._state = True
             self._skip_update = True
@@ -158,7 +156,6 @@ class XiaomiGenericHumidifier(XiaomiCoordinatedMiioEntity, HumidifierEntity):
         result = await self._try_command(
             "Turning the miio device off failed.", self._device.off
         )
-        await self.coordinator.async_request_refresh()
 
         if result:
             self._state = False
@@ -230,14 +227,14 @@ class XiaomiAirHumidifier(XiaomiGenericHumidifier, HumidifierEntity):
     @property
     def mode(self):
         """Return the current mode."""
-        if self._state:
+        if self._state and self.available:
             return AirhumidifierOperationMode(self._attributes[ATTR_MODE]).name
         return None
 
     @property
     def target_humidity(self):
         """Return the target humidity."""
-        if self._state:
+        if self._state and self.available:
             return (
                 self._attributes[ATTR_TARGET_HUMIDITY]
                 if AirhumidifierOperationMode(self._attributes[ATTR_MODE])
@@ -265,7 +262,6 @@ class XiaomiAirHumidifier(XiaomiGenericHumidifier, HumidifierEntity):
             == AirhumidifierOperationMode.Auto
             or AirhumidifierOperationMode.Auto.name not in self.available_modes
         ):
-            await self.coordinator.async_request_refresh()
             return
         _LOGGER.debug("Setting the operation mode to: Auto")
         await self._try_command(
@@ -273,7 +269,6 @@ class XiaomiAirHumidifier(XiaomiGenericHumidifier, HumidifierEntity):
             self._device.set_mode,
             AirhumidifierOperationMode.Auto,
         )
-        await self.coordinator.async_request_refresh()
 
     async def async_set_mode(self, mode: str) -> None:
         """Set the mode of the humidifier."""
@@ -290,7 +285,6 @@ class XiaomiAirHumidifier(XiaomiGenericHumidifier, HumidifierEntity):
             self._device.set_mode,
             AirhumidifierOperationMode[mode.title()],
         )
-        await self.coordinator.async_request_refresh()
 
 
 class XiaomiAirHumidifierMiot(XiaomiAirHumidifier):
@@ -333,6 +327,7 @@ class XiaomiAirHumidifierMiot(XiaomiAirHumidifier):
             "Setting operation mode of the miio device failed.",
             self._device.set_target_humidity,
             target_humidity,
+            False,
         )
         if (
             self.supported_features & SUPPORT_MODES == 0
@@ -347,7 +342,6 @@ class XiaomiAirHumidifierMiot(XiaomiAirHumidifier):
             self._device.set_mode,
             AirhumidifierMiotOperationMode.Auto,
         )
-        await self.coordinator.async_request_refresh()
 
     async def async_set_mode(self, mode: str) -> None:
         """Set the mode of the fan."""
@@ -365,4 +359,3 @@ class XiaomiAirHumidifierMiot(XiaomiAirHumidifier):
                 self._device.set_mode,
                 self.REVERSE_MODE_MAPPING[mode],
             )
-        await self.coordinator.async_request_refresh()

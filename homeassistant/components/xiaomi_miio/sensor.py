@@ -18,6 +18,7 @@ from homeassistant.components.sensor import (
     STATE_CLASS_MEASUREMENT,
     SensorEntity,
 )
+from homeassistant.components.xiaomi_miio.number import ATTR_ACTUAL_MOTOR_SPEED
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
@@ -114,6 +115,13 @@ SENSOR_TYPES = {
         valid_min_value=0.0,
         valid_max_value=100.0,
     ),
+    "actual_speed": SensorType(
+        unit="rpm",
+        icon="mdi:fast-forward",
+        state_class=STATE_CLASS_MEASUREMENT,
+        valid_min_value=200.0,
+        valid_max_value=2000.0,
+    ),
 }
 
 HUMIDIFIER_SENSORS = {
@@ -125,6 +133,7 @@ HUMIDIFIER_SENSORS_MIOT = {
     ATTR_HUMIDITY: "humidity",
     ATTR_TEMPERATURE: "temperature",
     ATTR_WATER_LEVEL: "water_level",
+    ATTR_ACTUAL_MOTOR_SPEED: "actual_speed",
 }
 
 

@@ -134,7 +134,7 @@ class XiaomiCoordinatedMiioEntity(CoordinatorEntity):
 
         return device_info
 
-    async def _try_command(self, mask_error, func, *args, **kwargs):
+    async def _try_command(self, mask_error, func, refresh=True, *args, **kwargs):
         """Call a miio device command handling error messages."""
         try:
             result = await self.hass.async_add_executor_job(
@@ -142,7 +142,9 @@ class XiaomiCoordinatedMiioEntity(CoordinatorEntity):
             )
 
             _LOGGER.debug("Response received from miio device: %s", result)
-
+            # refresh the state
+            if refresh:
+                await self.coordinator.async_request_refresh()
             return result == SUCCESS
         except DeviceException as exc:
             if self._available:
