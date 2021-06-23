@@ -11,7 +11,6 @@ from fritzconnection import FritzConnection
 from fritzconnection.core.exceptions import (
     FritzActionError,
     FritzConnectionException,
-    FritzSecurityError,
     FritzServiceError,
 )
 from fritzconnection.lib.fritzhosts import FritzHosts
@@ -37,7 +36,6 @@ from .const import (
     DOMAIN,
     SERVICE_REBOOT,
     SERVICE_RECONNECT,
-    SWITCH_UPDATE,
     TRACKER_SCAN_INTERVAL,
 )
 
@@ -375,7 +373,6 @@ class FritzBoxBaseSwitch:
 
         self._attributes: dict[str, str] = {}
         self._is_available = True
-        self._last_toggle_timestamp: datetime | None = None
 
         self._attr_is_on = False
 
@@ -418,17 +415,6 @@ class FritzBoxBaseSwitch:
 
     async def async_update(self):
         """Update data."""
-        if (
-            self._last_toggle_timestamp is not None
-            and (dt_util.utcnow() - self._last_toggle_timestamp).seconds < SWITCH_UPDATE
-        ):
-            _LOGGER.debug(
-                "Not updating switch state, because last toggle happened at %s, less than %s seconds ago",
-                self._last_toggle_timestamp.isoformat(sep=" ", timespec="seconds"),
-                SWITCH_UPDATE,
-            )
-            return
-
         _LOGGER.debug("Updating '%s' (%s) switch state", self.name, self._type)
         await self._update()
 
@@ -442,22 +428,6 @@ class FritzBoxBaseSwitch:
 
     async def _async_handle_turn_on_off(self, turn_on: bool) -> bool:
         """Handle switch state change request."""
-        try:
-            await self._switch(turn_on)
-        except FritzSecurityError:
-            _LOGGER.error(
-                "Authorization Error: Please check the provided credentials and verify that you can log into the web interface",
-                exc_info=True,
-            )
-            return False
-        except FritzConnectionException:
-            _LOGGER.error(
-                "Home Assistant cannot call the wished service on the FRITZ!Box",
-                exc_info=True,
-            )
-            return False
-
+        await self._switch(turn_on)
         self._attr_is_on = turn_on
-        self._last_toggle_timestamp = dt_util.utcnow()
-
         return True
