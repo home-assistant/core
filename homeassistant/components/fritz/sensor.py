@@ -75,8 +75,8 @@ async def async_setup_entry(
     fritzbox_tools: FritzBoxTools = hass.data[DOMAIN][entry.entry_id]
 
     if (
-        fritzbox_tools.connection
-        and "WANIPConn1" not in fritzbox_tools.connection.services
+        not fritzbox_tools.connection
+        or "WANIPConn1" not in fritzbox_tools.connection.services
     ):
         # Only routers are supported at the moment
         return

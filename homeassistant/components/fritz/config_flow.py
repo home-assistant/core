@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import logging
 from typing import Any
-from urllib.parse import urlparse
+from urllib.parse import ParseResult, urlparse
 
 from fritzconnection.core.exceptions import FritzConnectionException, FritzSecurityError
 import voluptuous as vol
@@ -21,6 +21,7 @@ from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .common import FritzBoxTools
 from .const import (
@@ -48,16 +49,20 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize FRITZ!Box Tools flow."""
-        self._host: str
+        self._host: str | None = None
         self._entry: ConfigEntry
         self._name: str
         self._password: str
-        self._port: int
+        self._port: int | None = None
         self._username: str
         self.fritz_tools: FritzBoxTools
 
     async def fritz_tools_init(self) -> str | None:
         """Initialize FRITZ!Box Tools class."""
+
+        if not self._host or not self._port:
+            return None
+
         self.fritz_tools = FritzBoxTools(
             hass=self.hass,
             host=self._host,
@@ -101,9 +106,9 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
             },
         )
 
-    async def async_step_ssdp(self, discovery_info: dict[str, Any]) -> FlowResult:
+    async def async_step_ssdp(self, discovery_info: DiscoveryInfoType) -> FlowResult:
         """Handle a flow initialized by discovery."""
-        ssdp_location = urlparse(discovery_info[ATTR_SSDP_LOCATION])
+        ssdp_location: ParseResult = urlparse(discovery_info[ATTR_SSDP_LOCATION])
         self._host = ssdp_location.hostname
         self._port = ssdp_location.port
         self._name = (
