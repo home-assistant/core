@@ -111,7 +111,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async def handle_api_call(call):
         name = call.data[ATTR_NAME]
         path = call.data[ATTR_PATH]
-        api = hass.data[DOMAIN].get(name)
+        api = None
+        for entry in hass.config_entries.async_entries(DOMAIN):
+            if entry.data["name"] == name:
+                api = hass.data[DOMAIN].get(entry.entry_id)
+
         if api is None:
             _LOGGER.error("API_CALL: User '%s' not configured", name)
             return
