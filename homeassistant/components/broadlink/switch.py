@@ -29,6 +29,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import DOMAIN, SWITCH_DOMAIN
+from .entity import BroadlinkEntity
 from .helpers import data_packet, import_device, mac_address
 
 _LOGGER = logging.getLogger(__name__)
@@ -131,12 +132,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(switches)
 
 
-class BroadlinkSwitch(SwitchEntity, RestoreEntity, ABC):
+class BroadlinkSwitch(BroadlinkEntity, SwitchEntity, RestoreEntity, ABC):
     """Representation of a Broadlink switch."""
 
     def __init__(self, device, command_on, command_off):
         """Initialize the switch."""
-        self._device = device
+        super().__init__(device)
         self._command_on = command_on
         self._command_off = command_off
         self._coordinator = device.update_manager.coordinator
@@ -153,35 +154,14 @@ class BroadlinkSwitch(SwitchEntity, RestoreEntity, ABC):
         return True
 
     @property
-    def available(self):
-        """Return True if the switch is available."""
-        return self._device.update_manager.available
-
-    @property
     def is_on(self):
         """Return True if the switch is on."""
         return self._state
 
     @property
-    def should_poll(self):
-        """Return True if the switch has to be polled for state."""
-        return False
-
-    @property
     def device_class(self):
         """Return device class."""
         return DEVICE_CLASS_SWITCH
-
-    @property
-    def device_info(self):
-        """Return device info."""
-        return {
-            "identifiers": {(DOMAIN, self._device.unique_id)},
-            "manufacturer": self._device.api.manufacturer,
-            "model": self._device.api.model,
-            "name": self._device.name,
-            "sw_version": self._device.fw_version,
-        }
 
     @callback
     def update_data(self):
