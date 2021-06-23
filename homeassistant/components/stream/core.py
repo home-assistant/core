@@ -148,9 +148,10 @@ class Segment:
                 if len(part_data_list) > 1
                 else part_data_list[0]
             )
-            # Trim output if necessary (probably not used and can consider removing)
+            # Check stopping condition and trim output if necessary
             if pos >= end_loc:
                 assert isinstance(end_loc, int)
+                # Trimming is probably not necessary, but it doesn't hurt
                 yield bytes_to_write[: len(bytes_to_write) + end_loc - pos]
                 return
             yield bytes_to_write
