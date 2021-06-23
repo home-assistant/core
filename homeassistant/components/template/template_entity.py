@@ -112,6 +112,8 @@ class _TemplateAttribute:
 class TemplateEntity(Entity):
     """Entity that uses templates to calculate attributes."""
 
+    _attr_should_poll = False
+
     def __init__(
         self,
         *,
@@ -130,11 +132,6 @@ class TemplateEntity(Entity):
         self._icon_template = icon_template
         self._entity_picture_template = entity_picture_template
         self._self_ref_update_count = 0
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
 
     @callback
     def _update_available(self, result):
