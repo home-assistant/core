@@ -60,28 +60,28 @@ async def async_setup_platform(
 ):
     """Set up MQTT select through configuration.yaml."""
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
-    await _async_setup_entity(async_add_entities, config)
+    await _async_setup_entity(hass, async_add_entities, config)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up MQTT select dynamically through MQTT discovery."""
     setup = functools.partial(
-        _async_setup_entity, async_add_entities, config_entry=config_entry
+        _async_setup_entity, hass, async_add_entities, config_entry=config_entry
     )
     await async_setup_entry_helper(hass, select.DOMAIN, setup, PLATFORM_SCHEMA)
 
 
 async def _async_setup_entity(
-    async_add_entities, config, config_entry=None, discovery_data=None
+    hass, async_add_entities, config, config_entry=None, discovery_data=None
 ):
     """Set up the MQTT select."""
-    async_add_entities([MqttSelect(config, config_entry, discovery_data)])
+    async_add_entities([MqttSelect(hass, config, config_entry, discovery_data)])
 
 
 class MqttSelect(MqttEntity, SelectEntity, RestoreEntity):
     """representation of an MQTT select."""
 
-    def __init__(self, config, config_entry, discovery_data):
+    def __init__(self, hass, config, config_entry, discovery_data):
         """Initialize the MQTT select."""
         self._config = config
         self._sub_state = None
@@ -89,7 +89,7 @@ class MqttSelect(MqttEntity, SelectEntity, RestoreEntity):
         self._attr_current_option = None
 
         SelectEntity.__init__(self)
-        MqttEntity.__init__(self, None, config, config_entry, discovery_data)
+        MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
     @staticmethod
     def config_schema():

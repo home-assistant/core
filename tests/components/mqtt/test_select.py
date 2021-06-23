@@ -85,6 +85,40 @@ async def test_run_select_setup(hass, mqtt_mock):
     assert state.state == "beer"
 
 
+async def test_value_template(hass, mqtt_mock):
+    """Test that it fetches the given payload with a template."""
+    topic = "test/select"
+    await async_setup_component(
+        hass,
+        "select",
+        {
+            "select": {
+                "platform": "mqtt",
+                "state_topic": topic,
+                "command_topic": topic,
+                "name": "Test Select",
+                "options": ["milk", "beer"],
+                "value_template": "{{ value_json.val }}",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    async_fire_mqtt_message(hass, topic, '{"val":"milk"}')
+
+    await hass.async_block_till_done()
+
+    state = hass.states.get("select.test_select")
+    assert state.state == "milk"
+
+    async_fire_mqtt_message(hass, topic, '{"val":"beer"}')
+
+    await hass.async_block_till_done()
+
+    state = hass.states.get("select.test_select")
+    assert state.state == "beer"
+
+
 async def test_run_select_service_optimistic(hass, mqtt_mock):
     """Test that set_value service works in optimistic mode."""
     topic = "test/select"
