@@ -153,7 +153,7 @@ class NmapDeviceScanner:
             self._async_start_scanner()
             return
 
-        self._entry.async_on_remove(
+        self._entry.async_on_unload(
             self._hass.bus.async_listen_once(
                 EVENT_HOMEASSISTANT_STARTED, self._async_start_scanner
             )
