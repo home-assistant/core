@@ -35,34 +35,33 @@ from tests.common import mock_restore_cache
 
 
 @pytest.mark.parametrize(
-    "do_options",
+    "do_config",
     [
-        {},
         {
-            CONF_SLAVE: 10,
-            CONF_SCAN_INTERVAL: 20,
+            CONF_COVERS: [
+                {
+                    CONF_NAME: "test_cover",
+                    CONF_ADDRESS: 1234,
+                    CONF_INPUT_TYPE: CALL_TYPE_COIL,
+                }
+            ]
+        },
+        {
+            CONF_COVERS: [
+                {
+                    CONF_NAME: "test_cover",
+                    CONF_ADDRESS: 1234,
+                    CONF_INPUT_TYPE: CALL_TYPE_REGISTER_HOLDING,
+                    CONF_SLAVE: 10,
+                    CONF_SCAN_INTERVAL: 20,
+                }
+            ]
         },
     ],
 )
-@pytest.mark.parametrize("read_type", [CALL_TYPE_COIL, CALL_TYPE_REGISTER_HOLDING])
-async def test_config_cover(hass, do_options, read_type):
-    """Run test for cover."""
-    device_name = "test_cover"
-    device_config = {
-        CONF_NAME: device_name,
-        CONF_ADDRESS: 1234,
-        CONF_INPUT_TYPE: read_type,
-        **do_options,
-    }
-    await base_config_test(
-        hass,
-        device_config,
-        device_name,
-        COVER_DOMAIN,
-        CONF_COVERS,
-        None,
-        method_discovery=True,
-    )
+async def test_config_cover(hass, mock_modbus):
+    """Run configuration test for cover."""
+    assert COVER_DOMAIN in hass.config.components
 
 
 @pytest.mark.parametrize(

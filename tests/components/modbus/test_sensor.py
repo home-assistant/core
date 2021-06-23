@@ -45,68 +45,90 @@ from tests.common import mock_restore_cache
     "do_config",
     [
         {
-            CONF_ADDRESS: 51,
+            CONF_SENSORS: [
+                {
+                    CONF_NAME: "test_sensor",
+                    CONF_ADDRESS: 51,
+                }
+            ]
         },
         {
-            CONF_ADDRESS: 51,
-            CONF_SLAVE: 10,
-            CONF_COUNT: 1,
-            CONF_DATA_TYPE: "int",
-            CONF_PRECISION: 0,
-            CONF_SCALE: 1,
-            CONF_OFFSET: 0,
-            CONF_INPUT_TYPE: CALL_TYPE_REGISTER_HOLDING,
-            CONF_DEVICE_CLASS: "battery",
+            CONF_SENSORS: [
+                {
+                    CONF_NAME: "test_sensor",
+                    CONF_ADDRESS: 51,
+                    CONF_SLAVE: 10,
+                    CONF_COUNT: 1,
+                    CONF_DATA_TYPE: "int",
+                    CONF_PRECISION: 0,
+                    CONF_SCALE: 1,
+                    CONF_OFFSET: 0,
+                    CONF_INPUT_TYPE: CALL_TYPE_REGISTER_HOLDING,
+                    CONF_DEVICE_CLASS: "battery",
+                }
+            ]
         },
         {
-            CONF_ADDRESS: 51,
-            CONF_SLAVE: 10,
-            CONF_COUNT: 1,
-            CONF_DATA_TYPE: "int",
-            CONF_PRECISION: 0,
-            CONF_SCALE: 1,
-            CONF_OFFSET: 0,
-            CONF_INPUT_TYPE: CALL_TYPE_REGISTER_INPUT,
-            CONF_DEVICE_CLASS: "battery",
+            CONF_SENSORS: [
+                {
+                    CONF_NAME: "test_sensor",
+                    CONF_ADDRESS: 51,
+                    CONF_SLAVE: 10,
+                    CONF_COUNT: 1,
+                    CONF_DATA_TYPE: "int",
+                    CONF_PRECISION: 0,
+                    CONF_SCALE: 1,
+                    CONF_OFFSET: 0,
+                    CONF_INPUT_TYPE: CALL_TYPE_REGISTER_INPUT,
+                    CONF_DEVICE_CLASS: "battery",
+                }
+            ]
         },
         {
-            CONF_ADDRESS: 51,
-            CONF_COUNT: 1,
-            CONF_SWAP: CONF_SWAP_NONE,
+            CONF_SENSORS: [
+                {
+                    CONF_NAME: "test_sensor",
+                    CONF_ADDRESS: 51,
+                    CONF_COUNT: 1,
+                    CONF_SWAP: CONF_SWAP_NONE,
+                }
+            ]
         },
         {
-            CONF_ADDRESS: 51,
-            CONF_COUNT: 1,
-            CONF_SWAP: CONF_SWAP_BYTE,
+            CONF_SENSORS: [
+                {
+                    CONF_NAME: "test_sensor",
+                    CONF_ADDRESS: 51,
+                    CONF_COUNT: 1,
+                    CONF_SWAP: CONF_SWAP_BYTE,
+                }
+            ]
         },
         {
-            CONF_ADDRESS: 51,
-            CONF_COUNT: 2,
-            CONF_SWAP: CONF_SWAP_WORD,
+            CONF_SENSORS: [
+                {
+                    CONF_NAME: "test_sensor",
+                    CONF_ADDRESS: 51,
+                    CONF_COUNT: 2,
+                    CONF_SWAP: CONF_SWAP_WORD,
+                }
+            ]
         },
         {
-            CONF_ADDRESS: 51,
-            CONF_COUNT: 2,
-            CONF_SWAP: CONF_SWAP_WORD_BYTE,
+            CONF_SENSORS: [
+                {
+                    CONF_NAME: "test_sensor",
+                    CONF_ADDRESS: 51,
+                    CONF_COUNT: 2,
+                    CONF_SWAP: CONF_SWAP_WORD_BYTE,
+                }
+            ]
         },
     ],
 )
-async def test_config_sensor(hass, do_config):
-    """Run test for sensor."""
-    sensor_name = "test_sensor"
-    config_sensor = {
-        CONF_NAME: sensor_name,
-        **do_config,
-    }
-    await base_config_test(
-        hass,
-        config_sensor,
-        sensor_name,
-        SENSOR_DOMAIN,
-        CONF_SENSORS,
-        CONF_REGISTERS,
-        method_discovery=True,
-    )
+async def test_config_sensor(hass, mock_modbus):
+    """Run configuration test for sensor."""
+    assert SENSOR_DOMAIN in hass.config.components
 
 
 @pytest.mark.parametrize(

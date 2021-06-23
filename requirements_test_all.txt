@@ -48,7 +48,7 @@ abodepy==1.2.0
 accuweather==0.2.0
 
 # homeassistant.components.androidtv
-adb-shell[async]==0.3.1
+adb-shell[async]==0.3.4
 
 # homeassistant.components.alarmdecoder
 adext==0.4.2
@@ -100,7 +100,7 @@ aioeafm==0.1.2
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==2.8.0
+aioesphomeapi==2.9.0
 
 # homeassistant.components.flo
 aioflo==0.4.1
@@ -146,7 +146,7 @@ aiopulse==0.4.2
 aiopvapi==1.6.14
 
 # homeassistant.components.pvpc_hourly_pricing
-aiopvpc==2.1.2
+aiopvpc==2.2.0
 
 # homeassistant.components.webostv
 aiopylgtv==0.4.0
@@ -196,7 +196,7 @@ arcam-fmj==0.5.3
 # homeassistant.components.dlna_dmr
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
-async-upnp-client==0.18.0
+async-upnp-client==0.19.0
 
 # homeassistant.components.aurora
 auroranoaa==0.0.2
@@ -420,7 +420,7 @@ hangups==0.4.14
 hass-nabucasa==0.43.0
 
 # homeassistant.components.tasmota
-hatasmota==0.2.16
+hatasmota==0.2.18
 
 # homeassistant.components.jewish_calendar
 hdate==0.10.2
@@ -562,7 +562,7 @@ nessclient==0.9.15
 netdisco==2.8.3
 
 # homeassistant.components.nam
-nettigo-air-monitor==0.2.6
+nettigo-air-monitor==1.0.0
 
 # homeassistant.components.nexia
 nexia==0.9.7
@@ -639,7 +639,7 @@ pilight==0.1.1
 pillow==8.2.0
 
 # homeassistant.components.plex
-plexapi==4.5.1
+plexapi==4.6.1
 
 # homeassistant.components.plex
 plexauth==0.0.6
@@ -758,10 +758,10 @@ pycomfoconnect==0.4
 pycoolmasternet-async==0.1.2
 
 # homeassistant.components.daikin
-pydaikin==2.4.2
+pydaikin==2.4.3
 
 # homeassistant.components.deconz
-pydeconz==79
+pydeconz==80
 
 # homeassistant.components.dexcom
 pydexcom==0.2.0
@@ -1283,16 +1283,16 @@ wiffi==1.0.1
 withings-api==2.3.2
 
 # homeassistant.components.wled
-wled==0.6.0
+wled==0.7.0
 
 # homeassistant.components.wolflink
-wolf_smartset==0.1.8
+wolf_smartset==0.1.11
 
 # homeassistant.components.xbox
 xbox-webapi==2.0.11
 
 # homeassistant.components.knx
-xknx==0.18.6
+xknx==0.18.7
 
 # homeassistant.components.bluesound
 # homeassistant.components.rest

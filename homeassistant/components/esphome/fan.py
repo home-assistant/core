@@ -24,7 +24,7 @@ from homeassistant.util.percentage import (
 
 from . import (
     EsphomeEntity,
-    esphome_map_enum,
+    EsphomeEnumMapper,
     esphome_state_property,
     platform_async_setup_entry,
 )
@@ -47,12 +47,12 @@ async def async_setup_entry(
     )
 
 
-@esphome_map_enum
-def _fan_directions():
-    return {
+_FAN_DIRECTIONS: EsphomeEnumMapper[FanDirection] = EsphomeEnumMapper(
+    {
         FanDirection.FORWARD: DIRECTION_FORWARD,
         FanDirection.REVERSE: DIRECTION_REVERSE,
     }
+)
 
 
 class EsphomeFan(EsphomeEntity, FanEntity):
@@ -115,7 +115,7 @@ class EsphomeFan(EsphomeEntity, FanEntity):
     async def async_set_direction(self, direction: str):
         """Set direction of the fan."""
         await self._client.fan_command(
-            key=self._static_info.key, direction=_fan_directions.from_hass(direction)
+            key=self._static_info.key, direction=_FAN_DIRECTIONS.from_hass(direction)
         )
 
     # https://github.com/PyCQA/pylint/issues/3150 for all @esphome_state_property
@@ -149,18 +149,18 @@ class EsphomeFan(EsphomeEntity, FanEntity):
         return self._static_info.supported_speed_levels
 
     @esphome_state_property
-    def oscillating(self) -> None:
+    def oscillating(self) -> bool | None:
         """Return the oscillation state."""
         if not self._static_info.supports_oscillation:
             return None
         return self._state.oscillating
 
     @esphome_state_property
-    def current_direction(self) -> None:
+    def current_direction(self) -> str | None:
         """Return the current fan direction."""
         if not self._static_info.supports_direction:
             return None
-        return _fan_directions.from_esphome(self._state.direction)
+        return _FAN_DIRECTIONS.from_esphome(self._state.direction)
 
     @property
     def supported_features(self) -> int:

@@ -51,6 +51,7 @@ from .const import (
     EVENT_DEVICE_ADDED_TO_REGISTRY,
 )
 from .helpers import async_enable_statistics, update_data_collection_preference
+from .services import BITMASK_SCHEMA
 
 # general API constants
 ID = "id"
@@ -158,7 +159,7 @@ def async_register_api(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_heal_node)
     websocket_api.async_register_command(hass, websocket_set_config_parameter)
     websocket_api.async_register_command(hass, websocket_get_config_parameters)
-    websocket_api.async_register_command(hass, websocket_subscribe_logs)
+    websocket_api.async_register_command(hass, websocket_subscribe_log_updates)
     websocket_api.async_register_command(hass, websocket_update_log_config)
     websocket_api.async_register_command(hass, websocket_get_log_config)
     websocket_api.async_register_command(
@@ -925,7 +926,7 @@ async def websocket_refresh_node_cc_values(
         vol.Required(NODE_ID): int,
         vol.Required(PROPERTY): int,
         vol.Optional(PROPERTY_KEY): int,
-        vol.Required(VALUE): int,
+        vol.Required(VALUE): vol.Any(int, BITMASK_SCHEMA),
     }
 )
 @websocket_api.async_response
@@ -1021,13 +1022,13 @@ def filename_is_present_if_logging_to_file(obj: dict) -> dict:
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "zwave_js/subscribe_logs",
+        vol.Required(TYPE): "zwave_js/subscribe_log_updates",
         vol.Required(ENTRY_ID): str,
     }
 )
 @websocket_api.async_response
 @async_get_entry
-async def websocket_subscribe_logs(
+async def websocket_subscribe_log_updates(
     hass: HomeAssistant,
     connection: ActiveConnection,
     msg: dict,
@@ -1041,24 +1042,44 @@ async def websocket_subscribe_logs(
     def async_cleanup() -> None:
         """Remove signal listeners."""
         hass.async_create_task(driver.async_stop_listening_logs())
-        unsub()
+        for unsub in unsubs:
+            unsub()
 
     @callback
-    def forward_event(event: dict) -> None:
+    def log_messages(event: dict) -> None:
         log_msg: LogMessage = event["log_message"]
         connection.send_message(
             websocket_api.event_message(
                 msg[ID],
                 {
-                    "timestamp": log_msg.timestamp,
-                    "level": log_msg.level,
-                    "primary_tags": log_msg.primary_tags,
-                    "message": log_msg.formatted_message,
+                    "type": "log_message",
+                    "log_message": {
+                        "timestamp": log_msg.timestamp,
+                        "level": log_msg.level,
+                        "primary_tags": log_msg.primary_tags,
+                        "message": log_msg.formatted_message,
+                    },
                 },
             )
         )
 
-    unsub = driver.on("logging", forward_event)
+    @callback
+    def log_config_updates(event: dict) -> None:
+        log_config: LogConfig = event["log_config"]
+        connection.send_message(
+            websocket_api.event_message(
+                msg[ID],
+                {
+                    "type": "log_config",
+                    "log_config": dataclasses.asdict(log_config),
+                },
+            )
+        )
+
+    unsubs = [
+        driver.on("logging", log_messages),
+        driver.on("log config updated", log_config_updates),
+    ]
     connection.subscriptions[msg["id"]] = async_cleanup
 
     await driver.async_start_listening_logs()
@@ -1125,10 +1146,9 @@ async def websocket_get_log_config(
     client: Client,
 ) -> None:
     """Get log configuration for the Z-Wave JS driver."""
-    result = await client.driver.async_get_log_config()
     connection.send_result(
         msg[ID],
-        dataclasses.asdict(result),
+        dataclasses.asdict(client.driver.log_config),
     )
 
 

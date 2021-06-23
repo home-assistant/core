@@ -3,6 +3,7 @@ import asyncio
 from enum import Enum
 from functools import partial
 import logging
+import math
 
 from miio import (
     AirFresh,
@@ -40,6 +41,7 @@ from homeassistant.components.fan import (
     SPEED_HIGH,
     SPEED_LOW,
     SPEED_MEDIUM,
+    SUPPORT_PRESET_MODE,
     SUPPORT_SET_SPEED,
     FanEntity,
 )
@@ -53,6 +55,10 @@ from homeassistant.const import (
     CONF_TOKEN,
 )
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util.percentage import (
+    percentage_to_ranged_value,
+    ranged_value_to_percentage,
+)
 
 from .const import (
     CONF_DEVICE,
@@ -157,7 +163,6 @@ ATTR_DRY = "dry"
 # Air Humidifier CA4
 ATTR_ACTUAL_MOTOR_SPEED = "actual_speed"
 ATTR_FAHRENHEIT = "fahrenheit"
-ATTR_FAULT = "fault"
 
 # Air Fresh
 ATTR_CO2 = "co2"
@@ -332,10 +337,15 @@ AVAILABLE_ATTRIBUTES_AIRFRESH = {
 }
 
 OPERATION_MODES_AIRPURIFIER = ["Auto", "Silent", "Favorite", "Idle"]
+PRESET_MODES_AIRPURIFIER = ["Auto", "Silent", "Favorite", "Idle"]
 OPERATION_MODES_AIRPURIFIER_PRO = ["Auto", "Silent", "Favorite"]
+PRESET_MODES_AIRPURIFIER_PRO = ["Auto", "Silent", "Favorite"]
 OPERATION_MODES_AIRPURIFIER_PRO_V7 = OPERATION_MODES_AIRPURIFIER_PRO
+PRESET_MODES_AIRPURIFIER_PRO_V7 = PRESET_MODES_AIRPURIFIER_PRO
 OPERATION_MODES_AIRPURIFIER_2S = ["Auto", "Silent", "Favorite"]
+PRESET_MODES_AIRPURIFIER_2S = ["Auto", "Silent", "Favorite"]
 OPERATION_MODES_AIRPURIFIER_3 = ["Auto", "Silent", "Favorite", "Fan"]
+PRESET_MODES_AIRPURIFIER_3 = ["Auto", "Silent", "Favorite", "Fan"]
 OPERATION_MODES_AIRPURIFIER_V3 = [
     "Auto",
     "Silent",
@@ -345,7 +355,19 @@ OPERATION_MODES_AIRPURIFIER_V3 = [
     "High",
     "Strong",
 ]
+PRESET_MODES_AIRPURIFIER_V3 = [
+    "Auto",
+    "Silent",
+    "Favorite",
+    "Idle",
+    "Medium",
+    "High",
+    "Strong",
+]
 OPERATION_MODES_AIRFRESH = ["Auto", "Silent", "Interval", "Low", "Middle", "Strong"]
+PRESET_MODES_AIRFRESH = ["Auto", "Interval"]
+PRESET_MODES_AIRHUMIDIFIER = ["Auto"]
+PRESET_MODES_AIRHUMIDIFIER_CA4 = ["Auto"]
 
 SUCCESS = ["ok"]
 
@@ -635,11 +657,42 @@ class XiaomiGenericDevice(XiaomiMiioEntity, FanEntity):
         self._state_attrs = {ATTR_MODEL: self._model}
         self._device_features = FEATURE_SET_CHILD_LOCK
         self._skip_update = False
+        self._supported_features = 0
+        self._speed_count = 100
+        self._preset_modes = []
+        # the speed_list attribute is deprecated, support will end with release 2021.7
+        self._speed_list = []
 
     @property
     def supported_features(self):
         """Flag supported features."""
-        return SUPPORT_SET_SPEED
+        return self._supported_features
+
+    # the speed_list attribute is deprecated, support will end with release 2021.7
+    @property
+    def speed_list(self) -> list:
+        """Get the list of available speeds."""
+        return self._speed_list
+
+    @property
+    def speed_count(self):
+        """Return the number of speeds of the fan supported."""
+        return self._speed_count
+
+    @property
+    def preset_modes(self) -> list:
+        """Get the list of available preset modes."""
+        return self._preset_modes
+
+    @property
+    def percentage(self):
+        """Return the percentage based speed of the fan."""
+        return None
+
+    @property
+    def preset_mode(self):
+        """Return the percentage based speed of the fan."""
+        return None
 
     @property
     def should_poll(self):
@@ -701,9 +754,14 @@ class XiaomiGenericDevice(XiaomiMiioEntity, FanEntity):
         **kwargs,
     ) -> None:
         """Turn the device on."""
+        # Remove the async_set_speed call is async_set_percentage and async_set_preset_modes have been implemented
         if speed:
-            # If operation mode was set the device must not be turned on.
-            result = await self.async_set_speed(speed)
+            await self.async_set_speed(speed)
+        # If operation mode was set the device must not be turned on.
+        if percentage:
+            await self.async_set_percentage(percentage)
+        if preset_mode:
+            await self.async_set_preset_mode(preset_mode)
         else:
             result = await self._try_command(
                 "Turning the miio device on failed.", self._device.on
@@ -771,6 +829,22 @@ class XiaomiGenericDevice(XiaomiMiioEntity, FanEntity):
 class XiaomiAirPurifier(XiaomiGenericDevice):
     """Representation of a Xiaomi Air Purifier."""
 
+    PRESET_MODE_MAPPING = {
+        "Auto": AirpurifierOperationMode.Auto,
+        "Silent": AirpurifierOperationMode.Silent,
+        "Favorite": AirpurifierOperationMode.Favorite,
+        "Idle": AirpurifierOperationMode.Favorite,
+    }
+
+    SPEED_MODE_MAPPING = {
+        1: AirpurifierOperationMode.Silent,
+        2: AirpurifierOperationMode.Medium,
+        3: AirpurifierOperationMode.High,
+        4: AirpurifierOperationMode.Strong,
+    }
+
+    REVERSE_SPEED_MODE_MAPPING = {v: k for k, v in SPEED_MODE_MAPPING.items()}
+
     def __init__(self, name, device, entry, unique_id, allowed_failures=0):
         """Initialize the plug switch."""
         super().__init__(name, device, entry, unique_id)
@@ -780,26 +854,60 @@ class XiaomiAirPurifier(XiaomiGenericDevice):
         if self._model == MODEL_AIRPURIFIER_PRO:
             self._device_features = FEATURE_FLAGS_AIRPURIFIER_PRO
             self._available_attributes = AVAILABLE_ATTRIBUTES_AIRPURIFIER_PRO
+            # SUPPORT_SET_SPEED was disabled
+            # the device supports preset_modes only
+            self._preset_modes = PRESET_MODES_AIRPURIFIER_PRO
+            self._supported_features = SUPPORT_PRESET_MODE
+            self._speed_count = 1
+            # the speed_list attribute is deprecated, support will end with release 2021.7
             self._speed_list = OPERATION_MODES_AIRPURIFIER_PRO
         elif self._model == MODEL_AIRPURIFIER_PRO_V7:
             self._device_features = FEATURE_FLAGS_AIRPURIFIER_PRO_V7
             self._available_attributes = AVAILABLE_ATTRIBUTES_AIRPURIFIER_PRO_V7
+            # SUPPORT_SET_SPEED was disabled
+            # the device supports preset_modes only
+            self._preset_modes = PRESET_MODES_AIRPURIFIER_PRO_V7
+            self._supported_features = SUPPORT_PRESET_MODE
+            self._speed_count = 1
+            # the speed_list attribute is deprecated, support will end with release 2021.7
             self._speed_list = OPERATION_MODES_AIRPURIFIER_PRO_V7
         elif self._model in [MODEL_AIRPURIFIER_2S, MODEL_AIRPURIFIER_2H]:
             self._device_features = FEATURE_FLAGS_AIRPURIFIER_2S
             self._available_attributes = AVAILABLE_ATTRIBUTES_AIRPURIFIER_2S
+            # SUPPORT_SET_SPEED was disabled
+            # the device supports preset_modes only
+            self._preset_modes = PRESET_MODES_AIRPURIFIER_2S
+            self._supported_features = SUPPORT_PRESET_MODE
+            self._speed_count = 1
+            # the speed_list attribute is deprecated, support will end with release 2021.7
             self._speed_list = OPERATION_MODES_AIRPURIFIER_2S
         elif self._model in MODELS_PURIFIER_MIOT:
             self._device_features = FEATURE_FLAGS_AIRPURIFIER_3
             self._available_attributes = AVAILABLE_ATTRIBUTES_AIRPURIFIER_3
+            # SUPPORT_SET_SPEED was disabled
+            # the device supports preset_modes only
+            self._preset_modes = PRESET_MODES_AIRPURIFIER_3
+            self._supported_features = SUPPORT_SET_SPEED | SUPPORT_PRESET_MODE
+            self._speed_count = 3
+            # the speed_list attribute is deprecated, support will end with release 2021.7
             self._speed_list = OPERATION_MODES_AIRPURIFIER_3
         elif self._model == MODEL_AIRPURIFIER_V3:
             self._device_features = FEATURE_FLAGS_AIRPURIFIER_V3
             self._available_attributes = AVAILABLE_ATTRIBUTES_AIRPURIFIER_V3
+            # SUPPORT_SET_SPEED was disabled
+            # the device supports preset_modes only
+            self._preset_modes = PRESET_MODES_AIRPURIFIER_V3
+            self._supported_features = SUPPORT_PRESET_MODE
+            self._speed_count = 1
+            # the speed_list attribute is deprecated, support will end with release 2021.7
             self._speed_list = OPERATION_MODES_AIRPURIFIER_V3
         else:
             self._device_features = FEATURE_FLAGS_AIRPURIFIER
             self._available_attributes = AVAILABLE_ATTRIBUTES_AIRPURIFIER
+            self._preset_modes = PRESET_MODES_AIRPURIFIER
+            self._supported_features = SUPPORT_SET_SPEED | SUPPORT_PRESET_MODE
+            self._speed_count = 4
+            # the speed_list attribute is deprecated, support will end with release 2021.7
             self._speed_list = OPERATION_MODES_AIRPURIFIER
 
         self._state_attrs.update(
@@ -846,10 +954,27 @@ class XiaomiAirPurifier(XiaomiGenericDevice):
                     )
 
     @property
-    def speed_list(self) -> list:
-        """Get the list of available speeds."""
-        return self._speed_list
+    def preset_mode(self):
+        """Get the active preset mode."""
+        if self._state:
+            preset_mode = AirpurifierOperationMode(self._state_attrs[ATTR_MODE]).name
+            return preset_mode if preset_mode in self._preset_modes else None
 
+        return None
+
+    @property
+    def percentage(self):
+        """Return the current percentage based speed."""
+        if self._state:
+            mode = AirpurifierOperationMode(self._state_attrs[ATTR_MODE])
+            if mode in self.REVERSE_SPEED_MODE_MAPPING:
+                return ranged_value_to_percentage(
+                    (1, self._speed_count), self.REVERSE_SPEED_MODE_MAPPING[mode]
+                )
+
+        return None
+
+    # the speed attribute is deprecated, support will end with release 2021.7
     @property
     def speed(self):
         """Return the current speed."""
@@ -858,6 +983,37 @@ class XiaomiAirPurifier(XiaomiGenericDevice):
 
         return None
 
+    async def async_set_percentage(self, percentage: int) -> None:
+        """Set the percentage of the fan.
+
+        This method is a coroutine.
+        """
+        speed_mode = math.ceil(
+            percentage_to_ranged_value((1, self._speed_count), percentage)
+        )
+        if speed_mode:
+            await self._try_command(
+                "Setting operation mode of the miio device failed.",
+                self._device.set_mode,
+                AirpurifierOperationMode(self.SPEED_MODE_MAPPING[speed_mode]),
+            )
+
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
+        """Set the preset mode of the fan.
+
+        This method is a coroutine.
+        """
+        if preset_mode not in self.preset_modes:
+            _LOGGER.warning("'%s'is not a valid preset mode", preset_mode)
+            return
+        await self._try_command(
+            "Setting operation mode of the miio device failed.",
+            self._device.set_mode,
+            self.PRESET_MODE_MAPPING[preset_mode],
+        )
+
+    # the async_set_speed function is deprecated, support will end with release 2021.7
+    # it is added here only for compatibility with legacy speeds
     async def async_set_speed(self, speed: str) -> None:
         """Set the speed of the fan."""
         if self.supported_features & SUPPORT_SET_SPEED == 0:
@@ -1004,6 +1160,34 @@ class XiaomiAirPurifier(XiaomiGenericDevice):
 class XiaomiAirPurifierMiot(XiaomiAirPurifier):
     """Representation of a Xiaomi Air Purifier (MiOT protocol)."""
 
+    PRESET_MODE_MAPPING = {
+        "Auto": AirpurifierMiotOperationMode.Auto,
+        "Silent": AirpurifierMiotOperationMode.Silent,
+        "Favorite": AirpurifierMiotOperationMode.Favorite,
+        "Fan": AirpurifierMiotOperationMode.Fan,
+    }
+
+    @property
+    def percentage(self):
+        """Return the current percentage based speed."""
+        if self._state:
+            fan_level = self._state_attrs[ATTR_FAN_LEVEL]
+            return ranged_value_to_percentage((1, 3), fan_level)
+
+        return None
+
+    @property
+    def preset_mode(self):
+        """Get the active preset mode."""
+        if self._state:
+            preset_mode = AirpurifierMiotOperationMode(
+                self._state_attrs[ATTR_MODE]
+            ).name
+            return preset_mode if preset_mode in self._preset_modes else None
+
+        return None
+
+    # the speed attribute is deprecated, support will end with release 2021.7
     @property
     def speed(self):
         """Return the current speed."""
@@ -1012,6 +1196,35 @@ class XiaomiAirPurifierMiot(XiaomiAirPurifier):
 
         return None
 
+    async def async_set_percentage(self, percentage: int) -> None:
+        """Set the percentage of the fan.
+
+        This method is a coroutine.
+        """
+        fan_level = math.ceil(percentage_to_ranged_value((1, 3), percentage))
+        if fan_level:
+            await self._try_command(
+                "Setting fan level of the miio device failed.",
+                self._device.set_fan_level,
+                fan_level,
+            )
+
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
+        """Set the preset mode of the fan.
+
+        This method is a coroutine.
+        """
+        if preset_mode not in self.preset_modes:
+            _LOGGER.warning("'%s'is not a valid preset mode", preset_mode)
+            return
+        await self._try_command(
+            "Setting operation mode of the miio device failed.",
+            self._device.set_mode,
+            self.PRESET_MODE_MAPPING[preset_mode],
+        )
+
+    # the async_set_speed function is deprecated, support will end with release 2021.7
+    # it is added here only for compatibility with legacy speeds
     async def async_set_speed(self, speed: str) -> None:
         """Set the speed of the fan."""
         if self.supported_features & SUPPORT_SET_SPEED == 0:
@@ -1040,30 +1253,58 @@ class XiaomiAirPurifierMiot(XiaomiAirPurifier):
 class XiaomiAirHumidifier(XiaomiGenericDevice):
     """Representation of a Xiaomi Air Humidifier."""
 
+    SPEED_MODE_MAPPING = {
+        1: AirhumidifierOperationMode.Silent,
+        2: AirhumidifierOperationMode.Medium,
+        3: AirhumidifierOperationMode.High,
+        4: AirhumidifierOperationMode.Strong,
+    }
+
+    REVERSE_SPEED_MODE_MAPPING = {v: k for k, v in SPEED_MODE_MAPPING.items()}
+
+    PRESET_MODE_MAPPING = {
+        "Auto": AirhumidifierOperationMode.Auto,
+    }
+
     def __init__(self, name, device, entry, unique_id):
         """Initialize the plug switch."""
         super().__init__(name, device, entry, unique_id)
-
+        self._percentage = None
+        self._preset_mode = None
+        self._supported_features = SUPPORT_SET_SPEED
+        self._preset_modes = []
         if self._model in [MODEL_AIRHUMIDIFIER_CA1, MODEL_AIRHUMIDIFIER_CB1]:
             self._device_features = FEATURE_FLAGS_AIRHUMIDIFIER_CA_AND_CB
             self._available_attributes = AVAILABLE_ATTRIBUTES_AIRHUMIDIFIER_CA_AND_CB
+            # the speed_list attribute is deprecated, support will end with release 2021.7
             self._speed_list = [
                 mode.name
                 for mode in AirhumidifierOperationMode
                 if mode is not AirhumidifierOperationMode.Strong
             ]
+            self._supported_features |= SUPPORT_PRESET_MODE
+            self._preset_modes = PRESET_MODES_AIRHUMIDIFIER
+            self._speed_count = 3
         elif self._model in [MODEL_AIRHUMIDIFIER_CA4]:
             self._device_features = FEATURE_FLAGS_AIRHUMIDIFIER_CA4
             self._available_attributes = AVAILABLE_ATTRIBUTES_AIRHUMIDIFIER_CA4
+            # the speed_list attribute is deprecated, support will end with release 2021.7
             self._speed_list = [SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
+            self._supported_features |= SUPPORT_PRESET_MODE
+            self._preset_modes = PRESET_MODES_AIRHUMIDIFIER
+            self._speed_count = 3
         else:
             self._device_features = FEATURE_FLAGS_AIRHUMIDIFIER
             self._available_attributes = AVAILABLE_ATTRIBUTES_AIRHUMIDIFIER
+            # the speed_list attribute is deprecated, support will end with release 2021.7
             self._speed_list = [
                 mode.name
                 for mode in AirhumidifierOperationMode
                 if mode is not AirhumidifierOperationMode.Auto
             ]
+            self._supported_features |= SUPPORT_PRESET_MODE
+            self._preset_modes = PRESET_MODES_AIRHUMIDIFIER
+            self._speed_count = 4
 
         self._state_attrs.update(
             {attribute: None for attribute in self._available_attributes}
@@ -1095,10 +1336,27 @@ class XiaomiAirHumidifier(XiaomiGenericDevice):
                 _LOGGER.error("Got exception while fetching the state: %s", ex)
 
     @property
-    def speed_list(self) -> list:
-        """Get the list of available speeds."""
-        return self._speed_list
+    def preset_mode(self):
+        """Get the active preset mode."""
+        if self._state:
+            preset_mode = AirhumidifierOperationMode(self._state_attrs[ATTR_MODE]).name
+            return preset_mode if preset_mode in self._preset_modes else None
 
+        return None
+
+    @property
+    def percentage(self):
+        """Return the current percentage based speed."""
+        if self._state:
+            mode = AirhumidifierOperationMode(self._state_attrs[ATTR_MODE])
+            if mode in self.REVERSE_SPEED_MODE_MAPPING:
+                return ranged_value_to_percentage(
+                    (1, self._speed_count), self.REVERSE_SPEED_MODE_MAPPING[mode]
+                )
+
+        return None
+
+    # the speed attribute is deprecated, support will end with release 2021.7
     @property
     def speed(self):
         """Return the current speed."""
@@ -1107,6 +1365,37 @@ class XiaomiAirHumidifier(XiaomiGenericDevice):
 
         return None
 
+    async def async_set_percentage(self, percentage: int) -> None:
+        """Set the percentage of the fan.
+
+        This method is a coroutine.
+        """
+        speed_mode = math.ceil(
+            percentage_to_ranged_value((1, self._speed_count), percentage)
+        )
+        if speed_mode:
+            await self._try_command(
+                "Setting operation mode of the miio device failed.",
+                self._device.set_mode,
+                AirhumidifierOperationMode(self.SPEED_MODE_MAPPING[speed_mode]),
+            )
+
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
+        """Set the preset mode of the fan.
+
+        This method is a coroutine.
+        """
+        if preset_mode not in self.preset_modes:
+            _LOGGER.warning("'%s'is not a valid preset mode", preset_mode)
+            return
+        await self._try_command(
+            "Setting operation mode of the miio device failed.",
+            self._device.set_mode,
+            self.PRESET_MODE_MAPPING[preset_mode],
+        )
+
+    # the async_set_speed function is deprecated, support will end with release 2021.7
+    # it is added here only for compatibility with legacy speeds
     async def async_set_speed(self, speed: str) -> None:
         """Set the speed of the fan."""
         if self.supported_features & SUPPORT_SET_SPEED == 0:
@@ -1168,21 +1457,64 @@ class XiaomiAirHumidifier(XiaomiGenericDevice):
 class XiaomiAirHumidifierMiot(XiaomiAirHumidifier):
     """Representation of a Xiaomi Air Humidifier (MiOT protocol)."""
 
-    MODE_MAPPING = {
+    PRESET_MODE_MAPPING = {
+        AirhumidifierMiotOperationMode.Auto: "Auto",
+    }
+
+    REVERSE_PRESET_MODE_MAPPING = {v: k for k, v in PRESET_MODE_MAPPING.items()}
+
+    SPEED_MAPPING = {
         AirhumidifierMiotOperationMode.Low: SPEED_LOW,
         AirhumidifierMiotOperationMode.Mid: SPEED_MEDIUM,
         AirhumidifierMiotOperationMode.High: SPEED_HIGH,
     }
 
-    REVERSE_MODE_MAPPING = {v: k for k, v in MODE_MAPPING.items()}
+    REVERSE_SPEED_MAPPING = {v: k for k, v in SPEED_MAPPING.items()}
 
+    SPEEDS = [
+        AirhumidifierMiotOperationMode.Low,
+        AirhumidifierMiotOperationMode.Mid,
+        AirhumidifierMiotOperationMode.High,
+    ]
+
+    # the speed attribute is deprecated, support will end with release 2021.7
+    # it is added here for compatibility
     @property
     def speed(self):
-        """Return the current speed."""
+        """Return current legacy speed."""
+        if (
+            self.state
+            and AirhumidifierMiotOperationMode(self._state_attrs[ATTR_MODE])
+            in self.SPEED_MAPPING
+        ):
+            return self.SPEED_MAPPING[
+                AirhumidifierMiotOperationMode(self._state_attrs[ATTR_MODE])
+            ]
+        return None
+
+    @property
+    def percentage(self):
+        """Return the current percentage based speed."""
+        if (
+            self.state
+            and AirhumidifierMiotOperationMode(self._state_attrs[ATTR_MODE])
+            in self.SPEEDS
+        ):
+            return ranged_value_to_percentage(
+                (1, self.speed_count), self._state_attrs[ATTR_MODE]
+            )
+
+        return None
+
+    @property
+    def preset_mode(self):
+        """Return the current preset_mode."""
         if self._state:
-            return self.MODE_MAPPING.get(
+            mode = self.PRESET_MODE_MAPPING.get(
                 AirhumidifierMiotOperationMode(self._state_attrs[ATTR_MODE])
             )
+            if mode in self._preset_modes:
+                return mode
 
         return None
 
@@ -1196,12 +1528,42 @@ class XiaomiAirHumidifierMiot(XiaomiAirHumidifier):
 
         return None
 
+    # the async_set_speed function is deprecated, support will end with release 2021.7
+    # it is added here only for compatibility with legacy speeds
     async def async_set_speed(self, speed: str) -> None:
-        """Set the speed of the fan."""
+        """Override for set async_set_speed of the super() class."""
+        if speed and speed in self.REVERSE_SPEED_MAPPING:
+            await self._try_command(
+                "Setting operation mode of the miio device failed.",
+                self._device.set_mode,
+                self.REVERSE_SPEED_MAPPING[speed],
+            )
+
+    async def async_set_percentage(self, percentage: int) -> None:
+        """Set the percentage of the fan.
+
+        This method is a coroutine.
+        """
+        mode = math.ceil(percentage_to_ranged_value((1, 3), percentage))
+        if mode:
+            await self._try_command(
+                "Setting operation mode of the miio device failed.",
+                self._device.set_mode,
+                AirhumidifierMiotOperationMode(mode),
+            )
+
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
+        """Set the preset mode of the fan.
+
+        This method is a coroutine.
+        """
+        if preset_mode not in self.preset_modes:
+            _LOGGER.warning("'%s'is not a valid preset mode", preset_mode)
+            return
         await self._try_command(
             "Setting operation mode of the miio device failed.",
             self._device.set_mode,
-            self.REVERSE_MODE_MAPPING[speed],
+            self.REVERSE_PRESET_MODE_MAPPING[preset_mode],
         )
 
     async def async_set_led_brightness(self, brightness: int = 2):
@@ -1230,13 +1592,30 @@ class XiaomiAirHumidifierMiot(XiaomiAirHumidifier):
 class XiaomiAirFresh(XiaomiGenericDevice):
     """Representation of a Xiaomi Air Fresh."""
 
+    SPEED_MODE_MAPPING = {
+        1: AirfreshOperationMode.Silent,
+        2: AirfreshOperationMode.Low,
+        3: AirfreshOperationMode.Middle,
+        4: AirfreshOperationMode.Strong,
+    }
+
+    REVERSE_SPEED_MODE_MAPPING = {v: k for k, v in SPEED_MODE_MAPPING.items()}
+
+    PRESET_MODE_MAPPING = {
+        "Auto": AirfreshOperationMode.Auto,
+        "Interval": AirfreshOperationMode.Interval,
+    }
+
     def __init__(self, name, device, entry, unique_id):
         """Initialize the miio device."""
         super().__init__(name, device, entry, unique_id)
 
         self._device_features = FEATURE_FLAGS_AIRFRESH
         self._available_attributes = AVAILABLE_ATTRIBUTES_AIRFRESH
+        # the speed_list attribute is deprecated, support will end with release 2021.7
         self._speed_list = OPERATION_MODES_AIRFRESH
+        self._speed_count = 4
+        self._preset_modes = PRESET_MODES_AIRFRESH
         self._state_attrs.update(
             {attribute: None for attribute in self._available_attributes}
         )
@@ -1267,10 +1646,27 @@ class XiaomiAirFresh(XiaomiGenericDevice):
                 _LOGGER.error("Got exception while fetching the state: %s", ex)
 
     @property
-    def speed_list(self) -> list:
-        """Get the list of available speeds."""
-        return self._speed_list
+    def preset_mode(self):
+        """Get the active preset mode."""
+        if self._state:
+            preset_mode = AirfreshOperationMode(self._state_attrs[ATTR_MODE]).name
+            return preset_mode if preset_mode in self._preset_modes else None
 
+        return None
+
+    @property
+    def percentage(self):
+        """Return the current percentage based speed."""
+        if self._state:
+            mode = AirfreshOperationMode(self._state_attrs[ATTR_MODE])
+            if mode in self.REVERSE_SPEED_MODE_MAPPING:
+                return ranged_value_to_percentage(
+                    (1, self._speed_count), self.REVERSE_SPEED_MODE_MAPPING[mode]
+                )
+
+        return None
+
+    # the speed attribute is deprecated, support will end with release 2021.7
     @property
     def speed(self):
         """Return the current speed."""
@@ -1279,6 +1675,37 @@ class XiaomiAirFresh(XiaomiGenericDevice):
 
         return None
 
+    async def async_set_percentage(self, percentage: int) -> None:
+        """Set the percentage of the fan.
+
+        This method is a coroutine.
+        """
+        speed_mode = math.ceil(
+            percentage_to_ranged_value((1, self._speed_count), percentage)
+        )
+        if speed_mode:
+            await self._try_command(
+                "Setting operation mode of the miio device failed.",
+                self._device.set_mode,
+                AirfreshOperationMode(self.SPEED_MODE_MAPPING[speed_mode]),
+            )
+
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
+        """Set the preset mode of the fan.
+
+        This method is a coroutine.
+        """
+        if preset_mode not in self.preset_modes:
+            _LOGGER.warning("'%s'is not a valid preset mode", preset_mode)
+            return
+        await self._try_command(
+            "Setting operation mode of the miio device failed.",
+            self._device.set_mode,
+            self.PRESET_MODE_MAPPING[preset_mode],
+        )
+
+    # the async_set_speed function is deprecated, support will end with release 2021.7
+    # it is added here only for compatibility with legacy speeds
     async def async_set_speed(self, speed: str) -> None:
         """Set the speed of the fan."""
         if self.supported_features & SUPPORT_SET_SPEED == 0:
