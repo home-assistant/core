@@ -177,13 +177,16 @@ async def async_get_condition_capabilities(
             value_schema = vol.Range(min=min, max=max)
         elif (
             config_value.configuration_value_type == ConfigurationValueType.MANUAL_ENTRY
-            and config_value.metadata.states
         ):
-            value_schema = vol.In(
-                {
-                    i: config_value.metadata.states.get(str(i)) or i
-                    for i in range(min, max + 1)
-                }
+            value_schema = (
+                vol.In(
+                    {
+                        i: config_value.metadata.states.get(str(i)) or i
+                        for i in range(min, max + 1)
+                    }
+                )
+                if config_value.metadata.states
+                else vol.Range(min=min, max=max)
             )
         elif config_value.configuration_value_type == ConfigurationValueType.ENUMERATED:
             value_schema = vol.In(
