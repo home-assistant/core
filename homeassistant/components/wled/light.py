@@ -123,12 +123,7 @@ class WLEDMasterLight(WLEDEntity, LightEntity):
 
     @property
     def available(self) -> bool:
-        """Return if this master light is available or not.
-
-        It is either available when the user explicitly set to keep master light
-        controls, even with a single segment or when we have multiple segments
-        available.
-        """
+        """Return if this master light is available or not."""
         return self.coordinator.has_master_light and super().available
 
     @wled_exception_handler
