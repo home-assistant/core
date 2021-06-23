@@ -423,7 +423,8 @@ class FritzBoxBaseSwitch:
             and (dt_util.utcnow() - self._last_toggle_timestamp).seconds < SWITCH_UPDATE
         ):
             _LOGGER.debug(
-                "Not updating switch state, because last toggle happened < %s seconds ago",
+                "Not updating switch state, because last toggle happened at %s, less than %s seconds ago",
+                self._last_toggle_timestamp.isoformat(sep=" ", timespec="seconds"),
                 SWITCH_UPDATE,
             )
             return
@@ -448,6 +449,7 @@ class FritzBoxBaseSwitch:
                 "Authorization Error: Please check the provided credentials and verify that you can log into the web interface",
                 exc_info=True,
             )
+            return False
         except FritzConnectionException:
             _LOGGER.error(
                 "Home Assistant cannot call the wished service on the FRITZ!Box",

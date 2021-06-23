@@ -293,12 +293,12 @@ class FritzBoxPortSwitch(FritzBoxBaseSwitch, SwitchEntity):
         resp = await service_call_action(
             self.fritzbox_tools,
             self.connection_type,
-            None,
+            "1",
             "AddPortMapping",
             **self.port_mapping,
         )
 
-        if not resp:
+        if resp is None:
             return False
 
         return True
