@@ -34,13 +34,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.json import load_json
 
-from .const import (
-    ATTR_MANUFACTURER,
-    BRAVIA_CONFIG_FILE,
-    BRAVIA_COORDINATOR,
-    DEFAULT_NAME,
-    DOMAIN,
-)
+from .const import ATTR_MANUFACTURER, BRAVIA_CONFIG_FILE, DEFAULT_NAME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -99,7 +93,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Bravia TV Media Player from a config_entry."""
 
-    coordinator = hass.data[DOMAIN][config_entry.entry_id][BRAVIA_COORDINATOR]
+    coordinator = hass.data[DOMAIN][config_entry.entry_id]
     unique_id = config_entry.unique_id
     device_info = {
         "identifiers": {(DOMAIN, unique_id)},
@@ -122,26 +116,11 @@ class BraviaTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
     def __init__(self, coordinator, name, unique_id, device_info):
         """Initialize the entity."""
 
-        self._name = name
-        self._unique_id = unique_id
-        self._device_info = device_info
+        self._attr_device_info = device_info
+        self._attr_name = name
+        self._attr_unique_id = unique_id
 
         super().__init__(coordinator)
-
-    @property
-    def name(self):
-        """Return the name of the device."""
-        return self._name
-
-    @property
-    def unique_id(self):
-        """Return a unique_id for this entity."""
-        return self._unique_id
-
-    @property
-    def device_info(self):
-        """Return the device info."""
-        return self._device_info
 
     @property
     def state(self):
@@ -163,9 +142,7 @@ class BraviaTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
     @property
     def volume_level(self):
         """Volume level of the media player (0..1)."""
-        if self.coordinator.volume is not None:
-            return self.coordinator.volume / 100
-        return None
+        return self.coordinator.volume_level
 
     @property
     def is_volume_muted(self):
@@ -175,12 +152,7 @@ class BraviaTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
     @property
     def media_title(self):
         """Title of current playing media."""
-        return_value = None
-        if self.coordinator.channel_name is not None:
-            return_value = self.coordinator.channel_name
-            if self.coordinator.program_name is not None:
-                return_value = f"{return_value}: {self.coordinator.program_name}"
-        return return_value
+        return self.coordinator.media_title
 
     @property
     def media_content_id(self):

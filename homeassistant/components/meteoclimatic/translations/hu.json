@@ -1,0 +1,11 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
+            "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
+        },
+        "error": {
+            "not_found": "Nem tal\u00e1lhat\u00f3 eszk\u00f6z a h\u00e1l\u00f3zaton"
+        }
+    }
+}

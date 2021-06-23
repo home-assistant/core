@@ -8,7 +8,6 @@ from aioswitcher.consts import (
     COMMAND_ON,
     STATE_OFF as SWITCHER_STATE_OFF,
     STATE_ON as SWITCHER_STATE_ON,
-    WAITING_TEXT,
 )
 from aioswitcher.devices import SwitcherV2Device
 import voluptuous as vol
@@ -23,7 +22,6 @@ from .const import (
     CONF_AUTO_OFF,
     CONF_TIMER_MINUTES,
     DATA_DEVICE,
-    DEVICE_PROPERTIES_TO_HA_ATTRIBUTES,
     DOMAIN,
     SERVICE_SET_AUTO_OFF_NAME,
     SERVICE_TURN_ON_WITH_TIMER_NAME,
@@ -123,23 +121,6 @@ class SwitcherControl(SwitchEntity):
     def is_on(self) -> bool:
         """Return True if entity is on."""
         return self._state == SWITCHER_STATE_ON
-
-    @property
-    def current_power_w(self) -> int:
-        """Return the current power usage in W."""
-        return self._device_data.power_consumption
-
-    @property
-    def extra_state_attributes(self) -> dict:
-        """Return the optional state attributes."""
-        attribs = {}
-
-        for prop, attr in DEVICE_PROPERTIES_TO_HA_ATTRIBUTES.items():
-            value = getattr(self._device_data, prop)
-            if value and value is not WAITING_TEXT:
-                attribs[attr] = value
-
-        return attribs
 
     @property
     def available(self) -> bool:

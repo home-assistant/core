@@ -12,14 +12,7 @@ from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PIN
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import (
-    BRAVIA_COORDINATOR,
-    CLIENTID_PREFIX,
-    CONF_IGNORED_SOURCES,
-    DOMAIN,
-    NICKNAME,
-    UNDO_UPDATE_LISTENER,
-)
+from .const import CLIENTID_PREFIX, CONF_IGNORED_SOURCES, DOMAIN, NICKNAME
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,15 +28,12 @@ async def async_setup_entry(hass, config_entry):
     ignored_sources = config_entry.options.get(CONF_IGNORED_SOURCES, [])
 
     coordinator = BraviaTVCoordinator(hass, host, mac, pin, ignored_sources)
-    undo_listener = config_entry.add_update_listener(update_listener)
+    config_entry.async_on_unload(config_entry.add_update_listener(update_listener))
 
     await coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][config_entry.entry_id] = {
-        BRAVIA_COORDINATOR: coordinator,
-        UNDO_UPDATE_LISTENER: undo_listener,
-    }
+    hass.data[DOMAIN][config_entry.entry_id] = coordinator
 
     hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
 
@@ -55,8 +45,6 @@ async def async_unload_entry(hass, config_entry):
     unload_ok = await hass.config_entries.async_unload_platforms(
         config_entry, PLATFORMS
     )
-
-    hass.data[DOMAIN][config_entry.entry_id][UNDO_UPDATE_LISTENER]()
 
     if unload_ok:
         hass.data[DOMAIN].pop(config_entry.entry_id)
@@ -83,9 +71,9 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
         self.pin = pin
         self.ignored_sources = ignored_sources
         self.muted = False
-        self.program_name = None
         self.channel_name = None
         self.channel_number = None
+        self.media_title = None
         self.source = None
         self.source_list = []
         self.original_content_list = []
@@ -97,7 +85,7 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
         self.audio_output = None
         self.min_volume = None
         self.max_volume = None
-        self.volume = None
+        self.volume_level = None
         self.is_on = False
         # Assume that the TV is in Play mode
         self.playing = True
@@ -129,8 +117,9 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
         """Refresh volume information."""
         volume_info = self.braviarc.get_volume_info(self.audio_output)
         if volume_info is not None:
+            volume = volume_info.get("volume")
+            self.volume_level = volume / 100 if volume is not None else None
             self.audio_output = volume_info.get("target")
-            self.volume = volume_info.get("volume")
             self.min_volume = volume_info.get("minVolume")
             self.max_volume = volume_info.get("maxVolume")
             self.muted = volume_info.get("mute")
@@ -152,7 +141,7 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
     def _refresh_playing_info(self):
         """Refresh playing information."""
         playing_info = self.braviarc.get_playing_info()
-        self.program_name = playing_info.get("programTitle")
+        program_name = playing_info.get("programTitle")
         self.channel_name = playing_info.get("title")
         self.program_media_type = playing_info.get("programMediaType")
         self.channel_number = playing_info.get("dispNum")
@@ -162,6 +151,12 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
         self.start_date_time = playing_info.get("startDateTime")
         if not playing_info:
             self.channel_name = "App"
+        if self.channel_name is not None:
+            self.media_title = self.channel_name
+            if program_name is not None:
+                self.media_title = f"{self.media_title}: {program_name}"
+        else:
+            self.media_title = None
 
     def _update_tv_data(self):
         """Connect and update TV info."""
