@@ -327,7 +327,7 @@ class XiaomiAirHumidifierMiot(XiaomiAirHumidifier):
             "Setting operation mode of the miio device failed.",
             self._device.set_target_humidity,
             target_humidity,
-            False,
+            refresh=False,
         )
         if (
             self.supported_features & SUPPORT_MODES == 0

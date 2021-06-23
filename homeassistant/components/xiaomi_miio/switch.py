@@ -400,12 +400,12 @@ class XiaomiGenericCoordinatedSwitch(XiaomiCoordinatedMiioEntity, SwitchEntity):
 
         return value
 
-    async def async_turn_on(self) -> None:
+    async def async_turn_on(self, **kwargs) -> None:
         """Turn on an option of the miio device."""
         method = getattr(self, SERVICE_TO_METHOD[self._controller.service]["method_on"])
         await method()
 
-    async def async_turn_off(self) -> None:
+    async def async_turn_off(self, **kwargs) -> None:
         """Turn on an option of the miio device."""
         method = getattr(
             self, SERVICE_TO_METHOD[self._controller.service]["method_off"]

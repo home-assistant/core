@@ -216,21 +216,21 @@ class XiaomiAirHumidifierSelector(XiaomiSelector):
     @property
     def led_brightness(self):
         """Return the current led brightness."""
-        REVERSED_VALUE_MAP = {0: "Bright", 1: "Dim", 2: "Off"}
-        if self._current_option in REVERSED_VALUE_MAP:
-            return REVERSED_VALUE_MAP[self._current_option]
+        reversed_value_map = {0: "Bright", 1: "Dim", 2: "Off"}
+        if self._current_option in reversed_value_map:
+            return reversed_value_map[self._current_option]
         return None
 
     async def async_set_led_brightness(self, brightness: str):
         """Set the led brightness."""
-        VALUE_MAP = {"Bright": 0, "Dim": 1, "Off": 2}
+        value_map = {"Bright": 0, "Dim": 1, "Off": 2}
         if self._device_features & FEATURE_SET_LED_BRIGHTNESS == 0:
             return
 
         await self._try_command(
             "Setting the led brightness of the miio device failed.",
             self._device.set_led_brightness,
-            AirhumidifierLedBrightness(VALUE_MAP[brightness]),
+            AirhumidifierLedBrightness(value_map[brightness]),
         )
 
 
@@ -240,19 +240,19 @@ class XiaomiAirHumidifierMiotSelector(XiaomiAirHumidifierSelector):
     @property
     def led_brightness(self):
         """Return the current led brightness."""
-        REVERSED_VALUE_MAP = {0: "Off", 1: "Dim", 2: "Bright"}
-        if self._current_option in REVERSED_VALUE_MAP:
-            return REVERSED_VALUE_MAP[self._current_option]
+        reversed_value_map = {0: "Off", 1: "Dim", 2: "Bright"}
+        if self._current_option in reversed_value_map:
+            return reversed_value_map[self._current_option]
         return None
 
     async def async_set_led_brightness(self, brightness: str):
         """Set the led brightness."""
-        VALUE_MAP = {"Bright": 2, "Dim": 1, "Off": 0}
+        value_map = {"Bright": 2, "Dim": 1, "Off": 0}
         if self._device_features & FEATURE_SET_LED_BRIGHTNESS == 0:
             return
 
         await self._try_command(
             "Setting the led brightness of the miio device failed.",
             self._device.set_led_brightness,
-            AirhumidifierMiotLedBrightness(VALUE_MAP[brightness]),
+            AirhumidifierMiotLedBrightness(value_map[brightness]),
         )
