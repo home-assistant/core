@@ -26,8 +26,8 @@ from .const import (
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_TRACK_WIRED,
     DEFAULT_TRACK_WIRED_MODE,
+    DHCP_TRACK_MODES,
     DOMAIN,
-    TRACK_WIRED_MODES,
 )
 from .errors import CannotConnect, LoginError
 from .hub import MikrotikHubData, get_api
@@ -168,7 +168,7 @@ class MikrotikOptionsFlowHandler(config_entries.OptionsFlow):
                     default=self.config_entry.options.get(
                         CONF_DHCP_SERVER_TRACK_MODE, DEFAULT_TRACK_WIRED_MODE
                     ),
-                ): vol.In(TRACK_WIRED_MODES),
+                ): vol.In(DHCP_TRACK_MODES),
                 vol.Optional(
                     CONF_DETECTION_TIME,
                     default=self.config_entry.options.get(

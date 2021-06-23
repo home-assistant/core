@@ -18,7 +18,7 @@ CONF_USE_DHCP_SERVER: Final = "force_dhcp"
 CONF_DHCP_SERVER_TRACK_MODE: Final = "dhcp_server_track_mode"
 CONF_DETECTION_TIME: Final = "detection_time"
 
-TRACK_WIRED_MODES: Final = ["DHCP lease", "ARP ping"]
+DHCP_TRACK_MODES: Final = ["DHCP lease", "ARP ping"]
 
 NAME: Final = "name"
 INFO: Final = "info"
