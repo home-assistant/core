@@ -179,7 +179,7 @@ async def get_entities_list(fritzbox_tools, device_friendly_name) -> list:
                                 device_friendly_name,
                                 portmap,
                                 i,
-                                connection_type,
+                                con_type,
                             )
                         )
 
