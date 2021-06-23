@@ -152,12 +152,7 @@ class BraviaTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
     @property
     def media_title(self):
         """Title of current playing media."""
-        return_value = None
-        if self.coordinator.channel_name is not None:
-            return_value = self.coordinator.channel_name
-            if self.coordinator.program_name is not None:
-                return_value = f"{return_value}: {self.coordinator.program_name}"
-        return return_value
+        return self.coordinator.media_title
 
     @property
     def media_content_id(self):
