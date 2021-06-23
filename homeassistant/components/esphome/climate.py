@@ -322,7 +322,7 @@ class EsphomeClimateEntity(EsphomeEntity, ClimateEntity):
         if fan_mode in self._static_info.supported_custom_fan_modes:
             kwargs["custom_fan_mode"] = fan_mode
         else:
-            kwargs["fan_mode"] = _PRESETS.from_hass(fan_mode)
+            kwargs["fan_mode"] = _FAN_MODES.from_hass(fan_mode)
         await self._client.climate_command(key=self._static_info.key, **kwargs)
 
     async def async_set_swing_mode(self, swing_mode: str) -> None:
