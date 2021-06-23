@@ -94,6 +94,7 @@ class MqttNumber(MqttEntity, NumberEntity, RestoreEntity):
     def __init__(self, config, config_entry, discovery_data):
         """Initialize the MQTT Number."""
         self._config = config
+        self._optimistic = False
         self._sub_state = None
 
         self._current_number = None
