@@ -87,13 +87,13 @@ async def async_setup_entity_template(
     hass, config, async_add_entities, config_entry, discovery_data
 ):
     """Set up a MQTT Template light."""
-    async_add_entities([MqttLightTemplate(config, config_entry, discovery_data)])
+    async_add_entities([MqttLightTemplate(hass, config, config_entry, discovery_data)])
 
 
 class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
     """Representation of a MQTT Template light."""
 
-    def __init__(self, config, config_entry, discovery_data):
+    def __init__(self, hass, config, config_entry, discovery_data):
         """Initialize a MQTT Template light."""
         self._state = False
 
@@ -108,7 +108,7 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
         self._hs = None
         self._effect = None
 
-        MqttEntity.__init__(self, None, config, config_entry, discovery_data)
+        MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
     @staticmethod
     def config_schema():
