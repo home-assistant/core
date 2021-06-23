@@ -236,6 +236,11 @@ class NmapDeviceScanner:
                 for signal, ipv4 in dispatches:
                     async_dispatcher_send(self._hass, signal, ipv4)
 
+        _LOGGER.warning(
+            "finished scan: %s -- all scans: %s",
+            self._entry.entry_id,
+            self.devices.entries_finished_first_scan,
+        )
         self.devices.entries_finished_first_scan[self._entry.entry_id] = True
         if not self.devices.finished_first_scan and all(
             self.devices.entries_finished_first_scan.values()
@@ -244,6 +249,7 @@ class NmapDeviceScanner:
             # scan we mark devices that were not found as not_home
             # from unavailable
             self.devices.finished_first_scan = True
+            _LOGGER.warning("firing finished first scan all")
             async_dispatcher_send(self._hass, ALL_FINISHED_FIRST_SCAN)
 
     def _run_nmap_scan(self):
