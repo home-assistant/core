@@ -246,12 +246,24 @@ class NmapDeviceScanner:
         # scan we mark devices that were not found as not_home
         # from unavailable
         registry = er.async_get(self._hass)
+        now = dt_util.now()
         for entry in registry.entities.values():
             _LOGGER.warning("checking %s", entry)
             if entry.config_entry_id != self._entry_id:
                 continue
             _LOGGER.warning("checking unique id of %s : %s", entry, entry.unique_id)
             if entry.unique_id not in self.devices.tracked:
+                self.devices.tracked[entry.unique_id] = NmapDevice(
+                    entry.unique_id,
+                    entry.name,
+                    None,
+                    self._get_vendor(
+                        self._mac_vendor_lookup.sanitise(entry.unique_id)[:6]
+                    ),
+                    "Device not found in initial scan",
+                    now,
+                    0,
+                )
                 async_dispatcher_send(
                     self._hass, self.signal_device_new, entry.unique_id
                 )
