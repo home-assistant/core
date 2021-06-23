@@ -257,7 +257,7 @@ class NmapDeviceScanner:
                 self.devices.config_entry_owner[entry.unique_id] = self._entry_id
                 self.devices.tracked[entry.unique_id] = NmapDevice(
                     entry.unique_id,
-                    entry.name,
+                    entry.original_name,
                     None,
                     self._async_get_vendor(entry.unique_id),
                     "Device not found in initial scan",
