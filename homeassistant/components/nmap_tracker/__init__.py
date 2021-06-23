@@ -2,11 +2,12 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from functools import lru_cache
 import logging
 
+import aiohttp
 from getmac import get_mac_address
 from mac_vendor_lookup import AsyncMacLookup
 from nmap import PortScanner, PortScannerError
@@ -67,7 +68,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     domain_data = hass.data.setdefault(DOMAIN, {})
     devices = domain_data.setdefault(NMAP_TRACKED_DEVICES, NmapTrackedDevices())
     scanner = domain_data[entry.entry_id] = NmapDeviceScanner(hass, entry, devices)
-    scanner.async_setup()
+    await scanner.async_setup()
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
     return True
@@ -136,8 +137,7 @@ class NmapDeviceScanner:
         self._last_results = []
         self._mac_vendor_lookup = None
 
-    @callback
-    def async_setup(self):
+    async def async_setup(self):
         """Set up the tracker."""
         config = self._entry.options
         self._hosts = cv.ensure_list_csv(config[CONF_HOSTS])
@@ -148,7 +148,7 @@ class NmapDeviceScanner:
         )
         self._scan_lock = asyncio.Lock()
         if self._hass.state == CoreState.running:
-            self._async_start_scanner()
+            await self._async_start_scanner()
             return
 
         self._entry.async_on_unload(
@@ -162,21 +162,18 @@ class NmapDeviceScanner:
         """Signal specific per nmap tracker entry to signal new device."""
         return f"{DOMAIN}-device-new-{self._entry_id}"
 
-    @lru_cache(maxsize=4096)
-    async def _async_get_vendor(self, oui):
+    @callback
+    def _async_get_vendor(self, mac_address):
         """Lookup the vendor."""
-        try:
-            return await self._mac_vendor_lookup.lookup(oui)
-        except KeyError:
-            return None
+        oui = self._mac_vendor_lookup.sanitise(mac_address)[:6]
+        return self._mac_vendor_lookup.prefixes.get(oui)
 
     @callback
     def _async_stop(self):
         """Stop the scanner."""
         self._stopping = True
 
-    @callback
-    def _async_start_scanner(self, *_):
+    async def _async_start_scanner(self, *_):
         """Start the scanner."""
         self._entry.async_on_unload(self._async_stop)
         self._entry.async_on_unload(
@@ -186,6 +183,11 @@ class NmapDeviceScanner:
                 timedelta(seconds=TRACKER_SCAN_INTERVAL),
             )
         )
+        self._mac_vendor_lookup = AsyncMacLookup()
+        with contextlib.suppress((asyncio.TimeoutError, aiohttp.ClientError)):
+            # We don't care of this fails since its only
+            # improves the data when we don't have it from nmap
+            await self._mac_vendor_lookup.load_vendors()
         self._hass.async_create_task(self._async_scan_devices())
 
     def _build_options(self):
@@ -252,9 +254,7 @@ class NmapDeviceScanner:
                     entry.unique_id,
                     entry.name,
                     None,
-                    await self._async_get_vendor(
-                        self._mac_vendor_lookup.sanitise(entry.unique_id)[:6]
-                    ),
+                    self._async_get_vendor(entry.unique_id),
                     "Device not found in initial scan",
                     now,
                     0,
@@ -340,11 +340,7 @@ class NmapDeviceScanner:
             ):
                 continue
 
-            vendor = info.get("vendor", {}).get(mac)
-            if not vendor:
-                vendor = await self._async_get_vendor(
-                    self._mac_vendor_lookup.sanitise(mac)[:6]
-                )
+            vendor = info.get("vendor", {}).get(mac) or self._async_get_vendor(mac)
             device = NmapDevice(formatted_mac, name, ipv4, vendor, reason, now, 0)
             new = formatted_mac not in devices.tracked
 
