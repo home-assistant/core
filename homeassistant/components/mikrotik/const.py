@@ -15,6 +15,7 @@ ATTR_FIRMWARE: Final = "current-firmware"
 ATTR_MODEL: Final = "model"
 
 CONF_USE_DHCP_SERVER: Final = "force_dhcp"
+CONF_ARP_PING: Final = "arp_ping"
 CONF_DHCP_SERVER_TRACK_MODE: Final = "dhcp_server_track_mode"
 CONF_DETECTION_TIME: Final = "detection_time"
 

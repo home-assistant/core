@@ -18,6 +18,7 @@ from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 
 from .const import (
+    CONF_ARP_PING,
     CONF_DETECTION_TIME,
     CONF_DHCP_SERVER_TRACK_MODE,
     CONF_USE_DHCP_SERVER,
@@ -142,6 +143,10 @@ class MikrotikOptionsFlowHandler(config_entries.OptionsFlow):
     ) -> FlowResult:
         """Manage the device tracker options."""
         if user_input is not None:
+            # for downgrade compatibility
+            user_input[CONF_ARP_PING] = (
+                user_input[CONF_DHCP_SERVER_TRACK_MODE] == "ARP ping"
+            )
             return self.async_create_entry(title="", data=user_input)
 
         options = {}
