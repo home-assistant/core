@@ -150,7 +150,7 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
         if self.channel_name is not None:
             self.media_title = self.channel_name
             if program_name is not None:
-                self.media_title = f"{self.media_title}: {self.program_name}"
+                self.media_title = f"{self.media_title}: {program_name}"
         else:
             self.media_title = None
 
