@@ -246,7 +246,7 @@ class FritzBoxPortSwitch(FritzBoxBaseSwitch, SwitchEntity):
 
         self._attributes = {}
         self.connection_type = connection_type
-        self.port_mapping: dict = port_mapping  # dict in the format as it comes from fritzconnection. eg: {'NewRemoteHost': '0.0.0.0', 'NewExternalPort': 22, 'NewProtocol': 'TCP', 'NewInternalPort': 22, 'NewInternalClient': '192.168.178.31', 'NewEnabled': True, 'NewPortMappingDescription': 'Beast SSH ', 'NewLeaseDuration': 0}
+        self.port_mapping: dict | None = port_mapping  # dict in the format as it comes from fritzconnection. eg: {'NewRemoteHost': '0.0.0.0', 'NewExternalPort': 22, 'NewProtocol': 'TCP', 'NewInternalPort': 22, 'NewInternalClient': '192.168.178.31', 'NewEnabled': True, 'NewPortMappingDescription': 'Beast SSH ', 'NewLeaseDuration': 0}
         self._idx = idx  # needed for update routine
 
         switch_info = SwitchInfo(
@@ -259,7 +259,7 @@ class FritzBoxPortSwitch(FritzBoxBaseSwitch, SwitchEntity):
         )
         super().__init__(fritzbox_tools, switch_info)
 
-    async def _async_fetch_update(self):
+    async def _async_fetch_update(self) -> None:
         """Fetch updates."""
 
         self.port_mapping = await service_call_action(
@@ -272,6 +272,10 @@ class FritzBoxPortSwitch(FritzBoxBaseSwitch, SwitchEntity):
         _LOGGER.debug(
             "Specific %s response: %s", SWITCH_TYPE_PORTFORWARD, self.port_mapping
         )
+        if self.port_mapping is None:
+            self._is_available = False
+            return
+
         self._attr_is_on = self.port_mapping["NewEnabled"] is True
         self._is_available = True
 
@@ -287,6 +291,9 @@ class FritzBoxPortSwitch(FritzBoxBaseSwitch, SwitchEntity):
             self._attributes[attributes_dict[key]] = self.port_mapping[key]
 
     async def _async_handle_port_switch_on_off(self, turn_on: bool) -> bool:
+
+        if self.port_mapping is None:
+            return False
 
         self.port_mapping["NewEnabled"] = "1" if turn_on else "0"
 
