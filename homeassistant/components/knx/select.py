@@ -35,11 +35,9 @@ async def async_setup_platform(
     platform_config = discovery_info["platform_config"]
     xknx: XKNX = hass.data[DOMAIN].xknx
 
-    entities = []
-    for entity_config in platform_config:
-        entities.append(KNXSelect(xknx, entity_config))
-
-    async_add_entities(entities)
+    async_add_entities(
+        KNXSelect(xknx, entity_config) for entity_config in platform_config
+    )
 
 
 def _create_raw_value(xknx: XKNX, config: ConfigType) -> RawValue:
