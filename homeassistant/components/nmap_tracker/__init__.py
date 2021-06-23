@@ -308,9 +308,6 @@ class NmapDeviceScanner:
 
     async def _async_run_nmap_scan(self):
         """Scan the network for devices and dispatch events."""
-        if not self._mac_vendor_lookup:
-            self._mac_vendor_lookup = AsyncMacLookup()
-
         result = await self._hass.async_add_executor_job(self._run_nmap_scan)
         if self._stopping:
             return
