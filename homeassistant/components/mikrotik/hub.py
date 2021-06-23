@@ -37,9 +37,9 @@ from .const import (
     CONF_DHCP_SERVER_TRACK_MODE,
     CONF_USE_DHCP_SERVER,
     DEFAULT_DETECTION_TIME,
+    DEFAULT_DHCP_SERVER_TRACK_MODE,
     DEFAULT_SCAN_INTERVAL,
-    DEFAULT_TRACK_WIRED,
-    DEFAULT_TRACK_WIRED_MODE,
+    DEFAULT_USE_DHCP_SERVER,
     DHCP,
     DOMAIN,
     IDENTITY,
@@ -84,7 +84,7 @@ class MikrotikHubData:
         """Return DHCP server tracking option."""
         if self.support_capsman or self.support_wireless:
             return self.config_entry.options.get(
-                CONF_USE_DHCP_SERVER, DEFAULT_TRACK_WIRED
+                CONF_USE_DHCP_SERVER, DEFAULT_USE_DHCP_SERVER
             )
         return True
 
@@ -92,7 +92,7 @@ class MikrotikHubData:
     def dhcp_server_track_mode(self) -> str:
         """Return tracking mode when using DHCP server."""
         return self.config_entry.options.get(
-            CONF_DHCP_SERVER_TRACK_MODE, DEFAULT_TRACK_WIRED_MODE
+            CONF_DHCP_SERVER_TRACK_MODE, DEFAULT_DHCP_SERVER_TRACK_MODE
         )
 
     @staticmethod

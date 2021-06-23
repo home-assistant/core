@@ -24,9 +24,9 @@ from .const import (
     CONF_USE_DHCP_SERVER,
     DEFAULT_API_PORT,
     DEFAULT_DETECTION_TIME,
+    DEFAULT_DHCP_SERVER_TRACK_MODE,
     DEFAULT_SCAN_INTERVAL,
-    DEFAULT_TRACK_WIRED,
-    DEFAULT_TRACK_WIRED_MODE,
+    DEFAULT_USE_DHCP_SERVER,
     DHCP_TRACK_MODES,
     DOMAIN,
 )
@@ -160,7 +160,7 @@ class MikrotikOptionsFlowHandler(config_entries.OptionsFlow):
                     vol.Optional(
                         CONF_USE_DHCP_SERVER,
                         default=self.config_entry.options.get(
-                            CONF_USE_DHCP_SERVER, DEFAULT_TRACK_WIRED
+                            CONF_USE_DHCP_SERVER, DEFAULT_USE_DHCP_SERVER
                         ),
                     ): bool,
                 }
@@ -171,7 +171,7 @@ class MikrotikOptionsFlowHandler(config_entries.OptionsFlow):
                 vol.Optional(
                     CONF_DHCP_SERVER_TRACK_MODE,
                     default=self.config_entry.options.get(
-                        CONF_DHCP_SERVER_TRACK_MODE, DEFAULT_TRACK_WIRED_MODE
+                        CONF_DHCP_SERVER_TRACK_MODE, DEFAULT_DHCP_SERVER_TRACK_MODE
                     ),
                 ): vol.In(DHCP_TRACK_MODES),
                 vol.Optional(
