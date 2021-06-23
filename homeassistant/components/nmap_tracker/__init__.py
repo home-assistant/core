@@ -32,7 +32,7 @@ from .const import (
 
 # Some version of nmap will fail with 'Assertion failed: htn.toclock_running == true (Target.cc: stopTimeOutClock: 503)\n'
 NMAP_TRANSIENT_FAILURE = "Assertion failed: htn.toclock_running == true"
-MAX_SCAN_ATTEMPTS = 10
+MAX_SCAN_ATTEMPTS = 16
 OFFLINE_SCANS_TO_MARK_UNAVAILABLE = 3
 
 
