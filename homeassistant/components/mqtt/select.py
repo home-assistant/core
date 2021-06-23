@@ -84,6 +84,7 @@ class MqttSelect(MqttEntity, SelectEntity, RestoreEntity):
     def __init__(self, hass, config, config_entry, discovery_data):
         """Initialize the MQTT select."""
         self._config = config
+        self._optimistic = False
         self._sub_state = None
 
         self._attr_current_option = None
