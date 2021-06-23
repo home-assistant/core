@@ -114,7 +114,7 @@ async def _async_build_schema_with_user_input(hass, user_input):
 class OptionsFlowHandler(config_entries.OptionsFlow):
     """Handle a option flow for homekit."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry):
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize options flow."""
         self.options = dict(config_entry.options)
 
