@@ -67,7 +67,7 @@ CONF_VIA_DEVICE = "via_device"
 CONF_DEPRECATED_VIA_HUB = "via_hub"
 CONF_SUGGESTED_AREA = "suggested_area"
 
-MQTT_ATTRIBUTES_BANNED = [
+MQTT_ATTRIBUTES_BANNED = {
     "assumed_state",
     "available",
     "context_recent_time",
@@ -84,7 +84,7 @@ MQTT_ATTRIBUTES_BANNED = [
     "supported_features",
     "unique_id",
     "unit_of_measurement",
-]
+}
 
 MQTT_AVAILABILITY_SINGLE_SCHEMA = vol.Schema(
     {
