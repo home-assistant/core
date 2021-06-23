@@ -1,0 +1,7 @@
+{
+  "domain": "ais_tts_local",
+  "name": "AIS TTS Local",
+  "documentation": "https://ai-speaker.com",
+  "codeowners": [],
+  "iot_class": "local_push"
+}
