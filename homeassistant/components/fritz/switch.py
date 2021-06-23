@@ -195,7 +195,7 @@ async def get_entities_list(fritzbox_tools, device_friendly_name) -> list:
     _LOGGER.debug("Setting up %s switches", SWITCH_TYPE_WIFINETWORK)
 
     std_table = {"ac": "5Ghz", "n": "2.4Ghz"}
-    networks = {}
+    networks: dict = {}
     for i in range(4):
         if ("WLANConfiguration" + str(i)) in fritzbox_tools.connection.services:
             network_info = await service_call_action(
@@ -203,7 +203,7 @@ async def get_entities_list(fritzbox_tools, device_friendly_name) -> list:
             )
             if network_info:
                 ssid = network_info["NewSSID"]
-                if ssid in networks:
+                if ssid in networks.values():
                     networks[i] = f'{ssid} {std_table[network_info["NewStandard"]]}'
                 else:
                     networks[i] = ssid
