@@ -238,9 +238,7 @@ async def test_async_step_discovery(
 
 async def test_options_flow(hass):
     """Test updating options."""
-    with patch(
-        "homeassistant.components.ezviz.PLATFORMS", []
-    ), _patch_async_setup_entry() as mock_setup_entry:
+    with _patch_async_setup_entry() as mock_setup_entry:
         entry = await init_integration(hass)
 
         assert entry.options[CONF_FFMPEG_ARGUMENTS] == DEFAULT_FFMPEG_ARGUMENTS
