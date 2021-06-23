@@ -178,6 +178,8 @@ async def async_get_condition_capabilities(
         elif (
             config_value.configuration_value_type == ConfigurationValueType.MANUAL_ENTRY
         ):
+            # If there are named states, we'll generate a list of numbers so that we can
+            # include the named states, otherwise we'll generate a range.
             value_schema = (
                 vol.In(
                     {
