@@ -340,9 +340,11 @@ class NmapDeviceScanner:
             ):
                 continue
 
-            vendor = info.get("vendor", {}).get(mac) or await self._async_get_vendor(
-                self._mac_vendor_lookup.sanitise(mac)[:6]
-            )
+            vendor = info.get("vendor", {}).get(mac)
+            if not vendor:
+                vendor = await self._async_get_vendor(
+                    self._mac_vendor_lookup.sanitise(mac)[:6]
+                )
             device = NmapDevice(formatted_mac, name, ipv4, vendor, reason, now, 0)
             new = formatted_mac not in devices.tracked
 
