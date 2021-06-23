@@ -2,13 +2,14 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from functools import lru_cache
 import logging
 
+import aiohttp
 from getmac import get_mac_address
-from mac_vendor_lookup import MacLookup
+from mac_vendor_lookup import AsyncMacLookup
 from nmap import PortScanner, PortScannerError
 
 from homeassistant.config_entries import ConfigEntry
@@ -66,9 +67,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Nmap Tracker from a config entry."""
     domain_data = hass.data.setdefault(DOMAIN, {})
     devices = domain_data.setdefault(NMAP_TRACKED_DEVICES, NmapTrackedDevices())
-    devices.entries_finished_first_scan[entry.entry_id] = False
     scanner = domain_data[entry.entry_id] = NmapDeviceScanner(hass, entry, devices)
-    scanner.async_setup()
+    await scanner.async_setup()
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
     return True
@@ -137,8 +137,7 @@ class NmapDeviceScanner:
         self._last_results = []
         self._mac_vendor_lookup = None
 
-    @callback
-    def async_setup(self):
+    async def async_setup(self):
         """Set up the tracker."""
         config = self._entry.options
         self._hosts = cv.ensure_list_csv(config[CONF_HOSTS])
@@ -149,7 +148,7 @@ class NmapDeviceScanner:
         )
         self._scan_lock = asyncio.Lock()
         if self._hass.state == CoreState.running:
-            self._async_start_scanner()
+            await self._async_start_scanner()
             return
 
         self._entry.async_on_unload(
@@ -163,21 +162,23 @@ class NmapDeviceScanner:
         """Signal specific per nmap tracker entry to signal new device."""
         return f"{DOMAIN}-device-new-{self._entry_id}"
 
-    @lru_cache(maxsize=4096)
-    def _get_vendor(self, oui):
+    @property
+    def signal_device_missing(self) -> str:
+        """Signal specific per nmap tracker entry to signal a missing device."""
+        return f"{DOMAIN}-device-missing-{self._entry_id}"
+
+    @callback
+    def _async_get_vendor(self, mac_address):
         """Lookup the vendor."""
-        try:
-            return self._mac_vendor_lookup.lookup(oui)
-        except KeyError:
-            return None
+        oui = self._mac_vendor_lookup.sanitise(mac_address)[:6]
+        return self._mac_vendor_lookup.prefixes.get(oui)
 
     @callback
     def _async_stop(self):
         """Stop the scanner."""
         self._stopping = True
 
-    @callback
-    def _async_start_scanner(self, *_):
+    async def _async_start_scanner(self, *_):
         """Start the scanner."""
         self._entry.async_on_unload(self._async_stop)
         self._entry.async_on_unload(
@@ -187,6 +188,11 @@ class NmapDeviceScanner:
                 timedelta(seconds=TRACKER_SCAN_INTERVAL),
             )
         )
+        self._mac_vendor_lookup = AsyncMacLookup()
+        with contextlib.suppress((asyncio.TimeoutError, aiohttp.ClientError)):
+            # We don't care of this fails since its only
+            # improves the data when we don't have it from nmap
+            await self._mac_vendor_lookup.load_vendors()
         self._hass.async_create_task(self._async_scan_devices())
 
     def _build_options(self):
@@ -226,38 +232,41 @@ class NmapDeviceScanner:
 
         async with self._scan_lock:
             try:
-                dispatches = await self._hass.async_add_executor_job(
-                    self._start_nmap_scan
-                )
+                await self._async_run_nmap_scan()
             except PortScannerError as ex:
                 _LOGGER.error("Nmap scanning failed: %s", ex)
-            else:
-                for signal, formatted_mac in dispatches:
-                    async_dispatcher_send(self._hass, signal, formatted_mac)
 
         if not self._finished_first_scan:
             self._finished_first_scan = True
-            self._mark_missing_devices_as_not_home()
+            await self._async_mark_missing_devices_as_not_home()
 
-    @callback
-    def _async_mark_missing_devices_as_not_home(self):
+    async def _async_mark_missing_devices_as_not_home(self):
         # After all config entries have finished their first
         # scan we mark devices that were not found as not_home
         # from unavailable
         registry = er.async_get(self._hass)
-        for entity in registry.entities:
-            if entity.config_entry.entry_id != self._entry_id:
+        now = dt_util.now()
+        for entry in registry.entities.values():
+            if entry.config_entry_id != self._entry_id:
                 continue
-            if entity.unique_id not in self.devices.tracked:
+            if entry.unique_id not in self.devices.tracked:
+                self.devices.config_entry_owner[entry.unique_id] = self._entry_id
+                self.devices.tracked[entry.unique_id] = NmapDevice(
+                    entry.unique_id,
+                    entry.original_name,
+                    None,
+                    self._async_get_vendor(entry.unique_id),
+                    "Device not found in initial scan",
+                    now,
+                    1,
+                )
                 async_dispatcher_send(
-                    self._hass, self.signal_device_new, entity.unique_id
+                    self._hass, self.signal_device_missing, entry.unique_id
                 )
 
     def _run_nmap_scan(self):
         """Run nmap and return the result."""
         options = self._build_options()
-        if not self._mac_vendor_lookup:
-            self._mac_vendor_lookup = MacLookup()
         if not self._scanner:
             self._scanner = PortScanner()
         _LOGGER.debug("Scanning %s with args: %s", self._hosts, options)
@@ -283,7 +292,8 @@ class NmapDeviceScanner:
         )
         return result
 
-    def _increment_device_offline(self, ipv4, reason, dispatches):
+    @callback
+    def _async_increment_device_offline(self, ipv4, reason):
         """Mark an IP offline."""
         if not (formatted_mac := self.devices.ipv4_last_mac.get(ipv4)):
             return
@@ -294,19 +304,15 @@ class NmapDeviceScanner:
         if device.offline_scans < OFFLINE_SCANS_TO_MARK_UNAVAILABLE:
             return
         device.reason = reason
-        dispatches.append((signal_device_update(formatted_mac), False))
+        async_dispatcher_send(self._hass, signal_device_update(formatted_mac), False)
         del self.devices.ipv4_last_mac[ipv4]
 
-    def _start_nmap_scan(self):
-        """Scan the network for devices.
-
-        Returns dispatches to callback if scanning successful.
-        """
-        result = self._run_nmap_scan()
+    async def _async_run_nmap_scan(self):
+        """Scan the network for devices and dispatch events."""
+        result = await self._hass.async_add_executor_job(self._run_nmap_scan)
         if self._stopping:
-            return []
+            return
 
-        dispatches = []
         devices = self.devices
         entry_id = self._entry_id
         now = dt_util.now()
@@ -314,12 +320,12 @@ class NmapDeviceScanner:
             status = info["status"]
             reason = status["reason"]
             if status["state"] != "up":
-                self._increment_device_offline(ipv4, reason, dispatches)
+                self._async_increment_device_offline(ipv4, reason)
                 continue
             # Mac address only returned if nmap ran as root
             mac = info["addresses"].get("mac") or get_mac_address(ip=ipv4)
             if mac is None:
-                self._increment_device_offline(ipv4, "No MAC address found", dispatches)
+                self._async_increment_device_offline(ipv4, "No MAC address found")
                 _LOGGER.info("No MAC address found for %s", ipv4)
                 continue
 
@@ -332,16 +338,17 @@ class NmapDeviceScanner:
             ):
                 continue
 
-            vendor = info.get("vendor", {}).get(mac) or self._get_vendor(
-                self._mac_vendor_lookup.sanitise(mac)[:6]
-            )
+            vendor = info.get("vendor", {}).get(mac) or self._async_get_vendor(mac)
             device = NmapDevice(formatted_mac, name, ipv4, vendor, reason, now, 0)
-            if formatted_mac not in devices.tracked:
-                dispatches.append((self.signal_device_new, formatted_mac))
-            dispatches.append((signal_device_update(formatted_mac), True))
+            new = formatted_mac not in devices.tracked
 
             devices.tracked[formatted_mac] = device
             devices.ipv4_last_mac[ipv4] = formatted_mac
             self._last_results.append(device)
 
-        return dispatches
+            if new:
+                async_dispatcher_send(self._hass, self.signal_device_new, formatted_mac)
+            else:
+                async_dispatcher_send(
+                    self._hass, signal_device_update(formatted_mac), True
+                )
