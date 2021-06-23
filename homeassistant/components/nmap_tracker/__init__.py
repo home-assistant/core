@@ -14,6 +14,7 @@ from nmap import PortScanner, PortScannerError
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EXCLUDE, CONF_HOSTS, EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import CoreState, HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -21,7 +22,6 @@ from homeassistant.helpers.event import async_track_time_interval
 import homeassistant.util.dt as dt_util
 
 from .const import (
-    ALL_FINISHED_FIRST_SCAN,
     CONF_HOME_INTERVAL,
     CONF_OPTIONS,
     DOMAIN,
@@ -57,8 +57,6 @@ class NmapTrackedDevices:
         self.tracked: dict = {}
         self.ipv4_last_mac: dict = {}
         self.config_entry_owner: dict = {}
-        self.entries_finished_first_scan: dict[str, bool] = {}
-        self.finished_first_scan = False
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -135,6 +133,7 @@ class NmapDeviceScanner:
         self._options = None
         self._exclude = None
 
+        self._finished_first_scan = False
         self._last_results = []
         self._mac_vendor_lookup = None
 
@@ -233,18 +232,25 @@ class NmapDeviceScanner:
             except PortScannerError as ex:
                 _LOGGER.error("Nmap scanning failed: %s", ex)
             else:
-                for signal, ipv4 in dispatches:
-                    async_dispatcher_send(self._hass, signal, ipv4)
+                for signal, formatted_mac in dispatches:
+                    async_dispatcher_send(self._hass, signal, formatted_mac)
 
-        self.devices.entries_finished_first_scan[self._entry.entry_id] = True
-        if not self.devices.finished_first_scan and all(
-            self.devices.entries_finished_first_scan.values()
-        ):
-            # After all config entries have finished their first
-            # scan we mark devices that were not found as not_home
-            # from unavailable
-            self.devices.finished_first_scan = True
-            async_dispatcher_send(self._hass, ALL_FINISHED_FIRST_SCAN)
+        if not self._finished_first_scan:
+            self._finished_first_scan = True
+            await self._mark_missing_devices_as_not_home()
+
+    async def _mark_missing_devices_as_not_home(self):
+        # After all config entries have finished their first
+        # scan we mark devices that were not found as not_home
+        # from unavailable
+        registry = er.async_get(self._hass)
+        for entity in registry.entities:
+            if entity.config_entry.entry_id != self._entry_id:
+                continue
+            if entity.unique_id not in self.devices.tracked:
+                async_dispatcher_send(
+                    self._hass, self.signal_device_new, entity.unique_id
+                )
 
     def _run_nmap_scan(self):
         """Run nmap and return the result."""

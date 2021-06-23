@@ -19,13 +19,7 @@ from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import NmapDeviceScanner, signal_device_update
-from .const import (
-    ALL_FINISHED_FIRST_SCAN,
-    CONF_HOME_INTERVAL,
-    CONF_OPTIONS,
-    DEFAULT_OPTIONS,
-    DOMAIN,
-)
+from .const import CONF_HOME_INTERVAL, CONF_OPTIONS, DEFAULT_OPTIONS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -179,13 +173,6 @@ class NmapTrackerEntity(ScannerEntity):
         self.async_process_update(online)
         self.async_write_ha_state()
 
-    @callback
-    def _async_first_scan_complete(self, *_) -> None:
-        """Any entity that is missing after the first scan should be marked as non_home instead of unavailable."""
-        if not self._had_any_update:
-            self._had_any_update = True
-            self.async_write_ha_state()
-
     async def async_added_to_hass(self):
         """Register state update callback."""
         self.async_process_update(True)
@@ -194,14 +181,5 @@ class NmapTrackerEntity(ScannerEntity):
                 self.hass,
                 signal_device_update(self._mac_address),
                 self.async_on_demand_update,
-            )
-        )
-        # Mark devices as not home once all config entries
-        # have finished the first scan
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                ALL_FINISHED_FIRST_SCAN,
-                self._async_first_scan_complete,
             )
         )
