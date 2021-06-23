@@ -21,6 +21,7 @@ from homeassistant.components import persistent_notification
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_EXCLUDE,
+    CONF_INCLUDE,
     EVENT_HOMEASSISTANT_FINAL_WRITE,
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
@@ -218,7 +219,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the recorder."""
     hass.data[DOMAIN] = {}
     conf = config[DOMAIN]
-    entity_filter = convert_include_exclude_filter(conf)
+    # entity_filter = convert_include_exclude_filter(conf)
     auto_purge = conf[CONF_AUTO_PURGE]
     keep_days = conf[CONF_PURGE_KEEP_DAYS]
     # commit_interval = conf[CONF_COMMIT_INTERVAL]
@@ -239,12 +240,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         if ais_global.G_DB_SETTINGS_INFO is None:
             with open(
-                hass.config.config_dir + ais_global.G_DB_SETTINGS_INFO_FILE
+                    hass.config.config_dir + ais_global.G_DB_SETTINGS_INFO_FILE
             ) as json_file:
                 ais_global.G_DB_SETTINGS_INFO = json.load(json_file)
         db_url = ais_global.G_DB_SETTINGS_INFO["dbUrl"]
         if db_url == "sqlite:///:memory:":
-            keep_days = 2
+            keep_days = 5
         else:
             if db_url.startswith("sqlite://///"):
                 # DB in file
@@ -256,19 +257,42 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     )
                     # enable recorder in memory
                     db_url = "sqlite:///:memory:"
-                    keep_days = 1
+                    keep_days = 5
                 else:
                     keep_days = 10
                     if "dbKeepDays" in ais_global.G_DB_SETTINGS_INFO:
                         keep_days = int(ais_global.G_DB_SETTINGS_INFO["dbKeepDays"])
+        db_include = ais_global.G_DB_SETTINGS_INFO.get("dbInclude", {})
+        db_exclude = ais_global.G_DB_SETTINGS_INFO.get("dbExclude", {})
+
     except Exception as e:
         # enable recorder in memory
         _LOGGER.error(
             "Get recorder config from file error, enable recorder in memory " + str(e)
         )
         db_url = "sqlite:///:memory:"
-        keep_days = 1
+        keep_days = 5
+        db_include = ais_global.G_AIS_INCLUDE_DB_DEFAULT
+        db_exclude = ais_global.G_AIS_EXCLUDE_DB_DEFAULT
+
+    # ais exclude
+    exclude = ais_global.G_AIS_EXCLUDE_DB_DEFAULT
+    include = {"domains": [], "entity_globs": [], "entities": []}
+    if db_include != {}:
+        include[ATTR_DOMAINS].extend(db_include.get(ATTR_DOMAINS, {}))
+        include[ATTR_ENTITY_GLOBS].extend(db_include.get(ATTR_ENTITY_GLOBS, {}))
+        include["entities"].extend(db_include.get("entities", {}))
+    if db_exclude != {}:
+        exclude[ATTR_DOMAINS].extend(db_exclude.get(ATTR_DOMAINS, {}))
+        exclude[ATTR_ENTITY_GLOBS].extend(db_exclude.get(ATTR_ENTITY_GLOBS, {}))
+        exclude["entities"].extend(db_exclude.get("entities", {}))
+
+    conf[CONF_EXCLUDE] = exclude
+    conf[CONF_INCLUDE] = include
+    entity_filter = convert_include_exclude_filter(conf)
+
     exclude = conf[CONF_EXCLUDE]
+
     exclude_t = exclude.get(CONF_EVENT_TYPES, [])
     instance = hass.data[DATA_INSTANCE] = Recorder(
         hass=hass,
@@ -376,16 +400,16 @@ class Recorder(threading.Thread):
     """A threaded recorder class."""
 
     def __init__(
-        self,
-        hass: HomeAssistant,
-        auto_purge: bool,
-        keep_days: int,
-        commit_interval: int,
-        uri: str,
-        db_max_retries: int,
-        db_retry_wait: int,
-        entity_filter: Callable[[str], bool],
-        exclude_t: list[str],
+            self,
+            hass: HomeAssistant,
+            auto_purge: bool,
+            keep_days: int,
+            commit_interval: int,
+            uri: str,
+            db_max_retries: int,
+            db_retry_wait: int,
+            entity_filter: Callable[[str], bool],
+            exclude_t: list[str],
     ) -> None:
         """Initialize the recorder."""
         threading.Thread.__init__(self, name="Recorder")

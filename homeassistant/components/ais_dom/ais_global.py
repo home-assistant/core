@@ -113,6 +113,7 @@ G_AIS_HOME_DIR = "/data/data/pl.sviete.dom/files/home"
 G_REMOTE_DRIVES_DOM_PATH = "/data/data/pl.sviete.dom/files/home/dom/dyski-wymienne"
 G_LOG_SETTINGS_INFO = None
 G_DB_SETTINGS_INFO = None
+G_USB_SETTINGS_INFO = {"usbAutoStartServices": True, "usbVoiceNotification": True}
 
 #
 G_AIS_DOM_PIN = ""
@@ -130,6 +131,118 @@ G_AIS_MQTT_CONFIG_INCLUDE_DIR_PATH = G_AIS_MQTT_CONFIG_DIR_PATH + "/mqtt_conf.d"
 G_AIS_SUPLA_MQTT_CONFIG_FILE_NAME = "supla.conf"
 
 G_AUTOMATION_CONFIG = None
+
+# DB
+G_AIS_INCLUDE_DB_DEFAULT = {
+    "domains": [
+        "automation",
+        "binary_sensor",
+        "climate",
+        "cover",
+        "device_tracker",
+        "light",
+        "person",
+        "sensor",
+        "switch",
+    ],
+    "entity_globs": ["sun.su*"],
+    "entities": ["sensor.version_info"],
+}
+
+G_AIS_EXCLUDE_DB_DEFAULT_EMPTY = {
+    "domains": ["ais_ai_service"],
+    "entity_globs": ["sensor.ais_*"],
+    "entities": ["sensor.time"],
+    "event_types": ["call_service"],
+}
+G_AIS_EXCLUDE_DB_DEFAULT = {
+    "domains": [
+            "ais_ai_service",
+            "ais_amplifier_service",
+            "ais_audiobooks_service",
+            "ais_bookmarks",
+            "ais_cloud",
+            "ais_dom",
+            "ais_dom_device",
+            "ais_drives_service",
+            "ais_exo_player",
+            "ais_files",
+            "ais_google_home",
+            "ais_help",
+            "ais_host",
+            "ais_ingress",
+            "ais_knowledge_service",
+            "ais_mdns",
+            "ais_shell_command",
+            "ais_spotify_service",
+            "ais_updater",
+            "ais_usb",
+            "ais_wifi_service",
+            "ais_yt_service",
+            "media_player",
+            "group"],
+    "entity_globs": [
+        "automation.ais_*",
+        "binary_sensor.ais_*",
+        "group.ais_*",
+        "group.all_ais_*",
+        "input_boolean.ais_*",
+        "input_select.ais_*",
+        "input_text.ais_*",
+        "script.ais_*",
+        "sensor.ais*",
+        "timer.ais_*",
+    ],
+    "entities": [
+        "sensor.time",
+        "input_select.book_autor",
+        "group.audiobooks_player",
+        "input_select.podcast_type",
+        "input_select.radio_type",
+        "sensor.daytodisplay",
+        "group.day_info",
+        "group.local_audio",
+        "group.radio_player",
+        "group.podcast_player",
+        "group.music_player",
+        "group.internet_status",
+        "group.audio_player",
+        "group.dom_system_version",
+        "sensor.radiolist",
+        "sensor.podcastnamelist",
+        "sensor.youtubelist",
+        "sensor.spotifysearchlist",
+        "sensor.spotifylist",
+        "sensor.rssnewslist",
+        "input_select.rss_news_category",
+        "input_select.rss_news_channel",
+        "sensor.selected_entity",
+        "sensor.wersja_kordynatora",
+        "sensor.status_serwisu_zigbee2mqtt",
+        "sensor.gate_pairing_pin",
+        "persistent_notification.config_entry_discovery",
+        "sensor.audiobookschapterslist",
+        "automation.zigbee_tryb_parowania",
+        "automation.zigbee_wylaczenie_trybu_parowania",
+        "input_number.assistant_rate",
+        "input_number.media_player_speed",
+        "timer.ais_dom_pin_join",
+        "media_player.wbudowany_glosnik",
+        "input_number.assistant_tone",
+        "timer.zigbee_permit_join",
+        "input_select.book_name",
+        "sensor.podcastlist",
+        "sensor.audiobookslist",
+        "sensor.rssnewstext",
+        "switch.zigbee_tryb_parowania",
+        "input_select.book_chapter",
+        "input_select.assistant_voice",
+        "input_select.media_player_sound_mode",
+        "binary_sensor.updater",
+        "weather.dom",
+        "binary_sensor.selected_entity",
+    ]
+}
 
 
 def set_ais_android_id_dom_file_path(path):
@@ -169,8 +282,7 @@ def get_ais_gate_model():
 
     try:
         ws_resp = requests.get(
-            G_HTTP_REST_SERVICE_BASE_URL.format("127.0.0.1"),
-            timeout=10,
+            G_HTTP_REST_SERVICE_BASE_URL.format("127.0.0.1"), timeout=10
         )
         data = ws_resp.json()
         ais_model = data.get("Model")

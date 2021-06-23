@@ -160,7 +160,7 @@ def handle_push_notification_channel(hass, connection, msg):
     registered_channels = hass.data[DOMAIN][DATA_PUSH_CHANNEL]
 
     if webhook_id in registered_channels:
-        registered_channels.pop(webhook_id)()
+        registered_channels.pop(webhook_id)
 
     @callback
     def forward_push_notification(data):

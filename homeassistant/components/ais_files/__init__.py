@@ -16,9 +16,11 @@ from sqlalchemy.pool import StaticPool
 import homeassistant.components.ais_dom.ais_global as ais_global
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import HTTP_BAD_REQUEST
-
+import voluptuous as vol
 from . import sensor
 from .const import DOMAIN
+from homeassistant.const import CONF_DOMAINS, CONF_ENTITIES
+from homeassistant.helpers import config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,6 +52,7 @@ async def async_setup(hass, config):
     hass.http.register_view(FileReadView)
     hass.http.register_view(FileWriteView)
     hass.http.register_view(AisDbConfigView)
+    hass.http.register_view(AisUsbConfigView)
 
     return True
 
@@ -231,6 +234,7 @@ async def _async_save_db_settings_info(hass, db_settings):
         ) as outfile:
             json.dump(db_settings, outfile)
         ais_global.G_DB_SETTINGS_INFO = db_settings
+
     except Exception as e:
         _LOGGER.error("Error save_db_file_url_info " + str(e))
 
@@ -357,92 +361,121 @@ class AisDbConfigView(HomeAssistantView):
             "dbShowLogbook": message.get("dbShowLogbook", False),
             "dbShowHistory": message.get("dbShowHistory", False),
             "dbUrl": "",
+            "dbInclude": message.get("dbInclude", ais_global.G_AIS_INCLUDE_DB_DEFAULT),
+            "dbExclude": message.get("dbExclude", ais_global.G_AIS_EXCLUDE_DB_DEFAULT_EMPTY),
         }
+
+        # 0 validate filters
+        filter_schema_include = vol.Schema({
+            vol.Optional(CONF_DOMAINS, default=[]): vol.All(cv.ensure_list, [cv.string]),
+            vol.Optional("entity_globs", default=[]): vol.All(cv.ensure_list, [cv.string]),
+            vol.Optional("entities", default=[]): cv.entity_ids,
+        }
+        )
+        filter_schema_exclude = vol.Schema({
+                vol.Optional(CONF_DOMAINS, default=[]): vol.All(cv.ensure_list, [cv.string]),
+                vol.Optional("entity_globs", default=[]): vol.All(cv.ensure_list, [cv.string]),
+                vol.Optional("entities", default=[]): cv.entity_ids,
+                vol.Optional("event_types", default=[]): vol.All(cv.ensure_list, [cv.string]),
+            }
+        )
+        try:
+            filter_schema_include(db_connection["dbInclude"])
+        except Exception as e:
+            error_info = "Invalid include filter: " + str(e)
+
+        if error_info == "":
+            try:
+                filter_schema_exclude(db_connection["dbExclude"])
+            except Exception as e:
+                error_info = "Invalid exclude filter: " + str(e)
+
         # 1. calculate url
-        if (
-            db_connection["dbEngine"] is None
-            or db_connection["dbEngine"] == "-"
-            or db_connection["dbEngine"] == ""
-        ):
-            db_connection["dbUrl"] = ""
-            db_connection["dbDrive"] = "-"
-            db_connection["dbPassword"] = ""
-            db_connection["dbUser"] = ""
-            db_connection["dbServerIp"] = ""
-            db_connection["dbServerName"] = ""
-            db_connection["dbKeepDays"] = "2"
-            db_connection["dbShowLogbook"] = False
-            db_connection["dbShowHistory"] = False
-            return_info = "Zapis do bazy wyłączony."
-        elif db_connection["dbEngine"] == "SQLite (memory)":
-            db_connection["dbUrl"] = "sqlite:///:memory:"
-            db_connection["dbDrive"] = "-"
-            db_connection["dbPassword"] = ""
-            db_connection["dbUser"] = ""
-            db_connection["dbServerIp"] = ""
-            db_connection["dbServerName"] = ""
-            db_connection["dbKeepDays"] = "2"
-            return_info = "Zapis właczony do bazy w pamięci."
-        elif db_connection["dbEngine"] == "SQLite (file)":
-            db_connection["dbUrl"] = (
-                "sqlite://///data/data/pl.sviete.dom/files/home/dom/dyski-wymienne/"
-                + db_connection["dbDrive"]
-                + "/ais.db"
-            )
-            db_connection["dbPassword"] = ""
-            db_connection["dbUser"] = ""
-            db_connection["dbServerIp"] = ""
-            db_connection["dbServerName"] = ""
-            # check if dbUrl is valid external drive drive
-            from homeassistant.components import ais_usb
+        if error_info == "":
+            if (
+                db_connection["dbEngine"] is None
+                or db_connection["dbEngine"] == "-"
+                or db_connection["dbEngine"] == ""
+            ):
+                db_connection["dbUrl"] = ""
+                db_connection["dbDrive"] = "-"
+                db_connection["dbPassword"] = ""
+                db_connection["dbUser"] = ""
+                db_connection["dbServerIp"] = ""
+                db_connection["dbServerName"] = ""
+                db_connection["dbKeepDays"] = "5"
+                db_connection["dbShowLogbook"] = False
+                db_connection["dbShowHistory"] = False
+                return_info = "Zapis do bazy wyłączony."
+            elif db_connection["dbEngine"] == "SQLite (memory)":
+                db_connection["dbUrl"] = "sqlite:///:memory:"
+                db_connection["dbDrive"] = "-"
+                db_connection["dbPassword"] = ""
+                db_connection["dbUser"] = ""
+                db_connection["dbServerIp"] = ""
+                db_connection["dbServerName"] = ""
+                db_connection["dbKeepDays"] = "5"
+                return_info = "Zapis właczony do bazy w pamięci."
+            elif db_connection["dbEngine"] == "SQLite (file)":
+                db_connection["dbUrl"] = (
+                    "sqlite://///data/data/pl.sviete.dom/files/home/dom/dyski-wymienne/"
+                    + db_connection["dbDrive"]
+                    + "/ais.db"
+                )
+                db_connection["dbPassword"] = ""
+                db_connection["dbUser"] = ""
+                db_connection["dbServerIp"] = ""
+                db_connection["dbServerName"] = ""
+                # check if dbUrl is valid external drive drive
+                from homeassistant.components import ais_usb
 
-            if not ais_usb.is_usb_url_valid_external_drive(db_connection["dbUrl"]):
-                error_info = (
-                    "Invalid external drive: "
-                    + db_connection["dbUrl"]
-                    + " selected for recording!"
-                )
-        elif db_connection["dbEngine"] == "MariaDB (local)":
-            db_connection["dbUrl"] = (
-                    "mysql+pymysql://ais:dom@127.0.0.1/ha?charset=utf8mb4"
-                )
-            db_connection["dbPassword"] = "dom"
-            db_connection["dbUser"] = "ais"
-            db_connection["dbServerIp"] = "127.0.0.1"
-            db_connection["dbServerName"] = "ha"
-        else:
-            db_user_pass = ""
-            if db_connection["dbUser"] + db_connection["dbPassword"] != "":
-                db_user_pass = (
-                    db_connection["dbUser"] + ":" + db_connection["dbPassword"] + "@"
-                )
+                if not ais_usb.is_usb_url_valid_external_drive(db_connection["dbUrl"]):
+                    error_info = (
+                        "Invalid external drive: "
+                        + db_connection["dbUrl"]
+                        + " selected for recording!"
+                    )
+            elif db_connection["dbEngine"] == "MariaDB (local)":
+                db_connection["dbUrl"] = (
+                        "mysql+pymysql://ais:dom@127.0.0.1/ha?charset=utf8mb4"
+                    )
+                db_connection["dbPassword"] = "dom"
+                db_connection["dbUser"] = "ais"
+                db_connection["dbServerIp"] = "127.0.0.1"
+                db_connection["dbServerName"] = "ha"
+            else:
+                db_user_pass = ""
+                if db_connection["dbUser"] + db_connection["dbPassword"] != "":
+                    db_user_pass = (
+                        db_connection["dbUser"] + ":" + db_connection["dbPassword"] + "@"
+                    )
 
-            if db_connection["dbEngine"] == "MariaDB":
-                db_connection["dbUrl"] = (
-                    "mysql+pymysql://"
-                    + db_user_pass
-                    + db_connection["dbServerIp"]
-                    + "/"
-                    + db_connection["dbServerName"]
-                    + "?charset=utf8mb4"
-                )
-            elif db_connection["dbEngine"] == "MySQL":
-                db_connection["dbUrl"] = (
-                    "mysql://"
-                    + db_user_pass
-                    + db_connection["dbServerIp"]
-                    + "/"
-                    + db_connection["dbServerName"]
-                    + "?charset=utf8mb4"
-                )
-            elif db_connection["dbEngine"] == "PostgreSQL":
-                db_connection["dbUrl"] = (
-                    "postgresql://"
-                    + db_user_pass
-                    + db_connection["dbServerIp"]
-                    + "/"
-                    + db_connection["dbServerName"]
-                )
+                if db_connection["dbEngine"] == "MariaDB":
+                    db_connection["dbUrl"] = (
+                        "mysql+pymysql://"
+                        + db_user_pass
+                        + db_connection["dbServerIp"]
+                        + "/"
+                        + db_connection["dbServerName"]
+                        + "?charset=utf8mb4"
+                    )
+                elif db_connection["dbEngine"] == "MySQL":
+                    db_connection["dbUrl"] = (
+                        "mysql://"
+                        + db_user_pass
+                        + db_connection["dbServerIp"]
+                        + "/"
+                        + db_connection["dbServerName"]
+                        + "?charset=utf8mb4"
+                    )
+                elif db_connection["dbEngine"] == "PostgreSQL":
+                    db_connection["dbUrl"] = (
+                        "postgresql://"
+                        + db_user_pass
+                        + db_connection["dbServerIp"]
+                        + "/"
+                        + db_connection["dbServerName"]
+                    )
 
         # 2. check the connection
         if error_info == "" and return_info == "":
@@ -510,5 +543,48 @@ class AisDbConfigView(HomeAssistantView):
             return_info += "Dziennik wyłączony."
             if panel_logbook:
                 hass.components.frontend.async_remove_panel("logbook")
+
+        return self.json({"info": return_info, "error": error_info})
+
+
+class AisUsbConfigView(HomeAssistantView):
+    """View to write the usb settings."""
+    requires_auth = False
+
+    url = "/api/ais_file/ais_usb_view"
+    name = "api:ais_file:ais_usb_view"
+
+    async def get(self, request):
+        return self.json(ais_global.G_USB_SETTINGS_INFO)
+
+    async def post(self, request):
+        """Retrieve the file."""
+        hass = request.app["hass"]
+        return_info = "ok"
+        error_info = ""
+        auto_start = True
+        voice_notification = True
+        try:
+            data = await request.json()
+            auto_start = data.get("usbAutoStartServices", True)
+            voice_notification = data.get("usbVoiceNotification", True)
+        except ValueError:
+            return self.json({"info": "", "error": "Invalid JSON"})
+
+        try:
+            usb_settings = {
+                "usbAutoStartServices": auto_start,
+                "usbVoiceNotification": voice_notification,
+            }
+            with open(
+                    hass.config.config_dir + ais_global.G_USB_SETTINGS_INFO_FILE, "w"
+            ) as outfile:
+                json.dump(usb_settings, outfile)
+
+        except Exception as e:
+            _LOGGER.error("Error save_usb_settings " + str(e))
+            return self.json({"info": "", "error": str(e)})
+
+        ais_global.G_USB_SETTINGS_INFO = usb_settings
 
         return self.json({"info": return_info, "error": error_info})
