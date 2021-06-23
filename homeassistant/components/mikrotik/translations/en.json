@@ -1,14 +1,24 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Device is already configured"
+            "already_configured": "Device is already configured",
+            "reauth_successful": "Re-authentication was successful"
         },
         "error": {
             "cannot_connect": "Failed to connect",
-            "invalid_auth": "Invalid authentication",
-            "name_exists": "Name exists"
+            "invalid_auth": "Invalid authentication"
         },
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Password",
+                    "port": "Port",
+                    "username": "Username",
+                    "verify_ssl": "Use ssl"
+                },
+                "description": "Credentials for {host} are no longer valid.",
+                "title": "Reauthenticate Integration"
+            },
             "user": {
                 "data": {
                     "host": "Host",
@@ -16,8 +26,7 @@
                     "password": "Password",
                     "port": "Port",
                     "username": "Username",
-                    "verify_ssl": "Use ssl",
-                    "repeater_mode": "Set Hub as repeater"
+                    "verify_ssl": "Use ssl"
                 },
                 "title": "Set up Mikrotik Router"
             }
@@ -27,9 +36,9 @@
         "step": {
             "device_tracker": {
                 "data": {
-                    "disable_tracking_wired": "Disable tracking wired devices",
-                    "track_wired_mode": "Mode for tracking wired devices",
-                    "detection_time": "Consider home interval",
+                    "detection_time": "Consider home interval (in seconds)",
+                    "dhcp_server_track_mode": "Tracking mode when using DHCP server",
+                    "force_dhcp": "Use DHCP server to track clients",
                     "scan_interval": "Update interval in seconds, minimum 10"
                 }
             }

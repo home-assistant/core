@@ -9,27 +9,36 @@
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]",
           "port": "[%key:common::config_flow::data::port%]",
-          "verify_ssl": "Use ssl",
-          "repeater_mode": "Set Hub as repeater"
+          "verify_ssl": "Use ssl"
+        }
+      },
+      "reauth_confirm": {
+        "description": "Credentials for {host} are no longer valid.",
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "verify_ssl": "Use ssl"
         }
       }
     },
+    "abort": {
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
     "error": {
-      "name_exists": "Name exists",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
-    },
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   },
   "options": {
     "step": {
       "device_tracker": {
         "data": {
-          "disable_tracking_wired": "Disable tracking wired devices",
-          "track_wired_mode": "Mode for tracking wired devices",
-          "detection_time": "Consider home interval",
+          "force_dhcp": "Use DHCP server to track clients",
+          "dhcp_server_track_mode": "Tracking mode when using DHCP server",
+          "detection_time": "Consider home interval (in seconds)",
           "scan_interval": "Update interval in seconds, minimum 10"
         }
       }

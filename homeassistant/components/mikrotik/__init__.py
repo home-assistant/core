@@ -6,7 +6,7 @@ from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceRegistry
 
-from .const import ATTR_MANUFACTURER, CLIENTS, CONF_REPEATER_MODE, DOMAIN, PLATFORMS
+from .const import ATTR_MANUFACTURER, CLIENTS, DOMAIN, PLATFORMS
 from .hub import MikrotikHub
 
 
@@ -15,27 +15,17 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     hub = MikrotikHub(hass, config_entry)
 
-    if config_entry.unique_id is None:
-        hass.config_entries.async_update_entry(
-            config_entry, unique_id=config_entry.data[CONF_HOST]
-        )
-
-    if CONF_REPEATER_MODE not in config_entry.data:
-        hass.config_entries.async_update_entry(
-            config_entry, data={**config_entry.data, CONF_REPEATER_MODE: False}
-        )
-
-    if not await hub.async_setup():
-        return False
+    await hub.async_setup()
 
     hass.config_entries.async_update_entry(
-        config_entry, title=f"{hub.hub_data.hostname} ({hub.host})"
+        config_entry,
+        title=f"{hub.hub_data.hostname} ({hub.host})",
+        unique_id=config_entry.data[CONF_HOST],
     )
 
     hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = hub
     hass.data[DOMAIN].setdefault(CLIENTS, {})
-    await hub.async_add_mikrotik_clients_from_registry()
-    await hub.async_config_entry_first_refresh()
+    await hub.async_refresh()
     hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
 
     device_registry: DeviceRegistry = hass.helpers.device_registry.async_get(hass)

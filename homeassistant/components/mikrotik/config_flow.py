@@ -19,13 +19,12 @@ from homeassistant.data_entry_flow import FlowResult
 
 from .const import (
     CONF_DETECTION_TIME,
-    CONF_DISABLE_TRACKING_WIRED,
-    CONF_REPEATER_MODE,
-    CONF_TRACK_WIRED_MODE,
+    CONF_DHCP_SERVER_TRACK_MODE,
+    CONF_USE_DHCP_SERVER,
     DEFAULT_API_PORT,
     DEFAULT_DETECTION_TIME,
-    DEFAULT_DISABLE_TRACKING_WIRED,
     DEFAULT_SCAN_INTERVAL,
+    DEFAULT_TRACK_WIRED,
     DEFAULT_TRACK_WIRED_MODE,
     DOMAIN,
     TRACK_WIRED_MODES,
@@ -41,7 +40,9 @@ class MikrotikFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry: config_entries.ConfigEntry):
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> config_entries.OptionsFlow:
         """Get the options flow for this handler."""
         return MikrotikOptionsFlowHandler(config_entry)
 
@@ -53,7 +54,7 @@ class MikrotikFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured()
 
             try:
-                await self.hass.async_add_executor_job(get_api, self.hass, user_input)
+                await self.hass.async_add_executor_job(get_api, user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except LoginError:
@@ -61,22 +62,66 @@ class MikrotikFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 errors[CONF_PASSWORD] = "invalid_auth"
 
             if not errors:
-                if CONF_REPEATER_MODE not in user_input:
-                    user_input[CONF_REPEATER_MODE] = False
                 return self.async_create_entry(title="Mikrotik", data=user_input)
-        form_fields = {
-            vol.Required(CONF_HOST): str,
-            vol.Required(CONF_USERNAME): str,
-            vol.Required(CONF_PASSWORD): str,
-            vol.Optional(CONF_PORT, default=DEFAULT_API_PORT): int,
-            vol.Optional(CONF_VERIFY_SSL, default=False): bool,
-        }
-        if self._async_current_entries():
-            form_fields.update({vol.Optional(CONF_REPEATER_MODE, default=False): bool})
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(form_fields),
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_HOST): str,
+                    vol.Required(CONF_USERNAME): str,
+                    vol.Required(CONF_PASSWORD): str,
+                    vol.Optional(CONF_PORT, default=DEFAULT_API_PORT): int,
+                    vol.Optional(CONF_VERIFY_SSL, default=False): bool,
+                }
+            ),
+            errors=errors,
+        )
+
+    async def async_step_reauth(self, user_input=None):
+        """Perform reauth upon an API authentication error."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(self, user_input=None):
+        """Dialog that informs the user that reauth is required."""
+        errors = {}
+        reauth_config_entry = self.hass.config_entries.async_get_entry(
+            self.context["entry_id"]
+        )
+        if user_input is not None:
+            user_input[CONF_HOST] = reauth_config_entry.data[CONF_HOST]
+            try:
+                await self.hass.async_add_executor_job(get_api, user_input)
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except LoginError:
+                errors[CONF_USERNAME] = "invalid_auth"
+                errors[CONF_PASSWORD] = "invalid_auth"
+
+            if not errors:
+                self.hass.config_entries.async_update_entry(
+                    reauth_config_entry,
+                    data={
+                        **reauth_config_entry.data,
+                        **user_input,
+                    },
+                )
+                await self.hass.config_entries.async_reload(
+                    reauth_config_entry.entry_id
+                )
+                return self.async_abort(reason="reauth_successful")
+
+        return self.async_show_form(
+            description_placeholders={CONF_HOST: reauth_config_entry.data[CONF_HOST]},
+            step_id="reauth_confirm",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_USERNAME): str,
+                    vol.Required(CONF_PASSWORD): str,
+                    vol.Optional(CONF_PORT, default=DEFAULT_API_PORT): int,
+                    vol.Optional(CONF_VERIFY_SSL, default=False): bool,
+                }
+            ),
             errors=errors,
         )
 
@@ -92,7 +137,9 @@ class MikrotikOptionsFlowHandler(config_entries.OptionsFlow):
         """Manage the Mikrotik options."""
         return await self.async_step_device_tracker()
 
-    async def async_step_device_tracker(self, user_input: dict[str, Any] = None):
+    async def async_step_device_tracker(
+        self, user_input: dict[str, Any] = None
+    ) -> FlowResult:
         """Manage the device tracker options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
@@ -106,9 +153,9 @@ class MikrotikOptionsFlowHandler(config_entries.OptionsFlow):
             options.update(
                 {
                     vol.Optional(
-                        CONF_DISABLE_TRACKING_WIRED,
+                        CONF_USE_DHCP_SERVER,
                         default=self.config_entry.options.get(
-                            CONF_DISABLE_TRACKING_WIRED, DEFAULT_DISABLE_TRACKING_WIRED
+                            CONF_USE_DHCP_SERVER, DEFAULT_TRACK_WIRED
                         ),
                     ): bool,
                 }
@@ -117,33 +164,23 @@ class MikrotikOptionsFlowHandler(config_entries.OptionsFlow):
         options.update(
             {
                 vol.Optional(
-                    CONF_TRACK_WIRED_MODE,
+                    CONF_DHCP_SERVER_TRACK_MODE,
                     default=self.config_entry.options.get(
-                        CONF_TRACK_WIRED_MODE, DEFAULT_TRACK_WIRED_MODE
+                        CONF_DHCP_SERVER_TRACK_MODE, DEFAULT_TRACK_WIRED_MODE
                     ),
                 ): vol.In(TRACK_WIRED_MODES),
-            }
-        )
-
-        if not hub_data.repeater_mode:
-            options.update(
-                {
-                    vol.Optional(
-                        CONF_DETECTION_TIME,
-                        default=self.config_entry.options.get(
-                            CONF_DETECTION_TIME, DEFAULT_DETECTION_TIME
-                        ),
-                    ): int,
-                }
-            )
-        options.update(
-            {
+                vol.Optional(
+                    CONF_DETECTION_TIME,
+                    default=self.config_entry.options.get(
+                        CONF_DETECTION_TIME, DEFAULT_DETECTION_TIME
+                    ),
+                ): int,
                 vol.Optional(
                     CONF_SCAN_INTERVAL,
                     default=self.config_entry.options.get(
                         CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
                     ),
-                ): vol.All(vol.Coerce(int), vol.Range(min=10))
+                ): vol.All(vol.Coerce(int), vol.Range(min=10)),
             }
         )
 

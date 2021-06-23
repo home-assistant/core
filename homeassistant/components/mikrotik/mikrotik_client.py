@@ -13,27 +13,32 @@ class MikrotikClient:
     """Represents a network client."""
 
     def __init__(
-        self, mac: str, host: str | None = None, dhcp_params: dict | None = None
+        self,
+        mac: str,
+        name: str | None = None,
+        host: str | None = None,
+        dhcp_params: dict | None = None,
     ) -> None:
         """Initialize the client."""
         self._mac = mac
+        self._name = name
         self.host = host
         self.dhcp_params: dict = dhcp_params or {}
         self.wireless_params: dict = {}
         self._last_seen: datetime | None = None
 
     @property
-    def name(self):
+    def name(self) -> str | None:
         """Return client name."""
-        return self.dhcp_params.get("host-name")
+        return self.dhcp_params.get("host-name") or self._name
 
     @property
-    def ip_address(self):
+    def ip_address(self) -> str | None:
         """Return device primary ip address."""
         return self.dhcp_params.get("address")
 
     @property
-    def mac(self):
+    def mac(self) -> str:
         """Return client mac."""
         return self._mac
 

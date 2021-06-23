@@ -41,7 +41,9 @@ async def async_setup_entry(
     for entity in hub_clients:
         if entity.unique_id not in hub.data:
             hub.data.append(entity.unique_id)
-            all_clients[entity.unique_id] = MikrotikClient(entity.unique_id)
+            all_clients[entity.unique_id] = MikrotikClient(
+                entity.unique_id, name=entity.original_name
+            )
 
     @callback
     def update_hub() -> None:
@@ -64,7 +66,7 @@ def update_items(
     new_tracked = []
     for mac in hub.data:
         if mac not in tracked:
-            tracked[mac] = MikrotikClientTracker(all_clients[mac], hub)
+            tracked[mac] = MikrotikClientTracker(mac, hub, all_clients)
             new_tracked.append(tracked[mac])
 
     if new_tracked:
@@ -74,24 +76,22 @@ def update_items(
 class MikrotikClientTracker(ScannerEntity):
     """Representation of network device."""
 
-    def __init__(self, client: MikrotikClient, hub: MikrotikHub) -> None:
+    def __init__(
+        self, mac: str, hub: MikrotikHub, all_clients: dict[str, MikrotikClient]
+    ) -> None:
         """Initialize the tracked device."""
-        self.client = client
-        self.host = self.client.host
+        self.mac = mac
+        self.all_clients = all_clients
+        self.host: str | None = all_clients[mac].host
         self.hub = hub
         self.this_device: DeviceEntry | None = None
 
     @property
     def is_connected(self) -> bool:
         """Return true if the client is connected to the network."""
-        if self.client.mac == "98:09:CF:0C:98:0F":
-            print(self.client.last_seen)
-        if (
-            self.client.last_seen
-            and (dt_util.utcnow() - self.client.last_seen)
-            < self.hub.option_detection_time
-        ):
-            return True
+        last_seen = self.all_clients[self.mac].last_seen
+        if last_seen is not None:
+            return (dt_util.utcnow() - last_seen) < self.hub.option_detection_time
         return False
 
     @property
@@ -100,45 +100,47 @@ class MikrotikClientTracker(ScannerEntity):
         return SOURCE_TYPE_ROUTER
 
     @property
-    def name(self) -> str:
+    def name(self) -> str | None:
         """Return the name of the client."""
-        return self.client.name
+        return self.all_clients[self.mac].name
 
     @property
-    def hostname(self) -> str:
+    def hostname(self) -> str | None:
         """Return the hostname of the client."""
-        return self.client.name
+        return self.all_clients[self.mac].name
 
     @property
     def mac_address(self) -> str:
         """Return the mac address of the client."""
-        return self.client.mac
+        return self.mac
 
     @property
-    def ip_address(self) -> str:
+    def ip_address(self) -> str | None:
         """Return the mac address of the client."""
-        return self.client.ip_address
+        return self.all_clients[self.mac].ip_address
 
     @property
     def unique_id(self) -> str:
         """Return a unique identifier for this device."""
-        return self.client.mac
+        return self.mac
 
     @property
-    def extra_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict | None:
         """Return the device state attributes."""
-        return self.client.attrs
+        return self.all_clients[self.mac].attrs if self.is_connected else None
 
     @property
     def device_info(self) -> DeviceInfo:
         """Return a client description for device registry."""
-        return {
-            "connections": {(CONNECTION_NETWORK_MAC, self.client.mac)},
-            "identifiers": {(DOMAIN, self.client.mac)},
-            # We only get generic info from device discovery and so don't want
-            # to override API specific info that integrations can provide
-            "default_name": self.name,
+        device_info: DeviceInfo = {
+            "connections": {(CONNECTION_NETWORK_MAC, self.mac)},
+            "identifiers": {(DOMAIN, self.mac)},
         }
+        if self.host is not None:
+            device_info["via_device"] = (DOMAIN, self.host)
+        if self.name is not None:
+            device_info["name"] = self.name
+        return device_info
 
     async def async_added_to_hass(self) -> None:
         """Client entity created."""
@@ -151,7 +153,7 @@ class MikrotikClientTracker(ScannerEntity):
             self.hass
         )
         hub_device = device_registry.async_get_device(
-            {(DOMAIN, self.client.host)}, set()
+            {(DOMAIN, self.all_clients[self.mac].host)}, set()
         )
         if not hub_device:
             return
@@ -159,16 +161,19 @@ class MikrotikClientTracker(ScannerEntity):
         _LOGGER.debug("Updating via_device_id for %s", self.name)
         if self.this_device is None:
             self.this_device = device_registry.async_get_device(
-                {(DOMAIN, self.client.mac)}, set()
+                {(DOMAIN, self.mac)}, set()
             )
         device_registry.async_update_device(
             self.this_device.id, via_device_id=hub_device.id
         )
-        self.host = self.client.host
+        self.host = self.all_clients[self.mac].host
 
     @callback
     def _update_callback(self) -> None:
         """Update device state and related hub_id."""
-        if self.client.host and self.host != self.client.host:
+        if (
+            self.all_clients[self.mac].host
+            and self.host != self.all_clients[self.mac].host
+        ):
             self.async_update_device_details()
         self.async_write_ha_state()
