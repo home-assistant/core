@@ -21,6 +21,7 @@ from homeassistant.helpers.event import async_track_time_interval
 import homeassistant.util.dt as dt_util
 
 from .const import (
+    ALL_FINISHED_FIRST_SCAN,
     CONF_HOME_INTERVAL,
     CONF_OPTIONS,
     DOMAIN,
@@ -56,6 +57,8 @@ class NmapTrackedDevices:
         self.tracked: dict = {}
         self.ipv4_last_mac: dict = {}
         self.config_entry_owner: dict = {}
+        self.entries_finished_first_scan: dict[str, bool] = {}
+        self.finished_first_scan = False
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -65,6 +68,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Nmap Tracker from a config entry."""
     domain_data = hass.data.setdefault(DOMAIN, {})
     devices = domain_data.setdefault(NMAP_TRACKED_DEVICES, NmapTrackedDevices())
+    devices.entries_finished_first_scan[entry.entry.id] = False
     scanner = domain_data[entry.entry_id] = NmapDeviceScanner(hass, entry, devices)
     scanner.async_setup()
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
@@ -83,6 +87,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     if unload_ok:
         _async_untrack_devices(hass, entry)
+        del hass.data[DOMAIN][NMAP_TRACKED_DEVICES].entries_finished_first_scan[
+            entry.entry_id
+        ]
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
@@ -228,6 +235,16 @@ class NmapDeviceScanner:
             else:
                 for signal, ipv4 in dispatches:
                     async_dispatcher_send(self._hass, signal, ipv4)
+
+        self.devices.entries_finished_first_scan[self._entry.entry_id] = True
+        if not self.devices.finished_first_scan and all(
+            self.devices.entries_finished_first_scan.values()
+        ):
+            # After all config entries have finished their first
+            # scan we mark devices that were not found as not_home
+            # from unavailable
+            self.devices.finished_first_scan = True
+            async_dispatcher_send(self._hass, ALL_FINISHED_FIRST_SCAN)
 
     def _run_nmap_scan(self):
         """Run nmap and return the result."""
