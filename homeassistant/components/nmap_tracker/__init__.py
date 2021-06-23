@@ -248,7 +248,7 @@ class NmapDeviceScanner:
         registry = er.async_get(self._hass)
         for entry in registry.entities.values():
             _LOGGER.warning("checking %s", entry)
-            if entry.config_entry.entry_id != self._entry_id:
+            if entry.config_entry_id != self._entry_id:
                 continue
             _LOGGER.warning("checking unique id of %s : %s", entry, entry.unique_id)
             if entry.unique_id not in self.devices.tracked:
