@@ -69,9 +69,9 @@ async def async_setup_entry(
     nmap_tracker = hass.data[DOMAIN][entry.entry_id]
 
     @callback
-    def update_router(ipv4):
+    def update_router(mac_address):
         """Update the values of the router."""
-        async_add_entities([NmapTrackerEntity(nmap_tracker, ipv4)])
+        async_add_entities([NmapTrackerEntity(nmap_tracker, mac_address)])
 
     entry.async_on_unload(
         async_dispatcher_connect(hass, nmap_tracker.signal_device_new, update_router)
