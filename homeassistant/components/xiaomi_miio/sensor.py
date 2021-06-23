@@ -1,5 +1,6 @@
-"""Support for Xiaomi Mi Air Quality Monitor (PM2.5)."""
+"""Support for Xiaomi Mi Air Quality Monitor (PM2.5) and Humidifier."""
 from dataclasses import dataclass
+from enum import Enum
 import logging
 
 from miio import AirQualityMonitor, DeviceException
@@ -20,6 +21,7 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
+    ATTR_TEMPERATURE,
     CONF_HOST,
     CONF_NAME,
     CONF_TOKEN,
@@ -33,10 +35,20 @@ from homeassistant.const import (
     PRESSURE_HPA,
     TEMP_CELSIUS,
 )
+from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
-from .const import CONF_DEVICE, CONF_FLOW_TYPE, CONF_GATEWAY, DOMAIN, KEY_COORDINATOR
-from .device import XiaomiMiioEntity
+from .const import (
+    CONF_DEVICE,
+    CONF_FLOW_TYPE,
+    CONF_GATEWAY,
+    CONF_MODEL,
+    DOMAIN,
+    KEY_COORDINATOR,
+    KEY_DEVICE,
+    MODELS_HUMIDIFIER_MIOT,
+)
+from .device import XiaomiCoordinatedMiioEntity, XiaomiMiioEntity
 from .gateway import XiaomiGatewayDevice
 
 _LOGGER = logging.getLogger(__name__)
@@ -59,42 +71,60 @@ ATTR_NIGHT_MODE = "night_mode"
 ATTR_NIGHT_TIME_BEGIN = "night_time_begin"
 ATTR_NIGHT_TIME_END = "night_time_end"
 ATTR_SENSOR_STATE = "sensor_state"
-
-SUCCESS = ["ok"]
+ATTR_WATER_LEVEL = "water_level"
+ATTR_HUMIDITY = "humidity"
 
 
 @dataclass
 class SensorType:
-    """Class that holds device specific info for a xiaomi aqara sensor."""
+    """Class that holds device specific info for a xiaomi aqara or humidifier sensor."""
 
     unit: str = None
     icon: str = None
     device_class: str = None
     state_class: str = None
+    valid_min_value: float = None
+    valid_max_value: float = None
 
 
-GATEWAY_SENSOR_TYPES = {
+SENSOR_TYPES = {
     "temperature": SensorType(
         unit=TEMP_CELSIUS,
-        icon=None,
         device_class=DEVICE_CLASS_TEMPERATURE,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
     "humidity": SensorType(
         unit=PERCENTAGE,
-        icon=None,
         device_class=DEVICE_CLASS_HUMIDITY,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
     "pressure": SensorType(
         unit=PRESSURE_HPA,
-        icon=None,
         device_class=DEVICE_CLASS_PRESSURE,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
     "load_power": SensorType(
-        unit=POWER_WATT, icon=None, device_class=DEVICE_CLASS_POWER
+        unit=POWER_WATT,
+        device_class=DEVICE_CLASS_POWER,
     ),
+    "water_level": SensorType(
+        unit=PERCENTAGE,
+        icon="mdi:water-check",
+        state_class=STATE_CLASS_MEASUREMENT,
+        valid_min_value=0.0,
+        valid_max_value=100.0,
+    ),
+}
+
+HUMIDIFIER_SENSORS = {
+    ATTR_HUMIDITY: "humidity",
+    ATTR_TEMPERATURE: "temperature",
+}
+
+HUMIDIFIER_SENSORS_MIOT = {
+    ATTR_HUMIDITY: "humidity",
+    ATTR_TEMPERATURE: "temperature",
+    ATTR_WATER_LEVEL: "water_level",
 }
 
 
@@ -135,7 +165,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         sub_devices = gateway.devices
         coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
         for sub_device in sub_devices.values():
-            sensor_variables = set(sub_device.status) & set(GATEWAY_SENSOR_TYPES)
+            sensor_variables = set(sub_device.status) & set(SENSOR_TYPES)
             if sensor_variables:
                 entities.extend(
                     [
@@ -145,19 +175,119 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                         for variable in sensor_variables
                     ]
                 )
-
-    if config_entry.data[CONF_FLOW_TYPE] == CONF_DEVICE:
+    elif config_entry.data[CONF_FLOW_TYPE] == CONF_DEVICE:
         host = config_entry.data[CONF_HOST]
         token = config_entry.data[CONF_TOKEN]
-        name = config_entry.title
-        unique_id = config_entry.unique_id
+        model = config_entry.data[CONF_MODEL]
+        device = None
+        sensors = []
+        if model in MODELS_HUMIDIFIER_MIOT:
+            device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
+            coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
+            sensors = HUMIDIFIER_SENSORS_MIOT
+        elif model.startswith("zhimi.humidifier."):
+            device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
+            coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
+            sensors = HUMIDIFIER_SENSORS
+        else:
+            unique_id = config_entry.unique_id
+            name = config_entry.title
+            _LOGGER.debug("Initializing with host %s (token %s...)", host, token[:5])
 
-        _LOGGER.debug("Initializing with host %s (token %s...)", host, token[:5])
-
-        device = AirQualityMonitor(host, token)
-        entities.append(XiaomiAirQualityMonitor(name, device, config_entry, unique_id))
+            device = AirQualityMonitor(host, token)
+            entities.append(
+                XiaomiAirQualityMonitor(name, device, config_entry, unique_id)
+            )
+        for sensor in sensors:
+            entities.append(
+                XiaomiGenericSensor(
+                    f"{config_entry.title} {sensor.replace('_', ' ').title()}",
+                    device,
+                    config_entry,
+                    f"{sensor}_{config_entry.unique_id}",
+                    sensor,
+                    hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR],
+                )
+            )
 
     async_add_entities(entities, update_before_add=True)
+
+
+class XiaomiGenericSensor(XiaomiCoordinatedMiioEntity, SensorEntity):
+    """Representation of a Xiaomi Humidifier sensor."""
+
+    def __init__(self, name, device, entry, unique_id, attribute, coordinator):
+        """Initialize the entity."""
+        super().__init__(name, device, entry, unique_id, coordinator)
+
+        self._name = name
+        self._device = device
+        self._entry = entry
+        self._unique_id = unique_id
+        self._attribute = attribute
+        self._available = None
+        self._state = None
+        self._skip_update = False
+
+    @callback
+    def _handle_coordinator_update(self):
+        """Fetch state from the device."""
+        # On state change the device doesn't provide the new state immediately.
+        state = self.coordinator.data
+        if not state:
+            return
+        _LOGGER.debug("Got new state: %s", state)
+        self._available = True
+        self._state = self._extract_value_from_attribute(state, self._attribute)
+        self.async_write_ha_state()
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit of measurement of this entity, if any."""
+        return SENSOR_TYPES[self._attribute].unit
+
+    @property
+    def icon(self):
+        """Return the icon to use in the frontend."""
+        return SENSOR_TYPES[self._attribute].icon
+
+    @property
+    def device_class(self):
+        """Return the device class of this entity."""
+        return SENSOR_TYPES[self._attribute].device_class
+
+    @property
+    def state_class(self):
+        """Return the state class of this entity."""
+        return SENSOR_TYPES[self._attribute].state_class
+
+    @property
+    def available(self):
+        """Return true when state is known."""
+        return super().available and self._available
+
+    @property
+    def state(self):
+        """Return the state of the device."""
+        if (
+            SENSOR_TYPES[self._attribute].valid_min_value
+            and self._state < SENSOR_TYPES[self._attribute].valid_min_value
+        ):
+            return None
+        if (
+            SENSOR_TYPES[self._attribute].valid_max_value
+            and self._state > SENSOR_TYPES[self._attribute].valid_max_value
+        ):
+            return None
+        return self._state
+
+    @staticmethod
+    def _extract_value_from_attribute(state, attribute):
+        value = getattr(state, attribute)
+        if isinstance(value, Enum):
+            return value.value
+
+        return value
 
 
 class XiaomiAirQualityMonitor(XiaomiMiioEntity, SensorEntity):
@@ -189,7 +319,7 @@ class XiaomiAirQualityMonitor(XiaomiMiioEntity, SensorEntity):
 
     @property
     def icon(self):
-        """Return the icon to use for device if any."""
+        """Return the icon to use in the frontend."""
         return self._icon
 
     @property
@@ -247,22 +377,22 @@ class XiaomiGatewaySensor(XiaomiGatewayDevice, SensorEntity):
     @property
     def icon(self):
         """Return the icon to use in the frontend."""
-        return GATEWAY_SENSOR_TYPES[self._data_key].icon
+        return SENSOR_TYPES[self._data_key].icon
 
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
-        return GATEWAY_SENSOR_TYPES[self._data_key].unit
+        return SENSOR_TYPES[self._data_key].unit
 
     @property
     def device_class(self):
         """Return the device class of this entity."""
-        return GATEWAY_SENSOR_TYPES[self._data_key].device_class
+        return SENSOR_TYPES[self._data_key].device_class
 
     @property
     def state_class(self):
         """Return the state class of this entity."""
-        return GATEWAY_SENSOR_TYPES[self._data_key].state_class
+        return SENSOR_TYPES[self._data_key].state_class
 
     @property
     def state(self):
