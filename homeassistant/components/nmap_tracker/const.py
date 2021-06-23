@@ -12,3 +12,5 @@ CONF_OPTIONS = "scan_options"
 DEFAULT_OPTIONS = "-F --host-timeout 5s"
 
 TRACKER_SCAN_INTERVAL = 120
+
+ALL_FINISHED_FIRST_SCAN = "nmap_tracker_all_finished_first_scan"
