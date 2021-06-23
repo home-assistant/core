@@ -237,9 +237,10 @@ class NmapDeviceScanner:
 
         if not self._finished_first_scan:
             self._finished_first_scan = True
-            await self._mark_missing_devices_as_not_home()
+            self._mark_missing_devices_as_not_home()
 
-    async def _mark_missing_devices_as_not_home(self):
+    @callback
+    def _async_mark_missing_devices_as_not_home(self):
         # After all config entries have finished their first
         # scan we mark devices that were not found as not_home
         # from unavailable
