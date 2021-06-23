@@ -32,8 +32,7 @@ async def async_setup_platform(
     xknx: XKNX = hass.data[DOMAIN].xknx
 
     async_add_entities(
-        KNXNumber(xknx, entity_config)
-        for entity_config in platform_config
+        KNXNumber(xknx, entity_config) for entity_config in platform_config
     )
 
 
