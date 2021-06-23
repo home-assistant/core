@@ -78,7 +78,7 @@ def create_parts(source):
         Part(
             duration=TEST_PART_DURATION,
             has_keyframe=next(independent_cycle),
-            data=source[i * BYTERANGE_LENGTH : (i + 1) * BYTERANGE_LENGTH],
+            data=bytes(source[i * BYTERANGE_LENGTH : (i + 1) * BYTERANGE_LENGTH]),
         )
         for i in range(NUM_PART_SEGMENTS)
     ]
@@ -604,7 +604,7 @@ async def test_get_part_segments(hass, hls_stream, stream_worker_sync, hls_sync)
     hls.put(segment)
     remaining_parts = create_parts(SEQUENCE_BYTES)
     num_completed_parts = len(remaining_parts) // 2
-    for i in range(num_completed_parts):
+    for _ in range(num_completed_parts):
         add_part_to_segment(segment, remaining_parts.pop(0))
 
     # Make requests for all the existing part segments
