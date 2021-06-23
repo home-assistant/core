@@ -74,6 +74,8 @@ async def async_setup_entry(
 
 def short_hostname(hostname):
     """Return the first part of the hostname."""
+    if hostname is None:
+        return None
     return hostname.split(".")[0]
 
 
