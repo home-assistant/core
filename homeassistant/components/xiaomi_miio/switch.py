@@ -34,6 +34,7 @@ from .const import (
     SERVICE_SET_POWER_PRICE,
     SERVICE_SET_WIFI_LED_OFF,
     SERVICE_SET_WIFI_LED_ON,
+    SUCCESS,
 )
 from .device import XiaomiMiioEntity
 from .gateway import XiaomiGatewayDevice
@@ -83,8 +84,6 @@ ATTR_POWER_MODE = "power_mode"
 ATTR_WIFI_LED = "wifi_led"
 ATTR_POWER_PRICE = "power_price"
 ATTR_PRICE = "price"
-
-SUCCESS = ["ok"]
 
 FEATURE_SET_POWER_MODE = 1
 FEATURE_SET_WIFI_LED = 2
