@@ -43,8 +43,10 @@ async def test_purge_old_states(
         events = session.query(Events).filter(Events.event_type == "state_changed")
         assert events.count() == 6
 
+        purge_before = dt_util.utcnow() - timedelta(days=4)
+
         # run purge_old_data()
-        finished = purge_old_data(instance, 4, repack=False)
+        finished = purge_old_data(instance, purge_before, repack=False)
         assert not finished
         assert states.count() == 2
 
@@ -52,7 +54,7 @@ async def test_purge_old_states(
         assert states_after_purge[1].old_state_id == states_after_purge[0].state_id
         assert states_after_purge[0].old_state_id is None
 
-        finished = purge_old_data(instance, 4, repack=False)
+        finished = purge_old_data(instance, purge_before, repack=False)
         assert finished
         assert states.count() == 2
 
@@ -162,13 +164,15 @@ async def test_purge_old_events(
         events = session.query(Events).filter(Events.event_type.like("EVENT_TEST%"))
         assert events.count() == 6
 
+        purge_before = dt_util.utcnow() - timedelta(days=4)
+
         # run purge_old_data()
-        finished = purge_old_data(instance, 4, repack=False)
+        finished = purge_old_data(instance, purge_before, repack=False)
         assert not finished
         assert events.count() == 2
 
         # we should only have 2 events left
-        finished = purge_old_data(instance, 4, repack=False)
+        finished = purge_old_data(instance, purge_before, repack=False)
         assert finished
         assert events.count() == 2
 
@@ -186,11 +190,13 @@ async def test_purge_old_recorder_runs(
         recorder_runs = session.query(RecorderRuns)
         assert recorder_runs.count() == 7
 
+        purge_before = dt_util.utcnow()
+
         # run purge_old_data()
-        finished = purge_old_data(instance, 0, repack=False)
+        finished = purge_old_data(instance, purge_before, repack=False)
         assert not finished
 
-        finished = purge_old_data(instance, 0, repack=False)
+        finished = purge_old_data(instance, purge_before, repack=False)
         assert finished
         assert recorder_runs.count() == 1
 
