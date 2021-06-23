@@ -138,7 +138,8 @@ class ScreenlogicDataUpdateCoordinator(DataUpdateCoordinator):
             connect_info = get_connect_info(self.hass, self.config_entry)
             try:
                 self.gateway = ScreenLogicGateway(**connect_info)
-                self.gateway.update()
+                async with self.api_lock:
+                    await self.hass.async_add_executor_job(self.gateway.update)
             except ScreenLogicError as error:
                 raise UpdateFailed(error) from error
 
