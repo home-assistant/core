@@ -10,6 +10,8 @@ from xknx.telegram.address import parse_device_group_address
 
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
+    CURRENT_HVAC_IDLE,
+    CURRENT_HVAC_OFF,
     HVAC_MODE_HEAT,
     HVAC_MODE_OFF,
     PRESET_AWAY,
@@ -22,7 +24,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import CONTROLLER_MODES, DOMAIN, PRESET_MODES
+from .const import CONTROLLER_MODES, CURRENT_HVAC_ACTIONS, DOMAIN, PRESET_MODES
 from .knx_entity import KnxEntity
 from .schema import ClimateSchema
 
@@ -260,6 +262,20 @@ class KNXClimate(KnxEntity, ClimateEntity):
         # default to ["heat"]
         return hvac_modes if hvac_modes else [HVAC_MODE_HEAT]
 
+    @property
+    def hvac_action(self) -> str | None:
+        """Return the current running hvac operation if supported.
+
+        Need to be one of CURRENT_HVAC_*.
+        """
+        if self._device.supports_on_off and not self._device.is_on:
+            return CURRENT_HVAC_OFF
+        if self._device.mode is not None and self._device.mode.supports_controller_mode:
+            return CURRENT_HVAC_ACTIONS.get(
+                self._device.mode.controller_mode.value, CURRENT_HVAC_IDLE
+            )
+        return None
+
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set operation mode."""
         if self._device.supports_on_off and hvac_mode == HVAC_MODE_OFF:
@@ -308,3 +324,15 @@ class KNXClimate(KnxEntity, ClimateEntity):
             knx_operation_mode = HVACOperationMode(PRESET_MODES_INV.get(preset_mode))
             await self._device.mode.set_operation_mode(knx_operation_mode)
             self.async_write_ha_state()
+
+    async def async_added_to_hass(self) -> None:
+        """Store register state change callback."""
+        await super().async_added_to_hass()
+        if self._device.mode is not None:
+            self._device.mode.register_device_updated_cb(self.after_update_callback)
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Disconnect device object when removed."""
+        await super().async_will_remove_from_hass()
+        if self._device.mode is not None:
+            self._device.mode.unregister_device_updated_cb(self.after_update_callback)

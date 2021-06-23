@@ -8,7 +8,7 @@ from simplipy.errors import (
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_CODE, CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
+from homeassistant.const import CONF_CODE, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client
 
@@ -59,7 +59,7 @@ class SimpliSafeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         try:
-            simplisafe = await self._async_get_simplisafe_api()
+            await self._async_get_simplisafe_api()
         except PendingAuthorizationError:
             LOGGER.info("Awaiting confirmation of MFA email click")
             return await self.async_step_mfa()
@@ -79,7 +79,7 @@ class SimpliSafeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return await self.async_step_finish(
             {
                 CONF_USERNAME: self._username,
-                CONF_TOKEN: simplisafe.refresh_token,
+                CONF_PASSWORD: self._password,
                 CONF_CODE: self._code,
             }
         )
@@ -89,6 +89,9 @@ class SimpliSafeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         existing_entry = await self.async_set_unique_id(self._username)
         if existing_entry:
             self.hass.config_entries.async_update_entry(existing_entry, data=user_input)
+            self.hass.async_create_task(
+                self.hass.config_entries.async_reload(existing_entry.entry_id)
+            )
             return self.async_abort(reason="reauth_successful")
         return self.async_create_entry(title=self._username, data=user_input)
 
@@ -98,7 +101,7 @@ class SimpliSafeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_show_form(step_id="mfa")
 
         try:
-            simplisafe = await self._async_get_simplisafe_api()
+            await self._async_get_simplisafe_api()
         except PendingAuthorizationError:
             LOGGER.error("Still awaiting confirmation of MFA email click")
             return self.async_show_form(
@@ -108,7 +111,7 @@ class SimpliSafeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return await self.async_step_finish(
             {
                 CONF_USERNAME: self._username,
-                CONF_TOKEN: simplisafe.refresh_token,
+                CONF_PASSWORD: self._password,
                 CONF_CODE: self._code,
             }
         )
