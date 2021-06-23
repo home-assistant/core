@@ -14,7 +14,7 @@ from multidict import CIMultiDict
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.core import HomeAssistant, callback
 
-from .const import X_HASSIO, X_INGRESS_PATH
+from .const import MAX_UPLOAD_SIZE, X_HASSIO, X_INGRESS_PATH
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -116,6 +116,11 @@ class HassIOIngress(HomeAssistantView):
         self, request: web.Request, token: str, path: str
     ) -> web.Response | web.StreamResponse:
         """Ingress route for request."""
+        if request.method == "POST":
+            # Allow larger POST requests to add-ons behind ingress
+            request._client_max_size = (  # pylint: disable=protected-access
+                MAX_UPLOAD_SIZE
+            )
         url = self._create_url(token, path)
         data = await request.read()
         source_header = _init_header(request, token)

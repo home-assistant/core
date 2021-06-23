@@ -2,6 +2,8 @@
 
 DOMAIN = "hassio"
 
+MAX_UPLOAD_SIZE = 1024 * 1024 * 1024
+
 ATTR_ADDON = "addon"
 ATTR_ADDONS = "addons"
 ATTR_ADMIN = "admin"

@@ -16,11 +16,9 @@ from homeassistant.components.http import KEY_AUTHENTICATED, HomeAssistantView
 from homeassistant.components.onboarding import async_is_onboarded
 from homeassistant.const import HTTP_UNAUTHORIZED
 
-from .const import X_HASS_IS_ADMIN, X_HASS_USER_ID, X_HASSIO
+from .const import MAX_UPLOAD_SIZE, X_HASS_IS_ADMIN, X_HASS_USER_ID, X_HASSIO
 
 _LOGGER = logging.getLogger(__name__)
-
-MAX_UPLOAD_SIZE = 1024 * 1024 * 1024
 
 NO_TIMEOUT = re.compile(
     r"^(?:"
