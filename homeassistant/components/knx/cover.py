@@ -44,15 +44,12 @@ async def async_setup_platform(
     if not discovery_info or not discovery_info["platform_config"]:
         return
     platform_config = discovery_info["platform_config"]
-    _async_migrate_unique_id(hass, platform_config)
-
     xknx: XKNX = hass.data[DOMAIN].xknx
 
-    entities = []
-    for entity_config in platform_config:
-        entities.append(KNXCover(xknx, entity_config))
-
-    async_add_entities(entities)
+    _async_migrate_unique_id(hass, platform_config)
+    async_add_entities(
+        KNXCover(xknx, entity_config) for entity_config in platform_config
+    )
 
 
 @callback

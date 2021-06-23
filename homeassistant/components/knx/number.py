@@ -27,7 +27,6 @@ async def async_setup_platform(
     """Set up number entities for KNX platform."""
     if not discovery_info or not discovery_info["platform_config"]:
         return
-
     platform_config = discovery_info["platform_config"]
     xknx: XKNX = hass.data[DOMAIN].xknx
 

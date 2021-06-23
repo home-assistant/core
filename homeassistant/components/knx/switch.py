@@ -27,15 +27,12 @@ async def async_setup_platform(
     """Set up switch(es) for KNX platform."""
     if not discovery_info or not discovery_info["platform_config"]:
         return
-
     platform_config = discovery_info["platform_config"]
     xknx: XKNX = hass.data[DOMAIN].xknx
 
-    entities = []
-    for entity_config in platform_config:
-        entities.append(KNXSwitch(xknx, entity_config))
-
-    async_add_entities(entities)
+    async_add_entities(
+        KNXSwitch(xknx, entity_config) for entity_config in platform_config
+    )
 
 
 class KNXSwitch(KnxEntity, SwitchEntity, RestoreEntity):

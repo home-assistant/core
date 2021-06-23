@@ -46,11 +46,9 @@ async def async_setup_platform(
     xknx: XKNX = hass.data[DOMAIN].xknx
 
     _async_migrate_unique_id(hass, platform_config)
-    entities = []
-    for entity_config in platform_config:
-        entities.append(KNXClimate(xknx, entity_config))
-
-    async_add_entities(entities)
+    async_add_entities(
+        KNXClimate(xknx, entity_config) for entity_config in platform_config
+    )
 
 
 @callback
