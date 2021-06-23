@@ -14,23 +14,12 @@ STORAGE_VERSION = 1
 STORAGE_KEY = DOMAIN
 
 
-def ensure_home_valid_tariffs(value: dict) -> dict:
-    """Ensure we only have a single tariff."""
-    if ("stat_tariff" in value) and "tariff_kwh_low" in value:
-        raise vol.Invalid("Either specify a tariff statistic or tariff calculation")
-
-    return value
-
-
-HOME_CONSUMPTION_SCHEMA = vol.All(
-    vol.Schema(
-        {
-            vol.Required("stat_consumption"): str,
-            vol.Required("stat_tariff"): vol.Any(None, str),
-            vol.Required("cost_adjustment_day"): vol.Coerce(float),
-        }
-    ),
-    ensure_home_valid_tariffs,
+HOME_CONSUMPTION_SCHEMA = vol.Schema(
+    {
+        vol.Required("stat_consumption"): str,
+        vol.Required("stat_cost"): vol.Any(None, str),
+        vol.Required("cost_adjustment_day"): vol.Coerce(float),
+    }
 )
 DEVICE_CONSUMPTION_SCHEMA = vol.Schema(
     {
@@ -61,8 +50,8 @@ class EnergyHomeConsumption(TypedDict):
     # This is an ever increasing value
     stat_consumption: str
 
-    # Points at a sensor that contains the cost
-    stat_tariff: str | None
+    # this is an ever increasing value
+    stat_cost: str | None
 
     cost_adjustment_day: float
 

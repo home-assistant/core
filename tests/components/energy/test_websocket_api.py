@@ -64,12 +64,12 @@ async def test_save_preferences(hass, hass_ws_client, hass_storage) -> None:
         "home_consumption": [
             {
                 "stat_consumption": "heat_pump_meter",
-                "stat_tariff": "heat_pump_kwh_cost",
+                "stat_cost": "heat_pump_kwh_cost",
                 "cost_adjustment_day": 1.2,
             },
             {
                 "stat_consumption": "home_meter",
-                "stat_tariff": None,
+                "stat_cost": None,
                 "cost_adjustment_day": 0,
             },
         ],
