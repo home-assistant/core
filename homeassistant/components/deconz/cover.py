@@ -18,14 +18,20 @@ from homeassistant.components.cover import (
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from .const import COVER_TYPES, DAMPERS, NEW_LIGHT, WINDOW_COVERS
+from .const import (
+    COVER_TYPES,
+    LEVEL_CONTROLLABLE_OUTPUT,
+    NEW_LIGHT,
+    WINDOW_COVERING_CONTROLLER,
+    WINDOW_COVERING_DEVICE,
+)
 from .deconz_device import DeconzDevice
 from .gateway import get_gateway_from_config_entry
 
 DEVICE_CLASS = {
-    DAMPERS[0]: DEVICE_CLASS_DAMPER,
-    WINDOW_COVERS[0]: DEVICE_CLASS_SHADE,
-    WINDOW_COVERS[1]: DEVICE_CLASS_SHADE,
+    LEVEL_CONTROLLABLE_OUTPUT: DEVICE_CLASS_DAMPER,
+    WINDOW_COVERING_CONTROLLER: DEVICE_CLASS_SHADE,
+    WINDOW_COVERING_DEVICE: DEVICE_CLASS_SHADE,
 }
 
 
