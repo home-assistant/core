@@ -2,11 +2,14 @@
 from datetime import timedelta
 import logging
 
+import async_timeout
+from miio import AirHumidifier, AirHumidifierMiot, DeviceException
 from miio.gateway.gateway import GatewayException
 
 from homeassistant import config_entries, core
 from homeassistant.const import CONF_HOST, CONF_TOKEN
-from homeassistant.helpers import device_registry as dr
+from homeassistant.core import callback
+from homeassistant.helpers import device_registry as dr, entity_registry as en
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
@@ -17,8 +20,11 @@ from .const import (
     CONF_MODEL,
     DOMAIN,
     KEY_COORDINATOR,
+    KEY_DEVICE,
     MODELS_AIR_MONITOR,
     MODELS_FAN,
+    MODELS_HUMIDIFIER,
+    MODELS_HUMIDIFIER_MIOT,
     MODELS_LIGHT,
     MODELS_SWITCH,
     MODELS_VACUUM,
@@ -30,6 +36,7 @@ _LOGGER = logging.getLogger(__name__)
 GATEWAY_PLATFORMS = ["alarm_control_panel", "light", "sensor", "switch"]
 SWITCH_PLATFORMS = ["switch"]
 FAN_PLATFORMS = ["fan"]
+HUMIDIFIER_PLATFORMS = ["humidifier", "sensor"]
 LIGHT_PLATFORMS = ["light"]
 VACUUM_PLATFORMS = ["vacuum"]
 AIR_MONITOR_PLATFORMS = ["air_quality", "sensor"]
@@ -51,6 +58,7 @@ async def async_setup_entry(
     )
 
 
+@callback
 def get_platforms(config_entry):
     """Return the platforms belonging to a config_entry."""
     model = config_entry.data[CONF_MODEL]
@@ -61,6 +69,8 @@ def get_platforms(config_entry):
     if flow_type == CONF_DEVICE:
         if model in MODELS_SWITCH:
             return SWITCH_PLATFORMS
+        if model in MODELS_HUMIDIFIER:
+            return HUMIDIFIER_PLATFORMS
         if model in MODELS_FAN:
             return FAN_PLATFORMS
         if model in MODELS_LIGHT:
@@ -71,8 +81,63 @@ def get_platforms(config_entry):
         for air_monitor_model in MODELS_AIR_MONITOR:
             if model.startswith(air_monitor_model):
                 return AIR_MONITOR_PLATFORMS
-
+    _LOGGER.error(
+        "Unsupported device found! Please create an issue at "
+        "https://github.com/syssi/xiaomi_airpurifier/issues "
+        "and provide the following data: %s",
+        model,
+    )
     return []
+
+
+async def async_create_miio_device_and_coordinator(
+    hass: core.HomeAssistant, entry: config_entries.ConfigEntry
+):
+    """Set up a data coordinator and one miio device to service multiple entities."""
+    model = entry.data[CONF_MODEL]
+    host = entry.data[CONF_HOST]
+    token = entry.data[CONF_TOKEN]
+    name = entry.title
+    device = None
+    if model not in MODELS_HUMIDIFIER:
+        return
+    if model in MODELS_HUMIDIFIER_MIOT:
+        device = AirHumidifierMiot(host, token)
+    else:
+        device = AirHumidifier(host, token, model=model)
+
+    # removing fan platform entity for humidifiers
+    entity_registry = await en.async_get_registry(hass)
+    entity_id = entity_registry.async_get_entity_id("fan", DOMAIN, entry.unique_id)
+    if entity_id:
+        entity_registry.async_remove(entity_id)
+
+    async def async_update_data():
+        """Fetch data from the device using async_add_executor_job."""
+        # On state change the device doesn't provide the new state immediately.
+        try:
+            async with async_timeout.timeout(10):
+                return await hass.async_add_executor_job(device.status)
+
+        except DeviceException as ex:
+            _LOGGER.error("Got exception while fetching the state: %s", ex)
+
+    # Create update miio device and coordinator
+    coordinator = DataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        # Name of the data. For logging purposes.
+        name=name,
+        update_method=async_update_data,
+        # Polling interval. Will only be polled if there are subscribers.
+        update_interval=timedelta(seconds=60),
+    )
+    hass.data[DOMAIN][entry.entry_id] = {
+        KEY_DEVICE: device,
+        KEY_COORDINATOR: coordinator,
+    }
+    # Trigger first data fetch
+    await coordinator.async_config_entry_first_refresh()
 
 
 async def async_setup_gateway_entry(
@@ -155,6 +220,7 @@ async def async_setup_device_entry(
 ):
     """Set up the Xiaomi Miio device component from a config entry."""
     platforms = get_platforms(entry)
+    await async_create_miio_device_and_coordinator(hass, entry)
 
     if not platforms:
         return False
