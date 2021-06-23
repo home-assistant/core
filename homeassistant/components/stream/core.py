@@ -120,14 +120,6 @@ class Segment:
         """Return reconstructed data for all parts as bytes, without init."""
         return b"".join([part.data for part in self.parts_by_byterange.values()])
 
-    def get_part_bytes(self, start_loc: int) -> bytes:
-        """Return part that begins at start_loc by looking up index in the part map.
-
-        Just a helper method for the remaining_data method below.
-        """
-        part = self.parts_by_byterange.get(start_loc)
-        return b"" if part is None else part.data
-
     def get_aggregating_bytes(
         self, start_loc: int, end_loc: int | float
     ) -> Generator[bytes, None, None]:
@@ -139,11 +131,27 @@ class Segment:
         pos = start_loc
         # Since we use this from a non worker thread, we need to check complete before
         # checking for new data. Use | instead of "or" to avoid short circuit evaluation.
-        while (not self.complete) | bool(bytes_to_write := self.get_part_bytes(pos)):
-            pos += len(bytes_to_write)
+        while (not self.complete) | bool(part := self.parts_by_byterange.get(pos)):
+            if not part:
+                yield b""
+                continue
+            # Store data in a list for efficient concatenation if necessary
+            part_data_list = [part.data]
+            pos += len(part.data)
+            # If we have more data, grab it all so we can send it in one chunk
+            while (part := self.parts_by_byterange.get(pos)) and pos < end_loc:
+                part_data_list.append(part.data)
+                pos += len(part.data)
+            # Skipping the join in the case of a single part avoids an extra copy
+            bytes_to_write = (
+                b"".join(part_data_list)
+                if len(part_data_list) > 1
+                else part_data_list[0]
+            )
+            # Trim output if necessary (probably not used and can consider removing)
             if pos >= end_loc:
                 assert isinstance(end_loc, int)
-                yield bytes_to_write[: len(bytes_to_write) - pos + end_loc]
+                yield bytes_to_write[: len(bytes_to_write) + end_loc - pos]
                 return
             yield bytes_to_write
 
