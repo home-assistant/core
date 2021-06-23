@@ -312,7 +312,7 @@ async def test_config_flow_invalid_interface(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.motion_blinds.config_flow.MotionMulticast.Start_listen",
+        "homeassistant.components.motion_blinds.config_flow.AsyncMotionMulticast.Start_listen",
         side_effect=socket.gaierror,
     ):
         result = await hass.config_entries.flow.async_configure(
