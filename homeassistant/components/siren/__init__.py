@@ -14,6 +14,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_ON,
 )
+from homeassistant.core import ServiceCall
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
@@ -63,6 +64,20 @@ def is_on(hass: HomeAssistantType, entity_id: str) -> bool:
     return hass.states.is_state(entity_id, STATE_ON)
 
 
+def filter_turn_on_params(siren: SirenEntity, params: dict[str, Any]):
+    """Filter out params not supported by the siren."""
+    supported_features = siren.supported_features or 0
+
+    if not supported_features & SUPPORT_TONES:
+        params.pop(ATTR_TONE, None)
+    if not supported_features & SUPPORT_DURATION:
+        params.pop(ATTR_DURATION, None)
+    if not supported_features & SUPPORT_VOLUME_SET:
+        params.pop(ATTR_VOLUME_LEVEL, None)
+
+    return params
+
+
 async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     """Set up siren devices."""
     component = hass.data[DOMAIN] = EntityComponent(
@@ -70,8 +85,15 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     )
     await component.async_setup(config)
 
+    async def async_handle_turn_on_service(
+        siren: SirenEntity, call: ServiceCall
+    ) -> None:
+        """Handle turning a siren on."""
+        params = dict(call.data["params"])
+        await siren.async_turn_on(**filter_turn_on_params(siren, params))
+
     component.async_register_entity_service(
-        SERVICE_TURN_ON, TURN_ON_SCHEMA, "async_turn_on", [SUPPORT_TURN_ON]
+        SERVICE_TURN_ON, TURN_ON_SCHEMA, async_handle_turn_on_service, [SUPPORT_TURN_ON]
     )
     component.async_register_entity_service(
         SERVICE_TURN_OFF, {}, "async_turn_off", [SUPPORT_TURN_OFF]
