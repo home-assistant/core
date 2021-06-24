@@ -3,6 +3,7 @@
 import pytest
 import voluptuous as vol
 
+from homeassistant.components.siren import is_on
 from homeassistant.components.siren.const import (
     ATTR_AVAILABLE_TONES,
     ATTR_DEFAULT_DURATION,
@@ -53,6 +54,11 @@ def test_all_setup_params(hass):
     assert state.attributes.get(ATTR_AVAILABLE_TONES) == ["fire", "alarm"]
     assert state.attributes.get(ATTR_VOLUME_LEVEL) == 0.5
     assert state.attributes.get(ATTR_DEFAULT_DURATION) == 5
+
+
+def test_is_on(hass):
+    """Test is_on."""
+    assert is_on(hass, ENTITY_SIREN)
 
 
 async def test_set_volume_level_bad_attr(hass):

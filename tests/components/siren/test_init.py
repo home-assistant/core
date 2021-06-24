@@ -7,6 +7,8 @@ from homeassistant.components.siren import SirenEntity
 class MockSirenEntity(SirenEntity):
     """Mock siren device to use in tests."""
 
+    _attr_is_on = True
+
     @property
     def supported_features(self) -> int:
         """Return the list of supported features."""
