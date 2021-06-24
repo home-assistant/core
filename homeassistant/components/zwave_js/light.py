@@ -44,6 +44,8 @@ MULTI_COLOR_MAP = {
     ColorComponent.PURPLE: "purple",
 }
 
+TRANSITION_DURATION = "transitionDuration"
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -297,40 +299,14 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
             zwave_brightness = byte_to_zwave_brightness(brightness)
 
         # set transition value before sending new brightness
-        await self._async_set_transition_duration(transition)
+        if transition is not None and self._dimming_duration is not None:
+            zwave_transition = {TRANSITION_DURATION: f"{transition}s"}
+        else:
+            zwave_transition = {}
         # setting a value requires setting targetValue
-        await self.info.node.async_set_value(self._target_value, zwave_brightness)
-
-    async def _async_set_transition_duration(self, duration: int | None = None) -> None:
-        """Set the transition time for the brightness value."""
-        if self._dimming_duration is None:
-            return
-        # pylint: disable=fixme,unreachable
-        # TODO: setting duration needs to be fixed upstream
-        # https://github.com/zwave-js/node-zwave-js/issues/1321
-        return
-
-        if duration is None:  # type: ignore
-            # no transition specified by user, use defaults
-            duration = 7621  # anything over 7620 uses the factory default
-        else:  # pragma: no cover
-            # transition specified by user
-            transition = duration
-            if transition <= 127:
-                duration = transition
-            else:
-                minutes = round(transition / 60)
-                LOGGER.debug(
-                    "Transition rounded to %d minutes for %s",
-                    minutes,
-                    self.entity_id,
-                )
-                duration = minutes + 128
-
-        # only send value if it differs from current
-        # this prevents sending a command for nothing
-        if self._dimming_duration.value != duration:  # pragma: no cover
-            await self.info.node.async_set_value(self._dimming_duration, duration)
+        await self.info.node.async_set_value(
+            self._target_value, zwave_brightness, zwave_transition
+        )
 
     @callback
     def _calculate_color_values(self) -> None:
