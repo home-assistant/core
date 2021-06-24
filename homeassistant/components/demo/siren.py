@@ -90,7 +90,7 @@ class DemoSiren(SirenEntity):
         self._state = True
         self.async_write_ha_state()
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the siren off."""
         self._state = False
         self.async_write_ha_state()
