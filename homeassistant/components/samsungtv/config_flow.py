@@ -223,6 +223,8 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         ):
             raise data_entry_flow.AbortFlow(RESULT_NOT_SUPPORTED)
         if not await self._async_get_and_check_device_info():
+            # If we cannot get device info for an SSDP discovery
+            # its likely a legacy tv.
             self._name = self._title = self._model = model_name
         self.context["title_placeholders"] = {"device": self._title}
         return await self.async_step_confirm()
