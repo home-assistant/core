@@ -1,4 +1,5 @@
 """The tests for the demo siren component."""
+from unittest.mock import call, patch
 
 import pytest
 import voluptuous as vol
@@ -217,3 +218,18 @@ async def test_toggle(hass):
     state = hass.states.get(ENTITY_SIREN)
     assert state.state == STATE_ON
     assert is_on(hass, ENTITY_SIREN)
+
+
+async def test_turn_on_strip_attributes(hass):
+    """Test attributes are stripped from turn_on service call when not supported."""
+    with patch(
+        "homeassistant.components.demo.siren.DemoSiren.async_turn_on"
+    ) as svc_call:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: ENTITY_SIREN, ATTR_VOLUME_LEVEL: 1},
+            blocking=True,
+        )
+        assert svc_call.called
+        assert svc_call.call_args_list[0] == call(**{ATTR_ENTITY_ID: [ENTITY_SIREN]})
