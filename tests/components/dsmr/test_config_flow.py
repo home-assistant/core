@@ -34,7 +34,7 @@ async def test_setup_network(hass, dsmr_connection_send_validate_fixture):
 
     assert result["type"] == "form"
     assert result["step_id"] == "user"
-    assert result["errors"] == {}
+    assert result["errors"] is None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -73,7 +73,7 @@ async def test_setup_serial(com_mock, hass, dsmr_connection_send_validate_fixtur
 
     assert result["type"] == "form"
     assert result["step_id"] == "user"
-    assert result["errors"] == {}
+    assert result["errors"] is None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -110,7 +110,7 @@ async def test_setup_serial_manual(
 
     assert result["type"] == "form"
     assert result["step_id"] == "user"
-    assert result["errors"] == {}
+    assert result["errors"] is None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -127,7 +127,7 @@ async def test_setup_serial_manual(
 
     assert result["type"] == "form"
     assert result["step_id"] == "setup_serial_manual_path"
-    assert result["errors"] == {}
+    assert result["errors"] is None
 
     with patch("homeassistant.components.dsmr.async_setup_entry", return_value=True):
         result = await hass.config_entries.flow.async_configure(
@@ -165,7 +165,7 @@ async def test_setup_serial_fail(com_mock, hass, dsmr_connection_send_validate_f
 
     assert result["type"] == "form"
     assert result["step_id"] == "user"
-    assert result["errors"] == {}
+    assert result["errors"] is None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -208,7 +208,7 @@ async def test_setup_serial_wrong_telegram(
 
     assert result["type"] == "form"
     assert result["step_id"] == "user"
-    assert result["errors"] == {}
+    assert result["errors"] is None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
