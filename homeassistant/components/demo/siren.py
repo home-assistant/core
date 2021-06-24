@@ -33,7 +33,7 @@ class DemoSiren(SirenEntity):
     def __init__(
         self,
         name: str,
-        active_tone: str = None,
+        active_tone: str | None = None,
         available_tones: str = None,
         volume_level: float = None,
         is_on: bool = True,
