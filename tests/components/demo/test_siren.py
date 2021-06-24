@@ -4,12 +4,12 @@ import pytest
 import voluptuous as vol
 
 from homeassistant.components.siren.const import (
-    ATTR_ACTIVE_TONE,
     ATTR_AVAILABLE_TONES,
+    ATTR_DEFAULT_TONE,
     ATTR_TONE,
     ATTR_VOLUME_LEVEL,
     DOMAIN,
-    SERVICE_SET_ACTIVE_TONE,
+    SERVICE_SET_DEFAULT_TONE,
     SERVICE_SET_VOLUME_LEVEL,
 )
 from homeassistant.const import (
@@ -38,14 +38,14 @@ def test_setup_params(hass):
     state = hass.states.get(ENTITY_SIREN)
     assert state.state == STATE_ON
     assert ATTR_VOLUME_LEVEL not in state.attributes
-    assert ATTR_ACTIVE_TONE not in state.attributes
+    assert ATTR_DEFAULT_TONE not in state.attributes
     assert ATTR_AVAILABLE_TONES not in state.attributes
 
 
 def test_all_setup_params(hass):
     """Test the setup with all parameters."""
     state = hass.states.get(ENTITY_SIREN_WITH_ALL_FEATURES)
-    assert state.attributes.get(ATTR_ACTIVE_TONE) == "fire"
+    assert state.attributes.get(ATTR_DEFAULT_TONE) == "fire"
     assert state.attributes.get(ATTR_AVAILABLE_TONES) == ["fire", "alarm"]
     assert state.attributes.get(ATTR_VOLUME_LEVEL) == 0.5
 
@@ -85,39 +85,39 @@ async def test_set_volume_level(hass):
     assert state.attributes.get(ATTR_VOLUME_LEVEL) == 0.75
 
 
-async def test_set_active_tone_bad_attr(hass):
-    """Test setting the active tone without required attribute."""
+async def test_set_default_tone_bad_attr(hass):
+    """Test setting the default tone without required attribute."""
     state = hass.states.get(ENTITY_SIREN_WITH_ALL_FEATURES)
-    assert state.attributes.get(ATTR_ACTIVE_TONE) == "fire"
+    assert state.attributes.get(ATTR_DEFAULT_TONE) == "fire"
 
     with pytest.raises(vol.Invalid):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_ACTIVE_TONE,
+            SERVICE_SET_DEFAULT_TONE,
             {ATTR_TONE: None, ATTR_ENTITY_ID: ENTITY_SIREN_WITH_ALL_FEATURES},
             blocking=True,
         )
     await hass.async_block_till_done()
 
     state = hass.states.get(ENTITY_SIREN_WITH_ALL_FEATURES)
-    assert state.attributes.get(ATTR_ACTIVE_TONE) == "fire"
+    assert state.attributes.get(ATTR_DEFAULT_TONE) == "fire"
 
 
-async def test_set_active_tone(hass):
-    """Test the setting of the active tone."""
+async def test_set_default_tone(hass):
+    """Test the setting of the default tone."""
     state = hass.states.get(ENTITY_SIREN_WITH_ALL_FEATURES)
-    assert state.attributes.get(ATTR_ACTIVE_TONE) == "fire"
+    assert state.attributes.get(ATTR_DEFAULT_TONE) == "fire"
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_ACTIVE_TONE,
+        SERVICE_SET_DEFAULT_TONE,
         {ATTR_TONE: "alarm", ATTR_ENTITY_ID: ENTITY_SIREN_WITH_ALL_FEATURES},
         blocking=True,
     )
     await hass.async_block_till_done()
 
     state = hass.states.get(ENTITY_SIREN_WITH_ALL_FEATURES)
-    assert state.attributes.get(ATTR_ACTIVE_TONE) == "alarm"
+    assert state.attributes.get(ATTR_DEFAULT_TONE) == "alarm"
 
 
 async def test_turn_on(hass):
