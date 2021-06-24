@@ -438,7 +438,7 @@ class FritzBoxProfileSwitch(FritzBoxBaseSwitch, SwitchEntity):
         """Handle profile switch."""
         state = "unlimited" if turn_on else "never"
         await self.hass.async_add_executor_job(
-            self.fritzbox_tools.fritz_profiles[self.profile].set_state(state)
+            self.fritzbox_tools.fritz_profiles[self.profile].set_state, state
         )
 
     @property
