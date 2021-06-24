@@ -129,8 +129,7 @@ class Segment:
         Used to help serve a range request on a segment.
         """
         pos = start_loc
-        # Use | instead of "or" to avoid short circuit evaluation
-        while (not self.complete) | bool(part := self.parts_by_byterange.get(pos)):
+        while (part := self.parts_by_byterange.get(pos)) or not self.complete:
             if not part:
                 yield b""
                 continue
