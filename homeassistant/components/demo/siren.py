@@ -85,7 +85,7 @@ class DemoSiren(SirenEntity):
         """Return true if the siren is on."""
         return self._state
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the siren on."""
         self._state = True
         self.async_write_ha_state()
