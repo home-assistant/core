@@ -54,68 +54,38 @@ class DemoSiren(SirenEntity):
         is_on: bool = True,
     ) -> None:
         """Initialize the siren device."""
-        self._name = name
-        self._state = is_on
-        self._support_flags = SUPPORT_FLAGS
+        self._attr_name = name
+        self._attr_should_poll = False
+        self._attr_supported_features = SUPPORT_FLAGS
+        self._attr_is_on = is_on
         if active_tone is not None and available_tones is not None:
-            self._support_flags = self._support_flags | SUPPORT_TONES
-        self._active_tone = active_tone
-        self._available_tones = available_tones
+            self._attr_supported_features = (
+                self._attr_supported_features | SUPPORT_TONES
+            )
         if volume_level is not None:
-            self._support_flags = self._support_flags | SUPPORT_VOLUME_SET
-        self._volume_level = volume_level
-
-    @property
-    def supported_features(self) -> int:
-        """Return the list of supported features."""
-        return self._support_flags
-
-    @property
-    def should_poll(self) -> bool:
-        """Return the polling state."""
-        return False
-
-    @property
-    def name(self) -> str:
-        """Return the name of the siren device."""
-        return self._name
-
-    @property
-    def active_tone(self) -> str | None:
-        """Return the active tone."""
-        return self._active_tone
-
-    @property
-    def available_tones(self) -> list[str] | None:
-        """Return the available tones."""
-        return self._available_tones
-
-    @property
-    def volume_level(self) -> float | None:
-        """Return the volume level."""
-        return self._volume_level
-
-    @property
-    def is_on(self) -> bool:
-        """Return true if the siren is on."""
-        return self._state
+            self._attr_supported_features = (
+                self._attr_supported_features | SUPPORT_VOLUME_SET
+            )
+        self._attr_active_tone = active_tone
+        self._attr_available_tones = available_tones
+        self._attr_volume_level = volume_level
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the siren on."""
-        self._state = True
+        self._attr_is_on = True
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the siren off."""
-        self._state = False
+        self._attr_is_on = False
         self.async_write_ha_state()
 
     async def async_set_volume_level(self, volume_level: float) -> None:
         """Set new volume level."""
-        self._volume_level = volume_level
+        self._attr_volume_level = volume_level
         self.async_write_ha_state()
 
     async def async_set_active_tone(self, tone: str) -> None:
         """Update active tone."""
-        self._active_tone = tone
+        self._attr_active_tone = tone
         self.async_write_ha_state()

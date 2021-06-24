@@ -114,6 +114,11 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> boo
 class SirenEntity(ToggleEntity):
     """Representation of a siren device."""
 
+    _attr_volume_level: float | None = None
+    _attr_default_duration: int | None = None
+    _attr_default_tone: int | str | None = None
+    _attr_available_tones: list[int] | list[str] | None = None
+
     @property
     def capability_attributes(self) -> dict[str, Any] | None:
         """Return capability attributes."""
@@ -144,21 +149,21 @@ class SirenEntity(ToggleEntity):
     @property
     def volume_level(self) -> float | None:
         """Return the volume level of the device (0 - 1)."""
-        return None
+        return self._attr_volume_level
 
     @property
     def default_duration(self) -> int | None:
         """Return the default duration in seconds of the noise."""
-        return None
+        return self._attr_default_duration
 
     @property
-    def default_tone(self) -> int | str:
+    def default_tone(self) -> int | str | None:
         """
         Return the default tone for the siren.
 
         Requires SUPPORT_TONES.
         """
-        raise NotImplementedError()
+        return self._attr_default_tone
 
     @property
     def available_tones(self) -> list[int] | list[str] | None:
@@ -167,7 +172,7 @@ class SirenEntity(ToggleEntity):
 
         Requires SUPPORT_TONES.
         """
-        raise NotImplementedError()
+        return self._attr_available_tones
 
     def set_default_tone(self, tone: int | str) -> None:
         """Set new default tone."""
