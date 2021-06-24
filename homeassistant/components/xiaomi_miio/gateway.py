@@ -1,7 +1,7 @@
 """Code to handle a Xiaomi Gateway."""
 import logging
-from construct.core import ChecksumError
 
+from construct.core import ChecksumError
 from micloud import MiCloud
 from miio import DeviceException, gateway
 from miio.gateway.gateway import GATEWAY_MODEL_EU
@@ -77,15 +77,15 @@ class ConnectXiaomiGateway:
             # get the gateway info
             self._gateway_device.info()
         except DeviceException as error:
-            if type(error.__cause__) == ChecksumError:
+            if isinstance(error.__cause__, ChecksumError):
                 raise ConfigEntryAuthFailed(error)
-            else:
-                _LOGGER.error(
-                    "DeviceException during setup of xiaomi gateway with host %s, %s",
-                    self._host,
-                    error,
-                )
-                return False
+
+            _LOGGER.error(
+                "DeviceException during setup of xiaomi gateway with host %s, %s",
+                self._host,
+                error,
+            )
+            return False
 
         # get the connected sub devices
         use_cloud = self._use_cloud or self._gateway_info.model == GATEWAY_MODEL_EU
@@ -97,10 +97,10 @@ class ConnectXiaomiGateway:
                 _LOGGER.info(
                     "DeviceException during getting subdevices of xiaomi gateway with host %s, trying cloud to obtain subdevices, %s",
                     self._host,
-                    error
+                    error,
                 )
                 use_cloud = True
-            
+
         if use_cloud:
             # use miio-cloud
             if (

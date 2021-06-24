@@ -1,7 +1,7 @@
 """Code to handle a Xiaomi Device."""
 import logging
-from construct.core import ChecksumError
 
+from construct.core import ChecksumError
 from miio import Device, DeviceException
 
 from homeassistant.exceptions import ConfigEntryAuthFailed
@@ -43,13 +43,15 @@ class ConnectXiaomiDevice:
                 self._device.info
             )
         except DeviceException as error:
-            if type(error.__cause__) == ChecksumError:
+            if isinstance(error.__cause__, ChecksumError):
                 raise ConfigEntryAuthFailed(error)
-            else:
-                _LOGGER.error(
-                    "DeviceException during setup of xiaomi device with host %s, %s", host, error
-                )
-                return False
+
+            _LOGGER.error(
+                "DeviceException during setup of xiaomi device with host %s, %s",
+                host,
+                error,
+            )
+            return False
 
         _LOGGER.debug(
             "%s %s %s detected",
