@@ -1,22 +1,52 @@
 """Tests for the Mikrotik component."""
-from homeassistant.components import mikrotik
+from typing import Final
 
-MOCK_DATA = {
-    mikrotik.CONF_NAME: "Mikrotik",
-    mikrotik.CONF_HOST: "0.0.0.0",
-    mikrotik.CONF_USERNAME: "user",
-    mikrotik.CONF_PASSWORD: "pass",
-    mikrotik.CONF_PORT: 8278,
-    mikrotik.CONF_VERIFY_SSL: False,
+from homeassistant.components.mikrotik.const import (
+    CONF_ARP_PING,
+    CONF_DETECTION_TIME,
+    CONF_DHCP_SERVER_TRACK_MODE,
+)
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_SCAN_INTERVAL,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
+)
+
+MOCK_DATA_OLD: Final = {
+    CONF_NAME: "Mikrotik",
+    CONF_HOST: "0.0.0.1",
+    CONF_USERNAME: "user",
+    CONF_PASSWORD: "pass",
+    CONF_PORT: 8278,
+    CONF_VERIFY_SSL: False,
 }
 
-MOCK_OPTIONS = {
-    mikrotik.CONF_ARP_PING: False,
-    mikrotik.const.CONF_FORCE_DHCP: False,
-    mikrotik.CONF_DETECTION_TIME: mikrotik.DEFAULT_DETECTION_TIME,
+MOCK_DATA: Final = {
+    CONF_HOST: "0.0.0.1",
+    CONF_USERNAME: "user",
+    CONF_PASSWORD: "pass",
+    CONF_PORT: 8278,
+    CONF_VERIFY_SSL: False,
 }
 
-DEVICE_1_DHCP = {
+MOCK_OPTIONS_OLD: Final = {
+    CONF_ARP_PING: True,
+    "force_dhcp": True,
+    CONF_DETECTION_TIME: 300,
+}
+MOCK_OPTIONS: Final = {
+    "force_dhcp": False,
+    CONF_ARP_PING: False,
+    CONF_DHCP_SERVER_TRACK_MODE: "DHCP lease",
+    CONF_DETECTION_TIME: 200,
+    CONF_SCAN_INTERVAL: 10,
+}
+
+DEVICE_1_DHCP: Final = {
     ".id": "*1A",
     "address": "0.0.0.1",
     "mac-address": "00:00:00:00:00:01",
@@ -24,15 +54,14 @@ DEVICE_1_DHCP = {
     "host-name": "Device_1",
     "comment": "Mobile",
 }
-DEVICE_2_DHCP = {
+DEVICE_2_DHCP: Final = {
     ".id": "*1B",
     "address": "0.0.0.2",
     "mac-address": "00:00:00:00:00:02",
-    "active-address": "0.0.0.2",
     "host-name": "Device_2",
     "comment": "PC",
 }
-DEVICE_1_WIRELESS = {
+DEVICE_1_WIRELESS: Final = {
     ".id": "*264",
     "interface": "wlan1",
     "mac-address": "00:00:00:00:00:01",
@@ -67,7 +96,7 @@ DEVICE_1_WIRELESS = {
     "tx-rate-set": "OFDM:6-54 BW:1x SGI:1x HT:0-7",
 }
 
-DEVICE_2_WIRELESS = {
+DEVICE_2_WIRELESS: Final = {
     ".id": "*265",
     "interface": "wlan1",
     "mac-address": "00:00:00:00:00:02",
@@ -129,5 +158,55 @@ ARP_DATA = [
         "dynamic": True,
         "complete": True,
         "disabled": False,
+    },
+]
+
+PING_SUCCESS = [
+    {
+        "seq": 0,
+        "host": "192.168.3.18",
+        "sent": 1,
+        "received": 1,
+    },
+    {
+        "seq": 1,
+        "host": "F8:0D:60:35:12:B8",
+        "time": "26ms",
+        "sent": 2,
+        "received": 2,
+    },
+    {
+        "seq": 1,
+        "host": "F8:0D:60:35:12:B8",
+        "time": "26ms",
+        "sent": 2,
+        "received": 3,
+    },
+]
+
+PING_FAIL = [
+    {
+        "seq": 0,
+        "host": "192.168.3.18",
+        "status": "timeout",
+        "sent": 1,
+        "received": 0,
+        "packet-loss": 100,
+    },
+    {
+        "seq": 1,
+        "host": "F8:0D:60:35:12:B8",
+        "status": "timeout",
+        "sent": 2,
+        "received": 0,
+        "packet-loss": 100,
+    },
+    {
+        "seq": 2,
+        "host": "192.168.3.18",
+        "status": "timeout",
+        "sent": 3,
+        "received": 0,
+        "packet-loss": 100,
     },
 ]

@@ -174,14 +174,15 @@ class MikrotikHubData:
                 api_error,
             )
             return None
+        except librouteros.exceptions.LibRouterosError as err:
+            if "invalid user name or password" in str(err):
+                raise LoginError from err
         return response if response else None
 
     def update_devices(self) -> list[str]:
         """Update clients detected by the hub."""
-
-        hub_clients = {}
-        tracked_clients = []
-        wireless_clients = arp_clients = dhcp_clients = {}
+        tracked_clients: list = []
+        hub_clients = wireless_clients = arp_clients = dhcp_clients = {}
         all_clients: dict[str, MikrotikClient] = self.hass.data[DOMAIN][CLIENTS]
 
         dhcp_clients = self.get_list_from_interface(DHCP)
@@ -200,7 +201,6 @@ class MikrotikHubData:
         if self.use_dhcp_server:
             _LOGGER.debug("Tracking clients using DHCP server")
             hub_clients = dhcp_clients
-
         for mac in hub_clients:
             # don't add clients that are registered or detected by other configured hubs
             if mac not in list(set(all_clients) | set(self.registered_clients)) or (
@@ -230,11 +230,10 @@ class MikrotikHubData:
                 if not dhcp_clients[mac].get("active-address"):
                     # don't update clients in dhcp_server with no active-address
                     continue
+
                 active = True
                 # ping check the rest of active devices if arp ping is enabled
                 if self.dhcp_server_track_mode == "ARP ping" and mac in arp_clients:
-                    if mac == "98:09:CF:0C:98:0F":
-                        print("arp")
                     active = self.do_arp_ping(
                         arp_clients[mac]["address"],
                         arp_clients[mac]["interface"],
@@ -325,8 +324,11 @@ def get_api(entry: MappingProxyType[str, Any]) -> Api:
     """Connect to Mikrotik hub."""
     _LOGGER.debug("Connecting to Mikrotik hub [%s]", entry[CONF_HOST])
 
-    _login_method = (login_plain, login_token)
-    kwargs = {"login_methods": _login_method, "port": entry["port"], "encoding": "utf8"}
+    kwargs = {
+        "login_methods": (login_plain, login_token),
+        "port": entry["port"],
+        "encoding": "utf8",
+    }
 
     if entry[CONF_VERIFY_SSL]:
         ssl_context = ssl.create_default_context()

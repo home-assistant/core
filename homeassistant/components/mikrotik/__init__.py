@@ -24,23 +24,20 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     await hub.async_setup()
 
+    # upgrading from an old entry
+    dhcp_track_mode = (
+        "ARP ping" if config_entry.options.get(CONF_ARP_PING) else "DHCP lease"
+    )
+
     hass.config_entries.async_update_entry(
         config_entry,
         title=f"{hub.hub_data.hostname} ({hub.host})",
         unique_id=config_entry.data[CONF_HOST],
+        options={
+            **config_entry.options,
+            CONF_DHCP_SERVER_TRACK_MODE: dhcp_track_mode,
+        },
     )
-    if CONF_ARP_PING in config_entry.options:
-        dhcp_track_mode = (
-            "ARP ping" if config_entry.options[CONF_ARP_PING] else "DHCP lease"
-        )
-
-        hass.config_entries.async_update_entry(
-            config_entry,
-            options={
-                **config_entry.options,
-                CONF_DHCP_SERVER_TRACK_MODE: dhcp_track_mode,
-            },
-        )
 
     hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = hub
     hass.data[DOMAIN].setdefault(CLIENTS, {})

@@ -147,6 +147,8 @@ class MikrotikOptionsFlowHandler(config_entries.OptionsFlow):
             user_input[CONF_ARP_PING] = (
                 user_input[CONF_DHCP_SERVER_TRACK_MODE] == "ARP ping"
             )
+            if CONF_USE_DHCP_SERVER not in user_input:
+                user_input[CONF_USE_DHCP_SERVER] = DEFAULT_USE_DHCP_SERVER
             return self.async_create_entry(title="", data=user_input)
 
         options = {}
