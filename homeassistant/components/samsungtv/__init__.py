@@ -149,8 +149,7 @@ async def _async_create_bridge_with_updated_data(hass, entry):
             updated_data[CONF_MAC] = mac
 
     if updated_data:
-        data = entry.data.copy()
-        data.update(updated_data)
+        data = {**entry.data, **updated_data}
         hass.config_entries.async_update_entry(entry, data=data)
 
     return bridge
