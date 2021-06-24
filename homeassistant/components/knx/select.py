@@ -66,7 +66,7 @@ class KNXSelect(KnxEntity, SelectEntity, RestoreEntity):
             option[SelectSchema.CONF_OPTION]: option[SelectSchema.CONF_PAYLOAD]
             for option in config[SelectSchema.CONF_OPTIONS]
         }
-        self._attr_options = list(self._option_payloads.keys())
+        self._attr_options = list(self._option_payloads)
         self._attr_current_option = None
 
     async def async_added_to_hass(self) -> None:
