@@ -8,6 +8,7 @@ from .const import DOMAIN
 
 class BroadlinkEntity(Entity):
     """Representation of a Broadlink entity."""
+    _attr_should_poll = False
 
     def __init__(self, device):
         """Initialize the device."""
