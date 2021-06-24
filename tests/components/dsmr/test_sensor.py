@@ -13,13 +13,8 @@ from unittest.mock import DEFAULT, MagicMock
 
 from homeassistant import config_entries
 from homeassistant.components.dsmr.const import DOMAIN
-from homeassistant.components.dsmr.sensor import DerivativeDSMREntity
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import (
-    ENERGY_KILO_WATT_HOUR,
-    VOLUME_CUBIC_METERS,
-    VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR,
-)
+from homeassistant.const import ENERGY_KILO_WATT_HOUR, VOLUME_CUBIC_METERS
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
@@ -177,46 +172,6 @@ async def test_setup_only_energy(hass, dsmr_connection_fixture):
 
     entry = registry.async_get("sensor.gas_consumption")
     assert not entry
-
-
-async def test_derivative():
-    """Test calculation of derivative value."""
-    from dsmr_parser.objects import MBusObject
-
-    config = {"platform": "dsmr"}
-
-    entity = DerivativeDSMREntity("test", "test_device", "5678", "1.0.0", config, False)
-    await entity.async_update()
-
-    assert entity.state is None, "initial state not unknown"
-
-    entity.telegram = {
-        "1.0.0": MBusObject(
-            [
-                {"value": datetime.datetime.fromtimestamp(1551642213)},
-                {"value": Decimal(745.695), "unit": VOLUME_CUBIC_METERS},
-            ]
-        )
-    }
-    await entity.async_update()
-
-    assert entity.state is None, "state after first update should still be unknown"
-
-    entity.telegram = {
-        "1.0.0": MBusObject(
-            [
-                {"value": datetime.datetime.fromtimestamp(1551642543)},
-                {"value": Decimal(745.698), "unit": VOLUME_CUBIC_METERS},
-            ]
-        )
-    }
-    await entity.async_update()
-
-    assert (
-        abs(entity.state - 0.033) < 0.00001
-    ), "state should be hourly usage calculated from first and second update"
-
-    assert entity.unit_of_measurement == VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR
 
 
 async def test_v4_meter(hass, dsmr_connection_fixture):
