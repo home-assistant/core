@@ -61,11 +61,6 @@ DEFAULT_UPDATE_INTERVAL: Final = timedelta(minutes=6)
 DOMAIN: Final = "nam"
 MANUFACTURER: Final = "Nettigo"
 
-AIR_QUALITY_SENSORS: Final[dict[str, str]] = {
-    ATTR_SDS011: "SDS011",
-    ATTR_SPS30: "SPS30",
-}
-
 MIGRATION_SENSORS: Final = [
     ("temperature", ATTR_DHT22_TEMPERATURE),
     ("humidity", ATTR_DHT22_HUMIDITY),
