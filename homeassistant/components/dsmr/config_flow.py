@@ -51,14 +51,16 @@ class DSMRConnection:
         """Equipment identifier."""
         if self._equipment_identifier in self._telegram:
             dsmr_object = self._telegram[self._equipment_identifier]
-            return getattr(dsmr_object, "value", None)
+            identifier: str | None = getattr(dsmr_object, "value", None)
+            return identifier
         return None
 
     def equipment_identifier_gas(self) -> str | None:
         """Equipment identifier gas."""
         if obis_ref.EQUIPMENT_IDENTIFIER_GAS in self._telegram:
             dsmr_object = self._telegram[obis_ref.EQUIPMENT_IDENTIFIER_GAS]
-            return getattr(dsmr_object, "value", None)
+            identifier: str | None = getattr(dsmr_object, "value", None)
+            return identifier
         return None
 
     async def validate_connect(self, hass: core.HomeAssistant) -> bool:
@@ -142,7 +144,7 @@ class DSMRFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     def _abort_if_host_port_configured(
         self,
         port: str,
-        host: str = None,
+        host: str | None = None,
         updates: dict[Any, Any] | None = None,
         reload_on_update: bool = True,
     ) -> FlowResult | None:
