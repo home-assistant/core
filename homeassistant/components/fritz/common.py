@@ -86,11 +86,11 @@ class FritzBoxTools:
         self.connection: FritzConnection = None
         self.fritz_hosts: FritzHosts = None
         self.fritz_status: FritzStatus = None
-        self.hass: HomeAssistant = hass
-        self.host: str = host
-        self.password: str = password
-        self.port: int = port
-        self.username: str = username
+        self.hass = hass
+        self.host = host
+        self.password = password
+        self.port = port
+        self.username = username
         self._mac: str | None = None
         self._model: str | None = None
         self._sw_version: str | None = None
