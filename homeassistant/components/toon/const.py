@@ -1,5 +1,5 @@
 """Constants for the Toon integration."""
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_CONNECTIVITY,
@@ -23,6 +23,7 @@ from homeassistant.const import (
     POWER_WATT,
     TEMP_CELSIUS,
 )
+from homeassistant.util import dt as dt_util
 
 DOMAIN = "toon"
 
@@ -149,7 +150,7 @@ SENSOR_ENTITIES = {
         ATTR_UNIT_OF_MEASUREMENT: VOLUME_M3,
         ATTR_ICON: "mdi:gas-cylinder",
         ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
-        ATTR_LAST_RESET: datetime.fromtimestamp(0),
+        ATTR_LAST_RESET: dt_util.utc_from_timestamp(0),
         ATTR_DEFAULT_ENABLED: False,
     },
     "gas_value": {
@@ -196,7 +197,7 @@ SENSOR_ENTITIES = {
         ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
         ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
         ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
-        ATTR_LAST_RESET: datetime.fromtimestamp(0),
+        ATTR_LAST_RESET: dt_util.utc_from_timestamp(0),
         ATTR_DEFAULT_ENABLED: False,
     },
     "power_meter_reading_low": {
@@ -206,7 +207,7 @@ SENSOR_ENTITIES = {
         ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
         ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
         ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
-        ATTR_LAST_RESET: datetime.fromtimestamp(0),
+        ATTR_LAST_RESET: dt_util.utc_from_timestamp(0),
         ATTR_DEFAULT_ENABLED: False,
     },
     "power_value": {
@@ -224,7 +225,7 @@ SENSOR_ENTITIES = {
         ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
         ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
         ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
-        ATTR_LAST_RESET: datetime.fromtimestamp(0),
+        ATTR_LAST_RESET: dt_util.utc_from_timestamp(0),
         ATTR_DEFAULT_ENABLED: False,
     },
     "solar_meter_reading_low_produced": {
@@ -234,7 +235,7 @@ SENSOR_ENTITIES = {
         ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
         ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
         ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
-        ATTR_LAST_RESET: datetime.fromtimestamp(0),
+        ATTR_LAST_RESET: dt_util.utc_from_timestamp(0),
         ATTR_DEFAULT_ENABLED: False,
     },
     "solar_value": {
@@ -340,7 +341,7 @@ SENSOR_ENTITIES = {
         ATTR_ICON: "mdi:water",
         ATTR_DEFAULT_ENABLED: False,
         ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
-        ATTR_LAST_RESET: datetime.fromtimestamp(0),
+        ATTR_LAST_RESET: dt_util.utc_from_timestamp(0),
     },
     "water_value": {
         ATTR_NAME: "Current Water Usage",

@@ -744,7 +744,7 @@ pyatv==0.7.7
 pyblackbird==0.5
 
 # homeassistant.components.neato
-pybotvac==0.0.20
+pybotvac==0.0.21
 
 # homeassistant.components.cloudflare
 pycfdns==1.2.1
