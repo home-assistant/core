@@ -37,12 +37,29 @@ MAX_SCAN_ATTEMPTS = 16
 OFFLINE_SCANS_TO_MARK_UNAVAILABLE = 3
 
 
+def short_hostname(hostname):
+    """Return the first part of the hostname."""
+    if hostname is None:
+        return None
+    return hostname.split(".")[0]
+
+
+def human_readable_name(hostname, vendor, mac_address):
+    """Generate a human readable name."""
+    if hostname:
+        return short_hostname(hostname)
+    if vendor:
+        return f"{vendor} {mac_address[-8:]}"
+    return f"Nmap Tracker {mac_address}"
+
+
 @dataclass
 class NmapDevice:
     """Class for keeping track of an nmap tracked device."""
 
     mac_address: str
     hostname: str
+    name: str
     ipv4: str
     manufacturer: str
     reason: str
@@ -253,6 +270,7 @@ class NmapDeviceScanner:
                 self.devices.config_entry_owner[entry.unique_id] = self._entry_id
                 self.devices.tracked[entry.unique_id] = NmapDevice(
                     entry.unique_id,
+                    None,
                     entry.original_name,
                     None,
                     self._async_get_vendor(entry.unique_id),
@@ -329,7 +347,7 @@ class NmapDeviceScanner:
                 _LOGGER.info("No MAC address found for %s", ipv4)
                 continue
 
-            name = info["hostnames"][0]["name"] if info["hostnames"] else ipv4
+            hostname = info["hostnames"][0]["name"] if info["hostnames"] else ipv4
 
             formatted_mac = format_mac(mac)
             if (
@@ -339,7 +357,10 @@ class NmapDeviceScanner:
                 continue
 
             vendor = info.get("vendor", {}).get(mac) or self._async_get_vendor(mac)
-            device = NmapDevice(formatted_mac, name, ipv4, vendor, reason, now, 0)
+            name = human_readable_name(hostname, vendor, mac)
+            device = NmapDevice(
+                formatted_mac, hostname, name, ipv4, vendor, reason, now, 0
+            )
             new = formatted_mac not in devices.tracked
 
             devices.tracked[formatted_mac] = device
