@@ -46,7 +46,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.dhcp.*",
     "homeassistant.components.directv.*",
     "homeassistant.components.doorbird.*",
-    "homeassistant.components.dsmr.*",
     "homeassistant.components.dynalite.*",
     "homeassistant.components.eafm.*",
     "homeassistant.components.edl21.*",
