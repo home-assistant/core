@@ -90,7 +90,8 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _async_set_device_unique_id(self, raise_on_progress=True):
         """Set device unique_id."""
-        await self._async_get_and_check_device_info()
+        if not await self._async_get_and_check_device_info():
+            raise data_entry_flow.AbortFlow(RESULT_NOT_SUPPORTED)
         await self._async_set_unique_id_from_udn(raise_on_progress)
 
     async def _async_set_unique_id_from_udn(self, raise_on_progress=True):
@@ -121,7 +122,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self.hass, self._bridge, self._host
         )
         if not info:
-            raise data_entry_flow.AbortFlow(RESULT_NOT_SUPPORTED)
+            return False
         dev_info = info.get("device", {})
         device_type = dev_info.get("type")
         if device_type != "Samsung SmartTV":
@@ -134,6 +135,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if mac := mac_from_device_info(info):
             self._mac = mac
         self._device_info = info
+        return True
 
     async def async_step_import(self, user_input=None):
         """Handle configuration by yaml file."""
@@ -210,6 +212,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_ssdp(self, discovery_info: DiscoveryInfoType):
         """Handle a flow initialized by ssdp discovery."""
         LOGGER.debug("Samsung device found via SSDP: %s", discovery_info)
+        model_name = discovery_info.get(ATTR_UPNP_MODEL_NAME)
         self._udn = _strip_uuid(discovery_info[ATTR_UPNP_UDN])
         self._host = urlparse(discovery_info[ATTR_SSDP_LOCATION]).hostname
         await self._async_set_unique_id_from_udn()
@@ -219,9 +222,10 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             "samsung"
         ):
             raise data_entry_flow.AbortFlow(RESULT_NOT_SUPPORTED)
-        self._name = self._title = self._model = discovery_info.get(
-            ATTR_UPNP_MODEL_NAME
-        )
+        if not await self._async_get_and_check_device_info():
+            # If we cannot get device info for an SSDP discovery
+            # its likely a legacy tv.
+            self._name = self._title = self._model = model_name
         self.context["title_placeholders"] = {"device": self._title}
         return await self.async_step_confirm()
 

@@ -58,6 +58,7 @@ def _get_device_info(bridge, host):
     for port in WEBSOCKET_PORTS:
         bridge = SamsungTVBridge.get_bridge(METHOD_WEBSOCKET, host, port)
         if info := bridge.device_info():
+            LOGGER.warning("got device info: %s", info)
             return port, METHOD_WEBSOCKET, info
 
     bridge = SamsungTVBridge.get_bridge(METHOD_LEGACY, host, LEGACY_PORT)
