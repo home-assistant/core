@@ -80,13 +80,13 @@ async def async_setup_entry(
 ) -> None:
     """Set up the DSMR sensor."""
     dsmr_version = entry.data[CONF_DSMR_VERSION]
-    devices = [
+    entities = [
         DSMREntity(sensor, entry)
         for sensor in SENSORS
         if (sensor.dsmr_versions is None or dsmr_version in sensor.dsmr_versions)
         and (not sensor.is_gas or CONF_SERIAL_ID_GAS in entry.data)
     ]
-    async_add_entities(devices)
+    async_add_entities(entities)
 
     min_time_between_updates = timedelta(
         seconds=entry.options.get(CONF_TIME_BETWEEN_UPDATE, DEFAULT_TIME_BETWEEN_UPDATE)
@@ -96,8 +96,8 @@ async def async_setup_entry(
     def update_entities_telegram(telegram: dict[str, DSMRObject]):
         """Update entities with latest telegram and trigger state update."""
         # Make all device entities aware of new telegram
-        for device in devices:
-            device.update_data(telegram)
+        for entity in entities:
+            entity.update_data(telegram)
 
     # Creates an asyncio.Protocol factory for reading DSMR telegrams from
     # serial and calls update_entities_telegram to update entities on arrival
