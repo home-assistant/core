@@ -35,14 +35,16 @@ async def async_setup_entry(
 class DiffuserRoomSize(DiffuserEntity, SelectEntity):
     """Representation of a diffuser room size select entity."""
 
+    _attr_icon = "mdi:ruler-square"
+    _attr_unit_of_measurement = AREA_SQUARE_METERS
+    _attr_options = ["15", "30", "60", "100"]
+
     def __init__(
         self, diffuser: Diffuser, coordinator: RitualsDataUpdateCoordinator
     ) -> None:
         """Initialize the diffuser room size select entity."""
         super().__init__(diffuser, coordinator, ROOM_SIZE_SUFFIX)
-        self._attr_icon = "mdi:ruler-square"
-        self._attr_unit_of_measurement = AREA_SQUARE_METERS
-        self._attr_options = ["15", "30", "60", "100"]
+        self._attr_entity_registry_enabled_default = diffuser.has_battery
 
     @property
     def current_option(self) -> str:
