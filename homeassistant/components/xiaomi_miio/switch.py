@@ -175,13 +175,13 @@ SWITCH_TYPES = {
         service=SERVICE_SET_BUZZER,
     ),
     FEATURE_SET_CHILD_LOCK: SwitchType(
-        name="Child lock",
+        name="Child Lock",
         icon="mdi:lock",
         short_name=ATTR_CHILD_LOCK,
         service=SERVICE_SET_CHILD_LOCK,
     ),
     FEATURE_SET_DRY: SwitchType(
-        name="Dry mode",
+        name="Dry Mode",
         icon="mdi:hair-dryer",
         short_name=ATTR_DRY,
         service=SERVICE_SET_DRY,
