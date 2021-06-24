@@ -1,6 +1,6 @@
 """Support for Tibber sensors."""
 import asyncio
-from datetime import datetime, timedelta
+from datetime import timedelta
 import logging
 from random import randrange
 
