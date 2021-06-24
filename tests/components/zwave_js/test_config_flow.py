@@ -1726,7 +1726,7 @@ async def test_options_addon_not_installed(
     new_addon_options,
     disconnect_calls,
 ):
-    """Test options flow and add-on already running on Supervisor."""
+    """Test options flow and add-on not installed on Supervisor."""
     addon_installed.return_value["version"] = None
     addon_options.update(old_addon_options)
     entry = integration
