@@ -363,6 +363,29 @@ async def test_ssdp_legacy_not_supported(hass: HomeAssistant, remote: Mock):
         assert result["reason"] == RESULT_NOT_SUPPORTED
 
 
+async def test_ssdp_websocket_success_populates_mac_address(
+    hass: HomeAssistant, remotews: Mock
+):
+    """Test starting a flow from ssdp for a supported device populates the mac."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_SSDP}, data=MOCK_SSDP_DATA
+    )
+    assert result["type"] == "form"
+    assert result["step_id"] == "confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input="whatever"
+    )
+    assert result["type"] == "create_entry"
+    assert result["title"] == "Living Room (82GXARRS)"
+    assert result["data"][CONF_HOST] == "fake_host"
+    assert result["data"][CONF_NAME] == "Living Room"
+    assert result["data"][CONF_MAC] == "aa:bb:cc:dd:ee:ff"
+    assert result["data"][CONF_MANUFACTURER] == "Samsung fake_manufacturer"
+    assert result["data"][CONF_MODEL] == "82GXARRS"
+    assert result["result"].unique_id == "0d1cef00-00dc-1000-9c80-4844f7b172de"
+
+
 async def test_ssdp_websocket_not_supported(hass: HomeAssistant, remote: Mock):
     """Test starting a flow from discovery for not supported device."""
     with patch(
