@@ -20,7 +20,6 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_TOKEN,
 )
-from homeassistant.core import callback
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.typing import DiscoveryInfoType
 
@@ -114,7 +113,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Set the unique id from the udn."""
         assert self._host is not None
         await self.async_set_unique_id(self._udn, raise_on_progress=raise_on_progress)
-        existing_entry = self._async_update_existing_host_entry(self._host)
+        existing_entry = await self._async_update_existing_host_entry(self._host)
         updates = {CONF_HOST: self._host}
         if self._mac:
             updates[CONF_MAC] = self._mac
@@ -192,8 +191,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(step_id="user", data_schema=DATA_SCHEMA)
 
-    @callback
-    def _async_update_existing_host_entry(self, host):
+    async def _async_update_existing_host_entry(self, host):
         for entry in self._async_current_entries(include_ignore=False):
             if entry.data[CONF_HOST] != host:
                 continue
@@ -206,13 +204,14 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 entry_kw_args["data"] = data_copy
             if entry_kw_args:
                 self.hass.config_entries.async_update_entry(entry, **entry_kw_args)
+                await self.hass.config_entries.async_reload(entry.entry_id)
             return entry
         return None
 
     async def _async_start_discovery(self):
         """Start discovery."""
         assert self._host is not None
-        if entry := self._async_update_existing_host_entry(self._host):
+        if entry := await self._async_update_existing_host_entry(self._host):
             if entry.unique_id:
                 # Let the flow continue to fill the missing
                 # unique id as we may be able to obtain it
