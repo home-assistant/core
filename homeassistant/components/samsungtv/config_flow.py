@@ -191,7 +191,9 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 entry_kw_args["data"] = data_copy
             if entry_kw_args:
                 self.hass.config_entries.async_update_entry(entry, **entry_kw_args)
-                await self.hass.config_entries.async_reload(entry.entry_id)
+                self.hass.async_create_task(
+                    self.hass.config_entries.async_reload(entry.entry_id)
+                )
             return entry
         return None
 
