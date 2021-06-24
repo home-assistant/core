@@ -208,7 +208,7 @@ av==8.0.3
 axis==44
 
 # homeassistant.components.azure_event_hub
-azure-eventhub==5.1.0
+azure-eventhub==5.5.0
 
 # homeassistant.components.homekit
 base36==0.1.1
@@ -731,7 +731,7 @@ pyarlo==0.2.4
 pyatag==0.3.5.3
 
 # homeassistant.components.netatmo
-pyatmo==5.0.1
+pyatmo==5.1.0
 
 # homeassistant.components.apple_tv
 pyatv==0.7.7
