@@ -7,9 +7,6 @@ from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.entity_registry import (
-    async_get_registry as async_get_entity_registry,
-)
 
 from .const import DOMAIN
 from .coordinator import WLEDDataUpdateCoordinator
@@ -28,7 +25,6 @@ async def async_setup_entry(
     coordinator: WLEDDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     update_segments = partial(
         async_update_segments,
-        entry,
         coordinator,
         {},
         async_add_entities,
@@ -42,19 +38,21 @@ class WLEDPaletteSelect(WLEDEntity, SelectEntity):
 
     _attr_icon = "mdi:palette-outline"
     _segment: int
+    _attr_entity_registry_enabled_default = False
 
     def __init__(self, coordinator: WLEDDataUpdateCoordinator, segment: int) -> None:
         """Initialize WLED ."""
         super().__init__(coordinator=coordinator)
 
-        # If this is the one and only segment, use a simpler name
+        # Segment 0 uses a simpler name, which is more natural for when using
+        # a single segment / using WLED with one big LED strip.
         self._attr_name = (
             f"{coordinator.data.info.name} Segment {segment} Color Palette"
         )
-        if len(coordinator.data.state.segments) == 1:
+        if segment == 0:
             self._attr_name = f"{coordinator.data.info.name} Color Palette"
 
-        self._attr_unique_id = f"{coordinator.data.info.mac_address}_{segment}"
+        self._attr_unique_id = f"{coordinator.data.info.mac_address}_palette_{segment}"
         self._attr_options = [
             palette.name for palette in self.coordinator.data.palettes
         ]
@@ -83,7 +81,6 @@ class WLEDPaletteSelect(WLEDEntity, SelectEntity):
 
 @callback
 def async_update_segments(
-    entry: ConfigEntry,
     coordinator: WLEDDataUpdateCoordinator,
     current: dict[int, WLEDPaletteSelect],
     async_add_entities,
@@ -101,23 +98,3 @@ def async_update_segments(
 
     if new_entities:
         async_add_entities(new_entities)
-
-    # Process deleted segments, remove them from Home Assistant
-    for segment_id in current_ids - segment_ids:
-        coordinator.hass.async_create_task(
-            async_remove_entity(segment_id, coordinator, current)
-        )
-
-
-async def async_remove_entity(
-    index: int,
-    coordinator: WLEDDataUpdateCoordinator,
-    current: dict[int, WLEDPaletteSelect],
-) -> None:
-    """Remove WLED segment from Home Assistant."""
-    entity = current[index]
-    await entity.async_remove(force_remove=True)
-    registry = await async_get_entity_registry(coordinator.hass)
-    if entity.entity_id in registry.entities:
-        registry.async_remove(entity.entity_id)
-    del current[index]
