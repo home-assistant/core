@@ -27,7 +27,6 @@ from .common import FritzBoxTools
 from .const import (
     DEFAULT_HOST,
     DEFAULT_PORT,
-    DEFAULT_USERNAME,
     DOMAIN,
     ERROR_AUTH_INVALID,
     ERROR_CANNOT_CONNECT,
