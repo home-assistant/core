@@ -9,6 +9,8 @@ from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ICON,
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    CONCENTRATION_PARTS_PER_MILLION,
+    DEVICE_CLASS_CO2,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_SIGNAL_STRENGTH,
@@ -36,12 +38,17 @@ ATTR_DHT22_HUMIDITY: Final = "dht22_humidity"
 ATTR_DHT22_TEMPERATURE: Final = "dht22_temperature"
 ATTR_HECA_HUMIDITY: Final = "heca_humidity"
 ATTR_HECA_TEMPERATURE: Final = "heca_temperature"
+ATTR_MHZ14A_CARBON_DIOXIDE: Final = "mhz14a_carbon_dioxide"
 ATTR_SDS011: Final = "sds011"
+ATTR_SDS011_P1: Final = f"{ATTR_SDS011}{SUFFIX_P1}"
+ATTR_SDS011_P2: Final = f"{ATTR_SDS011}{SUFFIX_P2}"
 ATTR_SHT3X_HUMIDITY: Final = "sht3x_humidity"
 ATTR_SHT3X_TEMPERATURE: Final = "sht3x_temperature"
 ATTR_SIGNAL_STRENGTH: Final = "signal"
 ATTR_SPS30: Final = "sps30"
 ATTR_SPS30_P0: Final = f"{ATTR_SPS30}{SUFFIX_P0}"
+ATTR_SPS30_P1: Final = f"{ATTR_SPS30}{SUFFIX_P1}"
+ATTR_SPS30_P2: Final = f"{ATTR_SPS30}{SUFFIX_P2}"
 ATTR_SPS30_P4: Final = f"{ATTR_SPS30}{SUFFIX_P4}"
 ATTR_UPTIME: Final = "uptime"
 
@@ -121,6 +128,30 @@ SENSORS: Final[dict[str, SensorDescription]] = {
         ATTR_ENABLED: True,
         ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
     },
+    ATTR_MHZ14A_CARBON_DIOXIDE: {
+        ATTR_LABEL: f"{DEFAULT_NAME} MH-Z14A Carbon Dioxide",
+        ATTR_UNIT: CONCENTRATION_PARTS_PER_MILLION,
+        ATTR_DEVICE_CLASS: DEVICE_CLASS_CO2,
+        ATTR_ICON: None,
+        ATTR_ENABLED: True,
+        ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+    },
+    ATTR_SDS011_P1: {
+        ATTR_LABEL: f"{DEFAULT_NAME} SDS011 Particulate Matter 10",
+        ATTR_UNIT: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        ATTR_DEVICE_CLASS: None,
+        ATTR_ICON: "mdi:blur",
+        ATTR_ENABLED: True,
+        ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+    },
+    ATTR_SDS011_P2: {
+        ATTR_LABEL: f"{DEFAULT_NAME} SDS011 Particulate Matter 2.5",
+        ATTR_UNIT: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        ATTR_DEVICE_CLASS: None,
+        ATTR_ICON: "mdi:blur",
+        ATTR_ENABLED: True,
+        ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+    },
     ATTR_SHT3X_HUMIDITY: {
         ATTR_LABEL: f"{DEFAULT_NAME} SHT3X Humidity",
         ATTR_UNIT: PERCENTAGE,
@@ -139,6 +170,22 @@ SENSORS: Final[dict[str, SensorDescription]] = {
     },
     ATTR_SPS30_P0: {
         ATTR_LABEL: f"{DEFAULT_NAME} SPS30 Particulate Matter 1.0",
+        ATTR_UNIT: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        ATTR_DEVICE_CLASS: None,
+        ATTR_ICON: "mdi:blur",
+        ATTR_ENABLED: True,
+        ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+    },
+    ATTR_SPS30_P1: {
+        ATTR_LABEL: f"{DEFAULT_NAME} SPS30 Particulate Matter 10",
+        ATTR_UNIT: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        ATTR_DEVICE_CLASS: None,
+        ATTR_ICON: "mdi:blur",
+        ATTR_ENABLED: True,
+        ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+    },
+    ATTR_SPS30_P2: {
+        ATTR_LABEL: f"{DEFAULT_NAME} SPS30 Particulate Matter 2.5",
         ATTR_UNIT: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         ATTR_DEVICE_CLASS: None,
         ATTR_ICON: "mdi:blur",
