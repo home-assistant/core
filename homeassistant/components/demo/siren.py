@@ -34,7 +34,7 @@ class DemoSiren(SirenEntity):
         self,
         name: str,
         active_tone: str | None = None,
-        available_tones: str = None,
+        available_tones: str | None = None,
         volume_level: float = None,
         is_on: bool = True,
     ) -> None:
