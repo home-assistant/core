@@ -1,13 +1,5 @@
 """Support for interface with a Bravia TV."""
-import logging
-
-import voluptuous as vol
-
-from homeassistant.components.media_player import (
-    DEVICE_CLASS_TV,
-    PLATFORM_SCHEMA,
-    MediaPlayerEntity,
-)
+from homeassistant.components.media_player import DEVICE_CLASS_TV, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
@@ -21,22 +13,10 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
 )
-from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PIN,
-    STATE_OFF,
-    STATE_PAUSED,
-    STATE_PLAYING,
-)
-import homeassistant.helpers.config_validation as cv
+from homeassistant.const import STATE_OFF, STATE_PAUSED, STATE_PLAYING
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.util.json import load_json
 
-from .const import ATTR_MANUFACTURER, BRAVIA_CONFIG_FILE, DEFAULT_NAME, DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
+from .const import ATTR_MANUFACTURER, DEFAULT_NAME, DOMAIN
 
 SUPPORT_BRAVIA = (
     SUPPORT_PAUSE
@@ -51,43 +31,6 @@ SUPPORT_BRAVIA = (
     | SUPPORT_PLAY
     | SUPPORT_STOP
 )
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    }
-)
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the Bravia TV platform."""
-    host = config[CONF_HOST]
-
-    bravia_config_file_path = hass.config.path(BRAVIA_CONFIG_FILE)
-    bravia_config = await hass.async_add_executor_job(
-        load_json, bravia_config_file_path
-    )
-    if not bravia_config:
-        _LOGGER.error(
-            "Configuration import failed, there is no bravia.conf file in the configuration folder"
-        )
-        return
-
-    while bravia_config:
-        # Import a configured TV
-        host_ip, host_config = bravia_config.popitem()
-        if host_ip == host:
-            pin = host_config[CONF_PIN]
-
-            hass.async_create_task(
-                hass.config_entries.flow.async_init(
-                    DOMAIN,
-                    context={"source": SOURCE_IMPORT},
-                    data={CONF_HOST: host, CONF_PIN: pin},
-                )
-            )
-            return
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
