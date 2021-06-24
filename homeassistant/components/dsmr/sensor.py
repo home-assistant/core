@@ -15,12 +15,7 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_PORT,
-    EVENT_HOMEASSISTANT_STOP,
-    TIME_HOURS,
-)
+from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import CoreState, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util import Throttle
@@ -172,7 +167,7 @@ async def async_setup_entry(
         else:
             gas_obis = obis_ref.GAS_METER_READING
 
-        # Add gas meter reading and derivative for usage
+        # Add gas meter reading
         devices += [
             DSMREntity(
                 "Gas Consumption",
@@ -181,15 +176,7 @@ async def async_setup_entry(
                 gas_obis,
                 config,
                 True,
-            ),
-            DerivativeDSMREntity(
-                "Hourly Gas Consumption",
-                DEVICE_NAME_GAS,
-                config[CONF_SERIAL_ID_GAS],
-                gas_obis,
-                config,
-                False,
-            ),
+            )
         ]
 
     async_add_entities(devices)
@@ -374,66 +361,3 @@ class DSMREntity(SensorEntity):
             return "low"
 
         return None
-
-
-class DerivativeDSMREntity(DSMREntity):
-    """Calculated derivative for values where the DSMR doesn't offer one.
-
-    Gas readings are only reported per hour and don't offer a rate only
-    the current meter reading. This entity converts subsequents readings
-    into a hourly rate.
-    """
-
-    _previous_reading = None
-    _previous_timestamp = None
-    _state = None
-
-    @property
-    def state(self):
-        """Return the calculated current hourly rate."""
-        return self._state
-
-    @property
-    def force_update(self):
-        """Disable force update."""
-        return False
-
-    @property
-    def should_poll(self):
-        """Enable polling."""
-        return True
-
-    async def async_update(self):
-        """Recalculate hourly rate if timestamp has changed.
-
-        DSMR updates gas meter reading every hour. Along with the new
-        value a timestamp is provided for the reading. Test if the last
-        known timestamp differs from the current one then calculate a
-        new rate for the previous hour.
-
-        """
-        # check if the timestamp for the object differs from the previous one
-        timestamp = self.get_dsmr_object_attr("datetime")
-        if timestamp and timestamp != self._previous_timestamp:
-            current_reading = self.get_dsmr_object_attr("value")
-
-            if self._previous_reading is None:
-                # Can't calculate rate without previous datapoint
-                # just store current point
-                pass
-            else:
-                # Recalculate the rate
-                diff = current_reading - self._previous_reading
-                timediff = timestamp - self._previous_timestamp
-                total_seconds = timediff.total_seconds()
-                self._state = round(float(diff) / total_seconds * 3600, 3)
-
-            self._previous_reading = current_reading
-            self._previous_timestamp = timestamp
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of this entity, per hour, if any."""
-        unit = self.get_dsmr_object_attr("unit")
-        if unit:
-            return f"{unit}/{TIME_HOURS}"
