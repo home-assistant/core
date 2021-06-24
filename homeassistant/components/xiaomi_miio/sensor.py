@@ -18,7 +18,6 @@ from homeassistant.components.sensor import (
     STATE_CLASS_MEASUREMENT,
     SensorEntity,
 )
-from homeassistant.components.xiaomi_miio.number import ATTR_ACTUAL_MOTOR_SPEED
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
@@ -74,6 +73,7 @@ ATTR_NIGHT_TIME_END = "night_time_end"
 ATTR_SENSOR_STATE = "sensor_state"
 ATTR_WATER_LEVEL = "water_level"
 ATTR_HUMIDITY = "humidity"
+ATTR_ACTUAL_MOTOR_SPEED = "actual_speed"
 
 
 @dataclass
