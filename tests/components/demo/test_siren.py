@@ -56,11 +56,6 @@ def test_all_setup_params(hass):
     assert state.attributes.get(ATTR_DEFAULT_DURATION) == 5
 
 
-def test_is_on(hass):
-    """Test is_on."""
-    assert is_on(hass, ENTITY_SIREN)
-
-
 async def test_set_volume_level_bad_attr(hass):
     """Test setting the volume level without required attribute."""
     state = hass.states.get(ENTITY_SIREN_WITH_ALL_FEATURES)
@@ -173,12 +168,14 @@ async def test_turn_on(hass):
     )
     state = hass.states.get(ENTITY_SIREN)
     assert state.state == STATE_OFF
+    assert not is_on(hass, ENTITY_SIREN)
 
     await hass.services.async_call(
         DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_SIREN}, blocking=True
     )
     state = hass.states.get(ENTITY_SIREN)
     assert state.state == STATE_ON
+    assert is_on(hass, ENTITY_SIREN)
 
 
 async def test_turn_off(hass):
@@ -188,12 +185,14 @@ async def test_turn_off(hass):
     )
     state = hass.states.get(ENTITY_SIREN)
     assert state.state == STATE_ON
+    assert is_on(hass, ENTITY_SIREN)
 
     await hass.services.async_call(
         DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_SIREN}, blocking=True
     )
     state = hass.states.get(ENTITY_SIREN)
     assert state.state == STATE_OFF
+    assert not is_on(hass, ENTITY_SIREN)
 
 
 async def test_toggle(hass):
@@ -203,15 +202,18 @@ async def test_toggle(hass):
     )
     state = hass.states.get(ENTITY_SIREN)
     assert state.state == STATE_ON
+    assert is_on(hass, ENTITY_SIREN)
 
     await hass.services.async_call(
         DOMAIN, SERVICE_TOGGLE, {ATTR_ENTITY_ID: ENTITY_SIREN}, blocking=True
     )
     state = hass.states.get(ENTITY_SIREN)
     assert state.state == STATE_OFF
+    assert not is_on(hass, ENTITY_SIREN)
 
     await hass.services.async_call(
         DOMAIN, SERVICE_TOGGLE, {ATTR_ENTITY_ID: ENTITY_SIREN}, blocking=True
     )
     state = hass.states.get(ENTITY_SIREN)
     assert state.state == STATE_ON
+    assert is_on(hass, ENTITY_SIREN)
