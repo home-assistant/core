@@ -5,9 +5,11 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_TYPE,
     CONF_UNIT_OF_MEASUREMENT,
+    DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_TEMPERATURE,
+    ENERGY_KILO_WATT_HOUR,
     FREQUENCY_HERTZ,
     PERCENTAGE,
     POWER_KILO_WATT,
@@ -20,8 +22,8 @@ ATTR_TARGET_TEMPERATURE = "target_temperature"
 ATTR_INSIDE_TEMPERATURE = "inside_temperature"
 ATTR_OUTSIDE_TEMPERATURE = "outside_temperature"
 ATTR_TOTAL_POWER = "total_power"
-ATTR_COOL_POWER = "cool_power"
-ATTR_HEAT_POWER = "heat_power"
+ATTR_COOL_ENERGY = "cool_energy"
+ATTR_HEAT_ENERGY = "heat_energy"
 ATTR_HUMIDITY = "humidity"
 ATTR_TARGET_HUMIDITY = "target_humidity"
 ATTR_COMPRESSOR_FREQUENCY = "compressor_frequency"
@@ -32,6 +34,7 @@ ATTR_STATE_OFF = "off"
 SENSOR_TYPE_TEMPERATURE = "temperature"
 SENSOR_TYPE_HUMIDITY = "humidity"
 SENSOR_TYPE_POWER = "power"
+SENSOR_TYPE_ENERGY = "energy"
 SENSOR_TYPE_FREQUENCY = "frequency"
 
 SENSOR_TYPES = {
@@ -65,19 +68,19 @@ SENSOR_TYPES = {
         CONF_DEVICE_CLASS: DEVICE_CLASS_POWER,
         CONF_UNIT_OF_MEASUREMENT: POWER_KILO_WATT,
     },
-    ATTR_COOL_POWER: {
-        CONF_NAME: "Cool Power Consumption",
-        CONF_TYPE: SENSOR_TYPE_POWER,
+    ATTR_COOL_ENERGY: {
+        CONF_NAME: "Cool Energy Consumption",
+        CONF_TYPE: SENSOR_TYPE_ENERGY,
         CONF_ICON: "mdi:snowflake",
-        CONF_DEVICE_CLASS: DEVICE_CLASS_POWER,
-        CONF_UNIT_OF_MEASUREMENT: POWER_KILO_WATT,
+        CONF_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
+        CONF_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
     },
-    ATTR_HEAT_POWER: {
-        CONF_NAME: "Heat Power Consumption",
-        CONF_TYPE: SENSOR_TYPE_POWER,
+    ATTR_HEAT_ENERGY: {
+        CONF_NAME: "Heat Energy Consumption",
+        CONF_TYPE: SENSOR_TYPE_ENERGY,
         CONF_ICON: "mdi:fire",
-        CONF_DEVICE_CLASS: DEVICE_CLASS_POWER,
-        CONF_UNIT_OF_MEASUREMENT: POWER_KILO_WATT,
+        CONF_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
+        CONF_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
     },
     ATTR_COMPRESSOR_FREQUENCY: {
         CONF_NAME: "Compressor Frequency",

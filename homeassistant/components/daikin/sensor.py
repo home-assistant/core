@@ -11,13 +11,14 @@ from homeassistant.const import (
 from . import DOMAIN as DAIKIN_DOMAIN, DaikinApi
 from .const import (
     ATTR_COMPRESSOR_FREQUENCY,
-    ATTR_COOL_POWER,
-    ATTR_HEAT_POWER,
+    ATTR_COOL_ENERGY,
+    ATTR_HEAT_ENERGY,
     ATTR_HUMIDITY,
     ATTR_INSIDE_TEMPERATURE,
     ATTR_OUTSIDE_TEMPERATURE,
     ATTR_TARGET_HUMIDITY,
     ATTR_TOTAL_POWER,
+    SENSOR_TYPE_ENERGY,
     SENSOR_TYPE_FREQUENCY,
     SENSOR_TYPE_HUMIDITY,
     SENSOR_TYPE_POWER,
@@ -42,8 +43,8 @@ async def async_setup_entry(hass, entry, async_add_entities):
         sensors.append(ATTR_OUTSIDE_TEMPERATURE)
     if daikin_api.device.support_energy_consumption:
         sensors.append(ATTR_TOTAL_POWER)
-        sensors.append(ATTR_COOL_POWER)
-        sensors.append(ATTR_HEAT_POWER)
+        sensors.append(ATTR_COOL_ENERGY)
+        sensors.append(ATTR_HEAT_ENERGY)
     if daikin_api.device.support_humidity:
         sensors.append(ATTR_HUMIDITY)
         sensors.append(ATTR_TARGET_HUMIDITY)
@@ -62,6 +63,7 @@ class DaikinSensor(SensorEntity):
             SENSOR_TYPE_TEMPERATURE: DaikinClimateSensor,
             SENSOR_TYPE_HUMIDITY: DaikinClimateSensor,
             SENSOR_TYPE_POWER: DaikinPowerSensor,
+            SENSOR_TYPE_ENERGY: DaikinPowerSensor,
             SENSOR_TYPE_FREQUENCY: DaikinClimateSensor,
         }[SENSOR_TYPES[monitored_state][CONF_TYPE]]
         return cls(api, monitored_state)
@@ -143,8 +145,8 @@ class DaikinPowerSensor(DaikinSensor):
         """Return the state of the sensor."""
         if self._device_attribute == ATTR_TOTAL_POWER:
             return round(self._api.device.current_total_power_consumption, 2)
-        if self._device_attribute == ATTR_COOL_POWER:
+        if self._device_attribute == ATTR_COOL_ENERGY:
             return round(self._api.device.last_hour_cool_power_consumption, 2)
-        if self._device_attribute == ATTR_HEAT_POWER:
+        if self._device_attribute == ATTR_HEAT_ENERGY:
             return round(self._api.device.last_hour_heat_power_consumption, 2)
         return None
