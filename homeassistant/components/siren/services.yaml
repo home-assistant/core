@@ -1,13 +1,13 @@
 # Describes the format for available siren services
 
 set_volume_level:
-  description: Set volume level for siren device.
+  description: Set volume level for siren.
   target:
     entity:
       domain: siren
   fields:
     volume_level:
-      description: New volume level for siren device.
+      description: New volume level for siren.
       example: 0.5
       required: true
       selector:
@@ -17,20 +17,20 @@ set_volume_level:
           step: 0.05
 
 set_default_tone:
-  description: Set default tone for siren device.
+  description: Set default tone for siren.
   target:
     entity:
       domain: siren
   fields:
     tone:
-      description: New default tone for siren device.
+      description: New default tone for siren.
       example: fire
       required: true
       selector:
         text:
 
 turn_on:
-  description: Turn siren device on.
+  description: Turn siren on.
   target:
     entity:
       domain: siren
@@ -58,13 +58,13 @@ turn_on:
         text:
 
 turn_off:
-  description: Turn siren device off.
+  description: Turn siren off.
   target:
     entity:
       domain: siren
 
 toggle:
-  description: Toggles a siren device.
+  description: Toggles a siren.
   target:
     entity:
       domain: siren
