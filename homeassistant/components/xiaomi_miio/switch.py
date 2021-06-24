@@ -37,6 +37,7 @@ from .const import (
     FEATURE_FLAGS_AIRHUMIDIFIER_CA_AND_CB,
     FEATURE_SET_BUZZER,
     FEATURE_SET_CHILD_LOCK,
+    FEATURE_SET_CLEAN,
     FEATURE_SET_DRY,
     KEY_COORDINATOR,
     KEY_DEVICE,
@@ -46,6 +47,7 @@ from .const import (
     MODELS_HUMIDIFIER,
     SERVICE_SET_BUZZER,
     SERVICE_SET_CHILD_LOCK,
+    SERVICE_SET_CLEAN,
     SERVICE_SET_DRY,
     SERVICE_SET_POWER_MODE,
     SERVICE_SET_POWER_PRICE,
@@ -104,6 +106,7 @@ ATTR_PRICE = "price"
 ATTR_BUZZER = "buzzer"
 ATTR_CHILD_LOCK = "child_lock"
 ATTR_DRY = "dry"
+ATTR_CLEAN = "clean_mode"
 
 FEATURE_SET_POWER_MODE = 1
 FEATURE_SET_WIFI_LED = 2
@@ -152,6 +155,10 @@ SERVICE_TO_METHOD = {
         "method_on": "async_set_dry_on",
         "method_off": "async_set_dry_off",
     },
+    SERVICE_SET_CLEAN: {
+        "method_on": "async_set_clean_on",
+        "method_off": "async_set_clean_off",
+    },
 }
 
 
@@ -185,6 +192,12 @@ SWITCH_TYPES = {
         icon="mdi:hair-dryer",
         short_name=ATTR_DRY,
         service=SERVICE_SET_DRY,
+    ),
+    FEATURE_SET_CLEAN: SwitchType(
+        name="Clean Mode",
+        icon="mdi:sparkles",
+        short_name=ATTR_CLEAN,
+        service=SERVICE_SET_CLEAN,
     ),
 }
 
@@ -349,7 +362,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                     )
                 )
 
-    async_add_entities(entities, update_before_add=True)
+    async_add_entities(entities, update_before_add=False)
 
 
 class XiaomiGenericCoordinatedSwitch(XiaomiCoordinatedMiioEntity, SwitchEntity):
@@ -388,8 +401,12 @@ class XiaomiGenericCoordinatedSwitch(XiaomiCoordinatedMiioEntity, SwitchEntity):
     @property
     def is_on(self):
         """Return the current option."""
-        if self.available:
-            return self._state
+        if not self._state:
+            self._state = self._extract_value_from_attribute(
+                self.coordinator.data, self._controller.short_name
+            )
+        if self._state:
+            return True
         return None
 
     @staticmethod
@@ -489,6 +506,28 @@ class XiaomiAirHumidifierSwitch(XiaomiGenericCoordinatedSwitch):
         await self._try_command(
             "Turning the dry mode of the miio device off failed.",
             self._device.set_dry,
+            False,
+        )
+
+    async def async_set_clean_on(self):
+        """Turn the dry mode on."""
+        if self._device_features & FEATURE_SET_CLEAN == 0:
+            return
+
+        await self._try_command(
+            "Turning the clean mode of the miio device off failed.",
+            self._device.set_clean_mode,
+            True,
+        )
+
+    async def async_set_clean_off(self):
+        """Turn the dry mode off."""
+        if self._device_features & FEATURE_SET_CLEAN == 0:
+            return
+
+        await self._try_command(
+            "Turning the clean mode of the miio device off failed.",
+            self._device.set_clean_mode,
             False,
         )
 
