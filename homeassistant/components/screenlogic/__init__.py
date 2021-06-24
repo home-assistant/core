@@ -1,6 +1,7 @@
 """The Screenlogic integration."""
 import asyncio
 from datetime import timedelta
+from functools import partial
 import logging
 
 from screenlogicpy import ScreenLogicError, ScreenLogicGateway
@@ -136,9 +137,12 @@ class ScreenlogicDataUpdateCoordinator(DataUpdateCoordinator):
             _LOGGER.warning("ScreenLogicError - attempting reconnect: %s", error)
 
             connect_info = get_connect_info(self.hass, self.config_entry)
+            screen_logic_reconnect = partial(ScreenLogicGateway, **connect_info)
             try:
-                self.gateway = ScreenLogicGateway(**connect_info)
                 async with self.api_lock:
+                    self.gateway = await self.hass.async_add_executor_job(
+                        screen_logic_reconnect
+                    )
                     await self.hass.async_add_executor_job(self.gateway.update)
             except ScreenLogicError as error:
                 raise UpdateFailed(error) from error
