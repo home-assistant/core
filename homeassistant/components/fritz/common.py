@@ -46,7 +46,7 @@ _LOGGER = logging.getLogger(__name__)
 class ClassSetupMissing(Exception):
     """Raised when a Class func is called before setup."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Init custom exception."""
         super().__init__("Function called before Class setup")
 

@@ -1,7 +1,9 @@
 """Switches for AVM Fritz!Box functions."""
 from __future__ import annotations
 
+from collections import OrderedDict
 import logging
+from typing import Any
 
 from fritzconnection.core.exceptions import FritzConnectionException, FritzSecurityError
 import xmltodict
@@ -29,7 +31,7 @@ async def service_call_action(
     service_name: str,
     service_suffix: str | None,
     action_name: str,
-    **kwargs,
+    **kwargs: Any,
 ) -> None | dict:
     """Return service details."""
 
@@ -63,7 +65,9 @@ async def service_call_action(
         return None
 
 
-async def get_deflections(fritzbox_tools: FritzBoxTools, service_name: str) -> list:
+async def get_deflections(
+    fritzbox_tools: FritzBoxTools, service_name: str
+) -> list[OrderedDict[Any, Any]] | None:
     """Get deflection switch info."""
 
     deflection_list = await service_call_action(
@@ -84,7 +88,9 @@ async def get_deflections(fritzbox_tools: FritzBoxTools, service_name: str) -> l
     return deflections
 
 
-async def get_entities_list(fritzbox_tools, device_friendly_name) -> list:
+async def get_entities_list(
+    fritzbox_tools: FritzBoxTools, device_friendly_name: str
+) -> list:
     """Get a list of all switches to create."""
     entities_list: list[
         FritzBoxDeflectionSwitch
@@ -111,12 +117,13 @@ async def get_entities_list(fritzbox_tools, device_friendly_name) -> list:
 
         if deflections_response["NewNumberOfDeflections"] != 0:
             deflection_list = await get_deflections(fritzbox_tools, service_name)
-            for dict_of_deflection in deflection_list:
-                entities_list.append(
-                    FritzBoxDeflectionSwitch(
-                        fritzbox_tools, device_friendly_name, dict_of_deflection
+            if deflection_list is not None:
+                for dict_of_deflection in deflection_list:
+                    entities_list.append(
+                        FritzBoxDeflectionSwitch(
+                            fritzbox_tools, device_friendly_name, dict_of_deflection
+                        )
                     )
-                )
 
     # 2. PortForward switches
     _LOGGER.debug("Setting up %s switches", SWITCH_TYPE_PORTFORWARD)
@@ -236,11 +243,11 @@ class FritzBoxPortSwitch(FritzBoxBaseSwitch, SwitchEntity):
     def __init__(
         self,
         fritzbox_tools: FritzBoxTools,
-        device_friendly_name,
-        port_mapping,
-        idx,
-        connection_type,
-    ):
+        device_friendly_name: str,
+        port_mapping: dict,
+        idx: int,
+        connection_type: str,
+    ) -> None:
         """Init Fritzbox port switch."""
         self.fritzbox_tools: FritzBoxTools = fritzbox_tools
 
@@ -314,7 +321,12 @@ class FritzBoxPortSwitch(FritzBoxBaseSwitch, SwitchEntity):
 class FritzBoxDeflectionSwitch(FritzBoxBaseSwitch, SwitchEntity):
     """Defines a FRITZ!Box Tools PortForward switch."""
 
-    def __init__(self, fritzbox_tools, device_friendly_name, dict_of_deflection):
+    def __init__(
+        self,
+        fritzbox_tools: FritzBoxTools,
+        device_friendly_name: str,
+        dict_of_deflection: Any,
+    ) -> None:
         """Init Fritxbox Deflection class."""
         self.fritzbox_tools: FritzBoxTools = fritzbox_tools
 
@@ -332,7 +344,7 @@ class FritzBoxDeflectionSwitch(FritzBoxBaseSwitch, SwitchEntity):
         )
         super().__init__(self.fritzbox_tools, switch_info)
 
-    async def _async_fetch_update(self):
+    async def _async_fetch_update(self) -> None:
         """Fetch updates."""
 
         resp = await service_call_action(
@@ -382,7 +394,9 @@ class FritzBoxDeflectionSwitch(FritzBoxBaseSwitch, SwitchEntity):
 class FritzBoxProfileSwitch(FritzBoxBaseSwitch, SwitchEntity):
     """Defines a FRITZ!Box Tools DeviceProfile switch."""
 
-    def __init__(self, fritzbox_tools, device_friendly_name, profile):
+    def __init__(
+        self, fritzbox_tools: FritzBoxTools, device_friendly_name: str, profile: str
+    ) -> None:
         """Init Fritz profile."""
         self.fritzbox_tools: FritzBoxTools = fritzbox_tools
         self.profile = profile
@@ -397,7 +411,7 @@ class FritzBoxProfileSwitch(FritzBoxBaseSwitch, SwitchEntity):
         )
         super().__init__(self.fritzbox_tools, switch_info)
 
-    async def _async_fetch_update(self):
+    async def _async_fetch_update(self) -> None:
         """Update data."""
         try:
             status = await self.hass.async_add_executor_job(
@@ -424,7 +438,7 @@ class FritzBoxProfileSwitch(FritzBoxBaseSwitch, SwitchEntity):
         """Handle profile switch."""
         state = "unlimited" if turn_on else "never"
         await self.hass.async_add_executor_job(
-            lambda: self.fritzbox_tools.fritz_profiles[self.profile].set_state(state)
+            self.fritzbox_tools.fritz_profiles[self.profile].set_state(state)
         )
 
     @property
@@ -436,7 +450,13 @@ class FritzBoxProfileSwitch(FritzBoxBaseSwitch, SwitchEntity):
 class FritzBoxWifiSwitch(FritzBoxBaseSwitch, SwitchEntity):
     """Defines a FRITZ!Box Tools Wifi switch."""
 
-    def __init__(self, fritzbox_tools, device_friendly_name, network_num, network_name):
+    def __init__(
+        self,
+        fritzbox_tools: FritzBoxTools,
+        device_friendly_name: str,
+        network_num: int,
+        network_name: str,
+    ) -> None:
         """Init Fritz Wifi switch."""
         self._fritzbox_tools: FritzBoxTools = fritzbox_tools
 
@@ -453,19 +473,23 @@ class FritzBoxWifiSwitch(FritzBoxBaseSwitch, SwitchEntity):
         )
         super().__init__(self._fritzbox_tools, switch_info)
 
-    async def _async_fetch_update(self):
+    async def _async_fetch_update(self) -> None:
         """Fetch updates."""
 
         try:
             wifi_info = await service_call_action(
                 self.fritzbox_tools,
                 "WLANConfiguration",
-                self._network_num,
+                str(self._network_num),
                 "GetInfo",
             )
             _LOGGER.debug(
                 "Specific %s response: GetInfo=%s", SWITCH_TYPE_WIFINETWORK, wifi_info
             )
+
+            if wifi_info is None:
+                self._is_available = False
+                return
 
             self._attr_is_on = wifi_info["NewEnable"] is True
             self._is_available = True
@@ -492,7 +516,7 @@ class FritzBoxWifiSwitch(FritzBoxBaseSwitch, SwitchEntity):
         await service_call_action(
             self.fritzbox_tools,
             "WLANConfiguration",
-            self._network_num,
+            str(self._network_num),
             "SetEnable",
             NewEnable="1" if turn_on else "0",
         )
