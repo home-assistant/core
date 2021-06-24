@@ -1,4 +1,4 @@
-"""Test the Energy config flow."""
+"""Test the Energy websocket API."""
 import pytest
 
 from homeassistant.components.energy import data

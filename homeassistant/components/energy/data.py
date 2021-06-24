@@ -49,10 +49,12 @@ class EnergyHomeConsumption(TypedDict):
 
     # This is an ever increasing value
     stat_consumption: str
+    entity_consumption: str | None
 
     # this is an ever increasing value
     stat_cost: str | None
 
+    entity_energy_price: str | None
     cost_adjustment_day: float
 
 
