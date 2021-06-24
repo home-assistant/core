@@ -1,6 +1,5 @@
 """Adds config flow for Bravia TV integration."""
 import ipaddress
-import logging
 import re
 
 from bravia_tv import BraviaRC
@@ -21,8 +20,6 @@ from .const import (
     DOMAIN,
     NICKNAME,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def host_valid(host):
@@ -74,27 +71,6 @@ class BraviaTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def async_get_options_flow(config_entry):
         """Bravia TV options callback."""
         return BraviaTVOptionsFlowHandler(config_entry)
-
-    async def async_step_import(self, user_input=None):
-        """Handle configuration by yaml file."""
-        self.host = user_input[CONF_HOST]
-        self.braviarc = BraviaRC(self.host)
-
-        try:
-            await self.init_device(user_input[CONF_PIN])
-        except CannotConnect:
-            _LOGGER.error("Import aborted, cannot connect to %s", self.host)
-            return self.async_abort(reason="cannot_connect")
-        except NoIPControl:
-            _LOGGER.error("IP Control is disabled in the TV settings")
-            return self.async_abort(reason="no_ip_control")
-        except ModelNotSupported:
-            _LOGGER.error("Import aborted, your TV is not supported")
-            return self.async_abort(reason="unsupported_model")
-
-        user_input[CONF_MAC] = self.mac
-
-        return self.async_create_entry(title=self.title, data=user_input)
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
