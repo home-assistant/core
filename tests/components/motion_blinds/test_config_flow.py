@@ -59,6 +59,10 @@ TEST_DISCOVERY_2 = {
     },
 }
 
+TEST_INTERFACES = [
+    {"enabled": True, "default": True, "ipv4": [{"address": TEST_HOST_HA}]}
+]
+
 
 @pytest.fixture(name="motion_blinds_connect", autouse=True)
 def motion_blinds_connect_fixture():
@@ -81,6 +85,9 @@ def motion_blinds_connect_fixture():
     ), patch(
         "homeassistant.components.motion_blinds.config_flow.AsyncMotionMulticast.Stop_listen",
         return_value=True,
+    ), patch(
+        "homeassistant.components.motion_blinds.config_flow.network.async_get_adapters",
+        return_value=TEST_INTERFACES,
     ), patch(
         "homeassistant.components.motion_blinds.async_setup_entry", return_value=True
     ):
@@ -116,7 +123,7 @@ async def test_config_flow_manual_host_success(hass):
     assert result["data"] == {
         CONF_HOST: TEST_HOST,
         CONF_API_KEY: TEST_API_KEY,
-        const.CONF_INTERFACE: const.DEFAULT_INTERFACE,
+        const.CONF_INTERFACE: TEST_HOST_HA,
     }
 
 
@@ -149,7 +156,7 @@ async def test_config_flow_discovery_1_success(hass):
     assert result["data"] == {
         CONF_HOST: TEST_HOST,
         CONF_API_KEY: TEST_API_KEY,
-        const.CONF_INTERFACE: const.DEFAULT_INTERFACE,
+        const.CONF_INTERFACE: TEST_HOST_HA,
     }
 
 
@@ -199,7 +206,7 @@ async def test_config_flow_discovery_2_success(hass):
     assert result["data"] == {
         CONF_HOST: TEST_HOST2,
         CONF_API_KEY: TEST_API_KEY,
-        const.CONF_INTERFACE: const.DEFAULT_INTERFACE,
+        const.CONF_INTERFACE: TEST_HOST_HA,
     }
 
 
@@ -317,7 +324,7 @@ async def test_config_flow_invalid_interface(hass):
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_API_KEY: TEST_API_KEY, const.CONF_INTERFACE: "invalid_interface"},
+            {CONF_API_KEY: TEST_API_KEY, const.CONF_INTERFACE: TEST_HOST_HA},
         )
 
     assert result["type"] == "form"
