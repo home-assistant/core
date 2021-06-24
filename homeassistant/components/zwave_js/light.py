@@ -113,6 +113,9 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         # get additional (optional) values and set features
         self._target_value = self.get_zwave_value("targetValue")
         self._dimming_duration = self.get_zwave_value("duration")
+        self._color_transition_duration = self.get_zwave_value(
+            "duration", CommandClass.SWITCH_COLOR
+        )
         self._calculate_color_values()
         if self._supports_rgbw:
             self._supported_color_modes.add(COLOR_MODE_RGBW)
@@ -198,7 +201,7 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
                 # turn of white leds when setting rgb
                 colors[ColorComponent.WARM_WHITE] = 0
                 colors[ColorComponent.COLD_WHITE] = 0
-            await self._async_set_colors(colors)
+            await self._async_set_colors(colors, kwargs.get(ATTR_TRANSITION))
 
         # Color temperature
         color_temp = kwargs.get(ATTR_COLOR_TEMP)
@@ -224,7 +227,8 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
                     ColorComponent.BLUE: 0,
                     ColorComponent.WARM_WHITE: warm,
                     ColorComponent.COLD_WHITE: cold,
-                }
+                },
+                kwargs.get(ATTR_TRANSITION),
             )
 
         # RGBW
@@ -240,7 +244,7 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
 
             if self._cold_white:
                 rgbw_channels[ColorComponent.COLD_WHITE] = rgbw[3]
-            await self._async_set_colors(rgbw_channels)
+            await self._async_set_colors(rgbw_channels, kwargs.get(ATTR_TRANSITION))
 
         # set brightness
         await self._async_set_brightness(
@@ -251,7 +255,9 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         """Turn the light off."""
         await self._async_set_brightness(0, kwargs.get(ATTR_TRANSITION))
 
-    async def _async_set_colors(self, colors: dict[ColorComponent, int]) -> None:
+    async def _async_set_colors(
+        self, colors: dict[ColorComponent, int], transition: int | None = None
+    ) -> None:
         """Set (multiple) defined colors to given value(s)."""
         # prefer the (new) combined color property
         # https://github.com/zwave-js/node-zwave-js/pull/1782
@@ -260,21 +266,31 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
             CommandClass.SWITCH_COLOR,
             value_property_key=None,
         )
+
+        if transition is not None and self._color_transition_duration is not None:
+            zwave_transition = {TRANSITION_DURATION: f"{transition}s"}
+        else:
+            zwave_transition = {}
+
         if combined_color_val and isinstance(combined_color_val.value, dict):
             colors_dict = {}
             for color, value in colors.items():
                 color_name = MULTI_COLOR_MAP[color]
                 colors_dict[color_name] = value
             # set updated color object
-            await self.info.node.async_set_value(combined_color_val, colors_dict)
+            await self.info.node.async_set_value(
+                combined_color_val, colors_dict, zwave_transition
+            )
             return
 
         # fallback to setting the color(s) one by one if multicolor fails
         # not sure this is needed at all, but just in case
         for color, value in colors.items():
-            await self._async_set_color(color, value)
+            await self._async_set_color(color, value, zwave_transition)
 
-    async def _async_set_color(self, color: ColorComponent, new_value: int) -> None:
+    async def _async_set_color(
+        self, color: ColorComponent, new_value: int, transition: dict | None = None
+    ) -> None:
         """Set defined color to given value."""
         # actually set the new color value
         target_zwave_value = self.get_zwave_value(
@@ -285,7 +301,7 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         if target_zwave_value is None:
             # guard for unsupported color
             return
-        await self.info.node.async_set_value(target_zwave_value, new_value)
+        await self.info.node.async_set_value(target_zwave_value, new_value, transition)
 
     async def _async_set_brightness(
         self, brightness: int | None, transition: int | None = None
