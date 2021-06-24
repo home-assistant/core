@@ -64,7 +64,7 @@ def is_on(hass: HomeAssistantType, entity_id: str) -> bool:
     return hass.states.is_state(entity_id, STATE_ON)
 
 
-def filter_turn_on_params(siren: SirenEntity, params: dict[str, Any]):
+def filter_turn_on_params(siren: SirenEntity, params: dict[str, Any]) -> dict[str, Any]:
     """Filter out params not supported by the siren."""
     supported_features = siren.supported_features or 0
 
