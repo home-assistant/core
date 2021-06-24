@@ -28,10 +28,9 @@ async def async_setup_platform(
     async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up number entities for KNX platform."""
+    """Set up select entities for KNX platform."""
     if not discovery_info or not discovery_info["platform_config"]:
         return
-
     platform_config = discovery_info["platform_config"]
     xknx: XKNX = hass.data[DOMAIN].xknx
 
@@ -54,20 +53,20 @@ def _create_raw_value(xknx: XKNX, config: ConfigType) -> RawValue:
 
 
 class KNXSelect(KnxEntity, SelectEntity, RestoreEntity):
-    """Representation of a KNX number."""
+    """Representation of a KNX select."""
+
+    _device: RawValue
 
     def __init__(self, xknx: XKNX, config: ConfigType) -> None:
-        """Initialize a KNX number."""
-        self._device: RawValue
+        """Initialize a KNX select."""
         super().__init__(_create_raw_value(xknx, config))
-        self._unique_id = f"{self._device.remote_value.group_address}"
-
         self._option_payloads: dict[str, int] = {
             option[SelectSchema.CONF_OPTION]: option[SelectSchema.CONF_PAYLOAD]
             for option in config[SelectSchema.CONF_OPTIONS]
         }
         self._attr_options = list(self._option_payloads)
         self._attr_current_option = None
+        self._attr_unique_id = f"{self._device.remote_value.group_address}"
 
     async def async_added_to_hass(self) -> None:
         """Restore last state."""

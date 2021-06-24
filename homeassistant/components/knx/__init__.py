@@ -298,7 +298,6 @@ class KNXModule:
             return self.connection_config_tunneling()
         if CONF_KNX_ROUTING in self.config[DOMAIN]:
             return self.connection_config_routing()
-        # config from xknx.yaml always has priority later on
         return ConnectionConfig(auto_reconnect=True)
 
     def connection_config_routing(self) -> ConnectionConfig:
