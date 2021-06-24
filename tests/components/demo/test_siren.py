@@ -5,10 +5,13 @@ import voluptuous as vol
 
 from homeassistant.components.siren.const import (
     ATTR_AVAILABLE_TONES,
+    ATTR_DEFAULT_DURATION,
     ATTR_DEFAULT_TONE,
+    ATTR_DURATION,
     ATTR_TONE,
     ATTR_VOLUME_LEVEL,
     DOMAIN,
+    SERVICE_SET_DEFAULT_DURATION,
     SERVICE_SET_DEFAULT_TONE,
     SERVICE_SET_VOLUME_LEVEL,
 )
@@ -40,6 +43,7 @@ def test_setup_params(hass):
     assert ATTR_VOLUME_LEVEL not in state.attributes
     assert ATTR_DEFAULT_TONE not in state.attributes
     assert ATTR_AVAILABLE_TONES not in state.attributes
+    assert ATTR_DEFAULT_DURATION not in state.attributes
 
 
 def test_all_setup_params(hass):
@@ -48,6 +52,7 @@ def test_all_setup_params(hass):
     assert state.attributes.get(ATTR_DEFAULT_TONE) == "fire"
     assert state.attributes.get(ATTR_AVAILABLE_TONES) == ["fire", "alarm"]
     assert state.attributes.get(ATTR_VOLUME_LEVEL) == 0.5
+    assert state.attributes.get(ATTR_DEFAULT_DURATION) == 5
 
 
 async def test_set_volume_level_bad_attr(hass):
@@ -118,6 +123,41 @@ async def test_set_default_tone(hass):
 
     state = hass.states.get(ENTITY_SIREN_WITH_ALL_FEATURES)
     assert state.attributes.get(ATTR_DEFAULT_TONE) == "alarm"
+
+
+async def test_set_default_duration_bad_attr(hass):
+    """Test setting the default duration without required attribute."""
+    state = hass.states.get(ENTITY_SIREN_WITH_ALL_FEATURES)
+    assert state.attributes.get(ATTR_DEFAULT_DURATION) == 5
+
+    with pytest.raises(vol.Invalid):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_DEFAULT_DURATION,
+            {ATTR_DURATION: None, ATTR_ENTITY_ID: ENTITY_SIREN_WITH_ALL_FEATURES},
+            blocking=True,
+        )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_SIREN_WITH_ALL_FEATURES)
+    assert state.attributes.get(ATTR_DEFAULT_DURATION) == 5
+
+
+async def test_set_default_duration(hass):
+    """Test the setting of the default duration."""
+    state = hass.states.get(ENTITY_SIREN_WITH_ALL_FEATURES)
+    assert state.attributes.get(ATTR_DEFAULT_DURATION) == 5
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_DEFAULT_DURATION,
+        {ATTR_DURATION: 10, ATTR_ENTITY_ID: ENTITY_SIREN_WITH_ALL_FEATURES},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_SIREN_WITH_ALL_FEATURES)
+    assert state.attributes.get(ATTR_DEFAULT_DURATION) == 10
 
 
 async def test_turn_on(hass):
