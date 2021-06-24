@@ -59,7 +59,7 @@ class KNXBinarySensor(KnxEntity, BinarySensorEntity):
         )
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)
         self._attr_force_update = self._device.ignore_internal_state
-        self._attr_unique_id = f"{self._device.remote_value.group_address_state}"
+        self._attr_unique_id = str(self._device.remote_value.group_address_state)
 
     @property
     def is_on(self) -> bool:

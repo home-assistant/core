@@ -71,7 +71,7 @@ class KNXFan(KnxEntity, FanEntity):
             if self._device.supports_oscillation
             else SUPPORT_SET_SPEED
         )
-        self._attr_unique_id = f"{self._device.speed.group_address}"
+        self._attr_unique_id = str(self._device.speed.group_address)
 
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan, as a percentage."""

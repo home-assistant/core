@@ -66,7 +66,7 @@ class KNXSelect(KnxEntity, SelectEntity, RestoreEntity):
         }
         self._attr_options = list(self._option_payloads)
         self._attr_current_option = None
-        self._attr_unique_id = f"{self._device.remote_value.group_address}"
+        self._attr_unique_id = str(self._device.remote_value.group_address)
 
     async def async_added_to_hass(self) -> None:
         """Restore last state."""

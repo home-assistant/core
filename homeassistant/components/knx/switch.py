@@ -51,7 +51,7 @@ class KNXSwitch(KnxEntity, SwitchEntity, RestoreEntity):
                 invert=config[SwitchSchema.CONF_INVERT],
             )
         )
-        self._attr_unique_id = f"{self._device.switch.group_address}"
+        self._attr_unique_id = str(self._device.switch.group_address)
 
     async def async_added_to_hass(self) -> None:
         """Restore last state."""
