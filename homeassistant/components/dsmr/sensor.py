@@ -23,7 +23,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import CoreState, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.util import Throttle
 
 from .const import (
@@ -289,17 +288,21 @@ async def async_setup_entry(
 class DSMREntity(SensorEntity):
     """Entity reading values from DSMR telegram."""
 
+    _attr_should_poll = False
+
     def __init__(self, name, device_name, device_serial, obis, config, force_update):
         """Initialize entity."""
-        self._name = name
         self._obis = obis
         self._config = config
         self.telegram = {}
 
-        self._device_name = device_name
-        self._device_serial = device_serial
-        self._force_update = force_update
-        self._unique_id = f"{device_serial}_{name}".replace(" ", "_")
+        self._attr_name = name
+        self._attr_force_update = force_update
+        self._attr_unique_id = f"{device_serial}_{name}".replace(" ", "_")
+        self._attr_device_info = {
+            "identifiers": {(DOMAIN, device_serial)},
+            "name": device_name,
+        }
 
     @callback
     def update_data(self, telegram):
@@ -319,20 +322,15 @@ class DSMREntity(SensorEntity):
         return getattr(dsmr_object, attribute, None)
 
     @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
     def icon(self):
         """Icon to use in the frontend, if any."""
-        if "Sags" in self._name or "Swells" in self.name:
+        if "Sags" in self.name or "Swells" in self.name:
             return ICON_SWELL_SAG
-        if "Failure" in self._name:
+        if "Failure" in self.name:
             return ICON_POWER_FAILURE
-        if "Power" in self._name:
+        if "Power" in self.name:
             return ICON_POWER
-        if "Gas" in self._name:
+        if "Gas" in self.name:
             return ICON_GAS
 
     @property
@@ -357,29 +355,6 @@ class DSMREntity(SensorEntity):
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         return self.get_dsmr_object_attr("unit")
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique ID."""
-        return self._unique_id
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device information."""
-        return {
-            "identifiers": {(DOMAIN, self._device_serial)},
-            "name": self._device_name,
-        }
-
-    @property
-    def force_update(self):
-        """Force update."""
-        return self._force_update
-
-    @property
-    def should_poll(self):
-        """Disable polling."""
-        return False
 
     @staticmethod
     def translate_tariff(value, dsmr_version):
