@@ -18,7 +18,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from . import NmapDeviceScanner, signal_device_update
+from . import NmapDeviceScanner, short_hostname, signal_device_update
 from .const import CONF_HOME_INTERVAL, CONF_OPTIONS, DEFAULT_OPTIONS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -80,13 +80,6 @@ async def async_setup_entry(
             hass, nmap_tracker.signal_device_missing, device_missing
         )
     )
-
-
-def short_hostname(hostname):
-    """Return the first part of the hostname."""
-    if hostname is None:
-        return None
-    return hostname.split(".")[0]
 
 
 class NmapTrackerEntity(ScannerEntity):
