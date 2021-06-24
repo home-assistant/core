@@ -344,7 +344,9 @@ class DSMREntity(SensorEntity):
             return self.translate_tariff(value, self._config[CONF_DSMR_VERSION])
 
         with suppress(TypeError):
-            value = round(float(value), self._config[CONF_PRECISION])
+            value = round(
+                float(value), self._config.get(CONF_PRECISION, DEFAULT_PRECISION)
+            )
 
         if value is not None:
             return value

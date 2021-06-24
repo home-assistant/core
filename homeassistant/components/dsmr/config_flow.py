@@ -4,16 +4,18 @@ from __future__ import annotations
 import asyncio
 from functools import partial
 import logging
+import os
 from typing import Any
 
 from async_timeout import timeout
 from dsmr_parser import obis_references as obis_ref
 from dsmr_parser.clients.protocol import create_dsmr_reader, create_tcp_dsmr_reader
 import serial
+import serial.tools.list_ports
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TYPE
 from homeassistant.core import callback
 
 from .const import (
@@ -26,6 +28,8 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+CONF_MANUAL_PATH = "Enter Manually"
 
 
 class DSMRConnection:
@@ -124,6 +128,10 @@ class DSMRFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    def __init__(self):
+        """Initialize flow instance."""
+        self._dsmr_version = None
+
     @staticmethod
     @callback
     def async_get_options_flow(config_entry):
@@ -159,6 +167,132 @@ class DSMRFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="already_configured")
 
         return None
+
+    async def async_step_user(self, user_input=None):
+        """Step when user initializes a integration."""
+        errors = {}
+        if user_input is not None:
+            user_selection = user_input[CONF_TYPE]
+            if user_selection == "Serial":
+                return await self.async_step_setup_serial()
+
+            return await self.async_step_setup_network()
+
+        list_of_types = ["Serial", "Network"]
+
+        schema = vol.Schema({vol.Required(CONF_TYPE): vol.In(list_of_types)})
+        return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
+
+    async def async_step_setup_network(self, user_input=None):
+        """Step when setting up network configuration."""
+        errors = {}
+
+        if user_input is not None:
+            data = await self.async_validate_dsmr(user_input, errors)
+
+            if not errors:
+                return self.async_create_entry(
+                    title=f"{data[CONF_HOST]}:{data[CONF_PORT]}", data=data
+                )
+
+        schema = vol.Schema(
+            {
+                vol.Required(CONF_HOST): str,
+                vol.Required(CONF_PORT): int,
+                vol.Required(CONF_DSMR_VERSION): vol.In(["2.2", "4", "5", "5B", "5L"]),
+            }
+        )
+        return self.async_show_form(
+            step_id="setup_network",
+            data_schema=schema,
+            errors=errors,
+        )
+
+    async def async_step_setup_serial(self, user_input=None):
+        """Step when setting up serial configuration."""
+        errors = {}
+
+        if user_input is not None:
+            user_selection = user_input[CONF_PORT]
+            if user_selection == CONF_MANUAL_PATH:
+                self._dsmr_version = user_input[CONF_DSMR_VERSION]
+                return await self.async_step_setup_serial_manual_path()
+
+            dev_path = await self.hass.async_add_executor_job(
+                get_serial_by_id, user_selection
+            )
+
+            validate_data = {
+                CONF_PORT: dev_path,
+                CONF_DSMR_VERSION: user_input[CONF_DSMR_VERSION],
+            }
+
+            data = await self.async_validate_dsmr(validate_data, errors)
+
+            if not errors:
+                return self.async_create_entry(title=data[CONF_PORT], data=data)
+
+        ports = await self.hass.async_add_executor_job(serial.tools.list_ports.comports)
+        list_of_ports = {}
+        for port in ports:
+            list_of_ports[
+                port.device
+            ] = f"{port}, s/n: {port.serial_number or 'n/a'}" + (
+                f" - {port.manufacturer}" if port.manufacturer else ""
+            )
+        list_of_ports[CONF_MANUAL_PATH] = CONF_MANUAL_PATH
+
+        schema = vol.Schema(
+            {
+                vol.Required(CONF_PORT): vol.In(list_of_ports),
+                vol.Required(CONF_DSMR_VERSION): vol.In(["2.2", "4", "5", "5B", "5L"]),
+            }
+        )
+        return self.async_show_form(
+            step_id="setup_serial",
+            data_schema=schema,
+            errors=errors,
+        )
+
+    async def async_step_setup_serial_manual_path(self, user_input=None):
+        """Select path manually."""
+        errors = {}
+
+        if user_input is not None:
+            validate_data = {
+                CONF_PORT: user_input[CONF_PORT],
+                CONF_DSMR_VERSION: self._dsmr_version,
+            }
+
+            data = await self.async_validate_dsmr(validate_data, errors)
+
+            if not errors:
+                return self.async_create_entry(title=data[CONF_PORT], data=data)
+
+        schema = vol.Schema({vol.Required(CONF_PORT): str})
+        return self.async_show_form(
+            step_id="setup_serial_manual_path",
+            data_schema=schema,
+            errors=errors,
+        )
+
+    async def async_validate_dsmr(self, input_data, errors):
+        """Validate dsmr connection and create data."""
+        data = input_data
+
+        try:
+            info = await _validate_dsmr_connection(self.hass, data)
+
+            data = {**data, **info}
+
+            await self.async_set_unique_id(info[CONF_SERIAL_ID])
+            self._abort_if_unique_id_configured()
+        except CannotConnect:
+            errors["base"] = "cannot_connect"
+        except CannotCommunicate:
+            errors["base"] = "cannot_communicate"
+
+        return data
 
     async def async_step_import(self, import_config=None):
         """Handle the initial step."""
@@ -214,6 +348,18 @@ class DSMROptionFlowHandler(config_entries.OptionsFlow):
                 }
             ),
         )
+
+
+def get_serial_by_id(dev_path: str) -> str:
+    """Return a /dev/serial/by-id match for given device if available."""
+    by_id = "/dev/serial/by-id"
+    if not os.path.isdir(by_id):
+        return dev_path
+
+    for path in (entry.path for entry in os.scandir(by_id) if entry.is_symlink()):
+        if os.path.realpath(path) == dev_path:
+            return path
+    return dev_path
 
 
 class CannotConnect(exceptions.HomeAssistantError):
