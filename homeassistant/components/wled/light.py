@@ -5,7 +5,6 @@ from functools import partial
 from typing import Any, Tuple, cast
 
 import voluptuous as vol
-from wled import Preset
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -218,18 +217,11 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
         if playlist == -1:
             playlist = None
 
-        preset: int | None = None
-        if isinstance(self.coordinator.data.state.preset, Preset):
-            preset = self.coordinator.data.state.preset.preset_id
-        elif self.coordinator.data.state.preset != -1:
-            preset = self.coordinator.data.state.preset
-
         segment = self.coordinator.data.state.segments[self._segment]
         return {
             ATTR_INTENSITY: segment.intensity,
             ATTR_PALETTE: segment.palette.name,
             ATTR_PLAYLIST: playlist,
-            ATTR_PRESET: preset,
             ATTR_REVERSE: segment.reverse,
             ATTR_SPEED: segment.speed,
         }

@@ -3,6 +3,8 @@ from __future__ import annotations
 
 from functools import partial
 
+from wled import Preset
+
 from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -23,6 +25,9 @@ async def async_setup_entry(
 ) -> None:
     """Set up WLED select based on a config entry."""
     coordinator: WLEDDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+
+    async_add_entities([WLEDPresetSelect(coordinator)])
+
     update_segments = partial(
         async_update_segments,
         coordinator,
@@ -31,6 +36,37 @@ async def async_setup_entry(
     )
     coordinator.async_add_listener(update_segments)
     update_segments()
+
+
+class WLEDPresetSelect(WLEDEntity, SelectEntity):
+    """Defined a WLED Preset select."""
+
+    _attr_icon = "mdi:playlist-play"
+
+    def __init__(self, coordinator: WLEDDataUpdateCoordinator) -> None:
+        """Initialize WLED ."""
+        super().__init__(coordinator=coordinator)
+
+        self._attr_name = f"{coordinator.data.info.name} Preset"
+        self._attr_unique_id = f"{coordinator.data.info.mac_address}_preset"
+        self._attr_options = [preset.name for preset in self.coordinator.data.presets]
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return len(self.coordinator.data.presets) > 0 and super().available
+
+    @property
+    def current_option(self) -> str | None:
+        """Return the current selected preset."""
+        if not isinstance(self.coordinator.data.state.preset, Preset):
+            return None
+        return self.coordinator.data.state.preset.name
+
+    @wled_exception_handler
+    async def async_select_option(self, option: str) -> None:
+        """Set WLED segment to the selected preset."""
+        await self.coordinator.wled.preset(preset=option)
 
 
 class WLEDPaletteSelect(WLEDEntity, SelectEntity):
