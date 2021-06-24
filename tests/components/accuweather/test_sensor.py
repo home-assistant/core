@@ -673,3 +673,36 @@ async def test_sensor_imperial_units(hass):
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
     assert state.attributes.get(ATTR_ICON) == "mdi:weather-fog"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == LENGTH_FEET
+
+
+async def test_state_update(hass):
+    """Ensure the sensor state changes after updating the data."""
+    await init_integration(hass)
+
+    state = hass.states.get("sensor.home_cloud_ceiling")
+    assert state
+    assert state.state != STATE_UNAVAILABLE
+    assert state.state == "3200"
+
+    future = utcnow() + timedelta(minutes=60)
+
+    current_condition = json.loads(
+        load_fixture("accuweather/current_conditions_data.json")
+    )
+    current_condition["Ceiling"]["Metric"]["Value"] = 3300
+
+    with patch(
+        "homeassistant.components.accuweather.AccuWeather.async_get_current_conditions",
+        return_value=current_condition,
+    ), patch(
+        "homeassistant.components.accuweather.AccuWeather.requests_remaining",
+        new_callable=PropertyMock,
+        return_value=10,
+    ):
+        async_fire_time_changed(hass, future)
+        await hass.async_block_till_done()
+
+        state = hass.states.get("sensor.home_cloud_ceiling")
+        assert state
+        assert state.state != STATE_UNAVAILABLE
+        assert state.state == "3300"

@@ -5,7 +5,7 @@ import asyncio
 import functools
 import logging
 import math
-from typing import Callable
+from typing import Generic, TypeVar
 
 from aioesphomeapi import (
     APIClient,
@@ -48,6 +48,7 @@ from .entry_data import RuntimeEntryData
 
 DOMAIN = "esphome"
 _LOGGER = logging.getLogger(__name__)
+_T = TypeVar("_T")
 
 STORAGE_VERSION = 1
 
@@ -721,30 +722,23 @@ def esphome_state_property(func):
     return _wrapper
 
 
-class EsphomeEnumMapper:
+class EsphomeEnumMapper(Generic[_T]):
     """Helper class to convert between hass and esphome enum values."""
 
-    def __init__(self, func: Callable[[], dict[int, str]]) -> None:
+    def __init__(self, mapping: dict[_T, str]) -> None:
         """Construct a EsphomeEnumMapper."""
-        self._func = func
+        # Add none mapping
+        mapping = {None: None, **mapping}
+        self._mapping = mapping
+        self._inverse: dict[str, _T] = {v: k for k, v in mapping.items()}
 
-    def from_esphome(self, value: int) -> str:
+    def from_esphome(self, value: _T | None) -> str | None:
         """Convert from an esphome int representation to a hass string."""
-        return self._func()[value]
+        return self._mapping[value]
 
-    def from_hass(self, value: str) -> int:
+    def from_hass(self, value: str) -> _T:
         """Convert from a hass string to a esphome int representation."""
-        inverse = {v: k for k, v in self._func().items()}
-        return inverse[value]
-
-
-def esphome_map_enum(func: Callable[[], dict[int, str]]):
-    """Map esphome int enum values to hass string constants.
-
-    This class has to be used as a decorator. This ensures the aioesphomeapi
-    import is only happening at runtime.
-    """
-    return EsphomeEnumMapper(func)
+        return self._inverse[value]
 
 
 class EsphomeBaseEntity(Entity):

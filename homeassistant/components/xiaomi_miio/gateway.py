@@ -75,7 +75,7 @@ class ConnectXiaomiGateway:
         try:
             self._gateway_device = gateway.Gateway(self._host, self._token)
             # get the gateway info
-            self._gateway_device.info()
+            self._gateway_info = self._gateway_device.info()
         except DeviceException as error:
             if isinstance(error.__cause__, ChecksumError):
                 raise ConfigEntryAuthFailed(error) from error

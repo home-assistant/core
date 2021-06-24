@@ -1,13 +1,5 @@
 """Support for interface with a Bravia TV."""
-import logging
-
-import voluptuous as vol
-
-from homeassistant.components.media_player import (
-    DEVICE_CLASS_TV,
-    PLATFORM_SCHEMA,
-    MediaPlayerEntity,
-)
+from homeassistant.components.media_player import DEVICE_CLASS_TV, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
@@ -21,28 +13,10 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
 )
-from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PIN,
-    STATE_OFF,
-    STATE_PAUSED,
-    STATE_PLAYING,
-)
-import homeassistant.helpers.config_validation as cv
+from homeassistant.const import STATE_OFF, STATE_PAUSED, STATE_PLAYING
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.util.json import load_json
 
-from .const import (
-    ATTR_MANUFACTURER,
-    BRAVIA_CONFIG_FILE,
-    BRAVIA_COORDINATOR,
-    DEFAULT_NAME,
-    DOMAIN,
-)
-
-_LOGGER = logging.getLogger(__name__)
+from .const import ATTR_MANUFACTURER, DEFAULT_NAME, DOMAIN
 
 SUPPORT_BRAVIA = (
     SUPPORT_PAUSE
@@ -58,48 +32,11 @@ SUPPORT_BRAVIA = (
     | SUPPORT_STOP
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    }
-)
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the Bravia TV platform."""
-    host = config[CONF_HOST]
-
-    bravia_config_file_path = hass.config.path(BRAVIA_CONFIG_FILE)
-    bravia_config = await hass.async_add_executor_job(
-        load_json, bravia_config_file_path
-    )
-    if not bravia_config:
-        _LOGGER.error(
-            "Configuration import failed, there is no bravia.conf file in the configuration folder"
-        )
-        return
-
-    while bravia_config:
-        # Import a configured TV
-        host_ip, host_config = bravia_config.popitem()
-        if host_ip == host:
-            pin = host_config[CONF_PIN]
-
-            hass.async_create_task(
-                hass.config_entries.flow.async_init(
-                    DOMAIN,
-                    context={"source": SOURCE_IMPORT},
-                    data={CONF_HOST: host, CONF_PIN: pin},
-                )
-            )
-            return
-
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Bravia TV Media Player from a config_entry."""
 
-    coordinator = hass.data[DOMAIN][config_entry.entry_id][BRAVIA_COORDINATOR]
+    coordinator = hass.data[DOMAIN][config_entry.entry_id]
     unique_id = config_entry.unique_id
     device_info = {
         "identifiers": {(DOMAIN, unique_id)},
@@ -122,26 +59,11 @@ class BraviaTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
     def __init__(self, coordinator, name, unique_id, device_info):
         """Initialize the entity."""
 
-        self._name = name
-        self._unique_id = unique_id
-        self._device_info = device_info
+        self._attr_device_info = device_info
+        self._attr_name = name
+        self._attr_unique_id = unique_id
 
         super().__init__(coordinator)
-
-    @property
-    def name(self):
-        """Return the name of the device."""
-        return self._name
-
-    @property
-    def unique_id(self):
-        """Return a unique_id for this entity."""
-        return self._unique_id
-
-    @property
-    def device_info(self):
-        """Return the device info."""
-        return self._device_info
 
     @property
     def state(self):
@@ -163,9 +85,7 @@ class BraviaTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
     @property
     def volume_level(self):
         """Volume level of the media player (0..1)."""
-        if self.coordinator.volume is not None:
-            return self.coordinator.volume / 100
-        return None
+        return self.coordinator.volume_level
 
     @property
     def is_volume_muted(self):
@@ -175,12 +95,7 @@ class BraviaTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
     @property
     def media_title(self):
         """Title of current playing media."""
-        return_value = None
-        if self.coordinator.channel_name is not None:
-            return_value = self.coordinator.channel_name
-            if self.coordinator.program_name is not None:
-                return_value = f"{return_value}: {self.coordinator.program_name}"
-        return return_value
+        return self.coordinator.media_title
 
     @property
     def media_content_id(self):

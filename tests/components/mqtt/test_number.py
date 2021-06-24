@@ -359,7 +359,7 @@ async def test_entity_id_update_discovery_update(hass, mqtt_mock):
 async def test_entity_debug_info_message(hass, mqtt_mock):
     """Test MQTT debug info."""
     await help_test_entity_debug_info_message(
-        hass, mqtt_mock, number.DOMAIN, DEFAULT_CONFIG, payload=b"1"
+        hass, mqtt_mock, number.DOMAIN, DEFAULT_CONFIG, payload="1"
     )
 
 
@@ -408,7 +408,7 @@ async def test_invalid_min_max_attributes(hass, caplog, mqtt_mock):
     )
     await hass.async_block_till_done()
 
-    assert f"'{CONF_MAX}'' must be > '{CONF_MIN}'" in caplog.text
+    assert f"'{CONF_MAX}' must be > '{CONF_MIN}'" in caplog.text
 
 
 async def test_mqtt_payload_not_a_number_warning(hass, caplog, mqtt_mock):
