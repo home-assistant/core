@@ -80,10 +80,10 @@ async def get_deflections(
     if not deflection_list:
         return []
 
-    deflections = xmltodict.parse(deflection_list["NewDeflectionList"])["List"]["Item"]
-
-    if not isinstance(deflections, list):
-        deflections = [deflections]
+    deflections: list = []
+    deflections.append(
+        xmltodict.parse(deflection_list["NewDeflectionList"])["List"]["Item"]
+    )
 
     return deflections
 
