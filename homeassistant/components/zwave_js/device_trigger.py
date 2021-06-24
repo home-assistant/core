@@ -47,8 +47,6 @@ from .helpers import (
     async_get_node_status_sensor_entity_id,
 )
 
-CONF_ACTION = "action"
-CONF_SCENE_ID = "scene_id"
 CONF_SUBTYPE = "subtype"
 CONF_VALUE_ID = "value_id"
 
@@ -95,22 +93,20 @@ BASE_VALUE_NOTIFICATION_EVENT_SCHEMA = BASE_EVENT_SCHEMA.extend(
         vol.Required(ATTR_PROPERTY): vol.Any(int, str),
         vol.Required(ATTR_PROPERTY_KEY): vol.Any(None, int, str),
         vol.Required(ATTR_ENDPOINT): vol.Coerce(int),
+        vol.Required(ATTR_VALUE): vol.Coerce(int),
+        vol.Required(CONF_SUBTYPE): cv.string,
     }
 )
 
 BASIC_VALUE_NOTIFICATION_SCHEMA = BASE_VALUE_NOTIFICATION_EVENT_SCHEMA.extend(
     {
         vol.Required(CONF_TYPE): BASIC_VALUE_NOTIFICATION,
-        vol.Required(ATTR_VALUE): vol.Coerce(int),
-        vol.Required(CONF_SUBTYPE): cv.string,
     }
 )
 
 CENTRAL_SCENE_VALUE_NOTIFICATION_SCHEMA = BASE_VALUE_NOTIFICATION_EVENT_SCHEMA.extend(
     {
         vol.Required(CONF_TYPE): CENTRAL_SCENE_VALUE_NOTIFICATION,
-        vol.Required(CONF_ACTION): vol.Coerce(int),
-        vol.Required(CONF_SUBTYPE): cv.string,
     }
 )
 
@@ -118,8 +114,6 @@ SCENE_ACTIVATION_VALUE_NOTIFICATION_SCHEMA = (
     BASE_VALUE_NOTIFICATION_EVENT_SCHEMA.extend(
         {
             vol.Required(CONF_TYPE): SCENE_ACTIVATION_VALUE_NOTIFICATION,
-            vol.Required(CONF_SCENE_ID): vol.Coerce(int),
-            vol.Required(CONF_SUBTYPE): cv.string,
         }
     )
 )
@@ -298,24 +292,16 @@ async def async_attach_trigger(
             )
             if (val := config.get(f"{ATTR_TYPE}.")) not in ("", None):
                 event_data[ATTR_TYPE] = val
-        elif trigger_type == BASIC_VALUE_NOTIFICATION:
+        elif trigger_type in (
+            BASIC_VALUE_NOTIFICATION,
+            CENTRAL_SCENE_VALUE_NOTIFICATION,
+            SCENE_ACTIVATION_VALUE_NOTIFICATION,
+        ):
             event_config[event.CONF_EVENT_TYPE] = ZWAVE_JS_VALUE_NOTIFICATION_EVENT
             copy_available_params(
                 config, event_data, [ATTR_PROPERTY, ATTR_PROPERTY_KEY, ATTR_ENDPOINT]
             )
             event_data[ATTR_VALUE_RAW] = config[ATTR_VALUE]
-        elif trigger_type == CENTRAL_SCENE_VALUE_NOTIFICATION:
-            event_config[event.CONF_EVENT_TYPE] = ZWAVE_JS_VALUE_NOTIFICATION_EVENT
-            copy_available_params(
-                config, event_data, [ATTR_PROPERTY, ATTR_PROPERTY_KEY, ATTR_ENDPOINT]
-            )
-            event_data[ATTR_VALUE_RAW] = config[CONF_ACTION]
-        elif trigger_type == SCENE_ACTIVATION_VALUE_NOTIFICATION:
-            event_config[event.CONF_EVENT_TYPE] = ZWAVE_JS_VALUE_NOTIFICATION_EVENT
-            copy_available_params(
-                config, event_data, [ATTR_PROPERTY, ATTR_PROPERTY_KEY, ATTR_ENDPOINT]
-            )
-            event_data[ATTR_VALUE_RAW] = config[CONF_SCENE_ID]
         else:
             raise HomeAssistantError(f"Unhandled trigger type {trigger_type}")
 
@@ -380,39 +366,19 @@ async def async_get_trigger_capabilities(
             )
         }
 
-    if config[CONF_TYPE] == BASIC_VALUE_NOTIFICATION:
-        return {
-            "extra_fields": vol.Schema(
-                {
-                    vol.Required(ATTR_VALUE): vol.All(
-                        vol.Coerce(int),
-                        vol.Range(min=value.metadata.min, max=value.metadata.max),
-                    )
-                }
+    if config[CONF_TYPE] in (
+        BASIC_VALUE_NOTIFICATION,
+        CENTRAL_SCENE_VALUE_NOTIFICATION,
+        SCENE_ACTIVATION_VALUE_NOTIFICATION,
+    ):
+        if value.metadata.states:
+            value_schema = vol.In({int(k): v for k, v in value.metadata.states.items()})
+        else:
+            value_schema = vol.All(
+                vol.Coerce(int),
+                vol.Range(min=value.metadata.min, max=value.metadata.max),
             )
-        }
 
-    if config[CONF_TYPE] == CENTRAL_SCENE_VALUE_NOTIFICATION:
-        return {
-            "extra_fields": vol.Schema(
-                {
-                    vol.Required(CONF_ACTION): vol.In(
-                        {int(k): v for k, v in value.metadata.states.items()}
-                    )
-                }
-            )
-        }
-
-    if config[CONF_TYPE] == SCENE_ACTIVATION_VALUE_NOTIFICATION:
-        return {
-            "extra_fields": vol.Schema(
-                {
-                    vol.Required(CONF_SCENE_ID): vol.All(
-                        vol.Coerce(int),
-                        vol.Range(min=value.metadata.min, max=value.metadata.max),
-                    )
-                }
-            )
-        }
+        return {"extra_fields": vol.Schema({vol.Required(ATTR_VALUE): value_schema})}
 
     return {}

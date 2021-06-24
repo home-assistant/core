@@ -555,7 +555,7 @@ async def test_if_central_scene_value_notification_fires(
                         "property_key": "001",
                         "endpoint": 0,
                         "subtype": "Endpoint 0 Scene 001",
-                        "action": 0,
+                        "value": 0,
                     },
                     "action": {
                         "service": "test.automation",
@@ -642,7 +642,7 @@ async def test_get_trigger_capabilities_central_scene_value_notification(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == [
         {
-            "name": "action",
+            "name": "value",
             "required": True,
             "type": "select",
             "options": [(0, "KeyPressed"), (1, "KeyReleased"), (2, "KeyHeldDown")],
@@ -696,7 +696,7 @@ async def test_if_scene_activation_value_notification_fires(
                         "property_key": None,
                         "endpoint": 0,
                         "subtype": "Endpoint 0",
-                        "scene_id": 1,
+                        "value": 1,
                     },
                     "action": {
                         "service": "test.automation",
@@ -776,7 +776,7 @@ async def test_get_trigger_capabilities_scene_activation_value_notification(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == [
         {
-            "name": "scene_id",
+            "name": "value",
             "required": True,
             "type": "integer",
             "valueMin": 1,
