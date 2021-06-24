@@ -89,7 +89,7 @@ async def async_setup_entry(
     )
 
     @Throttle(min_time_between_updates)
-    def update_entities_telegram(telegram: dict[str, DSMRObject]):
+    def update_entities_telegram(telegram: dict[str, DSMRObject]) -> None:
         """Update entities with latest telegram and trigger state update."""
         # Make all device entities aware of new telegram
         for entity in entities:
@@ -222,7 +222,8 @@ class DSMREntity(SensorEntity):
 
         # Get the attribute value if the object has it
         dsmr_object = self.telegram[self._sensor.obis_reference]
-        return getattr(dsmr_object, attribute, None)
+        attr: str | None = getattr(dsmr_object, attribute)
+        return attr
 
     @property
     def state(self) -> StateType:
