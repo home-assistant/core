@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import asyncio
 from functools import partial
-import logging
 import os
 from typing import Any
 
@@ -29,9 +28,8 @@ from .const import (
     CONF_TIME_BETWEEN_UPDATE,
     DEFAULT_TIME_BETWEEN_UPDATE,
     DOMAIN,
+    LOGGER,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 CONF_MANUAL_PATH = "Enter Manually"
 
@@ -92,7 +90,7 @@ class DSMRConnection:
         try:
             transport, protocol = await asyncio.create_task(reader_factory())
         except (serial.serialutil.SerialException, OSError):
-            _LOGGER.exception("Error connecting to DSMR")
+            LOGGER.exception("Error connecting to DSMR")
             return False
 
         if transport:
