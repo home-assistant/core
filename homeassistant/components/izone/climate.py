@@ -12,7 +12,7 @@ from homeassistant.components.climate.const import (
     FAN_HIGH,
     FAN_LOW,
     FAN_MEDIUM,
-    FAN_TOP,
+    FAN_TOP, 
     HVAC_MODE_COOL,
     HVAC_MODE_DRY,
     HVAC_MODE_FAN_ONLY,
