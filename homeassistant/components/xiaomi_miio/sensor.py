@@ -219,7 +219,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 )
             )
 
-    async_add_entities(entities, update_before_add=True)
+    async_add_entities(entities, update_before_add=False)
 
 
 class XiaomiGenericSensor(XiaomiCoordinatedMiioEntity, SensorEntity):
@@ -278,6 +278,10 @@ class XiaomiGenericSensor(XiaomiCoordinatedMiioEntity, SensorEntity):
     @property
     def state(self):
         """Return the state of the device."""
+        if not self._state:
+            self._state = self._extract_value_from_attribute(
+                self.coordinator.data, self._attribute
+            )
         if (
             SENSOR_TYPES[self._attribute].valid_min_value
             and self._state < SENSOR_TYPES[self._attribute].valid_min_value
