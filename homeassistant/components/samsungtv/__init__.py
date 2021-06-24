@@ -101,6 +101,7 @@ async def async_setup_entry(hass, entry):
 
     # Initialize bridge
     bridge = await _async_create_bridge_with_updated_data(hass, entry)
+    LOGGER.warning("got bridge: %s", bridge)
 
     def stop_bridge(event):
         """Stop SamsungTV bridge connection."""
@@ -122,6 +123,9 @@ async def _async_create_bridge_with_updated_data(hass, entry):
     port = entry.data.get(CONF_PORT)
     method = entry.data.get(CONF_METHOD)
     info = None
+    LOGGER.warning(
+        "_async_create_bridge_with_updated_data: port=%s method=%s", port, method
+    )
 
     if not port or not method:
         if method == METHOD_LEGACY:
@@ -139,6 +143,12 @@ async def _async_create_bridge_with_updated_data(hass, entry):
         updated_data[CONF_METHOD] = method
 
     bridge = _async_get_device_bridge({**entry.data, **updated_data})
+    LOGGER.warning(
+        "_async_create_bridge_with_updated_data: port=%s method=%s bridge=%s",
+        port,
+        method,
+        bridge,
+    )
 
     if not entry.data.get(CONF_MAC) and bridge.method == METHOD_WEBSOCKET:
         if info:
@@ -152,6 +162,13 @@ async def _async_create_bridge_with_updated_data(hass, entry):
         data = entry.data.copy()
         data.update(updated_data)
         hass.config_entries.async_update_entry(entry, data=data)
+
+    LOGGER.warning(
+        "DONE _async_create_bridge_with_updated_data: port=%s method=%s bridge=%s",
+        port,
+        method,
+        bridge,
+    )
 
     return bridge
 
