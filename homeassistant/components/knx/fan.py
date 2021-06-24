@@ -43,9 +43,10 @@ async def async_setup_platform(
 class KNXFan(KnxEntity, FanEntity):
     """Representation of a KNX fan."""
 
+    _device: XknxFan
+
     def __init__(self, xknx: XKNX, config: ConfigType) -> None:
         """Initialize of KNX fan."""
-        self._device: XknxFan
         max_step = config.get(FanSchema.CONF_MAX_STEP)
         super().__init__(
             device=XknxFan(
@@ -62,9 +63,15 @@ class KNXFan(KnxEntity, FanEntity):
                 max_step=max_step,
             )
         )
-        self._unique_id = f"{self._device.speed.group_address}"
         # FanSpeedMode.STEP if max_step is set
         self._step_range: tuple[int, int] | None = (1, max_step) if max_step else None
+
+        self._attr_supported_features = (
+            SUPPORT_SET_SPEED | SUPPORT_OSCILLATE
+            if self._device.supports_oscillation
+            else SUPPORT_SET_SPEED
+        )
+        self._attr_unique_id = f"{self._device.speed.group_address}"
 
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan, as a percentage."""
@@ -73,16 +80,6 @@ class KNXFan(KnxEntity, FanEntity):
             await self._device.set_speed(step)
         else:
             await self._device.set_speed(percentage)
-
-    @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        flags = SUPPORT_SET_SPEED
-
-        if self._device.supports_oscillation:
-            flags |= SUPPORT_OSCILLATE
-
-        return flags
 
     @property
     def percentage(self) -> int | None:

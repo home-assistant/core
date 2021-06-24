@@ -37,9 +37,10 @@ async def async_setup_platform(
 class KNXScene(KnxEntity, Scene):
     """Representation of a KNX scene."""
 
+    _device: XknxScene
+
     def __init__(self, xknx: XKNX, config: ConfigType) -> None:
         """Init KNX scene."""
-        self._device: XknxScene
         super().__init__(
             device=XknxScene(
                 xknx,
@@ -48,7 +49,7 @@ class KNXScene(KnxEntity, Scene):
                 scene_number=config[SceneSchema.CONF_SCENE_NUMBER],
             )
         )
-        self._unique_id = (
+        self._attr_unique_id = (
             f"{self._device.scene_value.group_address}_{self._device.scene_number}"
         )
 

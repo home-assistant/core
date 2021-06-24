@@ -82,9 +82,10 @@ def _async_migrate_unique_id(
 class KNXCover(KnxEntity, CoverEntity):
     """Representation of a KNX cover."""
 
+    _device: XknxCover
+
     def __init__(self, xknx: XKNX, config: ConfigType) -> None:
         """Initialize the cover."""
-        self._device: XknxCover
         super().__init__(
             device=XknxCover(
                 xknx,
@@ -106,12 +107,15 @@ class KNXCover(KnxEntity, CoverEntity):
                 invert_angle=config[CoverSchema.CONF_INVERT_ANGLE],
             )
         )
-        self._device_class: str | None = config.get(CONF_DEVICE_CLASS)
-        self._unique_id = (
+        self._unsubscribe_auto_updater: Callable[[], None] | None = None
+
+        self._attr_device_class = config.get(CONF_DEVICE_CLASS) or (
+            DEVICE_CLASS_BLIND if self._device.supports_angle else None
+        )
+        self._attr_unique_id = (
             f"{self._device.updown.group_address}_"
             f"{self._device.position_target.group_address}"
         )
-        self._unsubscribe_auto_updater: Callable[[], None] | None = None
 
     @callback
     async def after_update_callback(self, device: XknxDevice) -> None:
@@ -119,15 +123,6 @@ class KNXCover(KnxEntity, CoverEntity):
         self.async_write_ha_state()
         if self._device.is_traveling():
             self.start_auto_updater()
-
-    @property
-    def device_class(self) -> str | None:
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        if self._device_class:
-            return self._device_class
-        if self._device.supports_angle:
-            return DEVICE_CLASS_BLIND
-        return None
 
     @property
     def supported_features(self) -> int:

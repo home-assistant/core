@@ -38,9 +38,10 @@ async def async_setup_platform(
 class KNXSwitch(KnxEntity, SwitchEntity, RestoreEntity):
     """Representation of a KNX switch."""
 
+    _device: XknxSwitch
+
     def __init__(self, xknx: XKNX, config: ConfigType) -> None:
         """Initialize of KNX switch."""
-        self._device: XknxSwitch
         super().__init__(
             device=XknxSwitch(
                 xknx,
@@ -50,7 +51,7 @@ class KNXSwitch(KnxEntity, SwitchEntity, RestoreEntity):
                 invert=config[SwitchSchema.CONF_INVERT],
             )
         )
-        self._unique_id = f"{self._device.switch.group_address}"
+        self._attr_unique_id = f"{self._device.switch.group_address}"
 
     async def async_added_to_hass(self) -> None:
         """Restore last state."""

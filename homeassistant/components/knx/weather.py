@@ -71,21 +71,18 @@ def _create_weather(xknx: XKNX, config: ConfigType) -> XknxWeather:
 class KNXWeather(KnxEntity, WeatherEntity):
     """Representation of a KNX weather device."""
 
+    _device: XknxWeather
+    _attr_temperature_unit = TEMP_CELSIUS
+
     def __init__(self, xknx: XKNX, config: ConfigType) -> None:
         """Initialize of a KNX sensor."""
-        self._device: XknxWeather
         super().__init__(_create_weather(xknx, config))
-        self._unique_id = f"{self._device._temperature.group_address_state}"
+        self._attr_unique_id = f"{self._device._temperature.group_address_state}"
 
     @property
     def temperature(self) -> float | None:
         """Return current temperature."""
         return self._device.temperature
-
-    @property
-    def temperature_unit(self) -> str:
-        """Return temperature unit."""
-        return TEMP_CELSIUS
 
     @property
     def pressure(self) -> float | None:

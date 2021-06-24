@@ -50,25 +50,25 @@ def _create_numeric_value(xknx: XKNX, config: ConfigType) -> NumericValue:
 class KNXNumber(KnxEntity, NumberEntity, RestoreEntity):
     """Representation of a KNX number."""
 
+    _device: NumericValue
+
     def __init__(self, xknx: XKNX, config: ConfigType) -> None:
         """Initialize a KNX number."""
-        self._device: NumericValue
         super().__init__(_create_numeric_value(xknx, config))
-        self._unique_id = f"{self._device.sensor_value.group_address}"
-
-        self._attr_min_value = config.get(
-            NumberSchema.CONF_MIN,
-            self._device.sensor_value.dpt_class.value_min,
-        )
         self._attr_max_value = config.get(
             NumberSchema.CONF_MAX,
             self._device.sensor_value.dpt_class.value_max,
+        )
+        self._attr_min_value = config.get(
+            NumberSchema.CONF_MIN,
+            self._device.sensor_value.dpt_class.value_min,
         )
         self._attr_step = config.get(
             NumberSchema.CONF_STEP,
             self._device.sensor_value.dpt_class.resolution,
         )
-        self._device.sensor_value.value = max(0, self.min_value)
+        self._attr_unique_id = f"{self._device.sensor_value.group_address}"
+        self._device.sensor_value.value = max(0, self._attr_min_value)
 
     async def async_added_to_hass(self) -> None:
         """Restore last state."""

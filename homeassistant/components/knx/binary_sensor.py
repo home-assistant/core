@@ -39,9 +39,10 @@ async def async_setup_platform(
 class KNXBinarySensor(KnxEntity, BinarySensorEntity):
     """Representation of a KNX binary sensor."""
 
+    _device: XknxBinarySensor
+
     def __init__(self, xknx: XKNX, config: ConfigType) -> None:
         """Initialize of KNX binary sensor."""
-        self._device: XknxBinarySensor
         super().__init__(
             device=XknxBinarySensor(
                 xknx,
@@ -56,13 +57,9 @@ class KNXBinarySensor(KnxEntity, BinarySensorEntity):
                 reset_after=config.get(BinarySensorSchema.CONF_RESET_AFTER),
             )
         )
-        self._device_class: str | None = config.get(CONF_DEVICE_CLASS)
-        self._unique_id = f"{self._device.remote_value.group_address_state}"
-
-    @property
-    def device_class(self) -> str | None:
-        """Return the class of this sensor."""
-        return self._device_class
+        self._attr_device_class = config.get(CONF_DEVICE_CLASS)
+        self._attr_force_update = self._device.ignore_internal_state
+        self._attr_unique_id = f"{self._device.remote_value.group_address_state}"
 
     @property
     def is_on(self) -> bool:
@@ -82,13 +79,3 @@ class KNXBinarySensor(KnxEntity, BinarySensorEntity):
                 dt.as_utc(self._device.last_telegram.timestamp)
             )
         return attr
-
-    @property
-    def force_update(self) -> bool:
-        """
-        Return True if state updates should be forced.
-
-        If True, a state change will be triggered anytime the state property is
-        updated, not just when the value changes.
-        """
-        return self._device.ignore_internal_state
