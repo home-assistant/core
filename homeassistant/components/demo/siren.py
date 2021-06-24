@@ -35,7 +35,7 @@ class DemoSiren(SirenEntity):
         name: str,
         active_tone: str | None = None,
         available_tones: str | None = None,
-        volume_level: float = None,
+        volume_level: float | None = None,
         is_on: bool = True,
     ) -> None:
         """Initialize the siren device."""
