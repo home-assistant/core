@@ -25,7 +25,7 @@ async def async_setup_platform(
             DemoSiren(name="Siren"),
             DemoSiren(
                 name="Siren with all features",
-                active_tone="fire",
+                default_tone="fire",
                 available_tones=["fire", "alarm"],
                 volume_level=0.5,
             ),
@@ -48,7 +48,7 @@ class DemoSiren(SirenEntity):
     def __init__(
         self,
         name: str,
-        active_tone: str | None = None,
+        default_tone: str | None = None,
         available_tones: str | None = None,
         volume_level: float | None = None,
         is_on: bool = True,
@@ -58,7 +58,7 @@ class DemoSiren(SirenEntity):
         self._attr_should_poll = False
         self._attr_supported_features = SUPPORT_FLAGS
         self._attr_is_on = is_on
-        if active_tone is not None and available_tones is not None:
+        if default_tone is not None and available_tones is not None:
             self._attr_supported_features = (
                 self._attr_supported_features | SUPPORT_TONES
             )
@@ -66,7 +66,7 @@ class DemoSiren(SirenEntity):
             self._attr_supported_features = (
                 self._attr_supported_features | SUPPORT_VOLUME_SET
             )
-        self._attr_active_tone = active_tone
+        self._attr_default_tone = default_tone
         self._attr_available_tones = available_tones
         self._attr_volume_level = volume_level
 
@@ -85,7 +85,7 @@ class DemoSiren(SirenEntity):
         self._attr_volume_level = volume_level
         self.async_write_ha_state()
 
-    async def async_set_active_tone(self, tone: str) -> None:
-        """Update active tone."""
-        self._attr_active_tone = tone
+    async def async_set_default_tone(self, tone: str) -> None:
+        """Update default tone."""
+        self._attr_default_tone = tone
         self.async_write_ha_state()
