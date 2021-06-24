@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 import logging
 from types import MappingProxyType
-from typing import Any, TypedDict
+from typing import Any, Callable, TypedDict
 
 from fritzconnection import FritzConnection
 from fritzconnection.core.exceptions import (
@@ -15,6 +15,7 @@ from fritzconnection.core.exceptions import (
 )
 from fritzconnection.lib.fritzhosts import FritzHosts
 from fritzconnection.lib.fritzstatus import FritzStatus
+import fritzprofiles
 from fritzprofiles import FritzProfileSwitch, get_all_profiles
 
 from homeassistant.components.device_tracker.const import (
@@ -86,6 +87,7 @@ class FritzBoxTools:
         self._unique_id: str | None = None
         self.connection: FritzConnection = None
         self.fritz_hosts: FritzHosts = None
+        self.fritz_profiles: fritzprofiles = None
         self.fritz_status: FritzStatus = None
         self.hass = hass
         self.host = host
