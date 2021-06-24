@@ -5,8 +5,8 @@ from motionblinds import AsyncMotionMulticast, MotionDiscovery
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_API_KEY, CONF_HOST
 from homeassistant.components import network
+from homeassistant.const import CONF_API_KEY, CONF_HOST
 from homeassistant.core import callback
 
 from .const import (
@@ -133,7 +133,9 @@ class MotionBlindsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 except gaierror:
                     errors[CONF_INTERFACE] = "invalid_interface"
                     return self.async_show_form(
-                        step_id="connect", data_schema=self._config_settings, errors=errors
+                        step_id="connect",
+                        data_schema=self._config_settings,
+                        errors=errors,
                     )
 
             connect_gateway_class = ConnectMotionGateway(self.hass, multicast=None)
@@ -160,7 +162,9 @@ class MotionBlindsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._config_settings = vol.Schema(
             {
                 vol.Required(CONF_API_KEY): vol.All(str, vol.Length(min=16, max=16)),
-                vol.Optional(CONF_INTERFACE, default=default_interface): vol.In(interfaces),
+                vol.Optional(CONF_INTERFACE, default=default_interface): vol.In(
+                    interfaces
+                ),
             }
         )
 
