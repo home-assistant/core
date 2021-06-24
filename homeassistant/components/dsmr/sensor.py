@@ -39,10 +39,6 @@ from .const import (
     DEVICE_NAME_ENERGY,
     DEVICE_NAME_GAS,
     DOMAIN,
-    ICON_GAS,
-    ICON_POWER,
-    ICON_POWER_FAILURE,
-    ICON_SWELL_SAG,
     LOGGER,
     SENSORS,
 )
@@ -196,13 +192,20 @@ class DSMREntity(SensorEntity):
             device_serial = entry.data[CONF_SERIAL_ID_GAS]
             device_name = DEVICE_NAME_GAS
 
-        self._attr_name = sensor.name
-        self._attr_force_update = sensor.force_update
-        self._attr_unique_id = f"{device_serial}_{sensor.name}".replace(" ", "_")
+        self._attr_device_class = sensor.device_class
         self._attr_device_info = {
             "identifiers": {(DOMAIN, device_serial)},
             "name": device_name,
         }
+        self._attr_entity_registry_enabled_default = (
+            sensor.entity_registry_enabled_default
+        )
+        self._attr_force_update = sensor.force_update
+        self._attr_icon = sensor.icon
+        self._attr_last_reset = sensor.last_reset
+        self._attr_name = sensor.name
+        self._attr_state_class = sensor.state_class
+        self._attr_unique_id = f"{device_serial}_{sensor.name}".replace(" ", "_")
 
     @callback
     def update_data(self, telegram: dict[str, DSMRObject]) -> None:
@@ -220,21 +223,6 @@ class DSMREntity(SensorEntity):
         # Get the attribute value if the object has it
         dsmr_object = self.telegram[self._sensor.obis_reference]
         return getattr(dsmr_object, attribute, None)
-
-    @property
-    def icon(self) -> str | None:
-        """Icon to use in the frontend, if any."""
-        if not self.name:
-            return None
-        if "Sags" in self.name or "Swells" in self.name:
-            return ICON_SWELL_SAG
-        if "Failure" in self.name:
-            return ICON_POWER_FAILURE
-        if "Power" in self.name:
-            return ICON_POWER
-        if "Gas" in self.name:
-            return ICON_GAS
-        return None
 
     @property
     def state(self) -> StateType:
