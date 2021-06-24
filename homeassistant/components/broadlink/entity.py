@@ -6,7 +6,7 @@ from homeassistant.helpers.entity import Entity
 from .const import DOMAIN
 
 
-class BroadlinkEntity(Entity):
+class BroadlinkEntity:
     """Representation of a Broadlink entity."""
     _attr_should_poll = False
 
