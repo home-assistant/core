@@ -20,11 +20,6 @@ class BroadlinkEntity:
         return self._device.update_manager.available
 
     @property
-    def should_poll(self):
-        """Return True if the remote has to be polled for state."""
-        return False
-
-    @property
     def device_info(self):
         """Return device info."""
         return {
