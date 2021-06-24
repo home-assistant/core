@@ -266,11 +266,10 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
             CommandClass.SWITCH_COLOR,
             value_property_key=None,
         )
+        zwave_transition = {}
 
         if transition is not None and self._color_transition_duration is not None:
             zwave_transition = {TRANSITION_DURATION: f"{transition}s"}
-        else:
-            zwave_transition = {}
 
         if combined_color_val and isinstance(combined_color_val.value, dict):
             colors_dict = {}
@@ -315,10 +314,10 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
             zwave_brightness = byte_to_zwave_brightness(brightness)
 
         # set transition value before sending new brightness
+        zwave_transition = {}
         if transition is not None and self._dimming_duration is not None:
             zwave_transition = {TRANSITION_DURATION: f"{transition}s"}
-        else:
-            zwave_transition = {}
+
         # setting a value requires setting targetValue
         await self.info.node.async_set_value(
             self._target_value, zwave_brightness, zwave_transition
