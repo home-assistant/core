@@ -7,6 +7,7 @@ from homeassistant.components.webhook import async_handle_webhook
 from homeassistant.util.aiohttp import MockRequest
 
 from tests.common import load_fixture
+from tests.test_util.aiohttp import AiohttpClientMockResponse
 
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
@@ -50,7 +51,7 @@ async def fake_post_request(*args, **kwargs):
     if endpoint in "snapshot_720.jpg":
         return b"test stream image bytes"
 
-    if endpoint in [
+    elif endpoint in [
         "setpersonsaway",
         "setpersonshome",
         "setstate",
@@ -58,9 +59,16 @@ async def fake_post_request(*args, **kwargs):
         "setthermmode",
         "switchhomeschedule",
     ]:
-        return f'{{"{endpoint}": true}}'
+        payload = f'{{"{endpoint}": true}}'
 
-    return json.loads(load_fixture(f"netatmo/{endpoint}.json"))
+    else:
+        payload = json.loads(load_fixture(f"netatmo/{endpoint}.json"))
+
+    return AiohttpClientMockResponse(
+        method="POST",
+        url=kwargs["url"],
+        json=payload,
+    )
 
 
 async def fake_post_request_no_data(*args, **kwargs):
