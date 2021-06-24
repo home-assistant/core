@@ -74,7 +74,10 @@ async def async_setup_entry(
     _LOGGER.debug("Setting up FRITZ!Box sensors")
     fritzbox_tools: FritzBoxTools = hass.data[DOMAIN][entry.entry_id]
 
-    if "WANIPConn1" not in fritzbox_tools.connection.services:
+    if (
+        not fritzbox_tools.connection
+        or "WANIPConn1" not in fritzbox_tools.connection.services
+    ):
         # Only routers are supported at the moment
         return
 
