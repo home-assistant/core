@@ -39,10 +39,9 @@ from .const import (
 
 def mac_from_device_info(info):
     """Extract the mac address from the device info."""
-    if info is not None:
-        dev_info = info.get("device", {})
-        if dev_info.get("networkType") == "wireless" and dev_info.get("wifiMac"):
-            return format_mac(dev_info.get("wifiMac"))
+    dev_info = info.get("device", {})
+    if dev_info.get("networkType") == "wireless" and dev_info.get("wifiMac"):
+        return format_mac(dev_info.get("wifiMac"))
     return None
 
 
@@ -257,7 +256,8 @@ class SamsungTVWSBridge(SamsungTVBridge):
 
     def mac_from_device(self):
         """Try to fetch the mac address of the TV."""
-        return mac_from_device_info(self.device_info())
+        info = self.device_info()
+        return mac_from_device_info(info) if info else None
 
     def try_connect(self):
         """Try to connect to the Websocket TV."""
