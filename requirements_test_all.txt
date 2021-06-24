@@ -902,6 +902,9 @@ pymyq==3.0.4
 # homeassistant.components.mysensors
 pymysensors==0.21.0
 
+# homeassistant.components.netgear
+pynetgear==0.7.0
+
 # homeassistant.components.nuki
 pynuki==1.4.1
 
