@@ -44,7 +44,7 @@ class ConnectXiaomiDevice:
             )
         except DeviceException as error:
             if isinstance(error.__cause__, ChecksumError):
-                raise ConfigEntryAuthFailed(error)
+                raise ConfigEntryAuthFailed(error) from error
 
             _LOGGER.error(
                 "DeviceException during setup of xiaomi device with host %s, %s",

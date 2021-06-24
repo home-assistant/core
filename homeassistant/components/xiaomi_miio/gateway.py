@@ -78,7 +78,7 @@ class ConnectXiaomiGateway:
             self._gateway_device.info()
         except DeviceException as error:
             if isinstance(error.__cause__, ChecksumError):
-                raise ConfigEntryAuthFailed(error)
+                raise ConfigEntryAuthFailed(error) from error
 
             _LOGGER.error(
                 "DeviceException during setup of xiaomi gateway with host %s, %s",
@@ -120,7 +120,7 @@ class ConnectXiaomiGateway:
                     )
                 devices_raw = miio_cloud.get_devices(self._cloud_country)
                 self._gateway_device.get_devices_from_dict(devices_raw)
-            except DeviceException:
+            except DeviceException as error:
                 _LOGGER.error(
                     "DeviceException during setup of xiaomi gateway with host %s, %s",
                     self._host,
