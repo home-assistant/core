@@ -9,7 +9,7 @@ from .models import DSMRSensor
 
 DOMAIN = "dsmr"
 
-LOGGER = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__package__)
 
 PLATFORMS = ["sensor"]
 
