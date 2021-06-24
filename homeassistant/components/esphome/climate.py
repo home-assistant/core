@@ -188,9 +188,7 @@ class EsphomeClimateEntity(EsphomeEntity, ClimateEntity):
         """Return preset modes."""
         return [
             _PRESETS.from_esphome(preset)
-            for preset in self._static_info.supported_presets_compat(
-                self._client.api_version
-            )
+            for preset in self._static_info.supported_presets_compat(self._api_version)
         ] + self._static_info.supported_custom_presets
 
     @property
@@ -260,7 +258,7 @@ class EsphomeClimateEntity(EsphomeEntity, ClimateEntity):
     def preset_mode(self) -> str | None:
         """Return current preset mode."""
         return self._state.custom_preset or _PRESETS.from_esphome(
-            self._state.preset_compat(self._client.api_version)
+            self._state.preset_compat(self._api_version)
         )
 
     @esphome_state_property
