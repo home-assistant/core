@@ -128,7 +128,7 @@ class SirenEntity(ToggleEntity):
     def state_attributes(self) -> dict[str, Any]:
         """Return the optional state attributes."""
         supported_features = self.supported_features or 0
-        data = {}
+        data: dict[str, Any] = {}
 
         if self.volume_level is not None:
             data[ATTR_VOLUME_LEVEL] = self.volume_level
@@ -158,7 +158,7 @@ class SirenEntity(ToggleEntity):
 
         Requires SUPPORT_TONES.
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     @property
     def available_tones(self) -> list[int] | list[str] | None:
@@ -167,7 +167,7 @@ class SirenEntity(ToggleEntity):
 
         Requires SUPPORT_TONES.
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     def set_default_tone(self, tone: int | str) -> None:
         """Set new default tone."""
