@@ -311,7 +311,7 @@ class TibberSensorRT(TibberSensor):
             "last meter consumption",
             "last meter production",
         ]:
-            self._attr_last_reset = datetime.fromtimestamp(0)
+            self._attr_last_reset = dt_util.utc_from_timestamp(0)
         elif self._sensor_name in [
             "accumulated consumption",
             "accumulated production",
