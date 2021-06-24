@@ -98,11 +98,13 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Set the unique id from the udn."""
         assert self._host is not None
         await self.async_set_unique_id(self._udn, raise_on_progress=raise_on_progress)
-        self._async_update_existing_host_entry(self._host)
+        existing_entry = self._async_update_existing_host_entry(self._host)
         updates = {CONF_HOST: self._host}
         if self._mac:
             updates[CONF_MAC] = self._mac
         self._abort_if_unique_id_configured(updates=updates)
+        if existing_entry:
+            raise data_entry_flow.AbortFlow("already_configured")
 
     def _try_connect(self):
         """Try to connect and check auth."""
