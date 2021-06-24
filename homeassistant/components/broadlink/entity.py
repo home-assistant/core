@@ -1,13 +1,14 @@
 """Broadlink entities."""
 
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
 
 
-class BroadlinkEntity(Entity):
+class BroadlinkEntity:
     """Representation of a Broadlink entity."""
+
+    _attr_should_poll = False
 
     def __init__(self, device):
         """Initialize the device."""
@@ -17,11 +18,6 @@ class BroadlinkEntity(Entity):
     def available(self):
         """Return True if the remote is available."""
         return self._device.update_manager.available
-
-    @property
-    def should_poll(self):
-        """Return True if the remote has to be polled for state."""
-        return False
 
     @property
     def device_info(self):
