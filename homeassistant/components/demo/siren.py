@@ -1,13 +1,24 @@
 """Demo platform that offers a fake siren device."""
-from typing import List, Optional
+from __future__ import annotations
+
+from typing import Any
 
 from homeassistant.components.siren import SirenEntity
 from homeassistant.components.siren.const import SUPPORT_TONES, SUPPORT_VOLUME_SET
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import Config, HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import DiscoveryInfoType
 
 SUPPORT_FLAGS = 0
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: Config,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType = None,
+) -> None:
     """Set up the Demo siren devices."""
     async_add_entities(
         [
@@ -22,7 +33,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     )
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Demo siren devices config entry."""
     await async_setup_platform(hass, {}, async_add_entities)
 
@@ -66,17 +81,17 @@ class DemoSiren(SirenEntity):
         return self._name
 
     @property
-    def active_tone(self) -> Optional[str]:
+    def active_tone(self) -> str | None:
         """Return the active tone."""
         return self._active_tone
 
     @property
-    def available_tones(self) -> Optional[List[str]]:
+    def available_tones(self) -> list[str] | None:
         """Return the available tones."""
         return self._available_tones
 
     @property
-    def volume_level(self):
+    def volume_level(self) -> float | None:
         """Return the volume level."""
         return self._volume_level
 
