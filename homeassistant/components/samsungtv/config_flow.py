@@ -24,7 +24,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.typing import DiscoveryInfoType
 
-from .bridge import SamsungTVBridge
+from .bridge import SamsungTVBridge, async_get_device_info, mac_from_device_info
 from .const import (
     ATTR_PROPERTIES,
     CONF_MANUFACTURER,
@@ -45,23 +45,6 @@ from .const import (
 
 DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str, vol.Required(CONF_NAME): str})
 SUPPORTED_METHODS = [METHOD_LEGACY, METHOD_WEBSOCKET]
-
-
-def _get_device_info(host):
-    """Fetch device info by any websocket method."""
-    for port in WEBSOCKET_PORTS:
-        bridge = SamsungTVBridge.get_bridge(METHOD_WEBSOCKET, host, port)
-        if info := bridge.device_info():
-            return info
-    return None
-
-
-async def async_get_device_info(hass, bridge, host):
-    """Fetch device info from bridge or websocket."""
-    if bridge:
-        return await hass.async_add_executor_job(bridge.device_info)
-
-    return await hass.async_add_executor_job(_get_device_info, host)
 
 
 def _strip_uuid(udn):
@@ -107,7 +90,8 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _async_set_device_unique_id(self, raise_on_progress=True):
         """Set device unique_id."""
-        await self._async_get_and_check_device_info()
+        if not await self._async_get_and_check_device_info():
+            raise data_entry_flow.AbortFlow(RESULT_NOT_SUPPORTED)
         await self._async_set_unique_id_from_udn(raise_on_progress)
 
     async def _async_set_unique_id_from_udn(self, raise_on_progress=True):
@@ -134,9 +118,11 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _async_get_and_check_device_info(self):
         """Try to get the device info."""
-        info = await async_get_device_info(self.hass, self._bridge, self._host)
+        _port, _method, info = await async_get_device_info(
+            self.hass, self._bridge, self._host
+        )
         if not info:
-            raise data_entry_flow.AbortFlow(RESULT_NOT_SUPPORTED)
+            return False
         dev_info = info.get("device", {})
         device_type = dev_info.get("type")
         if device_type != "Samsung SmartTV":
@@ -146,9 +132,10 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._name = name.replace("[TV] ", "") if name else device_type
         self._title = f"{self._name} ({self._model})"
         self._udn = _strip_uuid(dev_info.get("udn", info["id"]))
-        if dev_info.get("networkType") == "wireless" and dev_info.get("wifiMac"):
-            self._mac = format_mac(dev_info.get("wifiMac"))
+        if mac := mac_from_device_info(info):
+            self._mac = mac
         self._device_info = info
+        return True
 
     async def async_step_import(self, user_input=None):
         """Handle configuration by yaml file."""
@@ -156,11 +143,11 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # since the TV may be off at startup
         await self._async_set_name_host_from_input(user_input)
         self._async_abort_entries_match({CONF_HOST: self._host})
-        if user_input.get(CONF_PORT) in WEBSOCKET_PORTS:
+        port = user_input.get(CONF_PORT)
+        if port in WEBSOCKET_PORTS:
             user_input[CONF_METHOD] = METHOD_WEBSOCKET
-        else:
+        elif port == LEGACY_PORT:
             user_input[CONF_METHOD] = METHOD_LEGACY
-            user_input[CONF_PORT] = LEGACY_PORT
         user_input[CONF_MANUFACTURER] = DEFAULT_MANUFACTURER
         return self.async_create_entry(
             title=self._title,
@@ -225,6 +212,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_ssdp(self, discovery_info: DiscoveryInfoType):
         """Handle a flow initialized by ssdp discovery."""
         LOGGER.debug("Samsung device found via SSDP: %s", discovery_info)
+        model_name = discovery_info.get(ATTR_UPNP_MODEL_NAME)
         self._udn = _strip_uuid(discovery_info[ATTR_UPNP_UDN])
         self._host = urlparse(discovery_info[ATTR_SSDP_LOCATION]).hostname
         await self._async_set_unique_id_from_udn()
@@ -234,9 +222,10 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             "samsung"
         ):
             raise data_entry_flow.AbortFlow(RESULT_NOT_SUPPORTED)
-        self._name = self._title = self._model = discovery_info.get(
-            ATTR_UPNP_MODEL_NAME
-        )
+        if not await self._async_get_and_check_device_info():
+            # If we cannot get device info for an SSDP discovery
+            # its likely a legacy tv.
+            self._name = self._title = self._model = model_name
         self.context["title_placeholders"] = {"device": self._title}
         return await self.async_step_confirm()
 
