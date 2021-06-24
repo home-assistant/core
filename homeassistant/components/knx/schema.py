@@ -116,6 +116,33 @@ def numeric_type_validator(value: Any) -> str | int:
     raise vol.Invalid(f"value '{value}' is not a valid numeric sensor type.")
 
 
+def select_options_sub_validator(entity_config: OrderedDict) -> OrderedDict:
+    """Validate a select entity options configuration."""
+    options_seen = set()
+    payloads_seen = set()
+    payload_length = entity_config[SelectSchema.CONF_PAYLOAD_LENGTH]
+    if payload_length == 0:
+        max_payload = 0x3F
+    else:
+        max_payload = 256 ** payload_length - 1
+
+    for opt in entity_config[SelectSchema.CONF_OPTIONS]:
+        option = opt[SelectSchema.CONF_OPTION]
+        payload = opt[SelectSchema.CONF_PAYLOAD]
+        if payload > max_payload:
+            raise vol.Invalid(
+                f"'payload: {payload}' for 'option: {option}' exceeds possible"
+                f" maximum of 'payload_length: {payload_length}': {max_payload}"
+            )
+        if option in options_seen:
+            raise vol.Invalid(f"duplicate item for 'option' not allowed: {option}")
+        options_seen.add(option)
+        if payload in payloads_seen:
+            raise vol.Invalid(f"duplicate item for 'payload' not allowed: {payload}")
+        payloads_seen.add(payload)
+    return entity_config
+
+
 def sensor_type_validator(value: Any) -> str | int:
     """Validate that value is parsable as sensor type."""
     if isinstance(value, (str, int)) and DPTBase.parse_transcoder(value) is not None:
@@ -614,6 +641,40 @@ class SceneSchema(KNXPlatformSchema):
                 vol.Coerce(int), vol.Range(min=1, max=64)
             ),
         }
+    )
+
+
+class SelectSchema(KNXPlatformSchema):
+    """Voluptuous schema for KNX selects."""
+
+    PLATFORM_NAME = SupportedPlatforms.SELECT.value
+
+    CONF_OPTION = "option"
+    CONF_OPTIONS = "options"
+    CONF_PAYLOAD = "payload"
+    CONF_PAYLOAD_LENGTH = "payload_length"
+    DEFAULT_NAME = "KNX Select"
+
+    ENTITY_SCHEMA = vol.All(
+        vol.Schema(
+            {
+                vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+                vol.Optional(CONF_SYNC_STATE, default=True): sync_state_validator,
+                vol.Optional(CONF_RESPOND_TO_READ, default=False): cv.boolean,
+                vol.Required(CONF_PAYLOAD_LENGTH): vol.All(
+                    vol.Coerce(int), vol.Range(min=0, max=14)
+                ),
+                vol.Required(CONF_OPTIONS): [
+                    {
+                        vol.Required(CONF_OPTION): vol.Coerce(str),
+                        vol.Required(CONF_PAYLOAD): cv.positive_int,
+                    }
+                ],
+                vol.Required(KNX_ADDRESS): ga_list_validator,
+                vol.Optional(CONF_STATE_ADDRESS): ga_list_validator,
+            }
+        ),
+        select_options_sub_validator,
     )
 
 
