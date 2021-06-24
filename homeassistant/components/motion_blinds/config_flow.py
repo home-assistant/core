@@ -6,6 +6,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_API_KEY, CONF_HOST
+from homeassistant.components import network
 from homeassistant.core import callback
 
 from .const import (
@@ -23,13 +24,6 @@ from .gateway import ConnectMotionGateway
 CONFIG_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_HOST): str,
-    }
-)
-
-CONFIG_SETTINGS = vol.Schema(
-    {
-        vol.Required(CONF_API_KEY): vol.All(str, vol.Length(min=16, max=16)),
-        vol.Optional(CONF_INTERFACE, default=DEFAULT_INTERFACE): str,
     }
 )
 
@@ -78,6 +72,7 @@ class MotionBlindsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize the Motion Blinds flow."""
         self._host = None
         self._ips = []
+        self._config_settings = None
 
     @staticmethod
     @callback
@@ -138,7 +133,7 @@ class MotionBlindsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 except gaierror:
                     errors[CONF_INTERFACE] = "invalid_interface"
                     return self.async_show_form(
-                        step_id="connect", data_schema=CONFIG_SETTINGS, errors=errors
+                        step_id="connect", data_schema=self._config_settings, errors=errors
                     )
 
             connect_gateway_class = ConnectMotionGateway(self.hass, multicast=None)
@@ -160,6 +155,36 @@ class MotionBlindsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 },
             )
 
-        return self.async_show_form(
-            step_id="connect", data_schema=CONFIG_SETTINGS, errors=errors
+        (interfaces, default_interface) = await self.async_get_interfaces()
+
+        self._config_settings = vol.Schema(
+            {
+                vol.Required(CONF_API_KEY): vol.All(str, vol.Length(min=16, max=16)),
+                vol.Optional(CONF_INTERFACE, default=default_interface): vol.In(interfaces),
+            }
         )
+
+        return self.async_show_form(
+            step_id="connect", data_schema=self._config_settings, errors=errors
+        )
+
+    async def async_get_interfaces(self):
+        """Get list of interface to use."""
+        interfaces = [DEFAULT_INTERFACE]
+        enabled_interfaces = []
+        default_interface = DEFAULT_INTERFACE
+
+        adapters = await network.async_get_adapters(self.hass)
+        for adapter in adapters:
+            if ipv4s := adapter["ipv4"]:
+                ip4 = ipv4s[0]["address"]
+                interfaces.append(ip4)
+                if adapter["enabled"]:
+                    enabled_interfaces.append(ip4)
+                    if adapter["default"]:
+                        default_interface = ip4
+
+        if len(enabled_interfaces) == 1:
+            default_interface = enabled_interfaces[0]
+
+        return (interfaces, default_interface)
