@@ -74,7 +74,7 @@ class ConnectXiaomiGateway:
         try:
             self._gateway_device = gateway.Gateway(self._host, self._token)
             # get the gateway info
-            self._gateway_device.info()
+            self._gateway_info = self._gateway_device.info()
 
             # get the connected sub devices
             if self._use_cloud or self._gateway_info.model == GATEWAY_MODEL_EU:
