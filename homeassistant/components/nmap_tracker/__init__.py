@@ -102,9 +102,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     if unload_ok:
         _async_untrack_devices(hass, entry)
-        del hass.data[DOMAIN][NMAP_TRACKED_DEVICES].entries_finished_first_scan[
-            entry.entry_id
-        ]
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
