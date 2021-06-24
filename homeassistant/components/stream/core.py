@@ -135,26 +135,14 @@ class Segment:
             if not part:
                 yield b""
                 continue
-            # Store data in a list for efficient concatenation if necessary
-            part_data_list = [part.data]
             pos += len(part.data)
-            # If we have more data, grab it all so we can send it in one chunk
-            while (part := self.parts_by_byterange.get(pos)) and pos < end_loc:
-                part_data_list.append(part.data)
-                pos += len(part.data)
-            # Skipping the join in the case of a single part avoids an extra copy
-            bytes_to_write = (
-                b"".join(part_data_list)
-                if len(part_data_list) > 1
-                else part_data_list[0]
-            )
             # Check stopping condition and trim output if necessary
             if pos >= end_loc:
                 assert isinstance(end_loc, int)
                 # Trimming is probably not necessary, but it doesn't hurt
-                yield bytes_to_write[: len(bytes_to_write) + end_loc - pos]
+                yield part.data[: len(part.data) + end_loc - pos]
                 return
-            yield bytes_to_write
+            yield part.data
 
 
 class IdleTimer:
