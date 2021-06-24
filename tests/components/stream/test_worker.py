@@ -228,7 +228,7 @@ async def async_decode_stream(hass, packets, py_av=None):
         "homeassistant.components.stream.core.StreamOutput.put",
         side_effect=py_av.capture_buffer.capture_output_segment,
     ):
-        segment_buffer = SegmentBuffer(stream.outputs)
+        segment_buffer = SegmentBuffer(hass, stream.outputs)
         stream_worker(STREAM_SOURCE, {}, segment_buffer, threading.Event())
         await hass.async_block_till_done()
 
@@ -241,7 +241,7 @@ async def test_stream_open_fails(hass):
     stream.add_provider(HLS_PROVIDER)
     with patch("av.open") as av_open:
         av_open.side_effect = av.error.InvalidDataError(-2, "error")
-        segment_buffer = SegmentBuffer(stream.outputs)
+        segment_buffer = SegmentBuffer(hass, stream.outputs)
         stream_worker(STREAM_SOURCE, {}, segment_buffer, threading.Event())
         await hass.async_block_till_done()
         av_open.assert_called_once()
@@ -629,7 +629,7 @@ async def test_worker_log(hass, caplog):
     stream.add_provider(HLS_PROVIDER)
     with patch("av.open") as av_open:
         av_open.side_effect = av.error.InvalidDataError(-2, "error")
-        segment_buffer = SegmentBuffer(stream.outputs)
+        segment_buffer = SegmentBuffer(hass, stream.outputs)
         stream_worker(
             "https://abcd:efgh@foo.bar", {}, segment_buffer, threading.Event()
         )

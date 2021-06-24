@@ -1,7 +1,6 @@
 """Provide functionality to stream HLS."""
 from __future__ import annotations
 
-from copy import copy
 import itertools
 import logging
 from typing import TYPE_CHECKING
@@ -118,27 +117,24 @@ class HlsPlaylistView(StreamView):
 
         This method is run on every playlist request and the output is not saved.
         """
-        # Create a copy of the segment with the parts frozen so we can iterate safely
-        segment_copy = copy(segment)
-        segment_copy.parts_by_byterange = segment_copy.parts_by_byterange.copy()
         (
             segment.hls_playlist,
             segment.hls_playlist_parts,
             segment.hls_num_parts_rendered,
             segment.hls_playlist_complete,
-        ) = cls.render_segment(segment_copy, ll_hls, last_stream_id)
+        ) = cls.render_segment(segment, ll_hls, last_stream_id)
         rendered = segment.hls_playlist.format(segment.hls_playlist_parts)
         playlist = [rendered] if rendered else []
 
         # Add preload hint
         # pylint: disable=undefined-loop-variable
         if ll_hls:
-            if segment_copy.complete:  # Next part belongs to next segment
-                sequence = segment_copy.sequence + 1
+            if segment.complete:  # Next part belongs to next segment
+                sequence = segment.sequence + 1
                 start = 0
             else:  # Next part is in the same segment
-                sequence = segment_copy.sequence
-                start = segment_copy.data_size
+                sequence = segment.sequence
+                start = segment.data_size
             playlist.append(
                 f'#EXT-X-PRELOAD-HINT:TYPE=PART,URI="./segment/{sequence}'
                 f'.m4s",BYTERANGE-START={start}'
@@ -202,10 +198,6 @@ class HlsPlaylistView(StreamView):
         """Render HLS playlist file."""
         # NUM_PLAYLIST_SEGMENTS+1 because most recent is probably not yet complete
         segments = list(track.get_segments())[-(NUM_PLAYLIST_SEGMENTS + 1) :]
-
-        # Create a copy of the last segment with the parts frozen for rendering playlist
-        segments[-1] = copy(segments[-1])
-        segments[-1].parts_by_byterange = segments[-1].parts_by_byterange.copy()
 
         # To cap the number of complete segments at NUM_PLAYLIST_SEGMENTS,
         # remove the first segment if the last segment is actually complete

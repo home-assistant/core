@@ -129,8 +129,7 @@ class Segment:
         Used to help serve a range request on a segment.
         """
         pos = start_loc
-        # Since we use this from a non worker thread, we need to check complete before
-        # checking for new data. Use | instead of "or" to avoid short circuit evaluation.
+        # Use | instead of "or" to avoid short circuit evaluation
         while (not self.complete) | bool(part := self.parts_by_byterange.get(pos)):
             if not part:
                 yield b""
@@ -262,11 +261,6 @@ class StreamOutput:
 
     def part_put(self) -> None:
         """Set event signalling the latest part segment."""
-        self._hass.loop.call_soon_threadsafe(self._async_part_put)
-
-    @callback
-    def _async_part_put(self) -> None:
-        """Call part_put from the event loop."""
         # Start idle timeout when we start receiving data
         self._part_event.set()
         self._part_event.clear()

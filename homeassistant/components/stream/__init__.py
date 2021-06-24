@@ -243,7 +243,7 @@ class Stream:
         # pylint: disable=import-outside-toplevel
         from .worker import SegmentBuffer, stream_worker
 
-        segment_buffer = SegmentBuffer(self.outputs)
+        segment_buffer = SegmentBuffer(self.hass, self.outputs)
         wait_timeout = 0
         while not self._thread_quit.wait(timeout=wait_timeout):
             start_time = time.time()

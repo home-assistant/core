@@ -10,6 +10,8 @@ from typing import Any, Callable, cast
 
 import av
 
+from homeassistant.core import HomeAssistant
+
 from . import redact_credentials
 from .const import (
     AUDIO_CODECS,
@@ -28,10 +30,13 @@ class SegmentBuffer:
     """Buffer for writing a sequence of packets to the output as a segment."""
 
     def __init__(
-        self, outputs_callback: Callable[[], Mapping[str, StreamOutput]]
+        self,
+        hass: HomeAssistant,
+        outputs_callback: Callable[[], Mapping[str, StreamOutput]],
     ) -> None:
         """Initialize SegmentBuffer."""
         self._stream_id: int = 0
+        self._hass = hass
         self._outputs_callback: Callable[
             [], Mapping[str, StreamOutput]
         ] = outputs_callback
@@ -181,13 +186,14 @@ class SegmentBuffer:
             self._av_output.close()
         assert self._segment
         self._memory_file.seek(self._memory_file_pos)
-        self._segment.add_part(
+        self._hass.loop.call_soon_threadsafe(
+            self._segment.add_part,
             Part(
                 duration=float((packet.dts - self._part_start_dts) * packet.time_base),
                 has_keyframe=self._part_has_keyframe,
                 data=self._memory_file.read(),
             ),
-            duration=float((packet.dts - self._segment_start_dts) * packet.time_base)
+            float((packet.dts - self._segment_start_dts) * packet.time_base)
             if last_part
             else 0,
         )
