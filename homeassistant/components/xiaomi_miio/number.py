@@ -56,7 +56,7 @@ class NumberType:
 
 NUMBER_TYPES = {
     FEATURE_SET_MOTOR_SPEED: NumberType(
-        name="Motor speed",
+        name="Motor Speed",
         icon="mdi:fast-forward-outline",
         short_name=ATTR_MOTOR_SPEED,
         unit_of_measurement="rpm",
