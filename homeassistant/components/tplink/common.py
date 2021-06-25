@@ -98,7 +98,7 @@ async def async_discover_devices(
             else:
                 _LOGGER.error("Unknown smart device type: %s", type(dev))
 
-    devices = dict()
+    devices = {}
     for attempt in range(1, MAX_DISCOVERY_RETRIES + 1):
         _LOGGER.debug(
             "Discovering tplink devices, attempt %s of %s",
@@ -111,8 +111,8 @@ async def async_discover_devices(
             len(discovered_devices),
             target_device_count,
         )
-        for ip in discovered_devices:
-            devices[ip] = discovered_devices[ip]
+        for device_ip in discovered_devices:
+            devices[device_ip] = discovered_devices[device_ip]
 
         if len(discovered_devices) >= target_device_count:
             _LOGGER.info(
