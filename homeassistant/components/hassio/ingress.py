@@ -135,10 +135,6 @@ class HassIOIngress(HomeAssistantView):
                 async for data in request.content.iter_any():
                     yield data
 
-        timeout = ClientTimeout(total=5 * 60)
-        if request.method == "POST":
-            timeout = ClientTimeout(total=None)
-
         async with self._websession.request(
             request.method,
             url,
@@ -147,7 +143,7 @@ class HassIOIngress(HomeAssistantView):
             allow_redirects=False,
             chunked=_with_chunks(request),
             data=_prepare_content(),
-            timeout=timeout,
+            timeout=ClientTimeout(total=None),
         ) as result:
             headers = _response_header(result)
 
