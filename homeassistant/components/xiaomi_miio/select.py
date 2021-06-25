@@ -109,7 +109,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                     )
                 )
 
-    async_add_entities(entities, update_before_add=True)
+    async_add_entities(entities, update_before_add=False)
 
 
 class XiaomiSelector(XiaomiCoordinatedMiioEntity, SelectEntity):
@@ -143,6 +143,11 @@ class XiaomiSelector(XiaomiCoordinatedMiioEntity, SelectEntity):
     @property
     def current_option(self):
         """Return the current option."""
+        if not self.available and self.coordinator.data:
+            self._available = True
+            self._current_option = self._extract_value_from_attribute(
+                self.coordinator.data, self._controller.short_name
+            )
         return (
             getattr(self, SERVICE_TO_METHOD[self._controller.service]["property"])
             if self.available
@@ -159,6 +164,11 @@ class XiaomiSelector(XiaomiCoordinatedMiioEntity, SelectEntity):
 
     async def async_select_option(self, option: str) -> None:
         """Set an option of the miio device."""
+        if option not in self.options:
+            _LOGGER.warning(
+                "Selection '%s' is not a valid '%s'", option, self._controller.name
+            )
+            return
         method = getattr(self, SERVICE_TO_METHOD[self._controller.service]["method"])
         await method(option)
 
@@ -208,11 +218,13 @@ class XiaomiAirHumidifierSelector(XiaomiSelector):
         if self._device_features & FEATURE_SET_LED_BRIGHTNESS == 0:
             return
 
-        await self._try_command(
+        if await self._try_command(
             "Setting the led brightness of the miio device failed.",
             self._device.set_led_brightness,
             AirhumidifierLedBrightness(value_map[brightness]),
-        )
+        ):
+            self._current_option = value_map[brightness]
+            self.async_write_ha_state()
 
 
 class XiaomiAirHumidifierMiotSelector(XiaomiAirHumidifierSelector):
@@ -232,8 +244,10 @@ class XiaomiAirHumidifierMiotSelector(XiaomiAirHumidifierSelector):
         if self._device_features & FEATURE_SET_LED_BRIGHTNESS == 0:
             return
 
-        await self._try_command(
+        if await self._try_command(
             "Setting the led brightness of the miio device failed.",
             self._device.set_led_brightness,
             AirhumidifierMiotLedBrightness(value_map[brightness]),
-        )
+        ):
+            self._current_option = value_map[brightness]
+            self.async_write_ha_state()
