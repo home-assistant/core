@@ -8,6 +8,8 @@ from sqlalchemy.exc import DatabaseError, OperationalError
 from sqlalchemy.orm.session import Session
 
 from homeassistant.components import recorder
+from homeassistant.components.recorder import PurgeTask
+from homeassistant.components.recorder.const import MAX_ROWS_TO_PURGE
 from homeassistant.components.recorder.models import Events, RecorderRuns, States
 from homeassistant.components.recorder.purge import purge_old_data
 from homeassistant.components.recorder.util import session_scope
@@ -43,8 +45,10 @@ async def test_purge_old_states(
         events = session.query(Events).filter(Events.event_type == "state_changed")
         assert events.count() == 6
 
+        purge_before = dt_util.utcnow() - timedelta(days=4)
+
         # run purge_old_data()
-        finished = purge_old_data(instance, 4, repack=False)
+        finished = purge_old_data(instance, purge_before, repack=False)
         assert not finished
         assert states.count() == 2
 
@@ -52,7 +56,7 @@ async def test_purge_old_states(
         assert states_after_purge[1].old_state_id == states_after_purge[0].state_id
         assert states_after_purge[0].old_state_id is None
 
-        finished = purge_old_data(instance, 4, repack=False)
+        finished = purge_old_data(instance, purge_before, repack=False)
         assert finished
         assert states.count() == 2
 
@@ -162,13 +166,15 @@ async def test_purge_old_events(
         events = session.query(Events).filter(Events.event_type.like("EVENT_TEST%"))
         assert events.count() == 6
 
+        purge_before = dt_util.utcnow() - timedelta(days=4)
+
         # run purge_old_data()
-        finished = purge_old_data(instance, 4, repack=False)
+        finished = purge_old_data(instance, purge_before, repack=False)
         assert not finished
         assert events.count() == 2
 
         # we should only have 2 events left
-        finished = purge_old_data(instance, 4, repack=False)
+        finished = purge_old_data(instance, purge_before, repack=False)
         assert finished
         assert events.count() == 2
 
@@ -186,11 +192,13 @@ async def test_purge_old_recorder_runs(
         recorder_runs = session.query(RecorderRuns)
         assert recorder_runs.count() == 7
 
+        purge_before = dt_util.utcnow()
+
         # run purge_old_data()
-        finished = purge_old_data(instance, 0, repack=False)
+        finished = purge_old_data(instance, purge_before, repack=False)
         assert not finished
 
-        finished = purge_old_data(instance, 0, repack=False)
+        finished = purge_old_data(instance, purge_before, repack=False)
         assert finished
         assert recorder_runs.count() == 1
 
@@ -320,6 +328,94 @@ async def test_purge_edge_case(
 
         assert states.count() == 0
         assert events.count() == 0
+
+
+async def test_purge_cutoff_date(
+    hass: HomeAssistant,
+    async_setup_recorder_instance: SetupRecorderInstanceT,
+):
+    """Test states and events are purged only if they occurred before "now() - keep_days"."""
+
+    async def _add_db_entries(hass: HomeAssistant, cutoff: datetime, rows: int) -> None:
+        timestamp_keep = cutoff
+        timestamp_purge = cutoff - timedelta(microseconds=1)
+
+        with recorder.session_scope(hass=hass) as session:
+            session.add(
+                Events(
+                    event_id=1000,
+                    event_type="KEEP",
+                    event_data="{}",
+                    origin="LOCAL",
+                    created=timestamp_keep,
+                    time_fired=timestamp_keep,
+                )
+            )
+            session.add(
+                States(
+                    entity_id="test.cutoff",
+                    domain="sensor",
+                    state="keep",
+                    attributes="{}",
+                    last_changed=timestamp_keep,
+                    last_updated=timestamp_keep,
+                    created=timestamp_keep,
+                    event_id=1000,
+                )
+            )
+            for row in range(1, rows):
+                session.add(
+                    Events(
+                        event_id=1000 + row,
+                        event_type="PURGE",
+                        event_data="{}",
+                        origin="LOCAL",
+                        created=timestamp_purge,
+                        time_fired=timestamp_purge,
+                    )
+                )
+                session.add(
+                    States(
+                        entity_id="test.cutoff",
+                        domain="sensor",
+                        state="purge",
+                        attributes="{}",
+                        last_changed=timestamp_purge,
+                        last_updated=timestamp_purge,
+                        created=timestamp_purge,
+                        event_id=1000 + row,
+                    )
+                )
+
+    instance = await async_setup_recorder_instance(hass, None)
+    await async_wait_purge_done(hass, instance)
+
+    service_data = {"keep_days": 2}
+
+    # Force multiple purge batches to be run
+    rows = MAX_ROWS_TO_PURGE + 1
+    cutoff = dt_util.utcnow() - timedelta(days=service_data["keep_days"])
+    await _add_db_entries(hass, cutoff, rows)
+
+    with session_scope(hass=hass) as session:
+        states = session.query(States)
+        events = session.query(Events)
+        assert states.filter(States.state == "purge").count() == rows - 1
+        assert states.filter(States.state == "keep").count() == 1
+        assert events.filter(Events.event_type == "PURGE").count() == rows - 1
+        assert events.filter(Events.event_type == "KEEP").count() == 1
+
+        instance.queue.put(PurgeTask(cutoff, repack=False, apply_filter=False))
+        await hass.async_block_till_done()
+        await async_recorder_block_till_done(hass, instance)
+        await async_wait_purge_done(hass, instance)
+
+        states = session.query(States)
+        events = session.query(Events)
+        assert states.filter(States.state == "purge").count() == 0
+        assert states.filter(States.state == "keep").count() == 1
+        assert events.filter(Events.event_type == "PURGE").count() == 0
+        assert events.filter(Events.event_type == "KEEP").count() == 1
 
 
 async def test_purge_filtered_states(
