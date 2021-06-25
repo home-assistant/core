@@ -145,7 +145,7 @@ class SirenEntity(ToggleEntity):
         """Return capability attributes."""
         supported_features = self.supported_features or 0
 
-        if supported_features & SUPPORT_TONES:
+        if supported_features & SUPPORT_TONES and self.available_tones is not None:
             return {ATTR_AVAILABLE_TONES: self.available_tones}
 
         return None
