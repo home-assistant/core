@@ -148,6 +148,7 @@ class BroadlinkSwitch(BroadlinkEntity, SwitchEntity, RestoreEntity, ABC):
         self._attr_name = f"{self._device.name} Switch"
         self._attr_unique_id = self._device.unique_id
 
+    @property
     def is_on(self):
         """Return True if the switch is on."""
         return self._state
