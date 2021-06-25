@@ -31,7 +31,7 @@ async def async_setup_entry(
     update_segments = partial(
         async_update_segments,
         coordinator,
-        {},
+        set(),
         async_add_entities,
     )
     coordinator.async_add_listener(update_segments)
@@ -118,19 +118,18 @@ class WLEDPaletteSelect(WLEDEntity, SelectEntity):
 @callback
 def async_update_segments(
     coordinator: WLEDDataUpdateCoordinator,
-    current: dict[int, WLEDPaletteSelect],
+    current_ids: set[int],
     async_add_entities,
 ) -> None:
     """Update segments."""
     segment_ids = {segment.segment_id for segment in coordinator.data.state.segments}
-    current_ids = set(current)
 
     new_entities = []
 
     # Process new segments, add them to Home Assistant
     for segment_id in segment_ids - current_ids:
-        current[segment_id] = WLEDPaletteSelect(coordinator, segment_id)
-        new_entities.append(current[segment_id])
+        current_ids.add(segment_id)
+        new_entities.append(WLEDPaletteSelect(coordinator, segment_id))
 
     if new_entities:
         async_add_entities(new_entities)
