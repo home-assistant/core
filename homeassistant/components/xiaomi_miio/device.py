@@ -142,6 +142,7 @@ class XiaomiCoordinatedMiioEntity(CoordinatorEntity):
             )
 
             _LOGGER.debug("Response received from miio device: %s", result)
+
             return True
         except DeviceException as exc:
             if self._available:
