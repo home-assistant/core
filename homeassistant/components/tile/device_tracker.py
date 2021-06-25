@@ -119,7 +119,7 @@ class TileDeviceTracker(CoordinatorEntity, TrackerEntity):
     @property
     def unique_id(self):
         """Return the unique ID of the entity."""
-        return f"{DOMAIN}_{self._entry.data[CONF_USERNAME]}_{self._tile.uuid}"
+        return f"{self._entry.data[CONF_USERNAME]}_{self._tile.uuid}"
 
     @property
     def source_type(self):
