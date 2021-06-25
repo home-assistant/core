@@ -1,6 +1,5 @@
 """Utility functions for here_weather."""
-
-from typing import Optional
+from __future__ import annotations
 
 from homeassistant.const import (
     CONF_UNIT_SYSTEM_METRIC,
@@ -35,7 +34,7 @@ def convert_unit_of_measurement_if_needed(unit_system, unit_of_measurement: str)
 
 def get_attribute_from_here_data(
     here_data: list, attribute_name: str, sensor_number: int = 0
-) -> Optional[str]:
+) -> str | None:
     """Extract and convert data from HERE response or None if not found."""
     if here_data is None:
         return None
@@ -47,8 +46,8 @@ def get_attribute_from_here_data(
         return None
 
 
-def convert_asterisk_to_none(state: str) -> str:
+def convert_asterisk_to_none(state: str) -> str | None:
     """Convert HERE API representation of None."""
     if state == "*":
-        state = None
+        return None
     return state

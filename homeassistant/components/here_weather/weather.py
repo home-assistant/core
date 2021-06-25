@@ -1,4 +1,6 @@
 """Weather platform for the HERE Destination Weather service."""
+from __future__ import annotations
+
 import logging
 
 from homeassistant.components.weather import (
@@ -14,6 +16,7 @@ from homeassistant.components.weather import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -56,7 +59,7 @@ class HEREDestinationWeather(CoordinatorEntity, WeatherEntity):
 
     def __init__(
         self, config_entry: ConfigEntry, coordinator: DataUpdateCoordinator, mode: str
-    ):
+    ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
         self._name = config_entry.data[CONF_NAME]
@@ -78,7 +81,7 @@ class HEREDestinationWeather(CoordinatorEntity, WeatherEntity):
         return get_condition_from_here_data(self.coordinator.data)
 
     @property
-    def temperature(self) -> float:
+    def temperature(self):
         """Return the temperature."""
         return get_temperature_from_here_data(self.coordinator.data, self._mode)
 
@@ -154,7 +157,7 @@ class HEREDestinationWeather(CoordinatorEntity, WeatherEntity):
         return self._mode == DEFAULT_MODE
 
     @property
-    def device_info(self) -> dict:
+    def device_info(self) -> DeviceInfo:
         """Return a device description for device registry."""
 
         return {
@@ -164,7 +167,7 @@ class HEREDestinationWeather(CoordinatorEntity, WeatherEntity):
         }
 
 
-def get_condition_from_here_data(here_data: list, offset: int = 0) -> str:
+def get_condition_from_here_data(here_data: list, offset: int = 0) -> str | None:
     """Return the condition from here_data."""
     try:
         return [
@@ -178,38 +181,42 @@ def get_condition_from_here_data(here_data: list, offset: int = 0) -> str:
 
 def get_high_or_default_temperature_from_here_data(
     here_data: list, mode: str, offset: int = 0
-) -> str:
+) -> str | None:
     """Return the temperature from here_data."""
     temperature = get_attribute_from_here_data(here_data, "highTemperature", offset)
     if temperature is not None:
-        return float(temperature)
+        return str(temperature)
 
     return get_temperature_from_here_data(here_data, mode, offset)
 
 
 def get_low_or_default_temperature_from_here_data(
     here_data: list, mode: str, offset: int = 0
-) -> str:
+) -> str | None:
     """Return the temperature from here_data."""
     temperature = get_attribute_from_here_data(here_data, "lowTemperature", offset)
     if temperature is not None:
-        return float(temperature)
+        return str(temperature)
     return get_temperature_from_here_data(here_data, mode, offset)
 
 
-def get_temperature_from_here_data(here_data: list, mode: str, offset: int = 0) -> str:
+def get_temperature_from_here_data(
+    here_data: list, mode: str, offset: int = 0
+) -> str | None:
     """Return the temperature from here_data."""
     if mode == MODE_DAILY_SIMPLE:
         temperature = get_attribute_from_here_data(here_data, "highTemperature", offset)
     else:
         temperature = get_attribute_from_here_data(here_data, "temperature", offset)
     if temperature is not None:
-        return float(temperature)
+        return str(temperature)
+    return None
 
 
-def calc_precipitation(here_data: list, offset: int = 0) -> float:
+def calc_precipitation(here_data: list, offset: int = 0) -> float | None:
     """Calculate Precipitation."""
     rain_fall = get_attribute_from_here_data(here_data, "rainFall", offset)
     snow_fall = get_attribute_from_here_data(here_data, "snowFall", offset)
     if rain_fall is not None and snow_fall is not None:
         return float(rain_fall) + float(snow_fall)
+    return None

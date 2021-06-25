@@ -1,4 +1,6 @@
 """Constants for the HERE Destination Weather service."""
+from __future__ import annotations
+
 DOMAIN = "here_weather"
 
 HERE_API_KEYS = "here_api_keys"
@@ -223,7 +225,7 @@ SENSOR_TYPES = {
     MODE_OBSERVATION: OBSERVATION_ATTRIBUTES,
 }
 
-CONDITION_CLASSES = {
+CONDITION_CLASSES: dict[str, list[str]] = {
     "clear-night": [
         "night_passing_clouds",
         "night_mostly_clear",

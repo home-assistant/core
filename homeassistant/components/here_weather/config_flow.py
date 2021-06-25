@@ -1,6 +1,7 @@
 """Config flow for here_weather integration."""
+from __future__ import annotations
+
 import logging
-from typing import Optional
 
 import herepy
 import voluptuous as vol
@@ -64,7 +65,7 @@ class HereWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    def _get_schema(self, user_input: Optional[dict]) -> vol.Schema:
+    def _get_schema(self, user_input: dict | None) -> vol.Schema:
         known_api_key = None
         if HERE_API_KEYS in self.hass.data:
             known_api_key = self.hass.data[HERE_API_KEYS][0]
