@@ -41,7 +41,7 @@ async def async_setup_entry(
     """Add a Nettigo Air Monitor entities from a config_entry."""
     coordinator: NAMDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
-    # Due to the change of the attribute name of two sensora, it is necessary to migrate
+    # Due to the change of the attribute name of two sensors, it is necessary to migrate
     # the unique_ids to the new names.
     ent_reg = entity_registry.async_get(hass)
     for old_sensor, new_sensor in MIGRATION_SENSORS:
