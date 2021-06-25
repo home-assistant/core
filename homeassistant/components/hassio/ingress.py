@@ -7,7 +7,7 @@ import logging
 import os
 
 import aiohttp
-from aiohttp import hdrs, web
+from aiohttp import ClientTimeout, hdrs, web
 from aiohttp.web_exceptions import HTTPBadGateway
 from multidict import CIMultiDict
 
@@ -119,14 +119,14 @@ class HassIOIngress(HomeAssistantView):
         url = self._create_url(token, path)
         source_header = _init_header(request, token)
 
-        def with_chunks(origin) -> bool:
+        def _with_chunks(origin: web.Request | web.Response) -> bool:
             return (
                 hdrs.CONTENT_LENGTH not in origin.headers
                 or int(origin.headers[hdrs.CONTENT_LENGTH]) > 4_194_000
             )
 
-        async def prepare_content():
-            if not with_chunks(request):
+        async def _prepare_content():
+            if not _with_chunks(request):
                 data = await request.read()
                 yield data
             else:
@@ -135,19 +135,24 @@ class HassIOIngress(HomeAssistantView):
                 async for data in request.content.iter_any():
                     yield data
 
+        timeout = ClientTimeout(total=5 * 60)
+        if request.method == "POST":
+            timeout = ClientTimeout(total=None)
+
         async with self._websession.request(
             request.method,
             url,
             headers=source_header,
             params=request.query,
             allow_redirects=False,
-            chunked=with_chunks(request),
-            data=prepare_content(),
+            chunked=_with_chunks(request),
+            data=_prepare_content(),
+            timeout=timeout,
         ) as result:
             headers = _response_header(result)
 
             # Simple request
-            if not with_chunks(result):
+            if not _with_chunks(result):
                 # Return Response
                 body = await result.read()
                 return web.Response(
