@@ -152,7 +152,6 @@ class InputBoolean(ToggleEntity, RestoreEntity):
         self._config = config
         self.editable = True
         self._attr_is_on = config.get(CONF_INITIAL, False)
-        self._attr_icon = config.get(CONF_ICON)
         self._attr_unique_id = config[CONF_ID]
 
     @classmethod
