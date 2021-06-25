@@ -122,7 +122,7 @@ class ConnectXiaomiGateway:
                 self._gateway_device.get_devices_from_dict(devices_raw)
             except DeviceException as error:
                 _LOGGER.error(
-                    "DeviceException during setup of xiaomi gateway with host %s, %s",
+                    "DeviceException during setup of xiaomi gateway with host %s: %s",
                     self._host,
                     error,
                 )
