@@ -1,4 +1,6 @@
 """The here_weather component."""
+from __future__ import annotations
+
 import asyncio
 from datetime import timedelta
 import logging
@@ -81,14 +83,13 @@ class HEREWeatherData:
         self.latitude = config_entry.data[CONF_LATITUDE]
         self.longitude = config_entry.data[CONF_LONGITUDE]
         self.weather_product_type = herepy.WeatherProductType[mode]
-        self.coordinator = None
-        self.unsub_handler = None
+        self.coordinator: DataUpdateCoordinator | None = None
 
-    async def async_setup(self) -> list:
+    async def async_setup(self) -> None:
         """Set up the here_weather integration."""
         self.add_options()
-        self.unsub_handler = self.config_entry.add_update_listener(
-            self.async_options_updated
+        self.config_entry.async_on_unload(
+            self.config_entry.add_update_listener(self.async_options_updated)
         )
         self.coordinator = DataUpdateCoordinator(
             self.hass,
@@ -99,7 +100,7 @@ class HEREWeatherData:
                 seconds=self.config_entry.options[CONF_SCAN_INTERVAL]
             ),
         )
-        await self.coordinator.async_refresh()
+        await self.coordinator.async_config_entry_first_refresh()
 
     def add_options(self) -> None:
         """Add options for here_weather integration."""
@@ -146,7 +147,8 @@ class HEREWeatherData:
 
     def set_update_interval(self, update_interval: int) -> None:
         """Set the coordinator update_interval to the supplied update_interval."""
-        self.coordinator.update_interval = timedelta(seconds=update_interval)
+        if self.coordinator is not None:
+            self.coordinator.update_interval = timedelta(seconds=update_interval)
 
 
 def extract_data_from_payload_for_product_type(
@@ -163,3 +165,5 @@ def extract_data_from_payload_for_product_type(
         return data.dailyForecasts["forecastLocation"]["forecast"]
     if product_type == herepy.WeatherProductType.forecast_hourly:
         return data.hourlyForecasts["forecastLocation"]["forecast"]
+    _LOGGER.debug("Payload malformed: %s", data)
+    raise UpdateFailed("Payload malformed")

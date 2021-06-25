@@ -1,9 +1,13 @@
 """Sensor platform for the HERE Destination Weather service."""
+from __future__ import annotations
+
 import logging
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -79,7 +83,7 @@ class HEREDestinationWeatherSensor(CoordinatorEntity):
         return self._unique_id
 
     @property
-    def state(self) -> str:
+    def state(self) -> StateType:
         """Return the state of the device."""
         return get_attribute_from_here_data(
             self.coordinator.data,
@@ -88,12 +92,12 @@ class HEREDestinationWeatherSensor(CoordinatorEntity):
         )
 
     @property
-    def unit_of_measurement(self) -> str:
+    def unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
 
     @property
-    def device_info(self) -> dict:
+    def device_info(self) -> DeviceInfo:
         """Return a device description for device registry."""
 
         return {

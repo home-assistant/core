@@ -25,7 +25,7 @@ CONF_MODES = [
 ]
 DEFAULT_MODE = MODE_DAILY_SIMPLE
 
-ASTRONOMY_ATTRIBUTES = {
+ASTRONOMY_ATTRIBUTES: dict[str, dict[str, str | None]] = {
     "sunrise": {"name": "Sunrise", "unit_of_measurement": None},
     "sunset": {"name": "Sunset", "unit_of_measurement": None},
     "moonrise": {"name": "Moonrise", "unit_of_measurement": None},
@@ -38,7 +38,7 @@ ASTRONOMY_ATTRIBUTES = {
     "utcTime": {"name": "UTC Time", "unit_of_measurement": None},
 }
 
-HOURLY_ATTRIBUTES = {
+HOURLY_ATTRIBUTES: dict[str, dict[str, str | None]] = {
     "daylight": {"name": "Daylight", "unit_of_measurement": None},
     "description": {"name": "Description", "unit_of_measurement": None},
     "skyInfo": {"name": "Sky Info", "unit_of_measurement": None},
@@ -75,7 +75,7 @@ HOURLY_ATTRIBUTES = {
     "localTimeFormat": {"name": "Local Time Format", "unit_of_measurement": None},
 }
 
-DAILY_SIMPLE_ATTRIBUTES = {
+DAILY_SIMPLE_ATTRIBUTES: dict[str, dict[str, str | None]] = {
     "daylight": {"name": "Daylight", "unit_of_measurement": None},
     "description": {"name": "Description", "unit_of_measurement": None},
     "skyInfo": {"name": "Sky Info", "unit_of_measurement": None},
@@ -118,7 +118,7 @@ DAILY_SIMPLE_ATTRIBUTES = {
     "utcTime": {"name": "UTC Time", "unit_of_measurement": None},
 }
 
-DAILY_ATTRIBUTES = {
+DAILY_ATTRIBUTES: dict[str, dict[str, str | None]] = {
     "daylight": {"name": "Daylight", "unit_of_measurement": None},
     "daySegment": {"name": "Day Segment", "unit_of_measurement": None},
     "description": {"name": "Description", "unit_of_measurement": None},
@@ -159,7 +159,7 @@ DAILY_ATTRIBUTES = {
     "utcTime": {"name": "UTC Time", "unit_of_measurement": None},
 }
 
-OBSERVATION_ATTRIBUTES = {
+OBSERVATION_ATTRIBUTES: dict[str, dict[str, str | None]] = {
     "daylight": {"name": "Daylight", "unit_of_measurement": None},
     "description": {"name": "Description", "unit_of_measurement": None},
     "skyInfo": {"name": "Sky Info", "unit_of_measurement": None},
@@ -217,7 +217,7 @@ OBSERVATION_ATTRIBUTES = {
     "city": {"name": "City", "unit_of_measurement": None},
 }
 
-SENSOR_TYPES = {
+SENSOR_TYPES: dict[str, dict[str, dict[str, str | None]]] = {
     MODE_ASTRONOMY: ASTRONOMY_ATTRIBUTES,
     MODE_HOURLY: HOURLY_ATTRIBUTES,
     MODE_DAILY_SIMPLE: DAILY_SIMPLE_ATTRIBUTES,
