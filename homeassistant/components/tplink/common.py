@@ -68,7 +68,7 @@ async def async_get_discoverable_devices(hass: HomeAssistant) -> dict[str, Smart
 
 
 async def async_discover_devices(
-    hass: HomeAssistant, existing_devices: SmartDevices, target_device_count
+    hass: HomeAssistant, existing_devices: SmartDevices, target_device_count: int
 ) -> SmartDevices:
     """Get devices through discovery."""
 
