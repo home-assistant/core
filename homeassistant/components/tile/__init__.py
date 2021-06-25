@@ -37,7 +37,7 @@ async def async_setup_entry(hass, entry):
     # change:
     #
     # Old: tile_{uuid}
-    # New: tile_{username}_{uuid}
+    # New: {username}_{uuid}
     #
     # Find any entities with the old format and update them:
     ent_reg = entity_registry.async_get(hass)
