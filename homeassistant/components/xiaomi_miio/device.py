@@ -8,7 +8,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_MAC, CONF_MODEL, DOMAIN, SUCCESS
+from .const import CONF_MAC, CONF_MODEL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -137,19 +137,12 @@ class XiaomiCoordinatedMiioEntity(CoordinatorEntity):
     async def _try_command(self, mask_error, func, *args, **kwargs):
         """Call a miio device command handling error messages."""
         try:
-            if "refresh" in kwargs:
-                refresh = kwargs.pop("refresh")
-            else:
-                refresh = True
             result = await self.hass.async_add_executor_job(
                 partial(func, *args, **kwargs)
             )
 
             _LOGGER.debug("Response received from miio device: %s", result)
-            # refresh the state
-            if refresh:
-                await self.coordinator.async_request_refresh()
-            return result == SUCCESS
+            return bool(result)
         except DeviceException as exc:
             if self._available:
                 _LOGGER.error(mask_error, exc)
