@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections import OrderedDict
 import logging
-from typing import Any
+from typing import Any, Callable
 
 from fritzconnection.core.exceptions import FritzConnectionException, FritzSecurityError
 import xmltodict
@@ -12,9 +12,11 @@ from homeassistant.components.network.util import async_get_source_ip
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.util import slugify
 
-from .common import FritzBoxBaseSwitch, FritzBoxTools, SwitchInfo
+from .common import FritzBoxTools, SwitchInfo
 from .const import (
     DOMAIN,
     SWITCH_TYPE_DEFLECTION,
@@ -259,6 +261,87 @@ async def async_setup_entry(
     entities_list.extend(await async_wifi_entities_list(fritzbox_tools, entry.title))
 
     async_add_entities(entities_list)
+
+
+class FritzBoxBaseSwitch:
+    """Fritz switch base class."""
+
+    def __init__(self, fritzbox_tools: FritzBoxTools, switch_info: SwitchInfo) -> None:
+        """Init Fritzbox port switch."""
+        self.fritzbox_tools: FritzBoxTools = fritzbox_tools
+
+        self._description = switch_info["description"]
+        self._friendly_name = switch_info["friendly_name"]
+        self._icon = switch_info["icon"]
+        self._type = switch_info["type"]
+        self._update: Callable = switch_info["callback_update"]
+        self._switch: Callable = switch_info["callback_switch"]
+
+        self._name = f"{self._friendly_name} {self._description}"
+        self._unique_id = (
+            f"{self.fritzbox_tools.unique_id}-{slugify(self._description)}"
+        )
+
+        self._attributes: dict[str, str] = {}
+        self._is_available = True
+
+        self._attr_is_on = False
+
+    @property
+    def name(self):
+        """Return name."""
+        return self._name
+
+    @property
+    def icon(self):
+        """Return name."""
+        return self._icon
+
+    @property
+    def unique_id(self):
+        """Return unique id."""
+        return self._unique_id
+
+    @property
+    def device_info(self):
+        """Return the device information."""
+
+        return {
+            "connections": {(CONNECTION_NETWORK_MAC, self.fritzbox_tools.mac)},
+            "name": self._friendly_name,
+            "manufacturer": "AVM",
+            "model": self.fritzbox_tools.model,
+            "sw_version": self.fritzbox_tools.sw_version,
+        }
+
+    @property
+    def available(self) -> bool:
+        """Return availability."""
+        return self._is_available
+
+    @property
+    def extra_state_attributes(self):
+        """Return device attributes."""
+        return self._attributes
+
+    async def async_update(self):
+        """Update data."""
+        _LOGGER.debug("Updating '%s' (%s) switch state", self.name, self._type)
+        await self._update()
+
+    async def async_turn_on(self, **kwargs) -> None:
+        """Turn on switch."""
+        await self._async_handle_turn_on_off(turn_on=True)
+
+    async def async_turn_off(self, **kwargs) -> None:
+        """Turn off switch."""
+        await self._async_handle_turn_on_off(turn_on=False)
+
+    async def _async_handle_turn_on_off(self, turn_on: bool) -> bool:
+        """Handle switch state change request."""
+        await self._switch(turn_on)
+        self._attr_is_on = turn_on
+        return True
 
 
 class FritzBoxPortSwitch(FritzBoxBaseSwitch, SwitchEntity):
