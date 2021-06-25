@@ -1208,7 +1208,6 @@ omit =
     homeassistant/components/xiaomi_miio/humidifier.py
     homeassistant/components/xiaomi_miio/light.py
     homeassistant/components/xiaomi_miio/remote.py
-    homeassistant/components/xiaomi_miio/select.py
     homeassistant/components/xiaomi_miio/sensor.py
     homeassistant/components/xiaomi_miio/switch.py
     homeassistant/components/xiaomi_miio/vacuum.py
