@@ -95,7 +95,8 @@ class ConnectXiaomiGateway:
                 self._gateway_device.discover_devices()
             except DeviceException as error:
                 _LOGGER.info(
-                    "DeviceException during getting subdevices of xiaomi gateway with host %s, trying cloud to obtain subdevices, %s",
+                    "DeviceException during getting subdevices of xiaomi gateway"
+                    " with host %s, trying cloud to obtain subdevices, %s",
                     self._host,
                     error,
                 )
