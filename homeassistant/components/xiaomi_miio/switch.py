@@ -443,9 +443,6 @@ class XiaomiGenericCoordinatedSwitch(XiaomiCoordinatedMiioEntity, SwitchEntity):
 
     async def async_set_buzzer_on(self) -> bool:
         """Turn the buzzer on."""
-        if self._device_features & FEATURE_SET_BUZZER == 0:
-            return False
-
         return await self._try_command(
             "Turning the buzzer of the miio device on failed.",
             self._device.set_buzzer,
@@ -454,9 +451,6 @@ class XiaomiGenericCoordinatedSwitch(XiaomiCoordinatedMiioEntity, SwitchEntity):
 
     async def async_set_buzzer_off(self) -> bool:
         """Turn the buzzer off."""
-        if self._device_features & FEATURE_SET_BUZZER == 0:
-            return False
-
         return await self._try_command(
             "Turning the buzzer of the miio device off failed.",
             self._device.set_buzzer,
@@ -465,9 +459,6 @@ class XiaomiGenericCoordinatedSwitch(XiaomiCoordinatedMiioEntity, SwitchEntity):
 
     async def async_set_child_lock_on(self) -> bool:
         """Turn the child lock on."""
-        if self._device_features & FEATURE_SET_CHILD_LOCK == 0:
-            return False
-
         return await self._try_command(
             "Turning the child lock of the miio device on failed.",
             self._device.set_child_lock,
@@ -476,9 +467,6 @@ class XiaomiGenericCoordinatedSwitch(XiaomiCoordinatedMiioEntity, SwitchEntity):
 
     async def async_set_child_lock_off(self) -> bool:
         """Turn the child lock off."""
-        if self._device_features & FEATURE_SET_CHILD_LOCK == 0:
-            return False
-
         return await self._try_command(
             "Turning the child lock of the miio device off failed.",
             self._device.set_child_lock,
@@ -487,9 +475,6 @@ class XiaomiGenericCoordinatedSwitch(XiaomiCoordinatedMiioEntity, SwitchEntity):
 
     async def async_set_dry_on(self) -> bool:
         """Turn the dry mode on."""
-        if self._device_features & FEATURE_SET_DRY == 0:
-            return
-
         return await self._try_command(
             "Turning the dry mode of the miio device off failed.",
             self._device.set_dry,
@@ -498,9 +483,6 @@ class XiaomiGenericCoordinatedSwitch(XiaomiCoordinatedMiioEntity, SwitchEntity):
 
     async def async_set_dry_off(self) -> bool:
         """Turn the dry mode off."""
-        if self._device_features & FEATURE_SET_DRY == 0:
-            return
-
         return await self._try_command(
             "Turning the dry mode of the miio device off failed.",
             self._device.set_dry,
@@ -509,9 +491,6 @@ class XiaomiGenericCoordinatedSwitch(XiaomiCoordinatedMiioEntity, SwitchEntity):
 
     async def async_set_clean_on(self) -> bool:
         """Turn the dry mode on."""
-        if self._device_features & FEATURE_SET_CLEAN == 0:
-            return
-
         return await self._try_command(
             "Turning the clean mode of the miio device off failed.",
             self._device.set_clean_mode,
@@ -520,9 +499,6 @@ class XiaomiGenericCoordinatedSwitch(XiaomiCoordinatedMiioEntity, SwitchEntity):
 
     async def async_set_clean_off(self) -> bool:
         """Turn the dry mode off."""
-        if self._device_features & FEATURE_SET_CLEAN == 0:
-            return
-
         return await self._try_command(
             "Turning the clean mode of the miio device off failed.",
             self._device.set_clean_mode,
