@@ -27,15 +27,10 @@ from homeassistant.loader import bind_hass
 
 from .const import (
     ATTR_AVAILABLE_TONES,
-    ATTR_DEFAULT_DURATION,
-    ATTR_DEFAULT_TONE,
     ATTR_DURATION,
     ATTR_TONE,
     ATTR_VOLUME_LEVEL,
     DOMAIN,
-    SERVICE_SET_DEFAULT_DURATION,
-    SERVICE_SET_DEFAULT_TONE,
-    SERVICE_SET_VOLUME_LEVEL,
     SUPPORT_DURATION,
     SUPPORT_TONES,
     SUPPORT_TURN_OFF,
@@ -100,24 +95,6 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     component.async_register_entity_service(
         SERVICE_TOGGLE, {}, "async_toggle", [SUPPORT_TURN_ON & SUPPORT_TURN_OFF]
     )
-    component.async_register_entity_service(
-        SERVICE_SET_DEFAULT_TONE,
-        {vol.Required(ATTR_TONE): vol.Any(vol.Coerce(int), cv.string)},
-        "async_set_default_tone",
-        [SUPPORT_TONES],
-    )
-    component.async_register_entity_service(
-        SERVICE_SET_DEFAULT_DURATION,
-        {vol.Required(ATTR_DURATION): cv.positive_float},
-        "async_set_default_duration",
-        [SUPPORT_DURATION],
-    )
-    component.async_register_entity_service(
-        SERVICE_SET_VOLUME_LEVEL,
-        {vol.Required(ATTR_VOLUME_LEVEL): cv.small_float},
-        "async_set_volume_level",
-        [SUPPORT_VOLUME_SET],
-    )
 
     return True
 
@@ -135,9 +112,6 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> boo
 class SirenEntity(ToggleEntity):
     """Representation of a siren device."""
 
-    _attr_volume_level: float | None = None
-    _attr_default_duration: int | None = None
-    _attr_default_tone: int | str | None = None
     _attr_available_tones: list[int] | list[str] | None = None
 
     @property
@@ -151,42 +125,6 @@ class SirenEntity(ToggleEntity):
         return None
 
     @property
-    def state_attributes(self) -> dict[str, Any]:
-        """Return the optional state attributes."""
-        supported_features = self.supported_features or 0
-        data: dict[str, Any] = {}
-
-        if self.volume_level is not None:
-            data[ATTR_VOLUME_LEVEL] = self.volume_level
-
-        if self.default_duration is not None:
-            data[ATTR_DEFAULT_DURATION] = self.default_duration
-
-        if supported_features & SUPPORT_TONES:
-            data[ATTR_DEFAULT_TONE] = self.default_tone
-
-        return data
-
-    @property
-    def volume_level(self) -> float | None:
-        """Return the volume level of the device (0 - 1)."""
-        return self._attr_volume_level
-
-    @property
-    def default_duration(self) -> int | None:
-        """Return the default duration in seconds of the noise."""
-        return self._attr_default_duration
-
-    @property
-    def default_tone(self) -> int | str | None:
-        """
-        Return the default tone for the siren.
-
-        Requires SUPPORT_TONES.
-        """
-        return self._attr_default_tone
-
-    @property
     def available_tones(self) -> list[int] | list[str] | None:
         """
         Return a list of available tones.
@@ -194,27 +132,3 @@ class SirenEntity(ToggleEntity):
         Requires SUPPORT_TONES.
         """
         return self._attr_available_tones
-
-    def set_default_tone(self, tone: int | str) -> None:
-        """Set new default tone."""
-        raise NotImplementedError()
-
-    async def async_set_default_tone(self, tone: int | str) -> None:
-        """Set new default tone."""
-        await self.hass.async_add_executor_job(self.set_default_tone, tone)
-
-    def set_volume_level(self, volume_level: float) -> None:
-        """Set volume level."""
-        raise NotImplementedError()
-
-    async def async_set_volume_level(self, volume_level: float) -> None:
-        """Set volume level."""
-        await self.hass.async_add_executor_job(self.set_volume_level, volume_level)
-
-    def set_default_duration(self, duration: int) -> None:
-        """Set default siren duration in seconds."""
-        raise NotImplementedError()
-
-    async def async_set_default_duration(self, duration: int) -> None:
-        """Set default siren duration in seconds."""
-        await self.hass.async_add_executor_job(self.set_default_duration, duration)

@@ -31,10 +31,9 @@ async def async_setup_platform(
             DemoSiren(name="Siren"),
             DemoSiren(
                 name="Siren with all features",
-                default_tone="fire",
                 available_tones=["fire", "alarm"],
-                volume_level=0.5,
-                default_duration=5,
+                support_volume_set=True,
+                support_duration=True,
             ),
         ]
     )
@@ -55,10 +54,9 @@ class DemoSiren(SirenEntity):
     def __init__(
         self,
         name: str,
-        default_tone: str | None = None,
         available_tones: str | None = None,
-        volume_level: float | None = None,
-        default_duration: int | None = None,
+        support_volume_set: bool = False,
+        support_duration: bool = False,
         is_on: bool = True,
     ) -> None:
         """Initialize the siren device."""
@@ -66,16 +64,13 @@ class DemoSiren(SirenEntity):
         self._attr_should_poll = False
         self._attr_supported_features = SUPPORT_FLAGS
         self._attr_is_on = is_on
-        if default_tone is not None and available_tones is not None:
+        if available_tones is not None:
             self._attr_supported_features |= SUPPORT_TONES
-        if volume_level is not None:
+        if support_volume_set:
             self._attr_supported_features |= SUPPORT_VOLUME_SET
-        if default_duration is not None:
+        if support_duration:
             self._attr_supported_features |= SUPPORT_DURATION
-        self._attr_default_tone = default_tone
         self._attr_available_tones = available_tones
-        self._attr_volume_level = volume_level
-        self._attr_default_duration = default_duration
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the siren on."""
@@ -85,19 +80,4 @@ class DemoSiren(SirenEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the siren off."""
         self._attr_is_on = False
-        self.async_write_ha_state()
-
-    async def async_set_volume_level(self, volume_level: float) -> None:
-        """Set new volume level."""
-        self._attr_volume_level = volume_level
-        self.async_write_ha_state()
-
-    async def async_set_default_tone(self, tone: str) -> None:
-        """Update default tone."""
-        self._attr_default_tone = tone
-        self.async_write_ha_state()
-
-    async def async_set_default_duration(self, duration: int) -> None:
-        """Update default duration."""
-        self._attr_default_duration = duration
         self.async_write_ha_state()
