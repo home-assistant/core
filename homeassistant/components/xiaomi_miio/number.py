@@ -107,7 +107,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                     )
                 )
 
-    async_add_entities(entities, update_before_add=True)
+    async_add_entities(entities, update_before_add=False)
 
 
 class XiaomiNumber(XiaomiCoordinatedMiioEntity, NumberEntity):
@@ -138,6 +138,11 @@ class XiaomiNumber(XiaomiCoordinatedMiioEntity, NumberEntity):
     @property
     def value(self):
         """Return the current option."""
+        if not self.available and self.coordinator.data:
+            self._available = True
+            self._value = self._extract_value_from_attribute(
+                self.coordinator.data, self._controller.short_name
+            )
         return self._value if self.available else None
 
     @staticmethod
@@ -167,7 +172,9 @@ class XiaomiNumber(XiaomiCoordinatedMiioEntity, NumberEntity):
             )
             return
         method = getattr(self, SERVICE_TO_METHOD[self._controller.service]["method"])
-        await method(value)
+        if await method(value):
+            self._value = value
+            self.async_write_ha_state()
 
 
 class XiaomiAirHumidifierNumber(XiaomiNumber):
@@ -199,10 +206,7 @@ class XiaomiAirHumidifierNumber(XiaomiNumber):
 
     async def async_set_motor_speed(self, motor_speed: int = 400):
         """Set the target motor speed."""
-        if self._device_features & FEATURE_SET_MOTOR_SPEED == 0:
-            return
-
-        await self._try_command(
+        return await self._try_command(
             "Setting the target motor speed of the miio device failed.",
             self._device.set_speed,
             motor_speed,
