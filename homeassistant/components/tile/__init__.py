@@ -47,9 +47,8 @@ async def async_setup_entry(hass, entry):
         if e.platform == DOMAIN
         and not e.unique_id.startswith(f"{DOMAIN}_{entry.data[CONF_USERNAME]}")
     ]:
-        split = f"{DOMAIN}_"
-        new_unique_id = (split + f"{entry.data[CONF_USERNAME]}_").join(
-            entity.unique_id.split(split)
+        new_unique_id = f"{entry.data[CONF_USERNAME]}_".join(
+            entity.unique_id.split(f"{DOMAIN}_")
         )
         LOGGER.debug(
             "Migrating entity %s from old unique ID '%s' to new unique ID '%s'",
