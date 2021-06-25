@@ -397,9 +397,6 @@ class XiaomiGenericCoordinatedSwitch(XiaomiCoordinatedMiioEntity, SwitchEntity):
             state, self._controller.short_name
         )
         self.async_write_ha_state()
-        _LOGGER.warning(
-            "Got new state for %s: %s", self._controller.short_name, self._state
-        )
 
     @property
     def available(self):
@@ -409,10 +406,11 @@ class XiaomiGenericCoordinatedSwitch(XiaomiCoordinatedMiioEntity, SwitchEntity):
     @property
     def is_on(self):
         """Return the current option."""
-        if not self._state:
+        if not self._available and self.coordinator.data:
             self._state = self._extract_value_from_attribute(
                 self.coordinator.data, self._controller.short_name
             )
+            self._available = True
         if self._state:
             return True
         return None
@@ -427,107 +425,105 @@ class XiaomiGenericCoordinatedSwitch(XiaomiCoordinatedMiioEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs) -> None:
         """Turn on an option of the miio device."""
-        # Write state back to avoid switch flips with a slow response
-        self._state = True
-        self.async_write_ha_state()
-
         method = getattr(self, SERVICE_TO_METHOD[self._controller.service]["method_on"])
-        await method()
+        if await method():
+            # Write state back to avoid switch flips with a slow response
+            self._state = True
+            self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs) -> None:
         """Turn on an option of the miio device."""
-        # Write state back to avoid switch flips with a slow response
-        self._state = False
-        self.async_write_ha_state()
-
         method = getattr(
             self, SERVICE_TO_METHOD[self._controller.service]["method_off"]
         )
-        await method()
+        if await method():
+            # Write state back to avoid switch flips with a slow response
+            self._state = False
+            self.async_write_ha_state()
 
-    async def async_set_buzzer_on(self):
+    async def async_set_buzzer_on(self) -> bool:
         """Turn the buzzer on."""
         if self._device_features & FEATURE_SET_BUZZER == 0:
-            return
+            return False
 
-        await self._try_command(
+        return await self._try_command(
             "Turning the buzzer of the miio device on failed.",
             self._device.set_buzzer,
             True,
         )
 
-    async def async_set_buzzer_off(self):
+    async def async_set_buzzer_off(self) -> bool:
         """Turn the buzzer off."""
         if self._device_features & FEATURE_SET_BUZZER == 0:
-            return
+            return False
 
-        await self._try_command(
+        return await self._try_command(
             "Turning the buzzer of the miio device off failed.",
             self._device.set_buzzer,
             False,
         )
 
-    async def async_set_child_lock_on(self):
+    async def async_set_child_lock_on(self) -> bool:
         """Turn the child lock on."""
         if self._device_features & FEATURE_SET_CHILD_LOCK == 0:
-            return
+            return False
 
-        await self._try_command(
+        return await self._try_command(
             "Turning the child lock of the miio device on failed.",
             self._device.set_child_lock,
             True,
         )
 
-    async def async_set_child_lock_off(self):
+    async def async_set_child_lock_off(self) -> bool:
         """Turn the child lock off."""
         if self._device_features & FEATURE_SET_CHILD_LOCK == 0:
-            return
+            return False
 
-        await self._try_command(
+        return await self._try_command(
             "Turning the child lock of the miio device off failed.",
             self._device.set_child_lock,
             False,
         )
 
-    async def async_set_dry_on(self):
+    async def async_set_dry_on(self) -> bool:
         """Turn the dry mode on."""
         if self._device_features & FEATURE_SET_DRY == 0:
             return
 
-        await self._try_command(
+        return await self._try_command(
             "Turning the dry mode of the miio device off failed.",
             self._device.set_dry,
             True,
         )
 
-    async def async_set_dry_off(self):
+    async def async_set_dry_off(self) -> bool:
         """Turn the dry mode off."""
         if self._device_features & FEATURE_SET_DRY == 0:
             return
 
-        await self._try_command(
+        return await self._try_command(
             "Turning the dry mode of the miio device off failed.",
             self._device.set_dry,
             False,
         )
 
-    async def async_set_clean_on(self):
+    async def async_set_clean_on(self) -> bool:
         """Turn the dry mode on."""
         if self._device_features & FEATURE_SET_CLEAN == 0:
             return
 
-        await self._try_command(
+        return await self._try_command(
             "Turning the clean mode of the miio device off failed.",
             self._device.set_clean_mode,
             True,
         )
 
-    async def async_set_clean_off(self):
+    async def async_set_clean_off(self) -> bool:
         """Turn the dry mode off."""
         if self._device_features & FEATURE_SET_CLEAN == 0:
             return
 
-        await self._try_command(
+        return await self._try_command(
             "Turning the clean mode of the miio device off failed.",
             self._device.set_clean_mode,
             False,
