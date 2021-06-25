@@ -40,6 +40,7 @@ from homeassistant.helpers.storage import Store
 from homeassistant.util.dt import utcnow
 
 from .const import DOMAIN
+from .entity import BroadlinkEntity
 from .helpers import data_packet, import_device
 
 _LOGGER = logging.getLogger(__name__)
@@ -112,12 +113,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities([remote], False)
 
 
-class BroadlinkRemote(RemoteEntity, RestoreEntity):
+class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
     """Representation of a Broadlink remote."""
 
     def __init__(self, device, codes, flags):
         """Initialize the remote."""
-        self._device = device
+        super().__init__(device)
         self._coordinator = device.update_manager.coordinator
         self._code_storage = codes
         self._flag_storage = flags
@@ -143,30 +144,9 @@ class BroadlinkRemote(RemoteEntity, RestoreEntity):
         return self._state
 
     @property
-    def available(self):
-        """Return True if the remote is available."""
-        return self._device.update_manager.available
-
-    @property
-    def should_poll(self):
-        """Return True if the remote has to be polled for state."""
-        return False
-
-    @property
     def supported_features(self):
         """Flag supported features."""
         return SUPPORT_LEARN_COMMAND | SUPPORT_DELETE_COMMAND
-
-    @property
-    def device_info(self):
-        """Return device info."""
-        return {
-            "identifiers": {(DOMAIN, self._device.unique_id)},
-            "manufacturer": self._device.api.manufacturer,
-            "model": self._device.api.model,
-            "name": self._device.name,
-            "sw_version": self._device.fw_version,
-        }
 
     def _extract_codes(self, commands, device=None):
         """Extract a list of codes.

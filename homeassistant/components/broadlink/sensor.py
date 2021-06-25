@@ -16,6 +16,7 @@ from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 
 from .const import DOMAIN
+from .entity import BroadlinkEntity
 from .helpers import import_device
 
 _LOGGER = logging.getLogger(__name__)
@@ -67,12 +68,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(sensors)
 
 
-class BroadlinkSensor(SensorEntity):
+class BroadlinkSensor(BroadlinkEntity, SensorEntity):
     """Representation of a Broadlink sensor."""
 
     def __init__(self, device, monitored_condition):
         """Initialize the sensor."""
-        self._device = device
+        super().__init__(device)
         self._coordinator = device.update_manager.coordinator
         self._monitored_condition = monitored_condition
         self._state = self._coordinator.data[monitored_condition]
@@ -93,19 +94,9 @@ class BroadlinkSensor(SensorEntity):
         return self._state
 
     @property
-    def available(self):
-        """Return True if the sensor is available."""
-        return self._device.update_manager.available
-
-    @property
     def unit_of_measurement(self):
         """Return the unit of measurement of the sensor."""
         return SENSOR_TYPES[self._monitored_condition][1]
-
-    @property
-    def should_poll(self):
-        """Return True if the sensor has to be polled for state."""
-        return False
 
     @property
     def device_class(self):
@@ -116,17 +107,6 @@ class BroadlinkSensor(SensorEntity):
     def state_class(self):
         """Return state class."""
         return SENSOR_TYPES[self._monitored_condition][3]
-
-    @property
-    def device_info(self):
-        """Return device info."""
-        return {
-            "identifiers": {(DOMAIN, self._device.unique_id)},
-            "manufacturer": self._device.api.manufacturer,
-            "model": self._device.api.model,
-            "name": self._device.name,
-            "sw_version": self._device.fw_version,
-        }
 
     @callback
     def update_data(self):
