@@ -79,7 +79,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     device_registry = dr.async_get(hass)
     tplink_devices = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
-    qty_tplink_devices = len(tplink_devices)
+    device_count = len(tplink_devices)
 
     # These will contain the initialized devices
     lights = hass.data[DOMAIN][CONF_LIGHT] = []
@@ -96,7 +96,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Add discovered devices
     if config_data is None or config_data[CONF_DISCOVERY]:
         discovered_devices = await async_discover_devices(
-            hass, static_devices, qty_tplink_devices
+            hass, static_devices, device_count
         )
 
         lights.extend(discovered_devices.lights)

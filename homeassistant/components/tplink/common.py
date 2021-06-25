@@ -68,7 +68,7 @@ async def async_get_discoverable_devices(hass: HomeAssistant) -> dict[str, Smart
 
 
 async def async_discover_devices(
-    hass: HomeAssistant, existing_devices: SmartDevices, target_discovery_qty
+    hass: HomeAssistant, existing_devices: SmartDevices, target_device_count
 ) -> SmartDevices:
     """Get devices through discovery."""
 
@@ -98,27 +98,23 @@ async def async_discover_devices(
             else:
                 _LOGGER.error("Unknown smart device type: %s", type(dev))
 
-    discovery_attempt = 0
     devices = dict()
-
-    while discovery_attempt < MAX_DISCOVERY_RETRIES:
-        discovery_attempt += 1
+    for attempt in range(1, MAX_DISCOVERY_RETRIES + 1):
         _LOGGER.debug(
             "Discovering tplink devices, attempt %s of %s",
-            discovery_attempt,
+            attempt,
             MAX_DISCOVERY_RETRIES,
         )
         discovered_devices = await async_get_discoverable_devices(hass)
         _LOGGER.info(
             "Discovered %s TP-Link of expected %s smart home device(s)",
             len(discovered_devices),
-            target_discovery_qty,
+            target_device_count,
         )
         for ip in discovered_devices:
-            if ip not in devices:
-                devices[ip] = discovered_devices[ip]
+            devices[ip] = discovered_devices[ip]
 
-        if len(discovered_devices) >= target_discovery_qty:
+        if len(discovered_devices) >= target_device_count:
             _LOGGER.info(
                 "Discovered at least as many devices on the network as exist in our device registry, no need to retry"
             )
@@ -127,7 +123,7 @@ async def async_discover_devices(
     _LOGGER.info(
         "Found %s unique TP-Link smart home device(s) after %s discovery attempts",
         len(devices),
-        discovery_attempt,
+        attempt,
     )
     await hass.async_add_executor_job(process_devices)
 
