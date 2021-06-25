@@ -88,119 +88,131 @@ async def get_deflections(
     return deflections
 
 
-async def get_entities_list(
+async def async_deflection_entities_list(
     fritzbox_tools: FritzBoxTools, device_friendly_name: str
-) -> list:
-    """Get a list of all switches to create."""
-    entities_list: list[
-        FritzBoxDeflectionSwitch
-        | FritzBoxPortSwitch
-        | FritzBoxProfileSwitch
-        | FritzBoxWifiSwitch
-    ] = []
+) -> list[FritzBoxDeflectionSwitch]:
+    """Get list of deflection entities."""
 
-    # 1. Deflection switches
     _LOGGER.debug("Setting up %s switches", SWITCH_TYPE_DEFLECTION)
 
+    entities_list: list = []
     service_name = "X_AVM-DE_OnTel"
     deflections_response = await service_call_action(
         fritzbox_tools, service_name, "1", "GetNumberOfDeflections"
     )
     if not deflections_response:
         _LOGGER.debug("The FRITZ!Box has no %s options", SWITCH_TYPE_DEFLECTION)
-    else:
-        _LOGGER.debug(
-            "Specific %s response: GetNumberOfDeflections=%s",
-            SWITCH_TYPE_DEFLECTION,
-            deflections_response,
-        )
+        return []
 
-        if deflections_response["NewNumberOfDeflections"] != 0:
-            deflection_list = await get_deflections(fritzbox_tools, service_name)
-            if deflection_list is not None:
-                for dict_of_deflection in deflection_list:
-                    entities_list.append(
-                        FritzBoxDeflectionSwitch(
-                            fritzbox_tools, device_friendly_name, dict_of_deflection
-                        )
+    _LOGGER.debug(
+        "Specific %s response: GetNumberOfDeflections=%s",
+        SWITCH_TYPE_DEFLECTION,
+        deflections_response,
+    )
+
+    if deflections_response["NewNumberOfDeflections"] != 0:
+        deflection_list = await get_deflections(fritzbox_tools, service_name)
+        if deflection_list is not None:
+            for dict_of_deflection in deflection_list:
+                entities_list.append(
+                    FritzBoxDeflectionSwitch(
+                        fritzbox_tools, device_friendly_name, dict_of_deflection
                     )
+                )
 
-    # 2. PortForward switches
+    return entities_list
+
+
+async def async_port_entities_list(
+    fritzbox_tools: FritzBoxTools, device_friendly_name: str
+) -> list[FritzBoxPortSwitch]:
+    """Get list of port forwarding entities."""
+
     _LOGGER.debug("Setting up %s switches", SWITCH_TYPE_PORTFORWARD)
-
+    entities_list: list = []
     service_name = "Layer3Forwarding"
     connection_type = await service_call_action(
         fritzbox_tools, service_name, "1", "GetDefaultConnectionService"
     )
     if not connection_type:
         _LOGGER.debug("The FRITZ!Box has no %s options", SWITCH_TYPE_PORTFORWARD)
-    else:
-        # Return NewDefaultConnectionService sample: "1.WANPPPConnection.1"
-        con_type: str = connection_type["NewDefaultConnectionService"][2:][:-2]
+        return []
 
-        # Query port forwardings and setup a switch for each forward for the current device
-        resp = await service_call_action(
-            fritzbox_tools, con_type, "1", "GetPortMappingNumberOfEntries"
+    # Return NewDefaultConnectionService sample: "1.WANPPPConnection.1"
+    con_type: str = connection_type["NewDefaultConnectionService"][2:][:-2]
+
+    # Query port forwardings and setup a switch for each forward for the current device
+    resp = await service_call_action(
+        fritzbox_tools, con_type, "1", "GetPortMappingNumberOfEntries"
+    )
+    if not resp:
+        _LOGGER.debug("The FRITZ!Box has no %s options", SWITCH_TYPE_DEFLECTION)
+        return []
+
+    port_forwards_count: int = resp["NewPortMappingNumberOfEntries"]
+
+    _LOGGER.debug(
+        "Specific %s response: GetPortMappingNumberOfEntries=%s",
+        SWITCH_TYPE_PORTFORWARD,
+        port_forwards_count,
+    )
+
+    for i in range(port_forwards_count):
+
+        portmap = await service_call_action(
+            fritzbox_tools,
+            con_type,
+            "1",
+            "GetGenericPortMappingEntry",
+            NewPortMappingIndex=i,
         )
-        if not resp:
+
+        if not portmap:
             _LOGGER.debug("The FRITZ!Box has no %s options", SWITCH_TYPE_DEFLECTION)
         else:
-            port_forwards_count: int = resp["NewPortMappingNumberOfEntries"]
-
             _LOGGER.debug(
-                "Specific %s response: GetPortMappingNumberOfEntries=%s",
+                "Specific %s response: GetGenericPortMappingEntry=%s",
                 SWITCH_TYPE_PORTFORWARD,
-                port_forwards_count,
+                portmap,
             )
 
-            for i in range(port_forwards_count):
-
-                portmap = await service_call_action(
-                    fritzbox_tools,
-                    con_type,
-                    "1",
-                    "GetGenericPortMappingEntry",
-                    NewPortMappingIndex=i,
+            # We can only handle port forwards of the given device
+            local_ip = async_get_source_ip(fritzbox_tools.host)
+            _LOGGER.debug("IP source for %s is %s", fritzbox_tools.host, local_ip)
+            if portmap["NewInternalClient"] == local_ip:
+                entities_list.append(
+                    FritzBoxPortSwitch(
+                        fritzbox_tools,
+                        device_friendly_name,
+                        portmap,
+                        i,
+                        con_type,
+                    )
                 )
 
-                if not portmap:
-                    _LOGGER.debug(
-                        "The FRITZ!Box has no %s options", SWITCH_TYPE_DEFLECTION
-                    )
-                else:
-                    _LOGGER.debug(
-                        "Specific %s response: GetGenericPortMappingEntry=%s",
-                        SWITCH_TYPE_PORTFORWARD,
-                        portmap,
-                    )
+    return entities_list
 
-                    # We can only handle port forwards of the given device
-                    local_ip = async_get_source_ip(fritzbox_tools.host)
-                    _LOGGER.debug(
-                        "IP source for %s is %s", fritzbox_tools.host, local_ip
-                    )
-                    if portmap["NewInternalClient"] == local_ip:
-                        entities_list.append(
-                            FritzBoxPortSwitch(
-                                fritzbox_tools,
-                                device_friendly_name,
-                                portmap,
-                                i,
-                                con_type,
-                            )
-                        )
 
-    # 3. Profile switches
+async def async_profile_entities_list(
+    fritzbox_tools: FritzBoxTools, device_friendly_name: str
+) -> list[FritzBoxProfileSwitch]:
+    """Get list of profile entities."""
     _LOGGER.debug("Setting up %s switches", SWITCH_TYPE_DEVICEPROFILE)
+    entities_list: list = []
     if len(fritzbox_tools.fritz_profiles) > 0:
         for profile in fritzbox_tools.fritz_profiles.keys():
             entities_list.append(
                 FritzBoxProfileSwitch(fritzbox_tools, device_friendly_name, profile)
             )
+    return entities_list
 
-    # 4. Wi-Fi switches
+
+async def async_wifi_entities_list(
+    fritzbox_tools: FritzBoxTools, device_friendly_name: str
+) -> list[FritzBoxWifiSwitch]:
+    """Get list of wifi entities."""
     _LOGGER.debug("Setting up %s switches", SWITCH_TYPE_WIFINETWORK)
-
+    entities_list: list = []
     std_table = {"ac": "5Ghz", "n": "2.4Ghz"}
     networks: dict = {}
     for i in range(4):
@@ -220,7 +232,6 @@ async def get_entities_list(
             FritzBoxWifiSwitch(fritzbox_tools, device_friendly_name, net, networks[net])
         )
 
-    # Full list of switches
     return entities_list
 
 
@@ -233,8 +244,21 @@ async def async_setup_entry(
 
     _LOGGER.debug("Fritzbox services: %s", fritzbox_tools.connection.services)
 
-    entities = await get_entities_list(fritzbox_tools, entry.title)
-    async_add_entities(entities)
+    entities_list: list[
+        FritzBoxDeflectionSwitch
+        | FritzBoxPortSwitch
+        | FritzBoxProfileSwitch
+        | FritzBoxWifiSwitch
+    ] = []
+
+    entities_list.extend(
+        await async_deflection_entities_list(fritzbox_tools, entry.title)
+    )
+    entities_list.extend(await async_port_entities_list(fritzbox_tools, entry.title))
+    entities_list.extend(await async_profile_entities_list(fritzbox_tools, entry.title))
+    entities_list.extend(await async_wifi_entities_list(fritzbox_tools, entry.title))
+
+    async_add_entities(entities_list)
 
 
 class FritzBoxPortSwitch(FritzBoxBaseSwitch, SwitchEntity):
