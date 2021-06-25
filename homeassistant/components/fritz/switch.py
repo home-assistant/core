@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections import OrderedDict
+from functools import partial
 import logging
 from typing import Any, Callable
 
@@ -42,8 +43,11 @@ async def async_service_call_action(
 
     try:
         return await fritzbox_tools.hass.async_add_executor_job(
-            lambda: fritzbox_tools.connection.call_action(
-                f"{service_name}:{service_suffix}", action_name, **kwargs
+            partial(
+                fritzbox_tools.connection.call_action,
+                f"{service_name}:{service_suffix}",
+                action_name,
+                **kwargs,
             )
         )
     except FritzSecurityError:
