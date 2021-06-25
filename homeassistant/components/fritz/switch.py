@@ -26,7 +26,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-async def service_call_action(
+async def async_service_call_action(
     fritzbox_tools: FritzBoxTools,
     service_name: str,
     service_suffix: str | None,
@@ -65,12 +65,12 @@ async def service_call_action(
         return None
 
 
-async def get_deflections(
+async def async_get_deflections(
     fritzbox_tools: FritzBoxTools, service_name: str
 ) -> list[OrderedDict[Any, Any]] | None:
     """Get deflection switch info."""
 
-    deflection_list = await service_call_action(
+    deflection_list = await async_service_call_action(
         fritzbox_tools,
         service_name,
         "1",
@@ -97,7 +97,7 @@ async def async_deflection_entities_list(
 
     entities_list: list = []
     service_name = "X_AVM-DE_OnTel"
-    deflections_response = await service_call_action(
+    deflections_response = await async_service_call_action(
         fritzbox_tools, service_name, "1", "GetNumberOfDeflections"
     )
     if not deflections_response:
@@ -111,7 +111,7 @@ async def async_deflection_entities_list(
     )
 
     if deflections_response["NewNumberOfDeflections"] != 0:
-        deflection_list = await get_deflections(fritzbox_tools, service_name)
+        deflection_list = await async_get_deflections(fritzbox_tools, service_name)
         if deflection_list is not None:
             for dict_of_deflection in deflection_list:
                 entities_list.append(
@@ -131,7 +131,7 @@ async def async_port_entities_list(
     _LOGGER.debug("Setting up %s switches", SWITCH_TYPE_PORTFORWARD)
     entities_list: list = []
     service_name = "Layer3Forwarding"
-    connection_type = await service_call_action(
+    connection_type = await async_service_call_action(
         fritzbox_tools, service_name, "1", "GetDefaultConnectionService"
     )
     if not connection_type:
@@ -142,7 +142,7 @@ async def async_port_entities_list(
     con_type: str = connection_type["NewDefaultConnectionService"][2:][:-2]
 
     # Query port forwardings and setup a switch for each forward for the current device
-    resp = await service_call_action(
+    resp = await async_service_call_action(
         fritzbox_tools, con_type, "1", "GetPortMappingNumberOfEntries"
     )
     if not resp:
@@ -159,7 +159,7 @@ async def async_port_entities_list(
 
     for i in range(port_forwards_count):
 
-        portmap = await service_call_action(
+        portmap = await async_service_call_action(
             fritzbox_tools,
             con_type,
             "1",
@@ -217,7 +217,7 @@ async def async_wifi_entities_list(
     networks: dict = {}
     for i in range(4):
         if ("WLANConfiguration" + str(i)) in fritzbox_tools.connection.services:
-            network_info = await service_call_action(
+            network_info = await async_service_call_action(
                 fritzbox_tools, "WLANConfiguration", str(i), "GetInfo"
             )
             if network_info:
@@ -293,7 +293,7 @@ class FritzBoxPortSwitch(FritzBoxBaseSwitch, SwitchEntity):
     async def _async_fetch_update(self) -> None:
         """Fetch updates."""
 
-        self.port_mapping = await service_call_action(
+        self.port_mapping = await async_service_call_action(
             self.fritzbox_tools,
             self.connection_type,
             "1",
@@ -328,7 +328,7 @@ class FritzBoxPortSwitch(FritzBoxBaseSwitch, SwitchEntity):
 
         self.port_mapping["NewEnabled"] = "1" if turn_on else "0"
 
-        resp = await service_call_action(
+        resp = await async_service_call_action(
             self.fritzbox_tools,
             self.connection_type,
             "1",
@@ -371,7 +371,7 @@ class FritzBoxDeflectionSwitch(FritzBoxBaseSwitch, SwitchEntity):
     async def _async_fetch_update(self) -> None:
         """Fetch updates."""
 
-        resp = await service_call_action(
+        resp = await async_service_call_action(
             self.fritzbox_tools, "X_AVM-DE_OnTel", "1", "GetDeflections"
         )
         if not resp:
@@ -405,7 +405,7 @@ class FritzBoxDeflectionSwitch(FritzBoxBaseSwitch, SwitchEntity):
 
     async def _async_switch_on_off_executor(self, turn_on: bool) -> None:
         """Handle deflection switch."""
-        await service_call_action(
+        await async_service_call_action(
             self.fritzbox_tools,
             "X_AVM-DE_OnTel",
             "1",
@@ -501,7 +501,7 @@ class FritzBoxWifiSwitch(FritzBoxBaseSwitch, SwitchEntity):
         """Fetch updates."""
 
         try:
-            wifi_info = await service_call_action(
+            wifi_info = await async_service_call_action(
                 self.fritzbox_tools,
                 "WLANConfiguration",
                 str(self._network_num),
@@ -537,7 +537,7 @@ class FritzBoxWifiSwitch(FritzBoxBaseSwitch, SwitchEntity):
 
     async def _async_switch_on_off_executor(self, turn_on: bool) -> None:
         """Handle wifi switch."""
-        await service_call_action(
+        await async_service_call_action(
             self.fritzbox_tools,
             "WLANConfiguration",
             str(self._network_num),
