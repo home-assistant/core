@@ -128,7 +128,10 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
 
         # Entity class attributes
         self._attr_supported_features = 0
-        if self._dimming_duration is not None:
+        if (
+            self._dimming_duration is not None
+            or self._color_transition_duration is not None
+        ):
             self._attr_supported_features |= SUPPORT_TRANSITION
 
     @callback
