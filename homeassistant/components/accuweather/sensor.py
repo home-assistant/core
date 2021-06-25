@@ -97,7 +97,7 @@ class AccuWeatherSensor(CoordinatorEntity, SensorEntity):
         self._device_class = None
         self._attrs = {ATTR_ATTRIBUTION: ATTRIBUTION}
         self.forecast_day = forecast_day
-        self._attr_state_class = self._description[ATTR_STATE_CLASS]
+        self._attr_state_class = self._description.get(ATTR_STATE_CLASS)
 
     @property
     def name(self) -> str:
