@@ -125,28 +125,12 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
         self._storage_loaded = False
         self._codes = {}
         self._flags = defaultdict(int)
-        self._state = True
         self._lock = asyncio.Lock()
 
-    @property
-    def name(self):
-        """Return the name of the remote."""
-        return f"{self._device.name} Remote"
-
-    @property
-    def unique_id(self):
-        """Return the unique id of the remote."""
-        return self._device.unique_id
-
-    @property
-    def is_on(self):
-        """Return True if the remote is on."""
-        return self._state
-
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        return SUPPORT_LEARN_COMMAND | SUPPORT_DELETE_COMMAND
+        self._attr_name = f"{self._device.name} Remote"
+        self._attr_is_on = True
+        self._attr_supported_features = SUPPORT_LEARN_COMMAND | SUPPORT_DELETE_COMMAND
+        self._attr_unique_id = self._device.unique_id
 
     def _extract_codes(self, commands, device=None):
         """Extract a list of codes.
@@ -204,7 +188,7 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
     async def async_added_to_hass(self):
         """Call when the remote is added to hass."""
         state = await self.async_get_last_state()
-        self._state = state is None or state.state != STATE_OFF
+        self._attr_is_on = state is None or state.state != STATE_OFF
 
         self.async_on_remove(
             self._coordinator.async_add_listener(self.async_write_ha_state)
@@ -216,12 +200,12 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
 
     async def async_turn_on(self, **kwargs):
         """Turn on the remote."""
-        self._state = True
+        self._attr_is_on = True
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs):
         """Turn off the remote."""
-        self._state = False
+        self._attr_is_on = False
         self.async_write_ha_state()
 
     async def _async_load_storage(self):
@@ -242,7 +226,7 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
         delay = kwargs[ATTR_DELAY_SECS]
         service = f"{RM_DOMAIN}.{SERVICE_SEND_COMMAND}"
 
-        if not self._state:
+        if not self._attr_is_on:
             _LOGGER.warning(
                 "%s canceled: %s entity is turned off", service, self.entity_id
             )
@@ -297,7 +281,7 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
         toggle = kwargs[ATTR_ALTERNATIVE]
         service = f"{RM_DOMAIN}.{SERVICE_LEARN_COMMAND}"
 
-        if not self._state:
+        if not self._attr_is_on:
             _LOGGER.warning(
                 "%s canceled: %s entity is turned off", service, self.entity_id
             )
@@ -455,7 +439,7 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
         device = kwargs[ATTR_DEVICE]
         service = f"{RM_DOMAIN}.{SERVICE_DELETE_COMMAND}"
 
-        if not self._state:
+        if not self._attr_is_on:
             _LOGGER.warning(
                 "%s canceled: %s entity is turned off",
                 service,
