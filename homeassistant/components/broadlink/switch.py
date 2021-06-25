@@ -161,7 +161,7 @@ class BroadlinkSwitch(BroadlinkEntity, SwitchEntity, RestoreEntity, ABC):
         """Call when the switch is added to hass."""
         if self._state is None:
             state = await self.async_get_last_state()
-            self._attr_is_on = state is not None and state.state == STATE_ON
+            self._state = state is not None and state.state == STATE_ON
         self.async_on_remove(self._coordinator.async_add_listener(self.update_data))
 
     async def async_update(self):
