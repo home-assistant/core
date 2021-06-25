@@ -187,7 +187,7 @@ class SegmentBuffer:
         assert self._segment
         self._memory_file.seek(self._memory_file_pos)
         self._hass.loop.call_soon_threadsafe(
-            self._segment.add_part,
+            self._segment.async_add_part,
             Part(
                 duration=float((packet.dts - self._part_start_dts) * packet.time_base),
                 has_keyframe=self._part_has_keyframe,

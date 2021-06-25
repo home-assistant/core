@@ -102,7 +102,8 @@ class Segment:
         )
         return last_http_range_start + len(last_part.data)
 
-    def add_part(
+    @callback
+    def async_add_part(
         self,
         part: Part,
         duration: float,
