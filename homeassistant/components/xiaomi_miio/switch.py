@@ -352,7 +352,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             switch = SWITCH_TYPES[feature]
             if feature & device_features and feature in SWITCH_TYPES:
                 entities.append(
-                    XiaomiAirHumidifierSwitch(
+                    XiaomiGenericCoordinatedSwitch(
                         f"{config_entry.title} {switch.name}",
                         device,
                         config_entry,
@@ -376,8 +376,13 @@ class XiaomiGenericCoordinatedSwitch(XiaomiCoordinatedMiioEntity, SwitchEntity):
         self._available = False
         self._state = None
         self._state_attrs = {ATTR_MODEL: self._model}
-        self._device_features = FEATURE_FLAGS_GENERIC
         self._controller = switch
+        if self._model in [MODEL_AIRHUMIDIFIER_CA1, MODEL_AIRHUMIDIFIER_CB1]:
+            self._device_features = FEATURE_FLAGS_AIRHUMIDIFIER_CA_AND_CB
+        elif self._model in [MODEL_AIRHUMIDIFIER_CA4]:
+            self._device_features = FEATURE_FLAGS_AIRHUMIDIFIER_CA4
+        else:
+            self._device_features = FEATURE_FLAGS_AIRHUMIDIFIER
 
     @callback
     def _handle_coordinator_update(self):
@@ -392,6 +397,9 @@ class XiaomiGenericCoordinatedSwitch(XiaomiCoordinatedMiioEntity, SwitchEntity):
             state, self._controller.short_name
         )
         self.async_write_ha_state()
+        _LOGGER.warning(
+            "Got new state for %s: %s", self._controller.short_name, self._state
+        )
 
     @property
     def available(self):
@@ -419,11 +427,19 @@ class XiaomiGenericCoordinatedSwitch(XiaomiCoordinatedMiioEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs) -> None:
         """Turn on an option of the miio device."""
+        # Write state back to avoid switch flips with a slow response
+        self._state = True
+        self.async_write_ha_state()
+
         method = getattr(self, SERVICE_TO_METHOD[self._controller.service]["method_on"])
         await method()
 
     async def async_turn_off(self, **kwargs) -> None:
         """Turn on an option of the miio device."""
+        # Write state back to avoid switch flips with a slow response
+        self._state = False
+        self.async_write_ha_state()
+
         method = getattr(
             self, SERVICE_TO_METHOD[self._controller.service]["method_off"]
         )
@@ -472,20 +488,6 @@ class XiaomiGenericCoordinatedSwitch(XiaomiCoordinatedMiioEntity, SwitchEntity):
             self._device.set_child_lock,
             False,
         )
-
-
-class XiaomiAirHumidifierSwitch(XiaomiGenericCoordinatedSwitch):
-    """Representation of a Xiaomi Air Humidifier."""
-
-    def __init__(self, name, device, entry, unique_id, switch, coordinator):
-        """Initialize the plug switch."""
-        super().__init__(name, device, entry, unique_id, switch, coordinator)
-        if self._model in [MODEL_AIRHUMIDIFIER_CA1, MODEL_AIRHUMIDIFIER_CB1]:
-            self._device_features = FEATURE_FLAGS_AIRHUMIDIFIER_CA_AND_CB
-        elif self._model in [MODEL_AIRHUMIDIFIER_CA4]:
-            self._device_features = FEATURE_FLAGS_AIRHUMIDIFIER_CA4
-        else:
-            self._device_features = FEATURE_FLAGS_AIRHUMIDIFIER
 
     async def async_set_dry_on(self):
         """Turn the dry mode on."""
