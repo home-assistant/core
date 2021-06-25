@@ -119,26 +119,22 @@ class HassIOIngress(HomeAssistantView):
         url = self._create_url(token, path)
         source_header = _init_header(request, token)
 
-        def _with_chunks(origin: web.Request | web.Response) -> bool:
-            return (
-                hdrs.CONTENT_LENGTH not in origin.headers
-                or int(origin.headers[hdrs.CONTENT_LENGTH]) > 4_194_000
-            )
-
         async with self._websession.request(
             request.method,
             url,
             headers=source_header,
             params=request.query,
             allow_redirects=False,
-            chunked=_with_chunks(request),
             data=request.content,
             timeout=ClientTimeout(total=None),
         ) as result:
             headers = _response_header(result)
 
             # Simple request
-            if not _with_chunks(result):
+            if (
+                hdrs.CONTENT_LENGTH in result.headers
+                and int(result.headers.get(hdrs.CONTENT_LENGTH, 0)) < 4194000
+            ):
                 # Return Response
                 body = await result.read()
                 return web.Response(
