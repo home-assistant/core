@@ -12,9 +12,8 @@ from homeassistant.components.habitica.const import (
 )
 from homeassistant.components.habitica.sensor import TASKS_TYPES
 from homeassistant.const import ATTR_NAME
-from homeassistant.core import callback
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_capture_events
 
 TEST_API_CALL_ARGS = {"text": "Use API from Home Assistant", "type": "todo"}
 TEST_USER_NAME = "test_user"
@@ -23,15 +22,7 @@ TEST_USER_NAME = "test_user"
 @pytest.fixture
 def capture_api_call_success(hass):
     """Capture api_call events."""
-    events = []
-
-    @callback
-    def async_capture(event):
-        events.append(event.data)
-
-    hass.bus.async_listen(EVENT_API_CALL_SUCCESS, async_capture)
-
-    return events
+    return async_capture_events(hass, EVENT_API_CALL_SUCCESS)
 
 
 @pytest.fixture
@@ -132,7 +123,7 @@ async def test_service_call(
     )
 
     assert len(capture_api_call_success) == 1
-    captured_data = capture_api_call_success[0]
+    captured_data = capture_api_call_success[0].data
     captured_data[ATTR_ARGS] = captured_data[ATTR_DATA]
     del captured_data[ATTR_DATA]
     assert captured_data == TEST_SERVICE_DATA

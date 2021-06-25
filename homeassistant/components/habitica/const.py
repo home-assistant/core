@@ -7,8 +7,11 @@ CONF_API_USER = "api_user"
 DEFAULT_URL = "https://habitica.com"
 DOMAIN = "habitica"
 
+# service constants
 SERVICE_API_CALL = "api_call"
 ATTR_PATH = CONF_PATH
 ATTR_ARGS = "args"
-ATTR_DATA = CONF_SERVICE_DATA
+
+# event constants
 EVENT_API_CALL_SUCCESS = f"{DOMAIN}_{SERVICE_API_CALL}_success"
+ATTR_DATA = CONF_SERVICE_DATA
