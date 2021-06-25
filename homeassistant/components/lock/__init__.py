@@ -125,7 +125,7 @@ class LockEntity(Entity):
         """Return true if the lock is jammed (incomplete locking)."""
         return self._attr_is_jammed
 
-    def lock(self, **kwargs) -> None:
+    def lock(self, **kwargs: Any) -> None:
         """Lock the lock."""
         raise NotImplementedError()
 
