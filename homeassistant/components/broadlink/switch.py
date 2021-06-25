@@ -143,25 +143,14 @@ class BroadlinkSwitch(BroadlinkEntity, SwitchEntity, RestoreEntity, ABC):
         self._coordinator = device.update_manager.coordinator
         self._state = None
 
-    @property
-    def name(self):
-        """Return the name of the switch."""
-        return f"{self._device.name} Switch"
+        self._attr_assumed_state = True
+        self._attr_device_class = DEVICE_CLASS_SWITCH
+        self._attr_name = f"{self._device.name} Switch"
+        self._attr_unique_id = self._device.unique_id
 
-    @property
-    def assumed_state(self):
-        """Return True if unable to access real state of the switch."""
-        return True
-
-    @property
     def is_on(self):
         """Return True if the switch is on."""
         return self._state
-
-    @property
-    def device_class(self):
-        """Return device class."""
-        return DEVICE_CLASS_SWITCH
 
     @callback
     def update_data(self):
@@ -172,7 +161,7 @@ class BroadlinkSwitch(BroadlinkEntity, SwitchEntity, RestoreEntity, ABC):
         """Call when the switch is added to hass."""
         if self._state is None:
             state = await self.async_get_last_state()
-            self._state = state is not None and state.state == STATE_ON
+            self._attr_is_on = state is not None and state.state == STATE_ON
         self.async_on_remove(self._coordinator.async_add_listener(self.update_data))
 
     async def async_update(self):
@@ -204,12 +193,7 @@ class BroadlinkRMSwitch(BroadlinkSwitch):
         super().__init__(
             device, config.get(CONF_COMMAND_ON), config.get(CONF_COMMAND_OFF)
         )
-        self._name = config[CONF_NAME]
-
-    @property
-    def name(self):
-        """Return the name of the switch."""
-        return self._name
+        self._attr_name = config[CONF_NAME]
 
     async def _async_send_packet(self, packet):
         """Send a packet to the device."""
@@ -231,11 +215,6 @@ class BroadlinkSP1Switch(BroadlinkSwitch):
         """Initialize the switch."""
         super().__init__(device, 1, 0)
 
-    @property
-    def unique_id(self):
-        """Return the unique id of the switch."""
-        return self._device.unique_id
-
     async def _async_send_packet(self, packet):
         """Send a packet to the device."""
         try:
@@ -255,10 +234,7 @@ class BroadlinkSP2Switch(BroadlinkSP1Switch):
         self._state = self._coordinator.data["pwr"]
         self._load_power = self._coordinator.data.get("power")
 
-    @property
-    def assumed_state(self):
-        """Return True if unable to access real state of the switch."""
-        return False
+        self._attr_assumed_state = False
 
     @property
     def current_power_w(self):
@@ -283,20 +259,9 @@ class BroadlinkMP1Slot(BroadlinkSwitch):
         self._slot = slot
         self._state = self._coordinator.data[f"s{slot}"]
 
-    @property
-    def unique_id(self):
-        """Return the unique id of the slot."""
-        return f"{self._device.unique_id}-s{self._slot}"
-
-    @property
-    def name(self):
-        """Return the name of the switch."""
-        return f"{self._device.name} S{self._slot}"
-
-    @property
-    def assumed_state(self):
-        """Return True if unable to access real state of the switch."""
-        return False
+        self._attr_name = f"{self._device.name} S{self._slot}"
+        self._attr_unique_id = f"{self._device.unique_id}-s{self._slot}"
+        self._attr_assumed_state = False
 
     @callback
     def update_data(self):
@@ -326,25 +291,10 @@ class BroadlinkBG1Slot(BroadlinkSwitch):
         self._slot = slot
         self._state = self._coordinator.data[f"pwr{slot}"]
 
-    @property
-    def unique_id(self):
-        """Return the unique id of the slot."""
-        return f"{self._device.unique_id}-s{self._slot}"
-
-    @property
-    def name(self):
-        """Return the name of the switch."""
-        return f"{self._device.name} S{self._slot}"
-
-    @property
-    def assumed_state(self):
-        """Return True if unable to access real state of the switch."""
-        return False
-
-    @property
-    def device_class(self):
-        """Return device class."""
-        return DEVICE_CLASS_OUTLET
+        self._attr_name = f"{self._device.name} S{self._slot}"
+        self._attr_device_class = DEVICE_CLASS_OUTLET
+        self._attr_unique_id = f"{self._device.unique_id}-s{self._slot}"
+        self._attr_assumed_state = False
 
     @callback
     def update_data(self):
