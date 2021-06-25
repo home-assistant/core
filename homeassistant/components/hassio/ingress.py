@@ -125,16 +125,6 @@ class HassIOIngress(HomeAssistantView):
                 or int(origin.headers[hdrs.CONTENT_LENGTH]) > 4_194_000
             )
 
-        async def _prepare_content():
-            if not _with_chunks(request):
-                data = await request.read()
-                yield data
-            else:
-                # Disable max size, we are chunking large requests anyway
-                request._client_max_size = None  # pylint: disable=protected-access
-                async for data in request.content.iter_any():
-                    yield data
-
         async with self._websession.request(
             request.method,
             url,
@@ -142,7 +132,7 @@ class HassIOIngress(HomeAssistantView):
             params=request.query,
             allow_redirects=False,
             chunked=_with_chunks(request),
-            data=_prepare_content(),
+            data=request.content,
             timeout=ClientTimeout(total=None),
         ) as result:
             headers = _response_header(result)
