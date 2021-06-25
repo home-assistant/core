@@ -101,7 +101,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.image.*",
     "homeassistant.components.incomfort.*",
     "homeassistant.components.influxdb.*",
-    "homeassistant.components.input_boolean.*",
     "homeassistant.components.input_datetime.*",
     "homeassistant.components.input_number.*",
     "homeassistant.components.insteon.*",
