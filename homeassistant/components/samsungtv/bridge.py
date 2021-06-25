@@ -234,6 +234,8 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
             except AccessDenied:
                 self._notify_callback()
                 raise
+            except (ConnectionClosed, OSError):
+                pass
         return self._remote
 
     def _send_key(self, key):
