@@ -9,9 +9,6 @@ from homeassistant.helpers.typing import ConfigType
 from . import websocket_api
 from .const import DOMAIN
 
-STORAGE_VERSION = 1
-STORAGE_KEY = DOMAIN
-
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Energy."""

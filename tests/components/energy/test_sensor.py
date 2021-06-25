@@ -17,7 +17,9 @@ import homeassistant.util.dt as dt_util
 
 async def setup_integration(hass):
     """Set up the integration."""
-    assert await async_setup_component(hass, "energy", {"energy": {}})
+    assert await async_setup_component(
+        hass, "energy", {"recorder": {"db_url": "sqlite://"}}
+    )
     await hass.async_block_till_done()
 
 

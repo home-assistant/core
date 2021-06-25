@@ -10,7 +10,9 @@ from tests.common import flush_store
 @pytest.fixture(autouse=True)
 async def setup_integration(hass):
     """Set up the integration."""
-    assert await async_setup_component(hass, "energy", {})
+    assert await async_setup_component(
+        hass, "energy", {"recorder": {"db_url": "sqlite://"}}
+    )
 
 
 async def test_get_preferences_no_data(hass, hass_ws_client) -> None:
@@ -28,11 +30,8 @@ async def test_get_preferences_no_data(hass, hass_ws_client) -> None:
 
 async def test_get_preferences_default(hass, hass_ws_client, hass_storage) -> None:
     """Test we get preferences."""
-    hass_storage[data.STORAGE_KEY] = {
-        "version": 1,
-        "data": data.EnergyManager.default_preferences(),
-    }
-
+    manager = await data.async_get_manager(hass)
+    manager.data = data.EnergyManager.default_preferences()
     client = await hass_ws_client(hass)
 
     await client.send_json({"id": 5, "type": "energy/get_prefs"})
@@ -63,13 +62,17 @@ async def test_save_preferences(hass, hass_ws_client, hass_storage) -> None:
         "currency": "$",
         "home_consumption": [
             {
-                "stat_consumption": "heat_pump_meter",
+                "stat_consumption": "sensor.heat_pump_meter",
+                "entity_consumption": "sensor.heat_pump_meter",
                 "stat_cost": "heat_pump_kwh_cost",
+                "entity_energy_price": "sensor.energy_price",
                 "cost_adjustment_day": 1.2,
             },
             {
                 "stat_consumption": "home_meter",
+                "entity_consumption": None,
                 "stat_cost": None,
+                "entity_energy_price": None,
                 "cost_adjustment_day": 0,
             },
         ],

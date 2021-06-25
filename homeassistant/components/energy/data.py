@@ -17,7 +17,9 @@ STORAGE_KEY = DOMAIN
 HOME_CONSUMPTION_SCHEMA = vol.Schema(
     {
         vol.Required("stat_consumption"): str,
+        vol.Required("entity_consumption"): vol.Any(None, str),
         vol.Required("stat_cost"): vol.Any(None, str),
+        vol.Required("entity_energy_price"): vol.Any(None, str),
         vol.Required("cost_adjustment_day"): vol.Coerce(float),
     }
 )
