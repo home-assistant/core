@@ -81,7 +81,7 @@ class ConnectXiaomiGateway:
                 raise ConfigEntryAuthFailed(error) from error
 
             _LOGGER.error(
-                "DeviceException during setup of xiaomi gateway with host %s, %s",
+                "DeviceException during setup of xiaomi gateway with host %s: %s",
                 self._host,
                 error,
             )
