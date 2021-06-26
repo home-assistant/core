@@ -45,7 +45,7 @@ async def async_setup_entry(hass, entry):
         e
         for e in ent_reg.entities.values()
         if e.platform == DOMAIN
-        and not e.unique_id.startswith(f"{DOMAIN}_{entry.data[CONF_USERNAME]}")
+        and not e.unique_id.startswith(f"{entry.data[CONF_USERNAME]}")
     ]:
         new_unique_id = f"{entry.data[CONF_USERNAME]}_".join(
             entity.unique_id.split(f"{DOMAIN}_")
