@@ -902,6 +902,9 @@ pymyq==3.0.4
 # homeassistant.components.mysensors
 pymysensors==0.21.0
 
+# homeassistant.components.nanoleaf
+pynanoleaf==0.1.0
+
 # homeassistant.components.nuki
 pynuki==1.4.1
 
