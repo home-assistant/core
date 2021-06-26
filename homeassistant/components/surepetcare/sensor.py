@@ -46,8 +46,10 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(entities)
 
 
-class SurePetcareSensor(SensorEntity):
-    """A binary sensor implementation for Sure Petcare Entities."""
+class SureBattery(SensorEntity):
+    """A sensor implementation for Sure Petcare Entities."""
+
+    _attr_should_poll = False
 
     def __init__(self, _id: int, spc: SurePetcareAPI) -> None:
         """Initialize a Sure Petcare sensor."""
@@ -57,9 +59,12 @@ class SurePetcareSensor(SensorEntity):
 
         self._surepy_entity: SurepyEntity = self._spc.states[_id]
         self._state: dict[str, Any] = {}
-        self._name = (
-            f"{self._surepy_entity.type.name.capitalize()} "
-            f"{self._surepy_entity.name.capitalize()}"
+
+        self._attr_device_class = DEVICE_CLASS_BATTERY
+        self._attr_name = f"{self._surepy_entity.type.name.capitalize()} {self._surepy_entity.name.capitalize()} Battery Level"
+        self._attr_unit_of_measurement = PERCENTAGE
+        self._attr_unique_id = (
+            f"{self._surepy_entity.household_id}-{self._surepy_entity.id}-battery"
         )
 
     @property
@@ -67,17 +72,12 @@ class SurePetcareSensor(SensorEntity):
         """Return true if entity is available."""
         return bool(self._state)
 
-    @property
-    def should_poll(self) -> bool:
-        """Return true."""
-        return False
-
     @callback
     def _async_update(self) -> None:
         """Get the latest data and update the state."""
         self._surepy_entity = self._spc.states[self._id]
         self._state = self._surepy_entity.raw_data()["status"]
-        _LOGGER.debug("%s -> self._state: %s", self._name, self._state)
+        _LOGGER.debug("%s -> self._state: %s", self.name, self._state)
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
@@ -86,37 +86,15 @@ class SurePetcareSensor(SensorEntity):
         )
         self._async_update()
 
-
-class SureBattery(SurePetcareSensor):
-    """Sure Petcare Flap."""
-
-    @property
-    def name(self) -> str:
-        """Return the name of the device if any."""
-        return f"{self._name} Battery Level"
-
     @property
     def state(self) -> int | None:
         """Return battery level in percent."""
-        battery_percent: int | None
         try:
             per_battery_voltage = self._state["battery"] / 4
             voltage_diff = per_battery_voltage - SURE_BATT_VOLTAGE_LOW
-            battery_percent = min(int(voltage_diff / SURE_BATT_VOLTAGE_DIFF * 100), 100)
+            return min(int(voltage_diff / SURE_BATT_VOLTAGE_DIFF * 100), 100)
         except (KeyError, TypeError):
-            battery_percent = None
-
-        return battery_percent
-
-    @property
-    def unique_id(self) -> str:
-        """Return an unique ID."""
-        return f"{self._surepy_entity.household_id}-{self._surepy_entity.id}-battery"
-
-    @property
-    def device_class(self) -> str:
-        """Return the device class."""
-        return DEVICE_CLASS_BATTERY
+            return None
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
@@ -130,8 +108,3 @@ class SureBattery(SurePetcareSensor):
             }
 
         return attributes
-
-    @property
-    def unit_of_measurement(self) -> str:
-        """Return the unit of measurement."""
-        return PERCENTAGE

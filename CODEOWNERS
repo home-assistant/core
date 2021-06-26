@@ -480,7 +480,7 @@ homeassistant/components/subaru/* @G-Two
 homeassistant/components/suez_water/* @ooii
 homeassistant/components/sun/* @Swamp-Ig
 homeassistant/components/supla/* @mwegrzynek
-homeassistant/components/surepetcare/* @benleb
+homeassistant/components/surepetcare/* @benleb @danielhiversen
 homeassistant/components/swiss_hydrological_data/* @fabaff
 homeassistant/components/swiss_public_transport/* @fabaff
 homeassistant/components/switchbot/* @danielhiversen
