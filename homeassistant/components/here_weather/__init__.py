@@ -63,8 +63,6 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
         )
     )
     if unload_ok:
-        for mode in CONF_MODES:
-            hass.data[DOMAIN][config_entry.entry_id][mode].unsub_handler()
         hass.data[DOMAIN].pop(config_entry.entry_id)
 
     return unload_ok

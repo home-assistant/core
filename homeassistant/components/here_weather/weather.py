@@ -181,35 +181,35 @@ def get_condition_from_here_data(here_data: list, offset: int = 0) -> str | None
 
 def get_high_or_default_temperature_from_here_data(
     here_data: list, mode: str, offset: int = 0
-) -> str | None:
+) -> float | None:
     """Return the temperature from here_data."""
     temperature = get_attribute_from_here_data(here_data, "highTemperature", offset)
     if temperature is not None:
-        return str(temperature)
+        return float(temperature)
 
     return get_temperature_from_here_data(here_data, mode, offset)
 
 
 def get_low_or_default_temperature_from_here_data(
     here_data: list, mode: str, offset: int = 0
-) -> str | None:
+) -> float | None:
     """Return the temperature from here_data."""
     temperature = get_attribute_from_here_data(here_data, "lowTemperature", offset)
     if temperature is not None:
-        return str(temperature)
+        return float(temperature)
     return get_temperature_from_here_data(here_data, mode, offset)
 
 
 def get_temperature_from_here_data(
     here_data: list, mode: str, offset: int = 0
-) -> str | None:
+) -> float | None:
     """Return the temperature from here_data."""
     if mode == MODE_DAILY_SIMPLE:
         temperature = get_attribute_from_here_data(here_data, "highTemperature", offset)
     else:
         temperature = get_attribute_from_here_data(here_data, "temperature", offset)
     if temperature is not None:
-        return str(temperature)
+        return float(temperature)
     return None
 
 
