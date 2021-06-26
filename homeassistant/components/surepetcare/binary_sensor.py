@@ -78,7 +78,7 @@ class SurePetcareBinarySensor(BinarySensorEntity):
 
         self._name = f"{self._surepy_entity.type.name.capitalize()} {name.capitalize()}"
 
-        self._attr_device_class = None if not device_class else device_class
+        self._attr_device_class = device_class
         self._attr_unique_id = f"{self._surepy_entity.household_id}-{self._id}"
 
     @property
