@@ -34,12 +34,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         damping=entry.options.get(CONF_DAMPING, 0),
     )
 
+    # Free account have a resolution of 1 hour, using that as the default
+    # update interval. Using a higher value for accounts with an API key.
+    update_interval = timedelta(hours=1)
+    if entry.options.get(CONF_API_KEY):
+        update_interval = timedelta(minutes=15)
+
     coordinator: DataUpdateCoordinator = DataUpdateCoordinator(
         hass,
         logging.getLogger(__name__),
         name=DOMAIN,
         update_method=forecast.estimate,
-        update_interval=timedelta(minutes=15),
+        update_interval=update_interval,
     )
     await coordinator.async_config_entry_first_refresh()
 
