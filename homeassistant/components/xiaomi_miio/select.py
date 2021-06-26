@@ -118,7 +118,6 @@ class XiaomiSelector(XiaomiCoordinatedMiioEntity, SelectEntity):
     def __init__(self, name, device, entry, unique_id, selector, coordinator):
         """Initialize the generic Xiaomi attribute selector."""
         super().__init__(name, device, entry, unique_id, coordinator)
-        self._state = None
         self._attr_icon = selector.icon
         self._attr_unit_of_measurement = selector.unit_of_measurement
         self._supported_features = 0
