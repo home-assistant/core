@@ -40,7 +40,7 @@ async def test_sensors(
     assert entry
     assert state
     assert entry.unique_id == f"{entry_id}_energy_production_today"
-    assert state.state == "13.455"
+    assert state.state == "100"
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME)
         == "Estimated Energy Production - Today"
@@ -55,7 +55,7 @@ async def test_sensors(
     assert entry
     assert state
     assert entry.unique_id == f"{entry_id}_energy_production_tomorrow"
-    assert state.state == "13.505"
+    assert state.state == "200"
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME)
         == "Estimated Energy Production - Tomorrow"
@@ -70,7 +70,7 @@ async def test_sensors(
     assert entry
     assert state
     assert entry.unique_id == f"{entry_id}_power_highest_peak_time_today"
-    assert state.state == "2021-06-26 13:00:00+00:00"
+    assert state.state == "2021-06-27 13:00:00+00:00"
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Highest Power Peak Time - Today"
     assert state.attributes.get(ATTR_STATE_CLASS) is None
     assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_TIMESTAMP
@@ -82,7 +82,7 @@ async def test_sensors(
     assert entry
     assert state
     assert entry.unique_id == f"{entry_id}_power_highest_peak_time_tomorrow"
-    assert state.state == "2021-06-27 11:00:00+00:00"
+    assert state.state == "2021-06-27 14:00:00+00:00"
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME) == "Highest Power Peak Time - Tomorrow"
     )
@@ -96,7 +96,7 @@ async def test_sensors(
     assert entry
     assert state
     assert entry.unique_id == f"{entry_id}_power_production_now"
-    assert state.state == "1405"
+    assert state.state == "300"
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME) == "Estimated Power Production - Now"
     )
@@ -110,7 +110,7 @@ async def test_sensors(
     assert entry
     assert state
     assert entry.unique_id == f"{entry_id}_energy_current_hour"
-    assert state.state == "1.415"
+    assert state.state == "800"
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME)
         == "Estimated Energy Production - This Hour"
@@ -125,7 +125,7 @@ async def test_sensors(
     assert entry
     assert state
     assert entry.unique_id == f"{entry_id}_energy_next_hour"
-    assert state.state == "1.39"
+    assert state.state == "900"
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME)
         == "Estimated Energy Production - Next Hour"
@@ -175,17 +175,17 @@ async def test_disabled_by_default(
         (
             "power_production_next_12hours",
             "Estimated Power Production - Next 12 Hours",
-            "0",
+            "600",
         ),
         (
             "power_production_next_24hours",
             "Estimated Power Production - Next 24 Hours",
-            "1420",
+            "700",
         ),
         (
             "power_production_next_hour",
             "Estimated Power Production - Next Hour",
-            "1415",
+            "400",
         ),
     ],
 )

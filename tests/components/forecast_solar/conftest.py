@@ -1,11 +1,9 @@
 """Fixtures for Forecast.Solar integration tests."""
 
 import datetime
-import json
 from typing import Generator
 from unittest.mock import MagicMock, patch
 
-from forecast_solar import Estimate
 import pytest
 
 from homeassistant.components.forecast_solar.const import (
@@ -19,7 +17,7 @@ from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)
@@ -49,31 +47,31 @@ def mock_config_entry() -> MockConfigEntry:
     )
 
 
-class MockDateTime(datetime.datetime):
-    """Patch time to a specific point."""
-
-    @classmethod
-    def now(cls, *args, **kwargs):
-        """Overload datetime.datetime.now."""
-        return cls(2021, 6, 26, 12, 39, 8, 337970, tzinfo=datetime.timezone.utc)
-
-    @classmethod
-    def replace(cls, *args, **kwargs):
-        """Overload datetime.datetime.replace."""
-        return cls(2021, 6, 26, 12, 39, 59, 337970, tzinfo=datetime.timezone.utc)
-
-
 @pytest.fixture
 def mock_forecast_solar() -> Generator[None, MagicMock, None]:
     """Return a mocked Forecast.Solar client."""
-    with patch("forecast_solar.models.datetime", MockDateTime,), patch(
+    with patch(
         "homeassistant.components.forecast_solar.ForecastSolar", autospec=True
     ) as forecast_solar_mock:
         forecast_solar = forecast_solar_mock.return_value
 
-        estimate = Estimate.from_dict(
-            json.loads(load_fixture("forecast_solar/estimate.json"))
+        estimate = MagicMock()
+        estimate.timezone = "Europe/Amsterdam"
+        estimate.energy_production_today = 100
+        estimate.energy_production_tomorrow = 200
+        estimate.power_production_now = 300
+        estimate.power_highest_peak_time_today = datetime.datetime(
+            2021, 6, 27, 13, 0, tzinfo=datetime.timezone.utc
         )
+        estimate.power_highest_peak_time_tomorrow = datetime.datetime(
+            2021, 6, 27, 14, 0, tzinfo=datetime.timezone.utc
+        )
+        estimate.power_production_next_hour = 400
+        estimate.power_production_next_6hours = 500
+        estimate.power_production_next_12hours = 600
+        estimate.power_production_next_24hours = 700
+        estimate.energy_current_hour = 800
+        estimate.energy_next_hour = 900
 
         forecast_solar.estimate.return_value = estimate
         yield forecast_solar
