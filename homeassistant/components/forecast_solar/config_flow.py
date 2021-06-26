@@ -115,7 +115,7 @@ class ForecastSolarOptionFlowHandler(OptionsFlow):
                 {
                     vol.Optional(
                         CONF_API_KEY,
-                        default=self.config_entry.options.get(CONF_API_KEY),
+                        default=self.config_entry.options.get(CONF_API_KEY, ""),
                     ): str,
                     vol.Required(
                         CONF_DECLINATION,

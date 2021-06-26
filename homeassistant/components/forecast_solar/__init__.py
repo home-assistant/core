@@ -24,8 +24,12 @@ PLATFORMS = ["sensor"]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Forecast.Solar from a config entry."""
+    api_key = entry.options.get(CONF_API_KEY)
+    if not api_key:
+        api_key = None
+
     forecast = ForecastSolar(
-        api_key=entry.options.get(CONF_API_KEY),
+        api_key=api_key,
         latitude=entry.data[CONF_LATITUDE],
         longitude=entry.data[CONF_LONGITUDE],
         declination=entry.options[CONF_DECLINATION],
@@ -37,7 +41,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Free account have a resolution of 1 hour, using that as the default
     # update interval. Using a higher value for accounts with an API key.
     update_interval = timedelta(hours=1)
-    if entry.options.get(CONF_API_KEY):
+    if api_key is not None:
         update_interval = timedelta(minutes=15)
 
     coordinator: DataUpdateCoordinator = DataUpdateCoordinator(
