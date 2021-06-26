@@ -13,7 +13,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import ACCOUNT_HASH, COORDINATORS, DEVICES, DOMAIN, HUBLOT
 
-PLATFORMS = ["binary_sensor", "sensor", "switch"]
+PLATFORMS = ["binary_sensor", "number", "sensor", "switch"]
 
 EMPTY_CREDENTIALS = ""
 

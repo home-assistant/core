@@ -29,6 +29,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import DOMAIN, SWITCH_DOMAIN
+from .entity import BroadlinkEntity
 from .helpers import data_packet, import_device, mac_address
 
 _LOGGER = logging.getLogger(__name__)
@@ -131,57 +132,26 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(switches)
 
 
-class BroadlinkSwitch(SwitchEntity, RestoreEntity, ABC):
+class BroadlinkSwitch(BroadlinkEntity, SwitchEntity, RestoreEntity, ABC):
     """Representation of a Broadlink switch."""
 
     def __init__(self, device, command_on, command_off):
         """Initialize the switch."""
-        self._device = device
+        super().__init__(device)
         self._command_on = command_on
         self._command_off = command_off
         self._coordinator = device.update_manager.coordinator
         self._state = None
 
-    @property
-    def name(self):
-        """Return the name of the switch."""
-        return f"{self._device.name} Switch"
-
-    @property
-    def assumed_state(self):
-        """Return True if unable to access real state of the switch."""
-        return True
-
-    @property
-    def available(self):
-        """Return True if the switch is available."""
-        return self._device.update_manager.available
+        self._attr_assumed_state = True
+        self._attr_device_class = DEVICE_CLASS_SWITCH
+        self._attr_name = f"{self._device.name} Switch"
+        self._attr_unique_id = self._device.unique_id
 
     @property
     def is_on(self):
         """Return True if the switch is on."""
         return self._state
-
-    @property
-    def should_poll(self):
-        """Return True if the switch has to be polled for state."""
-        return False
-
-    @property
-    def device_class(self):
-        """Return device class."""
-        return DEVICE_CLASS_SWITCH
-
-    @property
-    def device_info(self):
-        """Return device info."""
-        return {
-            "identifiers": {(DOMAIN, self._device.unique_id)},
-            "manufacturer": self._device.api.manufacturer,
-            "model": self._device.api.model,
-            "name": self._device.name,
-            "sw_version": self._device.fw_version,
-        }
 
     @callback
     def update_data(self):
@@ -224,12 +194,7 @@ class BroadlinkRMSwitch(BroadlinkSwitch):
         super().__init__(
             device, config.get(CONF_COMMAND_ON), config.get(CONF_COMMAND_OFF)
         )
-        self._name = config[CONF_NAME]
-
-    @property
-    def name(self):
-        """Return the name of the switch."""
-        return self._name
+        self._attr_name = config[CONF_NAME]
 
     async def _async_send_packet(self, packet):
         """Send a packet to the device."""
@@ -251,11 +216,6 @@ class BroadlinkSP1Switch(BroadlinkSwitch):
         """Initialize the switch."""
         super().__init__(device, 1, 0)
 
-    @property
-    def unique_id(self):
-        """Return the unique id of the switch."""
-        return self._device.unique_id
-
     async def _async_send_packet(self, packet):
         """Send a packet to the device."""
         try:
@@ -275,10 +235,7 @@ class BroadlinkSP2Switch(BroadlinkSP1Switch):
         self._state = self._coordinator.data["pwr"]
         self._load_power = self._coordinator.data.get("power")
 
-    @property
-    def assumed_state(self):
-        """Return True if unable to access real state of the switch."""
-        return False
+        self._attr_assumed_state = False
 
     @property
     def current_power_w(self):
@@ -303,20 +260,9 @@ class BroadlinkMP1Slot(BroadlinkSwitch):
         self._slot = slot
         self._state = self._coordinator.data[f"s{slot}"]
 
-    @property
-    def unique_id(self):
-        """Return the unique id of the slot."""
-        return f"{self._device.unique_id}-s{self._slot}"
-
-    @property
-    def name(self):
-        """Return the name of the switch."""
-        return f"{self._device.name} S{self._slot}"
-
-    @property
-    def assumed_state(self):
-        """Return True if unable to access real state of the switch."""
-        return False
+        self._attr_name = f"{self._device.name} S{self._slot}"
+        self._attr_unique_id = f"{self._device.unique_id}-s{self._slot}"
+        self._attr_assumed_state = False
 
     @callback
     def update_data(self):
@@ -346,25 +292,10 @@ class BroadlinkBG1Slot(BroadlinkSwitch):
         self._slot = slot
         self._state = self._coordinator.data[f"pwr{slot}"]
 
-    @property
-    def unique_id(self):
-        """Return the unique id of the slot."""
-        return f"{self._device.unique_id}-s{self._slot}"
-
-    @property
-    def name(self):
-        """Return the name of the switch."""
-        return f"{self._device.name} S{self._slot}"
-
-    @property
-    def assumed_state(self):
-        """Return True if unable to access real state of the switch."""
-        return False
-
-    @property
-    def device_class(self):
-        """Return device class."""
-        return DEVICE_CLASS_OUTLET
+        self._attr_name = f"{self._device.name} S{self._slot}"
+        self._attr_device_class = DEVICE_CLASS_OUTLET
+        self._attr_unique_id = f"{self._device.unique_id}-s{self._slot}"
+        self._attr_assumed_state = False
 
     @callback
     def update_data(self):

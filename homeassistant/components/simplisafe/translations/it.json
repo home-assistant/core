@@ -19,7 +19,7 @@
                 "data": {
                     "password": "Password"
                 },
-                "description": "Il token di accesso \u00e8 scaduto o \u00e8 stato revocato. Inserisci la tua password per ricollegare il tuo account.",
+                "description": "L'accesso \u00e8 scaduto o revocato. Inserisci la password per ri-collegare il tuo account.",
                 "title": "Autenticare nuovamente l'integrazione"
             },
             "user": {

@@ -9,7 +9,7 @@
             "cannot_connect": "Sikertelen csatlakoz\u00e1s",
             "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s"
         },
-        "flow_title": "Sonarr: {name}",
+        "flow_title": "{name}",
         "step": {
             "reauth_confirm": {
                 "title": "Integr\u00e1ci\u00f3 \u00fajrahiteles\u00edt\u00e9se"

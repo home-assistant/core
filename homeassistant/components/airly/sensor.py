@@ -1,7 +1,7 @@
 """Support for the Airly sensor service."""
 from __future__ import annotations
 
-from typing import Any, cast
+from typing import cast
 
 from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorEntity
 from homeassistant.config_entries import ConfigEntry
@@ -60,18 +60,18 @@ class AirlySensor(CoordinatorEntity, SensorEntity):
     ) -> None:
         """Initialize."""
         super().__init__(coordinator)
-        self._name = name
-        self._description = SENSOR_TYPES[kind]
+        description = SENSOR_TYPES[kind]
+        self._attr_device_class = description[ATTR_DEVICE_CLASS]
+        self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
+        self._attr_icon = description[ATTR_ICON]
+        self._attr_name = f"{name} {description[ATTR_LABEL]}"
+        self._attr_state_class = description[ATTR_STATE_CLASS]
+        self._attr_unique_id = (
+            f"{coordinator.latitude}-{coordinator.longitude}-{kind.lower()}"
+        )
+        self._attr_unit_of_measurement = description[ATTR_UNIT]
         self.kind = kind
         self._state = None
-        self._unit_of_measurement = None
-        self._attrs = {ATTR_ATTRIBUTION: ATTRIBUTION}
-        self._attr_state_class = self._description[ATTR_STATE_CLASS]
-
-    @property
-    def name(self) -> str:
-        """Return the name."""
-        return f"{self._name} {self._description[ATTR_LABEL]}"
 
     @property
     def state(self) -> StateType:
@@ -80,26 +80,6 @@ class AirlySensor(CoordinatorEntity, SensorEntity):
         if self.kind in [ATTR_API_PM1, ATTR_API_PRESSURE]:
             return round(cast(float, self._state))
         return round(cast(float, self._state), 1)
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return the state attributes."""
-        return self._attrs
-
-    @property
-    def icon(self) -> str | None:
-        """Return the icon."""
-        return self._description[ATTR_ICON]
-
-    @property
-    def device_class(self) -> str | None:
-        """Return the device_class."""
-        return self._description[ATTR_DEVICE_CLASS]
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique_id for this entity."""
-        return f"{self.coordinator.latitude}-{self.coordinator.longitude}-{self.kind.lower()}"
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -115,8 +95,3 @@ class AirlySensor(CoordinatorEntity, SensorEntity):
             "manufacturer": MANUFACTURER,
             "entry_type": "service",
         }
-
-    @property
-    def unit_of_measurement(self) -> str | None:
-        """Return the unit the value is expressed in."""
-        return self._description[ATTR_UNIT]

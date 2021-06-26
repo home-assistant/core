@@ -2,8 +2,13 @@
 
 from unittest.mock import patch
 
-from pyezviz.client import HTTPError, InvalidURL, PyEzvizError
-from pyezviz.test_cam_rtsp import AuthTestResultFailed, InvalidHost
+from pyezviz.exceptions import (
+    AuthTestResultFailed,
+    HTTPError,
+    InvalidHost,
+    InvalidURL,
+    PyEzvizError,
+)
 
 from homeassistant.components.ezviz.const import (
     ATTR_SERIAL,
@@ -233,29 +238,28 @@ async def test_async_step_discovery(
 
 async def test_options_flow(hass):
     """Test updating options."""
-    with patch("homeassistant.components.ezviz.PLATFORMS", []):
+    with _patch_async_setup_entry() as mock_setup_entry:
         entry = await init_integration(hass)
 
-    assert entry.options[CONF_FFMPEG_ARGUMENTS] == DEFAULT_FFMPEG_ARGUMENTS
-    assert entry.options[CONF_TIMEOUT] == DEFAULT_TIMEOUT
+        assert entry.options[CONF_FFMPEG_ARGUMENTS] == DEFAULT_FFMPEG_ARGUMENTS
+        assert entry.options[CONF_TIMEOUT] == DEFAULT_TIMEOUT
 
-    result = await hass.config_entries.options.async_init(entry.entry_id)
-    assert result["type"] == RESULT_TYPE_FORM
-    assert result["step_id"] == "init"
-    assert result["errors"] is None
+        result = await hass.config_entries.options.async_init(entry.entry_id)
+        assert result["type"] == RESULT_TYPE_FORM
+        assert result["step_id"] == "init"
+        assert result["errors"] is None
 
-    with _patch_async_setup_entry() as mock_setup_entry:
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
             user_input={CONF_FFMPEG_ARGUMENTS: "/H.264", CONF_TIMEOUT: 25},
         )
-    await hass.async_block_till_done()
+        await hass.async_block_till_done()
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["data"][CONF_FFMPEG_ARGUMENTS] == "/H.264"
     assert result["data"][CONF_TIMEOUT] == 25
 
-    assert len(mock_setup_entry.mock_calls) == 0
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_user_form_exception(hass, ezviz_config_flow):

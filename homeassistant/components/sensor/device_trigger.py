@@ -1,7 +1,7 @@
 """Provides device triggers for sensors."""
 import voluptuous as vol
 
-from homeassistant.components.device_automation import TRIGGER_BASE_SCHEMA
+from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
 )
@@ -9,8 +9,6 @@ from homeassistant.components.homeassistant.triggers import (
     numeric_state as numeric_state_trigger,
 )
 from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
-    ATTR_UNIT_OF_MEASUREMENT,
     CONF_ABOVE,
     CONF_BELOW,
     CONF_ENTITY_ID,
@@ -30,7 +28,9 @@ from homeassistant.const import (
     DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_VOLTAGE,
 )
+from homeassistant.core import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity import get_device_class, get_unit_of_measurement
 from homeassistant.helpers.entity_registry import async_entries_for_device
 
 from . import DOMAIN
@@ -73,7 +73,7 @@ ENTITY_TRIGGERS = {
 
 
 TRIGGER_SCHEMA = vol.All(
-    TRIGGER_BASE_SCHEMA.extend(
+    DEVICE_TRIGGER_BASE_SCHEMA.extend(
         {
             vol.Required(CONF_ENTITY_ID): cv.entity_id,
             vol.Required(CONF_TYPE): vol.In(
@@ -134,17 +134,11 @@ async def async_get_triggers(hass, device_id):
     ]
 
     for entry in entries:
-        device_class = DEVICE_CLASS_NONE
-        state = hass.states.get(entry.entity_id)
-        unit_of_measurement = (
-            state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) if state else None
-        )
+        device_class = get_device_class(hass, entry.entity_id) or DEVICE_CLASS_NONE
+        unit_of_measurement = get_unit_of_measurement(hass, entry.entity_id)
 
-        if not state or not unit_of_measurement:
+        if not unit_of_measurement:
             continue
-
-        if ATTR_DEVICE_CLASS in state.attributes:
-            device_class = state.attributes[ATTR_DEVICE_CLASS]
 
         templates = ENTITY_TRIGGERS.get(
             device_class, ENTITY_TRIGGERS[DEVICE_CLASS_NONE]
@@ -166,15 +160,14 @@ async def async_get_triggers(hass, device_id):
 
 async def async_get_trigger_capabilities(hass, config):
     """List trigger capabilities."""
-    state = hass.states.get(config[CONF_ENTITY_ID])
-    unit_of_measurement = (
-        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) if state else None
-    )
+    try:
+        unit_of_measurement = get_unit_of_measurement(hass, config[CONF_ENTITY_ID])
+    except HomeAssistantError:
+        unit_of_measurement = None
 
-    if not state or not unit_of_measurement:
+    if not unit_of_measurement:
         raise InvalidDeviceAutomationConfig(
-            "No state or unit of measurement found for "
-            f"trigger entity {config[CONF_ENTITY_ID]}"
+            f"No unit of measurement found for trigger entity {config[CONF_ENTITY_ID]}"
         )
 
     return {

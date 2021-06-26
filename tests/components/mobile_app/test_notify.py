@@ -136,6 +136,18 @@ async def test_notify_ws_works(
     sub_result = await client.receive_json()
     assert sub_result["success"]
 
+    # Subscribe twice, it should forward all messages to 2nd subscription
+    await client.send_json(
+        {
+            "id": 6,
+            "type": "mobile_app/push_notification_channel",
+            "webhook_id": "mock-webhook_id",
+        }
+    )
+
+    sub_result = await client.receive_json()
+    assert sub_result["success"]
+
     assert await hass.services.async_call(
         "notify", "mobile_app_test", {"message": "Hello world"}, blocking=True
     )
@@ -144,13 +156,14 @@ async def test_notify_ws_works(
 
     msg_result = await client.receive_json()
     assert msg_result["event"] == {"message": "Hello world"}
+    assert msg_result["id"] == 6  # This is the new subscription
 
     # Unsubscribe, now it should go over http
     await client.send_json(
         {
-            "id": 6,
+            "id": 7,
             "type": "unsubscribe_events",
-            "subscription": 5,
+            "subscription": 6,
         }
     )
     sub_result = await client.receive_json()
@@ -165,7 +178,7 @@ async def test_notify_ws_works(
     # Test non-existing webhook ID
     await client.send_json(
         {
-            "id": 7,
+            "id": 8,
             "type": "mobile_app/push_notification_channel",
             "webhook_id": "non-existing",
         }
@@ -180,7 +193,7 @@ async def test_notify_ws_works(
     # Test webhook ID linked to other user
     await client.send_json(
         {
-            "id": 8,
+            "id": 9,
             "type": "mobile_app/push_notification_channel",
             "webhook_id": "webhook_id_2",
         }

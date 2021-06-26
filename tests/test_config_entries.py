@@ -1971,7 +1971,7 @@ async def test__async_current_entries_does_not_skip_ignore_non_user(hass, manage
     assert len(mock_setup_entry.mock_calls) == 0
 
 
-async def test__async_current_entries_explict_skip_ignore(hass, manager):
+async def test__async_current_entries_explicit_skip_ignore(hass, manager):
     """Test that _async_current_entries can explicitly include ignore."""
     hass.config.components.add("comp")
     entry = MockConfigEntry(
@@ -2010,7 +2010,7 @@ async def test__async_current_entries_explict_skip_ignore(hass, manager):
     assert p_entry.data == {"token": "supersecret"}
 
 
-async def test__async_current_entries_explict_include_ignore(hass, manager):
+async def test__async_current_entries_explicit_include_ignore(hass, manager):
     """Test that _async_current_entries can explicitly include ignore."""
     hass.config.components.add("comp")
     entry = MockConfigEntry(

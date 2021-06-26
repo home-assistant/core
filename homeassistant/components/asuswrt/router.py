@@ -228,10 +228,10 @@ class AsusWrtRouter:
 
         # System
         model = await _get_nvram_info(self._api, "MODEL")
-        if model:
+        if model and "model" in model:
             self._model = model["model"]
         firmware = await _get_nvram_info(self._api, "FIRMWARE")
-        if firmware:
+        if firmware and "firmver" in firmware and "buildno" in firmware:
             self._sw_v = f"{firmware['firmver']} (build {firmware['buildno']})"
 
         # Load tracked entities from registry
@@ -424,7 +424,7 @@ async def _get_nvram_info(api: AsusWrt, info_type: str) -> dict[str, Any]:
     info = {}
     try:
         info = await api.async_get_nvram(info_type)
-    except OSError as exc:
+    except (OSError, UnicodeDecodeError) as exc:
         _LOGGER.warning("Error calling method async_get_nvram(%s): %s", info_type, exc)
 
     return info

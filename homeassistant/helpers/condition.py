@@ -16,7 +16,9 @@ from homeassistant.components import zone as zone_cmp
 from homeassistant.components.device_automation import (
     async_get_device_automation_platform,
 )
+from homeassistant.components.sensor import DEVICE_CLASS_TIMESTAMP
 from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
     ATTR_GPS_ACCURACY,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
@@ -29,6 +31,7 @@ from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_DOMAIN,
     CONF_ENTITY_ID,
+    CONF_ID,
     CONF_STATE,
     CONF_VALUE_TEMPLATE,
     CONF_WEEKDAY,
@@ -736,11 +739,24 @@ def time(
         after_entity = hass.states.get(after)
         if not after_entity:
             raise ConditionErrorMessage("time", f"unknown 'after' entity {after}")
-        after = dt_util.dt.time(
-            after_entity.attributes.get("hour", 23),
-            after_entity.attributes.get("minute", 59),
-            after_entity.attributes.get("second", 59),
-        )
+        if after_entity.domain == "input_datetime":
+            after = dt_util.dt.time(
+                after_entity.attributes.get("hour", 23),
+                after_entity.attributes.get("minute", 59),
+                after_entity.attributes.get("second", 59),
+            )
+        elif after_entity.attributes.get(
+            ATTR_DEVICE_CLASS
+        ) == DEVICE_CLASS_TIMESTAMP and after_entity.state not in (
+            STATE_UNAVAILABLE,
+            STATE_UNKNOWN,
+        ):
+            after_datetime = dt_util.parse_datetime(after_entity.state)
+            if after_datetime is None:
+                return False
+            after = dt_util.as_local(after_datetime).time()
+        else:
+            return False
 
     if before is None:
         before = dt_util.dt.time(23, 59, 59, 999999)
@@ -748,11 +764,24 @@ def time(
         before_entity = hass.states.get(before)
         if not before_entity:
             raise ConditionErrorMessage("time", f"unknown 'before' entity {before}")
-        before = dt_util.dt.time(
-            before_entity.attributes.get("hour", 23),
-            before_entity.attributes.get("minute", 59),
-            before_entity.attributes.get("second", 59),
-        )
+        if before_entity.domain == "input_datetime":
+            before = dt_util.dt.time(
+                before_entity.attributes.get("hour", 23),
+                before_entity.attributes.get("minute", 59),
+                before_entity.attributes.get("second", 59),
+            )
+        elif before_entity.attributes.get(
+            ATTR_DEVICE_CLASS
+        ) == DEVICE_CLASS_TIMESTAMP and before_entity.state not in (
+            STATE_UNAVAILABLE,
+            STATE_UNKNOWN,
+        ):
+            before_timedatime = dt_util.parse_datetime(before_entity.state)
+            if before_timedatime is None:
+                return False
+            before = dt_util.as_local(before_timedatime).time()
+        else:
+            return False
 
     if after < before:
         condition_trace_update_result(after=after, now_time=now_time, before=before)
@@ -900,6 +929,26 @@ async def async_device_from_config(
             platform.async_condition_from_config(config, config_validation),  # type: ignore
         )
     )
+
+
+async def async_trigger_from_config(
+    hass: HomeAssistant, config: ConfigType, config_validation: bool = True
+) -> ConditionCheckerType:
+    """Test a trigger condition."""
+    if config_validation:
+        config = cv.TRIGGER_CONDITION_SCHEMA(config)
+    trigger_id = config[CONF_ID]
+
+    @trace_condition_function
+    def trigger_if(hass: HomeAssistant, variables: TemplateVarsType = None) -> bool:
+        """Validate trigger based if-condition."""
+        return (
+            variables is not None
+            and "trigger" in variables
+            and variables["trigger"].get("id") in trigger_id
+        )
+
+    return trigger_if
 
 
 async def async_validate_condition_config(

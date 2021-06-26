@@ -169,7 +169,9 @@ class ONVIFDevice:
                 cdate = device_time.UTCDateTime
             else:
                 tzone = (
-                    dt_util.get_time_zone(device_time.TimeZone)
+                    dt_util.get_time_zone(
+                        device_time.TimeZone or str(dt_util.DEFAULT_TIME_ZONE)
+                    )
                     or dt_util.DEFAULT_TIME_ZONE
                 )
                 cdate = device_time.LocalDateTime

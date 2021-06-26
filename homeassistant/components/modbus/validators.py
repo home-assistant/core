@@ -17,16 +17,13 @@ from homeassistant.const import (
 
 from .const import (
     CONF_DATA_TYPE,
-    CONF_REVERSE_ORDER,
     CONF_SWAP,
     CONF_SWAP_BYTE,
     CONF_SWAP_NONE,
-    CONF_SWAP_WORD,
     DATA_TYPE_CUSTOM,
     DATA_TYPE_STRING,
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_STRUCT_FORMAT,
-    MINIMUM_SCAN_INTERVAL,
     PLATFORMS,
 )
 
@@ -71,13 +68,6 @@ def sensor_schema_validator(config):
         )
 
     swap_type = config.get(CONF_SWAP)
-
-    if CONF_REVERSE_ORDER in config:
-        if config[CONF_REVERSE_ORDER]:
-            swap_type = CONF_SWAP_WORD
-        else:
-            swap_type = CONF_SWAP_NONE
-        del config[CONF_REVERSE_ORDER]
 
     if config.get(CONF_SWAP) != CONF_SWAP_NONE:
         if swap_type == CONF_SWAP_BYTE:
@@ -127,25 +117,28 @@ def scan_interval_validator(config: dict) -> dict:
 
             for entry in hub[conf_key]:
                 scan_interval = entry.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
-                if scan_interval < MINIMUM_SCAN_INTERVAL:
-                    if scan_interval == 0:
-                        continue
+                if scan_interval == 0:
+                    continue
+                if scan_interval < 5:
                     _LOGGER.warning(
-                        "%s %s scan_interval(%d) is adjusted to minimum(%d)",
+                        "%s %s scan_interval(%d) is lower than 5 seconds, "
+                        "which may cause Home Assistant stability issues",
                         component,
                         entry.get(CONF_NAME),
                         scan_interval,
-                        MINIMUM_SCAN_INTERVAL,
                     )
-                    scan_interval = MINIMUM_SCAN_INTERVAL
                 entry[CONF_SCAN_INTERVAL] = scan_interval
                 minimum_scan_interval = min(scan_interval, minimum_scan_interval)
-        if CONF_TIMEOUT in hub and hub[CONF_TIMEOUT] > minimum_scan_interval - 1:
+        if (
+            CONF_TIMEOUT in hub
+            and hub[CONF_TIMEOUT] > minimum_scan_interval - 1
+            and minimum_scan_interval > 1
+        ):
             _LOGGER.warning(
                 "Modbus %s timeout(%d) is adjusted(%d) due to scan_interval",
                 hub.get(CONF_NAME, ""),
                 hub[CONF_TIMEOUT],
                 minimum_scan_interval - 1,
             )
-        hub[CONF_TIMEOUT] = minimum_scan_interval - 1
+            hub[CONF_TIMEOUT] = minimum_scan_interval - 1
     return config

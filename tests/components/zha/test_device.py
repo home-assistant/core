@@ -192,7 +192,7 @@ async def test_check_available_unsuccessful(
     assert basic_ch.read_attributes.await_args[0][0] == ["manufacturer"]
     assert zha_device.available is True
 
-    # not even trying to update, device is unavailble
+    # not even trying to update, device is unavailable
     _send_time_changed(hass, 91)
     await hass.async_block_till_done()
     assert basic_ch.read_attributes.await_count == 2

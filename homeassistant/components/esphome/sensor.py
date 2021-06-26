@@ -25,7 +25,7 @@ from homeassistant.util import dt
 
 from . import (
     EsphomeEntity,
-    esphome_map_enum,
+    EsphomeEnumMapper,
     esphome_state_property,
     platform_async_setup_entry,
 )
@@ -61,12 +61,12 @@ async def async_setup_entry(
 # pylint: disable=invalid-overridden-method
 
 
-@esphome_map_enum
-def _state_classes():
-    return {
+_STATE_CLASSES: EsphomeEnumMapper[SensorStateClass] = EsphomeEnumMapper(
+    {
         SensorStateClass.NONE: None,
         SensorStateClass.MEASUREMENT: STATE_CLASS_MEASUREMENT,
     }
+)
 
 
 class EsphomeSensor(EsphomeEntity, SensorEntity):
@@ -122,7 +122,7 @@ class EsphomeSensor(EsphomeEntity, SensorEntity):
         """Return the state class of this entity."""
         if not self._static_info.state_class:
             return None
-        return _state_classes.from_esphome(self._static_info.state_class)
+        return _STATE_CLASSES.from_esphome(self._static_info.state_class)
 
 
 class EsphomeTextSensor(EsphomeEntity, SensorEntity):

@@ -32,33 +32,33 @@ async def async_setup_platform(
 ):
     """Set up MQTT camera through configuration.yaml."""
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
-    await _async_setup_entity(async_add_entities, config)
+    await _async_setup_entity(hass, async_add_entities, config)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up MQTT camera dynamically through MQTT discovery."""
     setup = functools.partial(
-        _async_setup_entity, async_add_entities, config_entry=config_entry
+        _async_setup_entity, hass, async_add_entities, config_entry=config_entry
     )
     await async_setup_entry_helper(hass, camera.DOMAIN, setup, PLATFORM_SCHEMA)
 
 
 async def _async_setup_entity(
-    async_add_entities, config, config_entry=None, discovery_data=None
+    hass, async_add_entities, config, config_entry=None, discovery_data=None
 ):
     """Set up the MQTT Camera."""
-    async_add_entities([MqttCamera(config, config_entry, discovery_data)])
+    async_add_entities([MqttCamera(hass, config, config_entry, discovery_data)])
 
 
 class MqttCamera(MqttEntity, Camera):
     """representation of a MQTT camera."""
 
-    def __init__(self, config, config_entry, discovery_data):
+    def __init__(self, hass, config, config_entry, discovery_data):
         """Initialize the MQTT Camera."""
         self._last_image = None
 
         Camera.__init__(self)
-        MqttEntity.__init__(self, None, config, config_entry, discovery_data)
+        MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
     @staticmethod
     def config_schema():
