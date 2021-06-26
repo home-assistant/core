@@ -6,7 +6,13 @@ from functools import partial
 import logging
 from typing import Any, Callable
 
-from fritzconnection.core.exceptions import FritzConnectionException, FritzSecurityError
+from fritzconnection.core.exceptions import (
+    FritzActionError,
+    FritzActionFailedError,
+    FritzConnectionException,
+    FritzSecurityError,
+    FritzServiceError,
+)
 import xmltodict
 
 from homeassistant.components.network.util import async_get_source_ip
@@ -55,16 +61,16 @@ async def async_service_call_action(
             exc_info=True,
         )
         return None
-    except FritzConnectionException:
-        _LOGGER.error(
-            "Connection Error: Please check the device is properly configured for remote login",
-            exc_info=True,
-        )
-        return None
-    except Exception:  # pylint: disable=broad-except
+    except (FritzActionError, FritzActionFailedError, FritzServiceError):
         _LOGGER.error(
             "Service/Action Error: cannot execute service %s",
             service_name,
+            exc_info=True,
+        )
+        return None
+    except FritzConnectionException:
+        _LOGGER.error(
+            "Connection Error: Please check the device is properly configured for remote login",
             exc_info=True,
         )
         return None
