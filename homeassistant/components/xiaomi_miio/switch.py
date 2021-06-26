@@ -168,10 +168,9 @@ class SwitchType:
 
     name: str = None
     short_name: str = None
-    unit_of_measurement: str = None
     icon: str = None
-    device_class: str = None
     service: str = None
+    available_with_device_off: bool = True
 
 
 SWITCH_TYPES = {
@@ -198,6 +197,7 @@ SWITCH_TYPES = {
         icon="mdi:sparkles",
         short_name=ATTR_CLEAN,
         service=SERVICE_SET_CLEAN,
+        available_with_device_off=False,
     ),
 }
 
@@ -373,7 +373,6 @@ class XiaomiGenericCoordinatedSwitch(XiaomiCoordinatedMiioEntity, SwitchEntity):
         super().__init__(name, device, entry, unique_id, coordinator)
 
         self._attr_icon = switch.icon
-        self._available = False
         self._state = None
         self._state_attrs = {ATTR_MODEL: self._model}
         self._controller = switch
@@ -383,37 +382,34 @@ class XiaomiGenericCoordinatedSwitch(XiaomiCoordinatedMiioEntity, SwitchEntity):
             self._device_features = FEATURE_FLAGS_AIRHUMIDIFIER_CA4
         else:
             self._device_features = FEATURE_FLAGS_AIRHUMIDIFIER
+        self._state = self._extract_value_from_attribute(
+            self.coordinator.data, self._controller.short_name
+        )
 
     @callback
     def _handle_coordinator_update(self):
         """Fetch state from the device."""
         # On state change the device doesn't provide the new state immediately.
-        state = self.coordinator.data
-        if not state:
-            return
-        _LOGGER.debug("Got new state: %s", state)
-        self._available = True
         self._state = self._extract_value_from_attribute(
-            state, self._controller.short_name
+            self.coordinator.data, self._controller.short_name
         )
         self.async_write_ha_state()
 
     @property
     def available(self):
         """Return true when state is known."""
-        return super().available and self._available
+        if (
+            super().available
+            and not self.coordinator.data.is_on
+            and not self._controller.available_with_device_off
+        ):
+            return False
+        return super().available
 
     @property
     def is_on(self):
-        """Return the current option."""
-        if not self._available and self.coordinator.data:
-            self._state = self._extract_value_from_attribute(
-                self.coordinator.data, self._controller.short_name
-            )
-            self._available = True
-        if self._state:
-            return True
-        return None
+        """Return the current switch state."""
+        return self._state
 
     @staticmethod
     def _extract_value_from_attribute(state, attribute):
