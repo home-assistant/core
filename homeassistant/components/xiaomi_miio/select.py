@@ -183,14 +183,9 @@ class XiaomiAirHumidifierSelector(XiaomiSelector):
     @callback
     def _handle_coordinator_update(self):
         """Fetch state from the device."""
-        # On state change the device doesn't provide the new state immediately.
-        state = self.coordinator.data
-        if not state:
-            return
-        _LOGGER.debug("Got new state: %s", state)
         self._available = True
         self._current_option = self._extract_value_from_attribute(
-            state, self._controller.short_name
+            self.coordinator.data, self._controller.short_name
         )
         self.async_write_ha_state()
 
