@@ -579,40 +579,29 @@ class FritzBoxWifiSwitch(FritzBoxBaseSwitch, SwitchEntity):
     async def _async_fetch_update(self) -> None:
         """Fetch updates."""
 
-        try:
-            wifi_info = await async_service_call_action(
-                self._fritzbox_tools,
-                "WLANConfiguration",
-                str(self._network_num),
-                "GetInfo",
-            )
-            _LOGGER.debug(
-                "Specific %s response: GetInfo=%s", SWITCH_TYPE_WIFINETWORK, wifi_info
-            )
+        wifi_info = await async_service_call_action(
+            self._fritzbox_tools,
+            "WLANConfiguration",
+            str(self._network_num),
+            "GetInfo",
+        )
+        _LOGGER.debug(
+            "Specific %s response: GetInfo=%s", SWITCH_TYPE_WIFINETWORK, wifi_info
+        )
 
-            if wifi_info is None:
-                self._is_available = False
-                return
-
-            self._attr_is_on = wifi_info["NewEnable"] is True
-            self._is_available = True
-
-            std = wifi_info["NewStandard"]
-            self._attributes["standard"] = std if std else None
-            self._attributes["BSSID"] = wifi_info["NewBSSID"]
-            self._attributes["mac_address_control"] = wifi_info[
-                "NewMACAddressControlEnabled"
-            ]
-
-        except FritzConnectionException:
-            _LOGGER.error(
-                "Authorization Error: Please check the provided credentials and verify that you can log into the web interface",
-                exc_info=True,
-            )
+        if wifi_info is None:
             self._is_available = False
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.error("Could not get %s state", self.name, exc_info=True)
-            self._is_available = False
+            return
+
+        self._attr_is_on = wifi_info["NewEnable"] is True
+        self._is_available = True
+
+        std = wifi_info["NewStandard"]
+        self._attributes["standard"] = std if std else None
+        self._attributes["BSSID"] = wifi_info["NewBSSID"]
+        self._attributes["mac_address_control"] = wifi_info[
+            "NewMACAddressControlEnabled"
+        ]
 
     async def _async_switch_on_off_executor(self, turn_on: bool) -> None:
         """Handle wifi switch."""
