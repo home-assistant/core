@@ -33,6 +33,7 @@ async def async_setup_platform(
     spc: SurePetcareAPI = hass.data[DOMAIN][SPC]
 
     for surepy_entity in spc.states.values():
+
         # connectivity
         if surepy_entity.type in [
             EntityType.CAT_FLAP,
@@ -74,6 +75,7 @@ class SurePetcareBinarySensor(BinarySensorEntity):
             name = self._surepy_entity.name
         else:
             name = f"Unnamed {self._surepy_entity.type.name.capitalize()}"
+
         self._name = f"{self._surepy_entity.type.name.capitalize()} {name.capitalize()}"
 
         self._attr_device_class = None if not device_class else device_class
@@ -127,6 +129,7 @@ class Hub(SurePetcareBinarySensor):
                     self._surepy_entity.raw_data()["status"]["pairing_mode"]
                 ),
             }
+
         return attributes
 
 
@@ -200,4 +203,5 @@ class DeviceConnectivity(SurePetcareBinarySensor):
                 "device_rssi": f'{self._state["signal"]["device_rssi"]:.2f}',
                 "hub_rssi": f'{self._state["signal"]["hub_rssi"]:.2f}',
             }
+
         return attributes

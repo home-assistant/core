@@ -106,4 +106,5 @@ class SureBattery(SensorEntity):
                 ATTR_VOLTAGE: f"{float(self._state['battery']):.2f}",
                 f"{ATTR_VOLTAGE}_per_battery": f"{voltage_per_battery:.2f}",
             }
+
         return attributes
