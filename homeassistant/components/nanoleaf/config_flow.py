@@ -258,7 +258,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     (
                         "All Nanoleaf devices from the discovery integration are imported. "
                         "You can remove the '%s' file from your config folder. (This file may be hidden.) "
-                        "If you used the discovery integration only for Nanoleaf you can remove it from your configuration.yaml."
+                        "If you used the discovery integration only for Nanoleaf you can remove it from your configuration.yaml"
                     ),
                     CONFIG_FILE,
                 )
