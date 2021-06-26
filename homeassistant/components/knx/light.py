@@ -259,10 +259,13 @@ class KNXLight(KnxEntity, LightEntity):
         if self._device.current_xyy_color is not None:
             _, brightness = self._device.current_xyy_color
             return brightness
-        if (rgb := self.rgb_color) is not None:
-            return max(rgb)
-        if (rgbw := self.rgbw_color) is not None:
-            return max(rgbw)
+        if self._device.supports_color or self._device.supports_rgbw:
+            rgb, white = self._device.current_color
+            if rgb is None:
+                return white
+            if white is None:
+                return max(rgb)
+            return max(*rgb, white)
         return None
 
     @property
