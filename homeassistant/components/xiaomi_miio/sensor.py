@@ -232,28 +232,29 @@ class XiaomiGenericSensor(XiaomiCoordinatedMiioEntity, SensorEntity):
         self._device = device
         self._entry = entry
         self._unique_id = unique_id
+        self._description = SENSOR_TYPES[attribute]
         self._attribute = attribute
         self._state = None
 
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
-        return SENSOR_TYPES[self._attribute].unit
+        return self._description.unit
 
     @property
     def icon(self):
         """Return the icon to use in the frontend."""
-        return SENSOR_TYPES[self._attribute].icon
+        return self._description.icon
 
     @property
     def device_class(self):
         """Return the device class of this entity."""
-        return SENSOR_TYPES[self._attribute].device_class
+        return self._description.device_class
 
     @property
     def state_class(self):
         """Return the state class of this entity."""
-        return SENSOR_TYPES[self._attribute].state_class
+        return self._description.state_class
 
     @property
     def state(self):
@@ -262,13 +263,13 @@ class XiaomiGenericSensor(XiaomiCoordinatedMiioEntity, SensorEntity):
             self.coordinator.data, self._attribute
         )
         if (
-            SENSOR_TYPES[self._attribute].valid_min_value
-            and self._state < SENSOR_TYPES[self._attribute].valid_min_value
+            self._description.valid_min_value
+            and self._state < self._description.valid_min_value
         ):
             return None
         if (
-            SENSOR_TYPES[self._attribute].valid_max_value
-            and self._state > SENSOR_TYPES[self._attribute].valid_max_value
+            self._description.valid_max_value
+            and self._state > self._description.valid_max_value
         ):
             return None
         return self._state
