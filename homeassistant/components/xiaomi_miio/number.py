@@ -52,6 +52,7 @@ class NumberType:
     max: float = None
     step: float = None
     service: str = None
+    available_with_device_off: bool = True
 
 
 NUMBER_TYPES = {
@@ -64,6 +65,7 @@ NUMBER_TYPES = {
         max=2000,
         step=10,
         service=SERVICE_SET_MOTOR_SPEED,
+        available_with_device_off=False,
     ),
 }
 
@@ -134,6 +136,17 @@ class XiaomiNumber(XiaomiCoordinatedMiioEntity, NumberEntity):
     def value(self):
         """Return the current numbered value."""
         return self._value
+
+    @property
+    def available(self):
+        """Return the number controller availability."""
+        if (
+            super().available
+            and not self.coordinator.data.is_on
+            and not self._controller.available_with_device_off
+        ):
+            return False
+        return super().available
 
     @staticmethod
     def _extract_value_from_attribute(state, attribute):
