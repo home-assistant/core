@@ -267,7 +267,7 @@ async def async_setup_entry(
     async_add_entities(entities_list)
 
 
-class FritzBoxBaseSwitch:
+class FritzBoxBaseSwitch(FritzBoxBaseEntity):
     """Fritz switch base class."""
 
     def __init__(self, fritzbox_tools: FritzBoxTools, switch_info: SwitchInfo) -> None:
