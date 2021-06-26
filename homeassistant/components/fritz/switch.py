@@ -306,17 +306,6 @@ class FritzBoxBaseSwitch(FritzBoxBaseEntity):
         """Return unique id."""
         return self._unique_id
 
-    @property
-    def device_info(self):
-        """Return the device information."""
-
-        return {
-            "connections": {(CONNECTION_NETWORK_MAC, self.fritzbox_tools.mac)},
-            "name": self._friendly_name,
-            "manufacturer": "AVM",
-            "model": self.fritzbox_tools.model,
-            "sw_version": self.fritzbox_tools.sw_version,
-        }
 
     @property
     def available(self) -> bool:
