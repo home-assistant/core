@@ -13,11 +13,10 @@ from homeassistant.components.network.util import async_get_source_ip
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import slugify
 
-from .common import FritzBoxTools, SwitchInfo
+from .common import FritzBoxBaseEntity, FritzBoxTools, SwitchInfo
 from .const import (
     DOMAIN,
     SWITCH_TYPE_DEFLECTION,
@@ -270,7 +269,12 @@ async def async_setup_entry(
 class FritzBoxBaseSwitch(FritzBoxBaseEntity):
     """Fritz switch base class."""
 
-    def __init__(self, fritzbox_tools: FritzBoxTools, device_friendly_name: str, switch_info: SwitchInfo) -> None:
+    def __init__(
+        self,
+        fritzbox_tools: FritzBoxTools,
+        device_friendly_name: str,
+        switch_info: SwitchInfo,
+    ) -> None:
         """Init Fritzbox port switch."""
         super().__init__(fritzbox_tools, device_friendly_name)
 
@@ -283,7 +287,7 @@ class FritzBoxBaseSwitch(FritzBoxBaseEntity):
 
         self._name = f"{self._friendly_name} {self._description}"
         self._unique_id = (
-            f"{self.fritzbox_tools.unique_id}-{slugify(self._description)}"
+            f"{self._fritzbox_tools.unique_id}-{slugify(self._description)}"
         )
 
         self._attributes: dict[str, str] = {}
@@ -305,7 +309,6 @@ class FritzBoxBaseSwitch(FritzBoxBaseEntity):
     def unique_id(self):
         """Return unique id."""
         return self._unique_id
-
 
     @property
     def available(self) -> bool:
@@ -349,7 +352,7 @@ class FritzBoxPortSwitch(FritzBoxBaseSwitch, SwitchEntity):
         connection_type: str,
     ) -> None:
         """Init Fritzbox port switch."""
-        self.fritzbox_tools: FritzBoxTools = fritzbox_tools
+        self._fritzbox_tools: FritzBoxTools = fritzbox_tools
 
         self._attributes = {}
         self.connection_type = connection_type
@@ -364,13 +367,13 @@ class FritzBoxPortSwitch(FritzBoxBaseSwitch, SwitchEntity):
             callback_update=self._async_fetch_update,
             callback_switch=self._async_handle_port_switch_on_off,
         )
-        super().__init__(fritzbox_tools, switch_info)
+        super().__init__(fritzbox_tools, device_friendly_name, switch_info)
 
     async def _async_fetch_update(self) -> None:
         """Fetch updates."""
 
         self.port_mapping = await async_service_call_action(
-            self.fritzbox_tools,
+            self._fritzbox_tools,
             self.connection_type,
             "1",
             "GetGenericPortMappingEntry",
@@ -405,7 +408,7 @@ class FritzBoxPortSwitch(FritzBoxBaseSwitch, SwitchEntity):
         self.port_mapping["NewEnabled"] = "1" if turn_on else "0"
 
         resp = await async_service_call_action(
-            self.fritzbox_tools,
+            self._fritzbox_tools,
             self.connection_type,
             "1",
             "AddPortMapping",
@@ -428,7 +431,7 @@ class FritzBoxDeflectionSwitch(FritzBoxBaseSwitch, SwitchEntity):
         dict_of_deflection: Any,
     ) -> None:
         """Init Fritxbox Deflection class."""
-        self.fritzbox_tools: FritzBoxTools = fritzbox_tools
+        self._fritzbox_tools: FritzBoxTools = fritzbox_tools
 
         self.dict_of_deflection = dict_of_deflection
         self._attributes = {}
@@ -442,13 +445,13 @@ class FritzBoxDeflectionSwitch(FritzBoxBaseSwitch, SwitchEntity):
             callback_update=self._async_fetch_update,
             callback_switch=self._async_switch_on_off_executor,
         )
-        super().__init__(self.fritzbox_tools, switch_info)
+        super().__init__(self._fritzbox_tools, device_friendly_name, switch_info)
 
     async def _async_fetch_update(self) -> None:
         """Fetch updates."""
 
         resp = await async_service_call_action(
-            self.fritzbox_tools, "X_AVM-DE_OnTel", "1", "GetDeflections"
+            self._fritzbox_tools, "X_AVM-DE_OnTel", "1", "GetDeflections"
         )
         if not resp:
             self._is_available = False
@@ -482,7 +485,7 @@ class FritzBoxDeflectionSwitch(FritzBoxBaseSwitch, SwitchEntity):
     async def _async_switch_on_off_executor(self, turn_on: bool) -> None:
         """Handle deflection switch."""
         await async_service_call_action(
-            self.fritzbox_tools,
+            self._fritzbox_tools,
             "X_AVM-DE_OnTel",
             "1",
             "SetDeflectionEnable",
@@ -498,7 +501,7 @@ class FritzBoxProfileSwitch(FritzBoxBaseSwitch, SwitchEntity):
         self, fritzbox_tools: FritzBoxTools, device_friendly_name: str, profile: str
     ) -> None:
         """Init Fritz profile."""
-        self.fritzbox_tools: FritzBoxTools = fritzbox_tools
+        self._fritzbox_tools: FritzBoxTools = fritzbox_tools
         self.profile = profile
 
         switch_info = SwitchInfo(
@@ -509,13 +512,13 @@ class FritzBoxProfileSwitch(FritzBoxBaseSwitch, SwitchEntity):
             callback_update=self._async_fetch_update,
             callback_switch=self._async_switch_on_off_executor,
         )
-        super().__init__(self.fritzbox_tools, switch_info)
+        super().__init__(self._fritzbox_tools, device_friendly_name, switch_info)
 
     async def _async_fetch_update(self) -> None:
         """Update data."""
         try:
             status = await self.hass.async_add_executor_job(
-                self.fritzbox_tools.fritz_profiles[self.profile].get_state
+                self._fritzbox_tools.fritz_profiles[self.profile].get_state
             )
             _LOGGER.debug(
                 "Specific %s response: get_State()=%s",
@@ -538,7 +541,7 @@ class FritzBoxProfileSwitch(FritzBoxBaseSwitch, SwitchEntity):
         """Handle profile switch."""
         state = "unlimited" if turn_on else "never"
         await self.hass.async_add_executor_job(
-            self.fritzbox_tools.fritz_profiles[self.profile].set_state, state
+            self._fritzbox_tools.fritz_profiles[self.profile].set_state, state
         )
 
     @property
@@ -571,14 +574,14 @@ class FritzBoxWifiSwitch(FritzBoxBaseSwitch, SwitchEntity):
             callback_update=self._async_fetch_update,
             callback_switch=self._async_switch_on_off_executor,
         )
-        super().__init__(self._fritzbox_tools, switch_info)
+        super().__init__(self._fritzbox_tools, device_friendly_name, switch_info)
 
     async def _async_fetch_update(self) -> None:
         """Fetch updates."""
 
         try:
             wifi_info = await async_service_call_action(
-                self.fritzbox_tools,
+                self._fritzbox_tools,
                 "WLANConfiguration",
                 str(self._network_num),
                 "GetInfo",
@@ -614,7 +617,7 @@ class FritzBoxWifiSwitch(FritzBoxBaseSwitch, SwitchEntity):
     async def _async_switch_on_off_executor(self, turn_on: bool) -> None:
         """Handle wifi switch."""
         await async_service_call_action(
-            self.fritzbox_tools,
+            self._fritzbox_tools,
             "WLANConfiguration",
             str(self._network_num),
             "SetEnable",
