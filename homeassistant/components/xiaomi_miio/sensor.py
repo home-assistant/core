@@ -256,11 +256,6 @@ class XiaomiGenericSensor(XiaomiCoordinatedMiioEntity, SensorEntity):
         return SENSOR_TYPES[self._attribute].state_class
 
     @property
-    def available(self):
-        """Return true when state is known."""
-        return super().available and self._available
-
-    @property
     def state(self):
         """Return the state of the device."""
         self._state = self._extract_value_from_attribute(
