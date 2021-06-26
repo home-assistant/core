@@ -87,7 +87,7 @@ class FritzBoxTools:
         self._unique_id: str | None = None
         self.connection: FritzConnection = None
         self.fritz_hosts: FritzHosts = None
-        self.fritz_profiles: fritzprofiles = None
+        self.fritz_profiles: dict[str, FritzProfileSwitch] = {}
         self.fritz_status: FritzStatus = None
         self.hass = hass
         self.host = host
