@@ -1,17 +1,19 @@
-"""Support for the Forecast Solar sensor service."""
+"""Support for the Forecast.Solar sensor service."""
 from __future__ import annotations
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_NAME, ATTR_UNIT_OF_MEASUREMENT
+from homeassistant.const import ATTR_IDENTIFIERS, ATTR_MANUFACTURER, ATTR_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
 
-from .const import DOMAIN, SENSORS
+from .const import ATTR_ENTRY_TYPE, DOMAIN, ENTRY_TYPE_SERVICE, SENSORS
+from .models import ForecastSolarSensor
 
 
 async def async_setup_entry(
@@ -21,26 +23,46 @@ async def async_setup_entry(
     coordinator: DataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
-        ForecastSolarSensor(entry=entry, coordinator=coordinator, key=key)
-        for key in SENSORS
+        ForecastSolarSensorEntity(
+            entry_id=entry.entry_id, coordinator=coordinator, sensor=sensor
+        )
+        for sensor in SENSORS
     )
 
 
-class ForecastSolarSensor(CoordinatorEntity, SensorEntity):
+class ForecastSolarSensorEntity(CoordinatorEntity, SensorEntity):
     """Defines a Forcast.Solar sensor."""
 
     def __init__(
-        self, entry: ConfigEntry, coordinator: DataUpdateCoordinator, key: str
+        self,
+        *,
+        entry_id: str,
+        coordinator: DataUpdateCoordinator,
+        sensor: ForecastSolarSensor,
     ) -> None:
         """Initialize Forcast.Solar sensor."""
         super().__init__(coordinator=coordinator)
-        self._attr_name = f"{entry.title} - {SENSORS[key][ATTR_NAME]}"
-        self._attr_unit_of_measurement = SENSORS[key][ATTR_UNIT_OF_MEASUREMENT]
-        self._attr_device_class = SENSORS[key][ATTR_DEVICE_CLASS]
-        self._attr_unique_id = f"{entry.entry_id}_{key}"
-        self._key = key
+        self._sensor = sensor
+
+        self.entity_id = f"{SENSOR_DOMAIN}.{sensor.key}"
+        self._attr_device_class = sensor.device_class
+        self._attr_entity_registry_enabled_default = (
+            sensor.entity_registry_enabled_default
+        )
+        self._attr_name = sensor.name
+        self._attr_state_class = sensor.state_class
+        self._attr_unique_id = f"{entry_id}_{sensor.key}"
+        self._attr_unit_of_measurement = sensor.unit_of_measurement
+
+        self._attr_device_info = {
+            ATTR_IDENTIFIERS: {(DOMAIN, entry_id)},
+            ATTR_NAME: "Solar Production Forecast",
+            ATTR_MANUFACTURER: "Forecast.Solar",
+            ATTR_ENTRY_TYPE: ENTRY_TYPE_SERVICE,
+        }
 
     @property
-    def state(self) -> float:
+    def state(self) -> StateType:
         """Return the state of the sensor."""
-        return getattr(self.coordinator.data, self._key)
+        state: StateType = getattr(self.coordinator.data, self._sensor.key)
+        return state
