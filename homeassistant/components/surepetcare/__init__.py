@@ -40,21 +40,15 @@ CONFIG_SCHEMA = vol.Schema(
         DOMAIN: vol.Schema(
             vol.All(
                 {
-                    vol.Required(CONF_USERNAME): cv.string,
-                    vol.Required(CONF_PASSWORD): cv.string,
+                    vol.Required(CONF_USERNAME): cv.deprecated,
+                    vol.Required(CONF_PASSWORD): cv.deprecated,
                     vol.Optional(CONF_FEEDERS): vol.All(
-                        cv.ensure_list, [cv.positive_int]
+                        cv.deprecated, [cv.positive_int]
                     ),
-                    vol.Optional(CONF_FLAPS): vol.All(
-                        cv.ensure_list, [cv.positive_int]
-                    ),
-                    vol.Optional(CONF_PETS): vol.All(cv.ensure_list, [cv.positive_int]),
-                    vol.Optional(CONF_SCAN_INTERVAL): cv.time_period,
+                    vol.Optional(CONF_FLAPS): vol.All(cv.deprecated, [cv.positive_int]),
+                    vol.Optional(CONF_PETS): vol.All(cv.deprecated, [cv.positive_int]),
+                    vol.Optional(CONF_SCAN_INTERVAL): cv.deprecated,
                 },
-                cv.deprecated(CONF_FEEDERS),
-                cv.deprecated(CONF_FLAPS),
-                cv.deprecated(CONF_PETS),
-                cv.deprecated(CONF_SCAN_INTERVAL),
             )
         )
     },
