@@ -378,14 +378,16 @@ class KNXModule:
                         "Service event_register could not remove event for '%s'",
                         str(group_address),
                     )
-        else:
-            for group_address in group_addresses:
-                if group_address not in self._knx_event_callback.group_addresses:
-                    self._knx_event_callback.group_addresses.append(group_address)
-                    _LOGGER.debug(
-                        "Service event_register registered event for '%s'",
-                        str(group_address),
-                    )
+            return
+
+        for group_address in group_addresses:
+            if group_address in self._knx_event_callback.group_addresses:
+                continue
+            self._knx_event_callback.group_addresses.append(group_address)
+            _LOGGER.debug(
+                "Service event_register registered event for '%s'",
+                str(group_address),
+            )
 
     async def service_exposure_register_modify(self, call: ServiceCall) -> None:
         """Service for adding or removing an exposure to KNX bus."""
@@ -404,7 +406,6 @@ class KNXModule:
 
         if group_address in self.service_exposures:
             replaced_exposure = self.service_exposures.pop(group_address)
-            assert replaced_exposure.device is not None
             _LOGGER.warning(
                 "Service exposure_register replacing already registered exposure for '%s' - %s",
                 group_address,
