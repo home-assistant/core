@@ -228,33 +228,17 @@ class XiaomiGenericSensor(XiaomiCoordinatedMiioEntity, SensorEntity):
         """Initialize the entity."""
         super().__init__(name, device, entry, unique_id, coordinator)
 
-        self._name = name
+        self._description = SENSOR_TYPES[attribute]
+        self._attr_device_class = self._description.device_class
+        self._attr_state_class = self._description.state_class
+        self._attr_icon = self._description.icon
+        self._attr_name = name
+        self._attr_unique_id = unique_id
+        self._attr_unit_of_measurement = self._description.unit
         self._device = device
         self._entry = entry
-        self._unique_id = unique_id
-        self._description = SENSOR_TYPES[attribute]
         self._attribute = attribute
         self._state = None
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of this entity, if any."""
-        return self._description.unit
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend."""
-        return self._description.icon
-
-    @property
-    def device_class(self):
-        """Return the device class of this entity."""
-        return self._description.device_class
-
-    @property
-    def state_class(self):
-        """Return the state class of this entity."""
-        return self._description.state_class
 
     @property
     def state(self):
