@@ -61,6 +61,7 @@ class SureBattery(SensorEntity):
         self._state: dict[str, Any] = {}
 
         self._attr_device_class = DEVICE_CLASS_BATTERY
+        self._attr_name = f"{self._surepy_entity.type.name.capitalize()} {self._surepy_entity.name.capitalize()} Battery Level"
         self._attr_unit_of_measurement = PERCENTAGE
         self._attr_unique_id = (
             f"{self._surepy_entity.household_id}-{self._surepy_entity.id}-battery"
@@ -86,11 +87,6 @@ class SureBattery(SensorEntity):
         self._async_update()
 
     @property
-    def name(self) -> str:
-        """Return the name of the device if any."""
-        return f"{self._surepy_entity.type.name.capitalize()} {self._surepy_entity.name.capitalize()} Battery Level"
-
-    @property
     def state(self) -> int | None:
         """Return battery level in percent."""
         try:
@@ -103,11 +99,11 @@ class SureBattery(SensorEntity):
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return state attributes."""
-        if not self._state:
-            return None
-        voltage_per_battery = float(self._state["battery"]) / 4
-        attributes = {
-            ATTR_VOLTAGE: f"{float(self._state['battery']):.2f}",
-            f"{ATTR_VOLTAGE}_per_battery": f"{voltage_per_battery:.2f}",
-        }
+        attributes = None
+        if self._state:
+            voltage_per_battery = float(self._state["battery"]) / 4
+            attributes = {
+                ATTR_VOLTAGE: f"{float(self._state['battery']):.2f}",
+                f"{ATTR_VOLTAGE}_per_battery": f"{voltage_per_battery:.2f}",
+            }
         return attributes

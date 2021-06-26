@@ -34,7 +34,6 @@ async def async_setup_platform(
 
     for surepy_entity in spc.states.values():
         # connectivity
-        print(surepy_entity.type)
         if surepy_entity.type in [
             EntityType.CAT_FLAP,
             EntityType.PET_FLAP,
@@ -77,15 +76,19 @@ class SurePetcareBinarySensor(BinarySensorEntity):
             name = f"Unnamed {self._surepy_entity.type.name.capitalize()}"
         self._name = f"{self._surepy_entity.type.name.capitalize()} {name.capitalize()}"
 
-        self._attr_device_class = device_class
+        self._attr_device_class = None if not self._device_class else self._device_class
         self._attr_unique_id = f"{self._surepy_entity.household_id}-{self._id}"
+
+    @property
+    def name(self) -> str:
+        """Return the name of the device if any."""
+        return self._name
 
     @callback
     def _async_update(self) -> None:
         """Get the latest data and update the state."""
         self._surepy_entity = self._spc.states[self._id]
         self._state = self._surepy_entity.raw_data()["status"]
-        print(self._name, self._state)
         _LOGGER.debug("%s -> self._state: %s", self._name, self._state)
 
     async def async_added_to_hass(self) -> None:
@@ -106,7 +109,6 @@ class Hub(SurePetcareBinarySensor):
     @property
     def available(self) -> bool:
         """Return true if entity is available."""
-        print("avai", self._state, bool(self._state["online"]))
         return bool(self._state["online"])
 
     @property
@@ -146,9 +148,11 @@ class Pet(SurePetcareBinarySensor):
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the device."""
-        if not self._state:
-            return None
-        return {"since": self._state.since, "where": self._state.where}
+        attributes = None
+        if self._state:
+            attributes = {"since": self._state.since, "where": self._state.where}
+
+        return attributes
 
     @callback
     def _async_update(self) -> None:
@@ -190,10 +194,10 @@ class DeviceConnectivity(SurePetcareBinarySensor):
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the device."""
-        if not self._state:
-            return None
-        attributes = {
-            "device_rssi": f'{self._state["signal"]["device_rssi"]:.2f}',
-            "hub_rssi": f'{self._state["signal"]["hub_rssi"]:.2f}',
-        }
+        attributes = None
+        if self._state:
+            attributes = {
+                "device_rssi": f'{self._state["signal"]["device_rssi"]:.2f}',
+                "hub_rssi": f'{self._state["signal"]["hub_rssi"]:.2f}',
+            }
         return attributes
