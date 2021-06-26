@@ -78,7 +78,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     entities.append(entity)
 
-    async_add_entities(entities, update_before_add=False)
+    async_add_entities(entities)
 
 
 class XiaomiGenericHumidifier(XiaomiCoordinatedMiioEntity, HumidifierEntity):
@@ -91,7 +91,6 @@ class XiaomiGenericHumidifier(XiaomiCoordinatedMiioEntity, HumidifierEntity):
         """Initialize the generic Xiaomi device."""
         super().__init__(name, device, entry, unique_id, coordinator=coordinator)
 
-        self._available = False
         self._state = None
         self._attributes = {}
         self._available_modes = []
@@ -100,11 +99,6 @@ class XiaomiGenericHumidifier(XiaomiCoordinatedMiioEntity, HumidifierEntity):
         self._max_humidity = DEFAULT_MAX_HUMIDITY
         self._humidity_steps = 100
         self._target_humidity = None
-
-    @property
-    def available(self):
-        """Return true when state is known."""
-        return super().available and self._available
 
     @property
     def is_on(self):
@@ -203,35 +197,28 @@ class XiaomiAirHumidifier(XiaomiGenericHumidifier, HumidifierEntity):
             self._max_humidity = 80
             self._humidity_steps = 10
 
-        self._attributes.update({attribute: None for attribute in AVAILABLE_ATTRIBUTES})
+        self._state = self.coordinator.data.is_on
+        self._attributes.update(
+            {
+                key: self._extract_value_from_attribute(self.coordinator.data, value)
+                for key, value in AVAILABLE_ATTRIBUTES.items()
+            }
+        )
+        self._target_humidity = self._attributes[ATTR_TARGET_HUMIDITY]
+        self._mode = self._attributes[ATTR_MODE]
 
     @property
     def is_on(self):
         """Return true if device is on."""
-        if not self._available and self.coordinator.data:
-            self._available = True
-            self._target_humidity = self._extract_value_from_attribute(
-                self.coordinator.data, ATTR_TARGET_HUMIDITY
-            )
-            self._mode = self._extract_value_from_attribute(
-                self.coordinator.data, ATTR_MODE
-            )
-            self._state = True
-
         return self._state
 
     @callback
     def _handle_coordinator_update(self):
         """Fetch state from the device."""
-        state = self.coordinator.data
-        if not state:
-            return
-        _LOGGER.debug("Got new state: %s", state)
-        self._available = True
-        self._state = state.is_on
+        self._state = self.coordinator.data.is_on
         self._attributes.update(
             {
-                key: self._extract_value_from_attribute(state, value)
+                key: self._extract_value_from_attribute(self.coordinator.data, value)
                 for key, value in AVAILABLE_ATTRIBUTES.items()
             }
         )
@@ -242,21 +229,17 @@ class XiaomiAirHumidifier(XiaomiGenericHumidifier, HumidifierEntity):
     @property
     def mode(self):
         """Return the current mode."""
-        if self._state and self.available:
-            return AirhumidifierOperationMode(self._mode).name
-        return None
+        return AirhumidifierOperationMode(self._mode).name
 
     @property
     def target_humidity(self):
         """Return the target humidity."""
-        if self._state and self.available:
-            return (
-                self._target_humidity
-                if self._mode == AirhumidifierOperationMode.Auto.name
-                or AirhumidifierOperationMode.Auto.name not in self.available_modes
-                else None
-            )
-        return None
+        return (
+            self._target_humidity
+            if self._mode == AirhumidifierOperationMode.Auto.name
+            or AirhumidifierOperationMode.Auto.name not in self.available_modes
+            else None
+        )
 
     async def async_set_humidity(self, humidity: int) -> None:
         """Set the target humidity of the humidifier and set the mode to auto."""
