@@ -10,7 +10,7 @@ from homeassistant import config_entries, core
 from homeassistant.const import CONF_HOST, CONF_TOKEN
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr, entity_registry as en
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
     ATTR_AVAILABLE,
@@ -120,7 +120,7 @@ async def async_create_miio_device_and_coordinator(
                 return await hass.async_add_executor_job(device.status)
 
         except DeviceException as ex:
-            _LOGGER.error("Got exception while fetching the state: %s", ex)
+            raise UpdateFailed(ex) from ex
 
     # Create update miio device and coordinator
     coordinator = DataUpdateCoordinator(
