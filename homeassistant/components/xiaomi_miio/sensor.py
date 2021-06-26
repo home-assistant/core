@@ -35,7 +35,6 @@ from homeassistant.const import (
     PRESSURE_HPA,
     TEMP_CELSIUS,
 )
-from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
 from .const import (
@@ -234,20 +233,7 @@ class XiaomiGenericSensor(XiaomiCoordinatedMiioEntity, SensorEntity):
         self._entry = entry
         self._unique_id = unique_id
         self._attribute = attribute
-        self._available = None
         self._state = None
-
-    @callback
-    def _handle_coordinator_update(self):
-        """Fetch state from the device."""
-        # On state change the device doesn't provide the new state immediately.
-        state = self.coordinator.data
-        if not state:
-            return
-        _LOGGER.debug("Got new state: %s", state)
-        self._available = True
-        self._state = self._extract_value_from_attribute(state, self._attribute)
-        self.async_write_ha_state()
 
     @property
     def unit_of_measurement(self):
@@ -277,10 +263,9 @@ class XiaomiGenericSensor(XiaomiCoordinatedMiioEntity, SensorEntity):
     @property
     def state(self):
         """Return the state of the device."""
-        if not self._state:
-            self._state = self._extract_value_from_attribute(
-                self.coordinator.data, self._attribute
-            )
+        self._state = self._extract_value_from_attribute(
+            self.coordinator.data, self._attribute
+        )
         if (
             SENSOR_TYPES[self._attribute].valid_min_value
             and self._state < SENSOR_TYPES[self._attribute].valid_min_value
