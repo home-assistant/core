@@ -44,5 +44,7 @@ HOMEKIT_ACCESSORY_DISPATCH = {
 }
 
 CHARACTERISTIC_PLATFORMS = {
+    CharacteristicsTypes.Vendor.EVE_ENERGY_WATT: "sensor",
     CharacteristicsTypes.Vendor.KOOGEEK_REALTIME_ENERGY: "sensor",
+    CharacteristicsTypes.get_uuid(CharacteristicsTypes.TEMPERATURE_CURRENT): "sensor",
 }

@@ -1,5 +1,5 @@
 """Support for Homekit sensors."""
-from aiohomekit.model.characteristics import CharacteristicsTypes
+from aiohomekit.model.characteristics import Characteristic, CharacteristicsTypes
 from aiohomekit.model.services import ServicesTypes
 
 from homeassistant.components.sensor import SensorEntity
@@ -36,6 +36,14 @@ SIMPLE_SENSOR = {
         "device_class": DEVICE_CLASS_POWER,
         "unit": "watts",
         "icon": "mdi:chart-line",
+    },
+    CharacteristicsTypes.get_uuid(CharacteristicsTypes.TEMPERATURE_CURRENT): {
+        "name": "Current Temperature",
+        "device_class": DEVICE_CLASS_TEMPERATURE,
+        "unit": TEMP_CELSIUS,
+        # This sensor is only for temperature characteristics that are not part
+        # of a temperature sensor service.
+        "probe": lambda char: char.service.type != ServicesTypes.TEMPERATURE_SENSOR,
     },
 }
 
@@ -219,6 +227,7 @@ class SimpleSensor(CharacteristicEntity, SensorEntity):
         unit=None,
         icon=None,
         name=None,
+        **kwargs
     ):
         """Initialise a secondary HomeKit characteristic sensor."""
         self._device_class = device_class
@@ -285,9 +294,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     conn.add_listener(async_add_service)
 
     @callback
-    def async_add_characteristic(char):
+    def async_add_characteristic(char: Characteristic):
         kwargs = SIMPLE_SENSOR.get(char.type)
         if not kwargs:
+            return False
+        if "probe" in kwargs and not kwargs["probe"](char):
             return False
         info = {"aid": char.service.accessory.aid, "iid": char.service.iid}
         async_add_entities([SimpleSensor(conn, info, char, **kwargs)], True)
