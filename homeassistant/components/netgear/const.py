@@ -3,6 +3,8 @@ DOMAIN = "netgear"
 
 PLATFORMS = ["device_tracker"]
 
+DEFAULT_METHOD_VERSION = 1
+
 # Icons
 DEVICE_ICONS = {
     0: "mdi:access-point-network",  # Router (Orbi ...)

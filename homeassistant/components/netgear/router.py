@@ -1,4 +1,5 @@
 """Represent the Netgear router and its devices."""
+import logging
 from datetime import timedelta
 from typing import Dict
 
@@ -17,10 +18,12 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import HomeAssistantType
 
-from .const import DOMAIN
+from .const import DEFAULT_METHOD_VERSION, DOMAIN
 from .errors import CannotLoginException
 
 SCAN_INTERVAL = timedelta(seconds=30)
+
+_LOGGER = logging.getLogger(__name__)
 
 
 def get_api(
@@ -52,6 +55,7 @@ class NetgearRouter:
         self._ssl = entry.data.get(CONF_SSL)
         self._username = entry.data.get(CONF_USERNAME)
         self._password = entry.data[CONF_PASSWORD]
+        self._method_version = DEFAULT_METHOD_VERSION
 
         self._api: Netgear = None
         self._attrs = {}
@@ -83,12 +87,21 @@ class NetgearRouter:
         self._unsub_dispatcher()
         self._unsub_dispatcher = None
 
+    async def async_get_attached_devices(self) -> None:
+        """Get the devices connected to the router."""
+        if self._method_version == 1:
+            return await self.hass.async_add_executor_job(
+                self._api.get_attached_devices
+            )
+
+        return await self.hass.async_add_executor_job(
+            self._api.get_attached_devices_2
+        )
+
     async def async_update_device_trackers(self, now=None) -> None:
         """Update Netgear devices."""
         new_device = False
-        ntg_devices: Dict[str, any] = await self.hass.async_add_executor_job(
-            self._api.get_attached_devices_2
-        )
+        ntg_devices: Dict[str, any] = await self.async_get_attached_devices()
 
         for device in self.devices.values():
             device["active"] = False
@@ -96,7 +109,7 @@ class NetgearRouter:
         for ntg_device in ntg_devices:
             device_mac = ntg_device.mac
 
-            if not ntg_device.link_rate:
+            if self._method_version == 2 and not ntg_device.link_rate:
                 continue
 
             if not self.devices.get(device_mac):
@@ -108,6 +121,7 @@ class NetgearRouter:
         async_dispatcher_send(self.hass, self.signal_device_update)
 
         if new_device:
+            _LOGGER.debug("Netgear tracker: new device found")
             async_dispatcher_send(self.hass, self.signal_device_new)
 
     @property

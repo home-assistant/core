@@ -103,6 +103,7 @@ class NetgearDeviceEntity(ScannerEntity):
     def __init__(self, router: NetgearRouter, device: Dict[str, any]) -> None:
         """Initialize a Netgear device."""
         self._router = router
+        self._device = device
         self._name = device["name"]
         self._mac = device["mac"]
         self._manufacturer = device["device_model"]
@@ -113,12 +114,12 @@ class NetgearDeviceEntity(ScannerEntity):
     @callback
     def update_device(self) -> None:
         """Update the Netgear device."""
-        device = self._router.devices[self._mac]
-        self._active = device["active"]
+        self._device = self._router.devices[self._mac]
+        self._active = self._device["active"]
         self._attrs = {
-            "link_type": device["type"],
-            "link_rate": device["link_rate"],
-            "signal_strength": device["signal"],
+            "link_type": self._device["type"],
+            "link_rate": self._device["link_rate"],
+            "signal_strength": self._device["signal"],
         }
         if not self._active:
             self._attrs = {}
@@ -144,6 +145,16 @@ class NetgearDeviceEntity(ScannerEntity):
     def source_type(self) -> str:
         """Return the source type."""
         return SOURCE_TYPE_ROUTER
+
+    @property
+    def ip_address(self) -> str:
+        """Return the IP adress."""
+        return self._device["ip"]
+
+    @property
+    def mac_address(self) -> str:
+        """Return the mac adress."""
+        return self._mac
 
     @property
     def icon(self) -> str:
