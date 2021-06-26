@@ -25,7 +25,7 @@
       "config": "Connection or login error: please check your configuration"
     },
     "abort": {
-      "already_configured": "Host already configured"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   }
 }
