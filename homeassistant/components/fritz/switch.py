@@ -270,7 +270,7 @@ async def async_setup_entry(
 class FritzBoxBaseSwitch(FritzBoxBaseEntity):
     """Fritz switch base class."""
 
-    def __init__(self, fritzbox_tools: FritzBoxTools, switch_info: SwitchInfo) -> None:
+    def __init__(self, fritzbox_tools: FritzBoxTools, device_friendly_name: str, switch_info: SwitchInfo) -> None:
         """Init Fritzbox port switch."""
         self.fritzbox_tools: FritzBoxTools = fritzbox_tools
 
