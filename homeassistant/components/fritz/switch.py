@@ -272,7 +272,7 @@ class FritzBoxBaseSwitch(FritzBoxBaseEntity):
 
     def __init__(self, fritzbox_tools: FritzBoxTools, device_friendly_name: str, switch_info: SwitchInfo) -> None:
         """Init Fritzbox port switch."""
-        self.fritzbox_tools: FritzBoxTools = fritzbox_tools
+        super().__init__(fritzbox_tools, device_friendly_name)
 
         self._description = switch_info["description"]
         self._friendly_name = switch_info["friendly_name"]
