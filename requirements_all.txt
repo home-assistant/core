@@ -105,7 +105,7 @@ adafruit-circuitpython-dht==3.6.0
 adafruit-circuitpython-mcp230xx==2.2.2
 
 # homeassistant.components.androidtv
-adb-shell[async]==0.3.1
+adb-shell[async]==0.3.4
 
 # homeassistant.components.alarmdecoder
 adext==0.4.2
@@ -160,7 +160,7 @@ aioeafm==0.1.2
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==2.8.0
+aioesphomeapi==2.9.0
 
 # homeassistant.components.flo
 aioflo==0.4.1
@@ -304,7 +304,7 @@ asterisk_mbox==0.5.0
 # homeassistant.components.dlna_dmr
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
-async-upnp-client==0.18.0
+async-upnp-client==0.19.0
 
 # homeassistant.components.supla
 asyncpysupla==0.0.5
@@ -331,7 +331,7 @@ av==8.0.3
 axis==44
 
 # homeassistant.components.azure_event_hub
-azure-eventhub==5.1.0
+azure-eventhub==5.5.0
 
 # homeassistant.components.azure_service_bus
 azure-servicebus==0.50.3
@@ -747,7 +747,7 @@ hass-nabucasa==0.43.0
 hass_splunk==0.1.1
 
 # homeassistant.components.tasmota
-hatasmota==0.2.16
+hatasmota==0.2.18
 
 # homeassistant.components.jewish_calendar
 hdate==0.10.2
@@ -1008,7 +1008,7 @@ netdata==0.2.0
 netdisco==2.8.3
 
 # homeassistant.components.nam
-nettigo-air-monitor==0.2.6
+nettigo-air-monitor==1.0.0
 
 # homeassistant.components.neurio_energy
 neurio==0.3.1
@@ -1306,7 +1306,7 @@ pyarlo==0.2.4
 pyatag==0.3.5.3
 
 # homeassistant.components.netatmo
-pyatmo==5.0.1
+pyatmo==5.1.0
 
 # homeassistant.components.atome
 pyatome==0.1.1
@@ -1324,7 +1324,7 @@ pyblackbird==0.5
 # pybluez==0.22
 
 # homeassistant.components.neato
-pybotvac==0.0.20
+pybotvac==0.0.21
 
 # homeassistant.components.nissan_leaf
 pycarwings2==2.10
@@ -1369,7 +1369,7 @@ pydaikin==2.4.3
 pydanfossair==0.1.0
 
 # homeassistant.components.deconz
-pydeconz==79
+pydeconz==80
 
 # homeassistant.components.delijn
 pydelijn==0.6.1
@@ -2365,7 +2365,7 @@ wirelesstagpy==0.4.1
 withings-api==2.3.2
 
 # homeassistant.components.wled
-wled==0.6.0
+wled==0.7.0
 
 # homeassistant.components.wolflink
 wolf_smartset==0.1.11

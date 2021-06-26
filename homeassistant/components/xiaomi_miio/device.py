@@ -1,8 +1,10 @@
 """Code to handle a Xiaomi Device."""
 import logging
 
+from construct.core import ChecksumError
 from miio import Device, DeviceException
 
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import Entity
 
@@ -33,17 +35,24 @@ class ConnectXiaomiDevice:
     async def async_connect_device(self, host, token):
         """Connect to the Xiaomi Device."""
         _LOGGER.debug("Initializing with host %s (token %s...)", host, token[:5])
+
         try:
             self._device = Device(host, token)
             # get the device info
             self._device_info = await self._hass.async_add_executor_job(
                 self._device.info
             )
-        except DeviceException:
+        except DeviceException as error:
+            if isinstance(error.__cause__, ChecksumError):
+                raise ConfigEntryAuthFailed(error) from error
+
             _LOGGER.error(
-                "DeviceException during setup of xiaomi device with host %s", host
+                "DeviceException during setup of xiaomi device with host %s: %s",
+                host,
+                error,
             )
             return False
+
         _LOGGER.debug(
             "%s %s %s detected",
             self._device_info.model,

@@ -26,6 +26,7 @@ homeassistant.components.cover.*
 homeassistant.components.device_automation.*
 homeassistant.components.device_tracker.*
 homeassistant.components.dnsip.*
+homeassistant.components.dsmr.*
 homeassistant.components.dunehd.*
 homeassistant.components.elgato.*
 homeassistant.components.fitbit.*
@@ -56,6 +57,7 @@ homeassistant.components.notify.*
 homeassistant.components.number.*
 homeassistant.components.onewire.*
 homeassistant.components.persistent_notification.*
+homeassistant.components.pi_hole.*
 homeassistant.components.proximity.*
 homeassistant.components.recorder.purge
 homeassistant.components.recorder.repack

@@ -151,13 +151,13 @@ async def async_setup_entity_json(
     hass, config: ConfigType, async_add_entities, config_entry, discovery_data
 ):
     """Set up a MQTT JSON Light."""
-    async_add_entities([MqttLightJson(config, config_entry, discovery_data)])
+    async_add_entities([MqttLightJson(hass, config, config_entry, discovery_data)])
 
 
 class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
     """Representation of a MQTT JSON light."""
 
-    def __init__(self, config, config_entry, discovery_data):
+    def __init__(self, hass, config, config_entry, discovery_data):
         """Initialize MQTT JSON light."""
         self._state = False
         self._supported_features = 0
@@ -176,7 +176,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
         self._white_value = None
         self._xy = None
 
-        MqttEntity.__init__(self, None, config, config_entry, discovery_data)
+        MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
     @staticmethod
     def config_schema():

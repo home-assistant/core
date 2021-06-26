@@ -47,11 +47,9 @@ async def async_setup_platform(
     xknx: XKNX = hass.data[DOMAIN].xknx
 
     _async_migrate_unique_id(hass, platform_config)
-    entities = []
-    for entity_config in platform_config:
-        entities.append(KNXClimate(xknx, entity_config))
-
-    async_add_entities(entities)
+    async_add_entities(
+        KNXClimate(xknx, entity_config) for entity_config in platform_config
+    )
 
 
 @callback
@@ -173,22 +171,20 @@ def _create_climate(xknx: XKNX, config: ConfigType) -> XknxClimate:
 class KNXClimate(KnxEntity, ClimateEntity):
     """Representation of a KNX climate device."""
 
+    _device: XknxClimate
+    _attr_supported_features = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
+    _attr_temperature_unit = TEMP_CELSIUS
+
     def __init__(self, xknx: XKNX, config: ConfigType) -> None:
         """Initialize of a KNX climate device."""
-        self._device: XknxClimate
         super().__init__(_create_climate(xknx, config))
-        self._unique_id = (
+        self._attr_target_temperature_step = self._device.temperature_step
+        self._attr_unique_id = (
             f"{self._device.temperature.group_address_state}_"
             f"{self._device.target_temperature.group_address_state}_"
             f"{self._device.target_temperature.group_address}_"
             f"{self._device._setpoint_shift.group_address}"  # pylint: disable=protected-access
         )
-        self._attr_temperature_unit = TEMP_CELSIUS
-
-    @property
-    def supported_features(self) -> int:
-        """Return the list of supported features."""
-        return SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
 
     async def async_update(self) -> None:
         """Request a state update from KNX bus."""
@@ -200,11 +196,6 @@ class KNXClimate(KnxEntity, ClimateEntity):
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self._device.temperature.value
-
-    @property
-    def target_temperature_step(self) -> float:
-        """Return the supported step of target temperature."""
-        return self._device.temperature_step
 
     @property
     def target_temperature(self) -> float | None:
@@ -338,12 +329,12 @@ class KNXClimate(KnxEntity, ClimateEntity):
 
     async def async_added_to_hass(self) -> None:
         """Store register state change callback."""
-        super().async_added_to_hass()
+        await super().async_added_to_hass()
         if self._device.mode is not None:
             self._device.mode.register_device_updated_cb(self.after_update_callback)
 
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect device object when removed."""
-        super().async_will_remove_from_hass()
+        await super().async_will_remove_from_hass()
         if self._device.mode is not None:
             self._device.mode.unregister_device_updated_cb(self.after_update_callback)
