@@ -107,7 +107,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                     )
                 )
 
-    async_add_entities(entities, update_before_add=False)
+    async_add_entities(entities)
 
 
 class XiaomiNumber(XiaomiCoordinatedMiioEntity, NumberEntity):
@@ -131,19 +131,9 @@ class XiaomiNumber(XiaomiCoordinatedMiioEntity, NumberEntity):
         self._value = None
 
     @property
-    def available(self):
-        """Return true when state is known."""
-        return super().available and self._available
-
-    @property
     def value(self):
-        """Return the current option."""
-        if not self.available and self.coordinator.data:
-            self._available = True
-            self._value = self._extract_value_from_attribute(
-                self.coordinator.data, self._controller.short_name
-            )
-        return self._value if self.available else None
+        """Return the current numbered value."""
+        return self._value
 
     @staticmethod
     def _extract_value_from_attribute(state, attribute):
@@ -189,18 +179,16 @@ class XiaomiAirHumidifierNumber(XiaomiNumber):
             self._device_features = FEATURE_FLAGS_AIRHUMIDIFIER_CA4
         else:
             self._device_features = FEATURE_FLAGS_AIRHUMIDIFIER
+        self._value = self._extract_value_from_attribute(
+            self.coordinator.data, self._controller.short_name
+        )
 
     @callback
     def _handle_coordinator_update(self):
         """Fetch state from the device."""
         # On state change the device doesn't provide the new state immediately.
-        state = self.coordinator.data
-        if not state:
-            return
-        _LOGGER.debug("Got new state: %s", state)
-        self._available = True
         self._value = self._extract_value_from_attribute(
-            state, self._controller.short_name
+            self.coordinator.data, self._controller.short_name
         )
         self.async_write_ha_state()
 
