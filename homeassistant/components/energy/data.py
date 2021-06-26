@@ -1,41 +1,18 @@
 """Energy data."""
 from __future__ import annotations
 
-from typing import Optional, TypedDict, cast
+from collections import Counter
+from typing import Literal, Optional, TypedDict, Union, cast
 
 import voluptuous as vol
 
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import singleton, storage
+from homeassistant.helpers import config_validation as cv, singleton, storage
 
 from .const import DOMAIN
 
 STORAGE_VERSION = 1
 STORAGE_KEY = DOMAIN
-
-
-HOME_CONSUMPTION_SCHEMA = vol.Schema(
-    {
-        vol.Required("stat_consumption"): str,
-        vol.Required("entity_consumption"): vol.Any(None, str),
-        vol.Required("stat_cost"): vol.Any(None, str),
-        vol.Required("entity_energy_price"): vol.Any(None, str),
-        vol.Required("cost_adjustment_day"): vol.Coerce(float),
-    }
-)
-DEVICE_CONSUMPTION_SCHEMA = vol.Schema(
-    {
-        vol.Required("stat_consumption"): str,
-    }
-)
-PRODUCTION_SCHEMA = vol.Schema(
-    {
-        vol.Required("type"): vol.In(("solar", "wind")),
-        vol.Required("stat_production"): str,
-        vol.Required("stat_return_to_grid"): vol.Any(str, None),
-        vol.Required("stat_predicted_production"): vol.Any(str, None),
-    }
-)
 
 
 @singleton.singleton(DOMAIN)
@@ -46,48 +23,136 @@ async def async_get_manager(hass: HomeAssistant) -> EnergyManager:
     return manager
 
 
-class EnergyHomeConsumption(TypedDict):
-    """Dictionary holding the source of grid energy consumption."""
+class FlowFromGridSourceType(TypedDict):
+    """Dictionary describing the 'from' stat for the grid source."""
 
-    # This is an ever increasing value
-    stat_consumption: str
-    entity_consumption: str | None
+    # kWh meter
+    stat_from: str
 
-    # this is an ever increasing value
+    # $ meter
     stat_cost: str | None
 
+    # Can be used to generate costs if stat_cost omitted
+    entity_from: str | None
     entity_energy_price: str | None
+
+
+class FlowToGridSourceType(TypedDict):
+    """Dictionary describing the 'to' stat for the grid source."""
+
+    # kWh meter
+    stat_to: str
+
+
+class GridSourceType(TypedDict):
+    """Dictionary holding the source of grid energy consumption."""
+
+    type: Literal["grid"]
+
+    flow_from: list[FlowFromGridSourceType]
+    flow_to: list[FlowToGridSourceType]
+
     cost_adjustment_day: float
 
 
-class EnergyDeviceConsumption(TypedDict):
+class SolarSourceType(TypedDict):
+    """Dictionary holding the source of energy production."""
+
+    type: Literal["solar"]
+
+    stat_from: str
+    stat_predicted_from: str | None
+
+
+SourceType = Union[GridSourceType, SolarSourceType]
+
+
+class DeviceConsumption(TypedDict):
     """Dictionary holding the source of individual device consumption."""
 
     # This is an ever increasing value
     stat_consumption: str
 
 
-class EnergyProduction(TypedDict):
-    """Dictionary holding the source of energy production."""
-
-    type: str  # "solar" | "wind"
-
-    stat_production: str
-    stat_return_to_grid: str | None
-    stat_predicted_production: str | None
-
-
 class EnergyPreferences(TypedDict):
     """Dictionary holding the energy data."""
 
     currency: str
-    home_consumption: list[EnergyHomeConsumption]
-    device_consumption: list[EnergyDeviceConsumption]
-    production: list[EnergyProduction]
+    energy_sources: list[SourceType]
+    device_consumption: list[DeviceConsumption]
 
 
 class EnergyPreferencesUpdate(EnergyPreferences, total=False):
     """all types optional."""
+
+
+FLOW_FROM_GRID_SOURCE_SCHEMA = vol.Schema(
+    {
+        vol.Required("stat_from"): str,
+        vol.Required("stat_cost"): vol.Any(None, str),
+        vol.Required("entity_from"): vol.Any(None, str),
+        vol.Required("entity_energy_price"): vol.Any(None, str),
+    }
+)
+
+
+FLOW_TO_GRID_SOURCE_SCHEMA = vol.Schema(
+    {
+        vol.Required("stat_to"): str,
+    }
+)
+
+
+GRID_SOURCE_SCHEMA = vol.Schema(
+    {
+        vol.Required("type"): "grid",
+        vol.Required("flow_from"): vol.All(
+            [FLOW_FROM_GRID_SOURCE_SCHEMA], vol.Length(min=1)
+        ),
+        vol.Required("flow_to"): [FLOW_TO_GRID_SOURCE_SCHEMA],
+        vol.Required("cost_adjustment_day"): vol.Coerce(float),
+    }
+)
+SOLAR_SOURCE_SCHEMA = vol.Schema(
+    {
+        vol.Required("type"): "solar",
+        vol.Required("stat_from"): str,
+        vol.Required("stat_predicted_from"): vol.Any(str, None),
+    }
+)
+
+
+def check_type_limits(value: list[SourceType]) -> list[SourceType]:
+    """Validate that we don't have too many of certain types."""
+    types = Counter([val["type"] for val in value])
+
+    for source_type, source_count in types.items():
+        if source_count > 1:
+            raise vol.Invalid(f"You cannot have more than 1 {source_type} source")
+
+    return value
+
+
+ENERGY_SOURCE_SCHEMA = vol.All(
+    vol.Schema(
+        [
+            cv.key_value_schemas(
+                "type",
+                {
+                    "grid": GRID_SOURCE_SCHEMA,
+                    "solar": SOLAR_SOURCE_SCHEMA,
+                },
+            )
+        ]
+    ),
+    check_type_limits,
+)
+
+DEVICE_CONSUMPTION_SCHEMA = vol.Schema(
+    {
+        vol.Required("stat_consumption"): str,
+    }
+)
 
 
 class EnergyManager:
@@ -108,9 +173,8 @@ class EnergyManager:
         """Return default preferences."""
         return {
             "currency": "€",
-            "home_consumption": [],
+            "energy_sources": [],
             "device_consumption": [],
-            "production": [],
         }
 
     @callback
@@ -123,9 +187,8 @@ class EnergyManager:
 
         for key in (
             "currency",
-            "home_consumption",
+            "energy_sources",
             "device_consumption",
-            "production",
         ):
             if key in update:
                 data[key] = update[key]  # type: ignore

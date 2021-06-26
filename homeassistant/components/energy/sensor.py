@@ -35,23 +35,30 @@ async def async_setup_platform(
     entities = []
 
     currency = manager.data["currency"]
-    for home_consumption in manager.data["home_consumption"]:
-        if home_consumption["stat_cost"]:
+
+    for energy_source in manager.data["energy_sources"]:
+        if energy_source["type"] != "grid":
             continue
-        _, name = split_entity_id(home_consumption["entity_consumption"])
-        energy_state = hass.states.get(home_consumption["entity_consumption"])
-        if energy_state:
-            name = energy_state.attributes.get(ATTR_NAME, name)
-        name = f"{name} cost"
-        entities.append(
-            EnergyCostSensor(
-                name,
-                currency,
-                home_consumption["entity_consumption"],
-                home_consumption["entity_energy_price"],
-                None,
+
+        for flow in energy_source["flow_from"]:
+            if flow["stat_cost"] is not None:
+                continue
+
+            _, name = split_entity_id(flow["entity_from"])
+            energy_state = hass.states.get(flow["entity_from"])
+            if energy_state:
+                name = energy_state.attributes.get(ATTR_NAME, name)
+
+            entities.append(
+                EnergyCostSensor(
+                    f"{name} cost",
+                    currency,
+                    flow["entity_from"],
+                    flow["entity_energy_price"],
+                    None,
+                )
             )
-        )
+
     async_add_entities(entities)
 
 
@@ -73,7 +80,9 @@ class EnergyCostSensor(SensorEntity):
         self._attr_name = name
         self._attr_state_class = STATE_CLASS_MEASUREMENT
         self._attr_unit_of_measurement = currency
-        self._attr_unique_id = f"energy_{name}"
+        # TODO This is not unique enough. Name is dynamic.
+        # Maybe fallback to unique ID of the source entities?
+        # self._attr_unique_id = f"energy_{name}"
 
         self._energy_sensor_entity_id = energy_sensor
         self._energy_price_entity_id = energy_price_sensor

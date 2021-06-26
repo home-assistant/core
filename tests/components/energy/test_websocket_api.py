@@ -60,37 +60,27 @@ async def test_save_preferences(hass, hass_ws_client, hass_storage) -> None:
 
     new_prefs = {
         "currency": "$",
-        "home_consumption": [
+        "energy_sources": [
             {
-                "stat_consumption": "sensor.heat_pump_meter",
-                "entity_consumption": "sensor.heat_pump_meter",
-                "stat_cost": "heat_pump_kwh_cost",
-                "entity_energy_price": "sensor.energy_price",
+                "type": "grid",
+                "flow_from": [
+                    {
+                        "stat_from": "sensor.heat_pump_meter",
+                        "stat_cost": "heat_pump_kwh_cost",
+                        "entity_from": "sensor.heat_pump_meter",
+                        "entity_energy_price": "sensor.energy_price",
+                    }
+                ],
+                "flow_to": [{"stat_to": "return_to_grid_stat"}],
                 "cost_adjustment_day": 1.2,
             },
             {
-                "stat_consumption": "home_meter",
-                "entity_consumption": None,
-                "stat_cost": None,
-                "entity_energy_price": None,
-                "cost_adjustment_day": 0,
+                "type": "solar",
+                "stat_from": "my_solar_production",
+                "stat_predicted_from": "predicted_stat",
             },
         ],
         "device_consumption": [{"stat_consumption": "some_device_usage"}],
-        "production": [
-            {
-                "type": "solar",
-                "stat_production": "my_solar_production",
-                "stat_return_to_grid": "returned_to_grid_stat",
-                "stat_predicted_production": "predicted_stat",
-            },
-            {
-                "type": "wind",
-                "stat_production": "my_wind_geneeration",
-                "stat_return_to_grid": None,
-                "stat_predicted_production": None,
-            },
-        ],
     }
 
     await client.send_json({"id": 6, "type": "energy/save_prefs", **new_prefs})
@@ -106,3 +96,35 @@ async def test_save_preferences(hass, hass_ws_client, hass_storage) -> None:
     await flush_store(hass.data[data.DOMAIN]._store)
 
     assert hass_storage[data.STORAGE_KEY]["data"] == new_prefs
+
+    # Prefs with limited options
+    new_prefs_2 = {
+        "energy_sources": [
+            {
+                "type": "grid",
+                "flow_from": [
+                    {
+                        "stat_from": "sensor.heat_pump_meter",
+                        "stat_cost": None,
+                        "entity_from": None,
+                        "entity_energy_price": None,
+                    }
+                ],
+                "flow_to": [],
+                "cost_adjustment_day": 1.2,
+            },
+            {
+                "type": "solar",
+                "stat_from": "my_solar_production",
+                "stat_predicted_from": None,
+            },
+        ],
+    }
+
+    await client.send_json({"id": 7, "type": "energy/save_prefs", **new_prefs_2})
+
+    msg = await client.receive_json()
+
+    assert msg["id"] == 7
+    assert msg["success"]
+    assert msg["result"] == {**new_prefs, **new_prefs_2}

@@ -12,8 +12,7 @@ from homeassistant.core import HomeAssistant, callback
 
 from .data import (
     DEVICE_CONSUMPTION_SCHEMA,
-    HOME_CONSUMPTION_SCHEMA,
-    PRODUCTION_SCHEMA,
+    ENERGY_SOURCE_SCHEMA,
     EnergyManager,
     EnergyPreferencesUpdate,
     async_get_manager,
@@ -82,9 +81,8 @@ def ws_get_prefs(
     {
         vol.Required("type"): "energy/save_prefs",
         vol.Optional("currency"): str,
-        vol.Optional("home_consumption"): vol.Any(None, [HOME_CONSUMPTION_SCHEMA]),
-        vol.Optional("device_consumption"): vol.Any(None, [DEVICE_CONSUMPTION_SCHEMA]),
-        vol.Optional("production"): vol.Any(None, [PRODUCTION_SCHEMA]),
+        vol.Optional("energy_sources"): ENERGY_SOURCE_SCHEMA,
+        vol.Optional("device_consumption"): [DEVICE_CONSUMPTION_SCHEMA],
     }
 )
 @_ws_with_manager
