@@ -13,7 +13,7 @@ from aioswitcher.devices import SwitcherV2Device
 import voluptuous as vol
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -135,15 +135,15 @@ class SwitcherControl(SwitchEntity):
             )
         )
 
-    async def async_update_data(self, device_data: SwitcherV2Device) -> None:
+    @callback
+    def async_update_data(self, device_data: SwitcherV2Device) -> None:
         """Update the entity data."""
-        if device_data:
-            if self._self_initiated:
-                self._self_initiated = False
-            else:
-                self._device_data = device_data
-                self._state = self._device_data.state
-                self.async_write_ha_state()
+        if self._self_initiated:
+            self._self_initiated = False
+        else:
+            self._device_data = device_data
+            self._state = self._device_data.state
+            self.async_write_ha_state()
 
     async def async_turn_on(self, **kwargs: dict) -> None:
         """Turn the entity on."""
