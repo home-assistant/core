@@ -5,6 +5,7 @@ from collections import deque
 import json
 import logging
 import os
+import shutil
 import tempfile
 from typing import Any, Callable
 
@@ -61,17 +62,16 @@ def save_json(
         raise SerializationError(msg) from error
 
     tmp_filename = ""
-    tmp_path = os.path.split(filename)[0]
     try:
         # Modern versions of Python tempfile create this file with mode 0o600
         with tempfile.NamedTemporaryFile(
-            mode="w", encoding="utf-8", dir=tmp_path, delete=False
+            mode="w", encoding="utf-8", delete=False
         ) as fdesc:
             fdesc.write(json_data)
             tmp_filename = fdesc.name
         if not private:
             os.chmod(tmp_filename, 0o644)
-        os.replace(tmp_filename, filename)
+        shutil.move(tmp_filename, filename)
     except OSError as error:
         _LOGGER.exception("Saving JSON file failed: %s", filename)
         raise WriteError(error) from error
