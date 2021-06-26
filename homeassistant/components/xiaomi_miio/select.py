@@ -142,16 +142,7 @@ class XiaomiSelector(XiaomiCoordinatedMiioEntity, SelectEntity):
     @property
     def current_option(self):
         """Return the current option."""
-        if not self.available and self.coordinator.data:
-            self._available = True
-            self._current_option = self._extract_value_from_attribute(
-                self.coordinator.data, self._controller.short_name
-            )
-        return (
-            getattr(self, SERVICE_TO_METHOD[self._controller.service]["property"])
-            if self.available
-            else None
-        )
+        return getattr(self, SERVICE_TO_METHOD[self._controller.service]["property"])
 
     @staticmethod
     def _extract_value_from_attribute(state, attribute):
