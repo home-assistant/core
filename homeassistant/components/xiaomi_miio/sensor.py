@@ -236,7 +236,6 @@ class XiaomiGenericSensor(XiaomiCoordinatedMiioEntity, SensorEntity):
         self._attribute = attribute
         self._available = None
         self._state = None
-        self._skip_update = False
 
     @callback
     def _handle_coordinator_update(self):
