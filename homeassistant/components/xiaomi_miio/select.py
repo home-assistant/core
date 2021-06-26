@@ -135,11 +135,6 @@ class XiaomiSelector(XiaomiCoordinatedMiioEntity, SelectEntity):
         return self._controller.options
 
     @property
-    def available(self):
-        """Return true when state is known."""
-        return super().available and self._available
-
-    @property
     def current_option(self):
         """Return the current option."""
         return getattr(self, SERVICE_TO_METHOD[self._controller.service]["property"])
@@ -183,7 +178,6 @@ class XiaomiAirHumidifierSelector(XiaomiSelector):
     @callback
     def _handle_coordinator_update(self):
         """Fetch state from the device."""
-        self._available = True
         self._current_option = self._extract_value_from_attribute(
             self.coordinator.data, self._controller.short_name
         )
