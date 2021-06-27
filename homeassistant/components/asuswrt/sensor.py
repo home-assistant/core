@@ -7,7 +7,11 @@ from typing import Any
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import DATA_GIGABYTES, DATA_RATE_MEGABITS_PER_SECOND
+from homeassistant.const import (
+    DATA_GIGABYTES,
+    DATA_RATE_MEGABITS_PER_SECOND,
+    PERCENTAGE,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
@@ -20,6 +24,7 @@ from .const import (
     DOMAIN,
     SENSORS_BYTES,
     SENSORS_CONNECTED_DEVICE,
+    SENSORS_LOAD_AVG,
     SENSORS_RATES,
 )
 from .router import KEY_COORDINATOR, KEY_SENSORS, AsusWrtRouter
@@ -66,6 +71,21 @@ CONNECTION_SENSORS = {
         SENSOR_UNIT: DATA_GIGABYTES,
         SENSOR_FACTOR: 1000000000,
         SENSOR_ICON: "mdi:upload",
+    },
+    SENSORS_LOAD_AVG[0]: {
+        SENSOR_NAME: "Load Avg (1m)",
+        SENSOR_UNIT: PERCENTAGE,
+        SENSOR_ICON: "mdi:cpu-32-bit",
+    },
+    SENSORS_LOAD_AVG[1]: {
+        SENSOR_NAME: "Load Avg (5m)",
+        SENSOR_UNIT: PERCENTAGE,
+        SENSOR_ICON: "mdi:cpu-32-bit",
+    },
+    SENSORS_LOAD_AVG[2]: {
+        SENSOR_NAME: "Load Avg (15m)",
+        SENSOR_UNIT: PERCENTAGE,
+        SENSOR_ICON: "mdi:cpu-32-bit",
     },
 }
 

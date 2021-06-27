@@ -39,6 +39,7 @@ CONFIG_DATA = {
 
 MOCK_BYTES_TOTAL = [60000000000, 50000000000]
 MOCK_CURRENT_TRANSFER_RATES = [20000000, 10000000]
+MOCK_LOAD_AVG = [1.1, 1.2, 1.3]
 
 SENSOR_NAMES = [
     "Devices Connected",
@@ -46,6 +47,8 @@ SENSOR_NAMES = [
     "Download",
     "Upload Speed",
     "Upload",
+    "Load Avg (1m)",
+    "Load Avg (15m)",
 ]
 
 
@@ -80,6 +83,9 @@ def mock_controller_connect(mock_devices):
         )
         service_mock.return_value.async_get_current_transfer_rates = AsyncMock(
             return_value=MOCK_CURRENT_TRANSFER_RATES
+        )
+        service_mock.return_value.async_get_loadavg = AsyncMock(
+            return_value=MOCK_LOAD_AVG
         )
         yield service_mock
 
@@ -125,6 +131,8 @@ async def test_sensors(hass, connect, mock_devices):
     assert hass.states.get(f"{sensor_prefix}_download").state == "60.0"
     assert hass.states.get(f"{sensor_prefix}_upload_speed").state == "80.0"
     assert hass.states.get(f"{sensor_prefix}_upload").state == "50.0"
+    assert hass.states.get(f"{sensor_prefix}_load_avg_1m").state == "1.1"
+    assert hass.states.get(f"{sensor_prefix}_load_avg_15m").state == "1.3"
     assert hass.states.get(f"{sensor_prefix}_devices_connected").state == "2"
 
     # add one device and remove another
