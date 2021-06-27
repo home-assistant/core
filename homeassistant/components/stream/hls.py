@@ -21,8 +21,8 @@ from .core import (
     PROVIDERS,
     IdleTimer,
     Segment,
-    StreamConstants,
     StreamOutput,
+    StreamSettings,
     StreamView,
 )
 from .fmp4utils import get_codec_string
@@ -229,7 +229,7 @@ class HlsPlaylistView(StreamView):
                         for s in segments
                         for p in s.parts_by_byterange.values()
                     ),
-                    default=StreamConstants.TARGET_PART_DURATION,
+                    default=StreamSettings.target_part_duration,
                 )
             )
             playlist.extend(
@@ -352,7 +352,7 @@ class HlsPlaylistView(StreamView):
             and hls_part
             >= len(last_segment.parts_by_byterange)
             - 1
-            + StreamConstants.HLS_ADVANCE_PART_LIMIT
+            + StreamSettings.hls_advance_part_limit
         ):
             return self.bad_request(blocking_request, track.target_duration)
 
@@ -362,7 +362,7 @@ class HlsPlaylistView(StreamView):
             and hls_msn == last_segment.sequence
             and hls_part >= len(last_segment.parts_by_byterange)
         ):
-            if not await track.part_recv(timeout=StreamConstants.HLS_PART_TIMEOUT):
+            if not await track.part_recv(timeout=StreamSettings.hls_part_timeout):
                 return self.not_found(blocking_request, track.target_duration)
         # Now we should have msn.part >= hls_msn.hls_part. However, in the case
         # that we have a rollover part request from the previous segment, we need
@@ -374,12 +374,12 @@ class HlsPlaylistView(StreamView):
             if not (previous_segment := track.get_segment(hls_msn)) or (
                 hls_part >= len(previous_segment.parts_by_byterange)
                 and not last_segment.parts_by_byterange
-                and not await track.part_recv(timeout=StreamConstants.HLS_PART_TIMEOUT)
+                and not await track.part_recv(timeout=StreamSettings.hls_part_timeout)
             ):
                 return self.not_found(blocking_request, track.target_duration)
 
         response = web.Response(
-            body=self.render(track, StreamConstants.LL_HLS).encode("utf-8"),
+            body=self.render(track, StreamSettings.ll_hls).encode("utf-8"),
             headers={
                 "Content-Type": FORMAT_CONTENT_TYPE[HLS_PROVIDER],
                 "Cache-Control": f"max-age={(6 if blocking_request else 0.5)*track.target_duration:.0f}",
@@ -428,7 +428,7 @@ class HlsSegmentView(StreamView):
         if not (
             (segment := track.get_segment(int(sequence)))
             or (
-                await track.part_recv(timeout=StreamConstants.HLS_PART_TIMEOUT)
+                await track.part_recv(timeout=StreamSettings.hls_part_timeout)
                 and (segment := track.get_segment(int(sequence)))
             )
         ):
@@ -498,9 +498,7 @@ class HlsSegmentView(StreamView):
             ):
                 if bytes_to_write:
                     await response.write(bytes_to_write)
-                elif not await track.part_recv(
-                    timeout=StreamConstants.HLS_PART_TIMEOUT
-                ):
+                elif not await track.part_recv(timeout=StreamSettings.hls_part_timeout):
                     break
         except ConnectionResetError:
             _LOGGER.warning("Connection reset while serving HLS partial segment")

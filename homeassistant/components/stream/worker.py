@@ -21,7 +21,7 @@ from .const import (
     SEGMENT_CONTAINER_FORMAT,
     SOURCE_TIMEOUT,
 )
-from .core import Part, Segment, StreamConstants, StreamOutput
+from .core import Part, Segment, StreamOutput, StreamSettings
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -87,10 +87,10 @@ class SegmentBuffer:
                         # a "Part" that can be combined with the data from all the other "Part"s, plus an init
                         # section, to reconstitute the data in a "Segment".
                         "frag_duration": str(
-                            int(StreamConstants.TARGET_PART_DURATION * 1e6)
+                            int(StreamSettings.target_part_duration * 1e6)
                         ),
                     }
-                    if StreamConstants.LL_HLS
+                    if StreamSettings.ll_hls
                     else {}
                 ),
             },
@@ -137,7 +137,7 @@ class SegmentBuffer:
             if (
                 packet.is_keyframe
                 and (packet.dts - self._segment_start_dts) * packet.time_base
-                >= StreamConstants.MIN_SEGMENT_DURATION
+                >= StreamSettings.min_segment_duration
             ):
                 # Flush segment (also flushes the stub part segment)
                 self.flush(packet, last_part=True)

@@ -29,17 +29,17 @@ if TYPE_CHECKING:
 PROVIDERS = Registry()
 
 
-class StreamConstants:
-    """Constants that are initialized when Stream is loaded."""
+class StreamSettings:
+    """Settings that may be reset by config options when Stream is loaded."""
 
-    LL_HLS = False
+    ll_hls = False
     # Round down a little to avoid missing the keyframe due to rounding
-    MIN_SEGMENT_DURATION = (
+    min_segment_duration = (
         TARGET_SEGMENT_DURATION_NON_LL_HLS - SEGMENT_DURATION_ADJUSTER
     )
-    TARGET_PART_DURATION = 0.0
-    HLS_ADVANCE_PART_LIMIT = 3
-    HLS_PART_TIMEOUT = TARGET_SEGMENT_DURATION_NON_LL_HLS
+    target_part_duration = 0.0
+    hls_advance_part_limit = 3
+    hls_part_timeout = TARGET_SEGMENT_DURATION_NON_LL_HLS
 
 
 @attr.s(slots=True)
@@ -235,7 +235,7 @@ class StreamOutput:
     def target_duration(self) -> float:
         """Return the max duration of any given segment in seconds."""
         if not (durations := [s.duration for s in self._segments if s.complete]):
-            return StreamConstants.MIN_SEGMENT_DURATION
+            return StreamSettings.min_segment_duration
         return max(durations)
 
     def get_segment(self, sequence: int) -> Segment | None:

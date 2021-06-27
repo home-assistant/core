@@ -13,7 +13,7 @@ from homeassistant.components.stream.const import (
     MAX_SEGMENTS,
     NUM_PLAYLIST_SEGMENTS,
 )
-from homeassistant.components.stream.core import Part, Segment, StreamConstants
+from homeassistant.components.stream.core import Part, Segment, StreamSettings
 from homeassistant.const import HTTP_NOT_FOUND
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -92,9 +92,9 @@ def make_playlist(sequence, discontinuity_sequence=0, segments=None, hint=None):
     if hint:
         response.extend(
             [
-                f"#EXT-X-PART-INF:PART-TARGET={StreamConstants.TARGET_PART_DURATION:.3f}",
-                f"#EXT-X-SERVER-CONTROL:CAN-BLOCK-RELOAD=YES,PART-HOLD-BACK={2*StreamConstants.TARGET_PART_DURATION:.3f}",
-                f"#EXT-X-START:TIME-OFFSET=-{3*StreamConstants.TARGET_PART_DURATION:.3f},PRECISE=YES",
+                f"#EXT-X-PART-INF:PART-TARGET={StreamSettings.target_part_duration:.3f}",
+                f"#EXT-X-SERVER-CONTROL:CAN-BLOCK-RELOAD=YES,PART-HOLD-BACK={2*StreamSettings.target_part_duration:.3f}",
+                f"#EXT-X-START:TIME-OFFSET=-{3*StreamSettings.target_part_duration:.3f},PRECISE=YES",
             ]
         )
     else:
@@ -351,7 +351,7 @@ async def test_hls_max_segments(hass, hls_stream, stream_worker_sync):
 
     # The segment that fell off the buffer is not accessible
     with patch(
-        "homeassistant.components.stream.core.StreamConstants.HLS_PART_TIMEOUT", 0.1
+        "homeassistant.components.stream.core.StreamSettings.hls_part_timeout", 0.1
     ):
         segment_response = await hls_client.get("/segment/0.m4s")
     assert segment_response.status == 404

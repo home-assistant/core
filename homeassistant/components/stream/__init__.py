@@ -48,7 +48,7 @@ from .const import (
     STREAM_RESTART_INCREMENT,
     STREAM_RESTART_RESET_TIME,
 )
-from .core import PROVIDERS, IdleTimer, StreamConstants, StreamOutput
+from .core import PROVIDERS, IdleTimer, StreamOutput, StreamSettings
 from .hls import async_setup_hls
 
 _LOGGER = logging.getLogger(__name__)
@@ -117,17 +117,17 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.data[DOMAIN][ATTR_ENDPOINTS] = {}
     hass.data[DOMAIN][ATTR_STREAMS] = []
     if (conf := config.get(DOMAIN)) and conf[CONF_LL_HLS]:
-        StreamConstants.LL_HLS = True
+        StreamSettings.ll_hls = True
         assert isinstance(conf[CONF_SEGMENT_DURATION], float)
         assert isinstance(conf[CONF_PART_DURATION], float)
-        StreamConstants.MIN_SEGMENT_DURATION = (
+        StreamSettings.min_segment_duration = (
             conf[CONF_SEGMENT_DURATION] - SEGMENT_DURATION_ADJUSTER
         )
-        StreamConstants.TARGET_PART_DURATION = conf[CONF_PART_DURATION]
-        StreamConstants.HLS_ADVANCE_PART_LIMIT = max(
-            int(3 / StreamConstants.TARGET_PART_DURATION), 3
+        StreamSettings.target_part_duration = conf[CONF_PART_DURATION]
+        StreamSettings.hls_advance_part_limit = max(
+            int(3 / StreamSettings.target_part_duration), 3
         )
-        StreamConstants.HLS_PART_TIMEOUT = 2 * StreamConstants.TARGET_PART_DURATION
+        StreamSettings.hls_part_timeout = 2 * StreamSettings.target_part_duration
 
     # Setup HLS
     hls_endpoint = async_setup_hls(hass)

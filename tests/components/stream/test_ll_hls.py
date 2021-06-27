@@ -13,7 +13,7 @@ from homeassistant.components.stream.const import (
     CONF_SEGMENT_DURATION,
     HLS_PROVIDER,
 )
-from homeassistant.components.stream.core import Part, Segment, StreamConstants
+from homeassistant.components.stream.core import Part, Segment, StreamSettings
 from homeassistant.const import HTTP_NOT_FOUND
 from homeassistant.setup import async_setup_component
 
@@ -416,7 +416,7 @@ async def test_ll_hls_playlist_bad_msn_part(hass, hls_stream, stream_worker_sync
     assert (await hls_client.get("/playlist.m3u8?_HLS_msn=4")).status == 400
     assert (
         await hls_client.get(
-            f"/playlist.m3u8?_HLS_msn=1&_HLS_part={num_completed_parts-1+StreamConstants.HLS_ADVANCE_PART_LIMIT}"
+            f"/playlist.m3u8?_HLS_msn=1&_HLS_part={num_completed_parts-1+StreamSettings.hls_advance_part_limit}"
         )
     ).status == 400
     stream_worker_sync.resume()
@@ -543,7 +543,7 @@ async def test_ll_hls_playlist_msn_part(hass, hls_stream, stream_worker_sync, hl
 
     # Make requests for all the part segments up to n+ADVANCE_PART_LIMIT
     hls_sync.reset_request_pool(
-        num_completed_parts + int(-(-StreamConstants.HLS_ADVANCE_PART_LIMIT // 1))
+        num_completed_parts + int(-(-StreamSettings.hls_advance_part_limit // 1))
     )
     msn_requests = asyncio.gather(
         *(
@@ -551,7 +551,7 @@ async def test_ll_hls_playlist_msn_part(hass, hls_stream, stream_worker_sync, hl
                 hls_client.get(f"/playlist.m3u8?_HLS_msn=1&_HLS_part={i}")
                 for i in range(
                     num_completed_parts
-                    + int(-(-StreamConstants.HLS_ADVANCE_PART_LIMIT // 1))
+                    + int(-(-StreamSettings.hls_advance_part_limit // 1))
                 )
             ]
         )
