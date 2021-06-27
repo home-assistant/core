@@ -47,9 +47,6 @@ async def async_setup_platform(
         elif surepy_entity.type == EntityType.HUB:
             entities.append(Hub(surepy_entity.id, spc))
 
-    for en in entities:
-        print(en.name, en.entity_id)
-
     async_add_entities(entities, True)
 
 
