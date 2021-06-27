@@ -228,13 +228,13 @@ class XiaomiGenericSensor(XiaomiCoordinatedMiioEntity, SensorEntity):
         """Initialize the entity."""
         super().__init__(name, device, entry, unique_id, coordinator)
 
-        self._description = SENSOR_TYPES[attribute]
-        self._attr_device_class = self._description.device_class
-        self._attr_state_class = self._description.state_class
-        self._attr_icon = self._description.icon
+        self._sensor_config = SENSOR_TYPES[attribute]
+        self._attr_device_class = self._sensor_config.device_class
+        self._attr_state_class = self._sensor_config.state_class
+        self._attr_icon = self._sensor_config.icon
         self._attr_name = name
         self._attr_unique_id = unique_id
-        self._attr_unit_of_measurement = self._description.unit
+        self._attr_unit_of_measurement = self._sensor_config.unit
         self._device = device
         self._entry = entry
         self._attribute = attribute
@@ -247,13 +247,13 @@ class XiaomiGenericSensor(XiaomiCoordinatedMiioEntity, SensorEntity):
             self.coordinator.data, self._attribute
         )
         if (
-            self._description.valid_min_value
-            and self._state < self._description.valid_min_value
+            self._sensor_config.valid_min_value
+            and self._state < self._sensor_config.valid_min_value
         ):
             return None
         if (
-            self._description.valid_max_value
-            and self._state > self._description.valid_max_value
+            self._sensor_config.valid_max_value
+            and self._state > self._sensor_config.valid_max_value
         ):
             return None
         return self._state
