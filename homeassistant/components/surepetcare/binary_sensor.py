@@ -87,7 +87,6 @@ class SurePetcareBinarySensor(BinarySensorEntity):
     @callback
     def _async_update(self) -> None:
         """Get the latest data and update the state."""
-        pass
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
