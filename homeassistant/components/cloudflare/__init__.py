@@ -19,12 +19,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
 
-from .const import (
-    CONF_RECORDS,
-    DEFAULT_UPDATE_INTERVAL,
-    DOMAIN,
-    SERVICE_UPDATE_RECORDS,
-)
+from .const import CONF_RECORDS, DEFAULT_UPDATE_INTERVAL, DOMAIN, SERVICE_UPDATE_RECORDS
 
 _LOGGER = logging.getLogger(__name__)
 
