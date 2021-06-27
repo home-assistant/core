@@ -371,7 +371,6 @@ class TibberSensorRT(TibberSensor):
             self._attr_last_reset = dt_util.as_utc(
                 timestamp.replace(minute=0, second=0, microsecond=0)
             )
-
         self._attr_state = state
         self.async_write_ha_state()
 
