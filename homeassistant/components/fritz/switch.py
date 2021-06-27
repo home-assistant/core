@@ -42,18 +42,35 @@ async def async_service_call_action(
     **kwargs: Any,
 ) -> None | dict:
     """Return service details."""
+    return await fritzbox_tools.hass.async_add_executor_job(
+        partial(
+            service_call_action,
+            fritzbox_tools,
+            service_name,
+            service_suffix,
+            action_name,
+            **kwargs,
+        )
+    )
+
+
+def service_call_action(
+    fritzbox_tools: FritzBoxTools,
+    service_name: str,
+    service_suffix: str | None,
+    action_name: str,
+    **kwargs: Any,
+) -> dict | None:
+    """Return service details."""
 
     if f"{service_name}{service_suffix}" not in fritzbox_tools.connection.services:
         return None
 
     try:
-        return await fritzbox_tools.hass.async_add_executor_job(
-            partial(
-                fritzbox_tools.connection.call_action,
-                f"{service_name}:{service_suffix}",
-                action_name,
-                **kwargs,
-            )
+        return fritzbox_tools.connection.call_action(
+            f"{service_name}:{service_suffix}",
+            action_name,
+            **kwargs,
         )
     except FritzSecurityError:
         _LOGGER.error(
@@ -76,12 +93,12 @@ async def async_service_call_action(
         return None
 
 
-async def async_get_deflections(
+def get_deflections(
     fritzbox_tools: FritzBoxTools, service_name: str
 ) -> list[OrderedDict[Any, Any]] | None:
     """Get deflection switch info."""
 
-    deflection_list = await async_service_call_action(
+    deflection_list = service_call_action(
         fritzbox_tools,
         service_name,
         "1",
@@ -99,7 +116,7 @@ async def async_get_deflections(
     return deflections
 
 
-async def async_deflection_entities_list(
+def deflection_entities_list(
     fritzbox_tools: FritzBoxTools, device_friendly_name: str
 ) -> list[FritzBoxDeflectionSwitch]:
     """Get list of deflection entities."""
@@ -108,7 +125,7 @@ async def async_deflection_entities_list(
 
     entities_list: list = []
     service_name = "X_AVM-DE_OnTel"
-    deflections_response = await async_service_call_action(
+    deflections_response = service_call_action(
         fritzbox_tools, service_name, "1", "GetNumberOfDeflections"
     )
     if not deflections_response:
@@ -122,7 +139,7 @@ async def async_deflection_entities_list(
     )
 
     if deflections_response["NewNumberOfDeflections"] != 0:
-        deflection_list = await async_get_deflections(fritzbox_tools, service_name)
+        deflection_list = get_deflections(fritzbox_tools, service_name)
         if deflection_list is not None:
             for dict_of_deflection in deflection_list:
                 entities_list.append(
@@ -134,7 +151,7 @@ async def async_deflection_entities_list(
     return entities_list
 
 
-async def async_port_entities_list(
+def port_entities_list(
     fritzbox_tools: FritzBoxTools, device_friendly_name: str
 ) -> list[FritzBoxPortSwitch]:
     """Get list of port forwarding entities."""
@@ -142,7 +159,7 @@ async def async_port_entities_list(
     _LOGGER.debug("Setting up %s switches", SWITCH_TYPE_PORTFORWARD)
     entities_list: list = []
     service_name = "Layer3Forwarding"
-    connection_type = await async_service_call_action(
+    connection_type = service_call_action(
         fritzbox_tools, service_name, "1", "GetDefaultConnectionService"
     )
     if not connection_type:
@@ -153,7 +170,7 @@ async def async_port_entities_list(
     con_type: str = connection_type["NewDefaultConnectionService"][2:][:-2]
 
     # Query port forwardings and setup a switch for each forward for the current device
-    resp = await async_service_call_action(
+    resp = service_call_action(
         fritzbox_tools, con_type, "1", "GetPortMappingNumberOfEntries"
     )
     if not resp:
@@ -170,7 +187,7 @@ async def async_port_entities_list(
 
     for i in range(port_forwards_count):
 
-        portmap = await async_service_call_action(
+        portmap = service_call_action(
             fritzbox_tools,
             con_type,
             "1",
@@ -204,7 +221,7 @@ async def async_port_entities_list(
     return entities_list
 
 
-async def async_profile_entities_list(
+def profile_entities_list(
     fritzbox_tools: FritzBoxTools, device_friendly_name: str
 ) -> list[FritzBoxProfileSwitch]:
     """Get list of profile entities."""
@@ -218,7 +235,7 @@ async def async_profile_entities_list(
     return entities_list
 
 
-async def async_wifi_entities_list(
+def wifi_entities_list(
     fritzbox_tools: FritzBoxTools, device_friendly_name: str
 ) -> list[FritzBoxWifiSwitch]:
     """Get list of wifi entities."""
@@ -228,7 +245,7 @@ async def async_wifi_entities_list(
     networks: dict = {}
     for i in range(4):
         if ("WLANConfiguration" + str(i)) in fritzbox_tools.connection.services:
-            network_info = await async_service_call_action(
+            network_info = service_call_action(
                 fritzbox_tools, "WLANConfiguration", str(i), "GetInfo"
             )
             if network_info:
@@ -246,6 +263,24 @@ async def async_wifi_entities_list(
     return entities_list
 
 
+def all_entities_list(fritzbox_tools: FritzBoxTools, device_friendly_name: str):
+    """Get a list of all entities."""
+
+    entities_list: list[
+        FritzBoxDeflectionSwitch
+        | FritzBoxPortSwitch
+        | FritzBoxProfileSwitch
+        | FritzBoxWifiSwitch
+    ] = []
+
+    entities_list.extend(deflection_entities_list(fritzbox_tools, device_friendly_name))
+    entities_list.extend(port_entities_list(fritzbox_tools, device_friendly_name))
+    entities_list.extend(profile_entities_list(fritzbox_tools, device_friendly_name))
+    entities_list.extend(wifi_entities_list(fritzbox_tools, device_friendly_name))
+
+    return entities_list
+
+
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
@@ -255,20 +290,9 @@ async def async_setup_entry(
 
     _LOGGER.debug("Fritzbox services: %s", fritzbox_tools.connection.services)
 
-    entities_list: list[
-        FritzBoxDeflectionSwitch
-        | FritzBoxPortSwitch
-        | FritzBoxProfileSwitch
-        | FritzBoxWifiSwitch
-    ] = []
-
-    entities_list.extend(
-        await async_deflection_entities_list(fritzbox_tools, entry.title)
+    entities_list = await hass.async_add_executor_job(
+        all_entities_list, fritzbox_tools, entry.title
     )
-    entities_list.extend(await async_port_entities_list(fritzbox_tools, entry.title))
-    entities_list.extend(await async_profile_entities_list(fritzbox_tools, entry.title))
-    entities_list.extend(await async_wifi_entities_list(fritzbox_tools, entry.title))
-
     async_add_entities(entities_list)
 
 
