@@ -21,13 +21,9 @@ _LOGGER = logging.getLogger(__name__)
 class DecoraWifiLoginFailed(Exception):
     """Raised when DecoraWifiPlatform.login() fails to log in."""
 
-    pass
-
 
 class DecoraWifiCommFailed(Exception):
     """Raised when DecoraWifiPlatform.login() fails to communicate with the myLeviton Service."""
-
-    pass
 
 
 class DecoraWifiPlatform:
@@ -92,19 +88,19 @@ class DecoraWifiPlatform:
                         self._session, permission.residentialAccountId
                     )
                     residences = acct.get_residences()
-                    for r in residences:
-                        switches = r.get_iot_switches()
-                        for s in switches:
+                    for res in residences:
+                        switches = res.get_iot_switches()
+                        for sw in switches:
                             # Add the switch to the appropriate list in the iot_switches dictionary.
-                            platform = DecoraWifiPlatform.classifydevice(s)
-                            self._iot_switches[platform].append(s)
+                            platform = DecoraWifiPlatform.classifydevice(sw)
+                            self._iot_switches[platform].append(sw)
                 elif permission.residenceId is not None:
                     residence = Residence(self._session, permission.residenceId)
                     switches = residence.get_iot_switches()
                     for s in switches:
                         # Add the switch to the appropriate list in the iot_switches dictionary.
-                        platform = DecoraWifiPlatform.classifydevice(s)
-                        self._iot_switches[platform].append(s)
+                        platform = DecoraWifiPlatform.classifydevice(sw)
+                        self._iot_switches[platform].append(sw)
         except ValueError as exc:
             raise DecoraWifiCommFailed from exc
 

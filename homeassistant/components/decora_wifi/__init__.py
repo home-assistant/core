@@ -96,9 +96,9 @@ async def async_setup_entry(hass: HomeAssistant, entry):
                 password,
             )
         except DecoraWifiLoginFailed:
-            _LOGGER.error("Login failed.")
+            _LOGGER.error("Login failed")
         except DecoraWifiCommFailed:
-            _LOGGER.error("Communication with myLeviton failed.")
+            _LOGGER.error("Communication with myLeviton failed")
         decorawifisessions.update({email: session})
 
     if session:
@@ -121,7 +121,7 @@ async def async_unload_entry(hass, entry):
                 await hass.async_create_task(session.apilogout)
             except DecoraWifiCommFailed:
                 _LOGGER.warning(
-                    "Communication with myLeviton failed while attempting to logout."
+                    "Communication with myLeviton failed while attempting to logout"
                 )
             decorawifisessions.pop(email)
         hass.data[DOMAIN].pop(entry.entry_id)

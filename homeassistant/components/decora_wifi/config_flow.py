@@ -25,9 +25,8 @@ class DecoraWifiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.data = {}
         self.entry = None
 
-    async def async_step_user(self, user_input=None, errors=None):
+    async def async_step_user(self, user_input=None, errors={}):
         """Prompt for user input to setup decora_wifi."""
-        errors.setdefault(errors, {})
 
         data_schema = {
             vol.Required(CONF_USERNAME): str,
@@ -71,45 +70,45 @@ class DecoraWifiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             title=f"{CONF_TITLE} - {self.data[CONF_USERNAME]}", data=self.data
         )
 
-    async def async_step_reauth(self, user_input=None):
+    async def async_step_reauth(self, user_input=None, errors={}):
         """Re-authenticate a user."""
-        errors = {}
+
         data_schema = {
             vol.Required(CONF_USERNAME): str,
             vol.Required(CONF_PASSWORD): str,
         }
 
-        if (
-            user_input
-            and user_input.get(CONF_USERNAME)
-            and user_input.get(CONF_PASSWORD)
-        ):
-            self.data.update(user_input)
+        self.data = {
+            CONF_USERNAME: user_input[CONF_USERNAME],
+            CONF_PASSWORD: user_input[CONF_PASSWORD],
+        }
 
-            try:
-                self.session = await DecoraWifiPlatform.async_setup_decora_wifi(
-                    self.hass,
-                    email=self.data[CONF_USERNAME],
-                    password=self.data[CONF_PASSWORD],
-                )
-            except DecoraWifiLoginFailed:
-                errors["base"] = "invalid_auth"
-                return self.async_show_form(
-                    step_id="user", data_schema=vol.Schema(data_schema), errors=errors
-                )
-            except DecoraWifiCommFailed:
-                errors["base"] = "cannot_connect"
-                return self.async_show_form(
-                    step_id="user", data_schema=vol.Schema(data_schema), errors=errors
-                )
-            decorawifisessions.update({self.data[CONF_USERNAME]: self.session})
+        self.entry = await self.async_set_unique_id(self.data[CONF_USERNAME])
 
-            # Login attempt succeeded. Complete the entry setup.
-            self.hass.config_entries.async_update_entry(
-                self.entry, title=f"{CONF_TITLE} - {CONF_USERNAME}", data=self.data
+        try:
+            self.session = await DecoraWifiPlatform.async_setup_decora_wifi(
+                self.hass,
+                email=self.data[CONF_USERNAME],
+                password=self.data[CONF_PASSWORD],
             )
-            await self.hass.config_entries.async_reload(self.entry.entry_id)
-            return self.async_abort(reason="reauth_successful")
+        except DecoraWifiLoginFailed:
+            errors["base"] = "invalid_auth"
+            return self.async_show_form(
+                step_id="reauth", data_schema=vol.Schema(data_schema), errors=errors
+            )
+        except DecoraWifiCommFailed:
+            errors["base"] = "cannot_connect"
+            return self.async_show_form(
+                step_id="reauth", data_schema=vol.Schema(data_schema), errors=errors
+            )
+        decorawifisessions.update({self.data[CONF_USERNAME]: self.session})
+
+        # Login attempt succeeded. Complete the entry setup.
+        self.hass.config_entries.async_update_entry(
+            self.entry, title=f"{CONF_TITLE} - {CONF_USERNAME}", data=self.data
+        )
+        await self.hass.config_entries.async_reload(self.entry.entry_id)
+        return self.async_abort(reason="reauth_successful")
 
     async def async_step_import(self, user_input=None):
         """Import user."""
