@@ -41,9 +41,7 @@ async def async_setup_platform(
             EntityType.FEEDER,
             EntityType.FELAQUA,
         ]:
-            entities.append(
-                DeviceConnectivity(surepy_entity.id, surepy_entity.type, spc)
-            )
+            entities.append(DeviceConnectivity(surepy_entity.id, spc))
 
         if surepy_entity.type == EntityType.PET:
             entities.append(Pet(surepy_entity.id, spc))
@@ -56,18 +54,17 @@ async def async_setup_platform(
 class SurePetcareBinarySensor(BinarySensorEntity):
     """A binary sensor implementation for Sure Petcare Entities."""
 
+    _attr_should_poll = False
+
     def __init__(
         self,
         _id: int,
         spc: SurePetcareAPI,
         device_class: str,
-        sure_type: EntityType,
     ) -> None:
         """Initialize a Sure Petcare binary sensor."""
 
         self._id = _id
-        self._device_class = device_class
-
         self._spc: SurePetcareAPI = spc
 
         self._surepy_entity: SurepyEntity = self._spc.states[self._id]
@@ -81,25 +78,13 @@ class SurePetcareBinarySensor(BinarySensorEntity):
 
         self._name = f"{self._surepy_entity.type.name.capitalize()} {name.capitalize()}"
 
-    @property
-    def should_poll(self) -> bool:
-        """Return if the entity should use default polling."""
-        return False
+        self._attr_device_class = device_class
+        self._attr_unique_id = f"{self._surepy_entity.household_id}-{self._id}"
 
     @property
     def name(self) -> str:
         """Return the name of the device if any."""
         return self._name
-
-    @property
-    def device_class(self) -> str:
-        """Return the device class."""
-        return None if not self._device_class else self._device_class
-
-    @property
-    def unique_id(self) -> str:
-        """Return an unique ID."""
-        return f"{self._surepy_entity.household_id}-{self._id}"
 
     @callback
     def _async_update(self) -> None:
@@ -121,7 +106,7 @@ class Hub(SurePetcareBinarySensor):
 
     def __init__(self, _id: int, spc: SurePetcareAPI) -> None:
         """Initialize a Sure Petcare Hub."""
-        super().__init__(_id, spc, DEVICE_CLASS_CONNECTIVITY, EntityType.HUB)
+        super().__init__(_id, spc, DEVICE_CLASS_CONNECTIVITY)
 
     @property
     def available(self) -> bool:
@@ -153,7 +138,7 @@ class Pet(SurePetcareBinarySensor):
 
     def __init__(self, _id: int, spc: SurePetcareAPI) -> None:
         """Initialize a Sure Petcare Pet."""
-        super().__init__(_id, spc, DEVICE_CLASS_PRESENCE, EntityType.PET)
+        super().__init__(_id, spc, DEVICE_CLASS_PRESENCE)
 
     @property
     def is_on(self) -> bool:
@@ -186,21 +171,18 @@ class DeviceConnectivity(SurePetcareBinarySensor):
     def __init__(
         self,
         _id: int,
-        sure_type: EntityType,
         spc: SurePetcareAPI,
     ) -> None:
         """Initialize a Sure Petcare Device."""
-        super().__init__(_id, spc, DEVICE_CLASS_CONNECTIVITY, sure_type)
+        super().__init__(_id, spc, DEVICE_CLASS_CONNECTIVITY)
+        self._attr_unique_id = (
+            f"{self._surepy_entity.household_id}-{self._id}-connectivity"
+        )
 
     @property
     def name(self) -> str:
         """Return the name of the device if any."""
         return f"{self._name}_connectivity"
-
-    @property
-    def unique_id(self) -> str:
-        """Return an unique ID."""
-        return f"{self._surepy_entity.household_id}-{self._id}-connectivity"
 
     @property
     def available(self) -> bool:
