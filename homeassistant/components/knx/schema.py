@@ -259,6 +259,7 @@ class ClimateSchema(KNXPlatformSchema):
 
     PLATFORM_NAME = SupportedPlatforms.CLIMATE.value
 
+    CONF_ACTIVE_STATE_ADDRESS = "active_state_address"
     CONF_SETPOINT_SHIFT_ADDRESS = "setpoint_shift_address"
     CONF_SETPOINT_SHIFT_STATE_ADDRESS = "setpoint_shift_state_address"
     CONF_SETPOINT_SHIFT_MODE = "setpoint_shift_mode"
@@ -274,6 +275,7 @@ class ClimateSchema(KNXPlatformSchema):
     CONF_CONTROLLER_STATUS_STATE_ADDRESS = "controller_status_state_address"
     CONF_CONTROLLER_MODE_ADDRESS = "controller_mode_address"
     CONF_CONTROLLER_MODE_STATE_ADDRESS = "controller_mode_state_address"
+    CONF_COMMAND_VALUE_STATE_ADDRESS = "command_value_state_address"
     CONF_HEAT_COOL_ADDRESS = "heat_cool_address"
     CONF_HEAT_COOL_STATE_ADDRESS = "heat_cool_state_address"
     CONF_OPERATION_MODE_FROST_PROTECTION_ADDRESS = (
@@ -332,6 +334,8 @@ class ClimateSchema(KNXPlatformSchema):
                 vol.Optional(CONF_SETPOINT_SHIFT_MODE): vol.Maybe(
                     vol.All(vol.Upper, cv.enum(SetpointShiftMode))
                 ),
+                vol.Optional(CONF_ACTIVE_STATE_ADDRESS): ga_list_validator,
+                vol.Optional(CONF_COMMAND_VALUE_STATE_ADDRESS): ga_list_validator,
                 vol.Optional(CONF_OPERATION_MODE_ADDRESS): ga_list_validator,
                 vol.Optional(CONF_OPERATION_MODE_STATE_ADDRESS): ga_list_validator,
                 vol.Optional(CONF_CONTROLLER_STATUS_ADDRESS): ga_list_validator,
