@@ -248,7 +248,6 @@ def wifi_entities_list(
 ) -> list[FritzBoxWifiSwitch]:
     """Get list of wifi entities."""
     _LOGGER.debug("Setting up %s switches", SWITCH_TYPE_WIFINETWORK)
-    entities_list: list = []
     std_table = {"ac": "5Ghz", "n": "2.4Ghz"}
     networks: dict = {}
     for i in range(4):
@@ -263,12 +262,10 @@ def wifi_entities_list(
                 else:
                     networks[i] = ssid
 
-    for net in networks:
-        entities_list.append(
-            FritzBoxWifiSwitch(fritzbox_tools, device_friendly_name, net, networks[net])
-        )
-
-    return entities_list
+    return [
+        FritzBoxWifiSwitch(fritzbox_tools, device_friendly_name, net, networks[net])
+        for net in networks
+    ]
 
 
 def all_entities_list(
