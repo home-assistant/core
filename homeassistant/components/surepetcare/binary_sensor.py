@@ -1,6 +1,7 @@
 """Support for Sure PetCare Flaps/Pets binary sensors."""
 from __future__ import annotations
 
+from abc import abstractmethod
 import logging
 
 from surepy.entities import SurepyEntity
