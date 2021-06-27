@@ -58,7 +58,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             _LOGGER.error("Error updating zone %s: %s", entry.data[CONF_ZONE], error)
 
     update_interval = timedelta(minutes=DEFAULT_UPDATE_INTERVAL)
-    entry.async_on_unload(async_track_time_interval(hass, update_records, update_interval))
+    entry.async_on_unload(
+        async_track_time_interval(hass, update_records, update_interval)
+    )
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {}
