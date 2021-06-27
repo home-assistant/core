@@ -43,15 +43,9 @@ async def test_x_forwarded_for_without_trusted_proxy(aiohttp_client, caplog):
 @pytest.mark.parametrize(
     "trusted_proxies,x_forwarded_for,remote",
     [
-        (
-            ["127.0.0.0/24", "1.1.1.1", "10.10.10.0/24"],
-            "10.10.10.10, 1.1.1.1",
-            "10.10.10.10",
-        ),
         (["127.0.0.0/24", "1.1.1.1"], "123.123.123.123, 2.2.2.2, 1.1.1.1", "2.2.2.2"),
         (["127.0.0.0/24", "1.1.1.1"], "123.123.123.123,2.2.2.2,1.1.1.1", "2.2.2.2"),
         (["127.0.0.0/24"], "123.123.123.123, 2.2.2.2, 1.1.1.1", "1.1.1.1"),
-        (["127.0.0.0/24"], "127.0.0.1", "127.0.0.1"),
         (["127.0.0.1", "1.1.1.1"], "123.123.123.123, 1.1.1.1", "123.123.123.123"),
         (["127.0.0.1", "1.1.1.1"], "123.123.123.123, 2.2.2.2, 1.1.1.1", "2.2.2.2"),
         (["127.0.0.1"], "255.255.255.255", "255.255.255.255"),
@@ -81,6 +75,33 @@ async def test_x_forwarded_for_with_trusted_proxy(
     resp = await mock_api_client.get("/", headers={X_FORWARDED_FOR: x_forwarded_for})
 
     assert resp.status == 200
+
+
+@pytest.mark.parametrize(
+    "trusted_proxies,x_forwarded_for",
+    [
+        (
+            ["127.0.0.0/24", "1.1.1.1", "10.10.10.0/24"],
+            "10.10.10.10, 1.1.1.1",
+        ),
+        (["127.0.0.0/24"], "127.0.0.1"),
+    ],
+)
+async def test_x_forwarded_for_from_trusted_proxy_rejected(
+    trusted_proxies, x_forwarded_for, aiohttp_client
+):
+    """Test that we reject forwarded requests from proxy server itself."""
+
+    app = web.Application()
+    app.router.add_get("/", mock_handler)
+    async_setup_forwarded(
+        app, True, [ip_network(trusted_proxy) for trusted_proxy in trusted_proxies]
+    )
+
+    mock_api_client = await aiohttp_client(app)
+    resp = await mock_api_client.get("/", headers={X_FORWARDED_FOR: x_forwarded_for})
+
+    assert resp.status == 400
 
 
 async def test_x_forwarded_for_disabled_with_proxy(aiohttp_client, caplog):
