@@ -10,6 +10,7 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_CURRENT,
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_POWER,
+    DEVICE_CLASS_POWER_FACTOR,
     DEVICE_CLASS_SIGNAL_STRENGTH,
     DEVICE_CLASS_VOLTAGE,
     STATE_CLASS_MEASUREMENT,
@@ -18,6 +19,7 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     ELECTRICAL_CURRENT_AMPERE,
     ENERGY_KILO_WATT_HOUR,
+    PERCENTAGE,
     POWER_WATT,
     SIGNAL_STRENGTH_DECIBELS,
     VOLT,
@@ -127,6 +129,12 @@ RT_SENSOR_MAP = {
         STATE_CLASS_MEASUREMENT,
     ],
     "accumulatedCost": ["accumulated cost", None, None, STATE_CLASS_MEASUREMENT],
+    "powerFactor": [
+        "power factor",
+        DEVICE_CLASS_POWER_FACTOR,
+        PERCENTAGE,
+        STATE_CLASS_MEASUREMENT,
+    ],
 }
 
 
@@ -395,6 +403,8 @@ class TibberRtDataHandler:
         for sensor_type, state in live_measurement.items():
             if state is None or sensor_type not in RT_SENSOR_MAP:
                 continue
+            if sensor_type == "powerFactor":
+                state *= 100.0
             if sensor_type in self._entities:
                 async_dispatcher_send(
                     self.hass,
