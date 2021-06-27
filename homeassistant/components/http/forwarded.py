@@ -129,9 +129,11 @@ def async_setup_forwarded(
             overrides["remote"] = str(forwarded_ip)
             break
         else:
-            # If all the IP addresses are from trusted networks, take the left-most.
-            forwarded_for_index = -1
-            overrides["remote"] = str(forwarded_for[-1])
+            _LOGGER.warning(
+                "Request originated directly from a trusted proxy included in X-Forwarded-For: %s, this is likely a miss configuration and will be rejected",
+                forwarded_for_headers,
+            )
+            raise HTTPBadRequest()
 
         # Handle X-Forwarded-Proto
         forwarded_proto_headers: list[str] = request.headers.getall(
