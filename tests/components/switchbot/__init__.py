@@ -11,19 +11,31 @@ DOMAIN = "switchbot"
 ENTRY_CONFIG = {
     CONF_NAME: "test-name",
     CONF_PASSWORD: "test-password",
-    CONF_MAC: "00:00:00",
+    CONF_MAC: "e7:89:43:99:99:99",
 }
 
 USER_INPUT = {
     CONF_NAME: "test-name",
     CONF_PASSWORD: "test-password",
-    CONF_MAC: "00:00:00",
+    CONF_MAC: "e7:89:43:99:99:99",
+}
+
+USER_INPUT_UNSUPPORTED_DEVICE = {
+    CONF_NAME: "test-name",
+    CONF_PASSWORD: "test-password",
+    CONF_MAC: "test",
+}
+
+USER_INPUT_INVALID = {
+    CONF_NAME: "test-name",
+    CONF_PASSWORD: "test-password",
+    CONF_MAC: "invalid-mac",
 }
 
 YAML_CONFIG = {
     CONF_NAME: "test-name",
     CONF_PASSWORD: "test-password",
-    CONF_MAC: "00:00:00",
+    CONF_MAC: "e7:89:43:99:99:99",
     CONF_SENSOR_TYPE: "bot",
 }
 

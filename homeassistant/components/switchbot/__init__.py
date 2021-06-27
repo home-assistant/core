@@ -1,6 +1,5 @@
 """Support for Switchbot devices."""
-# pylint: disable=import-error
-import switchbot
+import switchbot  # pylint: disable=import-error
 
 from homeassistant.exceptions import ConfigEntryNotReady
 
@@ -22,7 +21,7 @@ from .coordinator import SwitchbotDataUpdateCoordinator
 PLATFORMS = ["switch"]
 
 
-async def async_setup_entry(hass, entry):
+async def async_setup_entry(hass, entry) -> bool:
     """Set up Switchbot from a config entry."""
     hass.data.setdefault(DOMAIN, {})
 
@@ -36,37 +35,36 @@ async def async_setup_entry(hass, entry):
 
         hass.config_entries.async_update_entry(entry, options=options)
 
-    if not hass.data[DOMAIN].get(DATA_COORDINATOR):
+    switchbot.DEFAULT_RETRY_TIMEOUT = entry.options[CONF_RETRY_TIMEOUT]
 
-        switchbot.DEFAULT_RETRY_TIMEOUT = entry.options[CONF_RETRY_TIMEOUT]
+    # Store api in coordinator.
+    coordinator = SwitchbotDataUpdateCoordinator(
+        hass,
+        update_interval=entry.options[CONF_TIME_BETWEEN_UPDATE_COMMAND],
+        api=switchbot,
+        retry_count=entry.options[CONF_RETRY_COUNT],
+        scan_timeout=entry.options[CONF_SCAN_TIMEOUT],
+    )
 
-        switchbot_api = switchbot
+    await coordinator.async_config_entry_first_refresh()
 
-        coordinator = SwitchbotDataUpdateCoordinator(
-            hass,
-            update_interval=entry.options[CONF_TIME_BETWEEN_UPDATE_COMMAND],
-            api=switchbot_api,
-            retry_count=entry.options[CONF_RETRY_COUNT],
-            scan_timeout=entry.options[CONF_SCAN_TIMEOUT],
-        )
-
-        await coordinator.async_config_entry_first_refresh()
-
-        if not coordinator.last_update_success:
-            raise ConfigEntryNotReady
-
-        hass.data[DOMAIN][DATA_COORDINATOR] = coordinator
+    if not coordinator.last_update_success:
+        raise ConfigEntryNotReady
 
     undo_listener = entry.add_update_listener(_async_update_listener)
 
-    hass.data[DOMAIN][entry.entry_id] = {DATA_UNDO_UPDATE_LISTENER: undo_listener}
+    # Creates reference to api via coordinator, this should result in single poll for all entities.
+    hass.data[DOMAIN][entry.entry_id] = {
+        DATA_COORDINATOR: coordinator,
+        DATA_UNDO_UPDATE_LISTENER: undo_listener,
+    }
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass, entry):
+async def async_unload_entry(hass, entry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
@@ -77,6 +75,6 @@ async def async_unload_entry(hass, entry):
     return unload_ok
 
 
-async def _async_update_listener(hass, entry):
+async def _async_update_listener(hass, entry) -> None:
     """Handle options update."""
     await hass.config_entries.async_reload(entry.entry_id)

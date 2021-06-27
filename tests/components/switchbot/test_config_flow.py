@@ -12,13 +12,20 @@ from homeassistant.data_entry_flow import (
 )
 from homeassistant.setup import async_setup_component
 
-from . import USER_INPUT, YAML_CONFIG, _patch_async_setup_entry, init_integration
+from . import (
+    USER_INPUT,
+    USER_INPUT_INVALID,
+    USER_INPUT_UNSUPPORTED_DEVICE,
+    YAML_CONFIG,
+    _patch_async_setup_entry,
+    init_integration,
+)
 
 DOMAIN = "switchbot"
 
 
-async def test_user_form(hass):
-    """Test the user initiated form with password."""
+async def test_user_form_valid_mac(hass):
+    """Test the user initiated form with password and valid mac."""
     await async_setup_component(hass, "persistent_notification", {})
 
     result = await hass.config_entries.flow.async_init(
@@ -38,7 +45,7 @@ async def test_user_form(hass):
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == "test-name"
     assert result["data"] == {
-        CONF_MAC: "00:00:00",
+        CONF_MAC: "e7:89:43:99:99:99",
         CONF_NAME: "test-name",
         CONF_PASSWORD: "test-password",
         CONF_SENSOR_TYPE: "bot",
@@ -65,6 +72,48 @@ async def test_user_form(hass):
     assert result["reason"] == "already_configured_device"
 
 
+async def test_user_form_unsupported_device(hass):
+    """Test the user initiated form for unsupported device type."""
+    await async_setup_component(hass, "persistent_notification", {})
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        USER_INPUT_UNSUPPORTED_DEVICE,
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "switchbot_unsupported_type"
+
+
+async def test_user_form_invalid_device(hass):
+    """Test the user initiated form for invalid device type."""
+    await async_setup_component(hass, "persistent_notification", {})
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        USER_INPUT_INVALID,
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["errors"] == {"base": "cannot_connect"}
+
+
 async def test_async_step_import(hass):
     """Test the config import flow."""
     await async_setup_component(hass, "persistent_notification", {})
@@ -75,7 +124,7 @@ async def test_async_step_import(hass):
         )
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["data"] == {
-        CONF_MAC: "00:00:00",
+        CONF_MAC: "e7:89:43:99:99:99",
         CONF_NAME: "test-name",
         CONF_PASSWORD: "test-password",
         CONF_SENSOR_TYPE: "bot",

@@ -2,7 +2,8 @@
     "config": {
         "abort": {
             "already_configured_device": "Device is already configured",
-            "unknown": "Unexpected error"
+            "unknown": "Unexpected error",
+            "switchbot_unsupported_type": "Unsupported Switchbot Type."
         },
         "error": {
             "cannot_connect": "Failed to connect"
@@ -14,8 +15,7 @@
                 "data": {
                     "name": "Name",
                     "password": "Password",
-                    "mac": "Mac",
-                    "type": "Device type"
+                    "mac": "Mac"
                 },
                 "title": "Setup Switchbot device"
             }

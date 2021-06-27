@@ -11,15 +11,47 @@ class MocGetSwitchbotDevices:
     def __init__(self, interface=None) -> None:
         """Get switchbot devices class constructor."""
         self._interface = interface
-        self._all_services_data = True
+        self._all_services_data = {
+            "mac_address": "e7:89:43:99:99:99",
+            "Flags": "06",
+            "Manufacturer": "5900e78943d9fe7c",
+            "Complete 128b Services": "cba20d00-224d-11e6-9fb8-0002a5d5c51b",
+            "data": {
+                "switchMode": "true",
+                "isOn": "true",
+                "battery": 91,
+                "rssi": -71,
+            },
+            "model": "H",
+            "modelName": "WoHand",
+        }
+        self._unsupported_device = {
+            "mac_address": "test",
+            "Flags": "06",
+            "Manufacturer": "5900e78943d9fe7c",
+            "Complete 128b Services": "cba20d00-224d-11e6-9fb8-0002a5d5c51b",
+            "data": {
+                "switchMode": "true",
+                "isOn": "true",
+                "battery": 91,
+                "rssi": -71,
+            },
+            "model": "HoN",
+            "modelName": "WoOther",
+        }
 
     def discover(self, retry=0, scan_timeout=0):
         """Mock discover."""
         return self._all_services_data
 
-    def get_device_data(self, mac):
+    def get_device_data(self, mac=None):
         """Return data for specific device."""
-        return self._all_services_data
+        if mac == "e7:89:43:99:99:99":
+            return self._all_services_data
+        if mac == "test":
+            return self._unsupported_device
+
+        return None
 
 
 class MocNotConnectedError(Exception):

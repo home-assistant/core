@@ -7,8 +7,7 @@
         "data": {
           "name": "[%key:common::config_flow::data::name%]",
           "password": "[%key:common::config_flow::data::password%]",
-          "mac": "Device MAC address",
-          "type": "Device type"
+          "mac": "Device MAC address"
         }
       }
     },
@@ -17,7 +16,8 @@
     },
     "abort": {
       "already_configured_device": "[%key:common::config_flow::abort::already_configured_device%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "switchbot_unsupported_type": "Unsupported Switchbot Type."
     }
   },
   "options": {
