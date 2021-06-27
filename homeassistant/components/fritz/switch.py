@@ -376,7 +376,7 @@ class FritzBoxPortSwitch(FritzBoxBaseSwitch, SwitchEntity):
         connection_type: str,
     ) -> None:
         """Init Fritzbox port switch."""
-        self._fritzbox_tools: FritzBoxTools = fritzbox_tools
+        self._fritzbox_tools = fritzbox_tools
 
         self._attributes = {}
         self.connection_type = connection_type
