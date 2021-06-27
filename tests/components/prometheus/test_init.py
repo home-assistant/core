@@ -31,9 +31,12 @@ class FilterTest:
     should_pass: bool
 
 
-async def prometheus_client(hass, hass_client):
+async def prometheus_client(hass, hass_client, namespace):
     """Initialize an hass_client with Prometheus component."""
-    await async_setup_component(hass, prometheus.DOMAIN, {prometheus.DOMAIN: {}})
+    config = {}
+    if namespace is not None:
+        config[prometheus.CONF_PROM_NAMESPACE] = namespace
+    await async_setup_component(hass, prometheus.DOMAIN, {prometheus.DOMAIN: config})
 
     await async_setup_component(hass, sensor.DOMAIN, {"sensor": [{"platform": "demo"}]})
 
@@ -98,9 +101,9 @@ async def prometheus_client(hass, hass_client):
     return await hass_client()
 
 
-async def test_view(hass, hass_client):
+async def test_view_empty_namespace(hass, hass_client):
     """Test prometheus metrics view."""
-    client = await prometheus_client(hass, hass_client)
+    client = await prometheus_client(hass, hass_client, "")
     resp = await client.get(prometheus.API_ENDPOINT)
 
     assert resp.status == 200
@@ -205,6 +208,31 @@ async def test_view(hass, hass_client):
         'sensor_unit_u0xb5g_per_mu0xb3{domain="sensor",'
         'entity="sensor.sps30_pm_1um_weight_concentration",'
         'friendly_name="SPS30 PM <1µm Weight concentration"} 3.7069' in body
+    )
+
+
+async def test_view_default_namespace(hass, hass_client):
+    """Test prometheus metrics view."""
+    client = await prometheus_client(hass, hass_client, None)
+    resp = await client.get(prometheus.API_ENDPOINT)
+
+    assert resp.status == 200
+    assert resp.headers["content-type"] == CONTENT_TYPE_TEXT_PLAIN
+    body = await resp.text()
+    body = body.split("\n")
+
+    assert len(body) > 3
+
+    assert "# HELP python_info Python platform information" in body
+    assert (
+        "# HELP python_gc_objects_collected_total "
+        "Objects collected during gc" in body
+    )
+
+    assert (
+        'homeassistant_sensor_temperature_celsius{domain="sensor",'
+        'entity="sensor.outside_temperature",'
+        'friendly_name="Outside Temperature"} 15.6' in body
     )
 
 

@@ -54,12 +54,14 @@ COMPONENT_CONFIG_SCHEMA_ENTRY = vol.Schema(
     {vol.Optional(CONF_OVERRIDE_METRIC): cv.string}
 )
 
+DEFAULT_NAMESPACE = "homeassistant"
+
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.All(
             {
                 vol.Optional(CONF_FILTER, default={}): entityfilter.FILTER_SCHEMA,
-                vol.Optional(CONF_PROM_NAMESPACE): cv.string,
+                vol.Optional(CONF_PROM_NAMESPACE, default=DEFAULT_NAMESPACE): cv.string,
                 vol.Optional(CONF_DEFAULT_METRIC): cv.string,
                 vol.Optional(CONF_OVERRIDE_METRIC): cv.string,
                 vol.Optional(CONF_COMPONENT_CONFIG, default={}): vol.Schema(
