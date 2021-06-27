@@ -51,6 +51,7 @@ REQUIRES = [
     "pyyaml==5.4.1",
     "requests==2.25.1",
     "ruamel.yaml==0.15.100",
+    "setuptools",
     "voluptuous==0.12.1",
     "voluptuous-serialize==2.4.0",
     "yarl==1.6.3",
