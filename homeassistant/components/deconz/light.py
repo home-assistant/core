@@ -2,9 +2,6 @@
 
 from __future__ import annotations
 
-from pydeconz.group import DeconzGroup as Group
-from pydeconz.light import Light
-
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
@@ -42,6 +39,7 @@ from .deconz_device import DeconzDevice
 from .gateway import get_gateway_from_config_entry
 
 CONTROLLER = ["Configuration tool"]
+DECONZ_GROUP = "is_deconz_group"
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -112,26 +110,21 @@ class DeconzBaseLight(DeconzDevice, LightEntity):
         super().__init__(device, gateway)
 
         self._attr_supported_color_modes = set()
-        self.update_features(self._device)
-
-    def update_features(self, device: Light | Group) -> None:
-        """Calculate supported features of device."""
-        supported_color_modes = self._attr_supported_color_modes
 
         if device.ct is not None:
-            supported_color_modes.add(COLOR_MODE_COLOR_TEMP)
+            self._attr_supported_color_modes.add(COLOR_MODE_COLOR_TEMP)
 
         if device.hue is not None and device.sat is not None:
-            supported_color_modes.add(COLOR_MODE_HS)
+            self._attr_supported_color_modes.add(COLOR_MODE_HS)
 
         if device.xy is not None:
-            supported_color_modes.add(COLOR_MODE_XY)
+            self._attr_supported_color_modes.add(COLOR_MODE_XY)
 
-        if not supported_color_modes and device.brightness is not None:
-            supported_color_modes.add(COLOR_MODE_BRIGHTNESS)
+        if not self._attr_supported_color_modes and device.brightness is not None:
+            self._attr_supported_color_modes.add(COLOR_MODE_BRIGHTNESS)
 
-        if not supported_color_modes:
-            supported_color_modes.add(COLOR_MODE_ONOFF)
+        if not self._attr_supported_color_modes:
+            self._attr_supported_color_modes.add(COLOR_MODE_ONOFF)
 
         if device.brightness is not None:
             self._attr_supported_features |= SUPPORT_FLASH
@@ -247,7 +240,7 @@ class DeconzBaseLight(DeconzDevice, LightEntity):
     @property
     def extra_state_attributes(self):
         """Return the device state attributes."""
-        return {"is_deconz_group": self._device.type == "LightGroup"}
+        return {DECONZ_GROUP: self._device.type == "LightGroup"}
 
 
 class DeconzLight(DeconzBaseLight):
@@ -270,28 +263,7 @@ class DeconzGroup(DeconzBaseLight):
     def __init__(self, device, gateway):
         """Set up group and create an unique id."""
         self._unique_id = f"{gateway.bridgeid}-{device.deconz_id}"
-
         super().__init__(device, gateway)
-
-        for light_id in device.lights:
-            light = gateway.api.lights[light_id]
-            if light.ZHATYPE == Light.ZHATYPE:
-                self.update_features(light)
-
-        for exclusive_color_mode in [COLOR_MODE_ONOFF, COLOR_MODE_BRIGHTNESS]:
-            if (
-                exclusive_color_mode in self._attr_supported_color_modes
-                and len(self._attr_supported_color_modes) > 1
-            ):
-                self._attr_supported_color_modes.remove(exclusive_color_mode)
-
-    @property
-    def hs_color(self) -> tuple | None:
-        """Return the hs color value."""
-        try:
-            return super().hs_color
-        except TypeError:
-            return None
 
     @property
     def unique_id(self):
@@ -301,14 +273,12 @@ class DeconzGroup(DeconzBaseLight):
     @property
     def device_info(self):
         """Return a device description for device registry."""
-        bridgeid = self.gateway.api.config.bridgeid
-
         return {
             "identifiers": {(DECONZ_DOMAIN, self.unique_id)},
             "manufacturer": "Dresden Elektronik",
             "model": "deCONZ group",
             "name": self._device.name,
-            "via_device": (DECONZ_DOMAIN, bridgeid),
+            "via_device": (DECONZ_DOMAIN, self.gateway.api.config.bridgeid),
         }
 
     @property

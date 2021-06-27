@@ -220,7 +220,7 @@ class MockFlushPart:
 
 async def async_decode_stream(hass, packets, py_av=None):
     """Start a stream worker that decodes incoming stream packets into output segments."""
-    stream = Stream(hass, STREAM_SOURCE)
+    stream = Stream(hass, STREAM_SOURCE, {})
     stream.add_provider(HLS_PROVIDER)
 
     if not py_av:
@@ -244,7 +244,7 @@ async def async_decode_stream(hass, packets, py_av=None):
 
 async def test_stream_open_fails(hass):
     """Test failure on stream open."""
-    stream = Stream(hass, STREAM_SOURCE)
+    stream = Stream(hass, STREAM_SOURCE, {})
     stream.add_provider(HLS_PROVIDER)
     with patch("av.open") as av_open:
         av_open.side_effect = av.error.InvalidDataError(-2, "error")
@@ -565,7 +565,7 @@ async def test_stream_stopped_while_decoding(hass):
     worker_open = threading.Event()
     worker_wake = threading.Event()
 
-    stream = Stream(hass, STREAM_SOURCE)
+    stream = Stream(hass, STREAM_SOURCE, {})
     stream.add_provider(HLS_PROVIDER)
 
     py_av = MockPyAv()
@@ -592,7 +592,7 @@ async def test_update_stream_source(hass):
     worker_open = threading.Event()
     worker_wake = threading.Event()
 
-    stream = Stream(hass, STREAM_SOURCE)
+    stream = Stream(hass, STREAM_SOURCE, {})
     stream.add_provider(HLS_PROVIDER)
     # Note that keepalive is not set here.  The stream is "restarted" even though
     # it is not stopping due to failure.
@@ -636,7 +636,7 @@ async def test_update_stream_source(hass):
 
 async def test_worker_log(hass, caplog):
     """Test that the worker logs the url without username and password."""
-    stream = Stream(hass, "https://abcd:efgh@foo.bar")
+    stream = Stream(hass, "https://abcd:efgh@foo.bar", {})
     stream.add_provider(HLS_PROVIDER)
     with patch("av.open") as av_open:
         av_open.side_effect = av.error.InvalidDataError(-2, "error")
@@ -654,7 +654,7 @@ async def test_durations(hass, record_worker_sync):
     await async_setup_component(hass, "stream", {"stream": {}})
 
     source = generate_h264_video()
-    stream = create_stream(hass, source)
+    stream = create_stream(hass, source, {})
 
     # use record_worker_sync to grab output segments
     with patch.object(hass.config, "is_allowed_path", return_value=True):
@@ -693,7 +693,7 @@ async def test_has_keyframe(hass, record_worker_sync):
     await async_setup_component(hass, "stream", {"stream": {}})
 
     source = generate_h264_video()
-    stream = create_stream(hass, source)
+    stream = create_stream(hass, source, {})
 
     # use record_worker_sync to grab output segments
     with patch.object(hass.config, "is_allowed_path", return_value=True):

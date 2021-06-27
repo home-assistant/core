@@ -306,7 +306,7 @@ def _async_register_services(hass, instance):
 class PurgeTask(NamedTuple):
     """Object to store information about purge task."""
 
-    keep_days: int
+    purge_before: datetime
     repack: bool
     apply_filter: bool
 
@@ -451,7 +451,8 @@ class Recorder(threading.Thread):
         repack = kwargs.get(ATTR_REPACK)
         apply_filter = kwargs.get(ATTR_APPLY_FILTER)
 
-        self.queue.put(PurgeTask(keep_days, repack, apply_filter))
+        purge_before = dt_util.utcnow() - timedelta(days=keep_days)
+        self.queue.put(PurgeTask(purge_before, repack, apply_filter))
 
     def do_adhoc_purge_entities(self, entity_ids, domains, entity_globs):
         """Trigger an adhoc purge of requested entities."""
@@ -538,7 +539,8 @@ class Recorder(threading.Thread):
             # Purge will schedule the perodic cleanups
             # after it completes to ensure it does not happen
             # until after the database is vacuumed
-            self.queue.put(PurgeTask(self.keep_days, repack=False, apply_filter=False))
+            purge_before = dt_util.utcnow() - timedelta(days=self.keep_days)
+            self.queue.put(PurgeTask(purge_before, repack=False, apply_filter=False))
         else:
             self.queue.put(PerodicCleanupTask())
 
@@ -696,16 +698,16 @@ class Recorder(threading.Thread):
             self.migration_in_progress = False
             persistent_notification.dismiss(self.hass, "recorder_database_migration")
 
-    def _run_purge(self, keep_days, repack, apply_filter):
+    def _run_purge(self, purge_before, repack, apply_filter):
         """Purge the database."""
-        if purge.purge_old_data(self, keep_days, repack, apply_filter):
+        if purge.purge_old_data(self, purge_before, repack, apply_filter):
             # We always need to do the db cleanups after a purge
             # is finished to ensure the WAL checkpoint and other
             # tasks happen after a vacuum.
             perodic_db_cleanups(self)
             return
         # Schedule a new purge task if this one didn't finish
-        self.queue.put(PurgeTask(keep_days, repack, apply_filter))
+        self.queue.put(PurgeTask(purge_before, repack, apply_filter))
 
     def _run_purge_entities(self, entity_filter):
         """Purge entities from the database."""
@@ -724,7 +726,7 @@ class Recorder(threading.Thread):
     def _process_one_event(self, event):
         """Process one event."""
         if isinstance(event, PurgeTask):
-            self._run_purge(event.keep_days, event.repack, event.apply_filter)
+            self._run_purge(event.purge_before, event.repack, event.apply_filter)
             return
         if isinstance(event, PurgeEntitiesTask):
             self._run_purge_entities(event.entity_filter)

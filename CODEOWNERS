@@ -72,7 +72,7 @@ homeassistant/components/bmp280/* @belidzs
 homeassistant/components/bmw_connected_drive/* @gerard33 @rikroe
 homeassistant/components/bond/* @prystupa
 homeassistant/components/bosch_shc/* @tschamm
-homeassistant/components/braviatv/* @bieniu
+homeassistant/components/braviatv/* @bieniu @Drafteed
 homeassistant/components/broadlink/* @danielhiversen @felipediel
 homeassistant/components/brother/* @bieniu
 homeassistant/components/brunt/* @eavanvalkenburg
@@ -118,7 +118,7 @@ homeassistant/components/digital_ocean/* @fabaff
 homeassistant/components/directv/* @ctalkington
 homeassistant/components/discogs/* @thibmaek
 homeassistant/components/doorbird/* @oblogic7 @bdraco
-homeassistant/components/dsmr/* @Robbie1221
+homeassistant/components/dsmr/* @Robbie1221 @frenck
 homeassistant/components/dsmr_reader/* @depl0y
 homeassistant/components/dunehd/* @bieniu
 homeassistant/components/dwd_weather_warnings/* @runningman84 @stephan192 @Hummel95
@@ -147,7 +147,7 @@ homeassistant/components/ephember/* @ttroy50
 homeassistant/components/epson/* @pszafer
 homeassistant/components/epsonworkforce/* @ThaStealth
 homeassistant/components/eq3btsmart/* @rytilahti
-homeassistant/components/esphome/* @OttoWinter
+homeassistant/components/esphome/* @OttoWinter @jesserockz
 homeassistant/components/essent/* @TheLastProject
 homeassistant/components/evohome/* @zxdavb
 homeassistant/components/ezviz/* @RenierM26 @baqs
@@ -163,6 +163,7 @@ homeassistant/components/flo/* @dmulcahey
 homeassistant/components/flock/* @fabaff
 homeassistant/components/flume/* @ChrisMandich @bdraco
 homeassistant/components/flunearyou/* @bachya
+homeassistant/components/forecast_solar/* @klaasnicolaas @frenck
 homeassistant/components/forked_daapd/* @uvjustin
 homeassistant/components/fortios/* @kimfrellsen
 homeassistant/components/foscam/* @skgsergio
@@ -423,6 +424,7 @@ homeassistant/components/scrape/* @fabaff
 homeassistant/components/screenlogic/* @dieselrabbit
 homeassistant/components/script/* @home-assistant/core
 homeassistant/components/search/* @home-assistant/core
+homeassistant/components/select/* @home-assistant/core
 homeassistant/components/sense/* @kbickar
 homeassistant/components/sensibo/* @andrey-git
 homeassistant/components/sentry/* @dcramer @frenck
@@ -479,7 +481,7 @@ homeassistant/components/subaru/* @G-Two
 homeassistant/components/suez_water/* @ooii
 homeassistant/components/sun/* @Swamp-Ig
 homeassistant/components/supla/* @mwegrzynek
-homeassistant/components/surepetcare/* @benleb
+homeassistant/components/surepetcare/* @benleb @danielhiversen
 homeassistant/components/swiss_hydrological_data/* @fabaff
 homeassistant/components/swiss_public_transport/* @fabaff
 homeassistant/components/switchbot/* @danielhiversen
@@ -568,7 +570,7 @@ homeassistant/components/xiaomi_miio/* @rytilahti @syssi @starkillerOG
 homeassistant/components/xiaomi_tv/* @simse
 homeassistant/components/xmpp/* @fabaff @flowolf
 homeassistant/components/yale_smart_alarm/* @gjohansson-ST
-homeassistant/components/yamaha_musiccast/* @jalmeroth
+homeassistant/components/yamaha_musiccast/* @vigonotion @micha91
 homeassistant/components/yandex_transport/* @rishatik92 @devbis
 homeassistant/components/yeelight/* @rytilahti @zewelor @shenxn
 homeassistant/components/yeelightsunflower/* @lindsaymarkward

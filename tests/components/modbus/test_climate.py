@@ -3,14 +3,11 @@ import pytest
 
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.components.climate.const import HVAC_MODE_AUTO
-from homeassistant.components.modbus.const import (
-    CONF_CLIMATES,
-    CONF_DATA_COUNT,
-    CONF_TARGET_TEMP,
-)
+from homeassistant.components.modbus.const import CONF_CLIMATES, CONF_TARGET_TEMP
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_ADDRESS,
+    CONF_COUNT,
     CONF_NAME,
     CONF_SCAN_INTERVAL,
     CONF_SLAVE,
@@ -23,34 +20,35 @@ from tests.common import mock_restore_cache
 
 
 @pytest.mark.parametrize(
-    "do_options",
+    "do_config",
     [
-        {},
         {
-            CONF_SCAN_INTERVAL: 20,
-            CONF_DATA_COUNT: 2,
+            CONF_CLIMATES: [
+                {
+                    CONF_NAME: "test_climate",
+                    CONF_TARGET_TEMP: 117,
+                    CONF_ADDRESS: 117,
+                    CONF_SLAVE: 10,
+                }
+            ],
+        },
+        {
+            CONF_CLIMATES: [
+                {
+                    CONF_NAME: "test_climate",
+                    CONF_TARGET_TEMP: 117,
+                    CONF_ADDRESS: 117,
+                    CONF_SLAVE: 10,
+                    CONF_SCAN_INTERVAL: 20,
+                    CONF_COUNT: 2,
+                }
+            ],
         },
     ],
 )
-async def test_config_climate(hass, do_options):
-    """Run test for climate."""
-    device_name = "test_climate"
-    device_config = {
-        CONF_NAME: device_name,
-        CONF_TARGET_TEMP: 117,
-        CONF_ADDRESS: 117,
-        CONF_SLAVE: 10,
-        **do_options,
-    }
-    await base_config_test(
-        hass,
-        device_config,
-        device_name,
-        CLIMATE_DOMAIN,
-        CONF_CLIMATES,
-        None,
-        method_discovery=True,
-    )
+async def test_config_climate(hass, mock_modbus):
+    """Run configuration test for climate."""
+    assert CLIMATE_DOMAIN in hass.config.components
 
 
 @pytest.mark.parametrize(
@@ -73,7 +71,7 @@ async def test_temperature_climate(hass, regs, expected):
             CONF_SLAVE: 1,
             CONF_TARGET_TEMP: 117,
             CONF_ADDRESS: 117,
-            CONF_DATA_COUNT: 2,
+            CONF_COUNT: 2,
         },
         climate_name,
         CLIMATE_DOMAIN,

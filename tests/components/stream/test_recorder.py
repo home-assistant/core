@@ -17,7 +17,7 @@ from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from tests.common import async_fire_time_changed
-from tests.components.stream.common import generate_h264_video
+from tests.components.stream.common import generate_h264_video, remux_with_audio
 
 MAX_ABORT_SEGMENTS = 20  # Abort test to avoid looping forever
 
@@ -34,7 +34,7 @@ async def test_record_stream(hass, hass_client, record_worker_sync):
 
     # Setup demo track
     source = generate_h264_video()
-    stream = create_stream(hass, source)
+    stream = create_stream(hass, source, {})
     with patch.object(hass.config, "is_allowed_path", return_value=True):
         await stream.async_record("/example/path")
 
@@ -56,7 +56,7 @@ async def test_record_lookback(
     await async_setup_component(hass, "stream", {"stream": {}})
 
     source = generate_h264_video()
-    stream = create_stream(hass, source)
+    stream = create_stream(hass, source, {})
 
     # Start an HLS feed to enable lookback
     stream.add_provider(HLS_PROVIDER)
@@ -85,7 +85,7 @@ async def test_recorder_timeout(hass, hass_client, stream_worker_sync):
         # Setup demo track
         source = generate_h264_video()
 
-        stream = create_stream(hass, source)
+        stream = create_stream(hass, source, {})
         with patch.object(hass.config, "is_allowed_path", return_value=True):
             await stream.async_record("/example/path")
         recorder = stream.add_provider(RECORDER_PROVIDER)
@@ -111,7 +111,7 @@ async def test_record_path_not_allowed(hass, hass_client):
 
     # Setup demo track
     source = generate_h264_video()
-    stream = create_stream(hass, source)
+    stream = create_stream(hass, source, {})
     with patch.object(
         hass.config, "is_allowed_path", return_value=False
     ), pytest.raises(HomeAssistantError):
@@ -190,20 +190,23 @@ async def test_record_stream_audio(
     """
     await async_setup_component(hass, "stream", {"stream": {}})
 
+    # Generate source video with no audio
+    source = generate_h264_video(container_format="mov")
+
     for a_codec, expected_audio_streams in (
         ("aac", 1),  # aac is a valid mp4 codec
         ("pcm_mulaw", 0),  # G.711 is not a valid mp4 codec
         ("empty", 0),  # audio stream with no packets
         (None, 0),  # no audio stream
     ):
+
+        # Remux source video with new audio
+        source = remux_with_audio(source, "mov", a_codec)  # mov can store PCM
+
         record_worker_sync.reset()
         stream_worker_sync.pause()
 
-        # Setup demo track
-        source = generate_h264_video(
-            container_format="mov", audio_codec=a_codec
-        )  # mov can store PCM
-        stream = create_stream(hass, source)
+        stream = create_stream(hass, source, {})
         with patch.object(hass.config, "is_allowed_path", return_value=True):
             await stream.async_record("/example/path")
         recorder = stream.add_provider(RECORDER_PROVIDER)
@@ -234,7 +237,7 @@ async def test_record_stream_audio(
 async def test_recorder_log(hass, caplog):
     """Test starting a stream to record logs the url without username and password."""
     await async_setup_component(hass, "stream", {"stream": {}})
-    stream = create_stream(hass, "https://abcd:efgh@foo.bar")
+    stream = create_stream(hass, "https://abcd:efgh@foo.bar", {})
     with patch.object(hass.config, "is_allowed_path", return_value=True):
         await stream.async_record("/example/path")
     assert "https://abcd:efgh@foo.bar" not in caplog.text

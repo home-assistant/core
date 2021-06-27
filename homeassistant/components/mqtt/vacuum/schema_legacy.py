@@ -151,16 +151,16 @@ PLATFORM_SCHEMA_LEGACY = (
 
 
 async def async_setup_entity_legacy(
-    config, async_add_entities, config_entry, discovery_data
+    hass, config, async_add_entities, config_entry, discovery_data
 ):
     """Set up a MQTT Vacuum Legacy."""
-    async_add_entities([MqttVacuum(config, config_entry, discovery_data)])
+    async_add_entities([MqttVacuum(hass, config, config_entry, discovery_data)])
 
 
 class MqttVacuum(MqttEntity, VacuumEntity):
     """Representation of a MQTT-controlled legacy vacuum."""
 
-    def __init__(self, config, config_entry, discovery_data):
+    def __init__(self, hass, config, config_entry, discovery_data):
         """Initialize the vacuum."""
         self._cleaning = False
         self._charging = False
@@ -171,7 +171,7 @@ class MqttVacuum(MqttEntity, VacuumEntity):
         self._fan_speed = "unknown"
         self._fan_speed_list = []
 
-        MqttEntity.__init__(self, None, config, config_entry, discovery_data)
+        MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
     @staticmethod
     def config_schema():
