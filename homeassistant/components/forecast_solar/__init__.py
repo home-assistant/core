@@ -44,7 +44,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # update interval. Using a higher value for accounts with an API key.
     update_interval = timedelta(hours=1)
     if api_key is not None:
-        update_interval = timedelta(minutes=15)
+        update_interval = timedelta(minutes=30)
 
     coordinator: DataUpdateCoordinator = DataUpdateCoordinator(
         hass,
