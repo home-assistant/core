@@ -5,6 +5,7 @@ import asyncio
 from collections import deque
 from collections.abc import Generator, Iterable
 import datetime
+import itertools
 from typing import TYPE_CHECKING
 
 from aiohttp import web
@@ -69,7 +70,7 @@ class Segment:
     start_time: datetime.datetime = attr.ib(factory=datetime.datetime.utcnow)
     _stream_outputs: Iterable[StreamOutput] = attr.ib(factory=list)
     # Store text of this segment's hls playlist for reuse
-    hls_playlist: str = attr.ib(default=None)
+    hls_playlist_template: str = attr.ib(default=None)
     hls_playlist_parts: str = attr.ib(default=None)
     # Number of playlist parts rendered so far
     hls_num_parts_rendered: int = attr.ib(default=0)
@@ -142,6 +143,82 @@ class Segment:
                 yield part.data[: len(part.data) + end_loc - pos]
                 return
             yield part.data
+
+    def render_hls(
+        self, last_stream_id: int, render_parts: bool, add_hint: bool
+    ) -> str:
+        """Render the HLS playlist section for the Segment.
+
+        The Segment may still be in progress.
+        This method stores intermediate data in hls_playlist_parts, hls_num_parts_rendered,
+        and hls_playlist_complete to avoid redoing work on subsequent calls.
+        """
+        if self.hls_playlist_complete:
+            return self.hls_playlist_template.format(
+                self.hls_playlist_parts if render_parts else ""
+            )
+        playlist_template = (
+            [self.hls_playlist_template] if self.hls_playlist_template else []
+        )
+        playlist_parts = [self.hls_playlist_parts] if self.hls_playlist_parts else []
+        if not playlist_template:
+            if last_stream_id != self.stream_id:
+                playlist_template = [
+                    "#EXT-X-DISCONTINUITY",
+                    "#EXT-X-PROGRAM-DATE-TIME:"
+                    + self.start_time.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]
+                    + "Z",
+                ]
+            playlist_template.append("{}")
+        if render_parts:
+            for http_range_start, part in itertools.islice(
+                self.parts_by_byterange.items(),
+                self.hls_num_parts_rendered,
+                None,
+            ):
+                playlist_parts.append(
+                    f"#EXT-X-PART:DURATION={part.duration:.3f},URI="
+                    f'"./segment/{self.sequence}.m4s",BYTERANGE="{len(part.data)}'
+                    f'@{http_range_start}"{",INDEPENDENT=YES" if part.has_keyframe else ""}'
+                )
+        if self.complete:
+            playlist_template.pop()
+            playlist_template.extend(
+                [
+                    # Squeeze the placeholder on the same line as #EXTINF
+                    # just to keep tidy when there are no parts
+                    "{}" + f"#EXTINF:{self.duration:.3f},",
+                    f"./segment/{self.sequence}.m4s",
+                ]
+            )
+            # Append another line to parts because we don't include a newline before #EXTINF
+            playlist_parts.append("")
+
+        # Store intermediate playlist data in member variables for reuse
+        self.hls_playlist_template = "\n".join(playlist_template)
+        self.hls_playlist_parts = "\n".join(playlist_parts)
+        self.hls_num_parts_rendered = len(self.parts_by_byterange)
+        self.hls_playlist_complete = self.complete
+
+        # Add the hint after storing everything as the hint is continually changing
+        if add_hint:
+            # Add preload hint
+            # pylint: disable=undefined-loop-variable
+            if self.complete:  # Next part belongs to next segment
+                sequence = self.sequence + 1
+                start = 0
+            else:  # Next part is in the same segment
+                sequence = self.sequence
+                start = self.data_size
+            playlist_template.append(
+                f'#EXT-X-PRELOAD-HINT:TYPE=PART,URI="./segment/{sequence}'
+                f'.m4s",BYTERANGE-START={start}'
+            )
+            # If add_hint is true, render_parts must be true, so add the parts
+            return "\n".join(playlist_template).format(self.hls_playlist_parts)
+        return self.hls_playlist_template.format(
+            self.hls_playlist_parts if render_parts else ""
+        )
 
 
 class IdleTimer:

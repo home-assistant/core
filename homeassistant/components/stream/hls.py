@@ -1,7 +1,6 @@
 """Provide functionality to stream HLS."""
 from __future__ import annotations
 
-import itertools
 import logging
 from typing import TYPE_CHECKING
 
@@ -17,14 +16,7 @@ from .const import (
     MAX_SEGMENTS,
     NUM_PLAYLIST_SEGMENTS,
 )
-from .core import (
-    PROVIDERS,
-    IdleTimer,
-    Segment,
-    StreamOutput,
-    StreamSettings,
-    StreamView,
-)
+from .core import PROVIDERS, IdleTimer, StreamOutput, StreamSettings, StreamView
 from .fmp4utils import get_codec_string
 
 if TYPE_CHECKING:
@@ -110,90 +102,6 @@ class HlsPlaylistView(StreamView):
     cors_allowed = True
 
     @classmethod
-    def render_current_segment(
-        cls, segment: Segment, ll_hls: bool, last_stream_id: int
-    ) -> str:
-        """Render the most recent segment of a hls playlist including the hint.
-
-        This method is run on every playlist request and the output is not saved.
-        """
-        (
-            segment.hls_playlist,
-            segment.hls_playlist_parts,
-            segment.hls_num_parts_rendered,
-            segment.hls_playlist_complete,
-        ) = cls.render_segment(segment, ll_hls, last_stream_id)
-        rendered = segment.hls_playlist.format(segment.hls_playlist_parts)
-        playlist = [rendered] if rendered else []
-
-        # Add preload hint
-        # pylint: disable=undefined-loop-variable
-        if ll_hls:
-            if segment.complete:  # Next part belongs to next segment
-                sequence = segment.sequence + 1
-                start = 0
-            else:  # Next part is in the same segment
-                sequence = segment.sequence
-                start = segment.data_size
-            playlist.append(
-                f'#EXT-X-PRELOAD-HINT:TYPE=PART,URI="./segment/{sequence}'
-                f'.m4s",BYTERANGE-START={start}'
-            )
-        return "\n".join(playlist)
-
-    @staticmethod
-    def render_segment(
-        segment: Segment, ll_hls: bool, last_stream_id: int
-    ) -> tuple[str, str, int, bool]:
-        """Render a segment.
-
-        Return a base string, a ll_hls string that can be interjected, the number of parts
-        rendered so far, and a bool that indicates if the rendering for the segment is complete.
-        """
-        playlist = [segment.hls_playlist] if segment.hls_playlist else []
-        playlist_parts = (
-            [segment.hls_playlist_parts] if segment.hls_playlist_parts else []
-        )
-        if not playlist:
-            if last_stream_id != segment.stream_id:
-                playlist = [
-                    "#EXT-X-DISCONTINUITY",
-                    "#EXT-X-PROGRAM-DATE-TIME:"
-                    + segment.start_time.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]
-                    + "Z",
-                ]
-            playlist.append("{}")
-        if ll_hls:
-            for http_range_start, part in itertools.islice(
-                segment.parts_by_byterange.items(),
-                segment.hls_num_parts_rendered,
-                None,
-            ):
-                playlist_parts.append(
-                    f"#EXT-X-PART:DURATION={part.duration:.3f},URI="
-                    f'"./segment/{segment.sequence}.m4s",BYTERANGE="{len(part.data)}'
-                    f'@{http_range_start}"{",INDEPENDENT=YES" if part.has_keyframe else ""}'
-                )
-        if segment.complete:
-            playlist.pop()
-            playlist.extend(
-                [
-                    # Squeeze the placeholder on the same line as #EXTINF
-                    # just to keep tidy when there are no parts
-                    "{}" + f"#EXTINF:{segment.duration:.3f},",
-                    f"./segment/{segment.sequence}.m4s",
-                ]
-            )
-            # Append another line to parts because we don't include a newline before #EXTINF
-            playlist_parts.append("")
-        return (
-            "\n".join(playlist),
-            "\n".join(playlist_parts),
-            len(segment.parts_by_byterange),
-            segment.complete,
-        )
-
-    @classmethod
     def render(cls, track: StreamOutput, ll_hls: bool) -> str:
         """Render HLS playlist file."""
         # NUM_PLAYLIST_SEGMENTS+1 because most recent is probably not yet complete
@@ -259,22 +167,17 @@ class HlsPlaylistView(StreamView):
         # The RFC seems to suggest removing parts after 3 full segments, but Apple's
         # own example shows removing after 2 full segments and 1 part one.
         for i, segment in enumerate(segments[:-1], 3 - len(segments)):
-            if not segment.hls_playlist_complete:
-                (
-                    segment.hls_playlist,
-                    segment.hls_playlist_parts,
-                    segment.hls_num_parts_rendered,
-                    segment.hls_playlist_complete,
-                ) = cls.render_segment(segment, ll_hls, last_stream_id)
             playlist.append(
-                segment.hls_playlist.format(
-                    segment.hls_playlist_parts if i >= 0 else ""
+                segment.render_hls(
+                    last_stream_id=last_stream_id, render_parts=i >= 0, add_hint=False
                 )
             )
             last_stream_id = segment.stream_id
 
         playlist.append(
-            cls.render_current_segment(segments[-1], ll_hls, last_stream_id)
+            segments[-1].render_hls(
+                last_stream_id=last_stream_id, render_parts=ll_hls, add_hint=ll_hls
+            )
         )
 
         return "\n".join(playlist) + "\n"
