@@ -173,7 +173,7 @@ class DeviceConnectivity(SurePetcareBinarySensor):
         """Get the latest data and update the state."""
         surepy_entity = self._spc.states[self._id]
         state = surepy_entity.raw_data()["status"]
-        self._attr_is_on = self._attr_available = bool(state["online"])
+        self._attr_is_on = self._attr_available = bool(self.state)
         if state:
             self._attr_extra_state_attributes = {
                 "device_rssi": f'{state["signal"]["device_rssi"]:.2f}',
