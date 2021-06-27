@@ -55,28 +55,28 @@ SENSOR_TYPES: dict[str, SensorDescription] = {
     ATTR_API_CAQI: {
         ATTR_LABEL: ATTR_API_CAQI,
         ATTR_UNIT: "CAQI",
-        ATTR_VALUE: lambda value: round(value),
+        ATTR_VALUE: round,
     },
     ATTR_API_PM1: {
         ATTR_ICON: "mdi:blur",
         ATTR_LABEL: ATTR_API_PM1,
         ATTR_UNIT: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
-        ATTR_VALUE: lambda value: round(value),
+        ATTR_VALUE: round,
     },
     ATTR_API_PM25: {
         ATTR_ICON: "mdi:blur",
         ATTR_LABEL: "PM2.5",
         ATTR_UNIT: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
-        ATTR_VALUE: lambda value: round(value),
+        ATTR_VALUE: round,
     },
     ATTR_API_PM10: {
         ATTR_ICON: "mdi:blur",
         ATTR_LABEL: ATTR_API_PM10,
         ATTR_UNIT: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
-        ATTR_VALUE: lambda value: round(value),
+        ATTR_VALUE: round,
     },
     ATTR_API_HUMIDITY: {
         ATTR_DEVICE_CLASS: DEVICE_CLASS_HUMIDITY,
@@ -90,7 +90,7 @@ SENSOR_TYPES: dict[str, SensorDescription] = {
         ATTR_LABEL: ATTR_API_PRESSURE.capitalize(),
         ATTR_UNIT: PRESSURE_HPA,
         ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
-        ATTR_VALUE: lambda value: round(value),
+        ATTR_VALUE: round,
     },
     ATTR_API_TEMPERATURE: {
         ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
