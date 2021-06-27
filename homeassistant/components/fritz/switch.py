@@ -19,6 +19,7 @@ from homeassistant.components.network.util import async_get_source_ip
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import slugify
 
@@ -138,15 +139,18 @@ def deflection_entities_list(
         deflections_response,
     )
 
-    if deflections_response["NewNumberOfDeflections"] != 0:
-        deflection_list = get_deflections(fritzbox_tools, service_name)
-        if deflection_list is not None:
-            for dict_of_deflection in deflection_list:
-                entities_list.append(
-                    FritzBoxDeflectionSwitch(
-                        fritzbox_tools, device_friendly_name, dict_of_deflection
-                    )
+    if deflections_response["NewNumberOfDeflections"] == 0:
+        _LOGGER.debug("The FRITZ!Box has no %s options", SWITCH_TYPE_DEFLECTION)
+        return []
+
+    deflection_list = get_deflections(fritzbox_tools, service_name)
+    if deflection_list is not None:
+        for dict_of_deflection in deflection_list:
+            entities_list.append(
+                FritzBoxDeflectionSwitch(
+                    fritzbox_tools, device_friendly_name, dict_of_deflection
                 )
+            )
 
     return entities_list
 
@@ -197,26 +201,27 @@ def port_entities_list(
 
         if not portmap:
             _LOGGER.debug("The FRITZ!Box has no %s options", SWITCH_TYPE_DEFLECTION)
-        else:
-            _LOGGER.debug(
-                "Specific %s response: GetGenericPortMappingEntry=%s",
-                SWITCH_TYPE_PORTFORWARD,
-                portmap,
-            )
+            continue
 
-            # We can only handle port forwards of the given device
-            local_ip = async_get_source_ip(fritzbox_tools.host)
-            _LOGGER.debug("IP source for %s is %s", fritzbox_tools.host, local_ip)
-            if portmap["NewInternalClient"] == local_ip:
-                entities_list.append(
-                    FritzBoxPortSwitch(
-                        fritzbox_tools,
-                        device_friendly_name,
-                        portmap,
-                        i,
-                        con_type,
-                    )
+        _LOGGER.debug(
+            "Specific %s response: GetGenericPortMappingEntry=%s",
+            SWITCH_TYPE_PORTFORWARD,
+            portmap,
+        )
+
+        # We can only handle port forwards of the given device
+        local_ip = async_get_source_ip(fritzbox_tools.host)
+        _LOGGER.debug("IP source for %s is %s", fritzbox_tools.host, local_ip)
+        if portmap["NewInternalClient"] == local_ip:
+            entities_list.append(
+                FritzBoxPortSwitch(
+                    fritzbox_tools,
+                    device_friendly_name,
+                    portmap,
+                    i,
+                    con_type,
                 )
+            )
 
     return entities_list
 
@@ -227,11 +232,14 @@ def profile_entities_list(
     """Get list of profile entities."""
     _LOGGER.debug("Setting up %s switches", SWITCH_TYPE_DEVICEPROFILE)
     entities_list: list = []
-    if len(fritzbox_tools.fritz_profiles) > 0:
-        for profile in fritzbox_tools.fritz_profiles.keys():
-            entities_list.append(
-                FritzBoxProfileSwitch(fritzbox_tools, device_friendly_name, profile)
-            )
+    if len(fritzbox_tools.fritz_profiles) <= 0:
+        _LOGGER.debug("The FRITZ!Box has no %s options", SWITCH_TYPE_DEVICEPROFILE)
+        return []
+
+    for profile in fritzbox_tools.fritz_profiles.keys():
+        entities_list.append(
+            FritzBoxProfileSwitch(fritzbox_tools, device_friendly_name, profile)
+        )
     return entities_list
 
 
@@ -371,7 +379,7 @@ class FritzBoxPortSwitch(FritzBoxBaseSwitch, SwitchEntity):
         self,
         fritzbox_tools: FritzBoxTools,
         device_friendly_name: str,
-        port_mapping: dict,
+        port_mapping: dict[str, Any],
         idx: int,
         connection_type: str,
     ) -> None:
@@ -380,7 +388,9 @@ class FritzBoxPortSwitch(FritzBoxBaseSwitch, SwitchEntity):
 
         self._attributes = {}
         self.connection_type = connection_type
-        self.port_mapping= port_mapping  # dict in the format as it comes from fritzconnection. eg: {'NewRemoteHost': '0.0.0.0', 'NewExternalPort': 22, 'NewProtocol': 'TCP', 'NewInternalPort': 22, 'NewInternalClient': '192.168.178.31', 'NewEnabled': True, 'NewPortMappingDescription': 'Beast SSH ', 'NewLeaseDuration': 0}
+        self.port_mapping: dict[
+            str, Any
+        ] | None = port_mapping  # dict in the format as it comes from fritzconnection. eg: {'NewRemoteHost': '0.0.0.0', 'NewExternalPort': 22, 'NewProtocol': 'TCP', 'NewInternalPort': 22, 'NewInternalClient': '192.168.178.31', 'NewEnabled': True, 'NewPortMappingDescription': 'Beast SSH ', 'NewLeaseDuration': 0}
         self._idx = idx  # needed for update routine
 
         switch_info = SwitchInfo(
