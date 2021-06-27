@@ -77,6 +77,7 @@ FLOWS = [
     "flo",
     "flume",
     "flunearyou",
+    "forecast_solar",
     "forked_daapd",
     "foscam",
     "freebox",
