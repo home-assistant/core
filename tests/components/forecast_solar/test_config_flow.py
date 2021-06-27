@@ -1,8 +1,6 @@
 """Test the Forecast.Solar config flow."""
 from unittest.mock import patch
 
-from forecast_solar.exceptions import ForecastSolarError
-
 from homeassistant.components.forecast_solar.const import (
     CONF_AZIMUTH,
     CONF_DAMPING,
@@ -29,9 +27,6 @@ async def test_user_flow(hass: HomeAssistant) -> None:
     assert "flow_id" in result
 
     with patch(
-        "homeassistant.components.forecast_solar.config_flow.ForecastSolar",
-        autospec=True,
-    ) as mock_forecast_solar, patch(
         "homeassistant.components.forecast_solar.async_setup_entry", return_value=True
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
@@ -59,31 +54,6 @@ async def test_user_flow(hass: HomeAssistant) -> None:
     }
 
     assert len(mock_setup_entry.mock_calls) == 1
-    assert len(mock_forecast_solar.return_value.estimate.mock_calls) == 1
-
-
-async def test_api_error(hass: HomeAssistant) -> None:
-    """Test API error."""
-    with patch(
-        "homeassistant.components.forecast_solar.config_flow.ForecastSolar",
-        autospec=True,
-    ) as mock_forecast_solar:
-        mock_forecast_solar.return_value.estimate.side_effect = ForecastSolarError
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data={
-                CONF_NAME: "Name",
-                CONF_LATITUDE: 52.42,
-                CONF_LONGITUDE: 4.42,
-                CONF_AZIMUTH: 142,
-                CONF_DECLINATION: 42,
-                CONF_MODULES_POWER: 4242,
-            },
-        )
-
-    assert result.get("type") == RESULT_TYPE_FORM
-    assert result.get("errors") == {"base": "cannot_connect"}
 
 
 async def test_options_flow(

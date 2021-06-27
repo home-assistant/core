@@ -3,14 +3,12 @@ from __future__ import annotations
 
 from typing import Any
 
-from forecast_solar import ForecastSolar, ForecastSolarError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
 from .const import (
@@ -39,35 +37,19 @@ class ForecastSolarFlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle a flow initiated by the user."""
-        errors: dict[str, str] = {}
         if user_input is not None:
-            session = async_get_clientsession(self.hass)
-            forecast = ForecastSolar(
-                azimuth=(user_input[CONF_AZIMUTH] - 180),
-                declination=user_input[CONF_DECLINATION],
-                kwp=(user_input[CONF_MODULES_POWER] / 1000),
-                latitude=user_input[CONF_LATITUDE],
-                longitude=user_input[CONF_LONGITUDE],
-                session=session,
+            return self.async_create_entry(
+                title=user_input[CONF_NAME],
+                data={
+                    CONF_LATITUDE: user_input[CONF_LATITUDE],
+                    CONF_LONGITUDE: user_input[CONF_LONGITUDE],
+                },
+                options={
+                    CONF_AZIMUTH: user_input[CONF_AZIMUTH],
+                    CONF_DECLINATION: user_input[CONF_DECLINATION],
+                    CONF_MODULES_POWER: user_input[CONF_MODULES_POWER],
+                },
             )
-
-            try:
-                await forecast.estimate()
-            except ForecastSolarError:
-                errors["base"] = "cannot_connect"
-            else:
-                return self.async_create_entry(
-                    title=user_input[CONF_NAME],
-                    data={
-                        CONF_LATITUDE: user_input[CONF_LATITUDE],
-                        CONF_LONGITUDE: user_input[CONF_LONGITUDE],
-                    },
-                    options={
-                        CONF_AZIMUTH: user_input[CONF_AZIMUTH],
-                        CONF_DECLINATION: user_input[CONF_DECLINATION],
-                        CONF_MODULES_POWER: user_input[CONF_MODULES_POWER],
-                    },
-                )
 
         return self.async_show_form(
             step_id="user",
@@ -91,7 +73,6 @@ class ForecastSolarFlowHandler(ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_MODULES_POWER): vol.Coerce(int),
                 }
             ),
-            errors=errors,
         )
 
 
