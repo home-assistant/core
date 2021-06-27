@@ -144,9 +144,7 @@ class Segment:
                 return
             yield part.data
 
-    def render_hls(
-        self, last_stream_id: int, render_parts: bool, add_hint: bool
-    ) -> str:
+    def _render_hls_template(self, last_stream_id: int, render_parts: bool) -> str:
         """Render the HLS playlist section for the Segment.
 
         The Segment may still be in progress.
@@ -154,9 +152,8 @@ class Segment:
         and hls_playlist_complete to avoid redoing work on subsequent calls.
         """
         if self.hls_playlist_complete:
-            return self.hls_playlist_template.format(
-                self.hls_playlist_parts if render_parts else ""
-            )
+            return self.hls_playlist_template
+        # Promote str to list[str] to allow appends and joins
         playlist_template = (
             [self.hls_playlist_template] if self.hls_playlist_template else []
         )
@@ -200,25 +197,32 @@ class Segment:
         self.hls_num_parts_rendered = len(self.parts_by_byterange)
         self.hls_playlist_complete = self.complete
 
-        # Add the hint after storing everything as the hint is continually changing
-        if add_hint:
-            # Add preload hint
-            # pylint: disable=undefined-loop-variable
-            if self.complete:  # Next part belongs to next segment
-                sequence = self.sequence + 1
-                start = 0
-            else:  # Next part is in the same segment
-                sequence = self.sequence
-                start = self.data_size
-            playlist_template.append(
-                f'#EXT-X-PRELOAD-HINT:TYPE=PART,URI="./segment/{sequence}'
-                f'.m4s",BYTERANGE-START={start}'
+        return self.hls_playlist_template
+
+    def render_hls(
+        self, last_stream_id: int, render_parts: bool, add_hint: bool
+    ) -> str:
+        """Render the HLS playlist section for the Segment including a hint if requested."""
+        playlist_template = self._render_hls_template(last_stream_id, render_parts)
+        if not add_hint:
+            return playlist_template.format(
+                self.hls_playlist_parts if render_parts else ""
             )
-            # If add_hint is true, render_parts must be true, so add the parts
-            return "\n".join(playlist_template).format(self.hls_playlist_parts)
-        return self.hls_playlist_template.format(
-            self.hls_playlist_parts if render_parts else ""
-        )
+        # Add preload hint
+        # pylint: disable=undefined-loop-variable
+        if self.complete:  # Next part belongs to next segment
+            sequence = self.sequence + 1
+            start = 0
+        else:  # Next part is in the same segment
+            sequence = self.sequence
+            start = self.data_size
+        playlist_template_list = [
+            playlist_template,
+            f'#EXT-X-PRELOAD-HINT:TYPE=PART,URI="./segment/{sequence}.m4s",'
+            f"BYTERANGE-START={start}",
+        ]
+        # If add_hint is true, render_parts must be true, so add the parts
+        return "\n".join(playlist_template_list).format(self.hls_playlist_parts)
 
 
 class IdleTimer:
