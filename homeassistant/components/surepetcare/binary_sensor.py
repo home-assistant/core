@@ -84,6 +84,7 @@ class SurePetcareBinarySensor(BinarySensorEntity):
         """Return the name of the device if any."""
         return self._name
 
+    @abstractmethod
     @callback
     def _async_update(self) -> None:
         """Get the latest data and update the state."""
