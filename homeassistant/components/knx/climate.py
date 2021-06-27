@@ -28,6 +28,7 @@ from .const import CONTROLLER_MODES, CURRENT_HVAC_ACTIONS, DOMAIN, PRESET_MODES
 from .knx_entity import KnxEntity
 from .schema import ClimateSchema
 
+ATTR_COMMAND_VALUE = "command_value"
 CONTROLLER_MODES_INV = {value: key for key, value in CONTROLLER_MODES.items()}
 PRESET_MODES_INV = {value: key for key, value in PRESET_MODES.items()}
 
@@ -156,10 +157,14 @@ def _create_climate(xknx: XKNX, config: ConfigType) -> XknxClimate:
         temperature_step=config[ClimateSchema.CONF_TEMPERATURE_STEP],
         group_address_on_off=config.get(ClimateSchema.CONF_ON_OFF_ADDRESS),
         group_address_on_off_state=config.get(ClimateSchema.CONF_ON_OFF_STATE_ADDRESS),
+        on_off_invert=config[ClimateSchema.CONF_ON_OFF_INVERT],
+        group_address_active_state=config.get(ClimateSchema.CONF_ACTIVE_STATE_ADDRESS),
+        group_address_command_value_state=config.get(
+            ClimateSchema.CONF_COMMAND_VALUE_STATE_ADDRESS
+        ),
         min_temp=config.get(ClimateSchema.CONF_MIN_TEMP),
         max_temp=config.get(ClimateSchema.CONF_MAX_TEMP),
         mode=climate_mode,
-        on_off_invert=config[ClimateSchema.CONF_ON_OFF_INVERT],
     )
 
 
@@ -256,6 +261,8 @@ class KNXClimate(KnxEntity, ClimateEntity):
         """
         if self._device.supports_on_off and not self._device.is_on:
             return CURRENT_HVAC_OFF
+        if self._device.is_active is False:
+            return CURRENT_HVAC_IDLE
         if self._device.mode is not None and self._device.mode.supports_controller_mode:
             return CURRENT_HVAC_ACTIONS.get(
                 self._device.mode.controller_mode.value, CURRENT_HVAC_IDLE
@@ -310,6 +317,15 @@ class KNXClimate(KnxEntity, ClimateEntity):
             knx_operation_mode = HVACOperationMode(PRESET_MODES_INV.get(preset_mode))
             await self._device.mode.set_operation_mode(knx_operation_mode)
             self.async_write_ha_state()
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        """Return device specific state attributes."""
+        attr: dict[str, Any] = {}
+
+        if self._device.command_value.initialized:
+            attr[ATTR_COMMAND_VALUE] = self._device.command_value.value
+        return attr
 
     async def async_added_to_hass(self) -> None:
         """Store register state change callback."""
