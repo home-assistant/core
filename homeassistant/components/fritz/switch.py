@@ -263,22 +263,16 @@ def wifi_entities_list(
     return entities_list
 
 
-def all_entities_list(fritzbox_tools: FritzBoxTools, device_friendly_name: str):
+def all_entities_list(
+    fritzbox_tools: FritzBoxTools, device_friendly_name: str
+) -> list[Entity]:
     """Get a list of all entities."""
-
-    entities_list: list[
-        FritzBoxDeflectionSwitch
-        | FritzBoxPortSwitch
-        | FritzBoxProfileSwitch
-        | FritzBoxWifiSwitch
-    ] = []
-
-    entities_list.extend(deflection_entities_list(fritzbox_tools, device_friendly_name))
-    entities_list.extend(port_entities_list(fritzbox_tools, device_friendly_name))
-    entities_list.extend(profile_entities_list(fritzbox_tools, device_friendly_name))
-    entities_list.extend(wifi_entities_list(fritzbox_tools, device_friendly_name))
-
-    return entities_list
+    return [
+        *deflection_entities_list(fritzbox_tools, device_friendly_name),
+        *port_entities_list(fritzbox_tools, device_friendly_name),
+        *profile_entities_list(fritzbox_tools, device_friendly_name),
+        *wifi_entities_list(fritzbox_tools, device_friendly_name),
+    ]
 
 
 async def async_setup_entry(
