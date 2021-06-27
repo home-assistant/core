@@ -10,6 +10,6 @@ class SensorDescription(TypedDict, total=False):
     device_class: str | None
     icon: str | None
     label: str
-    unit: str | None
+    unit: str
     state_class: str | None
     value: Callable
