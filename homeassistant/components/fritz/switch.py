@@ -382,6 +382,9 @@ class FritzBoxPortSwitch(FritzBoxBaseSwitch, SwitchEntity):
         self.port_mapping = port_mapping  # dict in the format as it comes from fritzconnection. eg: {'NewRemoteHost': '0.0.0.0', 'NewExternalPort': 22, 'NewProtocol': 'TCP', 'NewInternalPort': 22, 'NewInternalClient': '192.168.178.31', 'NewEnabled': True, 'NewPortMappingDescription': 'Beast SSH ', 'NewLeaseDuration': 0}
         self._idx = idx  # needed for update routine
 
+        if port_mapping is None:
+            return
+
         switch_info = SwitchInfo(
             description=f'Port forward {port_mapping["NewPortMappingDescription"]}',
             friendly_name=device_friendly_name,
