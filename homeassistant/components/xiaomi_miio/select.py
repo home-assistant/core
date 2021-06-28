@@ -47,12 +47,7 @@ class SelectorType:
 
     name: str = None
     short_name: str = None
-    unit_of_measurement: str = None
     icon: str = None
-    device_class: str = None
-    min: float = None
-    max: float = None
-    mode: str = None
     options: list = None
     step: float = None
     service: str = None
@@ -120,14 +115,8 @@ class XiaomiSelector(XiaomiCoordinatedMiioEntity, SelectEntity):
         super().__init__(name, device, entry, unique_id, coordinator)
         self._attr_icon = selector.icon
         self._attr_unit_of_measurement = selector.unit_of_measurement
-        self._supported_features = 0
-        self._device_features = 0
-        self._state_attrs = {}
         self._controller = selector
         self._current_option = None
-        self._enum_class = None
-        self._attributes = None
-        self._available_attributes = []
 
     @property
     def options(self):
@@ -171,8 +160,8 @@ class XiaomiAirHumidifierSelector(XiaomiSelector):
         else:
             self._device_features = FEATURE_FLAGS_AIRHUMIDIFIER
 
-        self._state_attrs.update(
-            {attribute: None for attribute in self._available_attributes}
+        self._current_option = self._extract_value_from_attribute(
+            self.coordinator.data, self._controller.short_name
         )
 
     @callback
