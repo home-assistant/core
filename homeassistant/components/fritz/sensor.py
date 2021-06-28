@@ -42,11 +42,42 @@ def _retrieve_external_ip_state(status: FritzStatus, last_value: str) -> str:
     return status.external_ip
 
 
+def _retrieve_kib_s_sent_state(status: FritzStatus, last_value: str) -> str:
+    """Return upload transmission rate."""
+    return round(status.transmission_rate[0] * 8 / 1024, 2)
+
+
+def _retrieve_kib_s_received_state(status: FritzStatus, last_value: str) -> str:
+    """Return download transmission rate."""
+    return round(status.transmission_rate[1] * 8 / 1024, 2)
+
+
+def _retrieve_max_kib_s_sent_state(status: FritzStatus, last_value: str) -> str:
+    """Return upload max transmission rate."""
+    return round(status.max_bit_rate[0] / 1024, 2)
+
+
+def _retrieve_max_kib_s_received_state(status: FritzStatus, last_value: str) -> str:
+    """Return download max transmission rate."""
+    return round(status.max_bit_rate[1] / 1024, 2)
+
+
+def _retrieve_kb_sent_state(status: FritzStatus, last_value: str) -> str:
+    """Return upload total data."""
+    return round(status.bytes_sent * 8 / 1024 / 1024, 2)
+
+
+def _retrieve_kb_received_state(status: FritzStatus, last_value: str) -> str:
+    """Return download total data."""
+    return round(status.bytes_received * 8 / 1024 / 1024, 2)
+
+
 class SensorData(TypedDict):
     """Sensor data class."""
 
     name: str
     device_class: str | None
+    unit_of_measurement: str | None
     icon: str | None
     state_provider: Callable
 
@@ -55,14 +86,58 @@ SENSOR_DATA = {
     "external_ip": SensorData(
         name="External IP",
         device_class=None,
+        unit_of_measurement=None,
         icon="mdi:earth",
         state_provider=_retrieve_external_ip_state,
     ),
     "uptime": SensorData(
         name="Uptime",
         device_class=DEVICE_CLASS_TIMESTAMP,
+        unit_of_measurement=None,
         icon=None,
         state_provider=_retrieve_uptime_state,
+    ),
+    "kib_s_sent": SensorData(
+        name="KiB/s sent",
+        device_class=None,
+        unit_of_measurement="KiB/s",
+        icon="mdi:web",
+        state_provider=_retrieve_kib_s_sent_state,
+    ),
+    "kib_s_received": SensorData(
+        name="KiB/s received",
+        device_class=None,
+        unit_of_measurement="KiB/s",
+        icon="mdi:web",
+        state_provider=_retrieve_kib_s_received_state,
+    ),
+    "max_kib_s_sent": SensorData(
+        name="Max KiB/s sent",
+        device_class=None,
+        unit_of_measurement="KiB/s",
+        icon="mdi:web",
+        state_provider=_retrieve_max_kib_s_sent_state,
+    ),
+    "max_kib_s_received": SensorData(
+        name="Max KiB/s received",
+        device_class=None,
+        unit_of_measurement="KiB/s",
+        icon="mdi:web",
+        state_provider=_retrieve_max_kib_s_received_state,
+    ),
+    "mb_sent": SensorData(
+        name="MB sent",
+        device_class=None,
+        unit_of_measurement="MB",
+        icon="mdi:web",
+        state_provider=_retrieve_kb_sent_state,
+    ),
+    "mb_received": SensorData(
+        name="MB received",
+        device_class=None,
+        unit_of_measurement="MB",
+        icon="mdi:web",
+        state_provider=_retrieve_kb_received_state,
     ),
 }
 
@@ -118,6 +193,11 @@ class FritzBoxSensor(FritzBoxBaseEntity, SensorEntity):
     def device_class(self) -> str | None:
         """Return device class."""
         return self._sensor_data["device_class"]
+
+    @property
+    def unit_of_measurement(self) -> str | None:
+        """Return unit of measurement."""
+        return self._sensor_data["unit_of_measurement"]
 
     @property
     def icon(self) -> str | None:
