@@ -108,7 +108,7 @@ SENSOR_TYPES: dict[str, tuple[str, str | None, str | None, str | None, bool]] = 
     "processor_temperature": (
         "Processor temperature",
         TEMP_CELSIUS,
-        CPU_ICON,
+        "mdi:thermometer",
         None,
         False,
     ),
