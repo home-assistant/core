@@ -73,7 +73,7 @@ SENSOR_TYPES: dict[str, tuple[str, str | None, str | None, str | None, bool]] = 
     ),
     "ipv4_address": ("IPv4 address", "", "mdi:server-network", None, True),
     "ipv6_address": ("IPv6 address", "", "mdi:server-network", None, True),
-    "last_boot": ("Last boot", None, "mdi:clock", DEVICE_CLASS_TIMESTAMP, False),
+    "last_boot": ("Last boot", None, None, DEVICE_CLASS_TIMESTAMP, False),
     "load_15m": ("Load (15m)", " ", CPU_ICON, None, False),
     "load_1m": ("Load (1m)", " ", CPU_ICON, None, False),
     "load_5m": ("Load (5m)", " ", CPU_ICON, None, False),
