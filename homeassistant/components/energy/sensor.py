@@ -63,7 +63,11 @@ async def async_setup_platform(
 
 
 class EnergyCostSensor(SensorEntity):
-    """Calculate costs incurred by consuming energy."""
+    """Calculate costs incurred by consuming energy.
+
+    This is intended as a fallback for when no specific cost sensor is available for the
+    utility.
+    """
 
     def __init__(
         self,

@@ -26,15 +26,17 @@ async def async_get_manager(hass: HomeAssistant) -> EnergyManager:
 class FlowFromGridSourceType(TypedDict):
     """Dictionary describing the 'from' stat for the grid source."""
 
-    # kWh meter
+    # statistic_id of a an energy meter (kWh)
     stat_from: str
 
-    # $ meter
+    # statistic_id of costs ($) incurred from the energy meter
+    # If set to None and entity_from and entity_energy_price are configured,
+    # an EnergyCostSensor will be automatically created
     stat_cost: str | None
 
-    # Can be used to generate costs if stat_cost omitted
-    entity_from: str | None
-    entity_energy_price: str | None
+    # Used to generate costs if stat_cost is set to None
+    entity_from: str | None  # entity_id of an energy meter (kWh)
+    entity_energy_price: str | None  # entity_id of an entity providing price ($/kWh)
 
 
 class FlowToGridSourceType(TypedDict):
