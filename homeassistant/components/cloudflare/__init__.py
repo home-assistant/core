@@ -34,6 +34,7 @@ _LOGGER = logging.getLogger(__name__)
 CONFIG_SCHEMA = cv.deprecated(DOMAIN)
 PLATFORMS = [SENSOR_DOMAIN]
 
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Cloudflare from a config entry."""
     cfupdate = CloudflareUpdater(
