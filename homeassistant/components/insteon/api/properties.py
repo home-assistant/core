@@ -26,7 +26,7 @@ from ..const import (
     PROPERTY_VALUE,
     TYPE,
 )
-from .device import DEVICE_ADDRESS, notify_device_not_found
+from .device import notify_device_not_found
 
 TOGGLE_ON_OFF_MODE = "toggle_on_off_mode"
 NON_TOGGLE_ON_MODE = "non_toggle_on_mode"
