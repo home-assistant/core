@@ -11,6 +11,7 @@ from pycfdns.exceptions import (
     CloudflareException,
 )
 
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_TOKEN, CONF_ZONE
 from homeassistant.core import HomeAssistant
@@ -31,7 +32,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = cv.deprecated(DOMAIN)
-
+PLATFORMS = [SENSOR_DOMAIN]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Cloudflare from a config entry."""
@@ -49,6 +50,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         return False
     except CloudflareConnectionException as error:
         raise ConfigEntryNotReady from error
+
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][entry.entry_id] = {}
 
     async def update_records(now):
         """Set up recurring update."""
@@ -71,10 +75,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         async_track_time_interval(hass, update_records, update_interval)
     )
 
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = {}
-
     hass.services.async_register(DOMAIN, SERVICE_UPDATE_RECORDS, update_records_service)
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
