@@ -35,7 +35,7 @@ class FlowFromGridSourceType(TypedDict):
     stat_cost: str | None
 
     # Used to generate costs if stat_cost is set to None
-    entity_from: str | None  # entity_id of an energy meter (kWh)
+    entity_from: str | None  # entity_id of an energy meter (kWh), entity_id of the energy meter for stat_from
     entity_energy_price: str | None  # entity_id of an entity providing price ($/kWh)
 
 
