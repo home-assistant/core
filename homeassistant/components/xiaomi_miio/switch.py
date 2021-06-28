@@ -373,15 +373,7 @@ class XiaomiGenericCoordinatedSwitch(XiaomiCoordinatedMiioEntity, SwitchEntity):
         super().__init__(name, device, entry, unique_id, coordinator)
 
         self._attr_icon = switch.icon
-        self._state = None
-        self._state_attrs = {ATTR_MODEL: self._model}
         self._controller = switch
-        if self._model in [MODEL_AIRHUMIDIFIER_CA1, MODEL_AIRHUMIDIFIER_CB1]:
-            self._device_features = FEATURE_FLAGS_AIRHUMIDIFIER_CA_AND_CB
-        elif self._model in [MODEL_AIRHUMIDIFIER_CA4]:
-            self._device_features = FEATURE_FLAGS_AIRHUMIDIFIER_CA4
-        else:
-            self._device_features = FEATURE_FLAGS_AIRHUMIDIFIER
         self._state = self._extract_value_from_attribute(
             self.coordinator.data, self._controller.short_name
         )
