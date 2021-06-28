@@ -148,14 +148,9 @@ class XiaomiAirHumidifierNumber(XiaomiCoordinatedMiioEntity, NumberEntity):
             or self.max_value
             and value > self.max_value
         ):
-            _LOGGER.warning(
-                "Value %s not a valid %s within the range %s - %s",
-                value,
-                self.name,
-                self.min_value,
-                self.max_value,
+            raise ValueError(
+                f"Value {value} not a valid {self.name} within the range {self.min_value} - {self.max_value}"
             )
-            return
         if await self.async_set_motor_speed(value):
             self._value = value
             self.async_write_ha_state()
