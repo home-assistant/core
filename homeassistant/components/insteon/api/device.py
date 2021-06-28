@@ -14,11 +14,6 @@ from ..const import (
     TYPE,
 )
 
-DEVICE_ADDRESS = "device_address"
-ALDB_RECORD = "record"
-PROPERTY_NAME = "name"
-PROPERTY_VALUE = "value"
-
 
 def compute_device_name(ha_device):
     """Return the HA device name."""
