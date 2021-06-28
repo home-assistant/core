@@ -58,10 +58,16 @@ async def init_integration(
     *,
     data: dict = ENTRY_CONFIG,
     options: dict = ENTRY_OPTIONS,
+    unique_id: str = MOCK_ZONE,
     skip_setup: bool = False,
 ) -> MockConfigEntry:
     """Set up the Cloudflare integration in Home Assistant."""
-    entry = MockConfigEntry(domain=DOMAIN, data=data, options=options)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=data,
+        options=options,
+        unique_id=unique_id,
+    )
     entry.add_to_hass(hass)
 
     if not skip_setup:
