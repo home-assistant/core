@@ -165,7 +165,11 @@ class AtwZoneSensor(MelDeviceSensor):
 
     def __init__(self, api: MelCloudDevice, zone: Zone, measurement, definition):
         """Initialize the sensor."""
-        super().__init__(api, measurement, definition)
+        if zone.zone_index == 1:
+            full_measurement = measurement
+        else:
+            full_measurement = f"{measurement}-zone-{zone.zone_index}"
+        super().__init__(api, full_measurement, definition)
         self._zone = zone
         self._name_slug = f"{api.name} {zone.name}"
 
