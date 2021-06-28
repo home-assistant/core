@@ -7,6 +7,7 @@
             "cannot_connect": "Verbindung fehlgeschlagen",
             "unknown": "Unerwarteter Fehler"
         },
+        "flow_title": "{name} ({host})",
         "step": {
             "link": {
                 "description": "M\u00f6chten Sie {name} ({host}) einrichten?",

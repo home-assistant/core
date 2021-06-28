@@ -20,6 +20,7 @@ from homeassistant.const import (
     STATE_NOT_HOME,
 )
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util import slugify
 from homeassistant.util.dt import utcnow
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -38,6 +39,14 @@ CONFIG_DATA = {
 
 MOCK_BYTES_TOTAL = [60000000000, 50000000000]
 MOCK_CURRENT_TRANSFER_RATES = [20000000, 10000000]
+
+SENSOR_NAMES = [
+    "Devices Connected",
+    "Download Speed",
+    "Download",
+    "Upload Speed",
+    "Upload",
+]
 
 
 @pytest.fixture(name="mock_devices")
@@ -88,46 +97,19 @@ async def test_sensors(hass, connect, mock_devices):
 
     # init variable
     unique_id = DOMAIN
-    name_prefix = DEFAULT_PREFIX
-    obj_prefix = name_prefix.lower()
+    obj_prefix = slugify(DEFAULT_PREFIX)
     sensor_prefix = f"{sensor.DOMAIN}.{obj_prefix}"
 
     # Pre-enable the status sensor
-    entity_reg.async_get_or_create(
-        sensor.DOMAIN,
-        DOMAIN,
-        f"{unique_id} {name_prefix} Devices Connected",
-        suggested_object_id=f"{obj_prefix}_devices_connected",
-        disabled_by=None,
-    )
-    entity_reg.async_get_or_create(
-        sensor.DOMAIN,
-        DOMAIN,
-        f"{unique_id} {name_prefix} Download Speed",
-        suggested_object_id=f"{obj_prefix}_download_speed",
-        disabled_by=None,
-    )
-    entity_reg.async_get_or_create(
-        sensor.DOMAIN,
-        DOMAIN,
-        f"{unique_id} {name_prefix} Download",
-        suggested_object_id=f"{obj_prefix}_download",
-        disabled_by=None,
-    )
-    entity_reg.async_get_or_create(
-        sensor.DOMAIN,
-        DOMAIN,
-        f"{unique_id} {name_prefix} Upload Speed",
-        suggested_object_id=f"{obj_prefix}_upload_speed",
-        disabled_by=None,
-    )
-    entity_reg.async_get_or_create(
-        sensor.DOMAIN,
-        DOMAIN,
-        f"{unique_id} {name_prefix} Upload",
-        suggested_object_id=f"{obj_prefix}_upload",
-        disabled_by=None,
-    )
+    for sensor_name in SENSOR_NAMES:
+        sensor_id = slugify(sensor_name)
+        entity_reg.async_get_or_create(
+            sensor.DOMAIN,
+            DOMAIN,
+            f"{unique_id} {DEFAULT_PREFIX} {sensor_name}",
+            suggested_object_id=f"{obj_prefix}_{sensor_id}",
+            disabled_by=None,
+        )
 
     config_entry.add_to_hass(hass)
 

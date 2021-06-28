@@ -280,10 +280,10 @@ def _update_states_table_with_foreign_key_options(connection, engine):
     for foreign_key in inspector.get_foreign_keys(TABLE_STATES):
         if foreign_key["name"] and (
             # MySQL/MariaDB will have empty options
-            not foreign_key["options"]
+            not foreign_key.get("options")
             or
             # Postgres will have ondelete set to None
-            foreign_key["options"].get("ondelete") is None
+            foreign_key.get("options", {}).get("ondelete") is None
         ):
             alters.append(
                 {
@@ -319,7 +319,7 @@ def _drop_foreign_key_constraints(connection, engine, table, columns):
     for foreign_key in inspector.get_foreign_keys(table):
         if (
             foreign_key["name"]
-            and foreign_key["options"].get("ondelete")
+            and foreign_key.get("options", {}).get("ondelete")
             and foreign_key["constrained_columns"] == columns
         ):
             drops.append(ForeignKeyConstraint((), (), name=foreign_key["name"]))

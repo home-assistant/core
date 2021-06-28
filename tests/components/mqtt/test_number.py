@@ -81,6 +81,39 @@ async def test_run_number_setup(hass, mqtt_mock):
     assert state.state == "20.5"
 
 
+async def test_value_template(hass, mqtt_mock):
+    """Test that it fetches the given payload with a template."""
+    topic = "test/number"
+    await async_setup_component(
+        hass,
+        "number",
+        {
+            "number": {
+                "platform": "mqtt",
+                "state_topic": topic,
+                "command_topic": topic,
+                "name": "Test Number",
+                "value_template": "{{ value_json.val }}",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    async_fire_mqtt_message(hass, topic, '{"val":10}')
+
+    await hass.async_block_till_done()
+
+    state = hass.states.get("number.test_number")
+    assert state.state == "10"
+
+    async_fire_mqtt_message(hass, topic, '{"val":20.5}')
+
+    await hass.async_block_till_done()
+
+    state = hass.states.get("number.test_number")
+    assert state.state == "20.5"
+
+
 async def test_run_number_service_optimistic(hass, mqtt_mock):
     """Test that set_value service works in optimistic mode."""
     topic = "test/number"
@@ -359,7 +392,7 @@ async def test_entity_id_update_discovery_update(hass, mqtt_mock):
 async def test_entity_debug_info_message(hass, mqtt_mock):
     """Test MQTT debug info."""
     await help_test_entity_debug_info_message(
-        hass, mqtt_mock, number.DOMAIN, DEFAULT_CONFIG, payload=b"1"
+        hass, mqtt_mock, number.DOMAIN, DEFAULT_CONFIG, payload="1"
     )
 
 
@@ -408,7 +441,7 @@ async def test_invalid_min_max_attributes(hass, caplog, mqtt_mock):
     )
     await hass.async_block_till_done()
 
-    assert f"'{CONF_MAX}'' must be > '{CONF_MIN}'" in caplog.text
+    assert f"'{CONF_MAX}' must be > '{CONF_MIN}'" in caplog.text
 
 
 async def test_mqtt_payload_not_a_number_warning(hass, caplog, mqtt_mock):

@@ -7,7 +7,7 @@ from homeassistant.helpers import config_validation as cv
 
 from .const import DEVICE_ID, DOMAIN, EVENT_TAG_SCANNED, TAG_ID
 
-TRIGGER_SCHEMA = vol.Schema(
+TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_PLATFORM): DOMAIN,
         vol.Required(TAG_ID): vol.All(cv.ensure_list, [cv.string]),
@@ -18,7 +18,7 @@ TRIGGER_SCHEMA = vol.Schema(
 
 async def async_attach_trigger(hass, config, action, automation_info):
     """Listen for tag_scanned events based on configuration."""
-    trigger_id = automation_info.get("trigger_id") if automation_info else None
+    trigger_data = automation_info.get("trigger_data", {}) if automation_info else {}
     tag_ids = set(config[TAG_ID])
     device_ids = set(config[DEVICE_ID]) if DEVICE_ID in config else None
 
@@ -35,10 +35,10 @@ async def async_attach_trigger(hass, config, action, automation_info):
             job,
             {
                 "trigger": {
+                    **trigger_data,
                     "platform": DOMAIN,
                     "event": event,
                     "description": "Tag scanned",
-                    "id": trigger_id,
                 }
             },
             event.context,

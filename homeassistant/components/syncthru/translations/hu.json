@@ -6,6 +6,7 @@
         "error": {
             "invalid_url": "\u00c9rv\u00e9nytelen URL"
         },
+        "flow_title": "{name}",
         "step": {
             "confirm": {
                 "data": {

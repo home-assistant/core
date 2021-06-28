@@ -1,4 +1,8 @@
 """Support for MySensors lights."""
+from __future__ import annotations
+
+from typing import Any
+
 from homeassistant.components import mysensors
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -10,8 +14,6 @@ from homeassistant.components.light import (
     SUPPORT_WHITE_VALUE,
     LightEntity,
 )
-from homeassistant.components.mysensors import on_unload
-from homeassistant.components.mysensors.const import MYSENSORS_DISCOVERY
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant, callback
@@ -20,6 +22,10 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.color as color_util
 from homeassistant.util.color import rgb_hex_to_rgb_list
 
+from .const import MYSENSORS_DISCOVERY, DiscoveryInfo, SensorType
+from .device import MySensorsDevice
+from .helpers import on_unload
+
 SUPPORT_MYSENSORS_RGBW = SUPPORT_COLOR | SUPPORT_WHITE_VALUE
 
 
@@ -27,15 +33,15 @@ async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-):
+) -> None:
     """Set up this platform for a specific ConfigEntry(==Gateway)."""
-    device_class_map = {
+    device_class_map: dict[SensorType, type[MySensorsDevice]] = {
         "S_DIMMER": MySensorsLightDimmer,
         "S_RGB_LIGHT": MySensorsLightRGB,
         "S_RGBW_LIGHT": MySensorsLightRGBW,
     }
 
-    async def async_discover(discovery_info):
+    async def async_discover(discovery_info: DiscoveryInfo) -> None:
         """Discover and add a MySensors light."""
         mysensors.setup_mysensors_platform(
             hass,
@@ -45,9 +51,9 @@ async def async_setup_entry(
             async_add_entities=async_add_entities,
         )
 
-    await on_unload(
+    on_unload(
         hass,
-        config_entry,
+        config_entry.entry_id,
         async_dispatcher_connect(
             hass,
             MYSENSORS_DISCOVERY.format(config_entry.entry_id, DOMAIN),
@@ -59,35 +65,35 @@ async def async_setup_entry(
 class MySensorsLight(mysensors.device.MySensorsEntity, LightEntity):
     """Representation of a MySensors Light child node."""
 
-    def __init__(self, *args):
+    def __init__(self, *args: Any) -> None:
         """Initialize a MySensors Light."""
         super().__init__(*args)
-        self._state = None
-        self._brightness = None
-        self._hs = None
-        self._white = None
+        self._state: bool | None = None
+        self._brightness: int | None = None
+        self._hs: tuple[int, int] | None = None
+        self._white: int | None = None
 
     @property
-    def brightness(self):
+    def brightness(self) -> int | None:
         """Return the brightness of this light between 0..255."""
         return self._brightness
 
     @property
-    def hs_color(self):
+    def hs_color(self) -> tuple[int, int] | None:
         """Return the hs color value [int, int]."""
         return self._hs
 
     @property
-    def white_value(self):
+    def white_value(self) -> int | None:
         """Return the white value of this light between 0..255."""
         return self._white
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if device is on."""
-        return self._state
+        return bool(self._state)
 
-    def _turn_on_light(self):
+    def _turn_on_light(self) -> None:
         """Turn on light child device."""
         set_req = self.gateway.const.SetReq
 
@@ -102,10 +108,9 @@ class MySensorsLight(mysensors.device.MySensorsEntity, LightEntity):
             self._state = True
             self._values[set_req.V_LIGHT] = STATE_ON
 
-    def _turn_on_dimmer(self, **kwargs):
+    def _turn_on_dimmer(self, **kwargs: Any) -> None:
         """Turn on dimmer child device."""
         set_req = self.gateway.const.SetReq
-        brightness = self._brightness
 
         if (
             ATTR_BRIGHTNESS not in kwargs
@@ -113,7 +118,7 @@ class MySensorsLight(mysensors.device.MySensorsEntity, LightEntity):
             or set_req.V_DIMMER not in self._values
         ):
             return
-        brightness = kwargs[ATTR_BRIGHTNESS]
+        brightness: int = kwargs[ATTR_BRIGHTNESS]
         percent = round(100 * brightness / 255)
         self.gateway.set_child_value(
             self.node_id, self.child_id, set_req.V_DIMMER, percent, ack=1
@@ -124,17 +129,20 @@ class MySensorsLight(mysensors.device.MySensorsEntity, LightEntity):
             self._brightness = brightness
             self._values[set_req.V_DIMMER] = percent
 
-    def _turn_on_rgb_and_w(self, hex_template, **kwargs):
+    def _turn_on_rgb_and_w(self, hex_template: str, **kwargs: Any) -> None:
         """Turn on RGB or RGBW child device."""
+        assert self._hs
+        assert self._white is not None
         rgb = list(color_util.color_hs_to_RGB(*self._hs))
         white = self._white
         hex_color = self._values.get(self.value_type)
-        hs_color = kwargs.get(ATTR_HS_COLOR)
+        hs_color: tuple[float, float] | None = kwargs.get(ATTR_HS_COLOR)
+        new_rgb: tuple[int, int, int] | None
         if hs_color is not None:
             new_rgb = color_util.color_hs_to_RGB(*hs_color)
         else:
             new_rgb = None
-        new_white = kwargs.get(ATTR_WHITE_VALUE)
+        new_white: int | None = kwargs.get(ATTR_WHITE_VALUE)
 
         if new_rgb is None and new_white is None:
             return
@@ -154,11 +162,11 @@ class MySensorsLight(mysensors.device.MySensorsEntity, LightEntity):
 
         if self.assumed_state:
             # optimistically assume that light has changed state
-            self._hs = color_util.color_RGB_to_hs(*rgb)
+            self._hs = color_util.color_RGB_to_hs(*rgb)  # type: ignore[assignment]
             self._white = white
             self._values[self.value_type] = hex_color
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         value_type = self.gateway.const.SetReq.V_LIGHT
         self.gateway.set_child_value(self.node_id, self.child_id, value_type, 0, ack=1)
@@ -169,13 +177,13 @@ class MySensorsLight(mysensors.device.MySensorsEntity, LightEntity):
             self.async_write_ha_state()
 
     @callback
-    def _async_update_light(self):
+    def _async_update_light(self) -> None:
         """Update the controller with values from light child."""
         value_type = self.gateway.const.SetReq.V_LIGHT
         self._state = self._values[value_type] == STATE_ON
 
     @callback
-    def _async_update_dimmer(self):
+    def _async_update_dimmer(self) -> None:
         """Update the controller with values from dimmer child."""
         value_type = self.gateway.const.SetReq.V_DIMMER
         if value_type in self._values:
@@ -184,31 +192,31 @@ class MySensorsLight(mysensors.device.MySensorsEntity, LightEntity):
                 self._state = False
 
     @callback
-    def _async_update_rgb_or_w(self):
+    def _async_update_rgb_or_w(self) -> None:
         """Update the controller with values from RGB or RGBW child."""
         value = self._values[self.value_type]
         color_list = rgb_hex_to_rgb_list(value)
         if len(color_list) > 3:
             self._white = color_list.pop()
-        self._hs = color_util.color_RGB_to_hs(*color_list)
+        self._hs = color_util.color_RGB_to_hs(*color_list)  # type: ignore[assignment]
 
 
 class MySensorsLightDimmer(MySensorsLight):
     """Dimmer child class to MySensorsLight."""
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> int:
         """Flag supported features."""
         return SUPPORT_BRIGHTNESS
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         self._turn_on_light()
         self._turn_on_dimmer(**kwargs)
         if self.assumed_state:
             self.async_write_ha_state()
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update the controller with the latest value from a sensor."""
         await super().async_update()
         self._async_update_light()
@@ -219,14 +227,14 @@ class MySensorsLightRGB(MySensorsLight):
     """RGB child class to MySensorsLight."""
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> int:
         """Flag supported features."""
         set_req = self.gateway.const.SetReq
         if set_req.V_DIMMER in self._values:
             return SUPPORT_BRIGHTNESS | SUPPORT_COLOR
         return SUPPORT_COLOR
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         self._turn_on_light()
         self._turn_on_dimmer(**kwargs)
@@ -234,7 +242,7 @@ class MySensorsLightRGB(MySensorsLight):
         if self.assumed_state:
             self.async_write_ha_state()
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update the controller with the latest value from a sensor."""
         await super().async_update()
         self._async_update_light()
@@ -246,14 +254,14 @@ class MySensorsLightRGBW(MySensorsLightRGB):
     """RGBW child class to MySensorsLightRGB."""
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> int:
         """Flag supported features."""
         set_req = self.gateway.const.SetReq
         if set_req.V_DIMMER in self._values:
             return SUPPORT_BRIGHTNESS | SUPPORT_MYSENSORS_RGBW
         return SUPPORT_MYSENSORS_RGBW
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         self._turn_on_light()
         self._turn_on_dimmer(**kwargs)

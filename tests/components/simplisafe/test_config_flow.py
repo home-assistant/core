@@ -10,7 +10,7 @@ from simplipy.errors import (
 from homeassistant import data_entry_flow
 from homeassistant.components.simplisafe import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
-from homeassistant.const import CONF_CODE, CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
+from homeassistant.const import CONF_CODE, CONF_PASSWORD, CONF_USERNAME
 
 from tests.common import MockConfigEntry
 
@@ -33,7 +33,11 @@ async def test_duplicate_error(hass):
     MockConfigEntry(
         domain=DOMAIN,
         unique_id="user@email.com",
-        data={CONF_USERNAME: "user@email.com", CONF_TOKEN: "12345", CONF_CODE: "1234"},
+        data={
+            CONF_USERNAME: "user@email.com",
+            CONF_PASSWORD: "password",
+            CONF_CODE: "1234",
+        },
     ).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
@@ -102,7 +106,11 @@ async def test_step_reauth(hass):
     MockConfigEntry(
         domain=DOMAIN,
         unique_id="user@email.com",
-        data={CONF_USERNAME: "user@email.com", CONF_TOKEN: "12345", CONF_CODE: "1234"},
+        data={
+            CONF_USERNAME: "user@email.com",
+            CONF_PASSWORD: "password",
+            CONF_CODE: "1234",
+        },
     ).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
@@ -120,6 +128,8 @@ async def test_step_reauth(hass):
         "homeassistant.components.simplisafe.async_setup_entry", return_value=True
     ), patch(
         "simplipy.API.login_via_credentials", new=AsyncMock(return_value=mock_api())
+    ), patch(
+        "homeassistant.config_entries.ConfigEntries.async_reload"
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_PASSWORD: "password"}
@@ -151,7 +161,7 @@ async def test_step_user(hass):
         assert result["title"] == "user@email.com"
         assert result["data"] == {
             CONF_USERNAME: "user@email.com",
-            CONF_TOKEN: "12345abc",
+            CONF_PASSWORD: "password",
             CONF_CODE: "1234",
         }
 
@@ -197,7 +207,7 @@ async def test_step_user_mfa(hass):
         assert result["title"] == "user@email.com"
         assert result["data"] == {
             CONF_USERNAME: "user@email.com",
-            CONF_TOKEN: "12345abc",
+            CONF_PASSWORD: "password",
             CONF_CODE: "1234",
         }
 

@@ -1,7 +1,7 @@
 """Config flow for Garmin Connect integration."""
 import logging
 
-from garminconnect_aio import (
+from garminconnect_ha import (
     Garmin,
     GarminConnectAuthenticationError,
     GarminConnectConnectionError,
@@ -11,7 +11,6 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_ID, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
 
@@ -38,15 +37,14 @@ class GarminConnectConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return await self._show_setup_form()
 
-        websession = async_get_clientsession(self.hass)
+        username = user_input[CONF_USERNAME]
+        password = user_input[CONF_PASSWORD]
 
-        garmin_client = Garmin(
-            websession, user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
-        )
+        api = Garmin(username, password)
 
         errors = {}
         try:
-            username = await garmin_client.login()
+            await self.hass.async_add_executor_job(api.login)
         except GarminConnectConnectionError:
             errors["base"] = "cannot_connect"
             return await self._show_setup_form(errors)
@@ -68,7 +66,7 @@ class GarminConnectConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             title=username,
             data={
                 CONF_ID: username,
-                CONF_USERNAME: user_input[CONF_USERNAME],
-                CONF_PASSWORD: user_input[CONF_PASSWORD],
+                CONF_USERNAME: username,
+                CONF_PASSWORD: password,
             },
         )

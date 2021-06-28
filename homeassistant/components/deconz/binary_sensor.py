@@ -81,6 +81,11 @@ class DeconzBinarySensor(DeconzDevice, BinarySensorEntity):
 
     TYPE = DOMAIN
 
+    def __init__(self, device, gateway):
+        """Initialize deCONZ binary sensor."""
+        super().__init__(device, gateway)
+        self._attr_device_class = DEVICE_CLASS.get(type(self._device))
+
     @callback
     def async_update_callback(self, force_update=False):
         """Update the sensor's state."""
@@ -92,11 +97,6 @@ class DeconzBinarySensor(DeconzDevice, BinarySensorEntity):
     def is_on(self):
         """Return true if sensor is on."""
         return self._device.state
-
-    @property
-    def device_class(self):
-        """Return the class of the sensor."""
-        return DEVICE_CLASS.get(type(self._device))
 
     @property
     def extra_state_attributes(self):
@@ -129,6 +129,12 @@ class DeconzTampering(DeconzDevice, BinarySensorEntity):
 
     _attr_device_class = DEVICE_CLASS_PROBLEM
 
+    def __init__(self, device, gateway):
+        """Initialize deCONZ binary sensor."""
+        super().__init__(device, gateway)
+
+        self._attr_name = f"{self._device.name} Tampered"
+
     @property
     def unique_id(self) -> str:
         """Return a unique identifier for this device."""
@@ -145,8 +151,3 @@ class DeconzTampering(DeconzDevice, BinarySensorEntity):
     def is_on(self) -> bool:
         """Return the state of the sensor."""
         return self._device.tampered
-
-    @property
-    def name(self) -> str:
-        """Return the name of the sensor."""
-        return f"{self._device.name} Tampered"

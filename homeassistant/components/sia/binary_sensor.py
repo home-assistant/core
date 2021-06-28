@@ -73,7 +73,7 @@ async def async_setup_entry(
     async_add_entities(generate_binary_sensors(entry))
 
 
-class SIABinarySensorBase(BinarySensorEntity, SIABaseEntity):
+class SIABinarySensorBase(SIABaseEntity, BinarySensorEntity):
     """Class for SIA Binary Sensors."""
 
     def __init__(

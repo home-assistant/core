@@ -1,5 +1,4 @@
 """The Wallbox integration."""
-import asyncio
 from datetime import timedelta
 import logging
 
@@ -115,33 +114,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, platform)
-                for platform in PLATFORMS
-            ]
-        )
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         hass.data[DOMAIN]["connections"].pop(entry.entry_id)
 
     return unload_ok
 
 
-class CannotConnect(exceptions.HomeAssistantError):
-    """Error to indicate we cannot connect."""
-
-    def __init__(self, msg=""):
-        """Create a log record."""
-        super().__init__()
-        _LOGGER.error("Cannot connect to Wallbox API. %s", msg)
-
-
 class InvalidAuth(exceptions.HomeAssistantError):
     """Error to indicate there is invalid auth."""
-
-    def __init__(self, msg=""):
-        """Create a log record."""
-        super().__init__()
-        _LOGGER.error("Cannot authenticate with Wallbox API. %s", msg)

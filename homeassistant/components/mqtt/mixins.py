@@ -67,6 +67,25 @@ CONF_VIA_DEVICE = "via_device"
 CONF_DEPRECATED_VIA_HUB = "via_hub"
 CONF_SUGGESTED_AREA = "suggested_area"
 
+MQTT_ATTRIBUTES_BLOCKED = {
+    "assumed_state",
+    "available",
+    "context_recent_time",
+    "device_class",
+    "device_info",
+    "entity_picture",
+    "entity_registry_enabled_default",
+    "extra_state_attributes",
+    "force_update",
+    "icon",
+    "name",
+    "should_poll",
+    "state",
+    "supported_features",
+    "unique_id",
+    "unit_of_measurement",
+}
+
 MQTT_AVAILABILITY_SINGLE_SCHEMA = vol.Schema(
     {
         vol.Exclusive(CONF_AVAILABILITY_TOPIC, "availability"): valid_subscribe_topic,
@@ -175,6 +194,8 @@ async def async_setup_entry_helper(hass, domain, async_setup, schema):
 class MqttAttributes(Entity):
     """Mixin used for platforms that support JSON attributes."""
 
+    _attributes_extra_blocked = frozenset()
+
     def __init__(self, config: dict) -> None:
         """Initialize the JSON attributes mixin."""
         self._attributes = None
@@ -206,7 +227,13 @@ class MqttAttributes(Entity):
                     payload = attr_tpl.async_render_with_possible_json_value(payload)
                 json_dict = json.loads(payload)
                 if isinstance(json_dict, dict):
-                    self._attributes = json_dict
+                    filtered_dict = {
+                        k: v
+                        for k, v in json_dict.items()
+                        if k not in MQTT_ATTRIBUTES_BLOCKED
+                        and k not in self._attributes_extra_blocked
+                    }
+                    self._attributes = filtered_dict
                     self.async_write_ha_state()
                 else:
                     _LOGGER.warning("JSON result was not a dictionary")

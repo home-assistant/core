@@ -1586,6 +1586,148 @@ async def test_light_service_call_color_conversion(hass, enable_custom_integrati
     assert data == {"brightness": 128, "rgbww_color": (0, 75, 140, 255, 255)}
 
 
+async def test_light_service_call_color_temp_emulation(
+    hass, enable_custom_integrations
+):
+    """Test color conversion in service calls."""
+    platform = getattr(hass.components, "test.light")
+    platform.init(empty=True)
+
+    platform.ENTITIES.append(platform.MockLight("Test_hs_ct", STATE_ON))
+    platform.ENTITIES.append(platform.MockLight("Test_hs", STATE_ON))
+    platform.ENTITIES.append(platform.MockLight("Test_hs_white", STATE_ON))
+
+    entity0 = platform.ENTITIES[0]
+    entity0.supported_color_modes = {light.COLOR_MODE_COLOR_TEMP, light.COLOR_MODE_HS}
+
+    entity1 = platform.ENTITIES[1]
+    entity1.supported_color_modes = {light.COLOR_MODE_HS}
+
+    entity2 = platform.ENTITIES[2]
+    entity2.supported_color_modes = {light.COLOR_MODE_HS, light.COLOR_MODE_WHITE}
+
+    assert await async_setup_component(hass, "light", {"light": {"platform": "test"}})
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity0.entity_id)
+    assert state.attributes["supported_color_modes"] == [
+        light.COLOR_MODE_COLOR_TEMP,
+        light.COLOR_MODE_HS,
+    ]
+
+    state = hass.states.get(entity1.entity_id)
+    assert state.attributes["supported_color_modes"] == [light.COLOR_MODE_HS]
+
+    state = hass.states.get(entity2.entity_id)
+    assert state.attributes["supported_color_modes"] == [
+        light.COLOR_MODE_HS,
+        light.COLOR_MODE_WHITE,
+    ]
+
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {
+            "entity_id": [
+                entity0.entity_id,
+                entity1.entity_id,
+                entity2.entity_id,
+            ],
+            "brightness_pct": 100,
+            "color_temp": 200,
+        },
+        blocking=True,
+    )
+    _, data = entity0.last_call("turn_on")
+    assert data == {"brightness": 255, "color_temp": 200}
+    _, data = entity1.last_call("turn_on")
+    assert data == {"brightness": 255, "hs_color": (27.001, 19.243)}
+    _, data = entity2.last_call("turn_on")
+    assert data == {"brightness": 255, "hs_color": (27.001, 19.243)}
+
+
+async def test_light_service_call_white_mode(hass, enable_custom_integrations):
+    """Test color_mode white in service calls."""
+    platform = getattr(hass.components, "test.light")
+    platform.init(empty=True)
+
+    platform.ENTITIES.append(platform.MockLight("Test_white", STATE_ON))
+    entity0 = platform.ENTITIES[0]
+    entity0.supported_color_modes = {light.COLOR_MODE_HS, light.COLOR_MODE_WHITE}
+
+    assert await async_setup_component(hass, "light", {"light": {"platform": "test"}})
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity0.entity_id)
+    assert state.attributes["supported_color_modes"] == [
+        light.COLOR_MODE_HS,
+        light.COLOR_MODE_WHITE,
+    ]
+
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {
+            "entity_id": [entity0.entity_id],
+            "brightness_pct": 100,
+            "hs_color": (240, 100),
+        },
+        blocking=True,
+    )
+    _, data = entity0.last_call("turn_on")
+    assert data == {"brightness": 255, "hs_color": (240.0, 100.0)}
+
+    entity0.calls = []
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {"entity_id": [entity0.entity_id], "white": 50},
+        blocking=True,
+    )
+    _, data = entity0.last_call("turn_on")
+    assert data == {"white": 50}
+
+    entity0.calls = []
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {"entity_id": [entity0.entity_id], "white": 0},
+        blocking=True,
+    )
+    _, data = entity0.last_call("turn_off")
+    assert data == {}
+
+    entity0.calls = []
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {"entity_id": [entity0.entity_id], "brightness_pct": 100, "white": 50},
+        blocking=True,
+    )
+    _, data = entity0.last_call("turn_on")
+    assert data == {"white": 255}
+
+    entity0.calls = []
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {"entity_id": [entity0.entity_id], "brightness": 100, "white": 0},
+        blocking=True,
+    )
+    _, data = entity0.last_call("turn_on")
+    assert data == {"white": 100}
+
+    entity0.calls = []
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {"entity_id": [entity0.entity_id], "brightness_pct": 0, "white": 50},
+        blocking=True,
+    )
+    _, data = entity0.last_call("turn_off")
+    assert data == {}
+
+
 async def test_light_state_color_conversion(hass, enable_custom_integrations):
     """Test color conversion in state updates."""
     platform = getattr(hass.components, "test.light")
@@ -1801,3 +1943,42 @@ async def test_services_filter_parameters(
 
     _, data = ent1.last_call("turn_off")
     assert data == {}
+
+
+def test_valid_supported_color_modes():
+    """Test valid_supported_color_modes."""
+    supported = {light.COLOR_MODE_HS}
+    assert light.valid_supported_color_modes(supported) == supported
+
+    # Supported color modes must not be empty
+    supported = set()
+    with pytest.raises(vol.Error):
+        light.valid_supported_color_modes(supported)
+
+    # COLOR_MODE_WHITE must be combined with a color mode supporting color
+    supported = {light.COLOR_MODE_WHITE}
+    with pytest.raises(vol.Error):
+        light.valid_supported_color_modes(supported)
+
+    supported = {light.COLOR_MODE_WHITE, light.COLOR_MODE_COLOR_TEMP}
+    with pytest.raises(vol.Error):
+        light.valid_supported_color_modes(supported)
+
+    supported = {light.COLOR_MODE_WHITE, light.COLOR_MODE_HS}
+    assert light.valid_supported_color_modes(supported) == supported
+
+    # COLOR_MODE_ONOFF must be the only supported mode
+    supported = {light.COLOR_MODE_ONOFF}
+    assert light.valid_supported_color_modes(supported) == supported
+
+    supported = {light.COLOR_MODE_ONOFF, light.COLOR_MODE_COLOR_TEMP}
+    with pytest.raises(vol.Error):
+        light.valid_supported_color_modes(supported)
+
+    # COLOR_MODE_BRIGHTNESS must be the only supported mode
+    supported = {light.COLOR_MODE_BRIGHTNESS}
+    assert light.valid_supported_color_modes(supported) == supported
+
+    supported = {light.COLOR_MODE_BRIGHTNESS, light.COLOR_MODE_COLOR_TEMP}
+    with pytest.raises(vol.Error):
+        light.valid_supported_color_modes(supported)

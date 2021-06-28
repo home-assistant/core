@@ -68,6 +68,18 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Shelly from a config entry."""
+    # The custom component for Shelly devices uses shelly domain as well as core
+    # integration. If the user removes the custom component but doesn't remove the
+    # config entry, core integration will try to configure that config entry with an
+    # error. The config entry data for this custom component doesn't contain host
+    # value, so if host isn't present, config entry will not be configured.
+    if not entry.data.get(CONF_HOST):
+        _LOGGER.warning(
+            "The config entry %s probably comes from a custom integration, please remove it if you want to use core Shelly integration",
+            entry.title,
+        )
+        return False
+
     hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id] = {}
     hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id][DEVICE] = None
 

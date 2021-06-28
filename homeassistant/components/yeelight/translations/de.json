@@ -7,6 +7,7 @@
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen"
         },
+        "flow_title": "{model} {host}",
         "step": {
             "discovery_confirm": {
                 "description": "M\u00f6chten Sie {model} ({host}) einrichten?"
