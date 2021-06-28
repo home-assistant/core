@@ -4,12 +4,12 @@ from __future__ import annotations
 import logging
 
 from aiomusiccast import MusicCastGroupException
+from aiomusiccast.features import ZoneFeature
 import voluptuous as vol
 
 from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     REPEAT_MODE_OFF,
-    SUPPORT_CLEAR_PLAYLIST,
     SUPPORT_GROUPING,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
@@ -55,13 +55,8 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-MUSIC_PLAYER_SUPPORT = (
+MUSIC_PLAYER_BASE_SUPPORT = (
     SUPPORT_PAUSE
-    | SUPPORT_VOLUME_SET
-    | SUPPORT_VOLUME_MUTE
-    | SUPPORT_TURN_ON
-    | SUPPORT_TURN_OFF
-    | SUPPORT_CLEAR_PLAYLIST
     | SUPPORT_PLAY
     | SUPPORT_SHUFFLE_SET
     | SUPPORT_REPEAT_SET
@@ -350,7 +345,17 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
     @property
     def supported_features(self):
         """Flag media player features that are supported."""
-        return MUSIC_PLAYER_SUPPORT
+        supported_features = MUSIC_PLAYER_BASE_SUPPORT
+        zone = self.coordinator.data.zones[self._zone_id]
+
+        if ZoneFeature.POWER in zone.features:
+            supported_features |= SUPPORT_TURN_ON | SUPPORT_TURN_OFF
+        if ZoneFeature.VOLUME in zone.features:
+            supported_features |= SUPPORT_VOLUME_SET
+        if ZoneFeature.MUTE in zone.features:
+            supported_features |= SUPPORT_VOLUME_MUTE
+
+        return supported_features
 
     async def async_media_previous_track(self):
         """Send previous track command."""
