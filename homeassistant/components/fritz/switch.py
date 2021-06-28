@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections import OrderedDict
 from functools import partial
 import logging
-from typing import Any, Callable
+from typing import Any
 
 from fritzconnection.core.exceptions import (
     FritzActionError,
@@ -304,8 +304,8 @@ class FritzBoxBaseSwitch(FritzBoxBaseEntity):
         self._friendly_name = switch_info["friendly_name"]
         self._icon = switch_info["icon"]
         self._type = switch_info["type"]
-        self._update: Callable = switch_info["callback_update"]
-        self._switch: Callable = switch_info["callback_switch"]
+        self._update = switch_info["callback_update"]
+        self._switch = switch_info["callback_switch"]
 
         self._name = f"{self._friendly_name} {self._description}"
         self._unique_id = (
@@ -318,17 +318,17 @@ class FritzBoxBaseSwitch(FritzBoxBaseEntity):
         self._attr_is_on = False
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return name."""
         return self._name
 
     @property
-    def icon(self):
+    def icon(self) -> str:
         """Return name."""
         return self._icon
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str:
         """Return unique id."""
         return self._unique_id
 
@@ -338,20 +338,20 @@ class FritzBoxBaseSwitch(FritzBoxBaseEntity):
         return self._is_available
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, str]:
         """Return device attributes."""
         return self._attributes
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update data."""
         _LOGGER.debug("Updating '%s' (%s) switch state", self.name, self._type)
         await self._update()
 
-    async def async_turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on switch."""
         await self._async_handle_turn_on_off(turn_on=True)
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off switch."""
         await self._async_handle_turn_on_off(turn_on=False)
 
