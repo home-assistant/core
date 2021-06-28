@@ -346,7 +346,6 @@ freebox-api==0.0.10
 
 # homeassistant.components.fritz
 # homeassistant.components.fritzbox_callmonitor
-# homeassistant.components.fritzbox_netmonitor
 fritzconnection==1.4.2
 
 # homeassistant.components.fritz
