@@ -44,10 +44,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         account[API_ACCOUNT_CURRENCY] for account in instance.accounts
     ]
 
+    desired_currencies: list[str] = []
+
     if CONF_CURRENCIES in config_entry.options:
         desired_currencies = config_entry.options[CONF_CURRENCIES]
-    else:
-        desired_currencies = provided_currencies
 
     exchange_native_currency = instance.exchange_rates.currency
 

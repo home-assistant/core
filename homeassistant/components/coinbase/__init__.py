@@ -48,47 +48,12 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass, config):
-    """Set up the Coinbase component.
-
-    Will automatically setup sensors to support
-    wallets discovered on the network.
-    """
-    api_key = config[DOMAIN][CONF_API_KEY]
-    api_secret = config[DOMAIN][CONF_API_SECRET]
-    account_currencies = config[DOMAIN].get(CONF_ACCOUNT_CURRENCIES)
-    exchange_currencies = config[DOMAIN][CONF_EXCHANGE_CURRENCIES]
-
-    hass.data[DATA_COINBASE] = coinbase_data = CoinbaseData(api_key, api_secret)
-
-    if not hasattr(coinbase_data, "accounts"):
-        return False
-    if account_currencies is not None:
-        provided_accounts = {}
-        for account in coinbase_data.accounts:
-            provided_accounts[account.currency] = account
-        for user_account in account_currencies:
-            if user_account in provided_accounts:
-                load_platform(
-                    hass,
-                    "sensor",
-                    DOMAIN,
-                    {"account": provided_accounts[user_account]},
-                    config,
-                )
-            else:
-                _LOGGER.warning(
-                    "Account %s not found, please check your API settings on Coinbase",
-                    user_account,
-                )
-    for currency in exchange_currencies:
-        if currency not in coinbase_data.exchange_rates.rates:
-            _LOGGER.warning("Currency %s not found", currency)
-            continue
-        native = coinbase_data.exchange_rates.currency
-        load_platform(
-            hass,
-            "sensor",
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Coinbase component."""
+    if DOMAIN not in config:
+        return True
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_IMPORT},
             data=config[DOMAIN],
