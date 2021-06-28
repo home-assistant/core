@@ -14,11 +14,8 @@ from homeassistant.components import websocket_api
 from homeassistant.core import callback
 
 from ..const import DEVICE_ADDRESS, ID, INSTEON_DEVICE_NOT_FOUND, TYPE
-from .device import async_device_name, notify_device_not_found
 
 from .device import (
-    DEVICE_ADDRESS,
-    INSTEON_DEVICE_NOT_FOUND,
     async_device_name,
     notify_device_not_found,
 )
