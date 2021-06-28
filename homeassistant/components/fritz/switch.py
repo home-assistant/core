@@ -184,6 +184,9 @@ def port_entities_list(
         port_forwards_count,
     )
 
+    local_ip = get_local_ip()
+    _LOGGER.debug("IP source for %s is %s", fritzbox_tools.host, local_ip)
+
     for i in range(port_forwards_count):
 
         portmap = service_call_action(
@@ -205,8 +208,6 @@ def port_entities_list(
         )
 
         # We can only handle port forwards of the given device
-        local_ip = get_local_ip()
-        _LOGGER.debug("IP source for %s is %s", fritzbox_tools.host, local_ip)
         if portmap["NewInternalClient"] == local_ip:
             entities_list.append(
                 FritzBoxPortSwitch(
@@ -244,16 +245,18 @@ def wifi_entities_list(
     std_table = {"ac": "5Ghz", "n": "2.4Ghz"}
     networks: dict = {}
     for i in range(4):
-        if ("WLANConfiguration" + str(i)) in fritzbox_tools.connection.services:
-            network_info = service_call_action(
-                fritzbox_tools, "WLANConfiguration", str(i), "GetInfo"
-            )
-            if network_info:
-                ssid = network_info["NewSSID"]
-                if ssid in networks.values():
-                    networks[i] = f'{ssid} {std_table[network_info["NewStandard"]]}'
-                else:
-                    networks[i] = ssid
+        if not ("WLANConfiguration" + str(i)) in fritzbox_tools.connection.services:
+            continue
+
+        network_info = service_call_action(
+            fritzbox_tools, "WLANConfiguration", str(i), "GetInfo"
+        )
+        if network_info:
+            ssid = network_info["NewSSID"]
+            if ssid in networks.values():
+                networks[i] = f'{ssid} {std_table[network_info["NewStandard"]]}'
+            else:
+                networks[i] = ssid
 
     return [
         FritzBoxWifiSwitch(fritzbox_tools, device_friendly_name, net, networks[net])
@@ -440,10 +443,7 @@ class FritzBoxPortSwitch(FritzBoxBaseSwitch, SwitchEntity):
             **self.port_mapping,
         )
 
-        if resp is None:
-            return False
-
-        return True
+        return bool(resp is not None)
 
 
 class FritzBoxDeflectionSwitch(FritzBoxBaseSwitch, SwitchEntity):
