@@ -194,7 +194,7 @@ async def async_setup_entry_helper(hass, domain, async_setup, schema):
 class MqttAttributes(Entity):
     """Mixin used for platforms that support JSON attributes."""
 
-    _attributes_extra_blocked = []
+    _attributes_extra_blocked = frozenset()
 
     def __init__(self, config: dict) -> None:
         """Initialize the JSON attributes mixin."""
