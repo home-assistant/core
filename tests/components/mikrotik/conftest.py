@@ -7,5 +7,7 @@ import pytest
 @pytest.fixture(autouse=True)
 def mock_api():
     """Mock api."""
-    with patch("librouteros.connect") as mock_api:
+    with patch("librouteros.create_transport"), patch(
+        "librouteros.Api.readResponse"
+    ) as mock_api:
         yield mock_api

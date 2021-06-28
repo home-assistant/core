@@ -165,7 +165,7 @@ class MikrotikHubData:
             socket.timeout,
         ) as api_error:
             _LOGGER.error("Mikrotik %s connection error %s", self.host, api_error)
-            raise CannotConnect from api_error
+            self.reconnect_hub()
         except librouteros.exceptions.ProtocolError as api_error:
             _LOGGER.debug(
                 "Mikrotik %s failed to retrieve data. cmd=[%s] Error: %s",
@@ -178,6 +178,15 @@ class MikrotikHubData:
             if "invalid user name or password" in str(err):
                 raise LoginError from err
         return response if response else None
+
+    def reconnect_hub(self) -> None:
+        """Try to reconnect if connection is broken."""
+        try:
+            self.api = get_api(self.config_entry.data)
+        except CannotConnect as err:
+            raise err
+        except LoginError as err:
+            raise ConfigEntryAuthFailed from err
 
     def update_devices(self) -> list[str]:
         """Update clients detected by the hub."""

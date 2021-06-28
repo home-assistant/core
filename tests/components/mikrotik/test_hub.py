@@ -1,6 +1,9 @@
 """Test Mikrotik hub."""
 from unittest.mock import patch
 
+import librouteros
+import pytest
+
 from homeassistant import config_entries
 from homeassistant.components import mikrotik
 from homeassistant.components.mikrotik.const import (
@@ -19,6 +22,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 
 from . import (
     ARP_DATA,
@@ -68,9 +72,7 @@ async def setup_mikrotik_entry(
             return ping_result
         return {}
 
-    with patch("librouteros.connect"), patch.object(
-        mikrotik.hub.MikrotikHubData, "command", new=mock_command
-    ):
+    with patch.object(mikrotik.hub.MikrotikHubData, "command", new=mock_command):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
         return hass.data[mikrotik.DOMAIN][config_entry.entry_id]
@@ -195,7 +197,6 @@ async def test_arp_ping(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
 
     # test device show as home if arp ping returns value
-    # with patch.object(mikrotik.hub.MikrotikHubData, "do_arp_ping", return_value=True):
     await setup_mikrotik_entry(
         hass,
         entry,
@@ -222,7 +223,6 @@ async def test_arp_ping_timeout(hass: HomeAssistant) -> None:
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_DATA, options=hub_options)
     entry.add_to_hass(hass)
 
-    # with patch.object(mikrotik.hub.MikrotikHubData, "do_arp_ping", return_value=False):
     await setup_mikrotik_entry(
         hass,
         entry,
@@ -235,29 +235,28 @@ async def test_arp_ping_timeout(hass: HomeAssistant) -> None:
     assert hass.data[DOMAIN][CLIENTS]["00:00:00:00:00:02"].last_seen is None
 
 
-# async def test_update_failed_conn_error(hass: HomeAssistant) -> None:
-#     """Test failing to connect during update."""
-#     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_DATA)
-#     entry.add_to_hass(hass)
-#     hub = await setup_mikrotik_entry(hass, entry)
+async def test_update_failed_conn_error(hass: HomeAssistant) -> None:
+    """Test failing to connect during update."""
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_DATA)
+    entry.add_to_hass(hass)
+    hub = await setup_mikrotik_entry(hass, entry)
 
-#     with patch.object(
-#         mikrotik.hub.MikrotikHubData,
-#         "command",
-#         side_effect=mikrotik.errors.CannotConnect,
-#     ), pytest.raises(UpdateFailed):
-#         await hub.async_update()
+    with patch.object(librouteros.Api, "__call__") as mock_api_call:
+        mock_api_call.side_effect = librouteros.exceptions.ConnectionClosed()
+        await hub.async_refresh()
+        assert not hub.last_update_success
 
 
-# async def test_update_failed_auth_error(hass: HomeAssistant) -> None:
-#     """Test failing to connect during update due to auth error."""
-#     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_DATA)
-#     entry.add_to_hass(hass)
+async def test_update_failed_auth_error(hass: HomeAssistant) -> None:
+    """Test failing to connect during update."""
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_DATA)
+    entry.add_to_hass(hass)
+    hub = await setup_mikrotik_entry(hass, entry)
 
-#     with patch.object(
-#         librouteros.Api,
-#         "readResponse",
-#         side_effect=librouteros.exceptions.MultiTrapError,
-#     ), pytest.raises(ConfigEntryAuthFailed):
-#         hub = await setup_mikrotik_entry(hass, entry)
-#         await hub.async_update()
+    with patch.object(librouteros.Api, "__call__") as mock_api_call:
+        mock_api_call.side_effect = [
+            librouteros.exceptions.ConnectionClosed("bla"),
+            librouteros.exceptions.TrapError("invalid user name or password"),
+        ]
+        with pytest.raises(ConfigEntryAuthFailed):
+            await hub.async_update()
