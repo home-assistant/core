@@ -1,6 +1,4 @@
 """The Automate Pulse Hub v2 integration."""
-import asyncio
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
