@@ -69,12 +69,9 @@ class IPPSensor(IPPEntity, SensorEntity):
         unit_of_measurement: str | None = None,
     ) -> None:
         """Initialize IPP sensor."""
-        self._unit_of_measurement = unit_of_measurement
         self._key = key
-        self._unique_id = None
-
-        if unique_id is not None:
-            self._unique_id = f"{unique_id}_{key}"
+        self._attr_unique_id = f"{unique_id}_{key}"
+        self._attr_unit_of_measurement = unit_of_measurement
 
         super().__init__(
             entry_id=entry_id,
@@ -84,16 +81,6 @@ class IPPSensor(IPPEntity, SensorEntity):
             icon=icon,
             enabled_default=enabled_default,
         )
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique ID for this sensor."""
-        return self._unique_id
-
-    @property
-    def unit_of_measurement(self) -> str:
-        """Return the unit this state is expressed in."""
-        return self._unit_of_measurement
 
 
 class IPPMarkerSensor(IPPSensor):
