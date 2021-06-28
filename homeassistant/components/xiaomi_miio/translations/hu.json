@@ -39,11 +39,23 @@
             "reauth_confirm": {
                 "title": "Integr\u00e1ci\u00f3 \u00fajrahiteles\u00edt\u00e9se"
             },
+            "select": {
+                "data": {
+                    "select_device": "Miio eszk\u00f6z"
+                }
+            },
             "user": {
                 "data": {
                     "gateway": "Csatlakozzon egy Xiaomi K\u00f6zponti egys\u00e9ghez"
                 },
                 "description": "V\u00e1lassza ki, melyik k\u00e9sz\u00fcl\u00e9khez szeretne csatlakozni.",
+                "title": "Xiaomi Miio"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
                 "title": "Xiaomi Miio"
             }
         }
