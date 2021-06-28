@@ -1,6 +1,6 @@
 """Support for Tibber sensors."""
 import asyncio
-from datetime import datetime, timedelta
+from datetime import timedelta
 import logging
 from random import randrange
 
@@ -10,6 +10,7 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_CURRENT,
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_POWER,
+    DEVICE_CLASS_POWER_FACTOR,
     DEVICE_CLASS_SIGNAL_STRENGTH,
     DEVICE_CLASS_VOLTAGE,
     STATE_CLASS_MEASUREMENT,
@@ -18,6 +19,7 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     ELECTRICAL_CURRENT_AMPERE,
     ENERGY_KILO_WATT_HOUR,
+    PERCENTAGE,
     POWER_WATT,
     SIGNAL_STRENGTH_DECIBELS,
     VOLT,
@@ -127,6 +129,12 @@ RT_SENSOR_MAP = {
         STATE_CLASS_MEASUREMENT,
     ],
     "accumulatedCost": ["accumulated cost", None, None, STATE_CLASS_MEASUREMENT],
+    "powerFactor": [
+        "power factor",
+        DEVICE_CLASS_POWER_FACTOR,
+        PERCENTAGE,
+        STATE_CLASS_MEASUREMENT,
+    ],
 }
 
 
@@ -311,7 +319,7 @@ class TibberSensorRT(TibberSensor):
             "last meter consumption",
             "last meter production",
         ]:
-            self._attr_last_reset = datetime.fromtimestamp(0)
+            self._attr_last_reset = dt_util.utc_from_timestamp(0)
         elif self._sensor_name in [
             "accumulated consumption",
             "accumulated production",
@@ -395,6 +403,8 @@ class TibberRtDataHandler:
         for sensor_type, state in live_measurement.items():
             if state is None or sensor_type not in RT_SENSOR_MAP:
                 continue
+            if sensor_type == "powerFactor":
+                state *= 100.0
             if sensor_type in self._entities:
                 async_dispatcher_send(
                     self.hass,

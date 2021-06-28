@@ -6,7 +6,7 @@ from pycfdns.exceptions import (
 )
 
 from homeassistant.components.cloudflare.const import CONF_RECORDS, DOMAIN
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
 from homeassistant.const import CONF_API_TOKEN, CONF_SOURCE, CONF_ZONE
 from homeassistant.data_entry_flow import (
     RESULT_TYPE_ABORT,
@@ -162,3 +162,37 @@ async def test_user_form_single_instance_allowed(hass):
     )
     assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "single_instance_allowed"
+
+
+async def test_reauth_flow(hass, cfupdate_flow):
+    """Test the reauthentication configuration flow."""
+    entry = MockConfigEntry(domain=DOMAIN, data=ENTRY_CONFIG)
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": SOURCE_REAUTH,
+            "unique_id": entry.unique_id,
+            "entry_id": entry.entry_id,
+        },
+        data=entry.data,
+    )
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    with _patch_async_setup_entry() as mock_setup_entry:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_API_TOKEN: "other_token"},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "reauth_successful"
+
+    assert entry.data[CONF_API_TOKEN] == "other_token"
+    assert entry.data[CONF_ZONE] == ENTRY_CONFIG[CONF_ZONE]
+    assert entry.data[CONF_RECORDS] == ENTRY_CONFIG[CONF_RECORDS]
+
+    assert len(mock_setup_entry.mock_calls) == 1

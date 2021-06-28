@@ -5,7 +5,11 @@ import logging
 from pyatome.client import AtomeClient, PyAtomeError
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    STATE_CLASS_MEASUREMENT,
+    SensorEntity,
+)
 from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
@@ -219,37 +223,16 @@ class AtomeSensor(SensorEntity):
 
     def __init__(self, data, name, sensor_type):
         """Initialize the sensor."""
-        self._name = name
+        self._attr_name = name
         self._data = data
-        self._state = None
-        self._attributes = {}
 
         self._sensor_type = sensor_type
 
         if sensor_type == LIVE_TYPE:
-            self._unit_of_measurement = POWER_WATT
+            self._attr_unit_of_measurement = POWER_WATT
+            self._attr_state_class = STATE_CLASS_MEASUREMENT
         else:
-            self._unit_of_measurement = ENERGY_KILO_WATT_HOUR
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
-        return self._attributes
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return self._unit_of_measurement
+            self._attr_unit_of_measurement = ENERGY_KILO_WATT_HOUR
 
     def update(self):
         """Update device state."""
@@ -257,11 +240,13 @@ class AtomeSensor(SensorEntity):
         update_function()
 
         if self._sensor_type == LIVE_TYPE:
-            self._state = self._data.live_power
-            self._attributes["subscribed_power"] = self._data.subscribed_power
-            self._attributes["is_connected"] = self._data.is_connected
+            self._attr_state = self._data.live_power
+            self._attr_extra_state_attributes = {
+                "subscribed_power": self._data.subscribed_power,
+                "is_connected": self._data.is_connected,
+            }
         else:
-            self._state = getattr(self._data, f"{self._sensor_type}_usage")
-            self._attributes["price"] = getattr(
-                self._data, f"{self._sensor_type}_price"
-            )
+            self._attr_state = getattr(self._data, f"{self._sensor_type}_usage")
+            self._attr_extra_state_attributes = {
+                "price": getattr(self._data, f"{self._sensor_type}_price")
+            }

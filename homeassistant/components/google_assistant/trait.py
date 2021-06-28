@@ -17,6 +17,7 @@ from homeassistant.components import (
     media_player,
     scene,
     script,
+    select,
     sensor,
     switch,
     vacuum,
@@ -1384,6 +1385,9 @@ class ModesTrait(_Trait):
         if domain == input_select.DOMAIN:
             return True
 
+        if domain == select.DOMAIN:
+            return True
+
         if domain == humidifier.DOMAIN and features & humidifier.SUPPORT_MODES:
             return True
 
@@ -1427,6 +1431,7 @@ class ModesTrait(_Trait):
             (fan.DOMAIN, fan.ATTR_PRESET_MODES, "preset mode"),
             (media_player.DOMAIN, media_player.ATTR_SOUND_MODE_LIST, "sound mode"),
             (input_select.DOMAIN, input_select.ATTR_OPTIONS, "option"),
+            (select.DOMAIN, select.ATTR_OPTIONS, "option"),
             (humidifier.DOMAIN, humidifier.ATTR_AVAILABLE_MODES, "mode"),
             (light.DOMAIN, light.ATTR_EFFECT_LIST, "effect"),
         ):
@@ -1458,6 +1463,8 @@ class ModesTrait(_Trait):
             if media_player.ATTR_SOUND_MODE_LIST in attrs:
                 mode_settings["sound mode"] = attrs.get(media_player.ATTR_SOUND_MODE)
         elif self.state.domain == input_select.DOMAIN:
+            mode_settings["option"] = self.state.state
+        elif self.state.domain == select.DOMAIN:
             mode_settings["option"] = self.state.state
         elif self.state.domain == humidifier.DOMAIN:
             if ATTR_MODE in attrs:
@@ -1497,6 +1504,20 @@ class ModesTrait(_Trait):
                 {
                     ATTR_ENTITY_ID: self.state.entity_id,
                     input_select.ATTR_OPTION: option,
+                },
+                blocking=True,
+                context=data.context,
+            )
+            return
+
+        if self.state.domain == select.DOMAIN:
+            option = settings["option"]
+            await self.hass.services.async_call(
+                select.DOMAIN,
+                select.SERVICE_SELECT_OPTION,
+                {
+                    ATTR_ENTITY_ID: self.state.entity_id,
+                    select.ATTR_OPTION: option,
                 },
                 blocking=True,
                 context=data.context,

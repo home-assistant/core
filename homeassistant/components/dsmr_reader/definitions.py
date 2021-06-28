@@ -268,6 +268,12 @@ DEFINITIONS = {
         "icon": "mdi:currency-eur",
         "unit": CURRENCY_EURO,
     },
+    "dsmr/day-consumption/fixed_cost": {
+        "name": "Current day fixed cost",
+        "enable_default": True,
+        "icon": "mdi:currency-eur",
+        "unit": CURRENCY_EURO,
+    },
     "dsmr/meter-stats/dsmr_version": {
         "name": "DSMR version",
         "enable_default": True,
