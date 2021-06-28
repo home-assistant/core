@@ -119,7 +119,6 @@ def deflection_entities_list(
 
     _LOGGER.debug("Setting up %s switches", SWITCH_TYPE_DEFLECTION)
 
-    entities_list: list = []
     service_name = "X_AVM-DE_OnTel"
     deflections_response = service_call_action(
         fritzbox_tools, service_name, "1", "GetNumberOfDeflections"
@@ -140,14 +139,14 @@ def deflection_entities_list(
 
     deflection_list = get_deflections(fritzbox_tools, service_name)
     if deflection_list is not None:
-        for dict_of_deflection in deflection_list:
-            entities_list.append(
-                FritzBoxDeflectionSwitch(
-                    fritzbox_tools, device_friendly_name, dict_of_deflection
-                )
-            )
+        return []
 
-    return entities_list
+    return [
+        FritzBoxDeflectionSwitch(
+            fritzbox_tools, device_friendly_name, dict_of_deflection
+        )
+        for dict_of_deflection in deflection_list
+    ]
 
 
 def port_entities_list(
