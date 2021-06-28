@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Any, Callable
 
 from aioesphomeapi import (
     COMPONENT_TYPE_TO_INFO,
+    APIVersion,
     BinarySensorInfo,
     CameraInfo,
     ClimateInfo,
@@ -67,6 +68,7 @@ class RuntimeEntryData:
     services: dict[int, UserService] = attr.ib(factory=dict)
     available: bool = attr.ib(default=False)
     device_info: DeviceInfo | None = attr.ib(default=None)
+    api_version: APIVersion = attr.ib(factory=APIVersion)
     cleanup_callbacks: list[Callable[[], None]] = attr.ib(factory=list)
     disconnect_callbacks: list[Callable[[], None]] = attr.ib(factory=list)
     loaded_platforms: set[str] = attr.ib(factory=set)
@@ -141,6 +143,10 @@ class RuntimeEntryData:
         self.device_info = _attr_obj_from_dict(
             DeviceInfo, **restored.pop("device_info")
         )
+        self.api_version = _attr_obj_from_dict(
+            APIVersion, **restored.pop("api_version", {})
+        )
+
         infos = []
         for comp_type, restored_infos in restored.items():
             if comp_type not in COMPONENT_TYPE_TO_INFO:
@@ -155,7 +161,11 @@ class RuntimeEntryData:
 
     async def async_save_to_store(self) -> None:
         """Generate dynamic data to store and save it to the filesystem."""
-        store_data = {"device_info": attr.asdict(self.device_info), "services": []}
+        store_data = {
+            "device_info": attr.asdict(self.device_info),
+            "services": [],
+            "api_version": attr.asdict(self.api_version),
+        }
 
         for comp_type, infos in self.info.items():
             store_data[comp_type] = [attr.asdict(info) for info in infos.values()]
