@@ -152,6 +152,8 @@ SERVICE_SET_CLEAN_OFF = "set_clean_off"
 SERVICE_SET_CLEAN = "set_clean"
 SERVICE_SET_FAN_LED_ON = "fan_set_led_on"
 SERVICE_SET_FAN_LED_OFF = "fan_set_led_off"
+SERVICE_SET_FAN_LED = "fan_set_led"
+SERVICE_SET_LED_BRIGHTNESS = "set_led_brightness"
 SERVICE_SET_CHILD_LOCK_ON = "fan_set_child_lock_on"
 SERVICE_SET_CHILD_LOCK_OFF = "fan_set_child_lock_off"
 SERVICE_SET_CHILD_LOCK = "set_child_lock"
@@ -200,7 +202,6 @@ SERVICE_STOP_REMOTE_CONTROL = "vacuum_remote_control_stop"
 SERVICE_CLEAN_SEGMENT = "vacuum_clean_segment"
 SERVICE_CLEAN_ZONE = "vacuum_clean_zone"
 SERVICE_GOTO = "vacuum_goto"
-
 
 # Features
 FEATURE_SET_BUZZER = 1
