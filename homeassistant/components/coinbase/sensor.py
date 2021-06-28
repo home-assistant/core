@@ -44,7 +44,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         account[API_ACCOUNT_CURRENCY] for account in instance.accounts
     ]
 
-    desired_currencies: list[str] = []
+    desired_currencies = []
 
     if CONF_CURRENCIES in config_entry.options:
         desired_currencies = config_entry.options[CONF_CURRENCIES]
