@@ -81,7 +81,7 @@ async def async_validate_condition_config(
     if config[CONF_TYPE] == VALUE_TYPE:
         value_id = get_value_id(
             node,
-            config[ATTR_COMMAND_CLASS],
+            CommandClass[config[ATTR_COMMAND_CLASS]],
             config[ATTR_PROPERTY],
             config.get(ATTR_ENDPOINT),
             config.get(ATTR_PROPERTY_KEY),
