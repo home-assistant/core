@@ -62,6 +62,7 @@ class RestData:
                 data=self._request_data,
                 timeout=self._timeout,
             )
+            response.encoding = "utf-8-sig"
             self.data = response.text
             self.headers = response.headers
         except httpx.RequestError as ex:
