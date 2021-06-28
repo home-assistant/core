@@ -113,15 +113,16 @@ class KNXCover(KnxEntity, CoverEntity):
             DEVICE_CLASS_BLIND if self._device.supports_angle else None
         )
         self._attr_supported_features = (
-            (SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_SET_POSITION)
-            | ((SUPPORT_STOP | SUPPORT_STOP_TILT) if self._device.supports_stop else 0)
-            | (SUPPORT_SET_TILT_POSITION if self._device.supports_angle else 0)
-            | (
-                (SUPPORT_CLOSE_TILT | SUPPORT_OPEN_TILT | SUPPORT_STOP_TILT)
-                if self._device.step.writable
-                else 0
-            )
+            SUPPORT_CLOSE | SUPPORT_OPEN | SUPPORT_SET_POSITION
         )
+        if self._device.supports_stop:
+            self._attr_supported_features |= SUPPORT_STOP | SUPPORT_STOP_TILT
+        if self._device.supports_angle:
+            self._attr_supported_features |= SUPPORT_SET_TILT_POSITION
+        if self._device.step.writable:
+            self._attr_supported_features |= (
+                SUPPORT_CLOSE_TILT | SUPPORT_OPEN_TILT | SUPPORT_STOP_TILT
+            )
         self._attr_unique_id = (
             f"{self._device.updown.group_address}_"
             f"{self._device.position_target.group_address}"
