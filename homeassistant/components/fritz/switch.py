@@ -109,12 +109,7 @@ def get_deflections(
     if not deflection_list:
         return []
 
-    deflections: list = []
-    deflections.append(
-        xmltodict.parse(deflection_list["NewDeflectionList"])["List"]["Item"]
-    )
-
-    return deflections
+    return [xmltodict.parse(deflection_list["NewDeflectionList"])["List"]["Item"]]
 
 
 def deflection_entities_list(
@@ -231,16 +226,14 @@ def profile_entities_list(
 ) -> list[FritzBoxProfileSwitch]:
     """Get list of profile entities."""
     _LOGGER.debug("Setting up %s switches", SWITCH_TYPE_DEVICEPROFILE)
-    entities_list: list = []
     if len(fritzbox_tools.fritz_profiles) <= 0:
         _LOGGER.debug("The FRITZ!Box has no %s options", SWITCH_TYPE_DEVICEPROFILE)
         return []
 
-    for profile in fritzbox_tools.fritz_profiles.keys():
-        entities_list.append(
-            FritzBoxProfileSwitch(fritzbox_tools, device_friendly_name, profile)
-        )
-    return entities_list
+    return [
+        FritzBoxProfileSwitch(fritzbox_tools, device_friendly_name, profile)
+        for profile in fritzbox_tools.fritz_profiles.keys()
+    ]
 
 
 def wifi_entities_list(
