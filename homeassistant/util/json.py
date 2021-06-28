@@ -61,7 +61,16 @@ def save_json(
         raise SerializationError(msg) from error
 
     tmp_filename = ""
-    tmp_path = os.path.split(filename)[0]
+    storege_temp_dir = os.environ.get("STORAGE_TEMP")
+    if (
+        storege_temp_dir is not None
+        and os.path.exists(storege_temp_dir)
+        and os.access(storege_temp_dir, os.W_OK)
+    ):
+        tmp_path = storege_temp_dir
+    else:
+        tmp_path = os.path.split(filename)[0]
+
     try:
         # Modern versions of Python tempfile create this file with mode 0o600
         with tempfile.NamedTemporaryFile(

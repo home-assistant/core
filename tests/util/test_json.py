@@ -31,7 +31,13 @@ TMP_DIR = None
 def setup():
     """Set up for tests."""
     global TMP_DIR
+    global STORAGE_TEMP
     TMP_DIR = mkdtemp()
+
+    # del STORAGE_TEMP to execute tests in TMP_DIR
+    STORAGE_TEMP = os.environ.get("STORAGE_TEMP")
+    if STORAGE_TEMP is not None:
+        del os.environ["STORAGE_TEMP"]
 
 
 def teardown():
@@ -39,6 +45,10 @@ def teardown():
     for fname in os.listdir(TMP_DIR):
         os.remove(os.path.join(TMP_DIR, fname))
     os.rmdir(TMP_DIR)
+
+    # restore STORAGE_TEMP
+    if STORAGE_TEMP is not None:
+        os.environ["STORAGE_TEMP"] = STORAGE_TEMP
 
 
 def _path_for(leaf_name):
@@ -178,3 +188,37 @@ def test_find_unserializable_data():
         )
         == {"$(BadData).bla": bad_data}
     )
+
+
+def test_storage_temp_nonexistent():
+    """Test nonexistent storage temp dir."""
+    os.environ["STORAGE_TEMP"] = os.path.join(TMP_DIR, "nonexistent/")
+    fname = _path_for("nonexistent")
+    save_json(fname, TEST_JSON_A)
+    data = load_json(fname)
+    assert data == TEST_JSON_A
+
+
+def test_storage_temp_unwritable():
+    """Test unwritable storage temp dir."""
+    unwritable = os.path.join(TMP_DIR, "unwritable/")
+    os.environ["STORAGE_TEMP"] = unwritable
+    os.mkdir(unwritable)
+    os.chmod(unwritable, mode=0)
+    fname = _path_for("unwritable")
+    save_json(fname, TEST_JSON_A)
+    data = load_json(fname)
+    os.rmdir(unwritable)
+    assert data == TEST_JSON_A
+
+
+def test_storage_temp():
+    """Test storage temp dir."""
+    storage_temp = os.path.join(TMP_DIR, "storage_temp/")
+    os.environ["STORAGE_TEMP"] = storage_temp
+    os.mkdir(storage_temp)
+    fname = _path_for("test7")
+    save_json(fname, TEST_JSON_A)
+    data = load_json(fname)
+    os.rmdir(storage_temp)
+    assert data == TEST_JSON_A
