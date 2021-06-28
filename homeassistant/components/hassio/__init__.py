@@ -697,7 +697,7 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
         # If there are new add-ons, we should reload the config entry so we can
         # create new devices and entities. We can return an empty dict because
         # coordinator will be recreated.
-        if self.data and list(set(new_data["addons"]) - set(self.data["addons"])):
+        if self.data and set(new_data["addons"]) - set(self.data["addons"]):
             self.hass.async_create_task(
                 self.hass.config_entries.async_reload(self.entry_id)
             )
