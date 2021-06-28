@@ -26,6 +26,8 @@ from homeassistant.util import slugify
 from .common import FritzBoxBaseEntity, FritzBoxTools, SwitchInfo
 from .const import (
     DOMAIN,
+    SWITCH_PROFILE_STATUS_OFF,
+    SWITCH_PROFILE_STATUS_ON,
     SWITCH_TYPE_DEFLECTION,
     SWITCH_TYPE_DEVICEPROFILE,
     SWITCH_TYPE_PORTFORWARD,
@@ -548,10 +550,10 @@ class FritzBoxProfileSwitch(FritzBoxBaseSwitch, SwitchEntity):
                 SWITCH_TYPE_DEVICEPROFILE,
                 status,
             )
-            if status == "never":
+            if status == SWITCH_PROFILE_STATUS_OFF:
                 self._attr_is_on = False
                 self._is_available = True
-            elif status == "unlimited":
+            elif status == SWITCH_PROFILE_STATUS_ON:
                 self._attr_is_on = True
                 self._is_available = True
             else:
@@ -562,7 +564,7 @@ class FritzBoxProfileSwitch(FritzBoxBaseSwitch, SwitchEntity):
 
     async def _async_switch_on_off_executor(self, turn_on: bool) -> None:
         """Handle profile switch."""
-        state = "unlimited" if turn_on else "never"
+        state = SWITCH_PROFILE_STATUS_ON if turn_on else SWITCH_PROFILE_STATUS_OFF
         await self.hass.async_add_executor_job(
             self._fritzbox_tools.fritz_profiles[self.profile].set_state, state
         )
