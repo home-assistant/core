@@ -4,12 +4,12 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 
+from pymfy.api.error import QuotaViolationException, SetupNotFoundException
 from pymfy.api.model import Device
 from pymfy.api.somfy_api import SomfyApi
-from requests.exceptions import HTTPError
 
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 
 class SomfyDataUpdateCoordinator(DataUpdateCoordinator):
@@ -31,39 +31,35 @@ class SomfyDataUpdateCoordinator(DataUpdateCoordinator):
             name=name,
             update_interval=update_interval,
         )
-
         self.data = {}
         self.client = client
-        self.site_ids = []
+        self.site_device = {}
         self.last_site_index = -1
 
     async def _async_update_data(self) -> dict[str, Device]:
-        """Fetch Somfy data."""
-        if not self.site_ids:
-            try:
-                sites = await self.hass.async_add_executor_job(self.client.get_sites)
-            except HTTPError:
-                sites = []
-            self.site_ids = [site.id for site in sites]
-            if not self.site_ids:
-                raise UpdateFailed("Somfy did not returned any site id.")
+        """Fetch Somfy data.
 
+        Somfy only allow one call per minute to /site.
+        """
+        if not self.site_device:
+            sites = await self.hass.async_add_executor_job(self.client.get_sites)
+            if not sites:
+                return {}
+            self.site_device = {site.id: [] for site in sites}
+
+        site_id = self._site_id
         try:
             devices = await self.hass.async_add_executor_job(
-                self.client.get_devices, self._site_id
+                self.client.get_devices, site_id
             )
-        except HTTPError:
-            devices = []
+            self.site_device[site_id] = devices
+        except SetupNotFoundException:
+            del self.site_device[site_id]
+            return await self._async_update_data()
+        except QuotaViolationException:
+            self.logger.warning("Quota violation")
 
-        previous_devices = self.data
-        # Sometimes Somfy returns an empty list.
-        if not devices and previous_devices:
-            self.logger.debug(
-                "No devices returned. Assuming the previous ones are still valid"
-            )
-            return previous_devices
-
-        return {dev.id: dev for dev in devices}
+        return {dev.id: dev for devices in self.site_device.values() for dev in devices}
 
     @property
     def _site_id(self):
@@ -71,5 +67,5 @@ class SomfyDataUpdateCoordinator(DataUpdateCoordinator):
 
         This tweak is required as Somfy does not allow to call the /site entrypoint more than once per minute.
         """
-        self.last_site_index = (self.last_site_index + 1) % len(self.site_ids)
-        return self.site_ids[self.last_site_index]
+        self.last_site_index = (self.last_site_index + 1) % len(self.site_device)
+        return list(self.site_device.keys())[self.last_site_index]
