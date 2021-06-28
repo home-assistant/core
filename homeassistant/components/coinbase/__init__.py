@@ -34,7 +34,6 @@ CONFIG_SCHEMA = vol.Schema(
     cv.deprecated(DOMAIN),
     {
         DOMAIN: vol.Schema(
-            cv.deprecated(CONF_API_KEY),
             {
                 vol.Required(CONF_API_KEY): cv.string,
                 vol.Required(CONF_YAML_API_TOKEN): cv.string,

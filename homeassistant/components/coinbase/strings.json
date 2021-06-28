@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "Coinbase API Key Details",
-        "description": "Please enter the details of your API key as provided by Coinbase. Seperate multiple currencies with a comma (e.g. \"BTC, EUR\")",
+        "description": "Please enter the details of your API key as provided by Coinbase. Separate multiple currencies with a comma (e.g., \"BTC, EUR\")",
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]",
           "api_token": "API Secret",
