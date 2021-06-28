@@ -52,7 +52,7 @@ class EsphomeNumber(EsphomeEntity, NumberEntity):
     @property
     def icon(self) -> str | None:
         """Return the icon."""
-        if not self._static_info.icon or self._static_info.device_class:
+        if not self._static_info.icon:
             return None
         return ICON_SCHEMA(self._static_info.icon)
 
@@ -82,9 +82,4 @@ class EsphomeNumber(EsphomeEntity, NumberEntity):
 
     async def async_set_value(self, value: float) -> None:
         """Update the current value."""
-        current_number = value
-
-        if value.is_integer():
-            current_number = int(value)
-
-        await self._client.number_command(self._static_info.key, current_number)
+        await self._client.number_command(self._static_info.key, value)
