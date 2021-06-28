@@ -18,8 +18,15 @@ import voluptuous_serialize
 from homeassistant.components import websocket_api
 import homeassistant.helpers.config_validation as cv
 
-from ..const import ID, PROPERTY_NAME, PROPERTY_VALUE, TYPE
-from .device import DEVICE_ADDRESS, INSTEON_DEVICE_NOT_FOUND, notify_device_not_found
+from ..const import (
+    DEVICE_ADDRESS,
+    ID,
+    INSTEON_DEVICE_NOT_FOUND,
+    PROPERTY_NAME,
+    PROPERTY_VALUE,
+    TYPE,
+)
+from .device import notify_device_not_found
 
 TOGGLE_ON_OFF_MODE = "toggle_on_off_mode"
 NON_TOGGLE_ON_MODE = "non_toggle_on_mode"
