@@ -62,41 +62,37 @@ NUMBER_TYPES = {
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Selectors from a config entry."""
     entities = []
-    if config_entry.data[CONF_FLOW_TYPE] == CONF_DEVICE:
-        host = config_entry.data[CONF_HOST]
-        token = config_entry.data[CONF_TOKEN]
-        model = config_entry.data[CONF_MODEL]
-        device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
-        coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
-        device_features = 0
-        entity_class = None
+    if not config_entry.data[CONF_FLOW_TYPE] == CONF_DEVICE:
+        return
+    host = config_entry.data[CONF_HOST]
+    token = config_entry.data[CONF_TOKEN]
+    model = config_entry.data[CONF_MODEL]
+    device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
+    coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
 
-        _LOGGER.debug("Initializing with host %s (token %s...)", host, token[:5])
-        if model in [MODEL_AIRHUMIDIFIER_CA1, MODEL_AIRHUMIDIFIER_CB1]:
-            device_features = FEATURE_FLAGS_AIRHUMIDIFIER_CA_AND_CB
-            entity_class = XiaomiAirHumidifierNumber
-        elif model in [MODEL_AIRHUMIDIFIER_CA4]:
-            device_features = FEATURE_FLAGS_AIRHUMIDIFIER_CA4
-            entity_class = XiaomiAirHumidifierNumber
-        elif model in MODELS_HUMIDIFIER:
-            device_features = FEATURE_FLAGS_AIRHUMIDIFIER
-            entity_class = XiaomiAirHumidifierNumber
-        else:
-            return
+    _LOGGER.debug("Initializing with host %s (token %s...)", host, token[:5])
+    if model in [MODEL_AIRHUMIDIFIER_CA1, MODEL_AIRHUMIDIFIER_CB1]:
+        device_features = FEATURE_FLAGS_AIRHUMIDIFIER_CA_AND_CB
+    elif model in [MODEL_AIRHUMIDIFIER_CA4]:
+        device_features = FEATURE_FLAGS_AIRHUMIDIFIER_CA4
+    elif model in MODELS_HUMIDIFIER:
+        device_features = FEATURE_FLAGS_AIRHUMIDIFIER
+    else:
+        return
 
-        for feature in NUMBER_TYPES:
-            number = NUMBER_TYPES[feature]
-            if feature & device_features and feature in NUMBER_TYPES:
-                entities.append(
-                    entity_class(
-                        f"{config_entry.title} {number.name}",
-                        device,
-                        config_entry,
-                        f"{number.short_name}_{config_entry.unique_id}",
-                        number,
-                        coordinator,
-                    )
+    for feature in NUMBER_TYPES:
+        number = NUMBER_TYPES[feature]
+        if feature & device_features and feature in NUMBER_TYPES:
+            entities.append(
+                XiaomiAirHumidifierNumber(
+                    f"{config_entry.title} {number.name}",
+                    device,
+                    config_entry,
+                    f"{number.short_name}_{config_entry.unique_id}",
+                    number,
+                    coordinator,
                 )
+            )
 
     async_add_entities(entities)
 
@@ -146,8 +142,6 @@ class XiaomiAirHumidifierNumber(XiaomiCoordinatedMiioEntity, NumberEntity):
 
     async def async_set_value(self, value):
         """Set an option of the miio device."""
-        if not self.available:
-            return
         if (
             self.min_value
             and value < self.min_value
