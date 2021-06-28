@@ -1,4 +1,5 @@
 """Support for BME280 temperature, humidity and pressure sensor."""
+from contextlib import suppress
 from datetime import timedelta
 from functools import partial
 import logging
@@ -60,7 +61,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     if CONF_SPI_BUS in sensor_conf and CONF_SPI_DEV in sensor_conf:
         spi_dev = sensor_conf[CONF_SPI_DEV]
         spi_bus = sensor_conf[CONF_SPI_BUS]
-        _LOGGER.info("BME280 sensor initialize at %s.%s", spi_bus, spi_dev)
+        _LOGGER.debug("BME280 sensor initialize at %s.%s", spi_bus, spi_dev)
         sensor = await hass.async_add_executor_job(
             partial(
                 BME280_spi,
@@ -75,10 +76,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         )
         if not sensor.sample_ok:
             _LOGGER.error("BME280 sensor not detected at %s.%s", spi_bus, spi_dev)
-            return False
-        sensor_handler = await hass.async_add_executor_job(
-            BME280Handler, sensor, INTERFACE_SPI
-        )
+            return
+        sensor.update()
+        sensor_handler = await hass.async_add_executor_job(BME280Handler, sensor, INTERFACE_SPI)
     else:
         i2c_address = sensor_conf[CONF_I2C_ADDRESS]
         bus = smbus.SMBus(sensor_conf[CONF_I2C_BUS])
@@ -94,26 +94,19 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 t_sb=sensor_conf[CONF_T_STANDBY],
                 filter_mode=sensor_conf[CONF_FILTER_MODE],
                 delta_temp=sensor_conf[CONF_DELTA_TEMP],
-                logger=_LOGGER,
             )
         )
         if not sensor.sample_ok:
             _LOGGER.error("BME280 sensor not detected at %s", i2c_address)
-            return False
-        sensor_handler = await hass.async_add_executor_job(
-            BME280Handler, sensor, INTERFACE_I2C
-        )
+            return
+        sensor.update(True)
+        sensor_handler = await hass.async_add_executor_job(BME280Handler, sensor, INTERFACE_I2C)
 
-    dev = []
-    try:
-        for variable in sensor_conf[CONF_MONITORED_CONDITIONS]:
-            dev.append(
-                BME280Sensor(sensor_handler, variable, SENSOR_TYPES[variable][1], name)
-            )
-    except KeyError:
-        pass
-
-    async_add_entities(dev, True)
+    entities = []
+    with suppress(KeyError):
+        for condition in sensor_conf[CONF_MONITORED_CONDITIONS]:
+            entities.append(BME280Sensor(sensor_handler, condition, SENSOR_TYPES[condition][1], name))
+    async_add_entities(entities, True)
 
 
 class BME280Handler:
@@ -125,10 +118,8 @@ class BME280Handler:
         self.interface = interface
         if self.interface == INTERFACE_SPI:
             self.update = self.update_spi
-            self.update()
         elif self.interface == INTERFACE_I2C:
             self.update = self.update_i2c
-            self.update(True)
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update_spi(self):
