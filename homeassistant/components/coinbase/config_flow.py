@@ -150,8 +150,8 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         """Manage the options."""
 
         errors = {}
-        default_currencies = self.config_entry.options.get(CONF_CURRENCIES)
-        default_exchange_rates = self.config_entry.options.get(CONF_EXCHANGE_RATES)
+        default_currencies = self.config_entry.options.get(CONF_CURRENCIES, [])
+        default_exchange_rates = self.config_entry.options.get(CONF_EXCHANGE_RATES, [])
 
         if user_input is not None:
             # Pass back user selected options, even if bad
