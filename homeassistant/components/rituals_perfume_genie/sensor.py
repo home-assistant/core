@@ -13,12 +13,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import RitualsDataUpdateCoordinator
-from .const import COORDINATORS, DEVICES, DOMAIN, ID, SENSORS
+from .const import COORDINATORS, DEVICES, DOMAIN, SENSORS
 from .entity import DiffuserEntity
 
-TITLE = "title"
-ICON = "icon"
-WIFI = "wific"
+ID = "id"
 PERFUME = "rfidc"
 FILL = "fillc"
 
@@ -29,8 +27,6 @@ BATTERY_SUFFIX = " Battery"
 PERFUME_SUFFIX = " Perfume"
 FILL_SUFFIX = " Fill"
 WIFI_SUFFIX = " Wifi"
-
-ATTR_SIGNAL_STRENGTH = "signal_strength"
 
 
 async def async_setup_entry(
@@ -72,7 +68,7 @@ class DiffuserPerfumeSensor(DiffuserEntity):
     @property
     def state(self) -> str:
         """Return the state of the perfume sensor."""
-        return self._diffuser.hub_data[SENSORS][PERFUME][TITLE]
+        return self._diffuser.perfume
 
 
 class DiffuserFillSensor(DiffuserEntity):
@@ -94,7 +90,7 @@ class DiffuserFillSensor(DiffuserEntity):
     @property
     def state(self) -> str:
         """Return the state of the fill sensor."""
-        return self._diffuser.hub_data[SENSORS][FILL][TITLE]
+        return self._diffuser.fill
 
 
 class DiffuserBatterySensor(DiffuserEntity):
