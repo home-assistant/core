@@ -11,6 +11,13 @@
             "cannot_connect": "\u00dchendamine nurjus"
         },
         "step": {
+            "auth": {
+                "data": {
+                    "password": "Salas\u00f5na",
+                    "username": "Kasutajanimi"
+                },
+                "title": "Autentimise seadistamine"
+            },
             "configure_profile": {
                 "data": {
                     "include": "Loo kaamera olem"
@@ -24,13 +31,11 @@
                 },
                 "title": "Vali ONVIF-seade"
             },
-            "configure": {
+            "manual_input": {
                 "data": {
                     "host": "",
                     "name": "Nimi",
-                    "port": "",
-                    "password": "Salas\u00f5na",
-                    "username": "Kasutajanimi"
+                    "port": ""
                 },
                 "title": "H\u00e4\u00e4lesta ONVIF-seade"
             },

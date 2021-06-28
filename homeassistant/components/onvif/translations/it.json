@@ -11,6 +11,13 @@
             "cannot_connect": "Impossibile connettersi"
         },
         "step": {
+            "auth": {
+                "data": {
+                    "password": "Password",
+                    "username": "Nome utente"
+                },
+                "title": "Configurare l'autenticazione"
+            },
             "configure_profile": {
                 "data": {
                     "include": "Crea entit\u00e0 telecamera"
@@ -24,13 +31,11 @@
                 },
                 "title": "Selezionare il dispositivo ONVIF"
             },
-            "configure": {
+            "manual_input": {
                 "data": {
                     "host": "Host",
                     "name": "Nome",
-                    "port": "Porta",
-                    "password": "Password",
-                    "username": "Nome utente"
+                    "port": "Porta"
                 },
                 "title": "Configurare il dispositivo ONVIF"
             },

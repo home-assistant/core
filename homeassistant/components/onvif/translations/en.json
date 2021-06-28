@@ -11,6 +11,13 @@
             "cannot_connect": "Failed to connect"
         },
         "step": {
+            "auth": {
+                "data": {
+                    "password": "Password",
+                    "username": "Username"
+                },
+                "title": "Configure authentication"
+            },
             "configure_profile": {
                 "data": {
                     "include": "Create camera entity"
@@ -24,20 +31,15 @@
                 },
                 "title": "Select ONVIF device"
             },
-            "configure": {
+            "manual_input": {
                 "data": {
                     "host": "Host",
                     "name": "Name",
-                    "port": "Port",
-                    "password": "Password",
-                    "username": "Username"
+                    "port": "Port"
                 },
                 "title": "Configure ONVIF device"
             },
             "user": {
-                "data": {
-                    "auto": "Search automatically"
-                },
                 "description": "By clicking submit, we will search your network for ONVIF devices that support Profile S.\n\nSome manufacturers have started to disable ONVIF by default. Please ensure ONVIF is enabled in your camera's configuration.",
                 "title": "ONVIF device setup"
             }

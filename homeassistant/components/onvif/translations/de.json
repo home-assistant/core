@@ -11,6 +11,13 @@
             "cannot_connect": "Verbindung fehlgeschlagen"
         },
         "step": {
+            "auth": {
+                "data": {
+                    "password": "Passwort",
+                    "username": "Benutzername"
+                },
+                "title": "Konfigurieren Sie die Authentifizierung"
+            },
             "configure_profile": {
                 "data": {
                     "include": "Kameraentit\u00e4t erstellen"
@@ -24,13 +31,11 @@
                 },
                 "title": "W\u00e4hlen Sie ONVIF-Ger\u00e4t"
             },
-            "configure": {
+            "manual_input": {
                 "data": {
                     "host": "Host",
                     "name": "Name",
-                    "port": "Port",
-                    "password": "Passwort",
-                    "username": "Benutzername"
+                    "port": "Port"
                 },
                 "title": "Konfigurieren Sie das ONVIF-Ger\u00e4t"
             },

@@ -11,6 +11,13 @@
             "cannot_connect": "Sikertelen csatlakoz\u00e1s"
         },
         "step": {
+            "auth": {
+                "data": {
+                    "password": "Jelsz\u00f3",
+                    "username": "Felhaszn\u00e1l\u00f3n\u00e9v"
+                },
+                "title": "Hiteles\u00edt\u00e9s konfigur\u00e1l\u00e1sa"
+            },
             "configure_profile": {
                 "data": {
                     "include": "Hozzon l\u00e9tre kamera entit\u00e1st"
@@ -24,13 +31,11 @@
                 },
                 "title": "ONVIF eszk\u00f6z kiv\u00e1laszt\u00e1sa"
             },
-            "configure": {
+            "manual_input": {
                 "data": {
                     "host": "Hoszt",
                     "name": "N\u00e9v",
-                    "port": "Port",
-                    "password": "Jelsz\u00f3",
-                    "username": "Felhaszn\u00e1l\u00f3n\u00e9v"
+                    "port": "Port"
                 },
                 "title": "ONVIF eszk\u00f6z konfigur\u00e1l\u00e1sa"
             },

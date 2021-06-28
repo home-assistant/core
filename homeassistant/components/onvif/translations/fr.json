@@ -11,6 +11,13 @@
             "cannot_connect": "\u00c9chec de connexion"
         },
         "step": {
+            "auth": {
+                "data": {
+                    "password": "Mot de passe",
+                    "username": "Nom d'utilisateur"
+                },
+                "title": "Configurer l'authentification"
+            },
             "configure_profile": {
                 "data": {
                     "include": "Cr\u00e9er une entit\u00e9 cam\u00e9ra"
@@ -24,13 +31,11 @@
                 },
                 "title": "S\u00e9lectionnez l'appareil ONVIF"
             },
-            "configure": {
+            "manual_input": {
                 "data": {
                     "host": "Nom d'h\u00f4te ou adresse IP",
                     "name": "Nom",
-                    "port": "Port",
-                    "password": "Mot de passe",
-                    "username": "Nom d'utilisateur"
+                    "port": "Port"
                 },
                 "title": "Configurer l\u2019appareil ONVIF"
             },

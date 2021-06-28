@@ -8,6 +8,13 @@
             "onvif_error": "Erro ao configurar o dispositivo ONVIF. Verifique os logs para obter mais informa\u00e7\u00f5es."
         },
         "step": {
+            "auth": {
+                "data": {
+                    "password": "Senha",
+                    "username": "Usu\u00e1rio"
+                },
+                "title": "Configurar autentica\u00e7\u00e3o"
+            },
             "configure_profile": {
                 "data": {
                     "include": "Criar entidade c\u00e2mera"
@@ -21,13 +28,11 @@
                 },
                 "title": "Selecionar dispositivo ONVIF"
             },
-            "configure": {
+            "manual_input": {
                 "data": {
                     "host": "Endere\u00e7o (IP)",
                     "name": "Nome",
-                    "port": "Porta",
-                    "password": "Senha",
-                    "username": "Usu\u00e1rio"
+                    "port": "Porta"
                 },
                 "title": "Configurar dispositivo ONVIF"
             },

@@ -11,6 +11,13 @@
             "cannot_connect": "Feeler beim verbannen"
         },
         "step": {
+            "auth": {
+                "data": {
+                    "password": "Passwuert",
+                    "username": "Benotzernumm"
+                },
+                "title": "Authentifikatioun konfigur\u00e9ieren"
+            },
             "configure_profile": {
                 "data": {
                     "include": "Kamera Entit\u00e9it erstellen"
@@ -24,13 +31,11 @@
                 },
                 "title": "ONVIF Apparat auswielen"
             },
-            "configure": {
+            "manual_input": {
                 "data": {
                     "host": "Apparat",
                     "name": "Numm",
-                    "port": "Port",
-                    "password": "Passwuert",
-                    "username": "Benotzernumm"
+                    "port": "Port"
                 },
                 "title": "ONVIF Apparat ariichten"
             },
