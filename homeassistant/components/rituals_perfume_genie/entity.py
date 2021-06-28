@@ -7,12 +7,13 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import RitualsDataUpdateCoordinator
-from .const import ATTRIBUTES, DOMAIN, HUBLOT, SENSORS
+from .const import DOMAIN, HUBLOT, SENSORS
 
 MANUFACTURER = "Rituals Cosmetics"
 MODEL = "The Perfume Genie"
 MODEL2 = "The Perfume Genie 2.0"
 
+ATTRIBUTES = "attributes"
 ROOMNAME = "roomnamec"
 STATUS = "status"
 VERSION = "versionc"

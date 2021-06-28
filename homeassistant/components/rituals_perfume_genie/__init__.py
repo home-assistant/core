@@ -15,8 +15,6 @@ from .const import ACCOUNT_HASH, COORDINATORS, DEVICES, DOMAIN, HUBLOT
 
 PLATFORMS = ["binary_sensor", "number", "select", "sensor", "switch"]
 
-EMPTY_CREDENTIALS = ""
-
 _LOGGER = logging.getLogger(__name__)
 
 UPDATE_INTERVAL = timedelta(seconds=30)
@@ -25,7 +23,7 @@ UPDATE_INTERVAL = timedelta(seconds=30)
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Rituals Perfume Genie from a config entry."""
     session = async_get_clientsession(hass)
-    account = Account(EMPTY_CREDENTIALS, EMPTY_CREDENTIALS, session)
+    account = Account(session=session)
     account.data = {ACCOUNT_HASH: entry.data.get(ACCOUNT_HASH)}
 
     try:

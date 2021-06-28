@@ -16,7 +16,6 @@ from .const import COORDINATORS, DEVICES, DOMAIN
 from .entity import DiffuserEntity
 
 CHARGING_SUFFIX = " Battery Charging"
-BATTERY_CHARGING_ID = 21
 
 
 async def async_setup_entry(
