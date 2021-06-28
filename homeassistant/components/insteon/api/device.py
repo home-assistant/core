@@ -5,17 +5,14 @@ import voluptuous as vol
 
 from homeassistant.components import websocket_api
 
-from ..const import DOMAIN
-
-TYPE = "type"
-ID = "id"
-DEVICE_ID = "device_id"
-DEVICE_ADDRESS = "device_address"
-ALDB_RECORD = "record"
-PROPERTY_NAME = "name"
-PROPERTY_VALUE = "value"
-HA_DEVICE_NOT_FOUND = "ha_device_not_found"
-INSTEON_DEVICE_NOT_FOUND = "insteon_device_not_found"
+from ..const import (
+    DEVICE_ID,
+    DOMAIN,
+    HA_DEVICE_NOT_FOUND,
+    ID,
+    INSTEON_DEVICE_NOT_FOUND,
+    TYPE,
+)
 
 
 def compute_device_name(ha_device):

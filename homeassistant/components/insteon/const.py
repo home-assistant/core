@@ -158,3 +158,13 @@ STATE_NAME_LABEL_MAP = {
     COVER: "Cover",
     RELAY: "Relay",
 }
+
+TYPE = "type"
+ID = "id"
+DEVICE_ID = "device_id"
+DEVICE_ADDRESS = "device_address"
+ALDB_RECORD = "record"
+PROPERTY_NAME = "name"
+PROPERTY_VALUE = "value"
+HA_DEVICE_NOT_FOUND = "ha_device_not_found"
+INSTEON_DEVICE_NOT_FOUND = "insteon_device_not_found"
