@@ -194,12 +194,13 @@ async def async_setup_entry_helper(hass, domain, async_setup, schema):
 class MqttAttributes(Entity):
     """Mixin used for platforms that support JSON attributes."""
 
-    def __init__(self, config: dict, extra_blocked_attributes: list = None) -> None:
+    _attributes_extra_blocked = []
+
+    def __init__(self, config: dict) -> None:
         """Initialize the JSON attributes mixin."""
         self._attributes = None
         self._attributes_sub_state = None
         self._attributes_config = config
-        self._extra_blocked_attributes = extra_blocked_attributes or []
 
     async def async_added_to_hass(self) -> None:
         """Subscribe MQTT events."""
@@ -230,7 +231,7 @@ class MqttAttributes(Entity):
                         k: v
                         for k, v in json_dict.items()
                         if k not in MQTT_ATTRIBUTES_BLOCKED
-                        and k not in self._extra_blocked_attributes
+                        and k not in self._attributes_extra_blocked
                     }
                     self._attributes = filtered_dict
                     self.async_write_ha_state()
