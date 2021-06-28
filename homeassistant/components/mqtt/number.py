@@ -44,7 +44,7 @@ DEFAULT_OPTIMISTIC = False
 def validate_config(config):
     """Validate that the configuration is valid, throws if it isn't."""
     if config.get(CONF_MIN) >= config.get(CONF_MAX):
-        raise vol.Invalid(f"'{CONF_MAX}'' must be > '{CONF_MIN}'")
+        raise vol.Invalid(f"'{CONF_MAX}' must be > '{CONF_MIN}'")
 
     return config
 
@@ -94,10 +94,10 @@ class MqttNumber(MqttEntity, NumberEntity, RestoreEntity):
     def __init__(self, config, config_entry, discovery_data):
         """Initialize the MQTT Number."""
         self._config = config
+        self._optimistic = False
         self._sub_state = None
 
         self._current_number = None
-        self._optimistic = config.get(CONF_OPTIMISTIC)
 
         NumberEntity.__init__(self)
         MqttEntity.__init__(self, None, config, config_entry, discovery_data)
@@ -107,6 +107,10 @@ class MqttNumber(MqttEntity, NumberEntity, RestoreEntity):
         """Return the config schema."""
         return PLATFORM_SCHEMA
 
+    def _setup_from_config(self, config):
+        """(Re)Setup the entity."""
+        self._optimistic = config[CONF_OPTIMISTIC]
+
     async def _subscribe_topics(self):
         """(Re)Subscribe to topics."""
 
@@ -114,16 +118,14 @@ class MqttNumber(MqttEntity, NumberEntity, RestoreEntity):
         @log_messages(self.hass, self.entity_id)
         def message_received(msg):
             """Handle new MQTT messages."""
+            payload = msg.payload
             try:
-                if msg.payload.decode("utf-8").isnumeric():
+                if payload.isnumeric():
                     num_value = int(msg.payload)
                 else:
                     num_value = float(msg.payload)
             except ValueError:
-                _LOGGER.warning(
-                    "Payload '%s' is not a Number",
-                    msg.payload.decode("utf-8", errors="ignore"),
-                )
+                _LOGGER.warning("Payload '%s' is not a Number", msg.payload)
                 return
 
             if num_value < self.min_value or num_value > self.max_value:
@@ -151,7 +153,6 @@ class MqttNumber(MqttEntity, NumberEntity, RestoreEntity):
                         "topic": self._config.get(CONF_STATE_TOPIC),
                         "msg_callback": message_received,
                         "qos": self._config[CONF_QOS],
-                        "encoding": None,
                     }
                 },
             )

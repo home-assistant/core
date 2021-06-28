@@ -12,13 +12,13 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
     ATTR_EFFECT,
-    ATTR_RGB_COLOR,
+    ATTR_HS_COLOR,
     ATTR_TRANSITION,
     ATTR_WHITE,
     COLOR_MODE_BRIGHTNESS,
     COLOR_MODE_COLOR_TEMP,
+    COLOR_MODE_HS,
     COLOR_MODE_ONOFF,
-    COLOR_MODE_RGB,
     COLOR_MODE_WHITE,
     SUPPORT_EFFECT,
     SUPPORT_TRANSITION,
@@ -90,7 +90,7 @@ class TasmotaLight(
         self._effect = None
         self._white_value = None
         self._flash_times = None
-        self._rgb = None
+        self._hs = None
 
         super().__init__(
             **kwds,
@@ -111,10 +111,10 @@ class TasmotaLight(
         light_type = self._tasmota_entity.light_type
 
         if light_type in [LIGHT_TYPE_RGB, LIGHT_TYPE_RGBW, LIGHT_TYPE_RGBCW]:
-            # Mark RGB support for RGBW light because we don't have control over the
+            # Mark HS support for RGBW light because we don't have direct control over the
             # white channel, so the base component's RGB->RGBW translation does not work
-            self._supported_color_modes.add(COLOR_MODE_RGB)
-            self._color_mode = COLOR_MODE_RGB
+            self._supported_color_modes.add(COLOR_MODE_HS)
+            self._color_mode = COLOR_MODE_HS
 
         if light_type == LIGHT_TYPE_RGBW:
             self._supported_color_modes.add(COLOR_MODE_WHITE)
@@ -149,8 +149,8 @@ class TasmotaLight(
                 brightness = float(attributes["brightness"])
                 percent_bright = brightness / TASMOTA_BRIGHTNESS_MAX
                 self._brightness = percent_bright * 255
-            if "color" in attributes:
-                self._rgb = attributes["color"][0:3]
+            if "color_hs" in attributes:
+                self._hs = attributes["color_hs"]
             if "color_temp" in attributes:
                 self._color_temp = attributes["color_temp"]
             if "effect" in attributes:
@@ -160,15 +160,15 @@ class TasmotaLight(
                 percent_white = white_value / TASMOTA_BRIGHTNESS_MAX
                 self._white_value = percent_white * 255
             if self._tasmota_entity.light_type == LIGHT_TYPE_RGBW:
-                # Tasmota does not support RGBW mode, set mode to white or rgb
+                # Tasmota does not support RGBW mode, set mode to white or hs
                 if self._white_value == 0:
-                    self._color_mode = COLOR_MODE_RGB
+                    self._color_mode = COLOR_MODE_HS
                 else:
                     self._color_mode = COLOR_MODE_WHITE
             elif self._tasmota_entity.light_type == LIGHT_TYPE_RGBCW:
-                # Tasmota does not support RGBWW mode, set mode to ct or rgb
+                # Tasmota does not support RGBWW mode, set mode to ct or hs
                 if self._white_value == 0:
-                    self._color_mode = COLOR_MODE_RGB
+                    self._color_mode = COLOR_MODE_HS
                 else:
                     self._color_mode = COLOR_MODE_COLOR_TEMP
 
@@ -210,21 +210,12 @@ class TasmotaLight(
         return self._tasmota_entity.effect_list
 
     @property
-    def rgb_color(self):
-        """Return the rgb color value."""
-        if self._rgb is None:
+    def hs_color(self):
+        """Return the hs color value."""
+        if self._hs is None:
             return None
-        rgb = self._rgb
-        # Tasmota's RGB color is adjusted for brightness, compensate
-        if self._brightness > 0:
-            red_compensated = clamp(round(rgb[0] / self._brightness * 255))
-            green_compensated = clamp(round(rgb[1] / self._brightness * 255))
-            blue_compensated = clamp(round(rgb[2] / self._brightness * 255))
-        else:
-            red_compensated = 0
-            green_compensated = 0
-            blue_compensated = 0
-        return [red_compensated, green_compensated, blue_compensated]
+        hs_color = self._hs
+        return [hs_color[0], hs_color[1]]
 
     @property
     def force_update(self):
@@ -252,9 +243,9 @@ class TasmotaLight(
 
         attributes = {}
 
-        if ATTR_RGB_COLOR in kwargs and COLOR_MODE_RGB in supported_color_modes:
-            rgb = kwargs[ATTR_RGB_COLOR]
-            attributes["color"] = [rgb[0], rgb[1], rgb[2]]
+        if ATTR_HS_COLOR in kwargs and COLOR_MODE_HS in supported_color_modes:
+            hs_color = kwargs[ATTR_HS_COLOR]
+            attributes["color_hs"] = [hs_color[0], hs_color[1]]
 
         if ATTR_WHITE in kwargs and COLOR_MODE_WHITE in supported_color_modes:
             attributes["white_value"] = scale_brightness(kwargs[ATTR_WHITE])
