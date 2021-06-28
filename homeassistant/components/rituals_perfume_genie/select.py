@@ -24,12 +24,10 @@ async def async_setup_entry(
     """Set up the diffuser select entities."""
     diffusers = hass.data[DOMAIN][config_entry.entry_id][DEVICES]
     coordinators = hass.data[DOMAIN][config_entry.entry_id][COORDINATORS]
-    entities: list[DiffuserEntity] = []
-    for hublot, diffuser in diffusers.items():
-        coordinator = coordinators[hublot]
-        entities.append(DiffuserRoomSize(diffuser, coordinator))
-
-    async_add_entities(entities)
+    async_add_entities(
+        DiffuserRoomSize(diffuser, coordinators[hublot])
+        for hublot, diffuser in diffusers.items()
+    )
 
 
 class DiffuserRoomSize(DiffuserEntity, SelectEntity):
