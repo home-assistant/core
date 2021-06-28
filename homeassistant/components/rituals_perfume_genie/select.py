@@ -10,7 +10,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import RitualsDataUpdateCoordinator
-from .const import ATTRIBUTES, COORDINATORS, DEVICES, DOMAIN, ROOM
+from .const import COORDINATORS, DEVICES, DOMAIN
 from .entity import DiffuserEntity
 
 ROOM_SIZE_SUFFIX = " Room Size"
@@ -47,24 +47,12 @@ class DiffuserRoomSize(DiffuserEntity, SelectEntity):
     @property
     def current_option(self) -> str:
         """Return the diffuser room size."""
-        return {
-            "1": "15",
-            "2": "30",
-            "3": "60",
-            "4": "100",
-        }[self._diffuser.hub_data[ATTRIBUTES][ROOM]]
+        return str(self._diffuser.room_size_square_meter)
 
     async def async_select_option(self, option: str) -> None:
         """Change the diffuser room size."""
         if option in self.options:
-            await self._diffuser.set_room_size(
-                {
-                    "15": 1,
-                    "30": 2,
-                    "60": 3,
-                    "100": 4,
-                }[option]
-            )
+            await self._diffuser.set_room_size_square_meter(int(option))
         else:
             raise ValueError(
                 f"Can't set the room size to {option}. Allowed room sizes are: {self.options}"
