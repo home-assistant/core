@@ -15,13 +15,12 @@ from fritzconnection.core.exceptions import (
 )
 import xmltodict
 
-from homeassistant.components.network.util import async_get_source_ip
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util import slugify
+from homeassistant.util import get_local_ip, slugify
 
 from .common import FritzBoxBaseEntity, FritzBoxTools, SwitchInfo
 from .const import (
@@ -206,7 +205,7 @@ def port_entities_list(
         )
 
         # We can only handle port forwards of the given device
-        local_ip = async_get_source_ip(fritzbox_tools.host)
+        local_ip = get_local_ip()
         _LOGGER.debug("IP source for %s is %s", fritzbox_tools.host, local_ip)
         if portmap["NewInternalClient"] == local_ip:
             entities_list.append(
