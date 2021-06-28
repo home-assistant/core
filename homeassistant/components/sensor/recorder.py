@@ -15,7 +15,12 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_TEMPERATURE,
     STATE_CLASS_MEASUREMENT,
 )
-from homeassistant.const import ATTR_DEVICE_CLASS
+from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
+    ATTR_UNIT_OF_MEASUREMENT,
+    ENERGY_KILO_WATT_HOUR,
+    ENERGY_WATT_HOUR,
+)
 from homeassistant.core import HomeAssistant, State
 import homeassistant.util.dt as dt_util
 
@@ -28,6 +33,13 @@ DEVICE_CLASS_STATISTICS = {
     DEVICE_CLASS_PRESSURE: {"mean", "min", "max"},
     DEVICE_CLASS_TEMPERATURE: {"mean", "min", "max"},
     DEVICE_CLASS_MONETARY: {"sum"},
+}
+
+UNIT_CONVERSIONS = {
+    DEVICE_CLASS_ENERGY: {
+        ENERGY_KILO_WATT_HOUR: lambda x: x,
+        ENERGY_WATT_HOUR: lambda x: x / 1000,
+    }
 }
 
 
@@ -92,6 +104,19 @@ def _time_weighted_average(
     return accumulated / (end - start).total_seconds()
 
 
+def _normalize(state: State, device_class: str) -> float:
+    """Normalize units."""
+    fstate = float(state.state)
+    if device_class not in UNIT_CONVERSIONS:
+        return fstate
+
+    unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+    if unit not in UNIT_CONVERSIONS[device_class]:
+        return fstate
+
+    return UNIT_CONVERSIONS[device_class][unit](fstate)  # type: ignore
+
+
 def compile_statistics(
     hass: HomeAssistant, start: datetime.datetime, end: datetime.datetime
 ) -> dict:
@@ -116,7 +141,9 @@ def compile_statistics(
 
         entity_history = history_list[entity_id]
         fstates = [
-            (float(el.state), el) for el in entity_history if _is_number(el.state)
+            (_normalize(el, device_class), el)
+            for el in entity_history
+            if _is_number(el.state)
         ]
 
         if not fstates:
