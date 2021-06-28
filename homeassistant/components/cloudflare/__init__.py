@@ -18,6 +18,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
+import homeassistant.util.dt as dt_util
 
 from .const import CONF_RECORDS, DEFAULT_UPDATE_INTERVAL, DOMAIN, SERVICE_UPDATE_RECORDS
 
@@ -47,6 +48,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Set up recurring update."""
         try:
             await _async_update_cloudflare(cfupdate, zone_id)
+            hass.data[DOMAIN][entry.entry_id][ATTR_LAST_UPDATE] = dt_util.utcnow()
         except CloudflareException as error:
             _LOGGER.error("Error updating zone %s: %s", entry.data[CONF_ZONE], error)
 
@@ -54,6 +56,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Set up service for manual trigger."""
         try:
             await _async_update_cloudflare(cfupdate, zone_id)
+            hass.data[DOMAIN][entry.entry_id][ATTR_LAST_UPDATE] = dt_util.utcnow()
         except CloudflareException as error:
             _LOGGER.error("Error updating zone %s: %s", entry.data[CONF_ZONE], error)
 
