@@ -143,7 +143,7 @@ MODELS_ALL_DEVICES = (
 )
 MODELS_ALL = MODELS_ALL_DEVICES + MODELS_GATEWAY
 
-# Fan and Humidifier Services
+# Fan/Humidifier Services
 SERVICE_SET_BUZZER_ON = "fan_set_buzzer_on"
 SERVICE_SET_BUZZER_OFF = "fan_set_buzzer_off"
 SERVICE_SET_BUZZER = "set_buzzer"
