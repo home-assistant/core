@@ -18,11 +18,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-    UpdateFailed,
-)
 
 from .const import (
     ATTR_IDENTIFIERS,
@@ -32,6 +27,7 @@ from .const import (
     CONF_BASE_PATH,
     DOMAIN,
 )
+from .coordinator import IPPDataUpdateCoordinator
 
 PLATFORMS = [SENSOR_DOMAIN]
 SCAN_INTERVAL = timedelta(seconds=60)
@@ -68,41 +64,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
     return unload_ok
-
-
-class IPPDataUpdateCoordinator(DataUpdateCoordinator[IPPPrinter]):
-    """Class to manage fetching IPP data from single endpoint."""
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        *,
-        host: str,
-        port: int,
-        base_path: str,
-        tls: bool,
-        verify_ssl: bool,
-    ) -> None:
-        """Initialize global IPP data updater."""
-        self.ipp = IPP(
-            host=host,
-            port=port,
-            base_path=base_path,
-            tls=tls,
-            verify_ssl=verify_ssl,
-            session=async_get_clientsession(hass, verify_ssl),
-        )
-
-        super().__init__(
-            hass,
-            _LOGGER,
-            name=DOMAIN,
-            update_interval=SCAN_INTERVAL,
-        )
-
-    async def _async_update_data(self) -> IPPPrinter:
-        """Fetch data from IPP."""
-        try:
-            return await self.ipp.printer()
-        except IPPError as error:
-            raise UpdateFailed(f"Invalid response from API: {error}") from error
