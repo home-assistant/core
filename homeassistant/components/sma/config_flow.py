@@ -51,7 +51,7 @@ async def validate_input(
 class SmaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for SMA."""
 
-    VERSION = 2
+    VERSION = 1
 
     def __init__(self) -> None:
         """Initialize."""
