@@ -1,8 +1,6 @@
 """Support for Rituals Perfume Genie numbers."""
 from __future__ import annotations
 
-import logging
-
 from pyrituals import Diffuser
 
 from homeassistant.components.number import NumberEntity
@@ -14,12 +12,8 @@ from . import RitualsDataUpdateCoordinator
 from .const import ATTRIBUTES, COORDINATORS, DEVICES, DOMAIN, SPEED
 from .entity import DiffuserEntity
 
-_LOGGER = logging.getLogger(__name__)
-
 MIN_PERFUME_AMOUNT = 1
 MAX_PERFUME_AMOUNT = 3
-MIN_ROOM_SIZE = 1
-MAX_ROOM_SIZE = 4
 
 PERFUME_AMOUNT_SUFFIX = " Perfume Amount"
 
@@ -40,7 +34,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class DiffuserPerfumeAmount(NumberEntity, DiffuserEntity):
+class DiffuserPerfumeAmount(DiffuserEntity, NumberEntity):
     """Representation of a diffuser perfume amount number."""
 
     def __init__(
@@ -74,9 +68,7 @@ class DiffuserPerfumeAmount(NumberEntity, DiffuserEntity):
         if value.is_integer() and MIN_PERFUME_AMOUNT <= value <= MAX_PERFUME_AMOUNT:
             await self._diffuser.set_perfume_amount(int(value))
         else:
-            _LOGGER.warning(
-                "Can't set the perfume amount to %s. Perfume amount must be an integer between %s and %s, inclusive",
-                value,
-                MIN_PERFUME_AMOUNT,
-                MAX_PERFUME_AMOUNT,
+            raise ValueError(
+                f"Can't set the perfume amount to {value}. "
+                f"Perfume amount must be an integer between {self.min_value} and {self.max_value}, inclusive"
             )
