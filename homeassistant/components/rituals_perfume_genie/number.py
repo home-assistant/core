@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import RitualsDataUpdateCoordinator
-from .const import ATTRIBUTES, COORDINATORS, DEVICES, DOMAIN, SPEED
+from .const import COORDINATORS, DEVICES, DOMAIN
 from .entity import DiffuserEntity
 
 MIN_PERFUME_AMOUNT = 1
@@ -51,7 +51,7 @@ class DiffuserPerfumeAmount(DiffuserEntity, NumberEntity):
     @property
     def value(self) -> int:
         """Return the current perfume amount."""
-        return self._diffuser.hub_data[ATTRIBUTES][SPEED]
+        return self._diffuser.perfume_amount
 
     @property
     def min_value(self) -> int:
