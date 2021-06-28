@@ -172,12 +172,14 @@ class KNXClimate(KnxEntity, ClimateEntity):
     """Representation of a KNX climate device."""
 
     _device: XknxClimate
-    _attr_supported_features = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
     _attr_temperature_unit = TEMP_CELSIUS
 
     def __init__(self, xknx: XKNX, config: ConfigType) -> None:
         """Initialize of a KNX climate device."""
         super().__init__(_create_climate(xknx, config))
+        self._attr_supported_features = SUPPORT_TARGET_TEMPERATURE
+        if self.preset_modes:
+            self._attr_supported_features |= SUPPORT_PRESET_MODE
         self._attr_target_temperature_step = self._device.temperature_step
         self._attr_unique_id = (
             f"{self._device.temperature.group_address_state}_"

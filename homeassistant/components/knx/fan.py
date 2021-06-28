@@ -66,11 +66,9 @@ class KNXFan(KnxEntity, FanEntity):
         # FanSpeedMode.STEP if max_step is set
         self._step_range: tuple[int, int] | None = (1, max_step) if max_step else None
 
-        self._attr_supported_features = (
-            SUPPORT_SET_SPEED | SUPPORT_OSCILLATE
-            if self._device.supports_oscillation
-            else SUPPORT_SET_SPEED
-        )
+        self._attr_supported_features = SUPPORT_SET_SPEED
+        if self._device.supports_oscillation:
+            self._attr_supported_features |= SUPPORT_OSCILLATE
         self._attr_unique_id = str(self._device.speed.group_address)
 
     async def async_set_percentage(self, percentage: int) -> None:
