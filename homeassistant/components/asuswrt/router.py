@@ -329,10 +329,10 @@ class AsusWrtRouter:
         self._sensors_data_handler.update_device_count(self._connected_devices)
 
         sensors_types = {
-            SENSORS_TYPE_COUNT: SENSORS_CONNECTED_DEVICE,
             SENSORS_TYPE_BYTES: SENSORS_BYTES,
-            SENSORS_TYPE_RATES: SENSORS_RATES,
+            SENSORS_TYPE_COUNT: SENSORS_CONNECTED_DEVICE,
             SENSORS_TYPE_LOAD_AVG: SENSORS_LOAD_AVG,
+            SENSORS_TYPE_RATES: SENSORS_RATES,
         }
 
         for sensor_type, sensor_names in sensors_types.items():

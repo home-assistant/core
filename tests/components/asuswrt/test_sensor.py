@@ -48,6 +48,7 @@ SENSOR_NAMES = [
     "Upload Speed",
     "Upload",
     "Load Avg (1m)",
+    "Load Avg (5m)",
     "Load Avg (15m)",
 ]
 
@@ -132,6 +133,7 @@ async def test_sensors(hass, connect, mock_devices):
     assert hass.states.get(f"{sensor_prefix}_upload_speed").state == "80.0"
     assert hass.states.get(f"{sensor_prefix}_upload").state == "50.0"
     assert hass.states.get(f"{sensor_prefix}_load_avg_1m").state == "1.1"
+    assert hass.states.get(f"{sensor_prefix}_load_avg_5m").state == "1.2"
     assert hass.states.get(f"{sensor_prefix}_load_avg_15m").state == "1.3"
     assert hass.states.get(f"{sensor_prefix}_devices_connected").state == "2"
 
