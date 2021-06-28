@@ -50,18 +50,13 @@ class MeteoclimaticSensor(CoordinatorEntity, SensorEntity):
         super().__init__(coordinator)
         self._type = sensor_type
         station = self.coordinator.data["station"]
-        self._name = f"{station.name} {SENSOR_TYPES[self._type][SENSOR_TYPE_NAME]}"
-        self._unique_id = f"{station.code}_{self._type}"
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def unique_id(self):
-        """Return the unique id of the sensor."""
-        return self._unique_id
+        self._attr_device_class = SENSOR_TYPES[sensor_type].get(SENSOR_TYPE_CLASS)
+        self._attr_icon = SENSOR_TYPES[sensor_type].get(SENSOR_TYPE_ICON)
+        self._attr_name = (
+            f"{station.name} {SENSOR_TYPES[sensor_type][SENSOR_TYPE_NAME]}"
+        )
+        self._attr_unique_id = f"{station.code}_{sensor_type}"
+        self._attr_unit_of_measurement = SENSOR_TYPES[sensor_type].get(SENSOR_TYPE_UNIT)
 
     @property
     def device_info(self):
@@ -82,21 +77,6 @@ class MeteoclimaticSensor(CoordinatorEntity, SensorEntity):
             if self.coordinator.data
             else None
         )
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return SENSOR_TYPES[self._type][SENSOR_TYPE_UNIT]
-
-    @property
-    def icon(self):
-        """Return the icon."""
-        return SENSOR_TYPES[self._type][SENSOR_TYPE_ICON]
-
-    @property
-    def device_class(self):
-        """Return the device class of the sensor."""
-        return SENSOR_TYPES[self._type][SENSOR_TYPE_CLASS]
 
     @property
     def extra_state_attributes(self):
