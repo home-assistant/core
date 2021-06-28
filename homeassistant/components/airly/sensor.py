@@ -83,13 +83,12 @@ class AirlySensor(CoordinatorEntity, SensorEntity):
         self._attr_unit_of_measurement = description.get(ATTR_UNIT)
         self._attrs: dict[str, Any] = {ATTR_ATTRIBUTION: ATTRIBUTION}
         self.kind = kind
-        self._state = None
 
     @property
     def state(self) -> StateType:
         """Return the state."""
-        self._state = self.coordinator.data[self.kind]
-        return cast(StateType, self._description[ATTR_VALUE](self._state))
+        state = self.coordinator.data[self.kind]
+        return cast(StateType, self._description[ATTR_VALUE](state))
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
