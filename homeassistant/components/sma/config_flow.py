@@ -4,11 +4,10 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-import aiohttp
 import pysma
 import voluptuous as vol
 
-from homeassistant import config_entries, core, exceptions
+from homeassistant import config_entries, core
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -36,14 +35,10 @@ async def validate_input(
 
     sma = pysma.SMA(session, url, data[CONF_PASSWORD], group=data[CONF_GROUP])
 
-    if await sma.new_session() is False:
-        raise InvalidAuth
-
+    # new_session raises SmaAuthenticationException on failure
+    await sma.new_session()
     device_info = await sma.device_info()
     await sma.close_session()
-
-    if not device_info:
-        raise CannotRetrieveDeviceInfo
 
     return device_info
 
@@ -79,11 +74,11 @@ class SmaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             try:
                 device_info = await validate_input(self.hass, user_input)
-            except aiohttp.ClientError:
+            except pysma.exceptions.SmaConnectionException:
                 errors["base"] = "cannot_connect"
-            except InvalidAuth:
+            except pysma.exceptions.SmaAuthenticationException:
                 errors["base"] = "invalid_auth"
-            except CannotRetrieveDeviceInfo:
+            except pysma.exceptions.SmaReadException:
                 errors["base"] = "cannot_retrieve_device_info"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
@@ -128,11 +123,3 @@ class SmaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_create_entry(
             title=import_config[CONF_HOST], data=import_config
         )
-
-
-class InvalidAuth(exceptions.HomeAssistantError):
-    """Error to indicate there is invalid auth."""
-
-
-class CannotRetrieveDeviceInfo(exceptions.HomeAssistantError):
-    """Error to indicate we cannot retrieve the device information."""

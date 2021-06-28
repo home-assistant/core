@@ -142,10 +142,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     session = async_get_clientsession(hass, verify_ssl=verify_ssl)
     sma = pysma.SMA(session, url, password, group)
 
-    # Get updated device info
-    device_info = await sma.device_info()
-    # Get all device sensors
-    sensor_def = await sma.get_sensors()
+    try:
+        # Get updated device info
+        device_info = await sma.device_info()
+        # Get all device sensors
+        sensor_def = await sma.get_sensors()
+    except (
+        pysma.exceptions.SmaReadException,
+        pysma.exceptions.SmaConnectionException,
+    ) as exc:
+        raise ConfigEntryNotReady from exc
 
     # Parse legacy options if initial setup was done from yaml
     if entry.source == SOURCE_IMPORT:
@@ -155,9 +161,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Define the coordinator
     async def async_update_data():
         """Update the used SMA sensors."""
-        values = await sma.read(sensor_def)
-        if not values:
-            raise UpdateFailed
+        try:
+            await sma.read(sensor_def)
+        except (
+            pysma.exceptions.SmaReadException,
+            pysma.exceptions.SmaConnectionException,
+        ) as exc:
+            raise UpdateFailed from exc
 
     interval = timedelta(
         seconds=entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
