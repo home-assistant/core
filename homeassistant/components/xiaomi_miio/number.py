@@ -108,9 +108,6 @@ class XiaomiAirHumidifierNumber(XiaomiCoordinatedMiioEntity, NumberEntity):
         self._attr_min_value = number.min
         self._attr_max_value = number.max
         self._attr_step = number.step
-        self._supported_features = 0
-        self._device_features = 0
-        self._state_attrs = {}
         self._controller = number
         self._value = self._extract_value_from_attribute(
             self.coordinator.data, self._controller.short_name
