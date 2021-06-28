@@ -370,7 +370,7 @@ class FritzBoxPortSwitch(FritzBoxBaseSwitch, SwitchEntity):
         self,
         fritzbox_tools: FritzBoxTools,
         device_friendly_name: str,
-        port_mapping: dict[str, Any],
+        port_mapping: dict[str, Any] | None,
         idx: int,
         connection_type: str,
     ) -> None:
