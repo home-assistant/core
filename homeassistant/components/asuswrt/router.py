@@ -42,6 +42,7 @@ from .const import (
     PROTOCOL_TELNET,
     SENSORS_BYTES,
     SENSORS_CONNECTED_DEVICE,
+    SENSORS_LOAD_AVG,
     SENSORS_RATES,
 )
 
@@ -54,6 +55,7 @@ SCAN_INTERVAL = timedelta(seconds=30)
 
 SENSORS_TYPE_BYTES = "sensors_bytes"
 SENSORS_TYPE_COUNT = "sensors_count"
+SENSORS_TYPE_LOAD_AVG = "sensors_load_avg"
 SENSORS_TYPE_RATES = "sensors_rates"
 
 _LOGGER = logging.getLogger(__name__)
@@ -100,6 +102,15 @@ class AsusWrtSensorDataHandler:
 
         return _get_dict(SENSORS_RATES, rates)
 
+    async def _get_load_avg(self):
+        """Fetch load average information from the router."""
+        try:
+            avg = await self._api.async_get_loadavg()
+        except (OSError, ValueError) as exc:
+            raise UpdateFailed(exc) from exc
+
+        return _get_dict(SENSORS_LOAD_AVG, avg)
+
     def update_device_count(self, conn_devices: int):
         """Update connected devices attribute."""
         if self._connected_devices == conn_devices:
@@ -113,6 +124,8 @@ class AsusWrtSensorDataHandler:
             method = self._get_connected_devices
         elif sensor_type == SENSORS_TYPE_BYTES:
             method = self._get_bytes
+        elif sensor_type == SENSORS_TYPE_LOAD_AVG:
+            method = self._get_load_avg
         elif sensor_type == SENSORS_TYPE_RATES:
             method = self._get_rates
         else:
@@ -316,8 +329,9 @@ class AsusWrtRouter:
         self._sensors_data_handler.update_device_count(self._connected_devices)
 
         sensors_types = {
-            SENSORS_TYPE_COUNT: SENSORS_CONNECTED_DEVICE,
             SENSORS_TYPE_BYTES: SENSORS_BYTES,
+            SENSORS_TYPE_COUNT: SENSORS_CONNECTED_DEVICE,
+            SENSORS_TYPE_LOAD_AVG: SENSORS_LOAD_AVG,
             SENSORS_TYPE_RATES: SENSORS_RATES,
         }
 
