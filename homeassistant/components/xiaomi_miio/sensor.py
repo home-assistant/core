@@ -249,9 +249,7 @@ class XiaomiGenericSensor(XiaomiCoordinatedMiioEntity, SensorEntity):
         if (
             self._sensor_config.valid_min_value
             and self._state < self._sensor_config.valid_min_value
-        ):
-            return None
-        if (
+        ) or (
             self._sensor_config.valid_max_value
             and self._state > self._sensor_config.valid_max_value
         ):
