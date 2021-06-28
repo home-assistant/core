@@ -205,13 +205,17 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
     @property
     def volume_level(self):
         """Return the volume level of the media player (0..1)."""
-        volume = self.coordinator.data.zones[self._zone_id].current_volume
-        return (volume - self._volume_min) / (self._volume_max - self._volume_min)
+        if ZoneFeature.VOLUME in self.coordinator.data.zones[self._zone_id].features:
+            volume = self.coordinator.data.zones[self._zone_id].current_volume
+            return (volume - self._volume_min) / (self._volume_max - self._volume_min)
+        return None
 
     @property
     def is_volume_muted(self):
         """Return boolean if volume is currently muted."""
-        return self.coordinator.data.zones[self._zone_id].mute
+        if ZoneFeature.VOLUME in self.coordinator.data.zones[self._zone_id].features:
+            return self.coordinator.data.zones[self._zone_id].mute
+        return None
 
     @property
     def shuffle(self):
