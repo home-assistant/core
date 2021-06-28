@@ -562,7 +562,7 @@ ndms2_client==0.1.1
 nessclient==0.9.15
 
 # homeassistant.components.discovery
-netdisco==2.8.3
+netdisco==2.9.0
 
 # homeassistant.components.nam
 nettigo-air-monitor==1.0.0
