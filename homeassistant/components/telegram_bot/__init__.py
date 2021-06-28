@@ -26,6 +26,7 @@ from homeassistant.const import (
     CONF_API_KEY,
     CONF_PLATFORM,
     CONF_URL,
+    HTTP_BEARER_AUTHENTICATION,
     HTTP_DIGEST_AUTHENTICATION,
 )
 from homeassistant.exceptions import TemplateError
@@ -255,7 +256,9 @@ def load_data(
         if url is not None:
             # Load data from URL
             params = {"timeout": 15}
-            if username is not None and password is not None:
+            if authentication == HTTP_BEARER_AUTHENTICATION and password is not None:
+                params["headers"] = {"Authorization": f"Bearer {password}"}
+            elif username is not None and password is not None:
                 if authentication == HTTP_DIGEST_AUTHENTICATION:
                     params["auth"] = HTTPDigestAuth(username, password)
                 else:
