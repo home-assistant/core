@@ -10,6 +10,7 @@ from homeassistant.components.number import NumberEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import EsphomeEntity, esphome_state_property, platform_async_setup_entry
 
@@ -17,7 +18,9 @@ ICON_SCHEMA = vol.Schema(cv.icon)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up esphome sensors based on a config entry."""
     await platform_async_setup_entry(
@@ -47,7 +50,7 @@ class EsphomeNumber(EsphomeEntity, NumberEntity):
         return super()._state
 
     @property
-    def icon(self) -> str:
+    def icon(self) -> str | None:
         """Return the icon."""
         if not self._static_info.icon or self._static_info.device_class:
             return None
@@ -69,7 +72,7 @@ class EsphomeNumber(EsphomeEntity, NumberEntity):
         return super()._static_info.step
 
     @esphome_state_property
-    def value(self) -> str | None:
+    def value(self) -> float:
         """Return the state of the entity."""
         if math.isnan(self._state.state):
             return None
