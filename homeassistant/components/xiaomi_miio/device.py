@@ -107,7 +107,6 @@ class XiaomiCoordinatedMiioEntity(CoordinatorEntity):
         self._device_name = entry.title
         self._unique_id = unique_id
         self._name = name
-        self._available = None
 
     @property
     def unique_id(self):
@@ -145,8 +144,7 @@ class XiaomiCoordinatedMiioEntity(CoordinatorEntity):
 
             return True
         except DeviceException as exc:
-            if self._available:
+            if self.available:
                 _LOGGER.error(mask_error, exc)
-                self._available = False
 
             return False

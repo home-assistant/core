@@ -143,14 +143,15 @@ MODELS_ALL_DEVICES = (
 )
 MODELS_ALL = MODELS_ALL_DEVICES + MODELS_GATEWAY
 
-# Fan Services
+# Fan/Humidifier Services
 SERVICE_SET_BUZZER_ON = "fan_set_buzzer_on"
 SERVICE_SET_BUZZER_OFF = "fan_set_buzzer_off"
 SERVICE_SET_FAN_LED_ON = "fan_set_led_on"
 SERVICE_SET_FAN_LED_OFF = "fan_set_led_off"
+SERVICE_SET_FAN_LED = "fan_set_led"
+SERVICE_SET_LED_BRIGHTNESS = "set_led_brightness"
 SERVICE_SET_CHILD_LOCK_ON = "fan_set_child_lock_on"
 SERVICE_SET_CHILD_LOCK_OFF = "fan_set_child_lock_off"
-SERVICE_SET_LED_BRIGHTNESS = "fan_set_led_brightness"
 SERVICE_SET_FAVORITE_LEVEL = "fan_set_favorite_level"
 SERVICE_SET_FAN_LEVEL = "fan_set_fan_level"
 SERVICE_SET_AUTO_DETECT_ON = "fan_set_auto_detect_on"
