@@ -256,7 +256,10 @@ async def async_validate_action_config(
         platform = await device_automation.async_get_device_automation_platform(
             hass, config[CONF_DOMAIN], "action"
         )
-        config = platform.ACTION_SCHEMA(config)  # type: ignore
+        if hasattr(platform, "async_validate_action_config"):
+            config = await platform.async_validate_action_config(hass, config)  # type: ignore
+        else:
+            config = platform.ACTION_SCHEMA(config)  # type: ignore
 
     elif action_type == cv.SCRIPT_ACTION_CHECK_CONDITION:
         if config[CONF_CONDITION] == "device":
