@@ -15,13 +15,6 @@ from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, assert_setup_component
 
-# from tcp test_sensor.py
-# async def test_setup_platform_valid_config(hass, mock_socket):
-#     """Check a valid configuration and call add_entities with sensor."""
-#     with assert_setup_component(1, "sensor"):
-#         assert await async_setup_component(hass, "sensor", TEST_CONFIG)
-#         await hass.async_block_till_done()
-
 TEST_CONFIG = {
     "sensor": {
         "platform": "aurora_abb_powerone",
