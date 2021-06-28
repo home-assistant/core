@@ -138,7 +138,7 @@ def deflection_entities_list(
         return []
 
     deflection_list = get_deflections(fritzbox_tools, service_name)
-    if deflection_list is not None:
+    if deflection_list is None:
         return []
 
     return [
