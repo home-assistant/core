@@ -65,19 +65,19 @@ async def test_save_preferences(hass, hass_ws_client, hass_storage) -> None:
                 "type": "grid",
                 "flow_from": [
                     {
-                        "stat_from": "sensor.heat_pump_meter",
+                        "stat_energy_from": "sensor.heat_pump_meter",
                         "stat_cost": "heat_pump_kwh_cost",
-                        "entity_from": "sensor.heat_pump_meter",
+                        "entity_energy_from": "sensor.heat_pump_meter",
                         "entity_energy_price": "sensor.energy_price",
                     }
                 ],
-                "flow_to": [{"stat_to": "return_to_grid_stat"}],
+                "flow_to": [{"stat_energy_to": "return_to_grid_stat"}],
                 "cost_adjustment_day": 1.2,
             },
             {
                 "type": "solar",
-                "stat_from": "my_solar_production",
-                "stat_predicted_from": "predicted_stat",
+                "stat_energy_from": "my_solar_production",
+                "stat_predicted_energy_from": "predicted_stat",
             },
         ],
         "device_consumption": [{"stat_consumption": "some_device_usage"}],
@@ -104,9 +104,9 @@ async def test_save_preferences(hass, hass_ws_client, hass_storage) -> None:
                 "type": "grid",
                 "flow_from": [
                     {
-                        "stat_from": "sensor.heat_pump_meter",
+                        "stat_energy_from": "sensor.heat_pump_meter",
                         "stat_cost": None,
-                        "entity_from": None,
+                        "entity_energy_from": None,
                         "entity_energy_price": None,
                     }
                 ],
@@ -115,8 +115,8 @@ async def test_save_preferences(hass, hass_ws_client, hass_storage) -> None:
             },
             {
                 "type": "solar",
-                "stat_from": "my_solar_production",
-                "stat_predicted_from": None,
+                "stat_energy_from": "my_solar_production",
+                "stat_predicted_energy_from": None,
             },
         ],
     }

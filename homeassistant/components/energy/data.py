@@ -27,15 +27,15 @@ class FlowFromGridSourceType(TypedDict):
     """Dictionary describing the 'from' stat for the grid source."""
 
     # statistic_id of a an energy meter (kWh)
-    stat_from: str
+    stat_energy_from: str
 
     # statistic_id of costs ($) incurred from the energy meter
-    # If set to None and entity_from and entity_energy_price are configured,
+    # If set to None and entity_energy_from and entity_energy_price are configured,
     # an EnergyCostSensor will be automatically created
     stat_cost: str | None
 
     # Used to generate costs if stat_cost is set to None
-    entity_from: str | None  # entity_id of an energy meter (kWh), entity_id of the energy meter for stat_from
+    entity_energy_from: str | None  # entity_id of an energy meter (kWh), entity_id of the energy meter for stat_from
     entity_energy_price: str | None  # entity_id of an entity providing price ($/kWh)
 
 
@@ -43,7 +43,7 @@ class FlowToGridSourceType(TypedDict):
     """Dictionary describing the 'to' stat for the grid source."""
 
     # kWh meter
-    stat_to: str
+    stat_energy_to: str
 
 
 class GridSourceType(TypedDict):
@@ -62,8 +62,8 @@ class SolarSourceType(TypedDict):
 
     type: Literal["solar"]
 
-    stat_from: str
-    stat_predicted_from: str | None
+    stat_energy_from: str
+    stat_predicted_energy_from: str | None
 
 
 SourceType = Union[GridSourceType, SolarSourceType]
@@ -90,9 +90,9 @@ class EnergyPreferencesUpdate(EnergyPreferences, total=False):
 
 FLOW_FROM_GRID_SOURCE_SCHEMA = vol.Schema(
     {
-        vol.Required("stat_from"): str,
+        vol.Required("stat_energy_from"): str,
         vol.Required("stat_cost"): vol.Any(None, str),
-        vol.Required("entity_from"): vol.Any(None, str),
+        vol.Required("entity_energy_from"): vol.Any(None, str),
         vol.Required("entity_energy_price"): vol.Any(None, str),
     }
 )
@@ -100,7 +100,7 @@ FLOW_FROM_GRID_SOURCE_SCHEMA = vol.Schema(
 
 FLOW_TO_GRID_SOURCE_SCHEMA = vol.Schema(
     {
-        vol.Required("stat_to"): str,
+        vol.Required("stat_energy_to"): str,
     }
 )
 
@@ -118,8 +118,8 @@ GRID_SOURCE_SCHEMA = vol.Schema(
 SOLAR_SOURCE_SCHEMA = vol.Schema(
     {
         vol.Required("type"): "solar",
-        vol.Required("stat_from"): str,
-        vol.Required("stat_predicted_from"): vol.Any(str, None),
+        vol.Required("stat_energy_from"): str,
+        vol.Required("stat_predicted_energy_from"): vol.Any(str, None),
     }
 )
 
