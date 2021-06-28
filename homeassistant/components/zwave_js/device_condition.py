@@ -7,13 +7,6 @@ import voluptuous as vol
 from zwave_js_server.const import CommandClass, ConfigurationValueType
 from zwave_js_server.model.value import ConfigurationValue, get_value_id
 
-from homeassistant.components.zwave_js.const import (
-    ATTR_COMMAND_CLASS,
-    ATTR_ENDPOINT,
-    ATTR_PROPERTY,
-    ATTR_PROPERTY_KEY,
-    ATTR_VALUE,
-)
 from homeassistant.const import CONF_CONDITION, CONF_DEVICE_ID, CONF_DOMAIN, CONF_TYPE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -22,6 +15,13 @@ from homeassistant.helpers.config_validation import DEVICE_CONDITION_BASE_SCHEMA
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
 from . import DOMAIN
+from .const import (
+    ATTR_COMMAND_CLASS,
+    ATTR_ENDPOINT,
+    ATTR_PROPERTY,
+    ATTR_PROPERTY_KEY,
+    ATTR_VALUE,
+)
 from .helpers import async_get_node_from_device_id
 
 CONF_SUBTYPE = "subtype"
@@ -70,6 +70,26 @@ CONDITION_SCHEMA = vol.Any(
     CONFIG_PARAMETER_CONDITION_SCHEMA,
     VALUE_CONDITION_SCHEMA,
 )
+
+
+async def async_validate_condition_config(
+    hass: HomeAssistant, config: ConfigType
+) -> ConfigType:
+    """Validate config."""
+    config = CONDITION_SCHEMA(config)
+    node = async_get_node_from_device_id(hass, config[CONF_DEVICE_ID])
+    if config[CONF_TYPE] == VALUE_TYPE:
+        value_id = get_value_id(
+            node,
+            config[ATTR_COMMAND_CLASS],
+            config[ATTR_PROPERTY],
+            config.get(ATTR_ENDPOINT),
+            config.get(ATTR_PROPERTY_KEY),
+        )
+        if value_id not in node.values:
+            raise vol.Invalid(f"Value {value_id} not found on node {node}")
+
+    return config
 
 
 async def async_get_conditions(

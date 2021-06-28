@@ -45,6 +45,9 @@ ATTR_EVENT_DATA = "event_data"
 ATTR_DATA_TYPE = "data_type"
 ATTR_WAIT_FOR_RESULT = "wait_for_result"
 
+ATTR_NODE = "node"
+ATTR_ZWAVE_VALUE = "zwave_value"
+
 # service constants
 ATTR_NODES = "nodes"
 
