@@ -11,7 +11,7 @@ from homeassistant.components.number import (
     DEFAULT_STEP,
     NumberEntity,
 )
-from homeassistant.const import CONF_NAME, CONF_OPTIMISTIC
+from homeassistant.const import CONF_NAME, CONF_OPTIMISTIC, CONF_VALUE_TEMPLATE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.reload import async_setup_reload_service
@@ -59,6 +59,7 @@ PLATFORM_SCHEMA = vol.All(
             vol.Optional(CONF_STEP, default=DEFAULT_STEP): vol.All(
                 vol.Coerce(float), vol.Range(min=1e-3)
             ),
+            vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
         },
     ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema),
     validate_config,
@@ -70,28 +71,28 @@ async def async_setup_platform(
 ):
     """Set up MQTT number through configuration.yaml."""
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
-    await _async_setup_entity(async_add_entities, config)
+    await _async_setup_entity(hass, async_add_entities, config)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up MQTT number dynamically through MQTT discovery."""
     setup = functools.partial(
-        _async_setup_entity, async_add_entities, config_entry=config_entry
+        _async_setup_entity, hass, async_add_entities, config_entry=config_entry
     )
     await async_setup_entry_helper(hass, number.DOMAIN, setup, PLATFORM_SCHEMA)
 
 
 async def _async_setup_entity(
-    async_add_entities, config, config_entry=None, discovery_data=None
+    hass, async_add_entities, config, config_entry=None, discovery_data=None
 ):
     """Set up the MQTT number."""
-    async_add_entities([MqttNumber(config, config_entry, discovery_data)])
+    async_add_entities([MqttNumber(hass, config, config_entry, discovery_data)])
 
 
 class MqttNumber(MqttEntity, NumberEntity, RestoreEntity):
     """representation of an MQTT number."""
 
-    def __init__(self, config, config_entry, discovery_data):
+    def __init__(self, hass, config, config_entry, discovery_data):
         """Initialize the MQTT Number."""
         self._config = config
         self._optimistic = False
@@ -100,7 +101,7 @@ class MqttNumber(MqttEntity, NumberEntity, RestoreEntity):
         self._current_number = None
 
         NumberEntity.__init__(self)
-        MqttEntity.__init__(self, None, config, config_entry, discovery_data)
+        MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
     @staticmethod
     def config_schema():
@@ -111,6 +112,10 @@ class MqttNumber(MqttEntity, NumberEntity, RestoreEntity):
         """(Re)Setup the entity."""
         self._optimistic = config[CONF_OPTIMISTIC]
 
+        value_template = self._config.get(CONF_VALUE_TEMPLATE)
+        if value_template is not None:
+            value_template.hass = self.hass
+
     async def _subscribe_topics(self):
         """(Re)Subscribe to topics."""
 
@@ -119,11 +124,14 @@ class MqttNumber(MqttEntity, NumberEntity, RestoreEntity):
         def message_received(msg):
             """Handle new MQTT messages."""
             payload = msg.payload
+            value_template = self._config.get(CONF_VALUE_TEMPLATE)
+            if value_template is not None:
+                payload = value_template.async_render_with_possible_json_value(payload)
             try:
                 if payload.isnumeric():
-                    num_value = int(msg.payload)
+                    num_value = int(payload)
                 else:
-                    num_value = float(msg.payload)
+                    num_value = float(payload)
             except ValueError:
                 _LOGGER.warning("Payload '%s' is not a Number", msg.payload)
                 return
