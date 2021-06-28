@@ -46,10 +46,9 @@ class SelectorType:
     """Class that holds device specific info for a xiaomi aqara or humidifier selectors."""
 
     name: str = None
-    short_name: str = None
     icon: str = None
+    short_name: str = None
     options: list = None
-    step: float = None
     service: str = None
 
 
@@ -139,10 +138,10 @@ class XiaomiSelector(XiaomiCoordinatedMiioEntity, SelectEntity):
     async def async_select_option(self, option: str) -> None:
         """Set an option of the miio device."""
         if option not in self.options:
-            _LOGGER.warning(
-                "Selection '%s' is not a valid '%s'", option, self._controller.name
+            raise ValueError(
+                f"Selection '{option}' is not a valid {self._controller.name}"
             )
-            return
+
         method = getattr(self, SERVICE_TO_METHOD[self._controller.service]["method"])
         await method(option)
 
@@ -153,13 +152,6 @@ class XiaomiAirHumidifierSelector(XiaomiSelector):
     def __init__(self, name, device, entry, unique_id, controller, coordinator):
         """Initialize the plug switch."""
         super().__init__(name, device, entry, unique_id, controller, coordinator)
-        if self._model in [MODEL_AIRHUMIDIFIER_CA1, MODEL_AIRHUMIDIFIER_CB1]:
-            self._device_features = FEATURE_FLAGS_AIRHUMIDIFIER_CA_AND_CB
-        elif self._model in [MODEL_AIRHUMIDIFIER_CA4]:
-            self._device_features = FEATURE_FLAGS_AIRHUMIDIFIER_CA4
-        else:
-            self._device_features = FEATURE_FLAGS_AIRHUMIDIFIER
-
         self._current_option = self._extract_value_from_attribute(
             self.coordinator.data, self._controller.short_name
         )
@@ -183,8 +175,6 @@ class XiaomiAirHumidifierSelector(XiaomiSelector):
     async def async_set_led_brightness(self, brightness: str):
         """Set the led brightness."""
         value_map = {"Bright": 0, "Dim": 1, "Off": 2}
-        if self._device_features & FEATURE_SET_LED_BRIGHTNESS == 0:
-            return
 
         if await self._try_command(
             "Setting the led brightness of the miio device failed.",
@@ -209,8 +199,6 @@ class XiaomiAirHumidifierMiotSelector(XiaomiAirHumidifierSelector):
     async def async_set_led_brightness(self, brightness: str):
         """Set the led brightness."""
         value_map = {"Bright": 2, "Dim": 1, "Off": 0}
-        if self._device_features & FEATURE_SET_LED_BRIGHTNESS == 0:
-            return
 
         if await self._try_command(
             "Setting the led brightness of the miio device failed.",
