@@ -13,6 +13,7 @@ from aiomodernforms.models import Device as ModernFormsDeviceState
 
 from homeassistant.components.fan import DOMAIN as FAN_DOMAIN
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_MODEL, ATTR_NAME, ATTR_SW_VERSION, CONF_HOST
 from homeassistant.core import HomeAssistant
@@ -30,6 +31,7 @@ SCAN_INTERVAL = timedelta(seconds=5)
 PLATFORMS = [
     LIGHT_DOMAIN,
     FAN_DOMAIN,
+    SWITCH_DOMAIN,
 ]
 _LOGGER = logging.getLogger(__name__)
 
