@@ -585,7 +585,7 @@ class FritzBoxWifiSwitch(FritzBoxBaseSwitch, SwitchEntity):
         network_name: str,
     ) -> None:
         """Init Fritz Wifi switch."""
-        self._fritzbox_tools: FritzBoxTools = fritzbox_tools
+        self._fritzbox_tools = fritzbox_tools
 
         self._attributes = {}
         self._network_num = network_num
