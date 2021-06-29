@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from dataclasses import dataclass, field
 import functools
 import logging
 import math
@@ -18,7 +19,6 @@ from aioesphomeapi import (
     UserService,
     UserServiceArgType,
 )
-import attr
 import voluptuous as vol
 from zeroconf import DNSPointer, DNSRecord, RecordUpdateListener, Zeroconf
 
@@ -55,12 +55,12 @@ _T = TypeVar("_T")
 STORAGE_VERSION = 1
 
 
-@attr.s
+@dataclass
 class DomainData:
     """Define a class that stores global esphome data in hass.data[DOMAIN]."""
 
-    _entry_datas: dict[str, RuntimeEntryData] = attr.ib(factory=dict)
-    _stores: dict[str, Store] = attr.ib(factory=dict)
+    _entry_datas: dict[str, RuntimeEntryData] = field(default_factory=dict)
+    _stores: dict[str, Store] = field(default_factory=dict)
 
     def get_entry_data(self, entry: ConfigEntry) -> RuntimeEntryData:
         """Return the runtime entry data associated with this config entry.
