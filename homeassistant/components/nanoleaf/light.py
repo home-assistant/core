@@ -68,7 +68,6 @@ async def async_setup_platform(
         DOMAIN,
         context={"source": SOURCE_IMPORT},
         data={CONF_HOST: config[CONF_HOST], CONF_TOKEN: config[CONF_TOKEN]},
-
     )
 
 
