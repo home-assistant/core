@@ -40,6 +40,14 @@ CONF_STEP = "step"
 DEFAULT_NAME = "MQTT Number"
 DEFAULT_OPTIMISTIC = False
 
+MQTT_NUMBER_ATTRIBUTES_BLOCKED = frozenset(
+    {
+        number.ATTR_MAX,
+        number.ATTR_MIN,
+        number.ATTR_STEP,
+    }
+)
+
 
 def validate_config(config):
     """Validate that the configuration is valid, throws if it isn't."""
@@ -91,6 +99,8 @@ async def _async_setup_entity(
 
 class MqttNumber(MqttEntity, NumberEntity, RestoreEntity):
     """representation of an MQTT number."""
+
+    _attributes_extra_blocked = MQTT_NUMBER_ATTRIBUTES_BLOCKED
 
     def __init__(self, hass, config, config_entry, discovery_data):
         """Initialize the MQTT Number."""
