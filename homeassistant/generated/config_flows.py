@@ -82,6 +82,7 @@ FLOWS = [
     "fritz",
     "fritzbox",
     "fritzbox_callmonitor",
+    "gandi_livedns",
     "garages_amsterdam",
     "garmin_connect",
     "gdacs",

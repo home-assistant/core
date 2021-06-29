@@ -1,0 +1,32 @@
+{
+  "config": {
+    "flow_title": "Gandi.net live DNS updater",
+    "step": {
+      "user": {
+        "title": "Gandi.net live DNS updater",
+        "description": "This integration requires a unique Gandi API Key. If you don’t have one yet, you can generate your production API key from the API Key Page (in the Security section).",
+        "data": {
+          "domain": "Domain name",
+          "name": "[%key:common::config_flow::data::name%]",
+          "type": "Record type",
+          "ttl": "Time to live",
+          "timeout": "Timeout",
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "ipv6": "Use IPV6",
+          "update_interval": "Update interval"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "record_notfound": "Record not found",
+      "timeout_connect": "Timeout",
+      "update_failed": "Record not updated",
+      "cannot_get_realip": "Can't get the real ip",
+      "unknown": "Unexpected error"
+    },
+    "abort": {
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    }
+  }
+}

@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "unknown": "Unexpected error"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "record_notfound": "Record not found",
+            "timeout_connect": "Timeout",
+            "update_failed": "Record not updated",
+            "cannot_get_realip": "Can't get the real ip",
+            "unknown": "Unexpected error"
+        },
+        "flow_title": "Gandi.net live DNS updater",
+        "step": {
+            "user": {
+                "data": {
+                    "domain": "Domain name (fqdn)",
+                    "name": "Record name (rrset_name)",
+                    "type": "Record type (rrset_type)",
+                    "ttl": "Time to live (rrset_ttl) in seconds",
+                    "timeout": "Timeout (in seconds)",
+                    "api_key": "Api key",
+                    "ipv6": "Use IPV6",
+                    "update_interval": "Update interval (in minutes)"
+                },
+                "title": "Gandi.net live DNS updater",
+                "description": "This integration requires a unique Gandi API Key. If you don’t have one yet, you can generate your production API key from the API Key Page (in the Security section)."
+            }
+        }
+    }
+}
