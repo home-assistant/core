@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 import logging
 from types import MappingProxyType
-from typing import Any, TypedDict
+from typing import Any, Callable, TypedDict
 
 from fritzconnection import FritzConnection
 from fritzconnection.core.exceptions import (
@@ -15,6 +15,7 @@ from fritzconnection.core.exceptions import (
 )
 from fritzconnection.lib.fritzhosts import FritzHosts
 from fritzconnection.lib.fritzstatus import FritzStatus
+from fritzprofiles import FritzProfileSwitch, get_all_profiles
 
 from homeassistant.components.device_tracker.const import (
     CONF_CONSIDER_HOME,
@@ -44,7 +45,7 @@ _LOGGER = logging.getLogger(__name__)
 class ClassSetupMissing(Exception):
     """Raised when a Class func is called before setup."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Init custom exception."""
         super().__init__("Function called before Class setup")
 
@@ -85,6 +86,7 @@ class FritzBoxTools:
         self._unique_id: str | None = None
         self.connection: FritzConnection = None
         self.fritz_hosts: FritzHosts = None
+        self.fritz_profiles: dict[str, FritzProfileSwitch] = {}
         self.fritz_status: FritzStatus = None
         self.hass = hass
         self.host = host
@@ -116,6 +118,13 @@ class FritzBoxTools:
 
         self._model = info.get("NewModelName")
         self._sw_version = info.get("NewSoftwareVersion")
+
+        self.fritz_profiles = {
+            profile: FritzProfileSwitch(
+                "http://" + self.host, self.username, self.password, profile
+            )
+            for profile in get_all_profiles(self.host, self.username, self.password)
+        }
 
     async def async_start(self, options: MappingProxyType[str, Any]) -> None:
         """Start FritzHosts connection."""
@@ -304,6 +313,17 @@ class FritzDevice:
     def last_activity(self) -> datetime | None:
         """Return device last activity."""
         return self._last_activity
+
+
+class SwitchInfo(TypedDict):
+    """FRITZ!Box switch info class."""
+
+    description: str
+    friendly_name: str
+    icon: str
+    type: str
+    callback_update: Callable
+    callback_switch: Callable
 
 
 class FritzBoxBaseEntity:

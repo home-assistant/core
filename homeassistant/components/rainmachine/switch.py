@@ -84,7 +84,7 @@ SLOPE_TYPE_MAP = {
 SPRINKLER_TYPE_MAP = {
     0: "Not Set",
     1: "Popup Spray",
-    2: "Rotors",
+    2: "Rotors Low Rate",
     3: "Surface Drip",
     4: "Bubblers Drip",
     5: "Rotors High Rate",
@@ -101,9 +101,10 @@ VEGETATION_MAP = {
     4: "Flowers",
     5: "Vegetables",
     6: "Citrus",
-    7: "Trees and Bushes",
+    7: "Bushes",
     9: "Drought Tolerant Plants",
     10: "Warm Season Grass",
+    11: "Trees",
     99: "Other",
 }
 
