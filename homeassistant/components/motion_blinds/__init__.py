@@ -80,23 +80,13 @@ class DataUpdateCoordinatorMotionBlinds(DataUpdateCoordinator):
         """Fetch the latest data from the gateway and blinds."""
         data = await self.hass.async_add_executor_job(self.update_gateway)
 
-        all_available = True
-        for device in data.values():
-            if not device[ATTR_AVAILABLE]:
-                all_available = False
-                break
-
+        all_available = all(device[ATTR_AVAILABLE] for device in data.values())
         if all_available:
             self.update_interval = timedelta(seconds=UPDATE_INTERVAL)
         else:
             self.update_interval = timedelta(seconds=UPDATE_INTERVAL_FAST)
 
         return data
-
-
-def setup(hass: core.HomeAssistant, config: dict):
-    """Set up the Motion Blinds component."""
-    return True
 
 
 async def async_setup_entry(
