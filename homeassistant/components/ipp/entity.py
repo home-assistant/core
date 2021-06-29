@@ -32,7 +32,6 @@ class IPPEntity(CoordinatorEntity):
         """Initialize the IPP entity."""
         super().__init__(coordinator)
         self._device_id = device_id
-        self._enabled_default = enabled_default
         self._entry_id = entry_id
         self._attr_name = name
         self._attr_icon = icon
