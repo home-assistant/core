@@ -363,7 +363,7 @@ class HomeKitClimateEntity(HomeKitEntity, ClimateEntity):
         heat_temp = kwargs.get(ATTR_TARGET_TEMP_LOW)
         cool_temp = kwargs.get(ATTR_TARGET_TEMP_HIGH)
 
-        if (mode in {HVAC_MODE_HEAT_COOL}) and (
+        if (mode == HVAC_MODE_HEAT_COOL) and (
             SUPPORT_TARGET_TEMPERATURE_RANGE & self.supported_features
         ):
             if temp is None:
