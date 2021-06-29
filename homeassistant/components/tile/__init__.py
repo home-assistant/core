@@ -36,24 +36,24 @@ async def async_setup_entry(hass, entry):
     hass.data[DOMAIN][DATA_TILE][entry.entry_id] = {}
 
     @callback
-    def async_migrate_callback(entity):
+    def async_migrate_callback(entity_entry):
         """
         Define a callback to migrate appropriate Tile entities to new unique IDs.
 
         Old: tile_{uuid}
         New: {username}_{uuid}
         """
-        if entity.unique_id.startswith(entry.data[CONF_USERNAME]):
+        if entity_entry.unique_id.startswith(entry.data[CONF_USERNAME]):
             return
 
         new_unique_id = f"{entry.data[CONF_USERNAME]}_".join(
-            entity.unique_id.split(f"{DOMAIN}_")
+            entity_entry.unique_id.split(f"{DOMAIN}_")
         )
 
         LOGGER.debug(
             "Migrating entity %s from old unique ID '%s' to new unique ID '%s'",
-            entity.entity_id,
-            entity.unique_id,
+            entity_entry.entity_id,
+            entity_entry.unique_id,
             new_unique_id,
         )
 
