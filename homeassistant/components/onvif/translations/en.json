@@ -11,6 +11,13 @@
             "cannot_connect": "Failed to connect"
         },
         "step": {
+            "auth": {
+                "data": {
+                    "password": "Password",
+                    "username": "Username"
+                },
+                "title": "Configure authentication"
+            },
             "configure": {
                 "data": {
                     "host": "Host",
@@ -33,6 +40,14 @@
                     "host": "Select discovered ONVIF device"
                 },
                 "title": "Select ONVIF device"
+            },
+            "manual_input": {
+                "data": {
+                    "host": "Host",
+                    "name": "Name",
+                    "port": "Port"
+                },
+                "title": "Configure ONVIF device"
             },
             "user": {
                 "data": {
