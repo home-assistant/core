@@ -10,13 +10,6 @@
       "link": {
         "title": "Link Nanoleaf",
         "description": "Press and hold the power button on your Nanoleaf for 5 seconds until the button LEDs start flashing, then click **SUBMIT** within 30 seconds."
-      },
-      "manual": {
-        "title": "Provide your token",
-        "description": "Information on how to get a token is available on https://www.home-assistant.io/integrations/nanoleaf/#getting-the-auth-token",
-        "data": {
-          "token": "Token"
-        }
       }
     },
     "error": {

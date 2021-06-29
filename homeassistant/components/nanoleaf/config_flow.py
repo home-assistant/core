@@ -8,7 +8,7 @@ from pynanoleaf import InvalidToken, Nanoleaf, NotAuthorizingNewTokens, Unavaila
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_HOST, CONF_MODE, CONF_TOKEN
+from homeassistant.const import CONF_HOST, CONF_TOKEN
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.typing import DiscoveryInfoType
 from homeassistant.util.json import load_json, save_json
@@ -21,34 +21,9 @@ _LOGGER = logging.getLogger(__name__)
 # For discovery integration import
 CONFIG_FILE: Final = ".nanoleaf.conf"
 
-CONF_AUTO: Final = "auto"
-CONF_MANUAL: Final = "manual"
-
-CONF_STEP_USER: Final = "user"
-CONF_STEP_AUTO: Final = "auto"
-CONF_STEP_MANUAL: Final = "manual"
-
-SIMPLE_USER_SCHEMA: Final = vol.Schema(
+USER_SCHEMA: Final = vol.Schema(
     {
         vol.Required(CONF_HOST): str,
-    }
-)
-
-ADVANCED_USER_SCHEMA: Final = vol.Schema(
-    {
-        vol.Required(CONF_HOST): str,
-        vol.Required(CONF_MODE, default=CONF_AUTO): vol.In(
-            {
-                CONF_AUTO: "Request a new token (recommended)",
-                CONF_MANUAL: "Enter a token manually",
-            }
-        ),
-    }
-)
-
-MANUAL_SCHEMA: Final = vol.Schema(
-    {
-        vol.Required(CONF_TOKEN): str,
     }
 )
 
@@ -58,7 +33,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    user_data_schema: vol.Schema
     nanoleaf: Nanoleaf
 
     # For discovery integration import
@@ -72,12 +46,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle Nanoleaf flow initiated by the user."""
-        self.user_data_schema = (
-            ADVANCED_USER_SCHEMA if self.show_advanced_options else SIMPLE_USER_SCHEMA
-        )
         if user_input is None:
             return self.async_show_form(
-                step_id="user", data_schema=self.user_data_schema, last_step=False
+                step_id="user", data_schema=USER_SCHEMA, last_step=False
             )
         self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
         self.nanoleaf = Nanoleaf(user_input[CONF_HOST])
@@ -87,7 +58,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.warning("Nanoleaf is not available at %s", self.nanoleaf.host)
             return self.async_show_form(
                 step_id="user",
-                data_schema=self.user_data_schema,
+                data_schema=USER_SCHEMA,
                 errors={"base": "cannot_connect"},
                 last_step=False,
             )
@@ -97,12 +68,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unknown error connecting to Nanoleaf")
             return self.async_show_form(
                 step_id="user",
-                data_schema=self.user_data_schema,
+                data_schema=USER_SCHEMA,
                 last_step=False,
                 errors={"base": "unknown"},
             )
-        if user_input.get(CONF_MODE) == CONF_MANUAL:
-            return self.async_show_form(step_id="manual", data_schema=MANUAL_SCHEMA)
         return self.async_show_form(step_id="link")
 
     async def async_step_zeroconf(
@@ -162,18 +131,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.error("Nanoleaf is not available at %s", self.nanoleaf.host)
             return self.async_show_form(
                 step_id="user",
-                data_schema=self.user_data_schema,
+                data_schema=USER_SCHEMA,
                 errors={"base": "cannot_connect"},
                 last_step=False,
             )
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unknown error authorizing Nanoleaf")
             return self.async_show_form(step_id="link", errors={"base": "unknown"})
-        return await self.async_setup_finish()
-
-    async def async_step_manual(self, user_input: dict[str, Any]) -> FlowResult:
-        """Handle Nanoleaf manual step."""
-        self.nanoleaf.token = user_input[CONF_TOKEN]
         return await self.async_setup_finish()
 
     async def async_step_import(self, config: dict[str, Any]) -> FlowResult:
@@ -196,16 +160,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.error("Nanoleaf is not available at %s", self.nanoleaf.host)
             return self.async_show_form(
                 step_id="user",
-                data_schema=self.user_data_schema,
+                data_schema=USER_SCHEMA,
                 errors={"base": "cannot_connect"},
                 last_step=False,
             )
         except InvalidToken:
             _LOGGER.error("Nanoleaf token %s is invalid", self.nanoleaf.token)
             return self.async_show_form(
-                step_id="manual",
-                data_schema=MANUAL_SCHEMA,
-                errors={"base": "invalid_token"},
+                step_id="link", errors={"base": "invalid_token"}
             )
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception(
@@ -215,7 +177,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
             return self.async_show_form(
                 step_id="user",
-                data_schema=self.user_data_schema,
+                data_schema=USER_SCHEMA,
                 errors={"base": "unknown"},
                 last_step=False,
             )
