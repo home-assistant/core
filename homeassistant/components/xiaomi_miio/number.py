@@ -109,14 +109,9 @@ class XiaomiAirHumidifierNumber(XiaomiCoordinatedMiioEntity, NumberEntity):
         self._attr_max_value = number.max
         self._attr_step = number.step
         self._controller = number
-        self._value = self._extract_value_from_attribute(
+        self._attr_value = self._extract_value_from_attribute(
             self.coordinator.data, self._controller.short_name
         )
-
-    @property
-    def value(self):
-        """Return the current numbered value."""
-        return self._value
 
     @property
     def available(self):
@@ -149,14 +144,14 @@ class XiaomiAirHumidifierNumber(XiaomiCoordinatedMiioEntity, NumberEntity):
                 f"Value {value} not a valid {self.name} within the range {self.min_value} - {self.max_value}"
             )
         if await self.async_set_motor_speed(value):
-            self._value = value
+            self._attr_value = value
             self.async_write_ha_state()
 
     @callback
     def _handle_coordinator_update(self):
         """Fetch state from the device."""
         # On state change the device doesn't provide the new state immediately.
-        self._value = self._extract_value_from_attribute(
+        self._attr_value = self._extract_value_from_attribute(
             self.coordinator.data, self._controller.short_name
         )
         self.async_write_ha_state()
