@@ -29,9 +29,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import State
 
-from .conftest import ReadResult, base_config_test, base_test, prepare_service_update
+from .conftest import ReadResult, base_test, prepare_service_update
 
-from tests.common import mock_restore_cache
+cover_name = "test_cover"
+entity_id = f"{COVER_DOMAIN}.{cover_name}"
 
 
 @pytest.mark.parametrize(
@@ -40,7 +41,7 @@ from tests.common import mock_restore_cache
         {
             CONF_COVERS: [
                 {
-                    CONF_NAME: "test_cover",
+                    CONF_NAME: cover_name,
                     CONF_ADDRESS: 1234,
                     CONF_INPUT_TYPE: CALL_TYPE_COIL,
                 }
@@ -49,7 +50,7 @@ from tests.common import mock_restore_cache
         {
             CONF_COVERS: [
                 {
-                    CONF_NAME: "test_cover",
+                    CONF_NAME: cover_name,
                     CONF_ADDRESS: 1234,
                     CONF_INPUT_TYPE: CALL_TYPE_REGISTER_HOLDING,
                     CONF_SLAVE: 10,
@@ -91,7 +92,6 @@ async def test_config_cover(hass, mock_modbus):
 )
 async def test_coil_cover(hass, regs, expected):
     """Run test for given config."""
-    cover_name = "modbus_test_cover"
     state = await base_test(
         hass,
         {
@@ -139,7 +139,6 @@ async def test_coil_cover(hass, regs, expected):
 )
 async def test_register_cover(hass, regs, expected):
     """Run test for given config."""
-    cover_name = "modbus_test_cover"
     state = await base_test(
         hass,
         {
@@ -162,11 +161,10 @@ async def test_register_cover(hass, regs, expected):
 async def test_service_cover_update(hass, mock_pymodbus):
     """Run test for service homeassistant.update_entity."""
 
-    entity_id = "cover.test"
     config = {
         CONF_COVERS: [
             {
-                CONF_NAME: "test",
+                CONF_NAME: cover_name,
                 CONF_ADDRESS: 1234,
                 CONF_STATUS_REGISTER_TYPE: CALL_TYPE_REGISTER_HOLDING,
             }
@@ -189,54 +187,54 @@ async def test_service_cover_update(hass, mock_pymodbus):
 
 
 @pytest.mark.parametrize(
-    "state", [STATE_CLOSED, STATE_CLOSING, STATE_OPENING, STATE_OPEN]
+    "mock_test_state",
+    [
+        (State(entity_id, STATE_CLOSED),),
+        (State(entity_id, STATE_CLOSING),),
+        (State(entity_id, STATE_OPENING),),
+        (State(entity_id, STATE_OPEN),),
+    ],
+    indirect=True,
 )
-async def test_restore_state_cover(hass, state):
+@pytest.mark.parametrize(
+    "do_config",
+    [
+        {
+            CONF_COVERS: [
+                {
+                    CONF_NAME: cover_name,
+                    CONF_INPUT_TYPE: CALL_TYPE_COIL,
+                    CONF_ADDRESS: 1234,
+                    CONF_STATE_OPEN: 1,
+                    CONF_STATE_CLOSED: 0,
+                    CONF_STATE_OPENING: 2,
+                    CONF_STATE_CLOSING: 3,
+                    CONF_STATUS_REGISTER: 1234,
+                    CONF_STATUS_REGISTER_TYPE: CALL_TYPE_REGISTER_HOLDING,
+                }
+            ]
+        },
+    ],
+)
+async def test_restore_state_cover(hass, mock_test_state, mock_modbus):
     """Run test for cover restore state."""
-
-    entity_id = "cover.test"
-    cover_name = "test"
-    config = {
-        CONF_NAME: cover_name,
-        CONF_INPUT_TYPE: CALL_TYPE_COIL,
-        CONF_ADDRESS: 1234,
-        CONF_STATE_OPEN: 1,
-        CONF_STATE_CLOSED: 0,
-        CONF_STATE_OPENING: 2,
-        CONF_STATE_CLOSING: 3,
-        CONF_STATUS_REGISTER: 1234,
-        CONF_STATUS_REGISTER_TYPE: CALL_TYPE_REGISTER_HOLDING,
-    }
-    mock_restore_cache(
-        hass,
-        (State(f"{entity_id}", state),),
-    )
-    await base_config_test(
-        hass,
-        config,
-        cover_name,
-        COVER_DOMAIN,
-        CONF_COVERS,
-        None,
-        method_discovery=True,
-    )
-    assert hass.states.get(entity_id).state == state
+    test_state = mock_test_state[0].state
+    assert hass.states.get(entity_id).state == test_state
 
 
 async def test_service_cover_move(hass, mock_pymodbus):
     """Run test for service homeassistant.update_entity."""
 
-    entity_id = "cover.test"
-    entity_id2 = "cover.test2"
+    entity_id2 = f"{entity_id}2"
     config = {
         CONF_COVERS: [
             {
-                CONF_NAME: "test",
+                CONF_NAME: cover_name,
                 CONF_ADDRESS: 1234,
                 CONF_STATUS_REGISTER_TYPE: CALL_TYPE_REGISTER_HOLDING,
             },
             {
-                CONF_NAME: "test2",
+                CONF_NAME: f"{cover_name}2",
                 CONF_INPUT_TYPE: CALL_TYPE_COIL,
                 CONF_ADDRESS: 1234,
             },

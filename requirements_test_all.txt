@@ -100,7 +100,7 @@ aioeafm==0.1.2
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==2.9.0
+aioesphomeapi==4.0.1
 
 # homeassistant.components.flo
 aioflo==0.4.1
@@ -131,7 +131,7 @@ aiolip==1.1.4
 aiolyric==1.0.7
 
 # homeassistant.components.modern_forms
-aiomodernforms==0.1.5
+aiomodernforms==0.1.8
 
 # homeassistant.components.yamaha_musiccast
 aiomusiccast==0.6
@@ -249,6 +249,9 @@ buienradar==1.0.4
 # homeassistant.components.caldav
 caldav==0.7.1
 
+# homeassistant.components.coinbase
+coinbase==2.1.0
+
 # homeassistant.scripts.check_config
 colorlog==5.0.1
 
@@ -267,7 +270,7 @@ coronavirus==1.1.1
 datadog==0.15.0
 
 # homeassistant.components.metoffice
-datapoint==0.9.5
+datapoint==0.9.8
 
 # homeassistant.components.debugpy
 debugpy==1.3.0
@@ -335,6 +338,9 @@ fnvhash==0.1.0
 # homeassistant.components.foobot
 foobot_async==1.0.0
 
+# homeassistant.components.forecast_solar
+forecast_solar==1.3.1
+
 # homeassistant.components.freebox
 freebox-api==0.0.10
 
@@ -343,8 +349,11 @@ freebox-api==0.0.10
 # homeassistant.components.fritzbox_netmonitor
 fritzconnection==1.4.2
 
+# homeassistant.components.fritz
+fritzprofiles==0.6.1
+
 # homeassistant.components.google_translate
-gTTS==2.2.2
+gTTS==2.2.3
 
 # homeassistant.components.garages_amsterdam
 garages-amsterdam==2.1.1
@@ -417,10 +426,10 @@ habitipy==0.2.0
 hangups==0.4.14
 
 # homeassistant.components.cloud
-hass-nabucasa==0.43.0
+hass-nabucasa==0.44.0
 
 # homeassistant.components.tasmota
-hatasmota==0.2.18
+hatasmota==0.2.19
 
 # homeassistant.components.jewish_calendar
 hdate==0.10.2
@@ -563,7 +572,7 @@ ndms2_client==0.1.1
 nessclient==0.9.15
 
 # homeassistant.components.discovery
-netdisco==2.8.3
+netdisco==2.9.0
 
 # homeassistant.components.nam
 nettigo-air-monitor==1.0.0
@@ -711,7 +720,7 @@ pyMetno==0.8.3
 pyRFXtrx==0.27.0
 
 # homeassistant.components.tibber
-pyTibber==0.17.0
+pyTibber==0.18.0
 
 # homeassistant.components.nextbus
 py_nextbusnext==0.1.4
@@ -966,7 +975,7 @@ pyqwikswitch==0.93
 pyrisco==0.3.1
 
 # homeassistant.components.rituals_perfume_genie
-pyrituals==0.0.3
+pyrituals==0.0.4
 
 # homeassistant.components.ruckus_unleashed
 pyruckus==0.12
@@ -986,7 +995,7 @@ pysiaalarm==3.0.0
 pysignalclirestapi==0.3.4
 
 # homeassistant.components.sma
-pysma==0.5.0
+pysma==0.6.0
 
 # homeassistant.components.smappee
 pysmappee==0.2.25
@@ -1019,7 +1028,7 @@ python-ecobee-api==0.2.11
 python-forecastio==1.4.0
 
 # homeassistant.components.izone
-python-izone==1.1.4
+python-izone==1.1.6
 
 # homeassistant.components.juicenet
 python-juicenet==1.0.2
@@ -1058,7 +1067,7 @@ python-velbus==2.1.2
 python_awair==0.2.1
 
 # homeassistant.components.tile
-pytile==5.2.0
+pytile==5.2.2
 
 # homeassistant.components.traccar
 pytraccar==0.9.0
@@ -1284,7 +1293,7 @@ wakeonlan==2.0.1
 wallbox==0.4.4
 
 # homeassistant.components.folder_watcher
-watchdog==2.1.2
+watchdog==2.1.3
 
 # homeassistant.components.wiffi
 wiffi==1.0.1
@@ -1305,6 +1314,7 @@ xbox-webapi==2.0.11
 xknx==0.18.7
 
 # homeassistant.components.bluesound
+# homeassistant.components.fritz
 # homeassistant.components.rest
 # homeassistant.components.startca
 # homeassistant.components.ted5000
@@ -1345,4 +1355,4 @@ zigpy-znp==0.5.1
 zigpy==0.34.0
 
 # homeassistant.components.zwave_js
-zwave-js-server-python==0.26.1
+zwave-js-server-python==0.27.0

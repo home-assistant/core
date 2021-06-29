@@ -907,9 +907,6 @@ async def test_update_missing_mac_unique_id_added_from_dhcp(hass, remotews: Mock
             data=MOCK_DHCP_DATA,
         )
         await hass.async_block_till_done()
-        import pprint
-
-        pprint.pprint(result)
         assert len(mock_setup.mock_calls) == 1
         assert len(mock_setup_entry.mock_calls) == 1
 

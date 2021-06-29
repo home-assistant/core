@@ -1,0 +1,38 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Asukoht on juba m\u00e4\u00e4ratud"
+        },
+        "error": {
+            "invalid_hosts": "Sobimatud hostid"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "exclude": "V\u00f5rguaadressid (komadega eraldatud), mis tuleb skaneerimisest v\u00e4lja j\u00e4tta",
+                    "home_interval": "Minimaalne minutite arv aktiivsete seadmete skaneerimise vahel (aku s\u00e4ilitamine)",
+                    "hosts": "Skaneeritavad v\u00f5rgu aadressid (komadega eraldatud)",
+                    "scan_options": "Nmapi algseadistavad skaneerimisvalikud"
+                },
+                "description": "Konfigureeri hostid, mida Nmap skannib. V\u00f5rguaadress ja v\u00e4ljaj\u00e4etud v\u00f5ivad olla IP-aadressid (192.168.1.1), IP-v\u00f5rgud (192.168.0.0/24) v\u00f5i IP-vahemikud (192.168.1.0-32)."
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "invalid_hosts": "Vigased hostid"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "exclude": "V\u00e4listatud IP aadresside vahemik (komadega eraldatud list)",
+                    "home_interval": "Minimaalne sk\u00e4nnimiste intervall minutites (eeldus on aku s\u00e4\u00e4stmine)",
+                    "hosts": "V\u00f5rguaadresside vahemik (komaga eraldatud)",
+                    "scan_options": "Vaikimisi Nmap sk\u00e4nnimise valikud"
+                },
+                "description": "Vali Nmap poolt sk\u00e4nnitavad hostid. Valikuks on IP aadressid (192.168.1.1), v\u00f5rgud (192.168.0.0/24)  v\u00f5i IP vahemikud (192.168.1.0-32)."
+            }
+        }
+    },
+    "title": "Nmap asukoht"
+}

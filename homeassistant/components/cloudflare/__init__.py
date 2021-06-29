@@ -14,18 +14,12 @@ from pycfdns.exceptions import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_TOKEN, CONF_ZONE
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
 
-from .const import (
-    CONF_RECORDS,
-    DATA_UNDO_UPDATE_INTERVAL,
-    DEFAULT_UPDATE_INTERVAL,
-    DOMAIN,
-    SERVICE_UPDATE_RECORDS,
-)
+from .const import CONF_RECORDS, DEFAULT_UPDATE_INTERVAL, DOMAIN, SERVICE_UPDATE_RECORDS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,9 +37,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         zone_id = await cfupdate.get_zone_id()
-    except CloudflareAuthenticationException:
-        _LOGGER.error("API access forbidden. Please reauthenticate")
-        return False
+    except CloudflareAuthenticationException as error:
+        raise ConfigEntryAuthFailed from error
     except CloudflareConnectionException as error:
         raise ConfigEntryNotReady from error
 
@@ -64,12 +57,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             _LOGGER.error("Error updating zone %s: %s", entry.data[CONF_ZONE], error)
 
     update_interval = timedelta(minutes=DEFAULT_UPDATE_INTERVAL)
-    undo_interval = async_track_time_interval(hass, update_records, update_interval)
+    entry.async_on_unload(
+        async_track_time_interval(hass, update_records, update_interval)
+    )
 
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = {
-        DATA_UNDO_UPDATE_INTERVAL: undo_interval,
-    }
+    hass.data[DOMAIN][entry.entry_id] = {}
 
     hass.services.async_register(DOMAIN, SERVICE_UPDATE_RECORDS, update_records_service)
 
@@ -78,7 +71,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload Cloudflare config entry."""
-    hass.data[DOMAIN][entry.entry_id][DATA_UNDO_UPDATE_INTERVAL]()
     hass.data[DOMAIN].pop(entry.entry_id)
 
     return True

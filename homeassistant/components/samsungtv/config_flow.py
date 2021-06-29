@@ -52,6 +52,7 @@ def _strip_uuid(udn):
 
 
 def _entry_is_complete(entry):
+    """Return True if the config entry information is complete."""
     return bool(entry.unique_id and entry.data.get(CONF_MAC))
 
 

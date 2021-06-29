@@ -12,6 +12,7 @@ import voluptuous as vol
 
 from homeassistant.components.notify import (
     ATTR_DATA,
+    ATTR_TARGET,
     ATTR_TITLE,
     ATTR_TITLE_DEFAULT,
     PLATFORM_SCHEMA,
@@ -182,7 +183,11 @@ class MailNotificationService(BaseNotificationService):
             msg = _build_text_msg(message)
 
         msg["Subject"] = subject
-        msg["To"] = ",".join(self.recipients)
+
+        recipients = kwargs.get(ATTR_TARGET)
+        if not recipients:
+            recipients = self.recipients
+        msg["To"] = recipients if isinstance(recipients, str) else ",".join(recipients)
         if self._sender_name:
             msg["From"] = f"{self._sender_name} <{self._sender}>"
         else:
@@ -191,14 +196,14 @@ class MailNotificationService(BaseNotificationService):
         msg["Date"] = email.utils.format_datetime(dt_util.now())
         msg["Message-Id"] = email.utils.make_msgid()
 
-        return self._send_email(msg)
+        return self._send_email(msg, recipients)
 
-    def _send_email(self, msg):
+    def _send_email(self, msg, recipients):
         """Send the message."""
         mail = self.connect()
         for _ in range(self.tries):
             try:
-                mail.sendmail(self._sender, self.recipients, msg.as_string())
+                mail.sendmail(self._sender, recipients, msg.as_string())
                 break
             except smtplib.SMTPServerDisconnected:
                 _LOGGER.warning(

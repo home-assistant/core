@@ -13,7 +13,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
 )
 from homeassistant.const import ELECTRICAL_CURRENT_AMPERE, POWER_WATT
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import DiscoveryInfoType, StateType
@@ -124,8 +124,8 @@ class SwitcherSensorEntity(SensorEntity):
             )
         )
 
-    async def async_update_data(self, device_data: SwitcherV2Device) -> None:
+    @callback
+    def async_update_data(self, device_data: SwitcherV2Device) -> None:
         """Update the entity data."""
-        if device_data:
-            self._device_data = device_data
-            self.async_write_ha_state()
+        self._device_data = device_data
+        self.async_write_ha_state()

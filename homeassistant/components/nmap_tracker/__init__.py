@@ -250,9 +250,7 @@ class NmapDeviceScanner:
             except PortScannerError as ex:
                 _LOGGER.error("Nmap scanning failed: %s", ex)
 
-        _LOGGER.warning("Finished scan")
         if not self._finished_first_scan:
-            _LOGGER.warning("Finished first scan")
             self._finished_first_scan = True
             await self._async_mark_missing_devices_as_not_home()
 
