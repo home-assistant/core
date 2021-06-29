@@ -257,7 +257,7 @@ async def test_import_config_invalid_token(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] == "form"
-    assert result["step_id"] == "manual"
+    assert result["step_id"] == "link"
     assert result["errors"] == {"base": "invalid_token"}
 
 
