@@ -5,9 +5,11 @@ from datetime import datetime
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import TIME_SECONDS
+from homeassistant.const import DEVICE_CLASS_TIMESTAMP
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
+from homeassistant.util import dt as dt_util
 
 from . import ModernFormsDataUpdateCoordinator, ModernFormsDeviceEntity
 from .const import CLEAR_TIMER, DOMAIN
@@ -45,7 +47,6 @@ class ModernFormsSensor(ModernFormsDeviceEntity, SensorEntity):
         name: str,
         icon: str,
         key: str,
-        unit_of_measure: str,
     ) -> None:
         """Initialize Modern Forms switch."""
         self._key = key
@@ -53,7 +54,6 @@ class ModernFormsSensor(ModernFormsDeviceEntity, SensorEntity):
             entry_id=entry_id, coordinator=coordinator, name=name, icon=icon
         )
         self._attr_unique_id = f"{self.coordinator.data.info.mac_address}_{self._key}"
-        self._attr_unit_of_measurement = unit_of_measure
 
 
 class ModernFormsLightTimerRemainingTimeSensor(ModernFormsSensor):
@@ -68,21 +68,23 @@ class ModernFormsLightTimerRemainingTimeSensor(ModernFormsSensor):
             entry_id=entry_id,
             icon="mdi:timer-outline",
             key="light_timer_remaining_time",
-            name=f"{coordinator.data.info.device_name} Light Timer Remaining Time",
-            unit_of_measure=TIME_SECONDS,
+            name=f"{coordinator.data.info.device_name} Light Sleep Time",
         )
+        self._attr_device_class = DEVICE_CLASS_TIMESTAMP
 
     @property
-    def state(self) -> str:
+    def state(self) -> StateType:
         """Return the state of the sensor."""
-        if self.coordinator.data.state.light_sleep_timer == CLEAR_TIMER:
-            return str(CLEAR_TIMER)
-
-        difference = (
-            datetime.fromtimestamp(self.coordinator.data.state.light_sleep_timer)
-            - datetime.now()
+        sleep_time: datetime = dt_util.utc_from_timestamp(
+            self.coordinator.data.state.light_sleep_timer
         )
-        return str(round(difference.total_seconds()))
+        if (
+            self.coordinator.data.state.light_sleep_timer == CLEAR_TIMER
+            or (sleep_time - dt_util.utcnow()).total_seconds() < 0
+        ):
+            return None
+        else:
+            return sleep_time.isoformat()
 
 
 class ModernFormsFanTimerRemainingTimeSensor(ModernFormsSensor):
@@ -97,18 +99,21 @@ class ModernFormsFanTimerRemainingTimeSensor(ModernFormsSensor):
             entry_id=entry_id,
             icon="mdi:timer-outline",
             key="fan_timer_remaining_time",
-            name=f"{coordinator.data.info.device_name} Fan Timer Remaining Time",
-            unit_of_measure=TIME_SECONDS,
+            name=f"{coordinator.data.info.device_name} Fan Sleep Time",
         )
+        self._attr_device_class = DEVICE_CLASS_TIMESTAMP
 
     @property
-    def state(self) -> str:
+    def state(self) -> StateType:
         """Return the state of the sensor."""
-        if self.coordinator.data.state.fan_sleep_timer == CLEAR_TIMER:
-            return str(CLEAR_TIMER)
-
-        difference = (
-            datetime.fromtimestamp(self.coordinator.data.state.fan_sleep_timer)
-            - datetime.now()
+        sleep_time: datetime = dt_util.utc_from_timestamp(
+            self.coordinator.data.state.fan_sleep_timer
         )
-        return str(round(difference.total_seconds()))
+
+        if (
+            self.coordinator.data.state.fan_sleep_timer == CLEAR_TIMER
+            or (sleep_time - dt_util.utcnow()).total_seconds() < 0
+        ):
+            return None
+        else:
+            return sleep_time.isoformat()
