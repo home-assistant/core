@@ -127,8 +127,8 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         # Entity class attributes
         self._attr_supported_features = 0
         if (
-            self._duration is not None
-            and "transitionDuration" in self._duration.metadata.value_change_options
+            self._target_value is not None
+            and "transitionDuration" in self._target_value.metadata.value_change_options
         ):
             self._attr_supported_features |= SUPPORT_TRANSITION
 
