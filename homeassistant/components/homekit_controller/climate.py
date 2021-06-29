@@ -376,7 +376,7 @@ class HomeKitClimateEntity(HomeKitEntity, ClimateEntity):
                 }
             )
         else:
-            chars.update({CharacteristicsTypes.TEMPERATURE_TARGET: temp})
+            chars[CharacteristicsTypes.TEMPERATURE_TARGET] = temp
 
         await self.async_put_characteristics(chars)
 
