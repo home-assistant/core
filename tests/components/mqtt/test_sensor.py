@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 import pytest
 
+from homeassistant.components.mqtt.sensor import MQTT_SENSOR_ATTRIBUTES_BLOCKED
 import homeassistant.components.sensor as sensor
 from homeassistant.const import EVENT_STATE_CHANGED, STATE_UNAVAILABLE
 import homeassistant.core as ha
@@ -535,7 +536,7 @@ async def test_setting_attribute_via_mqtt_json_message(hass, mqtt_mock):
 async def test_setting_blocked_attribute_via_mqtt_json_message(hass, mqtt_mock):
     """Test the setting of attribute via MQTT with JSON payload."""
     await help_test_setting_blocked_attribute_via_mqtt_json_message(
-        hass, mqtt_mock, sensor.DOMAIN, DEFAULT_CONFIG, None
+        hass, mqtt_mock, sensor.DOMAIN, DEFAULT_CONFIG, MQTT_SENSOR_ATTRIBUTES_BLOCKED
     )
 
 
