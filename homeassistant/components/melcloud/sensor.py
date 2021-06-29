@@ -121,15 +121,12 @@ class MelDeviceSensor(SensorEntity):
     def __init__(self, api: MelCloudDevice, measurement, definition):
         """Initialize the sensor."""
         self._api = api
-        self._measurement = measurement
         self._def = definition
 
         self._attr_device_class = definition[ATTR_DEVICE_CLASS]
         self._attr_icon = definition[ATTR_ICON]
         self._attr_name = f"{api.name} {definition[ATTR_MEASUREMENT_NAME]}"
-        self._attr_unique_id = (
-            f"{self._api.device.serial}-{self._api.device.mac}-{self._measurement}"
-        )
+        self._attr_unique_id = f"{api.device.serial}-{api.device.mac}-{measurement}"
         self._attr_unit_of_measurement = definition[ATTR_UNIT]
         self._attr_state_class = STATE_CLASS_MEASUREMENT
 
