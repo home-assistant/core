@@ -506,11 +506,8 @@ async def help_test_setting_blocked_attribute_via_mqtt_json_message(
     # Add JSON attributes settings to config
     config = copy.deepcopy(config)
     config[domain]["json_attributes_topic"] = "attr-topic"
-    assert await async_setup_component(
-        hass,
-        domain,
-        config,
-    )
+    data = json.dumps(config[domain])
+    async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", data)
     await hass.async_block_till_done()
     val = "abc123"
 
