@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import logging
 
-from pynanoleaf import Nanoleaf, Unavailable
+from pynanoleaf import Unavailable
 import voluptuous as vol
 
 from homeassistant.components.light import (
@@ -20,7 +20,6 @@ from homeassistant.components.light import (
     SUPPORT_TRANSITION,
     LightEntity,
 )
-from homeassistant.components.nanoleaf.util import pynanoleaf_get_info
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TOKEN
 from homeassistant.core import HomeAssistant
@@ -32,7 +31,7 @@ from homeassistant.util.color import (
     color_temperature_mired_to_kelvin as mired_to_kelvin,
 )
 
-from .const import DOMAIN
+from .const import DEVICE, DOMAIN, NAME, SERIAL_NO
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -75,12 +74,8 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Nanoleaf light."""
-    nanoleaf = Nanoleaf(entry.data[CONF_HOST])
-    nanoleaf.token = entry.data[CONF_TOKEN]
-    info = await hass.async_add_executor_job(pynanoleaf_get_info, nanoleaf)
-    name = info["name"]
-    serial_no = info["serialNo"]
-    add_entities([NanoleafLight(nanoleaf, name, serial_no)], True)
+    data = hass.data[DOMAIN][entry.entry_id]
+    add_entities([NanoleafLight(data[DEVICE], data[NAME], data[SERIAL_NO])], True)
 
 
 class NanoleafLight(LightEntity):
