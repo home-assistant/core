@@ -181,10 +181,6 @@ class RuntimeEntryData:
 
         self.store.async_delay_save(_memorized_storage, SAVE_DELAY)
 
-    async def async_remove_store(self) -> None:
-        """Permanently delete the store data from the filesystem."""
-        await self.store.async_remove()
-
 
 def _attr_obj_from_dict(cls, **kwargs):
     return cls(**{key: kwargs[key] for key in attr.fields_dict(cls) if key in kwargs})

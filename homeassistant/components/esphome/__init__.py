@@ -48,6 +48,8 @@ from homeassistant.helpers.template import Template
 from .entry_data import RuntimeEntryData
 
 DOMAIN = "esphome"
+# hass.data key under which to store `Store` instances for unloaded entries.
+KEY_UNLOADED_STORES = "esphome.unloaded_stores"
 _LOGGER = logging.getLogger(__name__)
 _T = TypeVar("_T")
 
@@ -75,9 +77,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     # Store client in per-config-entry hass.data
-    store = Store(
-        hass, STORAGE_VERSION, f"esphome.{entry.entry_id}", encoder=JSONEncoder
-    )
+    store = _get_store(hass, entry)
     entry_data = hass.data[DOMAIN][entry.entry_id] = RuntimeEntryData(
         client=cli, entry_id=entry.entry_id, store=store
     )
@@ -627,9 +627,26 @@ async def _cleanup_instance(
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload an esphome config entry."""
     entry_data = await _cleanup_instance(hass, entry)
-    await entry_data.async_remove_store()
+
+    # Persist store instance so that it's re-used when removing or loading again
+    # Otherwise race conditions could occur with two separate stores pointing to the same path
+    unloaded_stores: dict[str, Store] = hass.data.setdefault(KEY_UNLOADED_STORES, {})
+    unloaded_stores[entry.entry_id] = entry_data.store
+
     return await hass.config_entries.async_unload_platforms(
         entry, entry_data.loaded_platforms
+    )
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Remove an esphome config entry."""
+    await _get_store(hass, entry).async_remove()
+
+
+def _get_store(hass: HomeAssistant, entry: ConfigEntry) -> Store:
+    return hass.data.get(KEY_UNLOADED_STORES, {}).get(
+        entry.entry_id,
+        Store(hass, STORAGE_VERSION, f"esphome.{entry.entry_id}", encoder=JSONEncoder),
     )
 
 
