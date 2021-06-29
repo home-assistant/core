@@ -99,7 +99,6 @@ from .const import (
     DATA_TYPE_UINT,
     DEFAULT_HUB,
     DEFAULT_SCAN_INTERVAL,
-    DEFAULT_STRUCTURE_PREFIX,
     DEFAULT_TEMP_UNIT,
     MODBUS_DOMAIN as DOMAIN,
 )
@@ -193,30 +192,13 @@ BASE_SWITCH_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
 
 CLIMATE_SCHEMA = vol.All(
     cv.deprecated(CONF_DATA_COUNT, replacement_key=CONF_COUNT),
-    BASE_COMPONENT_SCHEMA.extend(
+    BASE_STRUCT_SCHEMA.extend(
         {
-            vol.Optional(CONF_INPUT_TYPE, default=CALL_TYPE_REGISTER_HOLDING): vol.In(
-                [
-                    CALL_TYPE_REGISTER_HOLDING,
-                    CALL_TYPE_REGISTER_INPUT,
-                ]
-            ),
             vol.Required(CONF_TARGET_TEMP): cv.positive_int,
-            vol.Optional(CONF_COUNT, default=2): cv.positive_int,
-            vol.Optional(CONF_DATA_TYPE, default=DATA_TYPE_FLOAT): vol.In(
-                [DATA_TYPE_INT, DATA_TYPE_UINT, DATA_TYPE_FLOAT, DATA_TYPE_CUSTOM]
-            ),
-            vol.Optional(CONF_PRECISION, default=1): cv.positive_int,
-            vol.Optional(CONF_SCALE, default=1): vol.Coerce(float),
-            vol.Optional(CONF_OFFSET, default=0): vol.Coerce(float),
             vol.Optional(CONF_MAX_TEMP, default=35): cv.positive_int,
             vol.Optional(CONF_MIN_TEMP, default=5): cv.positive_int,
             vol.Optional(CONF_STEP, default=0.5): vol.Coerce(float),
-            vol.Optional(CONF_STRUCTURE, default=DEFAULT_STRUCTURE_PREFIX): cv.string,
             vol.Optional(CONF_TEMPERATURE_UNIT, default=DEFAULT_TEMP_UNIT): cv.string,
-            vol.Optional(CONF_SWAP, default=CONF_SWAP_NONE): vol.In(
-                [CONF_SWAP_NONE, CONF_SWAP_BYTE, CONF_SWAP_WORD, CONF_SWAP_WORD_BYTE]
-            ),
         }
     ),
 )
