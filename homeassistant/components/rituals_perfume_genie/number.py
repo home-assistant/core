@@ -37,6 +37,10 @@ async def async_setup_entry(
 class DiffuserPerfumeAmount(DiffuserEntity, NumberEntity):
     """Representation of a diffuser perfume amount number."""
 
+    _attr_icon = "mdi:gauge"
+    _attr_max_value = MAX_PERFUME_AMOUNT
+    _attr_min_value = MIN_PERFUME_AMOUNT
+
     def __init__(
         self, diffuser: Diffuser, coordinator: RitualsDataUpdateCoordinator
     ) -> None:
@@ -44,24 +48,9 @@ class DiffuserPerfumeAmount(DiffuserEntity, NumberEntity):
         super().__init__(diffuser, coordinator, PERFUME_AMOUNT_SUFFIX)
 
     @property
-    def icon(self) -> str:
-        """Return the icon of the perfume amount entity."""
-        return "mdi:gauge"
-
-    @property
     def value(self) -> int:
         """Return the current perfume amount."""
         return self._diffuser.perfume_amount
-
-    @property
-    def min_value(self) -> int:
-        """Return the minimum perfume amount."""
-        return MIN_PERFUME_AMOUNT
-
-    @property
-    def max_value(self) -> int:
-        """Return the maximum perfume amount."""
-        return MAX_PERFUME_AMOUNT
 
     async def async_set_value(self, value: float) -> None:
         """Set the perfume amount."""
