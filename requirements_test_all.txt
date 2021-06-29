@@ -100,7 +100,7 @@ aioeafm==0.1.2
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==4.0.0
+aioesphomeapi==4.0.1
 
 # homeassistant.components.flo
 aioflo==0.4.1
