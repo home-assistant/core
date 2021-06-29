@@ -12,7 +12,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from .const import CONF_FLIPR_IDS, DOMAIN, MANUFACTURER, NAME
+from .const import CONF_FLIPR_ID, DOMAIN, MANUFACTURER, NAME
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,17 +24,11 @@ PLATFORMS = ["sensor"]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Flipr from a config entry."""
-
     hass.data.setdefault(DOMAIN, {})
 
-    flipr_ids = entry.data[CONF_FLIPR_IDS]
-
-    # Create all flipr_ids coordinators & devices present in the ConfigEntry
-    hass.data[DOMAIN][entry.entry_id] = {}
-    for flipr_id in flipr_ids:
-        coordinator = FliprDataUpdateCoordinator(hass, entry, flipr_id)
-        await coordinator.async_config_entry_first_refresh()
-        hass.data[DOMAIN][entry.entry_id][flipr_id] = coordinator
+    coordinator = FliprDataUpdateCoordinator(hass, entry)
+    await coordinator.async_config_entry_first_refresh()
+    hass.data[DOMAIN][entry.entry_id] = coordinator
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
@@ -54,11 +48,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
 class FliprDataUpdateCoordinator(DataUpdateCoordinator):
     """Class to hold Flipr data retrieval."""
 
-    def __init__(self, hass, entry, flipr_id):
+    def __init__(self, hass, entry):
         """Initialize."""
         username = entry.data[CONF_EMAIL]
         password = entry.data[CONF_PASSWORD]
-        self.flipr_id = flipr_id
+        self.flipr_id = entry.data[CONF_FLIPR_ID]
 
         _LOGGER.debug("Config entry values : %s, %s", username, self.flipr_id)
 

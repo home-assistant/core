@@ -2,7 +2,7 @@
 from datetime import datetime
 from unittest.mock import patch
 
-from homeassistant.components.flipr.const import CONF_FLIPR_IDS, DOMAIN
+from homeassistant.components.flipr.const import CONF_FLIPR_ID, DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
     ATTR_ICON,
@@ -37,7 +37,7 @@ async def test_sensors(hass: HomeAssistant) -> None:
         data={
             CONF_EMAIL: "toto@toto.com",
             CONF_PASSWORD: "myPassword",
-            CONF_FLIPR_IDS: ["myfliprid"],
+            CONF_FLIPR_ID: "myfliprid",
         },
     )
 

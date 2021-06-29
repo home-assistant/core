@@ -8,7 +8,7 @@ from homeassistant.const import (
 from homeassistant.helpers.entity import Entity
 
 from . import FliprEntity
-from .const import ATTRIBUTION, CONF_FLIPR_IDS, DOMAIN
+from .const import ATTRIBUTION, CONF_FLIPR_ID, DOMAIN
 
 SENSORS = {
     "chlorine": {
@@ -41,16 +41,14 @@ SENSORS = {
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Defer sensor setup to the shared sensor module."""
-    flipr_ids = config_entry.data[CONF_FLIPR_IDS]
+    flipr_id = config_entry.data[CONF_FLIPR_ID]
+    coordinator = hass.data[DOMAIN][config_entry.entry_id]
 
-    for flipr_id in flipr_ids:
-        coordinator = hass.data[DOMAIN][config_entry.entry_id][flipr_id]
+    sensors_list = []
+    for sensor in SENSORS:
+        sensors_list.append(FliprSensor(coordinator, flipr_id, sensor))
 
-        sensors_list = []
-        for sensor in SENSORS:
-            sensors_list.append(FliprSensor(coordinator, flipr_id, sensor))
-
-        async_add_entities(sensors_list, True)
+    async_add_entities(sensors_list, True)
 
 
 class FliprSensor(FliprEntity, Entity):

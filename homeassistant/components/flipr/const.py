@@ -2,7 +2,7 @@
 
 DOMAIN = "flipr"
 
-CONF_FLIPR_IDS = "flipr_ids"
+CONF_FLIPR_ID = "flipr_id"
 
 ATTRIBUTION = "Flipr Data"
 
