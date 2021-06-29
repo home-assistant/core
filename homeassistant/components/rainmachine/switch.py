@@ -87,7 +87,6 @@ SPRINKLER_TYPE_MAP = {
     2: "Rotors",
     3: "Surface Drip",
     4: "Bubblers Drip",
-    5: "Rotors High Rate",
     99: "Other",
 }
 
@@ -95,7 +94,6 @@ SUN_EXPOSURE_MAP = {0: "Not Set", 1: "Full Sun", 2: "Partial Shade", 3: "Full Sh
 
 VEGETATION_MAP = {
     0: "Not Set",
-    1: "Not Set",
     2: "Cool Season Grass",
     3: "Fruit Trees",
     4: "Flowers",
