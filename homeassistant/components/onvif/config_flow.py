@@ -149,11 +149,15 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_configure()
 
-    async def async_step_configure(self, user_input=None, errors=None):
+    async def async_step_configure(self, user_input=None):
         """Device configuration."""
+        errors = {}
         if user_input:
             self.onvif_config = user_input
-            return await self.async_step_profiles()
+            try:
+                return await self.async_setup_profiles()
+            except Fault:
+                errors["base"] = "cannot_connect"
 
         def conf(name, default=None):
             return self.onvif_config.get(name, default)
@@ -176,10 +180,8 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_profiles(self, user_input=None):
+    async def async_setup_profiles(self):
         """Fetch ONVIF device profiles."""
-        errors = {}
-
         LOGGER.debug(
             "Fetching profiles from ONVIF device %s", pformat(self.onvif_config)
         )
@@ -256,18 +258,12 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             )
             return self.async_abort(reason="onvif_error")
 
-        except Fault:
-            errors["base"] = "cannot_connect"
-
         finally:
             await device.close()
 
-        return await self.async_step_configure(errors=errors)
-
     async def async_step_import(self, user_input):
         """Handle import."""
-        self.onvif_config = user_input
-        return await self.async_step_profiles()
+        return await self.async_step_configure(user_input)
 
 
 class OnvifOptionsFlowHandler(config_entries.OptionsFlow):
