@@ -11,7 +11,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import utcnow
 
-from . import IPPEntity
 from .const import (
     ATTR_COMMAND_SET,
     ATTR_INFO,
@@ -25,7 +24,7 @@ from .const import (
     DOMAIN,
 )
 from .coordinator import IPPDataUpdateCoordinator
-
+from .entity import IPPEntity
 
 async def async_setup_entry(
     hass: HomeAssistant,
