@@ -83,8 +83,7 @@ class ModernFormsLightTimerRemainingTimeSensor(ModernFormsSensor):
             or (sleep_time - dt_util.utcnow()).total_seconds() < 0
         ):
             return None
-        else:
-            return sleep_time.isoformat()
+        return sleep_time.isoformat()
 
 
 class ModernFormsFanTimerRemainingTimeSensor(ModernFormsSensor):
@@ -115,5 +114,5 @@ class ModernFormsFanTimerRemainingTimeSensor(ModernFormsSensor):
             or (sleep_time - dt_util.utcnow()).total_seconds() < 0
         ):
             return None
-        else:
-            return sleep_time.isoformat()
+
+        return sleep_time.isoformat()
