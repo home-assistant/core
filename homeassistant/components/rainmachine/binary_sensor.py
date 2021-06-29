@@ -161,10 +161,6 @@ class CurrentRestrictionsBinarySensor(RainMachineBinarySensor):
         """Update the state."""
         if self._sensor_type == TYPE_FREEZE:
             self._state = self.coordinator.data["freeze"]
-        elif self._sensor_type == TYPE_FREEZE_PROTECTION:
-            self._state = self.coordinator.data["freezeProtectEnabled"]
-        elif self._sensor_type == TYPE_HOT_DAYS:
-            self._state = self.coordinator.data["hotDaysExtraWatering"]
         elif self._sensor_type == TYPE_HOURLY:
             self._state = self.coordinator.data["hourly"]
         elif self._sensor_type == TYPE_MONTH:
@@ -205,3 +201,7 @@ class UniversalRestrictionsBinarySensor(RainMachineBinarySensor):
         """Update the state."""
         if self._sensor_type == TYPE_FLOW_SENSOR:
             self._state = self.coordinator.data["system"].get("useFlowSensor")
+        elif self._sensor_type == TYPE_FREEZE_PROTECTION:
+            self._state = self.coordinator.data["freezeProtectEnabled"]
+        elif self._sensor_type == TYPE_HOT_DAYS:
+            self._state = self.coordinator.data["hotDaysExtraWatering"]
