@@ -3,7 +3,7 @@
   "name": "Nmap Tracker",
   "documentation": "https://www.home-assistant.io/integrations/nmap_tracker",
   "requirements": [
-    "python-nmap==0.6.4",
+    "netmap==0.7.0.2",
     "getmac==0.8.2",
     "ifaddr==0.1.7",
     "mac-vendor-lookup==0.1.11"
