@@ -68,11 +68,11 @@ class RuntimeEntryData:
     services: dict[int, UserService] = field(default_factory=dict)
     available: bool = False
     device_info: DeviceInfo | None = None
+    api_version: APIVersion = field(default_factory=APIVersion)
     cleanup_callbacks: list[Callable[[], None]] = field(default_factory=list)
     disconnect_callbacks: list[Callable[[], None]] = field(default_factory=list)
     loaded_platforms: set[str] = field(default_factory=set)
     platform_load_lock: asyncio.Lock = field(default_factory=asyncio.Lock)
-    api_version: APIVersion = field(default_factory=APIVersion)
     _storage_contents: dict | None = None
 
     @callback
