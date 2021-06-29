@@ -92,6 +92,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
             )
 
+        self._async_abort_entries_match({CONF_API_KEY: user_input[CONF_API_KEY]})
+
         options = {}
 
         if CONF_OPTIONS in user_input:
@@ -99,8 +101,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             info = await validate_api(self.hass, user_input)
-        except AlreadyConfigured:
-            return self.async_abort(reason="already_configured")
         except CannotConnect:
             errors["base"] = "cannot_connect"
         except InvalidAuth:
@@ -118,8 +118,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, config):
         """Handle import of Coinbase config from YAML."""
-
-        self._async_abort_entries_match({CONF_API_KEY: config[CONF_API_KEY]})
 
         cleaned_data = {
             CONF_API_KEY: config[CONF_API_KEY],
