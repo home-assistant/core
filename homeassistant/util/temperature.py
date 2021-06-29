@@ -51,19 +51,17 @@ def convert(
     if from_unit == TEMP_CELSIUS:
         if to_unit == TEMP_FAHRENHEIT:
             return celsius_to_fahrenheit(temperature, interval)
-        else:  # kelvin
-            return celsius_to_kelvin(temperature, interval)
+        # kelvin
+        return celsius_to_kelvin(temperature, interval)
 
     if from_unit == TEMP_FAHRENHEIT:
         if to_unit == TEMP_CELSIUS:
             return fahrenheit_to_celsius(temperature, interval)
-        else:  # kelvin
-            return celsius_to_kelvin(
-                fahrenheit_to_celsius(temperature, interval), interval
-            )
+        # kelvin
+        return celsius_to_kelvin(fahrenheit_to_celsius(temperature, interval), interval)
 
     # from_unit == kelvin
     if to_unit == TEMP_CELSIUS:
         return kelvin_to_celsius(temperature, interval)
-    else:  # fahrenheit
-        return celsius_to_fahrenheit(kelvin_to_celsius(temperature, interval), interval)
+    # fahrenheit
+    return celsius_to_fahrenheit(kelvin_to_celsius(temperature, interval), interval)
