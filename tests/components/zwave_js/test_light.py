@@ -413,7 +413,7 @@ async def test_light(hass, client, bulb_6_multi_color, integration):
         data={
             "source": "node",
             "event": "value updated",
-            "nodeId": 37,
+            "nodeId": 39,
             "args": {
                 "commandClassName": "Color Switch",
                 "commandClass": 51,
