@@ -59,6 +59,8 @@ class ModernFormsBinarySensor(ModernFormsDeviceEntity, BinarySensorEntity):
 class ModernFormsLightSleepTimerActive(ModernFormsBinarySensor):
     """Defines a Modern Forms Light Sleep Timer Active sensor."""
 
+    _attr_entity_registry_enabled_default = False
+
     def __init__(
         self, entry_id: str, coordinator: ModernFormsDataUpdateCoordinator
     ) -> None:
@@ -88,6 +90,8 @@ class ModernFormsLightSleepTimerActive(ModernFormsBinarySensor):
 
 class ModernFormsFanSleepTimerActive(ModernFormsBinarySensor):
     """Defines a Modern Forms Fan Sleep Timer Active sensor."""
+
+    _attr_entity_registry_enabled_default = False
 
     def __init__(
         self, entry_id: str, coordinator: ModernFormsDataUpdateCoordinator
