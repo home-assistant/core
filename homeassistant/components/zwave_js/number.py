@@ -71,7 +71,7 @@ class ZwaveNumberEntity(ZWaveBaseEntity, NumberEntity):
         return float(self.info.primary_value.metadata.max)
 
     @property
-    def value(self) -> float | None:  # type: ignore
+    def value(self) -> float | None:
         """Return the entity value."""
         if self.info.primary_value.value is None:
             return None
