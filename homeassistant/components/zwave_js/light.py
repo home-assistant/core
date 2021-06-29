@@ -115,7 +115,6 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         self._target_color = self.get_zwave_value(
             "targetColor",
             CommandClass.SWITCH_COLOR,
-            value_property_key=None,
         )
 
         self._calculate_color_values()
