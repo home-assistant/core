@@ -271,8 +271,7 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
 
         if (
             transition is not None
-            and self._duration is not None
-            and "transitionDuration" in self._duration.metadata.value_change_options
+            and self._attr_supported_features & SUPPORT_TRANSITION
         ):
             zwave_transition = {TRANSITION_DURATION: f"{transition}s"}
 
@@ -322,8 +321,7 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         zwave_transition = None
         if (
             transition is not None
-            and self._duration is not None
-            and "transitionDuration" in self._duration.metadata.value_change_options
+            and self._attr_supported_features & SUPPORT_TRANSITION
         ):
             zwave_transition = {TRANSITION_DURATION: f"{transition}s"}
 
