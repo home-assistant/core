@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+import os
 from typing import Any, Final
 
 from pynanoleaf import InvalidToken, Nanoleaf, NotAuthorizingNewTokens, Unavailable
@@ -210,21 +211,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
             else:
                 await self.hass.async_add_executor_job(
-                    save_json,
-                    self.hass.config.path(CONFIG_FILE),
-                    {
-                        0: "The Nanoleaf configuration has been imported into a config flow.",
-                        1: "This file is no longer used. YOU CAN DELETE THIS FILE.",
-                        2: "If you used the discovery integration only for Nanoleaf you can remove it from your configuration.yaml",
-                    },
+                    os.remove, self.hass.config.path(CONFIG_FILE)
                 )
                 _LOGGER.warning(
-                    (
-                        "All Nanoleaf devices from the discovery integration are imported. "
-                        "You can remove the '%s' file from your config folder. (This file may be hidden.) "
-                        "If you used the discovery integration only for Nanoleaf you can remove it from your configuration.yaml"
-                    ),
-                    CONFIG_FILE,
+                    "All Nanoleaf devices from the discovery integration are imported. "
+                    "If you used the discovery integration only for Nanoleaf you can remove it from your configuration.yaml"
                 )
 
         return self.async_create_entry(

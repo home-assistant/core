@@ -277,7 +277,7 @@ async def test_import_last_discovery_integration_host_zeroconf(
         "homeassistant.components.nanoleaf.config_flow.pynanoleaf_get_info",
         return_value={"name": TEST_NAME},
     ), patch(
-        "homeassistant.components.nanoleaf.config_flow.save_json",
+        "homeassistant.components.nanoleaf.config_flow.os.remove",
         return_value=None,
     ), patch(
         "homeassistant.components.nanoleaf.async_setup_entry",
