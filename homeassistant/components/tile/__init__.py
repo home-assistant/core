@@ -6,8 +6,10 @@ from pytile import async_login
 from pytile.errors import InvalidAuthError, SessionExpiredError, TileError
 
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import aiohttp_client, entity_registry
+from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers.entity_registry import async_migrate_entries
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.async_ import gather_with_concurrency
 
@@ -33,30 +35,31 @@ async def async_setup_entry(hass, entry):
     hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id] = {}
     hass.data[DOMAIN][DATA_TILE][entry.entry_id] = {}
 
-    # The existence of shared Tiles across multiple accounts requires an entity ID
-    # change:
-    #
-    # Old: tile_{uuid}
-    # New: {username}_{uuid}
-    #
-    # Find any entities with the old format and update them:
-    ent_reg = entity_registry.async_get(hass)
-    for entity in [
-        e
-        for e in ent_reg.entities.values()
-        if e.config_entry_id == entry.entry_id
-        and not e.unique_id.startswith(entry.data[CONF_USERNAME])
-    ]:
+    @callback
+    def async_migrate_callback(entity):
+        """
+        Define a callback to migrate appropriate Tile entities to new unique IDs.
+
+        Old: tile_{uuid}
+        New: {username}_{uuid}
+        """
+        if entity.unique_id.startswith(entry.data[CONF_USERNAME]):
+            return
+
         new_unique_id = f"{entry.data[CONF_USERNAME]}_".join(
             entity.unique_id.split(f"{DOMAIN}_")
         )
+
         LOGGER.debug(
             "Migrating entity %s from old unique ID '%s' to new unique ID '%s'",
             entity.entity_id,
             entity.unique_id,
             new_unique_id,
         )
-        ent_reg.async_update_entity(entity.entity_id, new_unique_id=new_unique_id)
+
+        return {"new_unique_id": new_unique_id}
+
+    await async_migrate_entries(hass, entry.entry_id, async_migrate_callback)
 
     websession = aiohttp_client.async_get_clientsession(hass)
 
