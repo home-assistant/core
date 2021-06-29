@@ -19,16 +19,16 @@ from homeassistant.const import ATTR_SUPPORTED_FEATURES, STATE_OFF, STATE_ON
 
 from .common import (
     AEON_SMART_SWITCH_LIGHT_ENTITY,
-    BULB_LZW42_LIGHT_ENTITY,
+    BULB_6_MULTI_COLOR_LIGHT_ENTITY,
     EATON_RF9640_ENTITY,
     ZEN_31_ENTITY,
 )
 
 
-async def test_light(hass, client, bulb_lzw42, integration):
+async def test_light(hass, client, bulb_6_multi_color, integration):
     """Test the light entity."""
-    node = bulb_lzw42
-    state = hass.states.get(BULB_LZW42_LIGHT_ENTITY)
+    node = bulb_6_multi_color
+    state = hass.states.get(BULB_6_MULTI_COLOR_LIGHT_ENTITY)
 
     assert state
     assert state.state == STATE_OFF
@@ -41,17 +41,16 @@ async def test_light(hass, client, bulb_lzw42, integration):
     await hass.services.async_call(
         "light",
         "turn_on",
-        {"entity_id": BULB_LZW42_LIGHT_ENTITY},
+        {"entity_id": BULB_6_MULTI_COLOR_LIGHT_ENTITY},
         blocking=True,
     )
 
     assert len(client.async_send_command.call_args_list) == 1
     args = client.async_send_command.call_args[0][0]
     assert args["command"] == "node.set_value"
-    assert args["nodeId"] == 37
+    assert args["nodeId"] == 39
     assert args["valueId"] == {
         "commandClassName": "Multilevel Switch",
-        "ccVersion": 0,
         "commandClass": 38,
         "endpoint": 0,
         "property": "targetValue",
@@ -66,7 +65,6 @@ async def test_light(hass, client, bulb_lzw42, integration):
             "label": "Target value",
             "valueChangeOptions": ["transitionDuration"],
         },
-        "value": 0,
     }
     assert args["value"] == 255
 
@@ -76,17 +74,16 @@ async def test_light(hass, client, bulb_lzw42, integration):
     await hass.services.async_call(
         "light",
         "turn_on",
-        {"entity_id": BULB_LZW42_LIGHT_ENTITY, ATTR_TRANSITION: 10},
+        {"entity_id": BULB_6_MULTI_COLOR_LIGHT_ENTITY, ATTR_TRANSITION: 10},
         blocking=True,
     )
 
     assert len(client.async_send_command.call_args_list) == 1
     args = client.async_send_command.call_args[0][0]
     assert args["command"] == "node.set_value"
-    assert args["nodeId"] == 37
+    assert args["nodeId"] == 39
     assert args["valueId"] == {
         "commandClassName": "Multilevel Switch",
-        "ccVersion": 0,
         "commandClass": 38,
         "endpoint": 0,
         "property": "targetValue",
@@ -101,7 +98,6 @@ async def test_light(hass, client, bulb_lzw42, integration):
             "label": "Target value",
             "valueChangeOptions": ["transitionDuration"],
         },
-        "value": 0,
     }
     assert args["value"] == 255
 
@@ -127,7 +123,7 @@ async def test_light(hass, client, bulb_lzw42, integration):
     )
     node.receive_event(event)
 
-    state = hass.states.get(BULB_LZW42_LIGHT_ENTITY)
+    state = hass.states.get(BULB_6_MULTI_COLOR_LIGHT_ENTITY)
     assert state.state == STATE_ON
     assert state.attributes[ATTR_COLOR_MODE] == "color_temp"
     assert state.attributes[ATTR_BRIGHTNESS] == 255
@@ -138,7 +134,7 @@ async def test_light(hass, client, bulb_lzw42, integration):
     await hass.services.async_call(
         "light",
         "turn_on",
-        {"entity_id": BULB_LZW42_LIGHT_ENTITY, ATTR_BRIGHTNESS: 255},
+        {"entity_id": BULB_6_MULTI_COLOR_LIGHT_ENTITY, ATTR_BRIGHTNESS: 255},
         blocking=True,
     )
 
@@ -150,17 +146,16 @@ async def test_light(hass, client, bulb_lzw42, integration):
     await hass.services.async_call(
         "light",
         "turn_on",
-        {"entity_id": BULB_LZW42_LIGHT_ENTITY, ATTR_BRIGHTNESS: 129},
+        {"entity_id": BULB_6_MULTI_COLOR_LIGHT_ENTITY, ATTR_BRIGHTNESS: 129},
         blocking=True,
     )
 
     assert len(client.async_send_command.call_args_list) == 1
     args = client.async_send_command.call_args[0][0]
     assert args["command"] == "node.set_value"
-    assert args["nodeId"] == 37
+    assert args["nodeId"] == 39
     assert args["valueId"] == {
         "commandClassName": "Multilevel Switch",
-        "ccVersion": 0,
         "commandClass": 38,
         "endpoint": 0,
         "property": "targetValue",
@@ -175,7 +170,6 @@ async def test_light(hass, client, bulb_lzw42, integration):
             "label": "Target value",
             "valueChangeOptions": ["transitionDuration"],
         },
-        "value": 0,
     }
     assert args["value"] == 50
 
@@ -186,7 +180,7 @@ async def test_light(hass, client, bulb_lzw42, integration):
         "light",
         "turn_on",
         {
-            "entity_id": BULB_LZW42_LIGHT_ENTITY,
+            "entity_id": BULB_6_MULTI_COLOR_LIGHT_ENTITY,
             ATTR_BRIGHTNESS: 129,
             ATTR_TRANSITION: 20,
         },
@@ -196,10 +190,9 @@ async def test_light(hass, client, bulb_lzw42, integration):
     assert len(client.async_send_command.call_args_list) == 1
     args = client.async_send_command.call_args[0][0]
     assert args["command"] == "node.set_value"
-    assert args["nodeId"] == 37
+    assert args["nodeId"] == 39
     assert args["valueId"] == {
         "commandClassName": "Multilevel Switch",
-        "ccVersion": 0,
         "commandClass": 38,
         "endpoint": 0,
         "property": "targetValue",
@@ -214,7 +207,6 @@ async def test_light(hass, client, bulb_lzw42, integration):
             "label": "Target value",
             "valueChangeOptions": ["transitionDuration"],
         },
-        "value": 0,
     }
     assert args["value"] == 50
 
@@ -224,25 +216,25 @@ async def test_light(hass, client, bulb_lzw42, integration):
     await hass.services.async_call(
         "light",
         "turn_on",
-        {"entity_id": BULB_LZW42_LIGHT_ENTITY, ATTR_RGB_COLOR: (255, 76, 255)},
+        {"entity_id": BULB_6_MULTI_COLOR_LIGHT_ENTITY, ATTR_RGB_COLOR: (255, 76, 255)},
         blocking=True,
     )
 
-    assert len(client.async_send_command.call_args_list) == 2
+    assert len(client.async_send_command.call_args_list) == 6
     warm_args = client.async_send_command.call_args_list[0][0][0]  # red 255
     assert warm_args["command"] == "node.set_value"
-    assert warm_args["nodeId"] == 37
+    assert warm_args["nodeId"] == 39
     assert warm_args["valueId"]["commandClassName"] == "Color Switch"
     assert warm_args["valueId"]["commandClass"] == 51
     assert warm_args["valueId"]["endpoint"] == 0
-    assert warm_args["valueId"]["value"]["red"] == "255"
+    assert warm_args["valueId"]["metadata"]["label"] == "Target value (Red)"
     assert warm_args["valueId"]["property"] == "targetColor"
     assert warm_args["valueId"]["propertyName"] == "targetColor"
-    # assert warm_args["value"] == 255
+    assert warm_args["value"] == 255
 
     cold_args = client.async_send_command.call_args_list[1][0][0]  # green 76
     assert cold_args["command"] == "node.set_value"
-    assert cold_args["nodeId"] == 37
+    assert cold_args["nodeId"] == 39
     assert cold_args["valueId"]["commandClassName"] == "Color Switch"
     assert cold_args["valueId"]["commandClass"] == 51
     assert cold_args["valueId"]["endpoint"] == 0
@@ -252,7 +244,7 @@ async def test_light(hass, client, bulb_lzw42, integration):
     assert cold_args["value"] == 76
     red_args = client.async_send_command.call_args_list[2][0][0]  # blue 255
     assert red_args["command"] == "node.set_value"
-    assert red_args["nodeId"] == 37
+    assert red_args["nodeId"] == 39
     assert red_args["valueId"]["commandClassName"] == "Color Switch"
     assert red_args["valueId"]["commandClass"] == 51
     assert red_args["valueId"]["endpoint"] == 0
@@ -262,7 +254,7 @@ async def test_light(hass, client, bulb_lzw42, integration):
     assert red_args["value"] == 255
     green_args = client.async_send_command.call_args_list[3][0][0]  # warm white 0
     assert green_args["command"] == "node.set_value"
-    assert green_args["nodeId"] == 37
+    assert green_args["nodeId"] == 39
     assert green_args["valueId"]["commandClassName"] == "Color Switch"
     assert green_args["valueId"]["commandClass"] == 51
     assert green_args["valueId"]["endpoint"] == 0
@@ -272,7 +264,7 @@ async def test_light(hass, client, bulb_lzw42, integration):
     assert green_args["value"] == 0
     blue_args = client.async_send_command.call_args_list[4][0][0]  # cold white 0
     assert blue_args["command"] == "node.set_value"
-    assert blue_args["nodeId"] == 37
+    assert blue_args["nodeId"] == 39
     assert blue_args["valueId"]["commandClassName"] == "Color Switch"
     assert blue_args["valueId"]["commandClass"] == 51
     assert blue_args["valueId"]["endpoint"] == 0
@@ -316,7 +308,7 @@ async def test_light(hass, client, bulb_lzw42, integration):
     node.receive_event(green_event)
     node.receive_event(blue_event)
 
-    state = hass.states.get(BULB_LZW42_LIGHT_ENTITY)
+    state = hass.states.get(BULB_6_MULTI_COLOR_LIGHT_ENTITY)
     assert state.state == STATE_ON
     assert state.attributes[ATTR_COLOR_MODE] == "hs"
     assert state.attributes[ATTR_BRIGHTNESS] == 255
@@ -329,7 +321,7 @@ async def test_light(hass, client, bulb_lzw42, integration):
     await hass.services.async_call(
         "light",
         "turn_on",
-        {"entity_id": BULB_LZW42_LIGHT_ENTITY, ATTR_RGB_COLOR: (255, 76, 255)},
+        {"entity_id": BULB_6_MULTI_COLOR_LIGHT_ENTITY, ATTR_RGB_COLOR: (255, 76, 255)},
         blocking=True,
     )
 
@@ -342,7 +334,7 @@ async def test_light(hass, client, bulb_lzw42, integration):
         "light",
         "turn_on",
         {
-            "entity_id": BULB_LZW42_LIGHT_ENTITY,
+            "entity_id": BULB_6_MULTI_COLOR_LIGHT_ENTITY,
             ATTR_RGB_COLOR: (128, 76, 255),
             ATTR_TRANSITION: 20,
         },
@@ -357,14 +349,14 @@ async def test_light(hass, client, bulb_lzw42, integration):
     await hass.services.async_call(
         "light",
         "turn_on",
-        {"entity_id": BULB_LZW42_LIGHT_ENTITY, ATTR_COLOR_TEMP: 170},
+        {"entity_id": BULB_6_MULTI_COLOR_LIGHT_ENTITY, ATTR_COLOR_TEMP: 170},
         blocking=True,
     )
 
     assert len(client.async_send_command.call_args_list) == 6
     red_args = client.async_send_command.call_args_list[0][0][0]  # red 0
     assert red_args["command"] == "node.set_value"
-    assert red_args["nodeId"] == 37
+    assert red_args["nodeId"] == 39
     assert red_args["valueId"]["commandClassName"] == "Color Switch"
     assert red_args["valueId"]["commandClass"] == 51
     assert red_args["valueId"]["endpoint"] == 0
@@ -374,7 +366,7 @@ async def test_light(hass, client, bulb_lzw42, integration):
     assert red_args["value"] == 0
     red_args = client.async_send_command.call_args_list[1][0][0]  # green 0
     assert red_args["command"] == "node.set_value"
-    assert red_args["nodeId"] == 37
+    assert red_args["nodeId"] == 39
     assert red_args["valueId"]["commandClassName"] == "Color Switch"
     assert red_args["valueId"]["commandClass"] == 51
     assert red_args["valueId"]["endpoint"] == 0
@@ -384,7 +376,7 @@ async def test_light(hass, client, bulb_lzw42, integration):
     assert red_args["value"] == 0
     red_args = client.async_send_command.call_args_list[2][0][0]  # blue 0
     assert red_args["command"] == "node.set_value"
-    assert red_args["nodeId"] == 37
+    assert red_args["nodeId"] == 39
     assert red_args["valueId"]["commandClassName"] == "Color Switch"
     assert red_args["valueId"]["commandClass"] == 51
     assert red_args["valueId"]["endpoint"] == 0
@@ -394,7 +386,7 @@ async def test_light(hass, client, bulb_lzw42, integration):
     assert red_args["value"] == 0
     warm_args = client.async_send_command.call_args_list[3][0][0]  # warm white 0
     assert warm_args["command"] == "node.set_value"
-    assert warm_args["nodeId"] == 37
+    assert warm_args["nodeId"] == 39
     assert warm_args["valueId"]["commandClassName"] == "Color Switch"
     assert warm_args["valueId"]["commandClass"] == 51
     assert warm_args["valueId"]["endpoint"] == 0
@@ -404,7 +396,7 @@ async def test_light(hass, client, bulb_lzw42, integration):
     assert warm_args["value"] == 20
     red_args = client.async_send_command.call_args_list[4][0][0]  # cold white
     assert red_args["command"] == "node.set_value"
-    assert red_args["nodeId"] == 37
+    assert red_args["nodeId"] == 39
     assert red_args["valueId"]["commandClassName"] == "Color Switch"
     assert red_args["valueId"]["commandClass"] == 51
     assert red_args["valueId"]["endpoint"] == 0
@@ -455,7 +447,7 @@ async def test_light(hass, client, bulb_lzw42, integration):
     node.receive_event(warm_white_event)
     node.receive_event(cold_white_event)
 
-    state = hass.states.get(BULB_LZW42_LIGHT_ENTITY)
+    state = hass.states.get(BULB_6_MULTI_COLOR_LIGHT_ENTITY)
     assert state.state == STATE_ON
     assert state.attributes[ATTR_COLOR_MODE] == "color_temp"
     assert state.attributes[ATTR_BRIGHTNESS] == 255
@@ -466,7 +458,7 @@ async def test_light(hass, client, bulb_lzw42, integration):
     await hass.services.async_call(
         "light",
         "turn_on",
-        {"entity_id": BULB_LZW42_LIGHT_ENTITY, ATTR_COLOR_TEMP: 170},
+        {"entity_id": BULB_6_MULTI_COLOR_LIGHT_ENTITY, ATTR_COLOR_TEMP: 170},
         blocking=True,
     )
 
@@ -479,7 +471,7 @@ async def test_light(hass, client, bulb_lzw42, integration):
         "light",
         "turn_on",
         {
-            "entity_id": BULB_LZW42_LIGHT_ENTITY,
+            "entity_id": BULB_6_MULTI_COLOR_LIGHT_ENTITY,
             ATTR_COLOR_TEMP: 170,
             ATTR_TRANSITION: 35,
         },
@@ -494,17 +486,16 @@ async def test_light(hass, client, bulb_lzw42, integration):
     await hass.services.async_call(
         "light",
         "turn_off",
-        {"entity_id": BULB_LZW42_LIGHT_ENTITY},
+        {"entity_id": BULB_6_MULTI_COLOR_LIGHT_ENTITY},
         blocking=True,
     )
 
     assert len(client.async_send_command.call_args_list) == 1
     args = client.async_send_command.call_args[0][0]
     assert args["command"] == "node.set_value"
-    assert args["nodeId"] == 37
+    assert args["nodeId"] == 39
     assert args["valueId"] == {
         "commandClassName": "Multilevel Switch",
-        "ccVersion": 0,
         "commandClass": 38,
         "endpoint": 0,
         "property": "targetValue",
@@ -519,7 +510,6 @@ async def test_light(hass, client, bulb_lzw42, integration):
             "label": "Target value",
             "valueChangeOptions": ["transitionDuration"],
         },
-        "value": 0,
     }
     assert args["value"] == 0
 

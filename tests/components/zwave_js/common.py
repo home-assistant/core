@@ -20,7 +20,6 @@ CLIMATE_EUROTRONICS_SPIRIT_Z_ENTITY = "climate.thermostatic_valve"
 CLIMATE_FLOOR_THERMOSTAT_ENTITY = "climate.floor_thermostat"
 CLIMATE_MAIN_HEAT_ACTIONNER = "climate.main_heat_actionner"
 BULB_6_MULTI_COLOR_LIGHT_ENTITY = "light.bulb_6_multi_color"
-BULB_LZW42_LIGHT_ENTITY = "light.multi_color_bulb"
 EATON_RF9640_ENTITY = "light.allloaddimmer"
 AEON_SMART_SWITCH_LIGHT_ENTITY = "light.smart_switch_6"
 ID_LOCK_CONFIG_PARAMETER_SENSOR = (

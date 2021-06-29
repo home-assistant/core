@@ -75,10 +75,13 @@
                 "type": "number",
                 "readable": true,
                 "writeable": true,
+                "label": "Target value",
+                "valueChangeOptions": [
+                  "transitionDuration"
+                ],
                 "min": 0,
-                "max": 99,
-                "label": "Target value"
-            }
+                "max": 99
+              }
         },
         {
             "commandClassName": "Multilevel Switch",
