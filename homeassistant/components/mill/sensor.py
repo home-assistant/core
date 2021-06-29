@@ -8,10 +8,7 @@ from homeassistant.components.sensor import (
 from homeassistant.const import ENERGY_KILO_WATT_HOUR, STATE_UNKNOWN
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN, MANUFACTURER
-
-CONSUMPTION_TODAY = "consumption_today"
-CONSUMPTION_YEAR = "consumption_year"
+from .const import CONSUMPTION_TODAY, CONSUMPTION_YEAR, DOMAIN, MANUFACTURER
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
