@@ -2,20 +2,37 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from typing import Any
+import logging
+from typing import cast
 
-from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorEntity
+from homeassistant.components.sensor import (
+    ATTR_STATE_CLASS,
+    DOMAIN as PLATFORM,
+    SensorEntity,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_ICON
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.dt import utcnow
 
 from . import NAMDataUpdateCoordinator
-from .const import ATTR_ENABLED, ATTR_LABEL, ATTR_UNIT, ATTR_UPTIME, DOMAIN, SENSORS
+from .const import (
+    ATTR_ENABLED,
+    ATTR_LABEL,
+    ATTR_UNIT,
+    ATTR_UPTIME,
+    DOMAIN,
+    MIGRATION_SENSORS,
+    SENSORS,
+)
 
 PARALLEL_UPDATES = 1
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -24,9 +41,24 @@ async def async_setup_entry(
     """Add a Nettigo Air Monitor entities from a config_entry."""
     coordinator: NAMDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
+    # Due to the change of the attribute name of two sensors, it is necessary to migrate
+    # the unique_ids to the new names.
+    ent_reg = entity_registry.async_get(hass)
+    for old_sensor, new_sensor in MIGRATION_SENSORS:
+        old_unique_id = f"{coordinator.unique_id}-{old_sensor}"
+        new_unique_id = f"{coordinator.unique_id}-{new_sensor}"
+        if entity_id := ent_reg.async_get_entity_id(PLATFORM, DOMAIN, old_unique_id):
+            _LOGGER.debug(
+                "Migrating entity %s from old unique ID '%s' to new unique ID '%s'",
+                entity_id,
+                old_unique_id,
+                new_unique_id,
+            )
+            ent_reg.async_update_entity(entity_id, new_unique_id=new_unique_id)
+
     sensors: list[NAMSensor | NAMSensorUptime] = []
     for sensor in SENSORS:
-        if sensor in coordinator.data:
+        if getattr(coordinator.data, sensor) is not None:
             if sensor == ATTR_UPTIME:
                 sensors.append(NAMSensorUptime(coordinator, sensor))
             else:
@@ -55,9 +87,9 @@ class NAMSensor(CoordinatorEntity, SensorEntity):
         self.sensor_type = sensor_type
 
     @property
-    def state(self) -> Any:
+    def state(self) -> StateType:
         """Return the state."""
-        return getattr(self.coordinator.data, self.sensor_type)
+        return cast(StateType, getattr(self.coordinator.data, self.sensor_type))
 
     @property
     def available(self) -> bool:
@@ -67,8 +99,8 @@ class NAMSensor(CoordinatorEntity, SensorEntity):
         # For a short time after booting, the device does not return values for all
         # sensors. For this reason, we mark entities for which data is missing as
         # unavailable.
-        return available and bool(
-            getattr(self.coordinator.data, self.sensor_type, None)
+        return (
+            available and getattr(self.coordinator.data, self.sensor_type) is not None
         )
 
 

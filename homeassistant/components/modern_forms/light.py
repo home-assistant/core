@@ -80,7 +80,7 @@ async def async_setup_entry(
     )
 
 
-class ModernFormsLightEntity(LightEntity, ModernFormsDeviceEntity):
+class ModernFormsLightEntity(ModernFormsDeviceEntity, LightEntity):
     """Defines a Modern Forms light."""
 
     def __init__(

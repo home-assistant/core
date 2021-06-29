@@ -1,0 +1,31 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "azimuth": "Asimuut (360 kraadi, 0 = p\u00f5hi, 90 = ida, 180 = l\u00f5una, 270 = l\u00e4\u00e4s)",
+                    "declination": "Deklinatsioon (0 = horisontaalne, 90 = vertikaalne)",
+                    "latitude": "Laiuskraad",
+                    "longitude": "Pikkuskraad",
+                    "modules power": "P\u00e4ikesemoodulite koguv\u00f5imsus vattides",
+                    "name": "Nimi"
+                },
+                "description": "Sisesta oma p\u00e4ikesepaneelide andmed. Kui v\u00e4li on ebaselge, loe dokumentatsiooni."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "api_key": "Forecast.Solar API v\u00f5ti (valikuline)",
+                    "azimuth": "Asimuut (360 kraadi, 0 = p\u00f5hi, 90 = ida, 180 = l\u00f5una, 270 = l\u00e4\u00e4s)",
+                    "damping": "Summutustegur: reguleerib tulemusi hommikul ja \u00f5htul",
+                    "declination": "Deklinatsioon (0 = horisontaalne, 90 = vertikaalne)",
+                    "modules power": "P\u00e4ikesemoodulite koguv\u00f5imsus vattides"
+                },
+                "description": "Need v\u00e4\u00e4rtused v\u00f5imaldavad muuta Solar.Forecast tulemust. Vaata dokumentatsiooni kui on ebaselge."
+            }
+        }
+    }
+}

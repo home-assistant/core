@@ -10,6 +10,7 @@ from typing import Generic, TypeVar
 from aioesphomeapi import (
     APIClient,
     APIConnectionError,
+    APIVersion,
     DeviceInfo as EsphomeDeviceInfo,
     EntityInfo,
     EntityState,
@@ -206,6 +207,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         nonlocal device_id
         try:
             entry_data.device_info = await cli.device_info()
+            entry_data.api_version = cli.api_version
             entry_data.available = True
             device_id = await _async_setup_device_registry(
                 hass, entry, entry_data.device_info
@@ -784,6 +786,10 @@ class EsphomeBaseEntity(Entity):
     @property
     def _entry_data(self) -> RuntimeEntryData:
         return self.hass.data[DOMAIN][self._entry_id]
+
+    @property
+    def _api_version(self) -> APIVersion:
+        return self._entry_data.api_version
 
     @property
     def _static_info(self) -> EntityInfo:

@@ -235,16 +235,17 @@ EVENT_TIME_CHANGED: Final = "time_changed"
 DEVICE_CLASS_BATTERY: Final = "battery"
 DEVICE_CLASS_CO: Final = "carbon_monoxide"
 DEVICE_CLASS_CO2: Final = "carbon_dioxide"
+DEVICE_CLASS_CURRENT: Final = "current"
+DEVICE_CLASS_ENERGY: Final = "energy"
 DEVICE_CLASS_HUMIDITY: Final = "humidity"
 DEVICE_CLASS_ILLUMINANCE: Final = "illuminance"
+DEVICE_CLASS_MONETARY: Final = "monetary"
+DEVICE_CLASS_POWER_FACTOR: Final = "power_factor"
+DEVICE_CLASS_POWER: Final = "power"
+DEVICE_CLASS_PRESSURE: Final = "pressure"
 DEVICE_CLASS_SIGNAL_STRENGTH: Final = "signal_strength"
 DEVICE_CLASS_TEMPERATURE: Final = "temperature"
 DEVICE_CLASS_TIMESTAMP: Final = "timestamp"
-DEVICE_CLASS_PRESSURE: Final = "pressure"
-DEVICE_CLASS_POWER: Final = "power"
-DEVICE_CLASS_CURRENT: Final = "current"
-DEVICE_CLASS_ENERGY: Final = "energy"
-DEVICE_CLASS_POWER_FACTOR: Final = "power_factor"
 DEVICE_CLASS_VOLTAGE: Final = "voltage"
 
 # #### STATES ####
@@ -493,6 +494,7 @@ PERCENTAGE: Final = "%"
 
 # Irradiation units
 IRRADIATION_WATTS_PER_SQUARE_METER: Final = "W/m²"
+IRRADIATION_BTUS_PER_HOUR_SQUARE_FOOT: Final = "BTU/(h×ft²)"
 
 # Precipitation units
 PRECIPITATION_MILLIMETERS_PER_HOUR: Final = "mm/h"
@@ -500,6 +502,7 @@ PRECIPITATION_MILLIMETERS_PER_HOUR: Final = "mm/h"
 # Concentration units
 CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: Final = "µg/m³"
 CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER: Final = "mg/m³"
+CONCENTRATION_MICROGRAMS_PER_CUBIC_FOOT: Final = "μg/ft³"
 CONCENTRATION_PARTS_PER_CUBIC_METER: Final = "p/m³"
 CONCENTRATION_PARTS_PER_MILLION: Final = "ppm"
 CONCENTRATION_PARTS_PER_BILLION: Final = "ppb"
@@ -634,6 +637,7 @@ HTTP_BAD_GATEWAY: Final = 502
 HTTP_SERVICE_UNAVAILABLE: Final = 503
 
 HTTP_BASIC_AUTHENTICATION: Final = "basic"
+HTTP_BEARER_AUTHENTICATION: Final = "bearer_token"
 HTTP_DIGEST_AUTHENTICATION: Final = "digest"
 
 HTTP_HEADER_X_REQUESTED_WITH: Final = "X-Requested-With"

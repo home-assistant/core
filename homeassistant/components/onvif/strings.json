@@ -12,6 +12,9 @@
     },
     "step": {
       "user": {
+        "data": {
+          "auto": "Search automatically"
+        },
         "title": "ONVIF device setup",
         "description": "By clicking submit, we will search your network for ONVIF devices that support Profile S.\n\nSome manufacturers have started to disable ONVIF by default. Please ensure ONVIF is enabled in your camera's configuration."
       },
@@ -21,20 +24,15 @@
         },
         "title": "Select ONVIF device"
       },
-      "manual_input": {
+      "configure": {
         "data": {
           "name": "[%key:common::config_flow::data::name%]",
           "host": "[%key:common::config_flow::data::host%]",
-          "port": "[%key:common::config_flow::data::port%]"
-        },
-        "title": "Configure ONVIF device"
-      },
-      "auth": {
-        "title": "Configure authentication",
-        "data": {
+          "port": "[%key:common::config_flow::data::port%]",
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
-        }
+        },
+        "title": "Configure ONVIF device"
       },
       "configure_profile": {
         "description": "Create camera entity for {profile} at {resolution} resolution?",
