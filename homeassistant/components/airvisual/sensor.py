@@ -102,13 +102,12 @@ class AirVisualGeographySensor(AirVisualEntity, SensorEntity):
             }
         )
         self._config_entry = config_entry
+        self._icon = icon
         self._kind = kind
         self._locale = locale
         self._name = name
         self._state = None
-
-        self._attr_icon = icon
-        self._attr_unit_of_measurement = unit
+        self._unit = unit
 
     @property
     def available(self):
@@ -119,6 +118,11 @@ class AirVisualGeographySensor(AirVisualEntity, SensorEntity):
             )
         except KeyError:
             return False
+
+    @property
+    def icon(self):
+        """Return the icon."""
+        return self._icon
 
     @property
     def name(self):
@@ -135,6 +139,11 @@ class AirVisualGeographySensor(AirVisualEntity, SensorEntity):
         """Return a unique, Home Assistant friendly identifier for this entity."""
         return f"{self._config_entry.unique_id}_{self._locale}_{self._kind}"
 
+    @property
+    def unit_of_measurement(self):
+        """Return the unit."""
+        return self._unit
+
     @callback
     def update_from_latest_data(self):
         """Update the entity from the latest data."""
@@ -150,53 +159,48 @@ class AirVisualGeographySensor(AirVisualEntity, SensorEntity):
 
             if 0 <= aqi <= 50:
                 self._state = "Good"
-                self._attr_icon = "mdi:emoticon-excited"
+                self._icon = "mdi:emoticon-excited"
             elif 51 <= aqi <= 100:
                 self._state = "Moderate"
-                self._attic = "mdi:emoticon-happy"
+                self._icon = "mdi:emoticon-happy"
             elif 101 <= aqi <= 150:
                 self._state = "Unhealthy for sensitive groups"
-                self._attr_icon = "mdi:emoticon-neutral"
+                self._icon = "mdi:emoticon-neutral"
             elif 151 <= aqi <= 200:
                 self._state = "Unhealthy"
-                self._attr_icon = "mdi:emoticon-sad"
+                self._icon = "mdi:emoticon-sad"
             elif 201 <= aqi <= 300:
                 self._state = "Very Unhealthy"
-                self._attr_icon = "mdi:emoticon-dead"
+                self._icon = "mdi:emoticon-dead"
             else:
                 self._state = "Hazardous"
-                self._attr_icon = "mdi:biohazard"
+                self._icon = "mdi:biohazard"
         elif self._kind == SENSOR_KIND_POLLUTANT:
             symbol = data[f"main{self._locale}"]
 
             if symbol == "co":
                 self._state = "Carbon Monoxide"
-                unit = CONCENTRATION_PARTS_PER_MILLION
+                self._unit = CONCENTRATION_PARTS_PER_MILLION
             elif symbol == "n2":
                 self._state = "Nitrogen Dioxide"
-                unit = CONCENTRATION_PARTS_PER_BILLION
+                self._unit = CONCENTRATION_PARTS_PER_BILLION
             elif symbol == "o3":
                 self._state = "Ozone"
-                unit = CONCENTRATION_PARTS_PER_BILLION
+                self._unit = CONCENTRATION_PARTS_PER_BILLION
             elif symbol == "p1":
                 self._state = "PM10"
-                unit = CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
+                self._unit = CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
             elif symbol == "p2":
                 self._state = "PM2.5"
-                unit = CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
+                self._unit = CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
             elif symbol == "s2":
                 self._state = "Sulfur Dioxide"
-                unit = CONCENTRATION_PARTS_PER_BILLION
+                self._unit = CONCENTRATION_PARTS_PER_BILLION
             else:
                 self._state = None
-                unit = None
+                self._unit = None
 
-            self._attrs.update(
-                {
-                    ATTR_POLLUTANT_SYMBOL: symbol,
-                    ATTR_POLLUTANT_UNIT: unit,
-                }
-            )
+            self._attrs.update({ATTR_POLLUTANT_SYMBOL: symbol})
 
         # Displaying the geography on the map relies upon putting the latitude/longitude
         # in the entity attributes with "latitude" and "longitude" as the keys.
