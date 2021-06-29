@@ -55,7 +55,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             await self.hass.async_add_executor_job(self.nanoleaf.authorize)
         except Unavailable:
-            _LOGGER.warning("Nanoleaf is not available at %s", self.nanoleaf.host)
             return self.async_show_form(
                 step_id="user",
                 data_schema=USER_SCHEMA,
@@ -123,12 +122,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             await self.hass.async_add_executor_job(self.nanoleaf.authorize)
         except NotAuthorizingNewTokens:
-            _LOGGER.warning("Nanoleaf is not allowing new tokens")
             return self.async_show_form(
                 step_id="link", errors={"base": "not_allowing_new_tokens"}
             )
         except Unavailable:
-            _LOGGER.error("Nanoleaf is not available at %s", self.nanoleaf.host)
             return self.async_show_form(
                 step_id="user",
                 data_schema=USER_SCHEMA,
@@ -157,7 +154,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 pynanoleaf_get_info, self.nanoleaf
             )
         except Unavailable:
-            _LOGGER.error("Nanoleaf is not available at %s", self.nanoleaf.host)
             return self.async_show_form(
                 step_id="user",
                 data_schema=USER_SCHEMA,
@@ -165,7 +161,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 last_step=False,
             )
         except InvalidToken:
-            _LOGGER.error("Nanoleaf token %s is invalid", self.nanoleaf.token)
             return self.async_show_form(
                 step_id="link", errors={"base": "invalid_token"}
             )
