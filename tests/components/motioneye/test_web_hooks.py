@@ -47,6 +47,7 @@ from . import (
 )
 
 from tests.common import async_capture_events
+from tests.components.cloud import mock_cloud
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -249,6 +250,62 @@ async def test_setup_camera_with_correct_webhook(
 
     # Webhooks are correctly configured, so no set call should have been made.
     assert not client.async_set_camera.called
+
+
+async def test_setup_camera_with_cloudhook(
+    hass: HomeAssistant,
+) -> None:
+    """Verify that webhooks are written with a cloud account."""
+    await mock_cloud(hass)
+    await hass.async_block_till_done()
+
+    client = create_mock_motioneye_client()
+    expected_cloudhook = "https://hooks.nabu.casa/ABCD"
+
+    with patch(
+        "homeassistant.components.cloud.async_is_logged_in", return_value=True
+    ), patch(
+        "homeassistant.components.cloud.async_active_subscription", return_value=True
+    ), patch(
+        "homeassistant.components.cloud.async_create_cloudhook",
+        return_value=expected_cloudhook,
+    ) as fake_create_cloudhook:
+        config_entry = await setup_mock_motioneye_config_entry(
+            hass,
+            client=client,
+        )
+
+    device_registry = await dr.async_get_registry(hass)
+    device = device_registry.async_get_device(
+        identifiers={TEST_CAMERA_DEVICE_IDENTIFIER}
+    )
+    assert device
+
+    expected_camera = copy.deepcopy(TEST_CAMERA)
+    expected_camera[KEY_WEB_HOOK_NOTIFICATIONS_ENABLED] = True
+    expected_camera[KEY_WEB_HOOK_NOTIFICATIONS_HTTP_METHOD] = KEY_HTTP_METHOD_POST_JSON
+    expected_camera[KEY_WEB_HOOK_NOTIFICATIONS_URL] = (
+        expected_cloudhook
+        + f"?{WEB_HOOK_MOTION_DETECTED_QUERY_STRING}&device_id={device.id}"
+    )
+
+    expected_camera[KEY_WEB_HOOK_STORAGE_ENABLED] = True
+    expected_camera[KEY_WEB_HOOK_STORAGE_HTTP_METHOD] = KEY_HTTP_METHOD_POST_JSON
+    expected_camera[KEY_WEB_HOOK_STORAGE_URL] = (
+        expected_cloudhook
+        + f"?{WEB_HOOK_FILE_STORED_QUERY_STRING}&device_id={device.id}"
+    )
+    assert client.async_set_camera.call_args == call(TEST_CAMERA_ID, expected_camera)
+    fake_create_cloudhook.assert_called_once()
+
+    with patch(
+        "homeassistant.components.cloud.async_delete_cloudhook"
+    ) as fake_delete_cloudhook:
+        await hass.config_entries.async_remove(config_entry.entry_id)
+        fake_delete_cloudhook.assert_called_once()
+
+    await hass.async_block_till_done()
+    assert not hass.config_entries.async_entries(DOMAIN)
 
 
 async def test_good_query(hass: HomeAssistant, aiohttp_client: Any) -> None:
