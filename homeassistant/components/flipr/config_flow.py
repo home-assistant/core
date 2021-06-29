@@ -1,6 +1,7 @@
 """Config flow for Flipr integration."""
+from __future__ import annotations
+
 import logging
-from typing import List, Union
 
 from flipr_api import FliprAPIRestClient
 from requests.exceptions import HTTPError, Timeout
@@ -19,9 +20,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    _username: Union[str, None] = None
-    _password: Union[str, None] = None
-    _flipr_ids: Union[List[str], None] = None
+    _username: str | None = None
+    _password: str | None = None
+    _flipr_ids: list(str) | None = None
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
@@ -76,7 +77,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def _authenticate_and_search_flipr(self) -> List[str]:
+    async def _authenticate_and_search_flipr(self) -> list[str]:
         """Validate the username and password provided and searches for a flipr id."""
         client = await self.hass.async_add_executor_job(
             FliprAPIRestClient, self._username, self._password
