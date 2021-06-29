@@ -111,10 +111,11 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         self._supported_color_modes = set()
 
         # get additional (optional) values and set features
-        self._target_value = self.get_zwave_value("targetValue")
+        self._target_value = self.get_zwave_value(
+            "targetValue", add_to_watched_value_ids=False
+        )
         self._target_color = self.get_zwave_value(
-            "targetColor",
-            CommandClass.SWITCH_COLOR,
+            "targetColor", CommandClass.SWITCH_COLOR, add_to_watched_value_ids=False
         )
 
         self._calculate_color_values()
