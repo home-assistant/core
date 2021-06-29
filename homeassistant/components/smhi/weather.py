@@ -151,7 +151,7 @@ class SmhiWeather(WeatherEntity):
         return self._name
 
     @property
-    def temperature(self) -> int | None:
+    def temperature(self) -> float | None:
         """Return the temperature."""
         if self._forecasts is not None:
             return self._forecasts[0].temperature
