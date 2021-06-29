@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import logging
 import os
-from typing import Any, Final
+from typing import Any, Final, cast
 
 from pynanoleaf import InvalidToken, Nanoleaf, NotAuthorizingNewTokens, Unavailable
 import voluptuous as vol
@@ -99,10 +99,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         # Import from discovery integration
         self.device_id = discovery_info["properties"]["id"]
-        self.discovery_conf = dict(
+        self.discovery_conf = cast(
+            dict,
             await self.hass.async_add_executor_job(
                 load_json, self.hass.config.path(CONFIG_FILE)
-            )
+            ),
         )
         self.nanoleaf.token = self.discovery_conf.get(host, {}).get("token")  # < 2021.4
         self.nanoleaf.token = self.discovery_conf.get(self.device_id, {}).get(
