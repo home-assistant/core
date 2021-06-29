@@ -70,6 +70,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         create_and_update_instance, entry.data[CONF_API_KEY], entry.data[CONF_API_TOKEN]
     )
 
+    entry.async_on_unload(entry.add_update_listener(update_listener))
+
     hass.data.setdefault(DOMAIN, {})
 
     hass.data[DOMAIN][entry.entry_id] = instance
@@ -94,6 +96,11 @@ def create_and_update_instance(api_key, api_token):
     instance = CoinbaseData(client)
     instance.update()
     return instance
+
+
+async def update_listener(hass, config_entry):
+    """Handle options update."""
+    await hass.config_entries.async_reload(config_entry.entry_id)
 
 
 def get_accounts(client):
