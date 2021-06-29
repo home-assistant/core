@@ -14,9 +14,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import State
 
-from .conftest import ReadResult, base_config_test, base_test, prepare_service_update
+from .conftest import ReadResult, base_test, prepare_service_update
 
-from tests.common import mock_restore_cache
+climate_name = "test_climate"
+entity_id = f"{CLIMATE_DOMAIN}.{climate_name}"
 
 
 @pytest.mark.parametrize(
@@ -25,7 +26,7 @@ from tests.common import mock_restore_cache
         {
             CONF_CLIMATES: [
                 {
-                    CONF_NAME: "test_climate",
+                    CONF_NAME: climate_name,
                     CONF_TARGET_TEMP: 117,
                     CONF_ADDRESS: 117,
                     CONF_SLAVE: 10,
@@ -35,7 +36,7 @@ from tests.common import mock_restore_cache
         {
             CONF_CLIMATES: [
                 {
-                    CONF_NAME: "test_climate",
+                    CONF_NAME: climate_name,
                     CONF_TARGET_TEMP: 117,
                     CONF_ADDRESS: 117,
                     CONF_SLAVE: 10,
@@ -88,11 +89,10 @@ async def test_temperature_climate(hass, regs, expected):
 async def test_service_climate_update(hass, mock_pymodbus):
     """Run test for service homeassistant.update_entity."""
 
-    entity_id = "climate.test"
     config = {
         CONF_CLIMATES: [
             {
-                CONF_NAME: "test",
+                CONF_NAME: climate_name,
                 CONF_TARGET_TEMP: 117,
                 CONF_ADDRESS: 117,
                 CONF_SLAVE: 10,
@@ -110,32 +110,31 @@ async def test_service_climate_update(hass, mock_pymodbus):
     assert hass.states.get(entity_id).state == "auto"
 
 
-async def test_restore_state_climate(hass):
-    """Run test for sensor restore state."""
+test_value = State(entity_id, 35)
+test_value.attributes = {ATTR_TEMPERATURE: 37}
 
-    climate_name = "test_climate"
-    test_temp = 37
-    entity_id = f"{CLIMATE_DOMAIN}.{climate_name}"
-    test_value = State(entity_id, 35)
-    test_value.attributes = {ATTR_TEMPERATURE: test_temp}
-    config_sensor = {
-        CONF_NAME: climate_name,
-        CONF_TARGET_TEMP: 117,
-        CONF_ADDRESS: 117,
-    }
-    mock_restore_cache(
-        hass,
-        (test_value,),
-    )
-    await base_config_test(
-        hass,
-        config_sensor,
-        climate_name,
-        CLIMATE_DOMAIN,
-        CONF_CLIMATES,
-        None,
-        method_discovery=True,
-    )
+
+@pytest.mark.parametrize(
+    "mock_test_state",
+    [(test_value,)],
+    indirect=True,
+)
+@pytest.mark.parametrize(
+    "do_config",
+    [
+        {
+            CONF_CLIMATES: [
+                {
+                    CONF_NAME: climate_name,
+                    CONF_TARGET_TEMP: 117,
+                    CONF_ADDRESS: 117,
+                }
+            ],
+        },
+    ],
+)
+async def test_restore_state_climate(hass, mock_test_state, mock_modbus):
+    """Run test for sensor restore state."""
     state = hass.states.get(entity_id)
     assert state.state == HVAC_MODE_AUTO
-    assert state.attributes[ATTR_TEMPERATURE] == test_temp
+    assert state.attributes[ATTR_TEMPERATURE] == 37
