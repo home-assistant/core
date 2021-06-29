@@ -69,7 +69,7 @@ def service_call_action(
         return None
 
     try:
-        return fritzbox_tools.connection.call_action(
+        return fritzbox_tools.connection.call_action(  # type: ignore[no-any-return]
             f"{service_name}:{service_suffix}",
             action_name,
             **kwargs,
