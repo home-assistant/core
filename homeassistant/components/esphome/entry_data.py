@@ -142,7 +142,7 @@ class RuntimeEntryData:
         self._storage_contents = restored.copy()
 
         self.device_info = DeviceInfo.from_dict(restored.pop("device_info"))
-        self.api_version = APIVersion.from_dict(restored.pop("api_version"))
+        self.api_version = APIVersion.from_dict(restored.pop("api_version", {}))
         infos = []
         for comp_type, restored_infos in restored.items():
             if comp_type not in COMPONENT_TYPE_TO_INFO:
