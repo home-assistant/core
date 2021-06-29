@@ -2320,9 +2320,6 @@ tp-connected==0.0.4
 # homeassistant.components.transmission
 transmissionrpc==0.11
 
-# homeassistant.components.tuya
-tuyaha==0.0.10
-
 # homeassistant.components.twentemilieu
 twentemilieu==0.3.0
 
