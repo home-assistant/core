@@ -4,11 +4,6 @@ from unittest.mock import patch
 from pynanoleaf import InvalidToken, NotAuthorizingNewTokens, Unavailable
 
 from homeassistant import config_entries
-from homeassistant.components.nanoleaf.config_flow import (
-    ADVANCED_USER_SCHEMA,
-    CONF_MANUAL,
-    CONF_MODE,
-)
 from homeassistant.components.nanoleaf.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_TOKEN
 from homeassistant.core import HomeAssistant
@@ -139,44 +134,6 @@ async def test_user_not_authorizing_new_tokens(hass: HomeAssistant) -> None:
     assert result4["errors"] == {"base": "not_allowing_new_tokens"}
 
 
-async def test_user_manual_invalid_token(hass: HomeAssistant) -> None:
-    """Test we handle InvalidToken errors in manual flow."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER, "show_advanced_options": True},
-    )
-    assert result["data_schema"] == ADVANCED_USER_SCHEMA
-
-    with patch(
-        "homeassistant.components.nanoleaf.config_flow.Nanoleaf.authorize",
-        return_value=None,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: TEST_HOST,
-                CONF_MODE: CONF_MANUAL,
-            },
-        )
-    assert result2["type"] == "form"
-    assert result2["step_id"] == "manual"
-
-    with patch(
-        "homeassistant.components.nanoleaf.config_flow.pynanoleaf_get_info",
-        side_effect=InvalidToken("message"),
-    ):
-        result3 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_TOKEN: TEST_TOKEN,
-            },
-        )
-
-    assert result3["step_id"] == "manual"
-    assert result3["errors"] == {"base": "invalid_token"}
-    assert result3["type"] == "form"
-
-
 async def test_user_exception(hass: HomeAssistant) -> None:
     """Test we handle Exception errors."""
     result = await hass.config_entries.flow.async_init(
@@ -285,6 +242,23 @@ async def test_import_config(hass: HomeAssistant) -> None:
     }
     await hass.async_block_till_done()
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_import_config_invalid_token(hass: HomeAssistant) -> None:
+    """Test configuration import with invalid token."""
+    with patch(
+        "homeassistant.components.nanoleaf.config_flow.pynanoleaf_get_info",
+        side_effect=InvalidToken("message"),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={CONF_HOST: TEST_HOST, CONF_TOKEN: TEST_TOKEN},
+        )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "manual"
+    assert result["errors"] == {"base": "invalid_token"}
 
 
 async def test_import_last_discovery_integration_host_zeroconf(
