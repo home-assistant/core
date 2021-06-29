@@ -101,6 +101,13 @@ TILT_FEATURES = (
     | SUPPORT_SET_TILT_POSITION
 )
 
+MQTT_COVER_ATTRIBUTES_BLOCKED = frozenset(
+    {
+        cover.ATTR_CURRENT_POSITION,
+        cover.ATTR_CURRENT_TILT_POSITION,
+    }
+)
+
 
 def validate_options(value):
     """Validate options.
@@ -218,6 +225,8 @@ async def _async_setup_entity(
 
 class MqttCover(MqttEntity, CoverEntity):
     """Representation of a cover that can be controlled using MQTT."""
+
+    _attributes_extra_blocked = MQTT_COVER_ATTRIBUTES_BLOCKED
 
     def __init__(self, hass, config, config_entry, discovery_data):
         """Initialize the cover."""

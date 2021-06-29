@@ -605,7 +605,7 @@ async def _register_service(
                 "example": "['Example text', 'Another example']",
                 "selector": {"object": {}},
             },
-        }[arg.type_]
+        }[arg.type]
         schema[vol.Required(arg.name)] = metadata["validator"]
         fields[arg.name] = {
             "name": arg.name,

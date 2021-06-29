@@ -5,7 +5,11 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components import number
-from homeassistant.components.mqtt.number import CONF_MAX, CONF_MIN
+from homeassistant.components.mqtt.number import (
+    CONF_MAX,
+    CONF_MIN,
+    MQTT_NUMBER_ATTRIBUTES_BLOCKED,
+)
 from homeassistant.components.number import (
     ATTR_MAX,
     ATTR_MIN,
@@ -37,6 +41,7 @@ from .test_common import (
     help_test_entity_id_update_subscriptions,
     help_test_setting_attribute_via_mqtt_json_message,
     help_test_setting_attribute_with_template,
+    help_test_setting_blocked_attribute_via_mqtt_json_message,
     help_test_unique_id,
     help_test_update_with_json_attrs_bad_JSON,
     help_test_update_with_json_attrs_not_dict,
@@ -247,6 +252,13 @@ async def test_setting_attribute_via_mqtt_json_message(hass, mqtt_mock):
     """Test the setting of attribute via MQTT with JSON payload."""
     await help_test_setting_attribute_via_mqtt_json_message(
         hass, mqtt_mock, number.DOMAIN, DEFAULT_CONFIG
+    )
+
+
+async def test_setting_blocked_attribute_via_mqtt_json_message(hass, mqtt_mock):
+    """Test the setting of attribute via MQTT with JSON payload."""
+    await help_test_setting_blocked_attribute_via_mqtt_json_message(
+        hass, mqtt_mock, number.DOMAIN, DEFAULT_CONFIG, MQTT_NUMBER_ATTRIBUTES_BLOCKED
     )
 
 

@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import datetime
 import itertools
+import logging
 
 from homeassistant.components.recorder import history, statistics
 from homeassistant.components.sensor import (
@@ -15,20 +16,44 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_TEMPERATURE,
     STATE_CLASS_MEASUREMENT,
 )
-from homeassistant.const import ATTR_DEVICE_CLASS
+from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
+    ATTR_UNIT_OF_MEASUREMENT,
+    DEVICE_CLASS_POWER,
+    ENERGY_KILO_WATT_HOUR,
+    ENERGY_WATT_HOUR,
+    POWER_KILO_WATT,
+    POWER_WATT,
+)
 from homeassistant.core import HomeAssistant, State
 import homeassistant.util.dt as dt_util
 
 from . import DOMAIN
 
+_LOGGER = logging.getLogger(__name__)
+
 DEVICE_CLASS_STATISTICS = {
     DEVICE_CLASS_BATTERY: {"mean", "min", "max"},
     DEVICE_CLASS_ENERGY: {"sum"},
     DEVICE_CLASS_HUMIDITY: {"mean", "min", "max"},
+    DEVICE_CLASS_MONETARY: {"sum"},
+    DEVICE_CLASS_POWER: {"mean", "min", "max"},
     DEVICE_CLASS_PRESSURE: {"mean", "min", "max"},
     DEVICE_CLASS_TEMPERATURE: {"mean", "min", "max"},
-    DEVICE_CLASS_MONETARY: {"sum"},
 }
+
+UNIT_CONVERSIONS = {
+    DEVICE_CLASS_ENERGY: {
+        ENERGY_KILO_WATT_HOUR: lambda x: x,
+        ENERGY_WATT_HOUR: lambda x: x / 1000,
+    },
+    DEVICE_CLASS_POWER: {
+        POWER_WATT: lambda x: x,
+        POWER_KILO_WATT: lambda x: x * 1000,
+    },
+}
+
+WARN_UNSUPPORTED_UNIT = set()
 
 
 def _get_entities(hass: HomeAssistant) -> list[tuple[str, str]]:
@@ -92,6 +117,36 @@ def _time_weighted_average(
     return accumulated / (end - start).total_seconds()
 
 
+def _normalize_states(
+    entity_history: list[State], device_class: str, entity_id: str
+) -> list[tuple[float, State]]:
+    """Normalize units."""
+
+    if device_class not in UNIT_CONVERSIONS:
+        # We're not normalizing this device class, return the state as they are
+        return [(float(el.state), el) for el in entity_history if _is_number(el.state)]
+
+    fstates = []
+
+    for state in entity_history:
+        # Exclude non numerical states from statistics
+        if not _is_number(state.state):
+            continue
+
+        fstate = float(state.state)
+        unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        # Exclude unsupported units from statistics
+        if unit not in UNIT_CONVERSIONS[device_class]:
+            if entity_id not in WARN_UNSUPPORTED_UNIT:
+                WARN_UNSUPPORTED_UNIT.add(entity_id)
+                _LOGGER.warning("%s has unknown unit %s", entity_id, unit)
+            continue
+
+        fstates.append((UNIT_CONVERSIONS[device_class][unit](fstate), state))  # type: ignore
+
+    return fstates
+
+
 def compile_statistics(
     hass: HomeAssistant, start: datetime.datetime, end: datetime.datetime
 ) -> dict:
@@ -115,9 +170,7 @@ def compile_statistics(
             continue
 
         entity_history = history_list[entity_id]
-        fstates = [
-            (float(el.state), el) for el in entity_history if _is_number(el.state)
-        ]
+        fstates = _normalize_states(entity_history, device_class, entity_id)
 
         if not fstates:
             continue
