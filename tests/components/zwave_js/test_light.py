@@ -344,6 +344,8 @@ async def test_light(hass, client, bulb_6_multi_color, integration):
     )
 
     assert len(client.async_send_command.call_args_list) == 6
+    args = client.async_send_command.call_args_list[5][0][0]
+    assert args["options"]["transitionDuration"] == "20.0s"
 
     client.async_send_command.reset_mock()
 
@@ -481,6 +483,8 @@ async def test_light(hass, client, bulb_6_multi_color, integration):
     )
 
     assert len(client.async_send_command.call_args_list) == 6
+    args = client.async_send_command.call_args_list[5][0][0]
+    assert args["options"]["transitionDuration"] == "35.0s"
 
     client.async_send_command.reset_mock()
 
