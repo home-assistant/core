@@ -840,7 +840,11 @@ async def test_statistics_during_period(hass, hass_ws_client):
     hass.states.async_set(
         "sensor.test",
         10,
-        attributes={"device_class": "temperature", "state_class": "measurement"},
+        attributes={
+            "device_class": "temperature",
+            "state_class": "measurement",
+            "unit_of_measurement": "°C",
+        },
     )
     await hass.async_block_till_done()
 
@@ -951,7 +955,11 @@ async def test_list_statistic_ids(hass, hass_ws_client):
     hass.states.async_set(
         "sensor.test",
         10,
-        attributes={"device_class": "temperature", "state_class": "measurement"},
+        attributes={
+            "device_class": "temperature",
+            "state_class": "measurement",
+            "unit_of_measurement": "°C",
+        },
     )
     await hass.async_block_till_done()
 
