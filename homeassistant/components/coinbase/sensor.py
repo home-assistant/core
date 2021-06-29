@@ -36,7 +36,6 @@ ATTRIBUTION = "Data provided by coinbase.com"
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Coinbase sensor platform."""
     instance = hass.data[DOMAIN][config_entry.entry_id]
-    hass.async_add_executor_job(instance.update)
 
     entities = []
 
