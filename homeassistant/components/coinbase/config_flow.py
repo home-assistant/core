@@ -33,17 +33,20 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
+def get_user_from_client(api_key, api_token):
+    """Get the user name from Coinbase API credentials."""
+    client = Client(api_key, api_token)
+    user = client.get_current_user()
+    return user
+
+
 async def validate_api(hass: core.HomeAssistant, data):
     """Validate the credentials."""
 
-    for entry in hass.config_entries.async_entries(DOMAIN):
-        if entry.data[CONF_API_KEY] == data[CONF_API_KEY]:
-            raise AlreadyConfigured
     try:
-        client = await hass.async_add_executor_job(
-            Client, data[CONF_API_KEY], data[CONF_API_TOKEN]
+        user = await hass.async_add_executor_job(
+            get_user_from_client, data[CONF_API_KEY], data[CONF_API_TOKEN]
         )
-        user = await hass.async_add_executor_job(client.get_current_user)
     except AuthenticationError as error:
         raise InvalidAuth from error
     except ConnectionError as error:
@@ -115,6 +118,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, config):
         """Handle import of Coinbase config from YAML."""
+
+        self._async_abort_entries_match({CONF_API_KEY: config[CONF_API_KEY]})
+
         cleaned_data = {
             CONF_API_KEY: config[CONF_API_KEY],
             CONF_API_TOKEN: config[CONF_YAML_API_TOKEN],
