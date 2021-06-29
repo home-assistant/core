@@ -26,6 +26,7 @@ from .const import (
 from .coordinator import IPPDataUpdateCoordinator
 from .entity import IPPEntity
 
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
