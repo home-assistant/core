@@ -296,7 +296,12 @@ async def test_yaml_import(hass):
     ), patch(
         "coinbase.wallet.client.Client.get_exchange_rates",
         return_value=mock_get_exchange_rates(),
-    ):
+    ), patch(
+        "homeassistant.components.coinbase.async_setup", return_value=True
+    ) as mock_setup, patch(
+        "homeassistant.components.coinbase.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=conf
         )
@@ -307,6 +312,8 @@ async def test_yaml_import(hass):
         CONF_CURRENCIES: ["BTC", "USD"],
         CONF_EXCHANGE_RATES: ["ATOM", "BTC"],
     }
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_yaml_existing(hass):
