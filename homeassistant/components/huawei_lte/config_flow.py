@@ -179,7 +179,8 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             if serial_number := info.get("SerialNumber"):
                 await self.async_set_unique_id(serial_number)
                 self._abort_if_unique_id_configured()
-            await self._async_handle_discovery_without_unique_id()
+            else:
+                await self._async_handle_discovery_without_unique_id()
 
         title = (
             self.context.get("title_placeholders", {}).get(CONF_NAME)
