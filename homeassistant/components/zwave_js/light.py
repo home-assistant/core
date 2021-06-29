@@ -112,7 +112,7 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
 
         # get additional (optional) values and set features
         self._target_value = self.get_zwave_value("targetValue")
-        self._duration = self.get_zwave_value("duration")
+        self._target_color = self.get_zwave_value("targetColor")
 
         self._calculate_color_values()
         if self._supports_rgbw:
@@ -129,6 +129,9 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         if (
             self._target_value is not None
             and "transitionDuration" in self._target_value.metadata.value_change_options
+        ) or (
+            self._target_color is not None
+            and "transitionDuration" in self._target_color.metadata.value_change_options
         ):
             self._attr_supported_features |= SUPPORT_TRANSITION
 
@@ -271,7 +274,8 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
 
         if (
             transition is not None
-            and self._attr_supported_features & SUPPORT_TRANSITION
+            and self._target_color is not None
+            and "transitionDuration" in self._target_color.metadata.value_change_options
         ):
             zwave_transition = {TRANSITION_DURATION: f"{transition}s"}
 
@@ -321,7 +325,8 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         zwave_transition = None
         if (
             transition is not None
-            and self._attr_supported_features & SUPPORT_TRANSITION
+            and self._target_value is not None
+            and "transitionDuration" in self._target_value.metadata.value_change_options
         ):
             zwave_transition = {TRANSITION_DURATION: f"{transition}s"}
 
