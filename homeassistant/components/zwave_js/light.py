@@ -112,10 +112,8 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
 
         # get additional (optional) values and set features
         self._target_value = self.get_zwave_value("targetValue")
-        self._dimming_duration = self.get_zwave_value("duration")
-        self._color_transition_duration = self.get_zwave_value(
-            "duration", CommandClass.SWITCH_COLOR
-        )
+        self._duration = self.get_zwave_value("duration")
+
         self._calculate_color_values()
         if self._supports_rgbw:
             self._supported_color_modes.add(COLOR_MODE_RGBW)
@@ -129,8 +127,8 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         # Entity class attributes
         self._attr_supported_features = 0
         if (
-            self._dimming_duration is not None
-            or self._color_transition_duration is not None
+            self._duration is not None
+            and "transitionDuration" in self._duration.metadata.value_change_options
         ):
             self._attr_supported_features |= SUPPORT_TRANSITION
 
@@ -271,7 +269,11 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         )
         zwave_transition = None
 
-        if transition is not None and self._color_transition_duration is not None:
+        if (
+            transition is not None
+            and self._duration is not None
+            and "transitionDuration" in self._duration.metadata.value_change_options
+        ):
             zwave_transition = {TRANSITION_DURATION: f"{transition}s"}
 
         if combined_color_val and isinstance(combined_color_val.value, dict):
@@ -318,7 +320,11 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
 
         # set transition value before sending new brightness
         zwave_transition = None
-        if transition is not None and self._dimming_duration is not None:
+        if (
+            transition is not None
+            and self._duration is not None
+            and "transitionDuration" in self._duration.metadata.value_change_options
+        ):
             zwave_transition = {TRANSITION_DURATION: f"{transition}s"}
 
         # setting a value requires setting targetValue
