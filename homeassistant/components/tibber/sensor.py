@@ -9,6 +9,7 @@ import aiohttp
 from homeassistant.components.sensor import (
     DEVICE_CLASS_CURRENT,
     DEVICE_CLASS_ENERGY,
+    DEVICE_CLASS_MONETARY,
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_POWER_FACTOR,
     DEVICE_CLASS_SIGNAL_STRENGTH,
@@ -128,7 +129,12 @@ RT_SENSOR_MAP = {
         SIGNAL_STRENGTH_DECIBELS,
         STATE_CLASS_MEASUREMENT,
     ],
-    "accumulatedCost": ["accumulated cost", None, None, STATE_CLASS_MEASUREMENT],
+    "accumulatedCost": [
+        "accumulated cost",
+        DEVICE_CLASS_MONETARY,
+        None,
+        STATE_CLASS_MEASUREMENT,
+    ],
     "powerFactor": [
         "power factor",
         DEVICE_CLASS_POWER_FACTOR,
