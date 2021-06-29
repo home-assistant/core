@@ -112,7 +112,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 ),
             )
 
-        # Get chosen or entered flipr_id.
+        # Get chosen flipr_id.
         self._flipr_id = user_input[CONF_FLIPR_ID]
 
         return await self.async_step_user(
