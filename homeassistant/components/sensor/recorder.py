@@ -4,6 +4,7 @@ from __future__ import annotations
 import datetime
 import itertools
 import logging
+from typing import Callable
 
 from homeassistant.components.recorder import history, statistics
 from homeassistant.components.sensor import (
@@ -21,9 +22,13 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     ENERGY_KILO_WATT_HOUR,
     ENERGY_WATT_HOUR,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
+    TEMP_KELVIN,
 )
 from homeassistant.core import HomeAssistant, State
 import homeassistant.util.dt as dt_util
+import homeassistant.util.temperature as temperature_util
 
 from . import DOMAIN
 
@@ -38,11 +43,16 @@ DEVICE_CLASS_STATISTICS = {
     DEVICE_CLASS_MONETARY: {"sum"},
 }
 
-UNIT_CONVERSIONS = {
+UNIT_CONVERSIONS: dict[str, dict[str, Callable]] = {
     DEVICE_CLASS_ENERGY: {
         ENERGY_KILO_WATT_HOUR: lambda x: x,
         ENERGY_WATT_HOUR: lambda x: x / 1000,
-    }
+    },
+    DEVICE_CLASS_TEMPERATURE: {
+        TEMP_CELSIUS: lambda x: x,
+        TEMP_FAHRENHEIT: temperature_util.fahrenheit_to_celsius,
+        TEMP_KELVIN: temperature_util.kelvin_to_celsius,
+    },
 }
 
 WARN_UNSUPPORTED_UNIT = set()
@@ -134,7 +144,7 @@ def _normalize_states(
                 _LOGGER.warning("%s has unknown unit %s", entity_id, unit)
             continue
 
-        fstates.append((UNIT_CONVERSIONS[device_class][unit](fstate), state))  # type: ignore
+        fstates.append((UNIT_CONVERSIONS[device_class][unit](fstate), state))
 
     return fstates
 
@@ -190,6 +200,7 @@ def compile_statistics(
                 _sum = last_stats[entity_id][0]["sum"]
 
             for fstate, state in fstates:
+
                 if "last_reset" not in state.attributes:
                     continue
                 if (last_reset := state.attributes["last_reset"]) != old_last_reset:

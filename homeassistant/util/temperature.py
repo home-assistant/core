@@ -14,6 +14,13 @@ def fahrenheit_to_celsius(fahrenheit: float, interval: bool = False) -> float:
     return (fahrenheit - 32.0) / 1.8
 
 
+def kelvin_to_celsius(kelvin: float, interval: bool = False) -> float:
+    """Convert a temperature in Kelvin to Celsius."""
+    if interval:
+        return kelvin
+    return kelvin - 273.15
+
+
 def celsius_to_fahrenheit(celsius: float, interval: bool = False) -> float:
     """Convert a temperature in Celsius to Fahrenheit."""
     if interval:
