@@ -49,7 +49,11 @@ def test_compile_hourly_energy_statistics(hass_recorder):
     hass = hass_recorder()
     recorder = hass.data[DATA_INSTANCE]
     setup_component(hass, "sensor", {})
-    sns1_attr = {"device_class": "energy", "state_class": "measurement"}
+    sns1_attr = {
+        "device_class": "energy",
+        "state_class": "measurement",
+        "unit_of_measurement": "kWh",
+    }
     sns2_attr = {"device_class": "energy"}
     sns3_attr = {}
 
@@ -109,9 +113,21 @@ def test_compile_hourly_energy_statistics2(hass_recorder):
     hass = hass_recorder()
     recorder = hass.data[DATA_INSTANCE]
     setup_component(hass, "sensor", {})
-    sns1_attr = {"device_class": "energy", "state_class": "measurement"}
-    sns2_attr = {"device_class": "energy", "state_class": "measurement"}
-    sns3_attr = {"device_class": "energy", "state_class": "measurement"}
+    sns1_attr = {
+        "device_class": "energy",
+        "state_class": "measurement",
+        "unit_of_measurement": "kWh",
+    }
+    sns2_attr = {
+        "device_class": "energy",
+        "state_class": "measurement",
+        "unit_of_measurement": "kWh",
+    }
+    sns3_attr = {
+        "device_class": "energy",
+        "state_class": "measurement",
+        "unit_of_measurement": "Wh",
+    }
 
     zero, four, eight, states = record_energy_states(
         hass, sns1_attr, sns2_attr, sns3_attr
@@ -201,8 +217,8 @@ def test_compile_hourly_energy_statistics2(hass_recorder):
                 "mean": None,
                 "min": None,
                 "last_reset": process_timestamp_to_utc_isoformat(zero),
-                "state": approx(5.0),
-                "sum": approx(5.0),
+                "state": approx(5.0 / 1000),
+                "sum": approx(5.0 / 1000),
             },
             {
                 "statistic_id": "sensor.test3",
@@ -211,8 +227,8 @@ def test_compile_hourly_energy_statistics2(hass_recorder):
                 "mean": None,
                 "min": None,
                 "last_reset": process_timestamp_to_utc_isoformat(four),
-                "state": approx(50.0),
-                "sum": approx(30.0),
+                "state": approx(50.0 / 1000),
+                "sum": approx(30.0 / 1000),
             },
             {
                 "statistic_id": "sensor.test3",
@@ -221,8 +237,8 @@ def test_compile_hourly_energy_statistics2(hass_recorder):
                 "mean": None,
                 "min": None,
                 "last_reset": process_timestamp_to_utc_isoformat(four),
-                "state": approx(90.0),
-                "sum": approx(70.0),
+                "state": approx(90.0 / 1000),
+                "sum": approx(70.0 / 1000),
             },
         ],
     }
