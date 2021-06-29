@@ -179,7 +179,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, config: dict[str, Any]) -> FlowResult:
         """Handle Nanoleaf configuration import."""
         self._async_abort_entries_match({CONF_HOST: config[CONF_HOST]})
-        _LOGGER.warning(
+        _LOGGER.debug(
             "Importing Nanoleaf on %s from your configuration.yaml", config[CONF_HOST]
         )
         self.nanoleaf = Nanoleaf(config[CONF_HOST])
