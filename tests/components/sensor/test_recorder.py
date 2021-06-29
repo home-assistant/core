@@ -49,7 +49,11 @@ def test_compile_hourly_energy_statistics(hass_recorder):
     hass = hass_recorder()
     recorder = hass.data[DATA_INSTANCE]
     setup_component(hass, "sensor", {})
-    sns1_attr = {"device_class": "energy", "state_class": "measurement"}
+    sns1_attr = {
+        "device_class": "energy",
+        "state_class": "measurement",
+        "unit_of_measurement": "kWh",
+    }
     sns2_attr = {"device_class": "energy"}
     sns3_attr = {}
 
@@ -109,8 +113,16 @@ def test_compile_hourly_energy_statistics2(hass_recorder):
     hass = hass_recorder()
     recorder = hass.data[DATA_INSTANCE]
     setup_component(hass, "sensor", {})
-    sns1_attr = {"device_class": "energy", "state_class": "measurement"}
-    sns2_attr = {"device_class": "energy", "state_class": "measurement"}
+    sns1_attr = {
+        "device_class": "energy",
+        "state_class": "measurement",
+        "unit_of_measurement": "kWh",
+    }
+    sns2_attr = {
+        "device_class": "energy",
+        "state_class": "measurement",
+        "unit_of_measurement": "kWh",
+    }
     sns3_attr = {
         "device_class": "energy",
         "state_class": "measurement",

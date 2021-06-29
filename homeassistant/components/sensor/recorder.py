@@ -109,21 +109,34 @@ def _time_weighted_average(
     return accumulated / (end - start).total_seconds()
 
 
-def _normalize(state: State, device_class: str, entity_id: str) -> float:
+def _normalize_states(
+    entity_history: list[State], device_class: str, entity_id: str
+) -> list[tuple[float, State]]:
     """Normalize units."""
-    fstate = float(state.state)
+
     if device_class not in UNIT_CONVERSIONS:
-        # We're not normalizing this device class, return the state as is
-        return fstate
+        # We're not normalizing this device class, return the state as they are
+        return [(float(el.state), el) for el in entity_history if _is_number(el.state)]
 
-    unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-    if unit not in UNIT_CONVERSIONS[device_class]:
-        if entity_id not in WARN_UNSUPPORTED_UNIT:
-            WARN_UNSUPPORTED_UNIT.add(entity_id)
-            _LOGGER.warning("%s has unknown unit %s", entity_id, unit)
-        return fstate
+    fstates = []
 
-    return UNIT_CONVERSIONS[device_class][unit](fstate)  # type: ignore
+    for state in entity_history:
+        # Exclude non numerical states from statistics
+        if not _is_number(state.state):
+            continue
+
+        fstate = float(state.state)
+        unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        # Exclude unsupported units from statistics
+        if unit not in UNIT_CONVERSIONS[device_class]:
+            if entity_id not in WARN_UNSUPPORTED_UNIT:
+                WARN_UNSUPPORTED_UNIT.add(entity_id)
+                _LOGGER.warning("%s has unknown unit %s", entity_id, unit)
+            continue
+
+        fstates.append((UNIT_CONVERSIONS[device_class][unit](fstate), state))  # type: ignore
+
+    return fstates
 
 
 def compile_statistics(
@@ -149,11 +162,7 @@ def compile_statistics(
             continue
 
         entity_history = history_list[entity_id]
-        fstates = [
-            (_normalize(el, device_class, entity_id), el)
-            for el in entity_history
-            if _is_number(el.state)
-        ]
+        fstates = _normalize_states(entity_history, device_class, entity_id)
 
         if not fstates:
             continue
