@@ -1018,7 +1018,7 @@ netdata==0.2.0
 netdisco==2.9.0
 
 # homeassistant.components.nmap_tracker
-netmap==0.7.0.1
+netmap==0.7.0.2
 
 # homeassistant.components.nam
 nettigo-air-monitor==1.0.0
