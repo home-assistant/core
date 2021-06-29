@@ -9,6 +9,7 @@ from pynanoleaf import InvalidToken, Nanoleaf, NotAuthorizingNewTokens, Unavaila
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components import persistent_notification
 from homeassistant.const import CONF_HOST, CONF_TOKEN
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.typing import DiscoveryInfoType
@@ -186,22 +187,19 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(name)
         self._abort_if_unique_id_configured({CONF_HOST: self.nanoleaf.host})
 
-        # Log successfully imported instructions and optionally update the Nanoleaf config file
+        # Show successfully imported instructions and optionally update the Nanoleaf config file
         if self.context["source"] == config_entries.SOURCE_IMPORT:
-            _LOGGER.warning(
-                (
-                    "Successfully imported Nanoleaf %s on %s.",
-                    "You can remove the light from your configuration.yaml",
-                ),
-                name,
-                self.nanoleaf.host,
+            persistent_notification.async_create(
+                self.hass,
+                f"Nanoleaf {name} has been successfully imported. Please remove the light with host {self.nanoleaf.host} from your configuration.yaml.",
+                f"Imported Nanoleaf {name}",
             )
         elif self.context["source"] == config_entries.SOURCE_INTEGRATION_DISCOVERY:
             if self.nanoleaf.host in self.discovery_conf:
                 self.discovery_conf.pop(self.nanoleaf.host)
             if self.device_id in self.discovery_conf:
                 self.discovery_conf.pop(self.device_id)
-            _LOGGER.warning(
+            _LOGGER.info(
                 "Successfully imported Nanoleaf %s from the discovery integration",
                 name,
             )
@@ -213,9 +211,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 await self.hass.async_add_executor_job(
                     os.remove, self.hass.config.path(CONFIG_FILE)
                 )
-                _LOGGER.warning(
-                    "All Nanoleaf devices from the discovery integration are imported. "
-                    "If you used the discovery integration only for Nanoleaf you can remove it from your configuration.yaml"
+                persistent_notification.async_create(
+                    self.hass,
+                    "All Nanoleaf devices from the discovery integration are imported. If you used the discovery integration only for Nanoleaf you can remove it from your configuration.yaml",
+                    f"Imported Nanoleaf {name}",
                 )
 
         return self.async_create_entry(
