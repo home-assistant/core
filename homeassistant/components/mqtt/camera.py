@@ -21,6 +21,7 @@ DEFAULT_NAME = "MQTT Camera"
 
 MQTT_CAMERA_ATTRIBUTES_BLOCKED = frozenset(
     {
+        "access_token",
         "brand",
         "model_name",
         "motion_detection",
