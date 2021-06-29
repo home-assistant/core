@@ -97,7 +97,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         # Import from discovery integration
         self.device_id = discovery_info["properties"]["id"]
-        self.discovery_conf = dict(load_json(self.hass.config.path(CONFIG_FILE)))
+        self.discovery_conf = dict(
+            await self.hass.async_add_executor_job(
+                load_json, self.hass.config.path(CONFIG_FILE)
+            )
+        )
         self.nanoleaf.token = self.discovery_conf.get(host, {}).get("token")  # < 2021.4
         self.nanoleaf.token = self.discovery_conf.get(self.device_id, {}).get(
             "token", self.nanoleaf.token
@@ -201,9 +205,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 name,
             )
             if self.discovery_conf:
-                save_json(self.hass.config.path(CONFIG_FILE), self.discovery_conf)
+                await self.hass.async_add_executor_job(
+                    save_json, self.hass.config.path(CONFIG_FILE), self.discovery_conf
+                )
             else:
-                save_json(
+                await self.hass.async_add_executor_job(
+                    save_json,
                     self.hass.config.path(CONFIG_FILE),
                     {
                         0: "The Nanoleaf configuration has been imported into a config flow.",
