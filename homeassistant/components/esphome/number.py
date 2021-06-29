@@ -1,4 +1,4 @@
-"""Support for esphome sensors."""
+"""Support for esphome numbers."""
 from __future__ import annotations
 
 import math
@@ -22,7 +22,7 @@ async def async_setup_entry(
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up esphome sensors based on a config entry."""
+    """Set up esphome numbers based on a config entry."""
     await platform_async_setup_entry(
         hass,
         entry,
@@ -39,7 +39,7 @@ async def async_setup_entry(
 
 
 class EsphomeNumber(EsphomeEntity, NumberEntity):
-    """A sensor implementation for esphome."""
+    """A number implementation for esphome."""
 
     @property
     def _static_info(self) -> NumberInfo:
