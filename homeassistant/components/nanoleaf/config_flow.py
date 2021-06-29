@@ -1,4 +1,4 @@
-"""Config flow to configure the Nuki integration."""
+"""Config flow for Nanoleaf integration."""
 from __future__ import annotations
 
 import logging
