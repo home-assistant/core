@@ -1,15 +1,11 @@
 """The Internet Printing Protocol (IPP) integration."""
 from __future__ import annotations
 
-from datetime import timedelta
 import logging
-
-from pyipp import IPP, IPPError, Printer as IPPPrinter
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_NAME,
     CONF_HOST,
     CONF_PORT,
     CONF_SSL,
@@ -17,20 +13,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.entity import DeviceInfo
 
-from .const import (
-    ATTR_IDENTIFIERS,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    ATTR_SOFTWARE_VERSION,
-    CONF_BASE_PATH,
-    DOMAIN,
-)
+from .const import CONF_BASE_PATH, DOMAIN,
 from .coordinator import IPPDataUpdateCoordinator
 
 PLATFORMS = [SENSOR_DOMAIN]
-SCAN_INTERVAL = timedelta(seconds=60)
 
 _LOGGER = logging.getLogger(__name__)
 
