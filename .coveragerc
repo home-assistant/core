@@ -274,6 +274,7 @@ omit =
     homeassistant/components/esphome/entry_data.py
     homeassistant/components/esphome/fan.py
     homeassistant/components/esphome/light.py
+    homeassistant/components/esphome/number.py
     homeassistant/components/esphome/sensor.py
     homeassistant/components/esphome/switch.py
     homeassistant/components/essent/sensor.py
