@@ -112,7 +112,11 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
 
         # get additional (optional) values and set features
         self._target_value = self.get_zwave_value("targetValue")
-        self._target_color = self.get_zwave_value("targetColor")
+        self._target_color = self.get_zwave_value(
+            "targetColor",
+            CommandClass.SWITCH_COLOR,
+            value_property_key=None,
+        )
 
         self._calculate_color_values()
         if self._supports_rgbw:
@@ -192,6 +196,9 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
+
+        transition = kwargs.get(ATTR_TRANSITION)
+
         # RGB/HS color
         hs_color = kwargs.get(ATTR_HS_COLOR)
         if hs_color is not None and self._supports_color:
@@ -205,7 +212,7 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
                 # turn of white leds when setting rgb
                 colors[ColorComponent.WARM_WHITE] = 0
                 colors[ColorComponent.COLD_WHITE] = 0
-            await self._async_set_colors(colors, kwargs.get(ATTR_TRANSITION))
+            await self._async_set_colors(colors, transition)
 
         # Color temperature
         color_temp = kwargs.get(ATTR_COLOR_TEMP)
@@ -232,7 +239,7 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
                     ColorComponent.WARM_WHITE: warm,
                     ColorComponent.COLD_WHITE: cold,
                 },
-                kwargs.get(ATTR_TRANSITION),
+                transition,
             )
 
         # RGBW
@@ -248,12 +255,10 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
 
             if self._cold_white:
                 rgbw_channels[ColorComponent.COLD_WHITE] = rgbw[3]
-            await self._async_set_colors(rgbw_channels, kwargs.get(ATTR_TRANSITION))
+            await self._async_set_colors(rgbw_channels, transition)
 
         # set brightness
-        await self._async_set_brightness(
-            kwargs.get(ATTR_BRIGHTNESS), kwargs.get(ATTR_TRANSITION)
-        )
+        await self._async_set_brightness(kwargs.get(ATTR_BRIGHTNESS), transition)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
