@@ -24,11 +24,6 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_LAST_UPDATE = "last_update"
-ATTR_SENSOR_ID = "sensor_id"
-ATTR_STATION_CODE = "station_code"
-ATTR_STATION_NAME = "station_name"
-
 
 async def async_setup_entry(
     hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
@@ -81,9 +76,4 @@ class MeteoclimaticSensor(CoordinatorEntity, SensorEntity):
     @property
     def extra_state_attributes(self):
         """Return the state attributes."""
-        attributes = {ATTR_ATTRIBUTION: ATTRIBUTION, ATTR_SENSOR_ID: self._type}
-        if self.coordinator.data:
-            attributes[ATTR_LAST_UPDATE] = self.coordinator.data["reception_time"]
-            attributes[ATTR_STATION_CODE] = self.coordinator.data["station"].code
-            attributes[ATTR_STATION_NAME] = self.coordinator.data["station"].name
-        return attributes
+        return {ATTR_ATTRIBUTION: ATTRIBUTION}
