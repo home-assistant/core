@@ -57,58 +57,6 @@ NODE_PRO_SENSORS = [
 ]
 
 
-@callback
-def async_get_pollutant_label(symbol):
-    """Get a pollutant's label based on its symbol."""
-    if symbol == "co":
-        return "Carbon Monoxide"
-    if symbol == "n2":
-        return "Nitrogen Dioxide"
-    if symbol == "o3":
-        return "Ozone"
-    if symbol == "p1":
-        return "PM10"
-    if symbol == "p2":
-        return "PM2.5"
-    if symbol == "s2":
-        return "Sulfur Dioxide"
-    return symbol
-
-
-@callback
-def async_get_pollutant_level_info(value):
-    """Return a verbal pollutant level (and associated icon) for a numeric value."""
-    if 0 <= value <= 50:
-        return ("Good", "mdi:emoticon-excited")
-    if 51 <= value <= 100:
-        return ("Moderate", "mdi:emoticon-happy")
-    if 101 <= value <= 150:
-        return ("Unhealthy for sensitive groups", "mdi:emoticon-neutral")
-    if 151 <= value <= 200:
-        return ("Unhealthy", "mdi:emoticon-sad")
-    if 201 <= value <= 300:
-        return ("Very Unhealthy", "mdi:emoticon-dead")
-    return ("Hazardous", "mdi:biohazard")
-
-
-@callback
-def async_get_pollutant_unit(symbol):
-    """Get a pollutant's unit based on its symbol."""
-    if symbol == "co":
-        return CONCENTRATION_PARTS_PER_MILLION
-    if symbol == "n2":
-        return CONCENTRATION_PARTS_PER_BILLION
-    if symbol == "o3":
-        return CONCENTRATION_PARTS_PER_BILLION
-    if symbol == "p1":
-        return CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
-    if symbol == "p2":
-        return CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
-    if symbol == "s2":
-        return CONCENTRATION_PARTS_PER_BILLION
-    return None
-
-
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up AirVisual sensors based on a config entry."""
     coordinator = hass.data[DOMAIN][DATA_COORDINATOR][config_entry.entry_id]
@@ -195,18 +143,58 @@ class AirVisualGeographySensor(AirVisualEntity, SensorEntity):
         except KeyError:
             return
 
-        if self._kind == SENSOR_KIND_LEVEL:
-            aqi = data[f"aqi{self._locale}"]
-            self._state, self._attr_icon = async_get_pollutant_level_info(aqi)
-        elif self._kind == SENSOR_KIND_AQI:
+        if self._kind == SENSOR_KIND_AQI:
             self._state = data[f"aqi{self._locale}"]
+        elif self._kind == SENSOR_KIND_LEVEL:
+            aqi = data[f"aqi{self._locale}"]
+
+            if 0 <= aqi <= 50:
+                self._state = "Good"
+                self._attr_icon = "mdi:emoticon-excited"
+            elif 51 <= aqi <= 100:
+                self._state = "Moderate"
+                self._attic = "mdi:emoticon-happy"
+            elif 101 <= aqi <= 150:
+                self._state = "Unhealthy for sensitive groups"
+                self._attr_icon = "mdi:emoticon-neutral"
+            elif 151 <= aqi <= 200:
+                self._state = "Unhealthy"
+                self._attr_icon = "mdi:emoticon-sad"
+            elif 201 <= aqi <= 300:
+                self._state = "Very Unhealthy"
+                self._attr_icon = "mdi:emoticon-dead"
+            else:
+                self._state = "Hazardous"
+                self._attr_icon = "mdi:biohazard"
         elif self._kind == SENSOR_KIND_POLLUTANT:
             symbol = data[f"main{self._locale}"]
-            self._state = async_get_pollutant_label(symbol)
+
+            if symbol == "co":
+                self._state = "Carbon Monoxide"
+                unit = CONCENTRATION_PARTS_PER_MILLION
+            elif symbol == "n2":
+                self._state = "Nitrogen Dioxide"
+                unit = CONCENTRATION_PARTS_PER_BILLION
+            elif symbol == "o3":
+                self._state = "Ozone"
+                unit = CONCENTRATION_PARTS_PER_BILLION
+            elif symbol == "p1":
+                self._state = "PM10"
+                unit = CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
+            elif symbol == "p2":
+                self._state = "PM2.5"
+                unit = CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
+            elif symbol == "s2":
+                self._state = "Sulfur Dioxide"
+                unit = CONCENTRATION_PARTS_PER_BILLION
+            else:
+                self._state = None
+                unit = None
+
             self._attrs.update(
                 {
                     ATTR_POLLUTANT_SYMBOL: symbol,
-                    ATTR_POLLUTANT_UNIT: async_get_pollutant_unit(symbol),
+                    ATTR_POLLUTANT_UNIT: unit,
                 }
             )
 
