@@ -180,27 +180,32 @@ class AirVisualGeographySensor(AirVisualEntity, SensorEntity):
 
             if symbol == "co":
                 self._state = "Carbon Monoxide"
-                self._unit = CONCENTRATION_PARTS_PER_MILLION
+                unit = CONCENTRATION_PARTS_PER_MILLION
             elif symbol == "n2":
                 self._state = "Nitrogen Dioxide"
-                self._unit = CONCENTRATION_PARTS_PER_BILLION
+                unit = CONCENTRATION_PARTS_PER_BILLION
             elif symbol == "o3":
                 self._state = "Ozone"
-                self._unit = CONCENTRATION_PARTS_PER_BILLION
+                unit = CONCENTRATION_PARTS_PER_BILLION
             elif symbol == "p1":
                 self._state = "PM10"
-                self._unit = CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
+                unit = CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
             elif symbol == "p2":
                 self._state = "PM2.5"
-                self._unit = CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
+                unit = CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
             elif symbol == "s2":
                 self._state = "Sulfur Dioxide"
-                self._unit = CONCENTRATION_PARTS_PER_BILLION
+                unit = CONCENTRATION_PARTS_PER_BILLION
             else:
                 self._state = None
-                self._unit = None
+                unit = None
 
-            self._attrs.update({ATTR_POLLUTANT_SYMBOL: symbol})
+            self._attrs.update(
+                {
+                    ATTR_POLLUTANT_SYMBOL: symbol,
+                    ATTR_POLLUTANT_UNIT: unit,
+                }
+            )
 
         # Displaying the geography on the map relies upon putting the latitude/longitude
         # in the entity attributes with "latitude" and "longitude" as the keys.
