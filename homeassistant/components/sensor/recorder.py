@@ -19,8 +19,11 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
+    DEVICE_CLASS_POWER,
     ENERGY_KILO_WATT_HOUR,
     ENERGY_WATT_HOUR,
+    POWER_KILO_WATT,
+    POWER_WATT,
     PRESSURE_BAR,
     PRESSURE_HPA,
     PRESSURE_INHG,
@@ -40,15 +43,20 @@ DEVICE_CLASS_STATISTICS = {
     DEVICE_CLASS_BATTERY: {"mean", "min", "max"},
     DEVICE_CLASS_ENERGY: {"sum"},
     DEVICE_CLASS_HUMIDITY: {"mean", "min", "max"},
+    DEVICE_CLASS_MONETARY: {"sum"},
+    DEVICE_CLASS_POWER: {"mean", "min", "max"},
     DEVICE_CLASS_PRESSURE: {"mean", "min", "max"},
     DEVICE_CLASS_TEMPERATURE: {"mean", "min", "max"},
-    DEVICE_CLASS_MONETARY: {"sum"},
 }
 
 UNIT_CONVERSIONS = {
     DEVICE_CLASS_ENERGY: {
         ENERGY_KILO_WATT_HOUR: lambda x: x,
         ENERGY_WATT_HOUR: lambda x: x / 1000,
+    },
+    DEVICE_CLASS_POWER: {
+        POWER_WATT: lambda x: x,
+        POWER_KILO_WATT: lambda x: x * 1000,
     },
     DEVICE_CLASS_PRESSURE: {
         PRESSURE_BAR: lambda x: x / pressure_util.UNIT_CONVERSION[PRESSURE_BAR],
