@@ -9,6 +9,9 @@ from homeassistant.components.device_tracker import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_PLATFORM
 from homeassistant.setup import async_setup_component
 
+# Integration is disabled
+pytest.skip("Integration has been disabled in the manifest", allow_module_level=True)
+
 
 def _configure_mock_get_devices(eebrightbox_mock):
     eebrightbox_instance = eebrightbox_mock.return_value
