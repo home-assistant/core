@@ -42,13 +42,9 @@ async def async_setup(hass: HomeAssistant, config: dict):
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Screenlogic from a config entry."""
 
-    connect_info = get_connect_info(hass, entry)
+    get_new_gateway_partial = partial(get_new_gateway, hass, entry)
 
-    try:
-        gateway = ScreenLogicGateway(**connect_info)
-    except ScreenLogicError as ex:
-        _LOGGER.error("Error while connecting to the gateway %s: %s", connect_info, ex)
-        raise ConfigEntryNotReady from ex
+    gateway = await hass.async_add_executor_job(get_new_gateway_partial)
 
     # The api library uses a shared socket connection and does not handle concurrent
     # requests very well.
@@ -108,6 +104,25 @@ def get_connect_info(hass: HomeAssistant, entry: ConfigEntry):
     return connect_info
 
 
+def get_new_gateway(hass: HomeAssistant, entry: ConfigEntry):
+    """Instantiate a new ScreenLogicGateway, connect to it and update."""
+
+    connect_info = get_connect_info(hass, entry)
+
+    try:
+        gateway = ScreenLogicGateway(**connect_info)
+    except ScreenLogicError as ex:
+        _LOGGER.error("Error while connecting to the gateway %s: %s", connect_info, ex)
+        raise ConfigEntryNotReady from ex
+
+    try:
+        gateway.update()
+    except ScreenLogicError as error:
+        raise UpdateFailed(error) from error
+
+    return gateway
+
+
 class ScreenlogicDataUpdateCoordinator(DataUpdateCoordinator):
     """Class to manage the data update for the Screenlogic component."""
 
@@ -136,16 +151,14 @@ class ScreenlogicDataUpdateCoordinator(DataUpdateCoordinator):
         except ScreenLogicError as error:
             _LOGGER.warning("ScreenLogicError - attempting reconnect: %s", error)
 
-            connect_info = get_connect_info(self.hass, self.config_entry)
-            screen_logic_reconnect = partial(ScreenLogicGateway, **connect_info)
-            try:
-                async with self.api_lock:
-                    self.gateway = await self.hass.async_add_executor_job(
-                        screen_logic_reconnect
-                    )
-                    await self.hass.async_add_executor_job(self.gateway.update)
-            except ScreenLogicError as error:
-                raise UpdateFailed(error) from error
+            get_new_gateway_partial = partial(
+                get_new_gateway, self.hass, self.config_entry
+            )
+
+            async with self.api_lock:
+                self.gateway = await self.hass.async_add_executor_job(
+                    get_new_gateway_partial
+                )
 
         return self.gateway.get_data()
 
