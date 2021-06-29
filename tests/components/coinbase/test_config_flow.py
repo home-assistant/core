@@ -191,7 +191,7 @@ async def test_option_good_exchange_rate(hass):
     """Test we handle a good exchange rate option."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id="abcde12345",
+        entry_id="abcde12345",
         title="Test User",
         data={CONF_API_KEY: "123456", CONF_API_TOKEN: "AbCDeF"},
         options={

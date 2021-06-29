@@ -11,11 +11,13 @@ import voluptuous as vol
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_API_TOKEN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import Throttle
 
 from .const import (
+    API_ACCOUNT_CURRENCY,
     API_ACCOUNT_ID,
     API_ACCOUNTS_DATA,
     CONF_CURRENCIES,
@@ -100,7 +102,34 @@ def create_and_update_instance(api_key, api_token):
 
 async def update_listener(hass, config_entry):
     """Handle options update."""
+
     await hass.config_entries.async_reload(config_entry.entry_id)
+
+    registry = entity_registry.async_get(hass)
+    entities = entity_registry.async_entries_for_config_entry(
+        registry, config_entry.entry_id
+    )
+
+    instance = hass.data[DOMAIN][config_entry.entry_id]
+    hass.async_add_executor_job(instance.update)
+
+    for entity in entities:
+        if "xe" in entity.unique_id:
+            currency = entity.unique_id.split("-")[-1]
+            if currency not in config_entry.options.get(CONF_EXCHANGE_RATES):
+                _LOGGER.warning(f"REMOVING {entity.entity_id}")
+                registry.async_remove(entity.entity_id)
+        else:
+            account = await hass.async_add_executor_job(
+                instance.client.get_account, entity.unique_id.split("coinbase-")[-1]
+            )
+            currency = account[API_ACCOUNT_CURRENCY]
+            _LOGGER.warning(
+                f"Checking if {currency} not in {config_entry.options.get(CONF_CURRENCIES)}"
+            )
+            if currency not in config_entry.options.get(CONF_CURRENCIES):
+                _LOGGER.warning(f"REMOVING {entity.entity_id}")
+                registry.async_remove(entity.entity_id)
 
 
 def get_accounts(client):
