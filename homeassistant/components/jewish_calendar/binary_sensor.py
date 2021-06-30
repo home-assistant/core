@@ -35,12 +35,16 @@ class JewishCalendarBinarySensor(BinarySensorEntity):
         self._attr_unique_id = f"{self._prefix}_{self._type}"
         self._attr_icon = sensor_info[1]
         self._attr_should_poll = False
-        self._attr_is_on = self._get_zmanim().issur_melacha_in_effect
         self._location = data["location"]
         self._hebrew = data["language"] == "hebrew"
         self._candle_lighting_offset = data["candle_lighting_offset"]
         self._havdalah_offset = data["havdalah_offset"]
         self._update_unsub = None
+
+    @property
+    def is_on(self):
+        """Return true if sensor is on."""
+        return self._get_zmanim().issur_melacha_in_effect
 
     def _get_zmanim(self):
         """Return the Zmanim object for now()."""
