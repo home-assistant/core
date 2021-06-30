@@ -61,7 +61,10 @@ class RainBirdSensor(SensorEntity):
     @property
     def unit_of_measurement(self):
         """Return the units of measurement."""
-        return self._unit_of_measurement
+        if isinstance(self._unit_of_measurement, list):
+            return self._unit_of_measurement[int(self._state == 1)]
+        else:
+            return self._unit_of_measurement
 
     @property
     def icon(self):

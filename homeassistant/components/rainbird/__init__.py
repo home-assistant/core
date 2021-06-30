@@ -1,5 +1,6 @@
 """Support for Rain Bird Irrigation system LNK WiFi Module."""
 import logging
+from typing import Any, Dict
 
 from pyrainbird import RainbirdController
 import voluptuous as vol
@@ -27,9 +28,9 @@ DOMAIN = "rainbird"
 SENSOR_TYPE_RAINDELAY = "raindelay"
 SENSOR_TYPE_RAINSENSOR = "rainsensor"
 # sensor_type [ description, unit, icon ]
-SENSOR_TYPES = {
+SENSOR_TYPES: Dict[str, Any] = {
     SENSOR_TYPE_RAINSENSOR: ["Rainsensor", None, "mdi:water"],
-    SENSOR_TYPE_RAINDELAY: ["Raindelay", None, "mdi:water-off"],
+    SENSOR_TYPE_RAINDELAY: ["Raindelay", ["days", "day"], "mdi:water-off"],
 }
 
 TRIGGER_TIME_SCHEMA = vol.All(
