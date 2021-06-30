@@ -31,6 +31,12 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_LED_BRIGHTNESS = "led_brightness"
 
 
+LED_BRIGHTNESS_MAP = {"Bright": 0, "Dim": 1, "Off": 2}
+LED_BRIGHTNESS_MAP_MIOT = {"Bright": 2, "Dim": 1, "Off": 0}
+LED_BRIGHTNESS_REVERSE_MAP = {0: "Bright", 1: "Dim", 2: "Off"}
+LED_BRIGHTNESS_REVERSE_MAP_MIOT = {0: "Off", 1: "Dim", 2: "Bright"}
+
+
 @dataclass
 class SelectorType:
     """Class that holds device specific info for a xiaomi aqara or humidifier selectors."""
@@ -145,21 +151,16 @@ class XiaomiAirHumidifierSelector(XiaomiSelector):
     @property
     def led_brightness(self):
         """Return the current led brightness."""
-        reversed_value_map = {0: "Bright", 1: "Dim", 2: "Off"}
-        if self._current_led_brightness in reversed_value_map:
-            return reversed_value_map[self._current_led_brightness]
-        return None
+        return dict.get(LED_BRIGHTNESS_REVERSE_MAP, self._current_led_brightness)
 
     async def async_set_led_brightness(self, brightness: str):
         """Set the led brightness."""
-        value_map = {"Bright": 0, "Dim": 1, "Off": 2}
-
         if await self._try_command(
             "Setting the led brightness of the miio device failed.",
             self._device.set_led_brightness,
-            AirhumidifierLedBrightness(value_map[brightness]),
+            AirhumidifierLedBrightness(LED_BRIGHTNESS_MAP[brightness]),
         ):
-            self._current_led_brightness = value_map[brightness]
+            self._current_led_brightness = LED_BRIGHTNESS_MAP[brightness]
             self.async_write_ha_state()
 
 
@@ -169,19 +170,14 @@ class XiaomiAirHumidifierMiotSelector(XiaomiAirHumidifierSelector):
     @property
     def led_brightness(self):
         """Return the current led brightness."""
-        reversed_value_map = {0: "Off", 1: "Dim", 2: "Bright"}
-        if self._current_led_brightness in reversed_value_map:
-            return reversed_value_map[self._current_led_brightness]
-        return None
+        return dict.get(LED_BRIGHTNESS_REVERSE_MAP_MIOT, self._current_led_brightness)
 
     async def async_set_led_brightness(self, brightness: str):
         """Set the led brightness."""
-        value_map = {"Bright": 2, "Dim": 1, "Off": 0}
-
         if await self._try_command(
             "Setting the led brightness of the miio device failed.",
             self._device.set_led_brightness,
-            AirhumidifierMiotLedBrightness(value_map[brightness]),
+            AirhumidifierMiotLedBrightness(LED_BRIGHTNESS_MAP_MIOT[brightness]),
         ):
-            self._current_led_brightness = value_map[brightness]
+            self._current_led_brightness = LED_BRIGHTNESS_MAP_MIOT[brightness]
             self.async_write_ha_state()
