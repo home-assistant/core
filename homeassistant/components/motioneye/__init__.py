@@ -184,6 +184,10 @@ def _add_camera(
     ) -> str:
         """Build a motionEye webhook URL."""
 
+        # This URL-surgery cannot use YARL because the output must NOT be
+        # url-encoded. This is because motionEye will do further string
+        # manipulation/substitution on this value before ultimately fetching it,
+        # and it cannot deal with URL-encoded input to that string manipulation.
         return urljoin(
             base,
             "?"
@@ -342,8 +346,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 device_identifier,
             )
 
-        # Ensure every device associated with this config entry is still in the list of
-        # motionEye cameras, otherwise remove the device (and thus entities).
+        # Ensure every device associated with this config entry is still in the
+        # list of motionEye cameras, otherwise remove the device (and thus
+        # entities).
         for device_entry in dr.async_entries_for_config_entry(
             device_registry, entry.entry_id
         ):
