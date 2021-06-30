@@ -34,8 +34,8 @@ from homeassistant.setup import async_setup_component
 
 from .conftest import ReadResult, base_test, prepare_service_update
 
-fan_name = "test_fan"
-entity_id = f"{FAN_DOMAIN}.{fan_name}"
+FAN_NAME = "test_fan"
+ENTITY_ID = f"{FAN_DOMAIN}.{FAN_NAME}"
 
 
 @pytest.mark.parametrize(
@@ -44,7 +44,7 @@ entity_id = f"{FAN_DOMAIN}.{fan_name}"
         {
             CONF_FANS: [
                 {
-                    CONF_NAME: fan_name,
+                    CONF_NAME: FAN_NAME,
                     CONF_ADDRESS: 1234,
                 }
             ]
@@ -52,7 +52,7 @@ entity_id = f"{FAN_DOMAIN}.{fan_name}"
         {
             CONF_FANS: [
                 {
-                    CONF_NAME: fan_name,
+                    CONF_NAME: FAN_NAME,
                     CONF_ADDRESS: 1234,
                     CONF_WRITE_TYPE: CALL_TYPE_COIL,
                 }
@@ -61,7 +61,7 @@ entity_id = f"{FAN_DOMAIN}.{fan_name}"
         {
             CONF_FANS: [
                 {
-                    CONF_NAME: fan_name,
+                    CONF_NAME: FAN_NAME,
                     CONF_ADDRESS: 1234,
                     CONF_SLAVE: 1,
                     CONF_COMMAND_OFF: 0x00,
@@ -78,7 +78,7 @@ entity_id = f"{FAN_DOMAIN}.{fan_name}"
         {
             CONF_FANS: [
                 {
-                    CONF_NAME: fan_name,
+                    CONF_NAME: FAN_NAME,
                     CONF_ADDRESS: 1234,
                     CONF_SLAVE: 1,
                     CONF_COMMAND_OFF: 0x00,
@@ -95,7 +95,7 @@ entity_id = f"{FAN_DOMAIN}.{fan_name}"
         {
             CONF_FANS: [
                 {
-                    CONF_NAME: fan_name,
+                    CONF_NAME: FAN_NAME,
                     CONF_ADDRESS: 1234,
                     CONF_SLAVE: 1,
                     CONF_COMMAND_OFF: 0x00,
@@ -112,7 +112,7 @@ entity_id = f"{FAN_DOMAIN}.{fan_name}"
         {
             CONF_FANS: [
                 {
-                    CONF_NAME: fan_name,
+                    CONF_NAME: FAN_NAME,
                     CONF_ADDRESS: 1234,
                     CONF_SLAVE: 1,
                     CONF_COMMAND_OFF: 0x00,
@@ -164,13 +164,13 @@ async def test_all_fan(hass, call_type, regs, verify, expected):
     state = await base_test(
         hass,
         {
-            CONF_NAME: fan_name,
+            CONF_NAME: FAN_NAME,
             CONF_ADDRESS: 1234,
             CONF_SLAVE: 1,
             CONF_WRITE_TYPE: call_type,
             **verify,
         },
-        fan_name,
+        FAN_NAME,
         FAN_DOMAIN,
         CONF_FANS,
         None,
@@ -184,7 +184,7 @@ async def test_all_fan(hass, call_type, regs, verify, expected):
 
 @pytest.mark.parametrize(
     "mock_test_state",
-    [(State(entity_id, STATE_ON),)],
+    [(State(ENTITY_ID, STATE_ON),)],
     indirect=True,
 )
 @pytest.mark.parametrize(
@@ -193,7 +193,7 @@ async def test_all_fan(hass, call_type, regs, verify, expected):
         {
             CONF_FANS: [
                 {
-                    CONF_NAME: fan_name,
+                    CONF_NAME: FAN_NAME,
                     CONF_ADDRESS: 1234,
                 }
             ]
@@ -202,13 +202,13 @@ async def test_all_fan(hass, call_type, regs, verify, expected):
 )
 async def test_restore_state_fan(hass, mock_test_state, mock_modbus):
     """Run test for fan restore state."""
-    assert hass.states.get(entity_id).state == STATE_ON
+    assert hass.states.get(ENTITY_ID).state == STATE_ON
 
 
 async def test_fan_service_turn(hass, caplog, mock_pymodbus):
     """Run test for service turn_on/turn_off."""
 
-    entity_id2 = f"{FAN_DOMAIN}.{fan_name}2"
+    ENTITY_ID2 = f"{FAN_DOMAIN}.{FAN_NAME}2"
     config = {
         MODBUS_DOMAIN: {
             CONF_TYPE: "tcp",
@@ -216,12 +216,12 @@ async def test_fan_service_turn(hass, caplog, mock_pymodbus):
             CONF_PORT: 5501,
             CONF_FANS: [
                 {
-                    CONF_NAME: fan_name,
+                    CONF_NAME: FAN_NAME,
                     CONF_ADDRESS: 17,
                     CONF_WRITE_TYPE: CALL_TYPE_REGISTER_HOLDING,
                 },
                 {
-                    CONF_NAME: f"{fan_name}2",
+                    CONF_NAME: f"{FAN_NAME}2",
                     CONF_ADDRESS: 17,
                     CONF_WRITE_TYPE: CALL_TYPE_REGISTER_HOLDING,
                     CONF_VERIFY: {},
@@ -233,44 +233,44 @@ async def test_fan_service_turn(hass, caplog, mock_pymodbus):
     await hass.async_block_till_done()
     assert MODBUS_DOMAIN in hass.config.components
 
-    assert hass.states.get(entity_id).state == STATE_OFF
+    assert hass.states.get(ENTITY_ID).state == STATE_OFF
     await hass.services.async_call(
-        "fan", "turn_on", service_data={"entity_id": entity_id}
+        "fan", "turn_on", service_data={"entity_id": ENTITY_ID}
     )
     await hass.async_block_till_done()
-    assert hass.states.get(entity_id).state == STATE_ON
+    assert hass.states.get(ENTITY_ID).state == STATE_ON
     await hass.services.async_call(
-        "fan", "turn_off", service_data={"entity_id": entity_id}
+        "fan", "turn_off", service_data={"entity_id": ENTITY_ID}
     )
     await hass.async_block_till_done()
-    assert hass.states.get(entity_id).state == STATE_OFF
+    assert hass.states.get(ENTITY_ID).state == STATE_OFF
 
     mock_pymodbus.read_holding_registers.return_value = ReadResult([0x01])
-    assert hass.states.get(entity_id2).state == STATE_OFF
+    assert hass.states.get(ENTITY_ID2).state == STATE_OFF
     await hass.services.async_call(
-        "fan", "turn_on", service_data={"entity_id": entity_id2}
+        "fan", "turn_on", service_data={"entity_id": ENTITY_ID2}
     )
     await hass.async_block_till_done()
-    assert hass.states.get(entity_id2).state == STATE_ON
+    assert hass.states.get(ENTITY_ID2).state == STATE_ON
     mock_pymodbus.read_holding_registers.return_value = ReadResult([0x00])
     await hass.services.async_call(
-        "fan", "turn_off", service_data={"entity_id": entity_id2}
+        "fan", "turn_off", service_data={"entity_id": ENTITY_ID2}
     )
     await hass.async_block_till_done()
-    assert hass.states.get(entity_id2).state == STATE_OFF
+    assert hass.states.get(ENTITY_ID2).state == STATE_OFF
 
     mock_pymodbus.write_register.side_effect = ModbusException("fail write_")
     await hass.services.async_call(
-        "fan", "turn_on", service_data={"entity_id": entity_id2}
+        "fan", "turn_on", service_data={"entity_id": ENTITY_ID2}
     )
     await hass.async_block_till_done()
-    assert hass.states.get(entity_id2).state == STATE_UNAVAILABLE
+    assert hass.states.get(ENTITY_ID2).state == STATE_UNAVAILABLE
     mock_pymodbus.write_coil.side_effect = ModbusException("fail write_")
     await hass.services.async_call(
-        "fan", "turn_off", service_data={"entity_id": entity_id}
+        "fan", "turn_off", service_data={"entity_id": ENTITY_ID}
     )
     await hass.async_block_till_done()
-    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
 
 
 async def test_service_fan_update(hass, mock_pymodbus):
@@ -279,7 +279,7 @@ async def test_service_fan_update(hass, mock_pymodbus):
     config = {
         CONF_FANS: [
             {
-                CONF_NAME: fan_name,
+                CONF_NAME: FAN_NAME,
                 CONF_ADDRESS: 1234,
                 CONF_WRITE_TYPE: CALL_TYPE_COIL,
                 CONF_VERIFY: {},
@@ -292,11 +292,11 @@ async def test_service_fan_update(hass, mock_pymodbus):
         config,
     )
     await hass.services.async_call(
-        "homeassistant", "update_entity", {"entity_id": entity_id}, blocking=True
+        "homeassistant", "update_entity", {"entity_id": ENTITY_ID}, blocking=True
     )
-    assert hass.states.get(entity_id).state == STATE_ON
+    assert hass.states.get(ENTITY_ID).state == STATE_ON
     mock_pymodbus.read_coils.return_value = ReadResult([0x00])
     await hass.services.async_call(
-        "homeassistant", "update_entity", {"entity_id": entity_id}, blocking=True
+        "homeassistant", "update_entity", {"entity_id": ENTITY_ID}, blocking=True
     )
-    assert hass.states.get(entity_id).state == STATE_OFF
+    assert hass.states.get(ENTITY_ID).state == STATE_OFF

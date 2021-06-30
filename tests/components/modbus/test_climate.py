@@ -16,8 +16,8 @@ from homeassistant.core import State
 
 from .conftest import ReadResult, base_test, prepare_service_update
 
-climate_name = "test_climate"
-entity_id = f"{CLIMATE_DOMAIN}.{climate_name}"
+CLIMATE_NAME = "test_climate"
+ENTITY_ID = f"{CLIMATE_DOMAIN}.{CLIMATE_NAME}"
 
 
 @pytest.mark.parametrize(
@@ -26,7 +26,7 @@ entity_id = f"{CLIMATE_DOMAIN}.{climate_name}"
         {
             CONF_CLIMATES: [
                 {
-                    CONF_NAME: climate_name,
+                    CONF_NAME: CLIMATE_NAME,
                     CONF_TARGET_TEMP: 117,
                     CONF_ADDRESS: 117,
                     CONF_SLAVE: 10,
@@ -36,7 +36,7 @@ entity_id = f"{CLIMATE_DOMAIN}.{climate_name}"
         {
             CONF_CLIMATES: [
                 {
-                    CONF_NAME: climate_name,
+                    CONF_NAME: CLIMATE_NAME,
                     CONF_TARGET_TEMP: 117,
                     CONF_ADDRESS: 117,
                     CONF_SLAVE: 10,
@@ -63,18 +63,18 @@ async def test_config_climate(hass, mock_modbus):
 )
 async def test_temperature_climate(hass, regs, expected):
     """Run test for given config."""
-    climate_name = "modbus_test_climate"
+    CLIMATE_NAME = "modbus_test_climate"
     return
     state = await base_test(
         hass,
         {
-            CONF_NAME: climate_name,
+            CONF_NAME: CLIMATE_NAME,
             CONF_SLAVE: 1,
             CONF_TARGET_TEMP: 117,
             CONF_ADDRESS: 117,
             CONF_COUNT: 2,
         },
-        climate_name,
+        CLIMATE_NAME,
         CLIMATE_DOMAIN,
         CONF_CLIMATES,
         None,
@@ -92,7 +92,7 @@ async def test_service_climate_update(hass, mock_pymodbus):
     config = {
         CONF_CLIMATES: [
             {
-                CONF_NAME: climate_name,
+                CONF_NAME: CLIMATE_NAME,
                 CONF_TARGET_TEMP: 117,
                 CONF_ADDRESS: 117,
                 CONF_SLAVE: 10,
@@ -105,12 +105,12 @@ async def test_service_climate_update(hass, mock_pymodbus):
         config,
     )
     await hass.services.async_call(
-        "homeassistant", "update_entity", {"entity_id": entity_id}, blocking=True
+        "homeassistant", "update_entity", {"entity_id": ENTITY_ID}, blocking=True
     )
-    assert hass.states.get(entity_id).state == "auto"
+    assert hass.states.get(ENTITY_ID).state == "auto"
 
 
-test_value = State(entity_id, 35)
+test_value = State(ENTITY_ID, 35)
 test_value.attributes = {ATTR_TEMPERATURE: 37}
 
 
@@ -125,7 +125,7 @@ test_value.attributes = {ATTR_TEMPERATURE: 37}
         {
             CONF_CLIMATES: [
                 {
-                    CONF_NAME: climate_name,
+                    CONF_NAME: CLIMATE_NAME,
                     CONF_TARGET_TEMP: 117,
                     CONF_ADDRESS: 117,
                 }
@@ -135,6 +135,6 @@ test_value.attributes = {ATTR_TEMPERATURE: 37}
 )
 async def test_restore_state_climate(hass, mock_test_state, mock_modbus):
     """Run test for sensor restore state."""
-    state = hass.states.get(entity_id)
+    state = hass.states.get(ENTITY_ID)
     assert state.state == HVAC_MODE_AUTO
     assert state.attributes[ATTR_TEMPERATURE] == 37
