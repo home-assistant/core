@@ -147,6 +147,8 @@ async def test_option_good_account_currency(hass):
     ), patch(
         "coinbase.wallet.client.Client.get_exchange_rates",
         return_value=mock_get_exchange_rates(),
+    ), patch(
+        "homeassistant.components.coinbase.update_listener"
     ):
         config_entry = await init_mock_coinbase(hass)
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
@@ -209,6 +211,8 @@ async def test_option_good_exchange_rate(hass):
     ), patch(
         "coinbase.wallet.client.Client.get_exchange_rates",
         return_value=mock_get_exchange_rates(),
+    ), patch(
+        "homeassistant.components.coinbase.update_listener"
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()

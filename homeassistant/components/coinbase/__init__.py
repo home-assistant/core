@@ -117,18 +117,13 @@ async def update_listener(hass, config_entry):
         if "xe" in entity.unique_id:
             currency = entity.unique_id.split("-")[-1]
             if currency not in config_entry.options.get(CONF_EXCHANGE_RATES):
-                _LOGGER.warning(f"REMOVING {entity.entity_id}")
                 registry.async_remove(entity.entity_id)
         else:
             account = await hass.async_add_executor_job(
                 instance.client.get_account, entity.unique_id.split("coinbase-")[-1]
             )
             currency = account[API_ACCOUNT_CURRENCY]
-            _LOGGER.warning(
-                f"Checking if {currency} not in {config_entry.options.get(CONF_CURRENCIES)}"
-            )
             if currency not in config_entry.options.get(CONF_CURRENCIES):
-                _LOGGER.warning(f"REMOVING {entity.entity_id}")
                 registry.async_remove(entity.entity_id)
 
 
