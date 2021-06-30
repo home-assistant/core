@@ -809,6 +809,9 @@ pyflunearyou==1.0.7
 # homeassistant.components.forked_daapd
 pyforked-daapd==0.1.11
 
+# homeassistant.components.freedompro
+pyfreedompro==1.1.0
+
 # homeassistant.components.fritzbox
 pyfritzhome==0.4.2
 
