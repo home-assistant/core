@@ -381,7 +381,7 @@ class XiaomiGenericCoordinatedSwitch(XiaomiCoordinatedMiioEntity, SwitchEntity):
     def _handle_coordinator_update(self):
         """Fetch state from the device."""
         # On state change the device doesn't provide the new state immediately.
-        self._state = self._extract_value_from_attribute(
+        self._attr_is_on = self._extract_value_from_attribute(
             self.coordinator.data, self._controller.short_name
         )
         self.async_write_ha_state()
