@@ -349,7 +349,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 )
 
         for feature, switch in SWITCH_TYPES.items():
-            if feature & device_features and feature in SWITCH_TYPES:
+            if feature & device_features:
                 entities.append(
                     XiaomiGenericCoordinatedSwitch(
                         f"{config_entry.title} {switch.name}",
