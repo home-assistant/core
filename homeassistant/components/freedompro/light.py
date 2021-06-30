@@ -81,15 +81,12 @@ class Device(CoordinatorEntity, LightEntity):
 
     async def async_turn_on(self, **kwargs):
         """Async function to set on to light."""
-        self._attr_is_on = True
         payload = {"on": True}
         if ATTR_BRIGHTNESS in kwargs:
-            self._attr_brightness = kwargs[ATTR_BRIGHTNESS]
-            payload["brightness"] = round(self._attr_brightness / 255 * 100)
+            payload["brightness"] = round(kwargs[ATTR_BRIGHTNESS] / 255 * 100)
         if ATTR_HS_COLOR in kwargs:
-            self._attr_hs_color = kwargs[ATTR_HS_COLOR]
-            payload["saturation"] = round(self._attr_hs_color[1])
-            payload["hue"] = round(self._attr_hs_color[0])
+            payload["saturation"] = round(kwargs[ATTR_HS_COLOR][1])
+            payload["hue"] = round(kwargs[ATTR_HS_COLOR][0])
         payload = json.dumps(payload)
         await put_state(
             self._session,
@@ -97,10 +94,10 @@ class Device(CoordinatorEntity, LightEntity):
             self._attr_unique_id,
             payload,
         )
+        await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs):
         """Async function to set off to light."""
-        self._attr_is_on = False
         payload = {"on": False}
         payload = json.dumps(payload)
         await put_state(
@@ -109,3 +106,4 @@ class Device(CoordinatorEntity, LightEntity):
             self._attr_unique_id,
             payload,
         )
+        await self.coordinator.async_request_refresh()
