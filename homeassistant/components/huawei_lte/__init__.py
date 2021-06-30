@@ -30,6 +30,7 @@ from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
+    CONF_MAC,
     CONF_NAME,
     CONF_PASSWORD,
     CONF_RECIPIENT,
@@ -80,6 +81,7 @@ from .const import (
     SERVICE_SUSPEND_INTEGRATION,
     UPDATE_SIGNAL,
 )
+from .utils import get_device_macs
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -165,6 +167,13 @@ class Router:
         """Get router identifiers for device registry."""
         assert self.config_entry.unique_id is not None
         return {(DOMAIN, self.config_entry.unique_id)}
+
+    @property
+    def device_connections(self) -> set[tuple[str, str]]:
+        """Get router connections for device registry."""
+        return {
+            (dr.CONNECTION_NETWORK_MAC, x) for x in self.config_entry.data[CONF_MAC]
+        }
 
     def _get_data(self, key: str, func: Callable[[], Any]) -> None:
         if not self.subscriptions.get(key):
@@ -295,7 +304,9 @@ class HuaweiLteData:
     routers: dict[str, Router] = attr.ib(init=False, factory=dict)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(  # noqa: C901
+    hass: HomeAssistant, entry: ConfigEntry
+) -> bool:
     """Set up Huawei LTE component from config entry."""
     url = entry.data[CONF_URL]
 
@@ -397,8 +408,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Clear all subscriptions, enabled entities will push back theirs
     router.subscriptions.clear()
 
+    # Update device MAC addresses on record. These can change due to toggling between
+    # authenticated and unauthenticated modes, or likely also when enabling/disabling
+    # SSIDs in the router config.
+    try:
+        wlan_settings = await hass.async_add_executor_job(
+            router.client.wlan.multi_basic_settings
+        )
+    except Exception:  # pylint: disable=broad-except
+        # Assume not supported, or authentication required but in unauthenticated mode
+        wlan_settings = {}
+    macs = get_device_macs(device_info or {}, wlan_settings)
+    # Be careful not to overwrite a previous, more complete set with a partial one
+    if macs and (not entry.data[CONF_MAC] or (device_info and wlan_settings)):
+        new_data = dict(entry.data)
+        new_data[CONF_MAC] = macs
+        hass.config_entries.async_update_entry(entry, data=new_data)
+
     # Set up device registry
-    if router.device_identifiers:
+    if router.device_identifiers or router.device_connections:
         device_data = {}
         sw_version = None
         if device_info:
@@ -414,9 +442,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         device_registry = await dr.async_get_registry(hass)
         device_registry.async_get_or_create(
             config_entry_id=entry.entry_id,
-            # We used to have "connections" here before 2021.7, but as of that version
-            # there is no way to clear them, so devices set up before that version will
-            # have it left behind.
+            connections=router.device_connections,
             identifiers=router.device_identifiers,
             name=router.device_name,
             manufacturer="Huawei",
@@ -574,6 +600,12 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         config_entry.version = 2
         hass.config_entries.async_update_entry(config_entry, options=options)
         _LOGGER.info("Migrated config entry to version %d", config_entry.version)
+    if config_entry.version == 2:
+        config_entry.version = 3
+        data = dict(config_entry.data)
+        data[CONF_MAC] = []
+        hass.config_entries.async_update_entry(config_entry, data=data)
+        _LOGGER.info("Migrated config entry to version %d", config_entry.version)
     return True
 
 
@@ -620,6 +652,7 @@ class HuaweiLteBaseEntity(Entity):
         """Get info for matching with parent router."""
         return {
             "identifiers": self.router.device_identifiers,
+            "connections": self.router.device_connections,
         }
 
     async def async_update(self) -> None:

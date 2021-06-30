@@ -7,7 +7,7 @@ from urllib.parse import urlparse
 
 from huawei_lte_api.AuthorizedConnection import AuthorizedConnection
 from huawei_lte_api.Client import Client
-from huawei_lte_api.Connection import Connection
+from huawei_lte_api.Connection import Connection, GetResponseType
 from huawei_lte_api.exceptions import (
     LoginErrorPasswordWrongException,
     LoginErrorUsernamePasswordOverrunException,
@@ -22,6 +22,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components import ssdp
 from homeassistant.const import (
+    CONF_MAC,
     CONF_NAME,
     CONF_PASSWORD,
     CONF_RECIPIENT,
@@ -42,6 +43,7 @@ from .const import (
     DEFAULT_UNAUTHENTICATED_MODE,
     DOMAIN,
 )
+from .utils import get_device_macs
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,7 +51,7 @@ _LOGGER = logging.getLogger(__name__)
 class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle Huawei LTE config flow."""
 
-    VERSION = 2
+    VERSION = 3
 
     @staticmethod
     @callback
@@ -94,7 +96,7 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle import initiated config flow."""
         return await self.async_step_user(user_input)
 
-    async def async_step_user(
+    async def async_step_user(  # noqa: C901
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle user initiated config flow."""
@@ -134,18 +136,28 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             )
             return conn
 
-        def get_device_info(conn: Connection) -> dict[str, Any]:
+        def get_device_info(
+            conn: Connection,
+        ) -> tuple[GetResponseType, GetResponseType]:
             """Get router info."""
             client = Client(conn)
             try:
-                return client.device.information()
+                device_info = client.device.information()
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.debug("Could not get device.information", exc_info=True)
+                try:
+                    device_info = client.device.basic_information()
+                except Exception:  # pylint: disable=broad-except
+                    _LOGGER.debug(
+                        "Could not get device.basic_information", exc_info=True
+                    )
+                    device_info = {}
             try:
-                return client.device.basic_information()
+                wlan_settings = client.wlan.multi_basic_settings()
             except Exception:  # pylint: disable=broad-except
-                _LOGGER.debug("Could not get device.basic_information", exc_info=True)
-            return {}
+                _LOGGER.debug("Could not get wlan.multi_basic_settings", exc_info=True)
+                wlan_settings = {}
+            return device_info, wlan_settings
 
         try:
             conn = await self.hass.async_add_executor_job(try_connect, user_input)
@@ -172,7 +184,9 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 user_input=user_input, errors=errors
             )
 
-        info = await self.hass.async_add_executor_job(get_device_info, conn)
+        info, wlan_settings = await self.hass.async_add_executor_job(
+            get_device_info, conn
+        )
         await self.hass.async_add_executor_job(logout)
 
         if not self.unique_id:
@@ -181,6 +195,8 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 self._abort_if_unique_id_configured()
             else:
                 await self._async_handle_discovery_without_unique_id()
+
+        user_input[CONF_MAC] = get_device_macs(info, wlan_settings)
 
         title = (
             self.context.get("title_placeholders", {}).get(CONF_NAME)
