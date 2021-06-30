@@ -54,7 +54,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_set_value(entry: NumberEntity, async_service_call: Callable) -> None:
+async def async_set_value(entry: NumberEntity, service_call: ServiceCall) -> None:
     """Service call wrapper to set a new value."""
     value = getattr(async_service_call, "data")["value"]
     if value < entry.min_value or value > entry.max_value:
