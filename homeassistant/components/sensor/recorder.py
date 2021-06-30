@@ -30,6 +30,7 @@ from homeassistant.const import (
     PRESSURE_MBAR,
     PRESSURE_PA,
     PRESSURE_PSI,
+    TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant, State
 import homeassistant.util.dt as dt_util
@@ -47,6 +48,12 @@ DEVICE_CLASS_STATISTICS = {
     DEVICE_CLASS_POWER: {"mean", "min", "max"},
     DEVICE_CLASS_PRESSURE: {"mean", "min", "max"},
     DEVICE_CLASS_TEMPERATURE: {"mean", "min", "max"},
+}
+
+DEVICE_CLASS_UNITS = {
+    DEVICE_CLASS_ENERGY: ENERGY_KILO_WATT_HOUR,
+    DEVICE_CLASS_PRESSURE: PRESSURE_PA,
+    DEVICE_CLASS_TEMPERATURE: TEMP_CELSIUS,
 }
 
 UNIT_CONVERSIONS = {
@@ -192,14 +199,21 @@ def compile_statistics(
 
         result[entity_id] = {}
 
+        # Get unit
+        unit = DEVICE_CLASS_UNITS.get(
+            device_class, fstates[0][1].attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        )
+        result[entity_id]["meta"] = {"unit_of_measurement": unit}
+
         # Make calculations
+        stat: dict = {}
         if "max" in wanted_statistics:
-            result[entity_id]["max"] = max(*itertools.islice(zip(*fstates), 1))
+            stat["max"] = max(*itertools.islice(zip(*fstates), 1))
         if "min" in wanted_statistics:
-            result[entity_id]["min"] = min(*itertools.islice(zip(*fstates), 1))
+            stat["min"] = min(*itertools.islice(zip(*fstates), 1))
 
         if "mean" in wanted_statistics:
-            result[entity_id]["mean"] = _time_weighted_average(fstates, start, end)
+            stat["mean"] = _time_weighted_average(fstates, start, end)
 
         if "sum" in wanted_statistics:
             last_reset = old_last_reset = None
@@ -233,8 +247,10 @@ def compile_statistics(
 
             # Update the sum with the last state
             _sum += new_state - old_state
-            result[entity_id]["last_reset"] = dt_util.parse_datetime(last_reset)
-            result[entity_id]["sum"] = _sum
-            result[entity_id]["state"] = new_state
+            stat["last_reset"] = dt_util.parse_datetime(last_reset)
+            stat["sum"] = _sum
+            stat["state"] = new_state
+
+        result[entity_id]["stat"] = stat
 
     return result
