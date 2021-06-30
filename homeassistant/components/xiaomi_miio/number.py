@@ -65,7 +65,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
 
     _LOGGER.debug("Initializing with host %s (token %s...)", host, token[:5])
-    if model not in model in [MODEL_AIRHUMIDIFIER_CA4]:
+    if model not in [MODEL_AIRHUMIDIFIER_CA4]:
         return
 
     for feature in NUMBER_TYPES:
