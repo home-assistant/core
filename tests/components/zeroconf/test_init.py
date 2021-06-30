@@ -1,7 +1,6 @@
 """Test Zeroconf component setup process."""
-from unittest.mock import AsyncMock, call, patch
+from unittest.mock import call, patch
 
-import pytest
 from zeroconf import InterfaceChoice, IPVersion, ServiceStateChange
 from zeroconf.asyncio import AsyncServiceInfo
 
@@ -25,16 +24,6 @@ PROPERTIES = {
 
 HOMEKIT_STATUS_UNPAIRED = b"1"
 HOMEKIT_STATUS_PAIRED = b"0"
-
-
-@pytest.fixture
-def mock_async_zeroconf():
-    """Mock AsyncZeroconf."""
-    with patch("homeassistant.components.zeroconf.HaAsyncZeroconf") as mock_aiozc:
-        zc = mock_aiozc.return_value
-        zc.zeroconf.async_wait_for_start = AsyncMock()
-        zc.ha_async_close = AsyncMock()
-        yield zc
 
 
 def service_update_mock(ipv6, zeroconf, services, handlers, *, limit_service=None):
@@ -763,7 +752,7 @@ _ADAPTERS_WITH_MANUAL_CONFIG = [
 ]
 
 
-async def test_async_detect_interfaces_setting_empty_route(hass):
+async def test_async_detect_interfaces_setting_empty_route(hass, mock_async_zeroconf):
     """Test without default interface config and the route returns nothing."""
     with patch("homeassistant.components.zeroconf.HaZeroconf") as mock_zc, patch.object(
         hass.config_entries.flow, "async_init"
