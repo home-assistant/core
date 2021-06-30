@@ -1,5 +1,4 @@
 """Support for the Abode Security System."""
-from copy import deepcopy
 from functools import partial
 
 from abodepy import Abode
@@ -8,7 +7,6 @@ import abodepy.helpers.timeline as TIMELINE
 from requests.exceptions import ConnectTimeout, HTTPError
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_DATE,
@@ -44,22 +42,7 @@ ATTR_APP_TYPE = "app_type"
 ATTR_EVENT_BY = "event_by"
 ATTR_VALUE = "value"
 
-CONFIG_SCHEMA = vol.Schema(
-    vol.All(
-        # Deprecated in Home Assistant 2021.6
-        cv.deprecated(DOMAIN),
-        {
-            DOMAIN: vol.Schema(
-                {
-                    vol.Required(CONF_USERNAME): cv.string,
-                    vol.Required(CONF_PASSWORD): cv.string,
-                    vol.Optional(CONF_POLLING, default=False): cv.boolean,
-                }
-            )
-        },
-    ),
-    extra=vol.ALLOW_EXTRA,
-)
+CONFIG_SCHEMA = cv.deprecated(DOMAIN)
 
 CHANGE_SETTING_SCHEMA = vol.Schema(
     {vol.Required(ATTR_SETTING): cv.string, vol.Required(ATTR_VALUE): cv.string}
@@ -90,22 +73,6 @@ class AbodeSystem:
         self.polling = polling
         self.entity_ids = set()
         self.logout_listener = None
-
-
-async def async_setup(hass, config):
-    """Set up Abode integration."""
-    if DOMAIN not in config:
-        return True
-
-    conf = config[DOMAIN]
-
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=deepcopy(conf)
-        )
-    )
-
-    return True
 
 
 async def async_setup_entry(hass, config_entry):
