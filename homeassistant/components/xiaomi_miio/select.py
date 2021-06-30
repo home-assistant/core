@@ -34,7 +34,7 @@ ATTR_LED_BRIGHTNESS = "led_brightness"
 LED_BRIGHTNESS_MAP = {"Bright": 0, "Dim": 1, "Off": 2}
 LED_BRIGHTNESS_MAP_MIOT = {"Bright": 2, "Dim": 1, "Off": 0}
 LED_BRIGHTNESS_REVERSE_MAP = {0: "Bright", 1: "Dim", 2: "Off"}
-LED_BRIGHTNESS_REVERSE_MAP_MIOT = {0: "Off", 1: "Dim", 2: "Bright"}
+LED_BRIGHTNESS_REVERSE_MAP_MIOT = {val: key for key, val in LED_BRIGHTNESS_MAP_MIOT.items()}
 
 
 @dataclass
