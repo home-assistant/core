@@ -24,8 +24,7 @@ from homeassistant.components.remote import (
     ATTR_NUM_REPEATS,
     DEFAULT_DELAY_SECS,
     DOMAIN as RM_DOMAIN,
-    EVENT_DATA_TYPE_LEARNED_CODE as RM_EVENT_DATA_TYPE_LEARNED_CODE,
-    EVENT_TYPE as RM_EVENT_TYPE,
+    EVENT_LEARNED_COMMAND as RM_EVENT_LEARNED_COMMAND,
     PLATFORM_SCHEMA,
     SERVICE_DELETE_COMMAND,
     SERVICE_LEARN_COMMAND,
@@ -284,16 +283,12 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
         service = f"{RM_DOMAIN}.{SERVICE_LEARN_COMMAND}"
 
         if not self._attr_is_on:
-            error_message = (
-                "%s canceled: %s entity is turned off",
-                service,
-                self.entity_id,
-            )
+            error_message = f"{service} canceled: {self.entity_id} entity is turned off"
+
             self.hass.bus.async_fire(
-                RM_EVENT_TYPE,
+                RM_EVENT_LEARNED_COMMAND,
                 {
                     "device_id": self.unique_id,
-                    "type": RM_EVENT_DATA_TYPE_LEARNED_CODE,
                     "error": error_message,
                 },
             )
@@ -325,10 +320,9 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
 
                 except (AuthorizationError, NetworkTimeoutError, OSError) as err:
                     self.hass.bus.async_fire(
-                        RM_EVENT_TYPE,
+                        RM_EVENT_LEARNED_COMMAND,
                         {
                             "device_id": self.unique_id,
-                            "type": RM_EVENT_DATA_TYPE_LEARNED_CODE,
                             "command": command,
                             "error": str(err),
                         },
@@ -338,10 +332,9 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
 
                 except BroadlinkException as err:
                     self.hass.bus.async_fire(
-                        RM_EVENT_TYPE,
+                        RM_EVENT_LEARNED_COMMAND,
                         {
                             "device_id": self.unique_id,
-                            "type": RM_EVENT_DATA_TYPE_LEARNED_CODE,
                             "command": command,
                             "error": str(err),
                         },
@@ -352,10 +345,9 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
                 self._codes.setdefault(device, {}).update({command: code})
 
                 self.hass.bus.async_fire(
-                    RM_EVENT_TYPE,
+                    RM_EVENT_LEARNED_COMMAND,
                     {
                         "device_id": self.unique_id,
-                        "type": RM_EVENT_DATA_TYPE_LEARNED_CODE,
                         "command": command,
                         "code": code,
                     },
