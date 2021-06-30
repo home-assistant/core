@@ -373,7 +373,7 @@ class XiaomiGenericCoordinatedSwitch(XiaomiCoordinatedMiioEntity, SwitchEntity):
 
         self._attr_icon = switch.icon
         self._controller = switch
-        self._state = self._extract_value_from_attribute(
+        self._attr_is_on = self._extract_value_from_attribute(
             self.coordinator.data, self._controller.short_name
         )
 
