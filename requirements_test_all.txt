@@ -545,7 +545,7 @@ mficlient==0.3.0
 micloud==0.3
 
 # homeassistant.components.mill
-millheater==0.4.1
+millheater==0.5.0
 
 # homeassistant.components.minio
 minio==4.0.9
@@ -1331,7 +1331,7 @@ yeelight==0.6.3
 zeep[async]==4.0.0
 
 # homeassistant.components.zeroconf
-zeroconf==0.31.0
+zeroconf==0.32.0
 
 # homeassistant.components.zha
 zha-quirks==0.0.57

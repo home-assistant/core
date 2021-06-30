@@ -24,9 +24,16 @@ from homeassistant.const import (
     ENERGY_WATT_HOUR,
     POWER_KILO_WATT,
     POWER_WATT,
+    PRESSURE_BAR,
+    PRESSURE_HPA,
+    PRESSURE_INHG,
+    PRESSURE_MBAR,
+    PRESSURE_PA,
+    PRESSURE_PSI,
 )
 from homeassistant.core import HomeAssistant, State
 import homeassistant.util.dt as dt_util
+import homeassistant.util.pressure as pressure_util
 
 from . import DOMAIN
 
@@ -50,6 +57,14 @@ UNIT_CONVERSIONS = {
     DEVICE_CLASS_POWER: {
         POWER_WATT: lambda x: x,
         POWER_KILO_WATT: lambda x: x * 1000,
+    },
+    DEVICE_CLASS_PRESSURE: {
+        PRESSURE_BAR: lambda x: x / pressure_util.UNIT_CONVERSION[PRESSURE_BAR],
+        PRESSURE_HPA: lambda x: x / pressure_util.UNIT_CONVERSION[PRESSURE_HPA],
+        PRESSURE_INHG: lambda x: x / pressure_util.UNIT_CONVERSION[PRESSURE_INHG],
+        PRESSURE_MBAR: lambda x: x / pressure_util.UNIT_CONVERSION[PRESSURE_MBAR],
+        PRESSURE_PA: lambda x: x / pressure_util.UNIT_CONVERSION[PRESSURE_PA],
+        PRESSURE_PSI: lambda x: x / pressure_util.UNIT_CONVERSION[PRESSURE_PSI],
     },
 }
 
