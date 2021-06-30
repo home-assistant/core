@@ -16,7 +16,7 @@
                     "currencies": "Konto saldo valuutad",
                     "exchange_rates": "Vahetuskursid"
                 },
-                "description": "Sisesta Coinbase'i pakutavad API-v\u00f5tme \u00fcksikasjad. Eralda mitu valuutat komaga (nt \"BTC, EUR\")",
+                "description": "Sisesta Coinbase'i pakutava API-v\u00f5tme \u00fcksikasjad.",
                 "title": "Coinbase'i API v\u00f5tme \u00fcksikasjad"
             }
         }
