@@ -108,21 +108,18 @@ class SwitcherSensorEntity(CoordinatorEntity, SensorEntity):
         super().__init__(wrapper)
         self.wrapper = wrapper
         self.attribute = attribute
-        self.description = description
 
         # Entity class attributes
-        self._attr_name = f"{self.wrapper.name} {self.description.name}"
-        self._attr_icon = self.description.icon
-        self._attr_unit_of_measurement = self.description.unit
-        self._attr_device_class = self.description.device_class
-        self._attr_entity_registry_enabled_default = self.description.default_enabled
+        self._attr_name = f"{wrapper.name} {description.name}"
+        self._attr_icon = description.icon
+        self._attr_unit_of_measurement = description.unit
+        self._attr_device_class = description.device_class
+        self._attr_entity_registry_enabled_default = description.default_enabled
 
-        self._attr_unique_id = (
-            f"{self.wrapper.device_id}-{self.wrapper.mac_address}-{self.attribute}"
-        )
+        self._attr_unique_id = f"{wrapper.device_id}-{wrapper.mac_address}-{attribute}"
         self._attr_device_info = {
             "connections": {
-                (device_registry.CONNECTION_NETWORK_MAC, self.wrapper.mac_address)
+                (device_registry.CONNECTION_NETWORK_MAC, wrapper.mac_address)
             }
         }
 

@@ -158,7 +158,7 @@ aiorecollect==1.0.5
 aioshelly==0.6.4
 
 # homeassistant.components.switcher_kis
-aioswitcher==2.0.1
+aioswitcher==2.0.2
 
 # homeassistant.components.syncthing
 aiosyncthing==0.5.1

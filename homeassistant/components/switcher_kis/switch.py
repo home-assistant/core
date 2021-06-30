@@ -91,11 +91,11 @@ class SwitcherBaseSwitchEntity(CoordinatorEntity, SwitchEntity):
         self.control_result: bool | None = None
 
         # Entity class attributes
-        self._attr_name = self.wrapper.name
-        self._attr_unique_id = f"{self.wrapper.device_id}-{self.wrapper.mac_address}"
+        self._attr_name = wrapper.name
+        self._attr_unique_id = f"{wrapper.device_id}-{wrapper.mac_address}"
         self._attr_device_info = {
             "connections": {
-                (device_registry.CONNECTION_NETWORK_MAC, self.wrapper.mac_address)
+                (device_registry.CONNECTION_NETWORK_MAC, wrapper.mac_address)
             }
         }
 
@@ -169,19 +169,13 @@ class SwitcherBaseSwitchEntity(CoordinatorEntity, SwitchEntity):
 class SwitcherPowerPlugSwitchEntity(SwitcherBaseSwitchEntity):
     """Representation of a Switcher power plug switch entity."""
 
-    @property
-    def device_class(self) -> str:
-        """Return device class."""
-        return DEVICE_CLASS_OUTLET
+    _attr_device_class = DEVICE_CLASS_OUTLET
 
 
 class SwitcherWaterHeaterSwitchEntity(SwitcherBaseSwitchEntity):
     """Representation of a Switcher water heater switch entity."""
 
-    @property
-    def device_class(self) -> str:
-        """Return device class."""
-        return DEVICE_CLASS_SWITCH
+    _attr_device_class = DEVICE_CLASS_SWITCH
 
     async def async_set_auto_off_service(self, auto_off: timedelta) -> None:
         """Use for handling setting device auto-off service calls."""
