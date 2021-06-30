@@ -29,17 +29,17 @@ class JewishCalendarBinarySensor(BinarySensorEntity):
 
     def __init__(self, data, sensor, sensor_info):
         """Initialize the binary sensor."""
+        self._type = sensor
+        self._prefix = data["prefix"]
         self._attr_name = f"{data['name']} {sensor_info[0]}"
         self._attr_unique_id = f"{self._prefix}_{self._type}"
         self._attr_icon = sensor_info[1]
         self._attr_should_poll = False
         self._attr_is_on = self._get_zmanim().issur_melacha_in_effect
         self._location = data["location"]
-        self._type = sensor
         self._hebrew = data["language"] == "hebrew"
         self._candle_lighting_offset = data["candle_lighting_offset"]
         self._havdalah_offset = data["havdalah_offset"]
-        self._prefix = data["prefix"]
         self._update_unsub = None
 
     def _get_zmanim(self):
