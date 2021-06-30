@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import Any, Callable, final
+from typing import Any, final
 
 import voluptuous as vol
 
