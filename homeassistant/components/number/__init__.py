@@ -59,7 +59,7 @@ async def async_set_value(entry: NumberEntity, async_service_call: Callable) -> 
     value = getattr(async_service_call, "data")["value"]
     if value < entry.min_value or value > entry.max_value:
         raise ValueError(
-            f"Value {value} not a valid {entry.name} within the range {entry.min_value} - {entry.max_value}"
+            f"Value {value} not a valid for {entry.name} within the range {entry.min_value} - {entry.max_value}"
         )
     await entry.async_set_value(value)
 
