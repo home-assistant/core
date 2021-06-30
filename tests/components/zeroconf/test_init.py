@@ -1,6 +1,7 @@
 """Test Zeroconf component setup process."""
-from unittest.mock import call, patch
+from unittest.mock import AsyncMock, call, patch
 
+import pytest
 from zeroconf import InterfaceChoice, IPVersion, ServiceStateChange
 from zeroconf.asyncio import AsyncServiceInfo
 
@@ -24,6 +25,15 @@ PROPERTIES = {
 
 HOMEKIT_STATUS_UNPAIRED = b"1"
 HOMEKIT_STATUS_PAIRED = b"0"
+
+
+@pytest.fixture
+def mock_async_zeroconf():
+    """Mock AsyncZeroconf."""
+    with patch("homeassistant.components.zeroconf.HaAsyncZeroconf") as mock_aiozc:
+        zc = mock_aiozc.return_value
+        zc.ha_async_close = AsyncMock()
+        yield zc
 
 
 def service_update_mock(ipv6, zeroconf, services, handlers, *, limit_service=None):
@@ -116,7 +126,7 @@ def get_zeroconf_info_mock_manufacturer(manufacturer):
     return mock_zc_info
 
 
-async def test_setup(hass, mock_zeroconf):
+async def test_setup(hass, mock_async_zeroconf):
     """Test configured options for a device are loaded via config entry."""
     with patch.object(
         hass.config_entries.flow, "async_init"
@@ -142,7 +152,9 @@ async def test_setup(hass, mock_zeroconf):
 
     # Test instance is set.
     assert "zeroconf" in hass.data
-    assert await hass.components.zeroconf.async_get_instance() is mock_zeroconf
+    assert (
+        await hass.components.zeroconf.async_get_async_instance() is mock_async_zeroconf
+    )
 
 
 async def test_setup_with_overly_long_url_and_name(hass, mock_zeroconf, caplog):
