@@ -100,10 +100,7 @@
   },
   "device_automation": {
     "condition_type": {
-      "asleep": "Node is asleep",
-      "awake": "Node is awake",
-      "dead": "Node is dead",
-      "alive": "Node is alive",
+      "node_status": "Node status",
       "config_parameter": "Config parameter {subtype} value",
       "value": "Current value of a Z-Wave Value"
     }

@@ -34,25 +34,7 @@ async def test_get_conditions(hass, client, lock_schlage_be469, integration) -> 
         {
             "condition": "device",
             "domain": DOMAIN,
-            "type": "alive",
-            "device_id": device.id,
-        },
-        {
-            "condition": "device",
-            "domain": DOMAIN,
-            "type": "awake",
-            "device_id": device.id,
-        },
-        {
-            "condition": "device",
-            "domain": DOMAIN,
-            "type": "asleep",
-            "device_id": device.id,
-        },
-        {
-            "condition": "device",
-            "domain": DOMAIN,
-            "type": "dead",
+            "type": "node_status",
             "device_id": device.id,
         },
         {
@@ -96,7 +78,8 @@ async def test_node_status_state(
                             "condition": "device",
                             "domain": DOMAIN,
                             "device_id": device.id,
-                            "type": "alive",
+                            "type": "node_status",
+                            "status": "alive",
                         }
                     ],
                     "action": {
@@ -113,7 +96,8 @@ async def test_node_status_state(
                             "condition": "device",
                             "domain": DOMAIN,
                             "device_id": device.id,
-                            "type": "awake",
+                            "type": "node_status",
+                            "status": "awake",
                         }
                     ],
                     "action": {
@@ -130,7 +114,8 @@ async def test_node_status_state(
                             "condition": "device",
                             "domain": DOMAIN,
                             "device_id": device.id,
-                            "type": "asleep",
+                            "type": "node_status",
+                            "status": "asleep",
                         }
                     ],
                     "action": {
@@ -147,7 +132,8 @@ async def test_node_status_state(
                             "condition": "device",
                             "domain": DOMAIN,
                             "device_id": device.id,
-                            "type": "dead",
+                            "type": "node_status",
+                            "status": "dead",
                         }
                     ],
                     "action": {
@@ -398,10 +384,25 @@ async def test_get_condition_capabilities_node_status(
             "platform": "device",
             "domain": DOMAIN,
             "device_id": device.id,
-            "type": "alive",
+            "type": "node_status",
         },
     )
-    assert not capabilities
+    assert capabilities and "extra_fields" in capabilities
+    assert voluptuous_serialize.convert(
+        capabilities["extra_fields"], custom_serializer=cv.custom_serializer
+    ) == [
+        {
+            "name": "status",
+            "required": True,
+            "type": "select",
+            "options": [
+                ("asleep", "asleep"),
+                ("awake", "awake"),
+                ("dead", "dead"),
+                ("alive", "alive"),
+            ],
+        }
+    ]
 
 
 async def test_get_condition_capabilities_value(

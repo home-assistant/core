@@ -25,17 +25,19 @@ from .const import (
 from .helpers import async_get_node_from_device_id
 
 CONF_SUBTYPE = "subtype"
-
 CONF_VALUE_ID = "value_id"
+CONF_STATUS = "status"
 
-NODE_STATUS_TYPES = {"asleep", "awake", "dead", "alive"}
+NODE_STATUS_TYPE = "node_status"
+NODE_STATUS_TYPES = ["asleep", "awake", "dead", "alive"]
 CONFIG_PARAMETER_TYPE = "config_parameter"
 VALUE_TYPE = "value"
-CONDITION_TYPES = {*NODE_STATUS_TYPES, CONFIG_PARAMETER_TYPE, VALUE_TYPE}
+CONDITION_TYPES = {NODE_STATUS_TYPE, CONFIG_PARAMETER_TYPE, VALUE_TYPE}
 
 NODE_STATUS_CONDITION_SCHEMA = DEVICE_CONDITION_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_TYPE): vol.In(NODE_STATUS_TYPES),
+        vol.Required(CONF_TYPE): NODE_STATUS_TYPE,
+        vol.Required(CONF_STATUS): vol.In(NODE_STATUS_TYPES),
     }
 )
 
@@ -108,9 +110,7 @@ async def async_get_conditions(
     conditions.append({**base_condition, CONF_TYPE: VALUE_TYPE})
 
     # Node status conditions
-    conditions.extend(
-        [{**base_condition, CONF_TYPE: cond} for cond in NODE_STATUS_TYPES]
-    )
+    conditions.append({**base_condition, CONF_TYPE: NODE_STATUS_TYPE})
 
     # Config parameter conditions
     conditions.extend(
@@ -143,9 +143,9 @@ def async_condition_from_config(
     def test_node_status(hass: HomeAssistant, variables: TemplateVarsType) -> bool:
         """Test if node status is a certain state."""
         node = async_get_node_from_device_id(hass, device_id)
-        return bool(node.status.name.lower() == condition_type)
+        return bool(node.status.name.lower() == config[CONF_STATUS])
 
-    if condition_type in NODE_STATUS_TYPES:
+    if condition_type == NODE_STATUS_TYPE:
         return test_node_status
 
     @callback
@@ -219,6 +219,13 @@ async def async_get_condition_capabilities(
                     vol.Optional(ATTR_ENDPOINT): cv.string,
                     vol.Required(ATTR_VALUE): cv.string,
                 }
+            )
+        }
+
+    if config[CONF_TYPE] == NODE_STATUS_TYPE:
+        return {
+            "extra_fields": vol.Schema(
+                {vol.Required(CONF_STATUS): vol.In(NODE_STATUS_TYPES)}
             )
         }
 
