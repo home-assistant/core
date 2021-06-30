@@ -420,7 +420,7 @@ class XiaomiGenericCoordinatedSwitch(XiaomiCoordinatedMiioEntity, SwitchEntity):
         )
         if await method():
             # Write state back to avoid switch flips with a slow response
-            self._state = False
+            self._attr_is_on = False
             self.async_write_ha_state()
 
     async def async_set_buzzer_on(self) -> bool:
