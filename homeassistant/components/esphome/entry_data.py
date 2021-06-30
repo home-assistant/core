@@ -137,7 +137,7 @@ class RuntimeEntryData:
         restored = await self.store.async_load()
         if restored is None:
             return [], []
-        restored = cast(dict[str, Any], restored)
+        restored = cast("dict[str, Any]", restored)
         self._storage_contents = restored.copy()
 
         self.device_info = DeviceInfo.from_dict(restored.pop("device_info"))
