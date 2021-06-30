@@ -3,6 +3,7 @@ import json
 import logging
 
 import voluptuous as vol
+from decimal import Decimal
 
 from homeassistant.components.device_tracker import (
     PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
@@ -64,7 +65,7 @@ class MerakiView(HomeAssistantView):
         if data["secret"] != self.secret:
             _LOGGER.error("Invalid Secret received from Meraki")
             return self.json_message("Invalid secret", HTTP_UNPROCESSABLE_ENTITY)
-        if data["version"] != VERSION:
+        if int(Decimal(data["version"])) != int(Decimal(VERSION)):
             _LOGGER.error("Invalid API version: %s", data["version"])
             return self.json_message("Invalid version", HTTP_UNPROCESSABLE_ENTITY)
         _LOGGER.debug("Valid Secret")
