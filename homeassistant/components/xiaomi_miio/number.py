@@ -1,4 +1,4 @@
-"""Support for Xiaomi Mi Air Purifier and Xiaomi Mi Air Humidifier."""
+"""Motor speed support for Xiaomi Mi Air Humidifier."""
 from dataclasses import dataclass
 from enum import Enum
 import logging
@@ -12,16 +12,10 @@ from .const import (
     CONF_FLOW_TYPE,
     CONF_MODEL,
     DOMAIN,
-    FEATURE_FLAGS_AIRHUMIDIFIER,
-    FEATURE_FLAGS_AIRHUMIDIFIER_CA4,
-    FEATURE_FLAGS_AIRHUMIDIFIER_CA_AND_CB,
     FEATURE_SET_MOTOR_SPEED,
     KEY_COORDINATOR,
     KEY_DEVICE,
-    MODEL_AIRHUMIDIFIER_CA1,
     MODEL_AIRHUMIDIFIER_CA4,
-    MODEL_AIRHUMIDIFIER_CB1,
-    MODELS_HUMIDIFIER,
 )
 from .device import XiaomiCoordinatedMiioEntity
 
@@ -71,28 +65,21 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
 
     _LOGGER.debug("Initializing with host %s (token %s...)", host, token[:5])
-    if model in [MODEL_AIRHUMIDIFIER_CA1, MODEL_AIRHUMIDIFIER_CB1]:
-        device_features = FEATURE_FLAGS_AIRHUMIDIFIER_CA_AND_CB
-    elif model in [MODEL_AIRHUMIDIFIER_CA4]:
-        device_features = FEATURE_FLAGS_AIRHUMIDIFIER_CA4
-    elif model in MODELS_HUMIDIFIER:
-        device_features = FEATURE_FLAGS_AIRHUMIDIFIER
-    else:
+    if model not in model in [MODEL_AIRHUMIDIFIER_CA4]:
         return
 
     for feature in NUMBER_TYPES:
         number = NUMBER_TYPES[feature]
-        if feature & device_features and feature in NUMBER_TYPES:
-            entities.append(
-                XiaomiAirHumidifierNumber(
-                    f"{config_entry.title} {number.name}",
-                    device,
-                    config_entry,
-                    f"{number.short_name}_{config_entry.unique_id}",
-                    number,
-                    coordinator,
-                )
+        entities.append(
+            XiaomiAirHumidifierNumber(
+                f"{config_entry.title} {number.name}",
+                device,
+                config_entry,
+                f"{number.short_name}_{config_entry.unique_id}",
+                number,
+                coordinator,
             )
+        )
 
     async_add_entities(entities)
 
