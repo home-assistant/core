@@ -348,8 +348,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                     DOMAIN, plug_service, async_service_handler, schema=schema
                 )
 
-        for feature in SWITCH_TYPES:
-            switch = SWITCH_TYPES[feature]
+        for feature, switch in SWITCH_TYPES.items():
             if feature & device_features and feature in SWITCH_TYPES:
                 entities.append(
                     XiaomiGenericCoordinatedSwitch(
