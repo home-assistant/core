@@ -452,6 +452,11 @@ def _apply_update(engine, session, new_version, old_version):
         _drop_foreign_key_constraints(
             connection, engine, TABLE_STATES, ["old_state_id"]
         )
+    elif new_version == 17:
+        if sqlalchemy.inspect(engine).has_table(Statistics.__tablename__):
+            # Recreate the statistics table
+            Statistics.__table__.drop(engine)
+            Statistics.__table__.create(engine)
     else:
         raise ValueError(f"No schema migration defined for version {new_version}")
 
