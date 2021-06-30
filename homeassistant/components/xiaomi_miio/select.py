@@ -170,7 +170,7 @@ class XiaomiAirHumidifierMiotSelector(XiaomiAirHumidifierSelector):
     @property
     def led_brightness(self):
         """Return the current led brightness."""
-        return dict.get(LED_BRIGHTNESS_REVERSE_MAP_MIOT, self._current_led_brightness)
+        return LED_BRIGHTNESS_REVERSE_MAP_MIOT.get(self._current_led_brightness)
 
     async def async_set_led_brightness(self, brightness: str):
         """Set the led brightness."""
