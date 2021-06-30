@@ -51,7 +51,7 @@ async def async_select_option(
     """Service call wrapper to set a new value."""
     option = async_service_call.data[ATTR_OPTION]
     if option not in entity.options:
-        raise ValueError(f"Option {option} not a valid for {entry.name}")
+        raise ValueError(f"Option {option} not valid for {entity.name}")
     await entity.async_select_option(option)
 
 
