@@ -61,7 +61,7 @@ async def async_set_value(entry: NumberEntity, async_service_call: Callable) -> 
         raise ValueError(
             f"Value {value} not a valid {entry.name} within the range {entry.min_value} - {entry.max_value}"
         )
-    return await entry.async_set_value(value)
+    await entry.async_set_value(value)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
