@@ -185,17 +185,20 @@ class GeographySensor(AirVisualEntity, SensorEntity):
         self._kind = kind
         self._locale = locale
 
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return (
+            self.coordinator.last_update_success
+            and self.coordinator.data["current"]["pollution"]
+        )
+
     @callback
     def update_from_latest_data(self):
         """Update the entity from the latest data."""
-        if not self.coordinator.last_update_success:
-            self._attr_available = False
-            return
-
         try:
             data = self.coordinator.data["current"]["pollution"]
         except KeyError:
-            self._attr_available = False
             return
 
         if self._kind == SENSOR_KIND_LEVEL:
