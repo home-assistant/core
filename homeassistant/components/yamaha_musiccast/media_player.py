@@ -383,12 +383,6 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
                 "Service next track is not supported for non NetUSB or Tuner sources."
             )
 
-    def clear_playlist(self):
-        """Clear players playlist."""
-        self._cur_track = 0
-        self._player_state = STATE_OFF
-        self.async_write_ha_state()
-
     async def async_set_repeat(self, repeat):
         """Enable/disable repeat mode."""
         if self._is_netusb:
