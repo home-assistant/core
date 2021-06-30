@@ -1,6 +1,5 @@
 """Support for reading vehicle status from BMW connected drive portal."""
 import logging
-import re
 
 from bimmer_connected.const import SERVICE_ALL_TRIPS, SERVICE_LAST_TRIP, SERVICE_STATUS
 from bimmer_connected.state import ChargingState
@@ -573,8 +572,6 @@ class BMWConnectedDriveSensor(BMWConnectedDriveBaseEntity, SensorEntity):
         """Read new state data from the library."""
         _LOGGER.debug("Updating %s", self._vehicle.name)
         vehicle_state = self._vehicle.state
-        vehicle_last_trip = self._vehicle.state.last_trip
-        vehicle_all_trips = self._vehicle.state.all_trips
         if self._attribute == "charging_status":
             self._state = getattr(vehicle_state, self._attribute).value
         elif self.unit_of_measurement == VOLUME_GALLONS:
@@ -588,12 +585,14 @@ class BMWConnectedDriveSensor(BMWConnectedDriveBaseEntity, SensorEntity):
         elif self._service is None:
             self._state = getattr(vehicle_state, self._attribute)
         elif self._service == SERVICE_LAST_TRIP:
+            vehicle_last_trip = self._vehicle.state.last_trip
             if self._attribute == "date_utc":
                 date_str = getattr(vehicle_last_trip, "date")
                 self._state = dt_util.parse_datetime(date_str).isoformat()
             else:
                 self._state = getattr(vehicle_last_trip, self._attribute)
         elif self._service == SERVICE_ALL_TRIPS:
+            vehicle_all_trips = self._vehicle.state.all_trips
             for attribute in [
                 "average_combined_consumption",
                 "average_electric_consumption",
@@ -601,10 +600,9 @@ class BMWConnectedDriveSensor(BMWConnectedDriveBaseEntity, SensorEntity):
                 "chargecycle_range",
                 "total_electric_distance",
             ]:
-                match = re.search(f"({attribute})_(.+)", self._attribute)
-                if match:
-                    attr = getattr(vehicle_all_trips, match.group(1))
-                    sub_attr = match.group(2)
+                if self._attribute.startswith(f"{attribute}_"):
+                    attr = getattr(vehicle_all_trips, attribute)
+                    sub_attr = self._attribute.replace(f"{attribute}_", "")
                     self._state = getattr(attr, sub_attr)
                     return
             if self._attribute == "reset_date_utc":
