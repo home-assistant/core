@@ -13,7 +13,7 @@ from sqlalchemy.ext import baked
 import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN
-from .models import Statistics, process_timestamp_to_utc_isoformat
+from .models import Statistics, StatisticsMeta, process_timestamp_to_utc_isoformat
 from .util import execute, retryable_database_job, session_scope
 
 if TYPE_CHECKING:
@@ -34,7 +34,13 @@ QUERY_STATISTIC_IDS = [
     Statistics.statistic_id,
 ]
 
+QUERY_STATISTIC_META = [
+    StatisticsMeta.statistic_id,
+    StatisticsMeta.unit_of_measurement,
+]
+
 STATISTICS_BAKERY = "recorder_statistics_bakery"
+STATISTICS_META_BAKERY = "recorder_statistics_bakery"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,6 +48,7 @@ _LOGGER = logging.getLogger(__name__)
 def async_setup(hass):
     """Set up the history hooks."""
     hass.data[STATISTICS_BAKERY] = baked.bakery()
+    hass.data[STATISTICS_META_BAKERY] = baked.bakery()
 
 
 def get_start_time() -> datetime.datetime:
@@ -73,9 +80,45 @@ def compile_statistics(instance: Recorder, start: datetime.datetime) -> bool:
     with session_scope(session=instance.get_session()) as session:  # type: ignore
         for stats in platform_stats:
             for entity_id, stat in stats.items():
-                session.add(Statistics.from_stats(DOMAIN, entity_id, start, stat))
+                session.add(
+                    Statistics.from_stats(DOMAIN, entity_id, start, stat["stat"])
+                )
+                exists = session.query(
+                    session.query(StatisticsMeta)
+                    .filter_by(statistic_id=entity_id)
+                    .exists()
+                ).scalar()
+                if not exists:
+                    unit = stat["meta"]["unit_of_measurement"]
+                    session.add(StatisticsMeta.from_meta(DOMAIN, entity_id, unit))
 
     return True
+
+
+def _get_meta_data(hass, session, statistic_ids):
+    """Fetch meta data."""
+
+    def _meta(metas, wanted_statistic_id):
+        meta = {"statistic_id": wanted_statistic_id, "unit_of_measurement": None}
+        for statistic_id, unit in metas:
+            if statistic_id == wanted_statistic_id:
+                meta["unit_of_measurement"] = unit
+        return meta
+
+    baked_query = hass.data[STATISTICS_META_BAKERY](
+        lambda session: session.query(*QUERY_STATISTIC_META)
+    )
+    if statistic_ids is not None:
+        baked_query += lambda q: q.filter(
+            StatisticsMeta.statistic_id.in_(bindparam("statistic_ids"))
+        )
+
+    result = execute(baked_query(session).params(statistic_ids=statistic_ids))
+
+    if statistic_ids is None:
+        statistic_ids = [statistic_id[0] for statistic_id in result]
+
+    return {id: _meta(result, id) for id in statistic_ids}
 
 
 def list_statistic_ids(hass, statistic_type=None):
@@ -92,10 +135,10 @@ def list_statistic_ids(hass, statistic_type=None):
 
         baked_query += lambda q: q.order_by(Statistics.statistic_id)
 
-        statistic_ids = []
         result = execute(baked_query(session))
-        statistic_ids = [statistic_id[0] for statistic_id in result]
-        return statistic_ids
+        statistic_ids_list = [statistic_id[0] for statistic_id in result]
+
+        return list(_get_meta_data(hass, session, statistic_ids_list).values())
 
 
 def statistics_during_period(hass, start_time, end_time=None, statistic_ids=None):

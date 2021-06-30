@@ -134,7 +134,7 @@ aiolyric==1.0.7
 aiomodernforms==0.1.8
 
 # homeassistant.components.yamaha_musiccast
-aiomusiccast==0.6
+aiomusiccast==0.8.0
 
 # homeassistant.components.notion
 aionotion==1.1.0
@@ -545,7 +545,7 @@ mficlient==0.3.0
 micloud==0.3
 
 # homeassistant.components.mill
-millheater==0.4.1
+millheater==0.5.0
 
 # homeassistant.components.minio
 minio==4.0.9
@@ -774,7 +774,7 @@ pycomfoconnect==0.4
 pycoolmasternet-async==0.1.2
 
 # homeassistant.components.daikin
-pydaikin==2.4.3
+pydaikin==2.4.4
 
 # homeassistant.components.deconz
 pydeconz==80
@@ -808,6 +808,9 @@ pyflunearyou==1.0.7
 
 # homeassistant.components.forked_daapd
 pyforked-daapd==0.1.11
+
+# homeassistant.components.freedompro
+pyfreedompro==1.1.0
 
 # homeassistant.components.fritzbox
 pyfritzhome==0.4.2
@@ -1328,7 +1331,7 @@ yeelight==0.6.3
 zeep[async]==4.0.0
 
 # homeassistant.components.zeroconf
-zeroconf==0.31.0
+zeroconf==0.32.0
 
 # homeassistant.components.zha
 zha-quirks==0.0.57
