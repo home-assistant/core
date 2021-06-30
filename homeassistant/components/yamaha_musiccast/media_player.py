@@ -587,7 +587,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
 
         Creates a new group if necessary. Used for join service.
         """
-        _LOGGER.info(
+        _LOGGER.debug(
             "%s wants to add the following entities %s",
             self.entity_id,
             str(group_members),
@@ -636,7 +636,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
         _LOGGER.debug(
             "%s added the following entities %s", self.entity_id, str(entities)
         )
-        _LOGGER.info(
+        _LOGGER.debug(
             "%s has now the following musiccast group %s",
             self.entity_id,
             str(self.musiccast_group),
@@ -681,7 +681,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
 
         if self.musiccast_zone_entity.is_server:
             # If one of the zones of the device is a server, we need to unjoin first.
-            _LOGGER.info(
+            _LOGGER.debug(
                 "%s is a server of a group and has to stop distribution "
                 "to use MusicCast for %s",
                 self.musiccast_zone_entity.entity_id,
@@ -694,7 +694,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
                 _LOGGER.warning("%s is already part of the group", self.entity_id)
                 return
 
-            _LOGGER.info(
+            _LOGGER.debug(
                 "%s is client in a different group, will unjoin first",
                 self.entity_id,
             )
@@ -764,7 +764,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
 
         Should only be called for servers.
         """
-        _LOGGER.info("%s closes his group", self.entity_id)
+        _LOGGER.debug("%s closes his group", self.entity_id)
         for client in self.musiccast_group:
             if client != self:
                 await client.async_client_leave_group()
@@ -782,7 +782,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
                 client_ips_for_removal.append(expected_client_ip)
 
         if len(client_ips_for_removal) > 0:
-            _LOGGER.info(
+            _LOGGER.debug(
                 "%s says good bye to the following members %s",
                 self.entity_id,
                 str(client_ips_for_removal),
