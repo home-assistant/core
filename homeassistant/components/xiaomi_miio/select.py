@@ -1,4 +1,4 @@
-"""Support for Xiaomi Mi Air Purifier and Xiaomi Mi Air Humidifier."""
+"""Support led_brightness for  Mi Air Humidifier."""
 from dataclasses import dataclass
 from enum import Enum
 import logging
@@ -15,9 +15,6 @@ from .const import (
     CONF_FLOW_TYPE,
     CONF_MODEL,
     DOMAIN,
-    FEATURE_FLAGS_AIRHUMIDIFIER,
-    FEATURE_FLAGS_AIRHUMIDIFIER_CA4,
-    FEATURE_FLAGS_AIRHUMIDIFIER_CA_AND_CB,
     FEATURE_SET_LED_BRIGHTNESS,
     KEY_COORDINATOR,
     KEY_DEVICE,
@@ -32,13 +29,6 @@ from .device import XiaomiCoordinatedMiioEntity
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_LED_BRIGHTNESS = "led_brightness"
-
-SERVICE_TO_METHOD = {
-    SERVICE_SET_LED_BRIGHTNESS: {
-        "method": "async_set_led_brightness",
-        "property": ATTR_LED_BRIGHTNESS,
-    },
-}
 
 
 @dataclass
@@ -65,41 +55,39 @@ SELECTOR_TYPES = {
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Selectors from a config entry."""
+    if not config_entry.data[CONF_FLOW_TYPE] == CONF_DEVICE:
+        return
+
     entities = []
-    if config_entry.data[CONF_FLOW_TYPE] == CONF_DEVICE:
-        host = config_entry.data[CONF_HOST]
-        token = config_entry.data[CONF_TOKEN]
-        model = config_entry.data[CONF_MODEL]
-        device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
-        coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
+    host = config_entry.data[CONF_HOST]
+    token = config_entry.data[CONF_TOKEN]
+    model = config_entry.data[CONF_MODEL]
+    device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
+    coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
 
-        _LOGGER.debug("Initializing with host %s (token %s...)", host, token[:5])
+    _LOGGER.debug("Initializing with host %s (token %s...)", host, token[:5])
 
-        if model in [MODEL_AIRHUMIDIFIER_CA1, MODEL_AIRHUMIDIFIER_CB1]:
-            device_features = FEATURE_FLAGS_AIRHUMIDIFIER_CA_AND_CB
-            entity_class = XiaomiAirHumidifierSelector
-        elif model in [MODEL_AIRHUMIDIFIER_CA4]:
-            device_features = FEATURE_FLAGS_AIRHUMIDIFIER_CA4
-            entity_class = XiaomiAirHumidifierMiotSelector
-        elif model in MODELS_HUMIDIFIER:
-            device_features = FEATURE_FLAGS_AIRHUMIDIFIER
-            entity_class = XiaomiAirHumidifierSelector
-        else:
-            return
+    if model in [MODEL_AIRHUMIDIFIER_CA1, MODEL_AIRHUMIDIFIER_CB1]:
+        entity_class = XiaomiAirHumidifierSelector
+    elif model in [MODEL_AIRHUMIDIFIER_CA4]:
+        entity_class = XiaomiAirHumidifierMiotSelector
+    elif model in MODELS_HUMIDIFIER:
+        entity_class = XiaomiAirHumidifierSelector
+    else:
+        return
 
-        for feature in SELECTOR_TYPES:
-            selector = SELECTOR_TYPES[feature]
-            if feature & device_features and feature in SELECTOR_TYPES:
-                entities.append(
-                    entity_class(
-                        f"{config_entry.title} {selector.name}",
-                        device,
-                        config_entry,
-                        f"{selector.short_name}_{config_entry.unique_id}",
-                        selector,
-                        coordinator,
-                    )
-                )
+    for feature in SELECTOR_TYPES:
+        selector = SELECTOR_TYPES[feature]
+        entities.append(
+            entity_class(
+                f"{config_entry.title} {selector.name}",
+                device,
+                config_entry,
+                f"{selector.short_name}_{config_entry.unique_id}",
+                selector,
+                coordinator,
+            )
+        )
 
     async_add_entities(entities)
 
@@ -112,17 +100,7 @@ class XiaomiSelector(XiaomiCoordinatedMiioEntity, SelectEntity):
         super().__init__(name, device, entry, unique_id, coordinator)
         self._attr_icon = selector.icon
         self._controller = selector
-        self._current_option = None
-
-    @property
-    def options(self):
-        """Return available options."""
-        return self._controller.options
-
-    @property
-    def current_option(self):
-        """Return the current option."""
-        return getattr(self, SERVICE_TO_METHOD[self._controller.service]["property"])
+        self._attr_options = self._controller.options
 
     @staticmethod
     def _extract_value_from_attribute(state, attribute):
@@ -132,16 +110,6 @@ class XiaomiSelector(XiaomiCoordinatedMiioEntity, SelectEntity):
 
         return value
 
-    async def async_select_option(self, option: str) -> None:
-        """Set an option of the miio device."""
-        if option not in self.options:
-            raise ValueError(
-                f"Selection '{option}' is not a valid {self._controller.name}"
-            )
-
-        method = getattr(self, SERVICE_TO_METHOD[self._controller.service]["method"])
-        await method(option)
-
 
 class XiaomiAirHumidifierSelector(XiaomiSelector):
     """Representation of a Xiaomi Air Humidifier selector."""
@@ -149,24 +117,37 @@ class XiaomiAirHumidifierSelector(XiaomiSelector):
     def __init__(self, name, device, entry, unique_id, controller, coordinator):
         """Initialize the plug switch."""
         super().__init__(name, device, entry, unique_id, controller, coordinator)
-        self._current_option = self._extract_value_from_attribute(
+        self._current_led_brightness = self._extract_value_from_attribute(
             self.coordinator.data, self._controller.short_name
         )
 
     @callback
     def _handle_coordinator_update(self):
         """Fetch state from the device."""
-        self._current_option = self._extract_value_from_attribute(
+        self._current_led_brightness = self._extract_value_from_attribute(
             self.coordinator.data, self._controller.short_name
         )
         self.async_write_ha_state()
 
     @property
+    def current_option(self):
+        """Return the current option."""
+        return self.led_brightness
+
+    async def async_select_option(self, option: str) -> None:
+        """Set an option of the miio device."""
+        if option not in self.options:
+            raise ValueError(
+                f"Selection '{option}' is not a valid {self._controller.name}"
+            )
+        await self.async_set_led_brightness(option)
+
+    @property
     def led_brightness(self):
         """Return the current led brightness."""
         reversed_value_map = {0: "Bright", 1: "Dim", 2: "Off"}
-        if self._current_option in reversed_value_map:
-            return reversed_value_map[self._current_option]
+        if self._current_led_brightness in reversed_value_map:
+            return reversed_value_map[self._current_led_brightness]
         return None
 
     async def async_set_led_brightness(self, brightness: str):
@@ -178,7 +159,7 @@ class XiaomiAirHumidifierSelector(XiaomiSelector):
             self._device.set_led_brightness,
             AirhumidifierLedBrightness(value_map[brightness]),
         ):
-            self._current_option = value_map[brightness]
+            self._current_led_brightness = value_map[brightness]
             self.async_write_ha_state()
 
 
@@ -189,8 +170,8 @@ class XiaomiAirHumidifierMiotSelector(XiaomiAirHumidifierSelector):
     def led_brightness(self):
         """Return the current led brightness."""
         reversed_value_map = {0: "Off", 1: "Dim", 2: "Bright"}
-        if self._current_option in reversed_value_map:
-            return reversed_value_map[self._current_option]
+        if self._current_led_brightness in reversed_value_map:
+            return reversed_value_map[self._current_led_brightness]
         return None
 
     async def async_set_led_brightness(self, brightness: str):
@@ -202,5 +183,5 @@ class XiaomiAirHumidifierMiotSelector(XiaomiAirHumidifierSelector):
             self._device.set_led_brightness,
             AirhumidifierMiotLedBrightness(value_map[brightness]),
         ):
-            self._current_option = value_map[brightness]
+            self._current_led_brightness = value_map[brightness]
             self.async_write_ha_state()
