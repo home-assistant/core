@@ -45,15 +45,11 @@ class ModernFormsBinarySensor(ModernFormsDeviceEntity, BinarySensorEntity):
         key: str,
     ) -> None:
         """Initialize Modern Forms switch."""
-        self._key = key
         super().__init__(
             entry_id=entry_id, coordinator=coordinator, name=name, icon=icon
         )
 
-    @property
-    def unique_id(self) -> str:
-        """Return the unique ID for this sensor."""
-        return f"{self.coordinator.data.info.mac_address}_{self._key}"
+        self._attr_unique_id = f"{coordinator.data.info.mac_address}_{key}"
 
 
 class ModernFormsLightSleepTimerActive(ModernFormsBinarySensor):
