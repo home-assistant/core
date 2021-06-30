@@ -206,7 +206,7 @@ class ValveControllerSwitch(ValveControllerEntity, SwitchEntity):
             LOGGER.error("Error while closing the valve: %s", err)
             return
 
-        self._is_on = False
+        self._attr_is_on = False
         self.async_write_ha_state()
 
     async def async_turn_on(self, **kwargs) -> None:
@@ -218,5 +218,5 @@ class ValveControllerSwitch(ValveControllerEntity, SwitchEntity):
             LOGGER.error("Error while opening the valve: %s", err)
             return
 
-        self._is_on = True
+        self._attr_is_on = True
         self.async_write_ha_state()
