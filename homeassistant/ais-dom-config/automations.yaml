@@ -313,3 +313,14 @@
         text: '{{ trigger.event.data.text }}'
         img: '{{ trigger.event.data.img }}'
       service: "ais_ai_service.say_it"
+
+- id: '20210630144002'
+  alias: 'AIS Change Audio Routing'
+  initial_state: True
+  trigger:
+    platform: state
+    entity_id: input_select.ais_audio_routing
+  action:
+    - service: ais_amplifier_service.set_audio_routing
+      data_template:
+        routing: "{{ states('input_select.ais_audio_routing') }}"

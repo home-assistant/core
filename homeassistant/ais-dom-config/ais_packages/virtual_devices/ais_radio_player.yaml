@@ -5,6 +5,15 @@ input_select:
       - "-"
     initial: "-"
     icon: mdi:format-list-bulleted-type
+  ais_audio_routing:
+    name: 'Audio routing:'
+    options:
+      - "all"
+      - "hdmi"
+      - "spdif"
+      - "pcm"
+    initial: "all"
+    icon: mdi:directions-fork
 
 media_player:
   - platform: ais_exo_player

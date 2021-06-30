@@ -35,6 +35,9 @@ async def async_setup(hass, config):
     async def get_audio_mono(service):
         await _get_audio_mono(hass, service)
 
+    async def set_audio_routing(service):
+        await _set_audio_routing(hass, service)
+
     # register services
     hass.services.async_register(DOMAIN, "change_work_mode", change_work_mode)
     hass.services.async_register(DOMAIN, "change_sound_mode", change_sound_mode)
@@ -42,6 +45,7 @@ async def async_setup(hass, config):
     hass.services.async_register(DOMAIN, "change_audio_to_mono", change_audio_to_mono)
     hass.services.async_register(DOMAIN, "get_audio_mono", get_audio_mono)
     hass.services.async_register(DOMAIN, "exec_tonos_command", exec_tonos_command)
+    hass.services.async_register(DOMAIN, "set_audio_routing", set_audio_routing)
 
     # temporarily suppress all kernel logging to the console
     if ais_global.has_root():
@@ -204,3 +208,26 @@ async def _exec_tonos_command(hass, call):
     comm = r'su -c "stty -F /dev/ttyS0 115200 && echo {} > /dev/ttyS0 && printf "\x0d" > /dev/ttyS0 && printf "\x0d" ' \
            r'> /dev/ttyS0"'.format(command)
     os.system(comm)
+
+
+async def _set_audio_routing(hass, call):
+    if "routing" not in call.data:
+        _LOGGER.error("No routing in call")
+        return
+    routing = call.data["routing"]
+    if routing not in (
+            "hdmi",
+            "spdif",
+            "pcm",
+            "all"
+    ):
+        _LOGGER.error("Unrecognized routing in call: " + routing)
+        return
+    # publish command to frame
+    await hass.services.async_call(
+        "ais_ai_service",
+        "publish_command_to_frame",
+        {"key": "setAudioRouting", "val": routing, "ip": "localhost"},
+    )
+
+

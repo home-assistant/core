@@ -59,3 +59,17 @@ exec_tonos_command:
       example: 'V0'
       selector:
         object:
+
+set_audio_routing:
+  description: (PRO) Ustawienie przekierowania wyjścia audio w Android
+  fields:
+    routing:
+      description: Przekierowanie wyjścia audio
+      example: 'all'
+      selector:
+        select:
+          options:
+            - "all"
+            - "hdmi"
+            - "spdif"
+            - "pcm"
