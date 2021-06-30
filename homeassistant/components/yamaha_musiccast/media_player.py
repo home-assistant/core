@@ -677,7 +677,9 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
                 return
 
             # It is not possible to join a group hosted by zone2 from main zone.
-            raise Exception("Can not join a zone other than main of the same device.")
+            raise HomeAssistantError(
+                "Can not join a zone other than main of the same device."
+            )
 
         if self.musiccast_zone_entity.is_server:
             # If one of the zones of the device is a server, we need to unjoin first.
@@ -730,15 +732,12 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
         _LOGGER.debug("%s client leave called", self.entity_id)
         if not force and (
             self.source == ATTR_MAIN_SYNC
-            or len(
-                [entity for entity in self.other_zones if entity.source == ATTR_MC_LINK]
-            )
-            > 0
+            or [entity for entity in self.other_zones if entity.source == ATTR_MC_LINK]
         ):
             # If we are only syncing to main or another zone is also using the musiccast module as client, don't
             # kill the client session, just select a dummy source.
             save_inputs = self.coordinator.musiccast.get_save_inputs(self._zone_id)
-            if len(save_inputs):
+            if save_inputs:
                 await self.async_select_source(save_inputs[0])
             # Then turn off the zone
             await self.async_turn_off()
@@ -749,7 +748,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
                 if server.coordinator.data.group_id == self.coordinator.data.group_id
             ]
             await self.coordinator.musiccast.mc_client_unjoin()
-            if len(servers):
+            if servers:
                 await servers[0].coordinator.musiccast.mc_server_group_reduce(
                     servers[0].zone_id, [self.ip_address], self.get_distribution_num()
                 )
@@ -781,7 +780,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
                 # The client is no longer part of the group. Prepare removal.
                 client_ips_for_removal.append(expected_client_ip)
 
-        if len(client_ips_for_removal) > 0:
+        if client_ips_for_removal:
             _LOGGER.debug(
                 "%s says good bye to the following members %s",
                 self.entity_id,
