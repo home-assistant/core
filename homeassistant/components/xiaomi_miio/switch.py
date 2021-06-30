@@ -414,7 +414,7 @@ class XiaomiGenericCoordinatedSwitch(XiaomiCoordinatedMiioEntity, SwitchEntity):
             self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs) -> None:
-        """Turn on an option of the miio device."""
+        """Turn off an option of the miio device."""
         method = getattr(
             self, SERVICE_TO_METHOD[self._controller.service]["method_off"]
         )
