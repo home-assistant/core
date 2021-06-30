@@ -66,12 +66,12 @@ POLLUTANT_LABELS = {
 }
 
 POLLUTANT_LEVELS = {
-    (0, 50): ("Good", "mid:emoticon-excited"),
-    (51, 100): ("Moderate", "mid:emoticon-happy"),
-    (101, 150): ("Unhealthy for sensitive groups", "mid:emoticon-neutral"),
-    (151, 200): ("Unhealthy", "mid:emoticon-sad"),
-    (201, 300): ("Very unhealthy", "mid:emoticon-dead"),
-    (301, 1000): ("Hazardous", "mid:biohazard"),
+    (0, 50): ("Good", "mdi:emoticon-excited"),
+    (51, 100): ("Moderate", "mdi:emoticon-happy"),
+    (101, 150): ("Unhealthy for sensitive groups", "mdi:emoticon-neutral"),
+    (151, 200): ("Unhealthy", "mdi:emoticon-sad"),
+    (201, 300): ("Very unhealthy", "mdi:emoticon-dead"),
+    (301, 1000): ("Hazardous", "mdi:biohazard"),
 }
 
 POLLUTANT_UNITS = {
