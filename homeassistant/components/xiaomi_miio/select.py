@@ -1,4 +1,4 @@
-"""Support led_brightness for  Mi Air Humidifier."""
+"""Support led_brightness for Mi Air Humidifier."""
 from dataclasses import dataclass
 from enum import Enum
 import logging
