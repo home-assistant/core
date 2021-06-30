@@ -178,8 +178,8 @@ class GeographySensor(AirVisualEntity, SensorEntity):
             }
         )
         self._attr_icon = icon
-        self._attr_name = f"{GEOGRAPHY_SENSOR_LOCALES[self._locale]} {name}"
-        self._attr_unique_id = f"{self._entry.unique_id}_{self._locale}_{self._kind}"
+        self._attr_name = f"{GEOGRAPHY_SENSOR_LOCALES[locale]} {name}"
+        self._attr_unique_id = f"{entry.unique_id}_{locale}_{kind}"
         self._attr_unit_of_measurement = unit
         self._entry = entry
         self._kind = kind
@@ -210,7 +210,7 @@ class GeographySensor(AirVisualEntity, SensorEntity):
         elif self._kind == SENSOR_KIND_POLLUTANT:
             symbol = data[f"main{self._locale}"]
             self._attr_state = POLLUTANT_LABELS[symbol]
-            self._attrs.update(
+            self._attr_extra_state_attributes.update(
                 {
                     ATTR_POLLUTANT_SYMBOL: symbol,
                     ATTR_POLLUTANT_UNIT: POLLUTANT_UNITS[symbol],
@@ -234,15 +234,15 @@ class GeographySensor(AirVisualEntity, SensorEntity):
         )
 
         if self._entry.options[CONF_SHOW_ON_MAP]:
-            self._attrs[ATTR_LATITUDE] = latitude
-            self._attrs[ATTR_LONGITUDE] = longitude
-            self._attrs.pop("lati", None)
-            self._attrs.pop("long", None)
+            self._attr_extra_state_attributes[ATTR_LATITUDE] = latitude
+            self._attr_extra_state_attributes[ATTR_LONGITUDE] = longitude
+            self._attr_extra_state_attributes.pop("lati", None)
+            self._attr_extra_state_attributes.pop("long", None)
         else:
-            self._attrs["lati"] = latitude
-            self._attrs["long"] = longitude
-            self._attrs.pop(ATTR_LATITUDE, None)
-            self._attrs.pop(ATTR_LONGITUDE, None)
+            self._attr_extra_state_attributes["lati"] = latitude
+            self._attr_extra_state_attributes["long"] = longitude
+            self._attr_extra_state_attributes.pop(ATTR_LATITUDE, None)
+            self._attr_extra_state_attributes.pop(ATTR_LONGITUDE, None)
 
 
 class NodeProSensor(AirVisualEntity, SensorEntity):
