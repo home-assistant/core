@@ -10,10 +10,13 @@ from typing import TYPE_CHECKING
 from sqlalchemy import bindparam
 from sqlalchemy.ext import baked
 
+from homeassistant.const import PRESSURE_PA, TEMP_CELSIUS
 import homeassistant.util.dt as dt_util
+import homeassistant.util.pressure as pressure_util
+import homeassistant.util.temperature as temperature_util
 
 from .const import DOMAIN
-from .models import Statistics, process_timestamp_to_utc_isoformat
+from .models import Statistics, StatisticsMeta, process_timestamp_to_utc_isoformat
 from .util import execute, retryable_database_job, session_scope
 
 if TYPE_CHECKING:
@@ -34,7 +37,22 @@ QUERY_STATISTIC_IDS = [
     Statistics.statistic_id,
 ]
 
+QUERY_STATISTIC_META = [
+    StatisticsMeta.statistic_id,
+    StatisticsMeta.unit_of_measurement,
+]
+
 STATISTICS_BAKERY = "recorder_statistics_bakery"
+STATISTICS_META_BAKERY = "recorder_statistics_bakery"
+
+UNIT_CONVERSIONS = {
+    PRESSURE_PA: lambda x, units: pressure_util.convert(
+        x, PRESSURE_PA, units.pressure_unit
+    ),
+    TEMP_CELSIUS: lambda x, units: temperature_util.convert(
+        x, TEMP_CELSIUS, units.temperature_unit
+    ),
+}
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,6 +60,7 @@ _LOGGER = logging.getLogger(__name__)
 def async_setup(hass):
     """Set up the history hooks."""
     hass.data[STATISTICS_BAKERY] = baked.bakery()
+    hass.data[STATISTICS_META_BAKERY] = baked.bakery()
 
 
 def get_start_time() -> datetime.datetime:
@@ -73,9 +92,45 @@ def compile_statistics(instance: Recorder, start: datetime.datetime) -> bool:
     with session_scope(session=instance.get_session()) as session:  # type: ignore
         for stats in platform_stats:
             for entity_id, stat in stats.items():
-                session.add(Statistics.from_stats(DOMAIN, entity_id, start, stat))
+                session.add(
+                    Statistics.from_stats(DOMAIN, entity_id, start, stat["stat"])
+                )
+                exists = session.query(
+                    session.query(StatisticsMeta)
+                    .filter_by(statistic_id=entity_id)
+                    .exists()
+                ).scalar()
+                if not exists:
+                    unit = stat["meta"]["unit_of_measurement"]
+                    session.add(StatisticsMeta.from_meta(DOMAIN, entity_id, unit))
 
     return True
+
+
+def _get_meta_data(hass, session, statistic_ids):
+    """Fetch meta data."""
+
+    def _meta(metas, wanted_statistic_id):
+        meta = {"statistic_id": wanted_statistic_id, "unit_of_measurement": None}
+        for statistic_id, unit in metas:
+            if statistic_id == wanted_statistic_id:
+                meta["unit_of_measurement"] = unit
+        return meta
+
+    baked_query = hass.data[STATISTICS_META_BAKERY](
+        lambda session: session.query(*QUERY_STATISTIC_META)
+    )
+    if statistic_ids is not None:
+        baked_query += lambda q: q.filter(
+            StatisticsMeta.statistic_id.in_(bindparam("statistic_ids"))
+        )
+
+    result = execute(baked_query(session).params(statistic_ids=statistic_ids))
+
+    if statistic_ids is None:
+        statistic_ids = [statistic_id[0] for statistic_id in result]
+
+    return {id: _meta(result, id) for id in statistic_ids}
 
 
 def list_statistic_ids(hass, statistic_type=None):
@@ -92,10 +147,10 @@ def list_statistic_ids(hass, statistic_type=None):
 
         baked_query += lambda q: q.order_by(Statistics.statistic_id)
 
-        statistic_ids = []
         result = execute(baked_query(session))
-        statistic_ids = [statistic_id[0] for statistic_id in result]
-        return statistic_ids
+        statistic_ids_list = [statistic_id[0] for statistic_id in result]
+
+        return list(_get_meta_data(hass, session, statistic_ids_list).values())
 
 
 def statistics_during_period(hass, start_time, end_time=None, statistic_ids=None):
@@ -123,8 +178,8 @@ def statistics_during_period(hass, start_time, end_time=None, statistic_ids=None
                 start_time=start_time, end_time=end_time, statistic_ids=statistic_ids
             )
         )
-
-        return _sorted_statistics_to_dict(stats, statistic_ids)
+        meta_data = _get_meta_data(hass, session, statistic_ids)
+        return _sorted_statistics_to_dict(hass, stats, statistic_ids, meta_data)
 
 
 def get_last_statistics(hass, number_of_stats, statistic_id=None):
@@ -150,38 +205,43 @@ def get_last_statistics(hass, number_of_stats, statistic_id=None):
         )
 
         statistic_ids = [statistic_id] if statistic_id is not None else None
-
-        return _sorted_statistics_to_dict(stats, statistic_ids)
+        meta_data = _get_meta_data(hass, session, statistic_ids)
+        return _sorted_statistics_to_dict(hass, stats, statistic_ids, meta_data)
 
 
 def _sorted_statistics_to_dict(
+    hass,
     stats,
     statistic_ids,
+    meta_data,
 ):
     """Convert SQL results into JSON friendly data structure."""
     result = defaultdict(list)
+    units = hass.config.units
+
     # Set all statistic IDs to empty lists in result set to maintain the order
     if statistic_ids is not None:
         for stat_id in statistic_ids:
             result[stat_id] = []
 
-    # Called in a tight loop so cache the function
-    # here
+    # Called in a tight loop so cache the function here
     _process_timestamp_to_utc_isoformat = process_timestamp_to_utc_isoformat
 
-    # Append all changes to it
+    # Append all statistic entries
     for ent_id, group in groupby(stats, lambda state: state.statistic_id):
+        unit = meta_data[ent_id]["unit_of_measurement"]
+        convert = UNIT_CONVERSIONS.get(unit, lambda x, units: x)
         ent_results = result[ent_id]
         ent_results.extend(
             {
                 "statistic_id": db_state.statistic_id,
                 "start": _process_timestamp_to_utc_isoformat(db_state.start),
-                "mean": db_state.mean,
-                "min": db_state.min,
-                "max": db_state.max,
+                "mean": convert(db_state.mean, units),
+                "min": convert(db_state.min, units),
+                "max": convert(db_state.max, units),
                 "last_reset": _process_timestamp_to_utc_isoformat(db_state.last_reset),
-                "state": db_state.state,
-                "sum": db_state.sum,
+                "state": convert(db_state.state, units),
+                "sum": convert(db_state.sum, units),
             }
             for db_state in group
         )

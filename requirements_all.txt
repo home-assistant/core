@@ -209,7 +209,7 @@ aiolyric==1.0.7
 aiomodernforms==0.1.8
 
 # homeassistant.components.yamaha_musiccast
-aiomusiccast==0.6
+aiomusiccast==0.8.0
 
 # homeassistant.components.keyboard_remote
 aionotify==0.2.0
@@ -780,7 +780,7 @@ hole==0.5.1
 holidays==0.11.1
 
 # homeassistant.components.frontend
-home-assistant-frontend==20210603.0
+home-assistant-frontend==20210630.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -1376,7 +1376,7 @@ pycsspeechtts==1.0.4
 # pycups==1.9.73
 
 # homeassistant.components.daikin
-pydaikin==2.4.3
+pydaikin==2.4.4
 
 # homeassistant.components.danfoss_air
 pydanfossair==0.1.0
@@ -1449,6 +1449,9 @@ pyfnip==0.2
 
 # homeassistant.components.forked_daapd
 pyforked-daapd==0.1.11
+
+# homeassistant.components.freedompro
+pyfreedompro==1.1.0
 
 # homeassistant.components.fritzbox
 pyfritzhome==0.4.2
@@ -2390,7 +2393,7 @@ xbox-webapi==2.0.11
 xboxapi==2.0.1
 
 # homeassistant.components.knx
-xknx==0.18.7
+xknx==0.18.8
 
 # homeassistant.components.bluesound
 # homeassistant.components.fritz
