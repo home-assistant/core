@@ -59,7 +59,7 @@ def _generate_secret_and_qr_code(username: str) -> tuple[str, str, str]:
 
     ota_secret = pyotp.random_base32()
     url = pyotp.totp.TOTP(ota_secret).provisioning_uri(
-        username, issuer_name="Home Assistant"
+        username, issuer_name="AI-Speaker"
     )
     image = _generate_qr_code(url)
     return ota_secret, url, image

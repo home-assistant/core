@@ -12,6 +12,10 @@ homeassistant:
       api_password: dom
   allowlist_external_dirs:
     - /data/data/pl.sviete.dom/files/home/AIS/www/
+
+  auth_mfa_modules:
+    - type: totp
+      name: "AIS Multi-factor authentication"
 #
 system_health:
 
