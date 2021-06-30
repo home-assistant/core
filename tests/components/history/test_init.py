@@ -830,6 +830,11 @@ async def test_entity_ids_limit_via_api_with_skip_initial_state(hass, hass_clien
     assert response_json[1][0]["entity_id"] == "light.cow"
 
 
+POWER_SENSOR_ATTRIBUTES = {
+    "device_class": "power",
+    "state_class": "measurement",
+    "unit_of_measurement": "kW",
+}
 PRESSURE_SENSOR_ATTRIBUTES = {
     "device_class": "pressure",
     "state_class": "measurement",
@@ -845,6 +850,8 @@ TEMPERATURE_SENSOR_ATTRIBUTES = {
 @pytest.mark.parametrize(
     "units, attributes, state, value",
     [
+        (IMPERIAL_SYSTEM, POWER_SENSOR_ATTRIBUTES, 10, 10000),
+        (METRIC_SYSTEM, POWER_SENSOR_ATTRIBUTES, 10, 10000),
         (IMPERIAL_SYSTEM, TEMPERATURE_SENSOR_ATTRIBUTES, 10, 50),
         (METRIC_SYSTEM, TEMPERATURE_SENSOR_ATTRIBUTES, 10, 10),
         (IMPERIAL_SYSTEM, PRESSURE_SENSOR_ATTRIBUTES, 1000, 14.503774389728312),
@@ -964,6 +971,8 @@ async def test_statistics_during_period_bad_end_time(hass, hass_ws_client):
 @pytest.mark.parametrize(
     "units, attributes, unit",
     [
+        (IMPERIAL_SYSTEM, POWER_SENSOR_ATTRIBUTES, "W"),
+        (METRIC_SYSTEM, POWER_SENSOR_ATTRIBUTES, "W"),
         (IMPERIAL_SYSTEM, TEMPERATURE_SENSOR_ATTRIBUTES, "°F"),
         (METRIC_SYSTEM, TEMPERATURE_SENSOR_ATTRIBUTES, "°C"),
         (IMPERIAL_SYSTEM, PRESSURE_SENSOR_ATTRIBUTES, "psi"),
