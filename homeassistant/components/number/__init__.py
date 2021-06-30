@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import Any, final
+from typing import Any, Callable, final
 
 import voluptuous as vol
 
@@ -48,10 +48,20 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     component.async_register_entity_service(
         SERVICE_SET_VALUE,
         {vol.Required(ATTR_VALUE): vol.Coerce(float)},
-        "async_set_value",
+        async_set_value,
     )
 
     return True
+
+
+async def async_set_value(entry: NumberEntity, async_service_call: Callable) -> None:
+    """Service call wrapper to set a new value."""
+    value = getattr(async_service_call, "data")["value"]
+    if value < entry.min_value or value > entry.max_value:
+        raise ValueError(
+            f"Value {value} not a valid {entry.name} within the range {entry.min_value} - {entry.max_value}"
+        )
+    return await entry.async_set_value(value)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
