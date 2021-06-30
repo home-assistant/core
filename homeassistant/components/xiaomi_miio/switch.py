@@ -410,7 +410,7 @@ class XiaomiGenericCoordinatedSwitch(XiaomiCoordinatedMiioEntity, SwitchEntity):
         method = getattr(self, SERVICE_TO_METHOD[self._controller.service]["method_on"])
         if await method():
             # Write state back to avoid switch flips with a slow response
-            self._state = True
+            self._attr_is_on = True
             self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs) -> None:
