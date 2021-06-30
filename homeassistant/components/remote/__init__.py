@@ -64,6 +64,9 @@ SUPPORT_LEARN_COMMAND = 1
 SUPPORT_DELETE_COMMAND = 2
 SUPPORT_ACTIVITY = 4
 
+EVENT_TYPE = "remote_event"
+EVENT_DATA_TYPE_LEARNED_CODE = "learned_code"
+
 REMOTE_SERVICE_ACTIVITY_SCHEMA = make_entity_service_schema(
     {vol.Optional(ATTR_ACTIVITY): cv.string}
 )

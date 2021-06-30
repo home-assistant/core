@@ -24,6 +24,8 @@ from homeassistant.components.remote import (
     ATTR_NUM_REPEATS,
     DEFAULT_DELAY_SECS,
     DOMAIN as RM_DOMAIN,
+    EVENT_DATA_TYPE_LEARNED_CODE as RM_EVENT_DATA_TYPE_LEARNED_CODE,
+    EVENT_TYPE as RM_EVENT_TYPE,
     PLATFORM_SCHEMA,
     SERVICE_DELETE_COMMAND,
     SERVICE_LEARN_COMMAND,
@@ -282,9 +284,20 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
         service = f"{RM_DOMAIN}.{SERVICE_LEARN_COMMAND}"
 
         if not self._attr_is_on:
-            _LOGGER.warning(
-                "%s canceled: %s entity is turned off", service, self.entity_id
+            error_message = (
+                "%s canceled: %s entity is turned off",
+                service,
+                self.entity_id,
             )
+            self.hass.bus.async_fire(
+                RM_EVENT_TYPE,
+                {
+                    "device_id": self.unique_id,
+                    "type": RM_EVENT_DATA_TYPE_LEARNED_CODE,
+                    "error": error_message,
+                },
+            )
+            _LOGGER.warning(error_message)
             return
 
         if not self._storage_loaded:
@@ -311,14 +324,43 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
                         code = [code, await learn_command(command)]
 
                 except (AuthorizationError, NetworkTimeoutError, OSError) as err:
+                    self.hass.bus.async_fire(
+                        RM_EVENT_TYPE,
+                        {
+                            "device_id": self.unique_id,
+                            "type": RM_EVENT_DATA_TYPE_LEARNED_CODE,
+                            "command": command,
+                            "error": str(err),
+                        },
+                    )
                     _LOGGER.error("Failed to learn '%s': %s", command, err)
                     break
 
                 except BroadlinkException as err:
+                    self.hass.bus.async_fire(
+                        RM_EVENT_TYPE,
+                        {
+                            "device_id": self.unique_id,
+                            "type": RM_EVENT_DATA_TYPE_LEARNED_CODE,
+                            "command": command,
+                            "error": str(err),
+                        },
+                    )
                     _LOGGER.error("Failed to learn '%s': %s", command, err)
                     continue
 
                 self._codes.setdefault(device, {}).update({command: code})
+
+                self.hass.bus.async_fire(
+                    RM_EVENT_TYPE,
+                    {
+                        "device_id": self.unique_id,
+                        "type": RM_EVENT_DATA_TYPE_LEARNED_CODE,
+                        "command": command,
+                        "code": code,
+                    },
+                )
+
                 should_store = True
 
             if should_store:
