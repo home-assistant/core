@@ -9,6 +9,7 @@ from homeassistant.components.recorder import history
 from homeassistant.components.recorder.const import DATA_INSTANCE
 from homeassistant.components.recorder.models import process_timestamp_to_utc_isoformat
 from homeassistant.components.recorder.statistics import statistics_during_period
+from homeassistant.const import TEMP_CELSIUS
 from homeassistant.setup import setup_component
 import homeassistant.util.dt as dt_util
 
@@ -53,7 +54,11 @@ def record_states(hass):
     sns1 = "sensor.test1"
     sns2 = "sensor.test2"
     sns3 = "sensor.test3"
-    sns1_attr = {"device_class": "temperature", "state_class": "measurement"}
+    sns1_attr = {
+        "device_class": "temperature",
+        "state_class": "measurement",
+        "unit_of_measurement": TEMP_CELSIUS,
+    }
     sns2_attr = {"device_class": "temperature"}
     sns3_attr = {}
 
