@@ -1,6 +1,5 @@
 """Support for Freedompro light."""
 import json
-import math
 
 from pyfreedompro import put_state
 
@@ -70,7 +69,7 @@ class Device(CoordinatorEntity, LightEntity):
             if "on" in state:
                 self._attr_is_on = state["on"]
             if "brightness" in state:
-                self._attr_brightness = math.floor(state["brightness"] / 100 * 255)
+                self._attr_brightness = round(state["brightness"] / 100 * 255)
             if "hue" in state and "saturation" in state:
                 self._attr_hs_color = (state["hue"], state["saturation"])
         super()._handle_coordinator_update()
@@ -85,13 +84,12 @@ class Device(CoordinatorEntity, LightEntity):
         self._attr_is_on = True
         payload = {"on": True}
         if ATTR_BRIGHTNESS in kwargs:
-            self._attr_brightness = math.floor(kwargs[ATTR_BRIGHTNESS] / 255 * 100)
-            payload["brightness"] = self._attr_brightness
+            self._attr_brightness = kwargs[ATTR_BRIGHTNESS]
+            payload["brightness"] = round(self._attr_brightness / 255 * 100)
         if ATTR_HS_COLOR in kwargs:
-            self._saturation = math.floor(kwargs[ATTR_HS_COLOR][1])
-            self._hue = math.floor(kwargs[ATTR_HS_COLOR][0])
-            payload["saturation"] = self._saturation
-            payload["hue"] = self._hue
+            self._attr_hs_color = kwargs[ATTR_HS_COLOR]
+            payload["saturation"] = round(self._attr_hs_color[1])
+            payload["hue"] = round(self._attr_hs_color[0])
         payload = json.dumps(payload)
         await put_state(
             self._session,
@@ -99,7 +97,6 @@ class Device(CoordinatorEntity, LightEntity):
             self._attr_unique_id,
             payload,
         )
-        await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs):
         """Async function to set off to light."""
@@ -112,4 +109,3 @@ class Device(CoordinatorEntity, LightEntity):
             self._attr_unique_id,
             payload,
         )
-        await self.coordinator.async_request_refresh()
