@@ -10,7 +10,10 @@ from typing import TYPE_CHECKING
 from sqlalchemy import bindparam
 from sqlalchemy.ext import baked
 
+from homeassistant.const import PRESSURE_PA, TEMP_CELSIUS
 import homeassistant.util.dt as dt_util
+import homeassistant.util.pressure as pressure_util
+import homeassistant.util.temperature as temperature_util
 
 from .const import DOMAIN
 from .models import Statistics, StatisticsMeta, process_timestamp_to_utc_isoformat
@@ -41,6 +44,15 @@ QUERY_STATISTIC_META = [
 
 STATISTICS_BAKERY = "recorder_statistics_bakery"
 STATISTICS_META_BAKERY = "recorder_statistics_bakery"
+
+UNIT_CONVERSIONS = {
+    PRESSURE_PA: lambda x, units: pressure_util.convert(
+        x, PRESSURE_PA, units.pressure_unit
+    ),
+    TEMP_CELSIUS: lambda x, units: temperature_util.convert(
+        x, TEMP_CELSIUS, units.temperature_unit
+    ),
+}
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -166,8 +178,8 @@ def statistics_during_period(hass, start_time, end_time=None, statistic_ids=None
                 start_time=start_time, end_time=end_time, statistic_ids=statistic_ids
             )
         )
-
-        return _sorted_statistics_to_dict(stats, statistic_ids)
+        meta_data = _get_meta_data(hass, session, statistic_ids)
+        return _sorted_statistics_to_dict(hass, stats, statistic_ids, meta_data)
 
 
 def get_last_statistics(hass, number_of_stats, statistic_id=None):
@@ -193,38 +205,43 @@ def get_last_statistics(hass, number_of_stats, statistic_id=None):
         )
 
         statistic_ids = [statistic_id] if statistic_id is not None else None
-
-        return _sorted_statistics_to_dict(stats, statistic_ids)
+        meta_data = _get_meta_data(hass, session, statistic_ids)
+        return _sorted_statistics_to_dict(hass, stats, statistic_ids, meta_data)
 
 
 def _sorted_statistics_to_dict(
+    hass,
     stats,
     statistic_ids,
+    meta_data,
 ):
     """Convert SQL results into JSON friendly data structure."""
     result = defaultdict(list)
+    units = hass.config.units
+
     # Set all statistic IDs to empty lists in result set to maintain the order
     if statistic_ids is not None:
         for stat_id in statistic_ids:
             result[stat_id] = []
 
-    # Called in a tight loop so cache the function
-    # here
+    # Called in a tight loop so cache the function here
     _process_timestamp_to_utc_isoformat = process_timestamp_to_utc_isoformat
 
-    # Append all changes to it
+    # Append all statistic entries
     for ent_id, group in groupby(stats, lambda state: state.statistic_id):
+        unit = meta_data[ent_id]["unit_of_measurement"]
+        convert = UNIT_CONVERSIONS.get(unit, lambda x, units: x)
         ent_results = result[ent_id]
         ent_results.extend(
             {
                 "statistic_id": db_state.statistic_id,
                 "start": _process_timestamp_to_utc_isoformat(db_state.start),
-                "mean": db_state.mean,
-                "min": db_state.min,
-                "max": db_state.max,
+                "mean": convert(db_state.mean, units),
+                "min": convert(db_state.min, units),
+                "max": convert(db_state.max, units),
                 "last_reset": _process_timestamp_to_utc_isoformat(db_state.last_reset),
-                "state": db_state.state,
-                "sum": db_state.sum,
+                "state": convert(db_state.state, units),
+                "sum": convert(db_state.sum, units),
             }
             for db_state in group
         )
