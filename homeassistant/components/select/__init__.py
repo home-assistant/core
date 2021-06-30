@@ -52,7 +52,7 @@ async def async_select_option(
     option = async_service_call.data[ATTR_OPTION]
     if option not in entity.options:
         raise ValueError(f"Option {option} not a valid for {entry.name}")
-    await entry.async_select_option(option)
+    await entity.async_select_option(option)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
