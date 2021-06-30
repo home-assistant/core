@@ -128,11 +128,7 @@ class JewishCalendarSensor(SensorEntity):
 class JewishCalendarTimeSensor(JewishCalendarSensor):
     """Implement attrbutes for sensors returning times."""
 
-    def __init__(self, data, sensor, sensor_info):
-        """Initialize the Jewish calendar time sensors."""
-        super().__init__(data, sensor, sensor_info)
-
-        self._attr_device_class = DEVICE_CLASS_TIMESTAMP
+    _attr_device_class = DEVICE_CLASS_TIMESTAMP
 
     @property
     def state(self):
