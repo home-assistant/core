@@ -1,0 +1,40 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API Key",
+                    "api_token": "API Secret",
+                    "currencies": "Account Balance Currencies",
+                    "exchange_rates": "Exchange Rates"
+                },
+                "description": "Please enter the details of your API key as provided by Coinbase.",
+                "title": "Coinbase API Key Details"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "currency_unavaliable": "One or more of the requested currency balances is not provided by your Coinbase API.",
+            "exchange_rate_unavaliable": "One or more of the requested exchange rates is not provided by Coinbase.",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "account_balance_currencies": "Wallet balances to report.",
+                    "exchange_rate_currencies": "Exchange rates to report."
+                },
+                "description": "Adjust Coinbase Options"
+            }
+        }
+    }
+}

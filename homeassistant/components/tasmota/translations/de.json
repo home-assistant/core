@@ -3,6 +3,9 @@
         "abort": {
             "single_instance_allowed": "Bereits konfiguriert. Nur eine einzige Konfiguration m\u00f6glich."
         },
+        "error": {
+            "invalid_discovery_topic": "Ung\u00fcltiges Discovery-Topic-Pr\u00e4fix."
+        },
         "step": {
             "config": {
                 "data": {

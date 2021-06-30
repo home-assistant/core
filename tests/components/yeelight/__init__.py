@@ -49,7 +49,9 @@ PROPERTIES = {
     "bg_flowing": "0",
     "bg_ct": "5000",
     "bg_bright": "80",
-    "bg_rgb": "16711680",
+    "bg_rgb": "65280",
+    "bg_hue": "200",
+    "bg_sat": "70",
     "nl_br": "23",
     "active_mode": "0",
     "current_brightness": "30",
@@ -74,9 +76,7 @@ YAML_CONFIGURATION = {
     }
 }
 
-CONFIG_ENTRY_DATA = {
-    CONF_ID: ID,
-}
+CONFIG_ENTRY_DATA = {CONF_ID: ID}
 
 
 def _mocked_bulb(cannot_connect=False):

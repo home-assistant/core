@@ -31,6 +31,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class ShellyCover(ShellyBlockEntity, CoverEntity):
     """Switch that controls a cover block on Shelly devices."""
 
+    _attr_device_class = DEVICE_CLASS_SHUTTER
+
     def __init__(self, wrapper: ShellyDeviceWrapper, block: Block) -> None:
         """Initialize light."""
         super().__init__(wrapper, block)
@@ -75,11 +77,6 @@ class ShellyCover(ShellyBlockEntity, CoverEntity):
     def supported_features(self):
         """Flag supported features."""
         return self._supported_features
-
-    @property
-    def device_class(self) -> str:
-        """Return the class of the device."""
-        return DEVICE_CLASS_SHUTTER
 
     async def async_close_cover(self, **kwargs):
         """Close cover."""

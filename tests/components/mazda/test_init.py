@@ -7,7 +7,7 @@ from pymazda import MazdaAuthenticationException, MazdaException
 import pytest
 import voluptuous as vol
 
-from homeassistant.components.mazda.const import DOMAIN, SERVICES
+from homeassistant.components.mazda.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     CONF_EMAIL,
@@ -186,7 +186,23 @@ async def test_device_no_nickname(hass):
     assert reg_device.name == "2021 MAZDA3 2.5 S SE AWD"
 
 
-async def test_services(hass):
+@pytest.mark.parametrize(
+    "service, service_data, expected_args",
+    [
+        ("start_charging", {}, [12345]),
+        ("start_engine", {}, [12345]),
+        ("stop_charging", {}, [12345]),
+        ("stop_engine", {}, [12345]),
+        ("turn_off_hazard_lights", {}, [12345]),
+        ("turn_on_hazard_lights", {}, [12345]),
+        (
+            "send_poi",
+            {"latitude": 1.2345, "longitude": 2.3456, "poi_name": "Work"},
+            [12345, 1.2345, 2.3456, "Work"],
+        ),
+    ],
+)
+async def test_services(hass, service, service_data, expected_args):
     """Test service calls."""
     client_mock = await init_integration(hass)
 
@@ -196,21 +212,13 @@ async def test_services(hass):
     )
     device_id = reg_device.id
 
-    for service in SERVICES:
-        service_data = {"device_id": device_id}
-        if service == "send_poi":
-            service_data["latitude"] = 1.2345
-            service_data["longitude"] = 2.3456
-            service_data["poi_name"] = "Work"
+    service_data["device_id"] = device_id
 
-        await hass.services.async_call(DOMAIN, service, service_data, blocking=True)
-        await hass.async_block_till_done()
+    await hass.services.async_call(DOMAIN, service, service_data, blocking=True)
+    await hass.async_block_till_done()
 
-        api_method = getattr(client_mock, service)
-        if service == "send_poi":
-            api_method.assert_called_once_with(12345, 1.2345, 2.3456, "Work")
-        else:
-            api_method.assert_called_once_with(12345)
+    api_method = getattr(client_mock, service)
+    api_method.assert_called_once_with(*expected_args)
 
 
 async def test_service_invalid_device_id(hass):

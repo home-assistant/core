@@ -35,8 +35,9 @@ class VerisureAlarm(CoordinatorEntity, AlarmControlPanelEntity):
 
     coordinator: VerisureDataUpdateCoordinator
 
+    _attr_code_format = FORMAT_NUMBER
     _attr_name = "Verisure Alarm"
-    _changed_by: str | None = None
+    _attr_supported_features = SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -49,24 +50,9 @@ class VerisureAlarm(CoordinatorEntity, AlarmControlPanelEntity):
         }
 
     @property
-    def supported_features(self) -> int:
-        """Return the list of supported features."""
-        return SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY
-
-    @property
     def unique_id(self) -> str:
         """Return the unique ID for this entity."""
         return self.coordinator.entry.data[CONF_GIID]
-
-    @property
-    def code_format(self) -> str:
-        """Return one or more digits/characters."""
-        return FORMAT_NUMBER
-
-    @property
-    def changed_by(self) -> str | None:
-        """Return the last change triggered by."""
-        return self._changed_by
 
     async def _async_set_arm_state(self, state: str, code: str | None = None) -> None:
         """Send set arm state command."""
@@ -102,7 +88,7 @@ class VerisureAlarm(CoordinatorEntity, AlarmControlPanelEntity):
         self._attr_state = ALARM_STATE_TO_HA.get(
             self.coordinator.data["alarm"]["statusType"]
         )
-        self._changed_by = self.coordinator.data["alarm"].get("name")
+        self._attr_changed_by = self.coordinator.data["alarm"].get("name")
         super()._handle_coordinator_update()
 
     async def async_added_to_hass(self) -> None:

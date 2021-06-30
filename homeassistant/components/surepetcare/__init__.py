@@ -90,12 +90,10 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     async_track_time_interval(hass, spc.async_update, SCAN_INTERVAL)
 
     # load platforms
-    hass.async_create_task(
-        hass.helpers.discovery.async_load_platform("binary_sensor", DOMAIN, {}, config)
-    )
-    hass.async_create_task(
-        hass.helpers.discovery.async_load_platform("sensor", DOMAIN, {}, config)
-    )
+    for platform in PLATFORMS:
+        hass.async_create_task(
+            hass.helpers.discovery.async_load_platform(platform, DOMAIN, {}, config)
+        )
 
     async def handle_set_lock_state(call):
         """Call when setting the lock state."""
@@ -150,6 +148,7 @@ class SurePetcareAPI:
             self.states = await self.surepy.get_entities()
         except SurePetcareError as error:
             _LOGGER.error("Unable to fetch data: %s", error)
+            return
 
         async_dispatcher_send(self.hass, TOPIC_UPDATE)
 

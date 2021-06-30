@@ -159,13 +159,32 @@ async def test_setup_websocket(hass, remotews, mock_now):
         remote = Mock()
         remote.__enter__ = Mock(return_value=enter)
         remote.__exit__ = Mock()
+        remote.rest_device_info.return_value = {
+            "id": "uuid:be9554b9-c9fb-41f4-8920-22da015376a4",
+            "device": {
+                "modelName": "82GXARRS",
+                "wifiMac": "aa:bb:cc:dd:ee:ff",
+                "name": "[TV] Living Room",
+                "type": "Samsung SmartTV",
+                "networkType": "wireless",
+            },
+        }
         remote_class.return_value = remote
 
         await setup_samsungtv(hass, MOCK_CONFIGWS)
 
-        assert remote_class.call_count == 1
-        assert remote_class.call_args_list == [call(**MOCK_CALLS_WS)]
+        assert remote_class.call_count == 2
+        assert remote_class.call_args_list == [
+            call(**MOCK_CALLS_WS),
+            call(**MOCK_CALLS_WS),
+        ]
         assert hass.states.get(ENTITY_ID)
+
+        await hass.async_block_till_done()
+
+        config_entries = hass.config_entries.async_entries(SAMSUNGTV_DOMAIN)
+        assert len(config_entries) == 1
+        assert config_entries[0].data[CONF_MAC] == "aa:bb:cc:dd:ee:ff"
 
 
 async def test_setup_websocket_2(hass, mock_now):
@@ -183,20 +202,37 @@ async def test_setup_websocket_2(hass, mock_now):
     assert len(config_entries) == 1
     assert entry is config_entries[0]
 
-    assert await async_setup_component(hass, SAMSUNGTV_DOMAIN, {})
-    await hass.async_block_till_done()
-
-    next_update = mock_now + timedelta(minutes=5)
-    with patch(
-        "homeassistant.components.samsungtv.bridge.SamsungTVWS"
-    ) as remote, patch("homeassistant.util.dt.utcnow", return_value=next_update):
-        async_fire_time_changed(hass, next_update)
+    with patch("homeassistant.components.samsungtv.bridge.SamsungTVWS") as remote_class:
+        enter = Mock()
+        type(enter).token = PropertyMock(return_value="987654321")
+        remote = Mock()
+        remote.__enter__ = Mock(return_value=enter)
+        remote.__exit__ = Mock()
+        remote.rest_device_info.return_value = {
+            "id": "uuid:be9554b9-c9fb-41f4-8920-22da015376a4",
+            "device": {
+                "modelName": "82GXARRS",
+                "wifiMac": "aa:bb:cc:dd:ee:ff",
+                "name": "[TV] Living Room",
+                "type": "Samsung SmartTV",
+                "networkType": "wireless",
+            },
+        }
+        remote_class.return_value = remote
+        assert await async_setup_component(hass, SAMSUNGTV_DOMAIN, {})
         await hass.async_block_till_done()
+
+        assert config_entries[0].data[CONF_MAC] == "aa:bb:cc:dd:ee:ff"
+
+        next_update = mock_now + timedelta(minutes=5)
+        with patch("homeassistant.util.dt.utcnow", return_value=next_update):
+            async_fire_time_changed(hass, next_update)
+            await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
     assert state
-    assert remote.call_count == 1
-    assert remote.call_args_list == [call(**MOCK_CALLS_WS)]
+    assert remote_class.call_count == 3
+    assert remote_class.call_args_list[0] == call(**MOCK_CALLS_WS)
 
 
 async def test_update_on(hass, remote, mock_now):
@@ -296,6 +332,32 @@ async def test_update_unhandled_response(hass, remote, mock_now):
     ):
 
         next_update = mock_now + timedelta(minutes=5)
+        with patch("homeassistant.util.dt.utcnow", return_value=next_update):
+            async_fire_time_changed(hass, next_update)
+            await hass.async_block_till_done()
+
+        state = hass.states.get(ENTITY_ID)
+        assert state.state == STATE_ON
+
+
+async def test_connection_closed_during_update_can_recover(hass, remote, mock_now):
+    """Testing update tv connection closed exception can recover."""
+    await setup_samsungtv(hass, MOCK_CONFIG)
+
+    with patch(
+        "homeassistant.components.samsungtv.bridge.Remote",
+        side_effect=[exceptions.ConnectionClosed(), DEFAULT_MOCK],
+    ):
+
+        next_update = mock_now + timedelta(minutes=5)
+        with patch("homeassistant.util.dt.utcnow", return_value=next_update):
+            async_fire_time_changed(hass, next_update)
+            await hass.async_block_till_done()
+
+        state = hass.states.get(ENTITY_ID)
+        assert state.state == STATE_OFF
+
+        next_update = mock_now + timedelta(minutes=10)
         with patch("homeassistant.util.dt.utcnow", return_value=next_update):
             async_fire_time_changed(hass, next_update)
             await hass.async_block_till_done()

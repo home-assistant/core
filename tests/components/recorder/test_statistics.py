@@ -9,6 +9,7 @@ from homeassistant.components.recorder import history
 from homeassistant.components.recorder.const import DATA_INSTANCE
 from homeassistant.components.recorder.models import process_timestamp_to_utc_isoformat
 from homeassistant.components.recorder.statistics import statistics_during_period
+from homeassistant.const import TEMP_CELSIUS
 from homeassistant.setup import setup_component
 import homeassistant.util.dt as dt_util
 
@@ -26,21 +27,22 @@ def test_compile_hourly_statistics(hass_recorder):
 
     recorder.do_adhoc_statistics(period="hourly", start=zero)
     wait_recording_done(hass)
-    stats = statistics_during_period(hass, zero)
-    assert stats == {
-        "sensor.test1": [
-            {
-                "statistic_id": "sensor.test1",
-                "start": process_timestamp_to_utc_isoformat(zero),
-                "mean": approx(14.915254237288135),
-                "min": approx(10.0),
-                "max": approx(20.0),
-                "last_reset": None,
-                "state": None,
-                "sum": None,
-            }
-        ]
-    }
+    for kwargs in ({}, {"statistic_ids": ["sensor.test1"]}):
+        stats = statistics_during_period(hass, zero, **kwargs)
+        assert stats == {
+            "sensor.test1": [
+                {
+                    "statistic_id": "sensor.test1",
+                    "start": process_timestamp_to_utc_isoformat(zero),
+                    "mean": approx(14.915254237288135),
+                    "min": approx(10.0),
+                    "max": approx(20.0),
+                    "last_reset": None,
+                    "state": None,
+                    "sum": None,
+                }
+            ]
+        }
 
 
 def record_states(hass):
@@ -52,7 +54,11 @@ def record_states(hass):
     sns1 = "sensor.test1"
     sns2 = "sensor.test2"
     sns3 = "sensor.test3"
-    sns1_attr = {"device_class": "temperature", "state_class": "measurement"}
+    sns1_attr = {
+        "device_class": "temperature",
+        "state_class": "measurement",
+        "unit_of_measurement": TEMP_CELSIUS,
+    }
     sns2_attr = {"device_class": "temperature"}
     sns3_attr = {}
 

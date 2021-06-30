@@ -179,18 +179,8 @@ class ProvisionSettingsBinarySensor(RainMachineBinarySensor):
     @callback
     def update_from_latest_data(self) -> None:
         """Update the state."""
-        if self._sensor_type == TYPE_FREEZE:
-            self._state = self.coordinator.data["freeze"]
-        elif self._sensor_type == TYPE_HOURLY:
-            self._state = self.coordinator.data["hourly"]
-        elif self._sensor_type == TYPE_MONTH:
-            self._state = self.coordinator.data["month"]
-        elif self._sensor_type == TYPE_RAINDELAY:
-            self._state = self.coordinator.data["rainDelay"]
-        elif self._sensor_type == TYPE_RAINSENSOR:
-            self._state = self.coordinator.data["rainSensor"]
-        elif self._sensor_type == TYPE_WEEKDAY:
-            self._state = self.coordinator.data["weekDay"]
+        if self._sensor_type == TYPE_FLOW_SENSOR:
+            self._state = self.coordinator.data["system"].get("useFlowSensor")
 
 
 class UniversalRestrictionsBinarySensor(RainMachineBinarySensor):
@@ -199,5 +189,7 @@ class UniversalRestrictionsBinarySensor(RainMachineBinarySensor):
     @callback
     def update_from_latest_data(self) -> None:
         """Update the state."""
-        if self._sensor_type == TYPE_FLOW_SENSOR:
-            self._state = self.coordinator.data["system"].get("useFlowSensor")
+        if self._sensor_type == TYPE_FREEZE_PROTECTION:
+            self._state = self.coordinator.data["freezeProtectEnabled"]
+        elif self._sensor_type == TYPE_HOT_DAYS:
+            self._state = self.coordinator.data["hotDaysExtraWatering"]

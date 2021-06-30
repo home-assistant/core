@@ -10,7 +10,7 @@
             "invalid_auth": "Ung\u00fcltige Authentifikation",
             "unknown": "Unerwarteter Fehler"
         },
-        "flow_title": "DoorBird {name} ({host})",
+        "flow_title": "{name} ({host})",
         "step": {
             "user": {
                 "data": {

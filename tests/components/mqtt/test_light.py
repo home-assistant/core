@@ -161,6 +161,9 @@ import pytest
 
 from homeassistant import config as hass_config
 from homeassistant.components import light
+from homeassistant.components.mqtt.light.schema_basic import (
+    MQTT_LIGHT_ATTRIBUTES_BLOCKED,
+)
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_SUPPORTED_FEATURES,
@@ -190,6 +193,7 @@ from .test_common import (
     help_test_entity_id_update_subscriptions,
     help_test_setting_attribute_via_mqtt_json_message,
     help_test_setting_attribute_with_template,
+    help_test_setting_blocked_attribute_via_mqtt_json_message,
     help_test_unique_id,
     help_test_update_with_json_attrs_bad_JSON,
     help_test_update_with_json_attrs_not_dict,
@@ -1103,7 +1107,7 @@ async def test_controlling_state_via_topic_with_templates(hass, mqtt_mock):
     assert state.attributes.get(light.ATTR_SUPPORTED_COLOR_MODES) == color_modes
 
 
-async def test_controlling_state_via_topic_with_value_template(hass, mqtt_mock):
+async def test_controlling_state_via_topic_with_value_template(hass, mqtt_mock, caplog):
     """Test the setting of the state with undocumented value_template."""
     config = {
         light.DOMAIN: {
@@ -1117,6 +1121,8 @@ async def test_controlling_state_via_topic_with_value_template(hass, mqtt_mock):
 
     assert await async_setup_component(hass, light.DOMAIN, config)
     await hass.async_block_till_done()
+
+    assert "The 'value_template' option is deprecated" in caplog.text
 
     state = hass.states.get("light.test")
     assert state.state == STATE_OFF
@@ -2266,6 +2272,83 @@ async def test_on_command_rgbww_template(hass, mqtt_mock):
     mqtt_mock.async_publish.assert_called_once_with("test_light/set", "OFF", 0, False)
 
 
+async def test_on_command_white(hass, mqtt_mock):
+    """Test sending commands for RGB + white light."""
+    config = {
+        light.DOMAIN: {
+            "platform": "mqtt",
+            "name": "test",
+            "command_topic": "tasmota_B94927/cmnd/POWER",
+            "value_template": "{{ value_json.POWER }}",
+            "payload_off": "OFF",
+            "payload_on": "ON",
+            "brightness_command_topic": "tasmota_B94927/cmnd/Dimmer",
+            "brightness_scale": 100,
+            "on_command_type": "brightness",
+            "brightness_value_template": "{{ value_json.Dimmer }}",
+            "rgb_command_topic": "tasmota_B94927/cmnd/Color2",
+            "rgb_value_template": "{{value_json.Color.split(',')[0:3]|join(',')}}",
+            "white_command_topic": "tasmota_B94927/cmnd/White",
+            "white_scale": 100,
+            "color_mode_value_template": "{% if value_json.White %} white {% else %} rgb {% endif %}",
+            "qos": "0",
+        }
+    }
+    color_modes = ["rgb", "white"]
+
+    assert await async_setup_component(hass, light.DOMAIN, config)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("light.test")
+    assert state.state == STATE_OFF
+    assert state.attributes.get("brightness") is None
+    assert state.attributes.get("rgb_color") is None
+    assert state.attributes.get(light.ATTR_COLOR_MODE) is None
+    assert state.attributes.get(light.ATTR_SUPPORTED_COLOR_MODES) == color_modes
+    assert state.attributes.get(ATTR_ASSUMED_STATE)
+
+    await common.async_turn_on(hass, "light.test", brightness=192)
+    mqtt_mock.async_publish.assert_has_calls(
+        [
+            call("tasmota_B94927/cmnd/Dimmer", "75", 0, False),
+        ],
+        any_order=True,
+    )
+    mqtt_mock.async_publish.reset_mock()
+
+    await common.async_turn_on(hass, "light.test", white=255)
+    mqtt_mock.async_publish.assert_has_calls(
+        [
+            call("tasmota_B94927/cmnd/White", "100", 0, False),
+        ],
+        any_order=True,
+    )
+    mqtt_mock.async_publish.reset_mock()
+
+    await common.async_turn_on(hass, "light.test", white=64)
+    mqtt_mock.async_publish.assert_has_calls(
+        [
+            call("tasmota_B94927/cmnd/White", "25", 0, False),
+        ],
+        any_order=True,
+    )
+    mqtt_mock.async_publish.reset_mock()
+
+    await common.async_turn_on(hass, "light.test")
+    mqtt_mock.async_publish.assert_has_calls(
+        [
+            call("tasmota_B94927/cmnd/Dimmer", "25", 0, False),
+        ],
+        any_order=True,
+    )
+    mqtt_mock.async_publish.reset_mock()
+
+    await common.async_turn_off(hass, "light.test")
+    mqtt_mock.async_publish.assert_called_once_with(
+        "tasmota_B94927/cmnd/POWER", "OFF", 0, False
+    )
+
+
 async def test_explicit_color_mode(hass, mqtt_mock):
     """Test explicit color mode over mqtt."""
     config = {
@@ -2497,6 +2580,70 @@ async def test_explicit_color_mode_templated(hass, mqtt_mock):
     assert light_state.attributes.get(light.ATTR_SUPPORTED_COLOR_MODES) == color_modes
 
 
+async def test_white_state_update(hass, mqtt_mock):
+    """Test state updates for RGB + white light."""
+    config = {
+        light.DOMAIN: {
+            "platform": "mqtt",
+            "name": "test",
+            "state_topic": "tasmota_B94927/tele/STATE",
+            "command_topic": "tasmota_B94927/cmnd/POWER",
+            "value_template": "{{ value_json.POWER }}",
+            "payload_off": "OFF",
+            "payload_on": "ON",
+            "brightness_command_topic": "tasmota_B94927/cmnd/Dimmer",
+            "brightness_state_topic": "tasmota_B94927/tele/STATE",
+            "brightness_scale": 100,
+            "on_command_type": "brightness",
+            "brightness_value_template": "{{ value_json.Dimmer }}",
+            "rgb_command_topic": "tasmota_B94927/cmnd/Color2",
+            "rgb_state_topic": "tasmota_B94927/tele/STATE",
+            "rgb_value_template": "{{value_json.Color.split(',')[0:3]|join(',')}}",
+            "white_command_topic": "tasmota_B94927/cmnd/White",
+            "white_scale": 100,
+            "color_mode_state_topic": "tasmota_B94927/tele/STATE",
+            "color_mode_value_template": "{% if value_json.White %} white {% else %} rgb {% endif %}",
+            "qos": "0",
+        }
+    }
+    color_modes = ["rgb", "white"]
+
+    assert await async_setup_component(hass, light.DOMAIN, config)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("light.test")
+    assert state.state == STATE_OFF
+    assert state.attributes.get("brightness") is None
+    assert state.attributes.get("rgb_color") is None
+    assert state.attributes.get(light.ATTR_COLOR_MODE) is None
+    assert state.attributes.get(light.ATTR_SUPPORTED_COLOR_MODES) == color_modes
+    assert not state.attributes.get(ATTR_ASSUMED_STATE)
+
+    async_fire_mqtt_message(
+        hass,
+        "tasmota_B94927/tele/STATE",
+        '{"POWER":"ON","Dimmer":50,"Color":"0,0,0,128","White":50}',
+    )
+    state = hass.states.get("light.test")
+    assert state.state == STATE_ON
+    assert state.attributes.get("brightness") == 128
+    assert state.attributes.get("rgb_color") is None
+    assert state.attributes.get(light.ATTR_COLOR_MODE) == "white"
+    assert state.attributes.get(light.ATTR_SUPPORTED_COLOR_MODES) == color_modes
+
+    async_fire_mqtt_message(
+        hass,
+        "tasmota_B94927/tele/STATE",
+        '{"POWER":"ON","Dimmer":50,"Color":"128,64,32,0","White":0}',
+    )
+    state = hass.states.get("light.test")
+    assert state.state == STATE_ON
+    assert state.attributes.get("brightness") == 128
+    assert state.attributes.get("rgb_color") == (128, 64, 32)
+    assert state.attributes.get(light.ATTR_COLOR_MODE) == "rgb"
+    assert state.attributes.get(light.ATTR_SUPPORTED_COLOR_MODES) == color_modes
+
+
 async def test_effect(hass, mqtt_mock):
     """Test effect."""
     config = {
@@ -2566,6 +2713,13 @@ async def test_setting_attribute_via_mqtt_json_message(hass, mqtt_mock):
     """Test the setting of attribute via MQTT with JSON payload."""
     await help_test_setting_attribute_via_mqtt_json_message(
         hass, mqtt_mock, light.DOMAIN, DEFAULT_CONFIG
+    )
+
+
+async def test_setting_blocked_attribute_via_mqtt_json_message(hass, mqtt_mock):
+    """Test the setting of attribute via MQTT with JSON payload."""
+    await help_test_setting_blocked_attribute_via_mqtt_json_message(
+        hass, mqtt_mock, light.DOMAIN, DEFAULT_CONFIG, MQTT_LIGHT_ATTRIBUTES_BLOCKED
     )
 
 

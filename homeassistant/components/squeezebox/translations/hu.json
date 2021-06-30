@@ -10,7 +10,7 @@
             "no_server_found": "Nem siker\u00fclt automatikusan felfedezni a szervert.",
             "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
         },
-        "flow_title": "Logitech Squeezebox: {host}",
+        "flow_title": "{host}",
         "step": {
             "edit": {
                 "data": {
