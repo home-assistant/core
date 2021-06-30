@@ -39,7 +39,7 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Freebox entry."""
     router = FreeboxRouter(hass, entry)
     await router.setup()

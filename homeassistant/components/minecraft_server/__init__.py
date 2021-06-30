@@ -25,24 +25,24 @@ PLATFORMS = ["binary_sensor", "sensor"]
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Minecraft Server from a config entry."""
     domain_data = hass.data.setdefault(DOMAIN, {})
 
     # Create and store server instance.
-    unique_id = config_entry.unique_id
+    unique_id = entry.unique_id
     _LOGGER.debug(
         "Creating server instance for '%s' (%s)",
-        config_entry.data[CONF_NAME],
-        config_entry.data[CONF_HOST],
+        entry.data[CONF_NAME],
+        entry.data[CONF_HOST],
     )
-    server = MinecraftServer(hass, unique_id, config_entry.data)
+    server = MinecraftServer(hass, unique_id, entry.data)
     domain_data[unique_id] = server
     await server.async_update()
     server.start_periodic_update()
 
     # Set up platforms.
-    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 

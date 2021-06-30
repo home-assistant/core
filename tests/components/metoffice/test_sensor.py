@@ -29,11 +29,16 @@ async def test_one_sensor_site_running(hass, requests_mock, legacy_patchable_tim
     mock_json = json.loads(load_fixture("metoffice.json"))
     all_sites = json.dumps(mock_json["all_sites"])
     wavertree_hourly = json.dumps(mock_json["wavertree_hourly"])
+    wavertree_daily = json.dumps(mock_json["wavertree_daily"])
 
     requests_mock.get("/public/data/val/wxfcs/all/json/sitelist/", text=all_sites)
     requests_mock.get(
         "/public/data/val/wxfcs/all/json/354107?res=3hourly",
         text=wavertree_hourly,
+    )
+    requests_mock.get(
+        "/public/data/val/wxfcs/all/json/354107?res=daily",
+        text=wavertree_daily,
     )
 
     entry = MockConfigEntry(
@@ -72,14 +77,22 @@ async def test_two_sensor_sites_running(hass, requests_mock, legacy_patchable_ti
     mock_json = json.loads(load_fixture("metoffice.json"))
     all_sites = json.dumps(mock_json["all_sites"])
     wavertree_hourly = json.dumps(mock_json["wavertree_hourly"])
+    wavertree_daily = json.dumps(mock_json["wavertree_daily"])
     kingslynn_hourly = json.dumps(mock_json["kingslynn_hourly"])
+    kingslynn_daily = json.dumps(mock_json["kingslynn_daily"])
 
     requests_mock.get("/public/data/val/wxfcs/all/json/sitelist/", text=all_sites)
     requests_mock.get(
         "/public/data/val/wxfcs/all/json/354107?res=3hourly", text=wavertree_hourly
     )
     requests_mock.get(
+        "/public/data/val/wxfcs/all/json/354107?res=daily", text=wavertree_daily
+    )
+    requests_mock.get(
         "/public/data/val/wxfcs/all/json/322380?res=3hourly", text=kingslynn_hourly
+    )
+    requests_mock.get(
+        "/public/data/val/wxfcs/all/json/322380?res=daily", text=kingslynn_daily
     )
 
     entry = MockConfigEntry(

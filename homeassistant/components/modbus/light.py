@@ -20,8 +20,9 @@ async def async_setup_platform(
     hass: HomeAssistant, config: ConfigType, async_add_entities, discovery_info=None
 ):
     """Read configuration and create Modbus lights."""
-    if discovery_info is None:
+    if discovery_info is None:  # pragma: no cover
         return
+
     lights = []
     for entry in discovery_info[CONF_LIGHTS]:
         hub: ModbusHub = hass.data[MODBUS_DOMAIN][discovery_info[CONF_NAME]]

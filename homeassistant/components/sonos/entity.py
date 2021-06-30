@@ -17,7 +17,7 @@ from homeassistant.helpers.entity import DeviceInfo, Entity
 from .const import (
     DOMAIN,
     SONOS_ENTITY_CREATED,
-    SONOS_HOUSEHOLD_UPDATED,
+    SONOS_FAVORITES_UPDATED,
     SONOS_POLL_UPDATE,
     SONOS_STATE_UPDATED,
 )
@@ -54,7 +54,7 @@ class SonosEntity(Entity):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{SONOS_HOUSEHOLD_UPDATED}-{self.soco.household_id}",
+                f"{SONOS_FAVORITES_UPDATED}-{self.soco.household_id}",
                 self.async_write_ha_state,
             )
         )
@@ -64,13 +64,14 @@ class SonosEntity(Entity):
 
     async def async_poll(self, now: datetime.datetime) -> None:
         """Poll the entity if subscriptions fail."""
-        if self.speaker.is_first_poll:
+        if not self.speaker.subscriptions_failed:
             _LOGGER.warning(
                 "%s cannot reach [%s], falling back to polling, functionality may be limited",
                 self.speaker.zone_name,
                 self.speaker.subscription_address,
             )
-            self.speaker.is_first_poll = False
+            self.speaker.subscriptions_failed = True
+            await self.speaker.async_unsubscribe()
         try:
             await self.async_update()  # pylint: disable=no-member
         except (OSError, SoCoException) as ex:

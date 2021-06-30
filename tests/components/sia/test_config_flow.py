@@ -104,29 +104,6 @@ ADDITIONAL_OPTIONS = {
     }
 }
 
-BASIC_CONFIG_ENTRY = MockConfigEntry(
-    domain=DOMAIN,
-    data=BASE_OUT["data"],
-    options=BASE_OUT["options"],
-    title="SIA Alarm on port 7777",
-    entry_id=BASIS_CONFIG_ENTRY_ID,
-    version=1,
-)
-ADDITIONAL_CONFIG_ENTRY = MockConfigEntry(
-    domain=DOMAIN,
-    data=ADDITIONAL_OUT["data"],
-    options=ADDITIONAL_OUT["options"],
-    title="SIA Alarm on port 7777",
-    entry_id=ADDITIONAL_CONFIG_ENTRY_ID,
-    version=1,
-)
-
-
-@pytest.fixture(params=[False, True], ids=["user", "add_account"])
-def additional(request) -> bool:
-    """Return True or False for the additional or base test."""
-    return request.param
-
 
 @pytest.fixture
 async def flow_at_user_step(hass):
@@ -140,7 +117,7 @@ async def flow_at_user_step(hass):
 @pytest.fixture
 async def entry_with_basic_config(hass, flow_at_user_step):
     """Return a entry with a basic config."""
-    with patch("pysiaalarm.aio.SIAClient.start", return_value=True):
+    with patch("homeassistant.components.sia.async_setup_entry", return_value=True):
         return await hass.config_entries.flow.async_configure(
             flow_at_user_step["flow_id"], BASIC_CONFIG
         )
@@ -157,7 +134,7 @@ async def flow_at_add_account_step(hass, flow_at_user_step):
 @pytest.fixture
 async def entry_with_additional_account_config(hass, flow_at_add_account_step):
     """Return a entry with a two account config."""
-    with patch("pysiaalarm.aio.SIAClient.start", return_value=True):
+    with patch("homeassistant.components.sia.async_setup_entry", return_value=True):
         return await hass.config_entries.flow.async_configure(
             flow_at_add_account_step["flow_id"], ADDITIONAL_ACCOUNT
         )
@@ -171,18 +148,18 @@ async def setup_sia(hass, config_entry: MockConfigEntry):
     await hass.async_block_till_done()
 
 
-async def test_form_start(
-    hass, flow_at_user_step, flow_at_add_account_step, additional
-):
-    """Start the form and check if you get the right id and schema."""
-    if additional:
-        assert flow_at_add_account_step["step_id"] == "add_account"
-        assert flow_at_add_account_step["errors"] is None
-        assert flow_at_add_account_step["data_schema"] == ACCOUNT_SCHEMA
-        return
+async def test_form_start_user(hass, flow_at_user_step):
+    """Start the form and check if you get the right id and schema for the user step."""
     assert flow_at_user_step["step_id"] == "user"
     assert flow_at_user_step["errors"] is None
     assert flow_at_user_step["data_schema"] == HUB_SCHEMA
+
+
+async def test_form_start_account(hass, flow_at_add_account_step):
+    """Start the form and check if you get the right id and schema for the additional account step."""
+    assert flow_at_add_account_step["step_id"] == "add_account"
+    assert flow_at_add_account_step["errors"] is None
+    assert flow_at_add_account_step["data_schema"] == ACCOUNT_SCHEMA
 
 
 async def test_create(hass, entry_with_basic_config):
@@ -211,9 +188,17 @@ async def test_create_additional_account(hass, entry_with_additional_account_con
     assert entry_with_additional_account_config["options"] == ADDITIONAL_OUT["options"]
 
 
-async def test_abort_form(hass, entry_with_basic_config):
+async def test_abort_form(hass):
     """Test aborting a config that already exists."""
-    assert entry_with_basic_config["data"][CONF_PORT] == BASIC_CONFIG[CONF_PORT]
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=BASE_OUT["data"],
+        options=BASE_OUT["options"],
+        title="SIA Alarm on port 7777",
+        entry_id=BASIS_CONFIG_ENTRY_ID,
+        version=1,
+    )
+    await setup_sia(hass, config_entry)
     start_another_flow = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -235,54 +220,97 @@ async def test_abort_form(hass, entry_with_basic_config):
         ("zones", 0, "invalid_zones"),
     ],
 )
-async def test_validation_errors(
+async def test_validation_errors_user(
     hass,
     flow_at_user_step,
-    additional,
     field,
     value,
     error,
 ):
-    """Test we handle the different invalid inputs, both in the user and add_account flow."""
+    """Test we handle the different invalid inputs, in the user flow."""
     config = BASIC_CONFIG.copy()
     flow_id = flow_at_user_step["flow_id"]
-    if additional:
-        flow_at_add_account_step = await hass.config_entries.flow.async_configure(
-            flow_at_user_step["flow_id"], BASIC_CONFIG_ADDITIONAL
-        )
-        config = ADDITIONAL_ACCOUNT.copy()
-        flow_id = flow_at_add_account_step["flow_id"]
-
     config[field] = value
     result_err = await hass.config_entries.flow.async_configure(flow_id, config)
     assert result_err["type"] == "form"
     assert result_err["errors"] == {"base": error}
 
 
-async def test_unknown(hass, flow_at_user_step, additional):
+@pytest.mark.parametrize(
+    "field, value, error",
+    [
+        ("encryption_key", "AAAAAAAAAAAAAZZZ", "invalid_key_format"),
+        ("encryption_key", "AAAAAAAAAAAAA", "invalid_key_length"),
+        ("account", "ZZZ", "invalid_account_format"),
+        ("account", "A", "invalid_account_length"),
+        ("ping_interval", 1500, "invalid_ping"),
+        ("zones", 0, "invalid_zones"),
+    ],
+)
+async def test_validation_errors_account(
+    hass,
+    flow_at_user_step,
+    field,
+    value,
+    error,
+):
+    """Test we handle the different invalid inputs, in the add_account flow."""
+    flow_at_add_account_step = await hass.config_entries.flow.async_configure(
+        flow_at_user_step["flow_id"], BASIC_CONFIG_ADDITIONAL
+    )
+    config = ADDITIONAL_ACCOUNT.copy()
+    flow_id = flow_at_add_account_step["flow_id"]
+    config[field] = value
+    result_err = await hass.config_entries.flow.async_configure(flow_id, config)
+    assert result_err["type"] == "form"
+    assert result_err["errors"] == {"base": error}
+
+
+async def test_unknown_user(hass, flow_at_user_step):
     """Test unknown exceptions."""
     flow_id = flow_at_user_step["flow_id"]
-    if additional:
-        flow_at_add_account_step = await hass.config_entries.flow.async_configure(
-            flow_at_user_step["flow_id"], BASIC_CONFIG_ADDITIONAL
-        )
-        flow_id = flow_at_add_account_step["flow_id"]
     with patch(
         "pysiaalarm.SIAAccount.validate_account",
         side_effect=Exception,
     ):
-        config = ADDITIONAL_ACCOUNT if additional else BASIC_CONFIG
+        config = BASIC_CONFIG
         result_err = await hass.config_entries.flow.async_configure(flow_id, config)
         assert result_err
-        assert result_err["step_id"] == "add_account" if additional else "user"
+        assert result_err["step_id"] == "user"
         assert result_err["errors"] == {"base": "unknown"}
-        assert result_err["data_schema"] == ACCOUNT_SCHEMA if additional else HUB_SCHEMA
+        assert result_err["data_schema"] == HUB_SCHEMA
+
+
+async def test_unknown_account(hass, flow_at_user_step):
+    """Test unknown exceptions."""
+    flow_at_add_account_step = await hass.config_entries.flow.async_configure(
+        flow_at_user_step["flow_id"], BASIC_CONFIG_ADDITIONAL
+    )
+    flow_id = flow_at_add_account_step["flow_id"]
+    with patch(
+        "pysiaalarm.SIAAccount.validate_account",
+        side_effect=Exception,
+    ):
+        config = ADDITIONAL_ACCOUNT
+        result_err = await hass.config_entries.flow.async_configure(flow_id, config)
+        assert result_err
+        assert result_err["step_id"] == "add_account"
+        assert result_err["errors"] == {"base": "unknown"}
+        assert result_err["data_schema"] == ACCOUNT_SCHEMA
 
 
 async def test_options_basic(hass):
     """Test options flow for single account."""
-    await setup_sia(hass, BASIC_CONFIG_ENTRY)
-    result = await hass.config_entries.options.async_init(BASIC_CONFIG_ENTRY.entry_id)
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=BASE_OUT["data"],
+        options=BASE_OUT["options"],
+        title="SIA Alarm on port 7777",
+        entry_id=BASIS_CONFIG_ENTRY_ID,
+        version=1,
+    )
+    await setup_sia(hass, config_entry)
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "options"
     assert result["last_step"]
@@ -298,10 +326,16 @@ async def test_options_basic(hass):
 
 async def test_options_additional(hass):
     """Test options flow for single account."""
-    await setup_sia(hass, ADDITIONAL_CONFIG_ENTRY)
-    result = await hass.config_entries.options.async_init(
-        ADDITIONAL_CONFIG_ENTRY.entry_id
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=ADDITIONAL_OUT["data"],
+        options=ADDITIONAL_OUT["options"],
+        title="SIA Alarm on port 7777",
+        entry_id=ADDITIONAL_CONFIG_ENTRY_ID,
+        version=1,
     )
+    await setup_sia(hass, config_entry)
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "options"
     assert not result["last_step"]

@@ -7,7 +7,11 @@ import requests
 import voluptuous as vol
 import xmltodict
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    STATE_CLASS_MEASUREMENT,
+    SensorEntity,
+)
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, POWER_WATT, VOLT
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util import Throttle
@@ -51,6 +55,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 class Ted5000Sensor(SensorEntity):
     """Implementation of a Ted5000 sensor."""
+
+    _attr_state_class = STATE_CLASS_MEASUREMENT
 
     def __init__(self, gateway, name, mtu, unit):
         """Initialize the sensor."""

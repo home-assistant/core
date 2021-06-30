@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.esphome import DOMAIN
+from homeassistant.components.esphome import DOMAIN, DomainData
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.data_entry_flow import (
     RESULT_TYPE_ABORT,
@@ -265,7 +265,8 @@ async def test_discovery_already_configured_name(hass, mock_client):
 
     mock_entry_data = MagicMock()
     mock_entry_data.device_info.name = "test8266"
-    hass.data[DOMAIN] = {entry.entry_id: mock_entry_data}
+    domain_data = DomainData.get(hass)
+    domain_data.set_entry_data(entry, mock_entry_data)
 
     service_info = {
         "host": "192.168.43.184",

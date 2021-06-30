@@ -11,7 +11,12 @@ from .const import DEFAULT_DATA
 
 
 async def test_browse_media(
-    hass, hass_ws_client, mock_plex_server, requests_mock, library_movies_filtertypes
+    hass,
+    hass_ws_client,
+    mock_plex_server,
+    requests_mock,
+    library_movies_filtertypes,
+    empty_payload,
 ):
     """Test getting Plex clients from plex.tv."""
     websocket_client = await hass_ws_client(hass)
@@ -91,6 +96,10 @@ async def test_browse_media(
     requests_mock.get(
         f"{mock_plex_server.url_in_use}/library/sections/1/all?includeMeta=1",
         text=library_movies_filtertypes,
+    )
+    requests_mock.get(
+        f"{mock_plex_server.url_in_use}/library/sections/1/collections?includeMeta=1",
+        text=empty_payload,
     )
 
     msg_id += 1

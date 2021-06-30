@@ -19,7 +19,7 @@
                 "data": {
                     "password": "Contrasenya"
                 },
-                "description": "El token d'acc\u00e9s ha caducat o ha estat revocat. Introdueix la teva contrasenya per tornar a vincular el compte.",
+                "description": "L'acc\u00e9s ha caducat o ha estat revocat. Introdueix la teva contrasenya per tornar a vincular el compte.",
                 "title": "Reautenticaci\u00f3 de la integraci\u00f3"
             },
             "user": {

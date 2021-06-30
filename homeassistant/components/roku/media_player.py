@@ -37,9 +37,10 @@ from homeassistant.const import (
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.network import is_internal_request
 
-from . import RokuDataUpdateCoordinator, RokuEntity, roku_exception_handler
+from . import RokuDataUpdateCoordinator, roku_exception_handler
 from .browse_media import build_item_response, library_payload
 from .const import ATTR_KEYWORD, DOMAIN, SERVICE_SEARCH
+from .entity import RokuEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -82,11 +83,11 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
         """Initialize the Roku device."""
         super().__init__(
             coordinator=coordinator,
-            name=coordinator.data.info.name,
             device_id=unique_id,
         )
 
-        self._unique_id = unique_id
+        self._attr_name = coordinator.data.info.name
+        self._attr_unique_id = unique_id
 
     def _media_playback_trackable(self) -> bool:
         """Detect if we have enough media data to track playback."""
@@ -94,11 +95,6 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
             return False
 
         return self.coordinator.data.media.duration > 0
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique ID for this entity."""
-        return self._unique_id
 
     @property
     def device_class(self) -> str | None:

@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any, cast
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
@@ -28,7 +28,6 @@ from .const import (
     ATTR_UNIT_IMPERIAL,
     ATTR_UNIT_METRIC,
     ATTRIBUTION,
-    COORDINATOR,
     DOMAIN,
     FORECAST_SENSOR_TYPES,
     MANUFACTURER,
@@ -46,9 +45,7 @@ async def async_setup_entry(
     """Add AccuWeather entities from a config_entry."""
     name: str = entry.data[CONF_NAME]
 
-    coordinator: AccuWeatherDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
-        COORDINATOR
-    ]
+    coordinator: AccuWeatherDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     sensors: list[AccuWeatherSensor] = []
     for sensor in SENSOR_TYPES:
@@ -92,6 +89,7 @@ class AccuWeatherSensor(CoordinatorEntity, SensorEntity):
         self._device_class = None
         self._attrs = {ATTR_ATTRIBUTION: ATTRIBUTION}
         self.forecast_day = forecast_day
+        self._attr_state_class = self._description.get(ATTR_STATE_CLASS)
 
     @property
     def name(self) -> str:

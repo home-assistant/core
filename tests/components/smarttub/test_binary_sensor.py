@@ -30,6 +30,7 @@ async def test_reminders(spa, setup_entry, hass):
     assert state is not None
     assert state.state == STATE_OFF
     assert state.attributes["snoozed"] is False
+    assert state.attributes["days"] == 2
 
 
 @pytest.fixture
@@ -63,7 +64,7 @@ async def test_error(spa, hass, config_entry, mock_error):
     assert state.attributes["error_code"] == 11
 
 
-async def test_snooze(spa, setup_entry, hass):
+async def test_snooze_reminder(spa, setup_entry, hass):
     """Test snoozing a reminder."""
 
     entity_id = f"binary_sensor.{spa.brand}_{spa.model}_myfilter_reminder"
@@ -75,9 +76,29 @@ async def test_snooze(spa, setup_entry, hass):
         "snooze_reminder",
         {
             "entity_id": entity_id,
-            "days": 30,
+            "days": days,
         },
         blocking=True,
     )
 
     reminder.snooze.assert_called_with(days)
+
+
+async def test_reset_reminder(spa, setup_entry, hass):
+    """Test snoozing a reminder."""
+
+    entity_id = f"binary_sensor.{spa.brand}_{spa.model}_myfilter_reminder"
+    reminder = spa.get_reminders.return_value[0]
+    days = 180
+
+    await hass.services.async_call(
+        "smarttub",
+        "reset_reminder",
+        {
+            "entity_id": entity_id,
+            "days": days,
+        },
+        blocking=True,
+    )
+
+    reminder.reset.assert_called_with(days)

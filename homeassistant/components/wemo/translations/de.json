@@ -9,5 +9,10 @@
                 "description": "M\u00f6chtest du Wemo einrichten?"
             }
         }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "long_press": "Wemo-Taste wurde 2 Sekunden lang gedr\u00fcckt"
+        }
     }
 }
