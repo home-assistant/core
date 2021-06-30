@@ -43,8 +43,8 @@ from .conftest import ReadResult, base_test, prepare_service_update
 
 from tests.common import async_fire_time_changed
 
-switch_name = "test_switch"
-entity_id = f"{SWITCH_DOMAIN}.{switch_name}"
+SWITCH_NAME = "test_switch"
+ENTITY_ID = f"{SWITCH_DOMAIN}.{SWITCH_NAME}"
 
 
 @pytest.mark.parametrize(
@@ -53,7 +53,7 @@ entity_id = f"{SWITCH_DOMAIN}.{switch_name}"
         {
             CONF_SWITCHES: [
                 {
-                    CONF_NAME: switch_name,
+                    CONF_NAME: SWITCH_NAME,
                     CONF_ADDRESS: 1234,
                 }
             ]
@@ -61,7 +61,7 @@ entity_id = f"{SWITCH_DOMAIN}.{switch_name}"
         {
             CONF_SWITCHES: [
                 {
-                    CONF_NAME: switch_name,
+                    CONF_NAME: SWITCH_NAME,
                     CONF_ADDRESS: 1234,
                     CONF_WRITE_TYPE: CALL_TYPE_COIL,
                 }
@@ -70,7 +70,7 @@ entity_id = f"{SWITCH_DOMAIN}.{switch_name}"
         {
             CONF_SWITCHES: [
                 {
-                    CONF_NAME: switch_name,
+                    CONF_NAME: SWITCH_NAME,
                     CONF_ADDRESS: 1234,
                     CONF_SLAVE: 1,
                     CONF_COMMAND_OFF: 0x00,
@@ -88,7 +88,7 @@ entity_id = f"{SWITCH_DOMAIN}.{switch_name}"
         {
             CONF_SWITCHES: [
                 {
-                    CONF_NAME: switch_name,
+                    CONF_NAME: SWITCH_NAME,
                     CONF_ADDRESS: 1234,
                     CONF_SLAVE: 1,
                     CONF_COMMAND_OFF: 0x00,
@@ -107,7 +107,7 @@ entity_id = f"{SWITCH_DOMAIN}.{switch_name}"
         {
             CONF_SWITCHES: [
                 {
-                    CONF_NAME: switch_name,
+                    CONF_NAME: SWITCH_NAME,
                     CONF_ADDRESS: 1234,
                     CONF_SLAVE: 1,
                     CONF_COMMAND_OFF: 0x00,
@@ -125,7 +125,7 @@ entity_id = f"{SWITCH_DOMAIN}.{switch_name}"
         {
             CONF_SWITCHES: [
                 {
-                    CONF_NAME: switch_name,
+                    CONF_NAME: SWITCH_NAME,
                     CONF_ADDRESS: 1234,
                     CONF_SLAVE: 1,
                     CONF_COMMAND_OFF: 0x00,
@@ -179,13 +179,13 @@ async def test_all_switch(hass, call_type, regs, verify, expected):
     state = await base_test(
         hass,
         {
-            CONF_NAME: switch_name,
+            CONF_NAME: SWITCH_NAME,
             CONF_ADDRESS: 1234,
             CONF_SLAVE: 1,
             CONF_WRITE_TYPE: call_type,
             **verify,
         },
-        switch_name,
+        SWITCH_NAME,
         SWITCH_DOMAIN,
         CONF_SWITCHES,
         None,
@@ -199,7 +199,7 @@ async def test_all_switch(hass, call_type, regs, verify, expected):
 
 @pytest.mark.parametrize(
     "mock_test_state",
-    [(State(entity_id, STATE_ON),)],
+    [(State(ENTITY_ID, STATE_ON),)],
     indirect=True,
 )
 @pytest.mark.parametrize(
@@ -208,7 +208,7 @@ async def test_all_switch(hass, call_type, regs, verify, expected):
         {
             CONF_SWITCHES: [
                 {
-                    CONF_NAME: switch_name,
+                    CONF_NAME: SWITCH_NAME,
                     CONF_ADDRESS: 1234,
                 }
             ]
@@ -217,13 +217,13 @@ async def test_all_switch(hass, call_type, regs, verify, expected):
 )
 async def test_restore_state_switch(hass, mock_test_state, mock_modbus):
     """Run test for sensor restore state."""
-    assert hass.states.get(entity_id).state == mock_test_state[0].state
+    assert hass.states.get(ENTITY_ID).state == mock_test_state[0].state
 
 
 async def test_switch_service_turn(hass, caplog, mock_pymodbus):
     """Run test for service turn_on/turn_off."""
 
-    entity_id2 = f"{SWITCH_DOMAIN}.{switch_name}2"
+    ENTITY_ID2 = f"{SWITCH_DOMAIN}.{SWITCH_NAME}2"
     config = {
         MODBUS_DOMAIN: {
             CONF_TYPE: "tcp",
@@ -231,12 +231,12 @@ async def test_switch_service_turn(hass, caplog, mock_pymodbus):
             CONF_PORT: 5501,
             CONF_SWITCHES: [
                 {
-                    CONF_NAME: switch_name,
+                    CONF_NAME: SWITCH_NAME,
                     CONF_ADDRESS: 17,
                     CONF_WRITE_TYPE: CALL_TYPE_REGISTER_HOLDING,
                 },
                 {
-                    CONF_NAME: f"{switch_name}2",
+                    CONF_NAME: f"{SWITCH_NAME}2",
                     CONF_ADDRESS: 17,
                     CONF_WRITE_TYPE: CALL_TYPE_REGISTER_HOLDING,
                     CONF_VERIFY: {},
@@ -248,44 +248,44 @@ async def test_switch_service_turn(hass, caplog, mock_pymodbus):
     await hass.async_block_till_done()
     assert MODBUS_DOMAIN in hass.config.components
 
-    assert hass.states.get(entity_id).state == STATE_OFF
+    assert hass.states.get(ENTITY_ID).state == STATE_OFF
     await hass.services.async_call(
-        "switch", "turn_on", service_data={"entity_id": entity_id}
+        "switch", "turn_on", service_data={"entity_id": ENTITY_ID}
     )
     await hass.async_block_till_done()
-    assert hass.states.get(entity_id).state == STATE_ON
+    assert hass.states.get(ENTITY_ID).state == STATE_ON
     await hass.services.async_call(
-        "switch", "turn_off", service_data={"entity_id": entity_id}
+        "switch", "turn_off", service_data={"entity_id": ENTITY_ID}
     )
     await hass.async_block_till_done()
-    assert hass.states.get(entity_id).state == STATE_OFF
+    assert hass.states.get(ENTITY_ID).state == STATE_OFF
 
     mock_pymodbus.read_holding_registers.return_value = ReadResult([0x01])
-    assert hass.states.get(entity_id2).state == STATE_OFF
+    assert hass.states.get(ENTITY_ID2).state == STATE_OFF
     await hass.services.async_call(
-        "switch", "turn_on", service_data={"entity_id": entity_id2}
+        "switch", "turn_on", service_data={"entity_id": ENTITY_ID2}
     )
     await hass.async_block_till_done()
-    assert hass.states.get(entity_id2).state == STATE_ON
+    assert hass.states.get(ENTITY_ID2).state == STATE_ON
     mock_pymodbus.read_holding_registers.return_value = ReadResult([0x00])
     await hass.services.async_call(
-        "switch", "turn_off", service_data={"entity_id": entity_id2}
+        "switch", "turn_off", service_data={"entity_id": ENTITY_ID2}
     )
     await hass.async_block_till_done()
-    assert hass.states.get(entity_id2).state == STATE_OFF
+    assert hass.states.get(ENTITY_ID2).state == STATE_OFF
 
     mock_pymodbus.write_register.side_effect = ModbusException("fail write_")
     await hass.services.async_call(
-        "switch", "turn_on", service_data={"entity_id": entity_id2}
+        "switch", "turn_on", service_data={"entity_id": ENTITY_ID2}
     )
     await hass.async_block_till_done()
-    assert hass.states.get(entity_id2).state == STATE_UNAVAILABLE
+    assert hass.states.get(ENTITY_ID2).state == STATE_UNAVAILABLE
     mock_pymodbus.write_coil.side_effect = ModbusException("fail write_")
     await hass.services.async_call(
-        "switch", "turn_off", service_data={"entity_id": entity_id}
+        "switch", "turn_off", service_data={"entity_id": ENTITY_ID}
     )
     await hass.async_block_till_done()
-    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
 
 
 async def test_service_switch_update(hass, mock_pymodbus):
@@ -294,7 +294,7 @@ async def test_service_switch_update(hass, mock_pymodbus):
     config = {
         CONF_SWITCHES: [
             {
-                CONF_NAME: switch_name,
+                CONF_NAME: SWITCH_NAME,
                 CONF_ADDRESS: 1234,
                 CONF_WRITE_TYPE: CALL_TYPE_COIL,
                 CONF_VERIFY: {},
@@ -307,14 +307,14 @@ async def test_service_switch_update(hass, mock_pymodbus):
         config,
     )
     await hass.services.async_call(
-        "homeassistant", "update_entity", {"entity_id": entity_id}, blocking=True
+        "homeassistant", "update_entity", {"entity_id": ENTITY_ID}, blocking=True
     )
-    assert hass.states.get(entity_id).state == STATE_ON
+    assert hass.states.get(ENTITY_ID).state == STATE_ON
     mock_pymodbus.read_coils.return_value = ReadResult([0x00])
     await hass.services.async_call(
-        "homeassistant", "update_entity", {"entity_id": entity_id}, blocking=True
+        "homeassistant", "update_entity", {"entity_id": ENTITY_ID}, blocking=True
     )
-    assert hass.states.get(entity_id).state == STATE_OFF
+    assert hass.states.get(ENTITY_ID).state == STATE_OFF
 
 
 async def test_delay_switch(hass, mock_pymodbus):
@@ -327,7 +327,7 @@ async def test_delay_switch(hass, mock_pymodbus):
                 CONF_PORT: 5501,
                 CONF_SWITCHES: [
                     {
-                        CONF_NAME: switch_name,
+                        CONF_NAME: SWITCH_NAME,
                         CONF_ADDRESS: 51,
                         CONF_SCAN_INTERVAL: 0,
                         CONF_VERIFY: {
@@ -345,12 +345,12 @@ async def test_delay_switch(hass, mock_pymodbus):
         assert await async_setup_component(hass, MODBUS_DOMAIN, config) is True
         await hass.async_block_till_done()
     await hass.services.async_call(
-        "switch", "turn_on", service_data={"entity_id": entity_id}
+        "switch", "turn_on", service_data={"entity_id": ENTITY_ID}
     )
     await hass.async_block_till_done()
-    assert hass.states.get(entity_id).state == STATE_OFF
+    assert hass.states.get(ENTITY_ID).state == STATE_OFF
     now = now + timedelta(seconds=2)
     with mock.patch("homeassistant.helpers.event.dt_util.utcnow", return_value=now):
         async_fire_time_changed(hass, now)
         await hass.async_block_till_done()
-    assert hass.states.get(entity_id).state == STATE_ON
+    assert hass.states.get(ENTITY_ID).state == STATE_ON
