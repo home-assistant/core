@@ -52,6 +52,7 @@ DEVICE_CLASS_STATISTICS = {
 
 DEVICE_CLASS_UNITS = {
     DEVICE_CLASS_ENERGY: ENERGY_KILO_WATT_HOUR,
+    DEVICE_CLASS_POWER: POWER_WATT,
     DEVICE_CLASS_PRESSURE: PRESSURE_PA,
     DEVICE_CLASS_TEMPERATURE: TEMP_CELSIUS,
 }
@@ -141,12 +142,16 @@ def _time_weighted_average(
 
 def _normalize_states(
     entity_history: list[State], device_class: str, entity_id: str
-) -> list[tuple[float, State]]:
+) -> tuple[str | None, list[tuple[float, State]]]:
     """Normalize units."""
 
     if device_class not in UNIT_CONVERSIONS:
         # We're not normalizing this device class, return the state as they are
-        return [(float(el.state), el) for el in entity_history if _is_number(el.state)]
+        fstates = [
+            (float(el.state), el) for el in entity_history if _is_number(el.state)
+        ]
+        unit = fstates[0][1].attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        return unit, fstates
 
     fstates = []
 
@@ -166,7 +171,7 @@ def _normalize_states(
 
         fstates.append((UNIT_CONVERSIONS[device_class][unit](fstate), state))  # type: ignore
 
-    return fstates
+    return DEVICE_CLASS_UNITS[device_class], fstates
 
 
 def compile_statistics(
@@ -192,17 +197,14 @@ def compile_statistics(
             continue
 
         entity_history = history_list[entity_id]
-        fstates = _normalize_states(entity_history, device_class, entity_id)
+        unit, fstates = _normalize_states(entity_history, device_class, entity_id)
 
         if not fstates:
             continue
 
         result[entity_id] = {}
 
-        # Get unit
-        unit = DEVICE_CLASS_UNITS.get(
-            device_class, fstates[0][1].attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-        )
+        # Set meta data
         result[entity_id]["meta"] = {"unit_of_measurement": unit}
 
         # Make calculations
