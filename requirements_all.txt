@@ -160,7 +160,7 @@ aioeafm==0.1.2
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==3.0.1
+aioesphomeapi==4.0.1
 
 # homeassistant.components.flo
 aioflo==0.4.1
@@ -560,7 +560,7 @@ emulated_roku==0.2.1
 enocean==0.50
 
 # homeassistant.components.entur_public_transport
-enturclient==0.2.1
+enturclient==0.2.2
 
 # homeassistant.components.environment_canada
 env_canada==0.2.5
@@ -639,6 +639,9 @@ freesms==0.2.0
 # homeassistant.components.fritzbox_callmonitor
 # homeassistant.components.fritzbox_netmonitor
 fritzconnection==1.4.2
+
+# homeassistant.components.fritz
+fritzprofiles==0.6.1
 
 # homeassistant.components.google_translate
 gTTS==2.2.3
@@ -744,7 +747,7 @@ habitipy==0.2.0
 hangups==0.4.14
 
 # homeassistant.components.cloud
-hass-nabucasa==0.43.0
+hass-nabucasa==0.44.0
 
 # homeassistant.components.splunk
 hass_splunk==0.1.1
@@ -1013,6 +1016,9 @@ netdata==0.2.0
 
 # homeassistant.components.discovery
 netdisco==2.9.0
+
+# homeassistant.components.nmap_tracker
+netmap==0.7.0.2
 
 # homeassistant.components.nam
 nettigo-air-monitor==1.0.0
@@ -1860,9 +1866,6 @@ python-mystrom==1.1.2
 # homeassistant.components.nest
 python-nest==4.1.0
 
-# homeassistant.components.nmap_tracker
-python-nmap==0.6.4
-
 # homeassistant.components.ozw
 python-openzwave-mqtt[mqtt-client]==1.4.0
 
@@ -2390,6 +2393,7 @@ xboxapi==2.0.1
 xknx==0.18.7
 
 # homeassistant.components.bluesound
+# homeassistant.components.fritz
 # homeassistant.components.rest
 # homeassistant.components.startca
 # homeassistant.components.ted5000
@@ -2421,7 +2425,7 @@ zeep[async]==4.0.0
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.31.0
+zeroconf==0.32.0
 
 # homeassistant.components.zha
 zha-quirks==0.0.57

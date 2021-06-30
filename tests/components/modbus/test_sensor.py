@@ -38,7 +38,8 @@ from homeassistant.core import State
 
 from .conftest import ReadResult, base_config_test, base_test, prepare_service_update
 
-from tests.common import mock_restore_cache
+sensor_name = "test_sensor"
+entity_id = f"{SENSOR_DOMAIN}.{sensor_name}"
 
 
 @pytest.mark.parametrize(
@@ -47,7 +48,7 @@ from tests.common import mock_restore_cache
         {
             CONF_SENSORS: [
                 {
-                    CONF_NAME: "test_sensor",
+                    CONF_NAME: sensor_name,
                     CONF_ADDRESS: 51,
                 }
             ]
@@ -55,7 +56,7 @@ from tests.common import mock_restore_cache
         {
             CONF_SENSORS: [
                 {
-                    CONF_NAME: "test_sensor",
+                    CONF_NAME: sensor_name,
                     CONF_ADDRESS: 51,
                     CONF_SLAVE: 10,
                     CONF_COUNT: 1,
@@ -71,7 +72,7 @@ from tests.common import mock_restore_cache
         {
             CONF_SENSORS: [
                 {
-                    CONF_NAME: "test_sensor",
+                    CONF_NAME: sensor_name,
                     CONF_ADDRESS: 51,
                     CONF_SLAVE: 10,
                     CONF_COUNT: 1,
@@ -87,7 +88,7 @@ from tests.common import mock_restore_cache
         {
             CONF_SENSORS: [
                 {
-                    CONF_NAME: "test_sensor",
+                    CONF_NAME: sensor_name,
                     CONF_ADDRESS: 51,
                     CONF_COUNT: 1,
                     CONF_SWAP: CONF_SWAP_NONE,
@@ -97,7 +98,7 @@ from tests.common import mock_restore_cache
         {
             CONF_SENSORS: [
                 {
-                    CONF_NAME: "test_sensor",
+                    CONF_NAME: sensor_name,
                     CONF_ADDRESS: 51,
                     CONF_COUNT: 1,
                     CONF_SWAP: CONF_SWAP_BYTE,
@@ -107,7 +108,7 @@ from tests.common import mock_restore_cache
         {
             CONF_SENSORS: [
                 {
-                    CONF_NAME: "test_sensor",
+                    CONF_NAME: sensor_name,
                     CONF_ADDRESS: 51,
                     CONF_COUNT: 2,
                     CONF_SWAP: CONF_SWAP_WORD,
@@ -117,7 +118,7 @@ from tests.common import mock_restore_cache
         {
             CONF_SENSORS: [
                 {
-                    CONF_NAME: "test_sensor",
+                    CONF_NAME: sensor_name,
                     CONF_ADDRESS: 51,
                     CONF_COUNT: 2,
                     CONF_SWAP: CONF_SWAP_WORD_BYTE,
@@ -210,7 +211,6 @@ async def test_config_wrong_struct_sensor(
 ):
     """Run test for sensor with wrong struct."""
 
-    sensor_name = "test_sensor"
     config_sensor = {
         CONF_NAME: sensor_name,
         **do_config,
@@ -505,7 +505,6 @@ async def test_config_wrong_struct_sensor(
 async def test_all_sensor(hass, cfg, regs, expected):
     """Run test for sensor."""
 
-    sensor_name = "modbus_test_sensor"
     state = await base_test(
         hass,
         {CONF_NAME: sensor_name, CONF_ADDRESS: 1234, **cfg},
@@ -560,7 +559,6 @@ async def test_all_sensor(hass, cfg, regs, expected):
 async def test_struct_sensor(hass, cfg, regs, expected):
     """Run test for sensor struct."""
 
-    sensor_name = "modbus_test_sensor"
     state = await base_test(
         hass,
         {CONF_NAME: sensor_name, CONF_ADDRESS: 1234, **cfg},
@@ -576,27 +574,27 @@ async def test_struct_sensor(hass, cfg, regs, expected):
     assert state == expected
 
 
-async def test_restore_state_sensor(hass):
+@pytest.mark.parametrize(
+    "mock_test_state",
+    [(State(entity_id, "117"),)],
+    indirect=True,
+)
+@pytest.mark.parametrize(
+    "do_config",
+    [
+        {
+            CONF_SENSORS: [
+                {
+                    CONF_NAME: sensor_name,
+                    CONF_ADDRESS: 51,
+                }
+            ]
+        },
+    ],
+)
+async def test_restore_state_sensor(hass, mock_test_state, mock_modbus):
     """Run test for sensor restore state."""
-
-    sensor_name = "test_sensor"
-    test_value = "117"
-    config_sensor = {CONF_NAME: sensor_name, CONF_ADDRESS: 17}
-    mock_restore_cache(
-        hass,
-        (State(f"{SENSOR_DOMAIN}.{sensor_name}", test_value),),
-    )
-    await base_config_test(
-        hass,
-        config_sensor,
-        sensor_name,
-        SENSOR_DOMAIN,
-        CONF_SENSORS,
-        None,
-        method_discovery=True,
-    )
-    entity_id = f"{SENSOR_DOMAIN}.{sensor_name}"
-    assert hass.states.get(entity_id).state == test_value
+    assert hass.states.get(entity_id).state == mock_test_state[0].state
 
 
 @pytest.mark.parametrize(
@@ -604,11 +602,11 @@ async def test_restore_state_sensor(hass):
     [
         (
             CONF_SWAP_WORD,
-            "Error in sensor modbus_test_sensor swap(word) not possible due to the registers count: 1, needed: 2",
+            f"Error in sensor {sensor_name} swap(word) not possible due to the registers count: 1, needed: 2",
         ),
         (
             CONF_SWAP_WORD_BYTE,
-            "Error in sensor modbus_test_sensor swap(word_byte) not possible due to the registers count: 1, needed: 2",
+            f"Error in sensor {sensor_name} swap(word_byte) not possible due to the registers count: 1, needed: 2",
         ),
     ],
 )
@@ -616,7 +614,6 @@ async def test_swap_sensor_wrong_config(
     hass, caplog, swap_type, error_message, mock_pymodbus
 ):
     """Run test for sensor swap."""
-    sensor_name = "modbus_test_sensor"
     config = {
         CONF_NAME: sensor_name,
         CONF_ADDRESS: 1234,
@@ -642,12 +639,10 @@ async def test_swap_sensor_wrong_config(
 
 async def test_service_sensor_update(hass, mock_pymodbus):
     """Run test for service homeassistant.update_entity."""
-
-    entity_id = "sensor.test"
     config = {
         CONF_SENSORS: [
             {
-                CONF_NAME: "test",
+                CONF_NAME: sensor_name,
                 CONF_ADDRESS: 1234,
                 CONF_INPUT_TYPE: CALL_TYPE_REGISTER_INPUT,
             }

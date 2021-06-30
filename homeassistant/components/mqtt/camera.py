@@ -19,6 +19,15 @@ from .mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_hel
 CONF_TOPIC = "topic"
 DEFAULT_NAME = "MQTT Camera"
 
+MQTT_CAMERA_ATTRIBUTES_BLOCKED = frozenset(
+    {
+        "access_token",
+        "brand",
+        "model_name",
+        "motion_detection",
+    }
+)
+
 PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -52,6 +61,8 @@ async def _async_setup_entity(
 
 class MqttCamera(MqttEntity, Camera):
     """representation of a MQTT camera."""
+
+    _attributes_extra_blocked = MQTT_CAMERA_ATTRIBUTES_BLOCKED
 
     def __init__(self, hass, config, config_entry, discovery_data):
         """Initialize the MQTT Camera."""

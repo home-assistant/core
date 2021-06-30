@@ -58,12 +58,9 @@ class DiffuserPerfumeSensor(DiffuserEntity):
         """Initialize the perfume sensor."""
         super().__init__(diffuser, coordinator, PERFUME_SUFFIX)
 
-    @property
-    def icon(self) -> str:
-        """Return the perfume sensor icon."""
-        if self._diffuser.hub_data[SENSORS][PERFUME][ID] == PERFUME_NO_CARTRIDGE_ID:
-            return "mdi:tag-remove"
-        return "mdi:tag-text"
+        self._attr_icon = "mdi:tag-text"
+        if diffuser.hub_data[SENSORS][PERFUME][ID] == PERFUME_NO_CARTRIDGE_ID:
+            self._attr_icon = "mdi:tag-remove"
 
     @property
     def state(self) -> str:
@@ -96,6 +93,9 @@ class DiffuserFillSensor(DiffuserEntity):
 class DiffuserBatterySensor(DiffuserEntity):
     """Representation of a diffuser battery sensor."""
 
+    _attr_device_class = DEVICE_CLASS_BATTERY
+    _attr_unit_of_measurement = PERCENTAGE
+
     def __init__(
         self, diffuser: Diffuser, coordinator: RitualsDataUpdateCoordinator
     ) -> None:
@@ -107,19 +107,12 @@ class DiffuserBatterySensor(DiffuserEntity):
         """Return the state of the battery sensor."""
         return self._diffuser.battery_percentage
 
-    @property
-    def device_class(self) -> str:
-        """Return the class of the battery sensor."""
-        return DEVICE_CLASS_BATTERY
-
-    @property
-    def unit_of_measurement(self) -> str:
-        """Return the battery unit of measurement."""
-        return PERCENTAGE
-
 
 class DiffuserWifiSensor(DiffuserEntity):
     """Representation of a diffuser wifi sensor."""
+
+    _attr_device_class = DEVICE_CLASS_SIGNAL_STRENGTH
+    _attr_unit_of_measurement = PERCENTAGE
 
     def __init__(
         self, diffuser: Diffuser, coordinator: RitualsDataUpdateCoordinator
@@ -131,13 +124,3 @@ class DiffuserWifiSensor(DiffuserEntity):
     def state(self) -> int:
         """Return the state of the wifi sensor."""
         return self._diffuser.wifi_percentage
-
-    @property
-    def device_class(self) -> str:
-        """Return the class of the wifi sensor."""
-        return DEVICE_CLASS_SIGNAL_STRENGTH
-
-    @property
-    def unit_of_measurement(self) -> str:
-        """Return the wifi unit of measurement."""
-        return PERCENTAGE
