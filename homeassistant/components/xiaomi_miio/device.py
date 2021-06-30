@@ -8,7 +8,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_MAC, CONF_MODEL, DOMAIN, SUCCESS
+from .const import CONF_MAC, CONF_MODEL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -107,7 +107,6 @@ class XiaomiCoordinatedMiioEntity(CoordinatorEntity):
         self._device_name = entry.title
         self._unique_id = unique_id
         self._name = name
-        self._available = None
 
     @property
     def unique_id(self):
@@ -143,10 +142,9 @@ class XiaomiCoordinatedMiioEntity(CoordinatorEntity):
 
             _LOGGER.debug("Response received from miio device: %s", result)
 
-            return result == SUCCESS
+            return True
         except DeviceException as exc:
-            if self._available:
+            if self.available:
                 _LOGGER.error(mask_error, exc)
-                self._available = False
 
             return False
