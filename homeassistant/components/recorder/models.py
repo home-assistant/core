@@ -36,7 +36,7 @@ import homeassistant.util.dt as dt_util
 # pylint: disable=invalid-name
 Base = declarative_base()
 
-SCHEMA_VERSION = 16
+SCHEMA_VERSION = 17
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,6 +47,7 @@ TABLE_STATES = "states"
 TABLE_RECORDER_RUNS = "recorder_runs"
 TABLE_SCHEMA_CHANGES = "schema_changes"
 TABLE_STATISTICS = "statistics"
+TABLE_STATISTICS_META = "statistics_meta"
 
 ALL_TABLES = [
     TABLE_STATES,
@@ -54,6 +55,7 @@ ALL_TABLES = [
     TABLE_RECORDER_RUNS,
     TABLE_SCHEMA_CHANGES,
     TABLE_STATISTICS,
+    TABLE_STATISTICS_META,
 ]
 
 DATETIME_TYPE = DateTime(timezone=True).with_variant(
@@ -245,6 +247,28 @@ class Statistics(Base):  # type: ignore
             statistic_id=statistic_id,
             start=start,
             **stats,
+        )
+
+
+class StatisticsMeta(Base):  # type: ignore
+    """Statistics meta data."""
+
+    __table_args__ = {
+        "mysql_default_charset": "utf8mb4",
+        "mysql_collate": "utf8mb4_unicode_ci",
+    }
+    __tablename__ = TABLE_STATISTICS_META
+    statistic_id = Column(String(255), primary_key=True)
+    source = Column(String(32))
+    unit_of_measurement = Column(String(255))
+
+    @staticmethod
+    def from_meta(source, statistic_id, unit_of_measurement):
+        """Create object from meta data."""
+        return StatisticsMeta(
+            source=source,
+            statistic_id=statistic_id,
+            unit_of_measurement=unit_of_measurement,
         )
 
 
