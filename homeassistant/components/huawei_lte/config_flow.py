@@ -7,7 +7,7 @@ from urllib.parse import urlparse
 
 from huawei_lte_api.AuthorizedConnection import AuthorizedConnection
 from huawei_lte_api.Client import Client
-from huawei_lte_api.Connection import Connection, GetResponseType
+from huawei_lte_api.Connection import GetResponseType
 from huawei_lte_api.exceptions import (
     LoginErrorPasswordWrongException,
     LoginErrorUsernamePasswordOverrunException,
@@ -96,7 +96,7 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle import initiated config flow."""
         return await self.async_step_user(user_input)
 
-    async def async_step_user(  # noqa: C901
+    async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle user initiated config flow."""
@@ -115,16 +115,15 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 user_input=user_input, errors=errors
             )
 
-        conn: Connection | None = None
+        conn: AuthorizedConnection
 
         def logout() -> None:
-            if isinstance(conn, AuthorizedConnection):
-                try:
-                    conn.user.logout()
-                except Exception:  # pylint: disable=broad-except
-                    _LOGGER.debug("Could not logout", exc_info=True)
+            try:
+                conn.user.logout()
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.debug("Could not logout", exc_info=True)
 
-        def try_connect(user_input: dict[str, Any]) -> Connection:
+        def try_connect(user_input: dict[str, Any]) -> AuthorizedConnection:
             """Try connecting with given credentials."""
             username = user_input.get(CONF_USERNAME) or ""
             password = user_input.get(CONF_PASSWORD) or ""
@@ -136,9 +135,7 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             )
             return conn
 
-        def get_device_info(
-            conn: Connection,
-        ) -> tuple[GetResponseType, GetResponseType]:
+        def get_device_info() -> tuple[GetResponseType, GetResponseType]:
             """Get router info."""
             client = Client(conn)
             try:
@@ -184,9 +181,7 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 user_input=user_input, errors=errors
             )
 
-        info, wlan_settings = await self.hass.async_add_executor_job(
-            get_device_info, conn
-        )
+        info, wlan_settings = await self.hass.async_add_executor_job(get_device_info)
         await self.hass.async_add_executor_job(logout)
 
         if not self.unique_id:
