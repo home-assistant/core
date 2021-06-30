@@ -72,7 +72,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         model = config_entry.data[CONF_MODEL]
         device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
         coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
-        entity_class = None
 
         _LOGGER.debug("Initializing with host %s (token %s...)", host, token[:5])
 
