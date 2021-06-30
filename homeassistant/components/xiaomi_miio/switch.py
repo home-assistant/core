@@ -464,7 +464,7 @@ class XiaomiGenericCoordinatedSwitch(XiaomiCoordinatedMiioEntity, SwitchEntity):
     async def async_set_dry_on(self) -> bool:
         """Turn the dry mode on."""
         return await self._try_command(
-            "Turning the dry mode of the miio device off failed.",
+            "Turning the dry mode of the miio device on failed.",
             self._device.set_dry,
             True,
         )
