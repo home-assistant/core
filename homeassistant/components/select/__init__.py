@@ -3,12 +3,12 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import Any, Callable, final
+from typing import Any, final
 
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
@@ -46,10 +46,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 
 async def async_select_option(
-    entry: SelectEntity, async_service_call: Callable
+    entry: SelectEntity, async_service_call: ServiceCall
 ) -> None:
     """Service call wrapper to set a new value."""
-    option = getattr(async_service_call, "data")[ATTR_OPTION]
+    option = async_service_call.data[ATTR_OPTION]
     if option not in entry.options:
         raise ValueError(f"Option {option} not a valid for {entry.name}")
     await entry.async_select_option(option)
