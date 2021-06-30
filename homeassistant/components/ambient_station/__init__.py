@@ -493,62 +493,17 @@ class AmbientWeatherEntity(Entity):
     ):
         """Initialize the sensor."""
         self._ambient = ambient
-        self._device_class = device_class
-        self._mac_address = mac_address
-        self._sensor_name = sensor_name
-        self._sensor_type = sensor_type
-        self._state = None
-        self._station_name = station_name
-
-    @property
-    def available(self):
-        """Return True if entity is available."""
-        # Since the solarradiation_lx sensor is created only if the
-        # user shows a solarradiation sensor, ensure that the
-        # solarradiation_lx sensor shows as available if the solarradiation
-        # sensor is available:
-        if self._sensor_type == TYPE_SOLARRADIATION_LX:
-            return (
-                self._ambient.stations[self._mac_address][ATTR_LAST_DATA].get(
-                    TYPE_SOLARRADIATION
-                )
-                is not None
-            )
-        return (
-            self._ambient.stations[self._mac_address][ATTR_LAST_DATA].get(
-                self._sensor_type
-            )
-            is not None
-        )
-
-    @property
-    def device_class(self):
-        """Return the device class."""
-        return self._device_class
-
-    @property
-    def device_info(self):
-        """Return device registry information for this entity."""
-        return {
-            "identifiers": {(DOMAIN, self._mac_address)},
-            "name": self._station_name,
+        self._attr_device_class = device_class
+        self._attr_device_info = {
+            "identifiers": {(DOMAIN, mac_address)},
+            "name": station_name,
             "manufacturer": "Ambient Weather",
         }
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return f"{self._station_name}_{self._sensor_name}"
-
-    @property
-    def should_poll(self):
-        """Disable polling."""
-        return False
-
-    @property
-    def unique_id(self):
-        """Return a unique, unchanging string that represents this sensor."""
-        return f"{self._mac_address}_{self._sensor_type}"
+        self._attr_name = f"{station_name}_{sensor_name}"
+        self._attr_should_poll = False
+        self._attr_unique_id = f"{mac_address}_{sensor_type}"
+        self._mac_address = mac_address
+        self._sensor_type = sensor_type
 
     async def async_added_to_hass(self):
         """Register callbacks."""
@@ -556,6 +511,21 @@ class AmbientWeatherEntity(Entity):
         @callback
         def update():
             """Update the state."""
+            if self._sensor_type == TYPE_SOLARRADIATION_LX:
+                self._attr_available = (
+                    self._ambient.stations[self._mac_address][ATTR_LAST_DATA].get(
+                        TYPE_SOLARRADIATION
+                    )
+                    is not None
+                )
+            else:
+                self._attr_available = (
+                    self._ambient.stations[self._mac_address][ATTR_LAST_DATA].get(
+                        self._sensor_type
+                    )
+                    is not None
+                )
+
             self.update_from_latest_data()
             self.async_write_ha_state()
 
