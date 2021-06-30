@@ -4,12 +4,12 @@ from __future__ import annotations
 import logging
 
 from aiomusiccast import MusicCastGroupException
+from aiomusiccast.features import ZoneFeature
 import voluptuous as vol
 
 from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     REPEAT_MODE_OFF,
-    SUPPORT_CLEAR_PLAYLIST,
     SUPPORT_GROUPING,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
@@ -55,13 +55,8 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-MUSIC_PLAYER_SUPPORT = (
+MUSIC_PLAYER_BASE_SUPPORT = (
     SUPPORT_PAUSE
-    | SUPPORT_VOLUME_SET
-    | SUPPORT_VOLUME_MUTE
-    | SUPPORT_TURN_ON
-    | SUPPORT_TURN_OFF
-    | SUPPORT_CLEAR_PLAYLIST
     | SUPPORT_PLAY
     | SUPPORT_SHUFFLE_SET
     | SUPPORT_REPEAT_SET
@@ -210,13 +205,17 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
     @property
     def volume_level(self):
         """Return the volume level of the media player (0..1)."""
-        volume = self.coordinator.data.zones[self._zone_id].current_volume
-        return (volume - self._volume_min) / (self._volume_max - self._volume_min)
+        if ZoneFeature.VOLUME in self.coordinator.data.zones[self._zone_id].features:
+            volume = self.coordinator.data.zones[self._zone_id].current_volume
+            return (volume - self._volume_min) / (self._volume_max - self._volume_min)
+        return None
 
     @property
     def is_volume_muted(self):
         """Return boolean if volume is currently muted."""
-        return self.coordinator.data.zones[self._zone_id].mute
+        if ZoneFeature.VOLUME in self.coordinator.data.zones[self._zone_id].features:
+            return self.coordinator.data.zones[self._zone_id].mute
+        return None
 
     @property
     def shuffle(self):
@@ -350,7 +349,17 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
     @property
     def supported_features(self):
         """Flag media player features that are supported."""
-        return MUSIC_PLAYER_SUPPORT
+        supported_features = MUSIC_PLAYER_BASE_SUPPORT
+        zone = self.coordinator.data.zones[self._zone_id]
+
+        if ZoneFeature.POWER in zone.features:
+            supported_features |= SUPPORT_TURN_ON | SUPPORT_TURN_OFF
+        if ZoneFeature.VOLUME in zone.features:
+            supported_features |= SUPPORT_VOLUME_SET
+        if ZoneFeature.MUTE in zone.features:
+            supported_features |= SUPPORT_VOLUME_MUTE
+
+        return supported_features
 
     async def async_media_previous_track(self):
         """Send previous track command."""
@@ -373,12 +382,6 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
             raise HomeAssistantError(
                 "Service next track is not supported for non NetUSB or Tuner sources."
             )
-
-    def clear_playlist(self):
-        """Clear players playlist."""
-        self._cur_track = 0
-        self._player_state = STATE_OFF
-        self.async_write_ha_state()
 
     async def async_set_repeat(self, repeat):
         """Enable/disable repeat mode."""
