@@ -170,47 +170,32 @@ class GeographySensor(AirVisualEntity, SensorEntity):
         """Initialize."""
         super().__init__(coordinator)
 
-        self._attrs.update(
+        self._attr_extra_state_attributes.update(
             {
                 ATTR_CITY: entry.data.get(CONF_CITY),
                 ATTR_STATE: entry.data.get(CONF_STATE),
                 ATTR_COUNTRY: entry.data.get(CONF_COUNTRY),
             }
         )
-
         self._attr_icon = icon
+        self._attr_name = f"{GEOGRAPHY_SENSOR_LOCALES[self._locale]} {name}"
+        self._attr_unique_id = f"{self._entry.unique_id}_{self._locale}_{self._kind}"
         self._attr_unit_of_measurement = unit
         self._entry = entry
         self._kind = kind
         self._locale = locale
-        self._name = name
-
-    @property
-    def available(self):
-        """Return True if entity is available."""
-        try:
-            return self.coordinator.last_update_success and bool(
-                self.coordinator.data["current"]["pollution"]
-            )
-        except KeyError:
-            return False
-
-    @property
-    def name(self):
-        """Return the name."""
-        return f"{GEOGRAPHY_SENSOR_LOCALES[self._locale]} {self._name}"
-
-    @property
-    def unique_id(self):
-        """Return a unique, Home Assistant friendly identifier for this entity."""
-        return f"{self._entry.unique_id}_{self._locale}_{self._kind}"
 
     @callback
     def update_from_latest_data(self):
         """Update the entity from the latest data."""
+        if not self.coordinator.last_update_success:
+            self._attr_available = False
+            return
+
         try:
             data = self.coordinator.data["current"]["pollution"]
         except KeyError:
+            self._attr_available = False
             return
 
         if self._kind == SENSOR_KIND_LEVEL:
