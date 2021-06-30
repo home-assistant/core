@@ -29,6 +29,7 @@ homeassistant.components.dnsip.*
 homeassistant.components.dsmr.*
 homeassistant.components.dunehd.*
 homeassistant.components.elgato.*
+homeassistant.components.esphome.*
 homeassistant.components.fitbit.*
 homeassistant.components.forecast_solar.*
 homeassistant.components.fritzbox.*
