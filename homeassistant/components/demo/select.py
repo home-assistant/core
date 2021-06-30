@@ -73,8 +73,5 @@ class DemoSelect(SelectEntity):
 
     async def async_select_option(self, option: str) -> None:
         """Update the current selected option."""
-        if option not in self.options:
-            raise ValueError(f"Invalid option for {self.entity_id}: {option}")
-
         self._attr_current_option = option
         self.async_write_ha_state()
