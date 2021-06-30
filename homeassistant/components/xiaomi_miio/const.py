@@ -146,12 +146,18 @@ MODELS_ALL = MODELS_ALL_DEVICES + MODELS_GATEWAY
 # Fan/Humidifier Services
 SERVICE_SET_BUZZER_ON = "fan_set_buzzer_on"
 SERVICE_SET_BUZZER_OFF = "fan_set_buzzer_off"
+SERVICE_SET_BUZZER = "set_buzzer"
+SERVICE_SET_CLEAN_ON = "set_clean_on"
+SERVICE_SET_CLEAN_OFF = "set_clean_off"
+SERVICE_SET_CLEAN = "set_clean"
 SERVICE_SET_FAN_LED_ON = "fan_set_led_on"
 SERVICE_SET_FAN_LED_OFF = "fan_set_led_off"
 SERVICE_SET_FAN_LED = "fan_set_led"
 SERVICE_SET_LED_BRIGHTNESS = "set_led_brightness"
 SERVICE_SET_CHILD_LOCK_ON = "fan_set_child_lock_on"
 SERVICE_SET_CHILD_LOCK_OFF = "fan_set_child_lock_off"
+SERVICE_SET_CHILD_LOCK = "set_child_lock"
+SERVICE_SET_LED_BRIGHTNESS = "fan_set_led_brightness"
 SERVICE_SET_FAVORITE_LEVEL = "fan_set_favorite_level"
 SERVICE_SET_FAN_LEVEL = "fan_set_fan_level"
 SERVICE_SET_AUTO_DETECT_ON = "fan_set_auto_detect_on"
@@ -164,6 +170,7 @@ SERVICE_SET_EXTRA_FEATURES = "fan_set_extra_features"
 SERVICE_SET_TARGET_HUMIDITY = "fan_set_target_humidity"
 SERVICE_SET_DRY_ON = "fan_set_dry_on"
 SERVICE_SET_DRY_OFF = "fan_set_dry_off"
+SERVICE_SET_DRY = "set_dry"
 SERVICE_SET_MOTOR_SPEED = "fan_set_motor_speed"
 
 # Light Services
@@ -211,6 +218,7 @@ FEATURE_SET_TARGET_HUMIDITY = 1024
 FEATURE_SET_DRY = 2048
 FEATURE_SET_FAN_LEVEL = 4096
 FEATURE_SET_MOTOR_SPEED = 8192
+FEATURE_SET_CLEAN = 16384
 
 FEATURE_FLAGS_AIRPURIFIER = (
     FEATURE_SET_BUZZER
@@ -275,6 +283,7 @@ FEATURE_FLAGS_AIRHUMIDIFIER_CA4 = (
     | FEATURE_SET_TARGET_HUMIDITY
     | FEATURE_SET_DRY
     | FEATURE_SET_MOTOR_SPEED
+    | FEATURE_SET_CLEAN
 )
 
 FEATURE_FLAGS_AIRFRESH = (
