@@ -35,7 +35,6 @@ from homeassistant.const import (
     PRESSURE_HPA,
     TEMP_CELSIUS,
 )
-from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
 from .const import (
@@ -229,67 +228,30 @@ class XiaomiGenericSensor(XiaomiCoordinatedMiioEntity, SensorEntity):
         """Initialize the entity."""
         super().__init__(name, device, entry, unique_id, coordinator)
 
-        self._name = name
+        self._sensor_config = SENSOR_TYPES[attribute]
+        self._attr_device_class = self._sensor_config.device_class
+        self._attr_state_class = self._sensor_config.state_class
+        self._attr_icon = self._sensor_config.icon
+        self._attr_name = name
+        self._attr_unique_id = unique_id
+        self._attr_unit_of_measurement = self._sensor_config.unit
         self._device = device
         self._entry = entry
-        self._unique_id = unique_id
         self._attribute = attribute
-        self._available = None
         self._state = None
-        self._skip_update = False
-
-    @callback
-    def _handle_coordinator_update(self):
-        """Fetch state from the device."""
-        # On state change the device doesn't provide the new state immediately.
-        state = self.coordinator.data
-        if not state:
-            return
-        _LOGGER.debug("Got new state: %s", state)
-        self._available = True
-        self._state = self._extract_value_from_attribute(state, self._attribute)
-        self.async_write_ha_state()
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of this entity, if any."""
-        return SENSOR_TYPES[self._attribute].unit
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend."""
-        return SENSOR_TYPES[self._attribute].icon
-
-    @property
-    def device_class(self):
-        """Return the device class of this entity."""
-        return SENSOR_TYPES[self._attribute].device_class
-
-    @property
-    def state_class(self):
-        """Return the state class of this entity."""
-        return SENSOR_TYPES[self._attribute].state_class
-
-    @property
-    def available(self):
-        """Return true when state is known."""
-        return super().available and self._available
 
     @property
     def state(self):
         """Return the state of the device."""
-        if not self._state:
-            self._state = self._extract_value_from_attribute(
-                self.coordinator.data, self._attribute
-            )
+        self._state = self._extract_value_from_attribute(
+            self.coordinator.data, self._attribute
+        )
         if (
-            SENSOR_TYPES[self._attribute].valid_min_value
-            and self._state < SENSOR_TYPES[self._attribute].valid_min_value
-        ):
-            return None
-        if (
-            SENSOR_TYPES[self._attribute].valid_max_value
-            and self._state > SENSOR_TYPES[self._attribute].valid_max_value
+            self._sensor_config.valid_min_value
+            and self._state < self._sensor_config.valid_min_value
+        ) or (
+            self._sensor_config.valid_max_value
+            and self._state > self._sensor_config.valid_max_value
         ):
             return None
         return self._state
