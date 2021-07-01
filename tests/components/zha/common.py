@@ -40,8 +40,9 @@ class FakeEndpoint:
         if _patch_cluster:
             patch_cluster(cluster)
         self.in_clusters[cluster_id] = cluster
-        if hasattr(cluster, "ep_attribute"):
-            setattr(self, cluster.ep_attribute, cluster)
+        ep_attribute = cluster.ep_attribute
+        if ep_attribute:
+            setattr(self, ep_attribute, cluster)
 
     def add_output_cluster(self, cluster_id, _patch_cluster=True):
         """Add an output cluster."""
