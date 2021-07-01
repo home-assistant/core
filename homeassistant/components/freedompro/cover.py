@@ -49,6 +49,14 @@ class Device(CoordinatorEntity, CoverEntity):
         self._attr_unique_id = device["uid"]
         self._type = device["type"]
         self._characteristics = device["characteristics"]
+        self._attr_device_info = {
+            "name": self._attr_name,
+            "identifiers": {
+                (DOMAIN, self._attr_unique_id),
+            },
+            "model": self._type,
+            "manufacturer": "Freedompro",
+        }
         self._attr_current_cover_position = 0
         self._attr_is_closed = True
         self._attr_supported_features = SUPPORT_SET_POSITION

@@ -36,6 +36,14 @@ class Device(CoordinatorEntity, LockEntity):
         self._attr_unique_id = device["uid"]
         self._type = device["type"]
         self._characteristics = device["characteristics"]
+        self._attr_device_info = {
+            "name": self._attr_name,
+            "identifiers": {
+                (DOMAIN, self._attr_unique_id),
+            },
+            "model": self._type,
+            "manufacturer": "Freedompro",
+        }
         self._attr_is_locked = False
 
     @callback
