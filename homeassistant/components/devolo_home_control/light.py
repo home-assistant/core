@@ -1,4 +1,8 @@
 """Platform for light integration."""
+from __future__ import annotations
+
+from typing import Any
+
 from devolo_home_control_api.devices.zwave import Zwave
 from devolo_home_control_api.homecontrol import HomeControl
 
@@ -68,7 +72,7 @@ class DevoloLightDeviceEntity(DevoloMultiLevelSwitchDeviceEntity, LightEntity):
         """Return the supported features."""
         return SUPPORT_BRIGHTNESS
 
-    def turn_on(self, **kwargs) -> None:
+    def turn_on(self, **kwargs: int) -> None:
         """Turn device on."""
         if kwargs.get(ATTR_BRIGHTNESS) is not None:
             self._multi_level_switch_property.set(
@@ -82,7 +86,7 @@ class DevoloLightDeviceEntity(DevoloMultiLevelSwitchDeviceEntity, LightEntity):
                 # If there is no binary switch attached to the device, turn it on to 100 %.
                 self._multi_level_switch_property.set(100)
 
-    def turn_off(self, **kwargs) -> None:
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn device off."""
         if self._binary_switch_property is not None:
             self._binary_switch_property.set(False)

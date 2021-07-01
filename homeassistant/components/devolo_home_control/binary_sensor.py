@@ -138,7 +138,7 @@ class DevoloRemoteControl(DevoloDeviceEntity, BinarySensorEntity):
         """Return the state."""
         return self._state
 
-    def _sync(self, message) -> None:
+    def _sync(self, message: tuple) -> None:
         """Update the binary sensor state."""
         if (
             message[0] == self._remote_control_property.element_uid

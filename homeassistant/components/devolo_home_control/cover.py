@@ -1,4 +1,8 @@
 """Platform for cover integration."""
+from __future__ import annotations
+
+from typing import Any
+
 from homeassistant.components.cover import (
     DEVICE_CLASS_BLIND,
     SUPPORT_CLOSE,
@@ -58,14 +62,14 @@ class DevoloCoverDeviceEntity(DevoloMultiLevelSwitchDeviceEntity, CoverEntity):
         """Flag supported features."""
         return SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_SET_POSITION
 
-    def open_cover(self, **kwargs) -> None:
+    def open_cover(self, **kwargs: Any) -> None:
         """Open the blind."""
         self._multi_level_switch_property.set(100)
 
-    def close_cover(self, **kwargs) -> None:
+    def close_cover(self, **kwargs: Any) -> None:
         """Close the blind."""
         self._multi_level_switch_property.set(0)
 
-    def set_cover_position(self, **kwargs) -> None:
+    def set_cover_position(self, **kwargs: int) -> None:
         """Set the blind to the given position."""
         self._multi_level_switch_property.set(kwargs["position"])

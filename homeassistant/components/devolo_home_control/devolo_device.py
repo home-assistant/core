@@ -24,7 +24,9 @@ class DevoloDeviceEntity(Entity):
         self._device_instance = device_instance
         self._unique_id = element_uid
         self._homecontrol = homecontrol
-        self._name = device_instance.settings_property["general_device_settings"].name
+        self._name: str = device_instance.settings_property[
+            "general_device_settings"
+        ].name
         self._area = device_instance.settings_property["general_device_settings"].zone
         self._device_class: str | None = None
         self._value: int
@@ -32,7 +34,7 @@ class DevoloDeviceEntity(Entity):
         self._enabled_default = True
 
         # This is not doing I/O. It fetches an internal state of the API
-        self._available = device_instance.is_online()
+        self._available: bool = device_instance.is_online()
 
         # Get the brand and model information
         self._brand = device_instance.brand

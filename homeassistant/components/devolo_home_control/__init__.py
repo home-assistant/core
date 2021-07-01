@@ -63,7 +63,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
-    def shutdown(event: Event):
+    def shutdown(event: Event) -> None:
         for gateway in hass.data[DOMAIN][entry.entry_id]["gateways"]:
             gateway.websocket_disconnect(
                 f"websocket disconnect requested by {EVENT_HOMEASSISTANT_STOP}"

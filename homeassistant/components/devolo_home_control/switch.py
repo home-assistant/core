@@ -1,6 +1,8 @@
 """Platform for switch integration."""
 from __future__ import annotations
 
+from typing import Any
+
 from devolo_home_control_api.devices.zwave import Zwave
 from devolo_home_control_api.homecontrol import HomeControl
 
@@ -51,7 +53,8 @@ class DevoloSwitch(DevoloDeviceEntity, SwitchEntity):
         self._binary_switch_property = self._device_instance.binary_switch_property.get(
             self._unique_id
         )
-        self._is_on = self._binary_switch_property.state
+        self._is_on: bool = self._binary_switch_property.state
+        self._consumption: float | None
 
         if hasattr(self._device_instance, "consumption_property"):
             self._consumption = self._device_instance.consumption_property.get(
@@ -66,16 +69,16 @@ class DevoloSwitch(DevoloDeviceEntity, SwitchEntity):
         return self._is_on
 
     @property
-    def current_power_w(self) -> float:
+    def current_power_w(self) -> float | None:
         """Return the current consumption."""
         return self._consumption
 
-    def turn_on(self, **kwargs) -> None:
+    def turn_on(self, **kwargs: Any) -> None:
         """Switch on the device."""
         self._is_on = True
         self._binary_switch_property.set(state=True)
 
-    def turn_off(self, **kwargs) -> None:
+    def turn_off(self, **kwargs: Any) -> None:
         """Switch off the device."""
         self._is_on = False
         self._binary_switch_property.set(state=False)
