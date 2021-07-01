@@ -107,7 +107,8 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
 
 async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    return await hass.data[DOMAIN].async_unload_entry(entry)
+    component: EntityComponent = hass.data[DOMAIN]
+    return await component.async_unload_entry(entry)
 
 
 class SirenEntity(ToggleEntity):
