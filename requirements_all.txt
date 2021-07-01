@@ -1396,7 +1396,7 @@ pyeconet==0.1.14
 pyedimax==0.2.1
 
 # homeassistant.components.eight_sleep
-pyeight==0.1.5
+pyeight==0.1.7
 
 # homeassistant.components.emby
 pyemby==1.7
