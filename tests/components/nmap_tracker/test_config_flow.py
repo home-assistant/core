@@ -4,7 +4,10 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant import config_entries, data_entry_flow, setup
-from homeassistant.components.device_tracker.const import CONF_TRACK_NEW, CONF_SCAN_INTERVAL
+from homeassistant.components.device_tracker.const import (
+    CONF_SCAN_INTERVAL,
+    CONF_TRACK_NEW,
+)
 from homeassistant.components.nmap_tracker.const import (
     CONF_HOME_INTERVAL,
     CONF_OPTIONS,

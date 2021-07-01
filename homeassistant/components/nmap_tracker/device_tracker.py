@@ -13,8 +13,8 @@ from homeassistant.components.device_tracker import (
 from homeassistant.components.device_tracker.config_entry import ScannerEntity
 from homeassistant.components.device_tracker.const import (
     CONF_NEW_DEVICE_DEFAULTS,
-    CONF_TRACK_NEW,
     CONF_SCAN_INTERVAL,
+    CONF_TRACK_NEW,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_EXCLUDE, CONF_HOSTS
