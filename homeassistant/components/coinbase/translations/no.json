@@ -16,7 +16,7 @@
                     "currencies": "Valutaer for kontosaldo",
                     "exchange_rates": "Valutakurser"
                 },
-                "description": "Vennligst skriv inn detaljene for API-n\u00f8kkelen din som gitt av Coinbase. Skill flere valutaer med komma (f.eks. \"BTC, EUR\")",
+                "description": "Vennligst skriv inn detaljene for API-n\u00f8kkelen din som gitt av Coinbase.",
                 "title": "Detaljer for Coinbase API-n\u00f8kkel"
             }
         }
