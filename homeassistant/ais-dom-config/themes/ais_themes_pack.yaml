@@ -1,0 +1,3695 @@
+#                                                                                  
+#    #####   #         ##     ####   #    # 
+#    #    #  #        #  #   #    #  #   #  
+#    #####   #       #    #  #       ####   
+#    #    #  #       ######  #       #  #   
+#    #    #  #       #    #  #    #  #   #  
+#    #####   ######  #    #   ####   #    #  
+#                                                                         
+
+AIS Black Rose:
+
+  # Change the value below 8px to 0px to remove the rounded corners
+  ha-card-border-radius: 8px
+  # Main colors
+  primary-color: "#aa3151"
+  light-primary-color: "#b8536d"
+  graph-color: var(--primary-color)
+  primary-background-color: "#0c0c0c"
+  secondary-background-color: var(--primary-background-color)
+  divider-color: "#2c2c2c"
+  disabled-color: "#393939"
+  # Text colors
+  primary-text-color: "#e5e5e5"
+  secondary-text-color: var(--disabled-color)
+  text-primary-color: "#E5E5E5"
+  disabled-text-color: var(--disabled-color)
+  # Sidebar colors
+  sidebar-icon-color: var(--primary-color)
+  sidebar-text-color: var(--primary-text-color)
+  sidebar-selected-background-color: var(--primary-background-color)
+  sidebar-selected-icon-color: var(--light-primary-color)
+  sidebar-selected-text-color: var(--sidebar-selected-icon-color)
+  # Icons colors
+  state-icon-color: var(--disabled-color)
+  state-icon-active-color: var(--primary-color)
+  state-icon-unavailable-color: var(--primary-background-color)
+  # Settins and colors of Mini Media Player
+  mini-media-player-icon-color: var(--primary-color)
+  mini-media-player-accent-color: var(--primary-color)
+  mini-media-player-progress-height: 8px
+  # Papers slider colors
+  paper-slider-knob-color: var(--primary-color)
+  paper-slider-knob-start-color: var(--paper-slider-knob-color)
+  paper-slider-pin-color: var(--paper-slider-knob-color)
+  paper-slider-active-color: var(--paper-slider-knob-color)
+  paper-slider-container-color: var(--disabled-color)
+  # Labels colors
+  label-badge-background-color: var(--divider-color)
+  label-badge-text-color: var(--primary-text-color)
+  label-badge-red: var(--primary-color)
+  label-badge-blue: var(--light-primary-color)
+  # Cards colors
+  ha-card-background: "#191919"
+  paper-card-background-color: var(--ha-card-background)
+  paper-listbox-background-color: var(--primary-background-color)
+  # Toggle button colors
+  paper-toggle-button-checked-button-color: var(--primary-color)
+  paper-toggle-button-checked-bar-color: var(--light-primary-color)
+  paper-toggle-button-unchecked-button-color: var(--disabled-color)
+  paper-toggle-button-unchecked-bar-color: var(--primary-background-color)
+  # Switch colors
+  switch-checked-color: var(--paper-toggle-button-checked-button-color)
+  switch-unchecked-button-color: var(--paper-toggle-button-unchecked-button-color)
+  switch-unchecked-color: var(--paper-toggle-button-unchecked-bar-color)
+  switch-unchecked-track-color: var(--paper-toggle-button-unchecked-bar-color)
+  # Table colors
+  table-row-background-color: var(--divider-color)
+  table-row-alternative-background-color: var(--secondary-background-color)
+  card-background-color: var(--primary-background-color)
+  #Animated icons
+  weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
+  weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
+  weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
+  weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
+  weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
+  weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
+  weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
+  weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
+  weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
+  weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
+  weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
+  weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
+  weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
+  weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
+  weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
+  # Shadown
+  ha-card-box-shadow: 'inset 0px 0px 0px 0px var(--divider-color)'
+  # HACS
+  hacs-badge-color: var(--primary-color)
+  link-text-color: var(--disabled-color)
+  markdown-code-background-color: var(--divider-color)
+  google-blue-500: var(--primary-color)
+  accent-color: var(--disabled-color)
+  hacs-chip-color: var(--primary-color)
+
+##########################################
+
+
+
+AIS Black Purple:
+
+  # Change the value below 8px to 0px to remove the rounded corners
+  ha-card-border-radius: 8px
+  # Main colors
+  primary-color: "#904eab"
+  light-primary-color: "#c983e4"
+  graph-color: var(--primary-color)
+  primary-background-color: "#0c0c0c"
+  secondary-background-color: var(--primary-background-color)
+  divider-color: "#2c2c2c"
+  disabled-color: "#393939"
+  # Text colors
+  primary-text-color: "#e5e5e5"
+  secondary-text-color: var(--disabled-color)
+  text-primary-color: "#E5E5E5"
+  disabled-text-color: var(--disabled-color)
+  # Sidebar colors
+  sidebar-icon-color: var(--primary-color)
+  sidebar-text-color: var(--primary-text-color)
+  sidebar-selected-background-color: var(--primary-background-color)
+  sidebar-selected-icon-color: var(--light-primary-color)
+  sidebar-selected-text-color: var(--sidebar-selected-icon-color)
+  # Icons colors
+  state-icon-color: var(--disabled-color)
+  state-icon-active-color: var(--primary-color)
+  state-icon-unavailable-color: var(--primary-background-color)
+  # Settins and colors of Mini Media Player
+  mini-media-player-icon-color: var(--primary-color)
+  mini-media-player-accent-color: var(--primary-color)
+  mini-media-player-progress-height: 8px
+  # Papers slider colors
+  paper-slider-knob-color: var(--primary-color)
+  paper-slider-knob-start-color: var(--paper-slider-knob-color)
+  paper-slider-pin-color: var(--paper-slider-knob-color)
+  paper-slider-active-color: var(--paper-slider-knob-color)
+  paper-slider-container-color: var(--disabled-color)
+  # Labels colors
+  label-badge-background-color: var(--divider-color)
+  label-badge-text-color: var(--primary-text-color)
+  label-badge-red: var(--primary-color)
+  label-badge-blue: var(--light-primary-color)
+  # Cards colors
+  ha-card-background: "#191919"
+  paper-card-background-color: var(--ha-card-background)
+  paper-listbox-background-color: var(--primary-background-color)
+  # Toggle button colors
+  paper-toggle-button-checked-button-color: var(--primary-color)
+  paper-toggle-button-checked-bar-color: var(--light-primary-color)
+  paper-toggle-button-unchecked-button-color: var(--disabled-color)
+  paper-toggle-button-unchecked-bar-color: var(--primary-background-color)
+  # Switch colors
+  switch-checked-color: var(--paper-toggle-button-checked-button-color)
+  switch-unchecked-button-color: var(--paper-toggle-button-unchecked-button-color)
+  switch-unchecked-color: var(--paper-toggle-button-unchecked-bar-color)
+  switch-unchecked-track-color: var(--paper-toggle-button-unchecked-bar-color)
+  # Table colors
+  table-row-background-color: var(--divider-color)
+  table-row-alternative-background-color: var(--secondary-background-color)
+  card-background-color: var(--primary-background-color)
+  #Animated icons
+  weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
+  weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
+  weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
+  weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
+  weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
+  weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
+  weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
+  weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
+  weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
+  weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
+  weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
+  weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
+  weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
+  weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
+  weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
+  # Shadown
+  ha-card-box-shadow: 'inset 0px 0px 0px 0px var(--divider-color)'
+  # HACS
+  hacs-badge-color: var(--primary-color)
+  link-text-color: var(--disabled-color)
+  markdown-code-background-color: var(--divider-color)
+  google-blue-500: var(--primary-color)
+  accent-color: var(--disabled-color)
+  hacs-chip-color: var(--primary-color)
+
+
+
+##########################################
+
+
+
+AIS Black Blue:
+
+  # Change the value below 8px to 0px to remove the rounded corners
+  ha-card-border-radius: 8px
+  # Main colors
+  primary-color: "#009bb5"
+  light-primary-color: "#5ed1eb"
+  graph-color: var(--primary-color)
+  primary-background-color: "#0c0c0c"
+  secondary-background-color: var(--primary-background-color)
+  divider-color: "#2c2c2c"
+  disabled-color: "#393939"
+  # Text colors
+  primary-text-color: "#e5e5e5"
+  secondary-text-color: var(--disabled-color)
+  text-primary-color: "#E5E5E5"
+  disabled-text-color: var(--disabled-color)
+  # Sidebar colors
+  sidebar-icon-color: var(--primary-color)
+  sidebar-text-color: var(--primary-text-color)
+  sidebar-selected-background-color: var(--primary-background-color)
+  sidebar-selected-icon-color: var(--light-primary-color)
+  sidebar-selected-text-color: var(--sidebar-selected-icon-color)
+  # Icons colors
+  state-icon-color: var(--disabled-color)
+  state-icon-active-color: var(--primary-color)
+  state-icon-unavailable-color: var(--primary-background-color)
+  # Settins and colors of Mini Media Player
+  mini-media-player-icon-color: var(--primary-color)
+  mini-media-player-accent-color: var(--primary-color)
+  mini-media-player-progress-height: 8px
+  # Papers slider colors
+  paper-slider-knob-color: var(--primary-color)
+  paper-slider-knob-start-color: var(--paper-slider-knob-color)
+  paper-slider-pin-color: var(--paper-slider-knob-color)
+  paper-slider-active-color: var(--paper-slider-knob-color)
+  paper-slider-container-color: var(--disabled-color)
+  # Labels colors
+  label-badge-background-color: var(--divider-color)
+  label-badge-text-color: var(--primary-text-color)
+  label-badge-red: var(--primary-color)
+  label-badge-blue: var(--light-primary-color)
+  # Cards colors
+  ha-card-background: "#191919"
+  paper-card-background-color: var(--ha-card-background)
+  paper-listbox-background-color: var(--primary-background-color)
+  # Toggle button colors
+  paper-toggle-button-checked-button-color: var(--primary-color)
+  paper-toggle-button-checked-bar-color: var(--light-primary-color)
+  paper-toggle-button-unchecked-button-color: var(--disabled-color)
+  paper-toggle-button-unchecked-bar-color: var(--primary-background-color)
+  # Switch colors
+  switch-checked-color: var(--paper-toggle-button-checked-button-color)
+  switch-unchecked-button-color: var(--paper-toggle-button-unchecked-button-color)
+  switch-unchecked-color: var(--paper-toggle-button-unchecked-bar-color)
+  switch-unchecked-track-color: var(--paper-toggle-button-unchecked-bar-color)
+  # Table colors
+  table-row-background-color: var(--divider-color)
+  table-row-alternative-background-color: var(--secondary-background-color)
+  card-background-color: var(--primary-background-color)
+  #Animated icons
+  weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
+  weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
+  weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
+  weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
+  weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
+  weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
+  weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
+  weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
+  weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
+  weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
+  weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
+  weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
+  weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
+  weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
+  weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
+  # Shadown
+  ha-card-box-shadow: 'inset 0px 0px 0px 0px var(--divider-color)'
+  # HACS
+  hacs-badge-color: var(--primary-color)
+  link-text-color: var(--disabled-color)
+  markdown-code-background-color: var(--divider-color)
+  google-blue-500: var(--primary-color)
+  accent-color: var(--disabled-color)
+  hacs-chip-color: var(--primary-color)
+
+
+
+##########################################
+
+
+
+AIS Black Aqua:
+
+  # Change the value below 8px to 0px to remove the rounded corners
+  ha-card-border-radius: 8px
+  # Main colors
+  primary-color: "#11ab93"
+  light-primary-color: "#62e3c8"
+  graph-color: var(--primary-color)
+  primary-background-color: "#0c0c0c"
+  secondary-background-color: var(--primary-background-color)
+  divider-color: "#2c2c2c"
+  disabled-color: "#393939"
+  # Text colors
+  primary-text-color: "#e5e5e5"
+  secondary-text-color: var(--disabled-color)
+  text-primary-color: "#E5E5E5"
+  disabled-text-color: var(--disabled-color)
+  # Sidebar colors
+  sidebar-icon-color: var(--primary-color)
+  sidebar-text-color: var(--primary-text-color)
+  sidebar-selected-background-color: var(--primary-background-color)
+  sidebar-selected-icon-color: var(--light-primary-color)
+  sidebar-selected-text-color: var(--sidebar-selected-icon-color)
+  # Icons colors
+  state-icon-color: var(--disabled-color)
+  state-icon-active-color: var(--primary-color)
+  state-icon-unavailable-color: var(--primary-background-color)
+  # Settins and colors of Mini Media Player
+  mini-media-player-icon-color: var(--primary-color)
+  mini-media-player-accent-color: var(--primary-color)
+  mini-media-player-progress-height: 8px
+  # Papers slider colors
+  paper-slider-knob-color: var(--primary-color)
+  paper-slider-knob-start-color: var(--paper-slider-knob-color)
+  paper-slider-pin-color: var(--paper-slider-knob-color)
+  paper-slider-active-color: var(--paper-slider-knob-color)
+  paper-slider-container-color: var(--disabled-color)
+  # Labels colors
+  label-badge-background-color: var(--divider-color)
+  label-badge-text-color: var(--primary-text-color)
+  label-badge-red: var(--primary-color)
+  label-badge-blue: var(--light-primary-color)
+  # Cards colors
+  ha-card-background: "#191919"
+  paper-card-background-color: var(--ha-card-background)
+  paper-listbox-background-color: var(--primary-background-color)
+  # Toggle button colors
+  paper-toggle-button-checked-button-color: var(--primary-color)
+  paper-toggle-button-checked-bar-color: var(--light-primary-color)
+  paper-toggle-button-unchecked-button-color: var(--disabled-color)
+  paper-toggle-button-unchecked-bar-color: var(--primary-background-color)
+  # Switch colors
+  switch-checked-color: var(--paper-toggle-button-checked-button-color)
+  switch-unchecked-button-color: var(--paper-toggle-button-unchecked-button-color)
+  switch-unchecked-color: var(--paper-toggle-button-unchecked-bar-color)
+  switch-unchecked-track-color: var(--paper-toggle-button-unchecked-bar-color)
+  # Table colors
+  table-row-background-color: var(--divider-color)
+  table-row-alternative-background-color: var(--secondary-background-color)
+  card-background-color: var(--primary-background-color)
+  #Animated icons
+  weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
+  weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
+  weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
+  weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
+  weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
+  weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
+  weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
+  weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
+  weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
+  weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
+  weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
+  weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
+  weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
+  weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
+  weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
+  # Shadown
+  ha-card-box-shadow: 'inset 0px 0px 0px 0px var(--divider-color)'
+  # HACS
+  hacs-badge-color: var(--primary-color)
+  link-text-color: var(--disabled-color)
+  markdown-code-background-color: var(--divider-color)
+  google-blue-500: var(--primary-color)
+  accent-color: var(--disabled-color)
+  hacs-chip-color: var(--primary-color)
+
+
+
+##########################################
+
+
+
+AIS Black Green:
+
+  # Change the value below 8px to 0px to remove the rounded corners
+  ha-card-border-radius: 8px
+  # Main colors
+  primary-color: "#6ca049"
+  light-primary-color: "#a1d77b"
+  graph-color: var(--primary-color)
+  primary-background-color: "#0c0c0c"
+  secondary-background-color: var(--primary-background-color)
+  divider-color: "#2c2c2c"
+  disabled-color: "#393939"
+  # Text colors
+  primary-text-color: "#e5e5e5"
+  secondary-text-color: var(--disabled-color)
+  text-primary-color: "#E5E5E5"
+  disabled-text-color: var(--disabled-color)
+  # Sidebar colors
+  sidebar-icon-color: var(--primary-color)
+  sidebar-text-color: var(--primary-text-color)
+  sidebar-selected-background-color: var(--primary-background-color)
+  sidebar-selected-icon-color: var(--light-primary-color)
+  sidebar-selected-text-color: var(--sidebar-selected-icon-color)
+  # Icons colors
+  state-icon-color: var(--disabled-color)
+  state-icon-active-color: var(--primary-color)
+  state-icon-unavailable-color: var(--primary-background-color)
+  # Settins and colors of Mini Media Player
+  mini-media-player-icon-color: var(--primary-color)
+  mini-media-player-accent-color: var(--primary-color)
+  mini-media-player-progress-height: 8px
+  # Papers slider colors
+  paper-slider-knob-color: var(--primary-color)
+  paper-slider-knob-start-color: var(--paper-slider-knob-color)
+  paper-slider-pin-color: var(--paper-slider-knob-color)
+  paper-slider-active-color: var(--paper-slider-knob-color)
+  paper-slider-container-color: var(--disabled-color)
+  # Labels colors
+  label-badge-background-color: var(--divider-color)
+  label-badge-text-color: var(--primary-text-color)
+  label-badge-red: var(--primary-color)
+  label-badge-blue: var(--light-primary-color)
+  # Cards colors
+  ha-card-background: "#191919"
+  paper-card-background-color: var(--ha-card-background)
+  paper-listbox-background-color: var(--primary-background-color)
+  # Toggle button colors
+  paper-toggle-button-checked-button-color: var(--primary-color)
+  paper-toggle-button-checked-bar-color: var(--light-primary-color)
+  paper-toggle-button-unchecked-button-color: var(--disabled-color)
+  paper-toggle-button-unchecked-bar-color: var(--primary-background-color)
+  # Switch colors
+  switch-checked-color: var(--paper-toggle-button-checked-button-color)
+  switch-unchecked-button-color: var(--paper-toggle-button-unchecked-button-color)
+  switch-unchecked-color: var(--paper-toggle-button-unchecked-bar-color)
+  switch-unchecked-track-color: var(--paper-toggle-button-unchecked-bar-color)
+  # Table colors
+  table-row-background-color: var(--divider-color)
+  table-row-alternative-background-color: var(--secondary-background-color)
+  card-background-color: var(--primary-background-color)
+  #Animated icons
+  weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
+  weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
+  weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
+  weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
+  weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
+  weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
+  weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
+  weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
+  weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
+  weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
+  weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
+  weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
+  weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
+  weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
+  weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
+  # Shadown
+  ha-card-box-shadow: 'inset 0px 0px 0px 0px var(--divider-color)'
+  # HACS
+  hacs-badge-color: var(--primary-color)
+  link-text-color: var(--disabled-color)
+  markdown-code-background-color: var(--divider-color)
+  google-blue-500: var(--primary-color)
+  accent-color: var(--disabled-color)
+  hacs-chip-color: var(--primary-color)
+
+
+
+##########################################
+
+
+
+AIS Black Yellow:
+
+  # Change the value below 8px to 0px to remove the rounded corners
+  ha-card-border-radius: 8px
+  # Main colors
+  primary-color: "#d6a245"
+  light-primary-color: "#ffd979"
+  graph-color: var(--primary-color)
+  primary-background-color: "#0c0c0c"
+  secondary-background-color: var(--primary-background-color)
+  divider-color: "#2c2c2c"
+  disabled-color: "#393939"
+  # Text colors
+  primary-text-color: "#e5e5e5"
+  secondary-text-color: var(--disabled-color)
+  text-primary-color: "#E5E5E5"
+  disabled-text-color: var(--disabled-color)
+  # Sidebar colors
+  sidebar-icon-color: var(--primary-color)
+  sidebar-text-color: var(--primary-text-color)
+  sidebar-selected-background-color: var(--primary-background-color)
+  sidebar-selected-icon-color: var(--light-primary-color)
+  sidebar-selected-text-color: var(--sidebar-selected-icon-color)
+  # Icons colors
+  state-icon-color: var(--disabled-color)
+  state-icon-active-color: var(--primary-color)
+  state-icon-unavailable-color: var(--primary-background-color)
+  # Settins and colors of Mini Media Player
+  mini-media-player-icon-color: var(--primary-color)
+  mini-media-player-accent-color: var(--primary-color)
+  mini-media-player-progress-height: 8px
+  # Papers slider colors
+  paper-slider-knob-color: var(--primary-color)
+  paper-slider-knob-start-color: var(--paper-slider-knob-color)
+  paper-slider-pin-color: var(--paper-slider-knob-color)
+  paper-slider-active-color: var(--paper-slider-knob-color)
+  paper-slider-container-color: var(--disabled-color)
+  # Labels colors
+  label-badge-background-color: var(--divider-color)
+  label-badge-text-color: var(--primary-text-color)
+  label-badge-red: var(--primary-color)
+  label-badge-blue: var(--light-primary-color)
+  # Cards colors
+  ha-card-background: "#191919"
+  paper-card-background-color: var(--ha-card-background)
+  paper-listbox-background-color: var(--primary-background-color)
+  # Toggle button colors
+  paper-toggle-button-checked-button-color: var(--primary-color)
+  paper-toggle-button-checked-bar-color: var(--light-primary-color)
+  paper-toggle-button-unchecked-button-color: var(--disabled-color)
+  paper-toggle-button-unchecked-bar-color: var(--primary-background-color)
+  # Switch colors
+  switch-checked-color: var(--paper-toggle-button-checked-button-color)
+  switch-unchecked-button-color: var(--paper-toggle-button-unchecked-button-color)
+  switch-unchecked-color: var(--paper-toggle-button-unchecked-bar-color)
+  switch-unchecked-track-color: var(--paper-toggle-button-unchecked-bar-color)
+  # Table colors
+  table-row-background-color: var(--divider-color)
+  table-row-alternative-background-color: var(--secondary-background-color)
+  card-background-color: var(--primary-background-color)
+  #Animated icons
+  weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
+  weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
+  weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
+  weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
+  weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
+  weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
+  weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
+  weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
+  weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
+  weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
+  weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
+  weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
+  weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
+  weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
+  weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
+  # Shadown
+  ha-card-box-shadow: 'inset 0px 0px 0px 0px var(--divider-color)'
+  # HACS
+  hacs-badge-color: var(--primary-color)
+  link-text-color: var(--disabled-color)
+  markdown-code-background-color: var(--divider-color)
+  google-blue-500: var(--primary-color)
+  accent-color: var(--disabled-color)
+  hacs-chip-color: var(--primary-color)
+
+
+
+##########################################
+
+
+
+AIS Black Orange:
+
+  # Change the value below 8px to 0px to remove the rounded corners
+  ha-card-border-radius: 8px
+  # Main colors
+  primary-color: "#d25f36"
+  light-primary-color: "#ff9568"
+  graph-color: var(--primary-color)
+  primary-background-color: "#0c0c0c"
+  secondary-background-color: var(--primary-background-color)
+  divider-color: "#2c2c2c"
+  disabled-color: "#393939"
+  # Text colors
+  primary-text-color: "#e5e5e5"
+  secondary-text-color: var(--disabled-color)
+  text-primary-color: "#E5E5E5"
+  disabled-text-color: var(--disabled-color)
+  # Sidebar colors
+  sidebar-icon-color: var(--primary-color)
+  sidebar-text-color: var(--primary-text-color)
+  sidebar-selected-background-color: var(--primary-background-color)
+  sidebar-selected-icon-color: var(--light-primary-color)
+  sidebar-selected-text-color: var(--sidebar-selected-icon-color)
+  # Icons colors
+  state-icon-color: var(--disabled-color)
+  state-icon-active-color: var(--primary-color)
+  state-icon-unavailable-color: var(--primary-background-color)
+  # Settins and colors of Mini Media Player
+  mini-media-player-icon-color: var(--primary-color)
+  mini-media-player-accent-color: var(--primary-color)
+  mini-media-player-progress-height: 8px
+  # Papers slider colors
+  paper-slider-knob-color: var(--primary-color)
+  paper-slider-knob-start-color: var(--paper-slider-knob-color)
+  paper-slider-pin-color: var(--paper-slider-knob-color)
+  paper-slider-active-color: var(--paper-slider-knob-color)
+  paper-slider-container-color: var(--disabled-color)
+  # Labels colors
+  label-badge-background-color: var(--divider-color)
+  label-badge-text-color: var(--primary-text-color)
+  label-badge-red: var(--primary-color)
+  label-badge-blue: var(--light-primary-color)
+  # Cards colors
+  ha-card-background: "#191919"
+  paper-card-background-color: var(--ha-card-background)
+  paper-listbox-background-color: var(--primary-background-color)
+  # Toggle button colors
+  paper-toggle-button-checked-button-color: var(--primary-color)
+  paper-toggle-button-checked-bar-color: var(--light-primary-color)
+  paper-toggle-button-unchecked-button-color: var(--disabled-color)
+  paper-toggle-button-unchecked-bar-color: var(--primary-background-color)
+  # Switch colors
+  switch-checked-color: var(--paper-toggle-button-checked-button-color)
+  switch-unchecked-button-color: var(--paper-toggle-button-unchecked-button-color)
+  switch-unchecked-color: var(--paper-toggle-button-unchecked-bar-color)
+  switch-unchecked-track-color: var(--paper-toggle-button-unchecked-bar-color)
+  # Table colors
+  table-row-background-color: var(--divider-color)
+  table-row-alternative-background-color: var(--secondary-background-color)
+  card-background-color: var(--primary-background-color)
+  #Animated icons
+  weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
+  weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
+  weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
+  weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
+  weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
+  weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
+  weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
+  weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
+  weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
+  weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
+  weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
+  weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
+  weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
+  weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
+  weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
+  # Shadown
+  ha-card-box-shadow: 'inset 0px 0px 0px 0px var(--divider-color)'
+  # HACS
+  hacs-badge-color: var(--primary-color)
+  link-text-color: var(--disabled-color)
+  markdown-code-background-color: var(--divider-color)
+  google-blue-500: var(--primary-color)
+  accent-color: var(--disabled-color)
+  hacs-chip-color: var(--primary-color)
+
+
+
+##########################################
+
+
+
+AIS Black Coral:
+
+  # Change the value below 8px to 0px to remove the rounded corners
+  ha-card-border-radius: 8px
+  # Main colors
+  primary-color: "#fa6e5e"
+  light-primary-color: "#ffa792"
+  graph-color: var(--primary-color)
+  primary-background-color: "#0c0c0c"
+  secondary-background-color: var(--primary-background-color)
+  divider-color: "#2c2c2c"
+  disabled-color: "#393939"
+  # Text colors
+  primary-text-color: "#e5e5e5"
+  secondary-text-color: var(--disabled-color)
+  text-primary-color: "#E5E5E5"
+  disabled-text-color: var(--disabled-color)
+  # Sidebar colors
+  sidebar-icon-color: var(--primary-color)
+  sidebar-text-color: var(--primary-text-color)
+  sidebar-selected-background-color: var(--primary-background-color)
+  sidebar-selected-icon-color: var(--light-primary-color)
+  sidebar-selected-text-color: var(--sidebar-selected-icon-color)
+  # Icons colors
+  state-icon-color: var(--disabled-color)
+  state-icon-active-color: var(--primary-color)
+  state-icon-unavailable-color: var(--primary-background-color)
+  # Settins and colors of Mini Media Player
+  mini-media-player-icon-color: var(--primary-color)
+  mini-media-player-accent-color: var(--primary-color)
+  mini-media-player-progress-height: 8px
+  # Papers slider colors
+  paper-slider-knob-color: var(--primary-color)
+  paper-slider-knob-start-color: var(--paper-slider-knob-color)
+  paper-slider-pin-color: var(--paper-slider-knob-color)
+  paper-slider-active-color: var(--paper-slider-knob-color)
+  paper-slider-container-color: var(--disabled-color)
+  # Labels colors
+  label-badge-background-color: var(--divider-color)
+  label-badge-text-color: var(--primary-text-color)
+  label-badge-red: var(--primary-color)
+  label-badge-blue: var(--light-primary-color)
+  # Cards colors
+  ha-card-background: "#191919"
+  paper-card-background-color: var(--ha-card-background)
+  paper-listbox-background-color: var(--primary-background-color)
+  # Toggle button colors
+  paper-toggle-button-checked-button-color: var(--primary-color)
+  paper-toggle-button-checked-bar-color: var(--light-primary-color)
+  paper-toggle-button-unchecked-button-color: var(--disabled-color)
+  paper-toggle-button-unchecked-bar-color: var(--primary-background-color)
+  # Switch colors
+  switch-checked-color: var(--paper-toggle-button-checked-button-color)
+  switch-unchecked-button-color: var(--paper-toggle-button-unchecked-button-color)
+  switch-unchecked-color: var(--paper-toggle-button-unchecked-bar-color)
+  switch-unchecked-track-color: var(--paper-toggle-button-unchecked-bar-color)
+  # Table colors
+  table-row-background-color: var(--divider-color)
+  table-row-alternative-background-color: var(--secondary-background-color)
+  card-background-color: var(--primary-background-color)
+  #Animated icons
+  weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
+  weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
+  weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
+  weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
+  weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
+  weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
+  weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
+  weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
+  weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
+  weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
+  weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
+  weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
+  weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
+  weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
+  weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
+  # Shadown
+  ha-card-box-shadow: 'inset 0px 0px 0px 0px var(--divider-color)'
+  # HACS
+  hacs-badge-color: var(--primary-color)
+  link-text-color: var(--disabled-color)
+  markdown-code-background-color: var(--divider-color)
+  google-blue-500: var(--primary-color)
+  accent-color: var(--disabled-color)
+  hacs-chip-color: var(--primary-color)
+
+
+
+##########################################
+
+
+
+AIS Black Pink:
+
+  # Change the value below 8px to 0px to remove the rounded corners
+  ha-card-border-radius: 8px
+  # Main colors
+  primary-color: "#f36f92"
+  light-primary-color: "#ffa8c9"
+  graph-color: var(--primary-color)
+  primary-background-color: "#0c0c0c"
+  secondary-background-color: var(--primary-background-color)
+  divider-color: "#2c2c2c"
+  disabled-color: "#393939"
+  # Text colors
+  primary-text-color: "#e5e5e5"
+  secondary-text-color: var(--disabled-color)
+  text-primary-color: "#E5E5E5"
+  disabled-text-color: var(--disabled-color)
+  # Sidebar colors
+  sidebar-icon-color: var(--primary-color)
+  sidebar-text-color: var(--primary-text-color)
+  sidebar-selected-background-color: var(--primary-background-color)
+  sidebar-selected-icon-color: var(--light-primary-color)
+  sidebar-selected-text-color: var(--sidebar-selected-icon-color)
+  # Icons colors
+  state-icon-color: var(--disabled-color)
+  state-icon-active-color: var(--primary-color)
+  state-icon-unavailable-color: var(--primary-background-color)
+  # Settins and colors of Mini Media Player
+  mini-media-player-icon-color: var(--primary-color)
+  mini-media-player-accent-color: var(--primary-color)
+  mini-media-player-progress-height: 8px
+  # Papers slider colors
+  paper-slider-knob-color: var(--primary-color)
+  paper-slider-knob-start-color: var(--paper-slider-knob-color)
+  paper-slider-pin-color: var(--paper-slider-knob-color)
+  paper-slider-active-color: var(--paper-slider-knob-color)
+  paper-slider-container-color: var(--disabled-color)
+  # Labels colors
+  label-badge-background-color: var(--divider-color)
+  label-badge-text-color: var(--primary-text-color)
+  label-badge-red: var(--primary-color)
+  label-badge-blue: var(--light-primary-color)
+  # Cards colors
+  ha-card-background: "#191919"
+  paper-card-background-color: var(--ha-card-background)
+  paper-listbox-background-color: var(--primary-background-color)
+  # Toggle button colors
+  paper-toggle-button-checked-button-color: var(--primary-color)
+  paper-toggle-button-checked-bar-color: var(--light-primary-color)
+  paper-toggle-button-unchecked-button-color: var(--disabled-color)
+  paper-toggle-button-unchecked-bar-color: var(--primary-background-color)
+  # Switch colors
+  switch-checked-color: var(--paper-toggle-button-checked-button-color)
+  switch-unchecked-button-color: var(--paper-toggle-button-unchecked-button-color)
+  switch-unchecked-color: var(--paper-toggle-button-unchecked-bar-color)
+  switch-unchecked-track-color: var(--paper-toggle-button-unchecked-bar-color)
+  # Table colors
+  table-row-background-color: var(--divider-color)
+  table-row-alternative-background-color: var(--secondary-background-color)
+  card-background-color: var(--primary-background-color)
+  #Animated icons
+  weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
+  weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
+  weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
+  weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
+  weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
+  weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
+  weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
+  weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
+  weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
+  weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
+  weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
+  weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
+  weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
+  weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
+  weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
+  # Shadown
+  ha-card-box-shadow: 'inset 0px 0px 0px 0px var(--divider-color)'
+  # HACS
+  hacs-badge-color: var(--primary-color)
+  link-text-color: var(--disabled-color)
+  markdown-code-background-color: var(--divider-color)
+  google-blue-500: var(--primary-color)
+  accent-color: var(--disabled-color)
+  hacs-chip-color: var(--primary-color)
+
+
+
+##########################################
+
+
+
+AIS Black Gray:
+
+  # Change the value below 8px to 0px to remove the rounded corners
+  ha-card-border-radius: 8px
+  # Main colors
+  primary-color: "#acacac"
+  light-primary-color: "#e2e2e2"
+  graph-color: var(--primary-color)
+  primary-background-color: "#0c0c0c"
+  secondary-background-color: var(--primary-background-color)
+  divider-color: "#2c2c2c"
+  disabled-color: "#393939"
+  # Text colors
+  primary-text-color: "#e5e5e5"
+  secondary-text-color: var(--disabled-color)
+  text-primary-color: "#E5E5E5"
+  disabled-text-color: var(--disabled-color)
+  # Sidebar colors
+  sidebar-icon-color: var(--primary-color)
+  sidebar-text-color: var(--primary-text-color)
+  sidebar-selected-background-color: var(--primary-background-color)
+  sidebar-selected-icon-color: var(--light-primary-color)
+  sidebar-selected-text-color: var(--sidebar-selected-icon-color)
+  # Icons colors
+  state-icon-color: var(--disabled-color)
+  state-icon-active-color: var(--primary-color)
+  state-icon-unavailable-color: var(--primary-background-color)
+  # Settins and colors of Mini Media Player
+  mini-media-player-icon-color: var(--primary-color)
+  mini-media-player-accent-color: var(--primary-color)
+  mini-media-player-progress-height: 8px
+  # Papers slider colors
+  paper-slider-knob-color: var(--primary-color)
+  paper-slider-knob-start-color: var(--paper-slider-knob-color)
+  paper-slider-pin-color: var(--paper-slider-knob-color)
+  paper-slider-active-color: var(--paper-slider-knob-color)
+  paper-slider-container-color: var(--disabled-color)
+  # Labels colors
+  label-badge-background-color: var(--divider-color)
+  label-badge-text-color: var(--primary-text-color)
+  label-badge-red: var(--primary-color)
+  label-badge-blue: var(--light-primary-color)
+  # Cards colors
+  ha-card-background: "#191919"
+  paper-card-background-color: var(--ha-card-background)
+  paper-listbox-background-color: var(--primary-background-color)
+  # Toggle button colors
+  paper-toggle-button-checked-button-color: var(--primary-color)
+  paper-toggle-button-checked-bar-color: var(--light-primary-color)
+  paper-toggle-button-unchecked-button-color: var(--disabled-color)
+  paper-toggle-button-unchecked-bar-color: var(--primary-background-color)
+  # Switch colors
+  switch-checked-color: var(--paper-toggle-button-checked-button-color)
+  switch-unchecked-button-color: var(--paper-toggle-button-unchecked-button-color)
+  switch-unchecked-color: var(--paper-toggle-button-unchecked-bar-color)
+  switch-unchecked-track-color: var(--paper-toggle-button-unchecked-bar-color)
+  # Table colors
+  table-row-background-color: var(--divider-color)
+  table-row-alternative-background-color: var(--secondary-background-color)
+  card-background-color: var(--primary-background-color)
+  #Animated icons
+  weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
+  weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
+  weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
+  weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
+  weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
+  weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
+  weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
+  weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
+  weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
+  weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
+  weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
+  weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
+  weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
+  weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
+  weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
+  # Shadown
+  ha-card-box-shadow: 'inset 0px 0px 0px 0px var(--divider-color)'
+  # HACS
+  hacs-badge-color: var(--primary-color)
+  link-text-color: var(--disabled-color)
+  markdown-code-background-color: var(--divider-color)
+  google-blue-500: var(--primary-color)
+  accent-color: var(--disabled-color)
+  hacs-chip-color: var(--primary-color)
+
+
+
+#                                                                                                               
+#      ####   #         ##     ####    ####  
+#     #    #  #        #  #   #       #      
+#     #       #       #    #   ####    ####  
+#     #  ###  #       ######       #       # 
+#     #    #  #       #    #  #    #  #    # 
+#      ####   ######  #    #   ####    ####                                          
+#                                                                                               
+
+AIS Black Rose Glass:
+
+  # Change the value below 8px to 0px to remove the rounded corners
+  ha-card-border-radius: 8px
+  # Main colors
+  primary-color: "#aa3151"
+  light-primary-color: "#b8536d"
+  graph-color: var(--primary-color)
+  primary-background-color: "#0c0c0c"
+  secondary-background-color: var(--primary-background-color)
+  divider-color: "#2c2c2c"
+  disabled-color: "#5b5b5b"
+  # Text colors
+  primary-text-color: "#e5e5e5"
+  secondary-text-color: var(--disabled-color)
+  text-primary-color: "#E5E5E5"
+  disabled-text-color: var(--disabled-color)
+  # Sidebar colors
+  sidebar-icon-color: var(--primary-color)
+  sidebar-text-color: var(--primary-text-color)
+  sidebar-selected-background-color: var(--primary-background-color)
+  sidebar-selected-icon-color: var(--light-primary-color)
+  sidebar-selected-text-color: var(--sidebar-selected-icon-color)
+  # Icons colors
+  state-icon-color: var(--disabled-color)
+  state-icon-active-color: var(--primary-color)
+  state-icon-unavailable-color: var(--primary-background-color)
+  # Settins and colors of Mini Media Player
+  mini-media-player-icon-color: var(--primary-color)
+  mini-media-player-accent-color: var(--primary-color)
+  mini-media-player-progress-height: 8px
+  # Papers slider colors
+  paper-slider-knob-color: var(--primary-color)
+  paper-slider-knob-start-color: var(--paper-slider-knob-color)
+  paper-slider-pin-color: var(--paper-slider-knob-color)
+  paper-slider-active-color: var(--paper-slider-knob-color)
+  paper-slider-container-color: var(--disabled-color)
+  # Labels colors
+  label-badge-background-color: var(--divider-color)
+  label-badge-text-color: var(--primary-text-color)
+  label-badge-red: var(--primary-color)
+  label-badge-blue: var(--light-primary-color)
+  # Cards colors
+  ha-card-background: "rgba(100, 100, 100, 0.15)"
+  paper-card-background-color: var(--ha-card-background)
+  paper-listbox-background-color: var(--primary-background-color)
+  # Toggle button colors
+  paper-toggle-button-checked-button-color: var(--primary-color)
+  paper-toggle-button-checked-bar-color: var(--light-primary-color)
+  paper-toggle-button-unchecked-button-color: var(--disabled-color)
+  paper-toggle-button-unchecked-bar-color: var(--primary-background-color)
+  # Switch colors
+  switch-checked-color: var(--paper-toggle-button-checked-button-color)
+  switch-unchecked-button-color: var(--paper-toggle-button-unchecked-button-color)
+  switch-unchecked-color: var(--paper-toggle-button-unchecked-bar-color)
+  switch-unchecked-track-color: var(--paper-toggle-button-unchecked-bar-color)
+  # Table colors
+  table-row-background-color: var(--divider-color)
+  table-row-alternative-background-color: var(--secondary-background-color)
+  card-background-color: var(--primary-background-color)
+  #Animated icons
+  weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
+  weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
+  weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
+  weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
+  weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
+  weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
+  weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
+  weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
+  weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
+  weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
+  weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
+  weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
+  weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
+  weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
+  weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
+  # Shadown
+  ha-card-box-shadow: 'inset 0px 0px 0px 0px var(--divider-color)'
+  # HACS
+  hacs-badge-color: var(--primary-color)
+  link-text-color: var(--disabled-color)
+  markdown-code-background-color: var(--divider-color)
+  google-blue-500: var(--primary-color)
+  accent-color: var(--disabled-color)
+  hacs-chip-color: var(--primary-color)
+
+
+
+##########################################
+
+
+
+AIS Black Purple Glass:
+
+  # Change the value below 8px to 0px to remove the rounded corners
+  ha-card-border-radius: 8px
+  # Main colors
+  primary-color: "#904eab"
+  light-primary-color: "#c983e4"
+  graph-color: var(--primary-color)
+  primary-background-color: "#0c0c0c"
+  secondary-background-color: var(--primary-background-color)
+  divider-color: "#2c2c2c"
+  disabled-color: "#5b5b5b"
+  # Text colors
+  primary-text-color: "#e5e5e5"
+  secondary-text-color: var(--disabled-color)
+  text-primary-color: "#E5E5E5"
+  disabled-text-color: var(--disabled-color)
+  # Sidebar colors
+  sidebar-icon-color: var(--primary-color)
+  sidebar-text-color: var(--primary-text-color)
+  sidebar-selected-background-color: var(--primary-background-color)
+  sidebar-selected-icon-color: var(--light-primary-color)
+  sidebar-selected-text-color: var(--sidebar-selected-icon-color)
+  # Icons colors
+  state-icon-color: var(--disabled-color)
+  state-icon-active-color: var(--primary-color)
+  state-icon-unavailable-color: var(--primary-background-color)
+  # Settins and colors of Mini Media Player
+  mini-media-player-icon-color: var(--primary-color)
+  mini-media-player-accent-color: var(--primary-color)
+  mini-media-player-progress-height: 8px
+  # Papers slider colors
+  paper-slider-knob-color: var(--primary-color)
+  paper-slider-knob-start-color: var(--paper-slider-knob-color)
+  paper-slider-pin-color: var(--paper-slider-knob-color)
+  paper-slider-active-color: var(--paper-slider-knob-color)
+  paper-slider-container-color: var(--disabled-color)
+  # Labels colors
+  label-badge-background-color: var(--divider-color)
+  label-badge-text-color: var(--primary-text-color)
+  label-badge-red: var(--primary-color)
+  label-badge-blue: var(--light-primary-color)
+  # Cards colors
+  ha-card-background: "rgba(100, 100, 100, 0.15)"
+  paper-card-background-color: var(--ha-card-background)
+  paper-listbox-background-color: var(--primary-background-color)
+  # Toggle button colors
+  paper-toggle-button-checked-button-color: var(--primary-color)
+  paper-toggle-button-checked-bar-color: var(--light-primary-color)
+  paper-toggle-button-unchecked-button-color: var(--disabled-color)
+  paper-toggle-button-unchecked-bar-color: var(--primary-background-color)
+  # Switch colors
+  switch-checked-color: var(--paper-toggle-button-checked-button-color)
+  switch-unchecked-button-color: var(--paper-toggle-button-unchecked-button-color)
+  switch-unchecked-color: var(--paper-toggle-button-unchecked-bar-color)
+  switch-unchecked-track-color: var(--paper-toggle-button-unchecked-bar-color)
+  # Table colors
+  table-row-background-color: var(--divider-color)
+  table-row-alternative-background-color: var(--secondary-background-color)
+  card-background-color: var(--primary-background-color)
+  #Animated icons
+  weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
+  weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
+  weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
+  weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
+  weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
+  weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
+  weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
+  weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
+  weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
+  weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
+  weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
+  weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
+  weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
+  weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
+  weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
+  # Shadown
+  ha-card-box-shadow: 'inset 0px 0px 0px 0px var(--divider-color)'
+  # HACS
+  hacs-badge-color: var(--primary-color)
+  link-text-color: var(--disabled-color)
+  markdown-code-background-color: var(--divider-color)
+  google-blue-500: var(--primary-color)
+  accent-color: var(--disabled-color)
+  hacs-chip-color: var(--primary-color)
+
+
+
+##########################################
+
+
+
+AIS Black Blue Glass:
+
+  # Change the value below 8px to 0px to remove the rounded corners
+  ha-card-border-radius: 8px
+  # Main colors
+  primary-color: "#009bb5"
+  light-primary-color: "#5ed1eb"
+  graph-color: var(--primary-color)
+  primary-background-color: "#0c0c0c"
+  secondary-background-color: var(--primary-background-color)
+  divider-color: "#2c2c2c"
+  disabled-color: "#5b5b5b"
+  # Text colors
+  primary-text-color: "#e5e5e5"
+  secondary-text-color: var(--disabled-color)
+  text-primary-color: "#E5E5E5"
+  disabled-text-color: var(--disabled-color)
+  # Sidebar colors
+  sidebar-icon-color: var(--primary-color)
+  sidebar-text-color: var(--primary-text-color)
+  sidebar-selected-background-color: var(--primary-background-color)
+  sidebar-selected-icon-color: var(--light-primary-color)
+  sidebar-selected-text-color: var(--sidebar-selected-icon-color)
+  # Icons colors
+  state-icon-color: var(--disabled-color)
+  state-icon-active-color: var(--primary-color)
+  state-icon-unavailable-color: var(--primary-background-color)
+  # Settins and colors of Mini Media Player
+  mini-media-player-icon-color: var(--primary-color)
+  mini-media-player-accent-color: var(--primary-color)
+  mini-media-player-progress-height: 8px
+  # Papers slider colors
+  paper-slider-knob-color: var(--primary-color)
+  paper-slider-knob-start-color: var(--paper-slider-knob-color)
+  paper-slider-pin-color: var(--paper-slider-knob-color)
+  paper-slider-active-color: var(--paper-slider-knob-color)
+  paper-slider-container-color: var(--disabled-color)
+  # Labels colors
+  label-badge-background-color: var(--divider-color)
+  label-badge-text-color: var(--primary-text-color)
+  label-badge-red: var(--primary-color)
+  label-badge-blue: var(--light-primary-color)
+  # Cards colors
+  ha-card-background: "rgba(100, 100, 100, 0.15)"
+  paper-card-background-color: var(--ha-card-background)
+  paper-listbox-background-color: var(--primary-background-color)
+  # Toggle button colors
+  paper-toggle-button-checked-button-color: var(--primary-color)
+  paper-toggle-button-checked-bar-color: var(--light-primary-color)
+  paper-toggle-button-unchecked-button-color: var(--disabled-color)
+  paper-toggle-button-unchecked-bar-color: var(--primary-background-color)
+  # Switch colors
+  switch-checked-color: var(--paper-toggle-button-checked-button-color)
+  switch-unchecked-button-color: var(--paper-toggle-button-unchecked-button-color)
+  switch-unchecked-color: var(--paper-toggle-button-unchecked-bar-color)
+  switch-unchecked-track-color: var(--paper-toggle-button-unchecked-bar-color)
+  # Table colors
+  table-row-background-color: var(--divider-color)
+  table-row-alternative-background-color: var(--secondary-background-color)
+  card-background-color: var(--primary-background-color)
+  #Animated icons
+  weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
+  weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
+  weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
+  weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
+  weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
+  weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
+  weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
+  weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
+  weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
+  weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
+  weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
+  weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
+  weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
+  weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
+  weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
+  # Shadown
+  ha-card-box-shadow: 'inset 0px 0px 0px 0px var(--divider-color)'
+  # HACS
+  hacs-badge-color: var(--primary-color)
+  link-text-color: var(--disabled-color)
+  markdown-code-background-color: var(--divider-color)
+  google-blue-500: var(--primary-color)
+  accent-color: var(--disabled-color)
+  hacs-chip-color: var(--primary-color)
+
+
+
+##########################################
+
+
+
+AIS Black Aqua Glass:
+
+  # Change the value below 8px to 0px to remove the rounded corners
+  ha-card-border-radius: 8px
+  # Main colors
+  primary-color: "#11ab93"
+  light-primary-color: "#62e3c8"
+  graph-color: var(--primary-color)
+  primary-background-color: "#0c0c0c"
+  secondary-background-color: var(--primary-background-color)
+  divider-color: "#2c2c2c"
+  disabled-color: "#5b5b5b"
+  # Text colors
+  primary-text-color: "#e5e5e5"
+  secondary-text-color: var(--disabled-color)
+  text-primary-color: "#E5E5E5"
+  disabled-text-color: var(--disabled-color)
+  # Sidebar colors
+  sidebar-icon-color: var(--primary-color)
+  sidebar-text-color: var(--primary-text-color)
+  sidebar-selected-background-color: var(--primary-background-color)
+  sidebar-selected-icon-color: var(--light-primary-color)
+  sidebar-selected-text-color: var(--sidebar-selected-icon-color)
+  # Icons colors
+  state-icon-color: var(--disabled-color)
+  state-icon-active-color: var(--primary-color)
+  state-icon-unavailable-color: var(--primary-background-color)
+  # Settins and colors of Mini Media Player
+  mini-media-player-icon-color: var(--primary-color)
+  mini-media-player-accent-color: var(--primary-color)
+  mini-media-player-progress-height: 8px
+  # Papers slider colors
+  paper-slider-knob-color: var(--primary-color)
+  paper-slider-knob-start-color: var(--paper-slider-knob-color)
+  paper-slider-pin-color: var(--paper-slider-knob-color)
+  paper-slider-active-color: var(--paper-slider-knob-color)
+  paper-slider-container-color: var(--disabled-color)
+  # Labels colors
+  label-badge-background-color: var(--divider-color)
+  label-badge-text-color: var(--primary-text-color)
+  label-badge-red: var(--primary-color)
+  label-badge-blue: var(--light-primary-color)
+  # Cards colors
+  ha-card-background: "rgba(100, 100, 100, 0.15)"
+  paper-card-background-color: var(--ha-card-background)
+  paper-listbox-background-color: var(--primary-background-color)
+  # Toggle button colors
+  paper-toggle-button-checked-button-color: var(--primary-color)
+  paper-toggle-button-checked-bar-color: var(--light-primary-color)
+  paper-toggle-button-unchecked-button-color: var(--disabled-color)
+  paper-toggle-button-unchecked-bar-color: var(--primary-background-color)
+  # Switch colors
+  switch-checked-color: var(--paper-toggle-button-checked-button-color)
+  switch-unchecked-button-color: var(--paper-toggle-button-unchecked-button-color)
+  switch-unchecked-color: var(--paper-toggle-button-unchecked-bar-color)
+  switch-unchecked-track-color: var(--paper-toggle-button-unchecked-bar-color)
+  # Table colors
+  table-row-background-color: var(--divider-color)
+  table-row-alternative-background-color: var(--secondary-background-color)
+  card-background-color: var(--primary-background-color)
+  #Animated icons
+  weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
+  weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
+  weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
+  weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
+  weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
+  weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
+  weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
+  weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
+  weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
+  weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
+  weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
+  weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
+  weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
+  weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
+  weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
+  # Shadown
+  ha-card-box-shadow: 'inset 0px 0px 0px 0px var(--divider-color)'
+  # HACS
+  hacs-badge-color: var(--primary-color)
+  link-text-color: var(--disabled-color)
+  markdown-code-background-color: var(--divider-color)
+  google-blue-500: var(--primary-color)
+  accent-color: var(--disabled-color)
+  hacs-chip-color: var(--primary-color)
+
+
+
+##########################################
+
+
+
+AIS Black Green Glass:
+
+  # Change the value below 8px to 0px to remove the rounded corners
+  ha-card-border-radius: 8px
+  # Main colors
+  primary-color: "#6ca049"
+  light-primary-color: "#a1d77b"
+  graph-color: var(--primary-color)
+  primary-background-color: "#0c0c0c"
+  secondary-background-color: var(--primary-background-color)
+  divider-color: "#2c2c2c"
+  disabled-color: "#5b5b5b"
+  # Text colors
+  primary-text-color: "#e5e5e5"
+  secondary-text-color: var(--disabled-color)
+  text-primary-color: "#E5E5E5"
+  disabled-text-color: var(--disabled-color)
+  # Sidebar colors
+  sidebar-icon-color: var(--primary-color)
+  sidebar-text-color: var(--primary-text-color)
+  sidebar-selected-background-color: var(--primary-background-color)
+  sidebar-selected-icon-color: var(--light-primary-color)
+  sidebar-selected-text-color: var(--sidebar-selected-icon-color)
+  # Icons colors
+  state-icon-color: var(--disabled-color)
+  state-icon-active-color: var(--primary-color)
+  state-icon-unavailable-color: var(--primary-background-color)
+  # Settins and colors of Mini Media Player
+  mini-media-player-icon-color: var(--primary-color)
+  mini-media-player-accent-color: var(--primary-color)
+  mini-media-player-progress-height: 8px
+  # Papers slider colors
+  paper-slider-knob-color: var(--primary-color)
+  paper-slider-knob-start-color: var(--paper-slider-knob-color)
+  paper-slider-pin-color: var(--paper-slider-knob-color)
+  paper-slider-active-color: var(--paper-slider-knob-color)
+  paper-slider-container-color: var(--disabled-color)
+  # Labels colors
+  label-badge-background-color: var(--divider-color)
+  label-badge-text-color: var(--primary-text-color)
+  label-badge-red: var(--primary-color)
+  label-badge-blue: var(--light-primary-color)
+  # Cards colors
+  ha-card-background: "rgba(100, 100, 100, 0.15)"
+  paper-card-background-color: var(--ha-card-background)
+  paper-listbox-background-color: var(--primary-background-color)
+  # Toggle button colors
+  paper-toggle-button-checked-button-color: var(--primary-color)
+  paper-toggle-button-checked-bar-color: var(--light-primary-color)
+  paper-toggle-button-unchecked-button-color: var(--disabled-color)
+  paper-toggle-button-unchecked-bar-color: var(--primary-background-color)
+  # Switch colors
+  switch-checked-color: var(--paper-toggle-button-checked-button-color)
+  switch-unchecked-button-color: var(--paper-toggle-button-unchecked-button-color)
+  switch-unchecked-color: var(--paper-toggle-button-unchecked-bar-color)
+  switch-unchecked-track-color: var(--paper-toggle-button-unchecked-bar-color)
+  # Table colors
+  table-row-background-color: var(--divider-color)
+  table-row-alternative-background-color: var(--secondary-background-color)
+  card-background-color: var(--primary-background-color)
+  #Animated icons
+  weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
+  weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
+  weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
+  weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
+  weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
+  weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
+  weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
+  weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
+  weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
+  weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
+  weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
+  weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
+  weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
+  weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
+  weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
+  # Shadown
+  ha-card-box-shadow: 'inset 0px 0px 0px 0px var(--divider-color)'
+  # HACS
+  hacs-badge-color: var(--primary-color)
+  link-text-color: var(--disabled-color)
+  markdown-code-background-color: var(--divider-color)
+  google-blue-500: var(--primary-color)
+  accent-color: var(--disabled-color)
+  hacs-chip-color: var(--primary-color)
+
+
+
+##########################################
+
+
+
+AIS Black Yellow Glass:
+
+  # Change the value below 8px to 0px to remove the rounded corners
+  ha-card-border-radius: 8px
+  # Main colors
+  primary-color: "#d6a245"
+  light-primary-color: "#ffd979"
+  graph-color: var(--primary-color)
+  primary-background-color: "#0c0c0c"
+  secondary-background-color: var(--primary-background-color)
+  divider-color: "#2c2c2c"
+  disabled-color: "#5b5b5b"
+  # Text colors
+  primary-text-color: "#e5e5e5"
+  secondary-text-color: var(--disabled-color)
+  text-primary-color: "#E5E5E5"
+  disabled-text-color: var(--disabled-color)
+  # Sidebar colors
+  sidebar-icon-color: var(--primary-color)
+  sidebar-text-color: var(--primary-text-color)
+  sidebar-selected-background-color: var(--primary-background-color)
+  sidebar-selected-icon-color: var(--light-primary-color)
+  sidebar-selected-text-color: var(--sidebar-selected-icon-color)
+  # Icons colors
+  state-icon-color: var(--disabled-color)
+  state-icon-active-color: var(--primary-color)
+  state-icon-unavailable-color: var(--primary-background-color)
+  # Settins and colors of Mini Media Player
+  mini-media-player-icon-color: var(--primary-color)
+  mini-media-player-accent-color: var(--primary-color)
+  mini-media-player-progress-height: 8px
+  # Papers slider colors
+  paper-slider-knob-color: var(--primary-color)
+  paper-slider-knob-start-color: var(--paper-slider-knob-color)
+  paper-slider-pin-color: var(--paper-slider-knob-color)
+  paper-slider-active-color: var(--paper-slider-knob-color)
+  paper-slider-container-color: var(--disabled-color)
+  # Labels colors
+  label-badge-background-color: var(--divider-color)
+  label-badge-text-color: var(--primary-text-color)
+  label-badge-red: var(--primary-color)
+  label-badge-blue: var(--light-primary-color)
+  # Cards colors
+  ha-card-background: "rgba(100, 100, 100, 0.15)"
+  paper-card-background-color: var(--ha-card-background)
+  paper-listbox-background-color: var(--primary-background-color)
+  # Toggle button colors
+  paper-toggle-button-checked-button-color: var(--primary-color)
+  paper-toggle-button-checked-bar-color: var(--light-primary-color)
+  paper-toggle-button-unchecked-button-color: var(--disabled-color)
+  paper-toggle-button-unchecked-bar-color: var(--primary-background-color)
+  # Switch colors
+  switch-checked-color: var(--paper-toggle-button-checked-button-color)
+  switch-unchecked-button-color: var(--paper-toggle-button-unchecked-button-color)
+  switch-unchecked-color: var(--paper-toggle-button-unchecked-bar-color)
+  switch-unchecked-track-color: var(--paper-toggle-button-unchecked-bar-color)
+  # Table colors
+  table-row-background-color: var(--divider-color)
+  table-row-alternative-background-color: var(--secondary-background-color)
+  card-background-color: var(--primary-background-color)
+  #Animated icons
+  weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
+  weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
+  weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
+  weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
+  weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
+  weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
+  weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
+  weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
+  weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
+  weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
+  weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
+  weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
+  weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
+  weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
+  weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
+  # Shadown
+  ha-card-box-shadow: 'inset 0px 0px 0px 0px var(--divider-color)'
+  # HACS
+  hacs-badge-color: var(--primary-color)
+  link-text-color: var(--disabled-color)
+  markdown-code-background-color: var(--divider-color)
+  google-blue-500: var(--primary-color)
+  accent-color: var(--disabled-color)
+  hacs-chip-color: var(--primary-color)
+
+
+
+##########################################
+
+
+
+AIS Black Orange Glass:
+
+  # Change the value below 8px to 0px to remove the rounded corners
+  ha-card-border-radius: 8px
+  # Main colors
+  primary-color: "#d25f36"
+  light-primary-color: "#ff9568"
+  graph-color: var(--primary-color)
+  primary-background-color: "#0c0c0c"
+  secondary-background-color: var(--primary-background-color)
+  divider-color: "#2c2c2c"
+  disabled-color: "#5b5b5b"
+  # Text colors
+  primary-text-color: "#e5e5e5"
+  secondary-text-color: var(--disabled-color)
+  text-primary-color: "#E5E5E5"
+  disabled-text-color: var(--disabled-color)
+  # Sidebar colors
+  sidebar-icon-color: var(--primary-color)
+  sidebar-text-color: var(--primary-text-color)
+  sidebar-selected-background-color: var(--primary-background-color)
+  sidebar-selected-icon-color: var(--light-primary-color)
+  sidebar-selected-text-color: var(--sidebar-selected-icon-color)
+  # Icons colors
+  state-icon-color: var(--disabled-color)
+  state-icon-active-color: var(--primary-color)
+  state-icon-unavailable-color: var(--primary-background-color)
+  # Settins and colors of Mini Media Player
+  mini-media-player-icon-color: var(--primary-color)
+  mini-media-player-accent-color: var(--primary-color)
+  mini-media-player-progress-height: 8px
+  # Papers slider colors
+  paper-slider-knob-color: var(--primary-color)
+  paper-slider-knob-start-color: var(--paper-slider-knob-color)
+  paper-slider-pin-color: var(--paper-slider-knob-color)
+  paper-slider-active-color: var(--paper-slider-knob-color)
+  paper-slider-container-color: var(--disabled-color)
+  # Labels colors
+  label-badge-background-color: var(--divider-color)
+  label-badge-text-color: var(--primary-text-color)
+  label-badge-red: var(--primary-color)
+  label-badge-blue: var(--light-primary-color)
+  # Cards colors
+  ha-card-background: "rgba(100, 100, 100, 0.15)"
+  paper-card-background-color: var(--ha-card-background)
+  paper-listbox-background-color: var(--primary-background-color)
+  # Toggle button colors
+  paper-toggle-button-checked-button-color: var(--primary-color)
+  paper-toggle-button-checked-bar-color: var(--light-primary-color)
+  paper-toggle-button-unchecked-button-color: var(--disabled-color)
+  paper-toggle-button-unchecked-bar-color: var(--primary-background-color)
+  # Switch colors
+  switch-checked-color: var(--paper-toggle-button-checked-button-color)
+  switch-unchecked-button-color: var(--paper-toggle-button-unchecked-button-color)
+  switch-unchecked-color: var(--paper-toggle-button-unchecked-bar-color)
+  switch-unchecked-track-color: var(--paper-toggle-button-unchecked-bar-color)
+  # Table colors
+  table-row-background-color: var(--divider-color)
+  table-row-alternative-background-color: var(--secondary-background-color)
+  card-background-color: var(--primary-background-color)
+  #Animated icons
+  weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
+  weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
+  weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
+  weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
+  weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
+  weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
+  weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
+  weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
+  weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
+  weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
+  weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
+  weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
+  weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
+  weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
+  weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
+  # Shadown
+  ha-card-box-shadow: 'inset 0px 0px 0px 0px var(--divider-color)'
+  # HACS
+  hacs-badge-color: var(--primary-color)
+  link-text-color: var(--disabled-color)
+  markdown-code-background-color: var(--divider-color)
+  google-blue-500: var(--primary-color)
+  accent-color: var(--disabled-color)
+  hacs-chip-color: var(--primary-color)
+
+
+
+##########################################
+
+
+
+AIS Black Coral Glass:
+
+  # Change the value below 8px to 0px to remove the rounded corners
+  ha-card-border-radius: 8px
+  # Main colors
+  primary-color: "#fa6e5e"
+  light-primary-color: "#ffa792"
+  graph-color: var(--primary-color)
+  primary-background-color: "#0c0c0c"
+  secondary-background-color: var(--primary-background-color)
+  divider-color: "#2c2c2c"
+  disabled-color: "#5b5b5b"
+  # Text colors
+  primary-text-color: "#e5e5e5"
+  secondary-text-color: var(--disabled-color)
+  text-primary-color: "#E5E5E5"
+  disabled-text-color: var(--disabled-color)
+  # Sidebar colors
+  sidebar-icon-color: var(--primary-color)
+  sidebar-text-color: var(--primary-text-color)
+  sidebar-selected-background-color: var(--primary-background-color)
+  sidebar-selected-icon-color: var(--light-primary-color)
+  sidebar-selected-text-color: var(--sidebar-selected-icon-color)
+  # Icons colors
+  state-icon-color: var(--disabled-color)
+  state-icon-active-color: var(--primary-color)
+  state-icon-unavailable-color: var(--primary-background-color)
+  # Settins and colors of Mini Media Player
+  mini-media-player-icon-color: var(--primary-color)
+  mini-media-player-accent-color: var(--primary-color)
+  mini-media-player-progress-height: 8px
+  # Papers slider colors
+  paper-slider-knob-color: var(--primary-color)
+  paper-slider-knob-start-color: var(--paper-slider-knob-color)
+  paper-slider-pin-color: var(--paper-slider-knob-color)
+  paper-slider-active-color: var(--paper-slider-knob-color)
+  paper-slider-container-color: var(--disabled-color)
+  # Labels colors
+  label-badge-background-color: var(--divider-color)
+  label-badge-text-color: var(--primary-text-color)
+  label-badge-red: var(--primary-color)
+  label-badge-blue: var(--light-primary-color)
+  # Cards colors
+  ha-card-background: "rgba(100, 100, 100, 0.15)"
+  paper-card-background-color: var(--ha-card-background)
+  paper-listbox-background-color: var(--primary-background-color)
+  # Toggle button colors
+  paper-toggle-button-checked-button-color: var(--primary-color)
+  paper-toggle-button-checked-bar-color: var(--light-primary-color)
+  paper-toggle-button-unchecked-button-color: var(--disabled-color)
+  paper-toggle-button-unchecked-bar-color: var(--primary-background-color)
+  # Switch colors
+  switch-checked-color: var(--paper-toggle-button-checked-button-color)
+  switch-unchecked-button-color: var(--paper-toggle-button-unchecked-button-color)
+  switch-unchecked-color: var(--paper-toggle-button-unchecked-bar-color)
+  switch-unchecked-track-color: var(--paper-toggle-button-unchecked-bar-color)
+  # Table colors
+  table-row-background-color: var(--divider-color)
+  table-row-alternative-background-color: var(--secondary-background-color)
+  card-background-color: var(--primary-background-color)
+  #Animated icons
+  weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
+  weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
+  weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
+  weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
+  weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
+  weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
+  weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
+  weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
+  weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
+  weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
+  weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
+  weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
+  weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
+  weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
+  weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
+  # Shadown
+  ha-card-box-shadow: 'inset 0px 0px 0px 0px var(--divider-color)'
+  # HACS
+  hacs-badge-color: var(--primary-color)
+  link-text-color: var(--disabled-color)
+  markdown-code-background-color: var(--divider-color)
+  google-blue-500: var(--primary-color)
+  accent-color: var(--disabled-color)
+  hacs-chip-color: var(--primary-color)
+
+
+
+##########################################
+
+
+
+AIS Black Pink Glass:
+
+  # Change the value below 8px to 0px to remove the rounded corners
+  ha-card-border-radius: 8px
+  # Main colors
+  primary-color: "#f36f92"
+  light-primary-color: "#ffa8c9"
+  graph-color: var(--primary-color)
+  primary-background-color: "#0c0c0c"
+  secondary-background-color: var(--primary-background-color)
+  divider-color: "#2c2c2c"
+  disabled-color: "#5b5b5b"
+  # Text colors
+  primary-text-color: "#e5e5e5"
+  secondary-text-color: var(--disabled-color)
+  text-primary-color: "#E5E5E5"
+  disabled-text-color: var(--disabled-color)
+  # Sidebar colors
+  sidebar-icon-color: var(--primary-color)
+  sidebar-text-color: var(--primary-text-color)
+  sidebar-selected-background-color: var(--primary-background-color)
+  sidebar-selected-icon-color: var(--light-primary-color)
+  sidebar-selected-text-color: var(--sidebar-selected-icon-color)
+  # Icons colors
+  state-icon-color: var(--disabled-color)
+  state-icon-active-color: var(--primary-color)
+  state-icon-unavailable-color: var(--primary-background-color)
+  # Settins and colors of Mini Media Player
+  mini-media-player-icon-color: var(--primary-color)
+  mini-media-player-accent-color: var(--primary-color)
+  mini-media-player-progress-height: 8px
+  # Papers slider colors
+  paper-slider-knob-color: var(--primary-color)
+  paper-slider-knob-start-color: var(--paper-slider-knob-color)
+  paper-slider-pin-color: var(--paper-slider-knob-color)
+  paper-slider-active-color: var(--paper-slider-knob-color)
+  paper-slider-container-color: var(--disabled-color)
+  # Labels colors
+  label-badge-background-color: var(--divider-color)
+  label-badge-text-color: var(--primary-text-color)
+  label-badge-red: var(--primary-color)
+  label-badge-blue: var(--light-primary-color)
+  # Cards colors
+  ha-card-background: "rgba(100, 100, 100, 0.15)"
+  paper-card-background-color: var(--ha-card-background)
+  paper-listbox-background-color: var(--primary-background-color)
+  # Toggle button colors
+  paper-toggle-button-checked-button-color: var(--primary-color)
+  paper-toggle-button-checked-bar-color: var(--light-primary-color)
+  paper-toggle-button-unchecked-button-color: var(--disabled-color)
+  paper-toggle-button-unchecked-bar-color: var(--primary-background-color)
+  # Switch colors
+  switch-checked-color: var(--paper-toggle-button-checked-button-color)
+  switch-unchecked-button-color: var(--paper-toggle-button-unchecked-button-color)
+  switch-unchecked-color: var(--paper-toggle-button-unchecked-bar-color)
+  switch-unchecked-track-color: var(--paper-toggle-button-unchecked-bar-color)
+  # Table colors
+  table-row-background-color: var(--divider-color)
+  table-row-alternative-background-color: var(--secondary-background-color)
+  card-background-color: var(--primary-background-color)
+  #Animated icons
+  weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
+  weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
+  weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
+  weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
+  weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
+  weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
+  weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
+  weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
+  weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
+  weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
+  weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
+  weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
+  weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
+  weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
+  weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
+  # Shadown
+  ha-card-box-shadow: 'inset 0px 0px 0px 0px var(--divider-color)'
+  # HACS
+  hacs-badge-color: var(--primary-color)
+  link-text-color: var(--disabled-color)
+  markdown-code-background-color: var(--divider-color)
+  google-blue-500: var(--primary-color)
+  accent-color: var(--disabled-color)
+  hacs-chip-color: var(--primary-color)
+
+
+
+##########################################
+
+AIS Black Gray Glass:
+
+  # Change the value below 8px to 0px to remove the rounded corners
+  ha-card-border-radius: 8px
+  # Main colors
+  primary-color: "#acacac"
+  light-primary-color: "#e2e2e2"
+  graph-color: var(--primary-color)
+  primary-background-color: "#0c0c0c"
+  secondary-background-color: var(--primary-background-color)
+  divider-color: "#2c2c2c"
+  disabled-color: "#5b5b5b"
+  # Text colors
+  primary-text-color: "#e5e5e5"
+  secondary-text-color: var(--disabled-color)
+  text-primary-color: "#E5E5E5"
+  disabled-text-color: var(--disabled-color)
+  # Sidebar colors
+  sidebar-icon-color: var(--primary-color)
+  sidebar-text-color: var(--primary-text-color)
+  sidebar-selected-background-color: var(--primary-background-color)
+  sidebar-selected-icon-color: var(--light-primary-color)
+  sidebar-selected-text-color: var(--sidebar-selected-icon-color)
+  # Icons colors
+  state-icon-color: var(--disabled-color)
+  state-icon-active-color: var(--primary-color)
+  state-icon-unavailable-color: var(--primary-background-color)
+  # Settins and colors of Mini Media Player
+  mini-media-player-icon-color: var(--primary-color)
+  mini-media-player-accent-color: var(--primary-color)
+  mini-media-player-progress-height: 8px
+  # Papers slider colors
+  paper-slider-knob-color: var(--primary-color)
+  paper-slider-knob-start-color: var(--paper-slider-knob-color)
+  paper-slider-pin-color: var(--paper-slider-knob-color)
+  paper-slider-active-color: var(--paper-slider-knob-color)
+  paper-slider-container-color: var(--disabled-color)
+  # Labels colors
+  label-badge-background-color: var(--divider-color)
+  label-badge-text-color: var(--primary-text-color)
+  label-badge-red: var(--primary-color)
+  label-badge-blue: var(--light-primary-color)
+  # Cards colors
+  ha-card-background: "rgba(100, 100, 100, 0.15)"
+  paper-card-background-color: var(--ha-card-background)
+  paper-listbox-background-color: var(--primary-background-color)
+  # Toggle button colors
+  paper-toggle-button-checked-button-color: var(--primary-color)
+  paper-toggle-button-checked-bar-color: var(--light-primary-color)
+  paper-toggle-button-unchecked-button-color: var(--disabled-color)
+  paper-toggle-button-unchecked-bar-color: var(--primary-background-color)
+  # Switch colors
+  switch-checked-color: var(--paper-toggle-button-checked-button-color)
+  switch-unchecked-button-color: var(--paper-toggle-button-unchecked-button-color)
+  switch-unchecked-color: var(--paper-toggle-button-unchecked-bar-color)
+  switch-unchecked-track-color: var(--paper-toggle-button-unchecked-bar-color)
+  # Table colors
+  table-row-background-color: var(--divider-color)
+  table-row-alternative-background-color: var(--secondary-background-color)
+  card-background-color: var(--primary-background-color)
+  #Animated icons
+  weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
+  weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
+  weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
+  weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
+  weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
+  weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
+  weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
+  weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
+  weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
+  weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
+  weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
+  weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
+  weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
+  weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
+  weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
+  # Shadown
+  ha-card-box-shadow: 'inset 0px 0px 0px 0px var(--divider-color)'
+  # HACS
+  hacs-badge-color: var(--primary-color)
+  link-text-color: var(--disabled-color)
+  markdown-code-background-color: var(--divider-color)
+  google-blue-500: var(--primary-color)
+  accent-color: var(--disabled-color)
+  hacs-chip-color: var(--primary-color)
+
+
+
+#                                                                                                         
+#    #       #   ####   #    #  #####  
+#    #       #  #    #  #    #    #     
+#    #       #  #       ######    #   
+#    #       #  #  ###  #    #    #    
+#    #       #  #    #  #    #    #    
+#    ######  #   ####   #    #    #    
+#         
+                                                          
+
+AIS Light Rose:
+
+  # Change the value below 8px to 0px to remove the rounded corners
+  ha-card-border-radius: 8px
+  # Main colors
+  primary-color: "#aa3151"
+  light-primary-color: "#b8536d"
+  graph-color: var(--primary-color)
+  primary-background-color: "#f2f2f2"
+  secondary-background-color: var(--primary-background-color)
+  divider-color: "#ababab"
+  disabled-color: "#ababab"
+  # Text colors
+  primary-text-color: "#7f7f7f"
+  secondary-text-color: var(--disabled-color)
+  text-primary-color: "#E5E5E5"
+  disabled-text-color: var(--disabled-color)
+  # Sidebar colors
+  sidebar-icon-color: var(--primary-color)
+  sidebar-text-color: var(--primary-text-color)
+  sidebar-selected-background-color: var(--primary-background-color)
+  sidebar-selected-icon-color: var(--light-primary-color)
+  sidebar-selected-text-color: var(--sidebar-selected-icon-color)
+  # Icons colors
+  state-icon-color: var(--disabled-color)
+  state-icon-active-color: var(--primary-color)
+  state-icon-unavailable-color: var(--primary-background-color)
+  # Settins and colors of Mini Media Player
+  mini-media-player-icon-color: var(--primary-color)
+  mini-media-player-accent-color: var(--primary-color)
+  mini-media-player-progress-height: 8px
+  # Papers slider colors
+  paper-slider-knob-color: var(--primary-color)
+  paper-slider-knob-start-color: var(--paper-slider-knob-color)
+  paper-slider-pin-color: var(--paper-slider-knob-color)
+  paper-slider-active-color: var(--paper-slider-knob-color)
+  paper-slider-container-color: var(--disabled-color)
+  # Labels colors
+  label-badge-background-color: var(--divider-color)
+  label-badge-text-color: var(--primary-text-color)
+  label-badge-red: var(--primary-color)
+  label-badge-blue: var(--light-primary-color)
+  # Cards colors
+  ha-card-background: "#ffffff"
+  paper-card-background-color: var(--ha-card-background)
+  paper-listbox-background-color: var(--primary-background-color)
+  # Toggle button colors
+  paper-toggle-button-checked-button-color: var(--primary-color)
+  paper-toggle-button-checked-bar-color: var(--light-primary-color)
+  paper-toggle-button-unchecked-button-color: var(--disabled-color)
+  paper-toggle-button-unchecked-bar-color: "#ababab"
+  # Switch colors
+  switch-checked-color: var(--paper-toggle-button-checked-button-color)
+  switch-unchecked-button-color: var(--paper-toggle-button-unchecked-button-color)
+  switch-unchecked-color: var(--paper-toggle-button-unchecked-bar-color)
+  switch-unchecked-track-color: var(--paper-toggle-button-unchecked-bar-color)
+  # Table colors
+  table-row-background-color: var(--divider-color)
+  table-row-alternative-background-color: var(--secondary-background-color)
+  card-background-color: var(--primary-background-color)
+  #Animated icons
+  weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
+  weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
+  weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
+  weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
+  weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
+  weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
+  weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
+  weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
+  weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
+  weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
+  weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
+  weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
+  weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
+  weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
+  weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
+  # Shadown
+  ha-card-box-shadow: 'inset 0px 0px 0px 0px var(--divider-color)'
+  # HACS
+  hacs-badge-color: var(--primary-color)
+  link-text-color: var(--disabled-color)
+  markdown-code-background-color: var(--divider-color)
+  google-blue-500: var(--primary-color)
+  accent-color: var(--disabled-color)
+  hacs-chip-color: var(--primary-color)
+
+
+
+##########################################
+
+
+
+AIS Light Purple:
+
+  # Change the value below 8px to 0px to remove the rounded corners
+  ha-card-border-radius: 8px
+  # Main colors
+  primary-color: "#904eab"
+  light-primary-color: "#c983e4"
+  graph-color: var(--primary-color)
+  primary-background-color: "#f2f2f2"
+  secondary-background-color: var(--primary-background-color)
+  divider-color: "#ababab"
+  disabled-color: "#ababab"
+  # Text colors
+  primary-text-color: "#7f7f7f"
+  secondary-text-color: var(--disabled-color)
+  text-primary-color: "#E5E5E5"
+  disabled-text-color: var(--disabled-color)
+  # Sidebar colors
+  sidebar-icon-color: var(--primary-color)
+  sidebar-text-color: var(--primary-text-color)
+  sidebar-selected-background-color: var(--primary-background-color)
+  sidebar-selected-icon-color: var(--light-primary-color)
+  sidebar-selected-text-color: var(--sidebar-selected-icon-color)
+  # Icons colors
+  state-icon-color: var(--disabled-color)
+  state-icon-active-color: var(--primary-color)
+  state-icon-unavailable-color: var(--primary-background-color)
+  # Settins and colors of Mini Media Player
+  mini-media-player-icon-color: var(--primary-color)
+  mini-media-player-accent-color: var(--primary-color)
+  mini-media-player-progress-height: 8px
+  # Papers slider colors
+  paper-slider-knob-color: var(--primary-color)
+  paper-slider-knob-start-color: var(--paper-slider-knob-color)
+  paper-slider-pin-color: var(--paper-slider-knob-color)
+  paper-slider-active-color: var(--paper-slider-knob-color)
+  paper-slider-container-color: var(--disabled-color)
+  # Labels colors
+  label-badge-background-color: var(--divider-color)
+  label-badge-text-color: var(--primary-text-color)
+  label-badge-red: var(--primary-color)
+  label-badge-blue: var(--light-primary-color)
+  # Cards colors
+  ha-card-background: "#ffffff"
+  paper-card-background-color: var(--ha-card-background)
+  paper-listbox-background-color: var(--primary-background-color)
+  # Toggle button colors
+  paper-toggle-button-checked-button-color: var(--primary-color)
+  paper-toggle-button-checked-bar-color: var(--light-primary-color)
+  paper-toggle-button-unchecked-button-color: var(--disabled-color)
+  paper-toggle-button-unchecked-bar-color: "#ababab"
+  # Switch colors
+  switch-checked-color: var(--paper-toggle-button-checked-button-color)
+  switch-unchecked-button-color: var(--paper-toggle-button-unchecked-button-color)
+  switch-unchecked-color: var(--paper-toggle-button-unchecked-bar-color)
+  switch-unchecked-track-color: var(--paper-toggle-button-unchecked-bar-color)
+  # Table colors
+  table-row-background-color: var(--divider-color)
+  table-row-alternative-background-color: var(--secondary-background-color)
+  card-background-color: var(--primary-background-color)
+  #Animated icons
+  weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
+  weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
+  weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
+  weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
+  weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
+  weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
+  weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
+  weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
+  weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
+  weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
+  weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
+  weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
+  weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
+  weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
+  weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
+  # Shadown
+  ha-card-box-shadow: 'inset 0px 0px 0px 0px var(--divider-color)'
+  # HACS
+  hacs-badge-color: var(--primary-color)
+  link-text-color: var(--disabled-color)
+  markdown-code-background-color: var(--divider-color)
+  google-blue-500: var(--primary-color)
+  accent-color: var(--disabled-color)
+  hacs-chip-color: var(--primary-color)
+
+
+
+##########################################
+
+
+
+AIS Light Blue:
+
+  # Change the value below 8px to 0px to remove the rounded corners
+  ha-card-border-radius: 8px
+  # Main colors
+  primary-color: "#009bb5"
+  light-primary-color: "#5ed1eb"
+  graph-color: var(--primary-color)
+  primary-background-color: "#f2f2f2"
+  secondary-background-color: var(--primary-background-color)
+  divider-color: "#ababab"
+  disabled-color: "#ababab"
+  # Text colors
+  primary-text-color: "#7f7f7f"
+  secondary-text-color: var(--disabled-color)
+  text-primary-color: "#E5E5E5"
+  disabled-text-color: var(--disabled-color)
+  # Sidebar colors
+  sidebar-icon-color: var(--primary-color)
+  sidebar-text-color: var(--primary-text-color)
+  sidebar-selected-background-color: var(--primary-background-color)
+  sidebar-selected-icon-color: var(--light-primary-color)
+  sidebar-selected-text-color: var(--sidebar-selected-icon-color)
+  # Icons colors
+  state-icon-color: var(--disabled-color)
+  state-icon-active-color: var(--primary-color)
+  state-icon-unavailable-color: var(--primary-background-color)
+  # Settins and colors of Mini Media Player
+  mini-media-player-icon-color: var(--primary-color)
+  mini-media-player-accent-color: var(--primary-color)
+  mini-media-player-progress-height: 8px
+  # Papers slider colors
+  paper-slider-knob-color: var(--primary-color)
+  paper-slider-knob-start-color: var(--paper-slider-knob-color)
+  paper-slider-pin-color: var(--paper-slider-knob-color)
+  paper-slider-active-color: var(--paper-slider-knob-color)
+  paper-slider-container-color: var(--disabled-color)
+  # Labels colors
+  label-badge-background-color: var(--divider-color)
+  label-badge-text-color: var(--primary-text-color)
+  label-badge-red: var(--primary-color)
+  label-badge-blue: var(--light-primary-color)
+  # Cards colors
+  ha-card-background: "#ffffff"
+  paper-card-background-color: var(--ha-card-background)
+  paper-listbox-background-color: var(--primary-background-color)
+  # Toggle button colors
+  paper-toggle-button-checked-button-color: var(--primary-color)
+  paper-toggle-button-checked-bar-color: var(--light-primary-color)
+  paper-toggle-button-unchecked-button-color: var(--disabled-color)
+  paper-toggle-button-unchecked-bar-color: "#ababab"
+  # Switch colors
+  switch-checked-color: var(--paper-toggle-button-checked-button-color)
+  switch-unchecked-button-color: var(--paper-toggle-button-unchecked-button-color)
+  switch-unchecked-color: var(--paper-toggle-button-unchecked-bar-color)
+  switch-unchecked-track-color: var(--paper-toggle-button-unchecked-bar-color)
+  # Table colors
+  table-row-background-color: var(--divider-color)
+  table-row-alternative-background-color: var(--secondary-background-color)
+  card-background-color: var(--primary-background-color)
+  #Animated icons
+  weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
+  weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
+  weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
+  weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
+  weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
+  weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
+  weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
+  weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
+  weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
+  weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
+  weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
+  weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
+  weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
+  weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
+  weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
+  # Shadown
+  ha-card-box-shadow: 'inset 0px 0px 0px 0px var(--divider-color)'
+  # HACS
+  hacs-badge-color: var(--primary-color)
+  link-text-color: var(--disabled-color)
+  markdown-code-background-color: var(--divider-color)
+  google-blue-500: var(--primary-color)
+  accent-color: var(--disabled-color)
+  hacs-chip-color: var(--primary-color)
+
+
+
+##########################################
+
+
+
+AIS Light Aqua:
+
+  # Change the value below 8px to 0px to remove the rounded corners
+  ha-card-border-radius: 8px
+  # Main colors
+  primary-color: "#11ab93"
+  light-primary-color: "#62e3c8"
+  graph-color: var(--primary-color)
+  primary-background-color: "#f2f2f2"
+  secondary-background-color: var(--primary-background-color)
+  divider-color: "#ababab"
+  disabled-color: "#ababab"
+  # Text colors
+  primary-text-color: "#7f7f7f"
+  secondary-text-color: var(--disabled-color)
+  text-primary-color: "#E5E5E5"
+  disabled-text-color: var(--disabled-color)
+  # Sidebar colors
+  sidebar-icon-color: var(--primary-color)
+  sidebar-text-color: var(--primary-text-color)
+  sidebar-selected-background-color: var(--primary-background-color)
+  sidebar-selected-icon-color: var(--light-primary-color)
+  sidebar-selected-text-color: var(--sidebar-selected-icon-color)
+  # Icons colors
+  state-icon-color: var(--disabled-color)
+  state-icon-active-color: var(--primary-color)
+  state-icon-unavailable-color: var(--primary-background-color)
+  # Settins and colors of Mini Media Player
+  mini-media-player-icon-color: var(--primary-color)
+  mini-media-player-accent-color: var(--primary-color)
+  mini-media-player-progress-height: 8px
+  # Papers slider colors
+  paper-slider-knob-color: var(--primary-color)
+  paper-slider-knob-start-color: var(--paper-slider-knob-color)
+  paper-slider-pin-color: var(--paper-slider-knob-color)
+  paper-slider-active-color: var(--paper-slider-knob-color)
+  paper-slider-container-color: var(--disabled-color)
+  # Labels colors
+  label-badge-background-color: var(--divider-color)
+  label-badge-text-color: var(--primary-text-color)
+  label-badge-red: var(--primary-color)
+  label-badge-blue: var(--light-primary-color)
+  # Cards colors
+  ha-card-background: "#ffffff"
+  paper-card-background-color: var(--ha-card-background)
+  paper-listbox-background-color: var(--primary-background-color)
+  # Toggle button colors
+  paper-toggle-button-checked-button-color: var(--primary-color)
+  paper-toggle-button-checked-bar-color: var(--light-primary-color)
+  paper-toggle-button-unchecked-button-color: var(--disabled-color)
+  paper-toggle-button-unchecked-bar-color: "#ababab"
+  # Switch colors
+  switch-checked-color: var(--paper-toggle-button-checked-button-color)
+  switch-unchecked-button-color: var(--paper-toggle-button-unchecked-button-color)
+  switch-unchecked-color: var(--paper-toggle-button-unchecked-bar-color)
+  switch-unchecked-track-color: var(--paper-toggle-button-unchecked-bar-color)
+  # Table colors
+  table-row-background-color: var(--divider-color)
+  table-row-alternative-background-color: var(--secondary-background-color)
+  card-background-color: var(--primary-background-color)
+  #Animated icons
+  weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
+  weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
+  weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
+  weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
+  weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
+  weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
+  weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
+  weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
+  weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
+  weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
+  weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
+  weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
+  weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
+  weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
+  weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
+  # Shadown
+  ha-card-box-shadow: 'inset 0px 0px 0px 0px var(--divider-color)'
+  # HACS
+  hacs-badge-color: var(--primary-color)
+  link-text-color: var(--disabled-color)
+  markdown-code-background-color: var(--divider-color)
+  google-blue-500: var(--primary-color)
+  accent-color: var(--disabled-color)
+  hacs-chip-color: var(--primary-color)
+
+
+
+##########################################
+
+
+
+AIS Light Green:
+
+  # Change the value below 8px to 0px to remove the rounded corners
+  ha-card-border-radius: 8px
+  # Main colors
+  primary-color: "#6ca049"
+  light-primary-color: "#a1d77b"
+  graph-color: var(--primary-color)
+  primary-background-color: "#f2f2f2"
+  secondary-background-color: var(--primary-background-color)
+  divider-color: "#ababab"
+  disabled-color: "#ababab"
+  # Text colors
+  primary-text-color: "#7f7f7f"
+  secondary-text-color: var(--disabled-color)
+  text-primary-color: "#E5E5E5"
+  disabled-text-color: var(--disabled-color)
+  # Sidebar colors
+  sidebar-icon-color: var(--primary-color)
+  sidebar-text-color: var(--primary-text-color)
+  sidebar-selected-background-color: var(--primary-background-color)
+  sidebar-selected-icon-color: var(--light-primary-color)
+  sidebar-selected-text-color: var(--sidebar-selected-icon-color)
+  # Icons colors
+  state-icon-color: var(--disabled-color)
+  state-icon-active-color: var(--primary-color)
+  state-icon-unavailable-color: var(--primary-background-color)
+  # Settins and colors of Mini Media Player
+  mini-media-player-icon-color: var(--primary-color)
+  mini-media-player-accent-color: var(--primary-color)
+  mini-media-player-progress-height: 8px
+  # Papers slider colors
+  paper-slider-knob-color: var(--primary-color)
+  paper-slider-knob-start-color: var(--paper-slider-knob-color)
+  paper-slider-pin-color: var(--paper-slider-knob-color)
+  paper-slider-active-color: var(--paper-slider-knob-color)
+  paper-slider-container-color: var(--disabled-color)
+  # Labels colors
+  label-badge-background-color: var(--divider-color)
+  label-badge-text-color: var(--primary-text-color)
+  label-badge-red: var(--primary-color)
+  label-badge-blue: var(--light-primary-color)
+  # Cards colors
+  ha-card-background: "#ffffff"
+  paper-card-background-color: var(--ha-card-background)
+  paper-listbox-background-color: var(--primary-background-color)
+  # Toggle button colors
+  paper-toggle-button-checked-button-color: var(--primary-color)
+  paper-toggle-button-checked-bar-color: var(--light-primary-color)
+  paper-toggle-button-unchecked-button-color: var(--disabled-color)
+  paper-toggle-button-unchecked-bar-color: "#ababab"
+  # Switch colors
+  switch-checked-color: var(--paper-toggle-button-checked-button-color)
+  switch-unchecked-button-color: var(--paper-toggle-button-unchecked-button-color)
+  switch-unchecked-color: var(--paper-toggle-button-unchecked-bar-color)
+  switch-unchecked-track-color: var(--paper-toggle-button-unchecked-bar-color)
+  # Table colors
+  table-row-background-color: var(--divider-color)
+  table-row-alternative-background-color: var(--secondary-background-color)
+  card-background-color: var(--primary-background-color)
+  #Animated icons
+  weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
+  weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
+  weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
+  weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
+  weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
+  weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
+  weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
+  weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
+  weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
+  weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
+  weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
+  weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
+  weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
+  weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
+  weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
+  # Shadown
+  ha-card-box-shadow: 'inset 0px 0px 0px 0px var(--divider-color)'
+  # HACS
+  hacs-badge-color: var(--primary-color)
+  link-text-color: var(--disabled-color)
+  markdown-code-background-color: var(--divider-color)
+  google-blue-500: var(--primary-color)
+  accent-color: var(--disabled-color)
+  hacs-chip-color: var(--primary-color)
+
+
+
+##########################################
+
+
+
+AIS Light Yellow:
+
+  # Change the value below 8px to 0px to remove the rounded corners
+  ha-card-border-radius: 8px
+  # Main colors
+  primary-color: "#d6a245"
+  light-primary-color: "#ffd979"
+  graph-color: var(--primary-color)
+  primary-background-color: "#f2f2f2"
+  secondary-background-color: var(--primary-background-color)
+  divider-color: "#ababab"
+  disabled-color: "#ababab"
+  # Text colors
+  primary-text-color: "#7f7f7f"
+  secondary-text-color: var(--disabled-color)
+  text-primary-color: "#E5E5E5"
+  disabled-text-color: var(--disabled-color)
+  # Sidebar colors
+  sidebar-icon-color: var(--primary-color)
+  sidebar-text-color: var(--primary-text-color)
+  sidebar-selected-background-color: var(--primary-background-color)
+  sidebar-selected-icon-color: var(--light-primary-color)
+  sidebar-selected-text-color: var(--sidebar-selected-icon-color)
+  # Icons colors
+  state-icon-color: var(--disabled-color)
+  state-icon-active-color: var(--primary-color)
+  state-icon-unavailable-color: var(--primary-background-color)
+  # Settins and colors of Mini Media Player
+  mini-media-player-icon-color: var(--primary-color)
+  mini-media-player-accent-color: var(--primary-color)
+  mini-media-player-progress-height: 8px
+  # Papers slider colors
+  paper-slider-knob-color: var(--primary-color)
+  paper-slider-knob-start-color: var(--paper-slider-knob-color)
+  paper-slider-pin-color: var(--paper-slider-knob-color)
+  paper-slider-active-color: var(--paper-slider-knob-color)
+  paper-slider-container-color: var(--disabled-color)
+  # Labels colors
+  label-badge-background-color: var(--divider-color)
+  label-badge-text-color: var(--primary-text-color)
+  label-badge-red: var(--primary-color)
+  label-badge-blue: var(--light-primary-color)
+  # Cards colors
+  ha-card-background: "#ffffff"
+  paper-card-background-color: var(--ha-card-background)
+  paper-listbox-background-color: var(--primary-background-color)
+  # Toggle button colors
+  paper-toggle-button-checked-button-color: var(--primary-color)
+  paper-toggle-button-checked-bar-color: var(--light-primary-color)
+  paper-toggle-button-unchecked-button-color: var(--disabled-color)
+  paper-toggle-button-unchecked-bar-color: "#ababab"
+  # Switch colors
+  switch-checked-color: var(--paper-toggle-button-checked-button-color)
+  switch-unchecked-button-color: var(--paper-toggle-button-unchecked-button-color)
+  switch-unchecked-color: var(--paper-toggle-button-unchecked-bar-color)
+  switch-unchecked-track-color: var(--paper-toggle-button-unchecked-bar-color)
+  # Table colors
+  table-row-background-color: var(--divider-color)
+  table-row-alternative-background-color: var(--secondary-background-color)
+  card-background-color: var(--primary-background-color)
+  #Animated icons
+  weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
+  weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
+  weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
+  weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
+  weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
+  weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
+  weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
+  weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
+  weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
+  weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
+  weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
+  weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
+  weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
+  weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
+  weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
+  # Shadown
+  ha-card-box-shadow: 'inset 0px 0px 0px 0px var(--divider-color)'
+  # HACS
+  hacs-badge-color: var(--primary-color)
+  link-text-color: var(--disabled-color)
+  markdown-code-background-color: var(--divider-color)
+  google-blue-500: var(--primary-color)
+  accent-color: var(--disabled-color)
+  hacs-chip-color: var(--primary-color)
+
+
+
+##########################################
+
+
+
+AIS Light Orange:
+
+  # Change the value below 8px to 0px to remove the rounded corners
+  ha-card-border-radius: 8px
+  # Main colors
+  primary-color: "#d25f36"
+  light-primary-color: "#ff9568"
+  graph-color: var(--primary-color)
+  primary-background-color: "#f2f2f2"
+  secondary-background-color: var(--primary-background-color)
+  divider-color: "#ababab"
+  disabled-color: "#ababab"
+  # Text colors
+  primary-text-color: "#7f7f7f"
+  secondary-text-color: var(--disabled-color)
+  text-primary-color: "#E5E5E5"
+  disabled-text-color: var(--disabled-color)
+  # Sidebar colors
+  sidebar-icon-color: var(--primary-color)
+  sidebar-text-color: var(--primary-text-color)
+  sidebar-selected-background-color: var(--primary-background-color)
+  sidebar-selected-icon-color: var(--light-primary-color)
+  sidebar-selected-text-color: var(--sidebar-selected-icon-color)
+  # Icons colors
+  state-icon-color: var(--disabled-color)
+  state-icon-active-color: var(--primary-color)
+  state-icon-unavailable-color: var(--primary-background-color)
+  # Settins and colors of Mini Media Player
+  mini-media-player-icon-color: var(--primary-color)
+  mini-media-player-accent-color: var(--primary-color)
+  mini-media-player-progress-height: 8px
+  # Papers slider colors
+  paper-slider-knob-color: var(--primary-color)
+  paper-slider-knob-start-color: var(--paper-slider-knob-color)
+  paper-slider-pin-color: var(--paper-slider-knob-color)
+  paper-slider-active-color: var(--paper-slider-knob-color)
+  paper-slider-container-color: var(--disabled-color)
+  # Labels colors
+  label-badge-background-color: var(--divider-color)
+  label-badge-text-color: var(--primary-text-color)
+  label-badge-red: var(--primary-color)
+  label-badge-blue: var(--light-primary-color)
+  # Cards colors
+  ha-card-background: "#ffffff"
+  paper-card-background-color: var(--ha-card-background)
+  paper-listbox-background-color: var(--primary-background-color)
+  # Toggle button colors
+  paper-toggle-button-checked-button-color: var(--primary-color)
+  paper-toggle-button-checked-bar-color: var(--light-primary-color)
+  paper-toggle-button-unchecked-button-color: var(--disabled-color)
+  paper-toggle-button-unchecked-bar-color: "#ababab"
+  # Switch colors
+  switch-checked-color: var(--paper-toggle-button-checked-button-color)
+  switch-unchecked-button-color: var(--paper-toggle-button-unchecked-button-color)
+  switch-unchecked-color: var(--paper-toggle-button-unchecked-bar-color)
+  switch-unchecked-track-color: var(--paper-toggle-button-unchecked-bar-color)
+  # Table colors
+  table-row-background-color: var(--divider-color)
+  table-row-alternative-background-color: var(--secondary-background-color)
+  card-background-color: var(--primary-background-color)
+  #Animated icons
+  weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
+  weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
+  weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
+  weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
+  weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
+  weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
+  weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
+  weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
+  weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
+  weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
+  weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
+  weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
+  weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
+  weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
+  weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
+  # Shadown
+  ha-card-box-shadow: 'inset 0px 0px 0px 0px var(--divider-color)'
+  # HACS
+  hacs-badge-color: var(--primary-color)
+  link-text-color: var(--disabled-color)
+  markdown-code-background-color: var(--divider-color)
+  google-blue-500: var(--primary-color)
+  accent-color: var(--disabled-color)
+  hacs-chip-color: var(--primary-color)
+
+
+
+##########################################
+
+
+
+AIS Light Coral:
+
+  # Change the value below 8px to 0px to remove the rounded corners
+  ha-card-border-radius: 8px
+  # Main colors
+  primary-color: "#fa6e5e"
+  light-primary-color: "#ffa792"
+  graph-color: var(--primary-color)
+  primary-background-color: "#f2f2f2"
+  secondary-background-color: var(--primary-background-color)
+  divider-color: "#ababab"
+  disabled-color: "#ababab"
+  # Text colors
+  primary-text-color: "#7f7f7f"
+  secondary-text-color: var(--disabled-color)
+  text-primary-color: "#E5E5E5"
+  disabled-text-color: var(--disabled-color)
+  # Sidebar colors
+  sidebar-icon-color: var(--primary-color)
+  sidebar-text-color: var(--primary-text-color)
+  sidebar-selected-background-color: var(--primary-background-color)
+  sidebar-selected-icon-color: var(--light-primary-color)
+  sidebar-selected-text-color: var(--sidebar-selected-icon-color)
+  # Icons colors
+  state-icon-color: var(--disabled-color)
+  state-icon-active-color: var(--primary-color)
+  state-icon-unavailable-color: var(--primary-background-color)
+  # Settins and colors of Mini Media Player
+  mini-media-player-icon-color: var(--primary-color)
+  mini-media-player-accent-color: var(--primary-color)
+  mini-media-player-progress-height: 8px
+  # Papers slider colors
+  paper-slider-knob-color: var(--primary-color)
+  paper-slider-knob-start-color: var(--paper-slider-knob-color)
+  paper-slider-pin-color: var(--paper-slider-knob-color)
+  paper-slider-active-color: var(--paper-slider-knob-color)
+  paper-slider-container-color: var(--disabled-color)
+  # Labels colors
+  label-badge-background-color: var(--divider-color)
+  label-badge-text-color: var(--primary-text-color)
+  label-badge-red: var(--primary-color)
+  label-badge-blue: var(--light-primary-color)
+  # Cards colors
+  ha-card-background: "#ffffff"
+  paper-card-background-color: var(--ha-card-background)
+  paper-listbox-background-color: var(--primary-background-color)
+  # Toggle button colors
+  paper-toggle-button-checked-button-color: var(--primary-color)
+  paper-toggle-button-checked-bar-color: var(--light-primary-color)
+  paper-toggle-button-unchecked-button-color: var(--disabled-color)
+  paper-toggle-button-unchecked-bar-color: "#ababab"
+  # Switch colors
+  switch-checked-color: var(--paper-toggle-button-checked-button-color)
+  switch-unchecked-button-color: var(--paper-toggle-button-unchecked-button-color)
+  switch-unchecked-color: var(--paper-toggle-button-unchecked-bar-color)
+  switch-unchecked-track-color: var(--paper-toggle-button-unchecked-bar-color)
+  # Table colors
+  table-row-background-color: var(--divider-color)
+  table-row-alternative-background-color: var(--secondary-background-color)
+  card-background-color: var(--primary-background-color)
+  #Animated icons
+  weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
+  weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
+  weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
+  weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
+  weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
+  weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
+  weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
+  weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
+  weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
+  weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
+  weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
+  weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
+  weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
+  weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
+  weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
+  # Shadown
+  ha-card-box-shadow: 'inset 0px 0px 0px 0px var(--divider-color)'
+  # HACS
+  hacs-badge-color: var(--primary-color)
+  link-text-color: var(--disabled-color)
+  markdown-code-background-color: var(--divider-color)
+  google-blue-500: var(--primary-color)
+  accent-color: var(--disabled-color)
+  hacs-chip-color: var(--primary-color)
+
+
+
+##########################################
+
+
+
+AIS Light Pink:
+
+  # Change the value below 8px to 0px to remove the rounded corners
+  ha-card-border-radius: 8px
+  # Main colors
+  primary-color: "#f36f92"
+  light-primary-color: "#ffa8c9"
+  graph-color: var(--primary-color)
+  primary-background-color: "#f2f2f2"
+  secondary-background-color: var(--primary-background-color)
+  divider-color: "#ababab"
+  disabled-color: "#ababab"
+  # Text colors
+  primary-text-color: "#7f7f7f"
+  secondary-text-color: var(--disabled-color)
+  text-primary-color: "#E5E5E5"
+  disabled-text-color: var(--disabled-color)
+  # Sidebar colors
+  sidebar-icon-color: var(--primary-color)
+  sidebar-text-color: var(--primary-text-color)
+  sidebar-selected-background-color: var(--primary-background-color)
+  sidebar-selected-icon-color: var(--light-primary-color)
+  sidebar-selected-text-color: var(--sidebar-selected-icon-color)
+  # Icons colors
+  state-icon-color: var(--disabled-color)
+  state-icon-active-color: var(--primary-color)
+  state-icon-unavailable-color: var(--primary-background-color)
+  # Settins and colors of Mini Media Player
+  mini-media-player-icon-color: var(--primary-color)
+  mini-media-player-accent-color: var(--primary-color)
+  mini-media-player-progress-height: 8px
+  # Papers slider colors
+  paper-slider-knob-color: var(--primary-color)
+  paper-slider-knob-start-color: var(--paper-slider-knob-color)
+  paper-slider-pin-color: var(--paper-slider-knob-color)
+  paper-slider-active-color: var(--paper-slider-knob-color)
+  paper-slider-container-color: var(--disabled-color)
+  # Labels colors
+  label-badge-background-color: var(--divider-color)
+  label-badge-text-color: var(--primary-text-color)
+  label-badge-red: var(--primary-color)
+  label-badge-blue: var(--light-primary-color)
+  # Cards colors
+  ha-card-background: "#ffffff"
+  paper-card-background-color: var(--ha-card-background)
+  paper-listbox-background-color: var(--primary-background-color)
+  # Toggle button colors
+  paper-toggle-button-checked-button-color: var(--primary-color)
+  paper-toggle-button-checked-bar-color: var(--light-primary-color)
+  paper-toggle-button-unchecked-button-color: var(--disabled-color)
+  paper-toggle-button-unchecked-bar-color: "#ababab"
+  # Switch colors
+  switch-checked-color: var(--paper-toggle-button-checked-button-color)
+  switch-unchecked-button-color: var(--paper-toggle-button-unchecked-button-color)
+  switch-unchecked-color: var(--paper-toggle-button-unchecked-bar-color)
+  switch-unchecked-track-color: var(--paper-toggle-button-unchecked-bar-color)
+  # Table colors
+  table-row-background-color: var(--divider-color)
+  table-row-alternative-background-color: var(--secondary-background-color)
+  card-background-color: var(--primary-background-color)
+  #Animated icons
+  weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
+  weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
+  weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
+  weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
+  weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
+  weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
+  weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
+  weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
+  weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
+  weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
+  weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
+  weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
+  weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
+  weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
+  weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
+  # Shadown
+  ha-card-box-shadow: 'inset 0px 0px 0px 0px var(--divider-color)'
+  # HACS
+  hacs-badge-color: var(--primary-color)
+  link-text-color: var(--disabled-color)
+  markdown-code-background-color: var(--divider-color)
+  google-blue-500: var(--primary-color)
+  accent-color: var(--disabled-color)
+  hacs-chip-color: var(--primary-color)
+
+
+
+##########################################
+
+
+
+AIS Light Gray:
+
+  # Change the value below 8px to 0px to remove the rounded corners
+  ha-card-border-radius: 8px
+  # Main colors
+  primary-color: "#666666"
+  light-primary-color: "#989898"
+  graph-color: var(--primary-color)
+  primary-background-color: "#f2f2f2"
+  secondary-background-color: var(--primary-background-color)
+  divider-color: "#ababab"
+  disabled-color: "#ababab"
+  # Text colors
+  primary-text-color: "#7f7f7f"
+  secondary-text-color: var(--disabled-color)
+  text-primary-color: "#E5E5E5"
+  disabled-text-color: var(--disabled-color)
+  # Sidebar colors
+  sidebar-icon-color: var(--primary-color)
+  sidebar-text-color: var(--primary-text-color)
+  sidebar-selected-background-color: var(--primary-background-color)
+  sidebar-selected-icon-color: var(--light-primary-color)
+  sidebar-selected-text-color: var(--sidebar-selected-icon-color)
+  # Icons colors
+  state-icon-color: var(--disabled-color)
+  state-icon-active-color: var(--primary-color)
+  state-icon-unavailable-color: var(--primary-background-color)
+  # Settins and colors of Mini Media Player
+  mini-media-player-icon-color: var(--primary-color)
+  mini-media-player-accent-color: var(--primary-color)
+  mini-media-player-progress-height: 8px
+  # Papers slider colors
+  paper-slider-knob-color: var(--primary-color)
+  paper-slider-knob-start-color: var(--paper-slider-knob-color)
+  paper-slider-pin-color: var(--paper-slider-knob-color)
+  paper-slider-active-color: var(--paper-slider-knob-color)
+  paper-slider-container-color: var(--disabled-color)
+  # Labels colors
+  label-badge-background-color: var(--divider-color)
+  label-badge-text-color: var(--primary-text-color)
+  label-badge-red: var(--primary-color)
+  label-badge-blue: var(--light-primary-color)
+  # Cards colors
+  ha-card-background: "#ffffff"
+  paper-card-background-color: var(--ha-card-background)
+  paper-listbox-background-color: var(--primary-background-color)
+  # Toggle button colors
+  paper-toggle-button-checked-button-color: var(--primary-color)
+  paper-toggle-button-checked-bar-color: var(--light-primary-color)
+  paper-toggle-button-unchecked-button-color: var(--disabled-color)
+  paper-toggle-button-unchecked-bar-color: "#ababab"
+  # Switch colors
+  switch-checked-color: var(--paper-toggle-button-checked-button-color)
+  switch-unchecked-button-color: var(--paper-toggle-button-unchecked-button-color)
+  switch-unchecked-color: var(--paper-toggle-button-unchecked-bar-color)
+  switch-unchecked-track-color: var(--paper-toggle-button-unchecked-bar-color)
+  # Table colors
+  table-row-background-color: var(--divider-color)
+  table-row-alternative-background-color: var(--secondary-background-color)
+  card-background-color: var(--primary-background-color)
+  #Animated icons
+  weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
+  weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
+  weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
+  weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
+  weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
+  weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
+  weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
+  weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
+  weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
+  weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
+  weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
+  weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
+  weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
+  weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
+  weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
+  # Shadown
+  ha-card-box-shadow: 'inset 0px 0px 0px 0px var(--divider-color)'
+  # HACS
+  hacs-badge-color: var(--primary-color)
+  link-text-color: var(--disabled-color)
+  markdown-code-background-color: var(--divider-color)
+  google-blue-500: var(--primary-color)
+  accent-color: var(--disabled-color)
+  hacs-chip-color: var(--primary-color)
+
+
+
+#                             
+#    #####     ##    #####   #    # 
+#    #    #   #  #   #    #  #   #  
+#    #    #  #    #  #    #  ####   
+#    #    #  ######  #####   #  #   
+#    #    #  #    #  #   #   #   #  
+#    #####   #    #  #    #  #    # 
+#                                    
+                                
+
+AIS Dark Rose:
+
+  # Change the value below 8px to 0px to remove the rounded corners
+  ha-card-border-radius: 8px
+  # Main colors
+  primary-color: "#aa3151"
+  light-primary-color: "#b8536d"
+  graph-color: var(--primary-color)
+  primary-background-color: "#1D1B1E"
+  secondary-background-color: var(--primary-background-color)
+  divider-color: "#37373D"
+  disabled-color: "#666666"
+  # Text colors
+  primary-text-color: "#e5e5e5"
+  secondary-text-color: var(--disabled-color)
+  text-primary-color: "#E5E5E5"
+  disabled-text-color: var(--disabled-color)
+  # Sidebar colors
+  sidebar-icon-color: var(--primary-color)
+  sidebar-text-color: var(--primary-text-color)
+  sidebar-selected-background-color: var(--primary-background-color)
+  sidebar-selected-icon-color: var(--light-primary-color)
+  sidebar-selected-text-color: var(--sidebar-selected-icon-color)
+  # Icons colors
+  state-icon-color: var(--disabled-color)
+  state-icon-active-color: var(--primary-color)
+  state-icon-unavailable-color: var(--primary-background-color)
+  # Settins and colors of Mini Media Player
+  mini-media-player-icon-color: var(--primary-color)
+  mini-media-player-accent-color: var(--primary-color)
+  mini-media-player-progress-height: 8px
+  # Papers slider colors
+  paper-slider-knob-color: var(--primary-color)
+  paper-slider-knob-start-color: var(--paper-slider-knob-color)
+  paper-slider-pin-color: var(--paper-slider-knob-color)
+  paper-slider-active-color: var(--paper-slider-knob-color)
+  paper-slider-container-color: var(--disabled-color)
+  # Labels colors
+  label-badge-background-color: var(--divider-color)
+  label-badge-text-color: var(--primary-text-color)
+  label-badge-red: var(--primary-color)
+  label-badge-blue: var(--light-primary-color)
+  # Cards colors
+  ha-card-background: "#2A282D"
+  paper-card-background-color: var(--ha-card-background)
+  paper-listbox-background-color: var(--primary-background-color)
+  # Toggle button colors
+  paper-toggle-button-checked-button-color: var(--primary-color)
+  paper-toggle-button-checked-bar-color: var(--light-primary-color)
+  paper-toggle-button-unchecked-button-color: var(--disabled-color)
+  paper-toggle-button-unchecked-bar-color: var(--primary-background-color)
+  # Switch colors
+  switch-checked-color: var(--paper-toggle-button-checked-button-color)
+  switch-unchecked-button-color: var(--paper-toggle-button-unchecked-button-color)
+  switch-unchecked-color: var(--paper-toggle-button-unchecked-bar-color)
+  switch-unchecked-track-color: var(--paper-toggle-button-unchecked-bar-color)
+  # Table colors
+  table-row-background-color: var(--divider-color)
+  table-row-alternative-background-color: var(--secondary-background-color)
+  card-background-color: var(--primary-background-color)
+  #Animated icons
+  weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
+  weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
+  weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
+  weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
+  weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
+  weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
+  weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
+  weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
+  weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
+  weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
+  weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
+  weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
+  weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
+  weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
+  weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
+  # Shadown
+  ha-card-box-shadow: 'inset 0px 0px 0px 0px var(--divider-color)'
+  # HACS
+  hacs-badge-color: var(--primary-color)
+  link-text-color: var(--disabled-color)
+  markdown-code-background-color: var(--divider-color)
+  google-blue-500: var(--primary-color)
+  accent-color: var(--disabled-color)
+  hacs-chip-color: var(--primary-color)
+
+
+
+##########################################
+
+
+
+AIS Dark Purple:
+
+  # Change the value below 8px to 0px to remove the rounded corners
+  ha-card-border-radius: 8px
+  # Main colors
+  primary-color: "#904eab"
+  light-primary-color: "#c983e4"
+  graph-color: var(--primary-color)
+  primary-background-color: "#1D1B1E"
+  secondary-background-color: var(--primary-background-color)
+  divider-color: "#37373D"
+  disabled-color: "#666666"
+  # Text colors
+  primary-text-color: "#e5e5e5"
+  secondary-text-color: var(--disabled-color)
+  text-primary-color: "#E5E5E5"
+  disabled-text-color: var(--disabled-color)
+  # Sidebar colors
+  sidebar-icon-color: var(--primary-color)
+  sidebar-text-color: var(--primary-text-color)
+  sidebar-selected-background-color: var(--primary-background-color)
+  sidebar-selected-icon-color: var(--light-primary-color)
+  sidebar-selected-text-color: var(--sidebar-selected-icon-color)
+  # Icons colors
+  state-icon-color: var(--disabled-color)
+  state-icon-active-color: var(--primary-color)
+  state-icon-unavailable-color: var(--primary-background-color)
+  # Settins and colors of Mini Media Player
+  mini-media-player-icon-color: var(--primary-color)
+  mini-media-player-accent-color: var(--primary-color)
+  mini-media-player-progress-height: 8px
+  # Papers slider colors
+  paper-slider-knob-color: var(--primary-color)
+  paper-slider-knob-start-color: var(--paper-slider-knob-color)
+  paper-slider-pin-color: var(--paper-slider-knob-color)
+  paper-slider-active-color: var(--paper-slider-knob-color)
+  paper-slider-container-color: var(--disabled-color)
+  # Labels colors
+  label-badge-background-color: var(--divider-color)
+  label-badge-text-color: var(--primary-text-color)
+  label-badge-red: var(--primary-color)
+  label-badge-blue: var(--light-primary-color)
+  # Cards colors
+  ha-card-background: "#2A282D"
+  paper-card-background-color: var(--ha-card-background)
+  paper-listbox-background-color: var(--primary-background-color)
+  # Toggle button colors
+  paper-toggle-button-checked-button-color: var(--primary-color)
+  paper-toggle-button-checked-bar-color: var(--light-primary-color)
+  paper-toggle-button-unchecked-button-color: var(--disabled-color)
+  paper-toggle-button-unchecked-bar-color: var(--primary-background-color)
+  # Switch colors
+  switch-checked-color: var(--paper-toggle-button-checked-button-color)
+  switch-unchecked-button-color: var(--paper-toggle-button-unchecked-button-color)
+  switch-unchecked-color: var(--paper-toggle-button-unchecked-bar-color)
+  switch-unchecked-track-color: var(--paper-toggle-button-unchecked-bar-color)
+  # Table colors
+  table-row-background-color: var(--divider-color)
+  table-row-alternative-background-color: var(--secondary-background-color)
+  card-background-color: var(--primary-background-color)
+  #Animated icons
+  weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
+  weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
+  weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
+  weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
+  weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
+  weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
+  weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
+  weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
+  weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
+  weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
+  weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
+  weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
+  weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
+  weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
+  weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
+  # Shadown
+  ha-card-box-shadow: 'inset 0px 0px 0px 0px var(--divider-color)'
+  # HACS
+  hacs-badge-color: var(--primary-color)
+  link-text-color: var(--disabled-color)
+  markdown-code-background-color: var(--divider-color)
+  google-blue-500: var(--primary-color)
+  accent-color: var(--disabled-color)
+  hacs-chip-color: var(--primary-color)
+
+
+
+##########################################
+
+
+
+AIS Dark Blue:
+
+  # Change the value below 8px to 0px to remove the rounded corners
+  ha-card-border-radius: 8px
+  # Main colors
+  primary-color: "#009bb5"
+  light-primary-color: "#5ed1eb"
+  graph-color: var(--primary-color)
+  primary-background-color: "#1D1B1E"
+  secondary-background-color: var(--primary-background-color)
+  divider-color: "#37373D"
+  disabled-color: "#666666"
+  # Text colors
+  primary-text-color: "#e5e5e5"
+  secondary-text-color: var(--disabled-color)
+  text-primary-color: "#E5E5E5"
+  disabled-text-color: var(--disabled-color)
+  # Sidebar colors
+  sidebar-icon-color: var(--primary-color)
+  sidebar-text-color: var(--primary-text-color)
+  sidebar-selected-background-color: var(--primary-background-color)
+  sidebar-selected-icon-color: var(--light-primary-color)
+  sidebar-selected-text-color: var(--sidebar-selected-icon-color)
+  # Icons colors
+  state-icon-color: var(--disabled-color)
+  state-icon-active-color: var(--primary-color)
+  state-icon-unavailable-color: var(--primary-background-color)
+  # Settins and colors of Mini Media Player
+  mini-media-player-icon-color: var(--primary-color)
+  mini-media-player-accent-color: var(--primary-color)
+  mini-media-player-progress-height: 8px
+  # Papers slider colors
+  paper-slider-knob-color: var(--primary-color)
+  paper-slider-knob-start-color: var(--paper-slider-knob-color)
+  paper-slider-pin-color: var(--paper-slider-knob-color)
+  paper-slider-active-color: var(--paper-slider-knob-color)
+  paper-slider-container-color: var(--disabled-color)
+  # Labels colors
+  label-badge-background-color: var(--divider-color)
+  label-badge-text-color: var(--primary-text-color)
+  label-badge-red: var(--primary-color)
+  label-badge-blue: var(--light-primary-color)
+  # Cards colors
+  ha-card-background: "#2A282D"
+  paper-card-background-color: var(--ha-card-background)
+  paper-listbox-background-color: var(--primary-background-color)
+  # Toggle button colors
+  paper-toggle-button-checked-button-color: var(--primary-color)
+  paper-toggle-button-checked-bar-color: var(--light-primary-color)
+  paper-toggle-button-unchecked-button-color: var(--disabled-color)
+  paper-toggle-button-unchecked-bar-color: var(--primary-background-color)
+  # Switch colors
+  switch-checked-color: var(--paper-toggle-button-checked-button-color)
+  switch-unchecked-button-color: var(--paper-toggle-button-unchecked-button-color)
+  switch-unchecked-color: var(--paper-toggle-button-unchecked-bar-color)
+  switch-unchecked-track-color: var(--paper-toggle-button-unchecked-bar-color)
+  # Table colors
+  table-row-background-color: var(--divider-color)
+  table-row-alternative-background-color: var(--secondary-background-color)
+  card-background-color: var(--primary-background-color)
+  #Animated icons
+  weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
+  weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
+  weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
+  weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
+  weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
+  weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
+  weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
+  weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
+  weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
+  weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
+  weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
+  weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
+  weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
+  weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
+  weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
+  # Shadown
+  ha-card-box-shadow: 'inset 0px 0px 0px 0px var(--divider-color)'
+  # HACS
+  hacs-badge-color: var(--primary-color)
+  link-text-color: var(--disabled-color)
+  markdown-code-background-color: var(--divider-color)
+  google-blue-500: var(--primary-color)
+  accent-color: var(--disabled-color)
+  hacs-chip-color: var(--primary-color)
+
+
+
+##########################################
+
+
+
+AIS Dark Aqua:
+
+  # Change the value below 8px to 0px to remove the rounded corners
+  ha-card-border-radius: 8px
+  # Main colors
+  primary-color: "#11ab93"
+  light-primary-color: "#62e3c8"
+  graph-color: var(--primary-color)
+  primary-background-color: "#1D1B1E"
+  secondary-background-color: var(--primary-background-color)
+  divider-color: "#37373D"
+  disabled-color: "#666666"
+  # Text colors
+  primary-text-color: "#e5e5e5"
+  secondary-text-color: var(--disabled-color)
+  text-primary-color: "#E5E5E5"
+  disabled-text-color: var(--disabled-color)
+  # Sidebar colors
+  sidebar-icon-color: var(--primary-color)
+  sidebar-text-color: var(--primary-text-color)
+  sidebar-selected-background-color: var(--primary-background-color)
+  sidebar-selected-icon-color: var(--light-primary-color)
+  sidebar-selected-text-color: var(--sidebar-selected-icon-color)
+  # Icons colors
+  state-icon-color: var(--disabled-color)
+  state-icon-active-color: var(--primary-color)
+  state-icon-unavailable-color: var(--primary-background-color)
+  # Settins and colors of Mini Media Player
+  mini-media-player-icon-color: var(--primary-color)
+  mini-media-player-accent-color: var(--primary-color)
+  mini-media-player-progress-height: 8px
+  # Papers slider colors
+  paper-slider-knob-color: var(--primary-color)
+  paper-slider-knob-start-color: var(--paper-slider-knob-color)
+  paper-slider-pin-color: var(--paper-slider-knob-color)
+  paper-slider-active-color: var(--paper-slider-knob-color)
+  paper-slider-container-color: var(--disabled-color)
+  # Labels colors
+  label-badge-background-color: var(--divider-color)
+  label-badge-text-color: var(--primary-text-color)
+  label-badge-red: var(--primary-color)
+  label-badge-blue: var(--light-primary-color)
+  # Cards colors
+  ha-card-background: "#2A282D"
+  paper-card-background-color: var(--ha-card-background)
+  paper-listbox-background-color: var(--primary-background-color)
+  # Toggle button colors
+  paper-toggle-button-checked-button-color: var(--primary-color)
+  paper-toggle-button-checked-bar-color: var(--light-primary-color)
+  paper-toggle-button-unchecked-button-color: var(--disabled-color)
+  paper-toggle-button-unchecked-bar-color: var(--primary-background-color)
+  # Switch colors
+  switch-checked-color: var(--paper-toggle-button-checked-button-color)
+  switch-unchecked-button-color: var(--paper-toggle-button-unchecked-button-color)
+  switch-unchecked-color: var(--paper-toggle-button-unchecked-bar-color)
+  switch-unchecked-track-color: var(--paper-toggle-button-unchecked-bar-color)
+  # Table colors
+  table-row-background-color: var(--divider-color)
+  table-row-alternative-background-color: var(--secondary-background-color)
+  card-background-color: var(--primary-background-color)
+  #Animated icons
+  weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
+  weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
+  weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
+  weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
+  weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
+  weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
+  weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
+  weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
+  weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
+  weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
+  weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
+  weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
+  weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
+  weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
+  weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
+  # Shadown
+  ha-card-box-shadow: 'inset 0px 0px 0px 0px var(--divider-color)'
+  # HACS
+  hacs-badge-color: var(--primary-color)
+  link-text-color: var(--disabled-color)
+  markdown-code-background-color: var(--divider-color)
+  google-blue-500: var(--primary-color)
+  accent-color: var(--disabled-color)
+  hacs-chip-color: var(--primary-color)
+
+
+
+##########################################
+
+
+
+AIS Dark Green:
+
+  # Change the value below 8px to 0px to remove the rounded corners
+  ha-card-border-radius: 8px
+  # Main colors
+  primary-color: "#6ca049"
+  light-primary-color: "#a1d77b"
+  graph-color: var(--primary-color)
+  primary-background-color: "#1D1B1E"
+  secondary-background-color: var(--primary-background-color)
+  divider-color: "#37373D"
+  disabled-color: "#666666"
+  # Text colors
+  primary-text-color: "#e5e5e5"
+  secondary-text-color: var(--disabled-color)
+  text-primary-color: "#E5E5E5"
+  disabled-text-color: var(--disabled-color)
+  # Sidebar colors
+  sidebar-icon-color: var(--primary-color)
+  sidebar-text-color: var(--primary-text-color)
+  sidebar-selected-background-color: var(--primary-background-color)
+  sidebar-selected-icon-color: var(--light-primary-color)
+  sidebar-selected-text-color: var(--sidebar-selected-icon-color)
+  # Icons colors
+  state-icon-color: var(--disabled-color)
+  state-icon-active-color: var(--primary-color)
+  state-icon-unavailable-color: var(--primary-background-color)
+  # Settins and colors of Mini Media Player
+  mini-media-player-icon-color: var(--primary-color)
+  mini-media-player-accent-color: var(--primary-color)
+  mini-media-player-progress-height: 8px
+  # Papers slider colors
+  paper-slider-knob-color: var(--primary-color)
+  paper-slider-knob-start-color: var(--paper-slider-knob-color)
+  paper-slider-pin-color: var(--paper-slider-knob-color)
+  paper-slider-active-color: var(--paper-slider-knob-color)
+  paper-slider-container-color: var(--disabled-color)
+  # Labels colors
+  label-badge-background-color: var(--divider-color)
+  label-badge-text-color: var(--primary-text-color)
+  label-badge-red: var(--primary-color)
+  label-badge-blue: var(--light-primary-color)
+  # Cards colors
+  ha-card-background: "#2A282D"
+  paper-card-background-color: var(--ha-card-background)
+  paper-listbox-background-color: var(--primary-background-color)
+  # Toggle button colors
+  paper-toggle-button-checked-button-color: var(--primary-color)
+  paper-toggle-button-checked-bar-color: var(--light-primary-color)
+  paper-toggle-button-unchecked-button-color: var(--disabled-color)
+  paper-toggle-button-unchecked-bar-color: var(--primary-background-color)
+  # Switch colors
+  switch-checked-color: var(--paper-toggle-button-checked-button-color)
+  switch-unchecked-button-color: var(--paper-toggle-button-unchecked-button-color)
+  switch-unchecked-color: var(--paper-toggle-button-unchecked-bar-color)
+  switch-unchecked-track-color: var(--paper-toggle-button-unchecked-bar-color)
+  # Table colors
+  table-row-background-color: var(--divider-color)
+  table-row-alternative-background-color: var(--secondary-background-color)
+  card-background-color: var(--primary-background-color)
+  #Animated icons
+  weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
+  weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
+  weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
+  weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
+  weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
+  weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
+  weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
+  weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
+  weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
+  weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
+  weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
+  weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
+  weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
+  weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
+  weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
+  # Shadown
+  ha-card-box-shadow: 'inset 0px 0px 0px 0px var(--divider-color)'
+  # HACS
+  hacs-badge-color: var(--primary-color)
+  link-text-color: var(--disabled-color)
+  markdown-code-background-color: var(--divider-color)
+  google-blue-500: var(--primary-color)
+  accent-color: var(--disabled-color)
+  hacs-chip-color: var(--primary-color)
+
+
+
+##########################################
+
+
+
+AIS Dark Yellow:
+
+  # Change the value below 8px to 0px to remove the rounded corners
+  ha-card-border-radius: 8px
+  # Main colors
+  primary-color: "#d6a245"
+  light-primary-color: "#ffd979"
+  graph-color: var(--primary-color)
+  primary-background-color: "#1D1B1E"
+  secondary-background-color: var(--primary-background-color)
+  divider-color: "#37373D"
+  disabled-color: "#666666"
+  # Text colors
+  primary-text-color: "#e5e5e5"
+  secondary-text-color: var(--disabled-color)
+  text-primary-color: "#E5E5E5"
+  disabled-text-color: var(--disabled-color)
+  # Sidebar colors
+  sidebar-icon-color: var(--primary-color)
+  sidebar-text-color: var(--primary-text-color)
+  sidebar-selected-background-color: var(--primary-background-color)
+  sidebar-selected-icon-color: var(--light-primary-color)
+  sidebar-selected-text-color: var(--sidebar-selected-icon-color)
+  # Icons colors
+  state-icon-color: var(--disabled-color)
+  state-icon-active-color: var(--primary-color)
+  state-icon-unavailable-color: var(--primary-background-color)
+  # Settins and colors of Mini Media Player
+  mini-media-player-icon-color: var(--primary-color)
+  mini-media-player-accent-color: var(--primary-color)
+  mini-media-player-progress-height: 8px
+  # Papers slider colors
+  paper-slider-knob-color: var(--primary-color)
+  paper-slider-knob-start-color: var(--paper-slider-knob-color)
+  paper-slider-pin-color: var(--paper-slider-knob-color)
+  paper-slider-active-color: var(--paper-slider-knob-color)
+  paper-slider-container-color: var(--disabled-color)
+  # Labels colors
+  label-badge-background-color: var(--divider-color)
+  label-badge-text-color: var(--primary-text-color)
+  label-badge-red: var(--primary-color)
+  label-badge-blue: var(--light-primary-color)
+  # Cards colors
+  ha-card-background: "#2A282D"
+  paper-card-background-color: var(--ha-card-background)
+  paper-listbox-background-color: var(--primary-background-color)
+  # Toggle button colors
+  paper-toggle-button-checked-button-color: var(--primary-color)
+  paper-toggle-button-checked-bar-color: var(--light-primary-color)
+  paper-toggle-button-unchecked-button-color: var(--disabled-color)
+  paper-toggle-button-unchecked-bar-color: var(--primary-background-color)
+  # Switch colors
+  switch-checked-color: var(--paper-toggle-button-checked-button-color)
+  switch-unchecked-button-color: var(--paper-toggle-button-unchecked-button-color)
+  switch-unchecked-color: var(--paper-toggle-button-unchecked-bar-color)
+  switch-unchecked-track-color: var(--paper-toggle-button-unchecked-bar-color)
+  # Table colors
+  table-row-background-color: var(--divider-color)
+  table-row-alternative-background-color: var(--secondary-background-color)
+  card-background-color: var(--primary-background-color)
+  #Animated icons
+  weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
+  weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
+  weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
+  weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
+  weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
+  weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
+  weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
+  weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
+  weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
+  weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
+  weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
+  weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
+  weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
+  weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
+  weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
+  # Shadown
+  ha-card-box-shadow: 'inset 0px 0px 0px 0px var(--divider-color)'
+  # HACS
+  hacs-badge-color: var(--primary-color)
+  link-text-color: var(--disabled-color)
+  markdown-code-background-color: var(--divider-color)
+  google-blue-500: var(--primary-color)
+  accent-color: var(--disabled-color)
+  hacs-chip-color: var(--primary-color)
+
+
+
+##########################################
+
+
+
+AIS Dark Orange:
+
+  # Change the value below 8px to 0px to remove the rounded corners
+  ha-card-border-radius: 8px
+  # Main colors
+  primary-color: "#d25f36"
+  light-primary-color: "#ff9568"
+  graph-color: var(--primary-color)
+  primary-background-color: "#1D1B1E"
+  secondary-background-color: var(--primary-background-color)
+  divider-color: "#37373D"
+  disabled-color: "#666666"
+  # Text colors
+  primary-text-color: "#e5e5e5"
+  secondary-text-color: var(--disabled-color)
+  text-primary-color: "#E5E5E5"
+  disabled-text-color: var(--disabled-color)
+  # Sidebar colors
+  sidebar-icon-color: var(--primary-color)
+  sidebar-text-color: var(--primary-text-color)
+  sidebar-selected-background-color: var(--primary-background-color)
+  sidebar-selected-icon-color: var(--light-primary-color)
+  sidebar-selected-text-color: var(--sidebar-selected-icon-color)
+  # Icons colors
+  state-icon-color: var(--disabled-color)
+  state-icon-active-color: var(--primary-color)
+  state-icon-unavailable-color: var(--primary-background-color)
+  # Settins and colors of Mini Media Player
+  mini-media-player-icon-color: var(--primary-color)
+  mini-media-player-accent-color: var(--primary-color)
+  mini-media-player-progress-height: 8px
+  # Papers slider colors
+  paper-slider-knob-color: var(--primary-color)
+  paper-slider-knob-start-color: var(--paper-slider-knob-color)
+  paper-slider-pin-color: var(--paper-slider-knob-color)
+  paper-slider-active-color: var(--paper-slider-knob-color)
+  paper-slider-container-color: var(--disabled-color)
+  # Labels colors
+  label-badge-background-color: var(--divider-color)
+  label-badge-text-color: var(--primary-text-color)
+  label-badge-red: var(--primary-color)
+  label-badge-blue: var(--light-primary-color)
+  # Cards colors
+  ha-card-background: "#2A282D"
+  paper-card-background-color: var(--ha-card-background)
+  paper-listbox-background-color: var(--primary-background-color)
+  # Toggle button colors
+  paper-toggle-button-checked-button-color: var(--primary-color)
+  paper-toggle-button-checked-bar-color: var(--light-primary-color)
+  paper-toggle-button-unchecked-button-color: var(--disabled-color)
+  paper-toggle-button-unchecked-bar-color: var(--primary-background-color)
+  # Switch colors
+  switch-checked-color: var(--paper-toggle-button-checked-button-color)
+  switch-unchecked-button-color: var(--paper-toggle-button-unchecked-button-color)
+  switch-unchecked-color: var(--paper-toggle-button-unchecked-bar-color)
+  switch-unchecked-track-color: var(--paper-toggle-button-unchecked-bar-color)
+  # Table colors
+  table-row-background-color: var(--divider-color)
+  table-row-alternative-background-color: var(--secondary-background-color)
+  card-background-color: var(--primary-background-color)
+  #Animated icons
+  weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
+  weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
+  weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
+  weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
+  weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
+  weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
+  weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
+  weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
+  weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
+  weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
+  weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
+  weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
+  weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
+  weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
+  weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
+  # Shadown
+  ha-card-box-shadow: 'inset 0px 0px 0px 0px var(--divider-color)'
+  # HACS
+  hacs-badge-color: var(--primary-color)
+  link-text-color: var(--disabled-color)
+  markdown-code-background-color: var(--divider-color)
+  google-blue-500: var(--primary-color)
+  accent-color: var(--disabled-color)
+  hacs-chip-color: var(--primary-color)
+
+
+
+##########################################
+
+
+
+AIS Dark Coral:
+
+  # Change the value below 8px to 0px to remove the rounded corners
+  ha-card-border-radius: 8px
+  # Main colors
+  primary-color: "#fa6e5e"
+  light-primary-color: "#ffa792"
+  graph-color: var(--primary-color)
+  primary-background-color: "#1D1B1E"
+  secondary-background-color: var(--primary-background-color)
+  divider-color: "#37373D"
+  disabled-color: "#666666"
+  # Text colors
+  primary-text-color: "#e5e5e5"
+  secondary-text-color: var(--disabled-color)
+  text-primary-color: "#E5E5E5"
+  disabled-text-color: var(--disabled-color)
+  # Sidebar colors
+  sidebar-icon-color: var(--primary-color)
+  sidebar-text-color: var(--primary-text-color)
+  sidebar-selected-background-color: var(--primary-background-color)
+  sidebar-selected-icon-color: var(--light-primary-color)
+  sidebar-selected-text-color: var(--sidebar-selected-icon-color)
+  # Icons colors
+  state-icon-color: var(--disabled-color)
+  state-icon-active-color: var(--primary-color)
+  state-icon-unavailable-color: var(--primary-background-color)
+  # Settins and colors of Mini Media Player
+  mini-media-player-icon-color: var(--primary-color)
+  mini-media-player-accent-color: var(--primary-color)
+  mini-media-player-progress-height: 8px
+  # Papers slider colors
+  paper-slider-knob-color: var(--primary-color)
+  paper-slider-knob-start-color: var(--paper-slider-knob-color)
+  paper-slider-pin-color: var(--paper-slider-knob-color)
+  paper-slider-active-color: var(--paper-slider-knob-color)
+  paper-slider-container-color: var(--disabled-color)
+  # Labels colors
+  label-badge-background-color: var(--divider-color)
+  label-badge-text-color: var(--primary-text-color)
+  label-badge-red: var(--primary-color)
+  label-badge-blue: var(--light-primary-color)
+  # Cards colors
+  ha-card-background: "#2A282D"
+  paper-card-background-color: var(--ha-card-background)
+  paper-listbox-background-color: var(--primary-background-color)
+  # Toggle button colors
+  paper-toggle-button-checked-button-color: var(--primary-color)
+  paper-toggle-button-checked-bar-color: var(--light-primary-color)
+  paper-toggle-button-unchecked-button-color: var(--disabled-color)
+  paper-toggle-button-unchecked-bar-color: var(--primary-background-color)
+  # Switch colors
+  switch-checked-color: var(--paper-toggle-button-checked-button-color)
+  switch-unchecked-button-color: var(--paper-toggle-button-unchecked-button-color)
+  switch-unchecked-color: var(--paper-toggle-button-unchecked-bar-color)
+  switch-unchecked-track-color: var(--paper-toggle-button-unchecked-bar-color)
+  # Table colors
+  table-row-background-color: var(--divider-color)
+  table-row-alternative-background-color: var(--secondary-background-color)
+  card-background-color: var(--primary-background-color)
+  #Animated icons
+  weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
+  weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
+  weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
+  weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
+  weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
+  weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
+  weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
+  weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
+  weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
+  weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
+  weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
+  weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
+  weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
+  weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
+  weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
+  # Shadown
+  ha-card-box-shadow: 'inset 0px 0px 0px 0px var(--divider-color)'
+  # HACS
+  hacs-badge-color: var(--primary-color)
+  link-text-color: var(--disabled-color)
+  markdown-code-background-color: var(--divider-color)
+  google-blue-500: var(--primary-color)
+  accent-color: var(--disabled-color)
+  hacs-chip-color: var(--primary-color)
+
+
+
+##########################################
+
+
+
+AIS Dark Pink:
+
+  # Change the value below 8px to 0px to remove the rounded corners
+  ha-card-border-radius: 8px
+  # Main colors
+  primary-color: "#f36f92"
+  light-primary-color: "#ffa8c9"
+  graph-color: var(--primary-color)
+  primary-background-color: "#1D1B1E"
+  secondary-background-color: var(--primary-background-color)
+  divider-color: "#37373D"
+  disabled-color: "#666666"
+  # Text colors
+  primary-text-color: "#e5e5e5"
+  secondary-text-color: var(--disabled-color)
+  text-primary-color: "#E5E5E5"
+  disabled-text-color: var(--disabled-color)
+  # Sidebar colors
+  sidebar-icon-color: var(--primary-color)
+  sidebar-text-color: var(--primary-text-color)
+  sidebar-selected-background-color: var(--primary-background-color)
+  sidebar-selected-icon-color: var(--light-primary-color)
+  sidebar-selected-text-color: var(--sidebar-selected-icon-color)
+  # Icons colors
+  state-icon-color: var(--disabled-color)
+  state-icon-active-color: var(--primary-color)
+  state-icon-unavailable-color: var(--primary-background-color)
+  # Settins and colors of Mini Media Player
+  mini-media-player-icon-color: var(--primary-color)
+  mini-media-player-accent-color: var(--primary-color)
+  mini-media-player-progress-height: 8px
+  # Papers slider colors
+  paper-slider-knob-color: var(--primary-color)
+  paper-slider-knob-start-color: var(--paper-slider-knob-color)
+  paper-slider-pin-color: var(--paper-slider-knob-color)
+  paper-slider-active-color: var(--paper-slider-knob-color)
+  paper-slider-container-color: var(--disabled-color)
+  # Labels colors
+  label-badge-background-color: var(--divider-color)
+  label-badge-text-color: var(--primary-text-color)
+  label-badge-red: var(--primary-color)
+  label-badge-blue: var(--light-primary-color)
+  # Cards colors
+  ha-card-background: "#2A282D"
+  paper-card-background-color: var(--ha-card-background)
+  paper-listbox-background-color: var(--primary-background-color)
+  # Toggle button colors
+  paper-toggle-button-checked-button-color: var(--primary-color)
+  paper-toggle-button-checked-bar-color: var(--light-primary-color)
+  paper-toggle-button-unchecked-button-color: var(--disabled-color)
+  paper-toggle-button-unchecked-bar-color: var(--primary-background-color)
+  # Switch colors
+  switch-checked-color: var(--paper-toggle-button-checked-button-color)
+  switch-unchecked-button-color: var(--paper-toggle-button-unchecked-button-color)
+  switch-unchecked-color: var(--paper-toggle-button-unchecked-bar-color)
+  switch-unchecked-track-color: var(--paper-toggle-button-unchecked-bar-color)
+  # Table colors
+  table-row-background-color: var(--divider-color)
+  table-row-alternative-background-color: var(--secondary-background-color)
+  card-background-color: var(--primary-background-color)
+  #Animated icons
+  weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
+  weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
+  weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
+  weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
+  weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
+  weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
+  weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
+  weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
+  weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
+  weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
+  weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
+  weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
+  weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
+  weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
+  weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
+  # Shadown
+  ha-card-box-shadow: 'inset 0px 0px 0px 0px var(--divider-color)'
+  # HACS
+  hacs-badge-color: var(--primary-color)
+  link-text-color: var(--disabled-color)
+  markdown-code-background-color: var(--divider-color)
+  google-blue-500: var(--primary-color)
+  accent-color: var(--disabled-color)
+  hacs-chip-color: var(--primary-color)
+
+
+
+##########################################
+
+
+
+AIS Dark Gray:
+
+  # Change the value below 8px to 0px to remove the rounded corners
+  ha-card-border-radius: 8px
+  # Main colors
+  primary-color: "#acacac"
+  light-primary-color: "#e2e2e2"
+  graph-color: var(--primary-color)
+  primary-background-color: "#1D1B1E"
+  secondary-background-color: var(--primary-background-color)
+  divider-color: "#37373D"
+  disabled-color: "#666666"
+  # Text colors
+  primary-text-color: "#e5e5e5"
+  secondary-text-color: var(--disabled-color)
+  text-primary-color: "#E5E5E5"
+  disabled-text-color: var(--disabled-color)
+  # Sidebar colors
+  sidebar-icon-color: var(--primary-color)
+  sidebar-text-color: var(--primary-text-color)
+  sidebar-selected-background-color: var(--primary-background-color)
+  sidebar-selected-icon-color: var(--light-primary-color)
+  sidebar-selected-text-color: var(--sidebar-selected-icon-color)
+  # Icons colors
+  state-icon-color: var(--disabled-color)
+  state-icon-active-color: var(--primary-color)
+  state-icon-unavailable-color: var(--primary-background-color)
+  # Settins and colors of Mini Media Player
+  mini-media-player-icon-color: var(--primary-color)
+  mini-media-player-accent-color: var(--primary-color)
+  mini-media-player-progress-height: 8px
+  # Papers slider colors
+  paper-slider-knob-color: var(--primary-color)
+  paper-slider-knob-start-color: var(--paper-slider-knob-color)
+  paper-slider-pin-color: var(--paper-slider-knob-color)
+  paper-slider-active-color: var(--paper-slider-knob-color)
+  paper-slider-container-color: var(--disabled-color)
+  # Labels colors
+  label-badge-background-color: var(--divider-color)
+  label-badge-text-color: var(--primary-text-color)
+  label-badge-red: var(--primary-color)
+  label-badge-blue: var(--light-primary-color)
+  # Cards colors
+  ha-card-background: "#2A282D"
+  paper-card-background-color: var(--ha-card-background)
+  paper-listbox-background-color: var(--primary-background-color)
+  # Toggle button colors
+  paper-toggle-button-checked-button-color: var(--primary-color)
+  paper-toggle-button-checked-bar-color: var(--light-primary-color)
+  paper-toggle-button-unchecked-button-color: var(--disabled-color)
+  paper-toggle-button-unchecked-bar-color: var(--primary-background-color)
+  # Switch colors
+  switch-checked-color: var(--paper-toggle-button-checked-button-color)
+  switch-unchecked-button-color: var(--paper-toggle-button-unchecked-button-color)
+  switch-unchecked-color: var(--paper-toggle-button-unchecked-bar-color)
+  switch-unchecked-track-color: var(--paper-toggle-button-unchecked-bar-color)
+  # Table colors
+  table-row-background-color: var(--divider-color)
+  table-row-alternative-background-color: var(--secondary-background-color)
+  card-background-color: var(--primary-background-color)
+  #Animated icons
+  weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
+  weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
+  weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
+  weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
+  weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
+  weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
+  weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
+  weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
+  weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
+  weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
+  weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
+  weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
+  weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
+  weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
+  weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
+  # Shadown
+  ha-card-box-shadow: 'inset 0px 0px 0px 0px var(--divider-color)'
+  # HACS
+  hacs-badge-color: var(--primary-color)
+  link-text-color: var(--disabled-color)
+  markdown-code-background-color: var(--divider-color)
+  google-blue-500: var(--primary-color)
+  accent-color: var(--disabled-color)
+  hacs-chip-color: var(--primary-color)

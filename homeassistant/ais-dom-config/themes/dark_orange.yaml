@@ -51,3 +51,20 @@ ais:
   zigbee2mqtt-networkmap-arrow-color: "rgba(198, 105, 0, 0.7)"
   zigbee2mqtt-networkmap-node-coordinator-color: "rgba(224, 78, 93, .7)"
   zigbee2mqtt-networkmap-node-router-color: "rgba(0, 165, 255, .7)"
+
+  #Animated icons
+  weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
+  weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
+  weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
+  weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
+  weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
+  weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
+  weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
+  weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
+  weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
+  weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
+  weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
+  weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
+  weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
+  weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
+  weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")
