@@ -13,12 +13,6 @@ from .const import DOMAIN
 PLATFORMS = ["sensor"]
 
 
-async def async_setup(hass: HomeAssistant, config: dict) -> bool:
-    """Set up the youless component."""
-    hass.data[DOMAIN] = {}
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up youless from a config entry."""
     api = YoulessAPI(entry.data[CONF_HOST])
@@ -28,6 +22,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except URLError as exception:
         raise ConfigEntryNotReady from exception
 
+    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = api
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
