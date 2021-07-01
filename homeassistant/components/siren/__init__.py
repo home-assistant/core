@@ -114,7 +114,7 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> boo
 class SirenEntity(ToggleEntity):
     """Representation of a siren device."""
 
-    _attr_available_tones: list[int] | list[str] | None = None
+    _attr_available_tones: list[int | str] | None = None
 
     @final
     @property
