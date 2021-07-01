@@ -2,9 +2,10 @@
 from unittest.mock import MagicMock, patch
 from urllib.error import URLError
 
-from homeassistant import config_entries
 from homeassistant.components.youless import DOMAIN
-from homeassistant.data_entry_flow import RESULT_TYPE_FORM
+from homeassistant.config_entries import SOURCE_USER
+from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_FORM
 
 
 def _get_mock_youless_api(initialize=None):
@@ -13,18 +14,21 @@ def _get_mock_youless_api(initialize=None):
         type(mock_youless).initialize = MagicMock(side_effect=initialize)
     else:
         type(mock_youless).initialize = MagicMock(return_value=initialize)
+
+    type(mock_youless).mac_address = None
     return mock_youless
 
 
-async def test_full_flow(hass, aiohttp_client, aioclient_mock, current_request):
+async def test_full_flow(hass: HomeAssistant) -> None:
     """Check setup."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result["type"] == RESULT_TYPE_FORM
-    assert result["errors"] == {}
-    assert result["step_id"] == config_entries.SOURCE_USER
+    assert result.get("type") == RESULT_TYPE_FORM
+    assert result.get("errors") == {}
+    assert result.get("step_id") == SOURCE_USER
+    assert "flow_id" in result
 
     mock_youless = _get_mock_youless_api(
         initialize={"homes": [{"id": 1, "name": "myhome"}]}
@@ -32,37 +36,37 @@ async def test_full_flow(hass, aiohttp_client, aioclient_mock, current_request):
     with patch(
         "homeassistant.components.youless.config_flow.YoulessAPI",
         return_value=mock_youless,
-    ) as mock_setup:
+    ) as mocked_youless:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {"host": "localhost", "name": "YouLess Sensor"},
         )
 
-    assert result2["type"] == "create_entry"
-    assert result2["title"] == "YouLess Sensor"
-    await hass.async_block_till_done()
-    assert len(mock_setup.mock_calls) == 1
+    assert result2.get("type") == RESULT_TYPE_CREATE_ENTRY
+    assert result2.get("title") == "YouLess Sensor"
+    assert len(mocked_youless.mock_calls) == 1
 
 
-async def test_not_found(hass, aiohttp_client, aioclient_mock, current_request):
+async def test_not_found(hass: HomeAssistant) -> None:
     """Check setup."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result["type"] == RESULT_TYPE_FORM
-    assert result["errors"] == {}
-    assert result["step_id"] == config_entries.SOURCE_USER
+    assert result.get("type") == RESULT_TYPE_FORM
+    assert result.get("errors") == {}
+    assert result.get("step_id") == SOURCE_USER
+    assert "flow_id" in result
 
     mock_youless = _get_mock_youless_api(initialize=URLError(""))
     with patch(
         "homeassistant.components.youless.config_flow.YoulessAPI",
         return_value=mock_youless,
-    ) as mock_setup:
+    ) as mocked_youless:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {"host": "localhost", "name": "YouLess Sensor"},
         )
 
-    assert result2["type"] == "form"
-    assert len(mock_setup.mock_calls) == 1
+    assert result2.get("type") == RESULT_TYPE_FORM
+    assert len(mocked_youless.mock_calls) == 1
