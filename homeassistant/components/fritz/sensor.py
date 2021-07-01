@@ -87,7 +87,6 @@ SENSOR_DATA = {
     "external_ip": SensorData(
         name="External IP",
         device_class=None,
-        state_class=None,
         unit_of_measurement=None,
         icon="mdi:earth",
         state_provider=_retrieve_external_ip_state,
