@@ -154,6 +154,7 @@ class NmapDeviceScanner:
         self._options = None
         self._exclude = None
 
+        self._known_mac_addresses = {}
         self._finished_first_scan = False
         self._last_results = []
         self._mac_vendor_lookup = None
@@ -181,6 +182,12 @@ class NmapDeviceScanner:
                 EVENT_HOMEASSISTANT_STARTED, self._async_start_scanner
             )
         )
+        registry = er.async_get(self._hass)
+        self._known_mac_addresses = {
+            entry.unique_id: entry.original_name
+            for entry in registry.entities.values()
+            if entry.config_entry_id == self._entry_id
+        }
 
     @property
     def signal_device_new(self) -> str:
@@ -269,25 +276,22 @@ class NmapDeviceScanner:
         # After all config entries have finished their first
         # scan we mark devices that were not found as not_home
         # from unavailable
-        registry = er.async_get(self._hass)
         now = dt_util.now()
-        for entry in registry.entities.values():
-            if entry.config_entry_id != self._entry_id:
-                continue
-            if entry.unique_id not in self.devices.tracked:
-                self.devices.config_entry_owner[entry.unique_id] = self._entry_id
-                self.devices.tracked[entry.unique_id] = NmapDevice(
-                    entry.unique_id,
+        for mac_address, original_name in self._known_mac_addresses:
+            if mac_address not in self.devices.tracked:
+                self.devices.config_entry_owner[mac_address] = self._entry_id
+                self.devices.tracked[mac_address] = NmapDevice(
+                    mac_address,
                     None,
-                    entry.original_name,
+                    original_name,
                     None,
-                    self._async_get_vendor(entry.unique_id),
+                    self._async_get_vendor(mac_address),
                     "Device not found in initial scan",
                     now,
                     1,
                 )
                 async_dispatcher_send(
-                    self._hass, self.signal_device_missing, entry.unique_id
+                    self._hass, self.signal_device_missing, mac_address
                 )
 
     def _run_nmap_scan(self):
@@ -357,7 +361,12 @@ class NmapDeviceScanner:
 
             formatted_mac = format_mac(mac)
             new = formatted_mac not in devices.tracked
-            if new and not self._track_new_devices:
+            if (
+                new
+                and not self._track_new_devices
+                and formatted_mac not in devices.tracked
+                and formatted_mac not in self._known_mac_addresses
+            ):
                 continue
 
             if (
