@@ -35,6 +35,8 @@ from homeassistant.components.light import (
     SUPPORT_WHITE_VALUE,
     VALID_COLOR_MODES,
     LightEntity,
+    legacy_supported_features,
+    valid_supported_color_modes,
 )
 from homeassistant.const import (
     CONF_BRIGHTNESS,
@@ -59,7 +61,7 @@ from ... import mqtt
 from ..debug_info import log_messages
 from ..mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity
 from .schema import MQTT_LIGHT_SCHEMA_SCHEMA
-from .schema_basic import CONF_BRIGHTNESS_SCALE
+from .schema_basic import CONF_BRIGHTNESS_SCALE, MQTT_LIGHT_ATTRIBUTES_BLOCKED
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -130,7 +132,10 @@ PLATFORM_SCHEMA_JSON = vol.All(
             vol.Optional(CONF_RGB, default=DEFAULT_RGB): cv.boolean,
             vol.Optional(CONF_STATE_TOPIC): mqtt.valid_subscribe_topic,
             vol.Inclusive(CONF_SUPPORTED_COLOR_MODES, "color_mode"): vol.All(
-                cv.ensure_list, [vol.In(VALID_COLOR_MODES)], vol.Unique()
+                cv.ensure_list,
+                [vol.In(VALID_COLOR_MODES)],
+                vol.Unique(),
+                valid_supported_color_modes,
             ),
             vol.Optional(CONF_WHITE_VALUE, default=DEFAULT_WHITE_VALUE): cv.boolean,
             vol.Optional(CONF_XY, default=DEFAULT_XY): cv.boolean,
@@ -146,13 +151,15 @@ async def async_setup_entity_json(
     hass, config: ConfigType, async_add_entities, config_entry, discovery_data
 ):
     """Set up a MQTT JSON Light."""
-    async_add_entities([MqttLightJson(config, config_entry, discovery_data)])
+    async_add_entities([MqttLightJson(hass, config, config_entry, discovery_data)])
 
 
 class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
     """Representation of a MQTT JSON light."""
 
-    def __init__(self, config, config_entry, discovery_data):
+    _attributes_extra_blocked = MQTT_LIGHT_ATTRIBUTES_BLOCKED
+
+    def __init__(self, hass, config, config_entry, discovery_data):
         """Initialize MQTT JSON light."""
         self._state = False
         self._supported_features = 0
@@ -171,7 +178,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
         self._white_value = None
         self._xy = None
 
-        MqttEntity.__init__(self, None, config, config_entry, discovery_data)
+        MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
     @staticmethod
     def config_schema():
@@ -454,7 +461,9 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
     @property
     def supported_features(self):
         """Flag supported features."""
-        return self._supported_features
+        return legacy_supported_features(
+            self._supported_features, self._config.get(CONF_SUPPORTED_COLOR_MODES)
+        )
 
     def _set_flash_and_transition(self, message, **kwargs):
         if ATTR_TRANSITION in kwargs:
@@ -480,7 +489,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
     def _supports_color_mode(self, color_mode):
         return self.supported_color_modes and color_mode in self.supported_color_modes
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs):  # noqa: C901
         """Turn the device on.
 
         This method is a coroutine.

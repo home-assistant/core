@@ -1,15 +1,17 @@
 # Describes the format for available Risco services
 
 bypass_zone:
+  name: Bypass zone
   description: Bypass a Risco Zone
-  fields:
-    entity_id:
-      description: Entity ID of the zone to bypass
-      example: "binary_sensor.living_room_motion"
+  target:
+    entity:
+      integration: risco
+      domain: binary_sensor
 
 unbypass_zone:
+  name: Unbypass zone
   description: Unbypass a Risco Zone
-  fields:
-    entity_id:
-      description: Entity ID of the zone to unbypass
-      example: "binary_sensor.living_room_motion"
+  target:
+    entity:
+      integration: risco
+      domain: binary_sensor

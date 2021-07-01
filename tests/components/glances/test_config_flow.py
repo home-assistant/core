@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 from glances_api import Glances
 
-from homeassistant import data_entry_flow
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import glances
 from homeassistant.const import CONF_SCAN_INTERVAL
 
@@ -33,7 +33,7 @@ async def test_form(hass):
     """Test config entry configured successfully."""
 
     result = await hass.config_entries.flow.async_init(
-        glances.DOMAIN, context={"source": "user"}
+        glances.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
@@ -56,7 +56,7 @@ async def test_form_cannot_connect(hass):
 
     with patch("glances_api.Glances"):
         result = await hass.config_entries.flow.async_init(
-            glances.DOMAIN, context={"source": "user"}
+            glances.DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=DEMO_USER_INPUT
@@ -72,7 +72,7 @@ async def test_form_wrong_version(hass):
     user_input = DEMO_USER_INPUT.copy()
     user_input.update(version=1)
     result = await hass.config_entries.flow.async_init(
-        glances.DOMAIN, context={"source": "user"}
+        glances.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=user_input
@@ -90,7 +90,7 @@ async def test_form_already_configured(hass):
     entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        glances.DOMAIN, context={"source": "user"}
+        glances.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=DEMO_USER_INPUT

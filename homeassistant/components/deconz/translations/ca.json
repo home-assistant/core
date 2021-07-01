@@ -11,7 +11,7 @@
         "error": {
             "no_key": "No s'ha pogut obtenir una clau API"
         },
-        "flow_title": "Passarel\u00b7la d'enlla\u00e7 deCONZ Zigbee ({host})",
+        "flow_title": "{host}",
         "step": {
             "hassio_confirm": {
                 "description": "Vols configurar Home Assistant perqu\u00e8 es connecti amb la passarel\u00b7la deCONZ proporcionada pel complement {addon}?",

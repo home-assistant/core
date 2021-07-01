@@ -3,5 +3,6 @@
   "name": "Nello",
   "documentation": "https://www.home-assistant.io/integrations/nello",
   "requirements": ["pynello==2.0.3"],
-  "codeowners": ["@pschmitt"]
+  "codeowners": ["@pschmitt"],
+  "iot_class": "cloud_polling"
 }

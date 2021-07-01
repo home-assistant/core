@@ -20,8 +20,7 @@
         "step": {
             "init": {
                 "data": {
-                    "floor_temperature": "Teplota podlahy",
-                    "precision": "P\u0159esnost"
+                    "floor_temperature": "Teplota podlahy"
                 },
                 "description": "Mo\u017enosti br\u00e1ny OpenTherm"
             }

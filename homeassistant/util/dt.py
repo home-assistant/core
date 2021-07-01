@@ -1,23 +1,25 @@
 """Helper methods to handle the time in Home Assistant."""
 from __future__ import annotations
 
+import bisect
 from contextlib import suppress
 import datetime as dt
 import re
+import sys
 from typing import Any, cast
 
 import ciso8601
-import pytz
-import pytz.exceptions as pytzexceptions
-import pytz.tzinfo as pytzinfo
 
 from homeassistant.const import MATCH_ALL
 
-DATE_STR_FORMAT = "%Y-%m-%d"
-NATIVE_UTC = dt.timezone.utc
-UTC = pytz.utc
-DEFAULT_TIME_ZONE: dt.tzinfo = pytz.utc
+if sys.version_info[:2] >= (3, 9):
+    import zoneinfo  # pylint: disable=import-error
+else:
+    from backports import zoneinfo  # pylint: disable=import-error
 
+DATE_STR_FORMAT = "%Y-%m-%d"
+UTC = dt.timezone.utc
+DEFAULT_TIME_ZONE: dt.tzinfo = dt.timezone.utc
 
 # Copyright (c) Django Software Foundation and individual contributors.
 # All rights reserved.
@@ -37,7 +39,6 @@ def set_default_time_zone(time_zone: dt.tzinfo) -> None:
     """
     global DEFAULT_TIME_ZONE  # pylint: disable=global-statement
 
-    # NOTE: Remove in the future in favour of typing
     assert isinstance(time_zone, dt.tzinfo)
 
     DEFAULT_TIME_ZONE = time_zone
@@ -49,14 +50,15 @@ def get_time_zone(time_zone_str: str) -> dt.tzinfo | None:
     Async friendly.
     """
     try:
-        return pytz.timezone(time_zone_str)
-    except pytzexceptions.UnknownTimeZoneError:
+        # Cast can be removed when mypy is switched to Python 3.9.
+        return cast(dt.tzinfo, zoneinfo.ZoneInfo(time_zone_str))
+    except zoneinfo.ZoneInfoNotFoundError:
         return None
 
 
 def utcnow() -> dt.datetime:
     """Get now in UTC time."""
-    return dt.datetime.now(NATIVE_UTC)
+    return dt.datetime.now(UTC)
 
 
 def now(time_zone: dt.tzinfo | None = None) -> dt.datetime:
@@ -72,15 +74,16 @@ def as_utc(dattim: dt.datetime) -> dt.datetime:
     if dattim.tzinfo == UTC:
         return dattim
     if dattim.tzinfo is None:
-        dattim = DEFAULT_TIME_ZONE.localize(dattim)  # type: ignore
+        dattim = dattim.replace(tzinfo=DEFAULT_TIME_ZONE)
 
     return dattim.astimezone(UTC)
 
 
-def as_timestamp(dt_value: dt.datetime) -> float:
+def as_timestamp(dt_value: dt.datetime | str) -> float:
     """Convert a date/time into a unix time (seconds since 1970)."""
-    if hasattr(dt_value, "timestamp"):
-        parsed_dt: dt.datetime | None = dt_value
+    parsed_dt: dt.datetime | None
+    if isinstance(dt_value, dt.datetime):
+        parsed_dt = dt_value
     else:
         parsed_dt = parse_datetime(str(dt_value))
     if parsed_dt is None:
@@ -93,14 +96,14 @@ def as_local(dattim: dt.datetime) -> dt.datetime:
     if dattim.tzinfo == DEFAULT_TIME_ZONE:
         return dattim
     if dattim.tzinfo is None:
-        dattim = UTC.localize(dattim)
+        dattim = dattim.replace(tzinfo=DEFAULT_TIME_ZONE)
 
     return dattim.astimezone(DEFAULT_TIME_ZONE)
 
 
 def utc_from_timestamp(timestamp: float) -> dt.datetime:
     """Return a UTC time from a timestamp."""
-    return UTC.localize(dt.datetime.utcfromtimestamp(timestamp))
+    return dt.datetime.utcfromtimestamp(timestamp).replace(tzinfo=UTC)
 
 
 def start_of_local_day(dt_or_d: dt.date | dt.datetime | None = None) -> dt.datetime:
@@ -112,9 +115,7 @@ def start_of_local_day(dt_or_d: dt.date | dt.datetime | None = None) -> dt.datet
     else:
         date = dt_or_d
 
-    return DEFAULT_TIME_ZONE.localize(  # type: ignore
-        dt.datetime.combine(date, dt.time())
-    )
+    return dt.datetime.combine(date, dt.time(), tzinfo=DEFAULT_TIME_ZONE)
 
 
 # Copyright (c) Django Software Foundation and individual contributors.
@@ -239,6 +240,12 @@ def parse_time_expression(parameter: Any, min_value: int, max_value: int) -> lis
     return res
 
 
+def _dst_offset_diff(dattim: dt.datetime) -> dt.timedelta:
+    """Return the offset when crossing the DST barrier."""
+    delta = dt.timedelta(hours=24)
+    return (dattim + delta).utcoffset() - (dattim - delta).utcoffset()  # type: ignore[operator]
+
+
 def find_next_time_expression_time(
     now: dt.datetime,  # pylint: disable=redefined-outer-name
     seconds: list[int],
@@ -262,15 +269,7 @@ def find_next_time_expression_time(
 
         Return None if no such value exists.
         """
-        left = 0
-        right = len(arr)
-        while left < right:
-            mid = (left + right) // 2
-            if arr[mid] < cmp:
-                left = mid + 1
-            else:
-                right = mid
-
+        left = bisect.bisect_left(arr, cmp)
         if left == len(arr):
             return None
         return arr[left]
@@ -312,38 +311,28 @@ def find_next_time_expression_time(
 
     result = result.replace(hour=next_hour)
 
-    if result.tzinfo is None:
+    if result.tzinfo in (None, UTC):
         return result
 
-    # Now we need to handle timezones. We will make this datetime object
-    # "naive" first and then re-convert it to the target timezone.
-    # This is so that we can call pytz's localize and handle DST changes.
-    tzinfo: pytzinfo.DstTzInfo = UTC if result.tzinfo == NATIVE_UTC else result.tzinfo
-    result = result.replace(tzinfo=None)
-
-    try:
-        result = tzinfo.localize(result, is_dst=None)
-    except pytzexceptions.AmbiguousTimeError:
+    if _datetime_ambiguous(result):
         # This happens when we're leaving daylight saving time and local
         # clocks are rolled back. In this case, we want to trigger
         # on both the DST and non-DST time. So when "now" is in the DST
         # use the DST-on time, and if not, use the DST-off time.
-        use_dst = bool(now.dst())
-        result = tzinfo.localize(result, is_dst=use_dst)
-    except pytzexceptions.NonExistentTimeError:
+        fold = 1 if now.dst() else 0
+        if result.fold != fold:
+            result = result.replace(fold=fold)
+
+    if not _datetime_exists(result):
         # This happens when we're entering daylight saving time and local
         # clocks are rolled forward, thus there are local times that do
         # not exist. In this case, we want to trigger on the next time
         # that *does* exist.
         # In the worst case, this will run through all the seconds in the
         # time shift, but that's max 3600 operations for once per year
-        result = result.replace(tzinfo=tzinfo) + dt.timedelta(seconds=1)
-        return find_next_time_expression_time(result, seconds, minutes, hours)
-
-    result_dst = cast(dt.timedelta, result.dst())
-    now_dst = cast(dt.timedelta, now.dst()) or dt.timedelta(0)
-    if result_dst >= now_dst:
-        return result
+        return find_next_time_expression_time(
+            result + dt.timedelta(seconds=1), seconds, minutes, hours
+        )
 
     # Another edge-case when leaving DST:
     # When now is in DST and ambiguous *and* the next trigger time we *should*
@@ -351,23 +340,26 @@ def find_next_time_expression_time(
     # For example: if triggering on 2:30 and now is 28.10.2018 2:30 (in DST)
     # we should trigger next on 28.10.2018 2:30 (out of DST), but our
     # algorithm above would produce 29.10.2018 2:30 (out of DST)
+    if _datetime_ambiguous(now):
+        check_result = find_next_time_expression_time(
+            now + _dst_offset_diff(now), seconds, minutes, hours
+        )
+        if _datetime_ambiguous(check_result):
+            return check_result
 
-    # Step 1: Check if now is ambiguous
-    try:
-        tzinfo.localize(now.replace(tzinfo=None), is_dst=None)
-        return result
-    except pytzexceptions.AmbiguousTimeError:
-        pass
+    return result
 
-    # Step 2: Check if result of (now - DST) is ambiguous.
-    check = now - now_dst
-    check_result = find_next_time_expression_time(check, seconds, minutes, hours)
-    try:
-        tzinfo.localize(check_result.replace(tzinfo=None), is_dst=None)
-        return result
-    except pytzexceptions.AmbiguousTimeError:
-        pass
 
-    # OK, edge case does apply. We must override the DST to DST-off
-    check_result = tzinfo.localize(check_result.replace(tzinfo=None), is_dst=False)
-    return check_result
+def _datetime_exists(dattim: dt.datetime) -> bool:
+    """Check if a datetime exists."""
+    assert dattim.tzinfo is not None
+    original_tzinfo = dattim.tzinfo
+    # Check if we can round trip to UTC
+    return dattim == dattim.astimezone(UTC).astimezone(original_tzinfo)
+
+
+def _datetime_ambiguous(dattim: dt.datetime) -> bool:
+    """Check whether a datetime is ambiguous."""
+    assert dattim.tzinfo is not None
+    opposite_fold = dattim.replace(fold=not dattim.fold)
+    return _datetime_exists(dattim) and dattim.utcoffset() != opposite_fold.utcoffset()

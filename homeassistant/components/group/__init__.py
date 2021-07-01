@@ -3,9 +3,10 @@ from __future__ import annotations
 
 from abc import abstractmethod
 import asyncio
+from collections.abc import Iterable
 from contextvars import ContextVar
 import logging
-from typing import Any, Iterable, List, cast
+from typing import Any, List, cast
 
 import voluptuous as vol
 

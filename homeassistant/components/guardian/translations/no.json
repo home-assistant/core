@@ -6,6 +6,9 @@
             "cannot_connect": "Tilkobling mislyktes"
         },
         "step": {
+            "discovery_confirm": {
+                "description": "Vil du konfigurere denne Guardian-enheten?"
+            },
             "user": {
                 "data": {
                     "ip_address": "IP adresse",

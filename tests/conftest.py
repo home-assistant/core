@@ -16,7 +16,7 @@ from homeassistant import core as ha, loader, runner, util
 from homeassistant.auth.const import GROUP_ID_ADMIN, GROUP_ID_READ_ONLY
 from homeassistant.auth.models import Credentials
 from homeassistant.auth.providers import homeassistant, legacy_api_password
-from homeassistant.components import mqtt
+from homeassistant.components import mqtt, recorder
 from homeassistant.components.websocket_api.auth import (
     TYPE_AUTH,
     TYPE_AUTH_OK,
@@ -39,6 +39,8 @@ from tests.common import (  # noqa: E402, isort:skip
     MockUser,
     async_fire_mqtt_message,
     async_test_home_assistant,
+    get_test_home_assistant,
+    init_recorder_component,
     mock_storage as mock_storage,
 )
 from tests.test_util.aiohttp import mock_aiohttp_client  # noqa: E402, isort:skip
@@ -478,7 +480,7 @@ async def mqtt_mock(hass, mqtt_client_mock, mqtt_config):
 @pytest.fixture
 def mock_zeroconf():
     """Mock zeroconf."""
-    with patch("homeassistant.components.zeroconf.HaZeroconf") as mock_zc:
+    with patch("homeassistant.components.zeroconf.models.HaZeroconf") as mock_zc:
         yield mock_zc.return_value
 
 
@@ -595,3 +597,36 @@ def legacy_patchable_time():
 def enable_custom_integrations(hass):
     """Enable custom integrations defined in the test dir."""
     hass.data.pop(loader.DATA_CUSTOM_COMPONENTS)
+
+
+@pytest.fixture
+def enable_statistics():
+    """Fixture to control enabling of recorder's statistics compilation.
+
+    To enable statistics, tests can be marked with:
+    @pytest.mark.parametrize("enable_statistics", [True])
+    """
+    return False
+
+
+@pytest.fixture
+def hass_recorder(enable_statistics):
+    """Home Assistant fixture with in-memory recorder."""
+    hass = get_test_home_assistant()
+    stats = recorder.Recorder.async_hourly_statistics if enable_statistics else None
+    with patch(
+        "homeassistant.components.recorder.Recorder.async_hourly_statistics",
+        side_effect=stats,
+        autospec=True,
+    ):
+
+        def setup_recorder(config=None):
+            """Set up with params."""
+            init_recorder_component(hass, config)
+            hass.start()
+            hass.block_till_done()
+            hass.data[recorder.DATA_INSTANCE].block_till_done()
+            return hass
+
+        yield setup_recorder
+        hass.stop()

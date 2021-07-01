@@ -1,5 +1,4 @@
 """Support for LCN devices."""
-import asyncio
 import logging
 
 import pypck
@@ -16,12 +15,10 @@ from homeassistant.const import (
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity import Entity
 
-from .const import CONF_DIM_MODE, CONF_SK_NUM_TRIES, CONNECTION, DOMAIN
+from .const import CONF_DIM_MODE, CONF_SK_NUM_TRIES, CONNECTION, DOMAIN, PLATFORMS
 from .helpers import generate_unique_id, import_lcn_config
 from .schemas import CONFIG_SCHEMA  # noqa: F401
 from .services import SERVICES
-
-PLATFORMS = ["binary_sensor", "climate", "cover", "light", "scene", "sensor", "switch"]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -95,10 +92,7 @@ async def async_setup_entry(hass, config_entry):
         entity_registry.async_clear_config_entry(config_entry.entry_id)
 
     # forward config_entry to components
-    for component in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, component)
-        )
+    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
 
     # register service calls
     for service_name, service in SERVICES:
@@ -113,13 +107,8 @@ async def async_setup_entry(hass, config_entry):
 async def async_unload_entry(hass, config_entry):
     """Close connection to PCHK host represented by config_entry."""
     # forward unloading to platforms
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(config_entry, component)
-                for component in PLATFORMS
-            ]
-        )
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        config_entry, PLATFORMS
     )
 
     if unload_ok and config_entry.entry_id in hass.data[DOMAIN]:

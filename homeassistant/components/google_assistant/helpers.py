@@ -364,7 +364,7 @@ class RequestData:
         source: str,
         request_id: str,
         devices: list[dict] | None,
-    ):
+    ) -> None:
         """Initialize the request data."""
         self.config = config
         self.source = source
@@ -388,7 +388,9 @@ def get_google_type(domain, device_class):
 class GoogleEntity:
     """Adaptation of Entity expressed in Google's terms."""
 
-    def __init__(self, hass: HomeAssistant, config: AbstractConfig, state: State):
+    def __init__(
+        self, hass: HomeAssistant, config: AbstractConfig, state: State
+    ) -> None:
         """Initialize a Google entity."""
         self.hass = hass
         self.config = config
@@ -408,7 +410,8 @@ class GoogleEntity:
 
         state = self.state
         domain = state.domain
-        features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        attributes = state.attributes
+        features = attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
         if not isinstance(features, int):
             _LOGGER.warning(
@@ -423,7 +426,7 @@ class GoogleEntity:
         self._traits = [
             Trait(self.hass, state, self.config)
             for Trait in trait.TRAITS
-            if Trait.supported(domain, features, device_class)
+            if Trait.supported(domain, features, device_class, attributes)
         ]
         return self._traits
 

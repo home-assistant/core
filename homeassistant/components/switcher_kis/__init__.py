@@ -1,4 +1,4 @@
-"""Home Assistant Switcher Component."""
+"""The Switcher integration."""
 from __future__ import annotations
 
 from asyncio import QueueEmpty, TimeoutError as Asyncio_TimeoutError, wait_for
@@ -8,29 +8,23 @@ import logging
 from aioswitcher.bridge import SwitcherV2Bridge
 import voluptuous as vol
 
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import CONF_DEVICE_ID, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.typing import EventType, HomeAssistantType
+from homeassistant.helpers.typing import EventType
+
+from .const import (
+    CONF_DEVICE_PASSWORD,
+    CONF_PHONE_ID,
+    DATA_DEVICE,
+    DOMAIN,
+    SIGNAL_SWITCHER_DEVICE_UPDATE,
+)
 
 _LOGGER = logging.getLogger(__name__)
-
-DOMAIN = "switcher_kis"
-
-CONF_DEVICE_PASSWORD = "device_password"
-CONF_PHONE_ID = "phone_id"
-
-DATA_DEVICE = "device"
-
-SIGNAL_SWITCHER_DEVICE_UPDATE = "switcher_device_update"
-
-ATTR_AUTO_OFF_SET = "auto_off_set"
-ATTR_ELECTRIC_CURRENT = "electric_current"
-ATTR_REMAINING_TIME = "remaining_time"
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -46,7 +40,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass: HomeAssistantType, config: dict) -> bool:
+async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     """Set up the switcher component."""
     phone_id = config[DOMAIN][CONF_PHONE_ID]
     device_id = config[DOMAIN][CONF_DEVICE_ID]
@@ -70,7 +64,8 @@ async def async_setup(hass: HomeAssistantType, config: dict) -> bool:
         return False
     hass.data[DOMAIN] = {DATA_DEVICE: device_data}
 
-    hass.async_create_task(async_load_platform(hass, SWITCH_DOMAIN, DOMAIN, {}, config))
+    hass.async_create_task(async_load_platform(hass, "switch", DOMAIN, {}, config))
+    hass.async_create_task(async_load_platform(hass, "sensor", DOMAIN, {}, config))
 
     @callback
     def device_updates(timestamp: datetime | None) -> None:

@@ -3,5 +3,6 @@
   "name": "Eight Sleep",
   "documentation": "https://www.home-assistant.io/integrations/eight_sleep",
   "requirements": ["pyeight==0.1.5"],
-  "codeowners": ["@mezz64"]
+  "codeowners": ["@mezz64"],
+  "iot_class": "cloud_polling"
 }

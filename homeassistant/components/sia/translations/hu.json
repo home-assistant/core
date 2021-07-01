@@ -1,0 +1,15 @@
+{
+    "config": {
+        "error": {
+            "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "port": "Port",
+                    "protocol": "Protokoll"
+                }
+            }
+        }
+    }
+}

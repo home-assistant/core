@@ -10,7 +10,7 @@
             "otp_failed": "Two-step authentication failed, retry with a new pass code",
             "unknown": "Unexpected error"
         },
-        "flow_title": "Synology DSM {name} ({host})",
+        "flow_title": "{name} ({host})",
         "step": {
             "2sa": {
                 "data": {

@@ -8,7 +8,7 @@ import attr
 import voluptuous as vol
 
 from homeassistant.components.automation import AutomationActionType
-from homeassistant.components.device_automation import TRIGGER_BASE_SCHEMA
+from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.const import (
     CONF_DEVICE,
     CONF_DEVICE_ID,
@@ -24,7 +24,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.typing import ConfigType
 
 from . import CONF_PAYLOAD, CONF_QOS, DOMAIN, debug_info, trigger as mqtt_trigger
 from .. import mqtt
@@ -54,7 +54,7 @@ MQTT_TRIGGER_BASE = {
     CONF_DOMAIN: DOMAIN,
 }
 
-TRIGGER_SCHEMA = TRIGGER_BASE_SCHEMA.extend(
+TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_PLATFORM): DEVICE,
         vol.Required(CONF_DOMAIN): DOMAIN,
@@ -120,7 +120,7 @@ class Trigger:
 
     device_id: str = attr.ib()
     discovery_data: dict = attr.ib()
-    hass: HomeAssistantType = attr.ib()
+    hass: HomeAssistant = attr.ib()
     payload: str = attr.ib()
     qos: int = attr.ib()
     remove_signal: Callable[[], None] = attr.ib()

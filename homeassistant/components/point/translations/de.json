@@ -2,7 +2,6 @@
     "config": {
         "abort": {
             "already_setup": "Bereits konfiguriert. Nur eine einzige Konfiguration m\u00f6glich.",
-            "authorize_url_fail": "Unbekannter Fehler beim Erstellen der Authorisierungs-URL.",
             "authorize_url_timeout": "Zeit\u00fcberschreitung beim Erstellen der Authorisierungs-URL.",
             "external_setup": "Pointt erfolgreich von einem anderen Flow konfiguriert.",
             "no_flows": "Die Komponente ist nicht konfiguriert. Bitte der Dokumentation folgen.",

@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio.subprocess
 import collections
+from collections.abc import Mapping
 import logging
 import os
 from typing import Any, cast
@@ -10,6 +11,7 @@ from typing import Any, cast
 import voluptuous as vol
 
 from homeassistant.const import CONF_COMMAND
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 
 from . import AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, AuthProvider, LoginFlow
@@ -100,7 +102,7 @@ class CommandLineAuthProvider(AuthProvider):
             self._user_meta[username] = meta
 
     async def async_get_or_create_credentials(
-        self, flow_result: dict[str, str]
+        self, flow_result: Mapping[str, str]
     ) -> Credentials:
         """Get credentials based on the flow result."""
         username = flow_result["username"]
@@ -127,7 +129,7 @@ class CommandLineLoginFlow(LoginFlow):
 
     async def async_step_init(
         self, user_input: dict[str, str] | None = None
-    ) -> dict[str, Any]:
+    ) -> FlowResult:
         """Handle the step of the form."""
         errors = {}
 

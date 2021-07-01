@@ -13,9 +13,10 @@ from homeassistant.components.air_quality import (
     ATTR_PM_2_5,
     ATTR_PM_10,
     ATTR_SO2,
+    DOMAIN as AIR_QUALITY_DOMAIN,
 )
 from homeassistant.components.gios.air_quality import ATTRIBUTION
-from homeassistant.components.gios.const import AQI_GOOD
+from homeassistant.components.gios.const import AQI_GOOD, DOMAIN
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_ICON,
@@ -55,7 +56,7 @@ async def test_air_quality(hass):
 
     entry = registry.async_get("air_quality.home")
     assert entry
-    assert entry.unique_id == 123
+    assert entry.unique_id == "123"
 
 
 async def test_air_quality_with_incomplete_data(hass):
@@ -83,7 +84,7 @@ async def test_air_quality_with_incomplete_data(hass):
 
     entry = registry.async_get("air_quality.home")
     assert entry
-    assert entry.unique_id == 123
+    assert entry.unique_id == "123"
 
 
 async def test_availability(hass):
@@ -122,3 +123,23 @@ async def test_availability(hass):
         assert state
         assert state.state != STATE_UNAVAILABLE
         assert state.state == "4"
+
+
+async def test_migrate_unique_id(hass):
+    """Test migrate unique_id of the air_quality entity."""
+    registry = er.async_get(hass)
+
+    # Pre-create registry entries for disabled by default sensors
+    registry.async_get_or_create(
+        AIR_QUALITY_DOMAIN,
+        DOMAIN,
+        123,
+        suggested_object_id="home",
+        disabled_by=None,
+    )
+
+    await init_integration(hass)
+
+    entry = registry.async_get("air_quality.home")
+    assert entry
+    assert entry.unique_id == "123"

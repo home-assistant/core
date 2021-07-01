@@ -1,7 +1,8 @@
 """Script variables."""
 from __future__ import annotations
 
-from typing import Any, Mapping
+from collections.abc import Mapping
+from typing import Any
 
 from homeassistant.core import HomeAssistant, callback
 
@@ -11,7 +12,7 @@ from . import template
 class ScriptVariables:
     """Class to hold and render script variables."""
 
-    def __init__(self, variables: dict[str, Any]):
+    def __init__(self, variables: dict[str, Any]) -> None:
         """Initialize script variables."""
         self.variables = variables
         self._has_template: bool | None = None

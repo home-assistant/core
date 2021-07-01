@@ -6,6 +6,7 @@ from homeassistant.components.climate.const import (
     FAN_HIGH,
     FAN_LOW,
     FAN_MEDIUM,
+    HVAC_MODE_AUTO,
     HVAC_MODE_COOL,
     HVAC_MODE_DRY,
     HVAC_MODE_FAN_ONLY,
@@ -15,6 +16,7 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, TEMP_CELSIUS
+from homeassistant.helpers import entity_platform
 
 from .const import (
     ADVANTAGE_AIR_STATE_CLOSE,
@@ -30,8 +32,17 @@ ADVANTAGE_AIR_HVAC_MODES = {
     "cool": HVAC_MODE_COOL,
     "vent": HVAC_MODE_FAN_ONLY,
     "dry": HVAC_MODE_DRY,
+    "myauto": HVAC_MODE_AUTO,
 }
 HASS_HVAC_MODES = {v: k for k, v in ADVANTAGE_AIR_HVAC_MODES.items()}
+
+AC_HVAC_MODES = [
+    HVAC_MODE_OFF,
+    HVAC_MODE_COOL,
+    HVAC_MODE_HEAT,
+    HVAC_MODE_FAN_ONLY,
+    HVAC_MODE_DRY,
+]
 
 ADVANTAGE_AIR_FAN_MODES = {
     "auto": FAN_AUTO,
@@ -42,13 +53,7 @@ ADVANTAGE_AIR_FAN_MODES = {
 HASS_FAN_MODES = {v: k for k, v in ADVANTAGE_AIR_FAN_MODES.items()}
 FAN_SPEEDS = {FAN_LOW: 30, FAN_MEDIUM: 60, FAN_HIGH: 100}
 
-AC_HVAC_MODES = [
-    HVAC_MODE_OFF,
-    HVAC_MODE_COOL,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_FAN_ONLY,
-    HVAC_MODE_DRY,
-]
+ADVANTAGE_AIR_SERVICE_SET_MYZONE = "set_myzone"
 ZONE_HVAC_MODES = [HVAC_MODE_OFF, HVAC_MODE_FAN_ONLY]
 
 PARALLEL_UPDATES = 0
@@ -67,6 +72,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             if zone["type"] != 0:
                 entities.append(AdvantageAirZone(instance, ac_key, zone_key))
     async_add_entities(entities)
+
+    platform = entity_platform.async_get_current_platform()
+    platform.async_register_entity_service(
+        ADVANTAGE_AIR_SERVICE_SET_MYZONE,
+        {},
+        "set_myzone",
+    )
 
 
 class AdvantageAirClimateEntity(AdvantageAirEntity, ClimateEntity):
@@ -121,6 +133,8 @@ class AdvantageAirAC(AdvantageAirClimateEntity):
     @property
     def hvac_modes(self):
         """Return the supported HVAC modes."""
+        if self._ac.get("myAutoModeEnabled"):
+            return AC_HVAC_MODES + [HVAC_MODE_AUTO]
         return AC_HVAC_MODES
 
     @property
@@ -232,4 +246,10 @@ class AdvantageAirZone(AdvantageAirClimateEntity):
         temp = kwargs.get(ATTR_TEMPERATURE)
         await self.async_change(
             {self.ac_key: {"zones": {self.zone_key: {"setTemp": temp}}}}
+        )
+
+    async def set_myzone(self, **kwargs):
+        """Set this zone as the 'MyZone'."""
+        await self.async_change(
+            {self.ac_key: {"info": {"myZone": self._zone["number"]}}}
         )

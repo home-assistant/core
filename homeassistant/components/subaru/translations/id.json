@@ -8,8 +8,7 @@
             "bad_pin_format": "PIN harus terdiri dari 4 angka",
             "cannot_connect": "Gagal terhubung",
             "incorrect_pin": "PIN salah",
-            "invalid_auth": "Autentikasi tidak valid",
-            "unknown": "Kesalahan yang tidak diharapkan"
+            "invalid_auth": "Autentikasi tidak valid"
         },
         "step": {
             "pin": {

@@ -7,8 +7,8 @@ from typing import Any
 from spotipy import Spotify
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components import persistent_notification
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from .const import DOMAIN, SPOTIFY_SCOPES
@@ -21,7 +21,6 @@ class SpotifyFlowHandler(
 
     DOMAIN = DOMAIN
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     def __init__(self) -> None:
         """Instantiate config flow."""
@@ -38,7 +37,7 @@ class SpotifyFlowHandler(
         """Extra data that needs to be appended to the authorize url."""
         return {"scope": ",".join(SPOTIFY_SCOPES)}
 
-    async def async_oauth_create_entry(self, data: dict[str, Any]) -> dict[str, Any]:
+    async def async_oauth_create_entry(self, data: dict[str, Any]) -> FlowResult:
         """Create an entry for Spotify."""
         spotify = Spotify(auth=data["token"]["access_token"])
 
@@ -60,7 +59,7 @@ class SpotifyFlowHandler(
 
         return self.async_create_entry(title=name, data=data)
 
-    async def async_step_reauth(self, entry: dict[str, Any]) -> dict[str, Any]:
+    async def async_step_reauth(self, entry: dict[str, Any]) -> FlowResult:
         """Perform reauth upon migration of old entries."""
         if entry:
             self.entry = entry
@@ -76,7 +75,7 @@ class SpotifyFlowHandler(
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> dict[str, Any]:
+    ) -> FlowResult:
         """Confirm reauth dialog."""
         if user_input is None:
             return self.async_show_form(

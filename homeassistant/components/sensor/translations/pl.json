@@ -13,7 +13,6 @@
             "is_pressure": "obecne ci\u015bnienie {entity_name}",
             "is_signal_strength": "obecna si\u0142a sygna\u0142u {entity_name}",
             "is_temperature": "obecna temperatura {entity_name}",
-            "is_timestamp": "obecny znacznik czasu {entity_name}",
             "is_value": "obecna warto\u015b\u0107 {entity_name}",
             "is_voltage": "obecne napi\u0119cie {entity_name}"
         },
@@ -30,7 +29,6 @@
             "pressure": "zmieni si\u0119 ci\u015bnienie {entity_name}",
             "signal_strength": "zmieni si\u0119 si\u0142a sygna\u0142u {entity_name}",
             "temperature": "zmieni si\u0119 temperatura {entity_name}",
-            "timestamp": "zmieni si\u0119 znacznik czasu {entity_name}",
             "value": "zmieni si\u0119 warto\u015b\u0107 {entity_name}",
             "voltage": "zmieni si\u0119 napi\u0119cie w {entity_name}"
         }

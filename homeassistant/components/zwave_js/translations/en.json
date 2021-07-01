@@ -4,7 +4,6 @@
             "addon_get_discovery_info_failed": "Failed to get Z-Wave JS add-on discovery info.",
             "addon_info_failed": "Failed to get Z-Wave JS add-on info.",
             "addon_install_failed": "Failed to install the Z-Wave JS add-on.",
-            "addon_missing_discovery_info": "Missing Z-Wave JS add-on discovery info.",
             "addon_set_config_failed": "Failed to set Z-Wave JS configuration.",
             "addon_start_failed": "Failed to start the Z-Wave JS add-on.",
             "already_configured": "Device is already configured",
@@ -49,11 +48,56 @@
             },
             "start_addon": {
                 "title": "The Z-Wave JS add-on is starting."
+            }
+        }
+    },
+    "options": {
+        "abort": {
+            "addon_get_discovery_info_failed": "Failed to get Z-Wave JS add-on discovery info.",
+            "addon_info_failed": "Failed to get Z-Wave JS add-on info.",
+            "addon_install_failed": "Failed to install the Z-Wave JS add-on.",
+            "addon_set_config_failed": "Failed to set Z-Wave JS configuration.",
+            "addon_start_failed": "Failed to start the Z-Wave JS add-on.",
+            "already_configured": "Device is already configured",
+            "cannot_connect": "Failed to connect",
+            "different_device": "The connected USB device is not the same as previously configured for this config entry. Please instead create a new config entry for the new device."
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_ws_url": "Invalid websocket URL",
+            "unknown": "Unexpected error"
+        },
+        "progress": {
+            "install_addon": "Please wait while the Z-Wave JS add-on installation finishes. This can take several minutes.",
+            "start_addon": "Please wait while the Z-Wave JS add-on start completes. This may take some seconds."
+        },
+        "step": {
+            "configure_addon": {
+                "data": {
+                    "emulate_hardware": "Emulate Hardware",
+                    "log_level": "Log level",
+                    "network_key": "Network Key",
+                    "usb_path": "USB Device Path"
+                },
+                "title": "Enter the Z-Wave JS add-on configuration"
             },
-            "user": {
+            "install_addon": {
+                "title": "The Z-Wave JS add-on installation has started"
+            },
+            "manual": {
                 "data": {
                     "url": "URL"
                 }
+            },
+            "on_supervisor": {
+                "data": {
+                    "use_addon": "Use the Z-Wave JS Supervisor add-on"
+                },
+                "description": "Do you want to use the Z-Wave JS Supervisor add-on?",
+                "title": "Select connection method"
+            },
+            "start_addon": {
+                "title": "The Z-Wave JS add-on is starting."
             }
         }
     },

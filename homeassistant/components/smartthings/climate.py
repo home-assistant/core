@@ -2,9 +2,8 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
 import logging
-from typing import Sequence
 
 from pysmartthings import Attribute, Capability
 

@@ -1,0 +1,19 @@
+{
+    "config": {
+        "error": {
+            "already_configured": "Tjenesten er allerede konfigurert"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "elevation": "Elevasjon",
+                    "latitude": "Breddegrad",
+                    "longitude": "Lengdegrad",
+                    "name": "Navn"
+                },
+                "description": "Skriv inn posisjonen din for \u00e5 bruke v\u00e6rdata fra Met \u00c9ireann Public Weather Forecast API",
+                "title": "Plassering"
+            }
+        }
+    }
+}

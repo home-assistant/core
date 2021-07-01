@@ -6,7 +6,7 @@ from aiohue.sensors import (
     TYPE_ZLL_TEMPERATURE,
 )
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
 from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_ILLUMINANCE,
@@ -26,23 +26,23 @@ TEMPERATURE_NAME_FORMAT = "{} temperature"
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Defer sensor setup to the shared sensor module."""
-    await hass.data[HUE_DOMAIN][
-        config_entry.entry_id
-    ].sensor_manager.async_register_component("sensor", async_add_entities)
+    bridge = hass.data[HUE_DOMAIN][config_entry.entry_id]
+
+    if not bridge.sensor_manager:
+        return
+
+    await bridge.sensor_manager.async_register_component("sensor", async_add_entities)
 
 
 class GenericHueGaugeSensorEntity(GenericZLLSensor, SensorEntity):
     """Parent class for all 'gauge' Hue device sensors."""
 
-    async def _async_update_ha_state(self, *args, **kwargs):
-        await self.async_update_ha_state(self, *args, **kwargs)
-
 
 class HueLightLevel(GenericHueGaugeSensorEntity):
     """The light level sensor entity for a Hue motion sensor device."""
 
-    device_class = DEVICE_CLASS_ILLUMINANCE
-    unit_of_measurement = LIGHT_LUX
+    _attr_device_class = DEVICE_CLASS_ILLUMINANCE
+    _attr_unit_of_measurement = LIGHT_LUX
 
     @property
     def state(self):
@@ -76,8 +76,9 @@ class HueLightLevel(GenericHueGaugeSensorEntity):
 class HueTemperature(GenericHueGaugeSensorEntity):
     """The temperature sensor entity for a Hue motion sensor device."""
 
-    device_class = DEVICE_CLASS_TEMPERATURE
-    unit_of_measurement = TEMP_CELSIUS
+    _attr_device_class = DEVICE_CLASS_TEMPERATURE
+    _attr_state_class = STATE_CLASS_MEASUREMENT
+    _attr_unit_of_measurement = TEMP_CELSIUS
 
     @property
     def state(self):
@@ -91,6 +92,10 @@ class HueTemperature(GenericHueGaugeSensorEntity):
 class HueBattery(GenericHueSensor, SensorEntity):
     """Battery class for when a batt-powered device is only represented as an event."""
 
+    _attr_device_class = DEVICE_CLASS_BATTERY
+    _attr_state_class = STATE_CLASS_MEASUREMENT
+    _attr_unit_of_measurement = PERCENTAGE
+
     @property
     def unique_id(self):
         """Return a unique identifier for this device."""
@@ -100,16 +105,6 @@ class HueBattery(GenericHueSensor, SensorEntity):
     def state(self):
         """Return the state of the battery."""
         return self.sensor.battery
-
-    @property
-    def device_class(self):
-        """Return the class of the sensor."""
-        return DEVICE_CLASS_BATTERY
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of this entity."""
-        return PERCENTAGE
 
 
 SENSOR_CONFIG_MAP.update(

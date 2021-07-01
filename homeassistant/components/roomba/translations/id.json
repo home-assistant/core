@@ -3,7 +3,8 @@
         "abort": {
             "already_configured": "Perangkat sudah dikonfigurasi",
             "cannot_connect": "Gagal terhubung",
-            "not_irobot_device": "Perangkat yang ditemukan bukan perangkat iRobot"
+            "not_irobot_device": "Perangkat yang ditemukan bukan perangkat iRobot",
+            "short_blid": "BLID terpotong"
         },
         "error": {
             "cannot_connect": "Gagal terhubung"

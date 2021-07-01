@@ -9,13 +9,14 @@ import aiohttp
 import pytest
 import requests
 
+from homeassistant import config_entries
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import CoreState
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import update_coordinator
 from homeassistant.util.dt import utcnow
 
-from tests.common import async_fire_time_changed
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -335,6 +336,15 @@ async def test_stop_refresh_on_ha_stop(hass, crd):
     await hass.async_block_till_done()
     assert crd.data == 1
 
+    # Ensure we can still manually refresh after stop
+    await crd.async_refresh()
+    assert crd.data == 2
+
+    # ...and that the manual refresh doesn't setup another scheduled refresh
+    async_fire_time_changed(hass, utcnow() + update_interval)
+    await hass.async_block_till_done()
+    assert crd.data == 2
+
 
 @pytest.mark.parametrize(
     "err_msg",
@@ -362,3 +372,12 @@ async def test_async_config_entry_first_refresh_success(crd, caplog):
     await crd.async_config_entry_first_refresh()
 
     assert crd.last_update_success is True
+
+
+async def test_not_schedule_refresh_if_system_option_disable_polling(hass):
+    """Test we do not schedule a refresh if disable polling in config entry."""
+    entry = MockConfigEntry(pref_disable_polling=True)
+    config_entries.current_entry.set(entry)
+    crd = get_crd(hass, DEFAULT_UPDATE_INTERVAL)
+    crd.async_add_listener(lambda: None)
+    assert crd._unsub_refresh is None

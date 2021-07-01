@@ -22,7 +22,7 @@ from homematicip.aio.group import AsyncExtendedLinkedSwitchingGroup, AsyncSwitch
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
 
 from . import DOMAIN as HMIPC_DOMAIN, HomematicipGenericEntity
 from .generic_entity import ATTR_GROUP_MEMBER_UNREACHABLE
@@ -30,7 +30,7 @@ from .hap import HomematicipHAP
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType, config_entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up the HomematicIP switch from a config entry."""
     hap = hass.data[HMIPC_DOMAIN][config_entry.unique_id]

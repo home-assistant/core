@@ -9,7 +9,7 @@
             "unknown": "Unexpected error",
             "unsupported_version": "BleBox device has outdated firmware. Please upgrade it first."
         },
-        "flow_title": "BleBox device: {name} ({host})",
+        "flow_title": "{name} ({host})",
         "step": {
             "user": {
                 "data": {

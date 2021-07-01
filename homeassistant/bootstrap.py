@@ -389,6 +389,7 @@ async def _async_watch_pending_setups(hass: core.HomeAssistant) -> None:
     """Periodic log of setups that are pending for longer than LOG_SLOW_STARTUP_INTERVAL."""
     loop_count = 0
     setup_started: dict[str, datetime] = hass.data[DATA_SETUP_STARTED]
+    previous_was_empty = True
     while True:
         now = dt_util.utcnow()
         remaining_with_setup_started = {
@@ -396,9 +397,11 @@ async def _async_watch_pending_setups(hass: core.HomeAssistant) -> None:
             for domain in setup_started
         }
         _LOGGER.debug("Integration remaining: %s", remaining_with_setup_started)
-        async_dispatcher_send(
-            hass, SIGNAL_BOOTSTRAP_INTEGRATONS, remaining_with_setup_started
-        )
+        if remaining_with_setup_started or not previous_was_empty:
+            async_dispatcher_send(
+                hass, SIGNAL_BOOTSTRAP_INTEGRATONS, remaining_with_setup_started
+            )
+        previous_was_empty = not remaining_with_setup_started
         await asyncio.sleep(SLOW_STARTUP_CHECK_INTERVAL)
         loop_count += SLOW_STARTUP_CHECK_INTERVAL
 
@@ -440,7 +443,7 @@ async def _async_set_up_integrations(
     hass.data[DATA_SETUP_STARTED] = {}
     setup_time = hass.data[DATA_SETUP_TIME] = {}
 
-    log_task = asyncio.create_task(_async_watch_pending_setups(hass))
+    watch_task = asyncio.create_task(_async_watch_pending_setups(hass))
 
     domains_to_setup = _get_domains(hass, config)
 
@@ -555,7 +558,9 @@ async def _async_set_up_integrations(
         except asyncio.TimeoutError:
             _LOGGER.warning("Setup timed out for stage 2 - moving forward")
 
-    log_task.cancel()
+    watch_task.cancel()
+    async_dispatcher_send(hass, SIGNAL_BOOTSTRAP_INTEGRATONS, {})
+
     _LOGGER.debug(
         "Integration setup times: %s",
         {

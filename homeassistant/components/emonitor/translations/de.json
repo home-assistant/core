@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert"
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "unknown": "Unerwarteter Fehler"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "confirm": {
+                "description": "M\u00f6chten Sie {name} ({host}) einrichten?",
+                "title": "Einrichtung SiteSage Emonitor"
+            },
+            "user": {
+                "data": {
+                    "host": "Host"
+                }
+            }
+        }
+    }
+}

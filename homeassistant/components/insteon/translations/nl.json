@@ -101,7 +101,7 @@
                 "data": {
                     "address": "Selecteer een apparaatadres om te verwijderen"
                 },
-                "description": "Een X10 apparaat verwijderen",
+                "description": "Verwijder een X10 apparaat",
                 "title": "Insteon"
             }
         }

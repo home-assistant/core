@@ -289,6 +289,7 @@ class HangoutsBot:
                 uri = data.get("image_file")
                 if self.hass.config.is_allowed_path(uri):
                     try:
+                        # pylint: disable=consider-using-with
                         image_file = open(uri, "rb")
                     except OSError as error:
                         _LOGGER.error(

@@ -14,7 +14,7 @@ from tests.components.light.conftest import mock_light_profiles  # noqa: F401
 @pytest.fixture(autouse=True)
 def mock_zeroconf():
     """Mock zeroconf."""
-    with mock.patch("homeassistant.components.zeroconf.HaZeroconf") as mock_zc:
+    with mock.patch("homeassistant.components.zeroconf.models.HaZeroconf") as mock_zc:
         yield mock_zc.return_value
 
 

@@ -3,5 +3,10 @@
         "create_entry": {
             "default": "Autentiserad med Netatmo."
         }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "schedule": "schema"
+        }
     }
 }

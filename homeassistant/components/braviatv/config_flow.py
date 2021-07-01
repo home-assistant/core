@@ -1,6 +1,5 @@
 """Adds config flow for Bravia TV integration."""
 import ipaddress
-import logging
 import re
 
 from bravia_tv import BraviaRC
@@ -16,20 +15,17 @@ from .const import (
     ATTR_CID,
     ATTR_MAC,
     ATTR_MODEL,
-    BRAVIARC,
     CLIENTID_PREFIX,
     CONF_IGNORED_SOURCES,
     DOMAIN,
     NICKNAME,
 )
 
-_LOGGER = logging.getLogger(__name__)
-
 
 def host_valid(host):
     """Return True if hostname or IP address is valid."""
     try:
-        if ipaddress.ip_address(host).version == (4 or 6):
+        if ipaddress.ip_address(host).version in [4, 6]:
             return True
     except ValueError:
         disallowed = re.compile(r"[^a-zA-Z\d\-]")
@@ -40,7 +36,6 @@ class BraviaTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for BraviaTV integration."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     def __init__(self):
         """Initialize."""
@@ -76,27 +71,6 @@ class BraviaTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def async_get_options_flow(config_entry):
         """Bravia TV options callback."""
         return BraviaTVOptionsFlowHandler(config_entry)
-
-    async def async_step_import(self, user_input=None):
-        """Handle configuration by yaml file."""
-        self.host = user_input[CONF_HOST]
-        self.braviarc = BraviaRC(self.host)
-
-        try:
-            await self.init_device(user_input[CONF_PIN])
-        except CannotConnect:
-            _LOGGER.error("Import aborted, cannot connect to %s", self.host)
-            return self.async_abort(reason="cannot_connect")
-        except NoIPControl:
-            _LOGGER.error("IP Control is disabled in the TV settings")
-            return self.async_abort(reason="no_ip_control")
-        except ModelNotSupported:
-            _LOGGER.error("Import aborted, your TV is not supported")
-            return self.async_abort(reason="unsupported_model")
-
-        user_input[CONF_MAC] = self.mac
-
-        return self.async_create_entry(title=self.title, data=user_input)
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
@@ -161,7 +135,8 @@ class BraviaTVOptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_init(self, user_input=None):
         """Manage the options."""
-        self.braviarc = self.hass.data[DOMAIN][self.config_entry.entry_id][BRAVIARC]
+        coordinator = self.hass.data[DOMAIN][self.config_entry.entry_id]
+        self.braviarc = coordinator.braviarc
         connected = await self.hass.async_add_executor_job(self.braviarc.is_connected)
         if not connected:
             await self.hass.async_add_executor_job(

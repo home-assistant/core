@@ -62,7 +62,8 @@
                     "port": "Poort",
                     "username": "Gebruikersnaam"
                 },
-                "description": "Voer de verbindingsgegevens van uw MQTT-broker in."
+                "description": "Voer de verbindingsgegevens van uw MQTT-broker in.",
+                "title": "Broker opties"
             },
             "options": {
                 "data": {
@@ -78,7 +79,8 @@
                     "will_retain": "Will message behouden",
                     "will_topic": "Will message topic"
                 },
-                "description": "Selecteer MQTT-opties."
+                "description": "Detectie - Als detectie is ingeschakeld (aanbevolen), zal Home Assistant automatisch apparaten en entiteiten detecteren die hun configuratie publiceren op de MQTT-broker. Als detectie is uitgeschakeld, moet alle configuratie handmatig worden uitgevoerd.\n Birth message - Het birth message wordt elke keer dat Home Assistant (opnieuw) verbinding maakt met de MQTT-broker, verzonden.\n Will message - Het will message wordt telkens verzonden  wanneer Home Assistant de verbinding met de broker verliest, zowel in het geval van een schone (bijv. Home Assistant wordt uitgeschakeld) als in geval van een onjuiste (bijv. Home Assistant crasht of verliest de netwerkverbinding) verbroken verbinding.",
+                "title": "MQTT-opties"
             }
         }
     }

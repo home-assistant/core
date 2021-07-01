@@ -1,5 +1,4 @@
 """The motion_blinds component."""
-import asyncio
 from datetime import timedelta
 import logging
 from socket import timeout
@@ -81,23 +80,13 @@ class DataUpdateCoordinatorMotionBlinds(DataUpdateCoordinator):
         """Fetch the latest data from the gateway and blinds."""
         data = await self.hass.async_add_executor_job(self.update_gateway)
 
-        all_available = True
-        for device in data.values():
-            if not device[ATTR_AVAILABLE]:
-                all_available = False
-                break
-
+        all_available = all(device[ATTR_AVAILABLE] for device in data.values())
         if all_available:
             self.update_interval = timedelta(seconds=UPDATE_INTERVAL)
         else:
             self.update_interval = timedelta(seconds=UPDATE_INTERVAL_FAST)
 
         return data
-
-
-def setup(hass: core.HomeAssistant, config: dict):
-    """Set up the Motion Blinds component."""
-    return True
 
 
 async def async_setup_entry(
@@ -159,10 +148,7 @@ async def async_setup_entry(
         sw_version=motion_gateway.protocol,
     )
 
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, platform)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
@@ -171,13 +157,8 @@ async def async_unload_entry(
     hass: core.HomeAssistant, config_entry: config_entries.ConfigEntry
 ):
     """Unload a config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(config_entry, platform)
-                for platform in PLATFORMS
-            ]
-        )
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        config_entry, PLATFORMS
     )
 
     if unload_ok:

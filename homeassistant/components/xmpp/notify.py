@@ -113,7 +113,7 @@ class XmppNotificationService(BaseNotificationService):
         )
 
 
-async def async_send_message(
+async def async_send_message(  # noqa: C901
     sender,
     password,
     recipients,

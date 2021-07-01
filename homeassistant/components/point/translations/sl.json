@@ -2,7 +2,6 @@
     "config": {
         "abort": {
             "already_setup": "Nastavite lahko samo en ra\u010dun Point.",
-            "authorize_url_fail": "Neznana napaka pri generiranju potrditvenega URL-ja.",
             "authorize_url_timeout": "\u010casovna omejitev za generiranje potrditvenega URL-ja je potekla.",
             "external_setup": "To\u010dka uspe\u0161no konfigurirana iz drugega toka.",
             "no_flows": "Preden lahko preverite pristnost, morate konfigurirati Point. [Preberite navodila](https://www.home-assistant.io/components/point/).",

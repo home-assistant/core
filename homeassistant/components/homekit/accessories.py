@@ -42,7 +42,7 @@ from homeassistant.util.decorator import Registry
 
 from .const import (
     ATTR_DISPLAY_NAME,
-    ATTR_INTERGRATION,
+    ATTR_INTEGRATION,
     ATTR_MANUFACTURER,
     ATTR_MODEL,
     ATTR_SOFTWARE_VERSION,
@@ -92,7 +92,7 @@ SWITCH_TYPES = {
 TYPES = Registry()
 
 
-def get_accessory(hass, driver, state, aid, config):
+def get_accessory(hass, driver, state, aid, config):  # noqa: C901
     """Take state and return an accessory object if supported."""
     if not aid:
         _LOGGER.warning(
@@ -221,8 +221,8 @@ class HomeAccessory(Accessory):
 
         if ATTR_MANUFACTURER in self.config:
             manufacturer = self.config[ATTR_MANUFACTURER]
-        elif ATTR_INTERGRATION in self.config:
-            manufacturer = self.config[ATTR_INTERGRATION].replace("_", " ").title()
+        elif ATTR_INTEGRATION in self.config:
+            manufacturer = self.config[ATTR_INTEGRATION].replace("_", " ").title()
         else:
             manufacturer = f"{MANUFACTURER} {domain}".title()
         if ATTR_MODEL in self.config:

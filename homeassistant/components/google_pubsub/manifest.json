@@ -3,5 +3,6 @@
   "name": "Google Pub/Sub",
   "documentation": "https://www.home-assistant.io/integrations/google_pubsub",
   "requirements": ["google-cloud-pubsub==2.1.0"],
-  "codeowners": []
+  "codeowners": [],
+  "iot_class": "cloud_push"
 }

@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "no_devices_found": "V\u00f5rgust ei leitud \u00fchtegi Google Casti seadet.",
             "single_instance_allowed": "Vajalik on ainult \u00fcks Google Casti konfiguratsioon."
         },
         "error": {
@@ -10,10 +9,10 @@
         "step": {
             "config": {
                 "data": {
-                    "known_hosts": "Valikuline loend teadaolevatest hostidest kui mDNS-i tuvastamine ei t\u00f6\u00f6ta."
+                    "known_hosts": "Tuntud hostid"
                 },
-                "description": "Sisesta Google Casti andmed.",
-                "title": "Google Cast"
+                "description": "Tuntud hostid - komadega eraldatud loend seadmete hostinimedest v\u00f5i IP-aadressidest. Kasuta seda juhul kui mDNS-i tuvastus ei t\u00f6\u00f6ta.",
+                "title": "Google Casti s\u00e4tted"
             },
             "confirm": {
                 "description": "Kas soovid seadistada Google Casti?"
@@ -25,13 +24,20 @@
             "invalid_known_hosts": "Teadaolevad hostid peab olema komaeraldusega hostide loend."
         },
         "step": {
-            "options": {
+            "advanced_options": {
                 "data": {
-                    "ignore_cec": "Valikuline nimekiri mis edastatakse pychromecast.IGNORE_CEC-ile.",
-                    "known_hosts": "Valikuline loend teadaolevatest hostidest kui mDNS-i tuvastamine ei t\u00f6\u00f6ta.",
-                    "uuid": "Valikuline UUIDide loend. Loetlemata cast-e ei lisata."
+                    "ignore_cec": "Eira CEC-i",
+                    "uuid": "Lubatud UUID-d"
                 },
-                "description": "Sisesta Google Casti andmed."
+                "description": "Lubatud UUID-d - komadega eraldatud loetelu UUID-dest, mida soovitakse lisada Home Assistant'ile. Kasuta ainult siis,kui ei soovi lisada k\u00f5iki olemasolevaid Cast seadmeid.\nIgnore CEC - komadega eraldatud loetelu Chromecastidest, mis peaksid aktiivse sisendi m\u00e4\u00e4ramisel CEC-andmeid ignoreerima. See edastatakse pychromecast.IGNORE_CEC.",
+                "title": "Google Casti seadistamise t\u00e4psemad valikud"
+            },
+            "basic_options": {
+                "data": {
+                    "known_hosts": "Tuntud hostid"
+                },
+                "description": "Tuntud hostid - komadega eraldatud loend hostitud seadmete hostinimedest v\u00f5i IP-aadressidest. Kasuta seda juhul kui mDNS-i tuvastus ei t\u00f6\u00f6ta.",
+                "title": "Google Casti s\u00e4tted"
             }
         }
     }

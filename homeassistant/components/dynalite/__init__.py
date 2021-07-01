@@ -1,7 +1,6 @@
 """Support for the Dynalite networks."""
 from __future__ import annotations
 
-import asyncio
 from typing import Any
 
 import voluptuous as vol
@@ -267,17 +266,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     bridge = DynaliteBridge(hass, entry.data)
     # need to do it before the listener
     hass.data[DOMAIN][entry.entry_id] = bridge
-    entry.add_update_listener(async_entry_changed)
+    entry.async_on_unload(entry.add_update_listener(async_entry_changed))
 
     if not await bridge.async_setup():
         LOGGER.error("Could not set up bridge for entry %s", entry.data)
         hass.data[DOMAIN][entry.entry_id] = None
         raise ConfigEntryNotReady
 
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, platform)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
@@ -285,10 +281,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     LOGGER.debug("Unloading entry %s", entry.data)
-    hass.data[DOMAIN].pop(entry.entry_id)
-    tasks = [
-        hass.config_entries.async_forward_entry_unload(entry, platform)
-        for platform in PLATFORMS
-    ]
-    results = await asyncio.gather(*tasks)
-    return False not in results
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unload_ok:
+        hass.data[DOMAIN].pop(entry.entry_id)
+    return unload_ok

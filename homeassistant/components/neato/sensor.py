@@ -80,7 +80,7 @@ class NeatoSensor(SensorEntity):
     @property
     def state(self):
         """Return the state."""
-        return self._state["details"]["charge"]
+        return self._state["details"]["charge"] if self._state else None
 
     @property
     def unit_of_measurement(self):

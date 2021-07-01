@@ -1,6 +1,8 @@
 """Code to handle a DenonAVR receiver."""
+from __future__ import annotations
+
 import logging
-from typing import Callable, Optional
+from typing import Callable
 
 from denonavr import DenonAVR
 
@@ -18,15 +20,13 @@ class ConnectDenonAVR:
         zone2: bool,
         zone3: bool,
         async_client_getter: Callable,
-        entry_state: Optional[str] = None,
-    ):
+    ) -> None:
         """Initialize the class."""
         self._async_client_getter = async_client_getter
         self._receiver = None
         self._host = host
         self._show_all_inputs = show_all_inputs
         self._timeout = timeout
-        self._entry_state = entry_state
 
         self._zones = {}
         if zone2:
@@ -35,7 +35,7 @@ class ConnectDenonAVR:
             self._zones["Zone3"] = None
 
     @property
-    def receiver(self) -> Optional[DenonAVR]:
+    def receiver(self) -> DenonAVR | None:
         """Return the class containing all connections to the receiver."""
         return self._receiver
 

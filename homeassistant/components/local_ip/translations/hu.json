@@ -5,9 +5,6 @@
         },
         "step": {
             "user": {
-                "data": {
-                    "name": "\u00c9rz\u00e9kel\u0151 neve"
-                },
                 "description": "El szeretn\u00e9d kezdeni a be\u00e1ll\u00edt\u00e1st?",
                 "title": "Helyi IP c\u00edm"
             }

@@ -2,13 +2,14 @@
 from __future__ import annotations
 
 from collections import OrderedDict
+from collections.abc import Sequence
 import logging
 import os
 from pathlib import Path
 import re
 import shutil
 from types import ModuleType
-from typing import Any, Callable, Sequence
+from typing import Any, Callable
 
 from awesomeversion import AwesomeVersion
 import voluptuous as vol
@@ -290,23 +291,28 @@ def _write_default_config(config_dir: str) -> bool:
         with open(config_path, "wt") as config_file:
             config_file.write(DEFAULT_CONFIG)
 
-        with open(secret_path, "wt") as secret_file:
-            secret_file.write(DEFAULT_SECRETS)
+        if not os.path.isfile(secret_path):
+            with open(secret_path, "wt") as secret_file:
+                secret_file.write(DEFAULT_SECRETS)
 
         with open(version_path, "wt") as version_file:
             version_file.write(__version__)
 
-        with open(group_yaml_path, "wt"):
-            pass
+        if not os.path.isfile(group_yaml_path):
+            with open(group_yaml_path, "wt"):
+                pass
 
-        with open(automation_yaml_path, "wt") as fil:
-            fil.write("[]")
+        if not os.path.isfile(automation_yaml_path):
+            with open(automation_yaml_path, "wt") as automation_file:
+                automation_file.write("[]")
 
-        with open(script_yaml_path, "wt"):
-            pass
+        if not os.path.isfile(script_yaml_path):
+            with open(script_yaml_path, "wt"):
+                pass
 
-        with open(scene_yaml_path, "wt"):
-            pass
+        if not os.path.isfile(scene_yaml_path):
+            with open(scene_yaml_path, "wt"):
+                pass
 
         return True
 
@@ -754,7 +760,7 @@ async def merge_packages_config(
     return config
 
 
-async def async_process_component_config(
+async def async_process_component_config(  # noqa: C901
     hass: HomeAssistant, config: ConfigType, integration: Integration
 ) -> ConfigType | None:
     """Check component configuration and return processed configuration.

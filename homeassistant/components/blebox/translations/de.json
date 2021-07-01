@@ -9,7 +9,7 @@
             "unknown": "Unerwarteter Fehler",
             "unsupported_version": "Das BleBox-Ger\u00e4t hat eine veraltete Firmware. Bitte aktualisieren Sie es zuerst."
         },
-        "flow_title": "BleBox-Ger\u00e4t: {name} ( {host} )",
+        "flow_title": "{name} ( {host} )",
         "step": {
             "user": {
                 "data": {

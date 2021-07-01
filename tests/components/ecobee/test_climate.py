@@ -13,6 +13,7 @@ def ecobee_fixture():
     """Set up ecobee mock."""
     vals = {
         "name": "Ecobee",
+        "modelNumber": "athenaSmart",
         "program": {
             "climates": [
                 {"name": "Climate1", "climateRef": "c1"},
@@ -21,6 +22,7 @@ def ecobee_fixture():
             "currentClimateRef": "c1",
         },
         "runtime": {
+            "connected": True,
             "actualTemperature": 300,
             "actualHumidity": 15,
             "desiredHeat": 400,
@@ -64,7 +66,8 @@ def data_fixture(ecobee_fixture):
 @pytest.fixture(name="thermostat")
 def thermostat_fixture(data):
     """Set up ecobee thermostat object."""
-    return ecobee.Thermostat(data, 1)
+    thermostat = data.ecobee.get_thermostat(1)
+    return ecobee.Thermostat(data, 1, thermostat)
 
 
 async def test_name(thermostat):
@@ -83,14 +86,14 @@ async def test_target_temperature_low(ecobee_fixture, thermostat):
     """Test target low temperature."""
     assert thermostat.target_temperature_low == 40
     ecobee_fixture["runtime"]["desiredHeat"] = 502
-    assert thermostat.target_temperature_low == 50.2
+    assert thermostat.target_temperature_low == 50
 
 
 async def test_target_temperature_high(ecobee_fixture, thermostat):
     """Test target high temperature."""
     assert thermostat.target_temperature_high == 20
-    ecobee_fixture["runtime"]["desiredCool"] = 103
-    assert thermostat.target_temperature_high == 10.3
+    ecobee_fixture["runtime"]["desiredCool"] = 679
+    assert thermostat.target_temperature_high == 68
 
 
 async def test_target_temperature(ecobee_fixture, thermostat):
@@ -164,6 +167,7 @@ async def test_extra_state_attributes(ecobee_fixture, thermostat):
         "fan_min_on_time": 10,
         "equipment_running": "auxHeat2",
     } == thermostat.extra_state_attributes
+
     ecobee_fixture["equipmentStatus"] = "compCool1"
     assert {
         "fan": "off",
@@ -319,7 +323,7 @@ async def test_set_fan_mode_on(thermostat, data):
     data.reset_mock()
     thermostat.set_fan_mode("on")
     data.ecobee.set_fan_mode.assert_has_calls(
-        [mock.call(1, "on", 20, 40, "nextTransition")]
+        [mock.call(1, "on", "nextTransition", holdHours=None)]
     )
 
 
@@ -328,5 +332,5 @@ async def test_set_fan_mode_auto(thermostat, data):
     data.reset_mock()
     thermostat.set_fan_mode("auto")
     data.ecobee.set_fan_mode.assert_has_calls(
-        [mock.call(1, "auto", 20, 40, "nextTransition")]
+        [mock.call(1, "auto", "nextTransition", holdHours=None)]
     )

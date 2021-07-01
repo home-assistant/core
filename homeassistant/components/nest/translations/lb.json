@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "authorize_url_fail": "Onbekannte Feeler beim gener\u00e9ieren vun der Autorisatiouns URL.",
             "authorize_url_timeout": "Z\u00e4it Iwwerschreidung beim gener\u00e9ieren vun der Autorisatiouns URL.",
             "missing_configuration": "Komponent net konfigur\u00e9iert. Folleg w.e.g der Dokumentatioun.",
             "reauth_successful": "Re-authentifikatioun war erfollegr\u00e4ich",

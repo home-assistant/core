@@ -2,5 +2,6 @@
   "domain": "wunderground",
   "name": "Weather Underground (WUnderground)",
   "documentation": "https://www.home-assistant.io/integrations/wunderground",
-  "codeowners": []
+  "codeowners": [],
+  "iot_class": "cloud_polling"
 }

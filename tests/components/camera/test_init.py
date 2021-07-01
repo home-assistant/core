@@ -11,7 +11,12 @@ from homeassistant.components.camera.const import DOMAIN, PREF_PRELOAD_STREAM
 from homeassistant.components.camera.prefs import CameraEntityPreferences
 from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.config import async_process_ha_core_config
-from homeassistant.const import ATTR_ENTITY_ID, EVENT_HOMEASSISTANT_START
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    EVENT_HOMEASSISTANT_START,
+    HTTP_BAD_GATEWAY,
+    HTTP_OK,
+)
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
@@ -354,3 +359,19 @@ async def test_record_service(hass, mock_camera, mock_stream):
         # So long as we call stream.record, the rest should be covered
         # by those tests.
         assert mock_record.called
+
+
+async def test_camera_proxy_stream(hass, mock_camera, hass_client):
+    """Test record service."""
+
+    client = await hass_client()
+
+    response = await client.get("/api/camera_proxy_stream/camera.demo_camera")
+    assert response.status == HTTP_OK
+
+    with patch(
+        "homeassistant.components.demo.camera.DemoCamera.handle_async_mjpeg_stream",
+        return_value=None,
+    ):
+        response = await client.get("/api/camera_proxy_stream/camera.demo_camera")
+        assert response.status == HTTP_BAD_GATEWAY

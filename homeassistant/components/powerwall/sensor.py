@@ -3,7 +3,7 @@ import logging
 
 from tesla_powerwall import MeterType
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
 from homeassistant.const import DEVICE_CLASS_BATTERY, DEVICE_CLASS_POWER, PERCENTAGE
 
 from .const import (
@@ -11,6 +11,7 @@ from .const import (
     ATTR_ENERGY_IMPORTED,
     ATTR_FREQUENCY,
     ATTR_INSTANT_AVERAGE_VOLTAGE,
+    ATTR_INSTANT_TOTAL_CURRENT,
     ATTR_IS_ACTIVE,
     DOMAIN,
     ENERGY_KILO_WATT,
@@ -63,20 +64,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class PowerWallChargeSensor(PowerWallEntity, SensorEntity):
     """Representation of an Powerwall charge sensor."""
 
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return PERCENTAGE
-
-    @property
-    def name(self):
-        """Device Name."""
-        return "Powerwall Charge"
-
-    @property
-    def device_class(self):
-        """Device Class."""
-        return DEVICE_CLASS_BATTERY
+    _attr_name = "Powerwall Charge"
+    _attr_unit_of_measurement = PERCENTAGE
+    _attr_device_class = DEVICE_CLASS_BATTERY
 
     @property
     def unique_id(self):
@@ -92,6 +82,10 @@ class PowerWallChargeSensor(PowerWallEntity, SensorEntity):
 class PowerWallEnergySensor(PowerWallEntity, SensorEntity):
     """Representation of an Powerwall Energy sensor."""
 
+    _attr_state_class = STATE_CLASS_MEASUREMENT
+    _attr_unit_of_measurement = ENERGY_KILO_WATT
+    _attr_device_class = DEVICE_CLASS_POWER
+
     def __init__(
         self,
         meter: MeterType,
@@ -106,26 +100,10 @@ class PowerWallEnergySensor(PowerWallEntity, SensorEntity):
             coordinator, site_info, status, device_type, powerwalls_serial_numbers
         )
         self._meter = meter
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return ENERGY_KILO_WATT
-
-    @property
-    def name(self):
-        """Device Name."""
-        return f"Powerwall {self._meter.value.title()} Now"
-
-    @property
-    def device_class(self):
-        """Device Class."""
-        return DEVICE_CLASS_POWER
-
-    @property
-    def unique_id(self):
-        """Device Uniqueid."""
-        return f"{self.base_unique_id}_{self._meter.value}_instant_power"
+        self._attr_name = f"Powerwall {self._meter.value.title()} Now"
+        self._attr_unique_id = (
+            f"{self.base_unique_id}_{self._meter.value}_instant_power"
+        )
 
     @property
     def state(self):
@@ -144,6 +122,7 @@ class PowerWallEnergySensor(PowerWallEntity, SensorEntity):
             ATTR_FREQUENCY: round(meter.frequency, 1),
             ATTR_ENERGY_EXPORTED: meter.get_energy_exported(),
             ATTR_ENERGY_IMPORTED: meter.get_energy_imported(),
-            ATTR_INSTANT_AVERAGE_VOLTAGE: round(meter.avarage_voltage, 1),
+            ATTR_INSTANT_AVERAGE_VOLTAGE: round(meter.average_voltage, 1),
+            ATTR_INSTANT_TOTAL_CURRENT: meter.get_instant_total_current(),
             ATTR_IS_ACTIVE: meter.is_active(),
         }

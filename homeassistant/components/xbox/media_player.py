@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import re
-from typing import List
 
 from xbox.webapi.api.client import XboxLiveClient
 from xbox.webapi.api.provider.catalog.models import Image
@@ -233,7 +232,7 @@ class XboxMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
         }
 
 
-def _find_media_image(images=List[Image]) -> Image | None:
+def _find_media_image(images: list[Image]) -> Image | None:
     purpose_order = ["FeaturePromotionalSquareArt", "Tile", "Logo", "BoxArt"]
     for purpose in purpose_order:
         for image in images:

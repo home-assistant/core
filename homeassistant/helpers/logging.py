@@ -1,9 +1,10 @@
 """Helpers for logging allowing more advanced logging styles to be used."""
 from __future__ import annotations
 
+from collections.abc import Mapping, MutableMapping
 import inspect
 import logging
-from typing import Any, Mapping, MutableMapping
+from typing import Any
 
 
 class KeywordMessage:

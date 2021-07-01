@@ -4,7 +4,6 @@
             "addon_get_discovery_info_failed": "No s'ha pogut obtenir la informaci\u00f3 de descobriment del complement Z-Wave JS.",
             "addon_info_failed": "No s'ha pogut obtenir la informaci\u00f3 del complement Z-Wave JS.",
             "addon_install_failed": "No s'ha pogut instal\u00b7lar el complement Z-Wave JS.",
-            "addon_missing_discovery_info": "Falta la informaci\u00f3 de descobriment del complement Z-Wave JS.",
             "addon_set_config_failed": "No s'ha pogut establir la configuraci\u00f3 de Z-Wave JS.",
             "addon_start_failed": "No s'ha pogut iniciar el complement Z-Wave JS.",
             "already_configured": "El dispositiu ja est\u00e0 configurat",
@@ -49,11 +48,56 @@
             },
             "start_addon": {
                 "title": "El complement Z-Wave JS s'est\u00e0 iniciant."
+            }
+        }
+    },
+    "options": {
+        "abort": {
+            "addon_get_discovery_info_failed": "No s'ha pogut obtenir la informaci\u00f3 de descobriment del complement Z-Wave JS.",
+            "addon_info_failed": "No s'ha pogut obtenir la informaci\u00f3 del complement Z-Wave JS.",
+            "addon_install_failed": "No s'ha pogut instal\u00b7lar el complement Z-Wave JS.",
+            "addon_set_config_failed": "No s'ha pogut establir la configuraci\u00f3 de Z-Wave JS.",
+            "addon_start_failed": "No s'ha pogut iniciar el complement Z-Wave JS.",
+            "already_configured": "El dispositiu ja est\u00e0 configurat",
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "different_device": "El dispositiu USB connectat per a aquesta entrada de configuraci\u00f3 no \u00e9s el mateix que el configurat anteriorment. Crea na entrada de configuraci\u00f3 nova per al dispositiu nou."
+        },
+        "error": {
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "invalid_ws_url": "URL websocket inv\u00e0lid",
+            "unknown": "Error inesperat"
+        },
+        "progress": {
+            "install_addon": "Espera mentre finalitza la instal\u00b7laci\u00f3 del complement Z-Wave JS. Pot tardar uns quants minuts.",
+            "start_addon": "Espera mentre es completa la inicialitzaci\u00f3 del complement Z-Wave JS. Pot tardar uns segons."
+        },
+        "step": {
+            "configure_addon": {
+                "data": {
+                    "emulate_hardware": "Emula maquinari",
+                    "log_level": "Nivell dels registres",
+                    "network_key": "Clau de xarxa",
+                    "usb_path": "Ruta del port USB del dispositiu"
+                },
+                "title": "Introdueix la configuraci\u00f3 del complement Z-Wave JS"
             },
-            "user": {
+            "install_addon": {
+                "title": "Ha comen\u00e7at la instal\u00b7laci\u00f3 del complement Z-Wave JS"
+            },
+            "manual": {
                 "data": {
                     "url": "URL"
                 }
+            },
+            "on_supervisor": {
+                "data": {
+                    "use_addon": "Utilitza el complement Z-Wave JS Supervisor"
+                },
+                "description": "Vols utilitzar el complement Supervisor de Z-Wave JS?",
+                "title": "Selecciona el m\u00e8tode de connexi\u00f3"
+            },
+            "start_addon": {
+                "title": "El complement Z-Wave JS s'est\u00e0 iniciant."
             }
         }
     },

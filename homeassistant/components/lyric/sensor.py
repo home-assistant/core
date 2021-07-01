@@ -11,7 +11,7 @@ from homeassistant.const import (
     DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_TIMESTAMP,
 )
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
@@ -34,7 +34,7 @@ LYRIC_SETPOINT_STATUS_NAMES = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up the Honeywell Lyric sensor platform based on a config entry."""
     coordinator: DataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]

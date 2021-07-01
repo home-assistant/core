@@ -5,8 +5,8 @@ from typing import Any
 
 from rpi_bad_power import new_under_voltage
 
-from homeassistant import config_entries
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.config_entry_flow import DiscoveryFlowHandler
 
 from .const import DOMAIN
@@ -29,12 +29,11 @@ class RPiPowerFlow(DiscoveryFlowHandler, domain=DOMAIN):
             DOMAIN,
             "Raspberry Pi Power Supply Checker",
             _async_supported,
-            config_entries.CONN_CLASS_LOCAL_POLL,
         )
 
     async def async_step_onboarding(
         self, data: dict[str, Any] | None = None
-    ) -> dict[str, Any]:
+    ) -> FlowResult:
         """Handle a flow initialized by onboarding."""
         has_devices = await self._discovery_function(self.hass)
 

@@ -316,7 +316,7 @@ class PlexServer:
             self.plextv_clients(),
         )
 
-    async def _async_update_platforms(self):
+    async def _async_update_platforms(self):  # noqa: C901
         """Update the platform entities."""
         _LOGGER.debug("Updating devices")
 
@@ -536,6 +536,11 @@ class PlexServer:
     def plex_server(self):
         """Return the plexapi PlexServer instance."""
         return self._plex_server
+
+    @property
+    def has_token(self):
+        """Return if a token is used to connect to this Plex server."""
+        return self._token is not None
 
     @property
     def accounts(self):

@@ -1,16 +1,18 @@
 {
     "config": {
         "abort": {
-            "already_configured": "El compte ja ha estat configurat"
+            "already_configured": "El compte ja ha estat configurat",
+            "no_udn": "La informaci\u00f3 de descobriment SSDP no t\u00e9 UDN",
+            "not_keenetic_ndms2": "El dispositiu descobert no \u00e9s un router Keenetic"
         },
         "error": {
             "cannot_connect": "Ha fallat la connexi\u00f3"
         },
+        "flow_title": "{name} ({host})",
         "step": {
             "user": {
                 "data": {
                     "host": "Amfitri\u00f3",
-                    "name": "Nom",
                     "password": "Contrasenya",
                     "port": "Port",
                     "username": "Nom d'usuari"

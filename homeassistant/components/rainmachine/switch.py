@@ -1,6 +1,8 @@
 """This component provides support for RainMachine programs and zones."""
+from __future__ import annotations
+
+from collections.abc import Coroutine
 from datetime import datetime
-from typing import Callable, Coroutine
 
 from regenmaschine.controller import Controller
 from regenmaschine.errors import RequestError
@@ -11,6 +13,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ID
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import RainMachineEntity, async_update_programs_and_zones
@@ -81,9 +84,10 @@ SLOPE_TYPE_MAP = {
 SPRINKLER_TYPE_MAP = {
     0: "Not Set",
     1: "Popup Spray",
-    2: "Rotors",
+    2: "Rotors Low Rate",
     3: "Surface Drip",
     4: "Bubblers Drip",
+    5: "Rotors High Rate",
     99: "Other",
 }
 
@@ -91,14 +95,16 @@ SUN_EXPOSURE_MAP = {0: "Not Set", 1: "Full Sun", 2: "Partial Shade", 3: "Full Sh
 
 VEGETATION_MAP = {
     0: "Not Set",
+    1: "Not Set",
     2: "Cool Season Grass",
     3: "Fruit Trees",
     4: "Flowers",
     5: "Vegetables",
     6: "Citrus",
-    7: "Trees and Bushes",
+    7: "Bushes",
     9: "Drought Tolerant Plants",
     10: "Warm Season Grass",
+    11: "Trees",
     99: "Other",
 }
 
@@ -107,10 +113,10 @@ SWITCH_TYPE_ZONE = "zone"
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: Callable
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up RainMachine switches based on a config entry."""
-    platform = entity_platform.current_platform.get()
+    platform = entity_platform.async_get_current_platform()
 
     alter_program_schema = {vol.Required(CONF_PROGRAM_ID): cv.positive_int}
     alter_zone_schema = {vol.Required(CONF_ZONE_ID): cv.positive_int}
@@ -383,7 +389,7 @@ class RainMachineZone(RainMachineSwitch):
                 ATTR_PRECIP_RATE: self._data.get("waterSense").get("precipitationRate"),
                 ATTR_RESTRICTIONS: self._data.get("restriction"),
                 ATTR_SLOPE: SLOPE_TYPE_MAP.get(self._data.get("slope")),
-                ATTR_SOIL_TYPE: SOIL_TYPE_MAP.get(self._data.get("sun")),
+                ATTR_SOIL_TYPE: SOIL_TYPE_MAP.get(self._data.get("soil")),
                 ATTR_SPRINKLER_TYPE: SPRINKLER_TYPE_MAP.get(self._data.get("group_id")),
                 ATTR_SUN_EXPOSURE: SUN_EXPOSURE_MAP.get(self._data.get("sun")),
                 ATTR_TIME_REMAINING: self._data.get("remaining"),

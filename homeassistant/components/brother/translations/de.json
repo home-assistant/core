@@ -9,7 +9,7 @@
             "snmp_error": "SNMP-Server deaktiviert oder Drucker nicht unterst\u00fctzt.",
             "wrong_host": " Ung\u00fcltiger Hostname oder IP-Adresse"
         },
-        "flow_title": "Brother-Drucker: {model} {serial_number}",
+        "flow_title": "{model} {serial_number}",
         "step": {
             "user": {
                 "data": {

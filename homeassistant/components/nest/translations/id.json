@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "authorize_url_fail": "Kesalahan tidak dikenal terjadi ketika menghasilkan URL otorisasi.",
             "authorize_url_timeout": "Tenggang waktu pembuatan URL otorisasi habis.",
             "missing_configuration": "Komponen tidak dikonfigurasi. Ikuti petunjuk dalam dokumentasi.",
             "no_url_available": "Tidak ada URL yang tersedia. Untuk informasi tentang kesalahan ini, [lihat bagian bantuan]({docs_url})",

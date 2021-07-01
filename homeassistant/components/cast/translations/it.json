@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "no_devices_found": "Nessun dispositivo trovato sulla rete",
             "single_instance_allowed": "Gi\u00e0 configurato. \u00c8 possibile una sola configurazione."
         },
         "error": {
@@ -10,10 +9,10 @@
         "step": {
             "config": {
                 "data": {
-                    "known_hosts": "Elenco facoltativo di host noti se l'individuazione di mDNS non funziona."
+                    "known_hosts": "Host conosciuti"
                 },
-                "description": "Inserisci la configurazione di Google Cast.",
-                "title": "Google Cast"
+                "description": "Host conosciuti: un elenco separato da virgole di nomi host o indirizzi IP di dispositivi di trasmissione, da utilizzare se l'individuazione di mDNS non funziona.",
+                "title": "Configurazione di Google Cast"
             },
             "confirm": {
                 "description": "Vuoi iniziare la configurazione?"
@@ -25,13 +24,20 @@
             "invalid_known_hosts": "Gli host noti devono essere indicati sotto forma di un elenco di host separati da virgole."
         },
         "step": {
-            "options": {
+            "advanced_options": {
                 "data": {
-                    "ignore_cec": "Elenco opzionale che sar\u00e0 passato a pychromecast.IGNORE_CEC.",
-                    "known_hosts": "Elenco facoltativo di host noti se l'individuazione di mDNS non funziona.",
-                    "uuid": "Elenco opzionale di UUID. I cast non elencati non saranno aggiunti."
+                    "ignore_cec": "Ignora CEC",
+                    "uuid": "UUID consentiti"
                 },
-                "description": "Inserisci la configurazione di Google Cast."
+                "description": "UUID consentiti: un elenco separato da virgole di UUID dei dispositivi di trasmissione da aggiungere a Home Assistant. Utilizza solo se non desideri aggiungere tutti i dispositivi di trasmissione disponibili.\nIgnora CEC: un elenco separato da virgole di Chromecast che dovrebbero ignorare i dati CEC per determinare l'input attivo. Questo verr\u00e0 passato a pychromecast.IGNORE_CEC.",
+                "title": "Configurazione avanzata di Google Cast"
+            },
+            "basic_options": {
+                "data": {
+                    "known_hosts": "Host conosciuti"
+                },
+                "description": "Host conosciuti: un elenco separato da virgole di nomi host o indirizzi IP di dispositivi di trasmissione, da utilizzare se l'individuazione di mDNS non funziona.",
+                "title": "Configurazione di Google Cast"
             }
         }
     }

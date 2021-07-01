@@ -1,4 +1,5 @@
 """Support for EDL21 Smart Meters."""
+from __future__ import annotations
 
 from datetime import timedelta
 import logging
@@ -16,7 +17,6 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.helpers.entity_registry import async_get_registry
-from homeassistant.helpers.typing import Optional
 from homeassistant.util.dt import utcnow
 
 _LOGGER = logging.getLogger(__name__)
@@ -48,7 +48,10 @@ class EDL21:
     _OBIS_NAMES = {
         # A=1: Electricity
         # C=0: General purpose objects
+        # D=0: Free ID-numbers for utilities
         "1-0:0.0.9*255": "Electricity ID",
+        # D=2: Program entries
+        "1-0:0.2.0*0": "Configuration program version number",
         # C=1: Active power +
         # D=8: Time integral 1
         # E=0: Total
@@ -68,6 +71,10 @@ class EDL21:
         "1-0:2.8.1*255": "Negative active energy in tariff T1",
         # E=2: Rate 2
         "1-0:2.8.2*255": "Negative active energy in tariff T2",
+        # C=14: Supply frequency
+        # D=7: Instantaneous value
+        # E=0: Total
+        "1-0:14.7.0*255": "Supply frequency",
         # C=15: Active power absolute
         # D=7: Instantaneous value
         # E=0: Total
@@ -100,12 +107,18 @@ class EDL21:
         # D=7: Instantaneous value
         # E=0: Total
         "1-0:76.7.0*255": "L3 active instantaneous power",
+        # C=81: Angles
+        # D=7: Instantaneous value
+        # E=26: U(L3) x I(L3)
+        "1-0:81.7.26*255": "U(L3)/I(L3) phase angle",
         # C=96: Electricity-related service entries
         "1-0:96.1.0*255": "Metering point ID 1",
+        "1-0:96.5.0*255": "Internal operating status",
     }
     _OBIS_BLACKLIST = {
         # C=96: Electricity-related service entries
         "1-0:96.50.1*1",  # Manufacturer specific
+        "1-0:96.90.2*1",  # Manufacturer specific
         # A=129: Manufacturer specific
         "129-129:199.130.3*255",  # Iskraemeco: Manufacturer
         "129-129:199.130.5*255",  # Iskraemeco: Public Key
@@ -258,7 +271,7 @@ class EDL21Entity(SensorEntity):
         return self._obis
 
     @property
-    def name(self) -> Optional[str]:
+    def name(self) -> str | None:
         """Return a name."""
         return self._name
 

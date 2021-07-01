@@ -121,7 +121,7 @@ class WaqiSensor(SensorEntity):
         """Return the name of the sensor."""
         if self.station_name:
             return f"WAQI {self.station_name}"
-        return "WAQI {}".format(self.url if self.url else self.uid)
+        return f"WAQI {self.url if self.url else self.uid}"
 
     @property
     def icon(self):

@@ -66,7 +66,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     devs = []
     for sensor_type, sensor_class in sensor_classes.items():
-        name = "{} {}".format(config.get(CONF_NAME), sensor_type.capitalize())
+        name = f"{config.get(CONF_NAME)} {sensor_type.capitalize()}"
         devs.append(sensor_class(sensor_client, name))
 
     add_entities(devs)

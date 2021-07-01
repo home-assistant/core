@@ -5,6 +5,7 @@ Abort login flow if not access from trusted network.
 """
 from __future__ import annotations
 
+from collections.abc import Mapping
 from ipaddress import (
     IPv4Address,
     IPv4Network,
@@ -18,6 +19,7 @@ from typing import Any, Dict, List, Union, cast
 import voluptuous as vol
 
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 
@@ -93,31 +95,29 @@ class TrustedNetworksAuthProvider(AuthProvider):
             user for user in users if not user.system_generated and user.is_active
         ]
         for ip_net, user_or_group_list in self.trusted_users.items():
-            if ip_addr in ip_net:
-                user_list = [
-                    user_id
-                    for user_id in user_or_group_list
-                    if isinstance(user_id, str)
-                ]
-                group_list = [
-                    group[CONF_GROUP]
-                    for group in user_or_group_list
-                    if isinstance(group, dict)
-                ]
-                flattened_group_list = [
-                    group for sublist in group_list for group in sublist
-                ]
-                available_users = [
-                    user
-                    for user in available_users
-                    if (
-                        user.id in user_list
-                        or any(
-                            group.id in flattened_group_list for group in user.groups
-                        )
-                    )
-                ]
-                break
+            if ip_addr not in ip_net:
+                continue
+
+            user_list = [
+                user_id for user_id in user_or_group_list if isinstance(user_id, str)
+            ]
+            group_list = [
+                group[CONF_GROUP]
+                for group in user_or_group_list
+                if isinstance(group, dict)
+            ]
+            flattened_group_list = [
+                group for sublist in group_list for group in sublist
+            ]
+            available_users = [
+                user
+                for user in available_users
+                if (
+                    user.id in user_list
+                    or any(group.id in flattened_group_list for group in user.groups)
+                )
+            ]
+            break
 
         return TrustedNetworksLoginFlow(
             self,
@@ -127,20 +127,29 @@ class TrustedNetworksAuthProvider(AuthProvider):
         )
 
     async def async_get_or_create_credentials(
-        self, flow_result: dict[str, str]
+        self, flow_result: Mapping[str, str]
     ) -> Credentials:
         """Get credentials based on the flow result."""
         user_id = flow_result["user"]
 
         users = await self.store.async_get_users()
         for user in users:
-            if not user.system_generated and user.is_active and user.id == user_id:
-                for credential in await self.async_credentials():
-                    if credential.data["user_id"] == user_id:
-                        return credential
-                cred = self.async_create_credentials({"user_id": user_id})
-                await self.store.async_link_user(user, cred)
-                return cred
+            if user.id != user_id:
+                continue
+
+            if user.system_generated:
+                continue
+
+            if not user.is_active:
+                continue
+
+            for credential in await self.async_credentials():
+                if credential.data["user_id"] == user_id:
+                    return credential
+
+            cred = self.async_create_credentials({"user_id": user_id})
+            await self.store.async_link_user(user, cred)
+            return cred
 
         # We only allow login as exist user
         raise InvalidUserError
@@ -199,7 +208,7 @@ class TrustedNetworksLoginFlow(LoginFlow):
 
     async def async_step_init(
         self, user_input: dict[str, str] | None = None
-    ) -> dict[str, Any]:
+    ) -> FlowResult:
         """Handle the step of the form."""
         try:
             cast(

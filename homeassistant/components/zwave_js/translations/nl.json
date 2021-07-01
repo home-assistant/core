@@ -4,7 +4,6 @@
             "addon_get_discovery_info_failed": "Ophalen van ontdekkingsinformatie voor Z-Wave JS-add-on is mislukt.",
             "addon_info_failed": "Ophalen van Z-Wave JS add-on-info is mislukt.",
             "addon_install_failed": "Kan de Z-Wave JS add-on niet installeren.",
-            "addon_missing_discovery_info": "De Z-Wave JS addon mist ontdekkings informatie",
             "addon_set_config_failed": "Instellen van de Z-Wave JS configuratie is mislukt.",
             "addon_start_failed": "Kan de Z-Wave JS add-on niet starten.",
             "already_configured": "Apparaat is al geconfigureerd",
@@ -49,11 +48,55 @@
             },
             "start_addon": {
                 "title": "De add-on Z-Wave JS wordt gestart."
+            }
+        }
+    },
+    "options": {
+        "abort": {
+            "addon_get_discovery_info_failed": "Ophalen van ontdekkingsinformatie voor Z-Wave JS-add-on is mislukt.",
+            "addon_info_failed": "Ophalen van Z-Wave JS add-on-info is mislukt.",
+            "addon_install_failed": "Kan de Z-Wave JS add-on niet installeren.",
+            "addon_set_config_failed": "Instellen van de Z-Wave JS configuratie is mislukt.",
+            "addon_start_failed": "Kan de Z-Wave JS add-on niet starten.",
+            "already_configured": "Apparaat is al geconfigureerd",
+            "cannot_connect": "Kan geen verbinding maken"
+        },
+        "error": {
+            "cannot_connect": "Kan geen verbinding maken",
+            "invalid_ws_url": "Ongeldige websocket URL",
+            "unknown": "Onverwachte fout"
+        },
+        "progress": {
+            "install_addon": "Wacht alstublieft terwijl de Z-Wave JS add-on installatie voltooid is. Dit kan enkele minuten duren.",
+            "start_addon": "Wacht alstublieft terwijl de Z-Wave JS add-on start voltooid is. Dit kan enkele seconden duren."
+        },
+        "step": {
+            "configure_addon": {
+                "data": {
+                    "emulate_hardware": "Emulate Hardware",
+                    "log_level": "Log level",
+                    "network_key": "Netwerksleutel",
+                    "usb_path": "USB-apparaatpad"
+                },
+                "title": "Voer de configuratie van de Z-Wave JS-add-on in"
             },
-            "user": {
+            "install_addon": {
+                "title": "De Z-Wave JS add-on installatie is gestart"
+            },
+            "manual": {
                 "data": {
                     "url": "URL"
                 }
+            },
+            "on_supervisor": {
+                "data": {
+                    "use_addon": "Gebruik de Z-Wave JS Supervisor add-on"
+                },
+                "description": "Wilt u de Z-Wave JS Supervisor add-on gebruiken?",
+                "title": "Selecteer een verbindingsmethode"
+            },
+            "start_addon": {
+                "title": "The Z-Wave JS add-on is aan het starten."
             }
         }
     },

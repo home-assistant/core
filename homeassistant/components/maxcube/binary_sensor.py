@@ -36,6 +36,11 @@ class MaxCubeShutter(BinarySensorEntity):
         return self._name
 
     @property
+    def unique_id(self):
+        """Return a unique ID."""
+        return self._device.serial
+
+    @property
     def device_class(self):
         """Return the class of this sensor."""
         return DEVICE_CLASS_WINDOW

@@ -2,7 +2,8 @@
     "config": {
         "abort": {
             "authorize_url_timeout": "\u7522\u751f\u8a8d\u8b49 URL \u6642\u903e\u6642\u3002",
-            "missing_configuration": "\u5143\u4ef6\u5c1a\u672a\u8a2d\u7f6e\uff0c\u8acb\u53c3\u95b1\u6587\u4ef6\u8aaa\u660e\u3002"
+            "missing_configuration": "\u5143\u4ef6\u5c1a\u672a\u8a2d\u7f6e\uff0c\u8acb\u53c3\u95b1\u6587\u4ef6\u8aaa\u660e\u3002",
+            "reauth_successful": "\u91cd\u65b0\u8a8d\u8b49\u6210\u529f"
         },
         "create_entry": {
             "default": "\u5df2\u6210\u529f\u8a8d\u8b49"
@@ -10,6 +11,10 @@
         "step": {
             "pick_implementation": {
                 "title": "\u9078\u64c7\u9a57\u8b49\u6a21\u5f0f"
+            },
+            "reauth_confirm": {
+                "description": "Lyric \u6574\u5408\u9700\u8981\u91cd\u65b0\u8a8d\u8b49\u60a8\u7684\u5e33\u865f",
+                "title": "\u91cd\u65b0\u8a8d\u8b49\u6574\u5408"
             }
         }
     }

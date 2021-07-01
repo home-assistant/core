@@ -9,7 +9,7 @@ from hatasmota.trigger import TasmotaTrigger
 import voluptuous as vol
 
 from homeassistant.components.automation import AutomationActionType
-from homeassistant.components.device_automation import TRIGGER_BASE_SCHEMA
+from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.components.homeassistant.triggers import event as event_trigger
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF_TYPE
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
@@ -17,7 +17,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, TASMOTA_EVENT
 from .discovery import TASMOTA_DISCOVERY_ENTITY_UPDATED, clear_discovery_hash
@@ -28,7 +28,7 @@ CONF_DISCOVERY_ID = "discovery_id"
 CONF_SUBTYPE = "subtype"
 DEVICE = "device"
 
-TRIGGER_SCHEMA = TRIGGER_BASE_SCHEMA.extend(
+TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_PLATFORM): DEVICE,
         vol.Required(CONF_DOMAIN): DOMAIN,
@@ -82,7 +82,7 @@ class Trigger:
 
     device_id: str = attr.ib()
     discovery_hash: dict = attr.ib()
-    hass: HomeAssistantType = attr.ib()
+    hass: HomeAssistant = attr.ib()
     remove_update_signal: Callable[[], None] = attr.ib()
     subtype: str = attr.ib()
     tasmota_trigger: TasmotaTrigger = attr.ib()

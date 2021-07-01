@@ -43,7 +43,7 @@ async def test_sensor(hass, generic_data):
     entry = registry.async_get(entity_id)
     assert entry
     assert entry.disabled
-    assert entry.disabled_by == "integration"
+    assert entry.disabled_by == er.DISABLED_INTEGRATION
 
     # Test enabling entity
     updated_entry = registry.async_update_entity(

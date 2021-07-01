@@ -3,5 +3,6 @@
   "name": "Ubiquiti UniFi Video",
   "documentation": "https://www.home-assistant.io/integrations/uvc",
   "requirements": ["uvcclient==0.11.0"],
-  "codeowners": []
+  "codeowners": [],
+  "iot_class": "local_polling"
 }

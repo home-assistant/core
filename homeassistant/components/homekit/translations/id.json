@@ -4,29 +4,13 @@
             "port_name_in_use": "Aksesori atau bridge dengan nama atau port yang sama telah dikonfigurasi."
         },
         "step": {
-            "accessory_mode": {
-                "data": {
-                    "entity_id": "Entitas"
-                },
-                "description": "Pilih entitas yang akan disertakan. Dalam mode aksesori, hanya satu entitas yang disertakan.",
-                "title": "Pilih entitas yang akan disertakan"
-            },
-            "bridge_mode": {
-                "data": {
-                    "include_domains": "Domain yang disertakan"
-                },
-                "description": "Pilih domain yang akan disertakan. Semua entitas yang didukung di domain akan disertakan.",
-                "title": "Pilih domain yang akan disertakan"
-            },
             "pairing": {
                 "description": "Untuk menyelesaikan pemasangan ikuti petunjuk di \"Notifikasi\" di bawah \"Pemasangan HomeKit\".",
                 "title": "Pasangkan HomeKit"
             },
             "user": {
                 "data": {
-                    "auto_start": "Mulai otomatis (nonaktifkan jika menggunakan Z-Wave atau sistem mulai tertunda lainnya)",
-                    "include_domains": "Domain yang disertakan",
-                    "mode": "Mode"
+                    "include_domains": "Domain yang disertakan"
                 },
                 "description": "Pilih domain yang akan disertakan. Semua entitas yang didukung di domain akan disertakan. Instans HomeKit terpisah dalam mode aksesori akan dibuat untuk setiap pemutar media TV dan kamera.",
                 "title": "Pilih domain yang akan disertakan"
@@ -37,8 +21,7 @@
         "step": {
             "advanced": {
                 "data": {
-                    "auto_start": "Mulai otomatis (nonaktifkan jika Anda memanggil layanan homekit.start secara manual)",
-                    "safe_mode": "Mode Aman (aktifkan hanya jika pemasangan gagal)"
+                    "auto_start": "Mulai otomatis (nonaktifkan jika Anda memanggil layanan homekit.start secara manual)"
                 },
                 "description": "Pengaturan ini hanya perlu disesuaikan jika HomeKit tidak berfungsi.",
                 "title": "Konfigurasi Tingkat Lanjut"

@@ -3,10 +3,11 @@ from __future__ import annotations
 
 import asyncio
 from collections import defaultdict
+from collections.abc import Iterable
 import datetime as dt
 import logging
 from types import ModuleType, TracebackType
-from typing import Any, Iterable
+from typing import Any
 
 from homeassistant.components.sun import STATE_ABOVE_HORIZON, STATE_BELOW_HORIZON
 from homeassistant.const import (

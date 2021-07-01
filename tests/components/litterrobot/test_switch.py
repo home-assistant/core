@@ -3,7 +3,7 @@ from datetime import timedelta
 
 import pytest
 
-from homeassistant.components.litterrobot.hub import REFRESH_WAIT_TIME
+from homeassistant.components.litterrobot.entity import REFRESH_WAIT_TIME_SECONDS
 from homeassistant.components.switch import (
     DOMAIN as PLATFORM_DOMAIN,
     SERVICE_TURN_OFF,
@@ -56,6 +56,6 @@ async def test_on_off_commands(hass, mock_account, entity_id, robot_command):
             blocking=True,
         )
 
-        future = utcnow() + timedelta(seconds=REFRESH_WAIT_TIME)
+        future = utcnow() + timedelta(seconds=REFRESH_WAIT_TIME_SECONDS)
         async_fire_time_changed(hass, future)
         assert getattr(mock_account.robots[0], robot_command).call_count == count

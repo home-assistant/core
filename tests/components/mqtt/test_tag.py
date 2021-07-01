@@ -386,7 +386,7 @@ async def test_entity_device_info_with_connection(hass, mqtt_mock):
         {
             "topic": "test-topic",
             "device": {
-                "connections": [["mac", "02:5b:26:a8:dc:12"]],
+                "connections": [[dr.CONNECTION_NETWORK_MAC, "02:5b:26:a8:dc:12"]],
                 "manufacturer": "Whatever",
                 "name": "Beer",
                 "model": "Glass",
@@ -397,9 +397,11 @@ async def test_entity_device_info_with_connection(hass, mqtt_mock):
     async_fire_mqtt_message(hass, "homeassistant/tag/bla/config", data)
     await hass.async_block_till_done()
 
-    device = registry.async_get_device(set(), {("mac", "02:5b:26:a8:dc:12")})
+    device = registry.async_get_device(
+        set(), {(dr.CONNECTION_NETWORK_MAC, "02:5b:26:a8:dc:12")}
+    )
     assert device is not None
-    assert device.connections == {("mac", "02:5b:26:a8:dc:12")}
+    assert device.connections == {(dr.CONNECTION_NETWORK_MAC, "02:5b:26:a8:dc:12")}
     assert device.manufacturer == "Whatever"
     assert device.name == "Beer"
     assert device.model == "Glass"
@@ -442,7 +444,7 @@ async def test_entity_device_info_update(hass, mqtt_mock):
         "topic": "test-topic",
         "device": {
             "identifiers": ["helloworld"],
-            "connections": [["mac", "02:5b:26:a8:dc:12"]],
+            "connections": [[dr.CONNECTION_NETWORK_MAC, "02:5b:26:a8:dc:12"]],
             "manufacturer": "Whatever",
             "name": "Beer",
             "model": "Glass",

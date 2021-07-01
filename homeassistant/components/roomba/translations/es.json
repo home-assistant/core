@@ -3,7 +3,8 @@
         "abort": {
             "already_configured": "El dispositivo ya est\u00e1 configurado",
             "cannot_connect": "No se pudo conectar",
-            "not_irobot_device": "El dispositivo descubierto no es un dispositivo iRobot"
+            "not_irobot_device": "El dispositivo descubierto no es un dispositivo iRobot",
+            "short_blid": "El BLID ha sido truncado"
         },
         "error": {
             "cannot_connect": "No se pudo conectar"

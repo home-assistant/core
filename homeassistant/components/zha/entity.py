@@ -2,9 +2,10 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Awaitable
 import functools
 import logging
-from typing import Any, Awaitable
+from typing import Any
 
 from homeassistant.const import ATTR_NAME
 from homeassistant.core import CALLBACK_TYPE, Event, callback
@@ -39,7 +40,7 @@ UPDATE_GROUP_FROM_CHILD_DELAY = 0.2
 class BaseZhaEntity(LogMixin, entity.Entity):
     """A base class for ZHA entities."""
 
-    def __init__(self, unique_id: str, zha_device: ZhaDeviceType, **kwargs):
+    def __init__(self, unique_id: str, zha_device: ZhaDeviceType, **kwargs) -> None:
         """Init ZHA entity."""
         self._name: str = ""
         self._force_update: bool = False
@@ -82,7 +83,7 @@ class BaseZhaEntity(LogMixin, entity.Entity):
         return self._should_poll
 
     @property
-    def device_info(self) -> dict[str, Any]:
+    def device_info(self) -> entity.DeviceInfo:
         """Return a device description for device registry."""
         zha_device_info = self._zha_device.device_info
         ieee = zha_device_info["ieee"]
@@ -146,7 +147,7 @@ class ZhaEntity(BaseZhaEntity, RestoreEntity):
         zha_device: ZhaDeviceType,
         channels: list[ChannelType],
         **kwargs,
-    ):
+    ) -> None:
         """Init ZHA entity."""
         super().__init__(unique_id, zha_device, **kwargs)
         ieeetail = "".join([f"{o:02x}" for o in zha_device.ieee[:4]])

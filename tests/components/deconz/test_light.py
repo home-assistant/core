@@ -4,22 +4,36 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.deconz.const import CONF_ALLOW_DECONZ_GROUPS
+from homeassistant.components.deconz.const import ATTR_ON, CONF_ALLOW_DECONZ_GROUPS
+from homeassistant.components.deconz.light import DECONZ_GROUP
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
+    ATTR_COLOR_MODE,
     ATTR_COLOR_TEMP,
     ATTR_EFFECT,
+    ATTR_EFFECT_LIST,
     ATTR_FLASH,
     ATTR_HS_COLOR,
     ATTR_MAX_MIREDS,
     ATTR_MIN_MIREDS,
+    ATTR_RGB_COLOR,
+    ATTR_SUPPORTED_COLOR_MODES,
     ATTR_TRANSITION,
+    ATTR_XY_COLOR,
+    COLOR_MODE_BRIGHTNESS,
+    COLOR_MODE_COLOR_TEMP,
+    COLOR_MODE_HS,
+    COLOR_MODE_ONOFF,
+    COLOR_MODE_XY,
     DOMAIN as LIGHT_DOMAIN,
     EFFECT_COLORLOOP,
     FLASH_LONG,
     FLASH_SHORT,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    SUPPORT_EFFECT,
+    SUPPORT_FLASH,
+    SUPPORT_TRANSITION,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -42,27 +56,667 @@ async def test_no_lights_or_groups(hass, aioclient_mock):
     assert len(hass.states.async_all()) == 0
 
 
-async def test_lights_and_groups(hass, aioclient_mock, mock_deconz_websocket):
+@pytest.mark.parametrize(
+    "input,expected",
+    [
+        (  # RGB light in color temp color mode
+            {
+                "colorcapabilities": 31,
+                "ctmax": 500,
+                "ctmin": 153,
+                "etag": "055485a82553e654f156d41c9301b7cf",
+                "hascolor": True,
+                "lastannounced": None,
+                "lastseen": "2021-06-10T20:25Z",
+                "manufacturername": "Philips",
+                "modelid": "LLC020",
+                "name": "Hue Go",
+                "state": {
+                    "alert": "none",
+                    "bri": 254,
+                    "colormode": "ct",
+                    "ct": 375,
+                    "effect": "none",
+                    "hue": 8348,
+                    "on": True,
+                    "reachable": True,
+                    "sat": 147,
+                    "xy": [0.462, 0.4111],
+                },
+                "swversion": "5.127.1.26420",
+                "type": "Extended color light",
+                "uniqueid": "00:17:88:01:01:23:45:67-00",
+            },
+            {
+                "entity_id": "light.hue_go",
+                "state": STATE_ON,
+                "attributes": {
+                    ATTR_BRIGHTNESS: 254,
+                    ATTR_COLOR_TEMP: 375,
+                    ATTR_EFFECT_LIST: [EFFECT_COLORLOOP],
+                    ATTR_SUPPORTED_COLOR_MODES: [
+                        COLOR_MODE_COLOR_TEMP,
+                        COLOR_MODE_HS,
+                        COLOR_MODE_XY,
+                    ],
+                    ATTR_COLOR_MODE: COLOR_MODE_COLOR_TEMP,
+                    ATTR_MIN_MIREDS: 153,
+                    ATTR_MAX_MIREDS: 500,
+                    ATTR_SUPPORTED_FEATURES: SUPPORT_TRANSITION
+                    | SUPPORT_FLASH
+                    | SUPPORT_EFFECT,
+                    DECONZ_GROUP: False,
+                },
+            },
+        ),
+        (  # RGB light in XY color mode
+            {
+                "colorcapabilities": 0,
+                "ctmax": 65535,
+                "ctmin": 0,
+                "etag": "74c91da78bbb5f4dc4d36edf4ad6857c",
+                "hascolor": True,
+                "lastannounced": "2021-01-27T18:05:38Z",
+                "lastseen": "2021-06-10T20:26Z",
+                "manufacturername": "Philips",
+                "modelid": "4090331P9_01",
+                "name": "Hue Ensis",
+                "state": {
+                    "alert": "none",
+                    "bri": 254,
+                    "colormode": "xy",
+                    "ct": 316,
+                    "effect": "0",
+                    "hue": 3096,
+                    "on": True,
+                    "reachable": True,
+                    "sat": 48,
+                    "xy": [0.427, 0.373],
+                },
+                "swversion": "1.65.9_hB3217DF4",
+                "type": "Extended color light",
+                "uniqueid": "00:17:88:01:01:23:45:67-01",
+            },
+            {
+                "entity_id": "light.hue_ensis",
+                "state": STATE_ON,
+                "attributes": {
+                    ATTR_MIN_MIREDS: 140,
+                    ATTR_MAX_MIREDS: 650,
+                    ATTR_EFFECT_LIST: [EFFECT_COLORLOOP],
+                    ATTR_SUPPORTED_COLOR_MODES: [
+                        COLOR_MODE_COLOR_TEMP,
+                        COLOR_MODE_HS,
+                        COLOR_MODE_XY,
+                    ],
+                    ATTR_COLOR_MODE: COLOR_MODE_XY,
+                    ATTR_BRIGHTNESS: 254,
+                    ATTR_HS_COLOR: (29.691, 38.039),
+                    ATTR_RGB_COLOR: (255, 206, 158),
+                    ATTR_XY_COLOR: (0.427, 0.373),
+                    DECONZ_GROUP: False,
+                    ATTR_SUPPORTED_FEATURES: SUPPORT_TRANSITION
+                    | SUPPORT_FLASH
+                    | SUPPORT_EFFECT,
+                },
+            },
+        ),
+        (  # RGB light with only HS color mode
+            {
+                "etag": "87a89542bf9b9d0aa8134919056844f8",
+                "hascolor": True,
+                "lastannounced": None,
+                "lastseen": "2020-12-05T22:57Z",
+                "manufacturername": "_TZE200_s8gkrkxk",
+                "modelid": "TS0601",
+                "name": "LIDL xmas light",
+                "state": {
+                    "bri": 25,
+                    "colormode": "hs",
+                    "effect": "none",
+                    "hue": 53691,
+                    "on": True,
+                    "reachable": True,
+                    "sat": 141,
+                },
+                "swversion": None,
+                "type": "Color dimmable light",
+                "uniqueid": "58:8e:81:ff:fe:db:7b:be-01",
+            },
+            {
+                "entity_id": "light.lidl_xmas_light",
+                "state": STATE_ON,
+                "attributes": {
+                    ATTR_EFFECT_LIST: [EFFECT_COLORLOOP],
+                    ATTR_SUPPORTED_COLOR_MODES: [COLOR_MODE_HS],
+                    ATTR_COLOR_MODE: COLOR_MODE_HS,
+                    ATTR_BRIGHTNESS: 25,
+                    ATTR_HS_COLOR: (294.938, 55.294),
+                    ATTR_RGB_COLOR: (243, 113, 255),
+                    ATTR_XY_COLOR: (0.357, 0.188),
+                    DECONZ_GROUP: False,
+                    ATTR_SUPPORTED_FEATURES: SUPPORT_TRANSITION
+                    | SUPPORT_FLASH
+                    | SUPPORT_EFFECT,
+                },
+            },
+        ),
+        (  # Tunable white light in CT color mode
+            {
+                "colorcapabilities": 16,
+                "ctmax": 454,
+                "ctmin": 153,
+                "etag": "576ffecbedb4abdc3d3f375fd8f17a9e",
+                "hascolor": True,
+                "lastannounced": None,
+                "lastseen": "2021-06-10T20:25Z",
+                "manufacturername": "Philips",
+                "modelid": "LTW013",
+                "name": "Hue White Ambiance",
+                "state": {
+                    "alert": "none",
+                    "bri": 254,
+                    "colormode": "ct",
+                    "ct": 396,
+                    "on": True,
+                    "reachable": True,
+                },
+                "swversion": "1.46.13_r26312",
+                "type": "Color temperature light",
+                "uniqueid": "00:17:88:01:01:23:45:67-02",
+            },
+            {
+                "entity_id": "light.hue_white_ambiance",
+                "state": STATE_ON,
+                "attributes": {
+                    ATTR_MIN_MIREDS: 153,
+                    ATTR_MAX_MIREDS: 454,
+                    ATTR_SUPPORTED_COLOR_MODES: [COLOR_MODE_COLOR_TEMP],
+                    ATTR_COLOR_MODE: COLOR_MODE_COLOR_TEMP,
+                    ATTR_BRIGHTNESS: 254,
+                    ATTR_COLOR_TEMP: 396,
+                    DECONZ_GROUP: False,
+                    ATTR_SUPPORTED_FEATURES: SUPPORT_TRANSITION | SUPPORT_FLASH,
+                },
+            },
+        ),
+        (  # Dimmable light
+            {
+                "etag": "f88e87235e2abce62404edd99b1af323",
+                "hascolor": False,
+                "lastannounced": None,
+                "lastseen": "2021-06-10T20:26Z",
+                "manufacturername": "Philips",
+                "modelid": "LWO001",
+                "name": "Hue Filament",
+                "state": {"alert": "none", "bri": 254, "on": True, "reachable": True},
+                "swversion": "1.55.8_r28815",
+                "type": "Dimmable light",
+                "uniqueid": "00:17:88:01:01:23:45:67-03",
+            },
+            {
+                "entity_id": "light.hue_filament",
+                "state": STATE_ON,
+                "attributes": {
+                    ATTR_SUPPORTED_COLOR_MODES: [COLOR_MODE_BRIGHTNESS],
+                    ATTR_COLOR_MODE: COLOR_MODE_BRIGHTNESS,
+                    ATTR_BRIGHTNESS: 254,
+                    DECONZ_GROUP: False,
+                    ATTR_SUPPORTED_FEATURES: SUPPORT_TRANSITION | SUPPORT_FLASH,
+                },
+            },
+        ),
+        (  # On/Off light
+            {
+                "etag": "99c67fd8f0529c6c2aab94b45e4f6caa",
+                "hascolor": False,
+                "lastannounced": "2021-04-26T20:28:11Z",
+                "lastseen": "2021-06-10T21:15Z",
+                "manufacturername": "Unknown",
+                "modelid": "Unknown",
+                "name": "Simple Light",
+                "state": {"alert": "none", "on": True, "reachable": True},
+                "swversion": "2.0",
+                "type": "Simple light",
+                "uniqueid": "00:15:8d:00:01:23:45:67-01",
+            },
+            {
+                "entity_id": "light.simple_light",
+                "state": STATE_ON,
+                "attributes": {
+                    ATTR_SUPPORTED_COLOR_MODES: [COLOR_MODE_ONOFF],
+                    ATTR_COLOR_MODE: COLOR_MODE_ONOFF,
+                    DECONZ_GROUP: False,
+                    ATTR_SUPPORTED_FEATURES: 0,
+                },
+            },
+        ),
+    ],
+)
+async def test_lights(hass, aioclient_mock, input, expected):
+    """Test that different light entities are created with expected values."""
+    data = {"lights": {"0": input}}
+    with patch.dict(DECONZ_WEB_REQUEST, data):
+        config_entry = await setup_deconz_integration(hass, aioclient_mock)
+
+    assert len(hass.states.async_all()) == 1
+
+    light = hass.states.get(expected["entity_id"])
+    assert light.state == expected["state"]
+    for attribute, expected_value in expected["attributes"].items():
+        assert light.attributes[attribute] == expected_value
+
+    await hass.config_entries.async_unload(config_entry.entry_id)
+
+    states = hass.states.async_all()
+    for state in states:
+        assert state.state == STATE_UNAVAILABLE
+
+    await hass.config_entries.async_remove(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all()) == 0
+
+
+async def test_light_state_change(hass, aioclient_mock, mock_deconz_websocket):
+    """Verify light can change state on websocket event."""
+    data = {
+        "lights": {
+            "0": {
+                "colorcapabilities": 31,
+                "ctmax": 500,
+                "ctmin": 153,
+                "etag": "055485a82553e654f156d41c9301b7cf",
+                "hascolor": True,
+                "lastannounced": None,
+                "lastseen": "2021-06-10T20:25Z",
+                "manufacturername": "Philips",
+                "modelid": "LLC020",
+                "name": "Hue Go",
+                "state": {
+                    "alert": "none",
+                    "bri": 254,
+                    "colormode": "ct",
+                    "ct": 375,
+                    "effect": "none",
+                    "hue": 8348,
+                    "on": True,
+                    "reachable": True,
+                    "sat": 147,
+                    "xy": [0.462, 0.4111],
+                },
+                "swversion": "5.127.1.26420",
+                "type": "Extended color light",
+                "uniqueid": "00:17:88:01:01:23:45:67-00",
+            }
+        }
+    }
+    with patch.dict(DECONZ_WEB_REQUEST, data):
+        await setup_deconz_integration(hass, aioclient_mock)
+
+    assert hass.states.get("light.hue_go").state == STATE_ON
+
+    event_changed_light = {
+        "t": "event",
+        "e": "changed",
+        "r": "lights",
+        "id": "0",
+        "state": {"on": False},
+    }
+    await mock_deconz_websocket(data=event_changed_light)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("light.hue_go").state == STATE_OFF
+
+
+@pytest.mark.parametrize(
+    "input,expected",
+    [
+        (  # Turn on light with short color loop
+            {
+                "light_on": False,
+                "service": SERVICE_TURN_ON,
+                "call": {
+                    ATTR_ENTITY_ID: "light.hue_go",
+                    ATTR_BRIGHTNESS: 200,
+                    ATTR_COLOR_TEMP: 200,
+                    ATTR_TRANSITION: 5,
+                    ATTR_FLASH: FLASH_SHORT,
+                    ATTR_EFFECT: EFFECT_COLORLOOP,
+                },
+            },
+            {
+                "bri": 200,
+                "ct": 200,
+                "transitiontime": 50,
+                "alert": "select",
+                "effect": "colorloop",
+            },
+        ),
+        (  # Turn on light disabling color loop with long flashing
+            {
+                "light_on": False,
+                "service": SERVICE_TURN_ON,
+                "call": {
+                    ATTR_ENTITY_ID: "light.hue_go",
+                    ATTR_XY_COLOR: (0.411, 0.351),
+                    ATTR_FLASH: FLASH_LONG,
+                    ATTR_EFFECT: "None",
+                },
+            },
+            {
+                "xy": (0.411, 0.351),
+                "alert": "lselect",
+                "effect": "none",
+            },
+        ),
+        (  # Turn off light with short flashing
+            {
+                "light_on": True,
+                "service": SERVICE_TURN_OFF,
+                "call": {
+                    ATTR_ENTITY_ID: "light.hue_go",
+                    ATTR_TRANSITION: 5,
+                    ATTR_FLASH: FLASH_SHORT,
+                },
+            },
+            {
+                "bri": 0,
+                "transitiontime": 50,
+                "alert": "select",
+            },
+        ),
+        (  # Turn off light with long flashing
+            {
+                "light_on": True,
+                "service": SERVICE_TURN_OFF,
+                "call": {ATTR_ENTITY_ID: "light.hue_go", ATTR_FLASH: FLASH_LONG},
+            },
+            {"alert": "lselect"},
+        ),
+        (  # Turn off light when light is already off is not supported
+            {
+                "light_on": False,
+                "service": SERVICE_TURN_OFF,
+                "call": {
+                    ATTR_ENTITY_ID: "light.hue_go",
+                    ATTR_TRANSITION: 5,
+                    ATTR_FLASH: FLASH_SHORT,
+                },
+            },
+            {},
+        ),
+    ],
+)
+async def test_light_service_calls(hass, aioclient_mock, input, expected):
+    """Verify light can change state on websocket event."""
+    data = {
+        "lights": {
+            "0": {
+                "colorcapabilities": 31,
+                "ctmax": 500,
+                "ctmin": 153,
+                "etag": "055485a82553e654f156d41c9301b7cf",
+                "hascolor": True,
+                "lastannounced": None,
+                "lastseen": "2021-06-10T20:25Z",
+                "manufacturername": "Philips",
+                "modelid": "LLC020",
+                "name": "Hue Go",
+                "state": {
+                    "alert": "none",
+                    "bri": 254,
+                    "colormode": "ct",
+                    "ct": 375,
+                    "effect": "none",
+                    "hue": 8348,
+                    "on": input["light_on"],
+                    "reachable": True,
+                    "sat": 147,
+                    "xy": [0.462, 0.4111],
+                },
+                "swversion": "5.127.1.26420",
+                "type": "Extended color light",
+                "uniqueid": "00:17:88:01:01:23:45:67-00",
+            }
+        }
+    }
+    with patch.dict(DECONZ_WEB_REQUEST, data):
+        config_entry = await setup_deconz_integration(hass, aioclient_mock)
+
+    mock_deconz_put_request(aioclient_mock, config_entry.data, "/lights/0/state")
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        input["service"],
+        input["call"],
+        blocking=True,
+    )
+    if expected:
+        assert aioclient_mock.mock_calls[1][2] == expected
+    else:
+        assert len(aioclient_mock.mock_calls) == 1  # not called
+
+
+async def test_ikea_default_transition_time(hass, aioclient_mock):
+    """Verify that service calls to IKEA lights always extend with transition tinme 0 if absent."""
+    data = {
+        "lights": {
+            "0": {
+                "colorcapabilities": 0,
+                "ctmax": 65535,
+                "ctmin": 0,
+                "etag": "9dd510cd474791481f189d2a68a3c7f1",
+                "hascolor": True,
+                "lastannounced": "2020-12-17T17:44:38Z",
+                "lastseen": "2021-01-11T18:36Z",
+                "manufacturername": "IKEA of Sweden",
+                "modelid": "TRADFRI bulb E27 WS opal 1000lm",
+                "name": "IKEA light",
+                "state": {
+                    "alert": "none",
+                    "bri": 156,
+                    "colormode": "ct",
+                    "ct": 250,
+                    "on": True,
+                    "reachable": True,
+                },
+                "swversion": "2.0.022",
+                "type": "Color temperature light",
+                "uniqueid": "ec:1b:bd:ff:fe:ee:ed:dd-01",
+            },
+        },
+    }
+    with patch.dict(DECONZ_WEB_REQUEST, data):
+        config_entry = await setup_deconz_integration(hass, aioclient_mock)
+
+    mock_deconz_put_request(aioclient_mock, config_entry.data, "/lights/0/state")
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {
+            ATTR_ENTITY_ID: "light.ikea_light",
+            ATTR_BRIGHTNESS: 100,
+        },
+        blocking=True,
+    )
+    assert aioclient_mock.mock_calls[1][2] == {
+        "bri": 100,
+        "on": True,
+        "transitiontime": 0,
+    }
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {
+            ATTR_ENTITY_ID: "light.ikea_light",
+            ATTR_BRIGHTNESS: 100,
+            ATTR_TRANSITION: 5,
+        },
+        blocking=True,
+    )
+    assert aioclient_mock.mock_calls[2][2] == {
+        "bri": 100,
+        "on": True,
+        "transitiontime": 50,
+    }
+
+
+async def test_lidl_christmas_light(hass, aioclient_mock):
     """Test that lights or groups entities are created."""
     data = {
+        "lights": {
+            "0": {
+                "etag": "87a89542bf9b9d0aa8134919056844f8",
+                "hascolor": True,
+                "lastannounced": None,
+                "lastseen": "2020-12-05T22:57Z",
+                "manufacturername": "_TZE200_s8gkrkxk",
+                "modelid": "TS0601",
+                "name": "LIDL xmas light",
+                "state": {
+                    "bri": 25,
+                    "colormode": "hs",
+                    "effect": "none",
+                    "hue": 53691,
+                    "on": True,
+                    "reachable": True,
+                    "sat": 141,
+                },
+                "swversion": None,
+                "type": "Color dimmable light",
+                "uniqueid": "58:8e:81:ff:fe:db:7b:be-01",
+            }
+        }
+    }
+
+    with patch.dict(DECONZ_WEB_REQUEST, data):
+        config_entry = await setup_deconz_integration(hass, aioclient_mock)
+
+    mock_deconz_put_request(aioclient_mock, config_entry.data, "/lights/0/state")
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {
+            ATTR_ENTITY_ID: "light.lidl_xmas_light",
+            ATTR_HS_COLOR: (20, 30),
+        },
+        blocking=True,
+    )
+    assert aioclient_mock.mock_calls[1][2] == {"on": True, "hue": 3640, "sat": 76}
+
+    assert hass.states.get("light.lidl_xmas_light")
+
+
+async def test_configuration_tool(hass, aioclient_mock):
+    """Verify that configuration tool is not created."""
+    data = {
+        "lights": {
+            "0": {
+                "etag": "26839cb118f5bf7ba1f2108256644010",
+                "hascolor": False,
+                "lastannounced": None,
+                "lastseen": "2020-11-22T11:27Z",
+                "manufacturername": "dresden elektronik",
+                "modelid": "ConBee II",
+                "name": "Configuration tool 1",
+                "state": {"reachable": True},
+                "swversion": "0x264a0700",
+                "type": "Configuration tool",
+                "uniqueid": "00:21:2e:ff:ff:05:a7:a3-01",
+            }
+        }
+    }
+    with patch.dict(DECONZ_WEB_REQUEST, data):
+        await setup_deconz_integration(hass, aioclient_mock)
+
+    assert len(hass.states.async_all()) == 0
+
+
+@pytest.mark.parametrize(
+    "input,expected",
+    [
+        (
+            {
+                "lights": ["1", "2", "3"],
+            },
+            {
+                "entity_id": "light.group",
+                "state": ATTR_ON,
+                "attributes": {
+                    ATTR_MIN_MIREDS: 153,
+                    ATTR_MAX_MIREDS: 500,
+                    ATTR_SUPPORTED_COLOR_MODES: [COLOR_MODE_COLOR_TEMP, COLOR_MODE_XY],
+                    ATTR_COLOR_MODE: COLOR_MODE_COLOR_TEMP,
+                    ATTR_BRIGHTNESS: 255,
+                    ATTR_EFFECT_LIST: [EFFECT_COLORLOOP],
+                    "all_on": False,
+                    DECONZ_GROUP: True,
+                    ATTR_SUPPORTED_FEATURES: 44,
+                },
+            },
+        ),
+        (
+            {
+                "lights": ["3", "1", "2"],
+            },
+            {
+                "entity_id": "light.group",
+                "state": ATTR_ON,
+                "attributes": {
+                    ATTR_MIN_MIREDS: 153,
+                    ATTR_MAX_MIREDS: 500,
+                    ATTR_SUPPORTED_COLOR_MODES: [COLOR_MODE_COLOR_TEMP, COLOR_MODE_XY],
+                    ATTR_COLOR_MODE: COLOR_MODE_COLOR_TEMP,
+                    ATTR_BRIGHTNESS: 50,
+                    ATTR_EFFECT_LIST: [EFFECT_COLORLOOP],
+                    "all_on": False,
+                    DECONZ_GROUP: True,
+                    ATTR_SUPPORTED_FEATURES: SUPPORT_TRANSITION
+                    | SUPPORT_FLASH
+                    | SUPPORT_EFFECT,
+                },
+            },
+        ),
+        (
+            {
+                "lights": ["2", "3", "1"],
+            },
+            {
+                "entity_id": "light.group",
+                "state": ATTR_ON,
+                "attributes": {
+                    ATTR_MIN_MIREDS: 153,
+                    ATTR_MAX_MIREDS: 500,
+                    ATTR_SUPPORTED_COLOR_MODES: [COLOR_MODE_COLOR_TEMP, COLOR_MODE_XY],
+                    ATTR_COLOR_MODE: COLOR_MODE_XY,
+                    ATTR_HS_COLOR: (52.0, 100.0),
+                    ATTR_RGB_COLOR: (255, 221, 0),
+                    ATTR_XY_COLOR: (0.5, 0.5),
+                    "all_on": False,
+                    DECONZ_GROUP: True,
+                    ATTR_SUPPORTED_FEATURES: SUPPORT_TRANSITION
+                    | SUPPORT_FLASH
+                    | SUPPORT_EFFECT,
+                },
+            },
+        ),
+    ],
+)
+async def test_groups(hass, aioclient_mock, input, expected):
+    """Test that different group entities are created with expected values."""
+    data = {
         "groups": {
-            "1": {
+            "0": {
                 "id": "Light group id",
-                "name": "Light group",
+                "name": "Group",
                 "type": "LightGroup",
                 "state": {"all_on": False, "any_on": True},
                 "action": {},
                 "scenes": [],
-                "lights": ["1", "2"],
-            },
-            "2": {
-                "id": "Empty group id",
-                "name": "Empty group",
-                "type": "LightGroup",
-                "state": {},
-                "action": {},
-                "scenes": [],
-                "lights": [],
+                "lights": input["lights"],
             },
         },
         "lights": {
@@ -70,10 +724,10 @@ async def test_lights_and_groups(hass, aioclient_mock, mock_deconz_websocket):
                 "name": "RGB light",
                 "state": {
                     "on": True,
-                    "bri": 255,
+                    "bri": 50,
                     "colormode": "xy",
                     "effect": "colorloop",
-                    "xy": (500, 500),
+                    "xy": (0.5, 0.5),
                     "reachable": True,
                 },
                 "type": "Extended color light",
@@ -83,190 +737,191 @@ async def test_lights_and_groups(hass, aioclient_mock, mock_deconz_websocket):
                 "ctmax": 454,
                 "ctmin": 155,
                 "name": "Tunable white light",
-                "state": {"on": True, "colormode": "ct", "ct": 2500, "reachable": True},
+                "state": {
+                    "on": True,
+                    "colormode": "ct",
+                    "ct": 2500,
+                    "reachable": True,
+                },
                 "type": "Tunable white light",
                 "uniqueid": "00:00:00:00:00:00:00:01-00",
             },
             "3": {
-                "name": "On off switch",
-                "type": "On/Off plug-in unit",
-                "state": {"reachable": True},
+                "name": "Dimmable light",
+                "type": "Dimmable light",
+                "state": {"bri": 255, "on": True, "reachable": True},
                 "uniqueid": "00:00:00:00:00:00:00:02-00",
-            },
-            "4": {
-                "name": "On off light",
-                "state": {"on": True, "reachable": True},
-                "type": "On and Off light",
-                "uniqueid": "00:00:00:00:00:00:00:03-00",
-            },
-            "5": {
-                "ctmax": 1000,
-                "ctmin": 0,
-                "name": "Tunable white light with bad maxmin values",
-                "state": {"on": True, "colormode": "ct", "ct": 2500, "reachable": True},
-                "type": "Tunable white light",
-                "uniqueid": "00:00:00:00:00:00:00:04-00",
             },
         },
     }
     with patch.dict(DECONZ_WEB_REQUEST, data):
         config_entry = await setup_deconz_integration(hass, aioclient_mock)
 
-    assert len(hass.states.async_all()) == 6
+    assert len(hass.states.async_all()) == 4
 
-    rgb_light = hass.states.get("light.rgb_light")
-    assert rgb_light.state == STATE_ON
-    assert rgb_light.attributes[ATTR_BRIGHTNESS] == 255
-    assert rgb_light.attributes[ATTR_HS_COLOR] == (224.235, 100.0)
-    assert rgb_light.attributes["is_deconz_group"] is False
-    assert rgb_light.attributes[ATTR_SUPPORTED_FEATURES] == 61
-
-    tunable_white_light = hass.states.get("light.tunable_white_light")
-    assert tunable_white_light.state == STATE_ON
-    assert tunable_white_light.attributes[ATTR_COLOR_TEMP] == 2500
-    assert tunable_white_light.attributes[ATTR_MAX_MIREDS] == 454
-    assert tunable_white_light.attributes[ATTR_MIN_MIREDS] == 155
-    assert tunable_white_light.attributes[ATTR_SUPPORTED_FEATURES] == 2
-
-    tunable_white_light_bad_maxmin = hass.states.get(
-        "light.tunable_white_light_with_bad_maxmin_values"
-    )
-    assert tunable_white_light_bad_maxmin.state == STATE_ON
-    assert tunable_white_light_bad_maxmin.attributes[ATTR_COLOR_TEMP] == 2500
-    assert tunable_white_light_bad_maxmin.attributes[ATTR_MAX_MIREDS] == 650
-    assert tunable_white_light_bad_maxmin.attributes[ATTR_MIN_MIREDS] == 140
-    assert tunable_white_light_bad_maxmin.attributes[ATTR_SUPPORTED_FEATURES] == 2
-
-    on_off_light = hass.states.get("light.on_off_light")
-    assert on_off_light.state == STATE_ON
-    assert on_off_light.attributes[ATTR_SUPPORTED_FEATURES] == 0
-
-    assert hass.states.get("light.light_group").state == STATE_ON
-    assert hass.states.get("light.light_group").attributes["all_on"] is False
-
-    empty_group = hass.states.get("light.empty_group")
-    assert empty_group is None
-
-    event_changed_light = {
-        "t": "event",
-        "e": "changed",
-        "r": "lights",
-        "id": "1",
-        "state": {"on": False},
-    }
-    await mock_deconz_websocket(data=event_changed_light)
-    await hass.async_block_till_done()
-
-    assert hass.states.get("light.rgb_light").state == STATE_OFF
-
-    # Verify service calls
-
-    mock_deconz_put_request(aioclient_mock, config_entry.data, "/lights/1/state")
-
-    # Service turn on light with short color loop
-
-    await hass.services.async_call(
-        LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {
-            ATTR_ENTITY_ID: "light.rgb_light",
-            ATTR_COLOR_TEMP: 2500,
-            ATTR_BRIGHTNESS: 200,
-            ATTR_TRANSITION: 5,
-            ATTR_FLASH: FLASH_SHORT,
-            ATTR_EFFECT: EFFECT_COLORLOOP,
-        },
-        blocking=True,
-    )
-    assert aioclient_mock.mock_calls[1][2] == {
-        "ct": 2500,
-        "bri": 200,
-        "transitiontime": 50,
-        "alert": "select",
-        "effect": "colorloop",
-    }
-
-    # Service turn on light disabling color loop with long flashing
-
-    await hass.services.async_call(
-        LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {
-            ATTR_ENTITY_ID: "light.rgb_light",
-            ATTR_HS_COLOR: (20, 30),
-            ATTR_FLASH: FLASH_LONG,
-            ATTR_EFFECT: "None",
-        },
-        blocking=True,
-    )
-    assert aioclient_mock.mock_calls[2][2] == {
-        "xy": (0.411, 0.351),
-        "alert": "lselect",
-        "effect": "none",
-    }
-
-    # Service turn on light with short flashing not supported
-
-    await hass.services.async_call(
-        LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
-        {
-            ATTR_ENTITY_ID: "light.rgb_light",
-            ATTR_TRANSITION: 5,
-            ATTR_FLASH: FLASH_SHORT,
-        },
-        blocking=True,
-    )
-    assert len(aioclient_mock.mock_calls) == 3  # Not called
-
-    event_changed_light = {
-        "t": "event",
-        "e": "changed",
-        "r": "lights",
-        "id": "1",
-        "state": {"on": True},
-    }
-    await mock_deconz_websocket(data=event_changed_light)
-    await hass.async_block_till_done()
-
-    # Service turn off light with short flashing
-
-    await hass.services.async_call(
-        LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
-        {
-            ATTR_ENTITY_ID: "light.rgb_light",
-            ATTR_TRANSITION: 5,
-            ATTR_FLASH: FLASH_SHORT,
-        },
-        blocking=True,
-    )
-    assert aioclient_mock.mock_calls[3][2] == {
-        "bri": 0,
-        "transitiontime": 50,
-        "alert": "select",
-    }
-
-    # Service turn off light with long flashing
-
-    await hass.services.async_call(
-        LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "light.rgb_light", ATTR_FLASH: FLASH_LONG},
-        blocking=True,
-    )
-    assert aioclient_mock.mock_calls[4][2] == {"alert": "lselect"}
+    group = hass.states.get(expected["entity_id"])
+    assert group.state == expected["state"]
+    for attribute, expected_value in expected["attributes"].items():
+        assert group.attributes[attribute] == expected_value
 
     await hass.config_entries.async_unload(config_entry.entry_id)
 
     states = hass.states.async_all()
-    assert len(states) == 6
     for state in states:
         assert state.state == STATE_UNAVAILABLE
 
     await hass.config_entries.async_remove(config_entry.entry_id)
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 0
+
+
+@pytest.mark.parametrize(
+    "input,expected",
+    [
+        (  # Turn on group with short color loop
+            {
+                "lights": ["1", "2", "3"],
+                "group_on": False,
+                "service": SERVICE_TURN_ON,
+                "call": {
+                    ATTR_ENTITY_ID: "light.group",
+                    ATTR_BRIGHTNESS: 200,
+                    ATTR_COLOR_TEMP: 200,
+                    ATTR_TRANSITION: 5,
+                    ATTR_FLASH: FLASH_SHORT,
+                    ATTR_EFFECT: EFFECT_COLORLOOP,
+                },
+            },
+            {
+                "bri": 200,
+                "ct": 200,
+                "transitiontime": 50,
+                "alert": "select",
+                "effect": "colorloop",
+            },
+        ),
+        (  # Turn on group with hs colors
+            {
+                "lights": ["1", "2", "3"],
+                "group_on": False,
+                "service": SERVICE_TURN_ON,
+                "call": {
+                    ATTR_ENTITY_ID: "light.group",
+                    ATTR_HS_COLOR: (250, 50),
+                },
+            },
+            {
+                "hue": 45510,
+                "on": True,
+                "sat": 127,
+            },
+        ),
+        (  # Turn on group with short color loop
+            {
+                "lights": ["3", "2", "1"],
+                "group_on": False,
+                "service": SERVICE_TURN_ON,
+                "call": {
+                    ATTR_ENTITY_ID: "light.group",
+                    ATTR_HS_COLOR: (250, 50),
+                },
+            },
+            {
+                "hue": 45510,
+                "on": True,
+                "sat": 127,
+            },
+        ),
+    ],
+)
+async def test_group_service_calls(hass, aioclient_mock, input, expected):
+    """Verify expected group web request from different service calls."""
+    data = {
+        "groups": {
+            "0": {
+                "id": "Light group id",
+                "name": "Group",
+                "type": "LightGroup",
+                "state": {"all_on": False, "any_on": input["group_on"]},
+                "action": {},
+                "scenes": [],
+                "lights": input["lights"],
+            },
+        },
+        "lights": {
+            "1": {
+                "name": "RGB light",
+                "state": {
+                    "bri": 255,
+                    "colormode": "xy",
+                    "effect": "colorloop",
+                    "hue": 53691,
+                    "on": True,
+                    "reachable": True,
+                    "sat": 141,
+                    "xy": (0.5, 0.5),
+                },
+                "type": "Extended color light",
+                "uniqueid": "00:00:00:00:00:00:00:00-00",
+            },
+            "2": {
+                "ctmax": 454,
+                "ctmin": 155,
+                "name": "Tunable white light",
+                "state": {
+                    "on": True,
+                    "colormode": "ct",
+                    "ct": 2500,
+                    "reachable": True,
+                },
+                "type": "Tunable white light",
+                "uniqueid": "00:00:00:00:00:00:00:01-00",
+            },
+            "3": {
+                "name": "Dimmable light",
+                "type": "Dimmable light",
+                "state": {"bri": 254, "on": True, "reachable": True},
+                "uniqueid": "00:00:00:00:00:00:00:02-00",
+            },
+        },
+    }
+    with patch.dict(DECONZ_WEB_REQUEST, data):
+        config_entry = await setup_deconz_integration(hass, aioclient_mock)
+
+    mock_deconz_put_request(aioclient_mock, config_entry.data, "/groups/0/action")
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        input["service"],
+        input["call"],
+        blocking=True,
+    )
+    if expected:
+        assert aioclient_mock.mock_calls[1][2] == expected
+    else:
+        assert len(aioclient_mock.mock_calls) == 1  # not called
+
+
+async def test_empty_group(hass, aioclient_mock):
+    """Verify that a group without a list of lights is not created."""
+    data = {
+        "groups": {
+            "0": {
+                "id": "Empty group id",
+                "name": "Empty group",
+                "type": "LightGroup",
+                "state": {},
+                "action": {},
+                "scenes": [],
+                "lights": [],
+            },
+        },
+    }
+    with patch.dict(DECONZ_WEB_REQUEST, data):
+        await setup_deconz_integration(hass, aioclient_mock)
+
+    assert len(hass.states.async_all()) == 0
+    assert not hass.states.get("light.empty_group")
 
 
 async def test_disable_light_groups(hass, aioclient_mock):
@@ -332,109 +987,6 @@ async def test_disable_light_groups(hass, aioclient_mock):
     assert not hass.states.get("light.light_group")
 
 
-async def test_configuration_tool(hass, aioclient_mock):
-    """Test that configuration tool is not created."""
-    data = {
-        "lights": {
-            "0": {
-                "etag": "26839cb118f5bf7ba1f2108256644010",
-                "hascolor": False,
-                "lastannounced": None,
-                "lastseen": "2020-11-22T11:27Z",
-                "manufacturername": "dresden elektronik",
-                "modelid": "ConBee II",
-                "name": "Configuration tool 1",
-                "state": {"reachable": True},
-                "swversion": "0x264a0700",
-                "type": "Configuration tool",
-                "uniqueid": "00:21:2e:ff:ff:05:a7:a3-01",
-            }
-        }
-    }
-    with patch.dict(DECONZ_WEB_REQUEST, data):
-        await setup_deconz_integration(hass, aioclient_mock)
-
-    assert len(hass.states.async_all()) == 0
-
-
-async def test_ikea_default_transition_time(hass, aioclient_mock):
-    """Verify that service calls to IKEA lights always extend with transition tinme 0 if absent."""
-    data = {
-        "lights": {
-            "1": {
-                "manufacturername": "IKEA",
-                "name": "Dimmable light",
-                "state": {"on": True, "bri": 255, "reachable": True},
-                "type": "Dimmable light",
-                "uniqueid": "00:00:00:00:00:00:00:01-00",
-            },
-        },
-    }
-    with patch.dict(DECONZ_WEB_REQUEST, data):
-        config_entry = await setup_deconz_integration(hass, aioclient_mock)
-
-    mock_deconz_put_request(aioclient_mock, config_entry.data, "/lights/1/state")
-
-    await hass.services.async_call(
-        LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.dimmable_light", ATTR_BRIGHTNESS: 100},
-        blocking=True,
-    )
-    assert aioclient_mock.mock_calls[1][2] == {
-        "bri": 100,
-        "on": True,
-        "transitiontime": 0,
-    }
-
-
-async def test_lidl_christmas_light(hass, aioclient_mock):
-    """Test that lights or groups entities are created."""
-    data = {
-        "lights": {
-            "0": {
-                "etag": "87a89542bf9b9d0aa8134919056844f8",
-                "hascolor": True,
-                "lastannounced": None,
-                "lastseen": "2020-12-05T22:57Z",
-                "manufacturername": "_TZE200_s8gkrkxk",
-                "modelid": "TS0601",
-                "name": "xmas light",
-                "state": {
-                    "bri": 25,
-                    "colormode": "hs",
-                    "effect": "none",
-                    "hue": 53691,
-                    "on": True,
-                    "reachable": True,
-                    "sat": 141,
-                },
-                "swversion": None,
-                "type": "Color dimmable light",
-                "uniqueid": "58:8e:81:ff:fe:db:7b:be-01",
-            }
-        }
-    }
-
-    with patch.dict(DECONZ_WEB_REQUEST, data):
-        config_entry = await setup_deconz_integration(hass, aioclient_mock)
-
-    mock_deconz_put_request(aioclient_mock, config_entry.data, "/lights/0/state")
-
-    await hass.services.async_call(
-        LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {
-            ATTR_ENTITY_ID: "light.xmas_light",
-            ATTR_HS_COLOR: (20, 30),
-        },
-        blocking=True,
-    )
-    assert aioclient_mock.mock_calls[1][2] == {"on": True, "hue": 3640, "sat": 76}
-
-    assert hass.states.get("light.xmas_light")
-
-
 async def test_non_color_light_reports_color(
     hass, aioclient_mock, mock_deconz_websocket
 ):
@@ -461,7 +1013,7 @@ async def test_non_color_light_reports_color(
                 "devicemembership": [],
                 "etag": "81e42cf1b47affb72fa72bc2e25ba8bf",
                 "lights": ["0", "1"],
-                "name": "All",
+                "name": "Group",
                 "scenes": [],
                 "state": {"all_on": False, "any_on": True},
                 "type": "LightGroup",
@@ -523,7 +1075,7 @@ async def test_non_color_light_reports_color(
         await setup_deconz_integration(hass, aioclient_mock)
 
     assert len(hass.states.async_all()) == 3
-    assert hass.states.get("light.all").attributes[ATTR_COLOR_TEMP] == 307
+    assert hass.states.get("light.group").attributes[ATTR_COLOR_TEMP] == 250
 
     # Updating a scene will return a faulty color value for a non-color light causing an exception in hs_color
     event_changed_light = {
@@ -546,8 +1098,8 @@ async def test_non_color_light_reports_color(
 
     # Bug is fixed if we reach this point, but device won't have neither color temp nor color
     with pytest.raises(KeyError):
-        assert hass.states.get("light.all").attributes[ATTR_COLOR_TEMP]
-        assert hass.states.get("light.all").attributes[ATTR_HS_COLOR]
+        assert hass.states.get("light.group").attributes[ATTR_COLOR_TEMP]
+        assert hass.states.get("light.group").attributes[ATTR_HS_COLOR]
 
 
 async def test_verify_group_supported_features(hass, aioclient_mock):
@@ -556,7 +1108,7 @@ async def test_verify_group_supported_features(hass, aioclient_mock):
         "groups": {
             "1": {
                 "id": "Group1",
-                "name": "group",
+                "name": "Group",
                 "type": "LightGroup",
                 "state": {"all_on": False, "any_on": True},
                 "action": {},
@@ -600,4 +1152,7 @@ async def test_verify_group_supported_features(hass, aioclient_mock):
     assert len(hass.states.async_all()) == 4
 
     assert hass.states.get("light.group").state == STATE_ON
-    assert hass.states.get("light.group").attributes[ATTR_SUPPORTED_FEATURES] == 63
+    assert (
+        hass.states.get("light.group").attributes[ATTR_SUPPORTED_FEATURES]
+        == SUPPORT_TRANSITION | SUPPORT_FLASH | SUPPORT_EFFECT
+    )

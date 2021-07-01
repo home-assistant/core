@@ -1,7 +1,7 @@
 """Support for a ScreenLogic heating device."""
 import logging
 
-from screenlogicpy.const import EQUIPMENT, HEAT_MODE
+from screenlogicpy.const import DATA as SL_DATA, EQUIPMENT, HEAT_MODE
 
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
@@ -37,11 +37,11 @@ SUPPORTED_PRESETS = [
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up entry."""
     entities = []
-    data = hass.data[DOMAIN][config_entry.entry_id]
-    coordinator = data["coordinator"]
+    coordinator = hass.data[DOMAIN][config_entry.entry_id]["coordinator"]
 
-    for body in data["devices"]["body"]:
+    for body in coordinator.data[SL_DATA.KEY_BODIES]:
         entities.append(ScreenLogicClimate(coordinator, body))
+
     async_add_entities(entities)
 
 
@@ -89,7 +89,7 @@ class ScreenLogicClimate(ScreenlogicEntity, ClimateEntity, RestoreEntity):
     @property
     def temperature_unit(self) -> str:
         """Return the unit of measurement."""
-        if self.config_data["is_celcius"]["value"] == 1:
+        if self.config_data["is_celsius"]["value"] == 1:
             return TEMP_CELSIUS
         return TEMP_FAHRENHEIT
 
@@ -217,4 +217,4 @@ class ScreenLogicClimate(ScreenlogicEntity, ClimateEntity, RestoreEntity):
     @property
     def body(self):
         """Shortcut to access body data."""
-        return self.coordinator.data["bodies"][self._data_key]
+        return self.coordinator.data[SL_DATA.KEY_BODIES][self._data_key]

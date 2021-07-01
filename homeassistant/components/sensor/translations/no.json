@@ -13,7 +13,6 @@
             "is_pressure": "Gjeldende {entity_name} trykk",
             "is_signal_strength": "Gjeldende {entity_name} signalstyrke",
             "is_temperature": "Gjeldende {entity_name} temperatur",
-            "is_timestamp": "Gjeldende {entity_name} tidsstempel",
             "is_value": "Gjeldende {entity_name} verdi",
             "is_voltage": "Gjeldende {entity_name} spenning"
         },
@@ -30,7 +29,6 @@
             "pressure": "{entity_name} trykk endringer",
             "signal_strength": "{entity_name} signalstyrkeendringer",
             "temperature": "{entity_name} temperaturendringer",
-            "timestamp": "{entity_name} tidsstempel endringer",
             "value": "{entity_name} verdi endringer",
             "voltage": "{entity_name} spenningsendringer"
         }

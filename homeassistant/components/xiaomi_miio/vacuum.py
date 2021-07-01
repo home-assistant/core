@@ -150,7 +150,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         mirobo = MiroboVacuum(name, vacuum, config_entry, unique_id)
         entities.append(mirobo)
 
-        platform = entity_platform.current_platform.get()
+        platform = entity_platform.async_get_current_platform()
 
         platform.async_register_entity_service(
             SERVICE_START_REMOTE_CONTROL,

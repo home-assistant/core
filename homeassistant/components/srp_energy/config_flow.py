@@ -16,7 +16,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=SRP_ENERGY_DOMAIN):
     """Handle a config flow for SRP Energy."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     config = {
         vol.Required(CONF_ID): str,

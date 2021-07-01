@@ -12,7 +12,7 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_USERNAME,
 )
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
 
 from .consts import HOST, MACS, PASSWORD, PORT, USE_SSL, USERNAME
 
@@ -20,7 +20,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.mark.no_bypass_setup
-async def test_services_registered(hass: HomeAssistantType):
+async def test_services_registered(hass: HomeAssistant):
     """Test if all services are registered."""
     with patch(
         "homeassistant.components.synology_dsm.SynoApi.async_setup", return_value=True

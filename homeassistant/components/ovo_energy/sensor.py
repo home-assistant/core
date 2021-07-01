@@ -6,7 +6,7 @@ from ovoenergy.ovoenergy import OVOEnergy
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import OVOEnergyDeviceEntity
@@ -17,7 +17,7 @@ PARALLEL_UPDATES = 4
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up OVO Energy sensor based on a config entry."""
     coordinator: DataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
@@ -80,7 +80,7 @@ class OVOEnergySensor(OVOEnergyDeviceEntity, SensorEntity):
 class OVOEnergyLastElectricityReading(OVOEnergySensor):
     """Defines a OVO Energy last reading sensor."""
 
-    def __init__(self, coordinator: DataUpdateCoordinator, client: OVOEnergy):
+    def __init__(self, coordinator: DataUpdateCoordinator, client: OVOEnergy) -> None:
         """Initialize OVO Energy sensor."""
 
         super().__init__(
@@ -115,7 +115,7 @@ class OVOEnergyLastElectricityReading(OVOEnergySensor):
 class OVOEnergyLastGasReading(OVOEnergySensor):
     """Defines a OVO Energy last reading sensor."""
 
-    def __init__(self, coordinator: DataUpdateCoordinator, client: OVOEnergy):
+    def __init__(self, coordinator: DataUpdateCoordinator, client: OVOEnergy) -> None:
         """Initialize OVO Energy sensor."""
 
         super().__init__(
@@ -152,7 +152,7 @@ class OVOEnergyLastElectricityCost(OVOEnergySensor):
 
     def __init__(
         self, coordinator: DataUpdateCoordinator, client: OVOEnergy, currency: str
-    ):
+    ) -> None:
         """Initialize OVO Energy sensor."""
         super().__init__(
             coordinator,
@@ -188,7 +188,7 @@ class OVOEnergyLastGasCost(OVOEnergySensor):
 
     def __init__(
         self, coordinator: DataUpdateCoordinator, client: OVOEnergy, currency: str
-    ):
+    ) -> None:
         """Initialize OVO Energy sensor."""
         super().__init__(
             coordinator,

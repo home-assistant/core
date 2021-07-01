@@ -5,5 +5,6 @@
   "codeowners": ["@ctalkington"],
   "requirements": ["sonarr==0.3.0"],
   "config_flow": true,
-  "quality_scale": "silver"
+  "quality_scale": "silver",
+  "iot_class": "local_polling"
 }

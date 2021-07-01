@@ -6,12 +6,7 @@ from homeassistant.components.homeassistant import (
     SERVICE_UPDATE_ENTITY,
 )
 from homeassistant.components.smart_meter_texas.const import DOMAIN
-from homeassistant.config_entries import (
-    ENTRY_STATE_LOADED,
-    ENTRY_STATE_NOT_LOADED,
-    ENTRY_STATE_SETUP_ERROR,
-    ENTRY_STATE_SETUP_RETRY,
-)
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.setup import async_setup_component
 
@@ -31,14 +26,14 @@ async def test_auth_failure(hass, config_entry, aioclient_mock):
     """Test if user's username or password is not accepted."""
     await setup_integration(hass, config_entry, aioclient_mock, auth_fail=True)
 
-    assert config_entry.state == ENTRY_STATE_SETUP_ERROR
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
 async def test_api_timeout(hass, config_entry, aioclient_mock):
     """Test that a timeout results in ConfigEntryNotReady."""
     await setup_integration(hass, config_entry, aioclient_mock, auth_timeout=True)
 
-    assert config_entry.state == ENTRY_STATE_SETUP_RETRY
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_update_failure(hass, config_entry, aioclient_mock):
@@ -64,9 +59,9 @@ async def test_unload_config_entry(hass, config_entry, aioclient_mock):
     config_entries = hass.config_entries.async_entries(DOMAIN)
     assert len(config_entries) == 1
     assert config_entries[0] is config_entry
-    assert config_entry.state == ENTRY_STATE_LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert config_entry.state == ENTRY_STATE_NOT_LOADED
+    assert config_entry.state is ConfigEntryState.NOT_LOADED

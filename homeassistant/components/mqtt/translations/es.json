@@ -62,7 +62,8 @@
                     "port": "Puerto",
                     "username": "Usuario"
                 },
-                "description": "Por favor, introduce la informaci\u00f3n de tu agente MQTT."
+                "description": "Por favor, introduce la informaci\u00f3n de tu agente MQTT.",
+                "title": "Opciones para el Broker"
             },
             "options": {
                 "data": {
@@ -78,7 +79,8 @@
                     "will_retain": "Retendr\u00e1 el mensaje",
                     "will_topic": "Enviar\u00e1 un mensaje al tema"
                 },
-                "description": "Por favor, selecciona las opciones para MQTT."
+                "description": "Por favor, selecciona las opciones para MQTT.",
+                "title": "Opciones para MQTT"
             }
         }
     }

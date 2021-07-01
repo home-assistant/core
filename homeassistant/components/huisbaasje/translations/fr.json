@@ -5,9 +5,7 @@
         },
         "error": {
             "cannot_connect": "[%key::common::config_flow::error::cannot_connect%]",
-            "connection_exception": "\u00c9chec de la connexion ",
             "invalid_auth": "Authentification invalide ",
-            "unauthenticated_exception": "Authentification invalide ",
             "unknown": "Erreur inatendue"
         },
         "step": {

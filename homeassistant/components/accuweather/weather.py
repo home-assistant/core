@@ -1,5 +1,8 @@
 """Support for the AccuWeather service."""
+from __future__ import annotations
+
 from statistics import mean
+from typing import Any, cast
 
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
@@ -10,17 +13,24 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_TIME,
     ATTR_FORECAST_WIND_BEARING,
     ATTR_FORECAST_WIND_SPEED,
+    Forecast,
     WeatherEntity,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.dt import utc_from_timestamp
 
+from . import AccuWeatherDataUpdateCoordinator
 from .const import (
+    API_IMPERIAL,
+    API_METRIC,
     ATTR_FORECAST,
     ATTRIBUTION,
     CONDITION_CLASSES,
-    COORDINATOR,
     DOMAIN,
     MANUFACTURER,
     NAME,
@@ -29,42 +39,47 @@ from .const import (
 PARALLEL_UPDATES = 1
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Add a AccuWeather weather entity from a config_entry."""
-    name = config_entry.data[CONF_NAME]
+    name: str = entry.data[CONF_NAME]
 
-    coordinator = hass.data[DOMAIN][config_entry.entry_id][COORDINATOR]
+    coordinator: AccuWeatherDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
-    async_add_entities([AccuWeatherEntity(name, coordinator)], False)
+    async_add_entities([AccuWeatherEntity(name, coordinator)])
 
 
 class AccuWeatherEntity(CoordinatorEntity, WeatherEntity):
     """Define an AccuWeather entity."""
 
-    def __init__(self, name, coordinator):
+    coordinator: AccuWeatherDataUpdateCoordinator
+
+    def __init__(
+        self, name: str, coordinator: AccuWeatherDataUpdateCoordinator
+    ) -> None:
         """Initialize."""
         super().__init__(coordinator)
         self._name = name
-        self._attrs = {}
-        self._unit_system = "Metric" if self.coordinator.is_metric else "Imperial"
+        self._unit_system = API_METRIC if self.coordinator.is_metric else API_IMPERIAL
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name."""
         return self._name
 
     @property
-    def attribution(self):
+    def attribution(self) -> str:
         """Return the attribution."""
         return ATTRIBUTION
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str:
         """Return a unique_id for this entity."""
         return self.coordinator.location_key
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device info."""
         return {
             "identifiers": {(DOMAIN, self.coordinator.location_key)},
@@ -74,7 +89,7 @@ class AccuWeatherEntity(CoordinatorEntity, WeatherEntity):
         }
 
     @property
-    def condition(self):
+    def condition(self) -> str | None:
         """Return the current condition."""
         try:
             return [
@@ -86,57 +101,65 @@ class AccuWeatherEntity(CoordinatorEntity, WeatherEntity):
             return None
 
     @property
-    def temperature(self):
+    def temperature(self) -> float:
         """Return the temperature."""
-        return self.coordinator.data["Temperature"][self._unit_system]["Value"]
+        return cast(
+            float, self.coordinator.data["Temperature"][self._unit_system]["Value"]
+        )
 
     @property
-    def temperature_unit(self):
+    def temperature_unit(self) -> str:
         """Return the unit of measurement."""
         return TEMP_CELSIUS if self.coordinator.is_metric else TEMP_FAHRENHEIT
 
     @property
-    def pressure(self):
+    def pressure(self) -> float:
         """Return the pressure."""
-        return self.coordinator.data["Pressure"][self._unit_system]["Value"]
+        return cast(
+            float, self.coordinator.data["Pressure"][self._unit_system]["Value"]
+        )
 
     @property
-    def humidity(self):
+    def humidity(self) -> int:
         """Return the humidity."""
-        return self.coordinator.data["RelativeHumidity"]
+        return cast(int, self.coordinator.data["RelativeHumidity"])
 
     @property
-    def wind_speed(self):
+    def wind_speed(self) -> float:
         """Return the wind speed."""
-        return self.coordinator.data["Wind"]["Speed"][self._unit_system]["Value"]
+        return cast(
+            float, self.coordinator.data["Wind"]["Speed"][self._unit_system]["Value"]
+        )
 
     @property
-    def wind_bearing(self):
+    def wind_bearing(self) -> int:
         """Return the wind bearing."""
-        return self.coordinator.data["Wind"]["Direction"]["Degrees"]
+        return cast(int, self.coordinator.data["Wind"]["Direction"]["Degrees"])
 
     @property
-    def visibility(self):
+    def visibility(self) -> float:
         """Return the visibility."""
-        return self.coordinator.data["Visibility"][self._unit_system]["Value"]
+        return cast(
+            float, self.coordinator.data["Visibility"][self._unit_system]["Value"]
+        )
 
     @property
-    def ozone(self):
+    def ozone(self) -> int | None:
         """Return the ozone level."""
         # We only have ozone data for certain locations and only in the forecast data.
         if self.coordinator.forecast and self.coordinator.data[ATTR_FORECAST][0].get(
             "Ozone"
         ):
-            return self.coordinator.data[ATTR_FORECAST][0]["Ozone"]["Value"]
+            return cast(int, self.coordinator.data[ATTR_FORECAST][0]["Ozone"]["Value"])
         return None
 
     @property
-    def forecast(self):
+    def forecast(self) -> list[Forecast] | None:
         """Return the forecast array."""
         if not self.coordinator.forecast:
             return None
         # remap keys from library to keys understood by the weather component
-        forecast = [
+        return [
             {
                 ATTR_FORECAST_TIME: utc_from_timestamp(item["EpochDate"]).isoformat(),
                 ATTR_FORECAST_TEMP: item["TemperatureMax"]["Value"],
@@ -158,10 +181,9 @@ class AccuWeatherEntity(CoordinatorEntity, WeatherEntity):
             }
             for item in self.coordinator.data[ATTR_FORECAST]
         ]
-        return forecast
 
     @staticmethod
-    def _calc_precipitation(day: dict) -> float:
+    def _calc_precipitation(day: dict[str, Any]) -> float:
         """Return sum of the precipitation."""
         precip_sum = 0
         precip_types = ["Rain", "Snow", "Ice"]

@@ -14,7 +14,7 @@
                 "data": {
                     "country_code": "Prefisso internazionale del tuo account (ad es. 1 per gli Stati Uniti o 86 per la Cina)",
                     "password": "Password",
-                    "platform": "L'app in cui si registra il tuo account",
+                    "platform": "L'app in cui \u00e8 registrato il tuo account",
                     "username": "Nome utente"
                 },
                 "description": "Inserisci le tue credenziali Tuya.",

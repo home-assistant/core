@@ -8,7 +8,7 @@
         "error": {
             "invalid_auth": "Ongeldige authenticatie"
         },
-        "flow_title": "AVM FRITZ!Box oproepmonitor: {name}",
+        "flow_title": "{name}",
         "step": {
             "phonebook": {
                 "data": {

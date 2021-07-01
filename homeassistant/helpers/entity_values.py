@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections import OrderedDict
 import fnmatch
 import re
-from typing import Any, Pattern
+from typing import Any
 
 from homeassistant.core import split_entity_id
 
@@ -26,7 +26,7 @@ class EntityValues:
         self._domain = domain
 
         if glob is None:
-            compiled: dict[Pattern[str], Any] | None = None
+            compiled: dict[re.Pattern[str], Any] | None = None
         else:
             compiled = OrderedDict()
             for key, value in glob.items():

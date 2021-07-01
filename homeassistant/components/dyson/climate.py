@@ -109,7 +109,7 @@ class DysonClimateEntity(DysonEntity, ClimateEntity):
             and self._device.environmental_state.temperature
         ):
             temperature_kelvin = self._device.environmental_state.temperature
-            return float("{:.1f}".format(temperature_kelvin - 273))
+            return float(f"{temperature_kelvin - 273:.1f}")
         return None
 
     @property

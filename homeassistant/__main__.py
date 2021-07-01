@@ -145,6 +145,7 @@ def daemonize() -> None:
         sys.exit(0)
 
     # redirect standard file descriptors to devnull
+    # pylint: disable=consider-using-with
     infd = open(os.devnull)
     outfd = open(os.devnull, "a+")
     sys.stdout.flush()

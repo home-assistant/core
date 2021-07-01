@@ -2,7 +2,6 @@
     "config": {
         "abort": {
             "already_configured": "Perjanjian yang dipilih sudah dikonfigurasi.",
-            "authorize_url_fail": "Kesalahan tidak dikenal terjadi ketika menghasilkan URL otorisasi.",
             "authorize_url_timeout": "Tenggang waktu pembuatan URL otorisasi habis.",
             "missing_configuration": "Komponen tidak dikonfigurasi. Ikuti petunjuk dalam dokumentasi.",
             "no_agreements": "Akun ini tidak memiliki tampilan Toon.",

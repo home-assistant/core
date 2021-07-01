@@ -14,7 +14,8 @@
                 "data": {
                     "pin": "PIN-Code"
                 },
-                "description": "Gib die auf deinem Fernseher angezeigten PIN ein"
+                "description": "Gib die auf deinem Fernseher angezeigten PIN ein",
+                "title": "Paaren"
             },
             "user": {
                 "data": {
@@ -27,6 +28,15 @@
     "device_automation": {
         "trigger_type": {
             "turn_on": "Ger\u00e4t wird zum Einschalten aufgefordert"
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "allow_notify": "Nutzung des Datenbenachrichtigungsdienstes zulassen."
+                }
+            }
         }
     }
 }

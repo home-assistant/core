@@ -1,0 +1,18 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Locatie is al geconfigureerd."
+        },
+        "error": {
+            "invalid_hosts": "Ongeldige hosts"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "exclude": "Netwerkadressen (door komma's gescheiden) om uit te sluiten van scannen"
+                }
+            }
+        }
+    },
+    "title": "Nmap Tracker"
+}

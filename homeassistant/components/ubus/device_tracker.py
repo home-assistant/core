@@ -8,7 +8,7 @@ import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
     DOMAIN,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     DeviceScanner,
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
@@ -20,7 +20,7 @@ CONF_DHCP_SOFTWARE = "dhcp_software"
 DEFAULT_DHCP_SOFTWARE = "dnsmasq"
 DHCP_SOFTWARES = ["dnsmasq", "odhcpd", "none"]
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,

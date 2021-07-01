@@ -230,7 +230,7 @@ def _parse_due_date(data: dict, gmt_string) -> datetime:
     """Parse the due date dict into a datetime object."""
     # Add time information to date only strings.
     if len(data["date"]) == 10:
-        data["date"] += "T00:00:00"
+        return datetime.fromisoformat(data["date"]).replace(tzinfo=dt.UTC)
     if dt.parse_datetime(data["date"]).tzinfo is None:
         data["date"] += gmt_string
     return dt.as_utc(dt.parse_datetime(data["date"]))
@@ -385,7 +385,7 @@ class TodoistProjectData:
         task[SUMMARY] = data[CONTENT]
         task[COMPLETED] = data[CHECKED] == 1
         task[PRIORITY] = data[PRIORITY]
-        task[DESCRIPTION] = "https://todoist.com/showTask?id={}".format(data[ID])
+        task[DESCRIPTION] = f"https://todoist.com/showTask?id={data[ID]}"
 
         # All task Labels (optional parameter).
         task[LABELS] = [

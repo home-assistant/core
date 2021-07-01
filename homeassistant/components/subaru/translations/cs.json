@@ -8,8 +8,7 @@
             "bad_pin_format": "PIN by m\u011bl m\u00edt 4 \u010d\u00edslice",
             "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit",
             "incorrect_pin": "Nespr\u00e1vn\u00fd PIN",
-            "invalid_auth": "Neplatn\u00e9 ov\u011b\u0159en\u00ed",
-            "unknown": "Neo\u010dek\u00e1van\u00e1 chyba"
+            "invalid_auth": "Neplatn\u00e9 ov\u011b\u0159en\u00ed"
         },
         "step": {
             "pin": {

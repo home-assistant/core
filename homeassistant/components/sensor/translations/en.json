@@ -13,7 +13,6 @@
             "is_pressure": "Current {entity_name} pressure",
             "is_signal_strength": "Current {entity_name} signal strength",
             "is_temperature": "Current {entity_name} temperature",
-            "is_timestamp": "Current {entity_name} timestamp",
             "is_value": "Current {entity_name} value",
             "is_voltage": "Current {entity_name} voltage"
         },
@@ -30,7 +29,6 @@
             "pressure": "{entity_name} pressure changes",
             "signal_strength": "{entity_name} signal strength changes",
             "temperature": "{entity_name} temperature changes",
-            "timestamp": "{entity_name} timestamp changes",
             "value": "{entity_name} value changes",
             "voltage": "{entity_name} voltage changes"
         }

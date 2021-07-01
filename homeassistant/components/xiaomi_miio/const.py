@@ -1,15 +1,27 @@
 """Constants for the Xiaomi Miio component."""
 DOMAIN = "xiaomi_miio"
 
+# Config flow
 CONF_FLOW_TYPE = "config_flow_device"
 CONF_GATEWAY = "gateway"
 CONF_DEVICE = "device"
 CONF_MODEL = "model"
 CONF_MAC = "mac"
+CONF_CLOUD_USERNAME = "cloud_username"
+CONF_CLOUD_PASSWORD = "cloud_password"
+CONF_CLOUD_COUNTRY = "cloud_country"
+CONF_MANUAL = "manual"
+
+# Options flow
+CONF_CLOUD_SUBDEVICES = "cloud_subdevices"
 
 KEY_COORDINATOR = "coordinator"
 
 ATTR_AVAILABLE = "available"
+
+# Cloud
+SERVER_COUNTRY_CODES = ["cn", "de", "i2", "ru", "sg", "us"]
+DEFAULT_CLOUD_COUNTRY = "cn"
 
 # Fan Models
 MODEL_AIRPURIFIER_V1 = "zhimi.airpurifier.v1"
@@ -25,6 +37,7 @@ MODEL_AIRPURIFIER_MA2 = "zhimi.airpurifier.ma2"
 MODEL_AIRPURIFIER_SA1 = "zhimi.airpurifier.sa1"
 MODEL_AIRPURIFIER_SA2 = "zhimi.airpurifier.sa2"
 MODEL_AIRPURIFIER_2S = "zhimi.airpurifier.mc1"
+MODEL_AIRPURIFIER_2H = "zhimi.airpurifier.mc2"
 MODEL_AIRPURIFIER_3 = "zhimi.airpurifier.ma4"
 MODEL_AIRPURIFIER_3H = "zhimi.airpurifier.mb3"
 MODEL_AIRPURIFIER_PROH = "zhimi.airpurifier.va1"
@@ -56,6 +69,7 @@ MODELS_FAN_MIIO = [
     MODEL_AIRPURIFIER_SA1,
     MODEL_AIRPURIFIER_SA2,
     MODEL_AIRPURIFIER_2S,
+    MODEL_AIRPURIFIER_2H,
     MODEL_AIRHUMIDIFIER_V1,
     MODEL_AIRHUMIDIFIER_CA1,
     MODEL_AIRHUMIDIFIER_CB1,

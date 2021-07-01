@@ -37,7 +37,7 @@ ECOBEE_MODEL_TO_NAME = {
     "vulcanSmart": "ecobee4 Smart",
 }
 
-PLATFORMS = ["binary_sensor", "climate", "sensor", "weather"]
+PLATFORMS = ["binary_sensor", "climate", "humidifier", "sensor", "weather"]
 
 MANUFACTURER = "ecobee"
 

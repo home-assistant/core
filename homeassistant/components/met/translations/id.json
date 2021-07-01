@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "no_home": "Tidak ada koordinat rumah yang disetel dalam konfigurasi Home Assistant"
+        },
         "error": {
             "already_configured": "Layanan sudah dikonfigurasi"
         },

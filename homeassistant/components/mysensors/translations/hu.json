@@ -5,6 +5,7 @@
             "cannot_connect": "Sikertelen csatlakoz\u00e1s",
             "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s",
             "invalid_device": "\u00c9rv\u00e9nytelen eszk\u00f6z",
+            "not_a_number": "Adj meg egy sz\u00e1mot.",
             "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
         },
         "error": {

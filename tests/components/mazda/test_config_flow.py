@@ -24,6 +24,11 @@ FIXTURE_USER_INPUT_REAUTH = {
     CONF_PASSWORD: "password_fixed",
     CONF_REGION: "MNAO",
 }
+FIXTURE_USER_INPUT_REAUTH_CHANGED_EMAIL = {
+    CONF_EMAIL: "example2@example.com",
+    CONF_PASSWORD: "password_fixed",
+    CONF_REGION: "MNAO",
+}
 
 
 async def test_form(hass):
@@ -39,8 +44,6 @@ async def test_form(hass):
         "homeassistant.components.mazda.config_flow.MazdaAPI.validate_credentials",
         return_value=True,
     ), patch(
-        "homeassistant.components.mazda.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.mazda.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -53,8 +56,37 @@ async def test_form(hass):
     assert result2["type"] == "create_entry"
     assert result2["title"] == FIXTURE_USER_INPUT[CONF_EMAIL]
     assert result2["data"] == FIXTURE_USER_INPUT
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_account_already_exists(hass):
+    """Test account already exists."""
+    mock_config = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=FIXTURE_USER_INPUT[CONF_EMAIL],
+        data=FIXTURE_USER_INPUT,
+    )
+    mock_config.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    with patch(
+        "homeassistant.components.mazda.config_flow.MazdaAPI.validate_credentials",
+        return_value=True,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            FIXTURE_USER_INPUT,
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == "abort"
+    assert result2["reason"] == "already_configured"
 
 
 async def test_form_invalid_auth(hass: HomeAssistant) -> None:
@@ -148,37 +180,43 @@ async def test_form_unknown_error(hass):
 async def test_reauth_flow(hass: HomeAssistant) -> None:
     """Test reauth works."""
     await setup.async_setup_component(hass, "persistent_notification", {})
+    mock_config = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=FIXTURE_USER_INPUT[CONF_EMAIL],
+        data=FIXTURE_USER_INPUT,
+    )
+    mock_config.add_to_hass(hass)
 
     with patch(
         "homeassistant.components.mazda.config_flow.MazdaAPI.validate_credentials",
         side_effect=MazdaAuthenticationException("Failed to authenticate"),
+    ), patch(
+        "homeassistant.components.mazda.async_setup_entry",
+        return_value=True,
     ):
-        mock_config = MockConfigEntry(
-            domain=DOMAIN,
-            unique_id=FIXTURE_USER_INPUT[CONF_EMAIL],
-            data=FIXTURE_USER_INPUT,
-        )
-        mock_config.add_to_hass(hass)
-
         await hass.config_entries.async_setup(mock_config.entry_id)
         await hass.async_block_till_done()
 
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "reauth"}, data=FIXTURE_USER_INPUT
+            DOMAIN,
+            context={
+                "source": config_entries.SOURCE_REAUTH,
+                "entry_id": mock_config.entry_id,
+            },
+            data=FIXTURE_USER_INPUT,
         )
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result["step_id"] == "reauth"
-        assert result["errors"] == {"base": "invalid_auth"}
+        assert result["step_id"] == "user"
+        assert result["errors"] == {}
 
     with patch(
         "homeassistant.components.mazda.config_flow.MazdaAPI.validate_credentials",
         return_value=True,
-    ):
-        result2 = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": "reauth", "unique_id": FIXTURE_USER_INPUT[CONF_EMAIL]},
-            data=FIXTURE_USER_INPUT_REAUTH,
+    ), patch("homeassistant.components.mazda.async_setup_entry", return_value=True):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            FIXTURE_USER_INPUT_REAUTH,
         )
         await hass.async_block_till_done()
 
@@ -188,16 +226,31 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
 
 async def test_reauth_authorization_error(hass: HomeAssistant) -> None:
     """Test we show user form on authorization error."""
+    mock_config = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=FIXTURE_USER_INPUT[CONF_EMAIL],
+        data=FIXTURE_USER_INPUT,
+    )
+    mock_config.add_to_hass(hass)
+
     with patch(
         "homeassistant.components.mazda.config_flow.MazdaAPI.validate_credentials",
         side_effect=MazdaAuthenticationException("Failed to authenticate"),
+    ), patch(
+        "homeassistant.components.mazda.async_setup_entry",
+        return_value=True,
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "reauth"}, data=FIXTURE_USER_INPUT
+            DOMAIN,
+            context={
+                "source": config_entries.SOURCE_REAUTH,
+                "entry_id": mock_config.entry_id,
+            },
+            data=FIXTURE_USER_INPUT,
         )
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result["step_id"] == "reauth"
+        assert result["step_id"] == "user"
 
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -206,22 +259,37 @@ async def test_reauth_authorization_error(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
         assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result2["step_id"] == "reauth"
+        assert result2["step_id"] == "user"
         assert result2["errors"] == {"base": "invalid_auth"}
 
 
 async def test_reauth_account_locked(hass: HomeAssistant) -> None:
     """Test we show user form on account_locked error."""
+    mock_config = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=FIXTURE_USER_INPUT[CONF_EMAIL],
+        data=FIXTURE_USER_INPUT,
+    )
+    mock_config.add_to_hass(hass)
+
     with patch(
         "homeassistant.components.mazda.config_flow.MazdaAPI.validate_credentials",
         side_effect=MazdaAccountLockedException("Account locked"),
+    ), patch(
+        "homeassistant.components.mazda.async_setup_entry",
+        return_value=True,
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "reauth"}, data=FIXTURE_USER_INPUT
+            DOMAIN,
+            context={
+                "source": config_entries.SOURCE_REAUTH,
+                "entry_id": mock_config.entry_id,
+            },
+            data=FIXTURE_USER_INPUT,
         )
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result["step_id"] == "reauth"
+        assert result["step_id"] == "user"
 
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -230,22 +298,37 @@ async def test_reauth_account_locked(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
         assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result2["step_id"] == "reauth"
+        assert result2["step_id"] == "user"
         assert result2["errors"] == {"base": "account_locked"}
 
 
 async def test_reauth_connection_error(hass: HomeAssistant) -> None:
     """Test we show user form on connection error."""
+    mock_config = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=FIXTURE_USER_INPUT[CONF_EMAIL],
+        data=FIXTURE_USER_INPUT,
+    )
+    mock_config.add_to_hass(hass)
+
     with patch(
         "homeassistant.components.mazda.config_flow.MazdaAPI.validate_credentials",
         side_effect=aiohttp.ClientError,
+    ), patch(
+        "homeassistant.components.mazda.async_setup_entry",
+        return_value=True,
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "reauth"}, data=FIXTURE_USER_INPUT
+            DOMAIN,
+            context={
+                "source": config_entries.SOURCE_REAUTH,
+                "entry_id": mock_config.entry_id,
+            },
+            data=FIXTURE_USER_INPUT,
         )
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result["step_id"] == "reauth"
+        assert result["step_id"] == "user"
 
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -254,50 +337,37 @@ async def test_reauth_connection_error(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
         assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result2["step_id"] == "reauth"
+        assert result2["step_id"] == "user"
         assert result2["errors"] == {"base": "cannot_connect"}
 
 
 async def test_reauth_unknown_error(hass: HomeAssistant) -> None:
     """Test we show user form on unknown error."""
+    mock_config = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=FIXTURE_USER_INPUT[CONF_EMAIL],
+        data=FIXTURE_USER_INPUT,
+    )
+    mock_config.add_to_hass(hass)
+
     with patch(
         "homeassistant.components.mazda.config_flow.MazdaAPI.validate_credentials",
         side_effect=Exception,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "reauth"}, data=FIXTURE_USER_INPUT
-        )
-
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result["step_id"] == "reauth"
-
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            FIXTURE_USER_INPUT_REAUTH,
-        )
-        await hass.async_block_till_done()
-
-        assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result2["step_id"] == "reauth"
-        assert result2["errors"] == {"base": "unknown"}
-
-
-async def test_reauth_unique_id_not_found(hass: HomeAssistant) -> None:
-    """Test we show user form when unique id not found during reauth."""
-    with patch(
-        "homeassistant.components.mazda.config_flow.MazdaAPI.validate_credentials",
+    ), patch(
+        "homeassistant.components.mazda.async_setup_entry",
         return_value=True,
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "reauth"}, data=FIXTURE_USER_INPUT
+            DOMAIN,
+            context={
+                "source": config_entries.SOURCE_REAUTH,
+                "entry_id": mock_config.entry_id,
+            },
+            data=FIXTURE_USER_INPUT,
         )
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result["step_id"] == "reauth"
-
-        # Change the unique_id of the flow in order to cause a mismatch
-        flows = hass.config_entries.flow.async_progress()
-        flows[0]["context"]["unique_id"] = "example2@example.com"
+        assert result["step_id"] == "user"
 
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -306,5 +376,48 @@ async def test_reauth_unique_id_not_found(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
         assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result2["step_id"] == "reauth"
+        assert result2["step_id"] == "user"
         assert result2["errors"] == {"base": "unknown"}
+
+
+async def test_reauth_user_has_new_email_address(hass: HomeAssistant) -> None:
+    """Test reauth with a new email address but same account."""
+    mock_config = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=FIXTURE_USER_INPUT[CONF_EMAIL],
+        data=FIXTURE_USER_INPUT,
+    )
+    mock_config.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.mazda.config_flow.MazdaAPI.validate_credentials",
+        return_value=True,
+    ), patch(
+        "homeassistant.components.mazda.async_setup_entry",
+        return_value=True,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={
+                "source": config_entries.SOURCE_REAUTH,
+                "entry_id": mock_config.entry_id,
+            },
+            data=FIXTURE_USER_INPUT,
+        )
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "user"
+
+        # Change the email and ensure the entry and its unique id gets
+        # updated in the event the user has changed their email with mazda
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            FIXTURE_USER_INPUT_REAUTH_CHANGED_EMAIL,
+        )
+        await hass.async_block_till_done()
+
+        assert (
+            mock_config.unique_id == FIXTURE_USER_INPUT_REAUTH_CHANGED_EMAIL[CONF_EMAIL]
+        )
+        assert result2["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result2["reason"] == "reauth_successful"

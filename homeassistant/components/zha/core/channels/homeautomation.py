@@ -1,7 +1,7 @@
 """Home automation channels module for Zigbee Home Automation."""
 from __future__ import annotations
 
-from typing import Coroutine
+from collections.abc import Coroutine
 
 import zigpy.zcl.clusters.homeautomation as homeautomation
 

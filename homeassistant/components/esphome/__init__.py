@@ -2,15 +2,17 @@
 from __future__ import annotations
 
 import asyncio
+from dataclasses import dataclass, field
 import functools
 import logging
 import math
-from typing import Any, Callable
+from typing import Generic, TypeVar
 
 from aioesphomeapi import (
     APIClient,
     APIConnectionError,
-    DeviceInfo,
+    APIVersion,
+    DeviceInfo as EsphomeDeviceInfo,
     EntityInfo,
     EntityState,
     HomeassistantServiceCall,
@@ -30,36 +32,78 @@ from homeassistant.const import (
     CONF_PORT,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import Event, State, callback
+from homeassistant.core import Event, HomeAssistant, State, callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import template
 import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.helpers.service import async_set_service_schema
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.template import Template
-from homeassistant.helpers.typing import HomeAssistantType
 
 # Import config flow so that it's added to the registry
 from .entry_data import RuntimeEntryData
 
 DOMAIN = "esphome"
 _LOGGER = logging.getLogger(__name__)
+_T = TypeVar("_T")
 
 STORAGE_VERSION = 1
 
-# No config schema - only configuration entry
-CONFIG_SCHEMA = vol.Schema({}, extra=vol.ALLOW_EXTRA)
+
+@dataclass
+class DomainData:
+    """Define a class that stores global esphome data in hass.data[DOMAIN]."""
+
+    _entry_datas: dict[str, RuntimeEntryData] = field(default_factory=dict)
+    _stores: dict[str, Store] = field(default_factory=dict)
+
+    def get_entry_data(self, entry: ConfigEntry) -> RuntimeEntryData:
+        """Return the runtime entry data associated with this config entry.
+
+        Raises KeyError if the entry isn't loaded yet.
+        """
+        return self._entry_datas[entry.entry_id]
+
+    def set_entry_data(self, entry: ConfigEntry, entry_data: RuntimeEntryData) -> None:
+        """Set the runtime entry data associated with this config entry."""
+        if entry.entry_id in self._entry_datas:
+            raise ValueError("Entry data for this entry is already set")
+        self._entry_datas[entry.entry_id] = entry_data
+
+    def pop_entry_data(self, entry: ConfigEntry) -> RuntimeEntryData:
+        """Pop the runtime entry data instance associated with this config entry."""
+        return self._entry_datas.pop(entry.entry_id)
+
+    def is_entry_loaded(self, entry: ConfigEntry) -> bool:
+        """Check whether the given entry is loaded."""
+        return entry.entry_id in self._entry_datas
+
+    def get_or_create_store(self, hass: HomeAssistant, entry: ConfigEntry) -> Store:
+        """Get or create a Store instance for the given config entry."""
+        return self._stores.setdefault(
+            entry.entry_id,
+            Store(
+                hass, STORAGE_VERSION, f"esphome.{entry.entry_id}", encoder=JSONEncoder
+            ),
+        )
+
+    @classmethod
+    def get(cls: type[_T], hass: HomeAssistant) -> _T:
+        """Get the global DomainData instance stored in hass.data."""
+        # Don't use setdefault - this is a hot code path
+        if DOMAIN in hass.data:
+            return hass.data[DOMAIN]
+        ret = hass.data[DOMAIN] = cls()
+        return ret
 
 
-async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the esphome component."""
-    hass.data.setdefault(DOMAIN, {})
-
     host = entry.data[CONF_HOST]
     port = entry.data[CONF_PORT]
     password = entry.data[CONF_PASSWORD]
@@ -76,13 +120,13 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
         zeroconf_instance=zeroconf_instance,
     )
 
-    # Store client in per-config-entry hass.data
-    store = Store(
-        hass, STORAGE_VERSION, f"esphome.{entry.entry_id}", encoder=JSONEncoder
+    domain_data = DomainData.get(hass)
+    entry_data = RuntimeEntryData(
+        client=cli,
+        entry_id=entry.entry_id,
+        store=domain_data.get_or_create_store(hass, entry),
     )
-    entry_data = hass.data[DOMAIN][entry.entry_id] = RuntimeEntryData(
-        client=cli, entry_id=entry.entry_id, store=store
-    )
+    domain_data.set_entry_data(entry, entry_data)
 
     async def on_stop(event: Event) -> None:
         """Cleanup the socket client on HA stop."""
@@ -144,38 +188,72 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
                 )
             )
 
-    async def send_home_assistant_state_event(event: Event) -> None:
-        """Forward Home Assistant states updates to ESPHome."""
-        new_state = event.data.get("new_state")
-        if new_state is None:
-            return
-        entity_id = event.data.get("entity_id")
-        await cli.send_home_assistant_state(entity_id, new_state.state)
-
     async def _send_home_assistant_state(
-        entity_id: str, new_state: State | None
+        entity_id: str, attribute: str | None, state: State | None
     ) -> None:
         """Forward Home Assistant states to ESPHome."""
-        await cli.send_home_assistant_state(entity_id, new_state.state)
+        if state is None or (attribute and attribute not in state.attributes):
+            return
+
+        send_state = state.state
+        if attribute:
+            send_state = state.attributes[attribute]
+            # ESPHome only handles "on"/"off" for boolean values
+            if isinstance(send_state, bool):
+                send_state = "on" if send_state else "off"
+
+        await cli.send_home_assistant_state(entity_id, attribute, str(send_state))
 
     @callback
-    def async_on_state_subscription(entity_id: str) -> None:
+    def async_on_state_subscription(
+        entity_id: str, attribute: str | None = None
+    ) -> None:
         """Subscribe and forward states for requested entities."""
+
+        async def send_home_assistant_state_event(event: Event) -> None:
+            """Forward Home Assistant states updates to ESPHome."""
+
+            # Only communicate changes to the state or attribute tracked
+            if (
+                "old_state" in event.data
+                and "new_state" in event.data
+                and (
+                    (
+                        not attribute
+                        and event.data["old_state"].state
+                        == event.data["new_state"].state
+                    )
+                    or (
+                        attribute
+                        and attribute in event.data["old_state"].attributes
+                        and attribute in event.data["new_state"].attributes
+                        and event.data["old_state"].attributes[attribute]
+                        == event.data["new_state"].attributes[attribute]
+                    )
+                )
+            ):
+                return
+
+            await _send_home_assistant_state(
+                event.data["entity_id"], attribute, event.data.get("new_state")
+            )
+
         unsub = async_track_state_change_event(
             hass, [entity_id], send_home_assistant_state_event
         )
         entry_data.disconnect_callbacks.append(unsub)
-        new_state = hass.states.get(entity_id)
-        if new_state is None:
-            return
+
         # Send initial state
-        hass.async_create_task(_send_home_assistant_state(entity_id, new_state))
+        hass.async_create_task(
+            _send_home_assistant_state(entity_id, attribute, hass.states.get(entity_id))
+        )
 
     async def on_login() -> None:
         """Subscribe to states and list entities on successful API login."""
         nonlocal device_id
         try:
             entry_data.device_info = await cli.device_info()
+            entry_data.api_version = cli.api_version
             entry_data.available = True
             device_id = await _async_setup_device_registry(
                 hass, entry, entry_data.device_info
@@ -222,7 +300,7 @@ class ReconnectLogic(RecordUpdateListener):
 
     def __init__(
         self,
-        hass: HomeAssistantType,
+        hass: HomeAssistant,
         cli: APIClient,
         entry: ConfigEntry,
         host: str,
@@ -254,7 +332,11 @@ class ReconnectLogic(RecordUpdateListener):
 
     @property
     def _entry_data(self) -> RuntimeEntryData | None:
-        return self._hass.data[DOMAIN].get(self._entry.entry_id)
+        domain_data = DomainData.get(self._hass)
+        try:
+            return domain_data.get_entry_data(self._entry)
+        except KeyError:
+            return None
 
     async def _on_disconnect(self):
         """Log and issue callbacks when disconnecting."""
@@ -350,7 +432,7 @@ class ReconnectLogic(RecordUpdateListener):
                 return False
 
         # Check if the entry got removed or disabled, in which case we shouldn't reconnect
-        if self._entry.entry_id not in self._hass.data[DOMAIN]:
+        if not DomainData.get(self._hass).is_entry_loaded(self._entry):
             # When removing/disconnecting manually
             return
 
@@ -452,7 +534,7 @@ class ReconnectLogic(RecordUpdateListener):
 
 
 async def _async_setup_device_registry(
-    hass: HomeAssistantType, entry: ConfigEntry, device_info: DeviceInfo
+    hass: HomeAssistant, entry: ConfigEntry, device_info: EsphomeDeviceInfo
 ):
     """Set up device registry feature for a particular config entry."""
     sw_version = device_info.esphome_version
@@ -471,9 +553,9 @@ async def _async_setup_device_registry(
 
 
 async def _register_service(
-    hass: HomeAssistantType, entry_data: RuntimeEntryData, service: UserService
+    hass: HomeAssistant, entry_data: RuntimeEntryData, service: UserService
 ):
-    service_name = f"{entry_data.device_info.name}_{service.name}"
+    service_name = f"{entry_data.device_info.name.replace('-', '_')}_{service.name}"
     schema = {}
     fields = {}
 
@@ -523,7 +605,7 @@ async def _register_service(
                 "example": "['Example text', 'Another example']",
                 "selector": {"object": {}},
             },
-        }[arg.type_]
+        }[arg.type]
         schema[vol.Required(arg.name)] = metadata["validator"]
         fields[arg.name] = {
             "name": arg.name,
@@ -549,7 +631,7 @@ async def _register_service(
 
 
 async def _setup_services(
-    hass: HomeAssistantType, entry_data: RuntimeEntryData, services: list[UserService]
+    hass: HomeAssistant, entry_data: RuntimeEntryData, services: list[UserService]
 ):
     old_services = entry_data.services.copy()
     to_unregister = []
@@ -580,10 +662,11 @@ async def _setup_services(
 
 
 async def _cleanup_instance(
-    hass: HomeAssistantType, entry: ConfigEntry
+    hass: HomeAssistant, entry: ConfigEntry
 ) -> RuntimeEntryData:
     """Cleanup the esphome client if it exists."""
-    data: RuntimeEntryData = hass.data[DOMAIN].pop(entry.entry_id)
+    domain_data = DomainData.get(hass)
+    data = domain_data.pop_entry_data(entry)
     for disconnect_cb in data.disconnect_callbacks:
         disconnect_cb()
     for cleanup_callback in data.cleanup_callbacks:
@@ -592,19 +675,21 @@ async def _cleanup_instance(
     return data
 
 
-async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload an esphome config entry."""
     entry_data = await _cleanup_instance(hass, entry)
-    tasks = []
-    for platform in entry_data.loaded_platforms:
-        tasks.append(hass.config_entries.async_forward_entry_unload(entry, platform))
-    if tasks:
-        await asyncio.wait(tasks)
-    return True
+    return await hass.config_entries.async_unload_platforms(
+        entry, entry_data.loaded_platforms
+    )
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Remove an esphome config entry."""
+    await DomainData.get(hass).get_or_create_store(hass, entry).async_remove()
 
 
 async def platform_async_setup_entry(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     entry: ConfigEntry,
     async_add_entities,
     *,
@@ -618,7 +703,7 @@ async def platform_async_setup_entry(
     This method is in charge of receiving, distributing and storing
     info and state updates.
     """
-    entry_data: RuntimeEntryData = hass.data[DOMAIN][entry.entry_id]
+    entry_data: RuntimeEntryData = DomainData.get(hass).get_entry_data(entry)
     entry_data.info[component_key] = {}
     entry_data.old_info[component_key] = {}
     entry_data.state[component_key] = {}
@@ -639,7 +724,7 @@ async def platform_async_setup_entry(
                 old_infos.pop(info.key)
             else:
                 # Create new entity
-                entity = entity_type(entry.entry_id, component_key, info.key)
+                entity = entity_type(entry_data, component_key, info.key)
                 add_entities.append(entity)
             new_infos[info.key] = info
 
@@ -695,38 +780,33 @@ def esphome_state_property(func):
     return _wrapper
 
 
-class EsphomeEnumMapper:
+class EsphomeEnumMapper(Generic[_T]):
     """Helper class to convert between hass and esphome enum values."""
 
-    def __init__(self, func: Callable[[], dict[int, str]]):
+    def __init__(self, mapping: dict[_T, str]) -> None:
         """Construct a EsphomeEnumMapper."""
-        self._func = func
+        # Add none mapping
+        mapping = {None: None, **mapping}
+        self._mapping = mapping
+        self._inverse: dict[str, _T] = {v: k for k, v in mapping.items()}
 
-    def from_esphome(self, value: int) -> str:
+    def from_esphome(self, value: _T | None) -> str | None:
         """Convert from an esphome int representation to a hass string."""
-        return self._func()[value]
+        return self._mapping[value]
 
-    def from_hass(self, value: str) -> int:
+    def from_hass(self, value: str) -> _T:
         """Convert from a hass string to a esphome int representation."""
-        inverse = {v: k for k, v in self._func().items()}
-        return inverse[value]
-
-
-def esphome_map_enum(func: Callable[[], dict[int, str]]):
-    """Map esphome int enum values to hass string constants.
-
-    This class has to be used as a decorator. This ensures the aioesphomeapi
-    import is only happening at runtime.
-    """
-    return EsphomeEnumMapper(func)
+        return self._inverse[value]
 
 
 class EsphomeBaseEntity(Entity):
     """Define a base esphome entity."""
 
-    def __init__(self, entry_id: str, component_key: str, key: int):
+    def __init__(
+        self, entry_data: RuntimeEntryData, component_key: str, key: int
+    ) -> None:
         """Initialize."""
-        self._entry_id = entry_id
+        self._entry_data = entry_data
         self._component_key = component_key
         self._key = key
 
@@ -762,8 +842,12 @@ class EsphomeBaseEntity(Entity):
         self.async_write_ha_state()
 
     @property
-    def _entry_data(self) -> RuntimeEntryData:
-        return self.hass.data[DOMAIN][self._entry_id]
+    def _entry_id(self) -> str:
+        return self._entry_data.entry_id
+
+    @property
+    def _api_version(self) -> APIVersion:
+        return self._entry_data.api_version
 
     @property
     def _static_info(self) -> EntityInfo:
@@ -776,7 +860,7 @@ class EsphomeBaseEntity(Entity):
         return self._entry_data.old_info[self._component_key].get(self._key)
 
     @property
-    def _device_info(self) -> DeviceInfo:
+    def _device_info(self) -> EsphomeDeviceInfo:
         return self._entry_data.device_info
 
     @property
@@ -810,7 +894,7 @@ class EsphomeBaseEntity(Entity):
         return self._static_info.unique_id
 
     @property
-    def device_info(self) -> dict[str, Any]:
+    def device_info(self) -> DeviceInfo:
         """Return device registry information for this entity."""
         return {
             "connections": {(dr.CONNECTION_NETWORK_MAC, self._device_info.mac_address)}

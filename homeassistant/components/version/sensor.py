@@ -1,7 +1,9 @@
 """Sensor that can display the current Home Assistant versions."""
 from datetime import timedelta
+import logging
 
 from pyhaversion import HaVersion, HaVersionChannel, HaVersionSource
+from pyhaversion.exceptions import HaVersionFetchException, HaVersionParseException
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
@@ -59,6 +61,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
+_LOGGER: logging.Logger = logging.getLogger(__name__)
+
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Version sensor platform."""
@@ -107,20 +111,27 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class VersionData:
     """Get the latest data and update the states."""
 
-    def __init__(self, api: HaVersion):
+    def __init__(self, api: HaVersion) -> None:
         """Initialize the data object."""
         self.api = api
 
     @Throttle(TIME_BETWEEN_UPDATES)
     async def async_update(self):
         """Get the latest version information."""
-        await self.api.get_version()
+        try:
+            await self.api.get_version()
+        except HaVersionFetchException as exception:
+            _LOGGER.warning(exception)
+        except HaVersionParseException as exception:
+            _LOGGER.warning(
+                "Could not parse data received for %s - %s", self.api.source, exception
+            )
 
 
 class VersionSensor(SensorEntity):
     """Representation of a Home Assistant version sensor."""
 
-    def __init__(self, data: VersionData, name: str):
+    def __init__(self, data: VersionData, name: str) -> None:
         """Initialize the Version sensor."""
         self.data = data
         self._name = name

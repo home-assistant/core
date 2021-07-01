@@ -1,7 +1,6 @@
 """Support for SimpliSafe locks."""
 from simplipy.errors import SimplipyError
 from simplipy.lock import LockStates
-from simplipy.websocket import EVENT_LOCK_LOCKED, EVENT_LOCK_UNLOCKED
 
 from homeassistant.components.lock import LockEntity
 from homeassistant.core import callback
@@ -38,9 +37,6 @@ class SimpliSafeLock(SimpliSafeEntity, LockEntity):
         super().__init__(simplisafe, system, lock.name, serial=lock.serial)
         self._lock = lock
         self._is_locked = None
-
-        for event_type in (EVENT_LOCK_LOCKED, EVENT_LOCK_UNLOCKED):
-            self.websocket_events_to_listen_for.append(event_type)
 
     @property
     def is_locked(self):
@@ -81,11 +77,3 @@ class SimpliSafeLock(SimpliSafeEntity, LockEntity):
         )
 
         self._is_locked = self._lock.state == LockStates.locked
-
-    @callback
-    def async_update_from_websocket_event(self, event):
-        """Update the entity with the provided websocket event data."""
-        if event.event_type == EVENT_LOCK_LOCKED:
-            self._is_locked = True
-        else:
-            self._is_locked = False

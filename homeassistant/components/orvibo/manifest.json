@@ -3,5 +3,6 @@
   "name": "Orvibo",
   "documentation": "https://www.home-assistant.io/integrations/orvibo",
   "requirements": ["orvibo==1.1.1"],
-  "codeowners": []
+  "codeowners": [],
+  "iot_class": "local_push"
 }

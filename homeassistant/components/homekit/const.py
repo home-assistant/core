@@ -8,7 +8,6 @@ HOMEKIT_FILE = ".homekit.state"
 HOMEKIT_PAIRING_QR = "homekit-pairing-qr"
 HOMEKIT_PAIRING_QR_SECRET = "homekit-pairing-qr-secret"
 HOMEKIT = "homekit"
-UNDO_UPDATE_LISTENER = "undo_update_listener"
 SHUTDOWN_TIMEOUT = 30
 CONF_ENTRY_INDEX = "index"
 
@@ -22,7 +21,7 @@ AUDIO_CODEC_COPY = "copy"
 # #### Attributes ####
 ATTR_DISPLAY_NAME = "display_name"
 ATTR_VALUE = "value"
-ATTR_INTERGRATION = "platform"
+ATTR_INTEGRATION = "platform"
 ATTR_MANUFACTURER = "manufacturer"
 ATTR_MODEL = "model"
 ATTR_SOFTWARE_VERSION = "sw_version"

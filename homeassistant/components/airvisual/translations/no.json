@@ -11,15 +11,6 @@
             "location_not_found": "Stedet ble ikke funnet"
         },
         "step": {
-            "geography": {
-                "data": {
-                    "api_key": "API-n\u00f8kkel",
-                    "latitude": "Breddegrad",
-                    "longitude": "Lengdegrad"
-                },
-                "description": "Bruk AirVisual cloud API til \u00e5 overv\u00e5ke en geografisk plassering.",
-                "title": "Konfigurer en Geography"
-            },
             "geography_by_coords": {
                 "data": {
                     "api_key": "API-n\u00f8kkel",
@@ -54,11 +45,6 @@
                 "title": "Godkjenne integrering p\u00e5 nytt"
             },
             "user": {
-                "data": {
-                    "cloud_api": "Geografisk plassering",
-                    "node_pro": "",
-                    "type": "Integrasjonstype"
-                },
                 "description": "Velg hvilken type AirVisual-data du vil overv\u00e5ke.",
                 "title": "Konfigurer AirVisual"
             }

@@ -18,7 +18,7 @@ from homeassistant.components.cover import (
     CoverEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
 
 from . import DOMAIN as HMIPC_DOMAIN, HomematicipGenericEntity
 from .hap import HomematicipHAP
@@ -30,7 +30,7 @@ HMIP_SLATS_CLOSED = 1
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType, config_entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up the HomematicIP cover from a config entry."""
     hap = hass.data[HMIPC_DOMAIN][config_entry.unique_id]

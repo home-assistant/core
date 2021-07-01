@@ -1,5 +1,4 @@
 """Support for Agent."""
-import asyncio
 
 from agent import AgentError
 from agent.a import Agent
@@ -47,24 +46,14 @@ async def async_setup_entry(hass, config_entry):
         sw_version=agent_client.version,
     )
 
-    for forward in FORWARDS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, forward)
-        )
+    hass.config_entries.async_setup_platforms(config_entry, FORWARDS)
 
     return True
 
 
 async def async_unload_entry(hass, config_entry):
     """Unload a config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(config_entry, forward)
-                for forward in FORWARDS
-            ]
-        )
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(config_entry, FORWARDS)
 
     await hass.data[AGENT_DOMAIN][config_entry.entry_id][CONNECTION].close()
 

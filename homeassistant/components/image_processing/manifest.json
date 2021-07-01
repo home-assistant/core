@@ -3,5 +3,6 @@
   "name": "Image Processing",
   "documentation": "https://www.home-assistant.io/integrations/image_processing",
   "dependencies": ["camera"],
-  "codeowners": []
+  "codeowners": [],
+  "quality_scale": "internal"
 }

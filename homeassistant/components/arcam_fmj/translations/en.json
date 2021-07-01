@@ -5,7 +5,7 @@
             "already_in_progress": "Configuration flow is already in progress",
             "cannot_connect": "Failed to connect"
         },
-        "flow_title": "Arcam FMJ on {host}",
+        "flow_title": "{host}",
         "step": {
             "confirm": {
                 "description": "Do you want to add Arcam FMJ on `{host}` to Home Assistant?"

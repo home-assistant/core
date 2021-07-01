@@ -31,7 +31,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             entities.append(FloSwitch(device))
     async_add_entities(entities)
 
-    platform = entity_platform.current_platform.get()
+    platform = entity_platform.async_get_current_platform()
 
     platform.async_register_entity_service(
         SERVICE_SET_AWAY_MODE, {}, "async_set_mode_away"
@@ -57,7 +57,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class FloSwitch(FloEntity, SwitchEntity):
     """Switch class for the Flo by Moen valve."""
 
-    def __init__(self, device: FloDeviceDataUpdateCoordinator):
+    def __init__(self, device: FloDeviceDataUpdateCoordinator) -> None:
         """Initialize the Flo switch."""
         super().__init__("shutoff_valve", "Shutoff Valve", device)
         self._state = self._device.last_known_valve_state == "open"

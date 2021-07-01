@@ -19,12 +19,9 @@ from homeassistant.const import (
     DEVICE_CLASS_TIMESTAMP,
     STATE_UNKNOWN,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import (
-    ConfigType,
-    DiscoveryInfoType,
-    HomeAssistantType,
-)
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import slugify
 import homeassistant.util.dt as dt_util
 
@@ -482,7 +479,7 @@ def get_next_departure(
 
 
 def setup_platform(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     config: ConfigType,
     add_entities: Callable[[list], None],
     discovery_info: DiscoveryInfoType | None = None,
@@ -521,13 +518,15 @@ def setup_platform(
 class GTFSDepartureSensor(SensorEntity):
     """Implementation of a GTFS departure sensor."""
 
+    _attr_device_class = DEVICE_CLASS_TIMESTAMP
+
     def __init__(
         self,
         gtfs: Any,
         name: Any | None,
         origin: Any,
         destination: Any,
-        offset: cv.time_period,
+        offset: datetime.timedelta,
         include_tomorrow: bool,
     ) -> None:
         """Initialize the sensor."""
@@ -578,11 +577,6 @@ class GTFSDepartureSensor(SensorEntity):
     def icon(self) -> str:
         """Icon to use in the frontend, if any."""
         return self._icon
-
-    @property
-    def device_class(self) -> str:
-        """Return the class of this device."""
-        return DEVICE_CLASS_TIMESTAMP
 
     def update(self) -> None:
         """Get the latest data from GTFS and update the states."""
@@ -699,7 +693,7 @@ class GTFSDepartureSensor(SensorEntity):
                 del self._attributes[ATTR_LAST]
 
         # Add contextual information
-        self._attributes[ATTR_OFFSET] = self._offset.seconds / 60
+        self._attributes[ATTR_OFFSET] = self._offset.total_seconds() / 60
 
         if self._state is None:
             self._attributes[ATTR_INFO] = (

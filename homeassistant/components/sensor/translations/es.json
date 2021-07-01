@@ -13,7 +13,6 @@
             "is_pressure": "Presi\u00f3n actual de {entity_name}",
             "is_signal_strength": "Intensidad de la se\u00f1al actual de {entity_name}",
             "is_temperature": "Temperatura actual de {entity_name}",
-            "is_timestamp": "Marca de tiempo actual de {entity_name}",
             "is_value": "Valor actual de {entity_name}",
             "is_voltage": "Voltaje actual de {entity_name}"
         },
@@ -30,7 +29,6 @@
             "pressure": "Cambios de presi\u00f3n de {entity_name}",
             "signal_strength": "cambios de la intensidad de se\u00f1al de {entity_name}",
             "temperature": "{entity_name} cambios de temperatura",
-            "timestamp": "{entity_name} cambios de fecha y hora",
             "value": "Cambios de valor de la {entity_name}",
             "voltage": "Cambio de voltaje en {entity_name}"
         }

@@ -6,5 +6,6 @@
     "RPi.GPIO==0.7.1a4",
     "adafruit-circuitpython-mcp230xx==2.2.2"
   ],
-  "codeowners": ["@jardiamj"]
+  "codeowners": ["@jardiamj"],
+  "iot_class": "local_polling"
 }

@@ -1,5 +1,4 @@
 """Zerproc lights integration."""
-import asyncio
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -18,17 +17,14 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Zerproc from a config entry."""
     if DOMAIN not in hass.data:
         hass.data[DOMAIN] = {}
     if DATA_ADDRESSES not in hass.data[DOMAIN]:
         hass.data[DOMAIN][DATA_ADDRESSES] = set()
 
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, platform)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
@@ -42,11 +38,4 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     hass.data.pop(DOMAIN, None)
 
-    return all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, platform)
-                for platform in PLATFORMS
-            ]
-        )
-    )
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
