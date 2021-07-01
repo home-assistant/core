@@ -189,7 +189,7 @@ class AirVisualGeographySensor(AirVisualEntity, SensorEntity):
     def available(self) -> bool:
         """Return if entity is available."""
         return (
-            self.coordinator.last_update_success
+            super().available
             and self.coordinator.data["current"]["pollution"]
         )
 
