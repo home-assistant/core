@@ -10,7 +10,7 @@
                 "exclude": "[%key:component::nmap_tracker::config::step::user::data::exclude%]",
                 "scan_options": "[%key:component::nmap_tracker::config::step::user::data::scan_options%]",
                 "track_new_devices": "[%key:component::nmap_tracker::config::step::user::data::track_new_devices%]",
-                "scan_interval": "[%key:component::nmap_tracker::config::step::user::data::scan_interval%]"
+                "interval_seconds": "[%key:component::nmap_tracker::config::step::user::data::interval_seconds%]"
               }
         }
     },
@@ -28,7 +28,7 @@
           "exclude": "Network addresses (comma seperated) to exclude from scanning",
           "scan_options": "Raw configurable scan options for Nmap",
           "track_new_devices": "Track new devices",
-          "scan_interval": "Scan interval"
+          "interval_seconds": "Scan interval"
         }
       }
     },
