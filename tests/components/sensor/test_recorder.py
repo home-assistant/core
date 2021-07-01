@@ -611,6 +611,21 @@ def test_compile_hourly_statistics_unavailable(
     assert "Error while processing event StatisticsTask" not in caplog.text
 
 
+def test_compile_hourly_statistics_fails(hass_recorder, caplog):
+    """Test compiling hourly statistics throws."""
+    zero = dt_util.utcnow()
+    hass = hass_recorder()
+    recorder = hass.data[DATA_INSTANCE]
+    setup_component(hass, "sensor", {})
+    with patch(
+        "homeassistant.components.sensor.recorder.compile_statistics",
+        side_effect=Exception,
+    ):
+        recorder.do_adhoc_statistics(period="hourly", start=zero)
+        wait_recording_done(hass)
+    assert "Error while processing event StatisticsTask" in caplog.text
+
+
 def record_states(hass, zero, entity_id, attributes):
     """Record some test states.
 
