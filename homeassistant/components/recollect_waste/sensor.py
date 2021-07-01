@@ -4,7 +4,7 @@ from __future__ import annotations
 from aiorecollect.client import PickupType
 
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONF_FRIENDLY_NAME,
@@ -18,7 +18,7 @@ from homeassistant.helpers.update_coordinator import (
 )
 from homeassistant.util.dt import as_utc
 
-from .const import CONF_PLACE_ID, CONF_SERVICE_ID, DATA_COORDINATOR, DOMAIN
+from .const import CONF_PLACE_ID, CONF_SERVICE_ID, DATA_COORDINATOR, DOMAIN, LOGGER
 
 ATTR_PICKUP_TYPES = "pickup_types"
 ATTR_AREA_NAME = "area_name"
@@ -40,6 +40,26 @@ def async_get_pickup_type_names(
         else t.name
         for t in pickup_types
     ]
+
+
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: dict,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: dict = None,
+):
+    """Import Recollect Waste configuration from YAML."""
+    LOGGER.warning(
+        "Loading ReCollect Waste via platform setup is deprecated; "
+        "Please remove it from your configuration"
+    )
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data=config,
+        )
+    )
 
 
 async def async_setup_entry(
