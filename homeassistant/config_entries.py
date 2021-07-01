@@ -820,7 +820,7 @@ class ConfigEntries:
         ent_reg.async_clear_config_entry(entry_id)
 
         # If the configuration entry is removed during reauth, it should
-        # abort any active reauth flow that is active for the removed entry.
+        # abort any reauth flow that is active for the removed entry.
         for progress_flow in self.hass.config_entries.flow.async_progress():
             context = progress_flow.get("context")
             if (
