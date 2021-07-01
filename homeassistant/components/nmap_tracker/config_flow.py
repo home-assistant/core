@@ -8,13 +8,21 @@ import ifaddr
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_EXCLUDE, CONF_HOSTS
+from homeassistant.components.device_tracker.const import CONF_TRACK_NEW
+from homeassistant.const import CONF_EXCLUDE, CONF_HOSTS, CONF_SCAN_INTERVAL
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import get_local_ip
 
-from .const import CONF_HOME_INTERVAL, CONF_OPTIONS, DEFAULT_OPTIONS, DOMAIN
+from .const import (
+    CONF_HOME_INTERVAL,
+    CONF_OPTIONS,
+    DEFAULT_OPTIONS,
+    DEFAULT_TRACK_NEW_DEVICES,
+    DOMAIN,
+    TRACKER_SCAN_INTERVAL,
+)
 
 DEFAULT_NETWORK_PREFIX = 24
 
@@ -107,6 +115,14 @@ async def _async_build_schema_with_user_input(hass, user_input):
             vol.Optional(
                 CONF_OPTIONS, default=user_input.get(CONF_OPTIONS, DEFAULT_OPTIONS)
             ): str,
+            vol.Optional(
+                CONF_TRACK_NEW,
+                default=user_input.get(CONF_TRACK_NEW, DEFAULT_TRACK_NEW_DEVICES),
+            ): bool,
+            vol.Optional(
+                CONF_SCAN_INTERVAL,
+                default=user_input.get(CONF_SCAN_INTERVAL, TRACKER_SCAN_INTERVAL),
+            ): vol.Range(10, 3600),
         }
     )
 

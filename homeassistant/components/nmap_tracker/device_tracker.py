@@ -11,15 +11,26 @@ from homeassistant.components.device_tracker import (
     SOURCE_TYPE_ROUTER,
 )
 from homeassistant.components.device_tracker.config_entry import ScannerEntity
+from homeassistant.components.device_tracker.const import (
+    CONF_NEW_DEVICE_DEFAULTS,
+    CONF_TRACK_NEW,
+)
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_EXCLUDE, CONF_HOSTS
+from homeassistant.const import CONF_EXCLUDE, CONF_HOSTS, CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import NmapDeviceScanner, short_hostname, signal_device_update
-from .const import CONF_HOME_INTERVAL, CONF_OPTIONS, DEFAULT_OPTIONS, DOMAIN
+from .const import (
+    CONF_HOME_INTERVAL,
+    CONF_OPTIONS,
+    DEFAULT_OPTIONS,
+    DEFAULT_TRACK_NEW_DEVICES,
+    DOMAIN,
+    TRACKER_SCAN_INTERVAL,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,6 +48,11 @@ async def async_get_scanner(hass, config):
     """Validate the configuration and return a Nmap scanner."""
     validated_config = config[DEVICE_TRACKER_DOMAIN]
 
+    if CONF_SCAN_INTERVAL in validated_config:
+        scan_interval = validated_config[CONF_SCAN_INTERVAL].total_seconds()
+    else:
+        scan_interval = TRACKER_SCAN_INTERVAL
+
     hass.async_create_task(
         hass.config_entries.flow.async_init(
             DOMAIN,
@@ -46,6 +62,10 @@ async def async_get_scanner(hass, config):
                 CONF_HOME_INTERVAL: validated_config[CONF_HOME_INTERVAL],
                 CONF_EXCLUDE: ",".join(validated_config[CONF_EXCLUDE]),
                 CONF_OPTIONS: validated_config[CONF_OPTIONS],
+                CONF_SCAN_INTERVAL: scan_interval,
+                CONF_TRACK_NEW: validated_config.get(CONF_NEW_DEVICE_DEFAULTS, {}).get(
+                    CONF_TRACK_NEW, DEFAULT_TRACK_NEW_DEVICES
+                ),
             },
         )
     )

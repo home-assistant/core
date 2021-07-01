@@ -48,10 +48,14 @@ STATISTICS_META_BAKERY = "recorder_statistics_bakery"
 UNIT_CONVERSIONS = {
     PRESSURE_PA: lambda x, units: pressure_util.convert(
         x, PRESSURE_PA, units.pressure_unit
-    ),
+    )
+    if x is not None
+    else None,
     TEMP_CELSIUS: lambda x, units: temperature_util.convert(
         x, TEMP_CELSIUS, units.temperature_unit
-    ),
+    )
+    if x is not None
+    else None,
 }
 
 _LOGGER = logging.getLogger(__name__)
@@ -133,8 +137,17 @@ def _get_meta_data(hass, session, statistic_ids):
     return {id: _meta(result, id) for id in statistic_ids}
 
 
+def _unit_system_unit(unit: str, units) -> str:
+    if unit == PRESSURE_PA:
+        return units.pressure_unit
+    if unit == TEMP_CELSIUS:
+        return units.temperature_unit
+    return unit
+
+
 def list_statistic_ids(hass, statistic_type=None):
     """Return statistic_ids."""
+    units = hass.config.units
     with session_scope(hass=hass) as session:
         baked_query = hass.data[STATISTICS_BAKERY](
             lambda session: session.query(*QUERY_STATISTIC_IDS).distinct()
@@ -149,8 +162,12 @@ def list_statistic_ids(hass, statistic_type=None):
 
         result = execute(baked_query(session))
         statistic_ids_list = [statistic_id[0] for statistic_id in result]
+        statistic_ids = _get_meta_data(hass, session, statistic_ids_list)
+        for statistic_id in statistic_ids.values():
+            unit = _unit_system_unit(statistic_id["unit_of_measurement"], units)
+            statistic_id["unit_of_measurement"] = unit
 
-        return list(_get_meta_data(hass, session, statistic_ids_list).values())
+        return list(statistic_ids.values())
 
 
 def statistics_during_period(hass, start_time, end_time=None, statistic_ids=None):
@@ -227,7 +244,7 @@ def _sorted_statistics_to_dict(
     # Called in a tight loop so cache the function here
     _process_timestamp_to_utc_isoformat = process_timestamp_to_utc_isoformat
 
-    # Append all statistic entries
+    # Append all statistic entries, and do unit conversion
     for ent_id, group in groupby(stats, lambda state: state.statistic_id):
         unit = meta_data[ent_id]["unit_of_measurement"]
         convert = UNIT_CONVERSIONS.get(unit, lambda x, units: x)
