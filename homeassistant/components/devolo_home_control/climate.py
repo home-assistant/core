@@ -83,14 +83,14 @@ class DevoloClimateDeviceEntity(DevoloMultiLevelSwitchDeviceEntity, ClimateEntit
     @property
     def min_temp(self) -> float:
         """Return the minimum set temperature value."""
-        min: float = self._multi_level_switch_property.min
-        return min
+        min_temp: float = self._multi_level_switch_property.min
+        return min_temp
 
     @property
     def max_temp(self) -> float:
         """Return the maximum set temperature value."""
-        max: float = self._multi_level_switch_property.max
-        return max
+        max_temp: float = self._multi_level_switch_property.max
+        return max_temp
 
     @property
     def precision(self) -> float:
