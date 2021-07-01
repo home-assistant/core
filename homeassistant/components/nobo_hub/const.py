@@ -3,6 +3,8 @@
 DOMAIN = "nobo_hub"
 
 CONF_SERIAL = "serial"
+# This must be a non-empty string guaranteed to not be a week profile name
+CONF_WEEK_PROFILE_NONE = "-"
 
 ATTR_TEMP_COMFORT_C = "temp_comfort_c"
 ATTR_TEMP_ECO_C = "temp_eco_c"

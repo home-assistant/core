@@ -4,7 +4,7 @@ from unittest.mock import Mock, PropertyMock, patch
 from pynobo import nobo
 
 from homeassistant import config_entries, setup
-from homeassistant.components.nobo_hub.const import DOMAIN
+from homeassistant.components.nobo_hub.const import CONF_WEEK_PROFILE_NONE, DOMAIN
 from homeassistant.const import CONF_COMMAND_OFF, CONF_COMMAND_ON
 from homeassistant.core import HomeAssistant
 
@@ -213,7 +213,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     assert result["step_id"] == "init"
     assert result["description_placeholders"]["zones"] == "1: Kitchen\r2: Bedrooms\r"
     schema = result["data_schema"].schema
-    profiles = {"<None>", "Off", "Kitchen On", "Bedrooms On"}
+    profiles = {CONF_WEEK_PROFILE_NONE, "Off", "Kitchen On", "Bedrooms On"}
     assert set(schema[CONF_COMMAND_OFF].schema.container) == profiles
     assert set(schema[CONF_COMMAND_ON + "_zone_1"].schema.container) == profiles
     assert set(schema[CONF_COMMAND_ON + "_zone_2"].schema.container) == profiles
@@ -238,9 +238,9 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
-            CONF_COMMAND_OFF: "<None>",
-            CONF_COMMAND_ON + "_zone_1": "<None>",
-            CONF_COMMAND_ON + "_zone_2": "<None>",
+            CONF_COMMAND_OFF: CONF_WEEK_PROFILE_NONE,
+            CONF_COMMAND_ON + "_zone_1": CONF_WEEK_PROFILE_NONE,
+            CONF_COMMAND_ON + "_zone_2": CONF_WEEK_PROFILE_NONE,
         },
     )
 

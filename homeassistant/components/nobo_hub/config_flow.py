@@ -14,7 +14,7 @@ from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 
-from .const import CONF_SERIAL, DOMAIN
+from .const import CONF_SERIAL, CONF_WEEK_PROFILE_NONE, DOMAIN
 
 DATA_NOBO_HUB_IMPL = "nobo_hub_flow_implementation"
 DEVICE_INPUT = "device_input"
@@ -141,9 +141,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         """Manage the options."""
 
         hub = self.hass.data[DOMAIN][self.config_entry.entry_id]
-        profile_names = [
-            k["name"].replace("\xa0", " ") for k in hub.week_profiles.values()
-        ]
+        profile_names = sorted(
+            [k["name"].replace("\xa0", " ") for k in hub.week_profiles.values()]
+        )
 
         if user_input is not None:
             off_command = user_input.get(CONF_COMMAND_OFF)
@@ -163,16 +163,17 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
             return self.async_create_entry(title="", data=data)
 
-        # Can't use "" here, because if selected by user, the old value will be used instead.
-        profile_names.insert(0, "<None>")
+        profile_names.insert(0, CONF_WEEK_PROFILE_NONE)
         profiles = vol.Schema(vol.In(profile_names))
 
         off_command = self.config_entry.options.get(CONF_COMMAND_OFF)
         if off_command not in profile_names:
-            off_command = "<None>"
+            off_command = CONF_WEEK_PROFILE_NONE
         schema = vol.Schema(
             {
-                vol.Optional(CONF_COMMAND_OFF, default=off_command): profiles,
+                # Ideally we should use vol.Optional, but resetting the field in the UI
+                # will default to the old value instead of setting to None.
+                vol.Required(CONF_COMMAND_OFF, default=off_command): profiles,
             }
         )
 
@@ -185,11 +186,11 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             on_command = (
                 on_commands[name]
                 if name in on_commands and on_commands[name] in profile_names
-                else "<None>"
+                else CONF_WEEK_PROFILE_NONE
             )
             schema = schema.extend(
                 {
-                    vol.Optional(
+                    vol.Required(
                         CONF_COMMAND_ON + "_zone_" + zone, default=on_command
                     ): profiles
                 }
