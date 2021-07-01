@@ -48,3 +48,9 @@ clear_fan_sleep_timer:
     entity:
       integration: modern_forms
       domain: fan
+reboot:
+  name: Reboot
+  description: Reboot the controller for a Modern Forms fan.
+  target:
+    device:
+      integration: modern_forms

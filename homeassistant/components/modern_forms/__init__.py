@@ -18,16 +18,18 @@ from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_MODEL, ATTR_NAME, ATTR_SW_VERSION, CONF_HOST
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.service import async_extract_config_entry_ids
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
     UpdateFailed,
 )
 
-from .const import ATTR_IDENTIFIERS, ATTR_MANUFACTURER, DOMAIN
+from .const import ATTR_IDENTIFIERS, ATTR_MANUFACTURER, DOMAIN, SERVICE_REBOOT
 
 SCAN_INTERVAL = timedelta(seconds=5)
 PLATFORMS = [
@@ -53,7 +55,58 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Set up all platforms for this device/entry.
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
+    async_load_modern_forms_device_services(hass)
     return True
+
+
+@callback
+def async_load_modern_forms_device_services(hass: HomeAssistant) -> None:
+    """Set up services for the Modern Forms integration."""
+    if hass.services.has_service(DOMAIN, SERVICE_REBOOT):
+        # Integration-level services have already been added. Return.
+        return
+
+    async def extract_modern_forms_config_entry_ids(
+        service_call: ServiceCall,
+    ) -> list[str]:
+        entries: list[str] = []
+        for entry_id in await async_extract_config_entry_ids(hass, service_call):
+            config_entry: ConfigEntry | None = hass.config_entries.async_get_entry(
+                entry_id
+            )
+            if config_entry and config_entry.domain == DOMAIN:
+                entries.append(entry_id)
+        return entries
+
+    async def async_reboot(service_call: ServiceCall) -> None:
+        """Reboot the Modern Forms fan control unit."""
+        if not (
+            modern_forms_entry_ids := await extract_modern_forms_config_entry_ids(
+                service_call
+            )
+        ):
+            raise HomeAssistantError(
+                f"Failed to call service '{SERVICE_REBOOT}'. Config entry for target not found"
+            )
+        for entry_id in modern_forms_entry_ids:
+            coordinator = hass.data[DOMAIN][entry_id]
+            await coordinator.modern_forms.reboot()
+
+    hass.services.async_register(DOMAIN, SERVICE_REBOOT, async_reboot, None)
+
+
+@callback
+async def async_unload_modern_forms_services(hass: HomeAssistant) -> None:
+    """Unload services for the Modern Forms fan integration."""
+    if DOMAIN in hass.data and hass.data[DOMAIN]:
+        # There is still another config entry for this domain, don't remove services.
+        return
+
+    if not hass.services.has_service(DOMAIN, SERVICE_REBOOT):
+        return
+
+    _LOGGER.info("Unloading Modern Forms Services")
+    hass.services.async_remove(domain=DOMAIN, service=SERVICE_REBOOT)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -66,6 +119,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if not hass.data[DOMAIN]:
         del hass.data[DOMAIN]
 
+    await async_unload_modern_forms_services(hass)
     return unload_ok
 
 
