@@ -22,7 +22,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers import aiohttp_client, config_validation as cv
+from homeassistant.helpers import (
+    aiohttp_client,
+    config_validation as cv,
+    entity_registry,
+)
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -223,6 +227,19 @@ async def async_setup_entry(hass, config_entry):
             config_entry.entry_id
         ] = config_entry.add_update_listener(async_reload_entry)
     else:
+        # Remove outdated air_quality entities from the entity registry if they exist:
+        ent_reg = entity_registry.async_get(hass)
+        for entity_entry in [
+            e
+            for e in ent_reg.entities.values()
+            if e.config_entry_id == config_entry.entry_id
+            and e.entity_id.startswith("air_quality")
+        ]:
+            LOGGER.debug(
+                'Removing deprecated air_quality entity: "%s"', entity_entry.entity_id
+            )
+            ent_reg.async_remove(entity_entry.entity_id)
+
         _standardize_node_pro_config_entry(hass, config_entry)
 
         async def async_update_data():
