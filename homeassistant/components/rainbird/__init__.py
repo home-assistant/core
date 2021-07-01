@@ -29,7 +29,7 @@ SENSOR_TYPE_RAINSENSOR = "rainsensor"
 # sensor_type [ description, unit, icon ]
 SENSOR_TYPES = {
     SENSOR_TYPE_RAINSENSOR: ["Rainsensor", None, "mdi:water"],
-    SENSOR_TYPE_RAINDELAY: ["Raindelay", "d", "mdi:water-off"],
+    SENSOR_TYPE_RAINDELAY: ["Raindelay", None, "mdi:water-off"],
 }
 
 TRIGGER_TIME_SCHEMA = vol.All(
