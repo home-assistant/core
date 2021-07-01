@@ -29,7 +29,6 @@ ATTR_EVENT_TYPE: Final = "event_type"
 ATTR_WEBHOOK_ID: Final = "webhook_id"
 
 CONF_CLIENT: Final = "client"
-CONF_CLOUDHOOK_URL: Final = "cloudhook_url"
 CONF_COORDINATOR: Final = "coordinator"
 CONF_ADMIN_PASSWORD: Final = "admin_password"
 CONF_ADMIN_USERNAME: Final = "admin_username"

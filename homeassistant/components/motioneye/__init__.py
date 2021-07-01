@@ -27,7 +27,6 @@ from motioneye_client.const import (
     KEY_WEB_HOOK_STORAGE_URL,
 )
 
-from homeassistant.components import cloud
 from homeassistant.components.camera.const import DOMAIN as CAMERA_DOMAIN
 from homeassistant.components.webhook import (
     async_generate_id,
@@ -58,7 +57,6 @@ from .const import (
     CONF_ADMIN_PASSWORD,
     CONF_ADMIN_USERNAME,
     CONF_CLIENT,
-    CONF_CLOUDHOOK_URL,
     CONF_COORDINATOR,
     CONF_SURVEILLANCE_PASSWORD,
     CONF_SURVEILLANCE_USERNAME,
@@ -210,13 +208,7 @@ def _add_camera(
         name=camera[KEY_NAME],
     )
     if entry.options.get(CONF_WEBHOOK_SET, DEFAULT_WEBHOOK_SET):
-        if (
-            hass.components.cloud.async_active_subscription()
-            and CONF_CLOUDHOOK_URL in entry.data
-        ):
-            url = entry.data[CONF_CLOUDHOOK_URL]
-        else:
-            url = async_generate_url(hass, entry.data[CONF_WEBHOOK_ID])
+        url = async_generate_url(hass, entry.data[CONF_WEBHOOK_ID])
 
         if _set_webhook(
             _build_url(
@@ -281,16 +273,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.config_entries.async_update_entry(
             entry, data={**entry.data, CONF_WEBHOOK_ID: async_generate_id()}
         )
-    if (
-        hass.components.cloud.async_active_subscription()
-        and CONF_CLOUDHOOK_URL not in entry.data
-    ):
-        url = await hass.components.cloud.async_create_cloudhook(
-            entry.data[CONF_WEBHOOK_ID]
-        )
-        data = {**entry.data, CONF_CLOUDHOOK_URL: url}
-        hass.config_entries.async_update_entry(entry, data=data)
-
     webhook_register(
         hass, DOMAIN, "motionEye", entry.data[CONF_WEBHOOK_ID], handle_webhook
     )
@@ -428,15 +410,3 @@ async def handle_webhook(
         },
     )
     return None
-
-
-async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry):
-    """Clean-up when entry is removed."""
-    if (
-        CONF_WEBHOOK_ID in entry.data
-        and hass.components.cloud.async_active_subscription()
-    ):
-        try:
-            await cloud.async_delete_cloudhook(hass, entry.data[CONF_WEBHOOK_ID])
-        except cloud.CloudNotAvailable:
-            pass
