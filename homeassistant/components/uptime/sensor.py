@@ -47,25 +47,7 @@ class UptimeSensor(SensorEntity):
 
     def __init__(self, name: str) -> None:
         """Initialize the uptime sensor."""
-        self._name = name
-        self._state = dt_util.now().isoformat()
-
-    @property
-    def name(self) -> str:
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def device_class(self) -> str:
-        """Return device class."""
-        return DEVICE_CLASS_TIMESTAMP
-
-    @property
-    def state(self) -> str:
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def should_poll(self) -> bool:
-        """Disable polling for this entity."""
-        return False
+        self._attr_name = name
+        self._attr_device_class = DEVICE_CLASS_TIMESTAMP
+        self._attr_should_poll = False
+        self._attr_state = dt_util.now().isoformat()
