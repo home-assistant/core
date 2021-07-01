@@ -12,7 +12,7 @@
                     "exclude": "Network addresses (comma seperated) to exclude from scanning",
                     "home_interval": "Minimum number of minutes between scans of active devices (preserve battery)",
                     "hosts": "Network addresses (comma seperated) to scan",
-                    "scan_interval": "Scan interval",
+                    "interval_seconds": "Scan interval",
                     "scan_options": "Raw configurable scan options for Nmap",
                     "track_new_devices": "Track new devices"
                 },
@@ -30,7 +30,7 @@
                     "exclude": "Network addresses (comma seperated) to exclude from scanning",
                     "home_interval": "Minimum number of minutes between scans of active devices (preserve battery)",
                     "hosts": "Network addresses (comma seperated) to scan",
-                    "scan_interval": "Scan interval",
+                    "interval_seconds": "Scan interval",
                     "scan_options": "Raw configurable scan options for Nmap",
                     "track_new_devices": "Track new devices"
                 },
