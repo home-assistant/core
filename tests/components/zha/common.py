@@ -40,7 +40,7 @@ class FakeEndpoint:
         if _patch_cluster:
             patch_cluster(cluster)
         self.in_clusters[cluster_id] = cluster
-        ep_attribute = getattr(cluster, "ep_attribute")
+        ep_attribute = cluster.ep_attribute
         if ep_attribute:
             setattr(self, ep_attribute, cluster)
 
