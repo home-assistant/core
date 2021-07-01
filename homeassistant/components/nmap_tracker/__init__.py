@@ -12,14 +12,12 @@ from getmac import get_mac_address
 from mac_vendor_lookup import AsyncMacLookup
 from nmap import PortScanner, PortScannerError
 
-from homeassistant.components.device_tracker.const import CONF_TRACK_NEW
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_EXCLUDE,
-    CONF_HOSTS,
+from homeassistant.components.device_tracker.const import (
     CONF_SCAN_INTERVAL,
-    EVENT_HOMEASSISTANT_STARTED,
+    CONF_TRACK_NEW,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_EXCLUDE, CONF_HOSTS, EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import CoreState, HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 import homeassistant.helpers.config_validation as cv

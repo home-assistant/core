@@ -8,8 +8,11 @@ import ifaddr
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.device_tracker.const import CONF_TRACK_NEW
-from homeassistant.const import CONF_EXCLUDE, CONF_HOSTS, CONF_SCAN_INTERVAL
+from homeassistant.components.device_tracker.const import (
+    CONF_SCAN_INTERVAL,
+    CONF_TRACK_NEW,
+)
+from homeassistant.const import CONF_EXCLUDE, CONF_HOSTS
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
