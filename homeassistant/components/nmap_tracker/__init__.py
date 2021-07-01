@@ -153,6 +153,8 @@ class NmapDeviceScanner:
         self._hosts = None
         self._options = None
         self._exclude = None
+        self._scan_interval = None
+        self._track_new_devices = None
 
         self._known_mac_addresses = {}
         self._finished_first_scan = False
