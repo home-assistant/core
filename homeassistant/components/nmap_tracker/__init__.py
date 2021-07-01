@@ -12,8 +12,14 @@ from getmac import get_mac_address
 from mac_vendor_lookup import AsyncMacLookup
 from nmap import PortScanner, PortScannerError
 
+from homeassistant.components.device_tracker.const import CONF_TRACK_NEW
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_EXCLUDE, CONF_HOSTS, EVENT_HOMEASSISTANT_STARTED
+from homeassistant.const import (
+    CONF_EXCLUDE,
+    CONF_HOSTS,
+    CONF_SCAN_INTERVAL,
+    EVENT_HOMEASSISTANT_STARTED,
+)
 from homeassistant.core import CoreState, HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 import homeassistant.helpers.config_validation as cv
@@ -25,6 +31,7 @@ import homeassistant.util.dt as dt_util
 from .const import (
     CONF_HOME_INTERVAL,
     CONF_OPTIONS,
+    DEFAULT_TRACK_NEW_DEVICES,
     DOMAIN,
     NMAP_TRACKED_DEVICES,
     PLATFORMS,
@@ -154,6 +161,10 @@ class NmapDeviceScanner:
     async def async_setup(self):
         """Set up the tracker."""
         config = self._entry.options
+        self._track_new_devices = config.get(CONF_TRACK_NEW, DEFAULT_TRACK_NEW_DEVICES)
+        self._scan_interval = timedelta(
+            seconds=config.get(CONF_SCAN_INTERVAL, TRACKER_SCAN_INTERVAL)
+        )
         self._hosts = cv.ensure_list_csv(config[CONF_HOSTS])
         self._exclude = cv.ensure_list_csv(config[CONF_EXCLUDE])
         self._options = config[CONF_OPTIONS]
@@ -199,7 +210,7 @@ class NmapDeviceScanner:
             async_track_time_interval(
                 self._hass,
                 self._async_scan_devices,
-                timedelta(seconds=TRACKER_SCAN_INTERVAL),
+                self._scan_interval,
             )
         )
         self._mac_vendor_lookup = AsyncMacLookup()
@@ -344,21 +355,23 @@ class NmapDeviceScanner:
                 _LOGGER.info("No MAC address found for %s", ipv4)
                 continue
 
-            hostname = info["hostnames"][0]["name"] if info["hostnames"] else ipv4
-
             formatted_mac = format_mac(mac)
+            new = formatted_mac not in devices.tracked
+            if new and not self._track_new_devices:
+                continue
+
             if (
                 devices.config_entry_owner.setdefault(formatted_mac, entry_id)
                 != entry_id
             ):
                 continue
 
+            hostname = info["hostnames"][0]["name"] if info["hostnames"] else ipv4
             vendor = info.get("vendor", {}).get(mac) or self._async_get_vendor(mac)
             name = human_readable_name(hostname, vendor, mac)
             device = NmapDevice(
                 formatted_mac, hostname, name, ipv4, vendor, reason, now, 0
             )
-            new = formatted_mac not in devices.tracked
 
             devices.tracked[formatted_mac] = device
             devices.ipv4_last_mac[ipv4] = formatted_mac
