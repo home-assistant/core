@@ -125,7 +125,7 @@ def async_sync_geo_coordinator_update_intervals(hass, api_key):
 
 
 @callback
-def _standardize_geography_entry(hass, config_entry):
+def _standardize_geography_config_entry(hass, config_entry):
     """Ensure that geography config entries have appropriate properties."""
     entry_updates = {}
 
@@ -158,7 +158,7 @@ def _standardize_geography_entry(hass, config_entry):
 
 
 @callback
-def _standardize_node_pro_entry(hass, config_entry):
+def _standardize_node_pro_config_entry(hass, config_entry):
     """Ensure that Node/Pro config entries have appropriate properties."""
     entry_updates = {}
 
@@ -180,7 +180,7 @@ async def async_setup_entry(hass, config_entry):
     hass.data.setdefault(DOMAIN, {DATA_COORDINATOR: {}, DATA_LISTENER: {}})
 
     if CONF_API_KEY in config_entry.data:
-        _standardize_geography_entry(hass, config_entry)
+        _standardize_geography_config_entry(hass, config_entry)
 
         websession = aiohttp_client.async_get_clientsession(hass)
         cloud_api = CloudAPI(config_entry.data[CONF_API_KEY], session=websession)
@@ -223,7 +223,7 @@ async def async_setup_entry(hass, config_entry):
             config_entry.entry_id
         ] = config_entry.add_update_listener(async_reload_entry)
     else:
-        _standardize_node_pro_entry(hass, config_entry)
+        _standardize_node_pro_config_entry(hass, config_entry)
 
         async def async_update_data():
             """Get new data from the API."""
