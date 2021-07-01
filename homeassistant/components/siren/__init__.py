@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import Any, final
+from typing import Any, TypedDict, cast, final
 
 import voluptuous as vol
 
@@ -59,7 +59,17 @@ def is_on(hass: HomeAssistantType, entity_id: str) -> bool:
     return hass.states.is_state(entity_id, STATE_ON)
 
 
-def filter_turn_on_params(siren: SirenEntity, params: dict[str, Any]) -> dict[str, Any]:
+class SirenTurnOnServiceParametersDataType(TypedDict, total=False):
+    """Represent possible parameters to siren.turn_on service data dict type."""
+
+    tone: int | str
+    duration: int
+    volume_level: float
+
+
+def filter_turn_on_params(
+    siren: SirenEntity, params: SirenTurnOnServiceParametersDataType
+) -> SirenTurnOnServiceParametersDataType:
     """Filter out params not supported by the siren."""
     supported_features = siren.supported_features or 0
 
@@ -84,7 +94,11 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
         siren: SirenEntity, call: ServiceCall
     ) -> None:
         """Handle turning a siren on."""
-        await siren.async_turn_on(**filter_turn_on_params(siren, dict(call.data)))
+        await siren.async_turn_on(
+            **filter_turn_on_params(
+                siren, cast(SirenTurnOnServiceParametersDataType, dict(call.data))
+            )
+        )
 
     component.async_register_entity_service(
         SERVICE_TURN_ON, TURN_ON_SCHEMA, async_handle_turn_on_service, [SUPPORT_TURN_ON]
@@ -128,7 +142,7 @@ class SirenEntity(ToggleEntity):
         return None
 
     @property
-    def available_tones(self) -> list[int] | list[str] | None:
+    def available_tones(self) -> list[int | str] | None:
         """
         Return a list of available tones.
 
