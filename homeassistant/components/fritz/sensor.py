@@ -94,7 +94,6 @@ SENSOR_DATA = {
     "uptime": SensorData(
         name="Uptime",
         device_class=DEVICE_CLASS_TIMESTAMP,
-        state_class=None,
         unit_of_measurement=None,
         icon=None,
         state_provider=_retrieve_uptime_state,
