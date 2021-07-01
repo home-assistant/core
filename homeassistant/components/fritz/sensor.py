@@ -8,7 +8,7 @@ from typing import Callable, TypedDict
 from fritzconnection.core.exceptions import FritzConnectionException
 from fritzconnection.lib.fritzstatus import FritzStatus
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DEVICE_CLASS_TIMESTAMP
 from homeassistant.core import HomeAssistant
@@ -77,6 +77,7 @@ class SensorData(TypedDict):
 
     name: str
     device_class: str | None
+    state_class: str | None
     unit_of_measurement: str | None
     icon: str | None
     state_provider: Callable
@@ -86,6 +87,7 @@ SENSOR_DATA = {
     "external_ip": SensorData(
         name="External IP",
         device_class=None,
+        state_class=None,
         unit_of_measurement=None,
         icon="mdi:earth",
         state_provider=_retrieve_external_ip_state,
@@ -93,6 +95,7 @@ SENSOR_DATA = {
     "uptime": SensorData(
         name="Uptime",
         device_class=DEVICE_CLASS_TIMESTAMP,
+        state_class=None,
         unit_of_measurement=None,
         icon=None,
         state_provider=_retrieve_uptime_state,
@@ -100,6 +103,7 @@ SENSOR_DATA = {
     "kib_s_sent": SensorData(
         name="KiB/s sent",
         device_class=None,
+        state_class=STATE_CLASS_MEASUREMENT,
         unit_of_measurement="KiB/s",
         icon="mdi:web",
         state_provider=_retrieve_kib_s_sent_state,
@@ -107,6 +111,7 @@ SENSOR_DATA = {
     "kib_s_received": SensorData(
         name="KiB/s received",
         device_class=None,
+        state_class=STATE_CLASS_MEASUREMENT,
         unit_of_measurement="KiB/s",
         icon="mdi:web",
         state_provider=_retrieve_kib_s_received_state,
@@ -114,6 +119,7 @@ SENSOR_DATA = {
     "max_kib_s_sent": SensorData(
         name="Max KiB/s sent",
         device_class=None,
+        state_class=STATE_CLASS_MEASUREMENT,
         unit_of_measurement="KiB/s",
         icon="mdi:web",
         state_provider=_retrieve_max_kib_s_sent_state,
@@ -121,6 +127,7 @@ SENSOR_DATA = {
     "max_kib_s_received": SensorData(
         name="Max KiB/s received",
         device_class=None,
+        state_class=STATE_CLASS_MEASUREMENT,
         unit_of_measurement="KiB/s",
         icon="mdi:web",
         state_provider=_retrieve_max_kib_s_received_state,
@@ -128,6 +135,7 @@ SENSOR_DATA = {
     "mb_sent": SensorData(
         name="MB sent",
         device_class=None,
+        state_class=STATE_CLASS_MEASUREMENT,
         unit_of_measurement="MB",
         icon="mdi:web",
         state_provider=_retrieve_kb_sent_state,
@@ -135,6 +143,7 @@ SENSOR_DATA = {
     "mb_received": SensorData(
         name="MB received",
         device_class=None,
+        state_class=STATE_CLASS_MEASUREMENT,
         unit_of_measurement="MB",
         icon="mdi:web",
         state_provider=_retrieve_kb_received_state,
@@ -177,9 +186,10 @@ class FritzBoxSensor(FritzBoxBaseEntity, SensorEntity):
         self._attr_device_class = self._sensor_data["device_class"]
         self._attr_icon = self._sensor_data["icon"]
         self._attr_name = f"{device_friendly_name} {self._sensor_data['name']}"
+        self._attr_state: str | None = None
+        self._attr_state_class = self._sensor_data["state_class"]
         self._attr_unit_of_measurement = self._sensor_data["unit_of_measurement"]
         self._attr_unique_id = f"{fritzbox_tools.unique_id}-{sensor_type}"
-        self._attr_state: str | None = None
         super().__init__(fritzbox_tools, device_friendly_name)
 
     @property
