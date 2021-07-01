@@ -4,13 +4,14 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant import config_entries, data_entry_flow, setup
+from homeassistant.components.device_tracker.const import CONF_TRACK_NEW
 from homeassistant.components.nmap_tracker.const import (
     CONF_HOME_INTERVAL,
     CONF_OPTIONS,
     DEFAULT_OPTIONS,
     DOMAIN,
 )
-from homeassistant.const import CONF_EXCLUDE, CONF_HOSTS
+from homeassistant.const import CONF_EXCLUDE, CONF_HOSTS, CONF_SCAN_INTERVAL
 from homeassistant.core import CoreState, HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -51,6 +52,8 @@ async def test_form(hass: HomeAssistant, hosts: str) -> None:
         CONF_HOME_INTERVAL: 3,
         CONF_OPTIONS: DEFAULT_OPTIONS,
         CONF_EXCLUDE: "4.4.4.4",
+        CONF_SCAN_INTERVAL: 120,
+        CONF_TRACK_NEW: True,
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -87,6 +90,8 @@ async def test_form_range(hass: HomeAssistant) -> None:
         CONF_HOME_INTERVAL: 3,
         CONF_OPTIONS: DEFAULT_OPTIONS,
         CONF_EXCLUDE: "4.4.4.4",
+        CONF_SCAN_INTERVAL: 120,
+        CONF_TRACK_NEW: True,
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -209,6 +214,8 @@ async def test_options_flow(hass: HomeAssistant) -> None:
                 CONF_HOME_INTERVAL: 5,
                 CONF_OPTIONS: "-sn",
                 CONF_EXCLUDE: "4.4.4.4, 5.5.5.5",
+                CONF_SCAN_INTERVAL: 10,
+                CONF_TRACK_NEW: False,
             },
         )
         await hass.async_block_till_done()
@@ -219,6 +226,8 @@ async def test_options_flow(hass: HomeAssistant) -> None:
         CONF_HOME_INTERVAL: 5,
         CONF_OPTIONS: "-sn",
         CONF_EXCLUDE: "4.4.4.4,5.5.5.5",
+        CONF_SCAN_INTERVAL: 10,
+        CONF_TRACK_NEW: False,
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -238,6 +247,8 @@ async def test_import(hass: HomeAssistant) -> None:
                 CONF_HOME_INTERVAL: 3,
                 CONF_OPTIONS: DEFAULT_OPTIONS,
                 CONF_EXCLUDE: "4.4.4.4, 6.4.3.2",
+                CONF_SCAN_INTERVAL: 2000,
+                CONF_TRACK_NEW: False,
             },
         )
         await hass.async_block_till_done()
@@ -250,6 +261,8 @@ async def test_import(hass: HomeAssistant) -> None:
         CONF_HOME_INTERVAL: 3,
         CONF_OPTIONS: DEFAULT_OPTIONS,
         CONF_EXCLUDE: "4.4.4.4,6.4.3.2",
+        CONF_SCAN_INTERVAL: 2000,
+        CONF_TRACK_NEW: False,
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
