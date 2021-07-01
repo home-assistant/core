@@ -48,6 +48,7 @@ class SwitchbotDataUpdateCoordinator(DataUpdateCoordinator):
 
         if self._switchbot_data:
             return True
+        return False
 
     async def _async_update_data(self) -> dict | None:
         """Fetch data from switchbot."""
