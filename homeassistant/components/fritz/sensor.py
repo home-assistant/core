@@ -172,11 +172,14 @@ class FritzBoxSensor(FritzBoxBaseEntity, SensorEntity):
     ) -> None:
         """Init FRITZ!Box connectivity class."""
         self._sensor_data: SensorData = SENSOR_DATA[sensor_type]
-        self._unique_id = f"{fritzbox_tools.unique_id}-{sensor_type}"
-        self._name = f"{device_friendly_name} {self._sensor_data['name']}"
-        self._is_available = True
         self._last_value: str | None = None
-        self._state: str | None = None
+        self._attr_available = True
+        self._attr_device_class = self._sensor_data["device_class"]
+        self._attr_icon = self._sensor_data["icon"]
+        self._attr_name = f"{device_friendly_name} {self._sensor_data['name']}"
+        self._attr_unit_of_measurement = self._sensor_data["unit_of_measurement"]
+        self._attr_unique_id = f"{fritzbox_tools.unique_id}-{sensor_type}"
+        self._attr_state: str | None = None
         super().__init__(fritzbox_tools, device_friendly_name)
 
     @property
@@ -184,51 +187,18 @@ class FritzBoxSensor(FritzBoxBaseEntity, SensorEntity):
         """Return the state provider for the binary sensor."""
         return self._sensor_data["state_provider"]
 
-    @property
-    def name(self) -> str:
-        """Return name."""
-        return self._name
-
-    @property
-    def device_class(self) -> str | None:
-        """Return device class."""
-        return self._sensor_data["device_class"]
-
-    @property
-    def unit_of_measurement(self) -> str | None:
-        """Return unit of measurement."""
-        return self._sensor_data["unit_of_measurement"]
-
-    @property
-    def icon(self) -> str | None:
-        """Return icon."""
-        return self._sensor_data["icon"]
-
-    @property
-    def unique_id(self) -> str:
-        """Return unique id."""
-        return self._unique_id
-
-    @property
-    def state(self) -> str | None:
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def available(self) -> bool:
-        """Return availability."""
-        return self._is_available
-
     def update(self) -> None:
         """Update data."""
         _LOGGER.debug("Updating FRITZ!Box sensors")
 
         try:
             status: FritzStatus = self._fritzbox_tools.fritz_status
-            self._is_available = True
+            self._attr_available = True
         except FritzConnectionException:
             _LOGGER.error("Error getting the state from the FRITZ!Box", exc_info=True)
-            self._is_available = False
+            self._attr_available = False
             return
 
-        self._state = self._last_value = self._state_provider(status, self._last_value)
+        self._attr_state = self._last_value = self._state_provider(
+            status, self._last_value
+        )
