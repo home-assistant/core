@@ -9,7 +9,7 @@ from miio.gateway.gateway import GatewayException
 from homeassistant import config_entries, core
 from homeassistant.const import CONF_HOST, CONF_TOKEN
 from homeassistant.core import callback
-from homeassistant.helpers import device_registry as dr, entity_registry as en
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
@@ -107,7 +107,7 @@ async def async_create_miio_device_and_coordinator(
         device = AirHumidifier(host, token, model=model)
 
     # removing fan platform entity for humidifiers
-    entity_registry = await en.async_get_registry(hass)
+    entity_registry = er.async_get(hass)
     entity_id = entity_registry.async_get_entity_id("fan", DOMAIN, entry.unique_id)
     if entity_id:
         entity_registry.async_remove(entity_id)
