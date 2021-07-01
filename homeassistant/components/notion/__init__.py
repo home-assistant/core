@@ -8,7 +8,7 @@ from aionotion.errors import InvalidCredentialsError, NotionError
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import (
     aiohttp_client,
     config_validation as cv,
@@ -49,7 +49,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD], session
         )
     except InvalidCredentialsError:
-        raise ConfigEntryAuthFailed("Invalid username and/or password")
+        LOGGER.error("Invalid username and/or password")
+        return False
     except NotionError as err:
         LOGGER.error("Config entry failed: %s", err)
         raise ConfigEntryNotReady from err
