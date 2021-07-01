@@ -65,6 +65,7 @@ SUPPORT_DELETE_COMMAND = 2
 SUPPORT_ACTIVITY = 4
 
 EVENT_LEARNED_COMMAND = "remote_learned_command"
+EVENT_LEARNED_COMMAND_FAILED = "remote_learned_command_failed"
 
 REMOTE_SERVICE_ACTIVITY_SCHEMA = make_entity_service_schema(
     {vol.Optional(ATTR_ACTIVITY): cv.string}

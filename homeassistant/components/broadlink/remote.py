@@ -25,6 +25,7 @@ from homeassistant.components.remote import (
     DEFAULT_DELAY_SECS,
     DOMAIN as RM_DOMAIN,
     EVENT_LEARNED_COMMAND as RM_EVENT_LEARNED_COMMAND,
+    EVENT_LEARNED_COMMAND_FAILED as RM_EVENT_LEARNED_COMMAND_FAILED,
     PLATFORM_SCHEMA,
     SERVICE_DELETE_COMMAND,
     SERVICE_LEARN_COMMAND,
@@ -286,7 +287,7 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
             error_message = f"{service} canceled: {self.entity_id} entity is turned off"
 
             self.hass.bus.async_fire(
-                RM_EVENT_LEARNED_COMMAND,
+                RM_EVENT_LEARNED_COMMAND_FAILED,
                 {
                     "device_id": self.unique_id,
                     "error": error_message,
@@ -320,7 +321,7 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
 
                 except (AuthorizationError, NetworkTimeoutError, OSError) as err:
                     self.hass.bus.async_fire(
-                        RM_EVENT_LEARNED_COMMAND,
+                        RM_EVENT_LEARNED_COMMAND_FAILED,
                         {
                             "device_id": self.unique_id,
                             "command": command,
@@ -332,7 +333,7 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
 
                 except BroadlinkException as err:
                     self.hass.bus.async_fire(
-                        RM_EVENT_LEARNED_COMMAND,
+                        RM_EVENT_LEARNED_COMMAND_FAILED,
                         {
                             "device_id": self.unique_id,
                             "command": command,
