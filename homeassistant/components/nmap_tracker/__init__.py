@@ -277,22 +277,21 @@ class NmapDeviceScanner:
         # scan we mark devices that were not found as not_home
         # from unavailable
         now = dt_util.now()
-        for mac_address, original_name in self._known_mac_addresses:
-            if mac_address not in self.devices.tracked:
-                self.devices.config_entry_owner[mac_address] = self._entry_id
-                self.devices.tracked[mac_address] = NmapDevice(
-                    mac_address,
-                    None,
-                    original_name,
-                    None,
-                    self._async_get_vendor(mac_address),
-                    "Device not found in initial scan",
-                    now,
-                    1,
-                )
-                async_dispatcher_send(
-                    self._hass, self.signal_device_missing, mac_address
-                )
+        for mac_address, original_name in self._known_mac_addresses.items():
+            if mac_address in self.devices.tracked:
+                continue
+            self.devices.config_entry_owner[mac_address] = self._entry_id
+            self.devices.tracked[mac_address] = NmapDevice(
+                mac_address,
+                None,
+                original_name,
+                None,
+                self._async_get_vendor(mac_address),
+                "Device not found in initial scan",
+                now,
+                1,
+            )
+            async_dispatcher_send(self._hass, self.signal_device_missing, mac_address)
 
     def _run_nmap_scan(self):
         """Run nmap and return the result."""
