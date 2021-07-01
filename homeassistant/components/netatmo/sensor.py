@@ -286,7 +286,6 @@ class NetatmoSensor(NetatmoBase, SensorEntity):
             f"{MANUFACTURER} {self._device_name} {SENSOR_TYPES[sensor_type][0]}"
         )
         self.type = sensor_type
-        self._attr_state = None
         self._attr_device_class = SENSOR_TYPES[self.type][3]
         self._attr_icon = SENSOR_TYPES[self.type][2]
         self._attr_unit_of_measurement = SENSOR_TYPES[self.type][1]
