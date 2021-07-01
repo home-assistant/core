@@ -116,6 +116,7 @@ class SirenEntity(ToggleEntity):
 
     _attr_available_tones: list[int] | list[str] | None = None
 
+    @final
     @property
     def capability_attributes(self) -> dict[str, Any] | None:
         """Return capability attributes."""
