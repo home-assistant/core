@@ -287,27 +287,17 @@ class NetatmoSensor(NetatmoBase, SensorEntity):
         )
         self.type = sensor_type
         self._attr_state = None
-        self._device_class = SENSOR_TYPES[self.type][3]
+        self._attr_device_class = SENSOR_TYPES[self.type][3]
         self._attr_icon = SENSOR_TYPES[self.type][2]
         self._attr_unit_of_measurement = SENSOR_TYPES[self.type][1]
         self._model = device["type"]
         self._attr_unique_id = f"{self._id}-{self.type}"
-        self._enabled_default = SENSOR_TYPES[self.type][4]
-
-    @property
-    def device_class(self):
-        """Return the device class of the sensor."""
-        return self._device_class
+        self._attr_entity_registry_enabled_default = SENSOR_TYPES[self.type][4]
 
     @property
     def available(self):
         """Return entity availability."""
         return self._attr_state is not None
-
-    @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Return if the entity should be enabled when first added to the entity registry."""
-        return self._enabled_default
 
     @callback
     def async_update_callback(self):  # noqa: C901
