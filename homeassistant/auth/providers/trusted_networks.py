@@ -82,6 +82,17 @@ class TrustedNetworksAuthProvider(AuthProvider):
         return cast(Dict[IPNetwork, Any], self.config[CONF_TRUSTED_USERS])
 
     @property
+    def trusted_proxies(self) -> list[IPNetwork]:
+        """Return trusted proxies in the system."""
+        if not self.hass.http:
+            return []
+
+        return [
+            ip_network(trusted_proxy)
+            for trusted_proxy in self.hass.http.trusted_proxies
+        ]
+
+    @property
     def support_mfa(self) -> bool:
         """Trusted Networks auth provider does not support MFA."""
         return False
@@ -177,6 +188,9 @@ class TrustedNetworksAuthProvider(AuthProvider):
             ip_addr in trusted_network for trusted_network in self.trusted_networks
         ):
             raise InvalidAuthError("Not in trusted_networks")
+
+        if any(ip_addr in trusted_proxy for trusted_proxy in self.trusted_proxies):
+            raise InvalidAuthError("Can't allow access from a proxy server")
 
     @callback
     def async_validate_refresh_token(
