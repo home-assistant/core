@@ -122,7 +122,7 @@ async def _async_build_schema_with_user_input(hass, user_input):
             vol.Optional(
                 CONF_SCAN_INTERVAL,
                 default=user_input.get(CONF_SCAN_INTERVAL, TRACKER_SCAN_INTERVAL),
-            ): vol.Range(10, 3600),
+            ): vol.All(vol.Coerce(int), vol.Range(min=10, max=3600)),
         }
     )
 
