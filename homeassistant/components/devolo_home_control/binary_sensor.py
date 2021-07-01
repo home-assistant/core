@@ -118,7 +118,7 @@ class DevoloRemoteControl(DevoloDeviceEntity, BinarySensorEntity):
         device_instance: Zwave,
         element_uid: str,
         key: int,
-    ):
+    ) -> None:
         """Initialize a devolo remote control."""
         self._remote_control_property = device_instance.remote_control_property.get(
             element_uid

@@ -19,7 +19,7 @@ class DevoloDeviceEntity(Entity):
 
     def __init__(
         self, homecontrol: HomeControl, device_instance: Zwave, element_uid: str
-    ):
+    ) -> None:
         """Initialize a devolo device entity."""
         self._device_instance = device_instance
         self._unique_id = element_uid
