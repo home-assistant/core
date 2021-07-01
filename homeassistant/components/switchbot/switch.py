@@ -1,7 +1,6 @@
 """Support for Switchbot bot."""
 from __future__ import annotations
 
-from asyncio import Lock
 import logging
 
 import voluptuous as vol
@@ -14,6 +13,7 @@ from homeassistant.components.switch import (
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_MAC, CONF_NAME, CONF_PASSWORD, CONF_SENSOR_TYPE
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
@@ -27,7 +27,6 @@ from .const import (
 
 # Initialize the logger
 _LOGGER = logging.getLogger(__name__)
-CONNECT_LOCK = Lock()
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -85,7 +84,7 @@ async def async_setup_entry(hass, entry, async_add_entities) -> None:
     async_add_entities(bot_device)
 
 
-class SwitchBot(CoordinatorEntity, SwitchEntity):
+class SwitchBot(CoordinatorEntity, SwitchEntity, RestoreEntity):
     """Representation of a Switchbot."""
 
     def __init__(self, coordinator, idx, mac, name, password, retry_count) -> None:
@@ -104,11 +103,12 @@ class SwitchBot(CoordinatorEntity, SwitchEntity):
         """Turn device on."""
         _LOGGER.info("Turn Switchbot bot on %s", self._mac)
 
-        async with CONNECT_LOCK:
+        async with self.coordinator.connect_lock:
             update_ok = await self.hass.async_add_executor_job(self._device.turn_on)
 
         if update_ok:
             self._last_run_success = True
+            await self.coordinator.async_request_refresh()
         else:
             self._last_run_success = False
 
@@ -116,11 +116,12 @@ class SwitchBot(CoordinatorEntity, SwitchEntity):
         """Turn device off."""
         _LOGGER.info("Turn Switchbot bot off %s", self._mac)
 
-        async with CONNECT_LOCK:
+        async with self.coordinator.connect_lock:
             update_ok = await self.hass.async_add_executor_job(self._device.turn_off)
 
         if update_ok:
             self._last_run_success = True
+            await self.coordinator.async_request_refresh()
         else:
             self._last_run_success = False
 
@@ -151,6 +152,7 @@ class SwitchBot(CoordinatorEntity, SwitchEntity):
         """Return the state attributes."""
         return {
             "last_run_success": self._last_run_success,
+            "MAC": self._mac,
             "switch_mode": self.coordinator.data[self._idx]["data"]["switchMode"],
         }
 

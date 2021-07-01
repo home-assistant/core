@@ -12,7 +12,6 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DOMAIN
 
-CONNECT_LOCK = asyncio.Lock()
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -30,6 +29,7 @@ class SwitchbotDataUpdateCoordinator(DataUpdateCoordinator):
     ) -> None:
         """Initialize global switchbot data updater."""
         self.switchbot_api = api
+        self.connect_lock = asyncio.Lock()
         self.retry_count = retry_count
         self.scan_timeout = scan_timeout
         self._switchbot_data = {}
@@ -53,7 +53,7 @@ class SwitchbotDataUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self) -> dict | None:
         """Fetch data from switchbot."""
 
-        async with CONNECT_LOCK:
+        async with self.connect_lock:
             _update_success = await self.hass.async_add_executor_job(self._update_data)
 
         if not _update_success:
