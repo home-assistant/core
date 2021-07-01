@@ -8,12 +8,7 @@ from typing import Any, TypedDict, cast, final
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    SERVICE_TOGGLE,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_ON,
-)
+from homeassistant.const import SERVICE_TOGGLE, SERVICE_TURN_OFF, SERVICE_TURN_ON
 from homeassistant.core import ServiceCall
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import (  # noqa: F401
@@ -23,7 +18,6 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
-from homeassistant.loader import bind_hass
 
 from .const import (
     ATTR_AVAILABLE_TONES,
@@ -47,16 +41,6 @@ TURN_ON_SCHEMA = {
     vol.Optional(ATTR_DURATION): cv.positive_float,
     vol.Optional(ATTR_VOLUME_LEVEL): cv.small_float,
 }
-
-
-@bind_hass
-def is_on(hass: HomeAssistantType, entity_id: str) -> bool:
-    """
-    Return if the siren is on based on the state machine.
-
-    Async friendly.
-    """
-    return hass.states.is_state(entity_id, STATE_ON)
 
 
 class SirenTurnOnServiceParametersDataType(TypedDict, total=False):

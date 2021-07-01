@@ -3,7 +3,6 @@ from unittest.mock import call, patch
 
 import pytest
 
-from homeassistant.components.siren import is_on
 from homeassistant.components.siren.const import (
     ATTR_AVAILABLE_TONES,
     ATTR_VOLUME_LEVEL,
@@ -50,14 +49,12 @@ async def test_turn_on(hass):
     )
     state = hass.states.get(ENTITY_SIREN)
     assert state.state == STATE_OFF
-    assert not is_on(hass, ENTITY_SIREN)
 
     await hass.services.async_call(
         DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_SIREN}, blocking=True
     )
     state = hass.states.get(ENTITY_SIREN)
     assert state.state == STATE_ON
-    assert is_on(hass, ENTITY_SIREN)
 
 
 async def test_turn_off(hass):
@@ -67,14 +64,12 @@ async def test_turn_off(hass):
     )
     state = hass.states.get(ENTITY_SIREN)
     assert state.state == STATE_ON
-    assert is_on(hass, ENTITY_SIREN)
 
     await hass.services.async_call(
         DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_SIREN}, blocking=True
     )
     state = hass.states.get(ENTITY_SIREN)
     assert state.state == STATE_OFF
-    assert not is_on(hass, ENTITY_SIREN)
 
 
 async def test_toggle(hass):
@@ -84,21 +79,18 @@ async def test_toggle(hass):
     )
     state = hass.states.get(ENTITY_SIREN)
     assert state.state == STATE_ON
-    assert is_on(hass, ENTITY_SIREN)
 
     await hass.services.async_call(
         DOMAIN, SERVICE_TOGGLE, {ATTR_ENTITY_ID: ENTITY_SIREN}, blocking=True
     )
     state = hass.states.get(ENTITY_SIREN)
     assert state.state == STATE_OFF
-    assert not is_on(hass, ENTITY_SIREN)
 
     await hass.services.async_call(
         DOMAIN, SERVICE_TOGGLE, {ATTR_ENTITY_ID: ENTITY_SIREN}, blocking=True
     )
     state = hass.states.get(ENTITY_SIREN)
     assert state.state == STATE_ON
-    assert is_on(hass, ENTITY_SIREN)
 
 
 async def test_turn_on_strip_attributes(hass):
