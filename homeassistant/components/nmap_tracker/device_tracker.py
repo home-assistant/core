@@ -14,9 +14,10 @@ from homeassistant.components.device_tracker.config_entry import ScannerEntity
 from homeassistant.components.device_tracker.const import (
     CONF_NEW_DEVICE_DEFAULTS,
     CONF_TRACK_NEW,
+    CONF_SCAN_INTERVAL,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_EXCLUDE, CONF_HOSTS, CONF_SCAN_INTERVAL
+from homeassistant.const import CONF_EXCLUDE, CONF_HOSTS
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
@@ -48,8 +49,6 @@ async def async_get_scanner(hass, config):
     """Validate the configuration and return a Nmap scanner."""
     validated_config = config[DEVICE_TRACKER_DOMAIN]
 
-    _LOGGER.debug("Validated Config: %s", validated_config)
-
     if CONF_SCAN_INTERVAL in validated_config:
         scan_interval = validated_config[CONF_SCAN_INTERVAL].total_seconds()
     else:
@@ -65,8 +64,6 @@ async def async_get_scanner(hass, config):
             CONF_TRACK_NEW, DEFAULT_TRACK_NEW_DEVICES
         ),
     }
-
-    _LOGGER.debug("Import Config: %s", import_config)
 
     hass.async_create_task(
         hass.config_entries.flow.async_init(
