@@ -59,7 +59,7 @@ class OpenUvBinarySensor(OpenUvEntity, BinarySensorEntity):
                 return
 
         if self._sensor_type == TYPE_PROTECTION_WINDOW:
-            self._attr_state = (
+            self._attr_is_on = (
                 parse_datetime(data["from_time"])
                 <= utcnow()
                 <= parse_datetime(data["to_time"])
