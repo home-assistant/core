@@ -267,7 +267,8 @@ class CoverTemplate(TemplateEntity, CoverEntity):
                 state,
                 ", ".join(_VALID_STATES),
             )
-            self._position = None
+            if not self._position_template:
+                self._position = None
 
     @callback
     def _update_position(self, result):
