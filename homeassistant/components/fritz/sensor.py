@@ -72,7 +72,7 @@ def _retrieve_kb_received_state(status: FritzStatus, last_value: str) -> str:
     return round(status.bytes_received * 8 / 1024 / 1024, 2)
 
 
-class SensorData(TypedDict):
+class SensorData(TypedDict, total=False):
     """Sensor data class."""
 
     name: str
@@ -86,21 +86,16 @@ class SensorData(TypedDict):
 SENSOR_DATA = {
     "external_ip": SensorData(
         name="External IP",
-        device_class=None,
-        unit_of_measurement=None,
         icon="mdi:earth",
         state_provider=_retrieve_external_ip_state,
     ),
     "uptime": SensorData(
         name="Uptime",
         device_class=DEVICE_CLASS_TIMESTAMP,
-        unit_of_measurement=None,
-        icon=None,
         state_provider=_retrieve_uptime_state,
     ),
     "kib_s_sent": SensorData(
         name="KiB/s sent",
-        device_class=None,
         state_class=STATE_CLASS_MEASUREMENT,
         unit_of_measurement="KiB/s",
         icon="mdi:web",
@@ -108,7 +103,6 @@ SENSOR_DATA = {
     ),
     "kib_s_received": SensorData(
         name="KiB/s received",
-        device_class=None,
         state_class=STATE_CLASS_MEASUREMENT,
         unit_of_measurement="KiB/s",
         icon="mdi:web",
@@ -116,21 +110,18 @@ SENSOR_DATA = {
     ),
     "max_kib_s_sent": SensorData(
         name="Max KiB/s sent",
-        device_class=None,
         unit_of_measurement="KiB/s",
         icon="mdi:web",
         state_provider=_retrieve_max_kib_s_sent_state,
     ),
     "max_kib_s_received": SensorData(
         name="Max KiB/s received",
-        device_class=None,
         unit_of_measurement="KiB/s",
         icon="mdi:web",
         state_provider=_retrieve_max_kib_s_received_state,
     ),
     "mb_sent": SensorData(
         name="MB sent",
-        device_class=None,
         state_class=STATE_CLASS_MEASUREMENT,
         unit_of_measurement="MB",
         icon="mdi:web",
@@ -138,7 +129,6 @@ SENSOR_DATA = {
     ),
     "mb_received": SensorData(
         name="MB received",
-        device_class=None,
         state_class=STATE_CLASS_MEASUREMENT,
         unit_of_measurement="MB",
         icon="mdi:web",
@@ -179,11 +169,11 @@ class FritzBoxSensor(FritzBoxBaseEntity, SensorEntity):
         self._sensor_data: SensorData = SENSOR_DATA[sensor_type]
         self._last_value: str | None = None
         self._attr_available = True
-        self._attr_device_class = self._sensor_data["device_class"]
-        self._attr_icon = self._sensor_data["icon"]
+        self._attr_device_class = self._sensor_data.get("device_class")
+        self._attr_icon = self._sensor_data.get("icon")
         self._attr_name = f"{device_friendly_name} {self._sensor_data['name']}"
         self._attr_state_class = self._sensor_data.get("state_class")
-        self._attr_unit_of_measurement = self._sensor_data["unit_of_measurement"]
+        self._attr_unit_of_measurement = self._sensor_data.get("unit_of_measurement")
         self._attr_unique_id = f"{fritzbox_tools.unique_id}-{sensor_type}"
         super().__init__(fritzbox_tools, device_friendly_name)
 
