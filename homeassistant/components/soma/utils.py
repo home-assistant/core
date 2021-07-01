@@ -7,12 +7,12 @@ _LOGGER = logging.getLogger(__name__)
 
 def log_device_unreachable(name: str, msg: str):
     """Log device unreachable."""
-    _LOGGER.error("Unable to reach device %s (%s)", name, msg)
+    _LOGGER.error("Unable to reach device %s (%s).", name, msg)
 
 
 def log_connect_api_unreachable():
     """Log Soma Connect api unreachable."""
-    _LOGGER.error("Connection to SOMA Connect failed")
+    _LOGGER.error("Connection to SOMA Connect failed!")
 
 
 def log_debug_msg(debugMsg: str):
