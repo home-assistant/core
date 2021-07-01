@@ -32,12 +32,15 @@ CONF_END = "end"
 CONF_DURATION = "duration"
 CONF_PERIOD_KEYS = [CONF_START, CONF_END, CONF_DURATION]
 
+CONF_PRECISION = "precision"
+
 CONF_TYPE_TIME = "time"
 CONF_TYPE_RATIO = "ratio"
 CONF_TYPE_COUNT = "count"
 CONF_TYPE_KEYS = [CONF_TYPE_TIME, CONF_TYPE_RATIO, CONF_TYPE_COUNT]
 
 DEFAULT_NAME = "unnamed statistics"
+DEFAULT_PRECISION = 2
 UNITS = {
     CONF_TYPE_TIME: TIME_HOURS,
     CONF_TYPE_RATIO: PERCENTAGE,
@@ -67,6 +70,9 @@ PLATFORM_SCHEMA = vol.All(
             vol.Optional(CONF_DURATION): cv.time_period,
             vol.Optional(CONF_TYPE, default=CONF_TYPE_TIME): vol.In(CONF_TYPE_KEYS),
             vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+            vol.Optional(CONF_PRECISION, default=DEFAULT_PRECISION): vol.All(
+                vol.Coerce(int), vol.Range(min=0)
+            ),
         }
     ),
     exactly_two_period_keys,
@@ -85,6 +91,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     duration = config.get(CONF_DURATION)
     sensor_type = config.get(CONF_TYPE)
     name = config.get(CONF_NAME)
+    precision = config.get(CONF_PRECISION)
 
     for template in [start, end]:
         if template is not None:
@@ -93,7 +100,15 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(
         [
             HistoryStatsSensor(
-                hass, entity_id, entity_states, start, end, duration, sensor_type, name
+                hass,
+                entity_id,
+                entity_states,
+                start,
+                end,
+                duration,
+                sensor_type,
+                name,
+                precision,
             )
         ]
     )
@@ -105,7 +120,16 @@ class HistoryStatsSensor(SensorEntity):
     """Representation of a HistoryStats sensor."""
 
     def __init__(
-        self, hass, entity_id, entity_states, start, end, duration, sensor_type, name
+        self,
+        hass,
+        entity_id,
+        entity_states,
+        start,
+        end,
+        duration,
+        sensor_type,
+        name,
+        precision,
     ):
         """Initialize the HistoryStats sensor."""
         self._entity_id = entity_id
@@ -115,6 +139,7 @@ class HistoryStatsSensor(SensorEntity):
         self._end = end
         self._type = sensor_type
         self._name = name
+        self._precision = precision
         self._unit_of_measurement = UNITS[sensor_type]
 
         self._period = (datetime.datetime.now(), datetime.datetime.now())
@@ -159,10 +184,13 @@ class HistoryStatsSensor(SensorEntity):
             return None
 
         if self._type == CONF_TYPE_TIME:
-            return round(self.value, 2)
+            return round(self.value, self._precision)
 
         if self._type == CONF_TYPE_RATIO:
-            return HistoryStatsHelper.pretty_ratio(self.value, self._period)
+            return round(
+                HistoryStatsHelper.pretty_ratio(self.value, self._period),
+                self._precision,
+            )
 
         if self._type == CONF_TYPE_COUNT:
             return self.count
@@ -344,9 +372,7 @@ class HistoryStatsHelper:
         """Format the ratio of value / period duration."""
         if len(period) != 2 or period[0] == period[1]:
             return 0.0
-
-        ratio = 100 * 3600 * value / (period[1] - period[0]).total_seconds()
-        return round(ratio, 1)
+        return 100 * 3600 * value / (period[1] - period[0]).total_seconds()
 
     @staticmethod
     def handle_template_exception(ex, field):
