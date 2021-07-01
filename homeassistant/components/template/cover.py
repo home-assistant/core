@@ -62,8 +62,7 @@ POSITION_ACTION = "set_cover_position"
 TILT_ACTION = "set_cover_tilt_position"
 CONF_TILT_OPTIMISTIC = "tilt_optimistic"
 
-CONF_VALUE_OR_POSITION_TEMPLATE = "value_or_position"
-CONF_OPEN_OR_CLOSE = "open_or_close"
+CONF_OPEN_AND_CLOSE = "open_or_close"
 
 TILT_FEATURES = (
     SUPPORT_OPEN_TILT
@@ -76,8 +75,8 @@ COVER_SCHEMA = vol.All(
     cv.deprecated(CONF_ENTITY_ID),
     vol.Schema(
         {
-            vol.Inclusive(OPEN_ACTION, CONF_OPEN_OR_CLOSE): cv.SCRIPT_SCHEMA,
-            vol.Inclusive(CLOSE_ACTION, CONF_OPEN_OR_CLOSE): cv.SCRIPT_SCHEMA,
+            vol.Inclusive(OPEN_ACTION, CONF_OPEN_AND_CLOSE): cv.SCRIPT_SCHEMA,
+            vol.Inclusive(CLOSE_ACTION, CONF_OPEN_AND_CLOSE): cv.SCRIPT_SCHEMA,
             vol.Optional(STOP_ACTION): cv.SCRIPT_SCHEMA,
             vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
             vol.Optional(CONF_AVAILABILITY_TEMPLATE): cv.template,
