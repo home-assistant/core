@@ -1,7 +1,7 @@
 """The tests for sensor recorder platform."""
 # pylint: disable=protected-access,invalid-name
 from datetime import timedelta
-from unittest.mock import patch, sentinel
+from unittest.mock import patch
 
 import pytest
 from pytest import approx
@@ -13,7 +13,7 @@ from homeassistant.components.recorder.statistics import (
     list_statistic_ids,
     statistics_during_period,
 )
-from homeassistant.const import STATE_UNAVAILABLE, TEMP_CELSIUS
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.setup import setup_component
 import homeassistant.util.dt as dt_util
 
@@ -58,7 +58,7 @@ TEMPERATURE_SENSOR_ATTRIBUTES = {
     ],
 )
 def test_compile_hourly_statistics(
-    hass_recorder, device_class, unit, native_unit, mean, min, max
+    hass_recorder, caplog, device_class, unit, native_unit, mean, min, max
 ):
     """Test compiling hourly statistics."""
     zero = dt_util.utcnow()
@@ -95,10 +95,11 @@ def test_compile_hourly_statistics(
             }
         ]
     }
+    assert "Error while processing event StatisticsTask" not in caplog.text
 
 
 @pytest.mark.parametrize("attributes", [TEMPERATURE_SENSOR_ATTRIBUTES])
-def test_compile_hourly_statistics_unsupported(hass_recorder, attributes):
+def test_compile_hourly_statistics_unsupported(hass_recorder, caplog, attributes):
     """Test compiling hourly statistics for unsupported sensor."""
     attributes = dict(attributes)
     zero = dt_util.utcnow()
@@ -150,6 +151,7 @@ def test_compile_hourly_statistics_unsupported(hass_recorder, attributes):
             }
         ]
     }
+    assert "Error while processing event StatisticsTask" not in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -162,7 +164,7 @@ def test_compile_hourly_statistics_unsupported(hass_recorder, attributes):
     ],
 )
 def test_compile_hourly_energy_statistics(
-    hass_recorder, device_class, unit, native_unit, factor
+    hass_recorder, caplog, device_class, unit, native_unit, factor
 ):
     """Test compiling hourly statistics."""
     zero = dt_util.utcnow()
@@ -230,9 +232,10 @@ def test_compile_hourly_energy_statistics(
             },
         ]
     }
+    assert "Error while processing event StatisticsTask" not in caplog.text
 
 
-def test_compile_hourly_energy_statistics_unsupported(hass_recorder):
+def test_compile_hourly_energy_statistics_unsupported(hass_recorder, caplog):
     """Test compiling hourly statistics."""
     zero = dt_util.utcnow()
     hass = hass_recorder()
@@ -316,9 +319,10 @@ def test_compile_hourly_energy_statistics_unsupported(hass_recorder):
             },
         ]
     }
+    assert "Error while processing event StatisticsTask" not in caplog.text
 
 
-def test_compile_hourly_energy_statistics_multiple(hass_recorder):
+def test_compile_hourly_energy_statistics_multiple(hass_recorder, caplog):
     """Test compiling multiple hourly statistics."""
     zero = dt_util.utcnow()
     hass = hass_recorder()
@@ -462,17 +466,39 @@ def test_compile_hourly_energy_statistics_multiple(hass_recorder):
             },
         ],
     }
+    assert "Error while processing event StatisticsTask" not in caplog.text
 
 
-def test_compile_hourly_statistics_unchanged(hass_recorder):
+@pytest.mark.parametrize(
+    "device_class,unit,value",
+    [
+        ("battery", "%", 30),
+        ("battery", None, 30),
+        ("humidity", "%", 30),
+        ("humidity", None, 30),
+        ("pressure", "Pa", 30),
+        ("pressure", "hPa", 3000),
+        ("pressure", "mbar", 3000),
+        ("pressure", "inHg", 101591.67),
+        ("pressure", "psi", 206842.71),
+        ("temperature", "°C", 30),
+        ("temperature", "°F", -1.111111),
+    ],
+)
+def test_compile_hourly_statistics_unchanged(
+    hass_recorder, caplog, device_class, unit, value
+):
     """Test compiling hourly statistics, with no changes during the hour."""
     zero = dt_util.utcnow()
     hass = hass_recorder()
     recorder = hass.data[DATA_INSTANCE]
     setup_component(hass, "sensor", {})
-    four, states = record_states(
-        hass, zero, "sensor.test1", TEMPERATURE_SENSOR_ATTRIBUTES
-    )
+    attributes = {
+        "device_class": device_class,
+        "state_class": "measurement",
+        "unit_of_measurement": unit,
+    }
+    four, states = record_states(hass, zero, "sensor.test1", attributes)
     hist = history.get_significant_states(hass, zero, four)
     assert dict(states) == dict(hist)
 
@@ -484,23 +510,27 @@ def test_compile_hourly_statistics_unchanged(hass_recorder):
             {
                 "statistic_id": "sensor.test1",
                 "start": process_timestamp_to_utc_isoformat(four),
-                "mean": approx(30.0),
-                "min": approx(30.0),
-                "max": approx(30.0),
+                "mean": approx(value),
+                "min": approx(value),
+                "max": approx(value),
                 "last_reset": None,
                 "state": None,
                 "sum": None,
             }
         ]
     }
+    assert "Error while processing event StatisticsTask" not in caplog.text
 
 
-def test_compile_hourly_statistics_partially_unavailable(hass_recorder):
+def test_compile_hourly_statistics_partially_unavailable(hass_recorder, caplog):
     """Test compiling hourly statistics, with the sensor being partially unavailable."""
+    zero = dt_util.utcnow()
     hass = hass_recorder()
     recorder = hass.data[DATA_INSTANCE]
     setup_component(hass, "sensor", {})
-    zero, four, states = record_states_partially_unavailable(hass)
+    four, states = record_states_partially_unavailable(
+        hass, zero, "sensor.test1", TEMPERATURE_SENSOR_ATTRIBUTES
+    )
     hist = history.get_significant_states(hass, zero, four)
     assert dict(states) == dict(hist)
 
@@ -521,21 +551,64 @@ def test_compile_hourly_statistics_partially_unavailable(hass_recorder):
             }
         ]
     }
+    assert "Error while processing event StatisticsTask" not in caplog.text
 
 
-def test_compile_hourly_statistics_unavailable(hass_recorder):
+@pytest.mark.parametrize(
+    "device_class,unit,value",
+    [
+        ("battery", "%", 30),
+        ("battery", None, 30),
+        ("humidity", "%", 30),
+        ("humidity", None, 30),
+        ("pressure", "Pa", 30),
+        ("pressure", "hPa", 3000),
+        ("pressure", "mbar", 3000),
+        ("pressure", "inHg", 101591.67),
+        ("pressure", "psi", 206842.71),
+        ("temperature", "°C", 30),
+        ("temperature", "°F", -1.111111),
+    ],
+)
+def test_compile_hourly_statistics_unavailable(
+    hass_recorder, caplog, device_class, unit, value
+):
     """Test compiling hourly statistics, with the sensor being unavailable."""
+    zero = dt_util.utcnow()
     hass = hass_recorder()
     recorder = hass.data[DATA_INSTANCE]
     setup_component(hass, "sensor", {})
-    zero, four, states = record_states_partially_unavailable(hass)
+    attributes = {
+        "device_class": device_class,
+        "state_class": "measurement",
+        "unit_of_measurement": unit,
+    }
+    four, states = record_states_partially_unavailable(
+        hass, zero, "sensor.test1", attributes
+    )
+    _, _states = record_states(hass, zero, "sensor.test2", attributes)
+    states = {**states, **_states}
     hist = history.get_significant_states(hass, zero, four)
     assert dict(states) == dict(hist)
 
     recorder.do_adhoc_statistics(period="hourly", start=four)
     wait_recording_done(hass)
     stats = statistics_during_period(hass, four)
-    assert stats == {}
+    assert stats == {
+        "sensor.test2": [
+            {
+                "statistic_id": "sensor.test2",
+                "start": process_timestamp_to_utc_isoformat(four),
+                "mean": approx(value),
+                "min": approx(value),
+                "max": approx(value),
+                "last_reset": None,
+                "state": None,
+                "sum": None,
+            }
+        ]
+    }
+    assert "Error while processing event StatisticsTask" not in caplog.text
 
 
 def record_states(hass, zero, entity_id, attributes):
@@ -629,22 +702,11 @@ def record_energy_states(hass, zero, entity_id, _attributes, seq):
     return four, eight, states
 
 
-def record_states_partially_unavailable(hass):
+def record_states_partially_unavailable(hass, zero, entity_id, attributes):
     """Record some test states.
 
     We inject a bunch of state updates temperature sensors.
     """
-    mp = "media_player.test"
-    sns1 = "sensor.test1"
-    sns2 = "sensor.test2"
-    sns3 = "sensor.test3"
-    sns1_attr = {
-        "device_class": "temperature",
-        "state_class": "measurement",
-        "unit_of_measurement": TEMP_CELSIUS,
-    }
-    sns2_attr = {"device_class": "temperature"}
-    sns3_attr = {}
 
     def set_state(entity_id, state, **kwargs):
         """Set the state."""
@@ -652,32 +714,21 @@ def record_states_partially_unavailable(hass):
         wait_recording_done(hass)
         return hass.states.get(entity_id)
 
-    zero = dt_util.utcnow()
     one = zero + timedelta(minutes=1)
     two = one + timedelta(minutes=15)
     three = two + timedelta(minutes=30)
     four = three + timedelta(minutes=15)
 
-    states = {mp: [], sns1: [], sns2: [], sns3: []}
+    states = {entity_id: []}
     with patch("homeassistant.components.recorder.dt_util.utcnow", return_value=one):
-        states[mp].append(
-            set_state(mp, "idle", attributes={"media_title": str(sentinel.mt1)})
-        )
-        states[mp].append(
-            set_state(mp, "YouTube", attributes={"media_title": str(sentinel.mt2)})
-        )
-        states[sns1].append(set_state(sns1, "10", attributes=sns1_attr))
-        states[sns2].append(set_state(sns2, "10", attributes=sns2_attr))
-        states[sns3].append(set_state(sns3, "10", attributes=sns3_attr))
+        states[entity_id].append(set_state(entity_id, "10", attributes=attributes))
 
     with patch("homeassistant.components.recorder.dt_util.utcnow", return_value=two):
-        states[sns1].append(set_state(sns1, "25", attributes=sns1_attr))
-        states[sns2].append(set_state(sns2, "25", attributes=sns2_attr))
-        states[sns3].append(set_state(sns3, "25", attributes=sns3_attr))
+        states[entity_id].append(set_state(entity_id, "25", attributes=attributes))
 
     with patch("homeassistant.components.recorder.dt_util.utcnow", return_value=three):
-        states[sns1].append(set_state(sns1, STATE_UNAVAILABLE, attributes=sns1_attr))
-        states[sns2].append(set_state(sns2, STATE_UNAVAILABLE, attributes=sns2_attr))
-        states[sns3].append(set_state(sns3, STATE_UNAVAILABLE, attributes=sns3_attr))
+        states[entity_id].append(
+            set_state(entity_id, STATE_UNAVAILABLE, attributes=attributes)
+        )
 
-    return zero, four, states
+    return four, states
