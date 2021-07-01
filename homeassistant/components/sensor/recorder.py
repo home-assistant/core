@@ -161,13 +161,15 @@ def _normalize_states(
     entity_history: list[State], device_class: str, entity_id: str
 ) -> tuple[str | None, list[tuple[float, State]]]:
     """Normalize units."""
+    unit = None
 
     if device_class not in UNIT_CONVERSIONS:
         # We're not normalizing this device class, return the state as they are
         fstates = [
             (float(el.state), el) for el in entity_history if _is_number(el.state)
         ]
-        unit = fstates[0][1].attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        if fstates:
+            unit = fstates[0][1].attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         return unit, fstates
 
     fstates = []
