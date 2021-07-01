@@ -129,6 +129,7 @@ class SwitchBot(CoordinatorEntity, SwitchEntity):
         """Return true if unable to access real state of entity."""
         if not self.coordinator.data[self._idx]["data"]["switchMode"]:
             return True
+        return False
 
     @property
     def is_on(self) -> bool:
