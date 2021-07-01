@@ -115,10 +115,14 @@ async def _async_build_schema_with_user_input(hass, user_input):
             vol.Optional(
                 CONF_OPTIONS, default=user_input.get(CONF_OPTIONS, DEFAULT_OPTIONS)
             ): str,
-            vol.Optional(CONF_TRACK_NEW, default=DEFAULT_TRACK_NEW_DEVICES): bool,
-            vol.Optional(CONF_SCAN_INTERVAL, default=TRACKER_SCAN_INTERVAL): vol.Range(
-                10, 3600
-            ),
+            vol.Optional(
+                CONF_TRACK_NEW,
+                default=user_input.get(CONF_TRACK_NEW, DEFAULT_TRACK_NEW_DEVICES),
+            ): bool,
+            vol.Optional(
+                CONF_SCAN_INTERVAL,
+                default=user_input.get(CONF_SCAN_INTERVAL, TRACKER_SCAN_INTERVAL),
+            ): vol.Range(10, 3600),
         }
     )
 

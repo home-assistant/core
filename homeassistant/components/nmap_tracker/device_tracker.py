@@ -48,6 +48,11 @@ async def async_get_scanner(hass, config):
     """Validate the configuration and return a Nmap scanner."""
     validated_config = config[DEVICE_TRACKER_DOMAIN]
 
+    if CONF_SCAN_INTERVAL in validated_config:
+        scan_interval = validated_config[CONF_SCAN_INTERVAL].total_seconds()
+    else:
+        scan_interval = TRACKER_SCAN_INTERVAL
+
     hass.async_create_task(
         hass.config_entries.flow.async_init(
             DOMAIN,
@@ -57,9 +62,7 @@ async def async_get_scanner(hass, config):
                 CONF_HOME_INTERVAL: validated_config[CONF_HOME_INTERVAL],
                 CONF_EXCLUDE: ",".join(validated_config[CONF_EXCLUDE]),
                 CONF_OPTIONS: validated_config[CONF_OPTIONS],
-                CONF_SCAN_INTERVAL: validated_config.get(
-                    CONF_SCAN_INTERVAL, TRACKER_SCAN_INTERVAL
-                ),
+                CONF_SCAN_INTERVAL: scan_interval,
                 CONF_TRACK_NEW: validated_config.get(CONF_NEW_DEVICE_DEFAULTS, {}).get(
                     CONF_TRACK_NEW, DEFAULT_TRACK_NEW_DEVICES
                 ),
