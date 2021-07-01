@@ -198,7 +198,7 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
                 break
 
         self._device_name = self._data.rooms[home_id][room_id]["name"]
-        self._name = f"{MANUFACTURER} {self._device_name}"
+        self._attr_name = f"{MANUFACTURER} {self._device_name}"
         self._current_temperature = None
         self._target_temperature = None
         self._preset = None
@@ -218,7 +218,7 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
         if self._model == NA_THERM:
             self._operation_list.append(HVAC_MODE_OFF)
 
-        self._unique_id = f"{self._id}-{self._model}"
+        self._attr_unique_id = f"{self._id}-{self._model}"
 
     async def async_added_to_hass(self) -> None:
         """Entity created."""
@@ -253,6 +253,9 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
             self._selected_schedule = self.hass.data[DOMAIN][DATA_SCHEDULES][
                 self._home_id
             ].get(data["schedule_id"])
+            self._attr_extra_state_attributes.update(
+                {"selected_schedule": self._selected_schedule}
+            )
             self.async_write_ha_state()
             self.data_handler.async_force_update(self._home_status_class)
             return
@@ -426,24 +429,6 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
 
         self.async_write_ha_state()
 
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes of the thermostat."""
-        attr = {}
-
-        if self._battery_level is not None:
-            attr[ATTR_BATTERY_LEVEL] = self._battery_level
-
-        if self._model == NA_VALVE:
-            attr[ATTR_HEATING_POWER_REQUEST] = self._room_status.get(
-                "heating_power_request", 0
-            )
-
-        if self._selected_schedule is not None:
-            attr[ATTR_SELECTED_SCHEDULE] = self._selected_schedule
-
-        return attr
-
     async def async_turn_off(self):
         """Turn the entity off."""
         if self._model == NA_VALVE:
@@ -512,6 +497,19 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
         self._connected = True
 
         self._away = self._hvac_mode == HVAC_MAP_NETATMO[STATE_NETATMO_AWAY]
+
+        if self._battery_level is not None:
+            self._attr_extra_state_attributes[ATTR_BATTERY_LEVEL] = self._battery_level
+
+        if self._model == NA_VALVE:
+            self._attr_extra_state_attributes[
+                ATTR_HEATING_POWER_REQUEST
+            ] = self._room_status.get("heating_power_request", 0)
+
+        if self._selected_schedule is not None:
+            self._attr_extra_state_attributes[
+                ATTR_SELECTED_SCHEDULE
+            ] = self._selected_schedule
 
     def _build_room_status(self):
         """Construct room status."""
