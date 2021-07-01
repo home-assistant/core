@@ -1,7 +1,6 @@
 """The Screenlogic integration."""
 import asyncio
 from datetime import timedelta
-from functools import partial
 import logging
 
 from screenlogicpy import ScreenLogicError, ScreenLogicGateway
@@ -42,9 +41,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Screenlogic from a config entry."""
 
-    get_new_gateway_partial = partial(get_new_gateway, hass, entry)
-
-    gateway = await hass.async_add_executor_job(get_new_gateway_partial)
+    gateway = await hass.async_add_executor_job(get_new_gateway, hass, entry)
 
     # The api library uses a shared socket connection and does not handle concurrent
     # requests very well.
@@ -105,7 +102,7 @@ def get_connect_info(hass: HomeAssistant, entry: ConfigEntry):
 
 
 def get_new_gateway(hass: HomeAssistant, entry: ConfigEntry):
-    """Instantiate a new ScreenLogicGateway, connect to it and update."""
+    """Instantiate a new ScreenLogicGateway, connect to it and return it to caller."""
 
     connect_info = get_connect_info(hass, entry)
 
@@ -114,11 +111,6 @@ def get_new_gateway(hass: HomeAssistant, entry: ConfigEntry):
     except ScreenLogicError as ex:
         _LOGGER.error("Error while connecting to the gateway %s: %s", connect_info, ex)
         raise ConfigEntryNotReady from ex
-
-    try:
-        gateway.update()
-    except ScreenLogicError as error:
-        raise UpdateFailed(error) from error
 
     return gateway
 
@@ -143,6 +135,19 @@ class ScreenlogicDataUpdateCoordinator(DataUpdateCoordinator):
             update_interval=interval,
         )
 
+    def reconnect_gateway(self):
+        """Instantiate a new ScreenLogicGateway, connect to it and update. Return new gateway to caller."""
+
+        connect_info = get_connect_info(self.hass, self.config_entry)
+
+        try:
+            gateway = ScreenLogicGateway(**connect_info)
+            gateway.update()
+        except ScreenLogicError as error:
+            raise UpdateFailed(error) from error
+
+        return gateway
+
     async def _async_update_data(self):
         """Fetch data from the Screenlogic gateway."""
         try:
@@ -151,13 +156,9 @@ class ScreenlogicDataUpdateCoordinator(DataUpdateCoordinator):
         except ScreenLogicError as error:
             _LOGGER.warning("ScreenLogicError - attempting reconnect: %s", error)
 
-            get_new_gateway_partial = partial(
-                get_new_gateway, self.hass, self.config_entry
-            )
-
             async with self.api_lock:
                 self.gateway = await self.hass.async_add_executor_job(
-                    get_new_gateway_partial
+                    self.reconnect_gateway
                 )
 
         return self.gateway.get_data()
