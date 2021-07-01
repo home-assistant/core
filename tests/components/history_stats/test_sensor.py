@@ -64,6 +64,7 @@ class TestHistoryStatsSensor(unittest.TestCase):
                 ".replace(minute=0).replace(second=0) }}",
                 "duration": "02:00",
                 "name": "Test",
+                "precision": 2,
             },
         }
 
@@ -88,10 +89,10 @@ class TestHistoryStatsSensor(unittest.TestCase):
             duration = timedelta(hours=2, minutes=1)
 
             sensor1 = HistoryStatsSensor(
-                self.hass, "test", "on", today, None, duration, "time", "test"
+                self.hass, "test", "on", today, None, duration, "time", "test", 2
             )
             sensor2 = HistoryStatsSensor(
-                self.hass, "test", "on", None, today, duration, "time", "test"
+                self.hass, "test", "on", None, today, duration, "time", "test", 2
             )
 
             sensor1.update_period()
@@ -125,10 +126,10 @@ class TestHistoryStatsSensor(unittest.TestCase):
         bad = Template("{{ TEST }}", self.hass)
 
         sensor1 = HistoryStatsSensor(
-            self.hass, "test", "on", good, bad, None, "time", "Test"
+            self.hass, "test", "on", good, bad, None, "time", "Test", 2
         )
         sensor2 = HistoryStatsSensor(
-            self.hass, "test", "on", bad, good, None, "time", "Test"
+            self.hass, "test", "on", bad, good, None, "time", "Test", 2
         )
 
         before_update1 = sensor1._period
@@ -151,6 +152,7 @@ class TestHistoryStatsSensor(unittest.TestCase):
                 "state": "on",
                 "start": "{{ now() }}",
                 "duration": "TEST",
+                "precision": 2,
             },
         }
 
@@ -165,10 +167,10 @@ class TestHistoryStatsSensor(unittest.TestCase):
         duration = "01:00"
 
         sensor1 = HistoryStatsSensor(
-            self.hass, "test", "on", bad, None, duration, "time", "Test"
+            self.hass, "test", "on", bad, None, duration, "time", "Test", 2
         )
         sensor2 = HistoryStatsSensor(
-            self.hass, "test", "on", None, bad, duration, "time", "Test"
+            self.hass, "test", "on", None, bad, duration, "time", "Test", 2
         )
 
         before_update1 = sensor1._period
@@ -210,6 +212,7 @@ class TestHistoryStatsSensor(unittest.TestCase):
                 "start": "{{ as_timestamp(now()) - 3600 }}",
                 "end": "{{ now() }}",
                 "duration": "01:00",
+                "precision": 2,
             },
         }
 
@@ -242,6 +245,7 @@ async def test_reload(hass):
                 "state": "on",
                 "start": "{{ as_timestamp(now()) - 3600 }}",
                 "duration": "01:00",
+                "precision": 2,
             },
         },
     )
@@ -306,6 +310,7 @@ async def test_measure_multiple(hass):
                     "start": "{{ as_timestamp(now()) - 3600 }}",
                     "end": "{{ now() }}",
                     "type": "time",
+                    "precision": 2,
                 },
                 {
                     "platform": "history_stats",
@@ -315,6 +320,7 @@ async def test_measure_multiple(hass):
                     "start": "{{ as_timestamp(now()) - 3600 }}",
                     "end": "{{ now() }}",
                     "type": "time",
+                    "precision": 2,
                 },
                 {
                     "platform": "history_stats",
@@ -333,6 +339,7 @@ async def test_measure_multiple(hass):
                     "start": "{{ as_timestamp(now()) - 3600 }}",
                     "end": "{{ now() }}",
                     "type": "ratio",
+                    "precision": 1,
                 },
             ]
         },
@@ -383,6 +390,7 @@ async def async_test_measure(hass):
                     "start": "{{ as_timestamp(now()) - 3600 }}",
                     "end": "{{ now() }}",
                     "type": "time",
+                    "precision": 2,
                 },
                 {
                     "platform": "history_stats",
@@ -392,6 +400,7 @@ async def async_test_measure(hass):
                     "start": "{{ as_timestamp(now()) - 3600 }}",
                     "end": "{{ now() }}",
                     "type": "time",
+                    "precision": 2,
                 },
                 {
                     "platform": "history_stats",
@@ -410,6 +419,7 @@ async def async_test_measure(hass):
                     "start": "{{ as_timestamp(now()) - 3600 }}",
                     "end": "{{ now() }}",
                     "type": "ratio",
+                    "precision": 1,
                 },
             ]
         },
