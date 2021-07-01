@@ -79,12 +79,7 @@ COVER_SCHEMA = vol.All(
             vol.Inclusive(OPEN_ACTION, CONF_OPEN_OR_CLOSE): cv.SCRIPT_SCHEMA,
             vol.Inclusive(CLOSE_ACTION, CONF_OPEN_OR_CLOSE): cv.SCRIPT_SCHEMA,
             vol.Optional(STOP_ACTION): cv.SCRIPT_SCHEMA,
-            vol.Exclusive(
-                CONF_POSITION_TEMPLATE, CONF_VALUE_OR_POSITION_TEMPLATE
-            ): cv.template,
-            vol.Exclusive(
-                CONF_VALUE_TEMPLATE, CONF_VALUE_OR_POSITION_TEMPLATE
-            ): cv.template,
+            vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
             vol.Optional(CONF_AVAILABILITY_TEMPLATE): cv.template,
             vol.Optional(CONF_POSITION_TEMPLATE): cv.template,
             vol.Optional(CONF_TILT_TEMPLATE): cv.template,
@@ -258,10 +253,11 @@ class CoverTemplate(TemplateEntity, CoverEntity):
         state = str(result).lower()
 
         if state in _VALID_STATES:
-            if state in ("true", STATE_OPEN):
-                self._position = 100
-            else:
-                self._position = 0
+            if not self._position_template:
+                if state in ("true", STATE_OPEN):
+                    self._position = 100
+                else:
+                    self._position = 0
 
             self._is_opening = state == STATE_OPENING
             self._is_closing = state == STATE_CLOSING
