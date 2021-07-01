@@ -17,7 +17,6 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import Throttle
 
 from .const import (
-    API_ACCOUNT_CURRENCY,
     API_ACCOUNT_ID,
     API_ACCOUNTS_DATA,
     CONF_CURRENCIES,
@@ -103,28 +102,22 @@ def create_and_update_instance(api_key, api_token):
 async def update_listener(hass, config_entry):
     """Handle options update."""
 
+    await hass.config_entries.async_reload(config_entry.entry_id)
+
     registry = entity_registry.async_get(hass)
     entities = entity_registry.async_entries_for_config_entry(
         registry, config_entry.entry_id
     )
 
-    instance = hass.data[DOMAIN][config_entry.entry_id]
-    hass.async_add_executor_job(instance.update)
-
+    # Remove orphaned entities
     for entity in entities:
+        currency = entity.unique_id.split("-")[-1]
         if "xe" in entity.unique_id:
-            currency = entity.unique_id.split("-")[-1]
             if currency not in config_entry.options.get(CONF_EXCHANGE_RATES):
                 registry.async_remove(entity.entity_id)
-        else:
-            account = await hass.async_add_executor_job(
-                instance.client.get_account, entity.unique_id.split("coinbase-")[-1]
-            )
-            currency = account[API_ACCOUNT_CURRENCY]
+        elif "wallet" in entity.unique_id:
             if currency not in config_entry.options.get(CONF_CURRENCIES):
                 registry.async_remove(entity.entity_id)
-
-    await hass.config_entries.async_reload(config_entry.entry_id)
 
 
 def get_accounts(client):
