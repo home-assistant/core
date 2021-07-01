@@ -245,11 +245,45 @@ class MqttCover(MqttEntity, CoverEntity):
         return PLATFORM_SCHEMA
 
     def _setup_from_config(self, config):
-        self._optimistic = config[CONF_OPTIMISTIC] or (
-            config.get(CONF_STATE_TOPIC) is None
+        no_position = (
+            config.get(CONF_SET_POSITION_TOPIC) is None
             and config.get(CONF_GET_POSITION_TOPIC) is None
         )
-        self._tilt_optimistic = config[CONF_TILT_STATE_OPTIMISTIC]
+        no_state = (
+            config.get(CONF_COMMAND_TOPIC) is None
+            and config.get(CONF_STATE_TOPIC) is None
+        )
+        no_tilt = (
+            config.get(CONF_TILT_COMMAND_TOPIC) is None
+            and config.get(CONF_TILT_STATUS_TOPIC) is None
+        )
+        optimistic_position = (
+            config.get(CONF_SET_POSITION_TOPIC) is not None
+            and config.get(CONF_GET_POSITION_TOPIC) is None
+        )
+        optimistic_state = (
+            config.get(CONF_COMMAND_TOPIC) is not None
+            and config.get(CONF_STATE_TOPIC) is None
+        )
+        optimistic_tilt = (
+            config.get(CONF_TILT_COMMAND_TOPIC) is not None
+            and config.get(CONF_TILT_STATUS_TOPIC) is None
+        )
+
+        if config[CONF_OPTIMISTIC] or (
+            (no_position or optimistic_position)
+            and (no_state or optimistic_state)
+            and (no_tilt or optimistic_tilt)
+        ):
+            # Force into optimistic mode.
+            self._optimistic = True
+
+        if (
+            config[CONF_TILT_STATE_OPTIMISTIC]
+            or config.get(CONF_TILT_STATUS_TOPIC) is None
+        ):
+            # Force into optimistic tilt mode.
+            self._tilt_optimistic = True
 
         value_template = self._config.get(CONF_VALUE_TEMPLATE)
         if value_template is not None:
@@ -418,17 +452,7 @@ class MqttCover(MqttEntity, CoverEntity):
                 "qos": self._config[CONF_QOS],
             }
 
-        if (
-            self._config.get(CONF_GET_POSITION_TOPIC) is None
-            and self._config.get(CONF_STATE_TOPIC) is None
-        ):
-            # Force into optimistic mode.
-            self._optimistic = True
-
-        if self._config.get(CONF_TILT_STATUS_TOPIC) is None:
-            # Force into optimistic tilt mode.
-            self._tilt_optimistic = True
-        else:
+        if self._config.get(CONF_TILT_STATUS_TOPIC) is not None:
             self._tilt_value = STATE_UNKNOWN
             topics["tilt_status_topic"] = {
                 "topic": self._config.get(CONF_TILT_STATUS_TOPIC),
