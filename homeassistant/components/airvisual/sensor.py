@@ -133,18 +133,18 @@ POLLUTANT_UNITS = {
 }
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up AirVisual sensors based on a config entry."""
-    coordinator = hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id]
+    coordinator = hass.data[DOMAIN][DATA_COORDINATOR][config_entry.entry_id]
 
-    if entry.data[CONF_INTEGRATION_TYPE] in [
+    if config_entry.data[CONF_INTEGRATION_TYPE] in [
         INTEGRATION_TYPE_GEOGRAPHY_COORDS,
         INTEGRATION_TYPE_GEOGRAPHY_NAME,
     ]:
         sensors = [
             GeographySensor(
                 coordinator,
-                entry,
+                config_entry,
                 kind,
                 name,
                 icon,
@@ -166,22 +166,22 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class GeographySensor(AirVisualEntity, SensorEntity):
     """Define an AirVisual sensor related to geography data via the Cloud API."""
 
-    def __init__(self, coordinator, entry, kind, name, icon, unit, locale):
+    def __init__(self, coordinator, config_entry, kind, name, icon, unit, locale):
         """Initialize."""
         super().__init__(coordinator)
 
         self._attr_extra_state_attributes.update(
             {
-                ATTR_CITY: entry.data.get(CONF_CITY),
-                ATTR_STATE: entry.data.get(CONF_STATE),
-                ATTR_COUNTRY: entry.data.get(CONF_COUNTRY),
+                ATTR_CITY: config_entry.data.get(CONF_CITY),
+                ATTR_STATE: config_entry.data.get(CONF_STATE),
+                ATTR_COUNTRY: config_entry.data.get(CONF_COUNTRY),
             }
         )
         self._attr_icon = icon
         self._attr_name = f"{GEOGRAPHY_SENSOR_LOCALES[locale]} {name}"
-        self._attr_unique_id = f"{entry.unique_id}_{locale}_{kind}"
+        self._attr_unique_id = f"{config_entry.unique_id}_{locale}_{kind}"
         self._attr_unit_of_measurement = unit
-        self._entry = entry
+        self._config_entry = config_entry
         self._kind = kind
         self._locale = locale
 
@@ -227,16 +227,16 @@ class GeographySensor(AirVisualEntity, SensorEntity):
         #
         # We use any coordinates in the config entry and, in the case of a geography by
         # name, we fall back to the latitude longitude provided in the coordinator data:
-        latitude = self._entry.data.get(
+        latitude = self._config_entry.data.get(
             CONF_LATITUDE,
             self.coordinator.data["location"]["coordinates"][1],
         )
-        longitude = self._entry.data.get(
+        longitude = self._config_entry.data.get(
             CONF_LONGITUDE,
             self.coordinator.data["location"]["coordinates"][0],
         )
 
-        if self._entry.options[CONF_SHOW_ON_MAP]:
+        if self._config_entry.options[CONF_SHOW_ON_MAP]:
             self._attr_extra_state_attributes[ATTR_LATITUDE] = latitude
             self._attr_extra_state_attributes[ATTR_LONGITUDE] = longitude
             self._attr_extra_state_attributes.pop("lati", None)
