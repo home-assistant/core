@@ -359,24 +359,27 @@ class HlsSegmentView(StreamView):
             "Content-Type": "video/iso.segment",
             "Cache-Control": f"max-age={6*track.target_duration:.0f}",
         }
-        if request.http_range.start is None and request.http_range.stop is None:
-            if segment.complete:
-                # This is a request for a full segment which is already complete
-                # We should return a standard 200 response.
-                return web.Response(body=segment.get_data(), headers=headers)
-            # Otherwise we still return a 200 response, but it is aggregating
-            status = 200
-        else:
-            # For the remaining cases we have a range request.
-            # We need to set the Content-Range header
-            # See https://datatracker.ietf.org/doc/html/rfc8673#section-2
-            if request.http_range.stop is None:
-                # This is a special case for establishing current range. We should only
-                # get this on a HEAD request. Our clients probably won't send this type
-                # of request, but we can try to respond correctly.
-                headers["Content-Range"] = f"bytes {http_start}-{segment.data_size-1}/*"
-                return web.Response(headers=headers, status=206)
-            status = 206
+        # For most cases we have a 206 partial content response.
+        status = 206
+        # For the 206 responses we need to set a Content-Range header
+        # See https://datatracker.ietf.org/doc/html/rfc8673#section-2
+        if request.http_range.stop is None:
+            if request.http_range.start is None:
+                status = 200
+                if segment.complete:
+                    # This is a request for a full segment which is already complete
+                    # We should return a standard 200 response.
+                    return web.Response(
+                        body=segment.get_data(), headers=headers, status=status
+                    )
+                # Otherwise we still return a 200 response, but it is aggregating
+                http_stop = float("inf")
+            else:
+                # See https://datatracker.ietf.org/doc/html/rfc7233#section-2.1
+                headers[
+                    "Content-Range"
+                ] = f"bytes {http_start}-{(http_stop:=segment.data_size)-1}/*"
+        else:  # The remaining cases are all 206 responses
             if segment.complete:
                 # If the segment is complete we have total size
                 headers["Content-Range"] = (
@@ -397,7 +400,7 @@ class HlsSegmentView(StreamView):
         await response.prepare(request)
         try:
             for bytes_to_write in segment.get_aggregating_bytes(
-                start_loc=http_start, end_loc=request.http_range.stop or float("inf")
+                start_loc=http_start, end_loc=request.http_range.stop or http_stop
             ):
                 if bytes_to_write:
                     await response.write(bytes_to_write)
