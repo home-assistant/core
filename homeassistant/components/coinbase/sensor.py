@@ -84,7 +84,10 @@ class AccountSensor(SensorEntity):
         for account in coinbase_data.accounts:
             if account[API_ACCOUNT_CURRENCY] == currency:
                 self._name = f"Coinbase {account[API_ACCOUNT_NAME]}"
-                self._id = f"coinbase-{account[API_ACCOUNT_ID]}"
+                self._id = (
+                    f"coinbase-{account[API_ACCOUNT_ID]}-wallet-"
+                    f"{account[API_ACCOUNT_CURRENCY]}"
+                )
                 self._state = account[API_ACCOUNT_BALANCE][API_ACCOUNT_AMOUNT]
                 self._unit_of_measurement = account[API_ACCOUNT_CURRENCY]
                 self._native_balance = account[API_ACCOUNT_NATIVE_BALANCE][
@@ -151,7 +154,7 @@ class ExchangeRateSensor(SensorEntity):
         self._coinbase_data = coinbase_data
         self.currency = exchange_currency
         self._name = f"{exchange_currency} Exchange Rate"
-        self._id = f"{coinbase_data.user_id}-xe-{exchange_currency}"
+        self._id = f"coinbase-{coinbase_data.user_id}-xe-{exchange_currency}"
         self._state = round(
             1 / float(self._coinbase_data.exchange_rates[API_RATES][self.currency]), 2
         )
