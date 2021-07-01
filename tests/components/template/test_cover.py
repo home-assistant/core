@@ -34,7 +34,7 @@ def calls_fixture(hass):
     return async_mock_service(hass, "test", "automation")
 
 
-async def test_template_state_text(hass, calls):
+async def test_template_state_text(hass, calls, caplog):
     """Test the state text of a template."""
     with assert_setup_component(1, "cover"):
         assert await setup.async_setup_component(
@@ -64,32 +64,61 @@ async def test_template_state_text(hass, calls):
     await hass.async_start()
     await hass.async_block_till_done()
 
-    state = hass.states.async_set("cover.test_state", STATE_OPEN)
+    hass.states.async_set("cover.test_state", STATE_OPEN)
     await hass.async_block_till_done()
-
     state = hass.states.get("cover.test_template_cover")
     assert state.state == STATE_OPEN
 
-    state = hass.states.async_set("cover.test_state", STATE_CLOSED)
+    hass.states.async_set("cover.test_state", STATE_CLOSED)
     await hass.async_block_till_done()
-
     state = hass.states.get("cover.test_template_cover")
     assert state.state == STATE_CLOSED
 
-    state = hass.states.async_set("cover.test_state", STATE_OPENING)
+    hass.states.async_set("cover.test_state", STATE_OPENING)
     await hass.async_block_till_done()
-
     state = hass.states.get("cover.test_template_cover")
     assert state.state == STATE_OPENING
 
-    state = hass.states.async_set("cover.test_state", STATE_CLOSING)
+    hass.states.async_set("cover.test_state", STATE_CLOSING)
     await hass.async_block_till_done()
-
     state = hass.states.get("cover.test_template_cover")
     assert state.state == STATE_CLOSING
 
+    # Unknown state sets position to None - "closing" takes precedence
+    state = hass.states.async_set("cover.test_state", "dog")
+    await hass.async_block_till_done()
+    state = hass.states.get("cover.test_template_cover")
+    assert state.state == STATE_CLOSING
+    assert "Received invalid cover is_on state: dog" in caplog.text
 
-async def test_template_state_text_combined(hass, calls):
+    # Set state to open
+    hass.states.async_set("cover.test_state", STATE_OPEN)
+    await hass.async_block_till_done()
+    state = hass.states.get("cover.test_template_cover")
+    assert state.state == STATE_OPEN
+
+    # Unknown state sets position to None -> Open
+    state = hass.states.async_set("cover.test_state", "cat")
+    await hass.async_block_till_done()
+    state = hass.states.get("cover.test_template_cover")
+    assert state.state == STATE_OPEN
+    assert "Received invalid cover is_on state: cat" in caplog.text
+
+    # Set state to closed
+    hass.states.async_set("cover.test_state", STATE_CLOSED)
+    await hass.async_block_till_done()
+    state = hass.states.get("cover.test_template_cover")
+    assert state.state == STATE_CLOSED
+
+    # Unknown state sets position to None -> Open
+    state = hass.states.async_set("cover.test_state", "bear")
+    await hass.async_block_till_done()
+    state = hass.states.get("cover.test_template_cover")
+    assert state.state == STATE_OPEN
+    assert "Received invalid cover is_on state: bear" in caplog.text
+
+
+async def test_template_state_text_combined(hass, calls, caplog):
     """Test the state text of a template which combines position and value templates."""
     with assert_setup_component(1, "cover"):
         assert await setup.async_setup_component(
@@ -160,6 +189,21 @@ async def test_template_state_text_combined(hass, calls):
     await hass.async_block_till_done()
     state = hass.states.get("cover.test_template_cover")
     assert state.state == STATE_CLOSED
+
+    # Set position to 10
+    hass.states.async_set("cover.test", STATE_CLOSED, attributes={"position": 10})
+    await hass.async_block_till_done()
+    state = hass.states.get("cover.test_template_cover")
+    assert state.state == STATE_OPEN
+    assert state.attributes["current_position"] == 10
+
+    # Unknown state should be ignored
+    state = hass.states.async_set("cover.test_state", "dog")
+    await hass.async_block_till_done()
+    state = hass.states.get("cover.test_template_cover")
+    assert state.state == STATE_OPEN
+    assert state.attributes["current_position"] == 10
+    assert "Received invalid cover is_on state: dog" in caplog.text
 
 
 async def test_template_state_boolean(hass, calls):
