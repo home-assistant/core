@@ -25,7 +25,7 @@ set_rain_delay:
   fields:
     duration:
       name: Duration
-      description: Duration for this system to be turned off
+      description: Duration for this system to be turned off.
       required: true
       selector:
         number:
