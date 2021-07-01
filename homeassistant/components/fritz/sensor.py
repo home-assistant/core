@@ -126,7 +126,6 @@ SENSOR_DATA = {
     "max_kib_s_received": SensorData(
         name="Max KiB/s received",
         device_class=None,
-        state_class=STATE_CLASS_MEASUREMENT,
         unit_of_measurement="KiB/s",
         icon="mdi:web",
         state_provider=_retrieve_max_kib_s_received_state,
