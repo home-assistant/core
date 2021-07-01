@@ -16,6 +16,7 @@ DOMAIN = "ecovacs"
 
 CONF_COUNTRY = "country"
 CONF_CONTINENT = "continent"
+CONF_SKIP = "skip_devices"
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -25,6 +26,7 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Required(CONF_PASSWORD): cv.string,
                 vol.Required(CONF_COUNTRY): vol.All(vol.Lower, cv.string),
                 vol.Required(CONF_CONTINENT): vol.All(vol.Lower, cv.string),
+                vol.Optional(CONF_SKIP, default=[]): cv.ensure_list,
             }
         )
     },
@@ -57,6 +59,12 @@ def setup(hass, config):
     _LOGGER.debug("Ecobot devices: %s", devices)
 
     for device in devices:
+        if device["nick"] in config[DOMAIN].get(CONF_SKIP):
+            _LOGGER.warning(
+                "Skipping Ecovacs device with nickname %s",
+                device["nick"],
+            )
+            continue
         _LOGGER.info(
             "Discovered Ecovacs device on account: %s with nickname %s",
             device["did"],
