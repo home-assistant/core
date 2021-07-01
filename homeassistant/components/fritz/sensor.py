@@ -185,7 +185,7 @@ class FritzBoxSensor(FritzBoxBaseEntity, SensorEntity):
         self._attr_icon = self._sensor_data["icon"]
         self._attr_name = f"{device_friendly_name} {self._sensor_data['name']}"
         self._attr_state: str | None = None
-        self._attr_state_class = self._sensor_data["state_class"]
+        self._attr_state_class = self._sensor_data.get("state_class")
         self._attr_unit_of_measurement = self._sensor_data["unit_of_measurement"]
         self._attr_unique_id = f"{fritzbox_tools.unique_id}-{sensor_type}"
         super().__init__(fritzbox_tools, device_friendly_name)
