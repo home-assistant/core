@@ -30,7 +30,7 @@ from motioneye_client.const import (
 from homeassistant.components.camera.const import DOMAIN as CAMERA_DOMAIN
 from homeassistant.components.webhook import (
     async_generate_id,
-    async_generate_url,
+    async_generate_path,
     async_register as webhook_register,
     async_unregister as webhook_unregister,
 )
@@ -49,6 +49,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
+from homeassistant.helpers.network import get_url
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
@@ -136,6 +137,15 @@ def listen_for_new_cameras(
 
 
 @callback
+def async_generate_motioneye_webhook(hass: HomeAssistant, webhook_id: str) -> str:
+    """Generate the full local URL for a webhook_id."""
+    return "{}{}".format(
+        get_url(hass, allow_cloud=False),
+        async_generate_path(webhook_id),
+    )
+
+
+@callback
 def _add_camera(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -208,7 +218,7 @@ def _add_camera(
         name=camera[KEY_NAME],
     )
     if entry.options.get(CONF_WEBHOOK_SET, DEFAULT_WEBHOOK_SET):
-        url = async_generate_url(hass, entry.data[CONF_WEBHOOK_ID])
+        url = async_generate_motioneye_webhook(hass, entry.data[CONF_WEBHOOK_ID])
 
         if _set_webhook(
             _build_url(
