@@ -21,7 +21,7 @@ start_irrigation:
           unit_of_measurement: "minutes"
 set_rain_delay:
   name: Set rain delay
-  description: Set how long automatic irrigation is turened off
+  description: Set how long automatic irrigation is turned off.
   fields:
     duration:
       name: Duration
