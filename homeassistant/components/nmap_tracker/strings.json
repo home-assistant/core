@@ -9,8 +9,8 @@
                 "home_interval": "[%key:component::nmap_tracker::config::step::user::data::home_interval%]",
                 "exclude": "[%key:component::nmap_tracker::config::step::user::data::exclude%]",
                 "scan_options": "[%key:component::nmap_tracker::config::step::user::data::scan_options%]",
-                "track_new_devices": "[%key:component::nmap_tracker::config::step::user::data::track_new_devices%]",
-                "interval_seconds": "[%key:component::nmap_tracker::config::step::user::data::interval_seconds%]"
+                "track_new_devices": "Track new devices",
+                "interval_seconds": "Scan interval"
               }
         }
     },
@@ -26,9 +26,7 @@
           "hosts": "Network addresses (comma seperated) to scan",
           "home_interval": "Minimum number of minutes between scans of active devices (preserve battery)",
           "exclude": "Network addresses (comma seperated) to exclude from scanning",
-          "scan_options": "Raw configurable scan options for Nmap",
-          "track_new_devices": "Track new devices",
-          "interval_seconds": "Scan interval"
+          "scan_options": "Raw configurable scan options for Nmap"
         }
       }
     },
