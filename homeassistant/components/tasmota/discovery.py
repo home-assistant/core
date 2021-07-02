@@ -42,7 +42,7 @@ def set_discovery_hash(hass, discovery_hash):
 
 async def async_start(
     hass: HomeAssistant, discovery_topic, config_entry, tasmota_mqtt, setup_device
-) -> bool:
+) -> None:
     """Start Tasmota device discovery."""
 
     async def _discover_entity(tasmota_entity_config, discovery_hash, platform):
@@ -171,7 +171,7 @@ async def async_start(
     hass.data[TASMOTA_DISCOVERY_INSTANCE] = tasmota_discovery
 
 
-async def async_stop(hass: HomeAssistant) -> bool:
+async def async_stop(hass: HomeAssistant) -> None:
     """Stop Tasmota device discovery."""
     hass.data.pop(ALREADY_DISCOVERED)
     tasmota_discovery = hass.data.pop(TASMOTA_DISCOVERY_INSTANCE)
