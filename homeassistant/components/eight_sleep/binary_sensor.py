@@ -1,7 +1,10 @@
 """Support for Eight Sleep binary sensors."""
 import logging
 
-from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_OCCUPANCY,
+    BinarySensorEntity,
+)
 
 from . import CONF_BINARY_SENSORS, DATA_EIGHT, NAME_MAP, EightSleepHeatEntity
 
@@ -32,9 +35,10 @@ class EightHeatSensor(EightSleepHeatEntity, BinarySensorEntity):
         """Initialize the sensor."""
         super().__init__(eight)
 
+        self._attr_name = f"{name} {self._mapped_name}"
+        self._attr_device_class = DEVICE_CLASS_OCCUPANCY
         self._sensor = sensor
         self._mapped_name = NAME_MAP.get(self._sensor, self._sensor)
-        self._name = f"{name} {self._mapped_name}"
         self._state = None
 
         self._side = self._sensor.split("_")[0]
@@ -47,11 +51,6 @@ class EightHeatSensor(EightSleepHeatEntity, BinarySensorEntity):
             self._side,
             self._userid,
         )
-
-    @property
-    def name(self):
-        """Return the name of the sensor, if any."""
-        return self._name
 
     @property
     def is_on(self):
