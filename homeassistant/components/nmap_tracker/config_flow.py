@@ -103,31 +103,35 @@ def normalize_input(user_input):
     return errors
 
 
-async def _async_build_schema_with_user_input(hass, user_input):
+async def _async_build_schema_with_user_input(hass, user_input, include_options):
     hosts = user_input.get(CONF_HOSTS, await hass.async_add_executor_job(get_network))
     exclude = user_input.get(
         CONF_EXCLUDE, await hass.async_add_executor_job(get_local_ip)
     )
-    return vol.Schema(
-        {
-            vol.Required(CONF_HOSTS, default=hosts): str,
-            vol.Required(
-                CONF_HOME_INTERVAL, default=user_input.get(CONF_HOME_INTERVAL, 0)
-            ): int,
-            vol.Optional(CONF_EXCLUDE, default=exclude): str,
-            vol.Optional(
-                CONF_OPTIONS, default=user_input.get(CONF_OPTIONS, DEFAULT_OPTIONS)
-            ): str,
-            vol.Optional(
-                CONF_TRACK_NEW,
-                default=user_input.get(CONF_TRACK_NEW, DEFAULT_TRACK_NEW_DEVICES),
-            ): bool,
-            vol.Optional(
-                CONF_SCAN_INTERVAL,
-                default=user_input.get(CONF_SCAN_INTERVAL, TRACKER_SCAN_INTERVAL),
-            ): vol.All(vol.Coerce(int), vol.Range(min=10, max=3600)),
-        }
-    )
+    schema = {
+        vol.Required(CONF_HOSTS, default=hosts): str,
+        vol.Required(
+            CONF_HOME_INTERVAL, default=user_input.get(CONF_HOME_INTERVAL, 0)
+        ): int,
+        vol.Optional(CONF_EXCLUDE, default=exclude): str,
+        vol.Optional(
+            CONF_OPTIONS, default=user_input.get(CONF_OPTIONS, DEFAULT_OPTIONS)
+        ): str,
+    }
+    if include_options:
+        schema.update(
+            {
+                vol.Optional(
+                    CONF_TRACK_NEW,
+                    default=user_input.get(CONF_TRACK_NEW, DEFAULT_TRACK_NEW_DEVICES),
+                ): bool,
+                vol.Optional(
+                    CONF_SCAN_INTERVAL,
+                    default=user_input.get(CONF_SCAN_INTERVAL, TRACKER_SCAN_INTERVAL),
+                ): vol.All(vol.Coerce(int), vol.Range(min=10, max=3600)),
+            }
+        )
+    return vol.Schema(schema)
 
 
 class OptionsFlowHandler(config_entries.OptionsFlow):
@@ -152,7 +156,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         return self.async_show_form(
             step_id="init",
             data_schema=await _async_build_schema_with_user_input(
-                self.hass, self.options
+                self.hass, self.options, True
             ),
             errors=errors,
         )
@@ -189,7 +193,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=await _async_build_schema_with_user_input(
-                self.hass, self.options
+                self.hass, self.options, False
             ),
             errors=errors,
         )

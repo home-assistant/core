@@ -55,8 +55,6 @@ async def test_form(hass: HomeAssistant, hosts: str) -> None:
         CONF_HOME_INTERVAL: 3,
         CONF_OPTIONS: DEFAULT_OPTIONS,
         CONF_EXCLUDE: "4.4.4.4",
-        CONF_SCAN_INTERVAL: 120,
-        CONF_TRACK_NEW: True,
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -93,8 +91,6 @@ async def test_form_range(hass: HomeAssistant) -> None:
         CONF_HOME_INTERVAL: 3,
         CONF_OPTIONS: DEFAULT_OPTIONS,
         CONF_EXCLUDE: "4.4.4.4",
-        CONF_SCAN_INTERVAL: 120,
-        CONF_TRACK_NEW: True,
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -205,6 +201,15 @@ async def test_options_flow(hass: HomeAssistant) -> None:
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "init"
+
+    assert result["data_schema"]({}) == {
+        CONF_EXCLUDE: "4.4.4.4",
+        CONF_HOME_INTERVAL: 3,
+        CONF_HOSTS: "192.168.1.0/24",
+        CONF_SCAN_INTERVAL: 120,
+        CONF_OPTIONS: "-F --host-timeout 5s",
+        CONF_TRACK_NEW: True,
+    }
 
     with patch(
         "homeassistant.components.nmap_tracker.async_setup_entry",
