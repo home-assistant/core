@@ -50,66 +50,136 @@ SUPPORTED_PUBLIC_SENSOR_TYPES = [
     "sum_rain_24",
 ]
 
+# sensor type: [name, netatmo name, unit of measurement, icon, device class, enable default]
 SENSOR_TYPES = {
-    "temperature": ["Temperature", TEMP_CELSIUS, None, DEVICE_CLASS_TEMPERATURE, True],
-    "temp_trend": ["Temperature trend", None, "mdi:trending-up", None, False],
-    "co2": ["CO2", CONCENTRATION_PARTS_PER_MILLION, None, DEVICE_CLASS_CO2, True],
-    "pressure": ["Pressure", PRESSURE_MBAR, None, DEVICE_CLASS_PRESSURE, True],
-    "pressure_trend": ["Pressure trend", None, "mdi:trending-up", None, False],
-    "noise": ["Noise", "dB", "mdi:volume-high", None, True],
-    "humidity": ["Humidity", PERCENTAGE, None, DEVICE_CLASS_HUMIDITY, True],
-    "rain": ["Rain", LENGTH_MILLIMETERS, "mdi:weather-rainy", None, True],
+    "temperature": [
+        "Temperature",
+        "Temperature",
+        TEMP_CELSIUS,
+        None,
+        DEVICE_CLASS_TEMPERATURE,
+        True,
+    ],
+    "temp_trend": [
+        "Temperature trend",
+        "temp_trend",
+        None,
+        "mdi:trending-up",
+        None,
+        False,
+    ],
+    "co2": [
+        "CO2",
+        "CO2",
+        CONCENTRATION_PARTS_PER_MILLION,
+        None,
+        DEVICE_CLASS_CO2,
+        True,
+    ],
+    "pressure": [
+        "Pressure",
+        "Pressure",
+        PRESSURE_MBAR,
+        None,
+        DEVICE_CLASS_PRESSURE,
+        True,
+    ],
+    "pressure_trend": [
+        "Pressure trend",
+        "pressure_trend",
+        None,
+        "mdi:trending-up",
+        None,
+        False,
+    ],
+    "noise": ["Noise", "Noise", "dB", "mdi:volume-high", None, True],
+    "humidity": ["Humidity", "Humidity", PERCENTAGE, None, DEVICE_CLASS_HUMIDITY, True],
+    "rain": ["Rain", "Rain", LENGTH_MILLIMETERS, "mdi:weather-rainy", None, True],
     "sum_rain_1": [
         "Rain last hour",
+        "sum_rain_1",
         LENGTH_MILLIMETERS,
         "mdi:weather-rainy",
         None,
         False,
     ],
-    "sum_rain_24": ["Rain today", LENGTH_MILLIMETERS, "mdi:weather-rainy", None, True],
+    "sum_rain_24": [
+        "Rain today",
+        "sum_rain_24",
+        LENGTH_MILLIMETERS,
+        "mdi:weather-rainy",
+        None,
+        True,
+    ],
     "battery_percent": [
         "Battery Percent",
+        "battery_percent",
         PERCENTAGE,
         None,
         DEVICE_CLASS_BATTERY,
         True,
     ],
-    "windangle": ["Direction", None, "mdi:compass-outline", None, True],
-    "windangle_value": ["Angle", DEGREE, "mdi:compass-outline", None, False],
+    "windangle": ["Direction", "WindAngle", None, "mdi:compass-outline", None, True],
+    "windangle_value": [
+        "Angle",
+        "WindAngle",
+        DEGREE,
+        "mdi:compass-outline",
+        None,
+        False,
+    ],
     "windstrength": [
         "Wind Strength",
+        "WindStrength",
         SPEED_KILOMETERS_PER_HOUR,
         "mdi:weather-windy",
         None,
         True,
     ],
-    "gustangle": ["Gust Direction", None, "mdi:compass-outline", None, False],
-    "gustangle_value": ["Gust Angle", DEGREE, "mdi:compass-outline", None, False],
+    "gustangle": [
+        "Gust Direction",
+        "GustAngle",
+        None,
+        "mdi:compass-outline",
+        None,
+        False,
+    ],
+    "gustangle_value": [
+        "Gust Angle",
+        "GustAngle",
+        DEGREE,
+        "mdi:compass-outline",
+        None,
+        False,
+    ],
     "guststrength": [
         "Gust Strength",
+        "GustStrength",
         SPEED_KILOMETERS_PER_HOUR,
         "mdi:weather-windy",
         None,
         False,
     ],
-    "reachable": ["Reachability", None, "mdi:signal", None, False],
-    "rf_status": ["Radio", None, "mdi:signal", None, False],
+    "reachable": ["Reachability", "reachable", None, "mdi:signal", None, False],
+    "rf_status": ["Radio", "rf_status", None, "mdi:signal", None, False],
     "rf_status_lvl": [
         "Radio Level",
+        "rf_status",
         SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         None,
         DEVICE_CLASS_SIGNAL_STRENGTH,
         False,
     ],
-    "wifi_status": ["Wifi", None, "mdi:wifi", None, False],
+    "wifi_status": ["Wifi", "wifi_status", None, "mdi:wifi", None, False],
     "wifi_status_lvl": [
         "Wifi Level",
+        "wifi_status",
         SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         None,
         DEVICE_CLASS_SIGNAL_STRENGTH,
         False,
     ],
-    "health_idx": ["Health", None, "mdi:cloud", None, True],
+    "health_idx": ["Health", "health_idx", None, "mdi:cloud", None, True],
 }
 
 MODULE_TYPE_OUTDOOR = "NAModule1"
@@ -287,12 +357,12 @@ class NetatmoSensor(NetatmoBase, SensorEntity):
         )
         self.type = sensor_type
         self._state = None
-        self._device_class = SENSOR_TYPES[self.type][3]
-        self._icon = SENSOR_TYPES[self.type][2]
-        self._unit_of_measurement = SENSOR_TYPES[self.type][1]
+        self._device_class = SENSOR_TYPES[self.type][4]
+        self._icon = SENSOR_TYPES[self.type][3]
+        self._unit_of_measurement = SENSOR_TYPES[self.type][2]
         self._model = device["type"]
         self._unique_id = f"{self._id}-{self.type}"
-        self._enabled_default = SENSOR_TYPES[self.type][4]
+        self._enabled_default = SENSOR_TYPES[self.type][5]
 
     @property
     def icon(self):
@@ -325,7 +395,7 @@ class NetatmoSensor(NetatmoBase, SensorEntity):
         return self._enabled_default
 
     @callback
-    def async_update_callback(self):  # noqa: C901
+    def async_update_callback(self):
         """Update the entity's state."""
         if self._data is None:
             if self._state is None:
@@ -350,52 +420,21 @@ class NetatmoSensor(NetatmoBase, SensorEntity):
             return
 
         try:
-            if self.type == "temperature":
-                self._state = round(data["Temperature"], 1)
-            elif self.type == "temp_trend":
-                self._state = data["temp_trend"]
-            elif self.type == "humidity":
-                self._state = data["Humidity"]
-            elif self.type == "rain":
-                self._state = data["Rain"]
-            elif self.type == "sum_rain_1":
-                self._state = round(data["sum_rain_1"], 1)
-            elif self.type == "sum_rain_24":
-                self._state = data["sum_rain_24"]
-            elif self.type == "noise":
-                self._state = data["Noise"]
-            elif self.type == "co2":
-                self._state = data["CO2"]
-            elif self.type == "pressure":
-                self._state = round(data["Pressure"], 1)
-            elif self.type == "pressure_trend":
-                self._state = data["pressure_trend"]
-            elif self.type == "battery_percent":
-                self._state = data["battery_percent"]
-            elif self.type == "windangle_value":
-                self._state = fix_angle(data["WindAngle"])
-            elif self.type == "windangle":
-                self._state = process_angle(fix_angle(data["WindAngle"]))
-            elif self.type == "windstrength":
-                self._state = data["WindStrength"]
-            elif self.type == "gustangle_value":
-                self._state = fix_angle(data["GustAngle"])
-            elif self.type == "gustangle":
-                self._state = process_angle(fix_angle(data["GustAngle"]))
-            elif self.type == "guststrength":
-                self._state = data["GustStrength"]
-            elif self.type == "reachable":
-                self._state = data["reachable"]
-            elif self.type == "rf_status_lvl":
-                self._state = data["rf_status"]
+            state = data[SENSOR_TYPES[self.type][1]]
+            if self.type in {"temperature", "pressure", "sum_rain_1"}:
+                self._state = round(state, 1)
+            elif self.type in {"windangle_value", "gustangle_value"}:
+                self._state = fix_angle(state)
+            elif self.type in {"windangle", "gustangle"}:
+                self._state = process_angle(fix_angle(state))
             elif self.type == "rf_status":
-                self._state = process_rf(data["rf_status"])
-            elif self.type == "wifi_status_lvl":
-                self._state = data["wifi_status"]
+                self._state = process_rf(state)
             elif self.type == "wifi_status":
-                self._state = process_wifi(data["wifi_status"])
+                self._state = process_wifi(state)
             elif self.type == "health_idx":
-                self._state = process_health(data["health_idx"])
+                self._state = process_health(state)
+            else:
+                self._state = state
         except KeyError:
             if self._state:
                 _LOGGER.debug("No %s data found for %s", self.type, self._device_name)
@@ -513,9 +552,9 @@ class NetatmoPublicSensor(NetatmoBase, SensorEntity):
         self._device_name = f"{self._area_name}"
         self._name = f"{MANUFACTURER} {self._device_name} {SENSOR_TYPES[self.type][0]}"
         self._state = None
-        self._device_class = SENSOR_TYPES[self.type][3]
-        self._icon = SENSOR_TYPES[self.type][2]
-        self._unit_of_measurement = SENSOR_TYPES[self.type][1]
+        self._device_class = SENSOR_TYPES[self.type][4]
+        self._icon = SENSOR_TYPES[self.type][3]
+        self._unit_of_measurement = SENSOR_TYPES[self.type][2]
         self._show_on_map = area.show_on_map
         self._unique_id = f"{self._device_name.replace(' ', '-')}-{self.type}"
         self._model = PUBLIC
