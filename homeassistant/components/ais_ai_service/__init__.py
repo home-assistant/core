@@ -7,6 +7,7 @@ import datetime
 import json
 import logging
 import re
+import subprocess
 import warnings
 
 from aiohttp.web import json_response
@@ -3277,6 +3278,22 @@ async def _publish_command_to_frame(hass, key, val, ip=None):
         camera = component.get_entity(val)
         stream_source = await camera.stream_source()
         requests_json = {"showCamera": {"streamUrl": stream_source, "haCamId": val}}
+    elif key == "WifiConnectionInfo":
+        requests_json = {key: val, "ip": ip}
+        # tunnel guard
+        access = hass.states.get("input_boolean.ais_remote_access").state
+        gate_id = ais_global.get_sercure_android_id_dom()
+        if access == "on":
+            # r = requests.get('http://httpbin.org/status/404', timeout=10)
+            r = requests.get("http://" + gate_id + ".paczka.pro", timeout=10)
+            if r.status_code == 404:
+                subprocess.Popen(
+                    "pm2 restart tunnel",
+                    shell=True,  # nosec
+                    stdout=None,
+                    stderr=None,
+                )
+
     else:
         requests_json = {key: val, "ip": ip}
     try:
