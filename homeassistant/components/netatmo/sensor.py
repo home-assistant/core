@@ -352,56 +352,30 @@ class NetatmoSensor(NetatmoBase, SensorEntity):
                 f"{module_info.get('module_name', device['type'])}"
             )
 
-        self._name = (
+        self._attr_name = (
             f"{MANUFACTURER} {self._device_name} {SENSOR_TYPES[sensor_type][0]}"
         )
         self.type = sensor_type
-        self._state = None
-        self._device_class = SENSOR_TYPES[self.type][4]
-        self._icon = SENSOR_TYPES[self.type][3]
-        self._unit_of_measurement = SENSOR_TYPES[self.type][2]
+        self._attr_device_class = SENSOR_TYPES[self.type][4]
+        self._attr_icon = SENSOR_TYPES[self.type][3]
+        self._attr_unit_of_measurement = SENSOR_TYPES[self.type][2]
         self._model = device["type"]
-        self._unique_id = f"{self._id}-{self.type}"
-        self._enabled_default = SENSOR_TYPES[self.type][5]
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return self._icon
-
-    @property
-    def device_class(self):
-        """Return the device class of the sensor."""
-        return self._device_class
-
-    @property
-    def state(self):
-        """Return the state of the device."""
-        return self._state
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of this entity, if any."""
-        return self._unit_of_measurement
+        self._attr_unique_id = f"{self._id}-{self.type}"
+        self._attr_entity_registry_enabled_default = SENSOR_TYPES[self.type][5]
 
     @property
     def available(self):
         """Return entity availability."""
-        return self._state is not None
-
-    @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Return if the entity should be enabled when first added to the entity registry."""
-        return self._enabled_default
+        return self._attr_state is not None
 
     @callback
     def async_update_callback(self):
         """Update the entity's state."""
         if self._data is None:
-            if self._state is None:
+            if self._attr_state is None:
                 return
             _LOGGER.warning("No data from update")
-            self._state = None
+            self._attr_state = None
             return
 
         data = self._data.get_last_data(station_id=self._station_id, exclude=3600).get(
@@ -409,36 +383,36 @@ class NetatmoSensor(NetatmoBase, SensorEntity):
         )
 
         if data is None:
-            if self._state:
+            if self._attr_state:
                 _LOGGER.debug(
                     "No data found for %s - %s (%s)",
                     self.name,
                     self._device_name,
                     self._id,
                 )
-            self._state = None
+            self._attr_state = None
             return
 
         try:
             state = data[SENSOR_TYPES[self.type][1]]
             if self.type in {"temperature", "pressure", "sum_rain_1"}:
-                self._state = round(state, 1)
+                self._attr_state = round(state, 1)
             elif self.type in {"windangle_value", "gustangle_value"}:
-                self._state = fix_angle(state)
+                self._attr_state = fix_angle(state)
             elif self.type in {"windangle", "gustangle"}:
-                self._state = process_angle(fix_angle(state))
+                self._attr_state = process_angle(fix_angle(state))
             elif self.type == "rf_status":
-                self._state = process_rf(state)
+                self._attr_state = process_rf(state)
             elif self.type == "wifi_status":
-                self._state = process_wifi(state)
+                self._attr_state = process_wifi(state)
             elif self.type == "health_idx":
-                self._state = process_health(state)
+                self._attr_state = process_health(state)
             else:
-                self._state = state
+                self._attr_state = state
         except KeyError:
-            if self._state:
+            if self._attr_state:
                 _LOGGER.debug("No %s data found for %s", self.type, self._device_name)
-            self._state = None
+            self._attr_state = None
             return
 
         self.async_write_ha_state()
@@ -550,50 +524,22 @@ class NetatmoPublicSensor(NetatmoBase, SensorEntity):
         self._area_name = area.area_name
         self._id = self._area_name
         self._device_name = f"{self._area_name}"
-        self._name = f"{MANUFACTURER} {self._device_name} {SENSOR_TYPES[self.type][0]}"
-        self._state = None
-        self._device_class = SENSOR_TYPES[self.type][4]
-        self._icon = SENSOR_TYPES[self.type][3]
-        self._unit_of_measurement = SENSOR_TYPES[self.type][2]
+        self._attr_name = (
+            f"{MANUFACTURER} {self._device_name} {SENSOR_TYPES[self.type][0]}"
+        )
+        self._attr_device_class = SENSOR_TYPES[self.type][4]
+        self._attr_icon = SENSOR_TYPES[self.type][3]
+        self._attr_unit_of_measurement = SENSOR_TYPES[self.type][2]
         self._show_on_map = area.show_on_map
-        self._unique_id = f"{self._device_name.replace(' ', '-')}-{self.type}"
+        self._attr_unique_id = f"{self._device_name.replace(' ', '-')}-{self.type}"
         self._model = PUBLIC
 
-    @property
-    def icon(self):
-        """Icon to use in the frontend."""
-        return self._icon
-
-    @property
-    def device_class(self):
-        """Return the device class of the sensor."""
-        return self._device_class
-
-    @property
-    def extra_state_attributes(self):
-        """Return the attributes of the device."""
-        attrs = {}
-
-        if self._show_on_map:
-            attrs[ATTR_LATITUDE] = (self.area.lat_ne + self.area.lat_sw) / 2
-            attrs[ATTR_LONGITUDE] = (self.area.lon_ne + self.area.lon_sw) / 2
-
-        return attrs
-
-    @property
-    def state(self):
-        """Return the state of the device."""
-        return self._state
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of this entity."""
-        return self._unit_of_measurement
-
-    @property
-    def available(self):
-        """Return True if entity is available."""
-        return self._state is not None
+        self._attr_extra_state_attributes.update(
+            {
+                ATTR_LATITUDE: (self.area.lat_ne + self.area.lat_sw) / 2,
+                ATTR_LONGITUDE: (self.area.lon_ne + self.area.lon_sw) / 2,
+            }
+        )
 
     @property
     def _data(self):
@@ -668,18 +614,19 @@ class NetatmoPublicSensor(NetatmoBase, SensorEntity):
             data = self._data.get_latest_gust_strengths()
 
         if data is None:
-            if self._state is None:
+            if self._attr_state is None:
                 return
             _LOGGER.debug(
                 "No station provides %s data in the area %s", self.type, self._area_name
             )
-            self._state = None
+            self._attr_state = None
             return
 
         if values := [x for x in data.values() if x is not None]:
             if self._mode == "avg":
-                self._state = round(sum(values) / len(values), 1)
+                self._attr_state = round(sum(values) / len(values), 1)
             elif self._mode == "max":
-                self._state = max(values)
+                self._attr_state = max(values)
 
+        self._attr_available = self._attr_state is not None
         self.async_write_ha_state()
