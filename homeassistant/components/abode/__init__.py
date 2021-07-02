@@ -339,17 +339,16 @@ class AbodeDevice(AbodeEntity):
 class AbodeAutomation(AbodeEntity):
     """Representation of an Abode automation."""
 
-    _attr_extra_state_attributes = {
-        ATTR_ATTRIBUTION: ATTRIBUTION,
-        "type": "CUE automation",
-    }
-
     def __init__(self, data, automation):
         """Initialize for Abode automation."""
         super().__init__(data)
         self._automation = automation
         self._attr_name = automation.name
         self._attr_unique_id = automation.automation_id
+        self._attr_extra_state_attributes = {
+            ATTR_ATTRIBUTION: ATTRIBUTION,
+            "type": "CUE automation",
+        }
 
     def update(self):
         """Update automation state."""
