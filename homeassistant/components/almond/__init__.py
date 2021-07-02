@@ -247,6 +247,11 @@ class AlmondOAuth(AbstractAlmondWebAuth):
 class AlmondAgent(conversation.AbstractConversationAgent):
     """Almond conversation agent."""
 
+    _attr_attribution = {
+        "name": "Powered by Almond",
+        "url": "https://almond.stanford.edu/",
+    }
+
     def __init__(
         self, hass: HomeAssistant, api: WebAlmondAPI, entry: ConfigEntry
     ) -> None:
@@ -254,11 +259,6 @@ class AlmondAgent(conversation.AbstractConversationAgent):
         self.hass = hass
         self.api = api
         self.entry = entry
-
-    @property
-    def attribution(self):
-        """Return the attribution."""
-        return {"name": "Powered by Almond", "url": "https://almond.stanford.edu/"}
 
     async def async_get_onboarding(self):
         """Get onboard url if not onboarded."""
