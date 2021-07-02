@@ -3284,21 +3284,24 @@ async def _publish_command_to_frame(hass, key, val, ip=None):
         access = hass.states.get("input_boolean.ais_remote_access").state
         gate_id = ais_global.get_sercure_android_id_dom()
         if access == "on":
-            # r = requests.get('http://httpbin.org/status/404', timeout=10)
-            r = requests.get("http://" + gate_id + ".paczka.pro", timeout=10)
-            if r.status_code == 404:
-                subprocess.Popen(
-                    "pm2 restart tunnel",
-                    shell=True,  # nosec
-                    stdout=None,
-                    stderr=None,
-                )
+            try:
+                # r = requests.get('http://httpbin.org/status/404', timeout=10)
+                r = requests.get("http://" + gate_id + ".paczka.pro", timeout=10)
+                if r.status_code == 404:
+                    subprocess.Popen(
+                        "pm2 restart tunnel",
+                        shell=True,  # nosec
+                        stdout=None,
+                        stderr=None,
+                    )
+            except Exception:
+                pass
 
     else:
         requests_json = {key: val, "ip": ip}
     try:
         requests.post(url + "/command", json=requests_json, timeout=2)
-    except Exception as e:
+    except Exception:
         pass
 
 
