@@ -36,8 +36,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class AbodeLight(AbodeDevice, LightEntity):
     """Representation of an Abode light."""
 
-    def __init__(self):
+    def __init__(self, data, device):
         """Initialize an Abode Light."""
+        super().__init__(data, device)
         if self._device.is_dimmable:
             self._attr_supported_features = SUPPORT_BRIGHTNESS
         elif self._device.is_dimmable and self._device.is_color_capable:

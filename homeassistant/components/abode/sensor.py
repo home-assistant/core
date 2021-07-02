@@ -41,9 +41,8 @@ class AbodeSensor(AbodeDevice, SensorEntity):
         """Initialize a sensor for an Abode device."""
         super().__init__(data, device)
         self._sensor_type = sensor_type
-        self._device_class = SENSOR_TYPES[self._sensor_type][1]
         self._attr_name = f"{device.name} {SENSOR_TYPES[sensor_type][0]}"
-        self._attr_device_class = device_class
+        self._attr_device_class = SENSOR_TYPES[self._sensor_type][1]
         self._attr_unique_id = f"{device.device_uuid}-{sensor_type}"
         if self._sensor_type == CONST.TEMP_STATUS_KEY:
             self._attr_unit_of_measurement = device.temp_unit
