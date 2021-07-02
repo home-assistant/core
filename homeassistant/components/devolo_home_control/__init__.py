@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from functools import partial
+from types import MappingProxyType
 from typing import Any
 
 from devolo_home_control_api.exceptions.gateway import GatewayOfflineError
@@ -28,7 +29,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the devolo account from a config entry."""
     hass.data.setdefault(DOMAIN, {})
 
-    mydevolo = configure_mydevolo(dict(entry.data))
+    mydevolo = configure_mydevolo(entry.data)
 
     credentials_valid = await hass.async_add_executor_job(mydevolo.credentials_valid)
 
@@ -91,7 +92,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload
 
 
-def configure_mydevolo(conf: dict[str, Any]) -> Mydevolo:
+def configure_mydevolo(conf: dict[str, Any] | MappingProxyType[str, Any]) -> Mydevolo:
     """Configure mydevolo."""
     mydevolo = Mydevolo()
     mydevolo.user = conf[CONF_USERNAME]
