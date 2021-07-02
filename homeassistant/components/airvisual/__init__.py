@@ -336,12 +336,7 @@ class AirVisualEntity(CoordinatorEntity):
     def __init__(self, coordinator):
         """Initialize."""
         super().__init__(coordinator)
-        self._attrs = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
-
-    @property
-    def extra_state_attributes(self):
-        """Return the device state attributes."""
-        return self._attrs
+        self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
 
     async def async_added_to_hass(self):
         """Register callbacks."""

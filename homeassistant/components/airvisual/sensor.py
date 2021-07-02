@@ -131,11 +131,14 @@ class AirVisualGeographySensor(AirVisualEntity, SensorEntity):
         self._config_entry = config_entry
         self._kind = kind
         self._locale = locale
-        self._name = name
         self._state = None
 
         self._attr_icon = icon
         self._attr_unit_of_measurement = unit
+        self._attr_name = f"{GEOGRAPHY_SENSOR_LOCALES[self._locale]} {name}"
+        self._attr_unique_id = (
+            f"{self._config_entry.unique_id}_{self._locale}_{self._kind}"
+        )
 
     @property
     def available(self):
@@ -148,19 +151,9 @@ class AirVisualGeographySensor(AirVisualEntity, SensorEntity):
             return False
 
     @property
-    def name(self):
-        """Return the name."""
-        return f"{GEOGRAPHY_SENSOR_LOCALES[self._locale]} {self._name}"
-
-    @property
     def state(self):
         """Return the state."""
         return self._state
-
-    @property
-    def unique_id(self):
-        """Return a unique, Home Assistant friendly identifier for this entity."""
-        return f"{self._config_entry.unique_id}_{self._locale}_{self._kind}"
 
     @callback
     def update_from_latest_data(self):
@@ -225,11 +218,13 @@ class AirVisualNodeProSensor(AirVisualEntity, SensorEntity):
         super().__init__(coordinator)
 
         self._kind = kind
-        self._name = name
         self._state = None
 
         self._attr_device_class = device_class
         self._attr_unit_of_measurement = unit
+        node_name = self.coordinator.data["settings"]["node_name"]
+        self._attr_name = f"{node_name} Node/Pro: {name}"
+        self._attr_unique_id = f"{self.coordinator.data['serial_number']}_{self._kind}"
 
     @property
     def device_info(self):
@@ -246,20 +241,9 @@ class AirVisualNodeProSensor(AirVisualEntity, SensorEntity):
         }
 
     @property
-    def name(self):
-        """Return the name."""
-        node_name = self.coordinator.data["settings"]["node_name"]
-        return f"{node_name} Node/Pro: {self._name}"
-
-    @property
     def state(self):
         """Return the state."""
         return self._state
-
-    @property
-    def unique_id(self):
-        """Return a unique, Home Assistant friendly identifier for this entity."""
-        return f"{self.coordinator.data['serial_number']}_{self._kind}"
 
     @callback
     def update_from_latest_data(self):

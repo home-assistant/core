@@ -34,6 +34,9 @@ class AirVisualNodeProSensor(AirVisualEntity, AirQualityEntity):
         super().__init__(airvisual)
 
         self._attr_icon = "mdi:chemical-weapon"
+        node_name = self.coordinator.data["settings"]["node_name"]
+        self._attr_name = f"{node_name} Node/Pro: Air Quality"
+        self._attr_unique_id = self.coordinator.data["serial_number"]
 
     @property
     def air_quality_index(self):
@@ -67,12 +70,6 @@ class AirVisualNodeProSensor(AirVisualEntity, AirQualityEntity):
         }
 
     @property
-    def name(self):
-        """Return the name."""
-        node_name = self.coordinator.data["settings"]["node_name"]
-        return f"{node_name} Node/Pro: Air Quality"
-
-    @property
     def particulate_matter_2_5(self):
         """Return the particulate matter 2.5 level."""
         return self.coordinator.data["measurements"].get("pm2_5")
@@ -86,11 +83,6 @@ class AirVisualNodeProSensor(AirVisualEntity, AirQualityEntity):
     def particulate_matter_0_1(self):
         """Return the particulate matter 0.1 level."""
         return self.coordinator.data["measurements"].get("pm0_1")
-
-    @property
-    def unique_id(self):
-        """Return a unique, Home Assistant friendly identifier for this entity."""
-        return self.coordinator.data["serial_number"]
 
     @callback
     def update_from_latest_data(self):
