@@ -21,7 +21,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the Goal Zero Yeti sensor."""
     name = entry.data[CONF_NAME]
     goalzero_data = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities(
+    sensors = [
         YetiSensor(
             goalzero_data[DATA_KEY_API],
             goalzero_data[DATA_KEY_COORDINATOR],
@@ -30,7 +30,8 @@ async def async_setup_entry(hass, entry, async_add_entities):
             entry.entry_id,
         )
         for sensor_name in SENSOR_DICT
-    )
+    ]
+    async_add_entities(sensors, True)
 
 
 class YetiSensor(YetiEntity):
