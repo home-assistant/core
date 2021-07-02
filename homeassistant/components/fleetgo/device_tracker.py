@@ -80,7 +80,7 @@ class FleetGoDeviceScanner:
                     if device.active or device.current_address is None:
                         try:
                             device.get_map_details()
-                        except:
+                        except AttributeError:
                             _LOGGER.error("Failed to get map details for device")
 
                     self._see(
