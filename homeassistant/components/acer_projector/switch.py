@@ -67,6 +67,13 @@ def setup_platform(
 class AcerSwitch(SwitchEntity):
     """Represents an Acer Projector as a switch."""
 
+    _attr_icon = ICON
+    _attr_extra_state_attributes = {
+        LAMP_HOURS: STATE_UNKNOWN,
+        INPUT_SOURCE: STATE_UNKNOWN,
+        ECO_MODE: STATE_UNKNOWN,
+    }
+
     def __init__(
         self,
         serial_port: str,
@@ -79,14 +86,9 @@ class AcerSwitch(SwitchEntity):
             port=serial_port, timeout=timeout, write_timeout=write_timeout
         )
         self._serial_port = serial_port
-        self._name = name
+        self._attr_name = name
         self._state = False
         self._available = False
-        self._attributes = {
-            LAMP_HOURS: STATE_UNKNOWN,
-            INPUT_SOURCE: STATE_UNKNOWN,
-            ECO_MODE: STATE_UNKNOWN,
-        }
 
     def _write_read(self, msg: str) -> str:
         """Write to the projector and read the return."""
@@ -122,24 +124,9 @@ class AcerSwitch(SwitchEntity):
         return self._available
 
     @property
-    def name(self) -> str:
-        """Return name of the projector."""
-        return self._name
-
-    @property
-    def icon(self) -> str:
-        """Return the icon."""
-        return ICON
-
-    @property
     def is_on(self) -> bool:
         """Return if the projector is turned on."""
         return self._state
-
-    @property
-    def extra_state_attributes(self) -> dict[str, str]:
-        """Return state attributes."""
-        return self._attributes
 
     def update(self) -> None:
         """Get the latest state from the projector."""
@@ -153,11 +140,11 @@ class AcerSwitch(SwitchEntity):
         else:
             self._available = False
 
-        for key in self._attributes:
+        for key in self._attr_extra_state_attributes:
             msg = CMD_DICT.get(key)
             if msg:
                 awns = self._write_read_format(msg)
-                self._attributes[key] = awns
+                self._attr_extra_state_attributes[key] = awns
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the projector on."""
