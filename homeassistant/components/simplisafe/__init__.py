@@ -410,25 +410,25 @@ class SimpliSafeEntity(CoordinatorEntity):
     def __init__(self, simplisafe, system, name, *, serial=None):
         """Initialize."""
         super().__init__(simplisafe.coordinator)
-        self._name = name
-        self._online = True
-        self._simplisafe = simplisafe
-        self._system = system
 
         if serial:
             self._serial = serial
         else:
             self._serial = system.serial
 
-        self._attrs = {ATTR_SYSTEM_ID: system.system_id}
-
-        self._device_info = {
+        self._attr_extra_state_attributes = {ATTR_SYSTEM_ID: system.system_id}
+        self._attr_device_info = {
             "identifiers": {(DOMAIN, system.system_id)},
             "manufacturer": "SimpliSafe",
             "model": system.version,
             "name": name,
             "via_device": (DOMAIN, system.serial),
         }
+        self._attr_name = f"{system.address} {name}"
+        self._attr_unique_id = self._serial
+        self._online = True
+        self._simplisafe = simplisafe
+        self._system = system
 
     @property
     def available(self):
@@ -438,27 +438,11 @@ class SimpliSafeEntity(CoordinatorEntity):
         # the entity as available if:
         #   1. We can verify that the system is online (assuming True if we can't)
         #   2. We can verify that the entity is online
-        return not (self._system.version == 3 and self._system.offline) and self._online
-
-    @property
-    def device_info(self):
-        """Return device registry information for this entity."""
-        return self._device_info
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
-        return self._attrs
-
-    @property
-    def name(self):
-        """Return the name of the entity."""
-        return f"{self._system.address} {self._name}"
-
-    @property
-    def unique_id(self):
-        """Return the unique ID of the entity."""
-        return self._serial
+        return (
+            super().available
+            and self._online
+            and not (self._system.version == 3 and self._system.offline)
+        )
 
     @callback
     def _handle_coordinator_update(self):
@@ -483,15 +467,12 @@ class SimpliSafeBaseSensor(SimpliSafeEntity):
     def __init__(self, simplisafe, system, sensor):
         """Initialize."""
         super().__init__(simplisafe, system, sensor.name, serial=sensor.serial)
-        self._device_info["identifiers"] = {(DOMAIN, sensor.serial)}
-        self._device_info["model"] = sensor.type.name
-        self._device_info["name"] = sensor.name
-        self._sensor = sensor
-        self._sensor_type_human_name = " ".join(
-            [w.title() for w in self._sensor.type.name.split("_")]
-        )
 
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return f"{self._system.address} {self._name} {self._sensor_type_human_name}"
+        self._attr_device_info["identifiers"] = {(DOMAIN, sensor.serial)}
+        self._attr_device_info["model"] = sensor.type.name
+        self._attr_device_info["name"] = sensor.name
+
+        human_friendly_name = " ".join([w.title() for w in sensor.type.name.split("_")])
+        self._attr_name = f"{super().name} {human_friendly_name}"
+
+        self._sensor = sensor
