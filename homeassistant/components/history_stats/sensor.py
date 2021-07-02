@@ -14,7 +14,10 @@ from homeassistant.const import (
     CONF_TYPE,
     EVENT_HOMEASSISTANT_START,
     PERCENTAGE,
+    TIME_DAYS,
     TIME_HOURS,
+    TIME_MINUTES,
+    TIME_SECONDS,
 )
 from homeassistant.core import CoreState, callback
 from homeassistant.exceptions import TemplateError
@@ -33,6 +36,7 @@ CONF_DURATION = "duration"
 CONF_PERIOD_KEYS = [CONF_START, CONF_END, CONF_DURATION]
 
 CONF_PRECISION = "precision"
+CONF_TIME_UNIT = "time_unit"
 
 CONF_TYPE_TIME = "time"
 CONF_TYPE_RATIO = "ratio"
@@ -42,7 +46,7 @@ CONF_TYPE_KEYS = [CONF_TYPE_TIME, CONF_TYPE_RATIO, CONF_TYPE_COUNT]
 DEFAULT_NAME = "unnamed statistics"
 DEFAULT_PRECISION = 2
 UNITS = {
-    CONF_TYPE_TIME: TIME_HOURS,
+    CONF_TYPE_TIME: [TIME_DAYS, TIME_HOURS, TIME_MINUTES, TIME_SECONDS],
     CONF_TYPE_RATIO: PERCENTAGE,
     CONF_TYPE_COUNT: "",
 }
@@ -73,6 +77,9 @@ PLATFORM_SCHEMA = vol.All(
             vol.Optional(CONF_PRECISION, default=DEFAULT_PRECISION): vol.All(
                 vol.Coerce(int), vol.Range(min=0)
             ),
+            vol.Optional(CONF_TIME_UNIT, default=TIME_HOURS): vol.In(
+                UNITS[CONF_TYPE_TIME]
+            ),
         }
     ),
     exactly_two_period_keys,
@@ -92,6 +99,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     sensor_type = config.get(CONF_TYPE)
     name = config.get(CONF_NAME)
     precision = config.get(CONF_PRECISION)
+    time_unit = config.get(CONF_TIME_UNIT)
 
     for template in [start, end]:
         if template is not None:
@@ -109,6 +117,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 sensor_type,
                 name,
                 precision,
+                time_unit,
             )
         ]
     )
@@ -130,6 +139,7 @@ class HistoryStatsSensor(SensorEntity):
         sensor_type,
         name,
         precision,
+        time_unit,
     ):
         """Initialize the HistoryStats sensor."""
         self._entity_id = entity_id
@@ -140,7 +150,10 @@ class HistoryStatsSensor(SensorEntity):
         self._type = sensor_type
         self._name = name
         self._precision = precision
-        self._unit_of_measurement = UNITS[sensor_type]
+        self._time_unit = time_unit
+        self._unit_of_measurement = (
+            UNITS[sensor_type] if not sensor_type == CONF_TYPE_TIME else time_unit
+        )
 
         self._period = (datetime.datetime.now(), datetime.datetime.now())
         self.value = None
@@ -184,7 +197,12 @@ class HistoryStatsSensor(SensorEntity):
             return None
 
         if self._type == CONF_TYPE_TIME:
-            return round(self.value, self._precision)
+            return round(
+                self.value
+                if self._time_unit == TIME_HOURS
+                else HistoryStatsHelper.convert_hours(self.value, unit=self._time_unit),
+                self._precision,
+            )
 
         if self._type == CONF_TYPE_RATIO:
             return round(
@@ -382,3 +400,16 @@ class HistoryStatsHelper:
             _LOGGER.warning(ex)
             return
         _LOGGER.error("Error parsing template for field %s", field, exc_info=ex)
+
+    @staticmethod
+    def convert_hours(hrs, unit=TIME_SECONDS):
+        """Convert hours to other time units."""
+        seconds = datetime.timedelta(hours=hrs).total_seconds()
+        # Return total days or minutes or seconds (default)
+        return (
+            seconds / 86400
+            if unit == TIME_DAYS
+            else seconds / 60
+            if unit == TIME_MINUTES
+            else seconds
+        )
