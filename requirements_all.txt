@@ -185,7 +185,7 @@ aiohttp_cors==0.7.0
 aiohue==2.5.1
 
 # homeassistant.components.imap
-aioimaplib==0.7.15
+aioimaplib==0.9.0
 
 # homeassistant.components.apache_kafka
 aiokafka==0.6.0
