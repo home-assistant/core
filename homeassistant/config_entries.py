@@ -826,6 +826,7 @@ class ConfigEntries:
             if (
                 context
                 and context["source"] == SOURCE_REAUTH
+                and "entry_id" in context
                 and context["entry_id"] == entry_id
                 and "flow_id" in progress_flow
             ):
