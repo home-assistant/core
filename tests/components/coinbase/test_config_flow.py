@@ -19,7 +19,14 @@ from .common import (
     mock_get_exchange_rates,
     mocked_get_accounts,
 )
-from .const import BAD_CURRENCY, BAD_EXCHANGE_RATE, GOOD_CURRENCY, GOOD_EXCHNAGE_RATE
+from .const import (
+    BAD_CURRENCY,
+    BAD_EXCHANGE_RATE,
+    GOOD_CURRENCY,
+    GOOD_CURRENCY_2,
+    GOOD_EXCHNAGE_RATE,
+    GOOD_EXCHNAGE_RATE_2,
+)
 
 from tests.common import MockConfigEntry
 
@@ -139,6 +146,18 @@ async def test_form_catch_all_exception(hass):
 
 async def test_option_good_account_currency(hass):
     """Test we handle a good wallet currency option."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        entry_id="abcde12345",
+        title="Test User",
+        data={CONF_API_KEY: "123456", CONF_API_TOKEN: "AbCDeF"},
+        options={
+            CONF_CURRENCIES: [GOOD_CURRENCY_2],
+            CONF_EXCHANGE_RATES: [],
+        },
+    )
+    config_entry.add_to_hass(hass)
+
     with patch(
         "coinbase.wallet.client.Client.get_current_user",
         return_value=mock_get_current_user(),
@@ -148,7 +167,8 @@ async def test_option_good_account_currency(hass):
         "coinbase.wallet.client.Client.get_exchange_rates",
         return_value=mock_get_exchange_rates(),
     ):
-        config_entry = await init_mock_coinbase(hass)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
         await hass.async_block_till_done()
         result2 = await hass.config_entries.options.async_configure(
@@ -191,12 +211,12 @@ async def test_option_good_exchange_rate(hass):
     """Test we handle a good exchange rate option."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id="abcde12345",
+        entry_id="abcde12345",
         title="Test User",
         data={CONF_API_KEY: "123456", CONF_API_TOKEN: "AbCDeF"},
         options={
             CONF_CURRENCIES: [],
-            CONF_EXCHANGE_RATES: [],
+            CONF_EXCHANGE_RATES: [GOOD_EXCHNAGE_RATE_2],
         },
     )
     config_entry.add_to_hass(hass)
