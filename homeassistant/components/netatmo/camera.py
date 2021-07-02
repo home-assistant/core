@@ -125,9 +125,9 @@ class NetatmoCamera(NetatmoBase, Camera):
         self._id = camera_id
         self._home_id = home_id
         self._device_name = self._data.get_camera(camera_id=camera_id).get("name")
-        self._name = f"{MANUFACTURER} {self._device_name}"
+        self._attr_name = f"{MANUFACTURER} {self._device_name}"
         self._model = camera_type
-        self._unique_id = f"{self._id}-{self._model}"
+        self._attr_unique_id = f"{self._id}-{self._model}"
         self._quality = quality
         self._vpnurl = None
         self._localurl = None
@@ -172,6 +172,9 @@ class NetatmoCamera(NetatmoBase, Camera):
                 self._status = "on"
             elif data[WEBHOOK_PUSH_TYPE] == WEBHOOK_LIGHT_MODE:
                 self._light_state = data["sub_type"]
+                self._attr_extra_state_attributes.update(
+                    {"light_state": self._light_state}
+                )
 
             self.async_write_ha_state()
             return
@@ -189,20 +192,6 @@ class NetatmoCamera(NetatmoBase, Camera):
         ) as err:
             _LOGGER.debug("Could not fetch live camera image (%s)", err)
         return None
-
-    @property
-    def extra_state_attributes(self):
-        """Return the Netatmo-specific camera state attributes."""
-        return {
-            "id": self._id,
-            "status": self._status,
-            "sd_status": self._sd_status,
-            "alim_status": self._alim_status,
-            "is_local": self._is_local,
-            "vpn_url": self._vpnurl,
-            "local_url": self._localurl,
-            "light_state": self._light_state,
-        }
 
     @property
     def available(self):
@@ -273,6 +262,19 @@ class NetatmoCamera(NetatmoBase, Camera):
                 self._data.outdoor_events.get(self._id, {})
             )
 
+        self._attr_extra_state_attributes.update(
+            {
+                "id": self._id,
+                "status": self._status,
+                "sd_status": self._sd_status,
+                "alim_status": self._alim_status,
+                "is_local": self._is_local,
+                "vpn_url": self._vpnurl,
+                "local_url": self._localurl,
+                "light_state": self._light_state,
+            }
+        )
+
     def process_events(self, events):
         """Add meta data to events."""
         for event in events.values():
@@ -328,7 +330,7 @@ class NetatmoCamera(NetatmoBase, Camera):
     async def _service_set_camera_light(self, **kwargs):
         """Service to set light mode."""
         mode = kwargs.get(ATTR_CAMERA_LIGHT_MODE)
-        _LOGGER.debug("Turn %s camera light for '%s'", mode, self._name)
+        _LOGGER.debug("Turn %s camera light for '%s'", mode, self._attr_name)
         await self._data.async_set_state(
             home_id=self._home_id,
             camera_id=self._id,
