@@ -472,6 +472,9 @@ coronavirus==1.1.1
 # homeassistant.components.datadog
 datadog==0.15.0
 
+# homeassistant.components.nea
+datagovsg==1.0.3
+
 # homeassistant.components.metoffice
 datapoint==0.9.8
 

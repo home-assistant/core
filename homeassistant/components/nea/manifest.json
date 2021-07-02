@@ -1,0 +1,8 @@
+{
+  "domain": "nea",
+  "name": "National Environment Agency",
+  "documentation": "https://www.home-assistant.io/integrations/nea",
+  "requirements": ["datagovsg==1.0.3"],
+  "codeowners": ["@loongyh"],
+  "iot_class": "cloud_polling"
+}
