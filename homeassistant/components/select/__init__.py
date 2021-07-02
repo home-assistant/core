@@ -45,9 +45,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_select_option(
-    entity: SelectEntity, service_call: ServiceCall
-) -> None:
+async def async_select_option(entity: SelectEntity, service_call: ServiceCall) -> None:
     """Service call wrapper to set a new value."""
     option = service_call.data[ATTR_OPTION]
     if option not in entity.options:
