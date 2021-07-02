@@ -35,8 +35,6 @@ class EightHeatSensor(EightSleepHeatEntity, BinarySensorEntity):
         """Initialize the sensor."""
         super().__init__(eight)
 
-        self._attr_name = f"{name} {self._mapped_name}"
-        self._attr_device_class = DEVICE_CLASS_OCCUPANCY
         self._sensor = sensor
         self._mapped_name = NAME_MAP.get(self._sensor, self._sensor)
         self._state = None
@@ -44,6 +42,9 @@ class EightHeatSensor(EightSleepHeatEntity, BinarySensorEntity):
         self._side = self._sensor.split("_")[0]
         self._userid = self._eight.fetch_userid(self._side)
         self._usrobj = self._eight.users[self._userid]
+
+        self._attr_name = f"{name} {self._mapped_name}"
+        self._attr_device_class = DEVICE_CLASS_OCCUPANCY
 
         _LOGGER.debug(
             "Presence Sensor: %s, Side: %s, User: %s",
