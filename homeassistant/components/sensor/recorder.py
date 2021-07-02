@@ -224,7 +224,11 @@ def compile_statistics(
         result[entity_id] = {}
 
         # Set meta data
-        result[entity_id]["meta"] = {"unit_of_measurement": unit}
+        result[entity_id]["meta"] = {
+            "unit_of_measurement": unit,
+            "has_mean": "mean" in wanted_statistics,
+            "has_sum": "sum" in wanted_statistics,
+        }
 
         # Make calculations
         stat: dict = {}
