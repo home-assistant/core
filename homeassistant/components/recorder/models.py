@@ -225,7 +225,9 @@ class Statistics(Base):  # type: ignore
     id = Column(Integer, primary_key=True)
     created = Column(DATETIME_TYPE, default=dt_util.utcnow)
     metadata_id = Column(
-        Integer, ForeignKey(f"{TABLE_STATISTICS_META}.id", ondelete="CASCADE"), index=True
+        Integer,
+        ForeignKey(f"{TABLE_STATISTICS_META}.id", ondelete="CASCADE"),
+        index=True,
     )
     start = Column(DATETIME_TYPE, index=True)
     mean = Column(Float())
