@@ -36,7 +36,7 @@ import homeassistant.util.dt as dt_util
 # pylint: disable=invalid-name
 Base = declarative_base()
 
-SCHEMA_VERSION = 17
+SCHEMA_VERSION = 18
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -224,8 +224,11 @@ class Statistics(Base):  # type: ignore
     __tablename__ = TABLE_STATISTICS
     id = Column(Integer, primary_key=True)
     created = Column(DATETIME_TYPE, default=dt_util.utcnow)
-    source = Column(String(32))
-    statistic_id = Column(String(255))
+    metadata_id = Column(
+        Integer,
+        ForeignKey(f"{TABLE_STATISTICS_META}.id", ondelete="CASCADE"),
+        index=True,
+    )
     start = Column(DATETIME_TYPE, index=True)
     mean = Column(Float())
     min = Column(Float())
@@ -236,15 +239,14 @@ class Statistics(Base):  # type: ignore
 
     __table_args__ = (
         # Used for fetching statistics for a certain entity at a specific time
-        Index("ix_statistics_statistic_id_start", "statistic_id", "start"),
+        Index("ix_statistics_statistic_id_start", "metadata_id", "start"),
     )
 
     @staticmethod
-    def from_stats(source, statistic_id, start, stats):
+    def from_stats(metadata_id, start, stats):
         """Create object from a statistics."""
         return Statistics(
-            source=source,
-            statistic_id=statistic_id,
+            metadata_id=metadata_id,
             start=start,
             **stats,
         )
@@ -258,17 +260,22 @@ class StatisticsMeta(Base):  # type: ignore
         "mysql_collate": "utf8mb4_unicode_ci",
     }
     __tablename__ = TABLE_STATISTICS_META
-    statistic_id = Column(String(255), primary_key=True)
+    id = Column(Integer, primary_key=True)
+    statistic_id = Column(String(255), index=True)
     source = Column(String(32))
     unit_of_measurement = Column(String(255))
+    has_mean = Column(Boolean)
+    has_sum = Column(Boolean)
 
     @staticmethod
-    def from_meta(source, statistic_id, unit_of_measurement):
+    def from_meta(source, statistic_id, unit_of_measurement, has_mean, has_sum):
         """Create object from meta data."""
         return StatisticsMeta(
             source=source,
             statistic_id=statistic_id,
             unit_of_measurement=unit_of_measurement,
+            has_mean=has_mean,
+            has_sum=has_sum,
         )
 
 
