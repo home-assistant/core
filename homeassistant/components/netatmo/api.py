@@ -17,7 +17,7 @@ class AsyncConfigEntryNetatmoAuth(pyatmo.auth.AbstractAsyncAuth):
         super().__init__(websession)
         self._oauth_session = oauth_session
 
-    async def async_get_access_token(self):
+    async def async_get_access_token(self) -> str:
         """Return a valid access token for Netatmo API."""
         if not self._oauth_session.valid_token:
             await self._oauth_session.async_ensure_token_valid()

@@ -484,8 +484,7 @@ def process_health(health: int) -> str:
         return "Fair"
     if health == 3:
         return "Poor"
-    if health == 4:
-        return "Unhealthy"
+    return "Unhealthy"
 
 
 def process_rf(strength: int) -> str:
@@ -549,12 +548,13 @@ class NetatmoPublicSensor(NetatmoBase, SensorEntity):
         self._attr_unique_id = f"{self._device_name.replace(' ', '-')}-{self.type}"
         self._model = PUBLIC
 
-        self._attr_extra_state_attributes.update(
-            {
-                ATTR_LATITUDE: (self.area.lat_ne + self.area.lat_sw) / 2,
-                ATTR_LONGITUDE: (self.area.lon_ne + self.area.lon_sw) / 2,
-            }
-        )
+        if self._show_on_map:
+            self._attr_extra_state_attributes.update(
+                {
+                    ATTR_LATITUDE: (self.area.lat_ne + self.area.lat_sw) / 2,
+                    ATTR_LONGITUDE: (self.area.lon_ne + self.area.lon_sw) / 2,
+                }
+            )
 
     @property
     def _data(self):
