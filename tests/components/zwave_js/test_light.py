@@ -173,6 +173,7 @@ async def test_light(hass, client, bulb_6_multi_color, integration):
         },
     }
     assert args["value"] == 50
+    assert args["options"]["transitionDuration"] == "default"
 
     client.async_send_command.reset_mock()
 
