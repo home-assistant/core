@@ -1,15 +1,27 @@
 """Support for Goal Zero Yeti Sensors."""
-from homeassistant.const import CONF_NAME
+from homeassistant.components.sensor import ATTR_LAST_RESET, ATTR_STATE_CLASS
+from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
+    ATTR_NAME,
+    ATTR_UNIT_OF_MEASUREMENT,
+    CONF_NAME,
+)
 
 from . import YetiEntity
-from .const import DATA_KEY_API, DATA_KEY_COORDINATOR, DOMAIN, SENSOR_DICT
+from .const import (
+    ATTR_DEFAULT_ENABLED,
+    DATA_KEY_API,
+    DATA_KEY_COORDINATOR,
+    DOMAIN,
+    SENSOR_DICT,
+)
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the Goal Zero Yeti sensor."""
     name = entry.data[CONF_NAME]
     goalzero_data = hass.data[DOMAIN][entry.entry_id]
-    sensors = [
+    async_add_entities(
         YetiSensor(
             goalzero_data[DATA_KEY_API],
             goalzero_data[DATA_KEY_COORDINATOR],
@@ -18,8 +30,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
             entry.entry_id,
         )
         for sensor_name in SENSOR_DICT
-    ]
-    async_add_entities(sensors)
+    )
 
 
 class YetiSensor(YetiEntity):
@@ -31,32 +42,17 @@ class YetiSensor(YetiEntity):
 
         self._condition = sensor_name
 
-        variable_info = SENSOR_DICT[sensor_name]
-        self._condition_name = variable_info[0]
-        self._device_class = variable_info[1]
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return f"{self._name} {self._condition_name}"
-
-    @property
-    def unique_id(self):
-        """Return the unique id of the sensor."""
-        return f"{self._server_unique_id}/{self._condition}"
+        sensor = SENSOR_DICT[sensor_name]
+        self._attr_name = f"{name} {sensor.get(ATTR_NAME)}"
+        self._attr_unique_id = f"{self._server_unique_id}/{sensor_name}"
+        self._attr_unit_of_measurement = sensor.get(ATTR_UNIT_OF_MEASUREMENT)
+        self._attr_entity_registry_enabled_default = sensor.get(ATTR_DEFAULT_ENABLED)
+        self._device_class = sensor.get(ATTR_DEVICE_CLASS)
+        self._attr_last_reset = sensor.get(ATTR_LAST_RESET)
+        self._attr_state_class = sensor.get(ATTR_STATE_CLASS)
 
     @property
     def state(self):
         """Return the state."""
         if self.api.data:
             return self.api.data[self._condition]
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        return SENSOR_DICT[self._condition][2]
-
-    @property
-    def entity_registry_enabled_default(self):
-        """Return if the entity should be enabled when first added to the entity registry."""
-        return SENSOR_DICT[self._condition][3]
