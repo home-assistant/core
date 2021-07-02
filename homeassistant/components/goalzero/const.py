@@ -1,5 +1,5 @@
 """Constants for the Goal Zero Yeti integration."""
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_BATTERY_CHARGING,
@@ -7,7 +7,6 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_POWER,
 )
 from homeassistant.components.sensor import (
-    ATTR_LAST_RESET,
     ATTR_STATE_CLASS,
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_CURRENT,
@@ -61,7 +60,6 @@ SENSOR_DICT = {
         ATTR_NAME: "Watts In",
         ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER,
         ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
-        ATTR_LAST_RESET: datetime.fromtimestamp(0),
         ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
         ATTR_DEFAULT_ENABLED: True,
     },
@@ -69,7 +67,6 @@ SENSOR_DICT = {
         ATTR_NAME: "Amps In",
         ATTR_DEVICE_CLASS: DEVICE_CLASS_CURRENT,
         ATTR_UNIT_OF_MEASUREMENT: ELECTRICAL_CURRENT_AMPERE,
-        ATTR_LAST_RESET: datetime.fromtimestamp(0),
         ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
         ATTR_DEFAULT_ENABLED: False,
     },
@@ -77,7 +74,6 @@ SENSOR_DICT = {
         ATTR_NAME: "Watts Out",
         ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER,
         ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
-        ATTR_LAST_RESET: datetime.fromtimestamp(0),
         ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
         ATTR_DEFAULT_ENABLED: True,
     },
@@ -85,7 +81,6 @@ SENSOR_DICT = {
         ATTR_NAME: "Amps Out",
         ATTR_DEVICE_CLASS: DEVICE_CLASS_CURRENT,
         ATTR_UNIT_OF_MEASUREMENT: ELECTRICAL_CURRENT_AMPERE,
-        ATTR_LAST_RESET: datetime.fromtimestamp(0),
         ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
         ATTR_DEFAULT_ENABLED: False,
     },
@@ -93,7 +88,6 @@ SENSOR_DICT = {
         ATTR_NAME: "WH Out",
         ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
         ATTR_UNIT_OF_MEASUREMENT: ENERGY_WATT_HOUR,
-        ATTR_LAST_RESET: datetime.fromtimestamp(0),
         ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
         ATTR_DEFAULT_ENABLED: False,
     },
@@ -101,7 +95,6 @@ SENSOR_DICT = {
         ATTR_NAME: "WH Stored",
         ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
         ATTR_UNIT_OF_MEASUREMENT: ENERGY_WATT_HOUR,
-        ATTR_LAST_RESET: datetime.fromtimestamp(0),
         ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
         ATTR_DEFAULT_ENABLED: True,
     },
