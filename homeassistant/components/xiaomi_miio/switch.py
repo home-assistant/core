@@ -41,6 +41,7 @@ from .const import (
     FEATURE_SET_DRY,
     KEY_COORDINATOR,
     KEY_DEVICE,
+    KEY_MIGRATE_ENTITY_NAME,
     MODEL_AIRHUMIDIFIER_CA1,
     MODEL_AIRHUMIDIFIER_CA4,
     MODEL_AIRHUMIDIFIER_CB1,
@@ -230,9 +231,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 async def async_setup_coordinated_entry(hass, config_entry, async_add_entities):
     """Set up the coordinated switch from a config entry."""
     entities = []
-    name = config_entry.title
     model = config_entry.data[CONF_MODEL]
     unique_id = config_entry.unique_id
+    if KEY_MIGRATE_ENTITY_NAME in hass.data[DOMAIN][config_entry.entry_id]:
+        name = hass.data[DOMAIN][config_entry.entry_id][KEY_MIGRATE_ENTITY_NAME]
+    else:
+        name = config_entry.title
 
     if DATA_KEY not in hass.data:
         hass.data[DATA_KEY] = {}
