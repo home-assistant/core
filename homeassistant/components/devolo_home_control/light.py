@@ -1,4 +1,11 @@
 """Platform for light integration."""
+from __future__ import annotations
+
+from typing import Any
+
+from devolo_home_control_api.devices.zwave import Zwave
+from devolo_home_control_api.homecontrol import HomeControl
+
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     SUPPORT_BRIGHTNESS,
@@ -6,13 +13,14 @@ from homeassistant.components.light import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .devolo_multi_level_switch import DevoloMultiLevelSwitchDeviceEntity
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Get all light devices and setup them via config entry."""
     entities = []
@@ -35,7 +43,9 @@ async def async_setup_entry(
 class DevoloLightDeviceEntity(DevoloMultiLevelSwitchDeviceEntity, LightEntity):
     """Representation of a light within devolo Home Control."""
 
-    def __init__(self, homecontrol, device_instance, element_uid):
+    def __init__(
+        self, homecontrol: HomeControl, device_instance: Zwave, element_uid: str
+    ) -> None:
         """Initialize a devolo multi level switch."""
         super().__init__(
             homecontrol=homecontrol,
@@ -48,21 +58,21 @@ class DevoloLightDeviceEntity(DevoloMultiLevelSwitchDeviceEntity, LightEntity):
         )
 
     @property
-    def brightness(self):
+    def brightness(self) -> int:
         """Return the brightness value of the light."""
         return round(self._value / 100 * 255)
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return the state of the light."""
         return bool(self._value)
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> int:
         """Return the supported features."""
         return SUPPORT_BRIGHTNESS
 
-    def turn_on(self, **kwargs) -> None:
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn device on."""
         if kwargs.get(ATTR_BRIGHTNESS) is not None:
             self._multi_level_switch_property.set(
@@ -76,7 +86,7 @@ class DevoloLightDeviceEntity(DevoloMultiLevelSwitchDeviceEntity, LightEntity):
                 # If there is no binary switch attached to the device, turn it on to 100 %.
                 self._multi_level_switch_property.set(100)
 
-    def turn_off(self, **kwargs) -> None:
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn device off."""
         if self._binary_switch_property is not None:
             self._binary_switch_property.set(False)
