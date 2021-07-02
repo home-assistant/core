@@ -72,4 +72,4 @@ set_audio_routing:
             - "all"
             - "hdmi"
             - "spdif"
-            - "pcm"
+            - "jack"

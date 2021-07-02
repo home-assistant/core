@@ -11,7 +11,7 @@ input_select:
       - "all"
       - "hdmi"
       - "spdif"
-      - "pcm"
+      - "jack"
     initial: "all"
     icon: mdi:directions-fork
 

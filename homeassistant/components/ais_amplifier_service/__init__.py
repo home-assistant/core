@@ -219,10 +219,13 @@ async def _set_audio_routing(hass, call):
             "hdmi",
             "spdif",
             "pcm",
+            "jack",
             "all"
     ):
         _LOGGER.error("Unrecognized routing in call: " + routing)
         return
+    if routing == "jack":
+        routing = "pcm"
     # publish command to frame
     await hass.services.async_call(
         "ais_ai_service",
