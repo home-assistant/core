@@ -13,8 +13,6 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import CONF_PLACE_ID, CONF_SERVICE_ID, DATA_COORDINATOR, DOMAIN, LOGGER
 
-DATA_LISTENER = "listener"
-
 DEFAULT_NAME = "recollect_waste"
 DEFAULT_UPDATE_INTERVAL = timedelta(days=1)
 
@@ -23,7 +21,7 @@ PLATFORMS = ["sensor"]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up RainMachine as config entry."""
-    hass.data.setdefault(DOMAIN, {DATA_COORDINATOR: {}, DATA_LISTENER: {}})
+    hass.data.setdefault(DOMAIN, {DATA_COORDINATOR: {}})
 
     session = aiohttp_client.async_get_clientsession(hass)
     client = Client(
@@ -55,9 +53,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
-    hass.data[DOMAIN][DATA_LISTENER][entry.entry_id] = entry.add_update_listener(
-        async_reload_entry
-    )
+    entry.async_on_unload(entry.add_update_listener(async_reload_entry))
 
     return True
 
@@ -72,7 +68,5 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         hass.data[DOMAIN][DATA_COORDINATOR].pop(entry.entry_id)
-        cancel_listener = hass.data[DOMAIN][DATA_LISTENER].pop(entry.entry_id)
-        cancel_listener()
 
     return unload_ok
