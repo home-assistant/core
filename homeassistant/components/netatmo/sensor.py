@@ -1,7 +1,10 @@
 """Support for the Netatmo Weather Service."""
+from __future__ import annotations
+
 import logging
 
 from homeassistant.components.sensor import SensorEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
@@ -20,19 +23,21 @@ from homeassistant.const import (
     SPEED_KILOMETERS_PER_HOUR,
     TEMP_CELSIUS,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.device_registry import async_entries_for_config_entry
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import CONF_WEATHER_AREAS, DATA_HANDLER, DOMAIN, MANUFACTURER, SIGNAL_NAME
 from .data_handler import (
     HOMECOACH_DATA_CLASS_NAME,
     PUBLICDATA_DATA_CLASS_NAME,
     WEATHERSTATION_DATA_CLASS_NAME,
+    NetatmoDataHandler,
 )
 from .helper import NetatmoArea
 from .netatmo_entity_base import NetatmoBase
@@ -197,12 +202,14 @@ BATTERY_VALUES = {
 PUBLIC = "public"
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up the Netatmo weather and homecoach platform."""
-    data_handler = hass.data[DOMAIN][entry.entry_id][DATA_HANDLER]
+    data_handler: NetatmoDataHandler = hass.data[DOMAIN][entry.entry_id][DATA_HANDLER]
     platform_not_ready = True
 
-    async def find_entities(data_class_name):
+    async def find_entities(data_class_name: str) -> list[NetatmoSensor]:
         """Find all entities."""
         all_module_infos = {}
         data = data_handler.data
@@ -260,7 +267,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     device_registry = await hass.helpers.device_registry.async_get_registry()
 
-    async def add_public_entities(update=True):
+    async def add_public_entities(update: bool = True) -> None:
         """Retrieve Netatmo public weather entities."""
         entities = {
             device.name: device.id
@@ -326,7 +333,13 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class NetatmoSensor(NetatmoBase, SensorEntity):
     """Implementation of a Netatmo sensor."""
 
-    def __init__(self, data_handler, data_class_name, module_info, sensor_type):
+    def __init__(
+        self,
+        data_handler: NetatmoDataHandler,
+        data_class_name: str,
+        module_info: dict,
+        sensor_type: str,
+    ) -> None:
         """Initialize the sensor."""
         super().__init__(data_handler)
 
@@ -369,7 +382,7 @@ class NetatmoSensor(NetatmoBase, SensorEntity):
         return self._attr_state is not None
 
     @callback
-    def async_update_callback(self):
+    def async_update_callback(self) -> None:
         """Update the entity's state."""
         if self._data is None:
             if self._attr_state is None:
@@ -461,7 +474,7 @@ def process_battery(data: int, model: str) -> str:
     return "Very Low"
 
 
-def process_health(health):
+def process_health(health: int) -> str:
     """Process health index and return string for display."""
     if health == 0:
         return "Healthy"
@@ -475,7 +488,7 @@ def process_health(health):
         return "Unhealthy"
 
 
-def process_rf(strength):
+def process_rf(strength: int) -> str:
     """Process wifi signal strength and return string for display."""
     if strength >= 90:
         return "Low"
@@ -486,7 +499,7 @@ def process_rf(strength):
     return "Full"
 
 
-def process_wifi(strength):
+def process_wifi(strength: int) -> str:
     """Process wifi signal strength and return string for display."""
     if strength >= 86:
         return "Low"
@@ -500,7 +513,9 @@ def process_wifi(strength):
 class NetatmoPublicSensor(NetatmoBase, SensorEntity):
     """Represent a single sensor in a Netatmo."""
 
-    def __init__(self, data_handler, area, sensor_type):
+    def __init__(
+        self, data_handler: NetatmoDataHandler, area: NetatmoArea, sensor_type: str
+    ) -> None:
         """Initialize the sensor."""
         super().__init__(data_handler)
 
