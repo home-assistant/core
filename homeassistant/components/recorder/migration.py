@@ -347,7 +347,7 @@ def _drop_foreign_key_constraints(connection, engine, table, columns):
             )
 
 
-def _apply_update(engine, session, new_version, old_version):
+def _apply_update(engine, session, new_version, old_version):  # noqa: C901
     """Perform operations to bring schema up to date."""
     connection = session.connection()
     if new_version == 1:
@@ -463,12 +463,15 @@ def _apply_update(engine, session, new_version, old_version):
         # This dropped the statistics table, done again in version 18.
         pass
     elif new_version == 18:
-        if sqlalchemy.inspect(engine).has_table(Statistics.__tablename__):
-            # Recreate the statistics and statisticsmeta tables
-            Statistics.__table__.drop(engine)
-            Statistics.__table__.create(engine)
+        # Recreate the statisticsmeta tables
+        if sqlalchemy.inspect(engine).has_table(StatisticsMeta.__tablename__):
             StatisticsMeta.__table__.drop(engine)
-            StatisticsMeta.__table__.create(engine)
+        StatisticsMeta.__table__.create(engine)
+
+        # Recreate the statistics table
+        if sqlalchemy.inspect(engine).has_table(Statistics.__tablename__):
+            Statistics.__table__.drop(engine)
+        Statistics.__table__.create(engine)
     else:
         raise ValueError(f"No schema migration defined for version {new_version}")
 
