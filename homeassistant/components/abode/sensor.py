@@ -43,21 +43,15 @@ class AbodeSensor(AbodeDevice, SensorEntity):
         self._sensor_type = sensor_type
         self._name = f"{self._device.name} {SENSOR_TYPES[self._sensor_type][0]}"
         self._device_class = SENSOR_TYPES[self._sensor_type][1]
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def device_class(self):
-        """Return the device class."""
-        return self._device_class
-
-    @property
-    def unique_id(self):
-        """Return a unique ID to use for this device."""
-        return f"{self._device.device_uuid}-{self._sensor_type}"
+        self._attr_name = self._name
+        self._attr_device_class = self._device_class
+        self._attr_unique_id = f"{self._device.device_uuid}-{self._sensor_type}"
+        if self._sensor_type == CONST.TEMP_STATUS_KEY:
+            self._attr_unit_of_measurement = self._device.temp_unit
+        if self._sensor_type == CONST.HUMI_STATUS_KEY:
+            self._attr_unit_of_measurement = self._device.humidity_unit
+        if self._sensor_type == CONST.LUX_STATUS_KEY:
+            self._attr_unit_of_measurement = self._device.lux_unit
 
     @property
     def state(self):
@@ -68,13 +62,3 @@ class AbodeSensor(AbodeDevice, SensorEntity):
             return self._device.humidity
         if self._sensor_type == CONST.LUX_STATUS_KEY:
             return self._device.lux
-
-    @property
-    def unit_of_measurement(self):
-        """Return the units of measurement."""
-        if self._sensor_type == CONST.TEMP_STATUS_KEY:
-            return self._device.temp_unit
-        if self._sensor_type == CONST.HUMI_STATUS_KEY:
-            return self._device.humidity_unit
-        if self._sensor_type == CONST.LUX_STATUS_KEY:
-            return self._device.lux_unit

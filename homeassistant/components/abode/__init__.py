@@ -251,16 +251,12 @@ class AbodeEntity(Entity):
         """Initialize Abode entity."""
         self._data = data
         self._available = True
+        self._attr_should_poll = self._data.polling
 
     @property
     def available(self):
         """Return the available state."""
         return self._available
-
-    @property
-    def should_poll(self):
-        """Return the polling state."""
-        return self._data.polling
 
     async def async_added_to_hass(self):
         """Subscribe to Abode connection status updates."""
@@ -291,6 +287,8 @@ class AbodeDevice(AbodeEntity):
         """Initialize Abode device."""
         super().__init__(data)
         self._device = device
+        self._attr_name = self._device.name
+        self._attr_unique_id = self._device.device_uuid
 
     async def async_added_to_hass(self):
         """Subscribe to device events."""
@@ -313,11 +311,6 @@ class AbodeDevice(AbodeEntity):
         self._device.refresh()
 
     @property
-    def name(self):
-        """Return the name of the device."""
-        return self._device.name
-
-    @property
     def extra_state_attributes(self):
         """Return the state attributes."""
         return {
@@ -327,11 +320,6 @@ class AbodeDevice(AbodeEntity):
             "no_response": self._device.no_response,
             "device_type": self._device.type,
         }
-
-    @property
-    def unique_id(self):
-        """Return a unique ID to use for this device."""
-        return self._device.device_uuid
 
     @property
     def device_info(self):
@@ -351,26 +339,18 @@ class AbodeDevice(AbodeEntity):
 class AbodeAutomation(AbodeEntity):
     """Representation of an Abode automation."""
 
+    _attr_extra_state_attributes = {
+        ATTR_ATTRIBUTION: ATTRIBUTION,
+        "type": "CUE automation",
+    }
+
     def __init__(self, data, automation):
         """Initialize for Abode automation."""
         super().__init__(data)
         self._automation = automation
+        self._attr_name = self._automation.name
+        self._attr_unique_id = self._automation.automation_id
 
     def update(self):
         """Update automation state."""
         self._automation.refresh()
-
-    @property
-    def name(self):
-        """Return the name of the automation."""
-        return self._automation.name
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
-        return {ATTR_ATTRIBUTION: ATTRIBUTION, "type": "CUE automation"}
-
-    @property
-    def unique_id(self):
-        """Return a unique ID to use for this automation."""
-        return self._automation.automation_id
