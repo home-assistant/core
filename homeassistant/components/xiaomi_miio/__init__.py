@@ -21,6 +21,7 @@ from .const import (
     DOMAIN,
     KEY_COORDINATOR,
     KEY_DEVICE,
+    KEY_MIGRATE_ENTITY_NAME,
     MODELS_AIR_MONITOR,
     MODELS_FAN,
     MODELS_HUMIDIFIER,
@@ -99,6 +100,8 @@ async def async_create_miio_device_and_coordinator(
     token = entry.data[CONF_TOKEN]
     name = entry.title
     device = None
+    migrate_entity_name = None
+
     if model not in MODELS_HUMIDIFIER:
         return
     if model in MODELS_HUMIDIFIER_MIOT:
@@ -106,10 +109,11 @@ async def async_create_miio_device_and_coordinator(
     else:
         device = AirHumidifier(host, token, model=model)
 
-    # removing fan platform entity for humidifiers
+    # removing fan platform entity for humidifiers and cache the name and entity name for migration
     entity_registry = er.async_get(hass)
     entity_id = entity_registry.async_get_entity_id("fan", DOMAIN, entry.unique_id)
     if entity_id:
+        migrate_entity_name = entity_registry.async_get(entity_id).name
         entity_registry.async_remove(entity_id)
 
     async def async_update_data():
@@ -136,6 +140,9 @@ async def async_create_miio_device_and_coordinator(
         KEY_DEVICE: device,
         KEY_COORDINATOR: coordinator,
     }
+    if migrate_entity_name:
+        hass.data[DOMAIN][entry.entry_id][KEY_MIGRATE_ENTITY_NAME] = migrate_entity_name
+
     # Trigger first data fetch
     await coordinator.async_config_entry_first_refresh()
 
