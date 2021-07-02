@@ -470,10 +470,8 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set new target hvac mode."""
         if not self._current_mode:
-            # Thermostat(valve) with no support for setting a mode
-            raise ValueError(
-                f"Thermostat {self.entity_id} does not support setting a mode"
-            )
+            # Thermostat(valve) has no support for setting a mode, so we make it a no-op
+            return
         hvac_mode_value = self._hvac_modes.get(hvac_mode)
         if hvac_mode_value is None:
             raise ValueError(f"Received an invalid hvac mode: {hvac_mode}")
