@@ -149,8 +149,8 @@ class AsusWrtDevInfo:
 
     def __init__(self, mac, name=None):
         """Initialize a AsusWrt device info."""
-        self._mac = mac
-        self._name = name
+        self._attr_mac = mac
+        self._attr_name = name
         self._ip_address = None
         self._last_activity = None
         self._connected = False
@@ -175,16 +175,6 @@ class AsusWrtDevInfo:
     def is_connected(self):
         """Return connected status."""
         return self._connected
-
-    @property
-    def mac(self):
-        """Return device mac address."""
-        return self._mac
-
-    @property
-    def name(self):
-        """Return device name."""
-        return self._name
 
     @property
     def ip_address(self):
@@ -225,6 +215,8 @@ class AsusWrtRouter:
             CONF_INTERFACE: DEFAULT_INTERFACE,
             CONF_REQUIRE_IP: True,
         }
+        self._attr_signal_device_new = f"{DOMAIN}-device-new"
+        self._attr_signal_device_update = f"{DOMAIN}-device-update"
         self._options.update(entry.options)
 
     async def setup(self) -> None:
@@ -313,9 +305,9 @@ class AsusWrtRouter:
             device.update(dev_info)
             self._devices[device_mac] = device
 
-        async_dispatcher_send(self.hass, self.signal_device_update)
+        async_dispatcher_send(self.hass, self._attr_signal_device_update)
         if new_device:
-            async_dispatcher_send(self.hass, self.signal_device_new)
+            async_dispatcher_send(self.hass, self._attr_signal_device_new)
 
         self._connected_devices = len(wrt_devices)
         await self._update_unpolled_sensors()
@@ -392,16 +384,6 @@ class AsusWrtRouter:
             "manufacturer": "Asus",
             "sw_version": self._sw_v,
         }
-
-    @property
-    def signal_device_new(self) -> str:
-        """Event specific per AsusWrt entry to signal new device."""
-        return f"{DOMAIN}-device-new"
-
-    @property
-    def signal_device_update(self) -> str:
-        """Event specific per AsusWrt entry to signal updates in devices."""
-        return f"{DOMAIN}-device-update"
 
     @property
     def host(self) -> str:

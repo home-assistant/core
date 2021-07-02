@@ -30,22 +30,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class AveaLight(LightEntity):
     """Representation of an Avea."""
 
+    _attr_supported_features = SUPPORT_AVEA
+
     def __init__(self, light):
         """Initialize an AveaLight."""
         self._light = light
-        self._name = light.name
+        self._attr_name = light.name
         self._state = None
         self._brightness = light.brightness
-
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        return SUPPORT_AVEA
-
-    @property
-    def name(self):
-        """Return the display name of this light."""
-        return self._name
 
     @property
     def brightness(self):

@@ -143,26 +143,11 @@ class AdGuardHomeEntity(Entity):
     ) -> None:
         """Initialize the AdGuard Home entity."""
         self._available = True
-        self._enabled_default = enabled_default
-        self._icon = icon
-        self._name = name
+        self._attr_entity_registry_enabled_default = enabled_default
+        self._attr_icon = icon
+        self._attr_name = name
         self._entry = entry
         self.adguard = adguard
-
-    @property
-    def name(self) -> str:
-        """Return the name of the entity."""
-        return self._name
-
-    @property
-    def icon(self) -> str:
-        """Return the mdi icon of the entity."""
-        return self._icon
-
-    @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Return if the entity should be enabled when first added to the entity registry."""
-        return self._enabled_default
 
     @property
     def available(self) -> bool:

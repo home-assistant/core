@@ -132,6 +132,8 @@ class AugustOperatorSensor(AugustEntityMixin, RestoreEntity, SensorEntity):
         self._operated_time = None
         self._available = False
         self._entity_picture = None
+        self._attr_name = f"{self._device.device_name} Operator"
+        self._attr_unique_id = f"{self._device_id}_lock_operator"
         self._update_from_data()
 
     @property
@@ -143,11 +145,6 @@ class AugustOperatorSensor(AugustEntityMixin, RestoreEntity, SensorEntity):
     def state(self):
         """Return the state of the sensor."""
         return self._state
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return f"{self._device.device_name} Operator"
 
     @callback
     def _update_from_data(self):
@@ -210,14 +207,12 @@ class AugustOperatorSensor(AugustEntityMixin, RestoreEntity, SensorEntity):
         """Return the entity picture to use in the frontend, if any."""
         return self._entity_picture
 
-    @property
-    def unique_id(self) -> str:
-        """Get the unique id of the device sensor."""
-        return f"{self._device_id}_lock_operator"
-
 
 class AugustBatterySensor(AugustEntityMixin, SensorEntity):
     """Representation of an August sensor."""
+
+    _attr_unit_of_measurement = PERCENTAGE
+    _attr_device_class = DEVICE_CLASS_BATTERY
 
     def __init__(self, data, sensor_type, device, old_device):
         """Initialize the sensor."""
@@ -228,6 +223,9 @@ class AugustBatterySensor(AugustEntityMixin, SensorEntity):
         self._old_device = old_device
         self._state = None
         self._available = False
+        self._attr_name = f"{self._device.device_name} Battery"
+        self._attr_unique_id = f"{self._device_id}_{self._sensor_type}"
+        self._attr_old_unique_id = f"{self._old_device.device_id}_{self._sensor_type}"
         self._update_from_data()
 
     @property
@@ -240,35 +238,9 @@ class AugustBatterySensor(AugustEntityMixin, SensorEntity):
         """Return the state of the sensor."""
         return self._state
 
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return PERCENTAGE
-
-    @property
-    def device_class(self):
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        return DEVICE_CLASS_BATTERY
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        device_name = self._device.device_name
-        return f"{device_name} Battery"
-
     @callback
     def _update_from_data(self):
         """Get the latest state of the sensor."""
         state_provider = SENSOR_TYPES_BATTERY[self._sensor_type]["state_provider"]
         self._state = state_provider(self._detail)
         self._available = self._state is not None
-
-    @property
-    def unique_id(self) -> str:
-        """Get the unique id of the device sensor."""
-        return f"{self._device_id}_{self._sensor_type}"
-
-    @property
-    def old_unique_id(self) -> str:
-        """Get the old unique id of the device sensor."""
-        return f"{self._old_device.device_id}_{self._sensor_type}"

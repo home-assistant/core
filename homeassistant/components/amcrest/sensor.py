@@ -45,20 +45,15 @@ class AmcrestSensor(SensorEntity):
 
     def __init__(self, name, device, sensor_type):
         """Initialize a sensor for Amcrest camera."""
-        self._name = f"{name} {SENSORS[sensor_type][0]}"
+        self._attr_name = f"{name} {SENSORS[sensor_type][0]}"
         self._signal_name = name
         self._api = device.api
         self._sensor_type = sensor_type
         self._state = None
         self._attrs = {}
-        self._unit_of_measurement = SENSORS[sensor_type][1]
-        self._icon = SENSORS[sensor_type][2]
+        self._attr_unit_of_measurement = SENSORS[sensor_type][1]
+        self._attr_icon = SENSORS[sensor_type][2]
         self._unsub_dispatcher = None
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
 
     @property
     def state(self):
@@ -69,16 +64,6 @@ class AmcrestSensor(SensorEntity):
     def extra_state_attributes(self):
         """Return the state attributes."""
         return self._attrs
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return self._icon
-
-    @property
-    def unit_of_measurement(self):
-        """Return the units of measurement."""
-        return self._unit_of_measurement
 
     @property
     def available(self):

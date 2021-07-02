@@ -63,15 +63,9 @@ class AdGuardHomeSensor(AdGuardHomeDeviceEntity, SensorEntity):
     ) -> None:
         """Initialize AdGuard Home sensor."""
         self._state = None
-        self._unit_of_measurement = unit_of_measurement
         self.measurement = measurement
-
-        super().__init__(adguard, entry, name, icon, enabled_default)
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique ID for this sensor."""
-        return "_".join(
+        self._attr_unit_of_measurement = unit_of_measurement
+        self._attr_unique_id = "_".join(
             [
                 DOMAIN,
                 self.adguard.host,
@@ -81,15 +75,12 @@ class AdGuardHomeSensor(AdGuardHomeDeviceEntity, SensorEntity):
             ]
         )
 
+        super().__init__(adguard, entry, name, icon, enabled_default)
+
     @property
     def state(self) -> str | None:
         """Return the state of the sensor."""
         return self._state
-
-    @property
-    def unit_of_measurement(self) -> str | None:
-        """Return the unit this state is expressed in."""
-        return self._unit_of_measurement
 
 
 class AdGuardHomeDNSQueriesSensor(AdGuardHomeSensor):

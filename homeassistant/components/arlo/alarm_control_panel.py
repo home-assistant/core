@@ -69,6 +69,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class ArloBaseStation(AlarmControlPanelEntity):
     """Representation of an Arlo Alarm Control Panel."""
 
+    _attr_supported_features = (
+        SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY | SUPPORT_ALARM_ARM_NIGHT
+    )
+    _attr_icon = ICON
+
     def __init__(self, data, home_mode_name, away_mode_name, night_mode_name):
         """Initialize the alarm control panel."""
         self._base_station = data
@@ -76,11 +81,11 @@ class ArloBaseStation(AlarmControlPanelEntity):
         self._away_mode_name = away_mode_name
         self._night_mode_name = night_mode_name
         self._state = None
-
-    @property
-    def icon(self):
-        """Return icon."""
-        return ICON
+        self._attr_name = self._base_station.name
+        self._attr_extra_state_attributes = {
+            ATTR_ATTRIBUTION: ATTRIBUTION,
+            "device_id": self._base_station.device_id,
+        }
 
     async def async_added_to_hass(self):
         """Register callbacks."""
@@ -99,11 +104,6 @@ class ArloBaseStation(AlarmControlPanelEntity):
     def state(self):
         """Return the state of the device."""
         return self._state
-
-    @property
-    def supported_features(self) -> int:
-        """Return the list of supported features."""
-        return SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY | SUPPORT_ALARM_ARM_NIGHT
 
     def update(self):
         """Update the state of the device."""
@@ -129,19 +129,6 @@ class ArloBaseStation(AlarmControlPanelEntity):
     def alarm_arm_night(self, code=None):
         """Send arm night command. Uses custom mode."""
         self._base_station.mode = self._night_mode_name
-
-    @property
-    def name(self):
-        """Return the name of the base station."""
-        return self._base_station.name
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
-        return {
-            ATTR_ATTRIBUTION: ATTRIBUTION,
-            "device_id": self._base_station.device_id,
-        }
 
     def _get_state_from_mode(self, mode):
         """Convert Arlo mode to Home Assistant state."""

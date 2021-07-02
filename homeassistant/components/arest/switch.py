@@ -86,14 +86,9 @@ class ArestSwitchBase(SwitchEntity):
     def __init__(self, resource, location, name):
         """Initialize the switch."""
         self._resource = resource
-        self._name = f"{location.title()} {name.title()}"
+        self._attr_name = f"{location.title()} {name.title()}"
         self._state = None
         self._available = True
-
-    @property
-    def name(self):
-        """Return the name of the switch."""
-        return self._name
 
     @property
     def is_on(self):

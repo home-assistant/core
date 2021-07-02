@@ -13,9 +13,14 @@ from .const import ACMEDA_ENTITY_REMOVE, DOMAIN, LOGGER
 class AcmedaBase(entity.Entity):
     """Base representation of an Acmeda roller."""
 
+    _attr_should_poll = False
+
     def __init__(self, roller: aiopulse.Roller) -> None:
         """Initialize the roller."""
         self.roller = roller
+        self.device_id = self.roller.id
+        self._attr_unique_id = self.roller.id
+        self._attr_name = self.roller.name
 
     async def async_remove_and_unregister(self):
         """Unregister from entity and device registry and call entity remove function."""
@@ -55,26 +60,6 @@ class AcmedaBase(entity.Entity):
         """Write updated device state information."""
         LOGGER.debug("Device update notification received: %s", self.name)
         self.async_write_ha_state()
-
-    @property
-    def should_poll(self):
-        """Report that Acmeda entities do not need polling."""
-        return False
-
-    @property
-    def unique_id(self):
-        """Return the unique ID of this roller."""
-        return self.roller.id
-
-    @property
-    def device_id(self):
-        """Return the ID of this roller."""
-        return self.roller.id
-
-    @property
-    def name(self):
-        """Return the name of roller."""
-        return self.roller.name
 
     @property
     def device_info(self):

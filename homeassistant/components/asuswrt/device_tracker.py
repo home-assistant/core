@@ -55,30 +55,21 @@ def add_entities(router, async_add_entities, tracked):
 class AsusWrtDevice(ScannerEntity):
     """Representation of a AsusWrt device."""
 
+    _attr_should_poll = False
+
     def __init__(self, router: AsusWrtRouter, device) -> None:
         """Initialize a AsusWrt device."""
         self._router = router
         self._device = device
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique ID."""
-        return self._device.mac
-
-    @property
-    def name(self) -> str:
-        """Return the name."""
-        return self._device.name or DEFAULT_DEVICE_NAME
+        self._attr_unique_id = self._device.mac
+        self._attr_name = self._device.name or DEFAULT_DEVICE_NAME
+        self._attr_source_type = SOURCE_TYPE_ROUTER
+        self._attr_mac_address = self._device.mac
 
     @property
     def is_connected(self):
         """Return true if the device is connected to the network."""
         return self._device.is_connected
-
-    @property
-    def source_type(self) -> str:
-        """Return the source type."""
-        return SOURCE_TYPE_ROUTER
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
@@ -101,11 +92,6 @@ class AsusWrtDevice(ScannerEntity):
         return self._device.ip_address
 
     @property
-    def mac_address(self) -> str:
-        """Return the mac address of the device."""
-        return self._device.mac
-
-    @property
     def device_info(self) -> DeviceInfo:
         """Return the device information."""
         data = {
@@ -115,11 +101,6 @@ class AsusWrtDevice(ScannerEntity):
             data["default_name"] = self._device.name
 
         return data
-
-    @property
-    def should_poll(self) -> bool:
-        """No polling needed."""
-        return False
 
     @callback
     def async_on_demand_update(self):

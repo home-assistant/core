@@ -152,6 +152,8 @@ async def async_setup(hass, config):
 class Alert(ToggleEntity):
     """Representation of an alert."""
 
+    _attr_should_poll = False
+
     def __init__(
         self,
         hass,
@@ -170,7 +172,7 @@ class Alert(ToggleEntity):
     ):
         """Initialize the alert."""
         self.hass = hass
-        self._name = name
+        self._attr_name = name
         self._alert_state = state
         self._skip_first = skip_first
         self._data = data
@@ -202,16 +204,6 @@ class Alert(ToggleEntity):
         event.async_track_state_change_event(
             hass, [watched_entity_id], self.watched_entity_change
         )
-
-    @property
-    def name(self):
-        """Return the name of the alert."""
-        return self._name
-
-    @property
-    def should_poll(self):
-        """Home Assistant need not poll these entities."""
-        return False
 
     @property
     def state(self):

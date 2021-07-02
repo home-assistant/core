@@ -140,27 +140,17 @@ class ArestSensor(SensorEntity):
         """Initialize the sensor."""
         self.arest = arest
         self._resource = resource
-        self._name = f"{location.title()} {name.title()}"
+        self._attr_name = f"{location.title()} {name.title()}"
         self._variable = variable
         self._pin = pin
         self._state = None
-        self._unit_of_measurement = unit_of_measurement
+        self._attr_unit_of_measurement = unit_of_measurement
         self._renderer = renderer
 
         if self._pin is not None:
             request = requests.get(f"{self._resource}/mode/{self._pin}/i", timeout=10)
             if request.status_code != HTTP_OK:
                 _LOGGER.error("Can't set mode of %s", self._resource)
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        return self._unit_of_measurement
 
     @property
     def state(self):

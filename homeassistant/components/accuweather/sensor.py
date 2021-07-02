@@ -90,6 +90,9 @@ class AccuWeatherSensor(CoordinatorEntity, SensorEntity):
         self._attrs = {ATTR_ATTRIBUTION: ATTRIBUTION}
         self.forecast_day = forecast_day
         self._attr_state_class = self._description.get(ATTR_STATE_CLASS)
+        self._attr_icon = self._description[ATTR_ICON]
+        self._attr_device_class = self._description[ATTR_DEVICE_CLASS]
+        self._attr_entity_registry_enabled_default = self._description[ATTR_ENABLED]
 
     @property
     def name(self) -> str:
@@ -140,16 +143,6 @@ class AccuWeatherSensor(CoordinatorEntity, SensorEntity):
         return cast(StateType, self._sensor_data)
 
     @property
-    def icon(self) -> str | None:
-        """Return the icon."""
-        return self._description[ATTR_ICON]
-
-    @property
-    def device_class(self) -> str | None:
-        """Return the device_class."""
-        return self._description[ATTR_DEVICE_CLASS]
-
-    @property
     def unit_of_measurement(self) -> str | None:
         """Return the unit the value is expressed in."""
         if self.coordinator.is_metric:
@@ -170,11 +163,6 @@ class AccuWeatherSensor(CoordinatorEntity, SensorEntity):
         elif self.kind == "Precipitation":
             self._attrs["type"] = self.coordinator.data["PrecipitationType"]
         return self._attrs
-
-    @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Return if the entity should be enabled when first added to the entity registry."""
-        return self._description[ATTR_ENABLED]
 
     @callback
     def _handle_coordinator_update(self) -> None:

@@ -60,6 +60,8 @@ async def async_setup_entry(
 class AlarmDecoderBinarySensor(BinarySensorEntity):
     """Representation of an AlarmDecoder binary sensor."""
 
+    _attr_should_poll = False
+
     def __init__(
         self,
         zone_number,
@@ -74,12 +76,13 @@ class AlarmDecoderBinarySensor(BinarySensorEntity):
         self._zone_number = int(zone_number)
         self._zone_type = zone_type
         self._state = None
-        self._name = zone_name
+        self._attr_name = zone_name
         self._rfid = zone_rfid
         self._loop = zone_loop
         self._rfstate = None
         self._relay_addr = relay_addr
         self._relay_chan = relay_chan
+        self._attr_device_class = self._zone_type
 
     async def async_added_to_hass(self):
         """Register callbacks."""
@@ -108,16 +111,6 @@ class AlarmDecoderBinarySensor(BinarySensorEntity):
         )
 
     @property
-    def name(self):
-        """Return the name of the entity."""
-        return self._name
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
-
-    @property
     def extra_state_attributes(self):
         """Return the state attributes."""
         attr = {CONF_ZONE_NUMBER: self._zone_number}
@@ -136,11 +129,6 @@ class AlarmDecoderBinarySensor(BinarySensorEntity):
     def is_on(self):
         """Return true if sensor is on."""
         return self._state == 1
-
-    @property
-    def device_class(self):
-        """Return the class of this sensor, from DEVICE_CLASSES."""
-        return self._zone_type
 
     def _fault_callback(self, zone):
         """Update the zone's state, if needed."""

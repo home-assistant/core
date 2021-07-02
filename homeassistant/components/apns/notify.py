@@ -68,49 +68,17 @@ class ApnsDevice:
 
     def __init__(self, push_id, name, tracking_device_id=None, disabled=False):
         """Initialize APNS Device."""
-        self.device_push_id = push_id
-        self.device_name = name
-        self.tracking_id = tracking_device_id
-        self.device_disabled = disabled
-
-    @property
-    def push_id(self):
-        """Return the  APNS id for the device."""
-        return self.device_push_id
-
-    @property
-    def name(self):
-        """Return the friendly name for the device."""
-        return self.device_name
-
-    @property
-    def tracking_device_id(self):
-        """
-        Return the device Id.
-
-        The id of a device that is tracked by the device
-        tracking component.
-        """
-        return self.tracking_id
-
-    @property
-    def full_tracking_device_id(self):
-        """
-        Return the fully qualified device id.
-
-        The full id of a device that is tracked by the device
-        tracking component.
-        """
-        return f"{DEVICE_TRACKER_DOMAIN}.{self.tracking_id}"
-
-    @property
-    def disabled(self):
-        """Return the state of the service."""
-        return self.device_disabled
+        self._attr_device_push_id = push_id
+        self._attr_tracking_id = tracking_device_id
+        self._attr_device_disabled = disabled
+        self._attr_name = name
+        self._attr_full_tracking_device_id = (
+            f"{DEVICE_TRACKER_DOMAIN}.{self._attr_tracking_id}"
+        )
 
     def disable(self):
         """Disable the device from receiving notifications."""
-        self.device_disabled = True
+        self._attr_device_disabled = True
 
     def __eq__(self, other):
         """Return the comparison."""

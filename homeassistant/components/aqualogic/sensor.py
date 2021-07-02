@@ -58,21 +58,20 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class AquaLogicSensor(SensorEntity):
     """Sensor implementation for the AquaLogic component."""
 
+    _attr_should_poll = False
+
     def __init__(self, processor, sensor_type):
         """Initialize sensor."""
         self._processor = processor
         self._type = sensor_type
         self._state = None
+        self._attr_name = f"AquaLogic {SENSOR_TYPES[self._type][0]}"
+        self._attr_icon = SENSOR_TYPES[self._type][2]
 
     @property
     def state(self):
         """Return the state of the sensor."""
         return self._state
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return f"AquaLogic {SENSOR_TYPES[self._type][0]}"
 
     @property
     def unit_of_measurement(self):
@@ -83,16 +82,6 @@ class AquaLogicSensor(SensorEntity):
         if panel.is_metric:
             return SENSOR_TYPES[self._type][1][0]
         return SENSOR_TYPES[self._type][1][1]
-
-    @property
-    def should_poll(self):
-        """Return the polling state."""
-        return False
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return SENSOR_TYPES[self._type][2]
 
     async def async_added_to_hass(self):
         """Register callbacks."""

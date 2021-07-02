@@ -78,16 +78,16 @@ class ArloSensor(SensorEntity):
     def __init__(self, name, device, sensor_type):
         """Initialize an Arlo sensor."""
         _LOGGER.debug("ArloSensor created for %s", name)
-        self._name = name
+        self._attr_name = name
         self._data = device
         self._sensor_type = sensor_type
         self._state = None
         self._icon = f"mdi:{SENSOR_TYPES.get(self._sensor_type)[2]}"
-
-    @property
-    def name(self):
-        """Return the name of this camera."""
-        return self._name
+        self._attr_unit_of_measurement = SENSOR_TYPES.get(self._sensor_type)[1]
+        if self._sensor_type == "temperature":
+            self._attr_device_class = DEVICE_CLASS_TEMPERATURE
+        if self._sensor_type == "humidity":
+            self._attr_device_class = DEVICE_CLASS_HUMIDITY
 
     async def async_added_to_hass(self):
         """Register callbacks."""
@@ -115,20 +115,6 @@ class ArloSensor(SensorEntity):
                 battery_level=int(self._state), charging=False
             )
         return self._icon
-
-    @property
-    def unit_of_measurement(self):
-        """Return the units of measurement."""
-        return SENSOR_TYPES.get(self._sensor_type)[1]
-
-    @property
-    def device_class(self):
-        """Return the device class of the sensor."""
-        if self._sensor_type == "temperature":
-            return DEVICE_CLASS_TEMPERATURE
-        if self._sensor_type == "humidity":
-            return DEVICE_CLASS_HUMIDITY
-        return None
 
     def update(self):
         """Get the latest data and updates the state."""

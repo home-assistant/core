@@ -65,23 +65,17 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class AvionLight(LightEntity):
     """Representation of an Avion light."""
 
+    _attr_supported_features = SUPPORT_AVION_LED
+    _attr_should_poll = False
+    _attr_assumed_state = True
+
     def __init__(self, device):
         """Initialize the light."""
-        self._name = device.name
-        self._address = device.mac
+        self._attr_name = device.name
+        self._attr_unique_id = device.mac
         self._brightness = 255
         self._state = False
         self._switch = device
-
-    @property
-    def unique_id(self):
-        """Return the ID of this light."""
-        return self._address
-
-    @property
-    def name(self):
-        """Return the name of the device if any."""
-        return self._name
 
     @property
     def is_on(self):
@@ -92,21 +86,6 @@ class AvionLight(LightEntity):
     def brightness(self):
         """Return the brightness of this light between 0..255."""
         return self._brightness
-
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        return SUPPORT_AVION_LED
-
-    @property
-    def should_poll(self):
-        """Don't poll."""
-        return False
-
-    @property
-    def assumed_state(self):
-        """We can't read the actual state, so assume it matches."""
-        return True
 
     def set_state(self, brightness):
         """Set the state of this lamp to the provided brightness."""

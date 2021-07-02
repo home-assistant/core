@@ -51,16 +51,8 @@ class AdvantageAirTimeTo(AdvantageAirEntity, SensorEntity):
         super().__init__(instance, ac_key)
         self.action = action
         self._time_key = f"countDownTo{self.action}"
-
-    @property
-    def name(self):
-        """Return the name."""
-        return f'{self._ac["name"]} Time To {self.action}'
-
-    @property
-    def unique_id(self):
-        """Return a unique id."""
-        return f'{self.coordinator.data["system"]["rid"]}-{self.ac_key}-timeto{self.action}'
+        self._attr_name = f'{self._ac["name"]} Time To {self.action}'
+        self._attr_unique_id = f'{self.coordinator.data["system"]["rid"]}-{self.ac_key}-timeto{self.action}'
 
     @property
     def state(self):

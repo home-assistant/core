@@ -51,16 +51,19 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class ArloCam(Camera):
     """An implementation of a Netgear Arlo IP camera."""
 
+    _attr_brand = DEFAULT_BRAND
+
     def __init__(self, hass, camera, device_info):
         """Initialize an Arlo camera."""
         super().__init__()
         self._camera = camera
-        self._name = self._camera.name
+        self._attr_name = self._camera.name
         self._motion_status = False
         self._ffmpeg = hass.data[DATA_FFMPEG]
         self._ffmpeg_arguments = device_info.get(CONF_FFMPEG_ARGUMENTS)
         self._last_refresh = None
         self.attrs = {}
+        self._attr_model = self._camera.model_id
 
     def camera_image(self):
         """Return a still image response from the camera."""
@@ -103,11 +106,6 @@ class ArloCam(Camera):
             await stream.close()
 
     @property
-    def name(self):
-        """Return the name of this camera."""
-        return self._name
-
-    @property
     def extra_state_attributes(self):
         """Return the state attributes."""
         return {
@@ -127,16 +125,6 @@ class ArloCam(Camera):
             )
             if value is not None
         }
-
-    @property
-    def model(self):
-        """Return the camera model."""
-        return self._camera.model_id
-
-    @property
-    def brand(self):
-        """Return the camera brand."""
-        return DEFAULT_BRAND
 
     @property
     def motion_detection_enabled(self):

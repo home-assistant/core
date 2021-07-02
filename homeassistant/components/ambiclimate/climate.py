@@ -137,21 +137,18 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class AmbiclimateEntity(ClimateEntity):
     """Representation of a Ambiclimate Thermostat device."""
 
+    _attr_temperature_unit = TEMP_CELSIUS
+    _attr_target_temperature_step = 1
+    _attr_supported_features = SUPPORT_FLAGS
+    _attr_hvac_modes = [HVAC_MODE_HEAT, HVAC_MODE_OFF]
+
     def __init__(self, heater, store):
         """Initialize the thermostat."""
         self._heater = heater
         self._store = store
         self._data = {}
-
-    @property
-    def unique_id(self):
-        """Return a unique ID."""
-        return self._heater.device_id
-
-    @property
-    def name(self):
-        """Return the name of the entity."""
-        return self._heater.name
+        self._attr_unique_id = self._heater.device_id
+        self._attr_name = self._heater.name
 
     @property
     def device_info(self):
@@ -163,19 +160,9 @@ class AmbiclimateEntity(ClimateEntity):
         }
 
     @property
-    def temperature_unit(self):
-        """Return the unit of measurement which this thermostat uses."""
-        return TEMP_CELSIUS
-
-    @property
     def target_temperature(self):
         """Return the target temperature."""
         return self._data.get("target_temperature")
-
-    @property
-    def target_temperature_step(self):
-        """Return the supported step of target temperature."""
-        return 1
 
     @property
     def current_temperature(self):
@@ -196,16 +183,6 @@ class AmbiclimateEntity(ClimateEntity):
     def max_temp(self):
         """Return the maximum temperature."""
         return self._heater.get_max_temp()
-
-    @property
-    def supported_features(self):
-        """Return the list of supported features."""
-        return SUPPORT_FLAGS
-
-    @property
-    def hvac_modes(self):
-        """Return the list of available hvac operation modes."""
-        return [HVAC_MODE_HEAT, HVAC_MODE_OFF]
 
     @property
     def hvac_mode(self):

@@ -61,33 +61,17 @@ def setup_platform(
 class AladdinDevice(CoverEntity):
     """Representation of Aladdin Connect cover."""
 
+    _attr_device_class = "garage"
+    _attr_supported_features = SUPPORTED_FEATURES
+
     def __init__(self, acc: AladdinConnectClient, device: DoorDevice) -> None:
         """Initialize the cover."""
         self._acc = acc
         self._device_id = device["device_id"]
         self._number = device["door_number"]
-        self._name = device["name"]
         self._status = STATES_MAP.get(device["status"])
-
-    @property
-    def device_class(self) -> str:
-        """Define this cover as a garage door."""
-        return "garage"
-
-    @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        return SUPPORTED_FEATURES
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique ID."""
-        return f"{self._device_id}-{self._number}"
-
-    @property
-    def name(self) -> str:
-        """Return the name of the garage door."""
-        return self._name
+        self._attr_unique_id = f"{self._device_id}-{self._number}"
+        self._attr_name = device["name"]
 
     @property
     def is_opening(self) -> bool:

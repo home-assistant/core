@@ -272,6 +272,8 @@ async def async_setup(hass, config):
 class AutomationEntity(ToggleEntity, RestoreEntity):
     """Entity to show status of entity."""
 
+    _attr_should_poll = False
+
     def __init__(
         self,
         automation_id,
@@ -314,11 +316,6 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
     def unique_id(self):
         """Return unique ID."""
         return self._id
-
-    @property
-    def should_poll(self):
-        """No polling needed for automation entities."""
-        return False
 
     @property
     def extra_state_attributes(self):

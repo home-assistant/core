@@ -67,6 +67,9 @@ async def async_setup_entry(
 class AgentCamera(MjpegCamera):
     """Representation of an Agent Device Stream."""
 
+    _attr_should_poll = True
+    _attr_supported_features = SUPPORT_ON_OFF
+
     def __init__(self, device):
         """Initialize as a subclass of MjpegCamera."""
         self._servername = device.client.name
@@ -81,6 +84,7 @@ class AgentCamera(MjpegCamera):
         self._removed = False
         self._name = f"{self._servername} {device.name}"
         self._unique_id = f"{device._client.unique}_{device.typeID}_{device.id}"
+        self._attr_unique_id = self._unique_id
         super().__init__(device_info)
 
     @property
@@ -122,11 +126,6 @@ class AgentCamera(MjpegCamera):
         }
 
     @property
-    def should_poll(self) -> bool:
-        """Update the state periodically."""
-        return True
-
-    @property
     def is_recording(self) -> bool:
         """Return whether the monitor is recording."""
         return self.device.recording
@@ -152,11 +151,6 @@ class AgentCamera(MjpegCamera):
         return self.device.connected
 
     @property
-    def supported_features(self) -> int:
-        """Return supported features."""
-        return SUPPORT_ON_OFF
-
-    @property
     def is_on(self) -> bool:
         """Return true if on."""
         return self.device.online
@@ -172,11 +166,6 @@ class AgentCamera(MjpegCamera):
     def motion_detection_enabled(self):
         """Return the camera motion detection status."""
         return self.device.detector_active
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique identifier for this agent object."""
-        return self._unique_id
 
     async def async_enable_alerts(self):
         """Enable alerts."""

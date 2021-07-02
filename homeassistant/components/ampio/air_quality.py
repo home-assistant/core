@@ -54,23 +54,16 @@ async def async_setup_platform(
 class AmpioSmogQuality(AirQualityEntity):
     """Implementation of an Ampio Smog air quality entity."""
 
+    _attr_attribution = ATTRIBUTION
+
     def __init__(
         self, api: AmpioSmogMapData, station_id: str, name: str | None
     ) -> None:
         """Initialize the air quality entity."""
         self._ampio = api
         self._station_id = station_id
-        self._name = name or api.api.name
-
-    @property
-    def name(self) -> str:
-        """Return the name of the air quality entity."""
-        return self._name
-
-    @property
-    def unique_id(self) -> str:
-        """Return unique_name."""
-        return f"ampio_smog_{self._station_id}"
+        self._attr_name = name or api.api.name
+        self._attr_unique_id = f"ampio_smog_{self._station_id}"
 
     @property
     def particulate_matter_2_5(self) -> str | None:
@@ -81,11 +74,6 @@ class AmpioSmogQuality(AirQualityEntity):
     def particulate_matter_10(self) -> str | None:
         """Return the particulate matter 10 level."""
         return self._ampio.api.pm10  # type: ignore[no-any-return]
-
-    @property
-    def attribution(self) -> str:
-        """Return the attribution."""
-        return ATTRIBUTION
 
     async def async_update(self) -> None:
         """Get the latest data from the AmpioMap API."""

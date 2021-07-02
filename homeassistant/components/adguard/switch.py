@@ -62,14 +62,10 @@ class AdGuardHomeSwitch(AdGuardHomeDeviceEntity, SwitchEntity):
         """Initialize AdGuard Home switch."""
         self._state = False
         self._key = key
-        super().__init__(adguard, entry, name, icon, enabled_default)
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique ID for this sensor."""
-        return "_".join(
+        self._attr_unique_id = "_".join(
             [DOMAIN, self.adguard.host, str(self.adguard.port), "switch", self._key]
         )
+        super().__init__(adguard, entry, name, icon, enabled_default)
 
     @property
     def is_on(self) -> bool:

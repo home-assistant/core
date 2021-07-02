@@ -28,11 +28,7 @@ class OnlineStatus(BinarySensorEntity):
         self._config = config
         self._data = data
         self._state = None
-
-    @property
-    def name(self):
-        """Return the name of the UPS online status sensor."""
-        return self._config[CONF_NAME]
+        self._attr_name = self._config[CONF_NAME]
 
     @property
     def is_on(self):

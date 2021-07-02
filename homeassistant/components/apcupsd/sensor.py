@@ -162,20 +162,11 @@ class APCUPSdSensor(SensorEntity):
         """Initialize the sensor."""
         self._data = data
         self.type = sensor_type
-        self._name = SENSOR_PREFIX + SENSOR_TYPES[sensor_type][0]
+        self._attr_name = SENSOR_PREFIX + SENSOR_TYPES[sensor_type][0]
         self._unit = SENSOR_TYPES[sensor_type][1]
         self._inferred_unit = None
         self._state = None
-
-    @property
-    def name(self):
-        """Return the name of the UPS sensor."""
-        return self._name
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return SENSOR_TYPES[self.type][2]
+        self._attr_icon = SENSOR_TYPES[self.type][2]
 
     @property
     def state(self):

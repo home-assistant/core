@@ -404,12 +404,17 @@ class ADBDevice(MediaPlayerEntity):
     ):
         """Initialize the Android TV / Fire TV device."""
         self.aftv = aftv
-        self._name = name
         self._app_id_to_name = APPS.copy()
         self._app_id_to_name.update(apps)
         self._app_name_to_id = {
             value: key for key, value in self._app_id_to_name.items() if value
         }
+        self._attr_app_id = self._current_app
+        self._attr_app_name = self._app_id_to_name.get(
+            self._current_app, self._current_app
+        )
+        self._attr_name = name
+        self._attr_unique_id = self._device_properties.get("serialno")
 
         # Make sure that apps overridden via the `apps` parameter are reflected
         # in `self._app_name_to_id`
@@ -420,7 +425,6 @@ class ADBDevice(MediaPlayerEntity):
         self._keys = KEYS
 
         self._device_properties = self.aftv.device_properties
-        self._unique_id = self._device_properties.get("serialno")
 
         self.turn_on_command = turn_on_command
         self.turn_off_command = turn_off_command
@@ -454,16 +458,6 @@ class ADBDevice(MediaPlayerEntity):
         self._hdmi_input = None
 
     @property
-    def app_id(self):
-        """Return the current app."""
-        return self._current_app
-
-    @property
-    def app_name(self):
-        """Return the friendly name of the current app."""
-        return self._app_id_to_name.get(self._current_app, self._current_app)
-
-    @property
     def available(self):
         """Return whether or not the ADB connection is valid."""
         return self._available
@@ -482,11 +476,6 @@ class ADBDevice(MediaPlayerEntity):
         return f"{datetime.now().timestamp()}" if self._screencap else None
 
     @property
-    def name(self):
-        """Return the device name."""
-        return self._name
-
-    @property
     def source(self):
         """Return the current app."""
         return self._app_id_to_name.get(self._current_app, self._current_app)
@@ -500,11 +489,6 @@ class ADBDevice(MediaPlayerEntity):
     def state(self):
         """Return the state of the player."""
         return self._state
-
-    @property
-    def unique_id(self):
-        """Return the device unique id."""
-        return self._unique_id
 
     @adb_decorator()
     async def _adb_screencap(self):
@@ -634,6 +618,8 @@ class ADBDevice(MediaPlayerEntity):
 class AndroidTVDevice(ADBDevice):
     """Representation of an Android TV device."""
 
+    _attr_supported_features = SUPPORT_ANDROIDTV
+
     def __init__(
         self,
         aftv,
@@ -704,11 +690,6 @@ class AndroidTVDevice(ADBDevice):
         return self._is_volume_muted
 
     @property
-    def supported_features(self):
-        """Flag media player features that are supported."""
-        return SUPPORT_ANDROIDTV
-
-    @property
     def volume_level(self):
         """Return the volume level."""
         return self._volume_level
@@ -741,6 +722,8 @@ class AndroidTVDevice(ADBDevice):
 
 class FireTVDevice(ADBDevice):
     """Representation of a Fire TV device."""
+
+    _attr_supported_features = SUPPORT_FIRETV
 
     @adb_decorator(override_available=True)
     async def async_update(self):
@@ -776,11 +759,6 @@ class FireTVDevice(ADBDevice):
             self._sources = [source for source in sources if source]
         else:
             self._sources = None
-
-    @property
-    def supported_features(self):
-        """Flag media player features that are supported."""
-        return SUPPORT_FIRETV
 
     @adb_decorator()
     async def async_media_stop(self):

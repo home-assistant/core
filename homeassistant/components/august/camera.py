@@ -26,6 +26,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class AugustCamera(AugustEntityMixin, Camera):
     """An implementation of a August security camera."""
 
+    _attr_motion_detection_enabled = True
+    _attr_brand = DEFAULT_NAME
+
     def __init__(self, data, device, session, timeout):
         """Initialize a August security camera."""
         super().__init__(data, device)
@@ -35,31 +38,14 @@ class AugustCamera(AugustEntityMixin, Camera):
         self._session = session
         self._image_url = None
         self._image_content = None
-
-    @property
-    def name(self):
-        """Return the name of this device."""
-        return f"{self._device.device_name} Camera"
+        self._attr_name = f"{self._device.device_name} Camera"
+        self._sttr_model = self._detail.model
+        self._attr_unique_id = f"{self._device_id:s}_camera"
 
     @property
     def is_recording(self):
         """Return true if the device is recording."""
         return self._device.has_subscription
-
-    @property
-    def motion_detection_enabled(self):
-        """Return the camera motion detection status."""
-        return True
-
-    @property
-    def brand(self):
-        """Return the camera brand."""
-        return DEFAULT_NAME
-
-    @property
-    def model(self):
-        """Return the camera model."""
-        return self._detail.model
 
     @callback
     def _update_from_data(self):
@@ -81,8 +67,3 @@ class AugustCamera(AugustEntityMixin, Camera):
                 self._session, timeout=self._timeout
             )
         return self._image_content
-
-    @property
-    def unique_id(self) -> str:
-        """Get the unique id of the camera."""
-        return f"{self._device_id:s}_camera"

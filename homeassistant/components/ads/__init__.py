@@ -268,15 +268,17 @@ class AdsHub:
 class AdsEntity(Entity):
     """Representation of ADS entity."""
 
+    _attr_should_poll = False
+    _event = None
+
     def __init__(self, ads_hub, name, ads_var):
         """Initialize ADS binary sensor."""
-        self._name = name
-        self._unique_id = ads_var
         self._state_dict = {}
         self._state_dict[STATE_KEY_STATE] = None
         self._ads_hub = ads_hub
         self._ads_var = ads_var
-        self._event = None
+        self._attr_unique_id = ads_var
+        self._attr_name = name
 
     async def async_initialize_device(
         self, ads_var, plctype, state_key=STATE_KEY_STATE, factor=None
@@ -309,21 +311,6 @@ class AdsEntity(Entity):
                 await self._event.wait()
         except asyncio.TimeoutError:
             _LOGGER.debug("Variable %s: Timeout during first update", ads_var)
-
-    @property
-    def name(self):
-        """Return the default name of the binary sensor."""
-        return self._name
-
-    @property
-    def unique_id(self):
-        """Return an unique identifier for this entity."""
-        return self._unique_id
-
-    @property
-    def should_poll(self):
-        """Return False because entity pushes its state to HA."""
-        return False
 
     @property
     def available(self):

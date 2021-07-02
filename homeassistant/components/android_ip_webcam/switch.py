@@ -39,13 +39,9 @@ class IPWebcamSettingsSwitch(AndroidIPCamEntity, SwitchEntity):
 
         self._setting = setting
         self._mapped_name = KEY_MAP.get(self._setting, self._setting)
-        self._name = f"{name} {self._mapped_name}"
+        self._attr_name = f"{name} {self._mapped_name}"
         self._state = False
-
-    @property
-    def name(self):
-        """Return the name of the node."""
-        return self._name
+        self._attr_icon = ICON_MAP.get(self._setting, "mdi:flash")
 
     async def async_update(self):
         """Get the updated status of the switch."""
@@ -81,8 +77,3 @@ class IPWebcamSettingsSwitch(AndroidIPCamEntity, SwitchEntity):
             await self._ipcam.change_setting(self._setting, False)
         self._state = False
         self.async_write_ha_state()
-
-    @property
-    def icon(self):
-        """Return the icon for the switch."""
-        return ICON_MAP.get(self._setting, "mdi:flash")

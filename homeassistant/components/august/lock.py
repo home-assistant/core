@@ -33,6 +33,8 @@ class AugustLock(AugustEntityMixin, RestoreEntity, LockEntity):
         self._lock_status = None
         self._changed_by = None
         self._available = False
+        self._attr_name = self._device.device_name
+        self._attr_unique_id = f"{self._device_id:s}_lock"
         self._update_from_data()
 
     async def async_lock(self, **kwargs):
@@ -88,11 +90,6 @@ class AugustLock(AugustEntityMixin, RestoreEntity, LockEntity):
         self._update_lock_status_from_detail()
 
     @property
-    def name(self):
-        """Return the name of this device."""
-        return self._device.device_name
-
-    @property
     def available(self):
         """Return the availability of this sensor."""
         return self._available
@@ -129,8 +126,3 @@ class AugustLock(AugustEntityMixin, RestoreEntity, LockEntity):
 
         if ATTR_CHANGED_BY in last_state.attributes:
             self._changed_by = last_state.attributes[ATTR_CHANGED_BY]
-
-    @property
-    def unique_id(self) -> str:
-        """Get the unique id of the lock."""
-        return f"{self._device_id:s}_lock"

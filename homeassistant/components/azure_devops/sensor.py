@@ -74,19 +74,15 @@ class AzureDevOpsSensor(AzureDevOpsDeviceEntity, SensorEntity):
         self._state = None
         self._attributes = None
         self._available = False
-        self._unit_of_measurement = unit_of_measurement
+        self._attr_unit_of_measurement = unit_of_measurement
         self.measurement = measurement
         self.client = client
         self.organization = organization
         self.project = project
         self.key = key
+        self._attr_unique_id = "_".join([self.organization, self.key])
 
         super().__init__(organization, project, name, icon)
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique ID for this sensor."""
-        return "_".join([self.organization, self.key])
 
     @property
     def state(self) -> str:
@@ -97,11 +93,6 @@ class AzureDevOpsSensor(AzureDevOpsDeviceEntity, SensorEntity):
     def extra_state_attributes(self) -> object:
         """Return the attributes of the sensor."""
         return self._attributes
-
-    @property
-    def unit_of_measurement(self) -> str:
-        """Return the unit this state is expressed in."""
-        return self._unit_of_measurement
 
 
 class AzureDevOpsLatestBuildSensor(AzureDevOpsSensor):

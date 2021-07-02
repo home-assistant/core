@@ -97,15 +97,13 @@ class AwairSensor(CoordinatorEntity, SensorEntity):
         super().__init__(coordinator)
         self._kind = kind
         self._device = device
-
-    @property
-    def name(self) -> str:
-        """Return the name of the sensor."""
-        name = SENSOR_TYPES[self._kind][ATTR_LABEL]
+        self._attr_icon = SENSOR_TYPES[self._kind][ATTR_ICON]
+        self._attr_device_class = SENSOR_TYPES[self._kind][ATTR_DEVICE_CLASS]
+        self._attr_unit_of_measurement = SENSOR_TYPES[self._kind][ATTR_UNIT]
         if self._device.name:
-            name = f"{self._device.name} {name}"
-
-        return name
+            self._attr_name = (
+                f"{self._device.name} {SENSOR_TYPES[self._kind][ATTR_LABEL]}"
+            )
 
     @property
     def unique_id(self) -> str:
@@ -163,21 +161,6 @@ class AwairSensor(CoordinatorEntity, SensorEntity):
             return round(state, 1)
 
         return round(state, 2)
-
-    @property
-    def icon(self) -> str:
-        """Return the icon."""
-        return SENSOR_TYPES[self._kind][ATTR_ICON]
-
-    @property
-    def device_class(self) -> str:
-        """Return the device_class."""
-        return SENSOR_TYPES[self._kind][ATTR_DEVICE_CLASS]
-
-    @property
-    def unit_of_measurement(self) -> str:
-        """Return the unit the value is expressed in."""
-        return SENSOR_TYPES[self._kind][ATTR_UNIT]
 
     @property
     def extra_state_attributes(self) -> dict:

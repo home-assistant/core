@@ -74,19 +74,10 @@ class AtenSwitch(SwitchEntity):
         self._device = device
         self._mac = mac
         self._outlet = outlet
-        self._name = name or f"Outlet {outlet}"
         self._enabled = False
         self._outlet_power = 0.0
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique ID."""
-        return f"{self._mac}-{self._outlet}"
-
-    @property
-    def name(self) -> str:
-        """Return the name of the entity."""
-        return self._name
+        self._attr_unique_id = f"{self._mac}-{self._outlet}"
+        self._attr_name = name or f"Outlet {outlet}"
 
     @property
     def is_on(self) -> bool:

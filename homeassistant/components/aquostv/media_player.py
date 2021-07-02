@@ -131,14 +131,14 @@ class SharpAquosTVDevice(MediaPlayerEntity):
         if self._power_on_enabled:
             self._supported_features |= SUPPORT_TURN_ON
         # Save a reference to the imported class
-        self._name = name
+        self._attr_name = name
         # Assume that the TV is not muted
         self._muted = False
         self._state = None
         self._remote = remote
         self._volume = 0
         self._source = None
-        self._source_list = list(SOURCES.values())
+        self._attr_source_list = list(SOURCES.values())
 
     def set_state(self, state):
         """Set TV state."""
@@ -167,11 +167,6 @@ class SharpAquosTVDevice(MediaPlayerEntity):
         self._volume = self._remote.volume() / 60
 
     @property
-    def name(self):
-        """Return the name of the device."""
-        return self._name
-
-    @property
     def state(self):
         """Return the state of the device."""
         return self._state
@@ -180,11 +175,6 @@ class SharpAquosTVDevice(MediaPlayerEntity):
     def source(self):
         """Return the current source."""
         return self._source
-
-    @property
-    def source_list(self):
-        """Return the source list."""
-        return self._source_list
 
     @property
     def volume_level(self):

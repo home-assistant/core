@@ -54,29 +54,16 @@ class AccuWeatherEntity(CoordinatorEntity, WeatherEntity):
     """Define an AccuWeather entity."""
 
     coordinator: AccuWeatherDataUpdateCoordinator
+    _attr_attribution = ATTRIBUTION
 
     def __init__(
         self, name: str, coordinator: AccuWeatherDataUpdateCoordinator
     ) -> None:
         """Initialize."""
         super().__init__(coordinator)
-        self._name = name
         self._unit_system = API_METRIC if self.coordinator.is_metric else API_IMPERIAL
-
-    @property
-    def name(self) -> str:
-        """Return the name."""
-        return self._name
-
-    @property
-    def attribution(self) -> str:
-        """Return the attribution."""
-        return ATTRIBUTION
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique_id for this entity."""
-        return self.coordinator.location_key
+        self._attr_name = name
+        self._attr_unique_id = self.coordinator.location_key
 
     @property
     def device_info(self) -> DeviceInfo:

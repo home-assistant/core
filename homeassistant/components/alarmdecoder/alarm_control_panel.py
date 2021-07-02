@@ -77,11 +77,17 @@ async def async_setup_entry(
 class AlarmDecoderAlarmPanel(AlarmControlPanelEntity):
     """Representation of an AlarmDecoder-based alarm panel."""
 
+    _attr_name = "Alarm Panel"
+    _attr_should_poll = False
+    _attr_code_format = FORMAT_NUMBER
+    _attr_supported_features = (
+        SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY | SUPPORT_ALARM_ARM_NIGHT
+    )
+
     def __init__(self, client, auto_bypass, code_arm_required, alt_night_mode):
         """Initialize the alarm panel."""
         self._client = client
         self._display = ""
-        self._name = "Alarm Panel"
         self._state = None
         self._ac_power = None
         self._alarm_event_occurred = None
@@ -132,29 +138,9 @@ class AlarmDecoderAlarmPanel(AlarmControlPanelEntity):
         self.schedule_update_ha_state()
 
     @property
-    def name(self):
-        """Return the name of the device."""
-        return self._name
-
-    @property
-    def should_poll(self):
-        """Return the polling state."""
-        return False
-
-    @property
-    def code_format(self):
-        """Return one or more digits/characters."""
-        return FORMAT_NUMBER
-
-    @property
     def state(self):
         """Return the state of the device."""
         return self._state
-
-    @property
-    def supported_features(self) -> int:
-        """Return the list of supported features."""
-        return SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY | SUPPORT_ALARM_ARM_NIGHT
 
     @property
     def code_arm_required(self):

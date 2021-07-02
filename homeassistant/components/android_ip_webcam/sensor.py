@@ -40,19 +40,9 @@ class IPWebcamSensor(AndroidIPCamEntity, SensorEntity):
 
         self._sensor = sensor
         self._mapped_name = KEY_MAP.get(self._sensor, self._sensor)
-        self._name = f"{name} {self._mapped_name}"
+        self._attr_name = f"{name} {self._mapped_name}"
         self._state = None
-        self._unit = None
-
-    @property
-    def name(self):
-        """Return the name of the sensor, if any."""
-        return self._name
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        return self._unit
+        self._attr_unit = None
 
     @property
     def state(self):
@@ -65,9 +55,9 @@ class IPWebcamSensor(AndroidIPCamEntity, SensorEntity):
             if not self._ipcam.status_data:
                 return
             self._state = self._ipcam.status_data.get(self._sensor)
-            self._unit = "Connections"
+            self._Attr_unit = "Connections"
         else:
-            self._state, self._unit = self._ipcam.export_sensor(self._sensor)
+            self._state, self._attr_unit = self._ipcam.export_sensor(self._sensor)
 
     @property
     def icon(self):

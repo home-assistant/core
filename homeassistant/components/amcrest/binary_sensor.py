@@ -105,34 +105,20 @@ class AmcrestBinarySensor(BinarySensorEntity):
 
     def __init__(self, name, device, sensor_type):
         """Initialize entity."""
-        self._name = f"{name} {BINARY_SENSORS[sensor_type][SENSOR_NAME]}"
+        self._attr_name = f"{name} {BINARY_SENSORS[sensor_type][SENSOR_NAME]}"
         self._signal_name = name
         self._api = device.api
         self._sensor_type = sensor_type
         self._state = None
-        self._device_class = BINARY_SENSORS[sensor_type][SENSOR_DEVICE_CLASS]
+        self._attr_device_class = BINARY_SENSORS[sensor_type][SENSOR_DEVICE_CLASS]
         self._event_code = BINARY_SENSORS[sensor_type][SENSOR_EVENT_CODE]
         self._unsub_dispatcher = []
-
-    @property
-    def should_poll(self):
-        """Return True if entity has to be polled for state."""
-        return self._sensor_type in BINARY_POLLED_SENSORS
-
-    @property
-    def name(self):
-        """Return entity name."""
-        return self._name
+        self._attr_should_poll = self._sensor_type in BINARY_POLLED_SENSORS
 
     @property
     def is_on(self):
         """Return if entity is on."""
         return self._state
-
-    @property
-    def device_class(self):
-        """Return device class."""
-        return self._device_class
 
     @property
     def available(self):

@@ -63,6 +63,18 @@ async def async_setup_entry(
 class ArcamFmj(MediaPlayerEntity):
     """Representation of a media device."""
 
+    _attr_should_poll = False
+    _attr_supported_features = (
+        SUPPORT_SELECT_SOURCE
+        | SUPPORT_PLAY_MEDIA
+        | SUPPORT_BROWSE_MEDIA
+        | SUPPORT_VOLUME_SET
+        | SUPPORT_VOLUME_MUTE
+        | SUPPORT_VOLUME_STEP
+        | SUPPORT_TURN_OFF
+        | SUPPORT_TURN_ON
+    )
+
     def __init__(
         self,
         device_name,
@@ -72,20 +84,13 @@ class ArcamFmj(MediaPlayerEntity):
         """Initialize device."""
         self._state = state
         self._device_name = device_name
-        self._name = f"{device_name} - Zone: {state.zn}"
         self._uuid = uuid
-        self._support = (
-            SUPPORT_SELECT_SOURCE
-            | SUPPORT_PLAY_MEDIA
-            | SUPPORT_BROWSE_MEDIA
-            | SUPPORT_VOLUME_SET
-            | SUPPORT_VOLUME_MUTE
-            | SUPPORT_VOLUME_STEP
-            | SUPPORT_TURN_OFF
-            | SUPPORT_TURN_ON
-        )
+        self._support = self._attr_supported_features
         if state.zn == 1:
             self._support |= SUPPORT_SELECT_SOUND_MODE
+        self._attr_entity_registry_enabled_default = self._state.zn == 1
+        self._attr_unique_id = f"{self._uuid}-{self._state.zn}"
+        self._attr_name = f"{device_name} - Zone: {state.zn}"
 
     def _get_2ch(self):
         """Return if source is 2 channel or not."""
@@ -101,16 +106,6 @@ class ArcamFmj(MediaPlayerEntity):
         )
 
     @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Return if the entity should be enabled when first added to the entity registry."""
-        return self._state.zn == 1
-
-    @property
-    def unique_id(self):
-        """Return unique identifier if known."""
-        return f"{self._uuid}-{self._state.zn}"
-
-    @property
     def device_info(self):
         """Return a device description for device registry."""
         return {
@@ -124,26 +119,11 @@ class ArcamFmj(MediaPlayerEntity):
         }
 
     @property
-    def should_poll(self) -> bool:
-        """No need to poll."""
-        return False
-
-    @property
-    def name(self):
-        """Return the name of the controlled device."""
-        return self._name
-
-    @property
     def state(self):
         """Return the state of the device."""
         if self._state.get_power():
             return STATE_ON
         return STATE_OFF
-
-    @property
-    def supported_features(self):
-        """Flag media player features that are supported."""
-        return self._support
 
     async def async_added_to_hass(self):
         """Once registered, add listener for events."""

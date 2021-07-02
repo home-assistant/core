@@ -65,16 +65,8 @@ class PwrCtrlSwitch(SwitchEntity):
         """Initialize the PwrCtrl switch."""
         self._port = port
         self._parent_device = parent_device
-
-    @property
-    def unique_id(self):
-        """Return the unique ID of the device."""
-        return f"{self._port.device.host}-{self._port.get_index()}"
-
-    @property
-    def name(self):
-        """Return the name of the device."""
-        return self._port.label
+        self._attr_unique_id = f"{self._port.device.host}-{self._port.get_index()}"
+        self._attr_name = self._port.label
 
     @property
     def is_on(self):

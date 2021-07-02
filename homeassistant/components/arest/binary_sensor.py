@@ -74,8 +74,8 @@ class ArestBinarySensor(BinarySensorEntity):
         """Initialize the aREST device."""
         self.arest = arest
         self._resource = resource
-        self._name = name
-        self._device_class = device_class
+        self._attr_name = name
+        self._attr_device_class = device_class
         self._pin = pin
 
         if self._pin is not None:
@@ -84,19 +84,9 @@ class ArestBinarySensor(BinarySensorEntity):
                 _LOGGER.error("Can't set mode of %s", self._resource)
 
     @property
-    def name(self):
-        """Return the name of the binary sensor."""
-        return self._name
-
-    @property
     def is_on(self):
         """Return true if the binary sensor is on."""
         return bool(self.arest.data.get("state"))
-
-    @property
-    def device_class(self):
-        """Return the class of this sensor."""
-        return self._device_class
 
     def update(self):
         """Get the latest data from aREST API."""

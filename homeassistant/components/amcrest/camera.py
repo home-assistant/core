@@ -131,10 +131,13 @@ class AmcrestCommandFailed(Exception):
 class AmcrestCam(Camera):
     """An implementation of an Amcrest IP camera."""
 
+    _attr_should_poll = True
+    _attr_supported_features = SUPPORT_ON_OFF | SUPPORT_STREAM
+
     def __init__(self, name, device, ffmpeg):
         """Initialize an Amcrest camera."""
         super().__init__()
-        self._name = name
+        self._attr_name = name
         self._api = device.api
         self._ffmpeg = ffmpeg
         self._ffmpeg_arguments = device.ffmpeg_arguments
@@ -144,8 +147,8 @@ class AmcrestCam(Camera):
         self._control_light = device.control_light
         self._is_recording = False
         self._motion_detection_enabled = None
-        self._brand = None
-        self._model = None
+        self._attr_brand = None
+        self._attr_model = None
         self._audio_enabled = None
         self._motion_recording_enabled = None
         self._color_bw = None
@@ -244,21 +247,6 @@ class AmcrestCam(Camera):
         finally:
             await stream.close()
 
-    # Entity property overrides
-
-    @property
-    def should_poll(self) -> bool:
-        """Return True if entity has to be polled for state.
-
-        False if entity pushes its state to HA.
-        """
-        return True
-
-    @property
-    def name(self):
-        """Return the name of this camera."""
-        return self._name
-
     @property
     def extra_state_attributes(self):
         """Return the Amcrest-specific camera state attributes."""
@@ -278,11 +266,6 @@ class AmcrestCam(Camera):
         """Return True if entity is available."""
         return self._api.available
 
-    @property
-    def supported_features(self):
-        """Return supported features."""
-        return SUPPORT_ON_OFF | SUPPORT_STREAM
-
     # Camera property overrides
 
     @property
@@ -291,19 +274,9 @@ class AmcrestCam(Camera):
         return self._is_recording
 
     @property
-    def brand(self):
-        """Return the camera brand."""
-        return self._brand
-
-    @property
     def motion_detection_enabled(self):
         """Return the camera motion detection status."""
         return self._motion_detection_enabled
-
-    @property
-    def model(self):
-        """Return the camera model."""
-        return self._model
 
     async def stream_source(self):
         """Return the source of the stream."""
@@ -353,18 +326,18 @@ class AmcrestCam(Camera):
             return
         _LOGGER.debug("Updating %s camera", self.name)
         try:
-            if self._brand is None:
+            if self._attr_brand is None:
                 resp = self._api.vendor_information.strip()
                 if resp.startswith("vendor="):
-                    self._brand = resp.split("=")[-1]
+                    self._attr_brand = resp.split("=")[-1]
                 else:
-                    self._brand = "unknown"
-            if self._model is None:
+                    self._attr_brand = "unknown"
+            if self._attr_model is None:
                 resp = self._api.device_type.strip()
                 if resp.startswith("type="):
-                    self._model = resp.split("=")[-1]
+                    self._attr_model = resp.split("=")[-1]
                 else:
-                    self._model = "unknown"
+                    self._attr_model = "unknown"
             self.is_streaming = self._get_video()
             self._is_recording = self._get_recording()
             self._motion_detection_enabled = self._get_motion_detection()

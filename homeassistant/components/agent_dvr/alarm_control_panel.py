@@ -35,28 +35,24 @@ async def async_setup_entry(
 class AgentBaseStation(AlarmControlPanelEntity):
     """Representation of an Agent DVR Alarm Control Panel."""
 
+    _attr_icon = ICON
+    _attr_supported_features = (
+        SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY | SUPPORT_ALARM_ARM_NIGHT
+    )
+
     def __init__(self, client):
         """Initialize the alarm control panel."""
         self._state = None
         self._client = client
-        self._unique_id = f"{client.unique}_CP"
         name = CONST_ALARM_CONTROL_PANEL_NAME
-        self._name = name = f"{client.name} {name}"
-
-    @property
-    def icon(self):
-        """Return icon."""
-        return ICON
+        name = f"{client.name} {name}"
+        self._attr_name = name
+        self._attr_unique_id = f"{client.unique}_CP"
 
     @property
     def state(self):
         """Return the state of the device."""
         return self._state
-
-    @property
-    def supported_features(self) -> int:
-        """Return the list of supported features."""
-        return SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY | SUPPORT_ALARM_ARM_NIGHT
 
     @property
     def device_info(self):
@@ -109,16 +105,6 @@ class AgentBaseStation(AlarmControlPanelEntity):
         self._state = STATE_ALARM_ARMED_NIGHT
 
     @property
-    def name(self):
-        """Return the name of the base station."""
-        return self._name
-
-    @property
     def available(self) -> bool:
         """Device available."""
         return self._client.is_available
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique ID."""
-        return self._unique_id

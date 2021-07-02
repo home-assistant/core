@@ -110,21 +110,11 @@ class AlphaVantageSensor(SensorEntity):
     def __init__(self, timeseries, symbol):
         """Initialize the sensor."""
         self._symbol = symbol[CONF_SYMBOL]
-        self._name = symbol.get(CONF_NAME, self._symbol)
+        self._attr_name = symbol.get(CONF_NAME, self._symbol)
         self._timeseries = timeseries
         self.values = None
-        self._unit_of_measurement = symbol.get(CONF_CURRENCY, self._symbol)
-        self._icon = ICONS.get(symbol.get(CONF_CURRENCY, "USD"))
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of this entity, if any."""
-        return self._unit_of_measurement
+        self._attr_unit_of_measurement = symbol.get(CONF_CURRENCY, self._symbol)
+        self._attr_icon = ICONS.get(symbol.get(CONF_CURRENCY, "USD"))
 
     @property
     def state(self):
@@ -141,11 +131,6 @@ class AlphaVantageSensor(SensorEntity):
                 ATTR_HIGH: self.values["2. high"],
                 ATTR_LOW: self.values["3. low"],
             }
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend, if any."""
-        return self._icon
 
     def update(self):
         """Get the latest data and updates the states."""
@@ -164,32 +149,17 @@ class AlphaVantageForeignExchange(SensorEntity):
         self._from_currency = config[CONF_FROM]
         self._to_currency = config[CONF_TO]
         if CONF_NAME in config:
-            self._name = config.get(CONF_NAME)
+            self._attr_name = config.get(CONF_NAME)
         else:
-            self._name = f"{self._to_currency}/{self._from_currency}"
-        self._unit_of_measurement = self._to_currency
-        self._icon = ICONS.get(self._from_currency, "USD")
+            self._attr_name = f"{self._to_currency}/{self._from_currency}"
+        self._attr_unit_of_measurement = self._to_currency
+        self._attr_icon = ICONS.get(self._from_currency, "USD")
         self.values = None
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of this entity, if any."""
-        return self._unit_of_measurement
 
     @property
     def state(self):
         """Return the state of the sensor."""
         return round(float(self.values["5. Exchange Rate"]), 4)
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend, if any."""
-        return self._icon
 
     @property
     def extra_state_attributes(self):

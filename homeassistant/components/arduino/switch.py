@@ -43,7 +43,7 @@ class ArduinoSwitch(SwitchEntity):
     def __init__(self, pin, options, board):
         """Initialize the Pin."""
         self._pin = pin
-        self._name = options[CONF_NAME]
+        self._attr_name = options[CONF_NAME]
         self.pin_type = CONF_TYPE
         self.direction = "out"
 
@@ -58,11 +58,6 @@ class ArduinoSwitch(SwitchEntity):
 
         board.set_mode(self._pin, self.direction, self.pin_type)
         (self.turn_on_handler if self._state else self.turn_off_handler)(pin)
-
-    @property
-    def name(self):
-        """Get the name of the pin."""
-        return self._name
 
     @property
     def is_on(self):
