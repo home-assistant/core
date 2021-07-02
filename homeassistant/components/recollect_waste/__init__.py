@@ -21,14 +21,10 @@ DEFAULT_UPDATE_INTERVAL = timedelta(days=1)
 PLATFORMS = ["sensor"]
 
 
-async def async_setup(hass: HomeAssistant, config: dict) -> bool:
-    """Set up the RainMachine component."""
-    hass.data[DOMAIN] = {DATA_COORDINATOR: {}, DATA_LISTENER: {}}
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up RainMachine as config entry."""
+    hass.data.setdefault(DOMAIN, {DATA_COORDINATOR: {}, DATA_LISTENER: {}})
+
     session = aiohttp_client.async_get_clientsession(hass)
     client = Client(
         entry.data[CONF_PLACE_ID], entry.data[CONF_SERVICE_ID], session=session
