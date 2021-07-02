@@ -60,23 +60,13 @@ class AccuWeatherEntity(CoordinatorEntity, WeatherEntity):
     ) -> None:
         """Initialize."""
         super().__init__(coordinator)
-        self._name = name
         self._unit_system = API_METRIC if self.coordinator.is_metric else API_IMPERIAL
-
-    @property
-    def name(self) -> str:
-        """Return the name."""
-        return self._name
-
-    @property
-    def attribution(self) -> str:
-        """Return the attribution."""
-        return ATTRIBUTION
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique_id for this entity."""
-        return self.coordinator.location_key
+        self._attr_name = name
+        self._attr_unique_id = self.coordinator.location_key
+        self._attr_temperature_unit = (
+            TEMP_CELSIUS if self.coordinator.is_metric else TEMP_FAHRENHEIT
+        )
+        self._attr_attribution = ATTRIBUTION
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -106,11 +96,6 @@ class AccuWeatherEntity(CoordinatorEntity, WeatherEntity):
         return cast(
             float, self.coordinator.data["Temperature"][self._unit_system]["Value"]
         )
-
-    @property
-    def temperature_unit(self) -> str:
-        """Return the unit of measurement."""
-        return TEMP_CELSIUS if self.coordinator.is_metric else TEMP_FAHRENHEIT
 
     @property
     def pressure(self) -> float:
