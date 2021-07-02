@@ -112,12 +112,14 @@ async def update_listener(hass, config_entry):
     # Remove orphaned entities
     for entity in entities:
         currency = entity.unique_id.split("-")[-1]
-        if "xe" in entity.unique_id:
-            if currency not in config_entry.options.get(CONF_EXCHANGE_RATES):
-                registry.async_remove(entity.entity_id)
-        elif "wallet" in entity.unique_id:
-            if currency not in config_entry.options.get(CONF_CURRENCIES):
-                registry.async_remove(entity.entity_id)
+        if "xe" in entity.unique_id and currency not in config_entry.options.get(
+            CONF_EXCHANGE_RATES
+        ):
+            registry.async_remove(entity.entity_id)
+        elif "wallet" in entity.unique_id and currency not in config_entry.options.get(
+            CONF_CURRENCIES
+        ):
+            registry.async_remove(entity.entity_id)
 
 
 def get_accounts(client):
