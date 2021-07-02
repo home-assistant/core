@@ -138,7 +138,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 "No webhook to be dropped for %s", entry.data[CONF_WEBHOOK_ID]
             )
 
-    async def register_webhook(event) -> None:
+    async def register_webhook(event: dict) -> None:
         if CONF_WEBHOOK_ID not in entry.data:
             data = {**entry.data, CONF_WEBHOOK_ID: secrets.token_hex()}
             hass.config_entries.async_update_entry(entry, data=data)
