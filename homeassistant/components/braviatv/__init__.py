@@ -90,17 +90,17 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
         self.source_list: list[str] = []
         self.original_content_list: list[str] = []
         self.content_mapping: dict[str, str] = {}
-        self.duration = None
-        self.content_uri = None
+        self.duration: int | None = None
+        self.content_uri: str | None = None
         self.start_date_time = None
-        self.program_media_type = None
-        self.audio_output = None
-        self.min_volume = None
-        self.max_volume = None
-        self.volume_level = None
-        self.is_on = False
+        self.program_media_type: str | None = None
+        self.audio_output: str | None = None
+        self.min_volume: int | None = None
+        self.max_volume: int | None = None
+        self.volume_level: float | None = None
+        self.is_on: bool = False
         # Assume that the TV is in Play mode
-        self.playing = True
+        self.playing: bool = True
         self.state_lock = asyncio.Lock()
 
         super().__init__(
