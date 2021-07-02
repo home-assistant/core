@@ -45,6 +45,8 @@ QUERY_STATISTIC_META = [
 STATISTICS_BAKERY = "recorder_statistics_bakery"
 STATISTICS_META_BAKERY = "recorder_statistics_bakery"
 
+# Convert pressure and temperature statistics from the native unit used for statistics
+# to the units configured by the user
 UNIT_CONVERSIONS = {
     PRESSURE_PA: lambda x, units: pressure_util.convert(
         x, PRESSURE_PA, units.pressure_unit
@@ -137,7 +139,8 @@ def _get_meta_data(hass, session, statistic_ids):
     return {id: _meta(result, id) for id in statistic_ids}
 
 
-def _unit_system_unit(unit: str, units) -> str:
+def _configured_unit(unit: str, units) -> str:
+    """Return the pressure and temperature units configured by the user."""
     if unit == PRESSURE_PA:
         return units.pressure_unit
     if unit == TEMP_CELSIUS:
@@ -146,7 +149,7 @@ def _unit_system_unit(unit: str, units) -> str:
 
 
 def list_statistic_ids(hass, statistic_type=None):
-    """Return statistic_ids."""
+    """Return statistic_ids and meta data."""
     units = hass.config.units
     with session_scope(hass=hass) as session:
         baked_query = hass.data[STATISTICS_BAKERY](
@@ -161,13 +164,14 @@ def list_statistic_ids(hass, statistic_type=None):
         baked_query += lambda q: q.order_by(Statistics.statistic_id)
 
         result = execute(baked_query(session))
-        statistic_ids_list = [statistic_id[0] for statistic_id in result]
-        statistic_ids = _get_meta_data(hass, session, statistic_ids_list)
-        for statistic_id in statistic_ids.values():
-            unit = _unit_system_unit(statistic_id["unit_of_measurement"], units)
-            statistic_id["unit_of_measurement"] = unit
 
-        return list(statistic_ids.values())
+        statistic_ids = [statistic_id[0] for statistic_id in result]
+        meta_data = _get_meta_data(hass, session, statistic_ids)
+        for item in meta_data.values():
+            unit = _configured_unit(item["unit_of_measurement"], units)
+            item["unit_of_measurement"] = unit
+
+        return list(meta_data.values())
 
 
 def statistics_during_period(hass, start_time, end_time=None, statistic_ids=None):
