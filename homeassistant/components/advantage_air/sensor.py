@@ -51,16 +51,8 @@ class AdvantageAirTimeTo(AdvantageAirEntity, SensorEntity):
         super().__init__(instance, ac_key)
         self.action = action
         self._time_key = f"countDownTo{self.action}"
-
-    @property
-    def name(self):
-        """Return the name."""
-        return f'{self._ac["name"]} Time To {self.action}'
-
-    @property
-    def unique_id(self):
-        """Return a unique id."""
-        return f'{self.coordinator.data["system"]["rid"]}-{self.ac_key}-timeto{self.action}'
+        self._attr_name = f'{self._ac["name"]} Time To {self.action}'
+        self._attr_unique_id = f'{self.coordinator.data["system"]["rid"]}-{self.ac_key}-timeto{self.action}'
 
     @property
     def state(self):
@@ -85,15 +77,10 @@ class AdvantageAirZoneVent(AdvantageAirEntity, SensorEntity):
 
     _attr_unit_of_measurement = PERCENTAGE
 
-    @property
-    def name(self):
-        """Return the name."""
-        return f'{self._zone["name"]} Vent'
-
-    @property
-    def unique_id(self):
-        """Return a unique id."""
-        return f'{self.coordinator.data["system"]["rid"]}-{self.ac_key}-{self.zone_key}-vent'
+    def __init__(self):
+        """Initialize an Advantage Air Zone Vent Sensor."""
+        self._attr_name = f'{self._zone["name"]} Vent'
+        self._attr_unique_id = f'{self.coordinator.data["system"]["rid"]}-{self.ac_key}-{self.zone_key}-vent'
 
     @property
     def state(self):
@@ -115,30 +102,21 @@ class AdvantageAirZoneSignal(AdvantageAirEntity, SensorEntity):
 
     _attr_unit_of_measurement = PERCENTAGE
 
-    @property
-    def name(self):
-        """Return the name."""
-        return f'{self._zone["name"]} Signal'
-
-    @property
-    def unique_id(self):
-        """Return a unique id."""
-        return f'{self.coordinator.data["system"]["rid"]}-{self.ac_key}-{self.zone_key}-signal'
+    def __init__(self):
+        """Initialize an Advantage Air Zone wireless signal sensor."""
+        self._attr_name = f'{self._zone["name"]} Signal'
+        self._attr_unique_id = f'{self.coordinator.data["system"]["rid"]}-{self.ac_key}-{self.zone_key}-signal'
+        self._attr_icon = "mdi:wifi-strength-outline"
+        if self._zone["rssi"] >= 80:
+            self._attr_icon = "mdi:wifi-strength-4"
+        elif self._zone["rssi"] >= 60:
+            self._attr_icon = "mdi:wifi-strength-3"
+        elif self._zone["rssi"] >= 40:
+            self._attr_icon = "mdi:wifi-strength-2"
+        elif self._zone["rssi"] >= 20:
+            self._attr_icon = "mdi:wifi-strength-1"
 
     @property
     def state(self):
         """Return the current value of the wireless signal."""
         return self._zone["rssi"]
-
-    @property
-    def icon(self):
-        """Return a representative icon."""
-        if self._zone["rssi"] >= 80:
-            return "mdi:wifi-strength-4"
-        if self._zone["rssi"] >= 60:
-            return "mdi:wifi-strength-3"
-        if self._zone["rssi"] >= 40:
-            return "mdi:wifi-strength-2"
-        if self._zone["rssi"] >= 20:
-            return "mdi:wifi-strength-1"
-        return "mdi:wifi-strength-outline"

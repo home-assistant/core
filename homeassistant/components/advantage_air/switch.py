@@ -25,25 +25,19 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class AdvantageAirFreshAir(AdvantageAirEntity, ToggleEntity):
     """Representation of Advantage Air fresh air control."""
 
-    @property
-    def name(self):
-        """Return the name."""
-        return f'{self._ac["name"]} Fresh Air'
+    _attr_icon = "mdi:air-filter"
 
-    @property
-    def unique_id(self):
-        """Return a unique id."""
-        return f'{self.coordinator.data["system"]["rid"]}-{self.ac_key}-freshair'
+    def __init__(self):
+        """Initialize an Advantage Air fresh air control."""
+        self._attr_name = f'{self._ac["name"]} Fresh Air'
+        self._attr_unique_id = (
+            f'{self.coordinator.data["system"]["rid"]}-{self.ac_key}-freshair'
+        )
 
     @property
     def is_on(self):
         """Return the fresh air status."""
         return self._ac["freshAirStatus"] == ADVANTAGE_AIR_STATE_ON
-
-    @property
-    def icon(self):
-        """Return a representative icon of the fresh air switch."""
-        return "mdi:air-filter"
 
     async def async_turn_on(self, **kwargs):
         """Turn fresh air on."""
