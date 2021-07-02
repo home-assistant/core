@@ -1,6 +1,8 @@
 """Config flow to configure the devolo home control integration."""
 from __future__ import annotations
 
+from typing import Any
+
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -8,7 +10,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import DiscoveryInfoType
 
 from . import configure_mydevolo
 from .const import CONF_MYDEVOLO, DEFAULT_MYDEVOLO, DOMAIN, SUPPORTED_MODEL_TYPES
@@ -29,7 +31,9 @@ class DevoloHomeControlFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._reauth_entry: ConfigEntry | None = None
         self._url = DEFAULT_MYDEVOLO
 
-    async def async_step_user(self, user_input: ConfigType | None = None) -> FlowResult:
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle a flow initiated by the user."""
         if self.show_advanced_options:
             self.data_schema[vol.Required(CONF_MYDEVOLO, default=self._url)] = str
@@ -51,7 +55,7 @@ class DevoloHomeControlFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_abort(reason="Not a devolo Home Control gateway.")
 
     async def async_step_zeroconf_confirm(
-        self, user_input: ConfigType | None = None
+        self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle a flow initiated by zeroconf."""
         if user_input is None:
@@ -63,7 +67,7 @@ class DevoloHomeControlFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 step_id="zeroconf_confirm", errors={"base": "invalid_auth"}
             )
 
-    async def async_step_reauth(self, user_input: ConfigType) -> FlowResult:
+    async def async_step_reauth(self, user_input: dict[str, Any]) -> FlowResult:
         """Handle reauthentication."""
         self._reauth_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]
@@ -76,7 +80,7 @@ class DevoloHomeControlFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
-        self, user_input: ConfigType | None = None
+        self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle a flow initiated by reauthentication."""
         if user_input is None:
@@ -92,7 +96,7 @@ class DevoloHomeControlFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 step_id="reauth_confirm", errors={"base": "reauth_failed"}
             )
 
-    async def _connect_mydevolo(self, user_input: ConfigType) -> FlowResult:
+    async def _connect_mydevolo(self, user_input: dict[str, Any]) -> FlowResult:
         """Connect to mydevolo."""
         user_input[CONF_MYDEVOLO] = user_input.get(CONF_MYDEVOLO, self._url)
         mydevolo = configure_mydevolo(conf=user_input)
