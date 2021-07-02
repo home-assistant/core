@@ -165,7 +165,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.rachio.*",
     "homeassistant.components.rainmachine.*",
     "homeassistant.components.recollect_waste.*",
-    "homeassistant.components.recorder.*",
     "homeassistant.components.reddit.*",
     "homeassistant.components.ring.*",
     "homeassistant.components.roku.*",
