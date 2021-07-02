@@ -230,16 +230,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 async def async_setup_coordinated_entry(hass, config_entry, async_add_entities):
     """Set up the coordinated switch from a config entry."""
     entities = []
-    host = config_entry.data[CONF_HOST]
-    token = config_entry.data[CONF_TOKEN]
     name = config_entry.title
     model = config_entry.data[CONF_MODEL]
     unique_id = config_entry.unique_id
 
     if DATA_KEY not in hass.data:
         hass.data[DATA_KEY] = {}
-
-    _LOGGER.debug("Initializing with host %s (token %s...)", host, token[:5])
 
     device_features = 0
 
