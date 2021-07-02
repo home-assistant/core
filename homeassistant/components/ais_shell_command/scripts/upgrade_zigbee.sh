@@ -36,6 +36,7 @@ pm2 start zigbee
 echo "Done!"
 
 # publih to ota
+# scp -P 7777 zigbee.zip dom@147.135.209.212:/var/www/AIS-WWW/ota/zigbee_beta.zip
 # scp -P 7777 zigbee.zip dom@147.135.209.212:/var/www/AIS-WWW/ota/zigbee.zip
 
 echo "!!! PUT  zigbee.zip in AIS-WWW !!!"

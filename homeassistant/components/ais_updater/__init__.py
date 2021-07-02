@@ -870,6 +870,7 @@ def do_download_upgrade(hass, call):
     dom_app_newest_version = attr.get("dom_app_newest_version", "")
     release_script = attr.get("release_script", "")
     reinstall_zigbee2mqtt = attr.get("reinstall_zigbee2mqtt", False)
+    beta = attr.get("beta", False)
 
     # add the grant to save on sdcard
     if reinstall_android_app:
@@ -899,6 +900,8 @@ def do_download_upgrade(hass, call):
         # download zigbee update zip
         try:
             zigbee_update_url = "http://powiedz.co/ota/zigbee.zip"
+            if beta:
+                zigbee_update_url = "http://powiedz.co/ota/zigbee_beta.zip"
             ws_resp = requests.get(zigbee_update_url, timeout=360)
             if ws_resp.status_code != 200:
                 _LOGGER.error(
