@@ -1,5 +1,6 @@
 # AIS dom backup script to create bootstrap
-ais_pro=$(su -c cat /system/build.prop | grep 'ro.product.name=AISPRO1' | wc -l)
+# last change 2021/06/09 by AR
+ais_pro=$(su -c cat /system/build.prop | grep 'ro.product.name=AIS-PRO1' | wc -l)
 if [ $ais_pro -gt 0 ]; then
   echo "OK, let use 6 CPUs"
 else
@@ -44,6 +45,7 @@ rm -rf /data/data/pl.sviete.dom/files/home/AIS/.dom/.ais*
 # create db settings for pro
 if [ $ais_pro -gt 0 ]; then
   echo '{"dbEngine": "PostgreSQL", "dbDrive": "", "dbUrl": "postgresql://ais:dom@localhost/ha", "dbPassword": "dom", "dbUser": "ais", "dbServerIp": "localhost", "dbServerName": "ha", "dbKeepDays": "10", "errorInfo": ""}' >  /data/data/pl.sviete.dom/files/home/AIS/.dom/.ais_db_settings_info
+
 fi
 # 6. clear npm cache
 rm -rf /data/data/pl.sviete.dom/files/home/.npm/_cacache/*
@@ -101,6 +103,33 @@ rm -rf /data/data/pl.sviete.dom/files/home/dom/dyski-zdalne/*
 rm -rf /data/data/pl.sviete.dom/files/home/dom/.temp
 rm -rf /data/data/pl.sviete.dom/files/usr/tmp/*
 
+# 16. rm the ais_setup_wizard_done file
+rm /data/data/pl.sviete.dom/files/ais_setup_wizard_done
+
+if [ $ais_pro -gt 0 ]; then
+  # 17. clean DB
+  # # drop database ha
+  #  mysql -h localhost -u ais -pdom -Bse "DROP database ha; CREATE database ha;"
+  echo TODO
+  # pm2 stop mysql
+  # apt -y remove mariadb
+  # rm -rf /data/data/pl.sviete.dom/files/usr/var/lib/mysql/*
+  # apt -y install mariadb
+  # mysql_install_db
+  # mysqld_safe &
+  # process_id=$!
+  # echo "DB PID: $process_id"
+  # wait $process_id
+  # echo "OK we have DB"
+  # sleep 5
+  # mysql -u $(whoami) --execute="CREATE DATABASE ha CHARACTER SET utf8;"
+  # mysql -u $(whoami) --execute="CREATE USER 'ais'@'localhost' IDENTIFIED  BY 'dom';"
+  # mysql -u $(whoami) --execute="GRANT ALL PRIVILEGES ON ha.* TO 'ais'@'localhost';"
+  # test
+  # mysql -h 127.0.0.1 -u ais -pdom ha --execute="select 'DB TEST OK' as ais from dual;"
+  # killall -9 mysqld mysqld_safe
+  # pm2 start mysql
+fi
 
 # ON THE END -> create new bootstrap
 cd /data/data/pl.sviete.dom
@@ -112,3 +141,4 @@ else
   # to prevent the kill form Android, 7z have to be limited to 2 threads only (mmt=2)
   7za a -m0=lzma2 /sdcard/files.tar.7z /data/data/pl.sviete.dom/files -mmt=2
 fi
+
