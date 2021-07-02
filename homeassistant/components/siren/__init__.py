@@ -43,7 +43,7 @@ TURN_ON_SCHEMA = {
 }
 
 
-class SirenTurnOnServiceParametersDataType(TypedDict, total=False):
+class SirenTurnOnServiceParameters(TypedDict, total=False):
     """Represent possible parameters to siren.turn_on service data dict type."""
 
     tone: int | str
@@ -52,8 +52,8 @@ class SirenTurnOnServiceParametersDataType(TypedDict, total=False):
 
 
 def filter_turn_on_params(
-    siren: SirenEntity, params: SirenTurnOnServiceParametersDataType
-) -> SirenTurnOnServiceParametersDataType:
+    siren: SirenEntity, params: SirenTurnOnServiceParameters
+) -> SirenTurnOnServiceParameters:
     """Filter out params not supported by the siren."""
     supported_features = siren.supported_features or 0
 
@@ -80,7 +80,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
         """Handle turning a siren on."""
         await siren.async_turn_on(
             **filter_turn_on_params(
-                siren, cast(SirenTurnOnServiceParametersDataType, dict(call.data))
+                siren, cast(SirenTurnOnServiceParameters, dict(call.data))
             )
         )
 
