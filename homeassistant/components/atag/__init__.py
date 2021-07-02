@@ -75,7 +75,8 @@ class AtagEntity(CoordinatorEntity):
         super().__init__(coordinator)
 
         self._id = atag_id
-        self._name = DOMAIN.title()
+        self._attr_name = DOMAIN.title()
+        self._attr_unique_id = f"{self.coordinator.data.id}-{self._id}"
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -89,13 +90,3 @@ class AtagEntity(CoordinatorEntity):
             "sw_version": version,
             "manufacturer": "Atag",
         }
-
-    @property
-    def name(self) -> str:
-        """Return the name of the entity."""
-        return self._name
-
-    @property
-    def unique_id(self):
-        """Return a unique ID to use for this entity."""
-        return f"{self.coordinator.data.id}-{self._id}"

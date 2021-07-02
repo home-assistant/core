@@ -37,30 +37,14 @@ class AtagSensor(AtagEntity, SensorEntity):
         """Initialize Atag sensor."""
         super().__init__(coordinator, SENSORS[sensor])
         self._name = sensor
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self.coordinator.data.report[self._id].state
-
-    @property
-    def icon(self):
-        """Return icon."""
-        return self.coordinator.data.report[self._id].icon
-
-    @property
-    def device_class(self):
-        """Return deviceclass."""
+        self._attr_device_class = None
         if self.coordinator.data.report[self._id].sensorclass in [
             DEVICE_CLASS_PRESSURE,
             DEVICE_CLASS_TEMPERATURE,
         ]:
-            return self.coordinator.data.report[self._id].sensorclass
-        return None
-
-    @property
-    def unit_of_measurement(self):
-        """Return measure."""
+            self._attr_device_class = self.coordinator.data.report[self._id].sensorclass
+        self._attr_icon = self.coordinator.data.report[self._id].icon
+        self._attr_unit_of_measurement = None
         if self.coordinator.data.report[self._id].measure in [
             PRESSURE_BAR,
             TEMP_CELSIUS,
@@ -68,5 +52,11 @@ class AtagSensor(AtagEntity, SensorEntity):
             PERCENTAGE,
             TIME_HOURS,
         ]:
-            return self.coordinator.data.report[self._id].measure
-        return None
+            self._attr_unit_of_measurement = self.coordinator.data.report[
+                self._id
+            ].measure
+
+    @property
+    def state(self):
+        """Return the state of the sensor."""
+        return self.coordinator.data.report[self._id].state

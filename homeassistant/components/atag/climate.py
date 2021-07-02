@@ -37,10 +37,9 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class AtagThermostat(AtagEntity, ClimateEntity):
     """Atag climate device."""
 
-    @property
-    def supported_features(self):
-        """Return the list of supported features."""
-        return SUPPORT_FLAGS
+    _attr_supported_features = SUPPORT_FLAGS
+    _attr_hvac_modes = HVAC_MODES
+    _attr_preset_modes = list(PRESET_MAP.keys())
 
     @property
     def hvac_mode(self) -> str | None:
@@ -50,15 +49,13 @@ class AtagThermostat(AtagEntity, ClimateEntity):
         return None
 
     @property
-    def hvac_modes(self) -> list[str]:
-        """Return the list of available hvac operation modes."""
-        return HVAC_MODES
-
-    @property
     def hvac_action(self) -> str | None:
         """Return the current running hvac operation."""
-        is_active = self.coordinator.data.climate.status
-        return CURRENT_HVAC_HEAT if is_active else CURRENT_HVAC_IDLE
+        return (
+            CURRENT_HVAC_HEAT
+            if self.coordinator.data.climate.status
+            else CURRENT_HVAC_IDLE
+        )
 
     @property
     def temperature_unit(self) -> str | None:
@@ -78,13 +75,7 @@ class AtagThermostat(AtagEntity, ClimateEntity):
     @property
     def preset_mode(self) -> str | None:
         """Return the current preset mode, e.g., auto, manual, fireplace, extend, etc."""
-        preset = self.coordinator.data.climate.preset_mode
-        return PRESET_INVERTED.get(preset)
-
-    @property
-    def preset_modes(self) -> list[str] | None:
-        """Return a list of available preset modes."""
-        return list(PRESET_MAP.keys())
+        return PRESET_INVERTED.get(self.coordinator.data.climate.preset_mode)
 
     async def async_set_temperature(self, **kwargs) -> None:
         """Set new target temperature."""
