@@ -54,6 +54,7 @@ DEVICE_CLASS_STATISTICS = {
     DEVICE_CLASS_TEMPERATURE: {"mean", "min", "max"},
 }
 
+# Normalized units which will be stored in the statistics table
 DEVICE_CLASS_UNITS = {
     DEVICE_CLASS_ENERGY: ENERGY_KILO_WATT_HOUR,
     DEVICE_CLASS_POWER: POWER_WATT,
@@ -62,14 +63,18 @@ DEVICE_CLASS_UNITS = {
 }
 
 UNIT_CONVERSIONS: dict[str, dict[str, Callable]] = {
+    # Convert energy to kWh
     DEVICE_CLASS_ENERGY: {
         ENERGY_KILO_WATT_HOUR: lambda x: x,
         ENERGY_WATT_HOUR: lambda x: x / 1000,
     },
+    # Convert power W
     DEVICE_CLASS_POWER: {
         POWER_WATT: lambda x: x,
         POWER_KILO_WATT: lambda x: x * 1000,
     },
+    # Convert pressure to Pa
+    # Note: pressure_util.convert is bypassed to avoid redundant error checking
     DEVICE_CLASS_PRESSURE: {
         PRESSURE_BAR: lambda x: x / pressure_util.UNIT_CONVERSION[PRESSURE_BAR],
         PRESSURE_HPA: lambda x: x / pressure_util.UNIT_CONVERSION[PRESSURE_HPA],
@@ -78,6 +83,8 @@ UNIT_CONVERSIONS: dict[str, dict[str, Callable]] = {
         PRESSURE_PA: lambda x: x / pressure_util.UNIT_CONVERSION[PRESSURE_PA],
         PRESSURE_PSI: lambda x: x / pressure_util.UNIT_CONVERSION[PRESSURE_PSI],
     },
+    # Convert temperature to °C
+    # Note: temperature_util.convert is bypassed to avoid redundant error checking
     DEVICE_CLASS_TEMPERATURE: {
         TEMP_CELSIUS: lambda x: x,
         TEMP_FAHRENHEIT: temperature_util.fahrenheit_to_celsius,
@@ -85,6 +92,7 @@ UNIT_CONVERSIONS: dict[str, dict[str, Callable]] = {
     },
 }
 
+# Keep track of entities for which a warning about unsupported unit has been logged
 WARN_UNSUPPORTED_UNIT = set()
 
 
@@ -153,13 +161,15 @@ def _normalize_states(
     entity_history: list[State], device_class: str, entity_id: str
 ) -> tuple[str | None, list[tuple[float, State]]]:
     """Normalize units."""
+    unit = None
 
     if device_class not in UNIT_CONVERSIONS:
         # We're not normalizing this device class, return the state as they are
         fstates = [
             (float(el.state), el) for el in entity_history if _is_number(el.state)
         ]
-        unit = fstates[0][1].attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        if fstates:
+            unit = fstates[0][1].attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         return unit, fstates
 
     fstates = []

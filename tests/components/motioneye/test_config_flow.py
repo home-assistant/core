@@ -14,9 +14,11 @@ from homeassistant.components.motioneye.const import (
     CONF_ADMIN_USERNAME,
     CONF_SURVEILLANCE_PASSWORD,
     CONF_SURVEILLANCE_USERNAME,
+    CONF_WEBHOOK_SET,
+    CONF_WEBHOOK_SET_OVERWRITE,
     DOMAIN,
 )
-from homeassistant.const import CONF_URL
+from homeassistant.const import CONF_URL, CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
 
 from . import TEST_URL, create_mock_motioneye_client, create_mock_motioneye_config_entry
@@ -247,6 +249,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
     """Test a reauth."""
     config_data = {
         CONF_URL: TEST_URL,
+        CONF_WEBHOOK_ID: "test-webhook-id",
     }
 
     config_entry = create_mock_motioneye_config_entry(hass, data=config_data)
@@ -287,7 +290,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "reauth_successful"
-    assert dict(config_entry.data) == new_data
+    assert dict(config_entry.data) == {**new_data, CONF_WEBHOOK_ID: "test-webhook-id"}
 
     assert len(mock_setup_entry.mock_calls) == 1
     assert mock_client.async_client_close.called
@@ -300,11 +303,11 @@ async def test_duplicate(hass: HomeAssistant) -> None:
     }
 
     # Add an existing entry with the same URL.
-    existing_entry: MockConfigEntry = MockConfigEntry(  # type: ignore[no-untyped-call]
+    existing_entry: MockConfigEntry = MockConfigEntry(
         domain=DOMAIN,
         data=config_data,
     )
-    existing_entry.add_to_hass(hass)  # type: ignore[no-untyped-call]
+    existing_entry.add_to_hass(hass)
 
     # Now do the usual config entry process, and verify it is rejected.
     create_mock_motioneye_config_entry(hass, data=config_data)
@@ -431,3 +434,35 @@ async def test_hassio_clean_up_on_user_flow(hass: HomeAssistant) -> None:
 
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 0
+
+
+async def test_options(hass: HomeAssistant) -> None:
+    """Check an options flow."""
+
+    config_entry = create_mock_motioneye_config_entry(hass)
+
+    client = create_mock_motioneye_client()
+    with patch(
+        "homeassistant.components.motioneye.MotionEyeClient",
+        return_value=client,
+    ), patch(
+        "homeassistant.components.motioneye.async_setup_entry",
+        return_value=True,
+    ):
+        await hass.async_block_till_done()
+
+        result = await hass.config_entries.options.async_init(config_entry.entry_id)
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "init"
+
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_WEBHOOK_SET: True,
+                CONF_WEBHOOK_SET_OVERWRITE: True,
+            },
+        )
+        await hass.async_block_till_done()
+        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["data"][CONF_WEBHOOK_SET]
+        assert result["data"][CONF_WEBHOOK_SET_OVERWRITE]
