@@ -1,6 +1,8 @@
 """Platform for climate integration."""
 from __future__ import annotations
 
+from typing import Any
+
 from homeassistant.components.climate import (
     ATTR_TEMPERATURE,
     HVAC_MODE_HEAT,
@@ -11,13 +13,14 @@ from homeassistant.components.climate import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PRECISION_HALVES, PRECISION_TENTHS
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .devolo_multi_level_switch import DevoloMultiLevelSwitchDeviceEntity
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Get all cover devices and setup them via config entry."""
     entities = []
@@ -82,12 +85,14 @@ class DevoloClimateDeviceEntity(DevoloMultiLevelSwitchDeviceEntity, ClimateEntit
     @property
     def min_temp(self) -> float:
         """Return the minimum set temperature value."""
-        return self._multi_level_switch_property.min
+        min_temp: float = self._multi_level_switch_property.min
+        return min_temp
 
     @property
     def max_temp(self) -> float:
         """Return the maximum set temperature value."""
-        return self._multi_level_switch_property.max
+        max_temp: float = self._multi_level_switch_property.max
+        return max_temp
 
     @property
     def precision(self) -> float:
@@ -95,7 +100,7 @@ class DevoloClimateDeviceEntity(DevoloMultiLevelSwitchDeviceEntity, ClimateEntit
         return PRECISION_TENTHS
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> int:
         """Flag supported features."""
         return SUPPORT_TARGET_TEMPERATURE
 
@@ -107,6 +112,6 @@ class DevoloClimateDeviceEntity(DevoloMultiLevelSwitchDeviceEntity, ClimateEntit
     def set_hvac_mode(self, hvac_mode: str) -> None:
         """Do nothing as devolo devices do not support changing the hvac mode."""
 
-    def set_temperature(self, **kwargs):
+    def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         self._multi_level_switch_property.set(kwargs[ATTR_TEMPERATURE])
