@@ -129,7 +129,6 @@ SENSOR_DATA = {
     ),
     "mb_received": SensorData(
         name="GB received",
-        state_class=STATE_CLASS_MEASUREMENT,
         unit_of_measurement="GB",
         icon="mdi:download",
         state_provider=_retrieve_gb_received_state,
