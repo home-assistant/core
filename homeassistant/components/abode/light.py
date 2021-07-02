@@ -38,10 +38,9 @@ class AbodeLight(AbodeDevice, LightEntity):
 
     def __init__(self):
         """Initialize an Abode Light."""
-        self._attr_supported_features = 0
         if self._device.is_dimmable:
             self._attr_supported_features = SUPPORT_BRIGHTNESS
-        if self._device.is_dimmable and self._device.is_color_capable:
+        elif self._device.is_dimmable and self._device.is_color_capable:
             self._attr_supported_features = (
                 SUPPORT_BRIGHTNESS | SUPPORT_COLOR | SUPPORT_COLOR_TEMP
             )

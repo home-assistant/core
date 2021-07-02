@@ -251,7 +251,7 @@ class AbodeEntity(Entity):
         """Initialize Abode entity."""
         self._data = data
         self._available = True
-        self._attr_should_poll = self._data.polling
+        self._attr_should_poll = data.polling
 
     @property
     def available(self):
@@ -287,8 +287,8 @@ class AbodeDevice(AbodeEntity):
         """Initialize Abode device."""
         super().__init__(data)
         self._device = device
-        self._attr_name = self._device.name
-        self._attr_unique_id = self._device.device_uuid
+        self._attr_name = device.name
+        self._attr_unique_id = device.device_uuid
 
     async def async_added_to_hass(self):
         """Subscribe to device events."""
@@ -348,8 +348,8 @@ class AbodeAutomation(AbodeEntity):
         """Initialize for Abode automation."""
         super().__init__(data)
         self._automation = automation
-        self._attr_name = self._automation.name
-        self._attr_unique_id = self._automation.automation_id
+        self._attr_name = automation.name
+        self._attr_unique_id = automation.automation_id
 
     def update(self):
         """Update automation state."""

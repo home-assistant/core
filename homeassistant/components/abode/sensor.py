@@ -41,17 +41,16 @@ class AbodeSensor(AbodeDevice, SensorEntity):
         """Initialize a sensor for an Abode device."""
         super().__init__(data, device)
         self._sensor_type = sensor_type
-        self._name = f"{self._device.name} {SENSOR_TYPES[self._sensor_type][0]}"
         self._device_class = SENSOR_TYPES[self._sensor_type][1]
-        self._attr_name = self._name
-        self._attr_device_class = self._device_class
-        self._attr_unique_id = f"{self._device.device_uuid}-{self._sensor_type}"
+        self._attr_name = f"{device.name} {SENSOR_TYPES[sensor_type][0]}"
+        self._attr_device_class = device_class
+        self._attr_unique_id = f"{device.device_uuid}-{sensor_type}"
         if self._sensor_type == CONST.TEMP_STATUS_KEY:
-            self._attr_unit_of_measurement = self._device.temp_unit
-        if self._sensor_type == CONST.HUMI_STATUS_KEY:
-            self._attr_unit_of_measurement = self._device.humidity_unit
-        if self._sensor_type == CONST.LUX_STATUS_KEY:
-            self._attr_unit_of_measurement = self._device.lux_unit
+            self._attr_unit_of_measurement = device.temp_unit
+        elif self._sensor_type == CONST.HUMI_STATUS_KEY:
+            self._attr_unit_of_measurement = device.humidity_unit
+        elif self._sensor_type == CONST.LUX_STATUS_KEY:
+            self._attr_unit_of_measurement = device.lux_unit
 
     @property
     def state(self):
