@@ -66,10 +66,12 @@ DATETIME_TYPE = DateTime(timezone=True).with_variant(
 class Events(Base):  # type: ignore
     """Event history data."""
 
-    __table_args__ = {
-        "mysql_default_charset": "utf8mb4",
-        "mysql_collate": "utf8mb4_unicode_ci",
-    }
+    __table_args__ = (
+        # Used for fetching events at a specific time
+        # see logbook
+        Index("ix_events_event_type_time_fired", "event_type", "time_fired"),
+        {"mysql_default_charset": "utf8mb4", "mysql_collate": "utf8mb4_unicode_ci"},
+    )
     __tablename__ = TABLE_EVENTS
     event_id = Column(Integer, Identity(), primary_key=True)
     event_type = Column(String(MAX_LENGTH_EVENT_EVENT_TYPE))
@@ -80,12 +82,6 @@ class Events(Base):  # type: ignore
     context_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID), index=True)
     context_user_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID), index=True)
     context_parent_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID), index=True)
-
-    __table_args__ = (
-        # Used for fetching events at a specific time
-        # see logbook
-        Index("ix_events_event_type_time_fired", "event_type", "time_fired"),
-    )
 
     def __repr__(self) -> str:
         """Return string representation of instance for debugging."""
@@ -133,10 +129,12 @@ class Events(Base):  # type: ignore
 class States(Base):  # type: ignore
     """State change history."""
 
-    __table_args__ = {
-        "mysql_default_charset": "utf8mb4",
-        "mysql_collate": "utf8mb4_unicode_ci",
-    }
+    __table_args__ = (
+        # Used for fetching the state of entities at a specific time
+        # (get_states in history.py)
+        Index("ix_states_entity_id_last_updated", "entity_id", "last_updated"),
+        {"mysql_default_charset": "utf8mb4", "mysql_collate": "utf8mb4_unicode_ci"},
+    )
     __tablename__ = TABLE_STATES
     state_id = Column(Integer, Identity(), primary_key=True)
     domain = Column(String(MAX_LENGTH_STATE_DOMAIN))
@@ -152,12 +150,6 @@ class States(Base):  # type: ignore
     old_state_id = Column(Integer, ForeignKey("states.state_id"), index=True)
     event = relationship("Events", uselist=False)
     old_state = relationship("States", remote_side=[state_id])
-
-    __table_args__ = (
-        # Used for fetching the state of entities at a specific time
-        # (get_states in history.py)
-        Index("ix_states_entity_id_last_updated", "entity_id", "last_updated"),
-    )
 
     def __repr__(self) -> str:
         """Return string representation of instance for debugging."""
@@ -217,10 +209,10 @@ class States(Base):  # type: ignore
 class Statistics(Base):  # type: ignore
     """Statistics."""
 
-    __table_args__ = {
-        "mysql_default_charset": "utf8mb4",
-        "mysql_collate": "utf8mb4_unicode_ci",
-    }
+    __table_args__ = (
+        # Used for fetching statistics for a certain entity at a specific time
+        Index("ix_statistics_statistic_id_start", "metadata_id", "start"),
+    )
     __tablename__ = TABLE_STATISTICS
     id = Column(Integer, primary_key=True)
     created = Column(DATETIME_TYPE, default=dt_util.utcnow)
@@ -237,11 +229,6 @@ class Statistics(Base):  # type: ignore
     state = Column(Float())
     sum = Column(Float())
 
-    __table_args__ = (
-        # Used for fetching statistics for a certain entity at a specific time
-        Index("ix_statistics_statistic_id_start", "metadata_id", "start"),
-    )
-
     @staticmethod
     def from_stats(metadata_id, start, stats):
         """Create object from a statistics."""
@@ -255,10 +242,6 @@ class Statistics(Base):  # type: ignore
 class StatisticsMeta(Base):  # type: ignore
     """Statistics meta data."""
 
-    __table_args__ = {
-        "mysql_default_charset": "utf8mb4",
-        "mysql_collate": "utf8mb4_unicode_ci",
-    }
     __tablename__ = TABLE_STATISTICS_META
     id = Column(Integer, primary_key=True)
     statistic_id = Column(String(255), index=True)
@@ -282,14 +265,13 @@ class StatisticsMeta(Base):  # type: ignore
 class RecorderRuns(Base):  # type: ignore
     """Representation of recorder run."""
 
+    __table_args__ = (Index("ix_recorder_runs_start_end", "start", "end"),)
     __tablename__ = TABLE_RECORDER_RUNS
     run_id = Column(Integer, Identity(), primary_key=True)
     start = Column(DateTime(timezone=True), default=dt_util.utcnow)
     end = Column(DateTime(timezone=True))
     closed_incorrect = Column(Boolean, default=False)
     created = Column(DateTime(timezone=True), default=dt_util.utcnow)
-
-    __table_args__ = (Index("ix_recorder_runs_start_end", "start", "end"),)
 
     def __repr__(self) -> str:
         """Return string representation of instance for debugging."""
