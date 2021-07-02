@@ -12,3 +12,5 @@ CONF_OPTIONS = "scan_options"
 DEFAULT_OPTIONS = "-F --host-timeout 5s"
 
 TRACKER_SCAN_INTERVAL = 120
+
+DEFAULT_TRACK_NEW_DEVICES = True
