@@ -275,14 +275,16 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
             CommandClass.SWITCH_COLOR,
             value_property_key=None,
         )
-        zwave_transition = {TRANSITION_DURATION: "default"}
+        zwave_transition = None
 
         if (
-            transition is not None
-            and self._target_color is not None
+            self._target_color is not None
             and "transitionDuration" in self._target_color.metadata.value_change_options
         ):
-            zwave_transition = {TRANSITION_DURATION: f"{transition}s"}
+            if transition is not None:
+                zwave_transition = {TRANSITION_DURATION: f"{transition}s"}
+            else:
+                zwave_transition = {TRANSITION_DURATION: "default"}
 
         if combined_color_val and isinstance(combined_color_val.value, dict):
             colors_dict = {}
@@ -327,13 +329,15 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
             zwave_brightness = byte_to_zwave_brightness(brightness)
 
         # set transition value before sending new brightness
-        zwave_transition = {TRANSITION_DURATION: "default"}
+        zwave_transition = None
         if (
-            transition is not None
-            and self._target_value is not None
+            self._target_value is not None
             and "transitionDuration" in self._target_value.metadata.value_change_options
         ):
-            zwave_transition = {TRANSITION_DURATION: f"{transition}s"}
+            if transition is not None:
+                zwave_transition = {TRANSITION_DURATION: f"{transition}s"}
+            else:
+                zwave_transition = {TRANSITION_DURATION: "default"}
 
         # setting a value requires setting targetValue
         await self.info.node.async_set_value(
