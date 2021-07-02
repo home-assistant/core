@@ -275,7 +275,7 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
             CommandClass.SWITCH_COLOR,
             value_property_key=None,
         )
-        zwave_transition = None
+        zwave_transition = {TRANSITION_DURATION: "default"}
 
         if (
             transition is not None
@@ -327,7 +327,7 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
             zwave_brightness = byte_to_zwave_brightness(brightness)
 
         # set transition value before sending new brightness
-        zwave_transition = None
+        zwave_transition = {TRANSITION_DURATION: "default"}
         if (
             transition is not None
             and self._target_value is not None
