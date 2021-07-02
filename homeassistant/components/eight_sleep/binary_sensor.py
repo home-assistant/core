@@ -1,49 +1,65 @@
 """Support for Eight Sleep binary sensors."""
+from __future__ import annotations
+
 import logging
+
+from pyeight.eight import EightSleep
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_OCCUPANCY,
     BinarySensorEntity,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType
 
-from . import CONF_BINARY_SENSORS, DATA_EIGHT, NAME_MAP, EightSleepHeatEntity
+from . import (
+    CONF_BINARY_SENSORS,
+    DATA_API,
+    DATA_EIGHT,
+    DATA_HEAT,
+    EightSleepHeatDataCoordinator,
+    EightSleepHeatEntity,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: dict[str, list[str]] = None,
+) -> None:
     """Set up the eight sleep binary sensor."""
     if discovery_info is None:
         return
 
     name = "Eight"
     sensors = discovery_info[CONF_BINARY_SENSORS]
-    eight = hass.data[DATA_EIGHT]
+    eight: EightSleep = hass.data[DATA_EIGHT][DATA_API]
+    heat_coordinator: EightSleepHeatDataCoordinator = hass.data[DATA_EIGHT][DATA_HEAT]
 
     all_sensors = []
 
     for sensor in sensors:
-        all_sensors.append(EightHeatSensor(name, eight, sensor))
+        all_sensors.append(EightHeatSensor(name, heat_coordinator, eight, sensor))
 
-    async_add_entities(all_sensors, True)
+    async_add_entities(all_sensors)
 
 
 class EightHeatSensor(EightSleepHeatEntity, BinarySensorEntity):
     """Representation of a Eight Sleep heat-based sensor."""
 
-    def __init__(self, name, eight, sensor):
+    def __init__(
+        self,
+        name: str,
+        coordinator: EightSleepHeatDataCoordinator,
+        eight: EightSleep,
+        sensor: str,
+    ):
         """Initialize the sensor."""
-        super().__init__(eight)
-
-        self._sensor = sensor
-        self._mapped_name = NAME_MAP.get(self._sensor, self._sensor)
-        self._state = None
-
-        self._side = self._sensor.split("_")[0]
-        self._userid = self._eight.fetch_userid(self._side)
-        self._usrobj = self._eight.users[self._userid]
-
-        self._attr_name = f"{name} {self._mapped_name}"
+        super().__init__(name, coordinator, eight, sensor)
         self._attr_device_class = DEVICE_CLASS_OCCUPANCY
 
         _LOGGER.debug(
@@ -54,10 +70,6 @@ class EightHeatSensor(EightSleepHeatEntity, BinarySensorEntity):
         )
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
-        return self._state
-
-    async def async_update(self):
-        """Retrieve latest state."""
-        self._state = self._usrobj.bed_presence
+        return self._usrobj.bed_presence
