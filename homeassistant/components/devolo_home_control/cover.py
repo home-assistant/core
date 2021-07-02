@@ -70,6 +70,6 @@ class DevoloCoverDeviceEntity(DevoloMultiLevelSwitchDeviceEntity, CoverEntity):
         """Close the blind."""
         self._multi_level_switch_property.set(0)
 
-    def set_cover_position(self, **kwargs: int) -> None:
+    def set_cover_position(self, **kwargs: Any) -> None:
         """Set the blind to the given position."""
         self._multi_level_switch_property.set(kwargs["position"])

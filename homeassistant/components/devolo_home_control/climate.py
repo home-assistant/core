@@ -1,6 +1,8 @@
 """Platform for climate integration."""
 from __future__ import annotations
 
+from typing import Any
+
 from homeassistant.components.climate import (
     ATTR_TEMPERATURE,
     HVAC_MODE_HEAT,
@@ -110,6 +112,6 @@ class DevoloClimateDeviceEntity(DevoloMultiLevelSwitchDeviceEntity, ClimateEntit
     def set_hvac_mode(self, hvac_mode: str) -> None:
         """Do nothing as devolo devices do not support changing the hvac mode."""
 
-    def set_temperature(self, **kwargs: int) -> None:
+    def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         self._multi_level_switch_property.set(kwargs[ATTR_TEMPERATURE])

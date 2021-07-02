@@ -72,7 +72,7 @@ class DevoloLightDeviceEntity(DevoloMultiLevelSwitchDeviceEntity, LightEntity):
         """Return the supported features."""
         return SUPPORT_BRIGHTNESS
 
-    def turn_on(self, **kwargs: int) -> None:
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn device on."""
         if kwargs.get(ATTR_BRIGHTNESS) is not None:
             self._multi_level_switch_property.set(
