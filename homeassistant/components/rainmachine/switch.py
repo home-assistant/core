@@ -220,7 +220,7 @@ class RainMachineSwitch(RainMachineEntity, SwitchEntity):
         except RequestError as err:
             LOGGER.error(
                 'Error while toggling %s "%s": %s',
-                self._switch_type,
+                self._entity_type,
                 self.unique_id,
                 err,
             )
@@ -229,7 +229,7 @@ class RainMachineSwitch(RainMachineEntity, SwitchEntity):
         if resp["statusCode"] != 0:
             LOGGER.error(
                 'Error while toggling %s "%s": %s',
-                self._switch_type,
+                self._entity_type,
                 self.unique_id,
                 resp["message"],
             )
