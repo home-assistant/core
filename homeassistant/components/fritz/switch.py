@@ -110,7 +110,10 @@ def get_deflections(
     if not deflection_list:
         return []
 
-    return [xmltodict.parse(deflection_list["NewDeflectionList"])["List"]["Item"]]
+    items = xmltodict.parse(deflection_list["NewDeflectionList"])["List"]["Item"]
+    if not isinstance(items, list):
+        return [items]
+    return items
 
 
 def deflection_entities_list(
