@@ -126,7 +126,7 @@ def compile_statistics(instance: Recorder, start: datetime.datetime) -> bool:
     return True
 
 
-def _get_meta_data(hass, session, statistic_ids, statistic_type):
+def _get_metadata(hass, session, statistic_ids, statistic_type):
     """Fetch meta data."""
 
     def _meta(metas, wanted_metadata_id):
@@ -166,18 +166,23 @@ def list_statistic_ids(hass, statistic_type=None):
     """Return statistic_ids and meta data."""
     units = hass.config.units
     with session_scope(hass=hass) as session:
-        meta_data = _get_meta_data(hass, session, None, statistic_type)
+        metadata = _get_metadata(hass, session, None, statistic_type)
 
-        for meta in meta_data.values():
+        for meta in metadata.values():
             unit = _configured_unit(meta["unit_of_measurement"], units)
             meta["unit_of_measurement"] = unit
 
-        return list(meta_data.values())
+        return list(metadata.values())
 
 
 def statistics_during_period(hass, start_time, end_time=None, statistic_ids=None):
     """Return states changes during UTC period start_time - end_time."""
+    metadata = None
     with session_scope(hass=hass) as session:
+        metadata = _get_metadata(hass, session, statistic_ids, None)
+        if not metadata:
+            return {}
+
         baked_query = hass.data[STATISTICS_BAKERY](
             lambda session: session.query(*QUERY_STATISTICS)
         )
@@ -192,10 +197,7 @@ def statistics_during_period(hass, start_time, end_time=None, statistic_ids=None
             baked_query += lambda q: q.filter(
                 Statistics.metadata_id.in_(bindparam("metadata_ids"))
             )
-            statistic_ids = [statistic_id.lower() for statistic_id in statistic_ids]
-            metadata_ids = _get_metadata_ids(hass, session, statistic_ids)
-            if not metadata_ids:
-                return {}
+            metadata_ids = list(metadata.keys())
 
         baked_query += lambda q: q.order_by(Statistics.metadata_id, Statistics.start)
 
@@ -204,24 +206,23 @@ def statistics_during_period(hass, start_time, end_time=None, statistic_ids=None
                 start_time=start_time, end_time=end_time, metadata_ids=metadata_ids
             )
         )
-        meta_data = _get_meta_data(hass, session, statistic_ids, None)
-        return _sorted_statistics_to_dict(hass, stats, statistic_ids, meta_data)
+        return _sorted_statistics_to_dict(hass, stats, statistic_ids, metadata)
 
 
-def get_last_statistics(hass, number_of_stats, statistic_id=None):
-    """Return the last number_of_stats statistics."""
+def get_last_statistics(hass, number_of_stats, statistic_id):
+    """Return the last number_of_stats statistics for a statistic_id."""
+    statistic_ids = [statistic_id]
     with session_scope(hass=hass) as session:
+        metadata = _get_metadata(hass, session, statistic_ids, None)
+        if not metadata:
+            return {}
+
         baked_query = hass.data[STATISTICS_BAKERY](
             lambda session: session.query(*QUERY_STATISTICS)
         )
 
-        metadata_id = None
-        if statistic_id is not None:
-            baked_query += lambda q: q.filter_by(metadata_id=bindparam("metadata_id"))
-            metadata_ids = _get_metadata_ids(hass, session, [statistic_id])
-            if not metadata_ids:
-                return {}
-            metadata_id = metadata_ids[0]
+        baked_query += lambda q: q.filter_by(metadata_id=bindparam("metadata_id"))
+        metadata_id = next(iter(metadata.keys()))
 
         baked_query += lambda q: q.order_by(
             Statistics.metadata_id, Statistics.start.desc()
@@ -235,16 +236,14 @@ def get_last_statistics(hass, number_of_stats, statistic_id=None):
             )
         )
 
-        statistic_ids = [statistic_id] if statistic_id is not None else None
-        meta_data = _get_meta_data(hass, session, statistic_ids, None)
-        return _sorted_statistics_to_dict(hass, stats, statistic_ids, meta_data)
+        return _sorted_statistics_to_dict(hass, stats, statistic_ids, metadata)
 
 
 def _sorted_statistics_to_dict(
     hass,
     stats,
     statistic_ids,
-    meta_data,
+    metadata,
 ):
     """Convert SQL results into JSON friendly data structure."""
     result = defaultdict(list)
@@ -260,8 +259,8 @@ def _sorted_statistics_to_dict(
 
     # Append all statistic entries, and do unit conversion
     for meta_id, group in groupby(stats, lambda state: state.metadata_id):
-        unit = meta_data[meta_id]["unit_of_measurement"]
-        statistic_id = meta_data[meta_id]["statistic_id"]
+        unit = metadata[meta_id]["unit_of_measurement"]
+        statistic_id = metadata[meta_id]["statistic_id"]
         convert = UNIT_CONVERSIONS.get(unit, lambda x, units: x)
         ent_results = result[meta_id]
         ent_results.extend(
@@ -279,4 +278,4 @@ def _sorted_statistics_to_dict(
         )
 
     # Filter out the empty lists if some states had 0 results.
-    return {meta_data[key]["statistic_id"]: val for key, val in result.items() if val}
+    return {metadata[key]["statistic_id"]: val for key, val in result.items() if val}
