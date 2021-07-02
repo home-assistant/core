@@ -131,7 +131,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     heat_coordinator = hass.data[DOMAIN][DATA_HEAT] = EightSleepHeatDataCoordinator(
         hass, eight
     )
-    hass.data[DOMAIN][DATA_USER] = EightSleepUserDataCoordinator(hass, eight)
+    user_coordinator = hass.data[DOMAIN][DATA_USER] = EightSleepUserDataCoordinator(
+        hass, eight
+    )
+    await heat_coordinator.async_request_refresh()
+    await user_coordinator.async_request_refresh()
 
     # Load sub components
     sensors = []
@@ -236,9 +240,7 @@ class EightSleepUserEntity(CoordinatorEntity):
         self._sensor = sensor
         self._mapped_name = NAME_MAP.get(self._sensor, self._sensor)
         self._units = units
-
         self._attr_name = f"{name} {self._mapped_name}"
-        self._attr_should_poll = False
 
 
 class EightSleepHeatEntity(CoordinatorEntity):
@@ -261,7 +263,5 @@ class EightSleepHeatEntity(CoordinatorEntity):
         self._userid: str = self._eight.fetch_userid(self._side)
         self._usrobj: EightUser = self._eight.users[self._userid]
 
-        self._attr_should_poll = False
         self._attr_name = f"{name} {self._mapped_name}"
-        serial = self._eight.device_data["hubSerial"]
-        self._attr_unique_id = f"{serial}_{self._userid}_{self._sensor}"
+        self._attr_unique_id = f"{self._eight.deviceid}_{self._userid}_{self._sensor}"

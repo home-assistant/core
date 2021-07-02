@@ -150,8 +150,7 @@ class EightUserSensor(EightSleepUserEntity, SensorEntity):
         if "bed_temp" in self._sensor:
             self._attr_icon = "mdi:thermometer"
 
-        serial = self._eight.device_data["hubSerial"]
-        self._attr_unique_id = f"{serial}_{self._userid}_{self._sensor}"
+        self._attr_unique_id = f"{self._eight.deviceid}_{self._userid}_{self._sensor}"
 
         _LOGGER.debug(
             "User Sensor: %s, Side: %s, User: %s",
@@ -224,6 +223,7 @@ class EightUserSensor(EightSleepUserEntity, SensorEntity):
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return device state attributes."""
+        attr = None
         if "current" in self._sensor:
             if "fitness" in self._sensor:
                 attr = self._usrobj.current_fitness_values
@@ -307,7 +307,7 @@ class EightRoomSensor(EightSleepUserEntity, SensorEntity):
         self._attr_unit_of_measurement = (
             TEMP_CELSIUS if self._units == "si" else TEMP_FAHRENHEIT
         )
-        self._attr_unique_id = f"{self._eight.device_data['hubSerial']}_{self._sensor}"
+        self._attr_unique_id = f"{self._eight.deviceid}_{self._sensor}"
 
     @property
     def state(self) -> int | float | None:
