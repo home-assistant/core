@@ -77,6 +77,12 @@ class FleetGoDeviceScanner:
             for device in devices:
                 if not self._include or device.license_plate in self._include:
 
+                    if device.active or device.current_address is None:
+                        try:
+                            device.get_map_details()
+                        except:
+                            _LOGGER.error("Failed to get map details for device")
+
                     self._see(
                         dev_id=device.plate_as_id,
                         gps=(device.latitude, device.longitude),
