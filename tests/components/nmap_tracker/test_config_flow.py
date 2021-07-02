@@ -32,6 +32,10 @@ async def test_form(hass: HomeAssistant, hosts: str) -> None:
     assert result["type"] == "form"
     assert result["errors"] == {}
 
+    schema_defaults = result["data_schema"]({})
+    assert CONF_TRACK_NEW not in schema_defaults
+    assert CONF_SCAN_INTERVAL not in schema_defaults
+
     with patch(
         "homeassistant.components.nmap_tracker.async_setup_entry",
         return_value=True,
