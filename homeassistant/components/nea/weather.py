@@ -5,7 +5,9 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.weather import (
+    ATTR_FORECAST_CONDITION,
     ATTR_FORECAST_TEMP,
+    ATTR_FORECAST_TEMP_LOW,
     ATTR_FORECAST_TIME,
     PLATFORM_SCHEMA,
     WeatherEntity,
@@ -23,9 +25,6 @@ from homeassistant.helpers import config_validation as cv
 from .sensor import ATTRIBUTION, NEAData
 
 _LOGGER = logging.getLogger(__name__)
-
-ATTR_FORECAST_CONDITION = "condition"
-ATTR_FORECAST_TEMP_LOW = "templow"
 
 CONDITION_CLASSES = {
     "cloudy": ["Cloudy", "Overcast"],
@@ -91,7 +90,6 @@ class NEAWeather(WeatherEntity):
     def __init__(self, name, lat, lon):
         """Initialise the platform with a data instance and site."""
         self._name = name
-        self.fcarray = []
         self.fclastupdate = datetime.min.replace(tzinfo=timezone.utc)
         self.dataset = {}
 
@@ -104,35 +102,30 @@ class NEAWeather(WeatherEntity):
             "wind-speed",
             "wind-direction",
         ]:
-            data = NEAData(sensor_type, lat, lon)
-            data.update()
-            if sensor_type == "4-day-weather-forecast":
-                self.dataset.update({sensor_type: [data]})
-            else:
-                self.dataset.update({sensor_type: [data, data.closest_station()]})
+            self.dataset[sensor_type] = NEAData(sensor_type, lat, lon)
 
     def update(self):
         """Update current conditions."""
-        for _, value in self.dataset.items():
-            value[0].update()
+        for data in self.dataset.values():
+            data.update()
 
     @property
     def name(self):
         """Return the name of the sensor."""
-        if self._name is None:
-            return self.dataset["2-hour-weather-forecast"][1]["name"]
         return self._name
+
+    @property
+    def extra_state_attributes(self):
+        """Return the state attributes."""
+        return {"station": self.dataset["2-hour-weather-forecast"].station["name"]}
 
     @property
     def condition(self):
         """Return the current condition."""
-        for forecast in self.dataset["2-hour-weather-forecast"][0].data["items"][0][
-            "forecasts"
-        ]:
-            if forecast["area"] == self.dataset["2-hour-weather-forecast"][1]["name"]:
-                for key, value in CONDITION_CLASSES.items():
-                    if forecast["forecast"] in value:
-                        return key
+        data = self.dataset["2-hour-weather-forecast"]
+        for key, value in CONDITION_CLASSES.items():
+            if data.state in value:
+                return key
         return STATE_UNKNOWN
 
     # Now implement the WeatherEntity interface
@@ -140,10 +133,7 @@ class NEAWeather(WeatherEntity):
     @property
     def temperature(self):
         """Return the platform temperature."""
-        for i in self.dataset["air-temperature"][0].data["items"][0]["readings"]:
-            if i["station_id"] == self.dataset["air-temperature"][1]["id"]:
-                return i["value"]
-        return STATE_UNKNOWN
+        return self.dataset["air-temperature"].state
 
     @property
     def temperature_unit(self):
@@ -153,26 +143,17 @@ class NEAWeather(WeatherEntity):
     @property
     def humidity(self):
         """Return the relative humidity."""
-        for i in self.dataset["relative-humidity"][0].data["items"][0]["readings"]:
-            if i["station_id"] == self.dataset["relative-humidity"][1]["id"]:
-                return i["value"]
-        return STATE_UNKNOWN
+        return self.dataset["relative-humidity"].state
 
     @property
     def wind_speed(self):
         """Return the wind speed."""
-        for i in self.dataset["wind-speed"][0].data["items"][0]["readings"]:
-            if i["station_id"] == self.dataset["wind-speed"][1]["id"]:
-                return i["value"]
-        return STATE_UNKNOWN
+        return self.dataset["wind-speed"].state
 
     @property
     def wind_bearing(self):
         """Return the wind bearing."""
-        for i in self.dataset["wind-direction"][0].data["items"][0]["readings"]:
-            if i["station_id"] == self.dataset["wind-direction"][1]["id"]:
-                return i["value"]
-        return STATE_UNKNOWN
+        return self.dataset["wind-direction"].state
 
     @property
     def attribution(self):
@@ -184,77 +165,50 @@ class NEAWeather(WeatherEntity):
         """Return the forecast array."""
         # Check if forecast array needs updating
         if self.fclastupdate < datetime.strptime(
-            "".join(
-                self.dataset["24-hour-weather-forecast"][0]
-                .data["items"][0]["update_timestamp"]
-                .rsplit(":", 1)
-            ),
+            self.dataset["24-hour-weather-forecast"].data["items"][0][
+                "update_timestamp"
+            ],
             "%Y-%m-%dT%H:%M:%S%z",
         ) or self.fclastupdate < datetime.strptime(
-            "".join(
-                self.dataset["4-day-weather-forecast"][0]
-                .data["items"][0]["update_timestamp"]
-                .rsplit(":", 1)
-            ),
+            self.dataset["4-day-weather-forecast"].data["items"][0]["update_timestamp"],
             "%Y-%m-%dT%H:%M:%S%z",
         ):
-            _24hfc = []
-            _4dfc = []
-            # Build 24hour forecast array
-            for period in self.dataset["24-hour-weather-forecast"][0].data["items"][0][
-                "periods"
-            ]:
-                for key, value in CONDITION_CLASSES.items():
-                    if (
-                        period["regions"][
-                            self.dataset["24-hour-weather-forecast"][1]["name"]
-                        ]
-                        in value
-                    ):
-                        condition = key
-                        break
-                start = datetime.strptime(
-                    "".join(period["time"]["start"].rsplit(":", 1)),
-                    "%Y-%m-%dT%H:%M:%S%z",
-                )
-                end = datetime.strptime(
-                    "".join(period["time"]["end"].rsplit(":", 1)), "%Y-%m-%dT%H:%M:%S%z"
-                )
-                _24hfc.append(
-                    {
-                        ATTR_FORECAST_TIME: start + (end - start) / 2,
-                        ATTR_FORECAST_CONDITION: condition,
-                        ATTR_FORECAST_TEMP_LOW: self.dataset[
-                            "24-hour-weather-forecast"
-                        ][0].data["items"][0]["general"]["temperature"]["low"],
-                        ATTR_FORECAST_TEMP: self.dataset["24-hour-weather-forecast"][
-                            0
-                        ].data["items"][0]["general"]["temperature"]["high"],
-                    }
-                )
-            # Build 4day forecast array
-            for forecast in self.dataset["4-day-weather-forecast"][0].data["items"][0][
+            forecasts = []
+            # Insert 24hour forecast into array
+            forecast = self.dataset["24-hour-weather-forecast"].data["items"][0]
+            condition = STATE_UNKNOWN
+            for key, value in CONDITION_CLASSES.items():
+                if forecast["general"]["forecast"] in value:
+                    condition = key
+                    break
+            forecasts.append(
+                {
+                    ATTR_FORECAST_TIME: forecast["valid_period"]["start"],
+                    ATTR_FORECAST_CONDITION: condition,
+                    ATTR_FORECAST_TEMP_LOW: forecast["general"]["temperature"]["low"],
+                    ATTR_FORECAST_TEMP: forecast["general"]["temperature"]["high"],
+                }
+            )
+            # Insert 4day forecasts into array
+            for forecast in self.dataset["4-day-weather-forecast"].data["items"][0][
                 "forecasts"
-            ][1:]:
-                found = False
-                for key, value in CONDITION_CLASSES.items():
-                    for cond in value:
-                        if cond.lower() in forecast["forecast"]:
-                            condition = key
-                            found = True
-                            break
-                    if found is True:
-                        break
-                _4dfc.append(
+            ]:
+
+                def lookup_condition():
+                    for key, value in CONDITION_CLASSES.items():
+                        for cond in value:
+                            if cond.lower() in forecast["forecast"]:
+                                return key
+                    return STATE_UNKNOWN
+
+                forecasts.append(
                     {
                         ATTR_FORECAST_TIME: datetime.strftime(
                             forecast["date"], "%Y-%m-%d"
                         ),
-                        ATTR_FORECAST_CONDITION: condition,
+                        ATTR_FORECAST_CONDITION: lookup_condition(),
                         ATTR_FORECAST_TEMP_LOW: forecast["temperature"]["low"],
                         ATTR_FORECAST_TEMP: forecast["temperature"]["high"],
                     }
                 )
-            # Combine and update forecast array
-            self.fcarray = _24hfc + _4dfc
-        return self.fcarray
+        return forecasts
