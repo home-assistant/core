@@ -155,12 +155,9 @@ def async_catch_zwave_errors(orig_func: Callable) -> Callable:
         except FailedZWaveCommand as err:
             error_msg = f"{err.zwave_error_code}: {err.zwave_error_message}"
             # Unsubscribe to callbacks
-            if DATA_UNSUBSCRIBE in msg:
-                if isinstance((unsubs := msg[DATA_UNSUBSCRIBE]), list):
-                    for unsub in unsubs:
-                        unsub()
-                else:
-                    msg[DATA_UNSUBSCRIBE]()
+            if unsubs := msg.get(DATA_UNSUBSCRIBE):
+                for unsub in unsubs:
+                    unsub()
             connection.send_error(msg[ID], ERR_ZWAVE_ERROR, error_msg)
 
     return async_catch_zwave_errors_func
@@ -709,7 +706,8 @@ async def websocket_remove_failed_node(
     @callback
     def async_cleanup() -> None:
         """Remove signal listeners."""
-        unsub()
+        for unsub in unsubs:
+            unsub()
 
     @callback
     def node_removed(event: dict) -> None:
@@ -725,7 +723,7 @@ async def websocket_remove_failed_node(
         )
 
     connection.subscriptions[msg["id"]] = async_cleanup
-    msg[DATA_UNSUBSCRIBE] = unsub = controller.on("node removed", node_removed)
+    msg[DATA_UNSUBSCRIBE] = unsubs = [controller.on("node removed", node_removed)]
 
     result = await controller.async_remove_failed_node(node_id)
     connection.send_result(
