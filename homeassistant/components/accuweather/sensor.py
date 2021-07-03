@@ -13,7 +13,6 @@ from homeassistant.const import (
     DEVICE_CLASS_TEMPERATURE,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -85,7 +84,6 @@ class AccuWeatherSensor(CoordinatorEntity, SensorEntity):
             self._description = FORECAST_SENSOR_TYPES[kind]
         self._unit_system = API_METRIC if coordinator.is_metric else API_IMPERIAL
         self.kind = kind
-        self._device_class = None
         self._attrs = {ATTR_ATTRIBUTION: ATTRIBUTION}
         self.forecast_day = forecast_day
         self._attr_state_class = self._description.get(ATTR_STATE_CLASS)
@@ -93,25 +91,19 @@ class AccuWeatherSensor(CoordinatorEntity, SensorEntity):
         self._attr_device_class = self._description[ATTR_DEVICE_CLASS]
         self._attr_entity_registry_enabled_default = self._description[ATTR_ENABLED]
         if self.forecast_day is not None:
-            self._attr_name = (
-                f"{name} {self._description[ATTR_LABEL]} {self.forecast_day}d"
+            self._attr_name = f"{name} {self._description[ATTR_LABEL]} {forecast_day}d"
+            self._attr_unique_id = (
+                f"{coordinator.location_key}-{kind}-{forecast_day}".lower()
             )
-            self._attr_unique_id = f"{self.coordinator.location_key}-{self.kind}-{self.forecast_day}".lower()
         else:
             self._attr_name = f"{name} {self._description[ATTR_LABEL]}"
-            self._attr_unique_id = (
-                f"{self.coordinator.location_key}-{self.kind}".lower()
-            )
-        if self.coordinator.is_metric:
+            self._attr_unique_id = f"{coordinator.location_key}-{kind}".lower()
+        if coordinator.is_metric:
             self._attr_unit_of_measurement = self._description[ATTR_UNIT_METRIC]
         else:
             self._attr_unit_of_measurement = self._description[ATTR_UNIT_IMPERIAL]
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device info."""
-        return {
-            "identifiers": {(DOMAIN, self.coordinator.location_key)},
+        self._attr_device_info = {
+            "identifiers": {(DOMAIN, coordinator.location_key)},
             "name": NAME,
             "manufacturer": MANUFACTURER,
             "entry_type": "service",
