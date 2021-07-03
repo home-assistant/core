@@ -356,6 +356,12 @@ class ZeroconfDiscovery:
     ) -> None:
         """Process a zeroconf update."""
         async_service_info = AsyncServiceInfo(service_type, name)
+        _LOGGER.debug(
+            "_process_service_update: type=%s name=%s %s",
+            service_type,
+            name,
+            async_service_info,
+        )
         await async_service_info.async_request(zeroconf, 3000)
 
         info = info_from_service(async_service_info)
