@@ -498,7 +498,7 @@ class ClimateEntity(Entity):
         """Turn the entity on."""
         if hasattr(self, "turn_on"):
             # pylint: disable=no-member
-            await self.hass.async_add_executor_job(self.turn_on)  # type: ignore
+            await self.hass.async_add_executor_job(self.turn_on)  # type: ignore[attr-defined]
             return
 
         # Fake turn on
@@ -512,7 +512,7 @@ class ClimateEntity(Entity):
         """Turn the entity off."""
         if hasattr(self, "turn_off"):
             # pylint: disable=no-member
-            await self.hass.async_add_executor_job(self.turn_off)  # type: ignore
+            await self.hass.async_add_executor_job(self.turn_off)  # type: ignore[attr-defined]
             return
 
         # Fake turn off
