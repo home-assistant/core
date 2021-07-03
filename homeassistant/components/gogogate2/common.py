@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Awaitable, Mapping
 from datetime import timedelta
 import logging
-from typing import Callable, NamedTuple
+from typing import Any, Callable, NamedTuple
 
 from ismartgate import AbstractGateApi, GogoGate2Api, ISmartGateApi
 from ismartgate.common import AbstractDoor, get_door_by_id
