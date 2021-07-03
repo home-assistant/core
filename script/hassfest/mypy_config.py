@@ -67,7 +67,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.garmin_connect.*",
     "homeassistant.components.geniushub.*",
     "homeassistant.components.glances.*",
-    "homeassistant.components.gogogate2.*",
     "homeassistant.components.google_assistant.*",
     "homeassistant.components.google_maps.*",
     "homeassistant.components.google_pubsub.*",
