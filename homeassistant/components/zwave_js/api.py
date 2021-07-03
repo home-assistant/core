@@ -13,6 +13,7 @@ from zwave_js_server.client import Client
 from zwave_js_server.const import CommandClass, LogLevel
 from zwave_js_server.exceptions import (
     BaseZwaveJSServerError,
+    FailedZWaveCommand,
     InvalidNewValue,
     NotFoundError,
     SetValueFailed,
@@ -81,6 +82,9 @@ STATUS = "status"
 ENABLED = "enabled"
 OPTED_IN = "opted_in"
 
+# Error codes
+ERR_ZWAVE_ERROR = "zwave_error"
+
 
 def async_get_entry(orig_func: Callable) -> Callable:
     """Decorate async function to get entry."""
@@ -132,6 +136,26 @@ def async_get_node(orig_func: Callable) -> Callable:
         await orig_func(hass, connection, msg, node)
 
     return async_get_node_func
+
+
+def async_catch_zwave_errors(orig_func: Callable) -> Callable:
+    """Decorate async function to catch FailedZWaveCommand and send relevant error."""
+
+    @wraps(orig_func)
+    async def async_catch_zwave_errors_func(
+        hass: HomeAssistant,
+        connection: ActiveConnection,
+        msg: dict,
+        *args: list,
+    ) -> None:
+        """Catch FailedZWaveCommand within function and send relevant error."""
+        try:
+            orig_func(hass, connection, msg, *args)
+        except FailedZWaveCommand as err:
+            error_msg = f"{err.zwave_error_code}: {err.zwave_error_message}"
+            connection.send_error(msg[ID], ERR_ZWAVE_ERROR, error_msg)
+
+    return async_catch_zwave_errors_func
 
 
 @callback
@@ -318,6 +342,7 @@ async def websocket_node_metadata(
     }
 )
 @websocket_api.async_response
+@async_catch_zwave_errors
 @async_get_node
 async def websocket_ping_node(
     hass: HomeAssistant,
@@ -342,6 +367,7 @@ async def websocket_ping_node(
     }
 )
 @websocket_api.async_response
+@async_catch_zwave_errors
 @async_get_entry
 async def websocket_add_node(
     hass: HomeAssistant,
@@ -435,6 +461,7 @@ async def websocket_add_node(
     }
 )
 @websocket_api.async_response
+@async_catch_zwave_errors
 @async_get_entry
 async def websocket_stop_inclusion(
     hass: HomeAssistant,
@@ -460,6 +487,7 @@ async def websocket_stop_inclusion(
     }
 )
 @websocket_api.async_response
+@async_catch_zwave_errors
 @async_get_entry
 async def websocket_stop_exclusion(
     hass: HomeAssistant,
@@ -485,6 +513,7 @@ async def websocket_stop_exclusion(
     }
 )
 @websocket_api.async_response
+@async_catch_zwave_errors
 @async_get_entry
 async def websocket_remove_node(
     hass: HomeAssistant,
@@ -546,6 +575,7 @@ async def websocket_remove_node(
     }
 )
 @websocket_api.async_response
+@async_catch_zwave_errors
 @async_get_entry
 async def websocket_replace_failed_node(
     hass: HomeAssistant,
@@ -655,6 +685,7 @@ async def websocket_replace_failed_node(
     }
 )
 @websocket_api.async_response
+@async_catch_zwave_errors
 @async_get_entry
 async def websocket_remove_failed_node(
     hass: HomeAssistant,
@@ -703,6 +734,7 @@ async def websocket_remove_failed_node(
     }
 )
 @websocket_api.async_response
+@async_catch_zwave_errors
 @async_get_entry
 async def websocket_begin_healing_network(
     hass: HomeAssistant,
@@ -771,6 +803,7 @@ async def websocket_subscribe_heal_network_progress(
     }
 )
 @websocket_api.async_response
+@async_catch_zwave_errors
 @async_get_entry
 async def websocket_stop_healing_network(
     hass: HomeAssistant,
@@ -797,6 +830,7 @@ async def websocket_stop_healing_network(
     }
 )
 @websocket_api.async_response
+@async_catch_zwave_errors
 @async_get_entry
 async def websocket_heal_node(
     hass: HomeAssistant,
@@ -824,6 +858,7 @@ async def websocket_heal_node(
     },
 )
 @websocket_api.async_response
+@async_catch_zwave_errors
 @async_get_node
 async def websocket_refresh_node_info(
     hass: HomeAssistant,
@@ -874,6 +909,7 @@ async def websocket_refresh_node_info(
     },
 )
 @websocket_api.async_response
+@async_catch_zwave_errors
 @async_get_node
 async def websocket_refresh_node_values(
     hass: HomeAssistant,
@@ -896,6 +932,7 @@ async def websocket_refresh_node_values(
     },
 )
 @websocket_api.async_response
+@async_catch_zwave_errors
 @async_get_node
 async def websocket_refresh_node_cc_values(
     hass: HomeAssistant,
@@ -930,6 +967,7 @@ async def websocket_refresh_node_cc_values(
     }
 )
 @websocket_api.async_response
+@async_catch_zwave_errors
 @async_get_node
 async def websocket_set_config_parameter(
     hass: HomeAssistant,
@@ -1027,6 +1065,7 @@ def filename_is_present_if_logging_to_file(obj: dict) -> dict:
     }
 )
 @websocket_api.async_response
+@async_catch_zwave_errors
 @async_get_entry
 async def websocket_subscribe_log_updates(
     hass: HomeAssistant,
@@ -1114,6 +1153,7 @@ async def websocket_subscribe_log_updates(
     },
 )
 @websocket_api.async_response
+@async_catch_zwave_errors
 @async_get_entry
 async def websocket_update_log_config(
     hass: HomeAssistant,
@@ -1137,6 +1177,7 @@ async def websocket_update_log_config(
     },
 )
 @websocket_api.async_response
+@async_catch_zwave_errors
 @async_get_entry
 async def websocket_get_log_config(
     hass: HomeAssistant,
@@ -1161,6 +1202,7 @@ async def websocket_get_log_config(
     },
 )
 @websocket_api.async_response
+@async_catch_zwave_errors
 @async_get_entry
 async def websocket_update_data_collection_preference(
     hass: HomeAssistant,
@@ -1191,6 +1233,7 @@ async def websocket_update_data_collection_preference(
     },
 )
 @websocket_api.async_response
+@async_catch_zwave_errors
 @async_get_entry
 async def websocket_data_collection_status(
     hass: HomeAssistant,
@@ -1273,6 +1316,7 @@ async def websocket_version_info(
     }
 )
 @websocket_api.async_response
+@async_catch_zwave_errors
 @async_get_node
 async def websocket_abort_firmware_update(
     hass: HomeAssistant,
@@ -1400,6 +1444,7 @@ class FirmwareUploadView(HomeAssistantView):
     }
 )
 @websocket_api.async_response
+@async_catch_zwave_errors
 @async_get_entry
 async def websocket_check_for_config_updates(
     hass: HomeAssistant,
@@ -1427,6 +1472,7 @@ async def websocket_check_for_config_updates(
     }
 )
 @websocket_api.async_response
+@async_catch_zwave_errors
 @async_get_entry
 async def websocket_install_config_update(
     hass: HomeAssistant,
