@@ -227,6 +227,6 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity):
         """Return true if the device is available and value has not expired."""
         expire_after = self._config.get(CONF_EXPIRE_AFTER)
         # mypy doesn't know about fget: https://github.com/python/mypy/issues/6185
-        return MqttAvailability.available.fget(self) and (  # type: ignore
+        return MqttAvailability.available.fget(self) and (  # type: ignore[attr-defined]
             expire_after is None or not self._expired
         )
