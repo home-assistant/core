@@ -124,7 +124,7 @@ class SceneConfig(NamedTuple):
     id: str
     name: str
     icon: str
-    state: dict
+    states: dict
 
 
 @callback
