@@ -35,7 +35,7 @@ class RokuEntity(CoordinatorEntity):
 
         return {
             ATTR_IDENTIFIERS: {(DOMAIN, self._device_id)},
-            ATTR_NAME: self.name,
+            ATTR_NAME: self.coordinator.data.info.name,
             ATTR_MANUFACTURER: self.coordinator.data.info.brand,
             ATTR_MODEL: self.coordinator.data.info.model_name,
             ATTR_SW_VERSION: self.coordinator.data.info.version,
