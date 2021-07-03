@@ -1,6 +1,4 @@
 """Support for Ezviz alarm."""
-from __future__ import annotations
-
 import logging
 
 from pyezviz.constants import DefenseModeType
@@ -77,7 +75,7 @@ class EzvizAlarm(CoordinatorEntity, AlarmControlPanelEntity, RestoreEntity):
         return self._name
 
     @property
-    def state(self) -> str | None:
+    def state(self) -> str:
         """Return the state of the device."""
         return self._state
 
