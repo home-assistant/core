@@ -151,8 +151,9 @@ class HistoryStatsSensor(SensorEntity):
         self._name = name
         self._precision = precision
         self._time_unit = time_unit
+        # use UNITS dict for all but 'time' sensors, which use the config variable time_unit
         self._unit_of_measurement = (
-            UNITS[sensor_type] if not sensor_type == CONF_TYPE_TIME else time_unit
+            UNITS[sensor_type] if sensor_type != CONF_TYPE_TIME else time_unit
         )
 
         self._period = (datetime.datetime.now(), datetime.datetime.now())
