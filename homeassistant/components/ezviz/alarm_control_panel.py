@@ -9,7 +9,6 @@ from homeassistant.components.alarm_control_panel.const import (
     SUPPORT_ALARM_ARM_AWAY,
     SUPPORT_ALARM_ARM_NIGHT,
 )
-from homeassistant.components.ezviz.coordinator import EzvizDataUpdateCoordinator
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_NIGHT,
@@ -27,6 +26,7 @@ from .const import (
     DOMAIN,
     MANUFACTURER,
 )
+from .coordinator import EzvizDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
