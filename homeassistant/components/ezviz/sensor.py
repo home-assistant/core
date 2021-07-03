@@ -1,17 +1,20 @@
 """Support for Ezviz sensors."""
+from __future__ import annotations
+
 import logging
 
 from pyezviz.constants import SensorType
 
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DATA_COORDINATOR, DOMAIN, MANUFACTURER
+from .coordinator import EzvizDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(hass, entry, async_add_entities) -> None:
     """Set up Ezviz sensors based on a config entry."""
     coordinator = hass.data[DOMAIN][entry.entry_id][DATA_COORDINATOR]
     sensors = []
@@ -32,7 +35,9 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class EzvizSensor(CoordinatorEntity, Entity):
     """Representation of a Ezviz sensor."""
 
-    def __init__(self, coordinator, idx, name, sensor_type_name):
+    coordinator: EzvizDataUpdateCoordinator
+
+    def __init__(self, coordinator, idx, name, sensor_type_name) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
         self._idx = idx
@@ -43,22 +48,22 @@ class EzvizSensor(CoordinatorEntity, Entity):
         self._serial = self.coordinator.data[self._idx]["serial"]
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the Ezviz sensor."""
-        return self._sensor_name
+        return self._name
 
     @property
-    def state(self):
+    def state(self) -> int | str:
         """Return the state of the sensor."""
         return self.coordinator.data[self._idx][self._name]
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str:
         """Return the unique ID of this sensor."""
         return f"{self._serial}_{self._sensor_name}"
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device_info of the device."""
         return {
             "identifiers": {(DOMAIN, self._serial)},
@@ -69,6 +74,6 @@ class EzvizSensor(CoordinatorEntity, Entity):
         }
 
     @property
-    def device_class(self):
+    def device_class(self) -> str:
         """Device class for the sensor."""
         return self.sensor_type_name
