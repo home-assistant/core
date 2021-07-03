@@ -83,9 +83,6 @@ STATUS = "status"
 ENABLED = "enabled"
 OPTED_IN = "opted_in"
 
-# Error codes
-ERR_ZWAVE_ERROR = "zwave_error"
-
 
 def async_get_entry(orig_func: Callable) -> Callable:
     """Decorate async function to get entry."""

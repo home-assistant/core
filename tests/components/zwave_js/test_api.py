@@ -20,7 +20,6 @@ from homeassistant.components.zwave_js.api import (
     ENABLED,
     ENTRY_ID,
     ERR_NOT_LOADED,
-    ERR_ZWAVE_ERROR,
     FILENAME,
     FORCE_CONSOLE,
     ID,
@@ -298,7 +297,7 @@ async def test_ping_node(
         msg = await ws_client.receive_json()
 
         assert not msg["success"]
-        assert msg["error"]["code"] == ERR_ZWAVE_ERROR
+        assert msg["error"]["code"] == "zwave_error"
         assert msg["error"]["message"] == "Z-Wave error 1: error message"
 
     # Test sending command with not loaded entry fails
@@ -421,7 +420,7 @@ async def test_add_node(
         msg = await ws_client.receive_json()
 
         assert not msg["success"]
-        assert msg["error"]["code"] == ERR_ZWAVE_ERROR
+        assert msg["error"]["code"] == "zwave_error"
         assert msg["error"]["message"] == "Z-Wave error 1: error message"
 
     # Test sending command with not loaded entry fails
@@ -473,7 +472,7 @@ async def test_cancel_inclusion_exclusion(hass, integration, client, hass_ws_cli
         msg = await ws_client.receive_json()
 
         assert not msg["success"]
-        assert msg["error"]["code"] == ERR_ZWAVE_ERROR
+        assert msg["error"]["code"] == "zwave_error"
         assert msg["error"]["message"] == "Z-Wave error 1: error message"
 
     # Test FailedZWaveCommand is caught
@@ -491,7 +490,7 @@ async def test_cancel_inclusion_exclusion(hass, integration, client, hass_ws_cli
         msg = await ws_client.receive_json()
 
         assert not msg["success"]
-        assert msg["error"]["code"] == ERR_ZWAVE_ERROR
+        assert msg["error"]["code"] == "zwave_error"
         assert msg["error"]["message"] == "Z-Wave error 1: error message"
 
     # Test sending command with not loaded entry fails
@@ -584,7 +583,7 @@ async def test_remove_node(
         msg = await ws_client.receive_json()
 
         assert not msg["success"]
-        assert msg["error"]["code"] == ERR_ZWAVE_ERROR
+        assert msg["error"]["code"] == "zwave_error"
         assert msg["error"]["message"] == "Z-Wave error 1: error message"
 
     # Test sending command with not loaded entry fails
@@ -750,7 +749,7 @@ async def test_replace_failed_node(
         msg = await ws_client.receive_json()
 
         assert not msg["success"]
-        assert msg["error"]["code"] == ERR_ZWAVE_ERROR
+        assert msg["error"]["code"] == "zwave_error"
         assert msg["error"]["message"] == "Z-Wave error 1: error message"
 
     # Test sending command with not loaded entry fails
@@ -833,7 +832,7 @@ async def test_remove_failed_node(
         msg = await ws_client.receive_json()
 
         assert not msg["success"]
-        assert msg["error"]["code"] == ERR_ZWAVE_ERROR
+        assert msg["error"]["code"] == "zwave_error"
         assert msg["error"]["message"] == "Z-Wave error 1: error message"
 
     # Test sending command with not loaded entry fails
@@ -893,7 +892,7 @@ async def test_begin_healing_network(
         msg = await ws_client.receive_json()
 
         assert not msg["success"]
-        assert msg["error"]["code"] == ERR_ZWAVE_ERROR
+        assert msg["error"]["code"] == "zwave_error"
         assert msg["error"]["message"] == "Z-Wave error 1: error message"
 
     # Test sending command with not loaded entry fails
@@ -1001,7 +1000,7 @@ async def test_stop_healing_network(
         msg = await ws_client.receive_json()
 
         assert not msg["success"]
-        assert msg["error"]["code"] == ERR_ZWAVE_ERROR
+        assert msg["error"]["code"] == "zwave_error"
         assert msg["error"]["message"] == "Z-Wave error 1: error message"
 
     # Test sending command with not loaded entry fails
@@ -1062,7 +1061,7 @@ async def test_heal_node(
         msg = await ws_client.receive_json()
 
         assert not msg["success"]
-        assert msg["error"]["code"] == ERR_ZWAVE_ERROR
+        assert msg["error"]["code"] == "zwave_error"
         assert msg["error"]["message"] == "Z-Wave error 1: error message"
 
     # Test sending command with not loaded entry fails
@@ -1180,7 +1179,7 @@ async def test_refresh_node_info(
         msg = await ws_client.receive_json()
 
         assert not msg["success"]
-        assert msg["error"]["code"] == ERR_ZWAVE_ERROR
+        assert msg["error"]["code"] == "zwave_error"
         assert msg["error"]["message"] == "Z-Wave error 1: error message"
 
     # Test sending command with not loaded entry fails
@@ -1269,7 +1268,7 @@ async def test_refresh_node_values(
         msg = await ws_client.receive_json()
 
         assert not msg["success"]
-        assert msg["error"]["code"] == ERR_ZWAVE_ERROR
+        assert msg["error"]["code"] == "zwave_error"
         assert msg["error"]["message"] == "Z-Wave error 1: error message"
 
     # Test sending command with not loaded entry fails
@@ -1363,7 +1362,7 @@ async def test_refresh_node_cc_values(
         msg = await ws_client.receive_json()
 
         assert not msg["success"]
-        assert msg["error"]["code"] == ERR_ZWAVE_ERROR
+        assert msg["error"]["code"] == "zwave_error"
         assert msg["error"]["message"] == "Z-Wave error 1: error message"
 
     # Test sending command with not loaded entry fails
@@ -1587,7 +1586,7 @@ async def test_set_config_parameter(
         msg = await ws_client.receive_json()
 
         assert not msg["success"]
-        assert msg["error"]["code"] == ERR_ZWAVE_ERROR
+        assert msg["error"]["code"] == "zwave_error"
         assert msg["error"]["message"] == "Z-Wave error 1: error message"
 
     # Test sending command with not loaded entry fails
@@ -1923,7 +1922,7 @@ async def test_subscribe_log_updates(hass, integration, client, hass_ws_client):
         msg = await ws_client.receive_json()
 
         assert not msg["success"]
-        assert msg["error"]["code"] == ERR_ZWAVE_ERROR
+        assert msg["error"]["code"] == "zwave_error"
         assert msg["error"]["message"] == "Z-Wave error 1: error message"
 
     # Test sending command with not loaded entry fails
@@ -2074,7 +2073,7 @@ async def test_update_log_config(hass, client, integration, hass_ws_client):
         msg = await ws_client.receive_json()
 
         assert not msg["success"]
-        assert msg["error"]["code"] == ERR_ZWAVE_ERROR
+        assert msg["error"]["code"] == "zwave_error"
         assert msg["error"]["message"] == "Z-Wave error 1: error message"
 
     # Test sending command with not loaded entry fails
@@ -2219,7 +2218,7 @@ async def test_data_collection(hass, client, integration, hass_ws_client):
         msg = await ws_client.receive_json()
 
         assert not msg["success"]
-        assert msg["error"]["code"] == ERR_ZWAVE_ERROR
+        assert msg["error"]["code"] == "zwave_error"
         assert msg["error"]["message"] == "Z-Wave error 1: error message"
 
     # Test FailedZWaveCommand is caught
@@ -2238,7 +2237,7 @@ async def test_data_collection(hass, client, integration, hass_ws_client):
         msg = await ws_client.receive_json()
 
         assert not msg["success"]
-        assert msg["error"]["code"] == ERR_ZWAVE_ERROR
+        assert msg["error"]["code"] == "zwave_error"
         assert msg["error"]["message"] == "Z-Wave error 1: error message"
 
     # Test sending command with not loaded entry fails
@@ -2311,7 +2310,7 @@ async def test_abort_firmware_update(
         msg = await ws_client.receive_json()
 
         assert not msg["success"]
-        assert msg["error"]["code"] == ERR_ZWAVE_ERROR
+        assert msg["error"]["code"] == "zwave_error"
         assert msg["error"]["message"] == "Z-Wave error 1: error message"
 
     # Test sending command with not loaded entry fails
@@ -2536,7 +2535,7 @@ async def test_check_for_config_updates(hass, client, integration, hass_ws_clien
         msg = await ws_client.receive_json()
 
         assert not msg["success"]
-        assert msg["error"]["code"] == ERR_ZWAVE_ERROR
+        assert msg["error"]["code"] == "zwave_error"
         assert msg["error"]["message"] == "Z-Wave error 1: error message"
 
     # Test sending command with not loaded entry fails
@@ -2601,7 +2600,7 @@ async def test_install_config_update(hass, client, integration, hass_ws_client):
         msg = await ws_client.receive_json()
 
         assert not msg["success"]
-        assert msg["error"]["code"] == ERR_ZWAVE_ERROR
+        assert msg["error"]["code"] == "zwave_error"
         assert msg["error"]["message"] == "Z-Wave error 1: error message"
 
     # Test sending command with not loaded entry fails
