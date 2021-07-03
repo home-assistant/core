@@ -151,7 +151,7 @@ def async_catch_zwave_errors(orig_func: Callable) -> Callable:
     ) -> None:
         """Catch FailedZWaveCommand within function and send relevant error."""
         try:
-            orig_func(hass, connection, msg, *args)
+            await orig_func(hass, connection, msg, *args)
         except FailedZWaveCommand as err:
             error_msg = f"{err.zwave_error_code}: {err.zwave_error_message}"
             # Unsubscribe to callbacks
