@@ -36,16 +36,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class AbodeLight(AbodeDevice, LightEntity):
     """Representation of an Abode light."""
 
-    def __init__(self, data, device):
-        """Initialize an Abode Light."""
-        super().__init__(data, device)
-        if self._device.is_dimmable:
-            self._attr_supported_features = SUPPORT_BRIGHTNESS
-        elif self._device.is_dimmable and self._device.is_color_capable:
-            self._attr_supported_features = (
-                SUPPORT_BRIGHTNESS | SUPPORT_COLOR | SUPPORT_COLOR_TEMP
-            )
-
     def turn_on(self, **kwargs):
         """Turn on the light."""
         if ATTR_COLOR_TEMP in kwargs and self._device.is_color_capable:
@@ -97,3 +87,12 @@ class AbodeLight(AbodeDevice, LightEntity):
         """Return the color of the light."""
         if self._device.has_color:
             return self._device.color
+
+    @property
+    def supported_features(self):
+        """Flag supported features."""
+        if self._device.is_dimmable and self._device.is_color_capable:
+            return SUPPORT_BRIGHTNESS | SUPPORT_COLOR | SUPPORT_COLOR_TEMP
+        if self._device.is_dimmable:
+            return SUPPORT_BRIGHTNESS
+        return 0
