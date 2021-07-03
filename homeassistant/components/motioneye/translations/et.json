@@ -25,5 +25,15 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "webhook_set": "Seadista motionEye veebihaagid, et teatada s\u00fcndmustest Home Assistanti'le",
+                    "webhook_set_overwrite": "Kirjuta tundmatud veebihaagid \u00fcle"
+                }
+            }
+        }
     }
 }

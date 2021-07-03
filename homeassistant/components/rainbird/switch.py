@@ -11,10 +11,17 @@ from . import CONF_ZONES, DATA_RAINBIRD, DOMAIN, RAINBIRD_CONTROLLER
 ATTR_DURATION = "duration"
 
 SERVICE_START_IRRIGATION = "start_irrigation"
+SERVICE_SET_RAIN_DELAY = "set_rain_delay"
 
 SERVICE_SCHEMA_IRRIGATION = vol.Schema(
     {
         vol.Required(ATTR_ENTITY_ID): cv.entity_id,
+        vol.Required(ATTR_DURATION): cv.positive_float,
+    }
+)
+
+SERVICE_SCHEMA_RAIN_DELAY = vol.Schema(
+    {
         vol.Required(ATTR_DURATION): cv.positive_float,
     }
 )
@@ -62,6 +69,18 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         SERVICE_START_IRRIGATION,
         start_irrigation,
         schema=SERVICE_SCHEMA_IRRIGATION,
+    )
+
+    def set_rain_delay(service):
+        duration = service.data[ATTR_DURATION]
+
+        controller.set_rain_delay(duration)
+
+    hass.services.register(
+        DOMAIN,
+        SERVICE_SET_RAIN_DELAY,
+        set_rain_delay,
+        schema=SERVICE_SCHEMA_RAIN_DELAY,
     )
 
 
