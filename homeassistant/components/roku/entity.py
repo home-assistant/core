@@ -12,7 +12,7 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import RokuDataUpdateCoordinator
-from .const import ATTR_SUGGESTED_AREA, DOMAIN
+from .const import DOMAIN
 
 
 class RokuEntity(CoordinatorEntity):
