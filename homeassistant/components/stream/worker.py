@@ -269,8 +269,6 @@ def stream_worker(
 
     # Iterator for demuxing
     container_packets: Iterator[av.Packet]
-    # Ensure packets are ordered correctly
-    dts_validator = TimestampValidator()
     # The video dts at the beginning of the segment
     segment_start_dts: int | None = None
     # Because of problems 1 and 2 below, we need to store the first few packets and replay them
@@ -288,6 +286,8 @@ def stream_worker(
         nonlocal segment_start_dts, audio_stream, container_packets
         found_audio = False
         try:
+            # Ensure packets are ordered correctly
+            dts_validator = TimestampValidator()
             container_packets = filter(
                 dts_validator.is_valid, container.demux((video_stream, audio_stream))
             )
@@ -315,6 +315,7 @@ def stream_worker(
                                 _LOGGER.warning(
                                     "ADTS AAC detected - disabling audio stream"
                                 )
+                                dts_validator = TimestampValidator()
                                 container_packets = filter(
                                     dts_validator.is_valid,
                                     container.demux(video_stream),
