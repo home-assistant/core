@@ -9,14 +9,14 @@ import voluptuous as vol
 from youless_api import YoulessAPI
 
 from homeassistant.config_entries import ConfigFlow
-from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_NAME
+from homeassistant.const import CONF_DEVICE, CONF_HOST
 from homeassistant.data_entry_flow import FlowResult
 
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_SCHEMA = vol.Schema({vol.Required(CONF_NAME): str, vol.Required(CONF_HOST): str})
+DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str})
 
 
 class YoulessConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -38,7 +38,7 @@ class YoulessConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             else:
                 return self.async_create_entry(
-                    title=user_input[CONF_NAME],
+                    title=DOMAIN,
                     data={
                         CONF_HOST: user_input[CONF_HOST],
                         CONF_DEVICE: api.mac_address,

@@ -22,6 +22,8 @@ async def async_setup_entry(
     """Initialize the integration."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
     device = entry.data[CONF_DEVICE]
+    if device is None:
+        device = entry.entry_id
 
     async_add_entities(
         [
@@ -32,6 +34,8 @@ async def async_setup_entry(
             CurrentPowerSensor(coordinator, device),
             DeliveryMeterSensor(coordinator, device, "low"),
             DeliveryMeterSensor(coordinator, device, "high"),
+            ExtraMeterSensor(coordinator, device, "total"),
+            ExtraMeterSensor(coordinator, device, "usage"),
         ]
     )
 
@@ -167,3 +171,27 @@ class PowerMeterSensor(YoulessBaseSensor):
             return None
 
         return getattr(self.coordinator.data.power_meter, f"_{self._type}", None)
+
+
+class ExtraMeterSensor(YoulessBaseSensor):
+    """The Youless extra meter value sensor (s0)."""
+
+    _attr_device_class = DEVICE_CLASS_POWER
+
+    def __init__(
+        self, coordinator: DataUpdateCoordinator, device: str, dev_type: str
+    ) -> None:
+        """Instantiate an extra meter sensor."""
+        super().__init__(
+            coordinator, device, "extra", "Extra meter", f"extra_{dev_type}"
+        )
+        self._type = dev_type
+        self._attr_name = f"Extra {dev_type}"
+
+    @property
+    def get_sensor(self) -> YoulessSensor | None:
+        """Get the sensor for providing the value."""
+        if self.coordinator.data.extra_meter is None:
+            return None
+
+        return getattr(self.coordinator.data.extra_meter, f"_{self._type}", None)

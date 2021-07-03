@@ -39,11 +39,11 @@ async def test_full_flow(hass: HomeAssistant) -> None:
     ) as mocked_youless:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"host": "localhost", "name": "YouLess Sensor"},
+            {"host": "localhost"},
         )
 
     assert result2.get("type") == RESULT_TYPE_CREATE_ENTRY
-    assert result2.get("title") == "YouLess Sensor"
+    assert result2.get("title") == DOMAIN
     assert len(mocked_youless.mock_calls) == 1
 
 
@@ -65,7 +65,7 @@ async def test_not_found(hass: HomeAssistant) -> None:
     ) as mocked_youless:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"host": "localhost", "name": "YouLess Sensor"},
+            {"host": "localhost"},
         )
 
     assert result2.get("type") == RESULT_TYPE_FORM
