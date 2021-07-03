@@ -244,7 +244,7 @@ def compile_statistics(
             last_reset = old_last_reset = None
             new_state = old_state = None
             _sum = 0
-            last_stats = statistics.get_last_statistics(hass, 1, entity_id)  # type: ignore
+            last_stats = statistics.get_last_statistics(hass, 1, entity_id)
             if entity_id in last_stats:
                 # We have compiled history for this sensor before, use that as a starting point
                 last_reset = old_last_reset = last_stats[entity_id][0]["last_reset"]

@@ -173,10 +173,10 @@ def _get_metadata(
 
     metadata_ids = [metadata[0] for metadata in result]
     metadata = {}
-    for id in metadata_ids:
-        meta = _meta(result, id)
+    for _id in metadata_ids:
+        meta = _meta(result, _id)
         if meta:
-            metadata[id] = meta
+            metadata[_id] = meta
     return metadata
 
 
@@ -209,7 +209,7 @@ def statistics_during_period(
     start_time: datetime,
     end_time: datetime | None = None,
     statistic_ids: list[str] | None = None,
-) -> dict[str, dict[str, str]]:
+) -> dict[str, list[dict[str, str]]]:
     """Return states changes during UTC period start_time - end_time."""
     metadata = None
     with session_scope(hass=hass) as session:
@@ -247,7 +247,7 @@ def statistics_during_period(
 
 def get_last_statistics(
     hass: HomeAssistant, number_of_stats: int, statistic_id: str
-) -> dict[str, dict[str, str]]:
+) -> dict[str, list[dict]]:
     """Return the last number_of_stats statistics for a statistic_id."""
     statistic_ids = [statistic_id]
     with session_scope(hass=hass) as session:
@@ -284,7 +284,7 @@ def _sorted_statistics_to_dict(
     stats: list,
     statistic_ids: list[str] | None,
     metadata: dict[str, dict[str, str]],
-) -> dict[str, dict[str, str]]:
+) -> dict[str, list[dict]]:
     """Convert SQL results into JSON friendly data structure."""
     result: dict = defaultdict(list)
     units = hass.config.units
