@@ -89,10 +89,10 @@ class TestHistoryStatsSensor(unittest.TestCase):
             duration = timedelta(hours=2, minutes=1)
 
             sensor1 = HistoryStatsSensor(
-                self.hass, "test", "on", today, None, duration, "time", "test", 2
+                self.hass, "test", "on", today, None, duration, "time", "test", 2, "h"
             )
             sensor2 = HistoryStatsSensor(
-                self.hass, "test", "on", None, today, duration, "time", "test", 2
+                self.hass, "test", "on", None, today, duration, "time", "test", 2, "h"
             )
 
             sensor1.update_period()
@@ -126,10 +126,10 @@ class TestHistoryStatsSensor(unittest.TestCase):
         bad = Template("{{ TEST }}", self.hass)
 
         sensor1 = HistoryStatsSensor(
-            self.hass, "test", "on", good, bad, None, "time", "Test", 2
+            self.hass, "test", "on", good, bad, None, "time", "Test", 2, "h"
         )
         sensor2 = HistoryStatsSensor(
-            self.hass, "test", "on", bad, good, None, "time", "Test", 2
+            self.hass, "test", "on", bad, good, None, "time", "Test", 2, "h"
         )
 
         before_update1 = sensor1._period
@@ -167,10 +167,10 @@ class TestHistoryStatsSensor(unittest.TestCase):
         duration = "01:00"
 
         sensor1 = HistoryStatsSensor(
-            self.hass, "test", "on", bad, None, duration, "time", "Test", 2
+            self.hass, "test", "on", bad, None, duration, "time", "Test", 2, "h"
         )
         sensor2 = HistoryStatsSensor(
-            self.hass, "test", "on", None, bad, duration, "time", "Test", 2
+            self.hass, "test", "on", None, bad, duration, "time", "Test", 2, "h"
         )
 
         before_update1 = sensor1._period
@@ -246,6 +246,7 @@ async def test_reload(hass):
                 "start": "{{ as_timestamp(now()) - 3600 }}",
                 "duration": "01:00",
                 "precision": 2,
+                "time_unit": "h",
             },
         },
     )
@@ -311,6 +312,7 @@ async def test_measure_multiple(hass):
                     "end": "{{ now() }}",
                     "type": "time",
                     "precision": 2,
+                    "time_unit": "h",
                 },
                 {
                     "platform": "history_stats",
@@ -321,6 +323,7 @@ async def test_measure_multiple(hass):
                     "end": "{{ now() }}",
                     "type": "time",
                     "precision": 2,
+                    "time_unit": "h",
                 },
                 {
                     "platform": "history_stats",
@@ -341,6 +344,17 @@ async def test_measure_multiple(hass):
                     "type": "ratio",
                     "precision": 1,
                 },
+                {
+                    "platform": "history_stats",
+                    "entity_id": "input_select.test_id",
+                    "name": "sensor5",
+                    "state": ["orange", "blue"],
+                    "start": "{{ as_timestamp(now()) - 3600 }}",
+                    "end": "{{ now() }}",
+                    "type": "time",
+                    "precision": 1,
+                    "time_unit": "min",
+                },
             ]
         },
     )
@@ -357,6 +371,7 @@ async def test_measure_multiple(hass):
     assert hass.states.get("sensor.sensor2").state == STATE_UNKNOWN
     assert hass.states.get("sensor.sensor3").state == "2"
     assert hass.states.get("sensor.sensor4").state == "50.0"
+    assert hass.states.get("sensor.sensor5").state == "30.0"
 
 
 async def async_test_measure(hass):
@@ -421,6 +436,17 @@ async def async_test_measure(hass):
                     "type": "ratio",
                     "precision": 1,
                 },
+                {
+                    "platform": "history_stats",
+                    "entity_id": "binary_sensor.test_id",
+                    "name": "sensor5",
+                    "state": "on",
+                    "start": "{{ as_timestamp(now()) - 3600 }}",
+                    "end": "{{ now() }}",
+                    "type": "time",
+                    "precision": 1,
+                    "time_unit": "min",
+                },
             ]
         },
     )
@@ -437,6 +463,7 @@ async def async_test_measure(hass):
     assert hass.states.get("sensor.sensor2").state == STATE_UNKNOWN
     assert hass.states.get("sensor.sensor3").state == "2"
     assert hass.states.get("sensor.sensor4").state == "50.0"
+    assert hass.states.get("sensor.sensor5").state == "30.0"
 
 
 def _get_fixtures_base_path():
