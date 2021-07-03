@@ -18,6 +18,16 @@
                 },
                 "title": "Konfigurieren Sie die Authentifizierung"
             },
+            "configure": {
+                "data": {
+                    "host": "Host",
+                    "name": "Name",
+                    "password": "Passwort",
+                    "port": "Port",
+                    "username": "Benutzername"
+                },
+                "title": "Konfigurieren Sie das ONVIF-Ger\u00e4t"
+            },
             "configure_profile": {
                 "data": {
                     "include": "Kameraentit\u00e4t erstellen"
@@ -40,6 +50,9 @@
                 "title": "Konfigurieren Sie das ONVIF-Ger\u00e4t"
             },
             "user": {
+                "data": {
+                    "auto": "Automatisch suchen"
+                },
                 "description": "Wenn Sie auf Senden klicken, durchsuchen wir Ihr Netzwerk nach ONVIF-Ger\u00e4ten, die Profil S unterst\u00fctzen. \n\nEinige Hersteller haben begonnen, ONVIF standardm\u00e4\u00dfig zu deaktivieren. Stellen Sie sicher, dass ONVIF in der Konfiguration Ihrer Kamera aktiviert ist.",
                 "title": "ONVIF-Ger\u00e4tekonfiguration"
             }

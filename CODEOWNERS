@@ -88,6 +88,7 @@ homeassistant/components/cisco_webex_teams/* @fbradyirl
 homeassistant/components/climacell/* @raman325
 homeassistant/components/cloud/* @home-assistant/cloud
 homeassistant/components/cloudflare/* @ludeeus @ctalkington
+homeassistant/components/coinbase/* @tombrien
 homeassistant/components/color_extractor/* @GenericStudent
 homeassistant/components/comfoconnect/* @michaelarnauts
 homeassistant/components/compensation/* @Petro31
@@ -163,10 +164,12 @@ homeassistant/components/flo/* @dmulcahey
 homeassistant/components/flock/* @fabaff
 homeassistant/components/flume/* @ChrisMandich @bdraco
 homeassistant/components/flunearyou/* @bachya
+homeassistant/components/forecast_solar/* @klaasnicolaas @frenck
 homeassistant/components/forked_daapd/* @uvjustin
 homeassistant/components/fortios/* @kimfrellsen
 homeassistant/components/foscam/* @skgsergio
 homeassistant/components/freebox/* @hacf-fr @Quentame
+homeassistant/components/freedompro/* @stefano055415
 homeassistant/components/fritz/* @mammuth @AaronDavidSchneider @chemelli74
 homeassistant/components/fritzbox/* @mib1185
 homeassistant/components/fronius/* @nielstron
@@ -329,6 +332,7 @@ homeassistant/components/nextcloud/* @meichthys
 homeassistant/components/nightscout/* @marciogranzotto
 homeassistant/components/nilu/* @hfurubotten
 homeassistant/components/nissan_leaf/* @filcole
+homeassistant/components/nmap_tracker/* @bdraco
 homeassistant/components/nmbs/* @thibmaek
 homeassistant/components/no_ip/* @fabaff
 homeassistant/components/noaa_tides/* @jdelaney72
@@ -429,7 +433,6 @@ homeassistant/components/sensibo/* @andrey-git
 homeassistant/components/sentry/* @dcramer @frenck
 homeassistant/components/serial/* @fabaff
 homeassistant/components/seven_segments/* @fabaff
-homeassistant/components/seventeentrack/* @bachya
 homeassistant/components/sharkiq/* @ajmarks
 homeassistant/components/shell_command/* @home-assistant/core
 homeassistant/components/shelly/* @balloob @bieniu @thecode @chemelli74

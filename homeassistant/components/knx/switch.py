@@ -13,7 +13,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import DOMAIN, KNX_ADDRESS
+from .const import CONF_RESPOND_TO_READ, DOMAIN, KNX_ADDRESS
 from .knx_entity import KnxEntity
 from .schema import SwitchSchema
 
@@ -48,6 +48,7 @@ class KNXSwitch(KnxEntity, SwitchEntity, RestoreEntity):
                 name=config[CONF_NAME],
                 group_address=config[KNX_ADDRESS],
                 group_address_state=config.get(SwitchSchema.CONF_STATE_ADDRESS),
+                respond_to_read=config[CONF_RESPOND_TO_READ],
                 invert=config[SwitchSchema.CONF_INVERT],
             )
         )

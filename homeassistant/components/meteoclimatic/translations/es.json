@@ -5,7 +5,7 @@
                 "data": {
                     "code": "C\u00f3digo de la estaci\u00f3n"
                 },
-                "description": "Introduzca el c\u00f3digo de la estaci\u00f3n Meteoclimatic (por ejemplo, ESCAT430000000043206B)",
+                "description": "Introduzca el c\u00f3digo de la estaci\u00f3n Meteoclimatic (por ejemplo, ESCAT4300000043206B)",
                 "title": "Meteoclimatic"
             }
         }

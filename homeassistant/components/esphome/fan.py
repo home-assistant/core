@@ -68,7 +68,7 @@ class EsphomeFan(EsphomeEntity, FanEntity):
 
     @property
     def _supports_speed_levels(self) -> bool:
-        api_version = self._client.api_version
+        api_version = self._api_version
         return api_version.major == 1 and api_version.minor > 3
 
     async def async_set_percentage(self, percentage: int) -> None:

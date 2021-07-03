@@ -108,12 +108,12 @@ class NumberEntity(Entity):
 
     @property
     @final
-    def state(self) -> float:
+    def state(self) -> float | None:
         """Return the entity state."""
         return self.value
 
     @property
-    def value(self) -> float:
+    def value(self) -> float | None:
         """Return the entity value to represent the entity state."""
         return self._attr_value
 

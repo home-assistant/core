@@ -397,7 +397,7 @@ class PrometheusMetrics:
 
             try:
                 value = self.state_as_number(state)
-                if unit == TEMP_FAHRENHEIT:
+                if state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_FAHRENHEIT:
                     value = fahrenheit_to_celsius(value)
                 _metric.labels(**self._labels(state)).set(value)
             except ValueError:

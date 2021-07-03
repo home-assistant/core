@@ -8,10 +8,14 @@ from homeassistant.components.light import (
     ATTR_COLOR_MODE,
     ATTR_COLOR_TEMP,
     ATTR_EFFECT,
+    ATTR_EFFECT_LIST,
     ATTR_HS_COLOR,
+    ATTR_MAX_MIREDS,
+    ATTR_MIN_MIREDS,
     ATTR_RGB_COLOR,
     ATTR_RGBW_COLOR,
     ATTR_RGBWW_COLOR,
+    ATTR_SUPPORTED_COLOR_MODES,
     ATTR_WHITE,
     ATTR_WHITE_VALUE,
     ATTR_XY_COLOR,
@@ -96,6 +100,25 @@ CONF_WHITE_VALUE_SCALE = "white_value_scale"
 CONF_WHITE_VALUE_STATE_TOPIC = "white_value_state_topic"
 CONF_WHITE_VALUE_TEMPLATE = "white_value_template"
 CONF_ON_COMMAND_TYPE = "on_command_type"
+
+MQTT_LIGHT_ATTRIBUTES_BLOCKED = frozenset(
+    {
+        ATTR_COLOR_MODE,
+        ATTR_BRIGHTNESS,
+        ATTR_COLOR_TEMP,
+        ATTR_EFFECT,
+        ATTR_EFFECT_LIST,
+        ATTR_HS_COLOR,
+        ATTR_MAX_MIREDS,
+        ATTR_MIN_MIREDS,
+        ATTR_RGB_COLOR,
+        ATTR_RGBW_COLOR,
+        ATTR_RGBWW_COLOR,
+        ATTR_SUPPORTED_COLOR_MODES,
+        ATTR_WHITE_VALUE,
+        ATTR_XY_COLOR,
+    }
+)
 
 DEFAULT_BRIGHTNESS_SCALE = 255
 DEFAULT_NAME = "MQTT LightEntity"
@@ -204,6 +227,8 @@ async def async_setup_entity_basic(
 
 class MqttLight(MqttEntity, LightEntity, RestoreEntity):
     """Representation of a MQTT light."""
+
+    _attributes_extra_blocked = MQTT_LIGHT_ATTRIBUTES_BLOCKED
 
     def __init__(self, hass, config, config_entry, discovery_data):
         """Initialize MQTT light."""

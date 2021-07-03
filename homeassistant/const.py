@@ -4,7 +4,7 @@ from __future__ import annotations
 from typing import Final
 
 MAJOR_VERSION: Final = 2021
-MINOR_VERSION: Final = 7
+MINOR_VERSION: Final = 8
 PATCH_VERSION: Final = "0.dev0"
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
@@ -266,6 +266,7 @@ STATE_ALARM_DISARMED: Final = "disarmed"
 STATE_ALARM_ARMED_HOME: Final = "armed_home"
 STATE_ALARM_ARMED_AWAY: Final = "armed_away"
 STATE_ALARM_ARMED_NIGHT: Final = "armed_night"
+STATE_ALARM_ARMED_VACATION: Final = "armed_vacation"
 STATE_ALARM_ARMED_CUSTOM_BYPASS: Final = "armed_custom_bypass"
 STATE_ALARM_PENDING: Final = "pending"
 STATE_ALARM_ARMING: Final = "arming"
@@ -494,6 +495,7 @@ PERCENTAGE: Final = "%"
 
 # Irradiation units
 IRRADIATION_WATTS_PER_SQUARE_METER: Final = "W/m²"
+IRRADIATION_BTUS_PER_HOUR_SQUARE_FOOT: Final = "BTU/(h×ft²)"
 
 # Precipitation units
 PRECIPITATION_MILLIMETERS_PER_HOUR: Final = "mm/h"
@@ -501,6 +503,7 @@ PRECIPITATION_MILLIMETERS_PER_HOUR: Final = "mm/h"
 # Concentration units
 CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: Final = "µg/m³"
 CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER: Final = "mg/m³"
+CONCENTRATION_MICROGRAMS_PER_CUBIC_FOOT: Final = "μg/ft³"
 CONCENTRATION_PARTS_PER_CUBIC_METER: Final = "p/m³"
 CONCENTRATION_PARTS_PER_MILLION: Final = "ppm"
 CONCENTRATION_PARTS_PER_BILLION: Final = "ppb"
@@ -578,6 +581,7 @@ SERVICE_ALARM_DISARM: Final = "alarm_disarm"
 SERVICE_ALARM_ARM_HOME: Final = "alarm_arm_home"
 SERVICE_ALARM_ARM_AWAY: Final = "alarm_arm_away"
 SERVICE_ALARM_ARM_NIGHT: Final = "alarm_arm_night"
+SERVICE_ALARM_ARM_VACATION: Final = "alarm_arm_vacation"
 SERVICE_ALARM_ARM_CUSTOM_BYPASS: Final = "alarm_arm_custom_bypass"
 SERVICE_ALARM_TRIGGER: Final = "alarm_trigger"
 
@@ -635,6 +639,7 @@ HTTP_BAD_GATEWAY: Final = 502
 HTTP_SERVICE_UNAVAILABLE: Final = 503
 
 HTTP_BASIC_AUTHENTICATION: Final = "basic"
+HTTP_BEARER_AUTHENTICATION: Final = "bearer_token"
 HTTP_DIGEST_AUTHENTICATION: Final = "digest"
 
 HTTP_HEADER_X_REQUESTED_WITH: Final = "X-Requested-With"

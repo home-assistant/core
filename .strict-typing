@@ -25,11 +25,13 @@ homeassistant.components.canary.*
 homeassistant.components.cover.*
 homeassistant.components.device_automation.*
 homeassistant.components.device_tracker.*
+homeassistant.components.devolo_home_control.*
 homeassistant.components.dnsip.*
 homeassistant.components.dsmr.*
 homeassistant.components.dunehd.*
 homeassistant.components.elgato.*
 homeassistant.components.fitbit.*
+homeassistant.components.forecast_solar.*
 homeassistant.components.fritzbox.*
 homeassistant.components.frontend.*
 homeassistant.components.geo_location.*
