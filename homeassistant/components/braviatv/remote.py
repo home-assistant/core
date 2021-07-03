@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
-from typing import Any, cast
+from typing import Any
 
 from homeassistant.components.remote import ATTR_NUM_REPEATS, RemoteEntity
 from homeassistant.config_entries import ConfigEntry
@@ -23,7 +23,8 @@ async def async_setup_entry(
     """Set up Bravia TV Remote from a config entry."""
 
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
-    unique_id = cast(str, config_entry.unique_id)
+    unique_id = config_entry.unique_id
+    assert unique_id is not None
     device_info: DeviceInfo = {
         "identifiers": {(DOMAIN, unique_id)},
         "name": DEFAULT_NAME,

@@ -1,7 +1,7 @@
 """Support for interface with a Bravia TV."""
 from __future__ import annotations
 
-from typing import Final, cast
+from typing import Final
 
 from homeassistant.components.media_player import DEVICE_CLASS_TV, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
@@ -50,7 +50,8 @@ async def async_setup_entry(
     """Set up Bravia TV Media Player from a config_entry."""
 
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
-    unique_id = cast(str, config_entry.unique_id)
+    unique_id = config_entry.unique_id
+    assert unique_id is not None
     device_info: DeviceInfo = {
         "identifiers": {(DOMAIN, unique_id)},
         "name": DEFAULT_NAME,
