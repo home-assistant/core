@@ -33,7 +33,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.cast.*",
     "homeassistant.components.cert_expiry.*",
     "homeassistant.components.climacell.*",
-    "homeassistant.components.climate.*",
     "homeassistant.components.cloud.*",
     "homeassistant.components.cloudflare.*",
     "homeassistant.components.config.*",
