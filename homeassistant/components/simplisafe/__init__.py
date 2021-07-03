@@ -41,8 +41,6 @@ from .const import (
     VOLUMES,
 )
 
-DATA_LISTENER = "listener"
-
 EVENT_SIMPLISAFE_NOTIFICATION = "SIMPLISAFE_NOTIFICATION"
 
 DEFAULT_SOCKET_MIN_RETRY = 15
@@ -130,9 +128,8 @@ async def async_register_base_station(hass, system, config_entry_id):
 
 async def async_setup_entry(hass, config_entry):  # noqa: C901
     """Set up SimpliSafe as config entry."""
-    hass.data.setdefault(DOMAIN, {DATA_CLIENT: {}, DATA_LISTENER: {}})
+    hass.data.setdefault(DOMAIN, {DATA_CLIENT: {}})
     hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id] = []
-    hass.data[DOMAIN][DATA_LISTENER][config_entry.entry_id] = []
 
     if CONF_PASSWORD not in config_entry.data:
         raise ConfigEntryAuthFailed("Config schema change requires re-authentication")
@@ -276,9 +273,7 @@ async def async_setup_entry(hass, config_entry):  # noqa: C901
     ]:
         async_register_admin_service(hass, DOMAIN, service, method, schema=schema)
 
-    hass.data[DOMAIN][DATA_LISTENER][config_entry.entry_id].append(
-        config_entry.add_update_listener(async_reload_entry)
-    )
+    config_entry.async_on_unload(config_entry.add_update_listener(async_reload_entry))
 
     return True
 
@@ -288,8 +283,6 @@ async def async_unload_entry(hass, entry):
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         hass.data[DOMAIN][DATA_CLIENT].pop(entry.entry_id)
-        for remove_listener in hass.data[DOMAIN][DATA_LISTENER].pop(entry.entry_id):
-            remove_listener()
 
     return unload_ok
 
