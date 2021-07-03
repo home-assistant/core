@@ -352,8 +352,8 @@ async def test_measure_multiple(hass):
                     "start": "{{ as_timestamp(now()) - 3600 }}",
                     "end": "{{ now() }}",
                     "type": "time",
-                    "precision": 1,
-                    "time_unit": "min",
+                    "precision": 3,
+                    "time_unit": "d",
                 },
             ]
         },
@@ -371,7 +371,7 @@ async def test_measure_multiple(hass):
     assert hass.states.get("sensor.sensor2").state == STATE_UNKNOWN
     assert hass.states.get("sensor.sensor3").state == "2"
     assert hass.states.get("sensor.sensor4").state == "50.0"
-    assert hass.states.get("sensor.sensor5").state == "30.0"
+    assert hass.states.get("sensor.sensor5").state == "0.021"
 
 
 async def async_test_measure(hass):
@@ -444,8 +444,8 @@ async def async_test_measure(hass):
                     "start": "{{ as_timestamp(now()) - 3600 }}",
                     "end": "{{ now() }}",
                     "type": "time",
-                    "precision": 1,
-                    "time_unit": "min",
+                    "precision": 3,
+                    "time_unit": "d",
                 },
             ]
         },
@@ -463,7 +463,7 @@ async def async_test_measure(hass):
     assert hass.states.get("sensor.sensor2").state == STATE_UNKNOWN
     assert hass.states.get("sensor.sensor3").state == "2"
     assert hass.states.get("sensor.sensor4").state == "50.0"
-    assert hass.states.get("sensor.sensor5").state == "30.0"
+    assert hass.states.get("sensor.sensor5").state == "0.021"
 
 
 def _get_fixtures_base_path():
