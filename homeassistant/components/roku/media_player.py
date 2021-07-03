@@ -39,9 +39,10 @@ from homeassistant.const import (
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.network import is_internal_request
 
-from . import RokuDataUpdateCoordinator, roku_exception_handler
+from . import roku_exception_handler
 from .browse_media import build_item_response, library_payload
 from .const import ATTR_KEYWORD, DOMAIN, SERVICE_SEARCH
+from .coordinator import RokuDataUpdateCoordinator
 from .entity import RokuEntity
 
 _LOGGER = logging.getLogger(__name__)
