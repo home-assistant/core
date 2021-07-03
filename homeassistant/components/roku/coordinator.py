@@ -1,7 +1,7 @@
 """Coordinator for Roku."""
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 
 from rokuecp import Roku, RokuConnectionError, RokuError
@@ -31,7 +31,7 @@ class RokuDataUpdateCoordinator(DataUpdateCoordinator[Device]):
         self.roku = Roku(host=host, session=async_get_clientsession(hass))
 
         self.full_update_interval = timedelta(minutes=15)
-        self.last_full_update = None
+        self.last_full_update: datetime | None = None
 
         super().__init__(
             hass,
