@@ -39,5 +39,5 @@ class RokuEntity(CoordinatorEntity):
             ATTR_MANUFACTURER: self.coordinator.data.info.brand,
             ATTR_MODEL: self.coordinator.data.info.model_name,
             ATTR_SW_VERSION: self.coordinator.data.info.version,
-            ATTR_SUGGESTED_AREA: self.coordinator.data.info.device_location,
+            "suggested_area": self.coordinator.data.info.device_location,
         }
