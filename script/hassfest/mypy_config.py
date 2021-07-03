@@ -170,7 +170,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.ruckus_unleashed.*",
     "homeassistant.components.sabnzbd.*",
     "homeassistant.components.screenlogic.*",
-    "homeassistant.components.script.*",
     "homeassistant.components.search.*",
     "homeassistant.components.sense.*",
     "homeassistant.components.sesame.*",
