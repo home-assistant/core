@@ -154,12 +154,11 @@ def async_catch_zwave_errors(orig_func: Callable) -> Callable:
         try:
             await orig_func(hass, connection, msg, *args, **kwargs)
         except FailedZWaveCommand as err:
-            error_msg = f"{err.zwave_error_code}: {err.zwave_error_message}"
             # Unsubscribe to callbacks
             if unsubs := msg.get(DATA_UNSUBSCRIBE):
                 for unsub in unsubs:
                     unsub()
-            connection.send_error(msg[ID], ERR_ZWAVE_ERROR, error_msg)
+            connection.send_error(msg[ID], ERR_ZWAVE_ERROR, err.args[0])
 
     return async_catch_zwave_errors_func
 
