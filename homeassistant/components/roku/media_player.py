@@ -66,7 +66,7 @@ SEARCH_SCHEMA = {vol.Required(ATTR_KEYWORD): str}
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the Roku config entry."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: RokuDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     unique_id = coordinator.data.info.serial_number
     async_add_entities([RokuMediaPlayer(unique_id, coordinator)], True)
 
