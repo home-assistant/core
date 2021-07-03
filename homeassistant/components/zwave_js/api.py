@@ -48,6 +48,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from .const import (
     CONF_DATA_COLLECTION_OPTED_IN,
     DATA_CLIENT,
+    DATA_UNSUBSCRIBE,
     DOMAIN,
     EVENT_DEVICE_ADDED_TO_REGISTRY,
 )
@@ -153,6 +154,13 @@ def async_catch_zwave_errors(orig_func: Callable) -> Callable:
             orig_func(hass, connection, msg, *args)
         except FailedZWaveCommand as err:
             error_msg = f"{err.zwave_error_code}: {err.zwave_error_message}"
+            # Unsubscribe to callbacks
+            if DATA_UNSUBSCRIBE in msg:
+                if isinstance((unsubs := msg[DATA_UNSUBSCRIBE]), list):
+                    for unsub in unsubs:
+                        unsub()
+                else:
+                    msg[DATA_UNSUBSCRIBE]()
             connection.send_error(msg[ID], ERR_ZWAVE_ERROR, error_msg)
 
     return async_catch_zwave_errors_func
@@ -436,7 +444,7 @@ async def websocket_add_node(
         )
 
     connection.subscriptions[msg["id"]] = async_cleanup
-    unsubs = [
+    msg[DATA_UNSUBSCRIBE] = unsubs = [
         controller.on("inclusion started", forward_event),
         controller.on("inclusion failed", forward_event),
         controller.on("inclusion stopped", forward_event),
@@ -551,7 +559,7 @@ async def websocket_remove_node(
         )
 
     connection.subscriptions[msg["id"]] = async_cleanup
-    unsubs = [
+    msg[DATA_UNSUBSCRIBE] = unsubs = [
         controller.on("exclusion started", forward_event),
         controller.on("exclusion failed", forward_event),
         controller.on("exclusion stopped", forward_event),
@@ -658,7 +666,7 @@ async def websocket_replace_failed_node(
         )
 
     connection.subscriptions[msg["id"]] = async_cleanup
-    unsubs = [
+    msg[DATA_UNSUBSCRIBE] = unsubs = [
         controller.on("inclusion started", forward_event),
         controller.on("inclusion failed", forward_event),
         controller.on("inclusion stopped", forward_event),
@@ -717,7 +725,7 @@ async def websocket_remove_failed_node(
         )
 
     connection.subscriptions[msg["id"]] = async_cleanup
-    unsub = controller.on("node removed", node_removed)
+    msg[DATA_UNSUBSCRIBE] = unsub = controller.on("node removed", node_removed)
 
     result = await controller.async_remove_failed_node(node_id)
     connection.send_result(
@@ -787,7 +795,7 @@ async def websocket_subscribe_heal_network_progress(
         )
 
     connection.subscriptions[msg["id"]] = async_cleanup
-    unsubs = [
+    msg[DATA_UNSUBSCRIBE] = unsubs = [
         controller.on("heal network progress", partial(forward_event, "progress")),
         controller.on("heal network done", partial(forward_event, "result")),
     ]
@@ -889,7 +897,7 @@ async def websocket_refresh_node_info(
         )
 
     connection.subscriptions[msg["id"]] = async_cleanup
-    unsubs = [
+    msg[DATA_UNSUBSCRIBE] = unsubs = [
         node.on("interview started", forward_event),
         node.on("interview completed", forward_event),
         node.on("interview stage completed", forward_stage),
@@ -1115,7 +1123,7 @@ async def websocket_subscribe_log_updates(
             )
         )
 
-    unsubs = [
+    msg[DATA_UNSUBSCRIBE] = unsubs = [
         driver.on("logging", log_messages),
         driver.on("log config updated", log_config_updates),
     ]
@@ -1381,7 +1389,7 @@ async def websocket_subscribe_firmware_update_status(
             )
         )
 
-    unsubs = [
+    msg[DATA_UNSUBSCRIBE] = unsubs = [
         node.on("firmware update progress", forward_progress),
         node.on("firmware update finished", forward_finished),
     ]
