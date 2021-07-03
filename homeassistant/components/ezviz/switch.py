@@ -18,10 +18,7 @@ async def async_setup_entry(hass, entry, async_add_entities) -> None:
     """Set up Ezviz switch based on a config entry."""
     coordinator = hass.data[DOMAIN][entry.entry_id][DATA_COORDINATOR]
     switch_entities = []
-    supported_switches = set()
-
-    for switches in DeviceSwitchType:
-        supported_switches.add(switches.value)
+    supported_switches = {switches.value for switches in DeviceSwitchType}
 
     for idx, camera in enumerate(coordinator.data):
         if not camera.get("switches"):
