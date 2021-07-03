@@ -308,6 +308,7 @@ omit =
     homeassistant/components/everlights/light.py
     homeassistant/components/evohome/*
     homeassistant/components/ezviz/__init__.py
+    homeassistant/components/ezviz/alarm_control_panel.py
     homeassistant/components/ezviz/camera.py
     homeassistant/components/ezviz/coordinator.py
     homeassistant/components/ezviz/const.py
