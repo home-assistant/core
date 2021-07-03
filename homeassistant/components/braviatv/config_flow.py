@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import ipaddress
 import re
-from typing import Any, cast
+from typing import Any
 
 from bravia_tv import BraviaRC
 from bravia_tv.braviarc import NoIPControl
@@ -46,9 +46,9 @@ class BraviaTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize."""
         self.braviarc: BraviaRC | None = None
-        self.host = None
-        self.title = None
-        self.mac = None
+        self.host: str | None = None
+        self.title = ""
+        self.mac: str | None = None
 
     async def init_device(self, pin: str) -> None:
         """Initialize Bravia TV device."""
@@ -83,7 +83,7 @@ class BraviaTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle the initial step."""
-        errors = {}
+        errors: dict[str, str] = {}
 
         if user_input is not None:
             if host_valid(user_input[CONF_HOST]):
@@ -116,9 +116,7 @@ class BraviaTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             else:
                 user_input[CONF_HOST] = self.host
                 user_input[CONF_MAC] = self.mac
-                return self.async_create_entry(
-                    title=cast(str, self.title), data=user_input
-                )
+                return self.async_create_entry(title=self.title, data=user_input)
         # Connecting with th PIN "0000" to start the pairing process on the TV.
         try:
             assert self.braviarc is not None

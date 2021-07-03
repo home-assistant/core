@@ -2,9 +2,10 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Iterable
 from datetime import timedelta
 import logging
-from typing import Final, Iterable
+from typing import Final
 
 from bravia_tv import BraviaRC
 from bravia_tv.braviarc import NoIPControl
@@ -21,7 +22,7 @@ from .const import CLIENTID_PREFIX, CONF_IGNORED_SOURCES, DOMAIN, NICKNAME
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS: Final = [MEDIA_PLAYER_DOMAIN, REMOTE_DOMAIN]
+PLATFORMS: Final[list[str]] = [MEDIA_PLAYER_DOMAIN, REMOTE_DOMAIN]
 SCAN_INTERVAL: Final = timedelta(seconds=10)
 
 
@@ -82,7 +83,7 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
         self.braviarc = BraviaRC(host, mac)
         self.pin = pin
         self.ignored_sources = ignored_sources
-        self.muted: bool | None = False
+        self.muted: bool = False
         self.channel_name: str | None = None
         self.channel_number = None
         self.media_title: str | None = None
@@ -98,9 +99,9 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
         self.min_volume: int | None = None
         self.max_volume: int | None = None
         self.volume_level: float | None = None
-        self.is_on: bool = False
+        self.is_on = False
         # Assume that the TV is in Play mode
-        self.playing: bool = True
+        self.playing = True
         self.state_lock = asyncio.Lock()
 
         super().__init__(
@@ -135,7 +136,7 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
             self.audio_output = volume_info.get("target")
             self.min_volume = volume_info.get("minVolume")
             self.max_volume = volume_info.get("maxVolume")
-            self.muted = volume_info.get("mute")
+            self.muted = volume_info.get("mute", False)
             return True
         return False
 

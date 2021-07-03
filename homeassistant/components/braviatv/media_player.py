@@ -108,7 +108,7 @@ class BraviaTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
         return self.coordinator.volume_level
 
     @property
-    def is_volume_muted(self) -> bool | None:
+    def is_volume_muted(self) -> bool:
         """Boolean if volume is currently muted."""
         return self.coordinator.muted
 
