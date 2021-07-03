@@ -469,6 +469,10 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set new target hvac mode."""
+        if hvac_mode not in self.hvac_modes:
+            raise ValueError(
+                f"Thermostat {self.entity_id} does not support the {hvac_mode} mode"
+            )
         if not self._current_mode:
             # Thermostat(valve) has no support for setting a mode, so we make it a no-op
             return
