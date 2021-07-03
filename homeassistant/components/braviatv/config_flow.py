@@ -1,6 +1,7 @@
 """Adds config flow for Bravia TV integration."""
 from __future__ import annotations
 
+from contextlib import suppress
 import ipaddress
 import re
 from typing import Any
@@ -29,11 +30,9 @@ from .const import (
 
 def host_valid(host: str) -> bool:
     """Return True if hostname or IP address is valid."""
-    try:
+    with suppress(ValueError):
         if ipaddress.ip_address(host).version in [4, 6]:
             return True
-    except ValueError:
-        pass
     disallowed = re.compile(r"[^a-zA-Z\d\-]")
     return all(x and not disallowed.search(x) for x in host.split("."))
 
