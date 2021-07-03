@@ -24,7 +24,7 @@
                     "declination": "Deklinatsioon (0 = horisontaalne, 90 = vertikaalne)",
                     "modules power": "P\u00e4ikesemoodulite koguv\u00f5imsus vattides"
                 },
-                "description": "Need v\u00e4\u00e4rtused v\u00f5imaldavad muuta Solar.Forecast tulemust. Vaata dokumentatsiooni kui on ebaselge."
+                "description": "Need v\u00e4\u00e4rtused v\u00f5imaldavad muuta Solar.Forecast tulemust. Vaata dokumentatsiooni kui asi on ebaselge."
             }
         }
     }
