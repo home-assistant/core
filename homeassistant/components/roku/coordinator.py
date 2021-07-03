@@ -21,6 +21,9 @@ _LOGGER = logging.getLogger(__name__)
 class RokuDataUpdateCoordinator(DataUpdateCoordinator[Device]):
     """Class to manage fetching Roku data."""
 
+    last_full_update: datetime | None
+    roku: Roku
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -31,7 +34,7 @@ class RokuDataUpdateCoordinator(DataUpdateCoordinator[Device]):
         self.roku = Roku(host=host, session=async_get_clientsession(hass))
 
         self.full_update_interval = timedelta(minutes=15)
-        self.last_full_update: datetime | None = None
+        self.last_full_update = None
 
         super().__init__(
             hass,
