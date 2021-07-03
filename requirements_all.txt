@@ -209,7 +209,7 @@ aiolyric==1.0.7
 aiomodernforms==0.1.8
 
 # homeassistant.components.yamaha_musiccast
-aiomusiccast==0.8.0
+aiomusiccast==0.8.2
 
 # homeassistant.components.keyboard_remote
 aionotify==0.2.0
