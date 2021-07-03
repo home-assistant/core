@@ -316,6 +316,7 @@ def stream_worker(
                                 _LOGGER.warning(
                                     "ADTS AAC detected - disabling audio stream"
                                 )
+                                dts_validator = TimestampValidator()
                                 container_packets = filter(
                                     dts_validator.is_valid,
                                     container.demux(video_stream),
