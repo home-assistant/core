@@ -103,7 +103,7 @@ class BraviaTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Get PIN from the Bravia TV device."""
-        errors = {}
+        errors: dict[str, str] = {}
 
         if user_input is not None:
             try:
