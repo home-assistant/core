@@ -169,7 +169,7 @@ class CastDevice(MediaPlayerEntity):
         self.cast_status = None
         self.media_status = None
         self.media_status_received = None
-        self.mz_media_status: dict[str, pychromecast.media.MediaStatus] = {}
+        self.mz_media_status: dict[str, pychromecast.controllers.media.MediaStatus] = {}
         self.mz_media_status_received: dict[str, datetime] = {}
         self.mz_mgr = None
         self._available = False
