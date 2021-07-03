@@ -85,7 +85,6 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
         self.ignored_sources = ignored_sources
         self.muted: bool = False
         self.channel_name: str | None = None
-        self.channel_number = None
         self.media_title: str | None = None
         self.source: str | None = None
         self.source_list: list[str] = []
@@ -93,7 +92,6 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
         self.content_mapping: dict[str, str] = {}
         self.duration: int | None = None
         self.content_uri: str | None = None
-        self.start_date_time = None
         self.program_media_type: str | None = None
         self.audio_output: str | None = None
         self.min_volume: int | None = None
@@ -158,7 +156,6 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
         program_name = playing_info.get("programTitle")
         self.channel_name = playing_info.get("title")
         self.program_media_type = playing_info.get("programMediaType")
-        self.channel_number = playing_info.get("dispNum")
         self.content_uri = playing_info.get("uri")
         self.source = self._get_source()
         self.duration = playing_info.get("durationSec")
