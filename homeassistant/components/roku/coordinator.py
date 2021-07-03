@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 import logging
 
-from rokuecp import Roku, RokuConnectionError, RokuError
+from rokuecp import Roku, RokuError
 from rokuecp.models import Device
 
 from homeassistant.core import HomeAssistant
