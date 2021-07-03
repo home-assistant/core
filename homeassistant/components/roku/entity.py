@@ -19,6 +19,8 @@ from .const import (
 class RokuEntity(CoordinatorEntity):
     """Defines a base Roku entity."""
 
+    coordinator: RokuDataUpdateCoordinator
+
     def __init__(
         self, *, device_id: str, coordinator: RokuDataUpdateCoordinator
     ) -> None:
