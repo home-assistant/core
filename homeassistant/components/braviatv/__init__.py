@@ -159,7 +159,6 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
         self.content_uri = playing_info.get("uri")
         self.source = self._get_source()
         self.duration = playing_info.get("durationSec")
-        self.start_date_time = playing_info.get("startDateTime")
         if not playing_info:
             self.channel_name = "App"
         if self.channel_name is not None:
