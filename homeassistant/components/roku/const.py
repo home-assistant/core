@@ -3,7 +3,6 @@ DOMAIN = "roku"
 
 # Attributes
 ATTR_KEYWORD = "keyword"
-ATTR_SUGGESTED_AREA = "suggested_area"
 
 # Default Values
 DEFAULT_PORT = 8060
