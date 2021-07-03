@@ -74,6 +74,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                         config_entry.unique_id,
                         serial_number,
                         SENSORS[condition][1],
+                        SENSORS[condition][2],
                         coordinator,
                     )
                 )
@@ -91,6 +92,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                     config_entry.unique_id,
                     None,
                     SENSORS[condition][1],
+                    SENSORS[condition][2],
                     coordinator,
                 )
             )
@@ -109,6 +111,7 @@ class Envoy(CoordinatorEntity, SensorEntity):
         device_serial_number,
         serial_number,
         unit,
+        state_class,
         coordinator,
     ):
         """Initialize Envoy entity."""
@@ -118,6 +121,7 @@ class Envoy(CoordinatorEntity, SensorEntity):
         self._device_name = device_name
         self._device_serial_number = device_serial_number
         self._unit_of_measurement = unit
+        self._attr_state_class = state_class
 
         super().__init__(coordinator)
 

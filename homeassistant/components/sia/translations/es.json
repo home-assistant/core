@@ -1,5 +1,13 @@
 {
     "config": {
+        "error": {
+            "invalid_account_format": "La cuenta no es un valor hexadecimal, por favor utilice s\u00f3lo 0-9 y A-F.",
+            "invalid_account_length": "La cuenta no tiene la longitud adecuada, tiene que tener entre 3 y 16 caracteres.",
+            "invalid_key_format": "La clave no es un valor hexadecimal, por favor utilice s\u00f3lo 0-9 y A-F.",
+            "invalid_key_length": "La clave no tiene la longitud correcta, tiene que ser de 16, 24 o 32 caracteres hexadecimales.",
+            "invalid_ping": "El intervalo de ping debe estar entre 1 y 1440 minutos.",
+            "invalid_zones": "Tiene que haber al menos 1 zona."
+        },
         "step": {
             "additional_account": {
                 "title": "Agrega otra cuenta al puerto actual."

@@ -4,6 +4,7 @@
             "arm_away": "Valvesta {entity_name}",
             "arm_home": "Valvesta {entity_name} kodus re\u017eiimis",
             "arm_night": "Valvesta {entity_name} \u00f6\u00f6re\u017eiimis",
+            "arm_vacation": "Valvesta {entity_name} puhkusere\u017eiimis",
             "disarm": "V\u00f5ta {entity_name} valvest maha",
             "trigger": "K\u00e4ivita {entity_name}"
         },
@@ -11,6 +12,7 @@
             "is_armed_away": "{entity_name} on valvestatud",
             "is_armed_home": "{entity_name} on valvestatud kodure\u017eiimis",
             "is_armed_night": "{entity_name} on valvestatud \u00f6\u00f6re\u017eiimis",
+            "is_armed_vacation": "{entity_name} on valvestatud puhkuse reziimis",
             "is_disarmed": "{entity_name} on valve alt maas",
             "is_triggered": "{entity_name} on h\u00e4iret andnud"
         },
@@ -18,6 +20,7 @@
             "armed_away": "{entity_name} valvestati",
             "armed_home": "{entity_name} valvestati kodure\u017eiimis",
             "armed_night": "{entity_name} valvestati \u00f6\u00f6re\u017eiimis",
+            "armed_vacation": "{entity_name} puhkuse re\u017eiim",
             "disarmed": "{entity_name} v\u00f5eti valvest maha",
             "triggered": "{entity_name} andis h\u00e4iret"
         }
@@ -29,6 +32,7 @@
             "armed_custom_bypass": "Valves, eranditega",
             "armed_home": "Valves kodus",
             "armed_night": "Valves \u00f6ine",
+            "armed_vacation": "Valvestatud puhkuse re\u017eiimis",
             "arming": "Valvestab",
             "disarmed": "Maas",
             "disarming": "Maas...",

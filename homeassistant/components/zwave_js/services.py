@@ -1,6 +1,7 @@
 """Methods and classes related to executing Z-Wave commands and publishing these to hass."""
 from __future__ import annotations
 
+import asyncio
 import logging
 from typing import Any
 
@@ -63,6 +64,14 @@ BITMASK_SCHEMA = vol.All(
         msg="Must provide an integer (e.g. 255) or a bitmask in hex form (e.g. 0xff)",
     ),
     lambda value: int(value, 16),
+)
+
+VALUE_SCHEMA = vol.Any(
+    bool,
+    vol.Coerce(int),
+    vol.Coerce(float),
+    BITMASK_SCHEMA,
+    cv.string,
 )
 
 
@@ -176,7 +185,7 @@ class ZWaveServices:
                             vol.Coerce(int), BITMASK_SCHEMA
                         ),
                         vol.Required(const.ATTR_CONFIG_VALUE): vol.Any(
-                            vol.Coerce(int), cv.string
+                            vol.Coerce(int), BITMASK_SCHEMA, cv.string
                         ),
                     },
                     cv.has_at_least_one_key(ATTR_DEVICE_ID, ATTR_ENTITY_ID),
@@ -203,7 +212,7 @@ class ZWaveServices:
                             {
                                 vol.Any(
                                     vol.Coerce(int), BITMASK_SCHEMA, cv.string
-                                ): vol.Any(vol.Coerce(int), cv.string)
+                                ): vol.Any(vol.Coerce(int), BITMASK_SCHEMA, cv.string)
                             },
                         ),
                     },
@@ -223,7 +232,7 @@ class ZWaveServices:
                         vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
                         vol.Optional(
                             const.ATTR_REFRESH_ALL_VALUES, default=False
-                        ): bool,
+                        ): cv.boolean,
                     },
                     validate_entities,
                 )
@@ -249,10 +258,8 @@ class ZWaveServices:
                             vol.Coerce(int), str
                         ),
                         vol.Optional(const.ATTR_ENDPOINT): vol.Coerce(int),
-                        vol.Required(const.ATTR_VALUE): vol.Any(
-                            bool, vol.Coerce(int), vol.Coerce(float), cv.string
-                        ),
-                        vol.Optional(const.ATTR_WAIT_FOR_RESULT): vol.Coerce(bool),
+                        vol.Required(const.ATTR_VALUE): VALUE_SCHEMA,
+                        vol.Optional(const.ATTR_WAIT_FOR_RESULT): cv.boolean,
                     },
                     cv.has_at_least_one_key(ATTR_DEVICE_ID, ATTR_ENTITY_ID),
                     get_nodes_from_service_data,
@@ -280,9 +287,7 @@ class ZWaveServices:
                             vol.Coerce(int), str
                         ),
                         vol.Optional(const.ATTR_ENDPOINT): vol.Coerce(int),
-                        vol.Required(const.ATTR_VALUE): vol.Any(
-                            bool, vol.Coerce(int), vol.Coerce(float), cv.string
-                        ),
+                        vol.Required(const.ATTR_VALUE): VALUE_SCHEMA,
                     },
                     vol.Any(
                         cv.has_at_least_one_key(ATTR_DEVICE_ID, ATTR_ENTITY_ID),
@@ -290,6 +295,24 @@ class ZWaveServices:
                     ),
                     get_nodes_from_service_data,
                     validate_multicast_nodes,
+                ),
+            ),
+        )
+
+        self._hass.services.async_register(
+            const.DOMAIN,
+            const.SERVICE_PING,
+            self.async_ping,
+            schema=vol.Schema(
+                vol.All(
+                    {
+                        vol.Optional(ATTR_DEVICE_ID): vol.All(
+                            cv.ensure_list, [cv.string]
+                        ),
+                        vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+                    },
+                    cv.has_at_least_one_key(ATTR_DEVICE_ID, ATTR_ENTITY_ID),
+                    get_nodes_from_service_data,
                 ),
             ),
         )
@@ -418,3 +441,8 @@ class ZWaveServices:
 
         if success is False:
             raise SetValueFailed("Unable to set value via multicast")
+
+    async def async_ping(self, service: ServiceCall) -> None:
+        """Ping node(s)."""
+        nodes: set[ZwaveNode] = service.data[const.ATTR_NODES]
+        await asyncio.gather(*[node.async_ping() for node in nodes])

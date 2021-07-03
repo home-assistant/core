@@ -1,6 +1,7 @@
 """Support for FRITZ!Box routers."""
 from __future__ import annotations
 
+import datetime
 import logging
 
 import voluptuous as vol
@@ -17,9 +18,11 @@ from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 
-from .common import FritzBoxTools, FritzDevice
+from .common import Device, FritzBoxTools, FritzData, FritzDevice
 from .const import DATA_FRITZ, DEFAULT_DEVICE_NAME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -41,7 +44,7 @@ PLATFORM_SCHEMA = vol.All(
 )
 
 
-async def async_get_scanner(hass: HomeAssistant, config: ConfigType):
+async def async_get_scanner(hass: HomeAssistant, config: ConfigType) -> None:
     """Import legacy FRITZ!Box configuration."""
     _LOGGER.debug("Import legacy FRITZ!Box configuration from YAML")
 
@@ -63,15 +66,15 @@ async def async_get_scanner(hass: HomeAssistant, config: ConfigType):
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up device tracker for FRITZ!Box component."""
     _LOGGER.debug("Starting FRITZ!Box device tracker")
-    router = hass.data[DOMAIN][entry.entry_id]
-    data_fritz = hass.data[DATA_FRITZ]
+    router: FritzBoxTools = hass.data[DOMAIN][entry.entry_id]
+    data_fritz: FritzData = hass.data[DATA_FRITZ]
 
     @callback
-    def update_router():
+    def update_router() -> None:
         """Update the values of the router."""
         _async_add_entities(router, async_add_entities, data_fritz)
 
@@ -83,10 +86,14 @@ async def async_setup_entry(
 
 
 @callback
-def _async_add_entities(router, async_add_entities, data_fritz):
+def _async_add_entities(
+    router: FritzBoxTools,
+    async_add_entities: AddEntitiesCallback,
+    data_fritz: FritzData,
+) -> None:
     """Add new tracker entities from the router."""
 
-    def _is_tracked(mac, device):
+    def _is_tracked(mac: str, device: Device) -> bool:
         for tracked in data_fritz.tracked.values():
             if mac in tracked:
                 return True
@@ -114,31 +121,32 @@ class FritzBoxTracker(ScannerEntity):
     def __init__(self, router: FritzBoxTools, device: FritzDevice) -> None:
         """Initialize a FRITZ!Box device."""
         self._router = router
-        self._mac = device.mac_address
-        self._name = device.hostname or DEFAULT_DEVICE_NAME
-        self._last_activity = device.last_activity
+        self._mac: str = device.mac_address
+        self._name: str = device.hostname or DEFAULT_DEVICE_NAME
+        self._last_activity: datetime.datetime | None = device.last_activity
         self._active = False
-        self._attrs: dict = {}
 
     @property
-    def is_connected(self):
+    def is_connected(self) -> bool:
         """Return device status."""
         return self._active
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return device name."""
         return self._name
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str:
         """Return device unique id."""
         return self._mac
 
     @property
-    def ip_address(self) -> str:
+    def ip_address(self) -> str | None:
         """Return the primary ip address of the device."""
-        return self._router.devices[self._mac].ip_address
+        if self._mac:
+            return self._router.devices[self._mac].ip_address
+        return None
 
     @property
     def mac_address(self) -> str:
@@ -146,9 +154,11 @@ class FritzBoxTracker(ScannerEntity):
         return self._mac
 
     @property
-    def hostname(self) -> str:
+    def hostname(self) -> str | None:
         """Return hostname of the device."""
-        return self._router.devices[self._mac].hostname
+        if self._mac:
+            return self._router.devices[self._mac].hostname
+        return None
 
     @property
     def source_type(self) -> str:
@@ -156,7 +166,7 @@ class FritzBoxTracker(ScannerEntity):
         return SOURCE_TYPE_ROUTER
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device information."""
         return {
             "connections": {(CONNECTION_NETWORK_MAC, self._mac)},
@@ -176,7 +186,7 @@ class FritzBoxTracker(ScannerEntity):
         return False
 
     @property
-    def icon(self):
+    def icon(self) -> str:
         """Return device icon."""
         if self.is_connected:
             return "mdi:lan-connect"
@@ -200,17 +210,20 @@ class FritzBoxTracker(ScannerEntity):
     @callback
     def async_process_update(self) -> None:
         """Update device."""
-        device: FritzDevice = self._router.devices[self._mac]
+        if not self._mac:
+            return
+
+        device = self._router.devices[self._mac]
         self._active = device.is_connected
         self._last_activity = device.last_activity
 
     @callback
-    def async_on_demand_update(self):
+    def async_on_demand_update(self) -> None:
         """Update state."""
         self.async_process_update()
         self.async_write_ha_state()
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register state update callback."""
         self.async_process_update()
         self.async_on_remove(

@@ -99,8 +99,10 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _async_setup_controller(self):
         """Create the controller."""
-        zeroconf_instance = await zeroconf.async_get_instance(self.hass)
-        self.controller = aiohomekit.Controller(zeroconf_instance=zeroconf_instance)
+        async_zeroconf_instance = await zeroconf.async_get_async_instance(self.hass)
+        self.controller = aiohomekit.Controller(
+            async_zeroconf_instance=async_zeroconf_instance
+        )
 
     async def async_step_user(self, user_input=None):
         """Handle a flow start."""

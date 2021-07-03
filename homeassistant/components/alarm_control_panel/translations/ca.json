@@ -4,6 +4,7 @@
             "arm_away": "Activa {entity_name} fora",
             "arm_home": "Activa {entity_name} a casa",
             "arm_night": "Activa {entity_name} nocturn",
+            "arm_vacation": "Activa {entity_name} en mode vacances",
             "disarm": "Desactiva {entity_name}",
             "trigger": "Dispara {entity_name}"
         },
@@ -11,6 +12,7 @@
             "is_armed_away": "{entity_name} est\u00e0 activada en mode 'a fora'",
             "is_armed_home": "{entity_name} est\u00e0 activada en mode 'a casa'",
             "is_armed_night": "{entity_name} est\u00e0 activada en mode 'nocturn'",
+            "is_armed_vacation": "{entity_name} activada en mode vacances",
             "is_disarmed": "{entity_name} est\u00e0 desactivada",
             "is_triggered": "{entity_name} est\u00e0 disparada"
         },
@@ -18,6 +20,7 @@
             "armed_away": "{entity_name} activada en mode 'a fora'",
             "armed_home": "{entity_name} activada en mode 'a casa'",
             "armed_night": "{entity_name} activada en mode 'nocturn'",
+            "armed_vacation": "{entity_name} s'activa en mode vacances",
             "disarmed": "{entity_name} desactivada",
             "triggered": "{entity_name} disparat/ada"
         }
@@ -29,6 +32,7 @@
             "armed_custom_bypass": "Activada, bypass personalitzat",
             "armed_home": "Activada, mode a casa",
             "armed_night": "Activada, mode nocturn",
+            "armed_vacation": "Activada, mode vacances",
             "arming": "Activant",
             "disarmed": "Desactivada",
             "disarming": "Desactivant",

@@ -47,6 +47,7 @@ from .const import (
     ATTR_URL,
     ATTR_VERSION,
     DOMAIN,
+    SupervisorEntityModel,
 )
 from .discovery import async_setup_discovery_view
 from .handler import HassIO, HassioAPIError, api_data
@@ -400,8 +401,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
             if not user.is_admin:
                 await hass.auth.async_update_user(user, group_ids=[GROUP_ID_ADMIN])
 
+            # Migrate old name
+            if user.name == "Hass.io":
+                await hass.auth.async_update_user(user, name="Supervisor")
+
     if refresh_token is None:
-        user = await hass.auth.async_create_system_user("Hass.io", [GROUP_ID_ADMIN])
+        user = await hass.auth.async_create_system_user("Supervisor", [GROUP_ID_ADMIN])
         refresh_token = await hass.auth.async_create_refresh_token(user)
         data["hassio_user"] = user.id
         await store.async_save(data)
@@ -593,7 +598,7 @@ def async_register_addons_in_dev_reg(
         params = {
             "config_entry_id": entry_id,
             "identifiers": {(DOMAIN, addon[ATTR_SLUG])},
-            "model": "Home Assistant Add-on",
+            "model": SupervisorEntityModel.ADDON,
             "sw_version": addon[ATTR_VERSION],
             "name": addon[ATTR_NAME],
             "entry_type": ATTR_SERVICE,
@@ -612,7 +617,7 @@ def async_register_os_in_dev_reg(
         "config_entry_id": entry_id,
         "identifiers": {(DOMAIN, "OS")},
         "manufacturer": "Home Assistant",
-        "model": "Home Assistant Operating System",
+        "model": SupervisorEntityModel.OS,
         "sw_version": os_dict[ATTR_VERSION],
         "name": "Home Assistant Operating System",
         "entry_type": ATTR_SERVICE,
@@ -621,9 +626,7 @@ def async_register_os_in_dev_reg(
 
 
 @callback
-def async_remove_addons_from_dev_reg(
-    dev_reg: DeviceRegistry, addons: list[dict[str, Any]]
-) -> None:
+def async_remove_addons_from_dev_reg(dev_reg: DeviceRegistry, addons: set[str]) -> None:
     """Remove addons from the device registry."""
     for addon_slug in addons:
         if dev := dev_reg.async_get_device({(DOMAIN, addon_slug)}):
@@ -680,16 +683,21 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
                 async_register_os_in_dev_reg(
                     self.entry_id, self.dev_reg, new_data["os"]
                 )
-            return new_data
 
         # Remove add-ons that are no longer installed from device registry
-        if removed_addons := list(set(self.data["addons"]) - set(new_data["addons"])):
-            async_remove_addons_from_dev_reg(self.dev_reg, removed_addons)
+        supervisor_addon_devices = {
+            list(device.identifiers)[0][1]
+            for device in self.dev_reg.devices.values()
+            if self.entry_id in device.config_entries
+            and device.model == SupervisorEntityModel.ADDON
+        }
+        if stale_addons := supervisor_addon_devices - set(new_data["addons"]):
+            async_remove_addons_from_dev_reg(self.dev_reg, stale_addons)
 
         # If there are new add-ons, we should reload the config entry so we can
         # create new devices and entities. We can return an empty dict because
         # coordinator will be recreated.
-        if list(set(new_data["addons"]) - set(self.data["addons"])):
+        if self.data and set(new_data["addons"]) - set(self.data["addons"]):
             self.hass.async_create_task(
                 self.hass.config_entries.async_reload(self.entry_id)
             )

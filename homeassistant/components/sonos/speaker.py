@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import asyncio
-from collections import deque
 from collections.abc import Coroutine
 import contextlib
 import datetime
@@ -12,12 +11,12 @@ from typing import Any, Callable
 import urllib.parse
 
 import async_timeout
-from pysonos.alarms import get_alarms
 from pysonos.core import MUSIC_SRC_LINE_IN, MUSIC_SRC_RADIO, MUSIC_SRC_TV, SoCo
-from pysonos.data_structures import DidlAudioBroadcast
+from pysonos.data_structures import DidlAudioBroadcast, DidlPlaylistContainer
 from pysonos.events_base import Event as SonosEvent, SubscriptionBase
 from pysonos.exceptions import SoCoException
 from pysonos.music_library import MusicLibrary
+from pysonos.plugins.sharelink import ShareLinkPlugin
 from pysonos.snapshot import Snapshot
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
@@ -33,6 +32,7 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.util import dt as dt_util
 
+from .alarms import SonosAlarms
 from .const import (
     BATTERY_SCAN_INTERVAL,
     DATA_SONOS,
@@ -40,7 +40,6 @@ from .const import (
     PLATFORMS,
     SCAN_INTERVAL,
     SEEN_EXPIRE_TIME,
-    SONOS_ALARM_UPDATE,
     SONOS_CREATE_ALARM,
     SONOS_CREATE_BATTERY,
     SONOS_CREATE_MEDIA_PLAYER,
@@ -111,6 +110,7 @@ class SonosMedia:
         self.duration: float | None = None
         self.image_url: str | None = None
         self.queue_position: int | None = None
+        self.playlist_name: str | None = None
         self.source_name: str | None = None
         self.title: str | None = None
         self.uri: str | None = None
@@ -125,6 +125,7 @@ class SonosMedia:
         self.channel = None
         self.duration = None
         self.image_url = None
+        self.playlist_name = None
         self.queue_position = None
         self.source_name = None
         self.title = None
@@ -147,6 +148,7 @@ class SonosSpeaker:
         self.soco = soco
         self.household_id: str = soco.household_id
         self.media = SonosMedia(soco)
+        self._share_link_plugin: ShareLinkPlugin | None = None
 
         # Synchronization helpers
         self._is_ready: bool = False
@@ -223,7 +225,9 @@ class SonosSpeaker:
         else:
             self._platforms_ready.update({BINARY_SENSOR_DOMAIN, SENSOR_DOMAIN})
 
-        if new_alarms := self.update_alarms_for_speaker():
+        if new_alarms := [
+            alarm.alarm_id for alarm in self.alarms if alarm.zone.uid == self.soco.uid
+        ]:
             dispatcher_send(self.hass, SONOS_CREATE_ALARM, self, new_alarms)
         else:
             self._platforms_ready.add(SWITCH_DOMAIN)
@@ -231,7 +235,7 @@ class SonosSpeaker:
         self._event_dispatchers = {
             "AlarmClock": self.async_dispatch_alarms,
             "AVTransport": self.async_dispatch_media_update,
-            "ContentDirectory": self.favorites.async_delayed_update,
+            "ContentDirectory": self.async_dispatch_favorites,
             "DeviceProperties": self.async_dispatch_device_properties,
             "RenderingControl": self.async_update_volume,
             "ZoneGroupTopology": self.async_update_groups,
@@ -244,8 +248,11 @@ class SonosSpeaker:
     #
     async def async_handle_new_entity(self, entity_type: str) -> None:
         """Listen to new entities to trigger first subscription."""
+        if self._platforms_ready == PLATFORMS:
+            return
+
         self._platforms_ready.add(entity_type)
-        if self._platforms_ready == PLATFORMS and not self._subscriptions:
+        if self._platforms_ready == PLATFORMS:
             self._resubscription_lock = asyncio.Lock()
             await self.async_subscribe()
             self._is_ready = True
@@ -273,6 +280,11 @@ class SonosSpeaker:
         return self._seen_timer is not None
 
     @property
+    def alarms(self) -> SonosAlarms:
+        """Return the SonosAlarms instance for this household."""
+        return self.hass.data[DATA_SONOS].alarms[self.household_id]
+
+    @property
     def favorites(self) -> SonosFavorites:
         """Return the SonosFavorites instance for this household."""
         return self.hass.data[DATA_SONOS].favorites[self.household_id]
@@ -283,9 +295,11 @@ class SonosSpeaker:
         return self.coordinator is None
 
     @property
-    def processed_alarm_events(self) -> deque[str]:
-        """Return the container of processed alarm events."""
-        return self.hass.data[DATA_SONOS].processed_alarm_events
+    def share_link(self) -> ShareLinkPlugin:
+        """Cache the ShareLinkPlugin instance for this speaker."""
+        if not self._share_link_plugin:
+            self._share_link_plugin = ShareLinkPlugin(self.soco)
+        return self._share_link_plugin
 
     @property
     def subscription_address(self) -> str | None:
@@ -379,13 +393,10 @@ class SonosSpeaker:
 
     @callback
     def async_dispatch_alarms(self, event: SonosEvent) -> None:
-        """Create a task to update alarms from an event."""
-        if not (update_id := event.variables.get("alarm_list_version")):
+        """Add the soco instance associated with the event to the callback."""
+        if not (event_id := event.variables.get("alarm_list_version")):
             return
-        if update_id in self.processed_alarm_events:
-            return
-        self.processed_alarm_events.append(update_id)
-        self.hass.async_add_executor_job(self.update_alarms)
+        self.alarms.async_handle_event(event_id, self.soco)
 
     @callback
     def async_dispatch_device_properties(self, event: SonosEvent) -> None:
@@ -396,8 +407,23 @@ class SonosSpeaker:
         """Update device properties from an event."""
         if more_info := event.variables.get("more_info"):
             battery_dict = dict(x.split(":") for x in more_info.split(","))
+            if "BattChg" not in battery_dict:
+                _LOGGER.debug(
+                    "Unknown device properties update for %s (%s), please report an issue: '%s'",
+                    self.zone_name,
+                    self.model_name,
+                    more_info,
+                )
+                return
             await self.async_update_battery_info(battery_dict)
         self.async_write_entity_states()
+
+    @callback
+    def async_dispatch_favorites(self, event: SonosEvent) -> None:
+        """Add the soco instance associated with the event to the callback."""
+        if not (event_id := event.variables.get("favorites_update_id")):
+            return
+        self.favorites.async_handle_event(event_id, self.soco)
 
     @callback
     def async_dispatch_media_update(self, event: SonosEvent) -> None:
@@ -467,6 +493,8 @@ class SonosSpeaker:
         self, now: datetime.datetime | None = None, will_reconnect: bool = False
     ) -> None:
         """Make this player unavailable when it was not seen recently."""
+        self._share_link_plugin = None
+
         if self._seen_timer:
             self._seen_timer()
             self._seen_timer = None
@@ -490,37 +518,6 @@ class SonosSpeaker:
         )
         await self.async_unseen(will_reconnect=True)
         await self.async_seen(soco)
-
-    #
-    # Alarm management
-    #
-    def update_alarms_for_speaker(self) -> set[str]:
-        """Update current alarm instances.
-
-        Updates hass.data[DATA_SONOS].alarms and returns a list of all alarms that are new.
-        """
-        new_alarms = set()
-        stored_alarms = self.hass.data[DATA_SONOS].alarms
-        updated_alarms = get_alarms(self.soco)
-
-        for alarm in updated_alarms:
-            if alarm.zone.uid == self.soco.uid and alarm.alarm_id not in list(
-                stored_alarms.keys()
-            ):
-                new_alarms.add(alarm.alarm_id)
-                stored_alarms[alarm.alarm_id] = alarm
-
-        for alarm_id, alarm in list(stored_alarms.items()):
-            if alarm not in updated_alarms:
-                stored_alarms.pop(alarm_id)
-
-        return new_alarms
-
-    def update_alarms(self) -> None:
-        """Update alarms from an event."""
-        if new_alarms := self.update_alarms_for_speaker():
-            dispatcher_send(self.hass, SONOS_CREATE_ALARM, self, new_alarms)
-        dispatcher_send(self.hass, SONOS_ALARM_UPDATE)
 
     #
     # Battery management
@@ -616,7 +613,7 @@ class SonosSpeaker:
             coordinator_uid = self.soco.uid
             slave_uids = []
 
-            with contextlib.suppress(SoCoException):
+            with contextlib.suppress(OSError, SoCoException):
                 if self.soco.group and self.soco.group.coordinator:
                     coordinator_uid = self.soco.group.coordinator.uid
                     slave_uids = [
@@ -899,6 +896,9 @@ class SonosSpeaker:
                 variables["enqueued_transport_uri"] or variables["current_track_uri"]
             )
             music_source = self.soco.music_source_from_uri(track_uri)
+            if uri_meta_data := variables.get("enqueued_transport_uri_meta_data"):
+                if isinstance(uri_meta_data, DidlPlaylistContainer):
+                    self.media.playlist_name = uri_meta_data.title
         else:
             self.media.play_mode = self.soco.play_mode
             music_source = self.soco.music_source
