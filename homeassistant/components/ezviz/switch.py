@@ -4,12 +4,12 @@ import logging
 from pyezviz.constants import DeviceSwitchType
 from pyezviz.exceptions import HTTPError, PyEzvizError
 
-from homeassistant.components.ezviz.coordinator import EzvizDataUpdateCoordinator
 from homeassistant.components.switch import DEVICE_CLASS_SWITCH, SwitchEntity
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DATA_COORDINATOR, DOMAIN, MANUFACTURER
+from .coordinator import EzvizDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
