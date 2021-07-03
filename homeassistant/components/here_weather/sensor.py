@@ -36,7 +36,7 @@ async def async_setup_entry(
                     weather_attribute,
                 )
             )
-    async_add_entities(sensors_to_add, True)
+    async_add_entities(sensors_to_add)
 
 
 class HEREDestinationWeatherSensor(CoordinatorEntity):
