@@ -1183,7 +1183,6 @@ async def websocket_update_log_config(
     },
 )
 @websocket_api.async_response
-@async_catch_zwave_errors
 @async_get_entry
 async def websocket_get_log_config(
     hass: HomeAssistant,
