@@ -1,5 +1,6 @@
 """The Goal Zero Yeti integration."""
 import logging
+from typing import Any
 
 from goalzero import Yeti, exceptions
 
@@ -7,17 +8,35 @@ from homeassistant.components.binary_sensor import DOMAIN as DOMAIN_BINARY_SENSO
 from homeassistant.components.sensor import DOMAIN as DOMAIN_SENSOR
 from homeassistant.components.switch import DOMAIN as DOMAIN_SWITCH
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.const import (
+    ATTR_ATTRIBUTION,
+    ATTR_IDENTIFIERS,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
+    ATTR_NAME,
+    ATTR_SW_VERSION,
+    CONF_HOST,
+    CONF_NAME,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
     UpdateFailed,
 )
 
-from .const import DATA_KEY_API, DATA_KEY_COORDINATOR, DOMAIN, MIN_TIME_BETWEEN_UPDATES
+from .const import (
+    ATTR_FIRMWARE_VERSION,
+    ATTR_FOREIGN_ACCESSORY,
+    ATTRIBUTION,
+    DATA_KEY_API,
+    DATA_KEY_COORDINATOR,
+    DOMAIN,
+    MIN_TIME_BETWEEN_UPDATES,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,7 +54,7 @@ async def async_setup_entry(hass, entry):
     try:
         await api.init_connect()
     except exceptions.ConnectError as ex:
-        _LOGGER.warning("Failed to connect: %s", ex)
+        _LOGGER.warning(f"Failed to connect to host at {host}", ex)
         raise ConfigEntryNotReady from ex
 
     async def async_update_data():
@@ -80,23 +99,33 @@ class YetiEntity(CoordinatorEntity):
         self.api = api
         self._name = name
         self._server_unique_id = server_unique_id
-        self._device_class = None
+        self._attr_device_class = None
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device information of the entity."""
-        info = {
-            "identifiers": {(DOMAIN, self._server_unique_id)},
-            "manufacturer": "Goal Zero",
-            "name": self._name,
+        return {
+            ATTR_IDENTIFIERS: {(DOMAIN, self._server_unique_id)},
+            ATTR_MANUFACTURER: "Goal Zero",
+            ATTR_NAME: self._name,
+            ATTR_MODEL: self.api.sysdata.get(ATTR_MODEL),
+            ATTR_SW_VERSION: self.api.data.get(ATTR_FIRMWARE_VERSION),
         }
-        if self.api.sysdata:
-            info["model"] = self.api.sysdata["model"]
-        if self.api.data:
-            info["sw_version"] = self.api.data["firmwareVersion"]
-        return info
 
     @property
-    def device_class(self):
-        """Return the class of this device."""
-        return self._device_class
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return the state attributes."""
+        attributes = {
+            ATTR_ATTRIBUTION: ATTRIBUTION,
+            "wifi_ssid": self.api.data.get("ssid"),
+            "ip_address": self.api.data.get("ipAddr"),
+        }
+        if (
+            ATTR_FOREIGN_ACCESSORY in self.api.data
+            and self.api.data[ATTR_FOREIGN_ACCESSORY] is not None
+        ):
+            attributes["accessory"] = self.api.data[ATTR_FOREIGN_ACCESSORY][ATTR_MODEL]
+            attributes["accessory_firmware"] = self.api.data[ATTR_FOREIGN_ACCESSORY][
+                ATTR_FIRMWARE_VERSION
+            ]
+        return attributes

@@ -1,4 +1,6 @@
 """Support for Goal Zero Yeti Switches."""
+from __future__ import annotations
+
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import CONF_NAME
 
@@ -36,20 +38,9 @@ class YetiSwitch(YetiEntity, SwitchEntity):
     ):
         """Initialize a Goal Zero Yeti switch."""
         super().__init__(api, coordinator, name, server_unique_id)
-
         self._condition = switch_name
-
-        self._condition_name = SWITCH_DICT[switch_name]
-
-    @property
-    def name(self):
-        """Return the name of the switch."""
-        return f"{self._name} {self._condition_name}"
-
-    @property
-    def unique_id(self):
-        """Return the unique id of the switch."""
-        return f"{self._server_unique_id}/{self._condition}"
+        self._attr_name = f"{name} {SWITCH_DICT[switch_name]}"
+        self._attr_unique_id = f"{self._server_unique_id}/{self._condition}"
 
     @property
     def is_on(self):

@@ -1,4 +1,6 @@
 """Support for Goal Zero Yeti Sensors."""
+from __future__ import annotations
+
 from homeassistant.components.sensor import ATTR_LAST_RESET, ATTR_STATE_CLASS
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -53,7 +55,8 @@ class YetiSensor(YetiEntity):
         self._attr_state_class = sensor.get(ATTR_STATE_CLASS)
 
     @property
-    def state(self):
+    def state(self) -> str | None:
         """Return the state."""
         if self.api.data:
             return self.api.data[self._condition]
+        return None

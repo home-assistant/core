@@ -18,6 +18,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
+    ATTR_ICON,
     ATTR_NAME,
     ATTR_UNIT_OF_MEASUREMENT,
     ELECTRICAL_CURRENT_AMPERE,
@@ -31,12 +32,11 @@ from homeassistant.const import (
     VOLT,
 )
 
+ATTRIBUTION = "Data provided by Goal Zero"
 ATTR_DEFAULT_ENABLED = "default_enabled"
+ATTR_FIRMWARE_VERSION = "firmwareVersion"
+ATTR_FOREIGN_ACCESSORY = "foreignAcsry"
 
-CONF_IDENTIFIERS = "identifiers"
-CONF_MANUFACTURER = "manufacturer"
-CONF_MODEL = "model"
-CONF_SW_VERSION = "sw_version"
 DATA_KEY_COORDINATOR = "coordinator"
 DOMAIN = "goalzero"
 DEFAULT_NAME = "Yeti"
@@ -45,14 +45,19 @@ DATA_KEY_API = "api"
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
 
 BINARY_SENSOR_DICT = {
-    "backlight": ["Backlight", None, "mdi:clock-digital"],
-    "app_online": [
-        "App Online",
-        DEVICE_CLASS_CONNECTIVITY,
-        None,
-    ],
-    "isCharging": ["Charging", DEVICE_CLASS_BATTERY_CHARGING, None],
-    "inputDetected": ["Input Detected", DEVICE_CLASS_POWER, None],
+    "backlight": {ATTR_NAME: "Backlight", ATTR_ICON: "mdi:clock-digital"},
+    "app_online": {
+        ATTR_NAME: "App Online",
+        ATTR_DEVICE_CLASS: DEVICE_CLASS_CONNECTIVITY,
+    },
+    "isCharging": {
+        ATTR_NAME: "Charging",
+        ATTR_DEVICE_CLASS: DEVICE_CLASS_BATTERY_CHARGING,
+    },
+    "inputDetected": {
+        ATTR_NAME: "Input Detected",
+        ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER,
+    },
 }
 
 SENSOR_DICT = {
