@@ -22,41 +22,9 @@ from homeassistant.const import (
 from homeassistant.helpers import config_validation as cv
 
 # Reuse data and API logic from the sensor implementation
-from .sensor import ATTRIBUTION, NEAData
+from .sensor import ATTRIBUTION, CONDITION_CLASSES, NEAData
 
 _LOGGER = logging.getLogger(__name__)
-
-CONDITION_CLASSES = {
-    "cloudy": ["Cloudy", "Overcast"],
-    "fog": ["Mist", "Fog", "Hazy", "Slightly Hazy"],
-    "hail": [],
-    "lightning": [],
-    "lightning-rainy": [
-        "Heavy Thundery Showers with Gusty Winds",
-        "Heavy Thundery Showers",
-        "Thundery Showers",
-    ],
-    "partlycloudy": ["Partly Cloudy (Day)", "Partly Cloudy (Night)"],
-    "pouring": ["Heavy Rain", "Heavy Showers"],
-    "rainy": [
-        "Drizzle",
-        "Light Rain",
-        "Light Showers",
-        "Passing Showers",
-        "Moderate Rain",
-        "Showers",
-        "Strong Winds, Showers",
-        "Strong Winds, Rain",
-        "Windy, Rain",
-        "Windy, Showers",
-    ],
-    "snowy": ["Snow"],
-    "snowy-rainy": ["Snow Showers"],
-    "sunny": ["Sunny"],
-    "windy": ["Strong Winds", "Windy, Cloudy", "Windy", "Windy, Fair"],
-    "windy-variant": [],
-    "exceptional": ["Fair (Day)", "Fair (Night)", "Fair & Warm"],
-}
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -122,11 +90,7 @@ class NEAWeather(WeatherEntity):
     @property
     def condition(self):
         """Return the current condition."""
-        data = self.dataset["2-hour-weather-forecast"]
-        for key, value in CONDITION_CLASSES.items():
-            if data.state in value:
-                return key
-        return STATE_UNKNOWN
+        return self.dataset["2-hour-weather-forecast"].state
 
     # Now implement the WeatherEntity interface
 

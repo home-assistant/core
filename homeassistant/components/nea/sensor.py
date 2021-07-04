@@ -9,6 +9,23 @@ from requests.exceptions import RequestException
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.weather import (
+    ATTR_CONDITION_CLEAR_NIGHT,
+    ATTR_CONDITION_CLOUDY,
+    ATTR_CONDITION_EXCEPTIONAL,
+    ATTR_CONDITION_FOG,
+    ATTR_CONDITION_HAIL,
+    ATTR_CONDITION_LIGHTNING,
+    ATTR_CONDITION_LIGHTNING_RAINY,
+    ATTR_CONDITION_PARTLYCLOUDY,
+    ATTR_CONDITION_POURING,
+    ATTR_CONDITION_RAINY,
+    ATTR_CONDITION_SNOWY,
+    ATTR_CONDITION_SNOWY_RAINY,
+    ATTR_CONDITION_SUNNY,
+    ATTR_CONDITION_WINDY,
+    ATTR_CONDITION_WINDY_VARIANT,
+)
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
@@ -49,15 +66,66 @@ INTERVALS = {
 # Sensor types are defined like so:
 # Name, units
 SENSOR_TYPES = {
-    "2-hour-weather-forecast": ["Weather", None],
-    "air-temperature": ["Temperature", TEMP_CELSIUS],
-    "pm25": ["PM2.5", CONCENTRATION_MICROGRAMS_PER_CUBIC_METER],
-    "psi": ["PSI", None],
-    "rainfall": ["Rainfall", LENGTH_MILLIMETERS],
-    "relative-humidity": ["Humidity", PERCENTAGE],
-    "uv-index": ["UV Index", UV_INDEX],
-    "wind-direction": ["Wind Direction", DEGREE],
-    "wind-speed": ["Wind Speed", SPEED_KILOMETERS_PER_HOUR],
+    "2-hour-weather-forecast": ["Weather", None, None],
+    "air-temperature": ["Temperature", TEMP_CELSIUS, "mdi:thermometer"],
+    "pm25": ["PM2.5", CONCENTRATION_MICROGRAMS_PER_CUBIC_METER, "mdi:biohazard"],
+    "psi": ["PSI", None, "mdi:biohazard"],
+    "rainfall": ["Rainfall", LENGTH_MILLIMETERS, "mdi:weather-pouring"],
+    "relative-humidity": ["Humidity", PERCENTAGE, "mdi:water-percent"],
+    "uv-index": ["UV Index", UV_INDEX, "mdi:weather-sunny"],
+    "wind-direction": ["Wind Direction", DEGREE, "mdi:compass-outline"],
+    "wind-speed": ["Wind Speed", SPEED_KILOMETERS_PER_HOUR, "mdi:weather-windy"],
+}
+
+CONDITION_CLASSES = {
+    ATTR_CONDITION_CLEAR_NIGHT: ["Fair (Night)"],
+    ATTR_CONDITION_CLOUDY: ["Cloudy", "Overcast"],
+    ATTR_CONDITION_EXCEPTIONAL: ["Fair (Day)", "Fair & Warm"],
+    ATTR_CONDITION_FOG: ["Mist", "Fog", "Hazy", "Slightly Hazy"],
+    ATTR_CONDITION_HAIL: [],
+    ATTR_CONDITION_LIGHTNING: [],
+    ATTR_CONDITION_LIGHTNING_RAINY: [
+        "Heavy Thundery Showers with Gusty Winds",
+        "Heavy Thundery Showers",
+        "Thundery Showers",
+    ],
+    ATTR_CONDITION_PARTLYCLOUDY: ["Partly Cloudy (Day)", "Partly Cloudy (Night)"],
+    ATTR_CONDITION_POURING: ["Heavy Rain", "Heavy Showers"],
+    ATTR_CONDITION_RAINY: [
+        "Drizzle",
+        "Light Rain",
+        "Light Showers",
+        "Passing Showers",
+        "Moderate Rain",
+        "Showers",
+        "Strong Winds, Showers",
+        "Strong Winds, Rain",
+        "Windy, Rain",
+        "Windy, Showers",
+    ],
+    ATTR_CONDITION_SNOWY: ["Snow"],
+    ATTR_CONDITION_SNOWY_RAINY: ["Snow Showers"],
+    ATTR_CONDITION_SUNNY: ["Sunny"],
+    ATTR_CONDITION_WINDY: ["Strong Winds", "Windy, Cloudy", "Windy", "Windy, Fair"],
+    ATTR_CONDITION_WINDY_VARIANT: [],
+}
+
+CONDITION_ICONS = {
+    ATTR_CONDITION_CLEAR_NIGHT: "mdi:weather-night",
+    ATTR_CONDITION_CLOUDY: "mdi:weather-cloudy",
+    ATTR_CONDITION_EXCEPTIONAL: "mdi:weather-sunny",
+    ATTR_CONDITION_FOG: "mdi:weather-fog",
+    ATTR_CONDITION_HAIL: "mdi:weather-hail",
+    ATTR_CONDITION_LIGHTNING: "mdi:weather-lightning",
+    ATTR_CONDITION_LIGHTNING_RAINY: "mdi:weather-lightning-rainy",
+    ATTR_CONDITION_PARTLYCLOUDY: "mdi:weather-partly-cloudy",
+    ATTR_CONDITION_POURING: "mdi:weather-pouring",
+    ATTR_CONDITION_RAINY: "mdi:weather-rainy",
+    ATTR_CONDITION_SNOWY: "mdi:weather-snowy",
+    ATTR_CONDITION_SNOWY_RAINY: "mdi:weather-snowy-rainy",
+    ATTR_CONDITION_SUNNY: "mdi:weather-sunny",
+    ATTR_CONDITION_WINDY: "mdi:weather-windy",
+    ATTR_CONDITION_WINDY_VARIANT: "mdi:weather-windy-variant",
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -116,6 +184,14 @@ class NEASensor(Entity):
         return self.data.state
 
     @property
+    def icon(self):
+        """Icon to use in the frontend, if any."""
+        if self.type == "2-hour-weather-forecast":
+            return CONDITION_ICONS[self.data.state]
+        else:
+            return SENSOR_TYPES[self.type][2]
+
+    @property
     def extra_state_attributes(self):
         """Return the state attributes."""
         attr = {}
@@ -164,7 +240,10 @@ class NEAData:
                 if self.type == "2-hour-weather-forecast":
                     for forecast in self.data["items"][0]["forecasts"]:
                         if forecast["area"] == self.station["name"]:
-                            self.state = forecast["forecast"]
+                            for key, value in CONDITION_CLASSES.items():
+                                if forecast["forecast"] in value:
+                                    self.state = key
+                                    break
                             break
                 elif self.type == "uv-index":
                     self.state = self.data["items"][0]["index"][0]["value"]
