@@ -42,21 +42,18 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class BlinkStickLight(LightEntity):
     """Representation of a BlinkStick light."""
 
+    _attr_supported_features = SUPPORT_BLINKSTICK
+
     def __init__(self, stick, name):
         """Initialize the light."""
         self._stick = stick
-        self._name = name
+        self._attr_name = name
         self._serial = stick.get_serial()
         self._hs_color = None
         self._brightness = None
 
     @property
-    def name(self):
-        """Return the name of the light."""
-        return self._name
-
-    @property
-    def brightness(self):
+    def brightness(self) -> int:
         """Read back the brightness of the light."""
         return self._brightness
 
@@ -66,14 +63,9 @@ class BlinkStickLight(LightEntity):
         return self._hs_color
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return True if entity is on."""
         return self._brightness > 0
-
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        return SUPPORT_BLINKSTICK
 
     def update(self):
         """Read back the device state."""
