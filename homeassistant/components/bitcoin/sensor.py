@@ -79,39 +79,22 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class BitcoinSensor(SensorEntity):
     """Representation of a Bitcoin sensor."""
 
+    _attr_icon = ICON
+
     def __init__(self, data, option_type, currency):
         """Initialize the sensor."""
         self.data = data
-        self._name = OPTION_TYPES[option_type][0]
-        self._unit_of_measurement = OPTION_TYPES[option_type][1]
+        self._attr_name = OPTION_TYPES[option_type][0]
+        self._attr_unit_of_measurement = OPTION_TYPES[option_type][1]
         self._currency = currency
         self.type = option_type
         self._state = None
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
+        self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
 
     @property
     def state(self):
         """Return the state of the sensor."""
         return self._state
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        return self._unit_of_measurement
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend, if any."""
-        return ICON
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes of the sensor."""
-        return {ATTR_ATTRIBUTION: ATTRIBUTION}
 
     def update(self):
         """Get the latest data and updates the states."""
