@@ -46,6 +46,7 @@ CONF_USE_X_FORWARDED_FOR: Final = "use_x_forwarded_for"
 CONF_TRUSTED_PROXIES: Final = "trusted_proxies"
 CONF_LOGIN_ATTEMPTS_THRESHOLD: Final = "login_attempts_threshold"
 CONF_IP_BAN_ENABLED: Final = "ip_ban_enabled"
+CONF_TRUSTED_NETWORKS: Final = "trusted_networks"
 CONF_SSL_PROFILE: Final = "ssl_profile"
 
 SSL_MODERN: Final = "modern"
@@ -88,6 +89,9 @@ HTTP_SCHEMA: Final = vol.All(
                 CONF_LOGIN_ATTEMPTS_THRESHOLD, default=NO_LOGIN_ATTEMPT_THRESHOLD
             ): vol.Any(cv.positive_int, NO_LOGIN_ATTEMPT_THRESHOLD),
             vol.Optional(CONF_IP_BAN_ENABLED, default=True): cv.boolean,
+            vol.Optional(CONF_TRUSTED_NETWORKS, default=[]): vol.All(
+                cv.ensure_list, [ip_network]
+            ),
             vol.Optional(CONF_SSL_PROFILE, default=SSL_MODERN): vol.In(
                 [SSL_INTERMEDIATE, SSL_MODERN]
             ),
@@ -112,6 +116,7 @@ class ConfData(TypedDict, total=False):
     trusted_proxies: list[str]
     login_attempts_threshold: int
     ip_ban_enabled: bool
+    trusted_networks: list[str]
     ssl_profile: str
 
 
@@ -155,6 +160,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     use_x_forwarded_for = conf.get(CONF_USE_X_FORWARDED_FOR, False)
     trusted_proxies = conf.get(CONF_TRUSTED_PROXIES) or []
     is_ban_enabled = conf[CONF_IP_BAN_ENABLED]
+    trusted_networks = conf.get(CONF_TRUSTED_NETWORKS) or []
     login_threshold = conf[CONF_LOGIN_ATTEMPTS_THRESHOLD]
     ssl_profile = conf[CONF_SSL_PROFILE]
 
@@ -170,6 +176,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         trusted_proxies=trusted_proxies,
         login_threshold=login_threshold,
         is_ban_enabled=is_ban_enabled,
+        trusted_networks=trusted_networks,
         ssl_profile=ssl_profile,
     )
 
@@ -219,6 +226,7 @@ class HomeAssistantHTTP:
         trusted_proxies: list[str],
         login_threshold: int,
         is_ban_enabled: bool,
+        trusted_networks: list[str],
         ssl_profile: str,
     ) -> None:
         """Initialize the HTTP Home Assistant server."""
@@ -236,7 +244,7 @@ class HomeAssistantHTTP:
         setup_request_context(app, current_request)
 
         if is_ban_enabled:
-            setup_bans(hass, app, login_threshold)
+            setup_bans(hass, app, login_threshold, trusted_networks)
 
         setup_auth(hass, app)
 
@@ -250,6 +258,7 @@ class HomeAssistantHTTP:
         self.server_port = server_port
         self.trusted_proxies = trusted_proxies
         self.is_ban_enabled = is_ban_enabled
+        self.trusted_networks = trusted_networks
         self.ssl_profile = ssl_profile
         self._handler = None
         self.runner: web.AppRunner | None = None
@@ -397,6 +406,11 @@ async def start_http_server_and_save_config(
     if CONF_TRUSTED_PROXIES in conf:
         conf[CONF_TRUSTED_PROXIES] = [
             str(ip.network_address) for ip in conf[CONF_TRUSTED_PROXIES]
+        ]
+
+    if CONF_TRUSTED_NETWORKS in conf:
+        conf[CONF_TRUSTED_NETWORKS] = [
+            str(ip.network_address) for ip in conf[CONF_TRUSTED_NETWORKS]
         ]
 
     store.async_delay_save(lambda: conf, SAVE_DELAY)
