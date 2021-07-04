@@ -112,7 +112,7 @@ aioguardian==1.0.4
 aioharmony==0.2.7
 
 # homeassistant.components.homekit_controller
-aiohomekit==0.2.67
+aiohomekit==0.4.0
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -750,7 +750,7 @@ pyarlo==0.2.4
 pyatag==0.3.5.3
 
 # homeassistant.components.netatmo
-pyatmo==5.1.0
+pyatmo==5.2.0
 
 # homeassistant.components.apple_tv
 pyatv==0.7.7
@@ -1001,7 +1001,7 @@ pysiaalarm==3.0.0
 pysignalclirestapi==0.3.4
 
 # homeassistant.components.sma
-pysma==0.6.0
+pysma==0.6.1
 
 # homeassistant.components.smappee
 pysmappee==0.2.25
@@ -1305,7 +1305,7 @@ wiffi==1.0.1
 withings-api==2.3.2
 
 # homeassistant.components.wled
-wled==0.7.0
+wled==0.7.1
 
 # homeassistant.components.wolflink
 wolf_smartset==0.1.11
@@ -1337,7 +1337,7 @@ zeep[async]==4.0.0
 zeroconf==0.32.0
 
 # homeassistant.components.zha
-zha-quirks==0.0.57
+zha-quirks==0.0.58
 
 # homeassistant.components.zha
 zigpy-cc==0.5.2
@@ -1355,7 +1355,7 @@ zigpy-zigate==0.7.3
 zigpy-znp==0.5.1
 
 # homeassistant.components.zha
-zigpy==0.34.0
+zigpy==0.35.0
 
 # homeassistant.components.zwave_js
 zwave-js-server-python==0.27.0
