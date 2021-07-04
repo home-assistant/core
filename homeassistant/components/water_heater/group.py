@@ -12,6 +12,7 @@ from . import (
     STATE_HEAT_PUMP,
     STATE_HIGH_DEMAND,
     STATE_PERFORMANCE,
+    STATE_VACATION,
 )
 
 
@@ -28,6 +29,7 @@ def async_describe_on_off_states(
             STATE_HIGH_DEMAND,
             STATE_HEAT_PUMP,
             STATE_GAS,
+            STATE_VACATION,
         },
         STATE_OFF,
     )

@@ -13,6 +13,7 @@ from homeassistant.components.water_heater import (
     STATE_HIGH_DEMAND,
     STATE_OFF,
     STATE_PERFORMANCE,
+    STATE_VACATION,
     SUPPORT_AWAY_MODE,
     SUPPORT_OPERATION_MODE,
     SUPPORT_TARGET_TEMPERATURE,
@@ -33,6 +34,7 @@ ECONET_STATE_TO_HA = {
     WaterHeaterOperationMode.ELECTRIC_MODE: STATE_ELECTRIC,
     WaterHeaterOperationMode.GAS: STATE_GAS,
     WaterHeaterOperationMode.PERFORMANCE: STATE_PERFORMANCE,
+    WaterHeaterOperationMode.VACATION: STATE_VACATION,
 }
 HA_STATE_TO_ECONET = {value: key for key, value in ECONET_STATE_TO_HA.items()}
 
