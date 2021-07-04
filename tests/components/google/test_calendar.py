@@ -17,6 +17,7 @@ from homeassistant.components.google import (
     SERVICE_SCAN_CALENDARS,
     do_setup,
 )
+from homeassistant.components.google.calendar import GoogleCalendarData
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.helpers.template import DATE_STR_FORMAT
 from homeassistant.setup import async_setup_component
@@ -314,3 +315,69 @@ async def test_update_error(hass, google_service):
     state = hass.states.get(TEST_ENTITY)
     assert state.name == TEST_ENTITY_NAME
     assert state.state == "off"
+
+
+async def test_get_new_event_empty():
+    """Test get new event with empty."""
+    google_calendar_data = GoogleCalendarData(None, None, "", True, 5, -1)
+
+    assert google_calendar_data.get_new_event([]) is None
+
+
+async def test_get_new_event_non_overlap():
+    """Test get new event with non-overlapping events."""
+    one_hour_from_now = dt_util.now() + dt_util.dt.timedelta(minutes=60 * 1)
+    two_hour_from_now = dt_util.now() + dt_util.dt.timedelta(minutes=60 * 2)
+    three_hour_from_now = dt_util.now() + dt_util.dt.timedelta(minutes=60 * 3)
+    four_hour_from_now = dt_util.now() + dt_util.dt.timedelta(minutes=60 * 4)
+
+    event = copy.deepcopy(TEST_EVENT)
+    event["start"]["dateTime"] = one_hour_from_now.isoformat()
+    event["end"]["dateTime"] = two_hour_from_now.isoformat()
+
+    further_event = copy.deepcopy(TEST_EVENT)
+    further_event["start"]["dateTime"] = three_hour_from_now.isoformat()
+    further_event["end"]["dateTime"] = four_hour_from_now.isoformat()
+
+    events = [event, further_event]
+
+    google_calendar_data = GoogleCalendarData(None, None, "", True, 5, -1)
+    assert google_calendar_data.get_new_event(events) == event
+
+    google_calendar_data = GoogleCalendarData(None, None, "", True, 5, 15)
+    assert google_calendar_data.get_new_event(events) == event
+
+
+async def test_get_new_event_overlap():
+    """Test get new event with overlapping events."""
+    today = dt_util.dt.date.today()
+    tomorrow = dt_util.dt.date.today() + dt_util.dt.timedelta(days=1)
+    one_hour_ago = dt_util.now() + dt_util.dt.timedelta(minutes=-60 * 1)
+    one_hour_from_now = dt_util.now() + dt_util.dt.timedelta(minutes=60 * 1)
+    five_minutes_from_now = dt_util.now() + dt_util.dt.timedelta(minutes=5)
+
+    all_day_event = copy.deepcopy(TEST_EVENT)
+    all_day_event["start"]["date"] = today.isoformat()
+    all_day_event["end"]["date"] = tomorrow.isoformat()
+
+    event = copy.deepcopy(TEST_EVENT)
+    event["start"]["dateTime"] = one_hour_ago.isoformat()
+    event["end"]["dateTime"] = one_hour_from_now.isoformat()
+
+    further_event = copy.deepcopy(TEST_EVENT)
+    further_event["start"]["dateTime"] = five_minutes_from_now.isoformat()
+    further_event["end"]["dateTime"] = one_hour_from_now.isoformat()
+
+    events = [all_day_event, event, further_event]
+
+    # all day event is still on-going.
+    google_calendar_data = GoogleCalendarData(None, None, "", True, 5, -1)
+    assert google_calendar_data.get_new_event(events) == all_day_event
+
+    # show the next event happening in 15 minutes.
+    google_calendar_data = GoogleCalendarData(None, None, "", True, 5, 15)
+    assert google_calendar_data.get_new_event(events) == further_event
+
+    # show the current event as the next event is happening too far.
+    google_calendar_data = GoogleCalendarData(None, None, "", True, 5, 2)
+    assert google_calendar_data.get_new_event(events) == event

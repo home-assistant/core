@@ -43,6 +43,7 @@ CONF_SEARCH = "search"
 CONF_IGNORE_AVAILABILITY = "ignore_availability"
 CONF_MAX_RESULTS = "max_results"
 CONF_CALENDAR_ACCESS = "calendar_access"
+CONF_SHOW_NEXT_EVENT_HAPPENING_IN_MINS = "show_next_event_happening_in_mins"
 
 DEFAULT_CONF_TRACK_NEW = True
 DEFAULT_CONF_OFFSET = "!!"
@@ -117,6 +118,7 @@ _SINGLE_CALSEARCH_CONFIG = vol.Schema(
         vol.Optional(CONF_SEARCH): cv.string,
         vol.Optional(CONF_TRACK): cv.boolean,
         vol.Optional(CONF_MAX_RESULTS): cv.positive_int,
+        vol.Optional(CONF_SHOW_NEXT_EVENT_HAPPENING_IN_MINS, default=-1): cv.Number,
     }
 )
 

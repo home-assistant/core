@@ -43,6 +43,7 @@ async def test_get_calendar_info(hass, test_calendar):
                 "name": "We are, we are, a... Test Calendar",
                 "track": True,
                 "ignore_availability": True,
+                "show_next_event_happening_in_mins": -1,
             }
         ],
     }
