@@ -467,6 +467,7 @@ async def test_options(hass: HomeAssistant) -> None:
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
         assert result["data"][CONF_WEBHOOK_SET]
         assert result["data"][CONF_WEBHOOK_SET_OVERWRITE]
+        assert CONF_EVENT_DURATION not in result["data"]
 
 
 async def test_advanced_options(hass: HomeAssistant) -> None:
