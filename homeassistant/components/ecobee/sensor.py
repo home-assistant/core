@@ -38,17 +38,20 @@ class EcobeeSensor(SensorEntity):
     def __init__(self, data, sensor_name, sensor_type, sensor_index):
         """Initialize the sensor."""
         self.data = data
-        self._name = f"{sensor_name} {SENSOR_TYPES[sensor_type][0]}"
+        self._attr_name = f"{sensor_name} {SENSOR_TYPES[sensor_type][0]}"
         self.sensor_name = sensor_name
         self.type = sensor_type
         self.index = sensor_index
         self._state = None
-        self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
-
-    @property
-    def name(self):
-        """Return the name of the Ecobee sensor."""
-        return self._name
+        self._attr_unit_of_measurement = SENSOR_TYPES[sensor_type][1]
+        self._attr_available = self.data.ecobee.get_thermostat(self.index)["runtime"][
+            "connected"
+        ]
+        self._attr_device_class = (
+            self.type
+            if self.type in (DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_TEMPERATURE)
+            else None
+        )
 
     @property
     def unique_id(self):
@@ -93,19 +96,6 @@ class EcobeeSensor(SensorEntity):
         return None
 
     @property
-    def available(self):
-        """Return true if device is available."""
-        thermostat = self.data.ecobee.get_thermostat(self.index)
-        return thermostat["runtime"]["connected"]
-
-    @property
-    def device_class(self):
-        """Return the device class of the sensor."""
-        if self.type in (DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_TEMPERATURE):
-            return self.type
-        return None
-
-    @property
     def state(self):
         """Return the state of the sensor."""
         if self._state in [
@@ -119,11 +109,6 @@ class EcobeeSensor(SensorEntity):
             return float(self._state) / 10
 
         return self._state
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement this sensor expresses itself in."""
-        return self._unit_of_measurement
 
     async def async_update(self):
         """Get the latest state of the sensor."""

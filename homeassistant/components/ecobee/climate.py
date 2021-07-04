@@ -304,12 +304,18 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class Thermostat(ClimateEntity):
     """A thermostat class for Ecobee."""
 
+    _attr_temperature_unit = TEMP_FAHRENHEIT
+    _attr_precision = PRECISION_TENTHS
+    _attr_min_humidity = DEFAULT_MIN_HUMIDITY
+    _attr_max_humidity = DEFAULT_MAX_HUMIDITY
+    _attr_fan_modes = [FAN_AUTO, FAN_ON]
+
     def __init__(self, data, thermostat_index, thermostat):
         """Initialize the thermostat."""
         self.data = data
         self.thermostat_index = thermostat_index
         self.thermostat = thermostat
-        self._name = self.thermostat["name"]
+        self._attr_name = self.thermostat["name"]
         self.vacation = None
         self._last_active_hvac_mode = HVAC_MODE_HEAT_COOL
 
@@ -329,8 +335,54 @@ class Thermostat(ClimateEntity):
             comfort["climateRef"]: comfort["name"]
             for comfort in self.thermostat["program"]["climates"]
         }
-        self._fan_modes = [FAN_AUTO, FAN_ON]
         self.update_without_throttle = False
+        self._attr_available = self.thermostat["runtime"]["connected"]
+        self._attr_supported_features = (
+            SUPPORT_FLAGS | SUPPORT_TARGET_HUMIDITY
+            if self.has_humidifier_control
+            else SUPPORT_FLAGS
+        )
+        self._attr_unique_id = self.thermostat["identifier"]
+        self._attr_current_temperature = (
+            self.thermostat["runtime"]["actualTemperature"] / 10.0
+        )
+        self._attr_target_temperature_low = (
+            round(self.thermostat["runtime"]["desiredHeat"] / 10.0)
+            if self.hvac_mode == HVAC_MODE_HEAT_COOL
+            else None
+        )
+        self._attr_target_temperature_high = (
+            round(self.thermostat["runtime"]["desiredCool"] / 10.0)
+            if self.hvac_mode == HVAC_MODE_HEAT_COOL
+            else None
+        )
+        self._attr_target_humidity = (
+            self.thermostat["runtime"]["desiredHumidity"]
+            if self.has_humidifier_control
+            else None
+        )
+        self._attr_target_temperature = (
+            round(self.thermostat["runtime"]["desiredHeat"] / 10.0)
+            if self.hvac_mode == HVAC_MODE_HEAT
+            else round(self.thermostat["runtime"]["desiredCool"] / 10.0)
+            if self.hvac_mode == HVAC_MODE_COOL
+            else None
+        )
+        self._attr_fan_mode = self.thermostat["runtime"]["desiredFanMode"]
+        self._attr_hvac_mode = ECOBEE_HVAC_TO_HASS[
+            self.thermostat["settings"]["hvacMode"]
+        ]
+        self._attr_hvac_modes = self._operation_list
+        self._attr_current_humidity = self.thermostat["runtime"]["actualHumidity"]
+        self._attr_extra_state_attributes = {
+            "fan": self.fan,
+            "climate_mode": self._preset_modes[
+                self.thermostat["program"]["currentClimateRef"]
+            ],
+            "equipment_running": self.thermostat["equipmentStatus"],
+            "fan_min_on_time": self.thermostat["settings"]["fanMinOnTime"],
+        }
+        self._attr_is_aux_heat = "auxHeat" in self.thermostat["equipmentStatus"]
 
     async def async_update(self):
         """Get the latest state from the thermostat."""
@@ -342,28 +394,6 @@ class Thermostat(ClimateEntity):
         self.thermostat = self.data.ecobee.get_thermostat(self.thermostat_index)
         if self.hvac_mode != HVAC_MODE_OFF:
             self._last_active_hvac_mode = self.hvac_mode
-
-    @property
-    def available(self):
-        """Return if device is available."""
-        return self.thermostat["runtime"]["connected"]
-
-    @property
-    def supported_features(self):
-        """Return the list of supported features."""
-        if self.has_humidifier_control:
-            return SUPPORT_FLAGS | SUPPORT_TARGET_HUMIDITY
-        return SUPPORT_FLAGS
-
-    @property
-    def name(self):
-        """Return the name of the Ecobee Thermostat."""
-        return self.thermostat["name"]
-
-    @property
-    def unique_id(self):
-        """Return a unique identifier for this ecobee thermostat."""
-        return self.thermostat["identifier"]
 
     @property
     def device_info(self):
@@ -382,35 +412,6 @@ class Thermostat(ClimateEntity):
         }
 
     @property
-    def temperature_unit(self):
-        """Return the unit of measurement."""
-        return TEMP_FAHRENHEIT
-
-    @property
-    def precision(self) -> float:
-        """Return the precision of the system."""
-        return PRECISION_TENTHS
-
-    @property
-    def current_temperature(self):
-        """Return the current temperature."""
-        return self.thermostat["runtime"]["actualTemperature"] / 10.0
-
-    @property
-    def target_temperature_low(self):
-        """Return the lower bound temperature we try to reach."""
-        if self.hvac_mode == HVAC_MODE_HEAT_COOL:
-            return round(self.thermostat["runtime"]["desiredHeat"] / 10.0)
-        return None
-
-    @property
-    def target_temperature_high(self):
-        """Return the upper bound temperature we try to reach."""
-        if self.hvac_mode == HVAC_MODE_HEAT_COOL:
-            return round(self.thermostat["runtime"]["desiredCool"] / 10.0)
-        return None
-
-    @property
     def has_humidifier_control(self):
         """Return true if humidifier connected to thermostat and set to manual/on mode."""
         return (
@@ -419,49 +420,11 @@ class Thermostat(ClimateEntity):
         )
 
     @property
-    def target_humidity(self) -> int | None:
-        """Return the desired humidity set point."""
-        if self.has_humidifier_control:
-            return self.thermostat["runtime"]["desiredHumidity"]
-        return None
-
-    @property
-    def min_humidity(self) -> int:
-        """Return the minimum humidity."""
-        return DEFAULT_MIN_HUMIDITY
-
-    @property
-    def max_humidity(self) -> int:
-        """Return the maximum humidity."""
-        return DEFAULT_MAX_HUMIDITY
-
-    @property
-    def target_temperature(self):
-        """Return the temperature we try to reach."""
-        if self.hvac_mode == HVAC_MODE_HEAT_COOL:
-            return None
-        if self.hvac_mode == HVAC_MODE_HEAT:
-            return round(self.thermostat["runtime"]["desiredHeat"] / 10.0)
-        if self.hvac_mode == HVAC_MODE_COOL:
-            return round(self.thermostat["runtime"]["desiredCool"] / 10.0)
-        return None
-
-    @property
     def fan(self):
         """Return the current fan status."""
         if "fan" in self.thermostat["equipmentStatus"]:
             return STATE_ON
         return HVAC_MODE_OFF
-
-    @property
-    def fan_mode(self):
-        """Return the fan setting."""
-        return self.thermostat["runtime"]["desiredFanMode"]
-
-    @property
-    def fan_modes(self):
-        """Return the available fan modes."""
-        return self._fan_modes
 
     @property
     def preset_mode(self):
@@ -485,21 +448,6 @@ class Thermostat(ClimateEntity):
                 return PRESET_VACATION
 
         return self._preset_modes[self.thermostat["program"]["currentClimateRef"]]
-
-    @property
-    def hvac_mode(self):
-        """Return current operation."""
-        return ECOBEE_HVAC_TO_HASS[self.thermostat["settings"]["hvacMode"]]
-
-    @property
-    def hvac_modes(self):
-        """Return the operation modes list."""
-        return self._operation_list
-
-    @property
-    def current_humidity(self) -> int | None:
-        """Return the current humidity."""
-        return self.thermostat["runtime"]["actualHumidity"]
 
     @property
     def hvac_action(self):
@@ -530,24 +478,6 @@ class Thermostat(ClimateEntity):
                 return action
 
         return CURRENT_HVAC_IDLE
-
-    @property
-    def extra_state_attributes(self):
-        """Return device specific state attributes."""
-        status = self.thermostat["equipmentStatus"]
-        return {
-            "fan": self.fan,
-            "climate_mode": self._preset_modes[
-                self.thermostat["program"]["currentClimateRef"]
-            ],
-            "equipment_running": status,
-            "fan_min_on_time": self.thermostat["settings"]["fanMinOnTime"],
-        }
-
-    @property
-    def is_aux_heat(self):
-        """Return true if aux heater."""
-        return "auxHeat" in self.thermostat["equipmentStatus"]
 
     async def async_turn_aux_heat_on(self) -> None:
         """Turn auxiliary heater on."""

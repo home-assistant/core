@@ -18,7 +18,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
+async def async_setup(hass, config) -> bool:
     """
     Ecobee uses config flow for configuration.
 
@@ -41,7 +41,7 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass, entry):
+async def async_setup_entry(hass, entry) -> bool:
     """Set up ecobee via a config entry."""
     api_key = entry.data[CONF_API_KEY]
     refresh_token = entry.data[CONF_REFRESH_TOKEN]
@@ -105,7 +105,7 @@ class EcobeeData:
         return False
 
 
-async def async_unload_entry(hass, entry):
+async def async_unload_entry(hass, entry) -> bool:
     """Unload the config entry and platforms."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:

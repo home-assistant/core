@@ -39,12 +39,30 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class EcobeeWeather(WeatherEntity):
     """Representation of Ecobee weather data."""
 
+    _attr_temperature_unit = TEMP_FAHRENHEIT
+
     def __init__(self, data, name, index):
         """Initialize the Ecobee weather platform."""
         self.data = data
-        self._name = name
+        self._attr_name = name
         self._index = index
         self.weather = None
+        self._attr_unique_id = self.data.ecobee.get_thermostat(self._index)[
+            "identifier"
+        ]
+        self._attr_device_info = {
+            "identifiers": {
+                (DOMAIN, self.data.ecobee.get_thermostat(self._index)["identifier"])
+            },
+            "name": self.name,
+            "manufacturer": MANUFACTURER,
+            "model": f"{ECOBEE_MODEL_TO_NAME.get(self.data.ecobee.get_thermostat(self._index)['modelNumber'])} Thermostat",
+        }
+        self._attr_attribution = (
+            f"Ecobee weather provided by {self.weather.get('weatherStation', 'UNKNOWN')} at {self.weather.get('timestamp', 'UNKNOWN')} UTC"
+            if self.weather
+            else None
+        )
 
     def get_forecast(self, index, param):
         """Retrieve forecast parameter."""
@@ -53,33 +71,6 @@ class EcobeeWeather(WeatherEntity):
             return forecast[param]
         except (IndexError, KeyError) as err:
             raise ValueError from err
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def unique_id(self):
-        """Return a unique identifier for the weather platform."""
-        return self.data.ecobee.get_thermostat(self._index)["identifier"]
-
-    @property
-    def device_info(self):
-        """Return device information for the ecobee weather platform."""
-        thermostat = self.data.ecobee.get_thermostat(self._index)
-        try:
-            model = f"{ECOBEE_MODEL_TO_NAME[thermostat['modelNumber']]} Thermostat"
-        except KeyError:
-            # Ecobee model is not in our list
-            model = None
-
-        return {
-            "identifiers": {(DOMAIN, thermostat["identifier"])},
-            "name": self.name,
-            "manufacturer": MANUFACTURER,
-            "model": model,
-        }
 
     @property
     def condition(self):
@@ -96,11 +87,6 @@ class EcobeeWeather(WeatherEntity):
             return float(self.get_forecast(0, "temperature")) / 10
         except ValueError:
             return None
-
-    @property
-    def temperature_unit(self):
-        """Return the unit of measurement."""
-        return TEMP_FAHRENHEIT
 
     @property
     def pressure(self):
@@ -145,16 +131,6 @@ class EcobeeWeather(WeatherEntity):
             return int(self.get_forecast(0, "windBearing"))
         except ValueError:
             return None
-
-    @property
-    def attribution(self):
-        """Return the attribution."""
-        if not self.weather:
-            return None
-
-        station = self.weather.get("weatherStation", "UNKNOWN")
-        time = self.weather.get("timestamp", "UNKNOWN")
-        return f"Ecobee weather provided by {station} at {time} UTC"
 
     @property
     def forecast(self):

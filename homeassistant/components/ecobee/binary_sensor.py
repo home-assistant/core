@@ -1,4 +1,6 @@
 """Support for Ecobee binary sensors."""
+from typing import Any
+
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_OCCUPANCY,
     BinarySensorEntity,
@@ -25,31 +27,31 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class EcobeeBinarySensor(BinarySensorEntity):
     """Representation of an Ecobee sensor."""
 
+    _attr_device_class = DEVICE_CLASS_OCCUPANCY
+
     def __init__(self, data, sensor_name, sensor_index):
         """Initialize the Ecobee sensor."""
         self.data = data
-        self._name = f"{sensor_name} Occupancy"
+        name = f"{sensor_name} Occupancy"
+        self._attr_name = name.rstrip()
         self.sensor_name = sensor_name
         self.index = sensor_index
         self._state = None
-
-    @property
-    def name(self):
-        """Return the name of the Ecobee sensor."""
-        return self._name.rstrip()
-
-    @property
-    def unique_id(self):
-        """Return a unique identifier for this sensor."""
         for sensor in self.data.ecobee.get_remote_sensors(self.index):
             if sensor["name"] == self.sensor_name:
                 if "code" in sensor:
-                    return f"{sensor['code']}-{self.device_class}"
+                    self._attr_unique_id = f"{sensor['code']}-{self.device_class}"
                 thermostat = self.data.ecobee.get_thermostat(self.index)
-                return f"{thermostat['identifier']}-{sensor['id']}-{self.device_class}"
+                self._attr_unique_id = (
+                    f"{thermostat['identifier']}-{sensor['id']}-{self.device_class}"
+                )
+        self._attr_available = self.data.ecobee.get_thermostat(self.index)["runtime"][
+            "connected"
+        ]
+        self._attr_is_on = self._state == "true"
 
     @property
-    def device_info(self):
+    def device_info(self) -> Any:
         """Return device information for this sensor."""
         identifier = None
         model = None
@@ -79,22 +81,6 @@ class EcobeeBinarySensor(BinarySensorEntity):
                 "model": model,
             }
         return None
-
-    @property
-    def available(self):
-        """Return true if device is available."""
-        thermostat = self.data.ecobee.get_thermostat(self.index)
-        return thermostat["runtime"]["connected"]
-
-    @property
-    def is_on(self):
-        """Return the status of the sensor."""
-        return self._state == "true"
-
-    @property
-    def device_class(self):
-        """Return the class of this sensor, from DEVICE_CLASSES."""
-        return DEVICE_CLASS_OCCUPANCY
 
     async def async_update(self):
         """Get the latest state of the sensor."""
