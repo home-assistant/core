@@ -67,16 +67,17 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    host: str = None  # type: ignore[assignment]
-    device_info: dict[str, Any] = None  # type: ignore[assignment]
+    host: str = ""
+    info: dict[str, Any] = {}
+    device_info: dict[str, Any] = {}
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle the initial step."""
-        errors: dict[str, Any] = {}
+        errors: dict[str, str] = {}
         if user_input is not None:
-            host = user_input[CONF_HOST]
+            host: str = user_input[CONF_HOST]
             try:
                 info = await self._async_get_info(host)
             except HTTP_CONNECT_ERRORS:
@@ -118,7 +119,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle the credentials step."""
-        errors: dict[str, Any] = {}
+        errors: dict[str, str] = {}
         if user_input is not None:
             try:
                 device_info = await validate_input(self.hass, self.host, user_input)
@@ -189,7 +190,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle discovery confirm."""
-        errors: dict[str, Any] = {}
+        errors: dict[str, str] = {}
         if user_input is not None:
             return self.async_create_entry(
                 title=self.device_info["title"] or self.device_info["hostname"],

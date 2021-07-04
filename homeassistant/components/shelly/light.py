@@ -86,7 +86,7 @@ class ShellyLight(ShellyBlockEntity, LightEntity):
         super().__init__(wrapper, block)
         self.control_result: dict[str, Any] | None = None
         self.mode_result: dict[str, Any] | None = None
-        self._supported_color_modes = set()
+        self._supported_color_modes: set[str] = set()
         self._supported_features: int = 0
         self._min_kelvin: int = KELVIN_MIN_VALUE_WHITE
         self._max_kelvin: int = KELVIN_MAX_VALUE
@@ -142,7 +142,7 @@ class ShellyLight(ShellyBlockEntity, LightEntity):
         return "white"
 
     @property
-    def brightness(self) -> int | None:
+    def brightness(self) -> int:
         """Return the brightness of this light between 0..255."""
         if self.mode == "color":
             if self.control_result:
@@ -158,7 +158,7 @@ class ShellyLight(ShellyBlockEntity, LightEntity):
         return round(255 * brightness_pct / 100)
 
     @property
-    def color_mode(self) -> str | None:
+    def color_mode(self) -> str:
         """Return the color mode of the light."""
         if self.mode == "color":
             if hasattr(self.block, "white"):
@@ -197,7 +197,7 @@ class ShellyLight(ShellyBlockEntity, LightEntity):
         return (*self.rgb_color, white)
 
     @property
-    def color_temp(self) -> int | None:
+    def color_temp(self) -> int:
         """Return the CT color value in mireds."""
         if self.control_result:
             color_temp = self.control_result["temp"]
