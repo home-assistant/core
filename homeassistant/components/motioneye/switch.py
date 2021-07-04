@@ -72,7 +72,7 @@ class MotionEyeSwitch(MotionEyeEntity, SwitchEntity):
         client: MotionEyeClient,
         coordinator: DataUpdateCoordinator,
         options: MappingProxyType[str, str],
-    ):
+    ) -> None:
         """Initialize the switch."""
         self._switch_key = switch_key
         self._switch_key_friendly_name = " ".join(

@@ -31,10 +31,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import MotionEyeEntity, is_acceptable_camera, listen_for_new_cameras
 from .const import (
@@ -117,7 +114,6 @@ class MotionEyeMjpegCamera(MotionEyeEntity, MjpegCamera):
                 **self._get_mjpeg_camera_properties_for_camera(camera),
             },
         )
-        CoordinatorEntity.__init__(self, coordinator)
 
     @callback
     def _get_mjpeg_camera_properties_for_camera(
