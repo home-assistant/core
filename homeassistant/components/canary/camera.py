@@ -21,7 +21,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import Throttle
@@ -107,31 +106,19 @@ class CanaryCamera(CoordinatorEntity, Camera):
         self._device_type_name = device.device_type["name"]
         self._timeout = timeout
         self._live_stream_session: LiveStreamSession | None = None
-
-    @property
-    def location(self) -> Location:
-        """Return information about the location."""
-        return self.coordinator.data["locations"][self._location_id]
-
-    @property
-    def name(self) -> str:
-        """Return the name of this device."""
-        return self._device_name
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique ID of this camera."""
-        return str(self._device_id)
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device_info of the device."""
-        return {
+        self._attr_name = self._device_name
+        self._attr_unique_id = str(self._device_id)
+        self._attr_device_info = {
             "identifiers": {(DOMAIN, str(self._device_id))},
             "name": self._device_name,
             "model": self._device_type_name,
             "manufacturer": MANUFACTURER,
         }
+
+    @property
+    def location(self) -> Location:
+        """Return information about the location."""
+        return self.coordinator.data["locations"][self._location_id]
 
     @property
     def is_recording(self) -> bool:
