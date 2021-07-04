@@ -146,7 +146,6 @@ class AmbiclimateEntity(ClimateEntity):
         """Initialize the thermostat."""
         self._heater = heater
         self._store = store
-        self._data = {}
         self._attr_unique_id = self._heater.device_id
         self._attr_name = self._heater.name
         self._attr_device_info = {
@@ -154,16 +153,6 @@ class AmbiclimateEntity(ClimateEntity):
             "name": self.name,
             "manufacturer": "Ambiclimate",
         }
-        self._attr_target_temperature = self._data.get("target_temperature")
-        self._attr_current_temperature = self._data.get("temperature")
-        self._attr_current_humidity = self._data.get("humidity")
-        self._attr_min_temp = self._heater.get_min_temp()
-        self._attr_max_temp = self._heater.get_max_temp()
-        self._attr_hvac_mode = (
-            HVAC_MODE_HEAT
-            if self._data.get("power", "").lower() == "on"
-            else HVAC_MODE_OFF
-        )
 
     async def async_set_temperature(self, **kwargs) -> None:
         """Set new target temperature."""
@@ -191,4 +180,12 @@ class AmbiclimateEntity(ClimateEntity):
         if token_info:
             await self._store.async_save(token_info)
 
-        self._data = await self._heater.update_device()
+        data = await self._heater.update_device()
+        self._attr_target_temperature = data.get("target_temperature")
+        self._attr_current_temperature = data.get("temperature")
+        self._attr_current_humidity = data.get("humidity")
+        self._attr_min_temp = self._heater.get_min_temp()
+        self._attr_max_temp = self._heater.get_max_temp()
+        self._attr_hvac_mode = (
+            HVAC_MODE_HEAT if data.get("power", "").lower() == "on" else HVAC_MODE_OFF
+        )
