@@ -148,19 +148,9 @@ class AlphaVantageForeignExchange(SensorEntity):
             if CONF_NAME in config
             else f"{self._to_currency}/{self._from_currency}"
         )
-        self._attr_unit_of_measurement = self._to_currency
-        self._attr_icon = ICONS.get(self._from_currency, "USD")
         self.values = None
-        self._attr_state = round(float(self.values["5. Exchange Rate"]), 4)
-        self._attr_extra_state_attributes = (
-            {
-                ATTR_ATTRIBUTION: ATTRIBUTION,
-                CONF_FROM: self._from_currency,
-                CONF_TO: self._to_currency,
-            }
-            if self.values is not None
-            else None
-        )
+        self._attr_icon = ICONS.get(self._from_currency, "USD")
+        self._attr_unit_of_measurement = self._to_currency
 
     def update(self):
         """Get the latest data and updates the states."""
@@ -172,6 +162,17 @@ class AlphaVantageForeignExchange(SensorEntity):
         self.values, _ = self._foreign_exchange.get_currency_exchange_rate(
             from_currency=self._from_currency, to_currency=self._to_currency
         )
+        self._attr_state = round(float(self.values["5. Exchange Rate"]), 4)
+        self._attr_extra_state_attributes = (
+            {
+                ATTR_ATTRIBUTION: ATTRIBUTION,
+                CONF_FROM: self._from_currency,
+                CONF_TO: self._to_currency,
+            }
+            if self.values is not None
+            else None
+        )
+
         _LOGGER.debug(
             "Received new data for forex %s - %s",
             self._from_currency,
