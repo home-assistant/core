@@ -20,6 +20,7 @@ from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
@@ -65,7 +66,10 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_platform(
-    hass, config, async_add_entities, discovery_info=None
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: entity_platform.AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up a Ezviz IP Camera from platform config."""
     _LOGGER.warning(
@@ -234,14 +238,14 @@ class EzvizCamera(CoordinatorEntity, Camera):
 
     def __init__(
         self,
-        hass,
-        coordinator,
-        idx,
-        camera_username,
-        camera_password,
-        camera_rtsp_stream,
-        local_rtsp_port,
-        ffmpeg_arguments,
+        hass: HomeAssistant,
+        coordinator: EzvizDataUpdateCoordinator,
+        idx: int,
+        camera_username: str,
+        camera_password: str,
+        camera_rtsp_stream: str | None,
+        local_rtsp_port: int | None,
+        ffmpeg_arguments: str | None,
     ) -> None:
         """Initialize a Ezviz security camera."""
         super().__init__(coordinator)
@@ -356,7 +360,7 @@ class EzvizCamera(CoordinatorEntity, Camera):
             return rtsp_stream_source
         return None
 
-    def perform_ptz(self, direction, speed) -> None:
+    def perform_ptz(self, direction: str, speed: int) -> None:
         """Perform a PTZ action on the camera."""
         try:
             self.coordinator.ezviz_client.ptz_control(
@@ -369,7 +373,7 @@ class EzvizCamera(CoordinatorEntity, Camera):
         except HTTPError as err:
             raise HTTPError("Cannot perform PTZ") from err
 
-    def perform_sound_alarm(self, enable) -> None:
+    def perform_sound_alarm(self, enable: int) -> None:
         """Sound the alarm on a camera."""
         try:
             self.coordinator.ezviz_client.sound_alarm(self._serial, enable)
@@ -383,7 +387,7 @@ class EzvizCamera(CoordinatorEntity, Camera):
         except (HTTPError, PyEzvizError) as err:
             raise PyEzvizError("Cannot wake device") from err
 
-    def perform_alarm_sound(self, level) -> None:
+    def perform_alarm_sound(self, level: int) -> None:
         """Enable/Disable movement sound alarm."""
         try:
             self.coordinator.ezviz_client.alarm_sound(self._serial, level, 1)
@@ -392,7 +396,9 @@ class EzvizCamera(CoordinatorEntity, Camera):
                 "Cannot set alarm sound level for on movement detected"
             ) from err
 
-    def perform_set_alarm_detection_sensibility(self, level, type_value) -> None:
+    def perform_set_alarm_detection_sensibility(
+        self, level: int, type_value: int
+    ) -> None:
         """Set camera detection sensibility level service."""
         try:
             self.coordinator.ezviz_client.detection_sensibility(
