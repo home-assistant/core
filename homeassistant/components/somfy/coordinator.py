@@ -39,7 +39,7 @@ class SomfyDataUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self) -> dict[str, Device]:
         """Fetch Somfy data.
 
-        Somfy only allow one call per minute to /site.
+        Somfy only allow one call per minute to /site. There is one exception: 2 calls are allowed after site retrieval.
         """
         if not self.site_device:
             sites = await self.hass.async_add_executor_job(self.client.get_sites)
