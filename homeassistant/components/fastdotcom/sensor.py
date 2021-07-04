@@ -1,16 +1,27 @@
 """Support for Fast.com internet speed testing sensor."""
+from __future__ import annotations
+
+from typing import Any
+
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import DATA_RATE_MEGABITS_PER_SECOND
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DATA_UPDATED, DOMAIN as FASTDOTCOM_DOMAIN
 
 ICON = "mdi:speedometer"
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Fast.com sensor."""
     async_add_entities([SpeedtestSensor(hass.data[FASTDOTCOM_DOMAIN])])
 
@@ -18,38 +29,21 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class SpeedtestSensor(RestoreEntity, SensorEntity):
     """Implementation of a FAst.com sensor."""
 
-    def __init__(self, speedtest_data):
+    def __init__(self, speedtest_data: dict[str, Any]) -> None:
         """Initialize the sensor."""
-        self._name = "Fast.com Download"
-        self.speedtest_client = speedtest_data
-        self._state = None
+        self._attr_name: str = "Fast.com Download"
+        self._attr_unit_of_measurement: str = DATA_RATE_MEGABITS_PER_SECOND
+        self._attr_icon: str = ICON
+        self._attr_should_poll: bool = False
+        self._speedtest_data = speedtest_data
+        self._state: str | None = None
 
     @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def state(self):
+    def state(self) -> str | None:
         """Return the state of the device."""
         return self._state
 
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of this entity, if any."""
-        return DATA_RATE_MEGABITS_PER_SECOND
-
-    @property
-    def icon(self):
-        """Return icon."""
-        return ICON
-
-    @property
-    def should_poll(self):
-        """Return the polling requirement for this sensor."""
-        return False
-
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()
 
@@ -64,13 +58,13 @@ class SpeedtestSensor(RestoreEntity, SensorEntity):
             return
         self._state = state.state
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data and update the states."""
-        data = self.speedtest_client.data
+        data = self._speedtest_data.data  # type: ignore[attr-defined]
         if data is None:
             return
         self._state = data["download"]
 
     @callback
-    def _schedule_immediate_update(self):
+    def _schedule_immediate_update(self) -> None:
         self.async_schedule_update_ha_state(True)
