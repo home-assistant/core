@@ -8,6 +8,7 @@ from aladdin_connect import AladdinConnectClient
 import voluptuous as vol
 
 from homeassistant.components.cover import (
+    DEVICE_CLASS_GARAGE,
     PLATFORM_SCHEMA as BASE_PLATFORM_SCHEMA,
     CoverEntity,
 )
@@ -61,7 +62,7 @@ def setup_platform(
 class AladdinDevice(CoverEntity):
     """Representation of Aladdin Connect cover."""
 
-    _attr_device_class = "garage"
+    _attr_device_class = DEVICE_CLASS_GARAGE
     _attr_supported_features = SUPPORTED_FEATURES
 
     def __init__(self, acc: AladdinConnectClient, device: DoorDevice) -> None:
@@ -72,11 +73,6 @@ class AladdinDevice(CoverEntity):
         self._status = STATES_MAP.get(device["status"])
         self._attr_unique_id = f"{self._device_id}-{self._number}"
         self._attr_name = device["name"]
-        self._attr_is_opening = self._status == STATE_OPENING
-        self._attr_is_closing = self._status == STATE_CLOSING
-        self._attr_is_closed = (
-            self._status == STATE_CLOSED if self._status is not None else None
-        )
 
     def close_cover(self, **kwargs: Any) -> None:
         """Issue close command to cover."""
@@ -90,3 +86,8 @@ class AladdinDevice(CoverEntity):
         """Update status of cover."""
         acc_status = self._acc.get_door_status(self._device_id, self._number)
         self._status = STATES_MAP.get(acc_status)
+        self._attr_is_opening = self._status == STATE_OPENING
+        self._attr_is_closing = self._status == STATE_CLOSING
+        self._attr_is_closed = (
+            self._status == STATE_CLOSED if self._status is not None else None
+        )
