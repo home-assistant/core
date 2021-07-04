@@ -44,27 +44,13 @@ class BloomSkySensor(BinarySensorEntity):
         self._bloomsky = bs
         self._device_id = device["DeviceID"]
         self._sensor_name = sensor_name
-        self._name = f"{device['DeviceName']} {sensor_name}"
+        self._attr_name = f"{device['DeviceName']} {sensor_name}"
         self._state = None
-        self._unique_id = f"{self._device_id}-{self._sensor_name}"
+        self._attr_unique_id = f"{self._device_id}-{self._sensor_name}"
+        self._attr_device_class = SENSOR_TYPES.get(self._sensor_name)
 
     @property
-    def unique_id(self):
-        """Return a unique ID."""
-        return self._unique_id
-
-    @property
-    def name(self):
-        """Return the name of the BloomSky device and this sensor."""
-        return self._name
-
-    @property
-    def device_class(self):
-        """Return the class of this sensor, from DEVICE_CLASSES."""
-        return SENSOR_TYPES.get(self._sensor_name)
-
-    @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if binary sensor is on."""
         return self._state
 
