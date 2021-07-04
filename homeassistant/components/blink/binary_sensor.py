@@ -33,26 +33,11 @@ class BlinkBinarySensor(BinarySensorEntity):
         self.data = data
         self._type = sensor_type
         name, device_class = BINARY_SENSORS[sensor_type]
-        self._name = f"{DOMAIN} {camera} {name}"
-        self._device_class = device_class
+        self._attr_name = f"{DOMAIN} {camera} {name}"
+        self._attr_device_class = device_class
         self._camera = data.cameras[camera]
         self._state = None
-        self._unique_id = f"{self._camera.serial}-{self._type}"
-
-    @property
-    def name(self):
-        """Return the name of the blink sensor."""
-        return self._name
-
-    @property
-    def unique_id(self):
-        """Return the unique id of the sensor."""
-        return self._unique_id
-
-    @property
-    def device_class(self):
-        """Return the class of this device."""
-        return self._device_class
+        self._attr_unique_id = f"{self._camera.serial}-{self._type}"
 
     @property
     def is_on(self):

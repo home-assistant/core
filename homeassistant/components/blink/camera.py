@@ -32,28 +32,14 @@ class BlinkCamera(Camera):
         """Initialize a camera."""
         super().__init__()
         self.data = data
-        self._name = f"{DOMAIN} {name}"
+        self._attr_name = f"{DOMAIN} {name}"
         self._camera = camera
-        self._unique_id = f"{camera.serial}-camera"
+        self._attr_unique_id = f"{camera.serial}-camera"
         self.response = None
         self.current_image = None
         self.last_image = None
+        self._attr_extra_state_attributes = self._camera.attributes
         _LOGGER.debug("Initialized blink camera %s", self._name)
-
-    @property
-    def name(self):
-        """Return the camera name."""
-        return self._name
-
-    @property
-    def unique_id(self):
-        """Return the unique camera id."""
-        return self._unique_id
-
-    @property
-    def extra_state_attributes(self):
-        """Return the camera attributes."""
-        return self._camera.attributes
 
     def enable_motion_detection(self):
         """Enable motion detection for the camera."""
