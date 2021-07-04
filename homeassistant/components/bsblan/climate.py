@@ -27,7 +27,6 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
@@ -88,6 +87,10 @@ async def async_setup_entry(
 class BSBLanClimate(ClimateEntity):
     """Defines a BSBLan climate device."""
 
+    _attr_supported_features = SUPPORT_FLAGS
+    _attr_hvac_modes = HVAC_MODES
+    _attr_preset_modes = PRESET_MODES
+
     def __init__(
         self,
         entry_id: str,
@@ -95,72 +98,25 @@ class BSBLanClimate(ClimateEntity):
         info: Info,
     ) -> None:
         """Initialize BSBLan climate device."""
-        self._current_temperature: float | None = None
-        self._available = True
-        self._hvac_mode: str | None = None
-        self._target_temperature: float | None = None
+        self._attr_current_temperature: float | None = None
+        self._attr_available = True
+        self._attr_hvac_mode: str | None = None
+        self._attr_target_temperature: float | None = None
         self._temperature_unit = None
-        self._preset_mode = None
+        self._attr_temperature_unit = (
+            TEMP_CELSIUS if self._temperature_unit == "&deg;C" else TEMP_FAHRENHEIT
+        )
+        self._attr_preset_mode = None
         self._store_hvac_mode = None
-        self._info: Info = info
+        _info: Info = info
         self.bsblan = bsblan
-
-    @property
-    def name(self) -> str:
-        """Return the name of the entity."""
-        return self._info.device_identification
-
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self._available
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique ID for this sensor."""
-        return self._info.device_identification
-
-    @property
-    def temperature_unit(self) -> str:
-        """Return the unit of measurement which this thermostat uses."""
-        if self._temperature_unit == "&deg;C":
-            return TEMP_CELSIUS
-        return TEMP_FAHRENHEIT
-
-    @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        return SUPPORT_FLAGS
-
-    @property
-    def current_temperature(self):
-        """Return the current temperature."""
-        return self._current_temperature
-
-    @property
-    def hvac_mode(self):
-        """Return the current operation mode."""
-        return self._hvac_mode
-
-    @property
-    def hvac_modes(self):
-        """Return the list of available operation modes."""
-        return HVAC_MODES
-
-    @property
-    def target_temperature(self):
-        """Return the temperature we try to reach."""
-        return self._target_temperature
-
-    @property
-    def preset_modes(self):
-        """List of available preset modes."""
-        return PRESET_MODES
-
-    @property
-    def preset_mode(self):
-        """Return the preset_mode."""
-        return self._preset_mode
+        self._attr_name = self._attr_unique_id = _info.device_identification
+        self._attr_device_info = {
+            ATTR_IDENTIFIERS: {(DOMAIN, _info.device_identification)},
+            ATTR_NAME: "BSBLan Device",
+            ATTR_MANUFACTURER: "BSBLan",
+            ATTR_MODEL: _info.controller_variant,
+        }
 
     async def async_set_preset_mode(self, preset_mode):
         """Set preset mode."""
@@ -230,13 +186,3 @@ class BSBLanClimate(ClimateEntity):
             self._preset_mode = PRESET_NONE
 
         self._temperature_unit = state.current_temperature.unit
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information about this BSBLan device."""
-        return {
-            ATTR_IDENTIFIERS: {(DOMAIN, self._info.device_identification)},
-            ATTR_NAME: "BSBLan Device",
-            ATTR_MANUFACTURER: "BSBLan",
-            ATTR_MODEL: self._info.controller_variant,
-        }
