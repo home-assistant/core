@@ -12,6 +12,10 @@ from getmac import get_mac_address
 from mac_vendor_lookup import AsyncMacLookup
 from nmap import PortScanner, PortScannerError
 
+from homeassistant.components.device_tracker.const import (
+    CONF_SCAN_INTERVAL,
+    CONF_TRACK_NEW,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EXCLUDE, CONF_HOSTS, EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import CoreState, HomeAssistant, callback
@@ -25,6 +29,7 @@ import homeassistant.util.dt as dt_util
 from .const import (
     CONF_HOME_INTERVAL,
     CONF_OPTIONS,
+    DEFAULT_TRACK_NEW_DEVICES,
     DOMAIN,
     NMAP_TRACKED_DEVICES,
     PLATFORMS,
@@ -146,7 +151,10 @@ class NmapDeviceScanner:
         self._hosts = None
         self._options = None
         self._exclude = None
+        self._scan_interval = None
+        self._track_new_devices = None
 
+        self._known_mac_addresses = {}
         self._finished_first_scan = False
         self._last_results = []
         self._mac_vendor_lookup = None
@@ -154,8 +162,14 @@ class NmapDeviceScanner:
     async def async_setup(self):
         """Set up the tracker."""
         config = self._entry.options
-        self._hosts = cv.ensure_list_csv(config[CONF_HOSTS])
-        self._exclude = cv.ensure_list_csv(config[CONF_EXCLUDE])
+        self._track_new_devices = config.get(CONF_TRACK_NEW, DEFAULT_TRACK_NEW_DEVICES)
+        self._scan_interval = timedelta(
+            seconds=config.get(CONF_SCAN_INTERVAL, TRACKER_SCAN_INTERVAL)
+        )
+        hosts_list = cv.ensure_list_csv(config[CONF_HOSTS])
+        self._hosts = [host for host in hosts_list if host != ""]
+        excludes_list = cv.ensure_list_csv(config[CONF_EXCLUDE])
+        self._exclude = [exclude for exclude in excludes_list if exclude != ""]
         self._options = config[CONF_OPTIONS]
         self.home_interval = timedelta(
             minutes=cv.positive_int(config[CONF_HOME_INTERVAL])
@@ -170,6 +184,12 @@ class NmapDeviceScanner:
                 EVENT_HOMEASSISTANT_STARTED, self._async_start_scanner
             )
         )
+        registry = er.async_get(self._hass)
+        self._known_mac_addresses = {
+            entry.unique_id: entry.original_name
+            for entry in registry.entities.values()
+            if entry.config_entry_id == self._entry_id
+        }
 
     @property
     def signal_device_new(self) -> str:
@@ -199,7 +219,7 @@ class NmapDeviceScanner:
             async_track_time_interval(
                 self._hass,
                 self._async_scan_devices,
-                timedelta(seconds=TRACKER_SCAN_INTERVAL),
+                self._scan_interval,
             )
         )
         self._mac_vendor_lookup = AsyncMacLookup()
@@ -258,26 +278,22 @@ class NmapDeviceScanner:
         # After all config entries have finished their first
         # scan we mark devices that were not found as not_home
         # from unavailable
-        registry = er.async_get(self._hass)
         now = dt_util.now()
-        for entry in registry.entities.values():
-            if entry.config_entry_id != self._entry_id:
+        for mac_address, original_name in self._known_mac_addresses.items():
+            if mac_address in self.devices.tracked:
                 continue
-            if entry.unique_id not in self.devices.tracked:
-                self.devices.config_entry_owner[entry.unique_id] = self._entry_id
-                self.devices.tracked[entry.unique_id] = NmapDevice(
-                    entry.unique_id,
-                    None,
-                    entry.original_name,
-                    None,
-                    self._async_get_vendor(entry.unique_id),
-                    "Device not found in initial scan",
-                    now,
-                    1,
-                )
-                async_dispatcher_send(
-                    self._hass, self.signal_device_missing, entry.unique_id
-                )
+            self.devices.config_entry_owner[mac_address] = self._entry_id
+            self.devices.tracked[mac_address] = NmapDevice(
+                mac_address,
+                None,
+                original_name,
+                None,
+                self._async_get_vendor(mac_address),
+                "Device not found in initial scan",
+                now,
+                1,
+            )
+            async_dispatcher_send(self._hass, self.signal_device_missing, mac_address)
 
     def _run_nmap_scan(self):
         """Run nmap and return the result."""
@@ -344,21 +360,28 @@ class NmapDeviceScanner:
                 _LOGGER.info("No MAC address found for %s", ipv4)
                 continue
 
-            hostname = info["hostnames"][0]["name"] if info["hostnames"] else ipv4
-
             formatted_mac = format_mac(mac)
+            new = formatted_mac not in devices.tracked
+            if (
+                new
+                and not self._track_new_devices
+                and formatted_mac not in devices.tracked
+                and formatted_mac not in self._known_mac_addresses
+            ):
+                continue
+
             if (
                 devices.config_entry_owner.setdefault(formatted_mac, entry_id)
                 != entry_id
             ):
                 continue
 
+            hostname = info["hostnames"][0]["name"] if info["hostnames"] else ipv4
             vendor = info.get("vendor", {}).get(mac) or self._async_get_vendor(mac)
             name = human_readable_name(hostname, vendor, mac)
             device = NmapDevice(
                 formatted_mac, hostname, name, ipv4, vendor, reason, now, 0
             )
-            new = formatted_mac not in devices.tracked
 
             devices.tracked[formatted_mac] = device
             devices.ipv4_last_mac[ipv4] = formatted_mac

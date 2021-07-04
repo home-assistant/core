@@ -2,14 +2,12 @@
 
 from aioambient import Client
 from aioambient.errors import WebsocketError
-import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_CONNECTIVITY,
     DOMAIN as BINARY_SENSOR,
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR
-from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_LOCATION,
     ATTR_NAME,
@@ -291,44 +289,13 @@ SENSOR_TYPES = {
     TYPE_YEARLYRAININ: ("Yearly Rain", "in", SENSOR, None),
 }
 
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_APP_KEY): cv.string,
-                vol.Required(CONF_API_KEY): cv.string,
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
-
-
-async def async_setup(hass, config):
-    """Set up the Ambient PWS integration."""
-    hass.data[DOMAIN] = {}
-    hass.data[DOMAIN][DATA_CLIENT] = {}
-
-    if DOMAIN not in config:
-        return True
-    conf = config[DOMAIN]
-
-    # Store config for use during entry setup:
-    hass.data[DOMAIN][DATA_CONFIG] = conf
-
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data={CONF_API_KEY: conf[CONF_API_KEY], CONF_APP_KEY: conf[CONF_APP_KEY]},
-        )
-    )
-
-    return True
+CONFIG_SCHEMA = cv.deprecated(DOMAIN)
 
 
 async def async_setup_entry(hass, config_entry):
     """Set up the Ambient PWS as config entry."""
+    hass.data.setdefault(DOMAIN, {DATA_CLIENT: {}})
+
     if not config_entry.unique_id:
         hass.config_entries.async_update_entry(
             config_entry, unique_id=config_entry.data[CONF_APP_KEY]

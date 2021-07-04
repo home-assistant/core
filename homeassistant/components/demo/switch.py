@@ -49,7 +49,6 @@ class DemoSwitch(SwitchEntity):
         self._attr_icon = icon
         self._attr_is_on = state
         self._attr_name = name or DEVICE_DEFAULT_NAME
-        self._attr_today_energy_kwh = 15
         self._attr_unique_id = unique_id
 
     @property
@@ -63,11 +62,9 @@ class DemoSwitch(SwitchEntity):
     def turn_on(self, **kwargs):
         """Turn the switch on."""
         self._attr_is_on = True
-        self._attr_current_power_w = 100
         self.schedule_update_ha_state()
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
         self._attr_is_on = False
-        self._attr_current_power_w = 0
         self.schedule_update_ha_state()

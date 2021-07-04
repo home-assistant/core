@@ -14,7 +14,7 @@ Adafruit-SHT31==1.0.2
 # Adafruit_BBIO==1.1.1
 
 # homeassistant.components.homekit
-HAP-python==3.5.0
+HAP-python==3.5.1
 
 # homeassistant.components.mastodon
 Mastodon.py==1.5.1
@@ -175,7 +175,7 @@ aioguardian==1.0.4
 aioharmony==0.2.7
 
 # homeassistant.components.homekit_controller
-aiohomekit==0.4.0
+aiohomekit==0.4.1
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -185,7 +185,7 @@ aiohttp_cors==0.7.0
 aiohue==2.5.1
 
 # homeassistant.components.imap
-aioimaplib==0.7.15
+aioimaplib==0.9.0
 
 # homeassistant.components.apache_kafka
 aiokafka==0.6.0
@@ -497,7 +497,7 @@ deluge-client==1.7.1
 denonavr==0.10.8
 
 # homeassistant.components.devolo_home_control
-devolo-home-control-api==0.17.3
+devolo-home-control-api==0.17.4
 
 # homeassistant.components.directv
 directv==0.4.0
@@ -637,7 +637,6 @@ freesms==0.2.0
 
 # homeassistant.components.fritz
 # homeassistant.components.fritzbox_callmonitor
-# homeassistant.components.fritzbox_netmonitor
 fritzconnection==1.4.2
 
 # homeassistant.components.fritz
@@ -1409,7 +1408,7 @@ pyeconet==0.1.14
 pyedimax==0.2.1
 
 # homeassistant.components.eight_sleep
-pyeight==0.1.5
+pyeight==0.1.8
 
 # homeassistant.components.emby
 pyemby==1.7
