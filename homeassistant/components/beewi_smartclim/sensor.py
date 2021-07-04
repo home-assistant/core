@@ -61,36 +61,18 @@ class BeewiSmartclimSensor(SensorEntity):
     def __init__(self, poller, name, mac, device, unit):
         """Initialize the sensor."""
         self._poller = poller
-        self._name = name
+        self._attr_name = name
         self._mac = mac
         self._device = device
-        self._unit = unit
+        self._attr_unit_of_measurement = unit
         self._state = None
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
+        self._attr_device_class = self._device
+        self._attr_unique_id = f"{self._mac}_{self._device}"
 
     @property
     def state(self):
         """Return the state of the sensor. State is returned in Celsius."""
         return self._state
-
-    @property
-    def device_class(self):
-        """Device class of this entity."""
-        return self._device
-
-    @property
-    def unique_id(self):
-        """Return a unique, Home Assistant friendly identifier for this entity."""
-        return f"{self._mac}_{self._device}"
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return self._unit
 
     def update(self):
         """Fetch new state data from the poller."""
