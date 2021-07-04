@@ -41,25 +41,24 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class BlinktLight(LightEntity):
     """Representation of a Blinkt! Light."""
 
+    _attr_supported_features = SUPPORT_BLINKT
+    _attr_should_poll = False
+    _attr_assumed_state = True
+
     def __init__(self, blinkt, name, index):
         """Initialize a Blinkt Light.
 
         Default brightness and white color.
         """
         self._blinkt = blinkt
-        self._name = f"{name}_{index}"
+        self._attr_name = f"{name}_{index}"
         self._index = index
         self._is_on = False
         self._brightness = 255
         self._hs_color = [0, 0]
 
     @property
-    def name(self):
-        """Return the display name of this light."""
-        return self._name
-
-    @property
-    def brightness(self):
+    def brightness(self) -> int:
         """Read back the brightness of the light.
 
         Returns integer in the range of 1-255.
@@ -72,24 +71,9 @@ class BlinktLight(LightEntity):
         return self._hs_color
 
     @property
-    def supported_features(self):
-        """Flag supported features."""
-        return SUPPORT_BLINKT
-
-    @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if light is on."""
         return self._is_on
-
-    @property
-    def should_poll(self):
-        """Return if we should poll this device."""
-        return False
-
-    @property
-    def assumed_state(self) -> bool:
-        """Return True if unable to access real state of the entity."""
-        return True
 
     def turn_on(self, **kwargs):
         """Instruct the light to turn on and set correct brightness & color."""
