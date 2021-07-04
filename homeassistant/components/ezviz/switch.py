@@ -1,11 +1,17 @@
 """Support for Ezviz Switch sensors."""
+from __future__ import annotations
+
 import logging
+from typing import Any
 
 from pyezviz.constants import DeviceSwitchType
 from pyezviz.exceptions import HTTPError, PyEzvizError
 
 from homeassistant.components.switch import DEVICE_CLASS_SWITCH, SwitchEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DATA_COORDINATOR, DOMAIN, MANUFACTURER
@@ -14,9 +20,13 @@ from .coordinator import EzvizDataUpdateCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass, entry, async_add_entities) -> None:
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up Ezviz switch based on a config entry."""
-    coordinator = hass.data[DOMAIN][entry.entry_id][DATA_COORDINATOR]
+    coordinator: EzvizDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
+        DATA_COORDINATOR
+    ]
     switch_entities = []
     supported_switches = {switches.value for switches in DeviceSwitchType}
 
@@ -36,7 +46,9 @@ class EzvizSwitch(CoordinatorEntity, SwitchEntity):
 
     coordinator: EzvizDataUpdateCoordinator
 
-    def __init__(self, coordinator, idx, switch) -> None:
+    def __init__(
+        self, coordinator: EzvizDataUpdateCoordinator, idx: int, switch: str
+    ) -> None:
         """Initialize the switch."""
         super().__init__(coordinator)
         self._idx = idx
@@ -61,7 +73,7 @@ class EzvizSwitch(CoordinatorEntity, SwitchEntity):
         """Return the unique ID of this switch."""
         return f"{self._serial}_{self._sensor_name}"
 
-    async def async_turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Change a device switch on the camera."""
         try:
             update_ok = await self.hass.async_add_executor_job(
@@ -74,7 +86,7 @@ class EzvizSwitch(CoordinatorEntity, SwitchEntity):
         if update_ok:
             await self.coordinator.async_request_refresh()
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Change a device switch on the camera."""
         try:
             update_ok = await self.hass.async_add_executor_job(
