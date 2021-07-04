@@ -35,7 +35,7 @@ class BleBoxLightEntity(BleBoxEntity, LightEntity):
         return {self.color_mode}
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return if light is on."""
         return self._feature.is_on
 
