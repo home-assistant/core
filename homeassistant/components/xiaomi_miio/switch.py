@@ -233,6 +233,8 @@ async def async_setup_coordinated_entry(hass, config_entry, async_add_entities):
     entities = []
     model = config_entry.data[CONF_MODEL]
     unique_id = config_entry.unique_id
+    device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
+    coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
     if KEY_MIGRATE_ENTITY_NAME in hass.data[DOMAIN][config_entry.entry_id]:
         name = hass.data[DOMAIN][config_entry.entry_id][KEY_MIGRATE_ENTITY_NAME]
     else:
@@ -244,16 +246,10 @@ async def async_setup_coordinated_entry(hass, config_entry, async_add_entities):
     device_features = 0
 
     if model in [MODEL_AIRHUMIDIFIER_CA1, MODEL_AIRHUMIDIFIER_CB1]:
-        device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
-        coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
         device_features = FEATURE_FLAGS_AIRHUMIDIFIER_CA_AND_CB
     elif model in [MODEL_AIRHUMIDIFIER_CA4]:
-        device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
-        coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
         device_features = FEATURE_FLAGS_AIRHUMIDIFIER_CA4
     elif model in MODELS_HUMIDIFIER:
-        device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
-        coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
         device_features = FEATURE_FLAGS_AIRHUMIDIFIER
 
     for feature, switch in SWITCH_TYPES.items():
