@@ -12,6 +12,7 @@ from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.motioneye.const import (
     CONF_ADMIN_PASSWORD,
     CONF_ADMIN_USERNAME,
+    CONF_EVENT_DURATION,
     CONF_SURVEILLANCE_PASSWORD,
     CONF_SURVEILLANCE_USERNAME,
     CONF_WEBHOOK_SET,
@@ -466,3 +467,36 @@ async def test_options(hass: HomeAssistant) -> None:
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
         assert result["data"][CONF_WEBHOOK_SET]
         assert result["data"][CONF_WEBHOOK_SET_OVERWRITE]
+
+
+async def test_advanced_options(hass: HomeAssistant) -> None:
+    """Check an options flow with advanced options."""
+
+    config_entry = create_mock_motioneye_config_entry(hass)
+
+    client = create_mock_motioneye_client()
+    with patch(
+        "homeassistant.components.motioneye.MotionEyeClient",
+        return_value=client,
+    ), patch(
+        "homeassistant.components.motioneye.async_setup_entry",
+        return_value=True,
+    ):
+        await hass.async_block_till_done()
+
+        result = await hass.config_entries.options.async_init(
+            config_entry.entry_id, context={"show_advanced_options": True}
+        )
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_WEBHOOK_SET: True,
+                CONF_WEBHOOK_SET_OVERWRITE: True,
+                CONF_EVENT_DURATION: 15,
+            },
+        )
+        await hass.async_block_till_done()
+        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["data"][CONF_WEBHOOK_SET]
+        assert result["data"][CONF_WEBHOOK_SET_OVERWRITE]
+        assert result["data"][CONF_EVENT_DURATION] == 15

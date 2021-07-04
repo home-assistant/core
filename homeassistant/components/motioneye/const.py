@@ -32,11 +32,13 @@ CONF_CLIENT: Final = "client"
 CONF_COORDINATOR: Final = "coordinator"
 CONF_ADMIN_PASSWORD: Final = "admin_password"
 CONF_ADMIN_USERNAME: Final = "admin_username"
+CONF_EVENT_DURATION: Final = "event_duration"
 CONF_SURVEILLANCE_USERNAME: Final = "surveillance_username"
 CONF_SURVEILLANCE_PASSWORD: Final = "surveillance_password"
 CONF_WEBHOOK_SET: Final = "webhook_set"
 CONF_WEBHOOK_SET_OVERWRITE: Final = "webhook_set_overwrite"
 
+DEFAULT_EVENT_DURATION: Final = 30
 DEFAULT_WEBHOOK_SET: Final = True
 DEFAULT_WEBHOOK_SET_OVERWRITE: Final = False
 DEFAULT_SCAN_INTERVAL: Final = timedelta(seconds=30)
@@ -84,6 +86,8 @@ SIGNAL_CAMERA_ADD: Final = f"{DOMAIN}_camera_add_signal." "{}"
 SIGNAL_CAMERA_REMOVE: Final = f"{DOMAIN}_camera_remove_signal." "{}"
 
 TYPE_MOTIONEYE_MJPEG_CAMERA: Final = "motioneye_mjpeg_camera"
+TYPE_MOTIONEYE_MOTION_BINARY_SENSOR: Final = f"{DOMAIN}_motion_binary_sensor"
+TYPE_MOTIONEYE_FILE_STORED_BINARY_SENSOR: Final = f"{DOMAIN}_file_stored_binary_sensor"
 
 WEB_HOOK_SENTINEL_KEY: Final = "src"
 WEB_HOOK_SENTINEL_VALUE: Final = "hass-motioneye"
