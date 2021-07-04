@@ -256,12 +256,10 @@ class AirVisualNodeProSensor(AirVisualEntity, SensorEntity):
         self._attr_icon = icon
         self._attr_unit_of_measurement = unit
         self._kind = kind
-        self._name = name
-
-    @property
-    def device_info(self):
-        """Return device registry information for this entity."""
-        return {
+        self._attr_name = (
+            f"{self.coordinator.data['settings']['node_name']} Node/Pro: {name}"
+        )
+        self._attr_device_info = {
             "identifiers": {(DOMAIN, self.coordinator.data["serial_number"])},
             "name": self.coordinator.data["settings"]["node_name"],
             "manufacturer": "AirVisual",
@@ -271,17 +269,7 @@ class AirVisualNodeProSensor(AirVisualEntity, SensorEntity):
                 f'{self.coordinator.data["status"]["app_version"]}'
             ),
         }
-
-    @property
-    def name(self):
-        """Return the name."""
-        node_name = self.coordinator.data["settings"]["node_name"]
-        return f"{node_name} Node/Pro: {self._name}"
-
-    @property
-    def unique_id(self):
-        """Return a unique, Home Assistant friendly identifier for this entity."""
-        return f"{self.coordinator.data['serial_number']}_{self._kind}"
+        self._attr_unique_id = f"{self.coordinator.data['serial_number']}_{self._kind}"
 
     @callback
     def update_from_latest_data(self):
