@@ -7,7 +7,6 @@ from typing import Any, Final, cast
 
 import aioshelly
 
-from homeassistant.components.shelly import ShellyDeviceWrapper
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import singleton
@@ -16,9 +15,7 @@ from homeassistant.util.dt import utcnow
 
 from .const import (
     BASIC_INPUTS_EVENTS_TYPES,
-    COAP,
     CONF_COAP_PORT,
-    DATA_CONFIG_ENTRY,
     DEFAULT_COAP_PORT,
     DOMAIN,
     SHBTN_INPUTS_EVENTS_TYPES,
@@ -181,22 +178,6 @@ def get_input_triggers(
         triggers.append((trigger_type, subtype))
 
     return triggers
-
-
-def get_device_wrapper(
-    hass: HomeAssistant, device_id: str
-) -> ShellyDeviceWrapper | None:
-    """Get a Shelly device wrapper for the given device id."""
-    if not hass.data.get(DOMAIN):
-        return None
-
-    for config_entry in hass.data[DOMAIN][DATA_CONFIG_ENTRY]:
-        wrapper = hass.data[DOMAIN][DATA_CONFIG_ENTRY][config_entry].get(COAP)
-
-        if wrapper and wrapper.device_id == device_id:
-            return cast(ShellyDeviceWrapper, wrapper)
-
-    return None
 
 
 @singleton.singleton("shelly_coap")

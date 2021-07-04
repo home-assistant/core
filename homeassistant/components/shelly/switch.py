@@ -1,7 +1,7 @@
 """Switch for Shelly."""
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
 from aioshelly import Block
 
@@ -66,9 +66,9 @@ class RelaySwitch(ShellyBlockEntity, SwitchEntity):
     def is_on(self) -> bool:
         """If switch is on."""
         if self.control_result:
-            return self.control_result["ison"]
+            return cast(bool, self.control_result["ison"])
 
-        return self.block.output
+        return bool(self.block.output)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on relay."""

@@ -1,7 +1,7 @@
 """Cover for Shelly."""
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
 from aioshelly import Block
 
@@ -55,33 +55,33 @@ class ShellyCover(ShellyBlockEntity, CoverEntity):
     def is_closed(self) -> bool:
         """If cover is closed."""
         if self.control_result:
-            return self.control_result["current_pos"] == 0
+            return cast(bool, self.control_result["current_pos"] == 0)
 
-        return self.block.rollerPos == 0
+        return cast(bool, self.block.rollerPos == 0)
 
     @property
     def current_cover_position(self) -> int:
         """Position of the cover."""
         if self.control_result:
-            return self.control_result["current_pos"]
+            return cast(int, self.control_result["current_pos"])
 
-        return self.block.rollerPos
+        return cast(int, self.block.rollerPos)
 
     @property
     def is_closing(self) -> bool:
         """Return if the cover is closing."""
         if self.control_result:
-            return self.control_result["state"] == "close"
+            return cast(bool, self.control_result["state"] == "close")
 
-        return self.block.roller == "close"
+        return cast(bool, self.block.roller == "close")
 
     @property
     def is_opening(self) -> bool:
         """Return if the cover is opening."""
         if self.control_result:
-            return self.control_result["state"] == "open"
+            return cast(bool, self.control_result["state"] == "open")
 
-        return self.block.roller == "open"
+        return cast(bool, self.block.roller == "open")
 
     @property
     def supported_features(self) -> int:

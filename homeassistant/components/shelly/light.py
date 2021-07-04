@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import Any, Final
+from typing import Any, Final, cast
 
 from aioshelly import Block
 import async_timeout
@@ -85,11 +85,11 @@ class ShellyLight(ShellyBlockEntity, LightEntity):
         """Initialize light."""
         super().__init__(wrapper, block)
         self.control_result: dict[str, Any] | None = None
-        self.mode_result = None
+        self.mode_result: dict[str, Any] | None = None
         self._supported_color_modes = set()
-        self._supported_features = 0
-        self._min_kelvin = KELVIN_MIN_VALUE_WHITE
-        self._max_kelvin = KELVIN_MAX_VALUE
+        self._supported_features: int = 0
+        self._min_kelvin: int = KELVIN_MIN_VALUE_WHITE
+        self._max_kelvin: int = KELVIN_MAX_VALUE
 
         if hasattr(block, "red") and hasattr(block, "green") and hasattr(block, "blue"):
             self._min_kelvin = KELVIN_MIN_VALUE_COLOR
@@ -119,18 +119,18 @@ class ShellyLight(ShellyBlockEntity, LightEntity):
     def is_on(self) -> bool:
         """If light is on."""
         if self.control_result:
-            return self.control_result["ison"]
+            return cast(bool, self.control_result["ison"])
 
-        return self.block.output
+        return bool(self.block.output)
 
     @property
-    def mode(self) -> str | None:
+    def mode(self) -> str:
         """Return the color mode of the light."""
         if self.mode_result:
-            return self.mode_result["mode"]
+            return cast(str, self.mode_result["mode"])
 
         if hasattr(self.block, "mode"):
-            return self.block.mode
+            return cast(str, self.block.mode)
 
         if (
             hasattr(self.block, "red")

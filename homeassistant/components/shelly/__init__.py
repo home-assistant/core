@@ -376,3 +376,19 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN][DATA_CONFIG_ENTRY].pop(entry.entry_id)
 
     return unload_ok
+
+
+def get_device_wrapper(
+    hass: HomeAssistant, device_id: str
+) -> ShellyDeviceWrapper | None:
+    """Get a Shelly device wrapper for the given device id."""
+    if not hass.data.get(DOMAIN):
+        return None
+
+    for config_entry in hass.data[DOMAIN][DATA_CONFIG_ENTRY]:
+        wrapper = hass.data[DOMAIN][DATA_CONFIG_ENTRY][config_entry].get(COAP)
+
+        if wrapper and wrapper.device_id == device_id:
+            return cast(ShellyDeviceWrapper, wrapper)
+
+    return None

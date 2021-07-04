@@ -7,6 +7,7 @@ from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.typing import EventType
 
+from . import get_device_wrapper
 from .const import (
     ATTR_CHANNEL,
     ATTR_CLICK_TYPE,
@@ -14,7 +15,7 @@ from .const import (
     DOMAIN,
     EVENT_SHELLY_CLICK,
 )
-from .utils import get_device_name, get_device_wrapper
+from .utils import get_device_name
 
 
 @callback

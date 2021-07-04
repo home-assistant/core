@@ -67,6 +67,7 @@ homeassistant.components.remote.*
 homeassistant.components.scene.*
 homeassistant.components.select.*
 homeassistant.components.sensor.*
+homeassistant.components.shelly.*
 homeassistant.components.slack.*
 homeassistant.components.sonos.media_player
 homeassistant.components.ssdp.*

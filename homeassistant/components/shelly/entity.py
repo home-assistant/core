@@ -244,7 +244,7 @@ class ShellyBlockEntity(entity.Entity):
         """Handle device update."""
         self.async_write_ha_state()
 
-    async def set_state(self, **kwargs: Any) -> dict[str, Any] | None:
+    async def set_state(self, **kwargs: Any) -> Any:
         """Set block state (HTTP request)."""
         _LOGGER.debug("Setting state for entity %s, state: %s", self.name, kwargs)
         try:
@@ -308,7 +308,7 @@ class ShellyBlockAttributeEntity(ShellyBlockEntity, entity.Entity):
         if value is None:
             return None
 
-        return self.description.value(value)
+        return cast(StateType, self.description.value(value))
 
     @property
     def device_class(self) -> str | None:

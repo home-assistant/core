@@ -22,6 +22,7 @@ from homeassistant.const import (
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 
+from . import get_device_wrapper
 from .const import (
     ATTR_CHANNEL,
     ATTR_CLICK_TYPE,
@@ -33,7 +34,7 @@ from .const import (
     SHBTN_MODELS,
     SUPPORTED_INPUTS_EVENTS_TYPES,
 )
-from .utils import get_device_wrapper, get_input_triggers
+from .utils import get_input_triggers
 
 TRIGGER_SCHEMA: Final = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {
