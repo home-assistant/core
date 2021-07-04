@@ -44,9 +44,7 @@ class AgentBaseStation(AlarmControlPanelEntity):
         """Initialize the alarm control panel."""
         self._state = None
         self._client = client
-        name = CONST_ALARM_CONTROL_PANEL_NAME
-        name = f"{client.name} {name}"
-        self._attr_name = name
+        self._attr_name = f"{client.name} {CONST_ALARM_CONTROL_PANEL_NAME}"
         self._attr_unique_id = f"{client.unique}_CP"
 
     @property
