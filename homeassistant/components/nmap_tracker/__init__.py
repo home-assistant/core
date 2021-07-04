@@ -166,8 +166,10 @@ class NmapDeviceScanner:
         self._scan_interval = timedelta(
             seconds=config.get(CONF_SCAN_INTERVAL, TRACKER_SCAN_INTERVAL)
         )
-        self._hosts = cv.ensure_list_csv(config[CONF_HOSTS])
-        self._exclude = cv.ensure_list_csv(config[CONF_EXCLUDE])
+        hosts_list = cv.ensure_list_csv(config[CONF_HOSTS])
+        self._hosts = [host for host in hosts_list if host != ""]
+        excludes_list = cv.ensure_list_csv(config[CONF_EXCLUDE])
+        self._exclude = [exclude for exclude in excludes_list if exclude != ""]
         self._options = config[CONF_OPTIONS]
         self.home_interval = timedelta(
             minutes=cv.positive_int(config[CONF_HOME_INTERVAL])
