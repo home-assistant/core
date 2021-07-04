@@ -4,7 +4,10 @@ import logging
 from pyezviz.constants import BinarySensorType
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DATA_COORDINATOR, DOMAIN, MANUFACTURER
@@ -13,9 +16,13 @@ from .coordinator import EzvizDataUpdateCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass, entry, async_add_entities) -> None:
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up Ezviz sensors based on a config entry."""
-    coordinator = hass.data[DOMAIN][entry.entry_id][DATA_COORDINATOR]
+    coordinator: EzvizDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
+        DATA_COORDINATOR
+    ]
     sensors = []
 
     for idx, camera in enumerate(coordinator.data):
@@ -38,7 +45,13 @@ class EzvizBinarySensor(CoordinatorEntity, BinarySensorEntity):
 
     coordinator: EzvizDataUpdateCoordinator
 
-    def __init__(self, coordinator, idx, name, sensor_type_name) -> None:
+    def __init__(
+        self,
+        coordinator: EzvizDataUpdateCoordinator,
+        idx: int,
+        name: str,
+        sensor_type_name: str,
+    ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
         self._idx = idx
