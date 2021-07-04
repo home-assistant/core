@@ -24,14 +24,9 @@ DEFAULT_UPDATE_INTERVAL = timedelta(minutes=2)
 CONF_SHOW_INACTIVE = "show_inactive"
 
 
-async def async_setup(hass, config):
-    """Set up the Tile component."""
-    hass.data[DOMAIN] = {DATA_COORDINATOR: {}, DATA_TILE: {}}
-    return True
-
-
 async def async_setup_entry(hass, entry):
     """Set up Tile as config entry."""
+    hass.data.setdefault(DOMAIN, {DATA_COORDINATOR: {}, DATA_TILE: {}})
     hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id] = {}
     hass.data[DOMAIN][DATA_TILE][entry.entry_id] = {}
 
