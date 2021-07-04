@@ -61,7 +61,6 @@ class BrotherPrinterSensor(CoordinatorEntity, SensorEntity):
         """Initialize."""
         super().__init__(coordinator)
         description = SENSOR_TYPES[kind]
-        self._attrs: dict[str, Any] = {}
         self._attr_device_class = description.get(ATTR_DEVICE_CLASS)
         self._attr_device_info = device_info
         self._attr_entity_registry_enabled_default = description[ATTR_ENABLED]
@@ -71,6 +70,15 @@ class BrotherPrinterSensor(CoordinatorEntity, SensorEntity):
         self._attr_unique_id = f"{coordinator.data.serial.lower()}_{kind}"
         self._attr_unit_of_measurement = description[ATTR_UNIT]
         self.kind = kind
+        remaining_pages, drum_counter = ATTRS_MAP.get(self.kind, (None, None))
+        self._attr_extra_state_attributes = {}
+        if remaining_pages and drum_counter:
+            self._attr_extra_state_attributes[ATTR_REMAINING_PAGES] = getattr(
+                self.coordinator.data, remaining_pages
+            )
+            self._attr_extra_state_attributes[ATTR_COUNTER] = getattr(
+                self.coordinator.data, drum_counter
+            )
 
     @property
     def state(self) -> Any:
@@ -78,14 +86,3 @@ class BrotherPrinterSensor(CoordinatorEntity, SensorEntity):
         if self.kind == ATTR_UPTIME:
             return getattr(self.coordinator.data, self.kind).isoformat()
         return getattr(self.coordinator.data, self.kind)
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return the state attributes."""
-        remaining_pages, drum_counter = ATTRS_MAP.get(self.kind, (None, None))
-        if remaining_pages and drum_counter:
-            self._attrs[ATTR_REMAINING_PAGES] = getattr(
-                self.coordinator.data, remaining_pages
-            )
-            self._attrs[ATTR_COUNTER] = getattr(self.coordinator.data, drum_counter)
-        return self._attrs
