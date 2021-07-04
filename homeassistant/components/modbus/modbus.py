@@ -224,7 +224,7 @@ class ModbusHub:
             # network configuration
             self._pb_params["host"] = client_config[CONF_HOST]
             if self._config_type == CONF_RTUOVERTCP:
-                self._pb_params["host"] = "ModbusRtuFramer"
+                self._pb_params["framer"] = "ModbusRtuFramer"
 
         Defaults.Timeout = client_config[CONF_TIMEOUT]
 
