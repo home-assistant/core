@@ -131,6 +131,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class BlackbirdZone(MediaPlayerEntity):
     """Representation of a Blackbird matrix zone."""
 
+    _attr_supported_features = SUPPORT_BLACKBIRD
+
     def __init__(self, blackbird, sources, zone_id, zone_name):
         """Initialize new zone."""
         self._blackbird = blackbird
@@ -143,7 +145,7 @@ class BlackbirdZone(MediaPlayerEntity):
             self._source_name_id.keys(), key=lambda v: self._source_name_id[v]
         )
         self._zone_id = zone_id
-        self._name = zone_name
+        self._attr_name = zone_name
         self._state = None
         self._source = None
 
@@ -160,19 +162,9 @@ class BlackbirdZone(MediaPlayerEntity):
             self._source = None
 
     @property
-    def name(self):
-        """Return the name of the zone."""
-        return self._name
-
-    @property
     def state(self):
         """Return the state of the zone."""
         return self._state
-
-    @property
-    def supported_features(self):
-        """Return flag of media commands that are supported."""
-        return SUPPORT_BLACKBIRD
 
     @property
     def media_title(self):
