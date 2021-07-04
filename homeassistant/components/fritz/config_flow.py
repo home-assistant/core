@@ -71,9 +71,6 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
             password=self._password,
         )
 
-        if not self.fritz_tools:
-            return None
-
         try:
             await self.fritz_tools.async_setup()
         except FritzSecurityError:
