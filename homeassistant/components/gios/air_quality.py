@@ -80,7 +80,7 @@ class GiosAirQuality(CoordinatorEntity, AirQualityEntity):
     @property
     def air_quality_index(self) -> str | None:
         """Return the air quality index."""
-        return cast(Optional[str], self.coordinator.data.get(API_AQI, {}).get("value"))
+        return cast(Optional[str], self.coordinator.data.get(API_AQI).get("value"))
 
     @property
     def particulate_matter_2_5(self) -> float | None:
@@ -141,7 +141,7 @@ class GiosAirQuality(CoordinatorEntity, AirQualityEntity):
             if sensor in self.coordinator.data:
                 self._attrs[f"{SENSOR_MAP[sensor]}_index"] = self.coordinator.data[
                     sensor
-                ]["index"]
+                ].get("index")
         self._attrs[ATTR_STATION] = self.coordinator.gios.station_name
         return self._attrs
 
