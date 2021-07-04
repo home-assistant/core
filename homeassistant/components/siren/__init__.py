@@ -38,7 +38,7 @@ SCAN_INTERVAL = timedelta(seconds=60)
 
 TURN_ON_SCHEMA = {
     vol.Optional(ATTR_TONE): cv.string,
-    vol.Optional(ATTR_DURATION): cv.positive_float,
+    vol.Optional(ATTR_DURATION): cv.positive_int,
     vol.Optional(ATTR_VOLUME_LEVEL): cv.small_float,
 }
 
