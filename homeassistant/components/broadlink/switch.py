@@ -135,6 +135,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class BroadlinkSwitch(BroadlinkEntity, SwitchEntity, RestoreEntity, ABC):
     """Representation of a Broadlink switch."""
 
+    _attr_assumed_state = True
+    _attr_device_class = DEVICE_CLASS_SWITCH
+
     def __init__(self, device, command_on, command_off):
         """Initialize the switch."""
         super().__init__(device)
@@ -143,8 +146,6 @@ class BroadlinkSwitch(BroadlinkEntity, SwitchEntity, RestoreEntity, ABC):
         self._coordinator = device.update_manager.coordinator
         self._state = None
 
-        self._attr_assumed_state = True
-        self._attr_device_class = DEVICE_CLASS_SWITCH
         self._attr_name = f"{self._device.name} Switch"
         self._attr_unique_id = self._device.unique_id
 
@@ -229,13 +230,13 @@ class BroadlinkSP1Switch(BroadlinkSwitch):
 class BroadlinkSP2Switch(BroadlinkSP1Switch):
     """Representation of a Broadlink SP2 switch."""
 
+    _attr_assumed_state = False
+
     def __init__(self, device, *args, **kwargs):
         """Initialize the switch."""
         super().__init__(device, *args, **kwargs)
         self._state = self._coordinator.data["pwr"]
         self._load_power = self._coordinator.data.get("power")
-
-        self._attr_assumed_state = False
 
     @property
     def current_power_w(self):
@@ -286,6 +287,8 @@ class BroadlinkMP1Slot(BroadlinkSwitch):
 class BroadlinkBG1Slot(BroadlinkSwitch):
     """Representation of a Broadlink BG1 slot."""
 
+    _attr_assumed_state = False
+
     def __init__(self, device, slot):
         """Initialize the switch."""
         super().__init__(device, 1, 0)
@@ -295,7 +298,6 @@ class BroadlinkBG1Slot(BroadlinkSwitch):
         self._attr_name = f"{self._device.name} S{self._slot}"
         self._attr_device_class = DEVICE_CLASS_OUTLET
         self._attr_unique_id = f"{self._device.unique_id}-s{self._slot}"
-        self._attr_assumed_state = False
 
     @callback
     def update_data(self):
