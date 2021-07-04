@@ -50,7 +50,7 @@ class YetiSensor(YetiEntity):
         self._attr_unique_id = f"{self._server_unique_id}/{sensor_name}"
         self._attr_unit_of_measurement = sensor.get(ATTR_UNIT_OF_MEASUREMENT)
         self._attr_entity_registry_enabled_default = sensor.get(ATTR_DEFAULT_ENABLED)
-        self._device_class = sensor.get(ATTR_DEVICE_CLASS)
+        self._attr_device_class = sensor.get(ATTR_DEVICE_CLASS)
         self._attr_last_reset = sensor.get(ATTR_LAST_RESET)
         self._attr_state_class = sensor.get(ATTR_STATE_CLASS)
 

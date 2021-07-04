@@ -12,7 +12,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the Goal Zero Yeti switch."""
     name = entry.data[CONF_NAME]
     goalzero_data = hass.data[DOMAIN][entry.entry_id]
-    switches = [
+    async_add_entities(
         YetiSwitch(
             goalzero_data[DATA_KEY_API],
             goalzero_data[DATA_KEY_COORDINATOR],
@@ -21,8 +21,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
             entry.entry_id,
         )
         for switch_name in SWITCH_DICT
-    ]
-    async_add_entities(switches)
+    )
 
 
 class YetiSwitch(YetiEntity, SwitchEntity):
