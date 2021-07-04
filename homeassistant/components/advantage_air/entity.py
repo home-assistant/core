@@ -14,6 +14,13 @@ class AdvantageAirEntity(CoordinatorEntity):
         self.async_change = instance["async_change"]
         self.ac_key = ac_key
         self.zone_key = zone_key
+        self._attr_device_info = {
+            "identifiers": {(DOMAIN, self.coordinator.data["system"]["rid"])},
+            "name": self.coordinator.data["system"]["name"],
+            "manufacturer": "Advantage Air",
+            "model": self.coordinator.data["system"]["sysType"],
+            "sw_version": self.coordinator.data["system"]["myAppRev"],
+        }
 
     @property
     def _ac(self):
@@ -22,14 +29,3 @@ class AdvantageAirEntity(CoordinatorEntity):
     @property
     def _zone(self):
         return self.coordinator.data["aircons"][self.ac_key]["zones"][self.zone_key]
-
-    @property
-    def device_info(self):
-        """Return parent device information."""
-        return {
-            "identifiers": {(DOMAIN, self.coordinator.data["system"]["rid"])},
-            "name": self.coordinator.data["system"]["name"],
-            "manufacturer": "Advantage Air",
-            "model": self.coordinator.data["system"]["sysType"],
-            "sw_version": self.coordinator.data["system"]["myAppRev"],
-        }

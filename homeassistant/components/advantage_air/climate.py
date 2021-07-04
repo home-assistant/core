@@ -86,16 +86,8 @@ class AdvantageAirClimateEntity(AdvantageAirEntity, ClimateEntity):
 
     _attr_temperature_unit = TEMP_CELSIUS
     _attr_target_temperature_step = PRECISION_WHOLE
-
-    @property
-    def max_temp(self):
-        """Return the maximum supported temperature."""
-        return 32
-
-    @property
-    def min_temp(self):
-        """Return the minimum supported temperature."""
-        return 16
+    _attr_max_temp = 32
+    _attr_min_temp = 16
 
 
 class AdvantageAirAC(AdvantageAirClimateEntity):
@@ -109,25 +101,18 @@ class AdvantageAirAC(AdvantageAirClimateEntity):
         self._attr_name = self._ac["name"]
         self._attr_unique_id = f'{self.coordinator.data["system"]["rid"]}-{self.ac_key}'
         self._attr_hvac_modes = AC_HVAC_MODES
-        if self._ac.get("myAutoModeEnabled"):
-            self._attr_hvac_modes = AC_HVAC_MODES + [HVAC_MODE_AUTO]
-
-    @property
-    def target_temperature(self):
-        """Return the current target temperature."""
-        return self._ac["setTemp"]
-
-    @property
-    def hvac_mode(self):
-        """Return the current HVAC modes."""
-        if self._ac["state"] == ADVANTAGE_AIR_STATE_ON:
-            return ADVANTAGE_AIR_HVAC_MODES.get(self._ac["mode"])
-        return HVAC_MODE_OFF
-
-    @property
-    def fan_mode(self):
-        """Return the current fan modes."""
-        return ADVANTAGE_AIR_FAN_MODES.get(self._ac["fan"])
+        self._attr_hvac_modes = (
+            AC_HVAC_MODES + [HVAC_MODE_AUTO]
+            if self._ac.get("myAutoModeEnabled")
+            else None
+        )
+        self._attr_target_temperature = self._ac["setTemp"]
+        self._attr_hvac_mode = (
+            ADVANTAGE_AIR_HVAC_MODES.get(self._ac["mode"])
+            if self._ac["state"] == ADVANTAGE_AIR_STATE_ON
+            else HVAC_MODE_OFF
+        )
+        self._attr_fan_mode = ADVANTAGE_AIR_FAN_MODES.get(self._ac["fan"])
 
     async def async_set_hvac_mode(self, hvac_mode):
         """Set the HVAC Mode and State."""
@@ -171,23 +156,13 @@ class AdvantageAirZone(AdvantageAirClimateEntity):
         self._attr_unique_id = (
             f'{self.coordinator.data["system"]["rid"]}-{self.ac_key}-{self.zone_key}'
         )
-
-    @property
-    def current_temperature(self):
-        """Return the current temperature."""
-        return self._zone["measuredTemp"]
-
-    @property
-    def target_temperature(self):
-        """Return the target temperature."""
-        return self._zone["setTemp"]
-
-    @property
-    def hvac_mode(self):
-        """Return the current HVAC modes."""
-        if self._zone["state"] == ADVANTAGE_AIR_STATE_OPEN:
-            return HVAC_MODE_FAN_ONLY
-        return HVAC_MODE_OFF
+        self._attr_current_temperature = self._zone["measuredTemp"]
+        self._attr_target_temperature = self._zone["setTemp"]
+        self._attr_hvac_mode = (
+            HVAC_MODE_FAN_ONLY
+            if self._zone["state"] == ADVANTAGE_AIR_STATE_OPEN
+            else HVAC_MODE_OFF
+        )
 
     async def async_set_hvac_mode(self, hvac_mode):
         """Set the HVAC Mode and State."""

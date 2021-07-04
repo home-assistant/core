@@ -33,11 +33,7 @@ class AdvantageAirFreshAir(AdvantageAirEntity, ToggleEntity):
         self._attr_unique_id = (
             f'{self.coordinator.data["system"]["rid"]}-{self.ac_key}-freshair'
         )
-
-    @property
-    def is_on(self):
-        """Return the fresh air status."""
-        return self._ac["freshAirStatus"] == ADVANTAGE_AIR_STATE_ON
+        self._attr_is_on = self._ac["freshAirStatus"] == ADVANTAGE_AIR_STATE_ON
 
     async def async_turn_on(self, **kwargs):
         """Turn fresh air on."""

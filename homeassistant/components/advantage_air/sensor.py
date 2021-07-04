@@ -53,18 +53,12 @@ class AdvantageAirTimeTo(AdvantageAirEntity, SensorEntity):
         self._time_key = f"countDownTo{self.action}"
         self._attr_name = f'{self._ac["name"]} Time To {self.action}'
         self._attr_unique_id = f'{self.coordinator.data["system"]["rid"]}-{self.ac_key}-timeto{self.action}'
-
-    @property
-    def state(self):
-        """Return the current value."""
-        return self._ac[self._time_key]
-
-    @property
-    def icon(self):
-        """Return a representative icon of the timer."""
-        if self._ac[self._time_key] > 0:
-            return "mdi:timer-outline"
-        return "mdi:timer-off-outline"
+        self._attr_state = self._ac[self._time_key]
+        self._attr_icon = (
+            "mdi:timer-outline"
+            if self._ac[self._time_key] > 0
+            else "mdi:timer-off-outline"
+        )
 
     async def set_time_to(self, **kwargs):
         """Set the timer value."""
@@ -81,20 +75,16 @@ class AdvantageAirZoneVent(AdvantageAirEntity, SensorEntity):
         """Initialize an Advantage Air Zone Vent Sensor."""
         self._attr_name = f'{self._zone["name"]} Vent'
         self._attr_unique_id = f'{self.coordinator.data["system"]["rid"]}-{self.ac_key}-{self.zone_key}-vent'
-
-    @property
-    def state(self):
-        """Return the current value of the air vent."""
-        if self._zone["state"] == ADVANTAGE_AIR_STATE_OPEN:
-            return self._zone["value"]
-        return 0
-
-    @property
-    def icon(self):
-        """Return a representative icon."""
-        if self._zone["state"] == ADVANTAGE_AIR_STATE_OPEN:
-            return "mdi:fan"
-        return "mdi:fan-off"
+        self._attr_state = (
+            self._zone["value"]
+            if self._zone["state"] == ADVANTAGE_AIR_STATE_OPEN
+            else 0
+        )
+        self._attr_icon = (
+            "mdi:fan"
+            if self._zone["state"] == ADVANTAGE_AIR_STATE_OPEN
+            else "mdi:fan-off"
+        )
 
 
 class AdvantageAirZoneSignal(AdvantageAirEntity, SensorEntity):
@@ -104,19 +94,18 @@ class AdvantageAirZoneSignal(AdvantageAirEntity, SensorEntity):
 
     def __init__(self):
         """Initialize an Advantage Air Zone wireless signal sensor."""
+        super().__init__()
         self._attr_name = f'{self._zone["name"]} Signal'
         self._attr_unique_id = f'{self.coordinator.data["system"]["rid"]}-{self.ac_key}-{self.zone_key}-signal'
-        self._attr_icon = "mdi:wifi-strength-outline"
-        if self._zone["rssi"] >= 80:
-            self._attr_icon = "mdi:wifi-strength-4"
-        elif self._zone["rssi"] >= 60:
-            self._attr_icon = "mdi:wifi-strength-3"
-        elif self._zone["rssi"] >= 40:
-            self._attr_icon = "mdi:wifi-strength-2"
-        elif self._zone["rssi"] >= 20:
-            self._attr_icon = "mdi:wifi-strength-1"
-
-    @property
-    def state(self):
-        """Return the current value of the wireless signal."""
-        return self._zone["rssi"]
+        self._attr_icon = (
+            "mdi:wifi-strength-4"
+            if self._zone["rssi"] >= 80
+            else "mdi:wifi-strength-3"
+            if self._zone["rssi"] >= 60
+            else "mdi:wifi-strength-2"
+            if self._zone["rssi"] >= 40
+            else "mdi:wifi-strength-1"
+            if self._zone["rssi"] >= 20
+            else "mdi:wifi-strength-outline"
+        )
+        self._attr_state = self._zone["rssi"]
