@@ -1,15 +1,12 @@
 """The Jellyfin integration."""
 import logging
 
-from homeassistant.components.jellyfin.config_flow import (
-    CannotConnect,
-    InvalidAuth,
-    validate_input,
-)
-from homeassistant.components.jellyfin.const import DATA_CLIENT, DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+
+from .config_flow import CannotConnect, InvalidAuth, validate_input
+from .const import DATA_CLIENT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 

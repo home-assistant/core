@@ -65,7 +65,7 @@ class JellyfinSource(MediaSource):
 
     name: str = "Jellyfin"
 
-    def __init__(self, hass: HomeAssistant, client: JellyfinClient):
+    def __init__(self, hass: HomeAssistant, client: JellyfinClient) -> None:
         """Initialize the Jellyfin media source."""
         super().__init__(DOMAIN)
 
