@@ -62,10 +62,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class CertExpiryEntity(CoordinatorEntity):
     """Defines a base Cert Expiry entity."""
 
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return "mdi:certificate"
+    _attr_icon = "mdi:certificate"
 
     @property
     def extra_state_attributes(self):
@@ -79,10 +76,7 @@ class CertExpiryEntity(CoordinatorEntity):
 class SSLCertificateTimestamp(CertExpiryEntity, SensorEntity):
     """Implementation of the Cert Expiry timestamp sensor."""
 
-    @property
-    def device_class(self):
-        """Return the device class of the sensor."""
-        return DEVICE_CLASS_TIMESTAMP
+    _attr_device_class = DEVICE_CLASS_TIMESTAMP
 
     @property
     def name(self):
