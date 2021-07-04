@@ -35,7 +35,6 @@ omit =
     homeassistant/components/airnow/__init__.py
     homeassistant/components/airnow/sensor.py
     homeassistant/components/airvisual/__init__.py
-    homeassistant/components/airvisual/air_quality.py
     homeassistant/components/airvisual/sensor.py
     homeassistant/components/aladdin_connect/*
     homeassistant/components/alarmdecoder/__init__.py
