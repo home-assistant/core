@@ -1,4 +1,5 @@
 """Support for Brunt Blind Engine covers."""
+from __future__ import annotations
 
 import logging
 
@@ -69,27 +70,29 @@ class BruntDevice(CoverEntity):
     Contains the common logic for all Brunt devices.
     """
 
+    _attr_device_class = DEVICE_CLASS_WINDOW
+    _attr_supported_features = COVER_FEATURES
+
     def __init__(self, bapi, name, thing_uri):
         """Init the Brunt device."""
         self._bapi = bapi
-        self._name = name
+        self._attr_name = name
         self._thing_uri = thing_uri
 
         self._state = {}
         self._available = None
+        self._attr_extra_state_attributes = {
+            ATTR_ATTRIBUTION: ATTRIBUTION,
+            ATTR_REQUEST_POSITION: self.request_cover_position,
+        }
 
     @property
-    def name(self):
-        """Return the name of the device as reported by tellcore."""
-        return self._name
-
-    @property
-    def available(self):
+    def available(self) -> bool:
         """Could the device be accessed during the last update call."""
         return self._available
 
     @property
-    def current_cover_position(self):
+    def current_cover_position(self) -> int | None:
         """
         Return current position of cover.
 
@@ -99,7 +102,7 @@ class BruntDevice(CoverEntity):
         return int(pos) if pos else None
 
     @property
-    def request_cover_position(self):
+    def request_cover_position(self) -> int | None:
         """
         Return request position of cover.
 
@@ -111,7 +114,7 @@ class BruntDevice(CoverEntity):
         return int(pos) if pos else None
 
     @property
-    def move_state(self):
+    def move_state(self) -> int | None:
         """
         Return current moving state of cover.
 
@@ -121,35 +124,17 @@ class BruntDevice(CoverEntity):
         return int(mov) if mov else None
 
     @property
-    def is_opening(self):
+    def is_opening(self) -> bool:
         """Return if the cover is opening or not."""
         return self.move_state == 1
 
     @property
-    def is_closing(self):
+    def is_closing(self) -> bool:
         """Return if the cover is closing or not."""
         return self.move_state == 2
 
     @property
-    def extra_state_attributes(self):
-        """Return the detailed device state attributes."""
-        return {
-            ATTR_ATTRIBUTION: ATTRIBUTION,
-            ATTR_REQUEST_POSITION: self.request_cover_position,
-        }
-
-    @property
-    def device_class(self):
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        return DEVICE_CLASS_WINDOW
-
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        return COVER_FEATURES
-
-    @property
-    def is_closed(self):
+    def is_closed(self) -> bool:
         """Return true if cover is closed, else False."""
         return self.current_cover_position == CLOSED_POSITION
 
