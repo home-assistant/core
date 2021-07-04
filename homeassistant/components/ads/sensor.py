@@ -5,6 +5,7 @@ from homeassistant.components import ads
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_NAME, CONF_UNIT_OF_MEASUREMENT
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import StateType
 
 from . import CONF_ADS_FACTOR, CONF_ADS_TYPE, CONF_ADS_VAR, STATE_KEY_STATE, AdsEntity
 
@@ -63,6 +64,6 @@ class AdsSensor(AdsEntity, SensorEntity):
         )
 
     @property
-    def state(self) -> str:
+    def state(self) -> StateType:
         """Return the state of the device."""
         return self._state_dict[STATE_KEY_STATE]

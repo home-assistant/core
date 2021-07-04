@@ -109,7 +109,7 @@ class AdsCover(AdsEntity, CoverEntity):
         self._attr_supported_features = SUPPORT_OPEN | SUPPORT_CLOSE
         if self._ads_var_stop is not None:
             self._attr_supported_features |= SUPPORT_STOP
-        if self._ads_var_pos_set is not None:
+        if ads_var_pos_set is not None:
             self._attr_supported_features |= SUPPORT_SET_POSITION
 
     async def async_added_to_hass(self):
