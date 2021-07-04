@@ -1,5 +1,6 @@
 """Support for Ezviz alarm."""
 import logging
+from typing import Any
 
 from pyezviz.constants import DefenseModeType
 from pyezviz.exceptions import HTTPError
@@ -9,12 +10,15 @@ from homeassistant.components.alarm_control_panel.const import (
     SUPPORT_ALARM_ARM_AWAY,
     SUPPORT_ALARM_ARM_NIGHT,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_NIGHT,
     STATE_ALARM_DISARMED,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -31,9 +35,13 @@ from .coordinator import EzvizDataUpdateCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass, entry, async_add_entities) -> None:
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up Ezviz alarm control panel."""
-    coordinator = hass.data[DOMAIN][entry.entry_id][DATA_COORDINATOR]
+    coordinator: EzvizDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
+        DATA_COORDINATOR
+    ]
 
     async_add_entities([EzvizAlarm(coordinator)])
 
@@ -43,7 +51,7 @@ class EzvizAlarm(CoordinatorEntity, AlarmControlPanelEntity, RestoreEntity):
 
     coordinator: EzvizDataUpdateCoordinator
 
-    def __init__(self, coordinator) -> None:
+    def __init__(self, coordinator: EzvizDataUpdateCoordinator) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
         self._location_id = "Home"
@@ -94,7 +102,7 @@ class EzvizAlarm(CoordinatorEntity, AlarmControlPanelEntity, RestoreEntity):
         """Return the list of supported features."""
         return SUPPORT_ALARM_ARM_AWAY | SUPPORT_ALARM_ARM_NIGHT
 
-    def alarm_disarm(self, code=None) -> None:
+    def alarm_disarm(self, code: Any = None) -> None:
         """Send disarm command."""
         try:
             service_switch = getattr(DefenseModeType, ATTR_HOME)
@@ -104,7 +112,7 @@ class EzvizAlarm(CoordinatorEntity, AlarmControlPanelEntity, RestoreEntity):
         except HTTPError as err:
             raise HTTPError("Cannot disarm alarm") from err
 
-    def alarm_arm_away(self, code=None) -> None:
+    def alarm_arm_away(self, code: Any = None) -> None:
         """Send arm away command."""
         try:
             service_switch = getattr(DefenseModeType, ATTR_AWAY)
@@ -114,7 +122,7 @@ class EzvizAlarm(CoordinatorEntity, AlarmControlPanelEntity, RestoreEntity):
         except HTTPError as err:
             raise HTTPError("Cannot arm alarm") from err
 
-    def alarm_arm_night(self, code=None) -> None:
+    def alarm_arm_night(self, code: Any = None) -> None:
         """Send arm night command."""
         try:
             service_switch = getattr(DefenseModeType, ATTR_SLEEP)
