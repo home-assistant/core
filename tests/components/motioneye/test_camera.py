@@ -1,7 +1,7 @@
 """Test the motionEye camera."""
 import copy
 import logging
-from typing import Any, cast
+from typing import Any
 from unittest.mock import AsyncMock, Mock
 
 from aiohttp import web
@@ -269,9 +269,7 @@ async def test_get_stream_from_camera(aiohttp_server: Any, hass: HomeAssistant) 
     # It won't actually get a stream from the dummy handler, so just catch
     # the expected exception, then verify the right handler was called.
     with pytest.raises(HTTPBadGateway):
-        await async_get_mjpeg_stream(
-            hass, cast(web.Request, None), TEST_CAMERA_ENTITY_ID
-        )
+        await async_get_mjpeg_stream(hass, None, TEST_CAMERA_ENTITY_ID)
     assert stream_handler.called
 
 
@@ -298,8 +296,7 @@ async def test_state_attributes(hass: HomeAssistant) -> None:
 
 async def test_device_info(hass: HomeAssistant) -> None:
     """Verify device information includes expected details."""
-    client = create_mock_motioneye_client()
-    entry = await setup_mock_motioneye_config_entry(hass, client=client)
+    entry = await setup_mock_motioneye_config_entry(hass)
 
     device_identifier = get_motioneye_device_identifier(entry.entry_id, TEST_CAMERA_ID)
     device_registry = dr.async_get(hass)
