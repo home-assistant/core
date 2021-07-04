@@ -130,7 +130,6 @@ async def async_create_miio_device_and_coordinator(
     coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
-        # Name of the data. For logging purposes.
         name=name,
         update_method=async_update_data,
         # Polling interval. Will only be polled if there are subscribers.
