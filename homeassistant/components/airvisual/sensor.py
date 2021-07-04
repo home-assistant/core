@@ -1,4 +1,6 @@
 """Support for AirVisual air quality sensors."""
+from typing import Any
+
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     ATTR_LATITUDE,
@@ -121,7 +123,7 @@ class AirVisualGeographySensor(AirVisualEntity, SensorEntity):
         """Initialize."""
         super().__init__(coordinator)
 
-        self._attrs.update(
+        self._attr_extra_state_attributes.update(
             {
                 ATTR_CITY: config_entry.data.get(CONF_CITY),
                 ATTR_STATE: config_entry.data.get(CONF_STATE),
@@ -175,7 +177,7 @@ class AirVisualGeographySensor(AirVisualEntity, SensorEntity):
         elif self._kind == SENSOR_KIND_POLLUTANT:
             symbol = data[f"main{self._locale}"]
             self._state = POLLUTANT_LABELS[symbol]
-            self._attrs.update(
+            self._attr_extra_state_attributes.update(
                 {
                     ATTR_POLLUTANT_SYMBOL: symbol,
                     ATTR_POLLUTANT_UNIT: POLLUTANT_UNITS[symbol],
@@ -199,15 +201,15 @@ class AirVisualGeographySensor(AirVisualEntity, SensorEntity):
         )
 
         if self._config_entry.options[CONF_SHOW_ON_MAP]:
-            self._attrs[ATTR_LATITUDE] = latitude
-            self._attrs[ATTR_LONGITUDE] = longitude
-            self._attrs.pop("lati", None)
-            self._attrs.pop("long", None)
+            self._attr_extra_state_attributes[ATTR_LATITUDE] = latitude
+            self._attr_extra_state_attributes[ATTR_LONGITUDE] = longitude
+            self._attr_extra_state_attributes.pop("lati", None)
+            self._attr_extra_state_attributes.pop("long", None)
         else:
-            self._attrs["lati"] = latitude
-            self._attrs["long"] = longitude
-            self._attrs.pop(ATTR_LATITUDE, None)
-            self._attrs.pop(ATTR_LONGITUDE, None)
+            self._attr_extra_state_attributes["lati"] = latitude
+            self._attr_extra_state_attributes["long"] = longitude
+            self._attr_extra_state_attributes.pop(ATTR_LATITUDE, None)
+            self._attr_extra_state_attributes.pop(ATTR_LONGITUDE, None)
 
 
 class AirVisualNodeProSensor(AirVisualEntity, SensorEntity):
@@ -225,11 +227,7 @@ class AirVisualNodeProSensor(AirVisualEntity, SensorEntity):
         node_name = self.coordinator.data["settings"]["node_name"]
         self._attr_name = f"{node_name} Node/Pro: {name}"
         self._attr_unique_id = f"{self.coordinator.data['serial_number']}_{self._kind}"
-
-    @property
-    def device_info(self):
-        """Return device registry information for this entity."""
-        return {
+        self._attr_device_info = {
             "identifiers": {(DOMAIN, self.coordinator.data["serial_number"])},
             "name": self.coordinator.data["settings"]["node_name"],
             "manufacturer": "AirVisual",
@@ -241,7 +239,7 @@ class AirVisualNodeProSensor(AirVisualEntity, SensorEntity):
         }
 
     @property
-    def state(self):
+    def state(self) -> Any:
         """Return the state."""
         return self._state
 

@@ -37,6 +37,16 @@ class AirVisualNodeProSensor(AirVisualEntity, AirQualityEntity):
         node_name = self.coordinator.data["settings"]["node_name"]
         self._attr_name = f"{node_name} Node/Pro: Air Quality"
         self._attr_unique_id = self.coordinator.data["serial_number"]
+        self._attr_device_info = {
+            "identifiers": {(DOMAIN, self.coordinator.data["serial_number"])},
+            "name": self.coordinator.data["settings"]["node_name"],
+            "manufacturer": "AirVisual",
+            "model": f'{self.coordinator.data["status"]["model"]}',
+            "sw_version": (
+                f'Version {self.coordinator.data["status"]["system_version"]}'
+                f'{self.coordinator.data["status"]["app_version"]}'
+            ),
+        }
 
     @property
     def air_quality_index(self):
@@ -56,20 +66,6 @@ class AirVisualNodeProSensor(AirVisualEntity, AirQualityEntity):
         return self.coordinator.data["measurements"].get("co2")
 
     @property
-    def device_info(self):
-        """Return device registry information for this entity."""
-        return {
-            "identifiers": {(DOMAIN, self.coordinator.data["serial_number"])},
-            "name": self.coordinator.data["settings"]["node_name"],
-            "manufacturer": "AirVisual",
-            "model": f'{self.coordinator.data["status"]["model"]}',
-            "sw_version": (
-                f'Version {self.coordinator.data["status"]["system_version"]}'
-                f'{self.coordinator.data["status"]["app_version"]}'
-            ),
-        }
-
-    @property
     def particulate_matter_2_5(self):
         """Return the particulate matter 2.5 level."""
         return self.coordinator.data["measurements"].get("pm2_5")
@@ -87,7 +83,7 @@ class AirVisualNodeProSensor(AirVisualEntity, AirQualityEntity):
     @callback
     def update_from_latest_data(self):
         """Update the entity from the latest data."""
-        self._attrs.update(
+        self._attr_extra_state_attributes.update(
             {
                 ATTR_VOC: self.coordinator.data["measurements"].get("voc"),
                 **{
