@@ -83,7 +83,7 @@ class MQTTConfig(dict):
 
 async def async_start(  # noqa: C901
     hass: HomeAssistant, discovery_topic, config_entry=None
-) -> bool:
+) -> None:
     """Start MQTT Discovery."""
     mqtt_integrations = {}
 
@@ -298,10 +298,8 @@ async def async_start(  # noqa: C901
                 0,
             )
 
-    return True
 
-
-async def async_stop(hass: HomeAssistant) -> bool:
+async def async_stop(hass: HomeAssistant) -> None:
     """Stop MQTT Discovery."""
     if DISCOVERY_UNSUBSCRIBE in hass.data:
         for unsub in hass.data[DISCOVERY_UNSUBSCRIBE]:
