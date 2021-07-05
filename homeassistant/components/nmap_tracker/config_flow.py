@@ -88,6 +88,10 @@ def _normalize_ips_and_network(hosts_str):
 def normalize_input(user_input):
     """Validate hosts and exclude are valid."""
     errors = {}
+    # Ensure they can clear CONF_EXCLUDE
+    if CONF_EXCLUDE not in user_input:
+        user_input[CONF_EXCLUDE] = ""
+
     normalized_hosts = _normalize_ips_and_network(user_input[CONF_HOSTS])
     if not normalized_hosts:
         errors[CONF_HOSTS] = "invalid_hosts"

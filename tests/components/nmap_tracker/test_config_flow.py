@@ -99,6 +99,42 @@ async def test_form_range(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+async def test_form_no_exclude(hass: HomeAssistant) -> None:
+    """Test we can configure with no excludes."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == "form"
+    assert result["errors"] == {}
+
+    with patch(
+        "homeassistant.components.nmap_tracker.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOSTS: "192.168.0.5-12",
+                CONF_HOME_INTERVAL: 3,
+                CONF_OPTIONS: DEFAULT_OPTIONS,
+                CONF_EXCLUDE: "",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == "create_entry"
+    assert result2["title"] == "Nmap Tracker 192.168.0.5-12"
+    assert result2["data"] == {}
+    assert result2["options"] == {
+        CONF_HOSTS: "192.168.0.5-12",
+        CONF_HOME_INTERVAL: 3,
+        CONF_OPTIONS: DEFAULT_OPTIONS,
+        CONF_EXCLUDE: "",
+    }
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
 async def test_form_invalid_hosts(hass: HomeAssistant) -> None:
     """Test invalid hosts passed in."""
     await setup.async_setup_component(hass, "persistent_notification", {})
@@ -238,6 +274,68 @@ async def test_options_flow(hass: HomeAssistant) -> None:
         CONF_HOME_INTERVAL: 5,
         CONF_OPTIONS: "-sn",
         CONF_EXCLUDE: "4.4.4.4,5.5.5.5",
+        CONF_SCAN_INTERVAL: 10,
+        CONF_TRACK_NEW: False,
+    }
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_options_flow_remove_excludes(hass: HomeAssistant) -> None:
+    """Test we can edit options."""
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={},
+        options={
+            CONF_HOSTS: "192.168.1.0/24",
+            CONF_HOME_INTERVAL: 3,
+            CONF_OPTIONS: DEFAULT_OPTIONS,
+            CONF_EXCLUDE: "4.4.4.4",
+        },
+    )
+    config_entry.add_to_hass(hass)
+    hass.state = CoreState.stopped
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "init"
+
+    assert result["data_schema"]({}) == {
+        CONF_EXCLUDE: "4.4.4.4",
+        CONF_HOME_INTERVAL: 3,
+        CONF_HOSTS: "192.168.1.0/24",
+        CONF_SCAN_INTERVAL: 120,
+        CONF_OPTIONS: "-F --host-timeout 5s",
+        CONF_TRACK_NEW: True,
+    }
+
+    with patch(
+        "homeassistant.components.nmap_tracker.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_HOSTS: "192.168.1.0/24, 192.168.2.0/24",
+                CONF_HOME_INTERVAL: 5,
+                CONF_OPTIONS: "-sn",
+                CONF_EXCLUDE: "",
+                CONF_SCAN_INTERVAL: 10,
+                CONF_TRACK_NEW: False,
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert config_entry.options == {
+        CONF_HOSTS: "192.168.1.0/24,192.168.2.0/24",
+        CONF_HOME_INTERVAL: 5,
+        CONF_OPTIONS: "-sn",
+        CONF_EXCLUDE: "",
         CONF_SCAN_INTERVAL: 10,
         CONF_TRACK_NEW: False,
     }
