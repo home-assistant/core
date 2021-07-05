@@ -70,9 +70,8 @@ class AladdinDevice(CoverEntity):
         self._acc = acc
         self._device_id = device["device_id"]
         self._number = device["door_number"]
-        self._status = STATES_MAP.get(device["status"])
-        self._attr_unique_id = f"{self._device_id}-{self._number}"
         self._attr_name = device["name"]
+        self._attr_unique_id = f"{self._device_id}-{self._number}"
 
     def close_cover(self, **kwargs: Any) -> None:
         """Issue close command to cover."""
@@ -84,10 +83,11 @@ class AladdinDevice(CoverEntity):
 
     def update(self) -> None:
         """Update status of cover."""
-        acc_status = self._acc.get_door_status(self._device_id, self._number)
-        self._status = STATES_MAP.get(acc_status)
+        self._status = STATES_MAP.get(
+            self._acc.get_door_status(self._device_id, self._number)
+        )
         self._attr_is_opening = self._status == STATE_OPENING
         self._attr_is_closing = self._status == STATE_CLOSING
         self._attr_is_closed = (
-            self._status == STATE_CLOSED if self._status is not None else None
+            None if self._status is None else self._status == STATE_CLOSED
         )
