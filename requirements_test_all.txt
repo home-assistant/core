@@ -1330,7 +1330,7 @@ yeelight==0.6.3
 zeep[async]==4.0.0
 
 # homeassistant.components.zeroconf
-zeroconf==0.32.0
+zeroconf==0.32.1
 
 # homeassistant.components.zha
 zha-quirks==0.0.58
