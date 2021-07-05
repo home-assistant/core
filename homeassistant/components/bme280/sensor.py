@@ -14,12 +14,12 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     TEMP_FAHRENHEIT,
 )
-from homeassistant.util import Throttle
-from homeassistant.util.temperature import celsius_to_fahrenheit
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
+from homeassistant.util import Throttle
+from homeassistant.util.temperature import celsius_to_fahrenheit
 
 from .const import (
     CONF_DELTA_TEMP,
@@ -103,7 +103,14 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     with suppress(KeyError):
         for condition in sensor_conf[CONF_MONITORED_CONDITIONS]:
             entities.append(
-                BME280Sensor(hass, sensor_handler, condition, SENSOR_TYPES[condition][1], name, scan_interval)
+                BME280Sensor(
+                    hass,
+                    sensor_handler,
+                    condition,
+                    SENSOR_TYPES[condition][1],
+                    name,
+                    scan_interval,
+                )
             )
     async_add_entities(entities, True)
 
@@ -134,7 +141,9 @@ class BME280Handler:
 class BME280Sensor(CoordinatorEntity, SensorEntity):
     """Implementation of the BME280 sensor."""
 
-    def __init__(self, hass, bme280_client, sensor_type, temp_unit, name, scan_interval):
+    def __init__(
+        self, hass, bme280_client, sensor_type, temp_unit, name, scan_interval
+    ):
         """Initialize the sensor."""
         self.client_name = name
         self._name = SENSOR_TYPES[sensor_type][0]
