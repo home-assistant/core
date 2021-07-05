@@ -90,19 +90,6 @@ class AlarmDecoderAlarmPanel(AlarmControlPanelEntity):
         self._auto_bypass = auto_bypass
         self._attr_code_arm_required = code_arm_required
         self._alt_night_mode = alt_night_mode
-        self._attr_extra_state_attributes = {
-            "ac_power": self._ac_power,
-            "alarm_event_occurred": self._alarm_event_occurred,
-            "backlight_on": self._backlight_on,
-            "battery_low": self._battery_low,
-            "check_zone": self._check_zone,
-            "chime": self._chime,
-            "entry_delay_off": self._entry_delay_off,
-            "programming_mode": self._programming_mode,
-            "ready": self._ready,
-            "zone_bypassed": self._zone_bypassed,
-            "code_arm_required": self._attr_code_arm_required,
-        }
 
     async def async_added_to_hass(self):
         """Register callbacks."""
