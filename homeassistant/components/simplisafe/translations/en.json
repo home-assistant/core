@@ -19,7 +19,7 @@
                 "data": {
                     "password": "Password"
                 },
-                "description": "Your access has expired or been revoked. Enter your password to re-link your account.",
+                "description": "Your access token has expired or been revoked. Enter your password to re-link your account.",
                 "title": "Reauthenticate Integration"
             },
             "user": {
