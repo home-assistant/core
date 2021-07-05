@@ -87,18 +87,6 @@ class AlarmDecoderAlarmPanel(AlarmControlPanelEntity):
     def __init__(self, client, auto_bypass, code_arm_required, alt_night_mode):
         """Initialize the alarm panel."""
         self._client = client
-        self._display = ""
-        self._attr_state = None
-        self._ac_power = None
-        self._alarm_event_occurred = None
-        self._backlight_on = None
-        self._battery_low = None
-        self._check_zone = None
-        self._chime = None
-        self._entry_delay_off = None
-        self._programming_mode = None
-        self._ready = None
-        self._zone_bypassed = None
         self._auto_bypass = auto_bypass
         self._attr_code_arm_required = code_arm_required
         self._alt_night_mode = alt_night_mode
@@ -137,17 +125,19 @@ class AlarmDecoderAlarmPanel(AlarmControlPanelEntity):
         else:
             self._attr_state = STATE_ALARM_DISARMED
 
-        self._ac_power = message.ac_power
-        self._alarm_event_occurred = message.alarm_event_occurred
-        self._backlight_on = message.backlight_on
-        self._battery_low = message.battery_low
-        self._check_zone = message.check_zone
-        self._chime = message.chime_on
-        self._entry_delay_off = message.entry_delay_off
-        self._programming_mode = message.programming_mode
-        self._ready = message.ready
-        self._zone_bypassed = message.zone_bypassed
-
+        self._attr_extra_state_attributes = {
+            "ac_power": message.ac_power,
+            "alarm_event_occurred": message.alarm_event_occurred,
+            "backlight_on": message.backlight_on,
+            "battery_low": message.battery_low,
+            "check_zone": message.check_zone,
+            "chime": message.chime_on,
+            "entry_delay_off": message.entry_delay_off,
+            "programming_mode": message.programming_mode,
+            "ready": message.ready,
+            "zone_bypassed": message.zone_bypassed,
+            "code_arm_required": self._attr_code_arm_required,
+        }
         self.schedule_update_ha_state()
 
     def alarm_disarm(self, code=None):

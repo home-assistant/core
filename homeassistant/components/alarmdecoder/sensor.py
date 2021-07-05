@@ -8,7 +8,7 @@ from .const import SIGNAL_PANEL_MESSAGE
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities
-):
+) -> bool:
     """Set up for AlarmDecoder sensor."""
 
     entity = AlarmDecoderSensor()
@@ -19,14 +19,9 @@ async def async_setup_entry(
 class AlarmDecoderSensor(SensorEntity):
     """Representation of an AlarmDecoder keypad."""
 
-    _attr_name = "Alarm Panel Display"
     _attr_icon = "mdi:alarm-check"
+    _attr_name = "Alarm Panel Display"
     _attr_should_poll = False
-
-    def __init__(self):
-        """Initialize the alarm panel."""
-        self._display = ""
-        self._attr_state = self._display
 
     async def async_added_to_hass(self):
         """Register callbacks."""
@@ -37,6 +32,6 @@ class AlarmDecoderSensor(SensorEntity):
         )
 
     def _message_callback(self, message):
-        if self._display != message.text:
-            self._display = message.text
+        if self._attr_state != message.text:
+            self._attr_state = message.text
             self.schedule_update_ha_state()
