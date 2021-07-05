@@ -1,5 +1,5 @@
 # AIS dom backup script to create bootstrap
-# last change 2021/06/09 by AR
+# last change 2021/07/05 by AR
 ais_pro=$(su -c cat /system/build.prop | grep 'ro.product.name=AIS-PRO1' | wc -l)
 if [ $ais_pro -gt 0 ]; then
   echo "OK, let use 6 CPUs"
@@ -19,6 +19,7 @@ rm -rf ~/.cache/pip/*
 pm2 delete tunnel
 pm2 delete ssh-tunnel
 pm2 delete zigbee
+pm2 delete zwave
 pm2 save
 pm2 stop ais
 pm2 flush
@@ -44,8 +45,7 @@ echo [] > ~/../myConnHist.json
 rm -rf /data/data/pl.sviete.dom/files/home/AIS/.dom/.ais*
 # create db settings for pro
 if [ $ais_pro -gt 0 ]; then
-  echo '{"dbEngine": "PostgreSQL", "dbDrive": "", "dbUrl": "postgresql://ais:dom@localhost/ha", "dbPassword": "dom", "dbUser": "ais", "dbServerIp": "localhost", "dbServerName": "ha", "dbKeepDays": "10", "errorInfo": ""}' >  /data/data/pl.sviete.dom/files/home/AIS/.dom/.ais_db_settings_info
-
+  echo '{"dbEngine": "MariaDB (local)", "dbDrive": "", "dbUrl": "mysql+pymysql://ais:dom@127.0.0.1/ha?charset=utf8mb4", "dbPassword": "dom", "dbUser": "ais", "dbServerIp": "127.0.0.1", "dbServerName": "ha", "dbKeepDays": "10", "errorInfo": ""}' >  /data/data/pl.sviete.dom/files/home/AIS/.dom/.ais_db_settings_info
 fi
 # 6. clear npm cache
 rm -rf /data/data/pl.sviete.dom/files/home/.npm/_cacache/*
