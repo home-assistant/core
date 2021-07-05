@@ -61,7 +61,7 @@ class NetatmoBase(Entity):
                     data_class["name"], signal_name, self.async_update_callback
                 )
 
-            for sub in self.data_handler.data_classes[signal_name].get("subscriptions"):
+            for sub in self.data_handler.data_classes[signal_name].subscriptions:
                 if sub is None:
                     await self.data_handler.unregister_data_class(signal_name, None)
 
