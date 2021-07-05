@@ -14,7 +14,7 @@ Adafruit-SHT31==1.0.2
 # Adafruit_BBIO==1.1.1
 
 # homeassistant.components.homekit
-HAP-python==3.5.0
+HAP-python==3.5.1
 
 # homeassistant.components.mastodon
 Mastodon.py==1.5.1
@@ -175,7 +175,7 @@ aioguardian==1.0.4
 aioharmony==0.2.7
 
 # homeassistant.components.homekit_controller
-aiohomekit==0.4.0
+aiohomekit==0.4.1
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -678,7 +678,7 @@ georss_qld_bushfire_alert_client==0.5
 getmac==0.8.2
 
 # homeassistant.components.gios
-gios==1.0.1
+gios==1.0.2
 
 # homeassistant.components.gitter
 gitterpy==0.1.7

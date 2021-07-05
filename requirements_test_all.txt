@@ -7,7 +7,7 @@
 AEMET-OpenData==0.2.1
 
 # homeassistant.components.homekit
-HAP-python==3.5.0
+HAP-python==3.5.1
 
 # homeassistant.components.flick_electric
 PyFlick==0.0.2
@@ -112,7 +112,7 @@ aioguardian==1.0.4
 aioharmony==0.2.7
 
 # homeassistant.components.homekit_controller
-aiohomekit==0.4.0
+aiohomekit==0.4.1
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -384,7 +384,7 @@ georss_qld_bushfire_alert_client==0.5
 getmac==0.8.2
 
 # homeassistant.components.gios
-gios==1.0.1
+gios==1.0.2
 
 # homeassistant.components.glances
 glances_api==0.2.0
