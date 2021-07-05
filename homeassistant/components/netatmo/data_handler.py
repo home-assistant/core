@@ -63,7 +63,7 @@ class NetatmoDataClass:
     name: str
     interval: int
     next_scan: float
-    subscriptions: list[CALLBACK_TYPE] = 0
+    subscriptions: list[CALLBACK_TYPE]
 
 
 class NetatmoDataHandler:
