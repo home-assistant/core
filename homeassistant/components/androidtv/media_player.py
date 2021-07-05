@@ -588,29 +588,6 @@ class AndroidTVDevice(ADBDevice):
 
     _attr_supported_features = SUPPORT_ANDROIDTV
 
-    def __init__(
-        self,
-        aftv,
-        name,
-        apps,
-        get_sources,
-        turn_on_command,
-        turn_off_command,
-        exclude_unnamed_apps,
-        screencap,
-    ):
-        """Initialize the Android TV device."""
-        super().__init__(
-            aftv,
-            name,
-            apps,
-            get_sources,
-            turn_on_command,
-            turn_off_command,
-            exclude_unnamed_apps,
-            screencap,
-        )
-
     @adb_decorator(override_available=True)
     async def async_update(self):
         """Update the device state and, if necessary, re-connect."""
