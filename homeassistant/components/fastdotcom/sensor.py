@@ -29,19 +29,16 @@ async def async_setup_platform(
 class SpeedtestSensor(RestoreEntity, SensorEntity):
     """Implementation of a FAst.com sensor."""
 
+    _attr_name = "Fast.com Download"
+    _attr_unit_of_measurement = DATA_RATE_MEGABITS_PER_SECOND
+    _attr_icon = ICON
+    _attr_should_poll = False
+    _attr_state = None
+
     def __init__(self, speedtest_data: dict[str, Any]) -> None:
         """Initialize the sensor."""
-        self._attr_name: str = "Fast.com Download"
-        self._attr_unit_of_measurement: str = DATA_RATE_MEGABITS_PER_SECOND
-        self._attr_icon: str = ICON
-        self._attr_should_poll: bool = False
         self._speedtest_data = speedtest_data
-        self._state: str | None = None
-
-    @property
-    def state(self) -> str | None:
-        """Return the state of the device."""
-        return self._state
+        self._attr_state = None
 
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
@@ -63,7 +60,7 @@ class SpeedtestSensor(RestoreEntity, SensorEntity):
         data = self._speedtest_data.data  # type: ignore[attr-defined]
         if data is None:
             return
-        self._state = data["download"]
+        self._attr_state = data["download"]
 
     @callback
     def _schedule_immediate_update(self) -> None:
