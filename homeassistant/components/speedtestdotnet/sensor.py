@@ -54,26 +54,28 @@ class SpeedtestSensor(CoordinatorEntity, RestoreEntity, SensorEntity):
         self._attr_name = f"{DEFAULT_NAME} {SENSOR_TYPES[sensor_type][0]}"
         self._attr_unit_of_measurement = SENSOR_TYPES[self.type][1]
         self._attr_unique_id = sensor_type
+        self._attrs = {ATTR_ATTRIBUTION: ATTRIBUTION}
 
     @property
-    def extra_state_attributes(self) -> dict[str, Any] | None:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
-        if not self.coordinator.data:
-            return None
+        if self.coordinator.data:
+            self._attrs.update(
+                {
+                    ATTR_SERVER_NAME: self.coordinator.data["server"]["name"],
+                    ATTR_SERVER_COUNTRY: self.coordinator.data["server"]["country"],
+                    ATTR_SERVER_ID: self.coordinator.data["server"]["id"],
+                }
+            )
 
-        attributes = {
-            ATTR_ATTRIBUTION: ATTRIBUTION,
-            ATTR_SERVER_NAME: self.coordinator.data["server"]["name"],
-            ATTR_SERVER_COUNTRY: self.coordinator.data["server"]["country"],
-            ATTR_SERVER_ID: self.coordinator.data["server"]["id"],
-        }
+            if self.type == "download":
+                self._attrs[ATTR_BYTES_RECEIVED] = self.coordinator.data[
+                    "bytes_received"
+                ]
+            elif self.type == "upload":
+                self._attrs[ATTR_BYTES_SENT] = self.coordinator.data["bytes_sent"]
 
-        if self.type == "download":
-            attributes[ATTR_BYTES_RECEIVED] = self.coordinator.data["bytes_received"]
-        elif self.type == "upload":
-            attributes[ATTR_BYTES_SENT] = self.coordinator.data["bytes_sent"]
-
-        return attributes
+        return self._attrs
 
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
@@ -91,14 +93,12 @@ class SpeedtestSensor(CoordinatorEntity, RestoreEntity, SensorEntity):
         self.async_on_remove(self.coordinator.async_add_listener(update))
         self._update_state()
 
-    def _update_state(self) -> None:
+    def _update_state(self):
         """Update sensors state."""
-        if not self.coordinator.data:
-            return
-
-        if self.type == "ping":
-            self._attr_state = self.coordinator.data["ping"]
-        elif self.type == "download":
-            self._attr_state = round(self.coordinator.data["download"] / 10 ** 6, 2)
-        elif self.type == "upload":
-            self._attr_state = round(self.coordinator.data["upload"] / 10 ** 6, 2)
+        if self.coordinator.data:
+            if self.type == "ping":
+                self._attr_state = self.coordinator.data["ping"]
+            elif self.type == "download":
+                self._attr_state = round(self.coordinator.data["download"] / 10 ** 6, 2)
+            elif self.type == "upload":
+                self._attr_state = round(self.coordinator.data["upload"] / 10 ** 6, 2)
