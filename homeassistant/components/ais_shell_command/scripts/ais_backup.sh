@@ -110,7 +110,8 @@ if [ $ais_pro -gt 0 ]; then
   # 17. clean DB
   # # drop database ha
   #  mysql -h localhost -u ais -pdom -Bse "DROP database ha; CREATE database ha;"
-  echo TODO
+  mysql -h 127.0.0.1 -u ais -pdom ha --execute="SET FOREIGN_KEY_CHECKS = 0; TRUNCATE states; TRUNCATE events; TRUNCATE schema_changes; TRUNCATE recorder_runs; TRUNCATE statistics; TRUNCATE statistics_meta; SET FOREIGN_KEY_CHECKS = 1;"
+
   # pm2 stop mysql
   # apt -y remove mariadb
   # rm -rf /data/data/pl.sviete.dom/files/usr/var/lib/mysql/*
@@ -126,7 +127,7 @@ if [ $ais_pro -gt 0 ]; then
   # mysql -u $(whoami) --execute="CREATE USER 'ais'@'localhost' IDENTIFIED  BY 'dom';"
   # mysql -u $(whoami) --execute="GRANT ALL PRIVILEGES ON ha.* TO 'ais'@'localhost';"
   # test
-  # mysql -h 127.0.0.1 -u ais -pdom ha --execute="select 'DB TEST OK' as ais from dual;"
+  mysql -h 127.0.0.1 -u ais -pdom ha --execute="select 'DB TEST OK' as ais from dual;"
   # killall -9 mysqld mysqld_safe
   # pm2 start mysql
 fi
