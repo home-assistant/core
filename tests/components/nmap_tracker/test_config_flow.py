@@ -323,7 +323,6 @@ async def test_options_flow_remove_excludes(hass: HomeAssistant) -> None:
                 CONF_HOSTS: "192.168.1.0/24, 192.168.2.0/24",
                 CONF_HOME_INTERVAL: 5,
                 CONF_OPTIONS: "-sn",
-                CONF_EXCLUDE: "",
                 CONF_SCAN_INTERVAL: 10,
                 CONF_TRACK_NEW: False,
             },
