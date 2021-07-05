@@ -30,7 +30,7 @@ from homeassistant.components.fritzbox.const import (
     ATTR_STATE_WINDOW_OPEN,
     DOMAIN as FB_DOMAIN,
 )
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.sensor import ATTR_STATE_CLASS, DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     ATTR_ENTITY_ID,
@@ -75,6 +75,7 @@ async def test_setup(hass: HomeAssistant, fritz: Mock):
     assert state.attributes[ATTR_STATE_SUMMER_MODE] == "fake_summer"
     assert state.attributes[ATTR_STATE_WINDOW_OPEN] == "fake_window"
     assert state.attributes[ATTR_TEMPERATURE] == 19.5
+    assert ATTR_STATE_CLASS not in state.attributes
     assert state.state == HVAC_MODE_HEAT
 
     state = hass.states.get(f"{SENSOR_DOMAIN}.{CONF_FAKE_NAME}_battery")
@@ -82,6 +83,7 @@ async def test_setup(hass: HomeAssistant, fritz: Mock):
     assert state.state == "23"
     assert state.attributes[ATTR_FRIENDLY_NAME] == f"{CONF_FAKE_NAME} Battery"
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == PERCENTAGE
+    assert ATTR_STATE_CLASS not in state.attributes
 
 
 async def test_target_temperature_on(hass: HomeAssistant, fritz: Mock):

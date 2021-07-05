@@ -7,7 +7,7 @@ from requests.exceptions import HTTPError
 
 from homeassistant.components.binary_sensor import DOMAIN
 from homeassistant.components.fritzbox.const import DOMAIN as FB_DOMAIN
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.sensor import ATTR_STATE_CLASS, DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_FRIENDLY_NAME,
@@ -40,12 +40,14 @@ async def test_setup(hass: HomeAssistant, fritz: Mock):
     assert state.state == STATE_ON
     assert state.attributes[ATTR_FRIENDLY_NAME] == CONF_FAKE_NAME
     assert state.attributes[ATTR_DEVICE_CLASS] == "window"
+    assert ATTR_STATE_CLASS not in state.attributes
 
     state = hass.states.get(f"{SENSOR_DOMAIN}.{CONF_FAKE_NAME}_battery")
     assert state
     assert state.state == "23"
     assert state.attributes[ATTR_FRIENDLY_NAME] == f"{CONF_FAKE_NAME} Battery"
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == PERCENTAGE
+    assert ATTR_STATE_CLASS not in state.attributes
 
 
 async def test_is_off(hass: HomeAssistant, fritz: Mock):
