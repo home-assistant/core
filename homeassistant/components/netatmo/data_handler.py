@@ -194,7 +194,7 @@ class NetatmoDataHandler:
         _LOGGER.debug("Data class %s added", data_class_entry)
 
     async def unregister_data_class(
-        self, data_class_entry: str, update_callback: CALLBACK_TYPE
+        self, data_class_entry: str, update_callback: CALLBACK_TYPE | None
     ) -> None:
         """Unregister data class."""
         self.data_classes[data_class_entry].subscriptions.remove(update_callback)

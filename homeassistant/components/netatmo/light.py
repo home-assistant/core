@@ -2,9 +2,11 @@
 import logging
 
 from homeassistant.components.light import LightEntity
-from homeassistant.core import callback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     DATA_HANDLER,
@@ -21,7 +23,9 @@ from .netatmo_entity_base import NetatmoBase
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up the Netatmo camera light platform."""
     if "access_camera" not in entry.data["token"]["scope"]:
         _LOGGER.info(
@@ -97,7 +101,7 @@ class NetatmoLight(NetatmoBase, LightEntity):
         )
 
     @callback
-    def handle_event(self, event):
+    def handle_event(self, event: dict) -> None:
         """Handle webhook events."""
         data = event["data"]
 
@@ -120,11 +124,11 @@ class NetatmoLight(NetatmoBase, LightEntity):
         return bool(self.data_handler.webhook)
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if light is on."""
         return self._is_on
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: dict) -> None:
         """Turn camera floodlight on."""
         _LOGGER.debug("Turn camera '%s' on", self.name)
         await self._data.async_set_state(
@@ -133,7 +137,7 @@ class NetatmoLight(NetatmoBase, LightEntity):
             floodlight="on",
         )
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: dict) -> None:
         """Turn camera floodlight into auto mode."""
         _LOGGER.debug("Turn camera '%s' to auto mode", self.name)
         await self._data.async_set_state(
@@ -143,6 +147,6 @@ class NetatmoLight(NetatmoBase, LightEntity):
         )
 
     @callback
-    def async_update_callback(self):
+    def async_update_callback(self) -> None:
         """Update the entity's state."""
         self._is_on = bool(self._data.get_light_state(self._id) == "on")
