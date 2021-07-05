@@ -236,13 +236,6 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             )
             config_num = None
 
-        # Device isn't paired with us or anyone else.
-        # But we have a 'complete' config entry for it - that is probably
-        # invalid. Remove it automatically.
-        existing = find_existing_host(self.hass, hkid)
-        if not paired and existing:
-            await self.hass.config_entries.async_remove(existing.entry_id)
-
         # If the device is already paired and known to us we should monitor c#
         # (config_num) for changes. If it changes, we check for new entities
         if paired and hkid in self.hass.data.get(KNOWN_DEVICES, {}):
@@ -260,6 +253,14 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="already_configured")
 
         _LOGGER.debug("Discovered device %s (%s - %s)", name, model, hkid)
+
+        # Device isn't paired with us or anyone else.
+        # But we have a 'complete' config entry for it - that is probably
+        # invalid. Remove it automatically.
+        existing = find_existing_host(self.hass, hkid)
+        if not paired and existing:
+            await self.hass.config_entries.async_remove(existing.entry_id)
+
         # Set unique-id and error out if it's already configured
         await self.async_set_unique_id(normalize_hkid(hkid))
         self._abort_if_unique_id_configured(
