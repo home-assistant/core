@@ -185,16 +185,12 @@ class AirVisualGeographySensor(AirVisualEntity, SensorEntity):
         self._kind = kind
         self._locale = locale
 
-    @property
-    def available(self) -> bool:
-        """Return if entity is available."""
-        return super().available and self.coordinator.data["current"]["pollution"]
-
     @callback
     def update_from_latest_data(self):
         """Update the entity from the latest data."""
         try:
             data = self.coordinator.data["current"]["pollution"]
+            self._attr_available = super().available and data
         except KeyError:
             return
 
@@ -257,19 +253,19 @@ class AirVisualNodeProSensor(AirVisualEntity, SensorEntity):
         self._attr_unit_of_measurement = unit
         self._kind = kind
         self._attr_name = (
-            f"{self.coordinator.data['settings']['node_name']} Node/Pro: {name}"
+            f"{coordinator.data['settings']['node_name']} Node/Pro: {name}"
         )
         self._attr_device_info = {
-            "identifiers": {(DOMAIN, self.coordinator.data["serial_number"])},
-            "name": self.coordinator.data["settings"]["node_name"],
+            "identifiers": {(DOMAIN, coordinator.data["serial_number"])},
+            "name": coordinator.data["settings"]["node_name"],
             "manufacturer": "AirVisual",
-            "model": f'{self.coordinator.data["status"]["model"]}',
+            "model": f'{coordinator.data["status"]["model"]}',
             "sw_version": (
-                f'Version {self.coordinator.data["status"]["system_version"]}'
-                f'{self.coordinator.data["status"]["app_version"]}'
+                f'Version {coordinator.data["status"]["system_version"]}'
+                f'{coordinator.data["status"]["app_version"]}'
             ),
         }
-        self._attr_unique_id = f"{self.coordinator.data['serial_number']}_{self._kind}"
+        self._attr_unique_id = f"{coordinator.data['serial_number']}_{kind}"
 
     @callback
     def update_from_latest_data(self):

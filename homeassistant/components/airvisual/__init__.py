@@ -275,7 +275,7 @@ async def async_setup_entry(hass, config_entry):
     return True
 
 
-async def async_migrate_entry(hass, config_entry):
+async def async_migrate_entry(hass, config_entry) -> bool:
     """Migrate an old config entry."""
     version = config_entry.version
 
@@ -317,7 +317,7 @@ async def async_migrate_entry(hass, config_entry):
     return True
 
 
-async def async_unload_entry(hass, config_entry):
+async def async_unload_entry(hass, config_entry) -> bool:
     """Unload an AirVisual config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(
         config_entry, PLATFORMS
