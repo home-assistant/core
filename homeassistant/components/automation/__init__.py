@@ -442,6 +442,7 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         This method is a coroutine.
         """
         reason = ""
+        run_variables["automation_entity_id"] = self.entity_id
         if "trigger" in run_variables and "description" in run_variables["trigger"]:
             reason = f' by {run_variables["trigger"]["description"]}'
         self._logger.debug("Automation triggered%s", reason)
