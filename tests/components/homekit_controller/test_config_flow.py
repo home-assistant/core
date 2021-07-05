@@ -383,11 +383,16 @@ async def test_discovery_invalid_config_entry(hass, controller):
 
 async def test_discovery_already_configured(hass, controller):
     """Already configured."""
-    MockConfigEntry(
+    entry = MockConfigEntry(
         domain="homekit_controller",
-        data={"AccessoryPairingID": "00:00:00:00:00:00"},
+        data={
+            "AccessoryIP": "4.4.4.4",
+            "AccessoryPort": 66,
+            "AccessoryPairingID": "00:00:00:00:00:00",
+        },
         unique_id="00:00:00:00:00:00",
-    ).add_to_hass(hass)
+    )
+    entry.add_to_hass(hass)
 
     device = setup_mock_accessory(controller)
     discovery_info = get_device_discovery_info(device)
@@ -403,6 +408,8 @@ async def test_discovery_already_configured(hass, controller):
     )
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
+    assert entry.data["AccessoryIP"] == discovery_info["host"]
+    assert entry.data["AccessoryPort"] == discovery_info["port"]
 
 
 @pytest.mark.parametrize("exception,expected", PAIRING_START_ABORT_ERRORS)
