@@ -47,22 +47,14 @@ class EcobeeWeather(WeatherEntity):
         self._attr_name = name
         self._index = index
         self.weather = None
-        self._attr_unique_id = self.data.ecobee.get_thermostat(self._index)[
-            "identifier"
-        ]
+        thermostat = self.data.ecobee.get_thermostat(self._index)
+        self._attr_unique_id = thermostat["identifier"]
         self._attr_device_info = {
-            "identifiers": {
-                (DOMAIN, self.data.ecobee.get_thermostat(self._index)["identifier"])
-            },
-            "name": self.name,
+            "identifiers": {(DOMAIN, thermostat["identifier"])},
+            "name": self._attr_name,
             "manufacturer": MANUFACTURER,
-            "model": f"{ECOBEE_MODEL_TO_NAME.get(self.data.ecobee.get_thermostat(self._index)['modelNumber'])} Thermostat",
+            "model": f"{ECOBEE_MODEL_TO_NAME.get(thermostat['modelNumber'])} Thermostat",
         }
-        self._attr_attribution = (
-            f"Ecobee weather provided by {self.weather.get('weatherStation', 'UNKNOWN')} at {self.weather.get('timestamp', 'UNKNOWN')} UTC"
-            if self.weather
-            else None
-        )
 
     def get_forecast(self, index, param):
         """Retrieve forecast parameter."""
@@ -72,91 +64,60 @@ class EcobeeWeather(WeatherEntity):
         except (IndexError, KeyError) as err:
             raise ValueError from err
 
-    @property
-    def condition(self):
-        """Return the current condition."""
-        try:
-            return ECOBEE_WEATHER_SYMBOL_TO_HASS[self.get_forecast(0, "weatherSymbol")]
-        except ValueError:
-            return None
-
-    @property
-    def temperature(self):
-        """Return the temperature."""
-        try:
-            return float(self.get_forecast(0, "temperature")) / 10
-        except ValueError:
-            return None
-
-    @property
-    def pressure(self):
-        """Return the pressure."""
-        try:
-            pressure = self.get_forecast(0, "pressure")
-            if not self.hass.config.units.is_metric:
-                pressure = pressure_convert(pressure, PRESSURE_HPA, PRESSURE_INHG)
-                return round(pressure, 2)
-            return round(pressure)
-        except ValueError:
-            return None
-
-    @property
-    def humidity(self):
-        """Return the humidity."""
-        try:
-            return int(self.get_forecast(0, "relativeHumidity"))
-        except ValueError:
-            return None
-
-    @property
-    def visibility(self):
-        """Return the visibility."""
-        try:
-            return int(self.get_forecast(0, "visibility")) / 1000
-        except ValueError:
-            return None
-
-    @property
-    def wind_speed(self):
-        """Return the wind speed."""
-        try:
-            return int(self.get_forecast(0, "windSpeed"))
-        except ValueError:
-            return None
-
-    @property
-    def wind_bearing(self):
-        """Return the wind direction."""
-        try:
-            return int(self.get_forecast(0, "windBearing"))
-        except ValueError:
-            return None
-
-    @property
-    def forecast(self):
-        """Return the forecast array."""
-        if "forecasts" not in self.weather:
-            return None
-
-        forecasts = []
-        date = dt_util.utcnow()
-        for day in range(0, 5):
-            forecast = _process_forecast(self.weather["forecasts"][day])
-            if forecast is None:
-                continue
-            forecast[ATTR_FORECAST_TIME] = date.isoformat()
-            date += timedelta(days=1)
-            forecasts.append(forecast)
-
-        if forecasts:
-            return forecasts
-        return None
-
     async def async_update(self):
         """Get the latest weather data."""
         await self.data.update()
         thermostat = self.data.ecobee.get_thermostat(self._index)
         self.weather = thermostat.get("weather")
+        self._attr_condition = ECOBEE_WEATHER_SYMBOL_TO_HASS.get(
+            self.get_forecast(0, "weatherSymbol")
+        )
+        try:
+            self._attr_temperature = float(self.get_forecast(0, "temperature")) / 10
+        except ValueError:
+            self._attr_temperature = None
+        try:
+            pressure = self.get_forecast(0, "pressure")
+            if not self.hass.config.units.is_metric:
+                pressure = pressure_convert(pressure, PRESSURE_HPA, PRESSURE_INHG)
+                self._attr_pressure = round(pressure, 2)
+            else:
+                self._attr_pressure = round(pressure)
+        except ValueError:
+            self._attr_pressure = None
+        try:
+            self._attr_humidity = int(self.get_forecast(0, "relativeHumidity"))
+        except ValueError:
+            self._attr_humidity = None
+        try:
+            self._attr_visibility = int(self.get_forecast(0, "visibility")) / 1000
+        except ValueError:
+            self._attr_visibility = None
+        try:
+            self._attr_wind_speed = int(self.get_forecast(0, "windSpeed"))
+        except ValueError:
+            self._attr_wind_speed = None
+        try:
+            self._attr_wind_bearing = int(self.get_forecast(0, "windBearing"))
+        except ValueError:
+            self._attr_wind_bearing = None
+        if self.weather:
+            self._attr_attribution = f"Ecobee weather provided by {self.weather.get('weatherStation', 'UNKNOWN')} at {self.weather.get('timestamp', 'UNKNOWN')} UTC"
+        else:
+            self._attr_attribution = None
+        if "forecasts" not in self.weather:
+            self._attr_forecast = None
+        else:
+            forecasts = []
+            date = dt_util.utcnow()
+            for day in range(0, 5):
+                forecast = _process_forecast(self.weather["forecasts"][day])
+                if forecast is None:
+                    continue
+                forecast[ATTR_FORECAST_TIME] = date.isoformat()
+                date += timedelta(days=1)
+                forecasts.append(forecast)
+            self._attr_forecast = forecasts if forecasts else None
 
 
 def _process_forecast(json):

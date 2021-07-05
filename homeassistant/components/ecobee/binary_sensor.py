@@ -1,6 +1,4 @@
 """Support for Ecobee binary sensors."""
-from typing import Any
-
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_OCCUPANCY,
     BinarySensorEntity,
@@ -32,31 +30,18 @@ class EcobeeBinarySensor(BinarySensorEntity):
     def __init__(self, data, sensor_name, sensor_index):
         """Initialize the Ecobee sensor."""
         self.data = data
-        name = f"{sensor_name} Occupancy"
-        self._attr_name = name.rstrip()
+        self._attr_name = (f"{sensor_name} Occupancy").rstrip()
         self.sensor_name = sensor_name
         self.index = sensor_index
-        self._state = None
         for sensor in self.data.ecobee.get_remote_sensors(self.index):
             if sensor["name"] == self.sensor_name:
-                if "code" in sensor:
-                    self._attr_unique_id = f"{sensor['code']}-{self.device_class}"
                 thermostat = self.data.ecobee.get_thermostat(self.index)
                 self._attr_unique_id = (
                     f"{thermostat['identifier']}-{sensor['id']}-{self.device_class}"
                 )
-        self._attr_available = self.data.ecobee.get_thermostat(self.index)["runtime"][
-            "connected"
-        ]
-        self._attr_is_on = self._state == "true"
-
-    @property
-    def device_info(self) -> Any:
-        """Return device information for this sensor."""
-        identifier = None
-        model = None
-        for sensor in self.data.ecobee.get_remote_sensors(self.index):
-            if sensor["name"] != self.sensor_name:
+                if "code" in sensor:
+                    self._attr_unique_id = f"{sensor['code']}-{self.device_class}"
+            else:
                 continue
             if "code" in sensor:
                 identifier = sensor["code"]
@@ -64,32 +49,29 @@ class EcobeeBinarySensor(BinarySensorEntity):
             else:
                 thermostat = self.data.ecobee.get_thermostat(self.index)
                 identifier = thermostat["identifier"]
-                try:
-                    model = (
-                        f"{ECOBEE_MODEL_TO_NAME[thermostat['modelNumber']]} Thermostat"
-                    )
-                except KeyError:
-                    # Ecobee model is not in our list
-                    model = None
+                model = (
+                    f"{ECOBEE_MODEL_TO_NAME.get(thermostat['modelNumber'])} Thermostat"
+                )
             break
-
         if identifier is not None:
-            return {
+            self._attr_device_info = {
                 "identifiers": {(DOMAIN, identifier)},
                 "name": self.sensor_name,
                 "manufacturer": MANUFACTURER,
                 "model": model,
             }
-        return None
 
     async def async_update(self):
         """Get the latest state of the sensor."""
         await self.data.update()
+        self._attr_available = self.data.ecobee.get_thermostat(self.index)["runtime"][
+            "connected"
+        ]
         for sensor in self.data.ecobee.get_remote_sensors(self.index):
             if sensor["name"] != self.sensor_name:
                 continue
             for item in sensor["capability"]:
                 if item["type"] != "occupancy":
                     continue
-                self._state = item["value"]
+                self._attr_state = item["value"] == "true"
                 break

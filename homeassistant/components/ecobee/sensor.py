@@ -42,32 +42,13 @@ class EcobeeSensor(SensorEntity):
         self.sensor_name = sensor_name
         self.type = sensor_type
         self.index = sensor_index
-        self._state = None
         self._attr_unit_of_measurement = SENSOR_TYPES[sensor_type][1]
-        self._attr_available = self.data.ecobee.get_thermostat(self.index)["runtime"][
-            "connected"
-        ]
-        self._attr_device_class = (
-            self.type
-            if self.type in (DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_TEMPERATURE)
-            else None
-        )
-
-    @property
-    def unique_id(self):
-        """Return a unique identifier for this sensor."""
         for sensor in self.data.ecobee.get_remote_sensors(self.index):
             if sensor["name"] == self.sensor_name:
                 if "code" in sensor:
-                    return f"{sensor['code']}-{self.device_class}"
-                thermostat = self.data.ecobee.get_thermostat(self.index)
-                return f"{thermostat['identifier']}-{sensor['id']}-{self.device_class}"
-
-    @property
-    def device_info(self):
-        """Return device information for this sensor."""
-        identifier = None
-        model = None
+                    self._attr_unique_id = f"{sensor['code']}-{self.device_class}"
+                else:
+                    self._attr_unique_id = f"{self.data.ecobee.get_thermostat(self.index)['identifier']}-{sensor['id']}-{self.device_class}"
         for sensor in self.data.ecobee.get_remote_sensors(self.index):
             if sensor["name"] != self.sensor_name:
                 continue
@@ -77,47 +58,43 @@ class EcobeeSensor(SensorEntity):
             else:
                 thermostat = self.data.ecobee.get_thermostat(self.index)
                 identifier = thermostat["identifier"]
-                try:
-                    model = (
-                        f"{ECOBEE_MODEL_TO_NAME[thermostat['modelNumber']]} Thermostat"
-                    )
-                except KeyError:
-                    # Ecobee model is not in our list
-                    model = None
+                model = (
+                    f"{ECOBEE_MODEL_TO_NAME.get(thermostat['modelNumber'])} Thermostat"
+                )
             break
 
         if identifier is not None and model is not None:
-            return {
+            self._attr_device_info = {
                 "identifiers": {(DOMAIN, identifier)},
                 "name": self.sensor_name,
                 "manufacturer": MANUFACTURER,
                 "model": model,
             }
-        return None
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        if self._state in [
-            ECOBEE_STATE_CALIBRATING,
-            ECOBEE_STATE_UNKNOWN,
-            "unknown",
-        ]:
-            return None
-
-        if self.type == "temperature":
-            return float(self._state) / 10
-
-        return self._state
+        self._attr_device_class = (
+            self.type
+            if self.type in (DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_TEMPERATURE)
+            else None
+        )
 
     async def async_update(self):
         """Get the latest state of the sensor."""
         await self.data.update()
+        self._attr_available = self.data.ecobee.get_thermostat(self.index)["runtime"][
+            "connected"
+        ]
         for sensor in self.data.ecobee.get_remote_sensors(self.index):
             if sensor["name"] != self.sensor_name:
                 continue
             for item in sensor["capability"]:
                 if item["type"] != self.type:
                     continue
-                self._state = item["value"]
+                self._attr_state = item["value"]
+                if self._attr_state in [
+                    ECOBEE_STATE_CALIBRATING,
+                    ECOBEE_STATE_UNKNOWN,
+                    "unknown",
+                ]:
+                    self._attr_state = None
+                elif self.type == "temperature":
+                    self._attr_state = float(self._attr_state) / 10
                 break

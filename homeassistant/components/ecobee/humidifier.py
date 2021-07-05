@@ -39,6 +39,12 @@ class EcobeeHumidifier(HumidifierEntity):
     _attr_min_humidity = DEFAULT_MIN_HUMIDITY
     _attr_supported_features = SUPPORT_MODES
 
+    _attr_available_modes = [MODE_OFF, MODE_AUTO, MODE_MANUAL]
+    _attr_device_class = DEVICE_CLASS_HUMIDIFIER
+    _attr_max_humidity = DEFAULT_MAX_HUMIDITY
+    _attr_min_humidity = DEFAULT_MIN_HUMIDITY
+    _attr_supported_features = SUPPORT_MODES
+
     def __init__(self, data, thermostat_index):
         """Initialize ecobee humidifier platform."""
         self.data = data
@@ -46,19 +52,14 @@ class EcobeeHumidifier(HumidifierEntity):
         self.thermostat = self.data.ecobee.get_thermostat(self.thermostat_index)
         self._attr_name = self.thermostat["name"]
         self._last_humidifier_on_mode = MODE_MANUAL
-
         self.update_without_throttle = False
         self._attr_unique_id = f"{self.thermostat['identifier']}"
         self._attr_device_info = {
             "identifiers": {(DOMAIN, self.thermostat["identifier"])},
-            "name": self.name,
+            "name": self._attr_name,
             "manufacturer": MANUFACTURER,
             "model": f"{ECOBEE_MODEL_TO_NAME.get(self.thermostat['modelNumber'])} Thermostat",
         }
-        self._attr_available = self.thermostat["runtime"]["connected"]
-        self._attr_is_on = self.mode != MODE_OFF
-        self._attr_mode = self.thermostat["settings"]["humidifierMode"]
-        self._attr_target_humidity = int(self.thermostat["runtime"]["desiredHumidity"])
 
     async def async_update(self):
         """Get the latest state from the thermostat."""
@@ -70,6 +71,10 @@ class EcobeeHumidifier(HumidifierEntity):
         self.thermostat = self.data.ecobee.get_thermostat(self.thermostat_index)
         if self.mode != MODE_OFF:
             self._last_humidifier_on_mode = self.mode
+        self._attr_available = self.thermostat["runtime"]["connected"]
+        self._attr_is_on = self.mode != MODE_OFF
+        self._attr_mode = self.thermostat["settings"]["humidifierMode"]
+        self._attr_target_humidity = int(self.thermostat["runtime"]["desiredHumidity"])
 
     def set_mode(self, mode):
         """Set humidifier mode (auto, off, manual)."""

@@ -306,9 +306,9 @@ class Thermostat(ClimateEntity):
 
     _attr_temperature_unit = TEMP_FAHRENHEIT
     _attr_precision = PRECISION_TENTHS
+    _attr_fan_modes = [FAN_AUTO, FAN_ON]
     _attr_min_humidity = DEFAULT_MIN_HUMIDITY
     _attr_max_humidity = DEFAULT_MAX_HUMIDITY
-    _attr_fan_modes = [FAN_AUTO, FAN_ON]
 
     def __init__(self, data, thermostat_index, thermostat):
         """Initialize the thermostat."""
@@ -330,19 +330,36 @@ class Thermostat(ClimateEntity):
         if len(self._operation_list) == 2:
             self._operation_list.insert(0, HVAC_MODE_HEAT_COOL)
         self._operation_list.append(HVAC_MODE_OFF)
-
-        self._preset_modes = {
+        self._attr_preset_modes = {
             comfort["climateRef"]: comfort["name"]
             for comfort in self.thermostat["program"]["climates"]
         }
+        self._attr_hvac_modes = self._operation_list
         self.update_without_throttle = False
-        self._attr_available = self.thermostat["runtime"]["connected"]
         self._attr_supported_features = (
             SUPPORT_FLAGS | SUPPORT_TARGET_HUMIDITY
             if self.has_humidifier_control
             else SUPPORT_FLAGS
         )
         self._attr_unique_id = self.thermostat["identifier"]
+        self._attr_device_info = {
+            "identifiers": {(DOMAIN, self.thermostat["identifier"])},
+            "name": self._attr_name,
+            "manufacturer": MANUFACTURER,
+            "model": f"{ECOBEE_MODEL_TO_NAME.get(self.thermostat['modelNumber'])} Thermostat",
+        }
+
+    async def async_update(self):
+        """Get the latest state from the thermostat."""
+        if self.update_without_throttle:
+            await self.data.update(no_throttle=True)
+            self.update_without_throttle = False
+        else:
+            await self.data.update()
+        self.thermostat = self.data.ecobee.get_thermostat(self.thermostat_index)
+        self._attr_available = self.thermostat["runtime"]["connected"]
+        if self.hvac_mode != HVAC_MODE_OFF:
+            self._last_active_hvac_mode = self.hvac_mode
         self._attr_current_temperature = (
             self.thermostat["runtime"]["actualTemperature"] / 10.0
         )
@@ -356,11 +373,6 @@ class Thermostat(ClimateEntity):
             if self.hvac_mode == HVAC_MODE_HEAT_COOL
             else None
         )
-        self._attr_target_humidity = (
-            self.thermostat["runtime"]["desiredHumidity"]
-            if self.has_humidifier_control
-            else None
-        )
         self._attr_target_temperature = (
             round(self.thermostat["runtime"]["desiredHeat"] / 10.0)
             if self.hvac_mode == HVAC_MODE_HEAT
@@ -368,56 +380,69 @@ class Thermostat(ClimateEntity):
             if self.hvac_mode == HVAC_MODE_COOL
             else None
         )
+        self._attr_target_humidity = (
+            self.thermostat["runtime"]["desiredHumidity"]
+            if self.has_humidifier_control
+            else None
+        )
         self._attr_fan_mode = self.thermostat["runtime"]["desiredFanMode"]
+        events = self.thermostat["events"]
+        for event in events:
+            if not event["running"]:
+                continue
+
+            if event["type"] == "hold":
+                if event["holdClimateRef"] in self._attr_preset_modes:
+                    self._attr_preset_mode = self._attr_preset_modes[
+                        event["holdClimateRef"]
+                    ]
+                else:
+                    # Any hold not based on a climate is a temp hold
+                    self._attr_preset_mode = PRESET_TEMPERATURE
+                continue
+            elif event["type"].startswith("auto"):
+                # All auto modes are treated as holds
+                self._attr_preset_mode = event["type"][4:].lower()
+                continue
+            elif event["type"] == "vacation":
+                self.vacation = event["name"]
+                self._attr_preset_mode = PRESET_VACATION
+                continue
+            self._attr_preset_modes = list(self._attr_preset_modes.values())
+            self._attr_preset_mode = self._attr_preset_modes[
+                self.thermostat["program"]["currentClimateRef"]
+            ]
         self._attr_hvac_mode = ECOBEE_HVAC_TO_HASS[
             self.thermostat["settings"]["hvacMode"]
         ]
-        self._attr_hvac_modes = self._operation_list
         self._attr_current_humidity = self.thermostat["runtime"]["actualHumidity"]
+        if self.thermostat["equipmentStatus"] == "":
+            self._attr_hvac_action = CURRENT_HVAC_IDLE
+        else:
+            actions = [
+                ECOBEE_HVAC_ACTION_TO_HASS[status]
+                for status in self.thermostat["equipmentStatus"].split(",")
+                if ECOBEE_HVAC_ACTION_TO_HASS[status] is not None
+            ]
+            for action in (
+                CURRENT_HVAC_HEAT,
+                CURRENT_HVAC_COOL,
+                CURRENT_HVAC_DRY,
+                CURRENT_HVAC_FAN,
+            ):
+                if action in actions:
+                    self._attr_hvac_action = action
+                else:
+                    self._attr_hvac_action = CURRENT_HVAC_IDLE
         self._attr_extra_state_attributes = {
             "fan": self.fan,
-            "climate_mode": self._preset_modes[
+            "climate_mode": self._attr_preset_modes[
                 self.thermostat["program"]["currentClimateRef"]
             ],
             "equipment_running": self.thermostat["equipmentStatus"],
             "fan_min_on_time": self.thermostat["settings"]["fanMinOnTime"],
         }
         self._attr_is_aux_heat = "auxHeat" in self.thermostat["equipmentStatus"]
-
-    async def async_update(self):
-        """Get the latest state from the thermostat."""
-        if self.update_without_throttle:
-            await self.data.update(no_throttle=True)
-            self.update_without_throttle = False
-        else:
-            await self.data.update()
-        self.thermostat = self.data.ecobee.get_thermostat(self.thermostat_index)
-        if self.hvac_mode != HVAC_MODE_OFF:
-            self._last_active_hvac_mode = self.hvac_mode
-
-    @property
-    def device_info(self):
-        """Return device information for this ecobee thermostat."""
-        try:
-            model = f"{ECOBEE_MODEL_TO_NAME[self.thermostat['modelNumber']]} Thermostat"
-        except KeyError:
-            # Ecobee model is not in our list
-            model = None
-
-        return {
-            "identifiers": {(DOMAIN, self.thermostat["identifier"])},
-            "name": self.name,
-            "manufacturer": MANUFACTURER,
-            "model": model,
-        }
-
-    @property
-    def has_humidifier_control(self):
-        """Return true if humidifier connected to thermostat and set to manual/on mode."""
-        return (
-            self.thermostat["settings"]["hasHumidifier"]
-            and self.thermostat["settings"]["humidifierMode"] == HUMIDIFIER_MANUAL_MODE
-        )
 
     @property
     def fan(self):
@@ -427,57 +452,12 @@ class Thermostat(ClimateEntity):
         return HVAC_MODE_OFF
 
     @property
-    def preset_mode(self):
-        """Return current preset mode."""
-        events = self.thermostat["events"]
-        for event in events:
-            if not event["running"]:
-                continue
-
-            if event["type"] == "hold":
-                if event["holdClimateRef"] in self._preset_modes:
-                    return self._preset_modes[event["holdClimateRef"]]
-
-                # Any hold not based on a climate is a temp hold
-                return PRESET_TEMPERATURE
-            if event["type"].startswith("auto"):
-                # All auto modes are treated as holds
-                return event["type"][4:].lower()
-            if event["type"] == "vacation":
-                self.vacation = event["name"]
-                return PRESET_VACATION
-
-        return self._preset_modes[self.thermostat["program"]["currentClimateRef"]]
-
-    @property
-    def hvac_action(self):
-        """Return current HVAC action.
-
-        Ecobee returns a CSV string with different equipment that is active.
-        We are prioritizing any heating/cooling equipment, otherwase look at
-        drying/fanning. Idle if nothing going on.
-
-        We are unable to map all actions to HA equivalents.
-        """
-        if self.thermostat["equipmentStatus"] == "":
-            return CURRENT_HVAC_IDLE
-
-        actions = [
-            ECOBEE_HVAC_ACTION_TO_HASS[status]
-            for status in self.thermostat["equipmentStatus"].split(",")
-            if ECOBEE_HVAC_ACTION_TO_HASS[status] is not None
-        ]
-
-        for action in (
-            CURRENT_HVAC_HEAT,
-            CURRENT_HVAC_COOL,
-            CURRENT_HVAC_DRY,
-            CURRENT_HVAC_FAN,
-        ):
-            if action in actions:
-                return action
-
-        return CURRENT_HVAC_IDLE
+    def has_humidifier_control(self):
+        """Return true if humidifier connected to thermostat and set to manual/on mode."""
+        return (
+            self.thermostat["settings"]["hasHumidifier"]
+            and self.thermostat["settings"]["humidifierMode"] == HUMIDIFIER_MANUAL_MODE
+        )
 
     async def async_turn_aux_heat_on(self) -> None:
         """Turn auxiliary heater on."""
@@ -544,11 +524,6 @@ class Thermostat(ClimateEntity):
                 self.hold_preference(),
                 self.hold_hours(),
             )
-
-    @property
-    def preset_modes(self):
-        """Return available preset modes."""
-        return list(self._preset_modes.values())
 
     def set_auto_temp_hold(self, heat_temp, cool_temp):
         """Set temperature hold in auto mode."""
@@ -728,7 +703,7 @@ class Thermostat(ClimateEntity):
         _LOGGER.debug(
             "Creating a vacation on thermostat %s with name %s, cool temp %s, heat temp %s, "
             "and the following other parameters: %s",
-            self.name,
+            self._attr_name,
             vacation_name,
             cool_temp,
             heat_temp,
@@ -742,7 +717,7 @@ class Thermostat(ClimateEntity):
         """Delete a vacation with the specified name."""
         _LOGGER.debug(
             "Deleting a vacation on thermostat %s with name %s",
-            self.name,
+            self._attr_name,
             vacation_name,
         )
         self.data.ecobee.delete_vacation(self.thermostat_index, vacation_name)
@@ -751,7 +726,7 @@ class Thermostat(ClimateEntity):
         """Set the thermostat to the last active HVAC mode."""
         _LOGGER.debug(
             "Turning on ecobee thermostat %s in %s mode",
-            self.name,
+            self._attr_name,
             self._last_active_hvac_mode,
         )
         self.set_hvac_mode(self._last_active_hvac_mode)
