@@ -117,7 +117,7 @@ class AfterShipSensor(SensorEntity):
         self._attributes: dict[str, Any] = {}
         self._state: int | None = None
         self.aftership = aftership
-        self._attr_name: str = name
+        self._attr_name = name
 
     @property
     def state(self) -> int | None:
