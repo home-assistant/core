@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import datetime as dt
-from typing import Callable, Union
+from typing import Awaitable, Callable, Union
 
 import attr
 
@@ -21,4 +21,5 @@ class Message:
     timestamp: dt.datetime | None = attr.ib(default=None)
 
 
+AsyncMessageCallbackType = Callable[[Message], Awaitable[None]]
 MessageCallbackType = Callable[[Message], None]
