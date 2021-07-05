@@ -22,7 +22,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers import aiohttp_client, config_validation as cv
+from homeassistant.helpers import (
+    aiohttp_client,
+    config_validation as cv,
+    entity_registry,
+)
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -42,7 +46,7 @@ from .const import (
     LOGGER,
 )
 
-PLATFORMS = ["air_quality", "sensor"]
+PLATFORMS = ["sensor"]
 
 DATA_LISTENER = "listener"
 
@@ -124,12 +128,6 @@ def async_sync_geo_coordinator_update_intervals(hass, api_key):
         coordinator.update_interval = update_interval
 
 
-async def async_setup(hass, config):
-    """Set up the AirVisual component."""
-    hass.data[DOMAIN] = {DATA_COORDINATOR: {}, DATA_LISTENER: {}}
-    return True
-
-
 @callback
 def _standardize_geography_config_entry(hass, config_entry):
     """Ensure that geography config entries have appropriate properties."""
@@ -183,6 +181,8 @@ def _standardize_node_pro_config_entry(hass, config_entry):
 
 async def async_setup_entry(hass, config_entry):
     """Set up AirVisual as config entry."""
+    hass.data.setdefault(DOMAIN, {DATA_COORDINATOR: {}, DATA_LISTENER: {}})
+
     if CONF_API_KEY in config_entry.data:
         _standardize_geography_config_entry(hass, config_entry)
 
@@ -227,6 +227,19 @@ async def async_setup_entry(hass, config_entry):
             config_entry.entry_id
         ] = config_entry.add_update_listener(async_reload_entry)
     else:
+        # Remove outdated air_quality entities from the entity registry if they exist:
+        ent_reg = entity_registry.async_get(hass)
+        for entity_entry in [
+            e
+            for e in ent_reg.entities.values()
+            if e.config_entry_id == config_entry.entry_id
+            and e.entity_id.startswith("air_quality")
+        ]:
+            LOGGER.debug(
+                'Removing deprecated air_quality entity: "%s"', entity_entry.entity_id
+            )
+            ent_reg.async_remove(entity_entry.entity_id)
+
         _standardize_node_pro_config_entry(hass, config_entry)
 
         async def async_update_data():
@@ -336,12 +349,7 @@ class AirVisualEntity(CoordinatorEntity):
     def __init__(self, coordinator):
         """Initialize."""
         super().__init__(coordinator)
-        self._attrs = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
-
-    @property
-    def extra_state_attributes(self):
-        """Return the device state attributes."""
-        return self._attrs
+        self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
 
     async def async_added_to_hass(self):
         """Register callbacks."""

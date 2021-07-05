@@ -31,6 +31,7 @@ homeassistant.components.dnsip.*
 homeassistant.components.dsmr.*
 homeassistant.components.dunehd.*
 homeassistant.components.elgato.*
+homeassistant.components.fastdotcom.*
 homeassistant.components.fitbit.*
 homeassistant.components.forecast_solar.*
 homeassistant.components.fritzbox.*
@@ -77,6 +78,7 @@ homeassistant.components.sun.*
 homeassistant.components.switch.*
 homeassistant.components.synology_dsm.*
 homeassistant.components.systemmonitor.*
+homeassistant.components.tag.*
 homeassistant.components.tcp.*
 homeassistant.components.tts.*
 homeassistant.components.upcloud.*

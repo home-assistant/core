@@ -129,7 +129,7 @@ SENSOR_DICT = {
         ATTR_DEFAULT_ENABLED: True,
     },
     "timestamp": {
-        ATTR_NAME: "Up Time",
+        ATTR_NAME: "Total Run Time",
         ATTR_UNIT_OF_MEASUREMENT: TIME_SECONDS,
         ATTR_DEFAULT_ENABLED: False,
     },
