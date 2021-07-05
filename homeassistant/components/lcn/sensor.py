@@ -1,8 +1,6 @@
 """Support for LCN sensors."""
 from __future__ import annotations
 
-from typing import Callable
-
 import pypck
 
 from homeassistant.components.sensor import DOMAIN as DOMAIN_SENSOR, SensorEntity
@@ -14,6 +12,7 @@ from homeassistant.const import (
     CONF_SOURCE,
     CONF_UNIT_OF_MEASUREMENT,
 )
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 from . import LcnEntity
@@ -50,7 +49,7 @@ def create_lcn_sensor_entity(
 async def async_setup_entry(
     hass: HomeAssistantType,
     config_entry: ConfigEntry,
-    async_add_entities: Callable[[list[LcnEntity]], None],
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up LCN switch entities from a config entry."""
     entities = []

@@ -1,5 +1,8 @@
 """Support for LCN devices."""
+from __future__ import annotations
+
 import logging
+from typing import Callable
 
 import pypck
 
@@ -143,8 +146,8 @@ class LcnEntity(Entity):
         self.config = config
         self.entry_id = entry_id
         self.device_connection = device_connection
-        self._unregister_for_inputs = None
-        self._name = str(config[CONF_NAME])
+        self._unregister_for_inputs: Callable | None = None
+        self._name: str = config[CONF_NAME]
 
     @property
     def unique_id(self) -> str:
@@ -173,7 +176,7 @@ class LcnEntity(Entity):
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
         if self._unregister_for_inputs is not None:
-            self._unregister_for_inputs()  # type: ignore[unreachable]
+            self._unregister_for_inputs()
 
     @property
     def name(self) -> str:

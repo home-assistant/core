@@ -1,7 +1,7 @@
 """Support for LCN climate control."""
 from __future__ import annotations
 
-from typing import Any, Callable
+from typing import Any, cast
 
 import pypck
 
@@ -19,6 +19,7 @@ from homeassistant.const import (
     CONF_SOURCE,
     CONF_UNIT_OF_MEASUREMENT,
 )
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 from . import LcnEntity
@@ -48,7 +49,7 @@ def create_lcn_climate_entity(
 async def async_setup_entry(
     hass: HomeAssistantType,
     config_entry: ConfigEntry,
-    async_add_entities: Callable[[list[LcnEntity]], None],
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up LCN switch entities from a config entry."""
     entities = []
@@ -108,7 +109,7 @@ class LcnClimate(LcnEntity, ClimateEntity):
     @property
     def temperature_unit(self) -> str:
         """Return the unit of measurement."""
-        return str(self.unit.value)
+        return cast(str, self.unit.value)
 
     @property
     def current_temperature(self) -> float | None:
@@ -144,12 +145,12 @@ class LcnClimate(LcnEntity, ClimateEntity):
     @property
     def max_temp(self) -> float:
         """Return the maximum temperature."""
-        return float(self._max_temp)
+        return cast(float, self._max_temp)
 
     @property
     def min_temp(self) -> float:
         """Return the minimum temperature."""
-        return float(self._min_temp)
+        return cast(float, self._min_temp)
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set new target hvac mode."""

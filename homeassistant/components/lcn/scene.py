@@ -1,13 +1,14 @@
 """Support for LCN scenes."""
 from __future__ import annotations
 
-from typing import Any, Callable
+from typing import Any
 
 import pypck
 
 from homeassistant.components.scene import DOMAIN as DOMAIN_SCENE, Scene
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS, CONF_DOMAIN, CONF_ENTITIES, CONF_SCENE
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 from . import LcnEntity
@@ -37,7 +38,7 @@ def create_lcn_scene_entity(
 async def async_setup_entry(
     hass: HomeAssistantType,
     config_entry: ConfigEntry,
-    async_add_entities: Callable[[list[LcnEntity]], None],
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up LCN switch entities from a config entry."""
     entities = []

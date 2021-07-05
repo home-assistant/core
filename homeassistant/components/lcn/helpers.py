@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import re
-from typing import Tuple, Type, Union
+from typing import Tuple, Type, Union, cast
 
 import pypck
 import voluptuous as vol
@@ -79,11 +79,11 @@ def get_device_connection(
 def get_resource(domain_name: str, domain_data: ConfigType) -> str:
     """Return the resource for the specified domain_data."""
     if domain_name in ["switch", "light"]:
-        return str(domain_data["output"])
+        return cast(str, domain_data["output"])
     if domain_name in ["binary_sensor", "sensor"]:
-        return str(domain_data["source"])
+        return cast(str, domain_data["source"])
     if domain_name == "cover":
-        return str(domain_data["motor"])
+        return cast(str, domain_data["motor"])
     if domain_name == "climate":
         return f'{domain_data["source"]}.{domain_data["setpoint"]}'
     if domain_name == "scene":

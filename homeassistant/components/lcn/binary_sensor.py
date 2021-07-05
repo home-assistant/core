@@ -1,8 +1,6 @@
 """Support for LCN binary sensors."""
 from __future__ import annotations
 
-from typing import Callable
-
 import pypck
 
 from homeassistant.components.binary_sensor import (
@@ -11,6 +9,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS, CONF_DOMAIN, CONF_ENTITIES, CONF_SOURCE
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 from . import LcnEntity
@@ -39,7 +38,7 @@ def create_lcn_binary_sensor_entity(
 async def async_setup_entry(
     hass: HomeAssistantType,
     config_entry: ConfigEntry,
-    async_add_entities: Callable[[list[LcnEntity]], None],
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up LCN switch entities from a config entry."""
     entities = []
