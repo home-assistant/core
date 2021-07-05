@@ -463,14 +463,19 @@ def _apply_update(engine, session, new_version, old_version):  # noqa: C901
         # This dropped the statistics table, done again in version 18.
         pass
     elif new_version == 18:
-        # Recreate the statisticsmeta tables
-        if sqlalchemy.inspect(engine).has_table(StatisticsMeta.__tablename__):
-            StatisticsMeta.__table__.drop(engine)
-        StatisticsMeta.__table__.create(engine)
+        # Recreate the statistics and statistics meta tables.
+        #
+        # Order matters! Statistics has a relation with StatisticsMeta,
+        # so statistics need to be deleted before meta (or in pair depending
+        # on the SQL backend); and meta needs to be created before statistics.
+        if sqlalchemy.inspect(engine).has_table(
+            StatisticsMeta.__tablename__
+        ) or sqlalchemy.inspect(engine).has_table(Statistics.__tablename__):
+            Base.metadata.drop_all(
+                bind=engine, tables=[Statistics.__table__, StatisticsMeta.__table__]
+            )
 
-        # Recreate the statistics table
-        if sqlalchemy.inspect(engine).has_table(Statistics.__tablename__):
-            Statistics.__table__.drop(engine)
+        StatisticsMeta.__table__.create(engine)
         Statistics.__table__.create(engine)
     else:
         raise ValueError(f"No schema migration defined for version {new_version}")
