@@ -466,9 +466,8 @@ def _apply_update(engine, session, new_version, old_version):
         # Recreate the statistics and statistics meta tables.
         #
         # Order matters! Statistics has a relation with StatisticsMeta,
-        # so statistics need to be deleted before meta,
-        # and meta needs to be created before statistics.
-        # Recreate the statistics & statistics meta tables.
+        # so statistics need to be deleted before meta (or in pair depending
+        # on the SQL backend); and meta needs to be created before statistics.
         if sqlalchemy.inspect(engine).has_table(
             StatisticsMeta.__tablename__
         ) or sqlalchemy.inspect(engine).has_table(Statistics.__tablename__):
