@@ -58,7 +58,7 @@ SCAN_INTERVAL = 60
 
 @dataclass
 class NetatmoDataClass:
-    """Class for keeping track of ."""
+    """Class for keeping track of Netatmo data class metadata."""
 
     name: str
     interval: int
