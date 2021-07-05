@@ -68,6 +68,32 @@ async def test_update_unique_id(hass: HomeAssistant, fritz: Mock):
     assert entity_migrated.unique_id == f"{CONF_FAKE_AIN}_temperature"
 
 
+async def test_update_unique_id_no_change(hass: HomeAssistant, fritz: Mock):
+    """Test unique_id is not updated of integration."""
+    entry = MockConfigEntry(
+        domain=FB_DOMAIN,
+        data=MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0],
+        unique_id="any",
+    )
+    entry.add_to_hass(hass)
+
+    entity_registry = er.async_get(hass)
+    entity = entity_registry.async_get_or_create(
+        SENSOR_DOMAIN,
+        FB_DOMAIN,
+        f"{CONF_FAKE_AIN}_temperature",
+        unit_of_measurement=TEMP_CELSIUS,
+        config_entry=entry,
+    )
+    assert entity.unique_id == f"{CONF_FAKE_AIN}_temperature"
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_migrated = entity_registry.async_get(entity.entity_id)
+    assert entity_migrated
+    assert entity_migrated.unique_id == f"{CONF_FAKE_AIN}_temperature"
+
+
 async def test_coordinator_update_after_reboot(hass: HomeAssistant, fritz: Mock):
     """Test coordinator after reboot."""
     entry = MockConfigEntry(
