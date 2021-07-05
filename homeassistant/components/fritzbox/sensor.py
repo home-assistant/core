@@ -1,7 +1,11 @@
 """Support for AVM FRITZ!SmartHome temperature sensor only devices."""
 from __future__ import annotations
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import (
+    ATTR_STATE_CLASS,
+    STATE_CLASS_MEASUREMENT,
+    SensorEntity,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -42,6 +46,7 @@ async def async_setup_entry(
                         ATTR_ENTITY_ID: f"{device.ain}_temperature",
                         ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
                         ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
+                        ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
                     },
                     coordinator,
                     ain,
@@ -56,6 +61,7 @@ async def async_setup_entry(
                         ATTR_ENTITY_ID: f"{device.ain}_battery",
                         ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE,
                         ATTR_DEVICE_CLASS: DEVICE_CLASS_BATTERY,
+                        ATTR_STATE_CLASS: None,
                     },
                     coordinator,
                     ain,

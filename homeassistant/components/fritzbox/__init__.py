@@ -6,6 +6,7 @@ from datetime import timedelta
 from pyfritzhome import Fritzhome, FritzhomeDevice, LoginError
 import requests
 
+from homeassistant.components.sensor import ATTR_STATE_CLASS
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -140,6 +141,7 @@ class FritzBoxEntity(CoordinatorEntity):
         self._unique_id = entity_info[ATTR_ENTITY_ID]
         self._unit_of_measurement = entity_info[ATTR_UNIT_OF_MEASUREMENT]
         self._device_class = entity_info[ATTR_DEVICE_CLASS]
+        self._attr_state_class = entity_info[ATTR_STATE_CLASS]
 
     @property
     def device(self) -> FritzhomeDevice:
