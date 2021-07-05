@@ -347,7 +347,7 @@ def _drop_foreign_key_constraints(connection, engine, table, columns):
             )
 
 
-def _apply_update(engine, session, new_version, old_version):  # noqa: C901
+def _apply_update(engine, session, new_version, old_version):
     """Perform operations to bring schema up to date."""
     connection = session.connection()
     if new_version == 1:
@@ -451,10 +451,8 @@ def _apply_update(engine, session, new_version, old_version):  # noqa: C901
     elif new_version == 14:
         _modify_columns(connection, engine, "events", ["event_type VARCHAR(64)"])
     elif new_version == 15:
-        if sqlalchemy.inspect(engine).has_table(Statistics.__tablename__):
-            # Recreate the statistics table
-            Statistics.__table__.drop(engine)
-            Statistics.__table__.create(engine)
+        # This dropped the statistics table, done again in version 18.
+        pass
     elif new_version == 16:
         _drop_foreign_key_constraints(
             connection, engine, TABLE_STATES, ["old_state_id"]
