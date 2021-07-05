@@ -14,7 +14,16 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["light", "switch", "lock", "fan", "sensor", "binary_sensor", "cover"]
+PLATFORMS = [
+    "light",
+    "switch",
+    "lock",
+    "fan",
+    "sensor",
+    "binary_sensor",
+    "cover",
+    "climate",
+]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
@@ -81,4 +90,5 @@ class FreedomproDataUpdateCoordinator(DataUpdateCoordinator):
             )
             if dev is not None and "state" in dev:
                 device["state"] = dev["state"]
+
         return self._devices
