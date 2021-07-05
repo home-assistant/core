@@ -7,7 +7,7 @@
       },
       "reauth_confirm": {
         "title": "[%key:common::config_flow::title::reauth%]",
-        "description": "Your access has expired or been revoked. Enter your password to re-link your account.",
+        "description": "Your access token has expired or been revoked. Enter your password to re-link your account.",
         "data": {
           "password": "[%key:common::config_flow::data::password%]"
         }
