@@ -28,8 +28,8 @@ from . import mock_real_ip
 SUPERVISOR_IP = "1.2.3.4"
 BANNED_IPS = ["200.201.202.203", "100.64.0.2"]
 BANNED_IPS_WITH_SUPERVISOR = BANNED_IPS + [SUPERVISOR_IP]
-TRUSTED_NETWORKS = [IPv4Network("192.168.1.0/24"), IPv4Network("10.0.0.1")]
-TRUSTED_IPS = ["192.168.1.1", "10.0.0.1"]
+IP_BAN_IGNORE_IPS = [IPv4Network("192.168.1.0/24"), IPv4Network("10.0.0.1")]
+IGNORE_IPS = ["192.168.1.1", "10.0.0.1"]
 
 
 @pytest.fixture(name="hassio_env")
@@ -56,7 +56,7 @@ async def test_access_from_banned_ip(hass, aiohttp_client):
     """Test accessing to server from banned IP. Both trusted and not."""
     app = web.Application()
     app["hass"] = hass
-    setup_bans(hass, app, 1, TRUSTED_NETWORKS)
+    setup_bans(hass, app, 1, IP_BAN_IGNORE_IPS)
     set_real_ip = mock_real_ip(app)
 
     with patch(
@@ -93,7 +93,7 @@ async def test_access_from_supervisor_ip(
         raise HTTPUnauthorized
 
     app.router.add_get("/", unauth_handler)
-    setup_bans(hass, app, 1, TRUSTED_NETWORKS)
+    setup_bans(hass, app, 1, IP_BAN_IGNORE_IPS)
     mock_real_ip(app)(remote_addr)
 
     with patch(
@@ -147,7 +147,7 @@ async def test_ip_bans_file_creation(hass, aiohttp_client):
         raise HTTPUnauthorized
 
     app.router.add_get("/", unauth_handler)
-    setup_bans(hass, app, 2, TRUSTED_NETWORKS)
+    setup_bans(hass, app, 2, IP_BAN_IGNORE_IPS)
     mock_real_ip(app)("200.201.202.204")
 
     with patch(
@@ -203,7 +203,7 @@ async def test_failed_login_attempts_counter(hass, aiohttp_client):
         "/", request_handler_factory(Mock(requires_auth=False), auth_handler)
     )
 
-    setup_bans(hass, app, 5, TRUSTED_NETWORKS)
+    setup_bans(hass, app, 5, IP_BAN_IGNORE_IPS)
     set_real_ip = mock_real_ip(app)
     remote_ip = ip_address("200.201.202.204")
     set_real_ip("200.201.202.204")
@@ -237,9 +237,9 @@ async def test_failed_login_attempts_counter(hass, aiohttp_client):
     assert resp.status == HTTPStatus.OK
     assert app[KEY_FAILED_LOGIN_ATTEMPTS][remote_ip] == 2
 
-    # Test trusted networks.
+    # Test IP_BAN_IGNORE_IPS
     # The authentication should still be rejected but the banned counter should be 0.
-    for remote_addr in TRUSTED_IPS:
+    for remote_addr in IGNORE_IPS:
         remote_ip = ip_address(remote_addr)
         set_real_ip(remote_addr)
         resp = await client.get("/auth_false")
