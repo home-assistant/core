@@ -81,7 +81,7 @@ DEVICES = [
     },
     {
         "uid": "3WRRJR6RCZQZSND8VP0YTO3YXCSOFPKBMW8T51TU-LQ*TWMYQKL3UVED4HSIIB9GXJWJZBQCXG-9VE-N2IUAIWI",
-        "name": "Bedroom thermostat",
+        "name": "thermostat",
         "type": "thermostat",
         "characteristics": [
             "heatingCoolingState",
