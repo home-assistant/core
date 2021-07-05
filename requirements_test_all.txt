@@ -997,7 +997,7 @@ pysiaalarm==3.0.0
 pysignalclirestapi==0.3.4
 
 # homeassistant.components.sma
-pysma==0.6.1
+pysma==0.6.2
 
 # homeassistant.components.smappee
 pysmappee==0.2.25
