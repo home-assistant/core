@@ -399,9 +399,9 @@ class SensiboClimate(ClimateEntity):
             aiohttp.client_exceptions.ClientError,
             asyncio.TimeoutError,
             pysensibo.SensiboError,
-        ):
-            _LOGGER.error(
-                "Failed to set AC state for device '%s' to Sensibo servers", self.name
-            )
+        ) as err:
             self._available = False
             self.async_write_ha_state()
+            raise Exception(
+                f"Failed to set AC state for device {self.name} to Sensibo servers"
+            ) from err
