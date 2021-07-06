@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from collections import defaultdict, deque
 from collections.abc import Generator, Iterator, Mapping
-import datetime
 from io import BytesIO
 import logging
 from threading import Event
@@ -61,8 +60,6 @@ class SegmentBuffer:
         self._stream_settings: StreamSettings = hass.data[DOMAIN][ATTR_SETTINGS]
         # Just do this dict lookup once since we use this value during each mux
         self._min_segment_duration = self._stream_settings["min_segment_duration"]
-        # This does not need to be exact
-        self._real_time_offset = datetime.datetime.utcnow()
 
     def make_new_av(
         self,
