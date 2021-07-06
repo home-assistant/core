@@ -161,6 +161,7 @@ class Segment:
         if not playlist_template:
             if last_stream_id != self.stream_id:
                 playlist_template.append("#EXT-X-DISCONTINUITY")
+            # This is a placeholder where the rendered parts will be inserted
             playlist_template.append("{}")
         if render_parts:
             for http_range_start, part in itertools.islice(
