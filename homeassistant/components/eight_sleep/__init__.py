@@ -264,4 +264,4 @@ class EightSleepHeatEntity(CoordinatorEntity):
         self._usrobj: EightUser = self._eight.users[self._userid]
 
         self._attr_name = f"{name} {self._mapped_name}"
-        self._attr_unique_id = f"{self._eight.deviceid}_{self._userid}_{self._sensor}"
+        self._attr_unique_id = f"{self._eight.deviceid}.{self._userid}.{self._sensor}"

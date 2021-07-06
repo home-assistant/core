@@ -150,7 +150,7 @@ class EightUserSensor(EightSleepUserEntity, SensorEntity):
         if "bed_temp" in self._sensor:
             self._attr_icon = "mdi:thermometer"
 
-        self._attr_unique_id = f"{self._eight.deviceid}_{self._userid}_{self._sensor}"
+        self._attr_unique_id = f"{self._eight.deviceid}.{self._userid}.{self._sensor}"
 
         _LOGGER.debug(
             "User Sensor: %s, Side: %s, User: %s",
@@ -307,7 +307,7 @@ class EightRoomSensor(EightSleepUserEntity, SensorEntity):
         self._attr_unit_of_measurement = (
             TEMP_CELSIUS if self._units == "si" else TEMP_FAHRENHEIT
         )
-        self._attr_unique_id = f"{self._eight.deviceid}_{self._sensor}"
+        self._attr_unique_id = f"{self._eight.deviceid}.{self._sensor}"
 
     @property
     def state(self) -> int | float | None:
