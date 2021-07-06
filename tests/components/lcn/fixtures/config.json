@@ -27,6 +27,21 @@
         "output": "output1"
       },
       {
+        "name": "Switch_Output2",
+        "address": "s0.m7",
+        "output": "output2"
+      },
+      {
+        "name": "Switch_Relay1",
+        "address": "s0.m7",
+        "output": "relay1"
+      },
+      {
+        "name": "Switch_Relay2",
+        "address": "s0.m7",
+        "output": "relay2"
+      },
+      {
         "name": "Switch_Group5",
         "address": "s0.g5",
         "output": "relay1"
