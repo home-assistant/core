@@ -65,8 +65,8 @@ class PwrCtrlSwitch(SwitchEntity):
         """Initialize the PwrCtrl switch."""
         self._port = port
         self._parent_device = parent_device
-        self._attr_unique_id = f"{self._port.device.host}-{self._port.get_index()}"
-        self._attr_name = self._port.label
+        self._attr_unique_id = f"{port.device.host}-{port.get_index()}"
+        self._attr_name = port.label
 
     def update(self):
         """Trigger update for all switches on the parent device."""
