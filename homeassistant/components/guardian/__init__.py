@@ -225,7 +225,7 @@ class GuardianEntity(CoordinatorEntity):
         self._entry = entry
 
     @callback
-    def _async_update_from_latest_data(self):
+    def _async_update_from_latest_data(self) -> None:
         """Update the entity.
 
         This should be extended by Guardian platforms.
@@ -271,8 +271,8 @@ class ValveControllerEntity(GuardianEntity):
         coordinators: dict[str, DataUpdateCoordinator],
         kind: str,
         name: str,
-        device_class: str,
-        icon: str,
+        device_class: str | None,
+        icon: str | None,
     ) -> None:
         """Initialize."""
         super().__init__(entry, kind, name, device_class, icon)
@@ -298,7 +298,7 @@ class ValveControllerEntity(GuardianEntity):
             if coordinator
         )
 
-    async def _async_continue_entity_setup(self):
+    async def _async_continue_entity_setup(self) -> None:
         """Perform additional, internal tasks when the entity is about to be added.
 
         This should be extended by Guardian platforms.
