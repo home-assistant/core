@@ -381,14 +381,17 @@ class HlsSegmentView(StreamView):
                 # If the segment is complete we have total size
                 headers["Content-Range"] = (
                     f"bytes {http_start}-"
-                    + str(min(request.http_range.stop, segment.data_size) - 1)
+                    + str(
+                        (http_stop := min(request.http_range.stop, segment.data_size))
+                        - 1
+                    )
                     + f"/{segment.data_size}"
                 )
             else:
                 # If we don't have the total size we use a *
                 headers[
                     "Content-Range"
-                ] = f"bytes {http_start}-{request.http_range.stop-1}/*"
+                ] = f"bytes {http_start}-{(http_stop:=request.http_range.stop)-1}/*"
         # Set up streaming response that we can write to as data becomes available
         response = web.StreamResponse(headers=headers, status=status)
         # Waiting until we write to prepare *might* give clients more accurate TTFB
@@ -397,7 +400,7 @@ class HlsSegmentView(StreamView):
         await response.prepare(request)
         try:
             for bytes_to_write in segment.get_aggregating_bytes(
-                start_loc=http_start, end_loc=request.http_range.stop or http_stop
+                start_loc=http_start, end_loc=http_stop
             ):
                 if bytes_to_write:
                     await response.write(bytes_to_write)
