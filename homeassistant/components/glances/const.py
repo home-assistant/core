@@ -5,6 +5,9 @@ from homeassistant.const import (
     DATA_GIBIBYTES,
     DATA_MEBIBYTES,
     DEVICE_CLASS_TEMPERATURE,
+    DATA_BYTES,
+    DATA_GIBIBYTES,
+    DATA_MEBIBYTES,
     PERCENTAGE,
     TEMP_CELSIUS,
 )
@@ -25,6 +28,7 @@ if sys.maxsize > 2 ** 32:
     CPU_ICON = "mdi:cpu-64-bit"
 else:
     CPU_ICON = "mdi:cpu-32-bit"
+
 
 SENSOR_TYPES = {
     "disk_use_percent": ["fs", "used percent", PERCENTAGE, "mdi:harddisk", None],
@@ -73,4 +77,6 @@ SENSOR_TYPES = {
         "mdi:docker",
         None,
     ],
+    "network_rx": ["network", "Rx", DATA_BYTES, "mdi:download"],
+    "network_tx": ["network", "Tx", DATA_BYTES, "mdi:upload"],
 }
