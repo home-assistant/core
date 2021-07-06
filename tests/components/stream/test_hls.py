@@ -354,7 +354,7 @@ async def test_hls_max_segments(hass, hls_stream, stream_worker_sync):
         }
 
     # The segment that fell off the buffer is not accessible
-    with patch.object(hls, "hls_part_timeout", 0.1):
+    with patch.object(hls.stream_settings, "hls_part_timeout", 0.1):
         segment_response = await hls_client.get("/segment/0.m4s")
     assert segment_response.status == 404
 

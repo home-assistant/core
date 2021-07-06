@@ -265,7 +265,7 @@ async def test_ll_hls_playlist_view(hass, hls_stream, stream_worker_sync):
             for i in range(2)
         ],
         hint=make_hint(2, 0),
-        target_part_duration=hls.target_part_duration,
+        target_part_duration=hls.stream_settings.target_part_duration,
     )
 
     # add one more segment
@@ -288,7 +288,7 @@ async def test_ll_hls_playlist_view(hass, hls_stream, stream_worker_sync):
             for i in range(3)
         ],
         hint=make_hint(3, 0),
-        target_part_duration=hls.target_part_duration,
+        target_part_duration=hls.stream_settings.target_part_duration,
     )
 
     stream_worker_sync.resume()
@@ -420,7 +420,7 @@ async def test_ll_hls_playlist_bad_msn_part(hass, hls_stream, stream_worker_sync
     assert (await hls_client.get("/playlist.m3u8?_HLS_msn=4")).status == 400
     assert (
         await hls_client.get(
-            f"/playlist.m3u8?_HLS_msn=1&_HLS_part={num_completed_parts-1+hass.data[DOMAIN][ATTR_SETTINGS]['hls_advance_part_limit']}"
+            f"/playlist.m3u8?_HLS_msn=1&_HLS_part={num_completed_parts-1+hass.data[DOMAIN][ATTR_SETTINGS].hls_advance_part_limit}"
         )
     ).status == 400
     stream_worker_sync.resume()
@@ -548,7 +548,7 @@ async def test_ll_hls_playlist_msn_part(hass, hls_stream, stream_worker_sync, hl
     # Make requests for all the part segments up to n+ADVANCE_PART_LIMIT
     hls_sync.reset_request_pool(
         num_completed_parts
-        + int(-(-hass.data[DOMAIN][ATTR_SETTINGS]["hls_advance_part_limit"] // 1))
+        + int(-(-hass.data[DOMAIN][ATTR_SETTINGS].hls_advance_part_limit // 1))
     )
     msn_requests = asyncio.gather(
         *(
@@ -557,10 +557,7 @@ async def test_ll_hls_playlist_msn_part(hass, hls_stream, stream_worker_sync, hl
                 for i in range(
                     num_completed_parts
                     + int(
-                        -(
-                            -hass.data[DOMAIN][ATTR_SETTINGS]["hls_advance_part_limit"]
-                            // 1
-                        )
+                        -(-hass.data[DOMAIN][ATTR_SETTINGS].hls_advance_part_limit // 1)
                     )
                 )
             ]

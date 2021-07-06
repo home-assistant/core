@@ -6,7 +6,7 @@ from collections import deque
 from collections.abc import Generator, Iterable
 import datetime
 import itertools
-from typing import TYPE_CHECKING, TypedDict
+from typing import TYPE_CHECKING
 
 from aiohttp import web
 import async_timeout
@@ -25,14 +25,15 @@ if TYPE_CHECKING:
 PROVIDERS = Registry()
 
 
-class StreamSettings(TypedDict):
+@attr.s(slots=True)
+class StreamSettings:
     """Stream settings."""
 
-    ll_hls: bool
-    min_segment_duration: float
-    target_part_duration: float
-    hls_advance_part_limit: int
-    hls_part_timeout: float
+    ll_hls: bool = attr.ib()
+    min_segment_duration: float = attr.ib()
+    target_part_duration: float = attr.ib()
+    hls_advance_part_limit: int = attr.ib()
+    hls_part_timeout: float = attr.ib()
 
 
 @attr.s(slots=True)
