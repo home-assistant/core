@@ -1,7 +1,13 @@
 """Constants for Glances component."""
 import sys
 
-from homeassistant.const import DATA_GIBIBYTES, DATA_MEBIBYTES, PERCENTAGE, TEMP_CELSIUS
+from homeassistant.const import (
+    DATA_BYTES,
+    DATA_GIBIBYTES,
+    DATA_MEBIBYTES,
+    PERCENTAGE,
+    TEMP_CELSIUS,
+)
 
 DOMAIN = "glances"
 CONF_VERSION = "version"
@@ -19,6 +25,7 @@ if sys.maxsize > 2 ** 32:
     CPU_ICON = "mdi:cpu-64-bit"
 else:
     CPU_ICON = "mdi:cpu-32-bit"
+
 
 SENSOR_TYPES = {
     "disk_use_percent": ["fs", "used percent", PERCENTAGE, "mdi:harddisk"],
@@ -48,4 +55,6 @@ SENSOR_TYPES = {
         DATA_MEBIBYTES,
         "mdi:docker",
     ],
+    "network_rx": ["network", "Rx", DATA_BYTES, "mdi:download"],
+    "network_tx": ["network", "Tx", DATA_BYTES, "mdi:upload"],
 }

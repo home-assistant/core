@@ -44,6 +44,19 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                             SENSOR_TYPES[sensor_type],
                         )
                     )
+        elif sensor_details[0] == "network":
+            # network will provide list of different network interfaces
+            for interface in client.api.data[sensor_details[0]]:
+                dev.append(
+                    GlancesSensor(
+                        client,
+                        name,
+                        interface["interface_name"],
+                        SENSOR_TYPES[sensor_type][1],
+                        sensor_type,
+                        SENSOR_TYPES[sensor_type],
+                    )
+                )
         elif client.api.data[sensor_details[0]]:
             dev.append(
                 GlancesSensor(
@@ -155,6 +168,15 @@ class GlancesSensor(SensorEntity):
                 self._state = round(disk["used"] / 1024 ** 3, 1)
             elif self.type == "disk_use_percent":
                 self._state = disk["percent"]
+        elif self.sensor_details[0] == "network":
+            for var in value["network"]:
+                if var["interface_name"] == self._sensor_name_prefix:
+                    interface = var
+                    break
+            if self.type == "network_rx":
+                self._state = interface["rx"]
+            elif self.type == "network_tx":
+                self._state = interface["tx"]
         elif self.type == "battery":
             for sensor in value["sensors"]:
                 if (
