@@ -9,7 +9,7 @@ from hatasmota.trigger import TasmotaTrigger
 import voluptuous as vol
 
 from homeassistant.components.automation import AutomationActionType
-from homeassistant.components.device_automation import TRIGGER_BASE_SCHEMA
+from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.components.homeassistant.triggers import event as event_trigger
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF_TYPE
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
@@ -28,7 +28,7 @@ CONF_DISCOVERY_ID = "discovery_id"
 CONF_SUBTYPE = "subtype"
 DEVICE = "device"
 
-TRIGGER_SCHEMA = TRIGGER_BASE_SCHEMA.extend(
+TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_PLATFORM): DEVICE,
         vol.Required(CONF_DOMAIN): DOMAIN,
@@ -81,9 +81,9 @@ class Trigger:
     """Device trigger settings."""
 
     device_id: str = attr.ib()
-    discovery_hash: dict = attr.ib()
+    discovery_hash: dict | None = attr.ib()
     hass: HomeAssistant = attr.ib()
-    remove_update_signal: Callable[[], None] = attr.ib()
+    remove_update_signal: Callable[[], None] | None = attr.ib()
     subtype: str = attr.ib()
     tasmota_trigger: TasmotaTrigger = attr.ib()
     type: str = attr.ib()
@@ -242,7 +242,7 @@ async def async_remove_triggers(hass: HomeAssistant, device_id: str):
 
 async def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict]:
     """List device triggers for a Tasmota device."""
-    triggers = []
+    triggers: list[dict[str, str]] = []
 
     if DEVICE_TRIGGERS not in hass.data:
         return triggers

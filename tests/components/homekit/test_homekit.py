@@ -54,7 +54,15 @@ from homeassistant.const import (
 )
 from homeassistant.core import State
 from homeassistant.helpers import device_registry
-from homeassistant.helpers.entityfilter import generate_filter
+from homeassistant.helpers.entityfilter import (
+    CONF_EXCLUDE_DOMAINS,
+    CONF_EXCLUDE_ENTITIES,
+    CONF_EXCLUDE_ENTITY_GLOBS,
+    CONF_INCLUDE_DOMAINS,
+    CONF_INCLUDE_ENTITIES,
+    CONF_INCLUDE_ENTITY_GLOBS,
+    convert_filter,
+)
 from homeassistant.setup import async_setup_component
 from homeassistant.util import json as json_util
 
@@ -63,6 +71,27 @@ from .util import PATH_HOMEKIT, async_init_entry, async_init_integration
 from tests.common import MockConfigEntry, mock_device_registry, mock_registry
 
 IP_ADDRESS = "127.0.0.1"
+
+
+def generate_filter(
+    include_domains,
+    include_entities,
+    exclude_domains,
+    exclude_entites,
+    include_globs=None,
+    exclude_globs=None,
+):
+    """Generate an entity filter using the standard method."""
+    return convert_filter(
+        {
+            CONF_INCLUDE_DOMAINS: include_domains,
+            CONF_INCLUDE_ENTITIES: include_entities,
+            CONF_EXCLUDE_DOMAINS: exclude_domains,
+            CONF_EXCLUDE_ENTITIES: exclude_entites,
+            CONF_INCLUDE_ENTITY_GLOBS: include_globs or [],
+            CONF_EXCLUDE_ENTITY_GLOBS: exclude_globs or [],
+        }
+    )
 
 
 @pytest.fixture(autouse=True)
@@ -250,7 +279,7 @@ async def test_homekit_setup(hass, hk_driver, mock_zeroconf):
         port=DEFAULT_PORT,
         persist_file=path,
         advertised_address=None,
-        zeroconf_instance=zeroconf_mock,
+        async_zeroconf_instance=zeroconf_mock,
     )
     assert homekit.driver.safe_mode is False
 
@@ -290,7 +319,7 @@ async def test_homekit_setup_ip_address(hass, hk_driver, mock_zeroconf):
         port=DEFAULT_PORT,
         persist_file=path,
         advertised_address=None,
-        zeroconf_instance=mock_zeroconf,
+        async_zeroconf_instance=mock_zeroconf,
     )
 
 
@@ -315,10 +344,10 @@ async def test_homekit_setup_advertise_ip(hass, hk_driver, mock_zeroconf):
         entry_title=entry.title,
     )
 
-    zeroconf_instance = MagicMock()
+    async_zeroconf_instance = MagicMock()
     path = get_persist_fullpath_for_entry_id(hass, entry.entry_id)
     with patch(f"{PATH_HOMEKIT}.HomeDriver", return_value=hk_driver) as mock_driver:
-        await hass.async_add_executor_job(homekit.setup, zeroconf_instance)
+        await hass.async_add_executor_job(homekit.setup, async_zeroconf_instance)
     mock_driver.assert_called_with(
         hass,
         entry.entry_id,
@@ -329,7 +358,7 @@ async def test_homekit_setup_advertise_ip(hass, hk_driver, mock_zeroconf):
         port=DEFAULT_PORT,
         persist_file=path,
         advertised_address="192.168.1.100",
-        zeroconf_instance=zeroconf_instance,
+        async_zeroconf_instance=async_zeroconf_instance,
     )
 
 
@@ -851,7 +880,7 @@ async def test_homekit_uses_system_zeroconf(hass, hk_driver, mock_zeroconf):
         options={},
     )
     assert await async_setup_component(hass, "zeroconf", {"zeroconf": {}})
-    system_zc = await zeroconf.async_get_instance(hass)
+    system_async_zc = await zeroconf.async_get_async_instance(hass)
 
     with patch("pyhap.accessory_driver.AccessoryDriver.async_start"), patch(
         f"{PATH_HOMEKIT}.HomeKit.async_stop"
@@ -859,7 +888,10 @@ async def test_homekit_uses_system_zeroconf(hass, hk_driver, mock_zeroconf):
         entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
-        assert hass.data[DOMAIN][entry.entry_id][HOMEKIT].driver.advertiser == system_zc
+        assert (
+            hass.data[DOMAIN][entry.entry_id][HOMEKIT].driver.advertiser
+            == system_async_zc
+        )
         assert await hass.config_entries.async_unload(entry.entry_id)
         await hass.async_block_till_done()
 
@@ -1168,6 +1200,31 @@ async def test_homekit_start_in_accessory_mode(
     )
     assert hk_driver_start.called
     assert homekit.status == STATUS_RUNNING
+
+
+async def test_homekit_start_in_accessory_mode_missing_entity(
+    hass, hk_driver, mock_zeroconf, device_reg, caplog
+):
+    """Test HomeKit start method in accessory mode when entity is not available."""
+    entry = await async_init_integration(hass)
+
+    homekit = _mock_homekit(hass, entry, HOMEKIT_MODE_ACCESSORY)
+
+    homekit.bridge = Mock()
+    homekit.bridge.accessories = []
+    homekit.driver = hk_driver
+    homekit.driver.accessory = Accessory(hk_driver, "any")
+
+    with patch(f"{PATH_HOMEKIT}.HomeKit.add_bridge_accessory") as mock_add_acc, patch(
+        f"{PATH_HOMEKIT}.show_setup_message"
+    ), patch("pyhap.accessory_driver.AccessoryDriver.async_start"):
+        await homekit.async_start()
+
+    await hass.async_block_till_done()
+    mock_add_acc.assert_not_called()
+    assert homekit.status == STATUS_WAIT
+
+    assert "entity not available" in caplog.text
 
 
 async def test_wait_for_port_to_free(hass, hk_driver, mock_zeroconf, caplog):

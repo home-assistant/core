@@ -92,6 +92,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             if process:
                 with suppress(TypeError):
                     process.kill()
+                    # https://bugs.python.org/issue43884
+                    # pylint: disable=protected-access
+                    process._transport.close()  # type: ignore[attr-defined]
                 del process
 
             return

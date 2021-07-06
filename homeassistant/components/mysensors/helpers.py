@@ -10,7 +10,6 @@ from mysensors import BaseAsyncGateway, Message
 from mysensors.sensor import ChildSensor
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
@@ -35,18 +34,13 @@ _LOGGER = logging.getLogger(__name__)
 SCHEMAS = Registry()
 
 
-async def on_unload(
-    hass: HomeAssistant, entry: ConfigEntry | GatewayId, fnct: Callable
-) -> None:
+@callback
+def on_unload(hass: HomeAssistant, gateway_id: GatewayId, fnct: Callable) -> None:
     """Register a callback to be called when entry is unloaded.
 
     This function is used by platforms to cleanup after themselves.
     """
-    if isinstance(entry, GatewayId):
-        uniqueid = entry
-    else:
-        uniqueid = entry.entry_id
-    key = MYSENSORS_ON_UNLOAD.format(uniqueid)
+    key = MYSENSORS_ON_UNLOAD.format(gateway_id)
     if key not in hass.data[DOMAIN]:
         hass.data[DOMAIN][key] = []
     hass.data[DOMAIN][key].append(fnct)
@@ -123,7 +117,10 @@ def switch_ir_send_schema(
 
 
 def get_child_schema(
-    gateway: BaseAsyncGateway, child: ChildSensor, value_type_name: ValueType, schema
+    gateway: BaseAsyncGateway,
+    child: ChildSensor,
+    value_type_name: ValueType,
+    schema: dict,
 ) -> vol.Schema:
     """Return a child schema."""
     set_req = gateway.const.SetReq
@@ -142,7 +139,7 @@ def get_child_schema(
 
 def invalid_msg(
     gateway: BaseAsyncGateway, child: ChildSensor, value_type_name: ValueType
-):
+) -> str:
     """Return a message for an invalid child during schema validation."""
     pres = gateway.const.Presentation
     set_req = gateway.const.SetReq
@@ -176,11 +173,15 @@ def validate_child(
 ) -> defaultdict[str, list[DevId]]:
     """Validate a child. Returns a dict mapping hass platform names to list of DevId."""
     validated: defaultdict[str, list[DevId]] = defaultdict(list)
-    pres: IntEnum = gateway.const.Presentation
-    set_req: IntEnum = gateway.const.SetReq
+    pres: type[IntEnum] = gateway.const.Presentation
+    set_req: type[IntEnum] = gateway.const.SetReq
     child_type_name: SensorType | None = next(
         (member.name for member in pres if member.value == child.type), None
     )
+    if not child_type_name:
+        _LOGGER.warning("Child type %s is not supported", child.type)
+        return validated
+
     value_types: set[int] = {value_type} if value_type else {*child.values}
     value_type_names: set[ValueType] = {
         member.name for member in set_req if member.value in value_types
@@ -199,7 +200,7 @@ def validate_child(
             child_value_names: set[ValueType] = {
                 member.name for member in set_req if member.value in child.values
             }
-            v_names: set[ValueType] = platform_v_names & child_value_names
+            v_names = platform_v_names & child_value_names
 
         for v_name in v_names:
             child_schema_gen = SCHEMAS.get((platform, v_name), default_schema)

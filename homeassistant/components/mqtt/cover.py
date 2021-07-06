@@ -94,12 +94,18 @@ DEFAULT_TILT_MIN = 0
 DEFAULT_TILT_OPEN_POSITION = 100
 DEFAULT_TILT_OPTIMISTIC = False
 
-OPEN_CLOSE_FEATURES = SUPPORT_OPEN | SUPPORT_CLOSE
 TILT_FEATURES = (
     SUPPORT_OPEN_TILT
     | SUPPORT_CLOSE_TILT
     | SUPPORT_STOP_TILT
     | SUPPORT_SET_TILT_POSITION
+)
+
+MQTT_COVER_ATTRIBUTES_BLOCKED = frozenset(
+    {
+        cover.ATTR_CURRENT_POSITION,
+        cover.ATTR_CURRENT_TILT_POSITION,
+    }
 )
 
 
@@ -151,8 +157,12 @@ PLATFORM_SCHEMA = vol.All(
             vol.Optional(CONF_GET_POSITION_TOPIC): mqtt.valid_subscribe_topic,
             vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
             vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
-            vol.Optional(CONF_PAYLOAD_CLOSE, default=DEFAULT_PAYLOAD_CLOSE): cv.string,
-            vol.Optional(CONF_PAYLOAD_OPEN, default=DEFAULT_PAYLOAD_OPEN): cv.string,
+            vol.Optional(CONF_PAYLOAD_CLOSE, default=DEFAULT_PAYLOAD_CLOSE): vol.Any(
+                cv.string, None
+            ),
+            vol.Optional(CONF_PAYLOAD_OPEN, default=DEFAULT_PAYLOAD_OPEN): vol.Any(
+                cv.string, None
+            ),
             vol.Optional(CONF_PAYLOAD_STOP, default=DEFAULT_PAYLOAD_STOP): vol.Any(
                 cv.string, None
             ),
@@ -216,6 +226,8 @@ async def _async_setup_entity(
 class MqttCover(MqttEntity, CoverEntity):
     """Representation of a cover that can be controlled using MQTT."""
 
+    _attributes_extra_blocked = MQTT_COVER_ATTRIBUTES_BLOCKED
+
     def __init__(self, hass, config, config_entry, discovery_data):
         """Initialize the cover."""
         self._position = None
@@ -233,11 +245,45 @@ class MqttCover(MqttEntity, CoverEntity):
         return PLATFORM_SCHEMA
 
     def _setup_from_config(self, config):
-        self._optimistic = config[CONF_OPTIMISTIC] or (
-            config.get(CONF_STATE_TOPIC) is None
+        no_position = (
+            config.get(CONF_SET_POSITION_TOPIC) is None
             and config.get(CONF_GET_POSITION_TOPIC) is None
         )
-        self._tilt_optimistic = config[CONF_TILT_STATE_OPTIMISTIC]
+        no_state = (
+            config.get(CONF_COMMAND_TOPIC) is None
+            and config.get(CONF_STATE_TOPIC) is None
+        )
+        no_tilt = (
+            config.get(CONF_TILT_COMMAND_TOPIC) is None
+            and config.get(CONF_TILT_STATUS_TOPIC) is None
+        )
+        optimistic_position = (
+            config.get(CONF_SET_POSITION_TOPIC) is not None
+            and config.get(CONF_GET_POSITION_TOPIC) is None
+        )
+        optimistic_state = (
+            config.get(CONF_COMMAND_TOPIC) is not None
+            and config.get(CONF_STATE_TOPIC) is None
+        )
+        optimistic_tilt = (
+            config.get(CONF_TILT_COMMAND_TOPIC) is not None
+            and config.get(CONF_TILT_STATUS_TOPIC) is None
+        )
+
+        if config[CONF_OPTIMISTIC] or (
+            (no_position or optimistic_position)
+            and (no_state or optimistic_state)
+            and (no_tilt or optimistic_tilt)
+        ):
+            # Force into optimistic mode.
+            self._optimistic = True
+
+        if (
+            config[CONF_TILT_STATE_OPTIMISTIC]
+            or config.get(CONF_TILT_STATUS_TOPIC) is None
+        ):
+            # Force into optimistic tilt mode.
+            self._tilt_optimistic = True
 
         value_template = self._config.get(CONF_VALUE_TEMPLATE)
         if value_template is not None:
@@ -406,17 +452,7 @@ class MqttCover(MqttEntity, CoverEntity):
                 "qos": self._config[CONF_QOS],
             }
 
-        if (
-            self._config.get(CONF_GET_POSITION_TOPIC) is None
-            and self._config.get(CONF_STATE_TOPIC) is None
-        ):
-            # Force into optimistic mode.
-            self._optimistic = True
-
-        if self._config.get(CONF_TILT_STATUS_TOPIC) is None:
-            # Force into optimistic tilt mode.
-            self._tilt_optimistic = True
-        else:
+        if self._config.get(CONF_TILT_STATUS_TOPIC) is not None:
             self._tilt_value = STATE_UNKNOWN
             topics["tilt_status_topic"] = {
                 "topic": self._config.get(CONF_TILT_STATUS_TOPIC),
@@ -474,8 +510,10 @@ class MqttCover(MqttEntity, CoverEntity):
         """Flag supported features."""
         supported_features = 0
         if self._config.get(CONF_COMMAND_TOPIC) is not None:
-            supported_features = OPEN_CLOSE_FEATURES
-
+            if self._config.get(CONF_PAYLOAD_OPEN) is not None:
+                supported_features |= SUPPORT_OPEN
+            if self._config.get(CONF_PAYLOAD_CLOSE) is not None:
+                supported_features |= SUPPORT_CLOSE
             if self._config.get(CONF_PAYLOAD_STOP) is not None:
                 supported_features |= SUPPORT_STOP
 

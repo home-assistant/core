@@ -12,3 +12,4 @@ class SensorDescription(TypedDict):
     device_class: str | None
     icon: str | None
     enabled: bool
+    state_class: str | None

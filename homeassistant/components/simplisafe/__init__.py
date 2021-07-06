@@ -41,8 +41,6 @@ from .const import (
     VOLUMES,
 )
 
-DATA_LISTENER = "listener"
-
 EVENT_SIMPLISAFE_NOTIFICATION = "SIMPLISAFE_NOTIFICATION"
 
 DEFAULT_SOCKET_MIN_RETRY = 15
@@ -136,15 +134,10 @@ async def async_register_base_station(hass, system, config_entry_id):
     )
 
 
-async def async_setup(hass, config):
-    """Set up the SimpliSafe component."""
-    hass.data[DOMAIN] = {DATA_CLIENT: {}, DATA_LISTENER: {}}
-    return True
-
-
 async def async_setup_entry(hass, config_entry):  # noqa: C901
     """Set up SimpliSafe as config entry."""
-    hass.data[DOMAIN][DATA_LISTENER][config_entry.entry_id] = []
+    hass.data.setdefault(DOMAIN, {DATA_CLIENT: {}})
+    hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id] = []
 
     entry_updates = {}
     if not config_entry.unique_id:
@@ -281,9 +274,7 @@ async def async_setup_entry(hass, config_entry):  # noqa: C901
     ]:
         async_register_admin_service(hass, DOMAIN, service, method, schema=schema)
 
-    hass.data[DOMAIN][DATA_LISTENER][config_entry.entry_id].append(
-        config_entry.add_update_listener(async_reload_entry)
-    )
+    config_entry.async_on_unload(config_entry.add_update_listener(async_reload_entry))
 
     return True
 
@@ -293,8 +284,6 @@ async def async_unload_entry(hass, entry):
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         hass.data[DOMAIN][DATA_CLIENT].pop(entry.entry_id)
-        for remove_listener in hass.data[DOMAIN][DATA_LISTENER].pop(entry.entry_id):
-            remove_listener()
 
     return unload_ok
 
@@ -431,25 +420,25 @@ class SimpliSafeEntity(CoordinatorEntity):
     def __init__(self, simplisafe, system, name, *, serial=None):
         """Initialize."""
         super().__init__(simplisafe.coordinator)
-        self._name = name
-        self._online = True
-        self._simplisafe = simplisafe
-        self._system = system
 
         if serial:
             self._serial = serial
         else:
             self._serial = system.serial
 
-        self._attrs = {ATTR_SYSTEM_ID: system.system_id}
-
-        self._device_info = {
+        self._attr_extra_state_attributes = {ATTR_SYSTEM_ID: system.system_id}
+        self._attr_device_info = {
             "identifiers": {(DOMAIN, system.system_id)},
             "manufacturer": "SimpliSafe",
             "model": system.version,
             "name": name,
             "via_device": (DOMAIN, system.serial),
         }
+        self._attr_name = f"{system.address} {name}"
+        self._attr_unique_id = self._serial
+        self._online = True
+        self._simplisafe = simplisafe
+        self._system = system
 
     @property
     def available(self):
@@ -459,27 +448,11 @@ class SimpliSafeEntity(CoordinatorEntity):
         # the entity as available if:
         #   1. We can verify that the system is online (assuming True if we can't)
         #   2. We can verify that the entity is online
-        return not (self._system.version == 3 and self._system.offline) and self._online
-
-    @property
-    def device_info(self):
-        """Return device registry information for this entity."""
-        return self._device_info
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
-        return self._attrs
-
-    @property
-    def name(self):
-        """Return the name of the entity."""
-        return f"{self._system.address} {self._name}"
-
-    @property
-    def unique_id(self):
-        """Return the unique ID of the entity."""
-        return self._serial
+        return (
+            super().available
+            and self._online
+            and not (self._system.version == 3 and self._system.offline)
+        )
 
     @callback
     def _handle_coordinator_update(self):
@@ -504,15 +477,12 @@ class SimpliSafeBaseSensor(SimpliSafeEntity):
     def __init__(self, simplisafe, system, sensor):
         """Initialize."""
         super().__init__(simplisafe, system, sensor.name, serial=sensor.serial)
-        self._device_info["identifiers"] = {(DOMAIN, sensor.serial)}
-        self._device_info["model"] = sensor.type.name
-        self._device_info["name"] = sensor.name
-        self._sensor = sensor
-        self._sensor_type_human_name = " ".join(
-            [w.title() for w in self._sensor.type.name.split("_")]
-        )
 
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return f"{self._system.address} {self._name} {self._sensor_type_human_name}"
+        self._attr_device_info["identifiers"] = {(DOMAIN, sensor.serial)}
+        self._attr_device_info["model"] = sensor.type.name
+        self._attr_device_info["name"] = sensor.name
+
+        human_friendly_name = " ".join([w.title() for w in sensor.type.name.split("_")])
+        self._attr_name = f"{super().name} {human_friendly_name}"
+
+        self._sensor = sensor

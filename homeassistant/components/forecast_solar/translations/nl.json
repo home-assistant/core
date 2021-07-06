@@ -1,0 +1,23 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "latitude": "Breedtegraad",
+                    "longitude": "Lengtegraad",
+                    "name": "Naam"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "api_key": "Forecast.Solar API-sleutel (optioneel)"
+                },
+                "description": "Met deze waarden kan het resultaat van Solar.Forecast worden aangepast. Raadpleeg de documentatie als een veld onduidelijk is."
+            }
+        }
+    }
+}

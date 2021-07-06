@@ -67,6 +67,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class AtenSwitch(SwitchEntity):
     """Represents an ATEN PE switch."""
 
+    _attr_device_class = DEVICE_CLASS_OUTLET
+
     def __init__(self, device, mac, outlet, name):
         """Initialize an ATEN PE switch."""
         self._device = device
@@ -85,11 +87,6 @@ class AtenSwitch(SwitchEntity):
     def name(self) -> str:
         """Return the name of the entity."""
         return self._name
-
-    @property
-    def device_class(self) -> str:
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        return DEVICE_CLASS_OUTLET
 
     @property
     def is_on(self) -> bool:

@@ -437,6 +437,16 @@ async def test_setpoint_thermostat(hass, client, climate_danfoss_lc_13, integrat
     client.async_send_command_no_wait.reset_mock()
 
 
+async def test_thermostat_heatit_z_trm3_no_value(
+    hass, client, climate_heatit_z_trm3_no_value, integration
+):
+    """Test a heatit Z-TRM3 entity that is missing a value."""
+    # When the config parameter that specifies what sensor to use has no value, we fall
+    # back to the first temperature sensor found on the device
+    state = hass.states.get(CLIMATE_FLOOR_THERMOSTAT_ENTITY)
+    assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 22.5
+
+
 async def test_thermostat_heatit_z_trm3(
     hass, client, climate_heatit_z_trm3, integration
 ):

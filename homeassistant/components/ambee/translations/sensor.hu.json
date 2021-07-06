@@ -1,0 +1,9 @@
+{
+    "state": {
+        "ambee__risk": {
+            "high": "Magas",
+            "low": "Alacsony",
+            "very high": "Nagyon magas"
+        }
+    }
+}

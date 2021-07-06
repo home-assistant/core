@@ -5,6 +5,8 @@ from typing import Callable
 
 from xknx import XKNX
 from xknx.devices import DateTime, ExposeSensor
+from xknx.dpt import DPTNumeric
+from xknx.remote_value import RemoteValueSensor
 
 from homeassistant.const import (
     CONF_ENTITY_ID,
@@ -13,7 +15,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, State, callback
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.typing import ConfigType, StateType
 
@@ -74,6 +76,7 @@ class KNXExposeSensor:
         self.address = address
         self._remove_listener: Callable[[], None] | None = None
         self.device: ExposeSensor = self.async_register()
+        self._init_expose_state()
 
     @callback
     def async_register(self) -> ExposeSensor:
@@ -94,6 +97,15 @@ class KNXExposeSensor:
         return device
 
     @callback
+    def _init_expose_state(self) -> None:
+        """Initialize state of the exposure."""
+        init_state = self.hass.states.get(self.entity_id)
+        init_value = self._get_expose_value(init_state)
+        self.device.sensor_value.value = (
+            init_value if init_value is not None else self.expose_default
+        )
+
+    @callback
     def shutdown(self) -> None:
         """Prepare for deletion."""
         if self._remove_listener is not None:
@@ -101,45 +113,46 @@ class KNXExposeSensor:
             self._remove_listener = None
         self.device.shutdown()
 
+    def _get_expose_value(self, state: State | None) -> StateType:
+        """Extract value from state."""
+        if state is None or state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE):
+            return None
+        value = (
+            state.state
+            if self.expose_attribute is None
+            else state.attributes.get(self.expose_attribute)
+        )
+        if self.type == "binary":
+            if value in (1, STATE_ON, "True"):
+                return True
+            if value in (0, STATE_OFF, "False"):
+                return False
+        if (
+            value is not None
+            and isinstance(self.device.sensor_value, RemoteValueSensor)
+            and issubclass(self.device.sensor_value.dpt_class, DPTNumeric)
+        ):
+            return float(value)
+        return value
+
     async def _async_entity_changed(self, event: Event) -> None:
         """Handle entity change."""
         new_state = event.data.get("new_state")
-        if new_state is None:
+        new_value = self._get_expose_value(new_state)
+        if new_value is None:
             return
-        if new_state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE):
-            return
-
         old_state = event.data.get("old_state")
-
-        if self.expose_attribute is None:
-            if old_state is None or old_state.state != new_state.state:
-                # don't send same value sequentially
-                await self._async_set_knx_value(new_state.state)
-            return
-
-        new_attribute = new_state.attributes.get(self.expose_attribute)
-
-        if old_state is not None:
-            old_attribute = old_state.attributes.get(self.expose_attribute)
-            if old_attribute == new_attribute:
-                # don't send same value sequentially
-                return
-        await self._async_set_knx_value(new_attribute)
+        old_value = self._get_expose_value(old_state)
+        # don't send same value sequentially
+        if new_value != old_value:
+            await self._async_set_knx_value(new_value)
 
     async def _async_set_knx_value(self, value: StateType) -> None:
         """Set new value on xknx ExposeSensor."""
-        assert self.device is not None
         if value is None:
             if self.expose_default is None:
                 return
             value = self.expose_default
-
-        if self.type == "binary":
-            if value == STATE_ON:
-                value = True
-            elif value == STATE_OFF:
-                value = False
-
         await self.device.set(value)
 
 

@@ -19,7 +19,7 @@ DEFAULT_UPDATE_RATE = 60
 PLATFORMS = ["sensor"]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up SiteSage Emonitor from a config entry."""
 
     session = aiohttp_client.async_get_clientsession(hass)

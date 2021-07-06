@@ -65,10 +65,10 @@ class TotalConnectConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 if self.usercodes[location_id] is None:
                     valid = await self.hass.async_add_executor_job(
                         self.client.locations[location_id].set_usercode,
-                        user_entry[CONF_LOCATION],
+                        user_entry[CONF_USERCODES],
                     )
                     if valid:
-                        self.usercodes[location_id] = user_entry[CONF_LOCATION]
+                        self.usercodes[location_id] = user_entry[CONF_USERCODES]
                     else:
                         errors[CONF_LOCATION] = "usercode"
                     break
@@ -93,12 +93,14 @@ class TotalConnectConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         # show the next location that needs a usercode
         location_codes = {}
+        location_for_user = ""
         for location_id in self.usercodes:
             if self.usercodes[location_id] is None:
+                location_for_user = location_id
                 location_codes[
                     vol.Required(
-                        CONF_LOCATION,
-                        default=location_id,
+                        CONF_USERCODES,
+                        default="0000",
                     )
                 ] = str
                 break
@@ -108,7 +110,7 @@ class TotalConnectConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="locations",
             data_schema=data_schema,
             errors=errors,
-            description_placeholders={"base": "description"},
+            description_placeholders={"location_id": location_for_user},
         )
 
     async def async_step_reauth(self, config):

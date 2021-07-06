@@ -6,7 +6,7 @@
         "error": {
             "cannot_connect": "Sikertelen csatlakoz\u00e1s"
         },
-        "flow_title": "ScreenLogic {name}",
+        "flow_title": "{name}",
         "step": {
             "gateway_entry": {
                 "data": {

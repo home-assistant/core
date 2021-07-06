@@ -44,6 +44,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class AdvantageAirTimeTo(AdvantageAirEntity, SensorEntity):
     """Representation of Advantage Air timer control."""
 
+    _attr_unit_of_measurement = ADVANTAGE_AIR_SET_COUNTDOWN_UNIT
+
     def __init__(self, instance, ac_key, action):
         """Initialize the Advantage Air timer control."""
         super().__init__(instance, ac_key)
@@ -66,11 +68,6 @@ class AdvantageAirTimeTo(AdvantageAirEntity, SensorEntity):
         return self._ac[self._time_key]
 
     @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return ADVANTAGE_AIR_SET_COUNTDOWN_UNIT
-
-    @property
     def icon(self):
         """Return a representative icon of the timer."""
         if self._ac[self._time_key] > 0:
@@ -85,6 +82,8 @@ class AdvantageAirTimeTo(AdvantageAirEntity, SensorEntity):
 
 class AdvantageAirZoneVent(AdvantageAirEntity, SensorEntity):
     """Representation of Advantage Air Zone Vent Sensor."""
+
+    _attr_unit_of_measurement = PERCENTAGE
 
     @property
     def name(self):
@@ -104,11 +103,6 @@ class AdvantageAirZoneVent(AdvantageAirEntity, SensorEntity):
         return 0
 
     @property
-    def unit_of_measurement(self):
-        """Return the percent sign."""
-        return PERCENTAGE
-
-    @property
     def icon(self):
         """Return a representative icon."""
         if self._zone["state"] == ADVANTAGE_AIR_STATE_OPEN:
@@ -118,6 +112,8 @@ class AdvantageAirZoneVent(AdvantageAirEntity, SensorEntity):
 
 class AdvantageAirZoneSignal(AdvantageAirEntity, SensorEntity):
     """Representation of Advantage Air Zone wireless signal sensor."""
+
+    _attr_unit_of_measurement = PERCENTAGE
 
     @property
     def name(self):
@@ -133,11 +129,6 @@ class AdvantageAirZoneSignal(AdvantageAirEntity, SensorEntity):
     def state(self):
         """Return the current value of the wireless signal."""
         return self._zone["rssi"]
-
-    @property
-    def unit_of_measurement(self):
-        """Return the percent sign."""
-        return PERCENTAGE
 
     @property
     def icon(self):

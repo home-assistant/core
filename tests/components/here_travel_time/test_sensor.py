@@ -132,7 +132,7 @@ def requests_mock_credentials_check(requests_mock):
 
 @pytest.fixture
 def requests_mock_truck_response(requests_mock_credentials_check):
-    """Return a requests_mock for truck respones."""
+    """Return a requests_mock for truck response."""
     modes = [ROUTE_MODE_FASTEST, TRAVEL_MODE_TRUCK, TRAFFIC_MODE_DISABLED]
     response_url = _build_mock_url(
         ",".join([TRUCK_ORIGIN_LATITUDE, TRUCK_ORIGIN_LONGITUDE]),
@@ -147,7 +147,7 @@ def requests_mock_truck_response(requests_mock_credentials_check):
 
 @pytest.fixture
 def requests_mock_car_disabled_response(requests_mock_credentials_check):
-    """Return a requests_mock for truck respones."""
+    """Return a requests_mock for truck response."""
     modes = [ROUTE_MODE_FASTEST, TRAVEL_MODE_CAR, TRAFFIC_MODE_DISABLED]
     response_url = _build_mock_url(
         ",".join([CAR_ORIGIN_LATITUDE, CAR_ORIGIN_LONGITUDE]),

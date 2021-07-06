@@ -1,15 +1,14 @@
 """The Wallbox integration."""
-import asyncio
 from datetime import timedelta
 import logging
 
 import requests
 from wallbox import Wallbox
 
+from homeassistant import exceptions
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import CONF_CONNECTIONS, CONF_ROUND, CONF_SENSOR_TYPES, CONF_STATION, DOMAIN
@@ -45,7 +44,7 @@ class WallboxHub(DataUpdateCoordinator):
             return True
         except requests.exceptions.HTTPError as wallbox_connection_error:
             if wallbox_connection_error.response.status_code == 403:
-                raise ConfigEntryAuthFailed from wallbox_connection_error
+                raise exceptions.ConfigEntryAuthFailed from wallbox_connection_error
             raise ConnectionError from wallbox_connection_error
 
     def _get_data(self):
@@ -74,7 +73,7 @@ class WallboxHub(DataUpdateCoordinator):
         return data
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Wallbox from a config entry."""
     wallbox = WallboxHub(
         entry.data[CONF_STATION],
@@ -98,15 +97,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, platform)
-                for platform in PLATFORMS
-            ]
-        )
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         hass.data[DOMAIN]["connections"].pop(entry.entry_id)
 
     return unload_ok
+
+
+class InvalidAuth(exceptions.HomeAssistantError):
+    """Error to indicate there is invalid auth."""

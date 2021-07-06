@@ -67,24 +67,16 @@ async def test_form_cannot_connect(hass):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with requests_mock.Mocker() as m:
-        m.get(
+    with requests_mock.Mocker() as mock_request:
+        mock_request.get(
             "https://api.wall-box.com/auth/token/user",
             text='{"jwt":"fakekeyhere","user_id":12345,"ttl":145656758,"error":false,"status":200}',
             status_code=200,
         )
-        m.get(
+        mock_request.get(
             "https://api.wall-box.com/chargers/status/12345",
             text='{"Temperature": 100, "Location": "Toronto", "Datetime": "2020-07-23", "Units": "Celsius"}',
             status_code=404,
-        )
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                "station": "12345",
-                "username": "test-username",
-                "password": "test-password",
-            },
         )
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -105,13 +97,13 @@ async def test_form_validate_input(hass):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with requests_mock.Mocker() as m:
-        m.get(
+    with requests_mock.Mocker() as mock_request:
+        mock_request.get(
             "https://api.wall-box.com/auth/token/user",
             text='{"jwt":"fakekeyhere","user_id":12345,"ttl":145656758,"error":false,"status":200}',
             status_code=200,
         )
-        m.get(
+        mock_request.get(
             "https://api.wall-box.com/chargers/status/12345",
             text='{"Temperature": 100, "Location": "Toronto", "Datetime": "2020-07-23", "Units": "Celsius"}',
             status_code=200,

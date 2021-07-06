@@ -2,14 +2,19 @@
 from pymelcloud import DEVICE_TYPE_ATA, DEVICE_TYPE_ATW
 from pymelcloud.atw_device import Zone
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import (
+    DEVICE_CLASS_ENERGY,
+    DEVICE_CLASS_TEMPERATURE,
+    STATE_CLASS_MEASUREMENT,
+    SensorEntity,
+)
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ICON,
-    DEVICE_CLASS_TEMPERATURE,
     ENERGY_KILO_WATT_HOUR,
     TEMP_CELSIUS,
 )
+from homeassistant.util import dt as dt_util
 
 from . import MelCloudDevice
 from .const import DOMAIN
@@ -32,7 +37,7 @@ ATA_SENSORS = {
         ATTR_MEASUREMENT_NAME: "Energy",
         ATTR_ICON: "mdi:factory",
         ATTR_UNIT: ENERGY_KILO_WATT_HOUR,
-        ATTR_DEVICE_CLASS: None,
+        ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
         ATTR_VALUE_FN: lambda x: x.device.total_energy_consumed,
         ATTR_ENABLED_FN: lambda x: x.device.has_energy_consumed_meter,
     },
@@ -116,39 +121,22 @@ class MelDeviceSensor(SensorEntity):
     def __init__(self, api: MelCloudDevice, measurement, definition):
         """Initialize the sensor."""
         self._api = api
-        self._name_slug = api.name
-        self._measurement = measurement
         self._def = definition
 
-    @property
-    def unique_id(self):
-        """Return a unique ID."""
-        return f"{self._api.device.serial}-{self._api.device.mac}-{self._measurement}"
+        self._attr_device_class = definition[ATTR_DEVICE_CLASS]
+        self._attr_icon = definition[ATTR_ICON]
+        self._attr_name = f"{api.name} {definition[ATTR_MEASUREMENT_NAME]}"
+        self._attr_unique_id = f"{api.device.serial}-{api.device.mac}-{measurement}"
+        self._attr_unit_of_measurement = definition[ATTR_UNIT]
+        self._attr_state_class = STATE_CLASS_MEASUREMENT
 
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend, if any."""
-        return self._def[ATTR_ICON]
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return f"{self._name_slug} {self._def[ATTR_MEASUREMENT_NAME]}"
+        if self.device_class == DEVICE_CLASS_ENERGY:
+            self._attr_last_reset = dt_util.utc_from_timestamp(0)
 
     @property
     def state(self):
         """Return the state of the sensor."""
         return self._def[ATTR_VALUE_FN](self._api)
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return self._def[ATTR_UNIT]
-
-    @property
-    def device_class(self):
-        """Return device class."""
-        return self._def[ATTR_DEVICE_CLASS]
 
     async def async_update(self):
         """Retrieve latest state."""
@@ -165,9 +153,13 @@ class AtwZoneSensor(MelDeviceSensor):
 
     def __init__(self, api: MelCloudDevice, zone: Zone, measurement, definition):
         """Initialize the sensor."""
-        super().__init__(api, measurement, definition)
+        if zone.zone_index == 1:
+            full_measurement = measurement
+        else:
+            full_measurement = f"{measurement}-zone-{zone.zone_index}"
+        super().__init__(api, full_measurement, definition)
         self._zone = zone
-        self._name_slug = f"{api.name} {zone.name}"
+        self._attr_name = f"{api.name} {zone.name} {definition[ATTR_MEASUREMENT_NAME]}"
 
     @property
     def state(self):

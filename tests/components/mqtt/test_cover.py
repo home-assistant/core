@@ -20,6 +20,7 @@ from homeassistant.components.mqtt.cover import (
     CONF_TILT_COMMAND_TOPIC,
     CONF_TILT_STATUS_TEMPLATE,
     CONF_TILT_STATUS_TOPIC,
+    MQTT_COVER_ATTRIBUTES_BLOCKED,
     MqttCover,
 )
 from homeassistant.const import (
@@ -62,6 +63,7 @@ from .test_common import (
     help_test_entity_id_update_subscriptions,
     help_test_setting_attribute_via_mqtt_json_message,
     help_test_setting_attribute_with_template,
+    help_test_setting_blocked_attribute_via_mqtt_json_message,
     help_test_unique_id,
     help_test_update_with_json_attrs_bad_JSON,
     help_test_update_with_json_attrs_not_dict,
@@ -389,6 +391,34 @@ async def test_position_via_template_and_entity_id(hass, mqtt_mock):
         ATTR_CURRENT_POSITION
     ]
     assert current_cover_position == 20
+
+
+@pytest.mark.parametrize(
+    "config, assumed_state",
+    [
+        ({"command_topic": "abc"}, True),
+        ({"command_topic": "abc", "state_topic": "abc"}, False),
+        # ({"set_position_topic": "abc"}, True), - not a valid configuration
+        ({"set_position_topic": "abc", "position_topic": "abc"}, False),
+        ({"tilt_command_topic": "abc"}, True),
+        ({"tilt_command_topic": "abc", "tilt_status_topic": "abc"}, False),
+    ],
+)
+async def test_optimistic_flag(hass, mqtt_mock, config, assumed_state):
+    """Test assumed_state is set correctly."""
+    assert await async_setup_component(
+        hass,
+        cover.DOMAIN,
+        {cover.DOMAIN: {**config, "platform": "mqtt", "name": "test", "qos": 0}},
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("cover.test")
+    assert state.state == STATE_UNKNOWN
+    if assumed_state:
+        assert ATTR_ASSUMED_STATE in state.attributes
+    else:
+        assert ATTR_ASSUMED_STATE not in state.attributes
 
 
 async def test_optimistic_state_change(hass, mqtt_mock):
@@ -1012,6 +1042,50 @@ async def test_no_command_topic(hass, mqtt_mock):
     await hass.async_block_till_done()
 
     assert hass.states.get("cover.test").attributes["supported_features"] == 240
+
+
+async def test_no_payload_close(hass, mqtt_mock):
+    """Test with no close payload."""
+    assert await async_setup_component(
+        hass,
+        cover.DOMAIN,
+        {
+            cover.DOMAIN: {
+                "platform": "mqtt",
+                "name": "test",
+                "command_topic": "command-topic",
+                "qos": 0,
+                "payload_open": "OPEN",
+                "payload_close": None,
+                "payload_stop": "STOP",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get("cover.test").attributes["supported_features"] == 9
+
+
+async def test_no_payload_open(hass, mqtt_mock):
+    """Test with no open payload."""
+    assert await async_setup_component(
+        hass,
+        cover.DOMAIN,
+        {
+            cover.DOMAIN: {
+                "platform": "mqtt",
+                "name": "test",
+                "command_topic": "command-topic",
+                "qos": 0,
+                "payload_open": None,
+                "payload_close": "CLOSE",
+                "payload_stop": "STOP",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get("cover.test").attributes["supported_features"] == 10
 
 
 async def test_no_payload_stop(hass, mqtt_mock):
@@ -2260,6 +2334,13 @@ async def test_setting_attribute_via_mqtt_json_message(hass, mqtt_mock):
     """Test the setting of attribute via MQTT with JSON payload."""
     await help_test_setting_attribute_via_mqtt_json_message(
         hass, mqtt_mock, cover.DOMAIN, DEFAULT_CONFIG
+    )
+
+
+async def test_setting_blocked_attribute_via_mqtt_json_message(hass, mqtt_mock):
+    """Test the setting of attribute via MQTT with JSON payload."""
+    await help_test_setting_blocked_attribute_via_mqtt_json_message(
+        hass, mqtt_mock, cover.DOMAIN, DEFAULT_CONFIG, MQTT_COVER_ATTRIBUTES_BLOCKED
     )
 
 

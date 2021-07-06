@@ -99,8 +99,10 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _async_setup_controller(self):
         """Create the controller."""
-        zeroconf_instance = await zeroconf.async_get_instance(self.hass)
-        self.controller = aiohomekit.Controller(zeroconf_instance=zeroconf_instance)
+        async_zeroconf_instance = await zeroconf.async_get_async_instance(self.hass)
+        self.controller = aiohomekit.Controller(
+            async_zeroconf_instance=async_zeroconf_instance
+        )
 
     async def async_step_user(self, user_input=None):
         """Handle a flow start."""
@@ -234,9 +236,20 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             )
             config_num = None
 
+        # Set unique-id and error out if it's already configured
+        existing_entry = await self.async_set_unique_id(normalize_hkid(hkid))
+        updated_ip_port = {
+            "AccessoryIP": discovery_info["host"],
+            "AccessoryPort": discovery_info["port"],
+        }
+
         # If the device is already paired and known to us we should monitor c#
         # (config_num) for changes. If it changes, we check for new entities
         if paired and hkid in self.hass.data.get(KNOWN_DEVICES, {}):
+            if existing_entry:
+                self.hass.config_entries.async_update_entry(
+                    existing_entry, data={**existing_entry.data, **updated_ip_port}
+                )
             conn = self.hass.data[KNOWN_DEVICES][hkid]
             # When we rediscover the device, let aiohomekit know
             # that the device is available and we should not wait
@@ -260,8 +273,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             await self.hass.config_entries.async_remove(existing.entry_id)
 
         # Set unique-id and error out if it's already configured
-        await self.async_set_unique_id(normalize_hkid(hkid))
-        self._abort_if_unique_id_configured()
+        self._abort_if_unique_id_configured(updates=updated_ip_port)
 
         self.context["hkid"] = hkid
 

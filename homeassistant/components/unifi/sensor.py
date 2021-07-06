@@ -35,7 +35,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     ) -> None:
         """Update the values of the controller."""
         if controller.option_allow_bandwidth_sensors:
-            add_bandwith_entities(controller, async_add_entities, clients)
+            add_bandwidth_entities(controller, async_add_entities, clients)
 
         if controller.option_allow_uptime_sensors:
             add_uptime_entities(controller, async_add_entities, clients)
@@ -49,7 +49,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 
 @callback
-def add_bandwith_entities(controller, async_add_entities, clients):
+def add_bandwidth_entities(controller, async_add_entities, clients):
     """Add new sensor entities from the controller."""
     sensors = []
 
@@ -86,15 +86,12 @@ class UniFiBandwidthSensor(UniFiClient, SensorEntity):
 
     DOMAIN = DOMAIN
 
+    _attr_unit_of_measurement = DATA_MEGABYTES
+
     @property
     def name(self) -> str:
         """Return the name of the client."""
         return f"{super().name} {self.TYPE.upper()}"
-
-    @property
-    def unit_of_measurement(self) -> str:
-        """Return the unit of measurement of this entity."""
-        return DATA_MEGABYTES
 
     async def options_updated(self) -> None:
         """Config entry options are updated, remove entity if option is disabled."""
@@ -134,10 +131,7 @@ class UniFiUpTimeSensor(UniFiClient, SensorEntity):
     DOMAIN = DOMAIN
     TYPE = UPTIME_SENSOR
 
-    @property
-    def device_class(self) -> str:
-        """Return device class."""
-        return DEVICE_CLASS_TIMESTAMP
+    _attr_device_class = DEVICE_CLASS_TIMESTAMP
 
     @property
     def name(self) -> str:

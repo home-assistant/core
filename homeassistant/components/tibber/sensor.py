@@ -1,6 +1,6 @@
 """Support for Tibber sensors."""
 import asyncio
-from datetime import datetime, timedelta
+from datetime import timedelta
 import logging
 from random import randrange
 
@@ -9,7 +9,9 @@ import aiohttp
 from homeassistant.components.sensor import (
     DEVICE_CLASS_CURRENT,
     DEVICE_CLASS_ENERGY,
+    DEVICE_CLASS_MONETARY,
     DEVICE_CLASS_POWER,
+    DEVICE_CLASS_POWER_FACTOR,
     DEVICE_CLASS_SIGNAL_STRENGTH,
     DEVICE_CLASS_VOLTAGE,
     STATE_CLASS_MEASUREMENT,
@@ -18,6 +20,7 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     ELECTRICAL_CURRENT_AMPERE,
     ENERGY_KILO_WATT_HOUR,
+    PERCENTAGE,
     POWER_WATT,
     SIGNAL_STRENGTH_DECIBELS,
     VOLT,
@@ -45,6 +48,7 @@ SIGNAL_UPDATE_ENTITY = "tibber_rt_update_{}"
 RT_SENSOR_MAP = {
     "averagePower": ["average power", DEVICE_CLASS_POWER, POWER_WATT, None],
     "power": ["power", DEVICE_CLASS_POWER, POWER_WATT, None],
+    "powerProduction": ["power production", DEVICE_CLASS_POWER, POWER_WATT, None],
     "minPower": ["min power", DEVICE_CLASS_POWER, POWER_WATT, None],
     "maxPower": ["max power", DEVICE_CLASS_POWER, POWER_WATT, None],
     "accumulatedConsumption": [
@@ -125,7 +129,18 @@ RT_SENSOR_MAP = {
         SIGNAL_STRENGTH_DECIBELS,
         STATE_CLASS_MEASUREMENT,
     ],
-    "accumulatedCost": ["accumulated cost", None, None, STATE_CLASS_MEASUREMENT],
+    "accumulatedCost": [
+        "accumulated cost",
+        DEVICE_CLASS_MONETARY,
+        None,
+        STATE_CLASS_MEASUREMENT,
+    ],
+    "powerFactor": [
+        "power factor",
+        DEVICE_CLASS_POWER_FACTOR,
+        PERCENTAGE,
+        STATE_CLASS_MEASUREMENT,
+    ],
 }
 
 
@@ -186,6 +201,7 @@ class TibberSensor(SensorEntity):
         """Initialize the sensor."""
         self._tibber_home = tibber_home
         self._home_name = tibber_home.info["viewer"]["home"]["appNickname"]
+        self._device_name = None
         if self._home_name is None:
             self._home_name = tibber_home.info["viewer"]["home"]["address"].get(
                 "address1", ""
@@ -202,7 +218,7 @@ class TibberSensor(SensorEntity):
         """Return the device_info of the device."""
         device_info = {
             "identifiers": {(TIBBER_DOMAIN, self.device_id)},
-            "name": self.name,
+            "name": self._device_name,
             "manufacturer": MANUFACTURER,
         }
         if self._model is not None:
@@ -236,6 +252,8 @@ class TibberSensorElPrice(TibberSensor):
         self._attr_name = f"Electricity price {self._home_name}"
         self._attr_unique_id = f"{self._tibber_home.home_id}"
         self._model = "Price Sensor"
+
+        self._device_name = self._attr_name
 
     async def async_update(self):
         """Get the latest data and updates the states."""
@@ -295,6 +313,7 @@ class TibberSensorRT(TibberSensor):
         super().__init__(tibber_home)
         self._sensor_name = sensor_name
         self._model = "Tibber Pulse"
+        self._device_name = f"{self._model} {self._home_name}"
 
         self._attr_device_class = device_class
         self._attr_name = f"{self._sensor_name} {self._home_name}"
@@ -306,7 +325,7 @@ class TibberSensorRT(TibberSensor):
             "last meter consumption",
             "last meter production",
         ]:
-            self._attr_last_reset = datetime.fromtimestamp(0)
+            self._attr_last_reset = dt_util.utc_from_timestamp(0)
         elif self._sensor_name in [
             "accumulated consumption",
             "accumulated production",
@@ -330,7 +349,7 @@ class TibberSensorRT(TibberSensor):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                SIGNAL_UPDATE_ENTITY.format(self._sensor_name),
+                SIGNAL_UPDATE_ENTITY.format(self.unique_id),
                 self._set_state,
             )
         )
@@ -370,7 +389,7 @@ class TibberRtDataHandler:
         self._async_add_entities = async_add_entities
         self._tibber_home = tibber_home
         self.hass = hass
-        self._entities = set()
+        self._entities = {}
 
     async def async_callback(self, payload):
         """Handle received data."""
@@ -385,15 +404,17 @@ class TibberRtDataHandler:
         if live_measurement is None:
             return
 
-        timestamp = datetime.fromisoformat(live_measurement.pop("timestamp"))
+        timestamp = dt_util.parse_datetime(live_measurement.pop("timestamp"))
         new_entities = []
         for sensor_type, state in live_measurement.items():
             if state is None or sensor_type not in RT_SENSOR_MAP:
                 continue
+            if sensor_type == "powerFactor":
+                state *= 100.0
             if sensor_type in self._entities:
                 async_dispatcher_send(
                     self.hass,
-                    SIGNAL_UPDATE_ENTITY.format(RT_SENSOR_MAP[sensor_type][0]),
+                    SIGNAL_UPDATE_ENTITY.format(self._entities[sensor_type]),
                     state,
                     timestamp,
                 )
@@ -412,6 +433,6 @@ class TibberRtDataHandler:
                     state_class,
                 )
                 new_entities.append(entity)
-                self._entities.add(sensor_type)
+                self._entities[sensor_type] = entity.unique_id
         if new_entities:
             self._async_add_entities(new_entities)

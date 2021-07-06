@@ -214,6 +214,7 @@ class EntityPlatform:
         @callback
         def async_create_setup_task() -> Coroutine:
             """Get task to set up platform."""
+            config_entries.current_entry.set(config_entry)
             return platform.async_setup_entry(  # type: ignore[no-any-return,union-attr]
                 self.hass, config_entry, self._async_schedule_add_entities
             )
@@ -395,8 +396,10 @@ class EntityPlatform:
             )
             raise
 
-        if self._async_unsub_polling is not None or not any(
-            entity.should_poll for entity in self.entities.values()
+        if (
+            (self.config_entry and self.config_entry.pref_disable_polling)
+            or self._async_unsub_polling is not None
+            or not any(entity.should_poll for entity in self.entities.values())
         ):
             return
 
@@ -505,7 +508,7 @@ class EntityPlatform:
             entity.entity_id = entry.entity_id
 
             if entry.disabled:
-                self.logger.info(
+                self.logger.debug(
                     "Not adding entity %s because it's disabled",
                     entry.name
                     or entity.name

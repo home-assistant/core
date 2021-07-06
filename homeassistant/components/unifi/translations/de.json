@@ -10,7 +10,7 @@
             "service_unavailable": "Verbindung fehlgeschlagen",
             "unknown_client_mac": "Unter dieser MAC-Adresse ist kein Client verf\u00fcgbar."
         },
-        "flow_title": "UniFi Netzwerk {site} ({host})",
+        "flow_title": "{site} ({host})",
         "step": {
             "user": {
                 "data": {
@@ -64,7 +64,8 @@
             },
             "statistics_sensors": {
                 "data": {
-                    "allow_bandwidth_sensors": "Bandbreitennutzungssensoren f\u00fcr Netzwerkclients"
+                    "allow_bandwidth_sensors": "Bandbreitennutzungssensoren f\u00fcr Netzwerkclients",
+                    "allow_uptime_sensors": "Uptime-Sensoren f\u00fcr Netzwerk-Clients"
                 },
                 "description": "Konfigurieren Sie Statistiksensoren",
                 "title": "UniFi-Optionen 3/3"
