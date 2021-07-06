@@ -58,7 +58,7 @@ async def async_setup_platform(
     config: dict,
     async_add_entities: AddEntitiesCallback,
     discovery_info: dict = None,
-):
+) -> None:
     """Import Recollect Waste configuration from YAML."""
     LOGGER.warning(
         "Loading ReCollect Waste via platform setup is deprecated; "
