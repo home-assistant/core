@@ -195,6 +195,9 @@ class BroadlinkRMSwitch(BroadlinkSwitch):
             device, config.get(CONF_COMMAND_ON), config.get(CONF_COMMAND_OFF)
         )
         self._attr_name = config[CONF_NAME]
+        self._attr_unique_id = (
+            f"{self._device.unique_id}-{self._attr_name.lower().replace(' ', '_')}"
+        )
 
     async def _async_send_packet(self, packet):
         """Send a packet to the device."""
