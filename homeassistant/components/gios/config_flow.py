@@ -49,7 +49,7 @@ class GiosFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     await gios.async_update()
 
                 return self.async_create_entry(
-                    title=user_input[CONF_STATION_ID],
+                    title=gios.station_name,
                     data=user_input,
                 )
             except (ApiError, ClientConnectorError, asyncio.TimeoutError):
