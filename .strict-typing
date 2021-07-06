@@ -36,6 +36,7 @@ homeassistant.components.fitbit.*
 homeassistant.components.forecast_solar.*
 homeassistant.components.fritzbox.*
 homeassistant.components.frontend.*
+homeassistant.components.fritz.*
 homeassistant.components.geo_location.*
 homeassistant.components.gios.*
 homeassistant.components.group.*
