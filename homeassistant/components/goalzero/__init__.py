@@ -1,6 +1,9 @@
 """The Goal Zero Yeti integration."""
+from __future__ import annotations
+
+from collections.abc import Mapping
 import logging
-from typing import Any, Mapping, Optional
+from typing import Any
 
 from goalzero import Yeti, exceptions
 
@@ -105,7 +108,7 @@ class YetiEntity(CoordinatorEntity):
         }
 
     @property
-    def extra_state_attributes(self) -> Optional[Mapping[str, Any]]:
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return the state attributes."""
         attributes = {
             ATTR_ATTRIBUTION: ATTRIBUTION,
