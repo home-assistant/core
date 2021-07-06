@@ -18,7 +18,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, device_registry, update_coordinator
 import homeassistant.helpers.config_validation as cv
@@ -312,7 +312,7 @@ class ShellyDeviceWrapper(update_coordinator.DataUpdateCoordinator):
             self.device = None
 
     @callback
-    def _handle_ha_stop(self, _: Any) -> None:
+    def _handle_ha_stop(self, _event: Event) -> None:
         """Handle Home Assistant stopping."""
         _LOGGER.debug("Stopping ShellyDeviceWrapper for %s", self.name)
         self.shutdown()
