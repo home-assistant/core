@@ -54,6 +54,8 @@ from .const import (
     CALL_TYPE_DISCRETE,
     CALL_TYPE_REGISTER_HOLDING,
     CALL_TYPE_REGISTER_INPUT,
+    CALL_TYPE_X_COILS,
+    CALL_TYPE_X_REGISTER_HOLDINGS,
     CONF_BAUDRATE,
     CONF_BYTESIZE,
     CONF_CLIMATES,
@@ -185,6 +187,8 @@ BASE_SWITCH_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
             [
                 CALL_TYPE_REGISTER_HOLDING,
                 CALL_TYPE_COIL,
+                CALL_TYPE_X_COILS,
+                CALL_TYPE_X_REGISTER_HOLDINGS,
             ]
         ),
         vol.Optional(CONF_COMMAND_OFF, default=0x00): cv.positive_int,
