@@ -112,7 +112,7 @@ aioguardian==1.0.4
 aioharmony==0.2.7
 
 # homeassistant.components.homekit_controller
-aiohomekit==0.4.1
+aiohomekit==0.4.2
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -447,7 +447,7 @@ hole==0.5.1
 holidays==0.11.1
 
 # homeassistant.components.frontend
-ais-dom-frontend==20210630.2
+ais-dom-frontend==20210706.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -1001,7 +1001,7 @@ pysiaalarm==3.0.0
 pysignalclirestapi==0.3.4
 
 # homeassistant.components.sma
-pysma==0.6.1
+pysma==0.6.2
 
 # homeassistant.components.smappee
 pysmappee==0.2.25
@@ -1334,7 +1334,7 @@ yeelight==0.6.3
 zeep[async]==4.0.0
 
 # homeassistant.components.zeroconf
-zeroconf==0.32.0
+zeroconf==0.32.1
 
 # homeassistant.components.zha
 zha-quirks==0.0.58
@@ -1355,7 +1355,7 @@ zigpy-zigate==0.7.3
 zigpy-znp==0.5.1
 
 # homeassistant.components.zha
-zigpy==0.35.0
+zigpy==0.35.1
 
 # homeassistant.components.zwave_js
 zwave-js-server-python==0.27.0
