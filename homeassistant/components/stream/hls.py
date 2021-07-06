@@ -319,7 +319,11 @@ class HlsSegmentView(StreamView):
     async def handle(
         self, request: web.Request, stream: Stream, sequence: str
     ) -> web.StreamResponse:
-        """Handle segments, part segments, and hinted segments."""
+        """Handle segments, part segments, and hinted segments.
+
+        For part and hinted segments, the start of the requested range must align
+        with a part boundary.
+        """
         track = stream.add_provider(HLS_PROVIDER)
         track.idle_timer.awake()
         # Ensure that we have a segment. If the request is from a hint for part 0
