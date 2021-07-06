@@ -75,9 +75,11 @@ from .const import (
 from .discovery import LAST_DISCOVERY
 from .models import (
     AsyncMessageCallbackType,
-    Message,
     MessageCallbackType,
+    PublishMessage,
     PublishPayloadType,
+    ReceiveMessage,
+    ReceivePayloadType,
 )
 from .util import _VALID_QOS_SCHEMA, valid_publish_topic, valid_subscribe_topic
 
@@ -290,9 +292,9 @@ def async_publish_template(
 
 
 AsyncDeprecatedMessageCallbackType = Callable[
-    [str, PublishPayloadType, int], Awaitable[None]
+    [str, ReceivePayloadType, int], Awaitable[None]
 ]
-DeprecatedMessageCallbackType = Callable[[str, PublishPayloadType, int], None]
+DeprecatedMessageCallbackType = Callable[[str, ReceivePayloadType, int], None]
 
 
 def wrap_msg_callback(
@@ -308,7 +310,7 @@ def wrap_msg_callback(
     if asyncio.iscoroutinefunction(check_func):
 
         @wraps(msg_callback)
-        async def async_wrapper(msg: Message) -> None:
+        async def async_wrapper(msg: ReceiveMessage) -> None:
             """Call with deprecated signature."""
             await cast(AsyncDeprecatedMessageCallbackType, msg_callback)(
                 msg.topic, msg.payload, msg.qos
@@ -318,7 +320,7 @@ def wrap_msg_callback(
     else:
 
         @wraps(msg_callback)
-        def wrapper(msg: Message) -> None:
+        def wrapper(msg: ReceiveMessage) -> None:
             """Call with deprecated signature."""
             msg_callback(msg.topic, msg.payload, msg.qos)
 
@@ -676,7 +678,7 @@ class MQTT:
             CONF_WILL_MESSAGE in self.conf
             and ATTR_TOPIC in self.conf[CONF_WILL_MESSAGE]
         ):
-            will_message = Message(**self.conf[CONF_WILL_MESSAGE])
+            will_message = PublishMessage(**self.conf[CONF_WILL_MESSAGE])
         else:
             will_message = None
 
@@ -853,7 +855,7 @@ class MQTT:
                     retain=birth_message.retain,
                 )
 
-            birth_message = Message(**self.conf[CONF_BIRTH_MESSAGE])
+            birth_message = PublishMessage(**self.conf[CONF_BIRTH_MESSAGE])
             asyncio.run_coroutine_threadsafe(
                 publish_birth_message(birth_message), self.hass.loop
             )
@@ -900,7 +902,7 @@ class MQTT:
 
             self.hass.async_run_hass_job(
                 subscription.job,
-                Message(
+                ReceiveMessage(
                     msg.topic,
                     payload,
                     msg.qos,
@@ -1043,7 +1045,7 @@ async def websocket_subscribe(hass, connection, msg):
     if not connection.user.is_admin:
         raise Unauthorized
 
-    async def forward_messages(mqttmsg: Message):
+    async def forward_messages(mqttmsg: ReceiveMessage):
         """Forward events to websocket."""
         connection.send_message(
             websocket_api.event_message(
@@ -1064,8 +1066,13 @@ async def websocket_subscribe(hass, connection, msg):
     connection.send_message(websocket_api.result_message(msg["id"]))
 
 
+ConnectionStatusCallback = Callable[[bool], None]
+
+
 @callback
-def async_subscribe_connection_status(hass, connection_status_callback):
+def async_subscribe_connection_status(
+    hass: HomeAssistant, connection_status_callback: ConnectionStatusCallback
+) -> Callable[[], None]:
     """Subscribe to MQTT connection changes."""
     connection_status_callback_job = HassJob(connection_status_callback)
 
@@ -1092,6 +1099,6 @@ def async_subscribe_connection_status(hass, connection_status_callback):
     return unsubscribe
 
 
-def is_connected(hass):
+def is_connected(hass: HomeAssistant) -> bool:
     """Return if MQTT client is connected."""
     return hass.data[DATA_MQTT].connected
