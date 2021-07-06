@@ -39,18 +39,25 @@ class AdvantageAirZoneVent(AdvantageAirEntity, CoverEntity):
     _attr_device_class = DEVICE_CLASS_DAMPER
     _attr_supported_features = SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_SET_POSITION
 
-    def __init__(self):
+    def __init__(self, instance, ac_key, zone_key):
         """Initialize an Advantage Air Cover Class."""
+        super().__init__(instance, ac_key, zone_key)
         self._attr_name = f'{self._zone["name"]}'
         self._attr_unique_id = (
-            f'{self.coordinator.data["system"]["rid"]}-{self.ac_key}-{self.zone_key}'
+            f'{self.coordinator.data["system"]["rid"]}-{ac_key}-{zone_key}'
         )
-        self._attr_is_closed = self._zone["state"] == ADVANTAGE_AIR_STATE_CLOSE
-        self._attr_current_cover_position = (
-            self._zone["value"]
-            if self._zone["state"] == ADVANTAGE_AIR_STATE_OPEN
-            else 0
-        )
+
+    @property
+    def is_closed(self):
+        """Return if vent is fully closed."""
+        return self._zone["state"] == ADVANTAGE_AIR_STATE_CLOSE
+
+    @property
+    def current_cover_position(self):
+        """Return vents current position as a percentage."""
+        if self._zone["state"] == ADVANTAGE_AIR_STATE_OPEN:
+            return self._zone["value"]
+        return 0
 
     async def async_open_cover(self, **kwargs):
         """Fully open zone vent."""

@@ -48,17 +48,24 @@ class AdvantageAirTimeTo(AdvantageAirEntity, SensorEntity):
 
     def __init__(self, instance, ac_key, action):
         """Initialize the Advantage Air timer control."""
-        super().__init__(instance, ac_key)
-        self.action = action
-        self._time_key = f"countDownTo{self.action}"
-        self._attr_name = f'{self._ac["name"]} Time To {self.action}'
-        self._attr_unique_id = f'{self.coordinator.data["system"]["rid"]}-{self.ac_key}-timeto{self.action}'
-        self._attr_state = self._ac[self._time_key]
-        self._attr_icon = (
-            "mdi:timer-outline"
-            if self._ac[self._time_key] > 0
-            else "mdi:timer-off-outline"
+        super().__init__(instance, ac_key, action)
+        self._time_key = f"countDownTo{action}"
+        self._attr_name = f'{self._ac["name"]} Time To {action}'
+        self._attr_unique_id = (
+            f'{self.coordinator.data["system"]["rid"]}-{ac_key}-timeto{action}'
         )
+
+    @property
+    def state(self):
+        """Return the current value."""
+        return self._ac[self._time_key]
+
+    @property
+    def icon(self):
+        """Return a representative icon of the timer."""
+        if self._ac[self._time_key] > 0:
+            return "mdi:timer-outline"
+        return "mdi:timer-off-outline"
 
     async def set_time_to(self, **kwargs):
         """Set the timer value."""
@@ -71,20 +78,27 @@ class AdvantageAirZoneVent(AdvantageAirEntity, SensorEntity):
 
     _attr_unit_of_measurement = PERCENTAGE
 
-    def __init__(self):
+    def __init__(self, instance, ac_key, zone_key):
         """Initialize an Advantage Air Zone Vent Sensor."""
+        super().__init__(instance, ac_key, zone_key)
         self._attr_name = f'{self._zone["name"]} Vent'
-        self._attr_unique_id = f'{self.coordinator.data["system"]["rid"]}-{self.ac_key}-{self.zone_key}-vent'
-        self._attr_state = (
-            self._zone["value"]
-            if self._zone["state"] == ADVANTAGE_AIR_STATE_OPEN
-            else 0
+        self._attr_unique_id = (
+            f'{self.coordinator.data["system"]["rid"]}-{ac_key}-{zone_key}-vent'
         )
-        self._attr_icon = (
-            "mdi:fan"
-            if self._zone["state"] == ADVANTAGE_AIR_STATE_OPEN
-            else "mdi:fan-off"
-        )
+
+    @property
+    def state(self):
+        """Return the current value of the air vent."""
+        if self._zone["state"] == ADVANTAGE_AIR_STATE_OPEN:
+            return self._zone["value"]
+        return 0
+
+    @property
+    def icon(self):
+        """Return a representative icon."""
+        if self._zone["state"] == ADVANTAGE_AIR_STATE_OPEN:
+            return "mdi:fan"
+        return "mdi:fan-off"
 
 
 class AdvantageAirZoneSignal(AdvantageAirEntity, SensorEntity):
@@ -92,20 +106,28 @@ class AdvantageAirZoneSignal(AdvantageAirEntity, SensorEntity):
 
     _attr_unit_of_measurement = PERCENTAGE
 
-    def __init__(self):
+    def __init__(self, instance, ac_key, zone_key):
         """Initialize an Advantage Air Zone wireless signal sensor."""
-        super().__init__()
+        super().__init__(instance, ac_key, zone_key)
         self._attr_name = f'{self._zone["name"]} Signal'
-        self._attr_unique_id = f'{self.coordinator.data["system"]["rid"]}-{self.ac_key}-{self.zone_key}-signal'
-        self._attr_icon = (
-            "mdi:wifi-strength-4"
-            if self._zone["rssi"] >= 80
-            else "mdi:wifi-strength-3"
-            if self._zone["rssi"] >= 60
-            else "mdi:wifi-strength-2"
-            if self._zone["rssi"] >= 40
-            else "mdi:wifi-strength-1"
-            if self._zone["rssi"] >= 20
-            else "mdi:wifi-strength-outline"
+        self._attr_unique_id = (
+            f'{self.coordinator.data["system"]["rid"]}-{ac_key}-{zone_key}-signal'
         )
-        self._attr_state = self._zone["rssi"]
+
+    @property
+    def state(self):
+        """Return the current value of the wireless signal."""
+        return self._zone["rssi"]
+
+    @property
+    def icon(self):
+        """Return a representative icon."""
+        if self._zone["rssi"] >= 80:
+            return "mdi:wifi-strength-4"
+        if self._zone["rssi"] >= 60:
+            return "mdi:wifi-strength-3"
+        if self._zone["rssi"] >= 40:
+            return "mdi:wifi-strength-2"
+        if self._zone["rssi"] >= 20:
+            return "mdi:wifi-strength-1"
+        return "mdi:wifi-strength-outline"

@@ -27,13 +27,18 @@ class AdvantageAirFreshAir(AdvantageAirEntity, ToggleEntity):
 
     _attr_icon = "mdi:air-filter"
 
-    def __init__(self):
+    def __init__(self, instance, ac_key):
         """Initialize an Advantage Air fresh air control."""
+        super().__init__(instance, ac_key)
         self._attr_name = f'{self._ac["name"]} Fresh Air'
         self._attr_unique_id = (
-            f'{self.coordinator.data["system"]["rid"]}-{self.ac_key}-freshair'
+            f'{self.coordinator.data["system"]["rid"]}-{ac_key}-freshair'
         )
-        self._attr_is_on = self._ac["freshAirStatus"] == ADVANTAGE_AIR_STATE_ON
+
+    @property
+    def is_on(self):
+        """Return the fresh air status."""
+        return self._ac["freshAirStatus"] == ADVANTAGE_AIR_STATE_ON
 
     async def async_turn_on(self, **kwargs):
         """Turn fresh air on."""
