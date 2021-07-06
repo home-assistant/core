@@ -68,6 +68,7 @@ async def async_setup_services(hass):
                 if possible_gateway.bridgeid == bridge_id:
                     gateway = possible_gateway
                     found_gateway = True
+                    break
 
             if not found_gateway:
                 LOGGER.error("Could not find the gateway %s", bridge_id)
