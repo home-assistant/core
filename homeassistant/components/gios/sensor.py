@@ -13,6 +13,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import GiosDataUpdateCoordinator
 from .const import (
+    ATTR_AQI,
     ATTR_INDEX,
     ATTR_STATION,
     ATTR_UNIT,
@@ -33,10 +34,14 @@ async def async_setup_entry(
 
     coordinator = hass.data[DOMAIN][entry.entry_id]
 
-    sensors = []
+    sensors: list[GiosSensor | GiosAqiSensor] = []
 
-    for sensor in coordinator.data:
-        if sensor in SENSOR_TYPES:
+    for sensor, sensor_data in coordinator.data.items():
+        if sensor not in SENSOR_TYPES or not sensor_data.get(ATTR_VALUE):
+            continue
+        if sensor == ATTR_AQI:
+            sensors.append(GiosAqiSensor(name, sensor, coordinator))
+        else:
             sensors.append(GiosSensor(name, sensor, coordinator))
     async_add_entities(sensors)
 
@@ -84,6 +89,21 @@ class GiosSensor(CoordinatorEntity, SensorEntity):
     def state(self) -> StateType:
         """Return the state."""
         self._state = self.coordinator.data[self._sensor_type][ATTR_VALUE]
-        if self._description.get(ATTR_VALUE):
-            return cast(StateType, self._description[ATTR_VALUE](self._state))
-        return cast(StateType, self._state)
+        return cast(StateType, self._description[ATTR_VALUE](self._state))
+
+
+class GiosAqiSensor(GiosSensor):
+    """Define an GIOS AQI sensor."""
+
+    @property
+    def state(self) -> StateType:
+        """Return the state."""
+        return cast(StateType, self.coordinator.data[self._sensor_type][ATTR_VALUE])
+
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        available = super().available
+        return available and bool(
+            self.coordinator.data[self._sensor_type].get(ATTR_VALUE)
+        )
