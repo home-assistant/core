@@ -61,8 +61,8 @@ async def test_setup_entry_successful(hass, aioclient_mock):
     config_entry = await setup_deconz_integration(hass, aioclient_mock)
 
     assert hass.data[DECONZ_DOMAIN]
-    assert config_entry.unique_id in hass.data[DECONZ_DOMAIN]
-    assert hass.data[DECONZ_DOMAIN][config_entry.unique_id].master
+    assert config_entry.entry_id in hass.data[DECONZ_DOMAIN]
+    assert hass.data[DECONZ_DOMAIN][config_entry.entry_id].master
 
 
 async def test_setup_entry_multiple_gateways(hass, aioclient_mock):
@@ -80,8 +80,8 @@ async def test_setup_entry_multiple_gateways(hass, aioclient_mock):
         )
 
     assert len(hass.data[DECONZ_DOMAIN]) == 2
-    assert hass.data[DECONZ_DOMAIN][config_entry.unique_id].master
-    assert not hass.data[DECONZ_DOMAIN][config_entry2.unique_id].master
+    assert hass.data[DECONZ_DOMAIN][config_entry.entry_id].master
+    assert not hass.data[DECONZ_DOMAIN][config_entry2.entry_id].master
 
 
 async def test_unload_entry(hass, aioclient_mock):
@@ -112,7 +112,7 @@ async def test_unload_entry_multiple_gateways(hass, aioclient_mock):
     assert await async_unload_entry(hass, config_entry)
 
     assert len(hass.data[DECONZ_DOMAIN]) == 1
-    assert hass.data[DECONZ_DOMAIN][config_entry2.unique_id].master
+    assert hass.data[DECONZ_DOMAIN][config_entry2.entry_id].master
 
 
 async def test_update_group_unique_id(hass):
