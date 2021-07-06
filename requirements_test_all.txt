@@ -904,7 +904,7 @@ pymelcloud==2.5.3
 pymeteoclimatic==0.0.6
 
 # homeassistant.components.somfy
-pymfy==0.9.3
+pymfy==0.11.0
 
 # homeassistant.components.mochad
 pymochad==0.2.0
