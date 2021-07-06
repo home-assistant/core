@@ -2,6 +2,7 @@
 DOMAIN = "stream"
 
 ATTR_ENDPOINTS = "endpoints"
+ATTR_SETTINGS = "settings"
 ATTR_STREAMS = "streams"
 
 HLS_PROVIDER = "hls"

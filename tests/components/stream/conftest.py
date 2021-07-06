@@ -22,11 +22,7 @@ import async_timeout
 import pytest
 
 from homeassistant.components.stream import Stream
-from homeassistant.components.stream.const import (
-    SEGMENT_DURATION_ADJUSTER,
-    TARGET_SEGMENT_DURATION_NON_LL_HLS,
-)
-from homeassistant.components.stream.core import Segment, StreamOutput, StreamSettings
+from homeassistant.components.stream.core import Segment, StreamOutput
 
 TEST_TIMEOUT = 7.0  # Lower than 9s home assistant timeout
 
@@ -217,16 +213,3 @@ def hls_sync():
         side_effect=sync.response,
     ):
         yield sync
-
-
-@pytest.fixture(autouse=True)
-def reset_stream_constants():
-    """Reset the class variables in StreamSettings before each test."""
-    StreamSettings.ll_hls = False
-    StreamSettings.min_segment_duration = (
-        TARGET_SEGMENT_DURATION_NON_LL_HLS - SEGMENT_DURATION_ADJUSTER
-    )
-    StreamSettings.target_part_duration = 0.0
-    StreamSettings.hls_advance_part_limit = 3
-    StreamSettings.hls_part_timeout = TARGET_SEGMENT_DURATION_NON_LL_HLS
-    yield

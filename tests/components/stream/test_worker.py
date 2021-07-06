@@ -20,17 +20,22 @@ import threading
 from unittest.mock import patch
 
 import av
+import pytest
 
 from homeassistant.components.stream import Stream, create_stream
 from homeassistant.components.stream.const import (
+    ATTR_SETTINGS,
     CONF_LL_HLS,
     CONF_PART_DURATION,
     CONF_SEGMENT_DURATION,
+    DOMAIN,
     HLS_PROVIDER,
     MAX_MISSING_DTS,
     PACKETS_TO_WAIT_FOR_AUDIO,
+    SEGMENT_DURATION_ADJUSTER,
     TARGET_SEGMENT_DURATION_NON_LL_HLS,
 )
+from homeassistant.components.stream.core import StreamSettings
 from homeassistant.components.stream.worker import SegmentBuffer, stream_worker
 from homeassistant.setup import async_setup_component
 
@@ -55,6 +60,21 @@ OUT_OF_ORDER_PACKET_INDEX = 3 * VIDEO_FRAME_RATE
 PACKETS_PER_SEGMENT = SEGMENT_DURATION / PACKET_DURATION
 SEGMENTS_PER_PACKET = PACKET_DURATION / SEGMENT_DURATION
 TIMEOUT = 15
+
+
+@pytest.fixture(autouse=True)
+def mock_stream_settings(hass):
+    """Set the stream settings data in hass before each test."""
+    hass.data[DOMAIN] = {
+        ATTR_SETTINGS: StreamSettings(
+            ll_hls=False,
+            min_segment_duration=TARGET_SEGMENT_DURATION_NON_LL_HLS
+            - SEGMENT_DURATION_ADJUSTER,
+            target_part_duration=0.0,
+            hls_advance_part_limit=3,
+            hls_part_timeout=TARGET_SEGMENT_DURATION_NON_LL_HLS,
+        )
+    }
 
 
 class FakePyAvStream:

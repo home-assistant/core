@@ -15,7 +15,9 @@ from homeassistant.core import HomeAssistant
 
 from . import redact_credentials
 from .const import (
+    ATTR_SETTINGS,
     AUDIO_CODECS,
+    DOMAIN,
     MAX_MISSING_DTS,
     MAX_TIMESTAMP_GAP,
     PACKETS_TO_WAIT_FOR_AUDIO,
@@ -56,12 +58,17 @@ class SegmentBuffer:
         self._memory_file_pos: int = cast(int, None)
         self._part_start_dts: int = cast(int, None)
         self._part_has_keyframe = False
+        self._stream_settings: StreamSettings = hass.data[DOMAIN][ATTR_SETTINGS]
+        # Just do this dict lookup once since we use this value during each mux
+        self._min_segment_duration = self._stream_settings["min_segment_duration"]
         # This does not need to be exact
         self._real_time_offset = datetime.datetime.utcnow()
 
-    @staticmethod
     def make_new_av(
-        memory_file: BytesIO, sequence: int, input_vstream: av.video.VideoStream
+        self,
+        memory_file: BytesIO,
+        sequence: int,
+        input_vstream: av.video.VideoStream,
     ) -> av.container.OutputContainer:
         """Make a new av OutputContainer."""
         return av.open(
@@ -90,10 +97,10 @@ class SegmentBuffer:
                         # a "Part" that can be combined with the data from all the other "Part"s, plus an init
                         # section, to reconstitute the data in a "Segment".
                         "frag_duration": str(
-                            int(StreamSettings.target_part_duration * 1e6)
+                            int(self._stream_settings["target_part_duration"] * 1e6)
                         ),
                     }
-                    if StreamSettings.ll_hls
+                    if self._stream_settings["ll_hls"]
                     else {}
                 ),
             },
@@ -140,7 +147,7 @@ class SegmentBuffer:
             if (
                 packet.is_keyframe
                 and (packet.dts - self._segment_start_dts) * packet.time_base
-                >= StreamSettings.min_segment_duration
+                >= self._min_segment_duration
             ):
                 # Flush segment (also flushes the stub part segment)
                 self.flush(packet, last_part=True)

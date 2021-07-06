@@ -6,7 +6,7 @@ from collections import deque
 from collections.abc import Generator, Iterable
 import datetime
 import itertools
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, TypedDict
 
 from aiohttp import web
 import async_timeout
@@ -17,12 +17,7 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.util.decorator import Registry
 
-from .const import (
-    ATTR_STREAMS,
-    DOMAIN,
-    SEGMENT_DURATION_ADJUSTER,
-    TARGET_SEGMENT_DURATION_NON_LL_HLS,
-)
+from .const import ATTR_STREAMS, DOMAIN
 
 if TYPE_CHECKING:
     from . import Stream
@@ -30,17 +25,14 @@ if TYPE_CHECKING:
 PROVIDERS = Registry()
 
 
-class StreamSettings:
-    """Settings that may be reset by config options when Stream is loaded."""
+class StreamSettings(TypedDict):
+    """Stream settings."""
 
-    ll_hls = False
-    # Round down a little to avoid missing the keyframe due to rounding
-    min_segment_duration = (
-        TARGET_SEGMENT_DURATION_NON_LL_HLS - SEGMENT_DURATION_ADJUSTER
-    )
-    target_part_duration = 0.0
-    hls_advance_part_limit = 3
-    hls_part_timeout = TARGET_SEGMENT_DURATION_NON_LL_HLS
+    ll_hls: bool
+    min_segment_duration: float
+    target_part_duration: float
+    hls_advance_part_limit: int
+    hls_part_timeout: float
 
 
 @attr.s(slots=True)
@@ -313,13 +305,6 @@ class StreamOutput:
         if self._segments:
             return self._segments[-1]
         return None
-
-    @property
-    def target_duration(self) -> float:
-        """Return the max duration of any given segment in seconds."""
-        if not (durations := [s.duration for s in self._segments if s.complete]):
-            return StreamSettings.min_segment_duration
-        return max(durations)
 
     def get_segment(self, sequence: int) -> Segment | None:
         """Retrieve a specific segment."""

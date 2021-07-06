@@ -35,6 +35,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     ATTR_ENDPOINTS,
+    ATTR_SETTINGS,
     ATTR_STREAMS,
     CONF_LL_HLS,
     CONF_PART_DURATION,
@@ -47,9 +48,11 @@ from .const import (
     SEGMENT_DURATION_ADJUSTER,
     STREAM_RESTART_INCREMENT,
     STREAM_RESTART_RESET_TIME,
+    TARGET_SEGMENT_DURATION_NON_LL_HLS,
 )
 from .core import PROVIDERS, IdleTimer, StreamOutput, StreamSettings
-from .hls import async_setup_hls
+from .hls import HlsStreamOutput, async_setup_hls
+from .recorder import RecorderOutput
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -117,17 +120,25 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.data[DOMAIN][ATTR_ENDPOINTS] = {}
     hass.data[DOMAIN][ATTR_STREAMS] = []
     if (conf := config.get(DOMAIN)) and conf[CONF_LL_HLS]:
-        StreamSettings.ll_hls = True
         assert isinstance(conf[CONF_SEGMENT_DURATION], float)
         assert isinstance(conf[CONF_PART_DURATION], float)
-        StreamSettings.min_segment_duration = (
-            conf[CONF_SEGMENT_DURATION] - SEGMENT_DURATION_ADJUSTER
+        hass.data[DOMAIN][ATTR_SETTINGS] = StreamSettings(
+            ll_hls=True,
+            min_segment_duration=conf[CONF_SEGMENT_DURATION]
+            - SEGMENT_DURATION_ADJUSTER,
+            target_part_duration=conf[CONF_PART_DURATION],
+            hls_advance_part_limit=max(int(3 / conf[CONF_PART_DURATION]), 3),
+            hls_part_timeout=2 * conf[CONF_PART_DURATION],
         )
-        StreamSettings.target_part_duration = conf[CONF_PART_DURATION]
-        StreamSettings.hls_advance_part_limit = max(
-            int(3 / StreamSettings.target_part_duration), 3
+    else:
+        hass.data[DOMAIN][ATTR_SETTINGS] = StreamSettings(
+            ll_hls=False,
+            min_segment_duration=TARGET_SEGMENT_DURATION_NON_LL_HLS
+            - SEGMENT_DURATION_ADJUSTER,
+            target_part_duration=0.0,
+            hls_advance_part_limit=3,
+            hls_part_timeout=TARGET_SEGMENT_DURATION_NON_LL_HLS,
         )
-        StreamSettings.hls_part_timeout = 2 * StreamSettings.target_part_duration
 
     # Setup HLS
     hls_endpoint = async_setup_hls(hass)
@@ -247,7 +258,12 @@ class Stream:
         wait_timeout = 0
         while not self._thread_quit.wait(timeout=wait_timeout):
             start_time = time.time()
-            stream_worker(self.source, self.options, segment_buffer, self._thread_quit)
+            stream_worker(
+                self.source,
+                self.options,
+                segment_buffer,
+                self._thread_quit,
+            )
             segment_buffer.discontinuity()
             if not self.keepalive or self._thread_quit.is_set():
                 if self._fast_restart_once:
@@ -325,7 +341,7 @@ class Stream:
         _LOGGER.debug("Started a stream recording of %s seconds", duration)
 
         # Take advantage of lookback
-        hls = self.outputs().get(HLS_PROVIDER)
+        hls: HlsStreamOutput = cast(HlsStreamOutput, self.outputs().get(HLS_PROVIDER))
         if lookback > 0 and hls:
             num_segments = min(int(lookback // hls.target_duration), MAX_SEGMENTS)
             # Wait for latest segment, then add the lookback

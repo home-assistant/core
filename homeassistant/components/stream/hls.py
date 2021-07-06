@@ -2,13 +2,15 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 from aiohttp import web
 
 from homeassistant.core import HomeAssistant, callback
 
 from .const import (
+    ATTR_SETTINGS,
+    DOMAIN,
     EXT_X_START_LL_HLS,
     EXT_X_START_NON_LL_HLS,
     FORMAT_CONTENT_TYPE,
@@ -42,11 +44,24 @@ class HlsStreamOutput(StreamOutput):
     def __init__(self, hass: HomeAssistant, idle_timer: IdleTimer) -> None:
         """Initialize HLS output."""
         super().__init__(hass, idle_timer, deque_maxlen=MAX_SEGMENTS)
+        stream_settings: StreamSettings = hass.data[DOMAIN][ATTR_SETTINGS]
+        self.ll_hls = stream_settings["ll_hls"]
+        self.min_segment_duration = stream_settings["min_segment_duration"]
+        self.hls_advance_part_limit = stream_settings["hls_advance_part_limit"]
+        self.target_part_duration = stream_settings["target_part_duration"]
+        self.hls_part_timeout = stream_settings["hls_part_timeout"]
 
     @property
     def name(self) -> str:
         """Return provider name."""
         return HLS_PROVIDER
+
+    @property
+    def target_duration(self) -> float:
+        """Return the max duration of any given segment in seconds."""
+        if not (durations := [s.duration for s in self._segments if s.complete]):
+            return self.min_segment_duration
+        return max(durations)
 
 
 class HlsMasterPlaylistView(StreamView):
@@ -102,7 +117,7 @@ class HlsPlaylistView(StreamView):
     cors_allowed = True
 
     @classmethod
-    def render(cls, track: StreamOutput, ll_hls: bool) -> str:
+    def render(cls, track: HlsStreamOutput) -> str:
         """Render HLS playlist file."""
         # NUM_PLAYLIST_SEGMENTS+1 because most recent is probably not yet complete
         segments = list(track.get_segments())[-(NUM_PLAYLIST_SEGMENTS + 1) :]
@@ -126,7 +141,7 @@ class HlsPlaylistView(StreamView):
             f"#EXT-X-DISCONTINUITY-SEQUENCE:{first_segment.stream_id}",
         ]
 
-        if ll_hls:
+        if track.ll_hls:
             part_duration = float(
                 max(
                     (
@@ -134,7 +149,7 @@ class HlsPlaylistView(StreamView):
                         for s in segments
                         for p in s.parts_by_byterange.values()
                     ),
-                    default=StreamSettings.target_part_duration,
+                    default=track.target_part_duration,
                 )
             )
             playlist.extend(
@@ -173,7 +188,9 @@ class HlsPlaylistView(StreamView):
 
         playlist.append(
             segments[-1].render_hls(
-                last_stream_id=last_stream_id, render_parts=ll_hls, add_hint=ll_hls
+                last_stream_id=last_stream_id,
+                render_parts=track.ll_hls,
+                add_hint=track.ll_hls,
             )
         )
 
@@ -212,7 +229,9 @@ class HlsPlaylistView(StreamView):
         self, request: web.Request, stream: Stream, sequence: str
     ) -> web.Response:
         """Return m3u8 playlist."""
-        track = stream.add_provider(HLS_PROVIDER)
+        track: HlsStreamOutput = cast(
+            HlsStreamOutput, stream.add_provider(HLS_PROVIDER)
+        )
         stream.start()
 
         hls_msn: str | int | None = request.query.get("_HLS_msn")
@@ -250,9 +269,7 @@ class HlsPlaylistView(StreamView):
             (last_segment := track.last_segment)
             and hls_msn == last_segment.sequence
             and hls_part
-            >= len(last_segment.parts_by_byterange)
-            - 1
-            + StreamSettings.hls_advance_part_limit
+            >= len(last_segment.parts_by_byterange) - 1 + track.hls_advance_part_limit
         ):
             return self.bad_request(blocking_request, track.target_duration)
 
@@ -262,7 +279,7 @@ class HlsPlaylistView(StreamView):
             and hls_msn == last_segment.sequence
             and hls_part >= len(last_segment.parts_by_byterange)
         ):
-            if not await track.part_recv(timeout=StreamSettings.hls_part_timeout):
+            if not await track.part_recv(timeout=track.hls_part_timeout):
                 return self.not_found(blocking_request, track.target_duration)
         # Now we should have msn.part >= hls_msn.hls_part. However, in the case
         # that we have a rollover part request from the previous segment, we need
@@ -274,12 +291,12 @@ class HlsPlaylistView(StreamView):
             if not (previous_segment := track.get_segment(hls_msn)) or (
                 hls_part >= len(previous_segment.parts_by_byterange)
                 and not last_segment.parts_by_byterange
-                and not await track.part_recv(timeout=StreamSettings.hls_part_timeout)
+                and not await track.part_recv(timeout=track.hls_part_timeout)
             ):
                 return self.not_found(blocking_request, track.target_duration)
 
         response = web.Response(
-            body=self.render(track, StreamSettings.ll_hls).encode("utf-8"),
+            body=self.render(track).encode("utf-8"),
             headers={
                 "Content-Type": FORMAT_CONTENT_TYPE[HLS_PROVIDER],
                 "Cache-Control": f"max-age={(6 if blocking_request else 0.5)*track.target_duration:.0f}",
@@ -324,7 +341,9 @@ class HlsSegmentView(StreamView):
         For part and hinted segments, the start of the requested range must align
         with a part boundary.
         """
-        track = stream.add_provider(HLS_PROVIDER)
+        track: HlsStreamOutput = cast(
+            HlsStreamOutput, stream.add_provider(HLS_PROVIDER)
+        )
         track.idle_timer.awake()
         # Ensure that we have a segment. If the request is from a hint for part 0
         # of a segment, there is a small chance it may have arrived before the
@@ -332,7 +351,7 @@ class HlsSegmentView(StreamView):
         if not (
             (segment := track.get_segment(int(sequence)))
             or (
-                await track.part_recv(timeout=StreamSettings.hls_part_timeout)
+                await track.part_recv(timeout=track.hls_part_timeout)
                 and (segment := track.get_segment(int(sequence)))
             )
         ):
@@ -408,7 +427,7 @@ class HlsSegmentView(StreamView):
             ):
                 if bytes_to_write:
                     await response.write(bytes_to_write)
-                elif not await track.part_recv(timeout=StreamSettings.hls_part_timeout):
+                elif not await track.part_recv(timeout=track.hls_part_timeout):
                     break
         except ConnectionResetError:
             _LOGGER.warning("Connection reset while serving HLS partial segment")
