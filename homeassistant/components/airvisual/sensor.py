@@ -190,9 +190,9 @@ class AirVisualGeographySensor(AirVisualEntity, SensorEntity):
         """Update the entity from the latest data."""
         try:
             data = self.coordinator.data["current"]["pollution"]
-            self._attr_available = super().available and data
         except KeyError:
             return
+        self._attr_available = super().available and data
 
         if self._kind == SENSOR_KIND_LEVEL:
             aqi = data[f"aqi{self._locale}"]
@@ -249,12 +249,6 @@ class AirVisualNodeProSensor(AirVisualEntity, SensorEntity):
         super().__init__(coordinator)
 
         self._attr_device_class = device_class
-        self._attr_icon = icon
-        self._attr_unit_of_measurement = unit
-        self._kind = kind
-        self._attr_name = (
-            f"{coordinator.data['settings']['node_name']} Node/Pro: {name}"
-        )
         self._attr_device_info = {
             "identifiers": {(DOMAIN, coordinator.data["serial_number"])},
             "name": coordinator.data["settings"]["node_name"],
@@ -265,7 +259,13 @@ class AirVisualNodeProSensor(AirVisualEntity, SensorEntity):
                 f'{coordinator.data["status"]["app_version"]}'
             ),
         }
+        self._attr_icon = icon
+        self._attr_name = (
+            f"{coordinator.data['settings']['node_name']} Node/Pro: {name}"
+        )
         self._attr_unique_id = f"{coordinator.data['serial_number']}_{kind}"
+        self._attr_unit_of_measurement = unit
+        self._kind = kind
 
     @callback
     def update_from_latest_data(self):
