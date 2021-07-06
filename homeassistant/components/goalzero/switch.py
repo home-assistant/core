@@ -39,7 +39,7 @@ class YetiSwitch(YetiEntity, SwitchEntity):
         super().__init__(api, coordinator, name, server_unique_id)
         self._condition = switch_name
         self._attr_name = f"{name} {SWITCH_DICT[switch_name]}"
-        self._attr_unique_id = f"{self._server_unique_id}/{self._condition}"
+        self._attr_unique_id = f"{server_unique_id}/{switch_name}"
 
     @property
     def is_on(self):

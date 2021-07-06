@@ -1,6 +1,6 @@
 """The Goal Zero Yeti integration."""
 import logging
-from typing import Any
+from typing import Any, Mapping, Optional
 
 from goalzero import Yeti, exceptions
 
@@ -21,7 +21,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -54,7 +53,7 @@ async def async_setup_entry(hass, entry):
     try:
         await api.init_connect()
     except exceptions.ConnectError as ex:
-        _LOGGER.warning(f"Failed to connect to host at {host}", ex)
+        _LOGGER.warning("Failed to connect to device %s", ex)
         raise ConfigEntryNotReady from ex
 
     async def async_update_data():
@@ -97,23 +96,16 @@ class YetiEntity(CoordinatorEntity):
         """Initialize a Goal Zero Yeti entity."""
         super().__init__(coordinator)
         self.api = api
-        self._name = name
-        self._server_unique_id = server_unique_id
-        self._attr_device_class = None
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device information of the entity."""
-        return {
-            ATTR_IDENTIFIERS: {(DOMAIN, self._server_unique_id)},
+        self._attr_device_info = {
+            ATTR_IDENTIFIERS: {(DOMAIN, server_unique_id)},
             ATTR_MANUFACTURER: "Goal Zero",
-            ATTR_NAME: self._name,
+            ATTR_NAME: name,
             ATTR_MODEL: self.api.sysdata.get(ATTR_MODEL),
             ATTR_SW_VERSION: self.api.data.get(ATTR_FIRMWARE_VERSION),
         }
 
     @property
-    def extra_state_attributes(self) -> dict[str, Any]:
+    def extra_state_attributes(self) -> Optional[Mapping[str, Any]]:
         """Return the state attributes."""
         attributes = {
             ATTR_ATTRIBUTION: ATTRIBUTION,

@@ -40,11 +40,11 @@ class YetiBinarySensor(YetiEntity, BinarySensorEntity):
 
         self._condition = sensor_name
         self._attr_device_class = BINARY_SENSOR_DICT[sensor_name].get(ATTR_DEVICE_CLASS)
+        self._attr_icon = BINARY_SENSOR_DICT[sensor_name].get(ATTR_ICON)
         self._attr_name = f"{name} {BINARY_SENSOR_DICT[sensor_name].get(ATTR_NAME)}"
         self._attr_unique_id = (
-            f"{self._server_unique_id}/{BINARY_SENSOR_DICT[sensor_name].get(ATTR_NAME)}"
+            f"{server_unique_id}/{BINARY_SENSOR_DICT[sensor_name].get(ATTR_NAME)}"
         )
-        self._attr_icon = BINARY_SENSOR_DICT[sensor_name].get(ATTR_ICON)
 
     @property
     def is_on(self) -> bool:
