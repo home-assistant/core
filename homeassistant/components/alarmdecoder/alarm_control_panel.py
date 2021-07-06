@@ -123,7 +123,6 @@ class AlarmDecoderAlarmPanel(AlarmControlPanelEntity):
             "programming_mode": message.programming_mode,
             "ready": message.ready,
             "zone_bypassed": message.zone_bypassed,
-            "code_arm_required": self._attr_code_arm_required,
         }
         self.schedule_update_ha_state()
 
