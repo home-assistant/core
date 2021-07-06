@@ -43,7 +43,7 @@ class SomfyDataUpdateCoordinator(DataUpdateCoordinator):
         """
         if not self.site_device:
             sites = await self.hass.async_add_executor_job(self.client.get_sites)
-            if not sites:
+            if len(sites) == 0:
                 return {}
             self.site_device = {site.id: [] for site in sites}
 
