@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections import defaultdict, deque
 from collections.abc import Generator, Iterator, Mapping
+import datetime
 from io import BytesIO
 import logging
 from threading import Event
@@ -55,6 +56,8 @@ class SegmentBuffer:
         self._memory_file_pos: int = cast(int, None)
         self._part_start_dts: int = cast(int, None)
         self._part_has_keyframe = False
+        # This does not need to be exact
+        self._real_time_offset = datetime.datetime.utcnow()
 
     @staticmethod
     def make_new_av(

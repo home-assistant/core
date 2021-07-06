@@ -95,14 +95,7 @@ def make_segment_with_parts(
     """Create a playlist response for a segment including part segments."""
     response = []
     if discontinuity:
-        response.extend(
-            [
-                "#EXT-X-DISCONTINUITY",
-                "#EXT-X-PROGRAM-DATE-TIME:"
-                + FAKE_TIME.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]
-                + "Z",
-            ]
-        )
+        response.append("#EXT-X-DISCONTINUITY")
     for i in range(num_parts):
         length, start = http_range_from_part(i)
         response.append(
@@ -110,6 +103,9 @@ def make_segment_with_parts(
         )
     response.extend(
         [
+            "#EXT-X-PROGRAM-DATE-TIME:"
+            + FAKE_TIME.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]
+            + "Z",
             f"#EXTINF:{SEGMENT_DURATION:.3f},",
             f"./segment/{segment}.m4s",
         ]
@@ -326,7 +322,9 @@ async def test_ll_hls_msn(hass, hls_stream, stream_worker_sync, hls_sync):
 
     for sequence in range(3):
         await hls_sync.wait_for_handler()
-        segment = Segment(sequence=sequence, duration=SEGMENT_DURATION)
+        segment = Segment(
+            sequence=sequence, duration=SEGMENT_DURATION, start_time=FAKE_TIME
+        )
         hls.put(segment)
 
     msn_responses = await msn_requests
@@ -345,7 +343,9 @@ async def test_ll_hls_msn(hass, hls_stream, stream_worker_sync, hls_sync):
     )
     for sequence in range(3, 6):
         await hls_sync.wait_for_handler()
-        segment = Segment(sequence=sequence, duration=SEGMENT_DURATION)
+        segment = Segment(
+            sequence=sequence, duration=SEGMENT_DURATION, start_time=FAKE_TIME
+        )
         hls.put(segment)
 
     msn_responses = await msn_requests

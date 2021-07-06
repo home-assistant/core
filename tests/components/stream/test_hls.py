@@ -63,15 +63,16 @@ def make_segment(segment, discontinuity=False):
     """Create a playlist response for a segment."""
     response = []
     if discontinuity:
-        response.extend(
-            [
-                "#EXT-X-DISCONTINUITY",
-                "#EXT-X-PROGRAM-DATE-TIME:"
-                + FAKE_TIME.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]
-                + "Z",
-            ]
-        )
-    response.extend([f"#EXTINF:{SEGMENT_DURATION:.3f},", f"./segment/{segment}.m4s"])
+        response.append("#EXT-X-DISCONTINUITY")
+    response.extend(
+        [
+            "#EXT-X-PROGRAM-DATE-TIME:"
+            + FAKE_TIME.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]
+            + "Z",
+            f"#EXTINF:{SEGMENT_DURATION:.3f},",
+            f"./segment/{segment}.m4s",
+        ]
+    )
     return "\n".join(response)
 
 
@@ -85,9 +86,6 @@ def make_playlist(sequence, discontinuity_sequence=0, segments=None, hint=None):
         f"#EXT-X-TARGETDURATION:{SEGMENT_DURATION}",
         f"#EXT-X-MEDIA-SEQUENCE:{sequence}",
         f"#EXT-X-DISCONTINUITY-SEQUENCE:{discontinuity_sequence}",
-        "#EXT-X-PROGRAM-DATE-TIME:"
-        + FAKE_TIME.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]
-        + "Z",
     ]
     if hint:
         response.extend(

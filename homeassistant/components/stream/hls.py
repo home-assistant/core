@@ -124,9 +124,6 @@ class HlsPlaylistView(StreamView):
             f"#EXT-X-TARGETDURATION:{target_duration:.0f}",
             f"#EXT-X-MEDIA-SEQUENCE:{first_segment.sequence}",
             f"#EXT-X-DISCONTINUITY-SEQUENCE:{first_segment.stream_id}",
-            "#EXT-X-PROGRAM-DATE-TIME:"
-            + first_segment.start_time.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]
-            + "Z",
         ]
 
         if ll_hls:
