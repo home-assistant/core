@@ -87,6 +87,10 @@ uuid==1000000000.0.0
 # https://github.com/home-assistant/core/issues/51778
 httpcore==0.13.3
 
+# Temporary constraint on pandas, to unblock 2021.7 releases
+# until we have fixed the wheels builds for newer versions.
+pandas==1.2.5
+
 """
 
 IGNORE_PRE_COMMIT_HOOK_ID = (
