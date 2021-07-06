@@ -2,10 +2,12 @@
 from __future__ import annotations
 
 import asyncio
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Callable
 
 from aioesphomeapi import (
     COMPONENT_TYPE_TO_INFO,
+    APIVersion,
     BinarySensorInfo,
     CameraInfo,
     ClimateInfo,
@@ -15,12 +17,12 @@ from aioesphomeapi import (
     EntityState,
     FanInfo,
     LightInfo,
+    NumberInfo,
     SensorInfo,
     SwitchInfo,
     TextSensorInfo,
     UserService,
 )
-import attr
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -40,37 +42,38 @@ INFO_TYPE_TO_PLATFORM = {
     CoverInfo: "cover",
     FanInfo: "fan",
     LightInfo: "light",
+    NumberInfo: "number",
     SensorInfo: "sensor",
     SwitchInfo: "switch",
     TextSensorInfo: "sensor",
 }
 
 
-@attr.s
+@dataclass
 class RuntimeEntryData:
     """Store runtime data for esphome config entries."""
 
-    _storage_contents: dict | None = None
-
-    entry_id: str = attr.ib()
-    client: APIClient = attr.ib()
-    store: Store = attr.ib()
-    state: dict[str, dict[str, Any]] = attr.ib(factory=dict)
-    info: dict[str, dict[str, Any]] = attr.ib(factory=dict)
+    entry_id: str
+    client: APIClient
+    store: Store
+    state: dict[str, dict[str, Any]] = field(default_factory=dict)
+    info: dict[str, dict[str, Any]] = field(default_factory=dict)
 
     # A second list of EntityInfo objects
     # This is necessary for when an entity is being removed. HA requires
     # some static info to be accessible during removal (unique_id, maybe others)
     # If an entity can't find anything in the info array, it will look for info here.
-    old_info: dict[str, dict[str, Any]] = attr.ib(factory=dict)
+    old_info: dict[str, dict[str, Any]] = field(default_factory=dict)
 
-    services: dict[int, UserService] = attr.ib(factory=dict)
-    available: bool = attr.ib(default=False)
-    device_info: DeviceInfo | None = attr.ib(default=None)
-    cleanup_callbacks: list[Callable[[], None]] = attr.ib(factory=list)
-    disconnect_callbacks: list[Callable[[], None]] = attr.ib(factory=list)
-    loaded_platforms: set[str] = attr.ib(factory=set)
-    platform_load_lock: asyncio.Lock = attr.ib(factory=asyncio.Lock)
+    services: dict[int, UserService] = field(default_factory=dict)
+    available: bool = False
+    device_info: DeviceInfo | None = None
+    api_version: APIVersion = field(default_factory=APIVersion)
+    cleanup_callbacks: list[Callable[[], None]] = field(default_factory=list)
+    disconnect_callbacks: list[Callable[[], None]] = field(default_factory=list)
+    loaded_platforms: set[str] = field(default_factory=set)
+    platform_load_lock: asyncio.Lock = field(default_factory=asyncio.Lock)
+    _storage_contents: dict | None = None
 
     @callback
     def async_update_entity(
@@ -138,16 +141,15 @@ class RuntimeEntryData:
             return [], []
         self._storage_contents = restored.copy()
 
-        self.device_info = _attr_obj_from_dict(
-            DeviceInfo, **restored.pop("device_info")
-        )
+        self.device_info = DeviceInfo.from_dict(restored.pop("device_info"))
+        self.api_version = APIVersion.from_dict(restored.pop("api_version", {}))
         infos = []
         for comp_type, restored_infos in restored.items():
             if comp_type not in COMPONENT_TYPE_TO_INFO:
                 continue
             for info in restored_infos:
                 cls = COMPONENT_TYPE_TO_INFO[comp_type]
-                infos.append(_attr_obj_from_dict(cls, **info))
+                infos.append(cls.from_dict(info))
         services = []
         for service in restored.get("services", []):
             services.append(UserService.from_dict(service))
@@ -155,10 +157,14 @@ class RuntimeEntryData:
 
     async def async_save_to_store(self) -> None:
         """Generate dynamic data to store and save it to the filesystem."""
-        store_data = {"device_info": attr.asdict(self.device_info), "services": []}
+        store_data = {
+            "device_info": self.device_info.to_dict(),
+            "services": [],
+            "api_version": self.api_version.to_dict(),
+        }
 
         for comp_type, infos in self.info.items():
-            store_data[comp_type] = [attr.asdict(info) for info in infos.values()]
+            store_data[comp_type] = [info.to_dict() for info in infos.values()]
         for service in self.services.values():
             store_data["services"].append(service.to_dict())
 
@@ -170,7 +176,3 @@ class RuntimeEntryData:
             return store_data
 
         self.store.async_delay_save(_memorized_storage, SAVE_DELAY)
-
-
-def _attr_obj_from_dict(cls, **kwargs):
-    return cls(**{key: kwargs[key] for key in attr.fields_dict(cls) if key in kwargs})

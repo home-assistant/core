@@ -9,7 +9,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_IP_ADDRESS, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -218,34 +217,12 @@ class GuardianEntity(CoordinatorEntity):
         self, entry: ConfigEntry, kind: str, name: str, device_class: str, icon: str
     ) -> None:
         """Initialize."""
-        self._attrs = {ATTR_ATTRIBUTION: "Data provided by Elexa"}
-        self._available = True
+        self._attr_device_class = device_class
+        self._attr_device_info = {"manufacturer": "Elexa"}
+        self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: "Data provided by Elexa"}
+        self._attr_icon = icon
+        self._attr_name = name
         self._entry = entry
-        self._device_class = device_class
-        self._device_info = {"manufacturer": "Elexa"}
-        self._icon = icon
-        self._kind = kind
-        self._name = name
-
-    @property
-    def device_class(self) -> str:
-        """Return the device class."""
-        return self._device_class
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device registry information for this entity."""
-        return self._device_info
-
-    @property
-    def extra_state_attributes(self) -> dict:
-        """Return the state attributes."""
-        return self._attrs
-
-    @property
-    def icon(self) -> str:
-        """Return the icon."""
-        return self._icon
 
     @callback
     def _async_update_from_latest_data(self):
@@ -254,12 +231,6 @@ class GuardianEntity(CoordinatorEntity):
         This should be extended by Guardian platforms.
         """
         raise NotImplementedError
-
-    @callback
-    def _async_update_state_callback(self):
-        """Update the entity's state."""
-        self._async_update_from_latest_data()
-        self.async_write_ha_state()
 
 
 class PairedSensorEntity(GuardianEntity):
@@ -277,23 +248,14 @@ class PairedSensorEntity(GuardianEntity):
         """Initialize."""
         super().__init__(entry, kind, name, device_class, icon)
 
+        paired_sensor_uid = coordinator.data["uid"]
+        self._attr_device_info["identifiers"] = {(DOMAIN, paired_sensor_uid)}
+        self._attr_device_info["name"] = f"Guardian Paired Sensor {paired_sensor_uid}"
+        self._attr_device_info["via_device"] = (DOMAIN, entry.data[CONF_UID])
+        self._attr_name = f"Guardian Paired Sensor {paired_sensor_uid}: {name}"
+        self._attr_unique_id = f"{paired_sensor_uid}_{kind}"
+        self._kind = kind
         self.coordinator = coordinator
-
-        self._paired_sensor_uid = coordinator.data["uid"]
-
-        self._device_info["identifiers"] = {(DOMAIN, self._paired_sensor_uid)}
-        self._device_info["name"] = f"Guardian Paired Sensor {self._paired_sensor_uid}"
-        self._device_info["via_device"] = (DOMAIN, self._entry.data[CONF_UID])
-
-    @property
-    def name(self) -> str:
-        """Return the name of the entity."""
-        return f"Guardian Paired Sensor {self._paired_sensor_uid}: {self._name}"
-
-    @property
-    def unique_id(self):
-        """Return the unique ID of the entity."""
-        return f"{self._paired_sensor_uid}_{self._kind}"
 
     async def async_added_to_hass(self) -> None:
         """Perform tasks when the entity is added."""
@@ -315,30 +277,26 @@ class ValveControllerEntity(GuardianEntity):
         """Initialize."""
         super().__init__(entry, kind, name, device_class, icon)
 
-        self.coordinators = coordinators
-
-        self._device_info["identifiers"] = {(DOMAIN, self._entry.data[CONF_UID])}
-        self._device_info[
+        self._attr_device_info["identifiers"] = {(DOMAIN, entry.data[CONF_UID])}
+        self._attr_device_info[
             "name"
-        ] = f"Guardian Valve Controller {self._entry.data[CONF_UID]}"
-        self._device_info["model"] = self.coordinators[API_SYSTEM_DIAGNOSTICS].data[
+        ] = f"Guardian Valve Controller {entry.data[CONF_UID]}"
+        self._attr_device_info["model"] = coordinators[API_SYSTEM_DIAGNOSTICS].data[
             "firmware"
         ]
+        self._attr_name = f"Guardian {entry.data[CONF_UID]}: {name}"
+        self._attr_unique_id = f"{entry.data[CONF_UID]}_{kind}"
+        self._kind = kind
+        self.coordinators = coordinators
 
     @property
-    def availabile(self) -> bool:
+    def available(self) -> bool:
         """Return if entity is available."""
-        return any(coordinator.last_update_success for coordinator in self.coordinators)
-
-    @property
-    def name(self) -> str:
-        """Return the name of the entity."""
-        return f"Guardian {self._entry.data[CONF_UID]}: {self._name}"
-
-    @property
-    def unique_id(self):
-        """Return the unique ID of the entity."""
-        return f"{self._entry.data[CONF_UID]}_{self._kind}"
+        return any(
+            coordinator.last_update_success
+            for coordinator in self.coordinators.values()
+            if coordinator
+        )
 
     async def _async_continue_entity_setup(self):
         """Perform additional, internal tasks when the entity is about to be added.
@@ -350,9 +308,14 @@ class ValveControllerEntity(GuardianEntity):
     @callback
     def async_add_coordinator_update_listener(self, api: str) -> None:
         """Add a listener to a DataUpdateCoordinator based on the API referenced."""
-        self.async_on_remove(
-            self.coordinators[api].async_add_listener(self._async_update_state_callback)
-        )
+
+        @callback
+        def update():
+            """Update the entity's state."""
+            self._async_update_from_latest_data()
+            self.async_write_ha_state()
+
+        self.async_on_remove(self.coordinators[api].async_add_listener(update))
 
     async def async_added_to_hass(self) -> None:
         """Perform tasks when the entity is added."""
@@ -365,7 +328,6 @@ class ValveControllerEntity(GuardianEntity):
 
         Only used by the generic entity update service.
         """
-
         # Ignore manual update requests if the entity is disabled
         if not self.enabled:
             return

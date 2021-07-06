@@ -11,6 +11,10 @@
             "unknown": "Onverwachte fout"
         },
         "step": {
+            "hassio_confirm": {
+                "description": "Wilt u Home Assistant configureren om verbinding te maken met de motionEye-service die wordt geleverd door de add-on: {addon}?",
+                "title": "motionEye via Home Assistant add-on"
+            },
             "user": {
                 "data": {
                     "admin_password": "Admin Wachtwoord",
@@ -18,6 +22,16 @@
                     "surveillance_password": "Surveillance Wachtwoord",
                     "surveillance_username": "Surveillance Gebruikersnaam",
                     "url": "URL"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "webhook_set": "MotionEye-webhooks configureren om gebeurtenissen aan Home Assistant te melden",
+                    "webhook_set_overwrite": "Overschrijf niet-herkende webhooks"
                 }
             }
         }

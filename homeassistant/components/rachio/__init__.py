@@ -39,7 +39,7 @@ async def async_remove_entry(hass, entry):
         await hass.components.cloud.async_delete_cloudhook(entry.data[CONF_WEBHOOK_ID])
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the Rachio config entry."""
 
     config = entry.data

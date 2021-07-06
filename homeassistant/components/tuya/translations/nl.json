@@ -36,7 +36,7 @@
                 "data": {
                     "brightness_range_mode": "Helderheidsbereik gebruikt door apparaat",
                     "curr_temp_divider": "Huidige temperatuurwaarde deler (0 = standaardwaarde)",
-                    "max_kelvin": "Max ondersteunde kleurtemperatuur in kelvin",
+                    "max_kelvin": "Max kleurtemperatuur in kelvin",
                     "max_temp": "Maximale doeltemperatuur (gebruik min en max = 0 voor standaardwaarde)",
                     "min_kelvin": "Minimaal ondersteunde kleurtemperatuur in kelvin",
                     "min_temp": "Min. gewenste temperatuur (gebruik min en max = 0 voor standaard)",

@@ -195,7 +195,7 @@ def _async_find_matching_config_entry(hass, prefix):
             return entry
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Elk-M1 Control from a config entry."""
     conf = entry.data
 

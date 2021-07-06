@@ -286,7 +286,7 @@ class EntityRegistry:
         if (
             disabled_by is None
             and config_entry
-            and config_entry.system_options.disable_new_entities
+            and config_entry.pref_disable_new_entities
         ):
             disabled_by = DISABLED_INTEGRATION
 

@@ -33,7 +33,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
                     )
                 )
 
-    async_add_entities(sensor_list, True)
+    async_add_entities(sensor_list)
 
 
 class AmbientWeatherSensor(AmbientWeatherEntity, SensorEntity):
@@ -54,17 +54,7 @@ class AmbientWeatherSensor(AmbientWeatherEntity, SensorEntity):
             ambient, mac_address, station_name, sensor_type, sensor_name, device_class
         )
 
-        self._unit = unit
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return self._unit
+        self._attr_unit_of_measurement = unit
 
     @callback
     def update_from_latest_data(self):
@@ -78,10 +68,10 @@ class AmbientWeatherSensor(AmbientWeatherEntity, SensorEntity):
             ].get(TYPE_SOLARRADIATION)
 
             if w_m2_brightness_val is None:
-                self._state = None
+                self._attr_state = None
             else:
-                self._state = round(float(w_m2_brightness_val) / 0.0079)
+                self._attr_state = round(float(w_m2_brightness_val) / 0.0079)
         else:
-            self._state = self._ambient.stations[self._mac_address][ATTR_LAST_DATA].get(
-                self._sensor_type
-            )
+            self._attr_state = self._ambient.stations[self._mac_address][
+                ATTR_LAST_DATA
+            ].get(self._sensor_type)

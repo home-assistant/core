@@ -374,7 +374,7 @@ class HomeAssistant:
 
         return task
 
-    def create_task(self, target: Coroutine) -> None:
+    def create_task(self, target: Awaitable) -> None:
         """Add task to the executor pool.
 
         target: target to call.
@@ -382,7 +382,7 @@ class HomeAssistant:
         self.loop.call_soon_threadsafe(self.async_create_task, target)
 
     @callback
-    def async_create_task(self, target: Coroutine) -> asyncio.tasks.Task:
+    def async_create_task(self, target: Awaitable) -> asyncio.tasks.Task:
         """Create a task from within the eventloop.
 
         This method must be run in the event loop.

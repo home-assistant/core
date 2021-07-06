@@ -12,12 +12,13 @@
         },
         "error": {
             "authentication_error": "Ung\u00fcltiger HomeKit Code, \u00fcberpr\u00fcfe bitte den Code und versuche es erneut.",
+            "insecure_setup_code": "Der angeforderte Setup-Code ist unsicher, da er zu trivial ist. Dieses Zubeh\u00f6r erf\u00fcllt nicht die grundlegenden Sicherheitsanforderungen.",
             "max_peers_error": "Das Ger\u00e4t weigerte sich, die Kopplung durchzuf\u00fchren, da es keinen freien Kopplungs-Speicher hat.",
             "pairing_failed": "Beim Versuch dieses Ger\u00e4t zu koppeln ist ein Fehler aufgetreten. Dies kann ein vor\u00fcbergehender Fehler sein oder das Ger\u00e4t wird derzeit m\u00f6glicherweise nicht unterst\u00fctzt.",
             "unable_to_pair": "Koppeln fehltgeschlagen, bitte versuche es erneut",
             "unknown_error": "Das Ger\u00e4t meldete einen unbekannten Fehler. Die Kopplung ist fehlgeschlagen."
         },
-        "flow_title": "HomeKit-Zubeh\u00f6r: {name}",
+        "flow_title": "{name}",
         "step": {
             "busy_error": {
                 "description": "Brechen Sie das Pairing auf allen Controllern ab oder versuchen Sie, das Ger\u00e4t neu zu starten, und fahren Sie dann fort, das Pairing fortzusetzen.",
@@ -29,19 +30,21 @@
             },
             "pair": {
                 "data": {
+                    "allow_insecure_setup_codes": "Pairing mit unsicheren Setup-Codes zulassen.",
                     "pairing_code": "Kopplungscode"
                 },
-                "description": "Gib deinen HomeKit-Kopplungscode ein, um dieses Zubeh\u00f6r zu verwenden",
+                "description": "HomeKit Controller kommuniziert mit {name} \u00fcber das lokale Netzwerk mit einer sicheren verschl\u00fcsselten Verbindung ohne separaten HomeKit Controller oder iCloud. Geben Sie Ihren HomeKit-Kopplungscode (im Format XXX-XX-XXX) ein, um dieses Zubeh\u00f6r zu verwenden. Dieser Code befindet sich in der Regel auf dem Ger\u00e4t selbst oder in der Verpackung.",
                 "title": "Mit HomeKit Zubeh\u00f6r koppeln"
             },
             "protocol_error": {
+                "description": "Das Ger\u00e4t befindet sich m\u00f6glicherweise nicht im Pairing-Modus und erfordert einen physischen oder virtuellen Tastendruck. Stellen Sie sicher, dass sich das Ger\u00e4t im Pairing-Modus befindet, oder versuchen Sie, das Ger\u00e4t neu zu starten und fahren Sie dann das Pairing fort.",
                 "title": "Fehler bei der Kommunikation mit dem Zubeh\u00f6r"
             },
             "user": {
                 "data": {
                     "device": "Ger\u00e4t"
                 },
-                "description": "W\u00e4hle das Ger\u00e4t aus, mit dem du die Kopplung herstellen m\u00f6chtest",
+                "description": "HomeKit Controller kommuniziert \u00fcber das lokale Netzwerk mit einer sicheren verschl\u00fcsselten Verbindung ohne separaten HomeKit Controller oder iCloud. W\u00e4hle das Ger\u00e4t aus, mit dem du die Kopplung herstellen m\u00f6chtest",
                 "title": "Ger\u00e4teauswahl"
             }
         }

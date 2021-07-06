@@ -5,6 +5,8 @@ from typing import Callable
 
 from xknx import XKNX
 from xknx.devices import DateTime, ExposeSensor
+from xknx.dpt import DPTNumeric
+from xknx.remote_value import RemoteValueSensor
 
 from homeassistant.const import (
     CONF_ENTITY_ID,
@@ -122,9 +124,15 @@ class KNXExposeSensor:
         )
         if self.type == "binary":
             if value in (1, STATE_ON, "True"):
-                value = True
-            elif value in (0, STATE_OFF, "False"):
-                value = False
+                return True
+            if value in (0, STATE_OFF, "False"):
+                return False
+        if (
+            value is not None
+            and isinstance(self.device.sensor_value, RemoteValueSensor)
+            and issubclass(self.device.sensor_value.dpt_class, DPTNumeric)
+        ):
+            return float(value)
         return value
 
     async def _async_entity_changed(self, event: Event) -> None:

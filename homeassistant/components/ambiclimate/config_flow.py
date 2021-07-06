@@ -139,7 +139,7 @@ class AmbiclimateAuthCallbackView(HomeAssistantView):
     url = AUTH_CALLBACK_PATH
     name = AUTH_CALLBACK_NAME
 
-    async def get(self, request):
+    async def get(self, request) -> str:
         """Receive authorization token."""
         code = request.query.get("code")
         if code is None:
