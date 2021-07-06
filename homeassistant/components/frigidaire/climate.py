@@ -192,16 +192,16 @@ class FrigidaireClimate(ClimateEntity):
         """Return the minimum temperature."""
         if self.temperature_unit == TEMP_FAHRENHEIT:
             return 60
-        else:
-            return 16
+
+        return 16
 
     @property
     def max_temp(self):
         """Return the maximum temperature."""
         if self.temperature_unit == TEMP_FAHRENHEIT:
             return 90
-        else:
-            return 32
+
+        return 32
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
