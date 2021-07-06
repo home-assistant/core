@@ -82,8 +82,6 @@ class AcerSwitch(SwitchEntity):
         )
         self._serial_port = serial_port
         self._attr_name = name
-        self._state = False
-        self._available = False
         self._attr_extra_state_attributes = {
             LAMP_HOURS: STATE_UNKNOWN,
             INPUT_SOURCE: STATE_UNKNOWN,
@@ -118,42 +116,36 @@ class AcerSwitch(SwitchEntity):
             return match.group(1)
         return STATE_UNKNOWN
 
-    @property
-    def available(self) -> bool:
-        """Return if projector is available."""
-        return self._available
-
-    @property
-    def is_on(self) -> bool:
-        """Return if the projector is turned on."""
-        return self._state
-
     def update(self) -> None:
         """Get the latest state from the projector."""
         awns = self._write_read_format(CMD_DICT[LAMP])
         if awns == "Lamp 1":
-            self._state = True
-            self._available = True
+            self._attr_is_on = True
+            self._attr_available = True
         elif awns == "Lamp 0":
-            self._state = False
-            self._available = True
+            self._attr_is_on = False
+            self._attr_available = True
         else:
-            self._available = False
+            self._attr_available = False
 
+        if self._attr_extra_state_attributes is None:
+            return
+        attr = {}
         for key in self._attr_extra_state_attributes:
             msg = CMD_DICT.get(key)
             if msg:
                 awns = self._write_read_format(msg)
-                self._attr_extra_state_attributes[key] = awns
+                attr[key] = awns
+        self._attr_extra_state_attributes = attr
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the projector on."""
         msg = CMD_DICT[STATE_ON]
         self._write_read(msg)
-        self._state = True
+        self._attr_is_on = True
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the projector off."""
         msg = CMD_DICT[STATE_OFF]
         self._write_read(msg)
-        self._state = False
+        self._attr_is_on = False
