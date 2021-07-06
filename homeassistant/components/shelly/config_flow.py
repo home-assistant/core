@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import Any, Final, cast
+from typing import Any, Dict, Final, cast
 
 import aiohttp
 import aioshelly
@@ -218,7 +218,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Get info from shelly device."""
         async with async_timeout.timeout(AIOSHELLY_DEVICE_TIMEOUT_SEC):
             return cast(
-                dict[str, Any],
+                Dict[str, Any],
                 await aioshelly.get_info(
                     aiohttp_client.async_get_clientsession(self.hass),
                     host,
