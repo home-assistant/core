@@ -99,7 +99,7 @@ async def test_create_entry(hass):
         result = await flow.async_step_user(user_input=CONFIG)
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert result["title"] == CONFIG[CONF_STATION_ID]
+        assert result["title"] == f"Test Name 1 ({CONFIG[CONF_STATION_ID]})"
         assert result["data"][CONF_STATION_ID] == CONFIG[CONF_STATION_ID]
 
         assert flow.context["unique_id"] == "123"
