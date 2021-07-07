@@ -110,7 +110,14 @@ MOCK_WS_ENTRY = {
     CONF_MODEL: "any",
     CONF_NAME: "any",
 }
-MOCK_DEVICE_INFO = {"device": {"type": "Samsung SmartTV"}, "id": "123"}
+MOCK_DEVICE_INFO = {
+    "device": {
+        "type": "Samsung SmartTV",
+        "name": "fake_name",
+        "modelName": "fake_model",
+    },
+    "id": "123",
+}
 
 
 AUTODETECT_LEGACY = {
@@ -291,9 +298,9 @@ async def test_ssdp(hass: HomeAssistant, remote: Mock):
             result["flow_id"], user_input="whatever"
         )
         assert result["type"] == "create_entry"
-        assert result["title"] == "fake_model"
+        assert result["title"] == "fake_name (fake_model)"
         assert result["data"][CONF_HOST] == "fake_host"
-        assert result["data"][CONF_NAME] == "fake_model"
+        assert result["data"][CONF_NAME] == "fake_name"
         assert result["data"][CONF_MANUFACTURER] == "Samsung fake_manufacturer"
         assert result["data"][CONF_MODEL] == "fake_model"
         assert result["result"].unique_id == "0d1cef00-00dc-1000-9c80-4844f7b172de"
@@ -320,11 +327,11 @@ async def test_ssdp_noprefix(hass: HomeAssistant, remote: Mock):
             result["flow_id"], user_input="whatever"
         )
         assert result["type"] == "create_entry"
-        assert result["title"] == "fake2_model"
+        assert result["title"] == "fake_name (fake_model)"
         assert result["data"][CONF_HOST] == "fake2_host"
-        assert result["data"][CONF_NAME] == "fake2_model"
+        assert result["data"][CONF_NAME] == "fake_name"
         assert result["data"][CONF_MANUFACTURER] == "Samsung fake2_manufacturer"
-        assert result["data"][CONF_MODEL] == "fake2_model"
+        assert result["data"][CONF_MODEL] == "fake_model"
         assert result["result"].unique_id == "0d1cef00-00dc-1000-9c80-4844f7b172df"
 
 
