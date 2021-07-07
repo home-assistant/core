@@ -2,14 +2,16 @@
 from __future__ import annotations
 
 import asyncio
+from dataclasses import dataclass, field
 import functools
 import logging
 import math
-from typing import Callable
+from typing import Generic, TypeVar
 
 from aioesphomeapi import (
     APIClient,
     APIConnectionError,
+    APIVersion,
     DeviceInfo as EsphomeDeviceInfo,
     EntityInfo,
     EntityState,
@@ -48,14 +50,60 @@ from .entry_data import RuntimeEntryData
 
 DOMAIN = "esphome"
 _LOGGER = logging.getLogger(__name__)
+_T = TypeVar("_T")
 
 STORAGE_VERSION = 1
 
 
+@dataclass
+class DomainData:
+    """Define a class that stores global esphome data in hass.data[DOMAIN]."""
+
+    _entry_datas: dict[str, RuntimeEntryData] = field(default_factory=dict)
+    _stores: dict[str, Store] = field(default_factory=dict)
+
+    def get_entry_data(self, entry: ConfigEntry) -> RuntimeEntryData:
+        """Return the runtime entry data associated with this config entry.
+
+        Raises KeyError if the entry isn't loaded yet.
+        """
+        return self._entry_datas[entry.entry_id]
+
+    def set_entry_data(self, entry: ConfigEntry, entry_data: RuntimeEntryData) -> None:
+        """Set the runtime entry data associated with this config entry."""
+        if entry.entry_id in self._entry_datas:
+            raise ValueError("Entry data for this entry is already set")
+        self._entry_datas[entry.entry_id] = entry_data
+
+    def pop_entry_data(self, entry: ConfigEntry) -> RuntimeEntryData:
+        """Pop the runtime entry data instance associated with this config entry."""
+        return self._entry_datas.pop(entry.entry_id)
+
+    def is_entry_loaded(self, entry: ConfigEntry) -> bool:
+        """Check whether the given entry is loaded."""
+        return entry.entry_id in self._entry_datas
+
+    def get_or_create_store(self, hass: HomeAssistant, entry: ConfigEntry) -> Store:
+        """Get or create a Store instance for the given config entry."""
+        return self._stores.setdefault(
+            entry.entry_id,
+            Store(
+                hass, STORAGE_VERSION, f"esphome.{entry.entry_id}", encoder=JSONEncoder
+            ),
+        )
+
+    @classmethod
+    def get(cls: type[_T], hass: HomeAssistant) -> _T:
+        """Get the global DomainData instance stored in hass.data."""
+        # Don't use setdefault - this is a hot code path
+        if DOMAIN in hass.data:
+            return hass.data[DOMAIN]
+        ret = hass.data[DOMAIN] = cls()
+        return ret
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the esphome component."""
-    hass.data.setdefault(DOMAIN, {})
-
     host = entry.data[CONF_HOST]
     port = entry.data[CONF_PORT]
     password = entry.data[CONF_PASSWORD]
@@ -72,13 +120,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         zeroconf_instance=zeroconf_instance,
     )
 
-    # Store client in per-config-entry hass.data
-    store = Store(
-        hass, STORAGE_VERSION, f"esphome.{entry.entry_id}", encoder=JSONEncoder
+    domain_data = DomainData.get(hass)
+    entry_data = RuntimeEntryData(
+        client=cli,
+        entry_id=entry.entry_id,
+        store=domain_data.get_or_create_store(hass, entry),
     )
-    entry_data = hass.data[DOMAIN][entry.entry_id] = RuntimeEntryData(
-        client=cli, entry_id=entry.entry_id, store=store
-    )
+    domain_data.set_entry_data(entry, entry_data)
 
     async def on_stop(event: Event) -> None:
         """Cleanup the socket client on HA stop."""
@@ -205,6 +253,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         nonlocal device_id
         try:
             entry_data.device_info = await cli.device_info()
+            entry_data.api_version = cli.api_version
             entry_data.available = True
             device_id = await _async_setup_device_registry(
                 hass, entry, entry_data.device_info
@@ -283,7 +332,11 @@ class ReconnectLogic(RecordUpdateListener):
 
     @property
     def _entry_data(self) -> RuntimeEntryData | None:
-        return self._hass.data[DOMAIN].get(self._entry.entry_id)
+        domain_data = DomainData.get(self._hass)
+        try:
+            return domain_data.get_entry_data(self._entry)
+        except KeyError:
+            return None
 
     async def _on_disconnect(self):
         """Log and issue callbacks when disconnecting."""
@@ -379,7 +432,7 @@ class ReconnectLogic(RecordUpdateListener):
                 return False
 
         # Check if the entry got removed or disabled, in which case we shouldn't reconnect
-        if self._entry.entry_id not in self._hass.data[DOMAIN]:
+        if not DomainData.get(self._hass).is_entry_loaded(self._entry):
             # When removing/disconnecting manually
             return
 
@@ -552,7 +605,7 @@ async def _register_service(
                 "example": "['Example text', 'Another example']",
                 "selector": {"object": {}},
             },
-        }[arg.type_]
+        }[arg.type]
         schema[vol.Required(arg.name)] = metadata["validator"]
         fields[arg.name] = {
             "name": arg.name,
@@ -612,7 +665,8 @@ async def _cleanup_instance(
     hass: HomeAssistant, entry: ConfigEntry
 ) -> RuntimeEntryData:
     """Cleanup the esphome client if it exists."""
-    data: RuntimeEntryData = hass.data[DOMAIN].pop(entry.entry_id)
+    domain_data = DomainData.get(hass)
+    data = domain_data.pop_entry_data(entry)
     for disconnect_cb in data.disconnect_callbacks:
         disconnect_cb()
     for cleanup_callback in data.cleanup_callbacks:
@@ -627,6 +681,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await hass.config_entries.async_unload_platforms(
         entry, entry_data.loaded_platforms
     )
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Remove an esphome config entry."""
+    await DomainData.get(hass).get_or_create_store(hass, entry).async_remove()
 
 
 async def platform_async_setup_entry(
@@ -644,7 +703,7 @@ async def platform_async_setup_entry(
     This method is in charge of receiving, distributing and storing
     info and state updates.
     """
-    entry_data: RuntimeEntryData = hass.data[DOMAIN][entry.entry_id]
+    entry_data: RuntimeEntryData = DomainData.get(hass).get_entry_data(entry)
     entry_data.info[component_key] = {}
     entry_data.old_info[component_key] = {}
     entry_data.state[component_key] = {}
@@ -665,7 +724,7 @@ async def platform_async_setup_entry(
                 old_infos.pop(info.key)
             else:
                 # Create new entity
-                entity = entity_type(entry.entry_id, component_key, info.key)
+                entity = entity_type(entry_data, component_key, info.key)
                 add_entities.append(entity)
             new_infos[info.key] = info
 
@@ -721,38 +780,33 @@ def esphome_state_property(func):
     return _wrapper
 
 
-class EsphomeEnumMapper:
+class EsphomeEnumMapper(Generic[_T]):
     """Helper class to convert between hass and esphome enum values."""
 
-    def __init__(self, func: Callable[[], dict[int, str]]) -> None:
+    def __init__(self, mapping: dict[_T, str]) -> None:
         """Construct a EsphomeEnumMapper."""
-        self._func = func
+        # Add none mapping
+        mapping = {None: None, **mapping}
+        self._mapping = mapping
+        self._inverse: dict[str, _T] = {v: k for k, v in mapping.items()}
 
-    def from_esphome(self, value: int) -> str:
+    def from_esphome(self, value: _T | None) -> str | None:
         """Convert from an esphome int representation to a hass string."""
-        return self._func()[value]
+        return self._mapping[value]
 
-    def from_hass(self, value: str) -> int:
+    def from_hass(self, value: str) -> _T:
         """Convert from a hass string to a esphome int representation."""
-        inverse = {v: k for k, v in self._func().items()}
-        return inverse[value]
-
-
-def esphome_map_enum(func: Callable[[], dict[int, str]]):
-    """Map esphome int enum values to hass string constants.
-
-    This class has to be used as a decorator. This ensures the aioesphomeapi
-    import is only happening at runtime.
-    """
-    return EsphomeEnumMapper(func)
+        return self._inverse[value]
 
 
 class EsphomeBaseEntity(Entity):
     """Define a base esphome entity."""
 
-    def __init__(self, entry_id: str, component_key: str, key: int) -> None:
+    def __init__(
+        self, entry_data: RuntimeEntryData, component_key: str, key: int
+    ) -> None:
         """Initialize."""
-        self._entry_id = entry_id
+        self._entry_data = entry_data
         self._component_key = component_key
         self._key = key
 
@@ -788,8 +842,12 @@ class EsphomeBaseEntity(Entity):
         self.async_write_ha_state()
 
     @property
-    def _entry_data(self) -> RuntimeEntryData:
-        return self.hass.data[DOMAIN][self._entry_id]
+    def _entry_id(self) -> str:
+        return self._entry_data.entry_id
+
+    @property
+    def _api_version(self) -> APIVersion:
+        return self._entry_data.api_version
 
     @property
     def _static_info(self) -> EntityInfo:

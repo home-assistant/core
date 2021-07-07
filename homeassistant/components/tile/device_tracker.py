@@ -30,7 +30,9 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities(
         [
             TileDeviceTracker(
-                hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id][tile_uuid], tile
+                entry,
+                hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id][tile_uuid],
+                tile,
             )
             for tile_uuid, tile in hass.data[DOMAIN][DATA_TILE][entry.entry_id].items()
         ]
@@ -61,10 +63,11 @@ async def async_setup_scanner(hass, config, async_see, discovery_info=None):
 class TileDeviceTracker(CoordinatorEntity, TrackerEntity):
     """Representation of a network infrastructure device."""
 
-    def __init__(self, coordinator, tile):
+    def __init__(self, entry, coordinator, tile):
         """Initialize."""
         super().__init__(coordinator)
         self._attrs = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
+        self._entry = entry
         self._tile = tile
 
     @property
@@ -116,7 +119,7 @@ class TileDeviceTracker(CoordinatorEntity, TrackerEntity):
     @property
     def unique_id(self):
         """Return the unique ID of the entity."""
-        return f"tile_{self._tile.uuid}"
+        return f"{self._entry.data[CONF_USERNAME]}_{self._tile.uuid}"
 
     @property
     def source_type(self):

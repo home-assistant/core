@@ -508,7 +508,7 @@ class EntityPlatform:
             entity.entity_id = entry.entity_id
 
             if entry.disabled:
-                self.logger.info(
+                self.logger.debug(
                     "Not adding entity %s because it's disabled",
                     entry.name
                     or entity.name

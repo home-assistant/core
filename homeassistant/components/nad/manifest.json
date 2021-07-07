@@ -2,7 +2,7 @@
   "domain": "nad",
   "name": "NAD",
   "documentation": "https://www.home-assistant.io/integrations/nad",
-  "requirements": ["nad_receiver==0.0.12"],
+  "requirements": ["nad_receiver==0.2.0"],
   "codeowners": [],
   "iot_class": "local_polling"
 }

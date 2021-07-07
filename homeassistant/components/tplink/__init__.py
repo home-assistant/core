@@ -7,6 +7,7 @@ from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
@@ -72,9 +73,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up TPLink from a config entry."""
     config_data = hass.data[DOMAIN].get(ATTR_CONFIG)
+
+    device_registry = dr.async_get(hass)
+    tplink_devices = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
+    device_count = len(tplink_devices)
 
     # These will contain the initialized devices
     lights = hass.data[DOMAIN][CONF_LIGHT] = []
@@ -90,7 +95,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     # Add discovered devices
     if config_data is None or config_data[CONF_DISCOVERY]:
-        discovered_devices = await async_discover_devices(hass, static_devices)
+        discovered_devices = await async_discover_devices(
+            hass, static_devices, device_count
+        )
 
         lights.extend(discovered_devices.lights)
         switches.extend(discovered_devices.switches)
@@ -101,7 +108,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             "Got %s lights: %s", len(lights), ", ".join(d.host for d in lights)
         )
 
-        hass.async_create_task(forward_setup(config_entry, "light"))
+        hass.async_create_task(forward_setup(entry, "light"))
 
     if switches:
         _LOGGER.debug(
@@ -110,7 +117,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             ", ".join(d.host for d in switches),
         )
 
-        hass.async_create_task(forward_setup(config_entry, "switch"))
+        hass.async_create_task(forward_setup(entry, "switch"))
 
     return True
 

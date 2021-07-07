@@ -1,5 +1,5 @@
 """Support for monitoring a Sense energy sensor."""
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     DEVICE_CLASS_POWER,
@@ -121,6 +121,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class SenseActiveSensor(SensorEntity):
     """Implementation of a Sense energy sensor."""
 
+    _attr_icon = ICON
+    _attr_unit_of_measurement = POWER_WATT
+    _attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
+    _attr_should_poll = False
+    _attr_available = False
+    _attr_state_class = STATE_CLASS_MEASUREMENT
+
     def __init__(
         self,
         data,
@@ -133,54 +140,12 @@ class SenseActiveSensor(SensorEntity):
     ):
         """Initialize the Sense sensor."""
         name_type = PRODUCTION_NAME if is_production else CONSUMPTION_NAME
-        self._name = f"{name} {name_type}"
-        self._unique_id = unique_id
-        self._available = False
+        self._attr_name = f"{name} {name_type}"
+        self._attr_unique_id = unique_id
         self._data = data
         self._sense_monitor_id = sense_monitor_id
         self._sensor_type = sensor_type
         self._is_production = is_production
-        self._state = None
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def available(self):
-        """Return the availability of the sensor."""
-        return self._available
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of this entity, if any."""
-        return POWER_WATT
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
-        return {ATTR_ATTRIBUTION: ATTRIBUTION}
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return ICON
-
-    @property
-    def unique_id(self):
-        """Return the unique id."""
-        return self._unique_id
-
-    @property
-    def should_poll(self):
-        """Return the device should not poll for updates."""
-        return False
 
     async def async_added_to_hass(self):
         """Register callbacks."""
@@ -200,15 +165,21 @@ class SenseActiveSensor(SensorEntity):
             if self._is_production
             else self._data.active_power
         )
-        if self._available and self._state == new_state:
+        if self._attr_available and self._attr_state == new_state:
             return
-        self._state = new_state
-        self._available = True
+        self._attr_state = new_state
+        self._attr_available = True
         self.async_write_ha_state()
 
 
 class SenseVoltageSensor(SensorEntity):
     """Implementation of a Sense energy voltage sensor."""
+
+    _attr_unit_of_measurement = VOLT
+    _attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
+    _attr_icon = ICON
+    _attr_should_poll = False
+    _attr_available = False
 
     def __init__(
         self,
@@ -218,53 +189,11 @@ class SenseVoltageSensor(SensorEntity):
     ):
         """Initialize the Sense sensor."""
         line_num = index + 1
-        self._name = f"L{line_num} Voltage"
-        self._unique_id = f"{sense_monitor_id}-L{line_num}"
-        self._available = False
+        self._attr_name = f"L{line_num} Voltage"
+        self._attr_unique_id = f"{sense_monitor_id}-L{line_num}"
         self._data = data
         self._sense_monitor_id = sense_monitor_id
         self._voltage_index = index
-        self._state = None
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def available(self):
-        """Return the availability of the sensor."""
-        return self._available
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of this entity, if any."""
-        return VOLT
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
-        return {ATTR_ATTRIBUTION: ATTRIBUTION}
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return ICON
-
-    @property
-    def unique_id(self):
-        """Return the unique id."""
-        return self._unique_id
-
-    @property
-    def should_poll(self):
-        """Return the device should not poll for updates."""
-        return False
 
     async def async_added_to_hass(self):
         """Register callbacks."""
@@ -280,15 +209,20 @@ class SenseVoltageSensor(SensorEntity):
     def _async_update_from_data(self):
         """Update the sensor from the data. Must not do I/O."""
         new_state = round(self._data.active_voltage[self._voltage_index], 1)
-        if self._available and self._state == new_state:
+        if self._attr_available and self._attr_state == new_state:
             return
-        self._available = True
-        self._state = new_state
+        self._attr_available = True
+        self._attr_state = new_state
         self.async_write_ha_state()
 
 
 class SenseTrendsSensor(SensorEntity):
     """Implementation of a Sense energy sensor."""
+
+    _attr_unit_of_measurement = ENERGY_KILO_WATT_HOUR
+    _attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
+    _attr_icon = ICON
+    _attr_should_poll = False
 
     def __init__(
         self,
@@ -301,21 +235,13 @@ class SenseTrendsSensor(SensorEntity):
     ):
         """Initialize the Sense sensor."""
         name_type = PRODUCTION_NAME if is_production else CONSUMPTION_NAME
-        self._name = f"{name} {name_type}"
-        self._unique_id = unique_id
-        self._available = False
+        self._attr_name = f"{name} {name_type}"
+        self._attr_unique_id = unique_id
         self._data = data
         self._sensor_type = sensor_type
         self._coordinator = trends_coordinator
         self._is_production = is_production
-        self._state = None
-        self._unit_of_measurement = ENERGY_KILO_WATT_HOUR
         self._had_any_update = False
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
 
     @property
     def state(self):
@@ -326,31 +252,6 @@ class SenseTrendsSensor(SensorEntity):
     def available(self):
         """Return if entity is available."""
         return self._had_any_update and self._coordinator.last_update_success
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of this entity, if any."""
-        return self._unit_of_measurement
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
-        return {ATTR_ATTRIBUTION: ATTRIBUTION}
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return ICON
-
-    @property
-    def unique_id(self):
-        """Return the unique id."""
-        return self._unique_id
-
-    @property
-    def should_poll(self):
-        """No need to poll. Coordinator notifies entity of updates."""
-        return False
 
     @callback
     def _async_update(self):
@@ -373,61 +274,21 @@ class SenseTrendsSensor(SensorEntity):
 class SenseEnergyDevice(SensorEntity):
     """Implementation of a Sense energy device."""
 
+    _attr_available = False
+    _attr_state_class = STATE_CLASS_MEASUREMENT
+    _attr_unit_of_measurement = POWER_WATT
+    _attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
+    _attr_device_class = DEVICE_CLASS_POWER
+    _attr_should_poll = False
+
     def __init__(self, sense_devices_data, device, sense_monitor_id):
         """Initialize the Sense binary sensor."""
-        self._name = f"{device['name']} {CONSUMPTION_NAME}"
+        self._attr_name = f"{device['name']} {CONSUMPTION_NAME}"
         self._id = device["id"]
-        self._available = False
         self._sense_monitor_id = sense_monitor_id
-        self._unique_id = f"{sense_monitor_id}-{self._id}-{CONSUMPTION_ID}"
-        self._icon = sense_to_mdi(device["icon"])
+        self._attr_unique_id = f"{sense_monitor_id}-{self._id}-{CONSUMPTION_ID}"
+        self._attr_icon = sense_to_mdi(device["icon"])
         self._sense_devices_data = sense_devices_data
-        self._state = None
-
-    @property
-    def state(self):
-        """Return the wattage of the sensor."""
-        return self._state
-
-    @property
-    def available(self):
-        """Return the availability of the sensor."""
-        return self._available
-
-    @property
-    def name(self):
-        """Return the name of the power sensor."""
-        return self._name
-
-    @property
-    def unique_id(self):
-        """Return the unique id of the power sensor."""
-        return self._unique_id
-
-    @property
-    def icon(self):
-        """Return the icon of the power sensor."""
-        return self._icon
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of this entity."""
-        return POWER_WATT
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
-        return {ATTR_ATTRIBUTION: ATTRIBUTION}
-
-    @property
-    def device_class(self):
-        """Return the device class of the power sensor."""
-        return DEVICE_CLASS_POWER
-
-    @property
-    def should_poll(self):
-        """Return the device should not poll for updates."""
-        return False
 
     async def async_added_to_hass(self):
         """Register callbacks."""
@@ -447,8 +308,8 @@ class SenseEnergyDevice(SensorEntity):
             new_state = 0
         else:
             new_state = int(device_data["w"])
-        if self._available and self._state == new_state:
+        if self._attr_available and self._attr_state == new_state:
             return
-        self._state = new_state
-        self._available = True
+        self._attr_state = new_state
+        self._attr_available = True
         self.async_write_ha_state()

@@ -9,6 +9,7 @@ import time
 
 from homeassistant.const import CONF_DEVICE, CONF_PLATFORM
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import RESULT_TYPE_ABORT
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -44,6 +45,7 @@ SUPPORTED_COMPONENTS = [
     "lock",
     "number",
     "scene",
+    "select",
     "sensor",
     "switch",
     "tag",
@@ -94,6 +96,10 @@ async def async_start(  # noqa: C901
         match = TOPIC_MATCHER.match(topic_trimmed)
 
         if not match:
+            if topic_trimmed.endswith("config"):
+                _LOGGER.warning(
+                    "Received message on illegal discovery topic '%s'", topic
+                )
             return
 
         component, node_id, object_id = match.groups()
@@ -274,7 +280,7 @@ async def async_start(  # noqa: C901
                 )
                 if (
                     result
-                    and result["type"] == "abort"
+                    and result["type"] == RESULT_TYPE_ABORT
                     and result["reason"]
                     in ["already_configured", "single_instance_allowed"]
                 ):

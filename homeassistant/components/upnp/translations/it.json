@@ -11,6 +11,10 @@
         },
         "flow_title": "{name}",
         "step": {
+            "init": {
+                "one": "Pi\u00f9",
+                "other": "Altri"
+            },
             "ssdp_confirm": {
                 "description": "Vuoi configurare questo dispositivo UPnP/IGD?"
             },

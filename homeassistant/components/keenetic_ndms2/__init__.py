@@ -29,22 +29,22 @@ PLATFORMS = [BINARY_SENSOR_DOMAIN, DEVICE_TRACKER_DOMAIN]
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the component."""
     hass.data.setdefault(DOMAIN, {})
-    async_add_defaults(hass, config_entry)
+    async_add_defaults(hass, entry)
 
-    router = KeeneticRouter(hass, config_entry)
+    router = KeeneticRouter(hass, entry)
     await router.async_setup()
 
-    undo_listener = config_entry.add_update_listener(update_listener)
+    undo_listener = entry.add_update_listener(update_listener)
 
-    hass.data[DOMAIN][config_entry.entry_id] = {
+    hass.data[DOMAIN][entry.entry_id] = {
         ROUTER: router,
         UNDO_UPDATE_LISTENER: undo_listener,
     }
 
-    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
@@ -97,14 +97,14 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     return unload_ok
 
 
-async def update_listener(hass, config_entry):
+async def update_listener(hass, entry):
     """Handle options update."""
-    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
-def async_add_defaults(hass: HomeAssistant, config_entry: ConfigEntry):
+def async_add_defaults(hass: HomeAssistant, entry: ConfigEntry):
     """Populate default options."""
-    host: str = config_entry.data[CONF_HOST]
+    host: str = entry.data[CONF_HOST]
     imported_options: dict = hass.data[DOMAIN].get(f"imported_options_{host}", {})
     options = {
         CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL,
@@ -114,8 +114,8 @@ def async_add_defaults(hass: HomeAssistant, config_entry: ConfigEntry):
         CONF_INCLUDE_ARP: True,
         CONF_INCLUDE_ASSOCIATED: True,
         **imported_options,
-        **config_entry.options,
+        **entry.options,
     }
 
-    if options.keys() - config_entry.options.keys():
-        hass.config_entries.async_update_entry(config_entry, options=options)
+    if options.keys() - entry.options.keys():
+        hass.config_entries.async_update_entry(entry, options=options)

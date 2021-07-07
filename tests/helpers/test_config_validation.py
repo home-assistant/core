@@ -1024,7 +1024,7 @@ def test_key_value_schemas():
         schema(True)
         assert str(excinfo.value) == "Expected a dictionary"
 
-    for mode in None, "invalid":
+    for mode in None, {"a": "dict"}, "invalid":
         with pytest.raises(vol.Invalid) as excinfo:
             schema({"mode": mode})
         assert (

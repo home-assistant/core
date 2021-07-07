@@ -10,7 +10,7 @@
             "otp_failed": "Die zweistufige Authentifizierung ist fehlgeschlagen. Versuchen Sie es erneut mit einem neuen Code",
             "unknown": "Unerwarteter Fehler"
         },
-        "flow_title": "Synology DSM {name} ({host})",
+        "flow_title": "{name} ({host})",
         "step": {
             "2sa": {
                 "data": {

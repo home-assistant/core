@@ -11,6 +11,7 @@
                     "longitude": "L\u00e4ngengrad",
                     "name": "Name"
                 },
+                "description": "Geben Sie Ihren Standort ein, um Wetterdaten von der Met \u00c9ireann Public Weather Forecast API zu verwenden",
                 "title": "Standort"
             }
         }

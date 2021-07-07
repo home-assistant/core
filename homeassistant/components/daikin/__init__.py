@@ -27,7 +27,7 @@ PLATFORMS = ["climate", "sensor", "switch"]
 CONFIG_SCHEMA = cv.deprecated(DOMAIN)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Establish connection with Daikin."""
     conf = entry.data
     # For backwards compat, set unique ID

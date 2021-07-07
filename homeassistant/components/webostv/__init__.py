@@ -198,7 +198,6 @@ async def async_request_configuration(hass, config, conf, client):
         except (
             OSError,
             ConnectionClosed,
-            ConnectionRefusedError,
             asyncio.TimeoutError,
             asyncio.CancelledError,
             PyLGTVCmdException,

@@ -59,7 +59,7 @@ SERVICE_OPEN_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up System Bridge from a config entry."""
 
     client = Bridge(

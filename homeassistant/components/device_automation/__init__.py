@@ -25,7 +25,7 @@ from .exceptions import DeviceNotFound, InvalidDeviceAutomationConfig
 DOMAIN = "device_automation"
 
 
-TRIGGER_BASE_SCHEMA = vol.Schema(
+DEVICE_TRIGGER_BASE_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_PLATFORM): "device",
         vol.Required(CONF_DOMAIN): str,

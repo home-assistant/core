@@ -24,7 +24,7 @@ CONF_ID_TOKEN = "id_token"
 PLATFORMS = ["sensor"]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Flick Electric from a config entry."""
     auth = HassFlickAuth(hass, entry)
 

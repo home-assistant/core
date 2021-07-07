@@ -56,19 +56,19 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Load the saved entities."""
 
     hass.data.setdefault(DOMAIN, {})
     if (
         CONF_APPS not in hass.data[DOMAIN]
-        and config_entry.data[CONF_DEVICE_CLASS] == DEVICE_CLASS_TV
+        and entry.data[CONF_DEVICE_CLASS] == DEVICE_CLASS_TV
     ):
         coordinator = VizioAppsDataUpdateCoordinator(hass)
         await coordinator.async_refresh()
         hass.data[DOMAIN][CONF_APPS] = coordinator
 
-    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
