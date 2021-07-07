@@ -1,20 +1,16 @@
 """Config flow for NFAndroidTV integration."""
 from __future__ import annotations
 
-from asyncio.exceptions import TimeoutError as TimedOutError
 import logging
 
-from aiohttp.client_exceptions import ClientConnectorError
-from async_timeout import timeout
-from httpcore import ConnectError
+from notifications_android_tv.notifications import ConnectError, Notifications
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DEFAULT_NAME, DEFAULT_TIMEOUT, DOMAIN
+from .const import DEFAULT_NAME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -72,10 +68,8 @@ class NFAndroidTVFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def _async_try_connect(self, host):
         """Try connecting to Android TV / Fire TV."""
         try:
-            session = async_get_clientsession(self.hass)
-            async with timeout(DEFAULT_TIMEOUT, loop=self.hass.loop):
-                await session.post(f"http://{host}:7676")
-        except (ConnectError, TimedOutError, ClientConnectorError):
+            await self.hass.async_add_executor_job(Notifications, host)
+        except ConnectError:
             _LOGGER.error("Error connecting to device at %s", host)
             return "cannot_connect"
         except Exception:  # pylint: disable=broad-except

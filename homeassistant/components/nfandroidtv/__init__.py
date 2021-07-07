@@ -1,9 +1,7 @@
 """The NFAndroidTV integration."""
-from asyncio.exceptions import TimeoutError as TimedOutError
 import logging
 
-from async_timeout import timeout
-from httpcore import ConnectError
+from notifications_android_tv.notifications import ConnectError, Notifications
 
 from homeassistant.components.notify import DOMAIN as NOTIFY
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
@@ -11,9 +9,8 @@ from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PLATFORM
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import discovery
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DEFAULT_TIMEOUT, DOMAIN
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,10 +39,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     name = entry.data[CONF_NAME]
 
     try:
-        session = async_get_clientsession(hass)
-        async with timeout(DEFAULT_TIMEOUT, loop=hass.loop):
-            await session.post(f"http://{host}:7676")
-    except (ConnectError, TimedOutError) as ex:
+        await hass.async_add_executor_job(Notifications, host)
+    except ConnectError as ex:
         _LOGGER.warning("Failed to connect: %s", ex)
         raise ConfigEntryNotReady from ex
 

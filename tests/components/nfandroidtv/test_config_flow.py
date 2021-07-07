@@ -1,13 +1,10 @@
 """Test NFAndroidTV config flow."""
-import logging
 from unittest.mock import patch
 
-from httpcore import ConnectError
-import pytest
+from notifications_android_tv.notifications import ConnectError
 
 from homeassistant.components.nfandroidtv.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.data_entry_flow import (
     RESULT_TYPE_ABORT,
     RESULT_TYPE_CREATE_ENTRY,
@@ -23,17 +20,6 @@ from . import (
 )
 
 from tests.common import MockConfigEntry
-
-_LOGGER = logging.getLogger(__name__)
-
-
-@pytest.fixture(name="connect_timeout")
-def connect_timeout_fixture():
-    """Mock the connect timeout."""
-    with patch(
-        "homeassistant.components.nfandroidtv.DEFAULT_TIMEOUT", new=1
-    ) as timeout:
-        yield timeout
 
 
 def _patch_setup():
@@ -61,20 +47,16 @@ async def test_flow_user(hass):
 
 
 async def test_flow_user_already_configured(hass):
-    """Test user initialized flow with duplicate device."""
+    """Test user initialized flow with duplicate server."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_HOST: "1.2.3.4", CONF_NAME: "Android TV / Fire TV"},
+        data=CONF_DATA,
     )
 
     entry.add_to_hass(hass)
 
-    service_info = {
-        "host": "1.2.3.4",
-        "name": "Android TV / Fire TV",
-    }
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=service_info
+        DOMAIN, context={"source": SOURCE_USER}, data=CONF_CONFIG_FLOW
     )
 
     assert result["type"] == RESULT_TYPE_ABORT

@@ -9,6 +9,7 @@ NAME = "Android TV / Fire TV"
 
 CONF_DATA = {
     CONF_HOST: HOST,
+    CONF_NAME: NAME,
 }
 
 CONF_CONFIG_FLOW = {
@@ -23,12 +24,8 @@ async def _create_mocked_tv(raise_exception=False):
     return mocked_tv
 
 
-def _patch_init_tv(mocked_tv):
-    return patch("homeassistant.components.nfandroidtv.timeout", return_value=mocked_tv)
-
-
 def _patch_config_flow_tv(mocked_tv):
     return patch(
-        "homeassistant.components.nfandroidtv.config_flow.DEFAULT_TIMEOUT",
+        "homeassistant.components.nfandroidtv.config_flow.Notifications",
         return_value=mocked_tv,
     )

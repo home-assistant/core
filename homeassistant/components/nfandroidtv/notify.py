@@ -1,8 +1,7 @@
 """Notifications for Android TV notification service."""
-import base64
-import io
 import logging
 
+from notifications_android_tv import Notifications
 import requests
 from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 import voluptuous as vol
@@ -14,11 +13,11 @@ from homeassistant.components.notify import (
     PLATFORM_SCHEMA,
     BaseNotificationService,
 )
-from homeassistant.const import CONF_HOST, CONF_TIMEOUT, HTTP_OK
+from homeassistant.const import ATTR_ICON, CONF_HOST, CONF_TIMEOUT
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 
 from .const import (
-    ATTR_BKGCOLOR,
     ATTR_COLOR,
     ATTR_DURATION,
     ATTR_FILE,
@@ -29,28 +28,16 @@ from .const import (
     ATTR_FILE_URL,
     ATTR_FILE_USERNAME,
     ATTR_FONTSIZE,
-    ATTR_IMAGE,
     ATTR_INTERRUPT,
     ATTR_POSITION,
     ATTR_TRANSPARENCY,
-    COLORS,
     CONF_COLOR,
     CONF_DURATION,
     CONF_FONTSIZE,
     CONF_INTERRUPT,
     CONF_POSITION,
     CONF_TRANSPARENCY,
-    DEFAULT_COLOR,
-    DEFAULT_DURATION,
-    DEFAULT_FONTSIZE,
-    DEFAULT_ICON,
-    DEFAULT_INTERRUPT,
-    DEFAULT_POSITION,
     DEFAULT_TIMEOUT,
-    DEFAULT_TRANSPARENCY,
-    FONTSIZES,
-    POSITIONS,
-    TRANSPARENCIES,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -61,34 +48,34 @@ PLATFORM_SCHEMA = cv.deprecated(
         PLATFORM_SCHEMA.extend(
             {
                 vol.Required(CONF_HOST): cv.string,
-                vol.Optional(CONF_DURATION, default=DEFAULT_DURATION): vol.Coerce(int),
-                vol.Optional(CONF_FONTSIZE, default=DEFAULT_FONTSIZE): vol.In(
-                    FONTSIZES.keys()
+                vol.Optional(CONF_DURATION): vol.Coerce(int),
+                vol.Optional(CONF_FONTSIZE): vol.In(Notifications.FONTSIZES.keys()),
+                vol.Optional(CONF_POSITION): vol.In(Notifications.POSITIONS.keys()),
+                vol.Optional(CONF_TRANSPARENCY): vol.In(
+                    Notifications.TRANSPARENCIES.keys()
                 ),
-                vol.Optional(CONF_POSITION, default=DEFAULT_POSITION): vol.In(
-                    POSITIONS.keys()
-                ),
-                vol.Optional(CONF_TRANSPARENCY, default=DEFAULT_TRANSPARENCY): vol.In(
-                    TRANSPARENCIES.keys()
-                ),
-                vol.Optional(CONF_COLOR, default=DEFAULT_COLOR): vol.In(COLORS.keys()),
-                vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): vol.Coerce(int),
-                vol.Optional(CONF_INTERRUPT, default=DEFAULT_INTERRUPT): cv.boolean,
+                vol.Optional(CONF_COLOR): vol.In(Notifications.BKG_COLORS.keys()),
+                vol.Optional(CONF_TIMEOUT): vol.Coerce(int),
+                vol.Optional(CONF_INTERRUPT): cv.boolean,
             }
         ),
     )
 )
 
 
-async def async_get_service(hass, config, discovery_info=None):
+async def async_get_service(hass: HomeAssistant, config, discovery_info=None):
     """Get the NFAndroidTV notification service."""
     if discovery_info is not None:
+        notify = await hass.async_add_executor_job(
+            Notifications, discovery_info[CONF_HOST]
+        )
         return NFAndroidTVNotificationService(
-            discovery_info[CONF_HOST],
+            notify,
             hass.config.is_allowed_path,
         )
+    notify = await hass.async_add_executor_job(Notifications, config.get(CONF_HOST))
     return NFAndroidTVNotificationService(
-        config.get(CONF_HOST),
+        notify,
         hass.config.is_allowed_path,
     )
 
@@ -98,118 +85,98 @@ class NFAndroidTVNotificationService(BaseNotificationService):
 
     def __init__(
         self,
-        host,
+        notify: Notifications,
         is_allowed_path,
     ):
         """Initialize the service."""
-        self._target = f"http://{host}:7676"
+        self.notify = notify
         self.is_allowed_path = is_allowed_path
 
     def send_message(self, message="", **kwargs):
         """Send a message to a Android TV device."""
-        _LOGGER.debug("Sending notification to: %s", self._target)
-
-        payload = {
-            "filename": (
-                "icon.png",
-                io.BytesIO(base64.b64decode(DEFAULT_ICON)),
-                "application/octet-stream",
-                {"Expires": "0"},
-            ),
-            "type": "0",
-            "title": kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT),
-            "msg": message,
-            "duration": "%i" % DEFAULT_DURATION,
-            "fontsize": "%i" % FONTSIZES.get(DEFAULT_FONTSIZE),
-            "position": "%i" % POSITIONS.get(DEFAULT_POSITION),
-            "bkgcolor": "%s" % COLORS.get(DEFAULT_COLOR),
-            "transparency": "%i" % TRANSPARENCIES.get(DEFAULT_TRANSPARENCY),
-            "offset": "0",
-            "app": ATTR_TITLE_DEFAULT,
-            "force": "true",
-            "interrupt": "%i" % DEFAULT_INTERRUPT,
-        }
-
         data = kwargs.get(ATTR_DATA)
+        title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
+        duration = None
+        fontsize = None
+        position = None
+        transparency = None
+        bkgcolor = None
+        interrupt = None
+        icon = None
+        image_file = None
         if data:
             if ATTR_DURATION in data:
                 try:
-                    payload[ATTR_DURATION] = "%i" % int(data.get(ATTR_DURATION))
+                    duration = int(data.get(ATTR_DURATION))
                 except ValueError:
                     _LOGGER.warning(
                         "Invalid duration-value: %s", str(data.get(ATTR_DURATION))
                     )
             if ATTR_FONTSIZE in data:
-                if data.get(ATTR_FONTSIZE) in FONTSIZES:
-                    payload[ATTR_FONTSIZE] = "%i" % FONTSIZES.get(
-                        data.get(ATTR_FONTSIZE)
-                    )
+                if data.get(ATTR_FONTSIZE) in Notifications.FONTSIZES:
+                    fontsize = data.get(ATTR_FONTSIZE)
                 else:
                     _LOGGER.warning(
                         "Invalid fontsize-value: %s", str(data.get(ATTR_FONTSIZE))
                     )
             if ATTR_POSITION in data:
-                if data.get(ATTR_POSITION) in POSITIONS:
-                    payload[ATTR_POSITION] = "%i" % POSITIONS.get(
-                        data.get(ATTR_POSITION)
-                    )
+                if data.get(ATTR_POSITION) in Notifications.POSITIONS:
+                    position = data.get(ATTR_POSITION)
                 else:
                     _LOGGER.warning(
                         "Invalid position-value: %s", str(data.get(ATTR_POSITION))
                     )
             if ATTR_TRANSPARENCY in data:
-                if data.get(ATTR_TRANSPARENCY) in TRANSPARENCIES:
-                    payload[ATTR_TRANSPARENCY] = "%i" % TRANSPARENCIES.get(
-                        data.get(ATTR_TRANSPARENCY)
-                    )
+                if data.get(ATTR_TRANSPARENCY) in Notifications.TRANSPARENCIES:
+                    transparency = data.get(ATTR_TRANSPARENCY)
                 else:
                     _LOGGER.warning(
                         "Invalid transparency-value: %s",
                         str(data.get(ATTR_TRANSPARENCY)),
                     )
             if ATTR_COLOR in data:
-                if data.get(ATTR_COLOR) in COLORS:
-                    payload[ATTR_BKGCOLOR] = "%s" % COLORS.get(data.get(ATTR_COLOR))
+                if data.get(ATTR_COLOR) in Notifications.BKG_COLORS:
+                    bkgcolor = data.get(ATTR_COLOR)
                 else:
                     _LOGGER.warning(
                         "Invalid color-value: %s", str(data.get(ATTR_COLOR))
                     )
             if ATTR_INTERRUPT in data:
                 try:
-                    payload[ATTR_INTERRUPT] = "%i" % cv.boolean(
-                        data.get(ATTR_INTERRUPT)
-                    )
+                    interrupt = cv.boolean(data.get(ATTR_INTERRUPT))
                 except vol.Invalid:
                     _LOGGER.warning(
                         "Invalid interrupt-value: %s", str(data.get(ATTR_INTERRUPT))
                     )
             filedata = data.get(ATTR_FILE) if data else None
             if filedata is not None:
-                # Load from file or URL
-                file_as_bytes = self.load_file(
+                if ATTR_ICON in filedata:
+                    icon = self.load_file(
+                        url=filedata.get(ATTR_ICON),
+                        local_path=filedata.get(ATTR_FILE_PATH),
+                        username=filedata.get(ATTR_FILE_USERNAME),
+                        password=filedata.get(ATTR_FILE_PASSWORD),
+                        auth=filedata.get(ATTR_FILE_AUTH),
+                    )
+                image_file = self.load_file(
                     url=filedata.get(ATTR_FILE_URL),
                     local_path=filedata.get(ATTR_FILE_PATH),
                     username=filedata.get(ATTR_FILE_USERNAME),
                     password=filedata.get(ATTR_FILE_PASSWORD),
                     auth=filedata.get(ATTR_FILE_AUTH),
                 )
-                if file_as_bytes:
-                    payload[ATTR_IMAGE] = (
-                        "image",
-                        file_as_bytes,
-                        "application/octet-stream",
-                        {"Expires": "0"},
-                    )
-
-        try:
-            _LOGGER.debug("Payload: %s", str(payload))
-            response = requests.post(
-                self._target, files=payload, timeout=DEFAULT_TIMEOUT
-            )
-            if response.status_code != HTTP_OK:
-                _LOGGER.error("Error sending message: %s", str(response))
-        except requests.exceptions.ConnectionError as err:
-            _LOGGER.error("Error communicating with %s: %s", self._target, str(err))
+        self.notify.send(
+            message,
+            title=title,
+            duration=duration,
+            fontsize=fontsize,
+            position=position,
+            bkgcolor=bkgcolor,
+            transparency=transparency,
+            interrupt=interrupt,
+            icon=icon,
+            image_file=image_file,
+        )
 
     def load_file(
         self, url=None, local_path=None, username=None, password=None, auth=None

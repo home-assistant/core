@@ -556,6 +556,9 @@ nettigo-air-monitor==0.2.5
 # homeassistant.components.nexia
 nexia==0.9.7
 
+# homeassistant.components.nfandroidtv
+notifications-android-tv==0.1.2
+
 # homeassistant.components.notify_events
 notify-events==1.0.4
 
