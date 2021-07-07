@@ -129,6 +129,16 @@ class EightHeatSensor(EightSleepBaseEntity, SensorEntity):
         }
 
 
+def _get_breakdown_percent(
+    attr: dict[str, Any], key: str, denominator: int | float
+) -> int | float:
+    """Get a breakdown percent."""
+    try:
+        return round((attr["breakdown"][key] / denominator) * 100, 2)
+    except ZeroDivisionError:
+        return 0
+
+
 class EightUserSensor(EightSleepUserEntity, SensorEntity):
     """Representation of an eight sleep user-based sensor."""
 
@@ -197,19 +207,9 @@ class EightUserSensor(EightSleepUserEntity, SensorEntity):
         try:
             if self._units == "si" or not use_units:
                 return round(attr["room_temp"], 2)
-            else:
-                return round((attr["room_temp"] * 1.8) + 32, 2)
+            return round((attr["room_temp"] * 1.8) + 32, 2)
         except TypeError:
             return None
-
-    def _get_breakdown_percent(
-        self, attr: dict[str, Any], key: str, denominator: int | float
-    ) -> int | float:
-        """Get a breakdown percent."""
-        try:
-            return round((attr["breakdown"][key] / denominator) * 100, 2)
-        except ZeroDivisionError:
-            return 0
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
@@ -244,15 +244,13 @@ class EightUserSensor(EightSleepUserEntity, SensorEntity):
         if attr.get("breakdown") is not None:
             sleep_time = sum(attr["breakdown"].values()) - attr["breakdown"]["awake"]
             state_attr[ATTR_SLEEP_DUR] = sleep_time
-            state_attr[ATTR_LIGHT_PERC] = self._get_breakdown_percent(
+            state_attr[ATTR_LIGHT_PERC] = _get_breakdown_percent(
                 attr, "light", sleep_time
             )
-            state_attr[ATTR_DEEP_PERC] = self._get_breakdown_percent(
+            state_attr[ATTR_DEEP_PERC] = _get_breakdown_percent(
                 attr, "deep", sleep_time
             )
-            state_attr[ATTR_REM_PERC] = self._get_breakdown_percent(
-                attr, "rem", sleep_time
-            )
+            state_attr[ATTR_REM_PERC] = _get_breakdown_percent(attr, "rem", sleep_time)
 
         room_temp = self._get_rounded_value(attr, "room_temp")
         bed_temp = self._get_rounded_value(attr, "bed_temp")
