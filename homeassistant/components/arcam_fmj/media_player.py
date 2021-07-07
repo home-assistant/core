@@ -63,6 +63,18 @@ async def async_setup_entry(
 class ArcamFmj(MediaPlayerEntity):
     """Representation of a media device."""
 
+    _attr_should_poll = False
+    _attr_supported_features = (
+        SUPPORT_SELECT_SOURCE
+        | SUPPORT_PLAY_MEDIA
+        | SUPPORT_BROWSE_MEDIA
+        | SUPPORT_VOLUME_SET
+        | SUPPORT_VOLUME_MUTE
+        | SUPPORT_VOLUME_STEP
+        | SUPPORT_TURN_OFF
+        | SUPPORT_TURN_ON
+    )
+
     def __init__(
         self,
         device_name,
@@ -72,20 +84,12 @@ class ArcamFmj(MediaPlayerEntity):
         """Initialize device."""
         self._state = state
         self._device_name = device_name
-        self._name = f"{device_name} - Zone: {state.zn}"
         self._uuid = uuid
-        self._support = (
-            SUPPORT_SELECT_SOURCE
-            | SUPPORT_PLAY_MEDIA
-            | SUPPORT_BROWSE_MEDIA
-            | SUPPORT_VOLUME_SET
-            | SUPPORT_VOLUME_MUTE
-            | SUPPORT_VOLUME_STEP
-            | SUPPORT_TURN_OFF
-            | SUPPORT_TURN_ON
-        )
         if state.zn == 1:
-            self._support |= SUPPORT_SELECT_SOUND_MODE
+            self._attr_supported_features |= SUPPORT_SELECT_SOUND_MODE
+        self._attr_entity_registry_enabled_default = self._state.zn == 1
+        self._attr_unique_id = f"{self._uuid}-{self._state.zn}"
+        self._attr_name = f"{device_name} - Zone: {state.zn}"
 
     def _get_2ch(self):
         """Return if source is 2 channel or not."""
@@ -99,51 +103,6 @@ class ArcamFmj(MediaPlayerEntity):
                 None,
             )
         )
-
-    @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Return if the entity should be enabled when first added to the entity registry."""
-        return self._state.zn == 1
-
-    @property
-    def unique_id(self):
-        """Return unique identifier if known."""
-        return f"{self._uuid}-{self._state.zn}"
-
-    @property
-    def device_info(self):
-        """Return a device description for device registry."""
-        return {
-            "name": self._device_name,
-            "identifiers": {
-                (DOMAIN, self._uuid),
-                (DOMAIN, self._state.client.host, self._state.client.port),
-            },
-            "model": "Arcam FMJ AVR",
-            "manufacturer": "Arcam",
-        }
-
-    @property
-    def should_poll(self) -> bool:
-        """No need to poll."""
-        return False
-
-    @property
-    def name(self):
-        """Return the name of the controlled device."""
-        return self._name
-
-    @property
-    def state(self):
-        """Return the state of the device."""
-        if self._state.get_power():
-            return STATE_ON
-        return STATE_OFF
-
-    @property
-    def supported_features(self):
-        """Flag media player features that are supported."""
-        return self._support
 
     async def async_added_to_hass(self):
         """Once registered, add listener for events."""
@@ -186,6 +145,57 @@ class ArcamFmj(MediaPlayerEntity):
         """Force update of state."""
         _LOGGER.debug("Update state %s", self.name)
         await self._state.update()
+        self._attr_state = STATE_ON if self._state.get_power() else STATE_OFF
+        self._attr_device_info = {
+            "name": self._device_name,
+            "identifiers": {
+                (DOMAIN, self._uuid),
+                (DOMAIN, self._state.client.host, self._state.client.port),
+            },
+            "model": "Arcam FMJ AVR",
+            "manufacturer": "Arcam",
+        }
+        source = self._state.get_source()
+        self._attr_source = source.name if source else None
+        self._attr_source_list = [x.name for x in self._state.get_source_list()]
+        if self._state.zn == 1:
+            if self._get_2ch():
+                value = self._state.get_decode_mode_2ch()
+                self._attr_sound_mode_list = [x.name for x in DecodeMode2CH]
+            else:
+                value = self._state.get_decode_mode_mch()
+                self._attr_sound_mode_list = [x.name for x in DecodeModeMCH]
+            self._attr_sound_mode = value.name if value else None
+        else:
+            self._attr_sound_mode = self._attr_sound_mode_list = None
+        value = self._state.get_mute()
+        self._attr_is_volume_muted = value if value else None
+        value = self._state.get_volume()
+        self._attr_volume_level = value / 99.0 if value else None
+        if source == SourceCodes.DAB:
+            self._attr_media_content_type = MEDIA_TYPE_MUSIC
+            self._attr_media_channel = self._state.get_dab_station()
+            self._attr_media_artist = self._state.get_dls_pdt()
+        elif source == SourceCodes.FM:
+            self._attr_media_content_type = MEDIA_TYPE_MUSIC
+            self._attr_media_channel = self._state.get_rds_information()
+        else:
+            self._attr_media_content_type = (
+                self._attr_media_channel
+            ) = self._attr_media_artist = None
+        if source in (SourceCodes.DAB, SourceCodes.FM):
+            preset = self._state.get_tuner_preset()
+            self._attr_media_content_id = f"preset:{preset}" if preset else None
+        else:
+            self._attr_media_content_id = None
+        if source:
+            channel = self._attr_media_channel
+            if channel:
+                self._attr_media_title = f"{source.name} - {channel}"
+            else:
+                self._attr_media_title = source.name
+        else:
+            self._attr_media_title = None
 
     async def async_mute_volume(self, mute):
         """Send mute command."""
@@ -286,120 +296,3 @@ class ArcamFmj(MediaPlayerEntity):
         else:
             _LOGGER.error("Media %s is not supported", media_id)
             return
-
-    @property
-    def source(self):
-        """Return the current input source."""
-        value = self._state.get_source()
-        if value is None:
-            return None
-        return value.name
-
-    @property
-    def source_list(self):
-        """List of available input sources."""
-        return [x.name for x in self._state.get_source_list()]
-
-    @property
-    def sound_mode(self):
-        """Name of the current sound mode."""
-        if self._state.zn != 1:
-            return None
-
-        if self._get_2ch():
-            value = self._state.get_decode_mode_2ch()
-        else:
-            value = self._state.get_decode_mode_mch()
-        if value:
-            return value.name
-        return None
-
-    @property
-    def sound_mode_list(self):
-        """List of available sound modes."""
-        if self._state.zn != 1:
-            return None
-
-        if self._get_2ch():
-            return [x.name for x in DecodeMode2CH]
-        return [x.name for x in DecodeModeMCH]
-
-    @property
-    def is_volume_muted(self):
-        """Boolean if volume is currently muted."""
-        value = self._state.get_mute()
-        if value is None:
-            return None
-        return value
-
-    @property
-    def volume_level(self):
-        """Volume level of device."""
-        value = self._state.get_volume()
-        if value is None:
-            return None
-        return value / 99.0
-
-    @property
-    def media_content_type(self):
-        """Content type of current playing media."""
-        source = self._state.get_source()
-        if source == SourceCodes.DAB:
-            value = MEDIA_TYPE_MUSIC
-        elif source == SourceCodes.FM:
-            value = MEDIA_TYPE_MUSIC
-        else:
-            value = None
-        return value
-
-    @property
-    def media_content_id(self):
-        """Content type of current playing media."""
-        source = self._state.get_source()
-        if source in (SourceCodes.DAB, SourceCodes.FM):
-            preset = self._state.get_tuner_preset()
-            if preset:
-                value = f"preset:{preset}"
-            else:
-                value = None
-        else:
-            value = None
-
-        return value
-
-    @property
-    def media_channel(self):
-        """Channel currently playing."""
-        source = self._state.get_source()
-        if source == SourceCodes.DAB:
-            value = self._state.get_dab_station()
-        elif source == SourceCodes.FM:
-            value = self._state.get_rds_information()
-        else:
-            value = None
-        return value
-
-    @property
-    def media_artist(self):
-        """Artist of current playing media, music track only."""
-        source = self._state.get_source()
-        if source == SourceCodes.DAB:
-            value = self._state.get_dls_pdt()
-        else:
-            value = None
-        return value
-
-    @property
-    def media_title(self):
-        """Title of current playing media."""
-        source = self._state.get_source()
-        if source is None:
-            return None
-
-        channel = self.media_channel
-
-        if channel:
-            value = f"{source.name} - {channel}"
-        else:
-            value = source.name
-        return value
