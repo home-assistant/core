@@ -105,6 +105,14 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
+def _get_device_unique_id(eight: EightSleep, user_obj: EightUser = None) -> str:
+    """Get the device's unique ID."""
+    unique_id = eight.deviceid
+    if user_obj:
+        unique_id = f"{unique_id}.{user_obj.userid}.{user_obj.side}"
+    return unique_id
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Eight Sleep component."""
 
@@ -141,8 +149,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     sensors = []
     binary_sensors = []
     if eight.users:
-        for user in eight.users:
-            obj = eight.users[user]
+        for user, obj in eight.users.items():
             for sensor in SENSORS:
                 sensors.append(f"{obj.side}_{sensor}")
             binary_sensors.append(f"{obj.side}_presence")
@@ -242,6 +249,15 @@ class EightSleepUserEntity(CoordinatorEntity):
         self._units = units
         self._attr_name = f"{name} {self._mapped_name}"
 
+        self._side = self._sensor.split("_", 1)[0]
+        self._usrobj: EightUser = None
+        if self._side in ("left", "right"):
+            self._usrobj = self._eight.users[self._eight.fetch_userid(self._side)]
+
+        self._attr_unique_id = (
+            f"{_get_device_unique_id(eight, self._usrobj)}.{self._sensor}"
+        )
+
 
 class EightSleepHeatEntity(CoordinatorEntity):
     """The Eight Sleep device entity."""
@@ -260,8 +276,11 @@ class EightSleepHeatEntity(CoordinatorEntity):
         self._mapped_name = NAME_MAP.get(self._sensor, self._sensor)
 
         self._side = self._sensor.split("_")[0]
-        self._userid: str = self._eight.fetch_userid(self._side)
-        self._usrobj: EightUser = self._eight.users[self._userid]
+        self._usrobj: EightUser = self._eight.users[
+            self._eight.fetch_userid(self._side)
+        ]
 
         self._attr_name = f"{name} {self._mapped_name}"
-        self._attr_unique_id = f"{self._eight.deviceid}.{self._userid}.{self._sensor}"
+        self._attr_unique_id = (
+            f"{_get_device_unique_id(eight, self._usrobj)}.{self._sensor}"
+        )

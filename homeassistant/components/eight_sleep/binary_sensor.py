@@ -66,7 +66,7 @@ class EightHeatSensor(EightSleepHeatEntity, BinarySensorEntity):
             "Presence Sensor: %s, Side: %s, User: %s",
             self._sensor,
             self._side,
-            self._userid,
+            self._usrobj.userid,
         )
 
     @property

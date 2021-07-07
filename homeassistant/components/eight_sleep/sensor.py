@@ -5,7 +5,6 @@ import logging
 from typing import Any
 
 from pyeight.eight import EightSleep
-from pyeight.user import EightUser
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import PERCENTAGE, TEMP_CELSIUS, TEMP_FAHRENHEIT
@@ -109,7 +108,7 @@ class EightHeatSensor(EightSleepHeatEntity, SensorEntity):
             "Heat Sensor: %s, Side: %s, User: %s",
             self._sensor,
             self._side,
-            self._userid,
+            self._usrobj.userid,
         )
 
     @property
@@ -141,22 +140,16 @@ class EightUserSensor(EightSleepUserEntity, SensorEntity):
         """Initialize the sensor."""
         super().__init__(name, coordinator, eight, sensor, units)
 
-        self._side = self._sensor.split("_", 1)[0]
-        self._userid: str = self._eight.fetch_userid(self._side)
-        self._usrobj: EightUser = self._eight.users[self._userid]
-
         self._sensor_root = self._sensor.split("_", 1)[1]
 
         if "bed_temp" in self._sensor:
             self._attr_icon = "mdi:thermometer"
 
-        self._attr_unique_id = f"{self._eight.deviceid}.{self._userid}.{self._sensor}"
-
         _LOGGER.debug(
             "User Sensor: %s, Side: %s, User: %s",
             self._sensor,
             self._side,
-            self._userid,
+            self._usrobj.userid,
         )
 
     @property
@@ -307,7 +300,6 @@ class EightRoomSensor(EightSleepUserEntity, SensorEntity):
         self._attr_unit_of_measurement = (
             TEMP_CELSIUS if self._units == "si" else TEMP_FAHRENHEIT
         )
-        self._attr_unique_id = f"{self._eight.deviceid}.{self._sensor}"
 
     @property
     def state(self) -> int | float | None:
