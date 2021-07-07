@@ -32,25 +32,20 @@ from .const import (
 )
 from .util import GuardianDataUpdateCoordinator
 
-DATA_LAST_SENSOR_PAIR_DUMP = "last_sensor_pair_dump"
-
 PLATFORMS = ["binary_sensor", "sensor", "switch"]
-
-
-async def async_setup(hass: HomeAssistant, config: dict) -> bool:
-    """Set up the Elexa Guardian component."""
-    hass.data[DOMAIN] = {
-        DATA_CLIENT: {},
-        DATA_COORDINATOR: {},
-        DATA_LAST_SENSOR_PAIR_DUMP: {},
-        DATA_PAIRED_SENSOR_MANAGER: {},
-        DATA_UNSUB_DISPATCHER_CONNECT: {},
-    }
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Elexa Guardian from a config entry."""
+    hass.data.setdefault(
+        DOMAIN,
+        {
+            DATA_CLIENT: {},
+            DATA_COORDINATOR: {},
+            DATA_PAIRED_SENSOR_MANAGER: {},
+            DATA_UNSUB_DISPATCHER_CONNECT: {},
+        },
+    )
     client = hass.data[DOMAIN][DATA_CLIENT][entry.entry_id] = Client(
         entry.data[CONF_IP_ADDRESS], port=entry.data[CONF_PORT]
     )
@@ -116,7 +111,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if unload_ok:
         hass.data[DOMAIN][DATA_CLIENT].pop(entry.entry_id)
         hass.data[DOMAIN][DATA_COORDINATOR].pop(entry.entry_id)
-        hass.data[DOMAIN][DATA_LAST_SENSOR_PAIR_DUMP].pop(entry.entry_id)
         for unsub in hass.data[DOMAIN][DATA_UNSUB_DISPATCHER_CONNECT][entry.entry_id]:
             unsub()
         hass.data[DOMAIN][DATA_UNSUB_DISPATCHER_CONNECT].pop(entry.entry_id)

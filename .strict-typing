@@ -36,6 +36,7 @@ homeassistant.components.fitbit.*
 homeassistant.components.forecast_solar.*
 homeassistant.components.fritzbox.*
 homeassistant.components.frontend.*
+homeassistant.components.fritz.*
 homeassistant.components.geo_location.*
 homeassistant.components.gios.*
 homeassistant.components.group.*
@@ -48,6 +49,7 @@ homeassistant.components.image_processing.*
 homeassistant.components.integration.*
 homeassistant.components.knx.*
 homeassistant.components.kraken.*
+homeassistant.components.lcn.*
 homeassistant.components.light.*
 homeassistant.components.local_ip.*
 homeassistant.components.lock.*
