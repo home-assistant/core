@@ -59,11 +59,6 @@ def create_segment(sequence, start_time=FAKE_TIME):
     return segment
 
 
-def add_part_to_segment(segment, part):
-    """Add a single part to the segment."""
-    segment.parts_by_byterange[segment.data_size] = part
-
-
 def complete_segment(segment):
     """Completes a segment by setting its duration."""
     segment.duration = sum(
@@ -72,7 +67,7 @@ def complete_segment(segment):
 
 
 def create_parts(source):
-    """Create parts from a source that can be added using add_part_to_segment."""
+    """Create parts from a source."""
     independent_cycle = itertools.cycle(
         [True] + [False] * (PART_INDEPENDENT_PERIOD - 1)
     )
@@ -247,7 +242,7 @@ async def test_ll_hls_playlist_view(hass, hls_stream, stream_worker_sync):
         segment = create_segment(sequence=sequence)
         hls.put(segment)
         for part in create_parts(SEQUENCE_BYTES):
-            add_part_to_segment(segment, part)
+            segment.async_add_part(part, 0)
             hls.part_put()
         complete_segment(segment)
     await hass.async_block_till_done()
@@ -272,7 +267,7 @@ async def test_ll_hls_playlist_view(hass, hls_stream, stream_worker_sync):
     segment = create_segment(sequence=2)
     hls.put(segment)
     for part in create_parts(SEQUENCE_BYTES):
-        add_part_to_segment(segment, part)
+        segment.async_add_part(part, 0)
         hls.part_put()
     complete_segment(segment)
 
@@ -394,7 +389,7 @@ async def test_ll_hls_playlist_bad_msn_part(hass, hls_stream, stream_worker_sync
     segment = create_segment(sequence=0)
     hls.put(segment)
     for part in create_parts(SEQUENCE_BYTES):
-        add_part_to_segment(segment, part)
+        segment.async_add_part(part, 0)
         hls.part_put()
     complete_segment(segment)
 
@@ -403,7 +398,7 @@ async def test_ll_hls_playlist_bad_msn_part(hass, hls_stream, stream_worker_sync
     remaining_parts = create_parts(SEQUENCE_BYTES)
     num_completed_parts = len(remaining_parts) // 2
     for part in remaining_parts[:num_completed_parts]:
-        add_part_to_segment(segment, part)
+        segment.async_add_part(part, 0)
 
     # If the _HLS_msn is greater than the Media Sequence Number of the last
     # Media Segment in the current Playlist plus two, or if the _HLS_part
@@ -456,7 +451,7 @@ async def test_ll_hls_playlist_rollover_part(
         hls.put(segment)
 
         for part in create_parts(SEQUENCE_BYTES):
-            add_part_to_segment(segment, part)
+            segment.async_add_part(part, 0)
             hls.part_put()
         complete_segment(segment)
 
@@ -490,7 +485,7 @@ async def test_ll_hls_playlist_rollover_part(
     await hass.async_block_till_done()
 
     remaining_parts = create_parts(SEQUENCE_BYTES)
-    add_part_to_segment(segment, remaining_parts.pop(0))
+    segment.async_add_part(remaining_parts.pop(0), 0)
     hls.part_put()
 
     await hls_sync.wait_for_handler()
@@ -533,7 +528,7 @@ async def test_ll_hls_playlist_msn_part(hass, hls_stream, stream_worker_sync, hl
     segment = create_segment(sequence=0)
     hls.put(segment)
     for part in create_parts(SEQUENCE_BYTES):
-        add_part_to_segment(segment, part)
+        segment.async_add_part(part, 0)
         hls.part_put()
     complete_segment(segment)
 
@@ -542,7 +537,7 @@ async def test_ll_hls_playlist_msn_part(hass, hls_stream, stream_worker_sync, hl
     remaining_parts = create_parts(SEQUENCE_BYTES)
     num_completed_parts = len(remaining_parts) // 2
     for part in remaining_parts[:num_completed_parts]:
-        add_part_to_segment(segment, part)
+        segment.async_add_part(part, 0)
     del remaining_parts[:num_completed_parts]
 
     # Make requests for all the part segments up to n+ADVANCE_PART_LIMIT
@@ -566,7 +561,7 @@ async def test_ll_hls_playlist_msn_part(hass, hls_stream, stream_worker_sync, hl
 
     while remaining_parts:
         await hls_sync.wait_for_handler()
-        add_part_to_segment(segment, remaining_parts.pop(0))
+        segment.async_add_part(remaining_parts.pop(0), 0)
         hls.part_put()
 
     msn_responses = await msn_requests
@@ -603,7 +598,7 @@ async def test_get_part_segments(hass, hls_stream, stream_worker_sync, hls_sync)
     segment = create_segment(sequence=0)
     hls.put(segment)
     for part in create_parts(SEQUENCE_BYTES):
-        add_part_to_segment(segment, part)
+        segment.async_add_part(part, 0)
         hls.part_put()
     complete_segment(segment)
 
@@ -612,7 +607,7 @@ async def test_get_part_segments(hass, hls_stream, stream_worker_sync, hls_sync)
     remaining_parts = create_parts(SEQUENCE_BYTES)
     num_completed_parts = len(remaining_parts) // 2
     for _ in range(num_completed_parts):
-        add_part_to_segment(segment, remaining_parts.pop(0))
+        segment.async_add_part(remaining_parts.pop(0), 0)
 
     # Make requests for all the existing part segments
     # These should succeed with a status of 206
@@ -698,7 +693,7 @@ async def test_get_part_segments(hass, hls_stream, stream_worker_sync, hls_sync)
     while remaining_parts:
         await hls_sync.wait_for_handler()
         # Put one more part segment
-        add_part_to_segment(segment, remaining_parts.pop(0))
+        segment.async_add_part(remaining_parts.pop(0), 0)
         hls.part_put()
     complete_segment(segment)
     # Check the response
@@ -727,7 +722,7 @@ async def test_get_part_segments(hass, hls_stream, stream_worker_sync, hls_sync)
     remaining_parts = create_parts(ALT_SEQUENCE_BYTES)
     for part in remaining_parts:
         await hls_sync.wait_for_handler()
-        add_part_to_segment(segment, part)
+        segment.async_add_part(part, 0)
         hls.part_put()
     complete_segment(segment)
     # Check the response
