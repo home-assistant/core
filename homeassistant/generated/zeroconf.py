@@ -186,6 +186,11 @@ ZEROCONF = {
             "name": "brother*"
         }
     ],
+    "_sonos._tcp.local.": [
+        {
+            "domain": "sonos"
+        }
+    ],
     "_spotify-connect._tcp.local.": [
         {
             "domain": "spotify"
