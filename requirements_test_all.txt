@@ -383,7 +383,7 @@ georss_qld_bushfire_alert_client==0.5
 getmac==0.8.2
 
 # homeassistant.components.gios
-gios==1.0.1
+gios==1.0.2
 
 # homeassistant.components.glances
 glances_api==0.2.0
@@ -428,7 +428,7 @@ hangups==0.4.14
 hass-nabucasa==0.44.0
 
 # homeassistant.components.tasmota
-hatasmota==0.2.19
+hatasmota==0.2.20
 
 # homeassistant.components.jewish_calendar
 hdate==0.10.2
@@ -446,7 +446,7 @@ hole==0.5.1
 holidays==0.11.1
 
 # homeassistant.components.frontend
-home-assistant-frontend==20210630.0
+home-assistant-frontend==20210706.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -592,7 +592,7 @@ numato-gpio==0.10.0
 # homeassistant.components.opencv
 # homeassistant.components.tensorflow
 # homeassistant.components.trend
-numpy==1.20.3
+numpy==1.21.0
 
 # homeassistant.components.google
 oauth2client==4.0.0
@@ -899,7 +899,7 @@ pymelcloud==2.5.3
 pymeteoclimatic==0.0.6
 
 # homeassistant.components.somfy
-pymfy==0.9.3
+pymfy==0.11.0
 
 # homeassistant.components.mochad
 pymochad==0.2.0
@@ -1150,7 +1150,7 @@ sharkiqpy==0.1.8
 simplehound==0.3
 
 # homeassistant.components.simplisafe
-simplisafe-python==10.0.0
+simplisafe-python==11.0.0
 
 # homeassistant.components.slack
 slackclient==2.5.0

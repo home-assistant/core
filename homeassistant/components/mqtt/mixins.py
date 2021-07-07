@@ -38,7 +38,7 @@ from .discovery import (
     clear_discovery_hash,
     set_discovery_hash,
 )
-from .models import Message
+from .models import ReceiveMessage
 from .subscription import async_subscribe_topics, async_unsubscribe_topics
 from .util import valid_subscribe_topic
 
@@ -221,7 +221,7 @@ class MqttAttributes(Entity):
 
         @callback
         @log_messages(self.hass, self.entity_id)
-        def attributes_message_received(msg: Message) -> None:
+        def attributes_message_received(msg: ReceiveMessage) -> None:
             try:
                 payload = msg.payload
                 if attr_tpl is not None:
@@ -318,7 +318,7 @@ class MqttAvailability(Entity):
 
         @callback
         @log_messages(self.hass, self.entity_id)
-        def availability_message_received(msg: Message) -> None:
+        def availability_message_received(msg: ReceiveMessage) -> None:
             """Handle a new received MQTT availability message."""
             topic = msg.topic
             if msg.payload == self._avail_topics[topic][CONF_PAYLOAD_AVAILABLE]:
