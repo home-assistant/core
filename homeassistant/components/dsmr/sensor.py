@@ -6,24 +6,21 @@ from asyncio import CancelledError
 from contextlib import suppress
 from datetime import timedelta
 from functools import partial
-import logging
+from typing import Any
 
 from dsmr_parser import obis_references as obis_ref
 from dsmr_parser.clients.protocol import create_dsmr_reader, create_tcp_dsmr_reader
+from dsmr_parser.objects import DSMRObject
 import serial
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_PORT,
-    EVENT_HOMEASSISTANT_STOP,
-    TIME_HOURS,
-)
+from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import CoreState, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, StateType
 from homeassistant.util import Throttle
 
 from .const import (
@@ -42,13 +39,10 @@ from .const import (
     DEVICE_NAME_ENERGY,
     DEVICE_NAME_GAS,
     DOMAIN,
-    ICON_GAS,
-    ICON_POWER,
-    ICON_POWER_FAILURE,
-    ICON_SWELL_SAG,
+    LOGGER,
+    SENSORS,
 )
-
-_LOGGER = logging.getLogger(__name__)
+from .models import DSMRSensor
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -63,8 +57,19 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: dict[str, Any] | None = None,
+) -> None:
     """Import the platform into a config entry."""
+    LOGGER.warning(
+        "Configuration of the DSMR platform in YAML is deprecated and will be "
+        "removed in Home Assistant 2021.9; Your existing configuration "
+        "has been imported into the UI automatically and can be safely removed "
+        "from your configuration.yaml file"
+    )
     hass.async_create_task(
         hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_IMPORT}, data=config
@@ -73,147 +78,37 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the DSMR sensor."""
-    config = entry.data
-    options = entry.options
-
-    dsmr_version = config[CONF_DSMR_VERSION]
-
-    # Define list of name,obis,force_update mappings to generate entities
-    obis_mapping = [
-        ["Power Consumption", obis_ref.CURRENT_ELECTRICITY_USAGE, True],
-        ["Power Production", obis_ref.CURRENT_ELECTRICITY_DELIVERY, True],
-        ["Power Tariff", obis_ref.ELECTRICITY_ACTIVE_TARIFF, False],
-        ["Energy Consumption (tarif 1)", obis_ref.ELECTRICITY_USED_TARIFF_1, True],
-        ["Energy Consumption (tarif 2)", obis_ref.ELECTRICITY_USED_TARIFF_2, True],
-        ["Energy Production (tarif 1)", obis_ref.ELECTRICITY_DELIVERED_TARIFF_1, True],
-        ["Energy Production (tarif 2)", obis_ref.ELECTRICITY_DELIVERED_TARIFF_2, True],
-        [
-            "Power Consumption Phase L1",
-            obis_ref.INSTANTANEOUS_ACTIVE_POWER_L1_POSITIVE,
-            False,
-        ],
-        [
-            "Power Consumption Phase L2",
-            obis_ref.INSTANTANEOUS_ACTIVE_POWER_L2_POSITIVE,
-            False,
-        ],
-        [
-            "Power Consumption Phase L3",
-            obis_ref.INSTANTANEOUS_ACTIVE_POWER_L3_POSITIVE,
-            False,
-        ],
-        [
-            "Power Production Phase L1",
-            obis_ref.INSTANTANEOUS_ACTIVE_POWER_L1_NEGATIVE,
-            False,
-        ],
-        [
-            "Power Production Phase L2",
-            obis_ref.INSTANTANEOUS_ACTIVE_POWER_L2_NEGATIVE,
-            False,
-        ],
-        [
-            "Power Production Phase L3",
-            obis_ref.INSTANTANEOUS_ACTIVE_POWER_L3_NEGATIVE,
-            False,
-        ],
-        ["Short Power Failure Count", obis_ref.SHORT_POWER_FAILURE_COUNT, False],
-        ["Long Power Failure Count", obis_ref.LONG_POWER_FAILURE_COUNT, False],
-        ["Voltage Sags Phase L1", obis_ref.VOLTAGE_SAG_L1_COUNT, False],
-        ["Voltage Sags Phase L2", obis_ref.VOLTAGE_SAG_L2_COUNT, False],
-        ["Voltage Sags Phase L3", obis_ref.VOLTAGE_SAG_L3_COUNT, False],
-        ["Voltage Swells Phase L1", obis_ref.VOLTAGE_SWELL_L1_COUNT, False],
-        ["Voltage Swells Phase L2", obis_ref.VOLTAGE_SWELL_L2_COUNT, False],
-        ["Voltage Swells Phase L3", obis_ref.VOLTAGE_SWELL_L3_COUNT, False],
-        ["Voltage Phase L1", obis_ref.INSTANTANEOUS_VOLTAGE_L1, False],
-        ["Voltage Phase L2", obis_ref.INSTANTANEOUS_VOLTAGE_L2, False],
-        ["Voltage Phase L3", obis_ref.INSTANTANEOUS_VOLTAGE_L3, False],
-        ["Current Phase L1", obis_ref.INSTANTANEOUS_CURRENT_L1, False],
-        ["Current Phase L2", obis_ref.INSTANTANEOUS_CURRENT_L2, False],
-        ["Current Phase L3", obis_ref.INSTANTANEOUS_CURRENT_L3, False],
+    dsmr_version = entry.data[CONF_DSMR_VERSION]
+    entities = [
+        DSMREntity(sensor, entry)
+        for sensor in SENSORS
+        if (sensor.dsmr_versions is None or dsmr_version in sensor.dsmr_versions)
+        and (not sensor.is_gas or CONF_SERIAL_ID_GAS in entry.data)
     ]
-
-    if dsmr_version == "5L":
-        obis_mapping.extend(
-            [
-                [
-                    "Energy Consumption (total)",
-                    obis_ref.LUXEMBOURG_ELECTRICITY_USED_TARIFF_GLOBAL,
-                    True,
-                ],
-                [
-                    "Energy Production (total)",
-                    obis_ref.LUXEMBOURG_ELECTRICITY_DELIVERED_TARIFF_GLOBAL,
-                    True,
-                ],
-            ]
-        )
-    else:
-        obis_mapping.extend(
-            [["Energy Consumption (total)", obis_ref.ELECTRICITY_IMPORTED_TOTAL, True]]
-        )
-
-    # Generate device entities
-    devices = [
-        DSMREntity(
-            name, DEVICE_NAME_ENERGY, config[CONF_SERIAL_ID], obis, config, force_update
-        )
-        for name, obis, force_update in obis_mapping
-    ]
-
-    # Protocol version specific obis
-    if CONF_SERIAL_ID_GAS in config:
-        if dsmr_version in ("4", "5", "5L"):
-            gas_obis = obis_ref.HOURLY_GAS_METER_READING
-        elif dsmr_version in ("5B",):
-            gas_obis = obis_ref.BELGIUM_HOURLY_GAS_METER_READING
-        else:
-            gas_obis = obis_ref.GAS_METER_READING
-
-        # Add gas meter reading and derivative for usage
-        devices += [
-            DSMREntity(
-                "Gas Consumption",
-                DEVICE_NAME_GAS,
-                config[CONF_SERIAL_ID_GAS],
-                gas_obis,
-                config,
-                True,
-            ),
-            DerivativeDSMREntity(
-                "Hourly Gas Consumption",
-                DEVICE_NAME_GAS,
-                config[CONF_SERIAL_ID_GAS],
-                gas_obis,
-                config,
-                False,
-            ),
-        ]
-
-    async_add_entities(devices)
+    async_add_entities(entities)
 
     min_time_between_updates = timedelta(
-        seconds=options.get(CONF_TIME_BETWEEN_UPDATE, DEFAULT_TIME_BETWEEN_UPDATE)
+        seconds=entry.options.get(CONF_TIME_BETWEEN_UPDATE, DEFAULT_TIME_BETWEEN_UPDATE)
     )
 
     @Throttle(min_time_between_updates)
-    def update_entities_telegram(telegram):
+    def update_entities_telegram(telegram: dict[str, DSMRObject]) -> None:
         """Update entities with latest telegram and trigger state update."""
         # Make all device entities aware of new telegram
-        for device in devices:
-            device.update_data(telegram)
+        for entity in entities:
+            entity.update_data(telegram)
 
     # Creates an asyncio.Protocol factory for reading DSMR telegrams from
     # serial and calls update_entities_telegram to update entities on arrival
-    if CONF_HOST in config:
+    if CONF_HOST in entry.data:
         reader_factory = partial(
             create_tcp_dsmr_reader,
-            config[CONF_HOST],
-            config[CONF_PORT],
-            config[CONF_DSMR_VERSION],
+            entry.data[CONF_HOST],
+            entry.data[CONF_PORT],
+            entry.data[CONF_DSMR_VERSION],
             update_entities_telegram,
             loop=hass.loop,
             keep_alive_interval=60,
@@ -221,13 +116,13 @@ async def async_setup_entry(
     else:
         reader_factory = partial(
             create_dsmr_reader,
-            config[CONF_PORT],
-            config[CONF_DSMR_VERSION],
+            entry.data[CONF_PORT],
+            entry.data[CONF_DSMR_VERSION],
             update_entities_telegram,
             loop=hass.loop,
         )
 
-    async def connect_and_reconnect():
+    async def connect_and_reconnect() -> None:
         """Connect to DSMR and keep reconnecting until Home Assistant stops."""
         stop_listener = None
         transport = None
@@ -259,12 +154,12 @@ async def async_setup_entry(
                 update_entities_telegram({})
 
                 # throttle reconnect attempts
-                await asyncio.sleep(config[CONF_RECONNECT_INTERVAL])
+                await asyncio.sleep(entry.data[CONF_RECONNECT_INTERVAL])
 
             except (serial.serialutil.SerialException, OSError):
                 # Log any error while establishing connection and drop to retry
                 # connection wait
-                _LOGGER.exception("Error connecting to DSMR")
+                LOGGER.exception("Error connecting to DSMR")
                 transport = None
                 protocol = None
             except CancelledError:
@@ -289,62 +184,67 @@ async def async_setup_entry(
 class DSMREntity(SensorEntity):
     """Entity reading values from DSMR telegram."""
 
-    def __init__(self, name, device_name, device_serial, obis, config, force_update):
-        """Initialize entity."""
-        self._name = name
-        self._obis = obis
-        self._config = config
-        self.telegram = {}
+    _attr_should_poll = False
 
-        self._device_name = device_name
-        self._device_serial = device_serial
-        self._force_update = force_update
-        self._unique_id = f"{device_serial}_{name}".replace(" ", "_")
+    def __init__(self, sensor: DSMRSensor, entry: ConfigEntry) -> None:
+        """Initialize entity."""
+        self._sensor = sensor
+        self._entry = entry
+        self.telegram: dict[str, DSMRObject] = {}
+
+        device_serial = entry.data[CONF_SERIAL_ID]
+        device_name = DEVICE_NAME_ENERGY
+        if sensor.is_gas:
+            device_serial = entry.data[CONF_SERIAL_ID_GAS]
+            device_name = DEVICE_NAME_GAS
+
+        self._attr_device_class = sensor.device_class
+        self._attr_device_info = {
+            "identifiers": {(DOMAIN, device_serial)},
+            "name": device_name,
+        }
+        self._attr_entity_registry_enabled_default = (
+            sensor.entity_registry_enabled_default
+        )
+        self._attr_force_update = sensor.force_update
+        self._attr_icon = sensor.icon
+        self._attr_last_reset = sensor.last_reset
+        self._attr_name = sensor.name
+        self._attr_state_class = sensor.state_class
+        self._attr_unique_id = f"{device_serial}_{sensor.name}".replace(" ", "_")
 
     @callback
-    def update_data(self, telegram):
+    def update_data(self, telegram: dict[str, DSMRObject]) -> None:
         """Update data."""
         self.telegram = telegram
-        if self.hass and self._obis in self.telegram:
+        if self.hass and self._sensor.obis_reference in self.telegram:
             self.async_write_ha_state()
 
-    def get_dsmr_object_attr(self, attribute):
+    def get_dsmr_object_attr(self, attribute: str) -> str | None:
         """Read attribute from last received telegram for this DSMR object."""
         # Make sure telegram contains an object for this entities obis
-        if self._obis not in self.telegram:
+        if self._sensor.obis_reference not in self.telegram:
             return None
 
         # Get the attribute value if the object has it
-        dsmr_object = self.telegram[self._obis]
-        return getattr(dsmr_object, attribute, None)
+        dsmr_object = self.telegram[self._sensor.obis_reference]
+        attr: str | None = getattr(dsmr_object, attribute)
+        return attr
 
     @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        if "Sags" in self._name or "Swells" in self.name:
-            return ICON_SWELL_SAG
-        if "Failure" in self._name:
-            return ICON_POWER_FAILURE
-        if "Power" in self._name:
-            return ICON_POWER
-        if "Gas" in self._name:
-            return ICON_GAS
-
-    @property
-    def state(self):
+    def state(self) -> StateType:
         """Return the state of sensor, if available, translate if needed."""
         value = self.get_dsmr_object_attr("value")
+        if value is None:
+            return None
 
-        if self._obis == obis_ref.ELECTRICITY_ACTIVE_TARIFF:
-            return self.translate_tariff(value, self._config[CONF_DSMR_VERSION])
+        if self._sensor.obis_reference == obis_ref.ELECTRICITY_ACTIVE_TARIFF:
+            return self.translate_tariff(value, self._entry.data[CONF_DSMR_VERSION])
 
         with suppress(TypeError):
-            value = round(float(value), self._config[CONF_PRECISION])
+            value = round(
+                float(value), self._entry.data.get(CONF_PRECISION, DEFAULT_PRECISION)
+            )
 
         if value is not None:
             return value
@@ -352,39 +252,16 @@ class DSMREntity(SensorEntity):
         return None
 
     @property
-    def unit_of_measurement(self):
+    def unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of this entity, if any."""
         return self.get_dsmr_object_attr("unit")
 
-    @property
-    def unique_id(self) -> str:
-        """Return a unique ID."""
-        return self._unique_id
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device information."""
-        return {
-            "identifiers": {(DOMAIN, self._device_serial)},
-            "name": self._device_name,
-        }
-
-    @property
-    def force_update(self):
-        """Force update."""
-        return self._force_update
-
-    @property
-    def should_poll(self):
-        """Disable polling."""
-        return False
-
     @staticmethod
-    def translate_tariff(value, dsmr_version):
+    def translate_tariff(value: str, dsmr_version: str) -> str | None:
         """Convert 2/1 to normal/low depending on DSMR version."""
         # DSMR V5B: Note: In Belgium values are swapped:
         # Rate code 2 is used for low rate and rate code 1 is used for normal rate.
-        if dsmr_version in ("5B",):
+        if dsmr_version == "5B":
             if value == "0001":
                 value = "0002"
             elif value == "0002":
@@ -397,66 +274,3 @@ class DSMREntity(SensorEntity):
             return "low"
 
         return None
-
-
-class DerivativeDSMREntity(DSMREntity):
-    """Calculated derivative for values where the DSMR doesn't offer one.
-
-    Gas readings are only reported per hour and don't offer a rate only
-    the current meter reading. This entity converts subsequents readings
-    into a hourly rate.
-    """
-
-    _previous_reading = None
-    _previous_timestamp = None
-    _state = None
-
-    @property
-    def state(self):
-        """Return the calculated current hourly rate."""
-        return self._state
-
-    @property
-    def force_update(self):
-        """Disable force update."""
-        return False
-
-    @property
-    def should_poll(self):
-        """Enable polling."""
-        return True
-
-    async def async_update(self):
-        """Recalculate hourly rate if timestamp has changed.
-
-        DSMR updates gas meter reading every hour. Along with the new
-        value a timestamp is provided for the reading. Test if the last
-        known timestamp differs from the current one then calculate a
-        new rate for the previous hour.
-
-        """
-        # check if the timestamp for the object differs from the previous one
-        timestamp = self.get_dsmr_object_attr("datetime")
-        if timestamp and timestamp != self._previous_timestamp:
-            current_reading = self.get_dsmr_object_attr("value")
-
-            if self._previous_reading is None:
-                # Can't calculate rate without previous datapoint
-                # just store current point
-                pass
-            else:
-                # Recalculate the rate
-                diff = current_reading - self._previous_reading
-                timediff = timestamp - self._previous_timestamp
-                total_seconds = timediff.total_seconds()
-                self._state = round(float(diff) / total_seconds * 3600, 3)
-
-            self._previous_reading = current_reading
-            self._previous_timestamp = timestamp
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of this entity, per hour, if any."""
-        unit = self.get_dsmr_object_attr("unit")
-        if unit:
-            return f"{unit}/{TIME_HOURS}"

@@ -6,6 +6,7 @@ from homeassistant.components.climate.const import (
     FAN_HIGH,
     FAN_LOW,
     FAN_MEDIUM,
+    HVAC_MODE_AUTO,
     HVAC_MODE_COOL,
     HVAC_MODE_DRY,
     HVAC_MODE_FAN_ONLY,
@@ -31,8 +32,17 @@ ADVANTAGE_AIR_HVAC_MODES = {
     "cool": HVAC_MODE_COOL,
     "vent": HVAC_MODE_FAN_ONLY,
     "dry": HVAC_MODE_DRY,
+    "myauto": HVAC_MODE_AUTO,
 }
 HASS_HVAC_MODES = {v: k for k, v in ADVANTAGE_AIR_HVAC_MODES.items()}
+
+AC_HVAC_MODES = [
+    HVAC_MODE_OFF,
+    HVAC_MODE_COOL,
+    HVAC_MODE_HEAT,
+    HVAC_MODE_FAN_ONLY,
+    HVAC_MODE_DRY,
+]
 
 ADVANTAGE_AIR_FAN_MODES = {
     "auto": FAN_AUTO,
@@ -43,13 +53,6 @@ ADVANTAGE_AIR_FAN_MODES = {
 HASS_FAN_MODES = {v: k for k, v in ADVANTAGE_AIR_FAN_MODES.items()}
 FAN_SPEEDS = {FAN_LOW: 30, FAN_MEDIUM: 60, FAN_HIGH: 100}
 
-AC_HVAC_MODES = [
-    HVAC_MODE_OFF,
-    HVAC_MODE_COOL,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_FAN_ONLY,
-    HVAC_MODE_DRY,
-]
 ADVANTAGE_AIR_SERVICE_SET_MYZONE = "set_myzone"
 ZONE_HVAC_MODES = [HVAC_MODE_OFF, HVAC_MODE_FAN_ONLY]
 
@@ -130,6 +133,8 @@ class AdvantageAirAC(AdvantageAirClimateEntity):
     @property
     def hvac_modes(self):
         """Return the supported HVAC modes."""
+        if self._ac.get("myAutoModeEnabled"):
+            return AC_HVAC_MODES + [HVAC_MODE_AUTO]
         return AC_HVAC_MODES
 
     @property

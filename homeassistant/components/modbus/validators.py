@@ -40,10 +40,10 @@ def sensor_schema_validator(config):
             structure = (
                 f">{DEFAULT_STRUCT_FORMAT[config[CONF_DATA_TYPE]][config[CONF_COUNT]]}"
             )
-        except KeyError:
+        except KeyError as key:
             raise vol.Invalid(
                 f"Unable to detect data type for {config[CONF_NAME]} sensor, try a custom type"
-            ) from KeyError
+            ) from key
     else:
         structure = config.get(CONF_STRUCTURE)
 

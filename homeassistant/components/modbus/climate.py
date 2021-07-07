@@ -40,8 +40,6 @@ from .const import (
     CONF_SWAP_WORD,
     CONF_SWAP_WORD_BYTE,
     CONF_TARGET_TEMP,
-    DATA_TYPE_CUSTOM,
-    DEFAULT_STRUCT_FORMAT,
     MODBUS_DOMAIN,
 )
 from .modbus import ModbusHub
@@ -63,37 +61,6 @@ async def async_setup_platform(
     entities = []
     for entity in discovery_info[CONF_CLIMATES]:
         hub: ModbusHub = hass.data[MODBUS_DOMAIN][discovery_info[CONF_NAME]]
-        count = entity[CONF_COUNT]
-        data_type = entity[CONF_DATA_TYPE]
-        name = entity[CONF_NAME]
-        structure = entity[CONF_STRUCTURE]
-
-        if data_type != DATA_TYPE_CUSTOM:
-            try:
-                structure = f">{DEFAULT_STRUCT_FORMAT[data_type][count]}"
-            except KeyError:
-                _LOGGER.error(
-                    "Climate %s: Unable to find a data type matching count value %s, try a custom type",
-                    name,
-                    count,
-                )
-                continue
-
-        try:
-            size = struct.calcsize(structure)
-        except struct.error as err:
-            _LOGGER.error("Error in sensor %s structure: %s", name, err)
-            continue
-
-        if count * 2 != size:
-            _LOGGER.error(
-                "Structure size (%d bytes) mismatch registers count (%d words)",
-                size,
-                count,
-            )
-            continue
-
-        entity[CONF_STRUCTURE] = structure
         entities.append(ModbusThermostat(hub, entity))
 
     async_add_entities(entities)

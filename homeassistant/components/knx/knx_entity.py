@@ -14,10 +14,11 @@ from .const import DOMAIN
 class KnxEntity(Entity):
     """Representation of a KNX entity."""
 
+    _attr_should_poll = False
+
     def __init__(self, device: XknxDevice) -> None:
         """Set up device."""
         self._device = device
-        self._unique_id: str | None = None
 
     @property
     def name(self) -> str:
@@ -29,16 +30,6 @@ class KnxEntity(Entity):
         """Return True if entity is available."""
         knx_module = cast(KNXModule, self.hass.data[DOMAIN])
         return knx_module.connected
-
-    @property
-    def should_poll(self) -> bool:
-        """No polling needed within KNX."""
-        return False
-
-    @property
-    def unique_id(self) -> str | None:
-        """Return the unique id of the device."""
-        return self._unique_id
 
     async def async_update(self) -> None:
         """Request a state update from KNX bus."""

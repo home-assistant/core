@@ -432,7 +432,10 @@ class TPLinkSmartBulb(LightEntity):
             self._is_setting_light_state = False
             if LIGHT_STATE_ERROR_MSG in light_state_params:
                 raise HomeAssistantError(light_state_params[LIGHT_STATE_ERROR_MSG])
-            self._light_state = self._light_state_from_params(light_state_params)
+            # Some devices do not report the new state in their responses, so we skip
+            # set here and wait for the next poll to update the values. See #47600
+            if LIGHT_STATE_ON_OFF in light_state_params:
+                self._light_state = self._light_state_from_params(light_state_params)
             return
         except (SmartDeviceException, OSError):
             pass

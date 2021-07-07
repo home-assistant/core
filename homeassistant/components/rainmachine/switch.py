@@ -53,6 +53,8 @@ CONF_PROGRAM_ID = "program_id"
 CONF_SECONDS = "seconds"
 CONF_ZONE_ID = "zone_id"
 
+DEFAULT_ICON = "mdi:water"
+
 DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
 
 RUN_STATUS_MAP = {0: "Not Running", 1: "Running", 2: "Queued"}
@@ -84,9 +86,10 @@ SLOPE_TYPE_MAP = {
 SPRINKLER_TYPE_MAP = {
     0: "Not Set",
     1: "Popup Spray",
-    2: "Rotors",
+    2: "Rotors Low Rate",
     3: "Surface Drip",
     4: "Bubblers Drip",
+    5: "Rotors High Rate",
     99: "Other",
 }
 
@@ -94,14 +97,16 @@ SUN_EXPOSURE_MAP = {0: "Not Set", 1: "Full Sun", 2: "Partial Shade", 3: "Full Sh
 
 VEGETATION_MAP = {
     0: "Not Set",
+    1: "Not Set",
     2: "Cool Season Grass",
     3: "Fruit Trees",
     4: "Flowers",
     5: "Vegetables",
     6: "Citrus",
-    7: "Trees and Bushes",
+    7: "Bushes",
     9: "Drought Tolerant Plants",
     10: "Warm Season Grass",
+    11: "Trees",
     99: "Other",
 }
 
@@ -178,6 +183,8 @@ async def async_setup_entry(
 class RainMachineSwitch(RainMachineEntity, SwitchEntity):
     """A class to represent a generic RainMachine switch."""
 
+    _attr_icon = DEFAULT_ICON
+
     def __init__(
         self,
         coordinator: DataUpdateCoordinator,
@@ -187,34 +194,24 @@ class RainMachineSwitch(RainMachineEntity, SwitchEntity):
         entry: ConfigEntry,
     ) -> None:
         """Initialize a generic RainMachine switch."""
-        super().__init__(coordinator, controller)
+        super().__init__(coordinator, controller, type(self).__name__)
+
+        self._attr_is_on = False
+        self._attr_name = name
         self._data = coordinator.data[uid]
         self._entry = entry
         self._is_active = True
-        self._is_on = False
-        self._name = name
-        self._switch_type = type(self).__name__
         self._uid = uid
 
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return self._is_active and self.coordinator.last_update_success
-
-    @property
-    def icon(self) -> str:
-        """Return the icon."""
-        return "mdi:water"
-
-    @property
-    def is_on(self) -> bool:
-        """Return whether the program is running."""
-        return self._is_on
+        return super().available and self._is_active
 
     @property
     def unique_id(self) -> str:
         """Return a unique, Home Assistant friendly identifier for this entity."""
-        return f"{self._unique_id}_{self._switch_type}_{self._uid}"
+        return f"{super().unique_id}_{self._uid}"
 
     async def _async_run_switch_coroutine(self, api_coro: Coroutine) -> None:
         """Run a coroutine to toggle the switch."""
@@ -223,7 +220,7 @@ class RainMachineSwitch(RainMachineEntity, SwitchEntity):
         except RequestError as err:
             LOGGER.error(
                 'Error while toggling %s "%s": %s',
-                self._switch_type,
+                self._entity_type,
                 self.unique_id,
                 err,
             )
@@ -232,7 +229,7 @@ class RainMachineSwitch(RainMachineEntity, SwitchEntity):
         if resp["statusCode"] != 0:
             LOGGER.error(
                 'Error while toggling %s "%s": %s',
-                self._switch_type,
+                self._entity_type,
                 self.unique_id,
                 resp["message"],
             )
@@ -331,7 +328,7 @@ class RainMachineProgram(RainMachineSwitch):
         """Update the state."""
         super().update_from_latest_data()
 
-        self._is_on = bool(self._data["status"])
+        self._attr_is_on = bool(self._data["status"])
 
         if self._data.get("nextRun") is not None:
             next_run = datetime.strptime(
@@ -341,7 +338,7 @@ class RainMachineProgram(RainMachineSwitch):
         else:
             next_run = None
 
-        self._attrs.update(
+        self._attr_extra_state_attributes.update(
             {
                 ATTR_ID: self._uid,
                 ATTR_NEXT_RUN: next_run,
@@ -373,9 +370,9 @@ class RainMachineZone(RainMachineSwitch):
         """Update the state."""
         super().update_from_latest_data()
 
-        self._is_on = bool(self._data["state"])
+        self._attr_is_on = bool(self._data["state"])
 
-        self._attrs.update(
+        self._attr_extra_state_attributes.update(
             {
                 ATTR_STATUS: RUN_STATUS_MAP[self._data["state"]],
                 ATTR_AREA: self._data.get("waterSense").get("area"),
@@ -386,7 +383,7 @@ class RainMachineZone(RainMachineSwitch):
                 ATTR_PRECIP_RATE: self._data.get("waterSense").get("precipitationRate"),
                 ATTR_RESTRICTIONS: self._data.get("restriction"),
                 ATTR_SLOPE: SLOPE_TYPE_MAP.get(self._data.get("slope")),
-                ATTR_SOIL_TYPE: SOIL_TYPE_MAP.get(self._data.get("sun")),
+                ATTR_SOIL_TYPE: SOIL_TYPE_MAP.get(self._data.get("soil")),
                 ATTR_SPRINKLER_TYPE: SPRINKLER_TYPE_MAP.get(self._data.get("group_id")),
                 ATTR_SUN_EXPOSURE: SUN_EXPOSURE_MAP.get(self._data.get("sun")),
                 ATTR_TIME_REMAINING: self._data.get("remaining"),

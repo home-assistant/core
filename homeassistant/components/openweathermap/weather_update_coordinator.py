@@ -18,6 +18,7 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_WIND_BEARING,
     ATTR_FORECAST_WIND_SPEED,
 )
+from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers import sun
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt
@@ -179,10 +180,10 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
 
         return forecast
 
-    @staticmethod
-    def _fmt_dewpoint(dewpoint):
+    def _fmt_dewpoint(self, dewpoint):
         if dewpoint is not None:
-            return round(dewpoint / 100, 1)
+            dewpoint = dewpoint - 273.15
+            return round(self.hass.config.units.temperature(dewpoint, TEMP_CELSIUS), 1)
         return None
 
     @staticmethod

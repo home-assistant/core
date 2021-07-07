@@ -1,6 +1,7 @@
 """Support for FRITZ!Box routers."""
 from __future__ import annotations
 
+import datetime
 import logging
 
 import voluptuous as vol
@@ -120,9 +121,9 @@ class FritzBoxTracker(ScannerEntity):
     def __init__(self, router: FritzBoxTools, device: FritzDevice) -> None:
         """Initialize a FRITZ!Box device."""
         self._router = router
-        self._mac = device.mac_address
-        self._name = device.hostname or DEFAULT_DEVICE_NAME
-        self._last_activity = device.last_activity
+        self._mac: str = device.mac_address
+        self._name: str = device.hostname or DEFAULT_DEVICE_NAME
+        self._last_activity: datetime.datetime | None = device.last_activity
         self._active = False
 
     @property
@@ -144,7 +145,7 @@ class FritzBoxTracker(ScannerEntity):
     def ip_address(self) -> str | None:
         """Return the primary ip address of the device."""
         if self._mac:
-            return self._router.devices[self._mac].ip_address
+            return self._router.devices[self._mac].ip_address  # type: ignore[no-any-return]
         return None
 
     @property
@@ -156,7 +157,7 @@ class FritzBoxTracker(ScannerEntity):
     def hostname(self) -> str | None:
         """Return hostname of the device."""
         if self._mac:
-            return self._router.devices[self._mac].hostname
+            return self._router.devices[self._mac].hostname  # type: ignore[no-any-return]
         return None
 
     @property
