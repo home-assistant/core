@@ -41,7 +41,8 @@ async def async_setup_platform(
     heat_coordinator: EightSleepHeatDataCoordinator = hass.data[DATA_EIGHT][DATA_HEAT]
 
     all_sensors = [
-        EightHeatSensor(name, heat_coordinator, eight, sensor) for sensor in sensors
+        EightHeatSensor(name, heat_coordinator, eight, side, sensor)
+        for side, sensor in sensors
     ]
 
     async_add_entities(all_sensors)
@@ -55,10 +56,11 @@ class EightHeatSensor(EightSleepBaseEntity, BinarySensorEntity):
         name: str,
         coordinator: EightSleepHeatDataCoordinator,
         eight: EightSleep,
-        sensor: tuple[str, str],
+        side: str | None,
+        sensor: str,
     ):
         """Initialize the sensor."""
-        super().__init__(name, coordinator, eight, sensor)
+        super().__init__(name, coordinator, eight, side, sensor)
         self._attr_device_class = DEVICE_CLASS_OCCUPANCY
 
         _LOGGER.debug(

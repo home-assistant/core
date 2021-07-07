@@ -229,13 +229,14 @@ class EightSleepBaseEntity(CoordinatorEntity):
         name: str,
         coordinator: EightSleepUserDataCoordinator | EightSleepHeatDataCoordinator,
         eight: EightSleep,
-        sensor: tuple[str, str],
+        side: str | None,
+        sensor: str,
     ):
         """Initialize the data object."""
         super().__init__(coordinator)
         self._eight = eight
-        self._side = sensor[0]
-        self._sensor = sensor[1]
+        self._side = side
+        self._sensor = sensor
         full_sensor_name = self._sensor
         if self._side is not None:
             full_sensor_name = f"{self._side}_{full_sensor_name}"
@@ -261,9 +262,10 @@ class EightSleepUserEntity(EightSleepBaseEntity):
         name: str,
         coordinator: EightSleepUserDataCoordinator,
         eight: EightSleep,
-        sensor: tuple[str, str],
+        side: str | None,
+        sensor: str,
         units: str,
     ):
         """Initialize the data object."""
-        super().__init__(name, coordinator, eight, sensor)
+        super().__init__(name, coordinator, eight, side, sensor)
         self._units = units

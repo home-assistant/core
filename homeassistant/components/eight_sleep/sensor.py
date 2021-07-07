@@ -75,16 +75,18 @@ async def async_setup_platform(
 
     all_sensors: list[SensorEntity] = []
 
-    for sensor in sensors:
-        if "bed_state" in sensor[1]:
-            all_sensors.append(EightHeatSensor(name, heat_coordinator, eight, sensor))
-        elif "room_temperature" in sensor[1]:
+    for side, sensor in sensors:
+        if sensor == "bed_state":
             all_sensors.append(
-                EightRoomSensor(name, user_coordinator, eight, sensor, units)
+                EightHeatSensor(name, heat_coordinator, eight, side, sensor)
+            )
+        elif sensor == "room_temperature":
+            all_sensors.append(
+                EightRoomSensor(name, user_coordinator, eight, side, sensor, units)
             )
         else:
             all_sensors.append(
-                EightUserSensor(name, user_coordinator, eight, sensor, units)
+                EightUserSensor(name, user_coordinator, eight, side, sensor, units)
             )
 
     async_add_entities(all_sensors)
@@ -98,10 +100,11 @@ class EightHeatSensor(EightSleepBaseEntity, SensorEntity):
         name: str,
         coordinator: EightSleepHeatDataCoordinator,
         eight: EightSleep,
-        sensor: tuple[str, str],
+        side: str | None,
+        sensor: str,
     ):
         """Initialize the sensor."""
-        super().__init__(name, coordinator, eight, sensor)
+        super().__init__(name, coordinator, eight, side, sensor)
         self._attr_unit_of_measurement = PERCENTAGE
 
         _LOGGER.debug(
@@ -134,11 +137,12 @@ class EightUserSensor(EightSleepUserEntity, SensorEntity):
         name: str,
         coordinator: EightSleepUserDataCoordinator,
         eight: EightSleep,
-        sensor: tuple[str, str],
+        side: str | None,
+        sensor: str,
         units: str,
     ):
         """Initialize the sensor."""
-        super().__init__(name, coordinator, eight, sensor, units)
+        super().__init__(name, coordinator, eight, side, sensor, units)
 
         if self._sensor == "bed_temperature":
             self._attr_icon = "mdi:thermometer"
@@ -284,11 +288,12 @@ class EightRoomSensor(EightSleepUserEntity, SensorEntity):
         name: str,
         coordinator: EightSleepUserDataCoordinator,
         eight: EightSleep,
-        sensor: tuple[str, str],
+        side: str | None,
+        sensor: str,
         units: str,
     ):
         """Initialize the sensor."""
-        super().__init__(name, coordinator, eight, sensor, units)
+        super().__init__(name, coordinator, eight, side, sensor, units)
 
         self._attr_icon = "mdi:thermometer"
         self._attr_unit_of_measurement = (
