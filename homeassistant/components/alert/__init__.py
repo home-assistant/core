@@ -252,11 +252,19 @@ class Alert(ToggleEntity):
     async def _schedule_notify(self):
         """Schedule a notification."""
         delay = self._delay[self._next_delay]
-        next_msg = now() + delay
-        self._cancel = event.async_track_point_in_time(
-            self.hass, self._notify, next_msg
-        )
-        self._next_delay = min(self._next_delay + 1, len(self._delay) - 1)
+        # #4851 - Repeating with a delay of zero causes infinite looping when it is the last
+        # delay specified, skip this case and log a warning.
+        if delay.total_seconds() <= 0.0 and self._next_delay == len(self._delay) - 1:
+            _LOGGER.warning(
+                "Alert: %s - Repeat of 0 - invalid configuration please fix",
+                self._attr_name,
+            )
+        else:
+            next_msg = now() + delay
+            self._cancel = event.async_track_point_in_time(
+                self.hass, self._notify, next_msg
+            )
+            self._next_delay = min(self._next_delay + 1, len(self._delay) - 1)
 
     async def _notify(self, *args):
         """Send the alert notification."""
