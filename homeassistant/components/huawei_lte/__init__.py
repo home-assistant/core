@@ -372,7 +372,7 @@ async def async_setup_entry(  # noqa: C901
     # Check that we found required information
     device_info = router.data.get(KEY_DEVICE_INFORMATION)
     if not entry.unique_id:
-        # Transitional from < 2021.7: update None config entry and entity unique ids
+        # Transitional from < 2021.8: update None config entry and entity unique ids
         if device_info and (serial_number := device_info.get("SerialNumber")):
             hass.config_entries.async_update_entry(entry, unique_id=serial_number)
             ent_reg = entity_registry.async_get(hass)
