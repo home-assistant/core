@@ -5,9 +5,9 @@ from homeassistant.const import (
     DATA_GIBIBYTES,
     DATA_MEBIBYTES,
     DEVICE_CLASS_TEMPERATURE,
-    DATA_BYTES,
     DATA_GIBIBYTES,
     DATA_MEBIBYTES,
+    DATA_RATE_MEGABYTES_PER_SECOND,
     PERCENTAGE,
     TEMP_CELSIUS,
 )
@@ -77,6 +77,6 @@ SENSOR_TYPES = {
         "mdi:docker",
         None,
     ],
-    "network_rx": ["network", "Rx", DATA_BYTES, "mdi:download"],
-    "network_tx": ["network", "Tx", DATA_BYTES, "mdi:upload"],
+    "network_rx": ["network", "Rx", DATA_RATE_MEGABYTES_PER_SECOND, "mdi:download"],
+    "network_tx": ["network", "Tx", DATA_RATE_MEGABYTES_PER_SECOND, "mdi:upload"],
 }
