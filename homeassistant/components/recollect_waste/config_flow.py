@@ -1,6 +1,8 @@
 """Config flow for ReCollect Waste integration."""
 from __future__ import annotations
 
+from typing import Any
+
 from aiorecollect.client import Client
 from aiorecollect.errors import RecollectError
 import voluptuous as vol
@@ -31,11 +33,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Define the config flow to handle options."""
         return RecollectWasteOptionsFlowHandler(config_entry)
 
-    async def async_step_import(self, import_config: dict[str, Any] | None = None) -> FlowResult:
+    async def async_step_import(
+        self, import_config: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle configuration via YAML import."""
         return await self.async_step_user(import_config)
 
-    async def async_step_user(self, user_input: dict[str, Any] | None = None) -> FlowResult:
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle configuration via the UI."""
         if user_input is None:
             return self.async_show_form(
@@ -78,7 +84,9 @@ class RecollectWasteOptionsFlowHandler(config_entries.OptionsFlow):
         """Initialize."""
         self._entry = entry
 
-    async def async_step_init(self, user_input: dict[str, Any] | None = None) -> FlowResult:
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Manage the options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
