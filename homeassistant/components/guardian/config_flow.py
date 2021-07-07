@@ -101,7 +101,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         }
         return await self._async_handle_discovery()
 
-    async def async_step_zeroconf(self, discovery_info: dict) -> FlowResult:
+    async def async_step_zeroconf(self, discovery_info: DiscoveryInfoType) -> FlowResult:
         """Handle the configuration via zeroconf."""
         self.discovery_info = {
             CONF_IP_ADDRESS: discovery_info["host"],
