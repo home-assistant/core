@@ -18,8 +18,8 @@ from . import (
     DATA_EIGHT,
     DATA_HEAT,
     DATA_USER,
+    EightSleepBaseEntity,
     EightSleepHeatDataCoordinator,
-    EightSleepHeatEntity,
     EightSleepUserDataCoordinator,
     EightSleepUserEntity,
 )
@@ -56,7 +56,7 @@ async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: dict[str, list[str]] = None,
+    discovery_info: dict[str, list[tuple[str, str]]] = None,
 ) -> None:
     """Set up the eight sleep sensors."""
     if discovery_info is None:
@@ -76,9 +76,9 @@ async def async_setup_platform(
     all_sensors: list[SensorEntity] = []
 
     for sensor in sensors:
-        if "bed_state" in sensor:
+        if "bed_state" in sensor[1]:
             all_sensors.append(EightHeatSensor(name, heat_coordinator, eight, sensor))
-        elif "room_temp" in sensor:
+        elif "room_temperature" in sensor[1]:
             all_sensors.append(
                 EightRoomSensor(name, user_coordinator, eight, sensor, units)
             )
@@ -90,7 +90,7 @@ async def async_setup_platform(
     async_add_entities(all_sensors)
 
 
-class EightHeatSensor(EightSleepHeatEntity, SensorEntity):
+class EightHeatSensor(EightSleepBaseEntity, SensorEntity):
     """Representation of an eight sleep heat-based sensor."""
 
     def __init__(
@@ -98,7 +98,7 @@ class EightHeatSensor(EightSleepHeatEntity, SensorEntity):
         name: str,
         coordinator: EightSleepHeatDataCoordinator,
         eight: EightSleep,
-        sensor: str,
+        sensor: tuple[str, str],
     ):
         """Initialize the sensor."""
         super().__init__(name, coordinator, eight, sensor)
@@ -134,22 +134,20 @@ class EightUserSensor(EightSleepUserEntity, SensorEntity):
         name: str,
         coordinator: EightSleepUserDataCoordinator,
         eight: EightSleep,
-        sensor: str,
+        sensor: tuple[str, str],
         units: str,
     ):
         """Initialize the sensor."""
         super().__init__(name, coordinator, eight, sensor, units)
 
-        self._sensor_root = self._sensor.split("_", 1)[1]
-
-        if "bed_temp" in self._sensor:
+        if self._sensor == "bed_temperature":
             self._attr_icon = "mdi:thermometer"
 
         _LOGGER.debug(
             "User Sensor: %s, Side: %s, User: %s",
             self._sensor,
             self._side,
-            self._usrobj.userid,
+            self._usrobj.userid if self._usrobj else None,
         )
 
     @property
@@ -163,7 +161,7 @@ class EightUserSensor(EightSleepUserEntity, SensorEntity):
         if "last" in self._sensor:
             return self._usrobj.last_sleep_score
 
-        if "bed_temp" in self._sensor:
+        if self._sensor == "bed_temperature":
             temp = self._usrobj.current_values["bed_temp"]
             try:
                 if self._units == "si":
@@ -172,7 +170,7 @@ class EightUserSensor(EightSleepUserEntity, SensorEntity):
             except TypeError:
                 return None
 
-        if "sleep_stage" in self._sensor:
+        if self._sensor == "sleep_stage":
             return self._usrobj.current_values["stage"]
 
         return None
@@ -180,13 +178,9 @@ class EightUserSensor(EightSleepUserEntity, SensorEntity):
     @property
     def unit_of_measurement(self) -> str | None:
         """Return the unit the value is expressed in."""
-        if (
-            "current_sleep" in self._sensor
-            or "last_sleep" in self._sensor
-            or "current_sleep_fitness" in self._sensor
-        ):
+        if self._sensor in ("current_sleep", "last_sleep", "current_sleep_fitness"):
             return "Score"
-        if "bed_temp" in self._sensor:
+        if self._sensor == "bed_temperature":
             if self._units == "si":
                 return TEMP_CELSIUS
             return TEMP_FAHRENHEIT
@@ -229,7 +223,7 @@ class EightUserSensor(EightSleepUserEntity, SensorEntity):
             # Skip attributes if sensor type doesn't support
             return None
 
-        if "fitness" in self._sensor_root:
+        if "fitness" in self._sensor:
             state_attr = {
                 ATTR_FIT_DATE: attr["date"],
                 ATTR_FIT_DURATION_SCORE: attr["duration"],
@@ -259,7 +253,7 @@ class EightUserSensor(EightSleepUserEntity, SensorEntity):
         room_temp = self._get_rounded_value(attr, "room_temp")
         bed_temp = self._get_rounded_value(attr, "bed_temp")
 
-        if "current" in self._sensor_root:
+        if "current" in self._sensor:
             state_attr[ATTR_RESP_RATE] = self._get_rounded_value(
                 attr, "resp_rate", False
             )
@@ -269,7 +263,7 @@ class EightUserSensor(EightSleepUserEntity, SensorEntity):
             state_attr[ATTR_SLEEP_STAGE] = attr["stage"]
             state_attr[ATTR_ROOM_TEMP] = room_temp
             state_attr[ATTR_BED_TEMP] = bed_temp
-        elif "last" in self._sensor_root:
+        elif "last" in self._sensor:
             state_attr[ATTR_AVG_RESP_RATE] = self._get_rounded_value(
                 attr, "resp_rate", False
             )
@@ -290,7 +284,7 @@ class EightRoomSensor(EightSleepUserEntity, SensorEntity):
         name: str,
         coordinator: EightSleepUserDataCoordinator,
         eight: EightSleep,
-        sensor: str,
+        sensor: tuple[str, str],
         units: str,
     ):
         """Initialize the sensor."""

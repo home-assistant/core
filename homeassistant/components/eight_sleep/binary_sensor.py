@@ -18,8 +18,8 @@ from . import (
     DATA_API,
     DATA_EIGHT,
     DATA_HEAT,
+    EightSleepBaseEntity,
     EightSleepHeatDataCoordinator,
-    EightSleepHeatEntity,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -29,7 +29,7 @@ async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: dict[str, list[str]] = None,
+    discovery_info: dict[str, list[tuple[str, str]]] = None,
 ) -> None:
     """Set up the eight sleep binary sensor."""
     if discovery_info is None:
@@ -40,15 +40,14 @@ async def async_setup_platform(
     eight: EightSleep = hass.data[DATA_EIGHT][DATA_API]
     heat_coordinator: EightSleepHeatDataCoordinator = hass.data[DATA_EIGHT][DATA_HEAT]
 
-    all_sensors = []
-
-    for sensor in sensors:
-        all_sensors.append(EightHeatSensor(name, heat_coordinator, eight, sensor))
+    all_sensors = [
+        EightHeatSensor(name, heat_coordinator, eight, sensor) for sensor in sensors
+    ]
 
     async_add_entities(all_sensors)
 
 
-class EightHeatSensor(EightSleepHeatEntity, BinarySensorEntity):
+class EightHeatSensor(EightSleepBaseEntity, BinarySensorEntity):
     """Representation of a Eight Sleep heat-based sensor."""
 
     def __init__(
@@ -56,7 +55,7 @@ class EightHeatSensor(EightSleepHeatEntity, BinarySensorEntity):
         name: str,
         coordinator: EightSleepHeatDataCoordinator,
         eight: EightSleep,
-        sensor: str,
+        sensor: tuple[str, str],
     ):
         """Initialize the sensor."""
         super().__init__(name, coordinator, eight, sensor)

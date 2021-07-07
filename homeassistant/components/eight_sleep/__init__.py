@@ -49,18 +49,9 @@ NAME_MAP = {
     "left_current_sleep": "Left Sleep Session",
     "left_current_sleep_fitness": "Left Sleep Fitness",
     "left_last_sleep": "Left Previous Sleep Session",
-    "left_bed_state": "Left Bed State",
-    "left_presence": "Left Bed Presence",
-    "left_bed_temp": "Left Bed Temperature",
-    "left_sleep_stage": "Left Sleep Stage",
     "right_current_sleep": "Right Sleep Session",
     "right_current_sleep_fitness": "Right Sleep Fitness",
     "right_last_sleep": "Right Previous Sleep Session",
-    "right_bed_state": "Right Bed State",
-    "right_presence": "Right Bed Presence",
-    "right_bed_temp": "Right Bed Temperature",
-    "right_sleep_stage": "Right Sleep Stage",
-    "room_temp": "Room Temperature",
 }
 
 SENSORS = [
@@ -68,7 +59,7 @@ SENSORS = [
     "current_sleep_fitness",
     "last_sleep",
     "bed_state",
-    "bed_temp",
+    "bed_temperature",
     "sleep_stage",
 ]
 
@@ -151,9 +142,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if eight.users:
         for user, obj in eight.users.items():
             for sensor in SENSORS:
-                sensors.append(f"{obj.side}_{sensor}")
-            binary_sensors.append(f"{obj.side}_presence")
-        sensors.append("room_temp")
+                sensors.append((obj.side, sensor))
+            binary_sensors.append((obj.side, "bed_presence"))
+        sensors.append((None, "room_temperature"))
     else:
         # No users, cannot continue
         return False
@@ -179,7 +170,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         duration = params.pop(ATTR_HEAT_DURATION, 0)
 
         for sens in sensor:
-            side = sens.split("_")[1]
+            side = sens[0]
             userid = eight.fetch_userid(side)
             usrobj = eight.users[userid]
             await usrobj.set_heating_level(target, duration)
@@ -230,28 +221,31 @@ class EightSleepUserDataCoordinator(DataUpdateCoordinator):
         await self.api.update_user_data()
 
 
-class EightSleepUserEntity(CoordinatorEntity):
-    """The Eight Sleep user entity."""
+class EightSleepBaseEntity(CoordinatorEntity):
+    """The base Eight Sleep entity class."""
 
     def __init__(
         self,
         name: str,
-        coordinator: EightSleepUserDataCoordinator,
+        coordinator: EightSleepUserDataCoordinator | EightSleepHeatDataCoordinator,
         eight: EightSleep,
-        sensor: str,
-        units: str,
+        sensor: tuple[str, str],
     ):
         """Initialize the data object."""
         super().__init__(coordinator)
         self._eight = eight
-        self._sensor = sensor
-        self._mapped_name = NAME_MAP.get(self._sensor, self._sensor)
-        self._units = units
+        self._side = sensor[0]
+        self._sensor = sensor[1]
+        full_sensor_name = self._sensor
+        if self._side is not None:
+            full_sensor_name = f"{self._side}_{full_sensor_name}"
+        self._mapped_name = NAME_MAP.get(
+            full_sensor_name, full_sensor_name.replace("_", " ").title()
+        )
         self._attr_name = f"{name} {self._mapped_name}"
 
-        self._side = self._sensor.split("_", 1)[0]
         self._usrobj: EightUser = None
-        if self._side in ("left", "right"):
+        if self._side:
             self._usrobj = self._eight.users[self._eight.fetch_userid(self._side)]
 
         self._attr_unique_id = (
@@ -259,28 +253,17 @@ class EightSleepUserEntity(CoordinatorEntity):
         )
 
 
-class EightSleepHeatEntity(CoordinatorEntity):
-    """The Eight Sleep device entity."""
+class EightSleepUserEntity(EightSleepBaseEntity):
+    """The Eight Sleep user entity."""
 
     def __init__(
         self,
         name: str,
-        coordinator: EightSleepHeatDataCoordinator,
+        coordinator: EightSleepUserDataCoordinator,
         eight: EightSleep,
-        sensor: str,
+        sensor: tuple[str, str],
+        units: str,
     ):
         """Initialize the data object."""
-        super().__init__(coordinator)
-        self._eight = eight
-        self._sensor = sensor
-        self._mapped_name = NAME_MAP.get(self._sensor, self._sensor)
-
-        self._side = self._sensor.split("_")[0]
-        self._usrobj: EightUser = self._eight.users[
-            self._eight.fetch_userid(self._side)
-        ]
-
-        self._attr_name = f"{name} {self._mapped_name}"
-        self._attr_unique_id = (
-            f"{_get_device_unique_id(eight, self._usrobj)}.{self._sensor}"
-        )
+        super().__init__(name, coordinator, eight, sensor)
+        self._units = units
