@@ -1,6 +1,7 @@
 """Config flow for SONOS."""
 import pysonos
 
+from homeassistant import config_entries
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
@@ -34,5 +35,10 @@ class SonosDiscoveryFlowHandler(DiscoveryFlowHandler):
         host = discovery_info[CONF_HOST]
         boot_seqnum = discovery_info["properties"].get("bootseq")
         uid = hostname.split("-")[1].replace(".local.", "")
-        self.hass.data[DATA_SONOS_DISCOVERY_MANAGER].async_discovered_player(discovery_info["properties"], host, uid, boot_seqnum)
+        self.hass.data[DATA_SONOS_DISCOVERY_MANAGER].async_discovered_player(
+            discovery_info["properties"], host, uid, boot_seqnum
+        )
         return await self.async_step_discovery(discovery_info)
+
+
+config_entries.HANDLERS.register(DOMAIN)(SonosDiscoveryFlowHandler)
