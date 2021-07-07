@@ -242,12 +242,18 @@ class SonosDiscoveryManager:
                 async_dispatcher_send(self.hass, f"{SONOS_SEEN}-{uid}")
 
     @callback
-    def _async_discovered_player(self, info):
+    def _async_ssdp_discovered_player(self, info):
         discovered_ip = urlparse(info[ssdp.ATTR_SSDP_LOCATION]).hostname
+        boot_seqnum = info.get("X-RINCON-BOOTSEQ")
         uid = info.get(ssdp.ATTR_UPNP_UDN)
         if uid.startswith("uuid:"):
             uid = uid[5:]
-        if boot_seqnum := info.get("X-RINCON-BOOTSEQ"):
+        self.async_discovered_player(info, discovered_ip, uid, boot_seqnum)
+
+    @callback
+    def async_discovered_player(self, info, discovered_ip, uid, boot_seqnum):
+        """Handle discovery via ssdp or zeroconf."""
+        if boot_seqnum:
             boot_seqnum = int(boot_seqnum)
             self.data.boot_counts.setdefault(uid, boot_seqnum)
         if uid not in self.data.discovery_known:
@@ -287,6 +293,6 @@ class SonosDiscoveryManager:
 
         self.entry.async_on_unload(
             ssdp.async_register_callback(
-                self.hass, self._async_discovered_player, {"st": UPNP_ST}
+                self.hass, self._async_ssdp_discovered_player, {"st": UPNP_ST}
             )
         )
