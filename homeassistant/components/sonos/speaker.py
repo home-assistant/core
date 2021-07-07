@@ -410,7 +410,9 @@ class SonosSpeaker:
             battery_dict = dict(x.split(":") for x in more_info.split(","))
             for unused in UNUSED_DEVICE_KEYS:
                 battery_dict.pop(unused, None)
-            if battery_dict and "BattChg" not in battery_dict:
+            if not battery_dict:
+                return
+            if "BattChg" not in battery_dict:
                 _LOGGER.debug(
                     "Unknown device properties update for %s (%s), please report an issue: '%s'",
                     self.zone_name,
