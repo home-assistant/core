@@ -48,7 +48,12 @@ ALERT_SCHEMA = vol.Schema(
         vol.Required(CONF_NAME): cv.string,
         vol.Required(CONF_ENTITY_ID): cv.entity_id,
         vol.Required(CONF_STATE, default=STATE_ON): cv.string,
-        vol.Required(CONF_REPEAT): vol.All(cv.ensure_list, [vol.Coerce(float)]),
+        vol.Required(CONF_REPEAT): vol.All(
+            # Minimum delay is 1 second = 0.16 minutes
+            cv.ensure_list,
+            [vol.Coerce(float)],
+            [vol.Range(min=0.016)],
+        ),
         vol.Required(CONF_CAN_ACK, default=DEFAULT_CAN_ACK): cv.boolean,
         vol.Required(CONF_SKIP_FIRST, default=DEFAULT_SKIP_FIRST): cv.boolean,
         vol.Optional(CONF_ALERT_MESSAGE): cv.template,
@@ -256,8 +261,7 @@ class Alert(ToggleEntity):
         # delay specified, skip this case and log a warning.
         if delay.total_seconds() <= 0.0 and self._next_delay == len(self._delay) - 1:
             _LOGGER.warning(
-                "Alert: %s - Repeat of 0 - invalid configuration please fix",
-                self._attr_name,
+                f"Alert: {self._attr_name} - Repeat value [{delay.total_seconds()}] must be a positive non-zero number.  Please update your configuration"
             )
         else:
             next_msg = now() + delay
