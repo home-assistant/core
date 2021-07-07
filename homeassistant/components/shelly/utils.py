@@ -98,13 +98,13 @@ def get_device_channel_name(
     ):
         return entity_name
 
-    channel_name = None
+    channel_name: str | None = None
     mode = block.type + "s"
     if mode in device.settings:
         channel_name = device.settings[mode][int(block.channel)].get("name")
 
     if channel_name:
-        return cast(str, channel_name)
+        return channel_name
 
     if device.settings["device"]["type"] == "SHEM-3":
         base = ord("A")
