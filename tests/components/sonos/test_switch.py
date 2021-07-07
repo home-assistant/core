@@ -1,4 +1,6 @@
 """Tests for the Sonos Alarm switch platform."""
+from copy import copy
+
 from homeassistant.components.sonos import DOMAIN
 from homeassistant.components.sonos.switch import (
     ATTR_DURATION,
@@ -52,23 +54,30 @@ async def test_alarm_create_delete(
     hass, config_entry, config, soco, alarm_clock, alarm_clock_extended, alarm_event
 ):
     """Test for correct creation and deletion of alarms during runtime."""
-    soco.alarmClock = alarm_clock_extended
+    entity_registry = async_get_entity_registry(hass)
+
+    one_alarm = copy(alarm_clock.ListAlarms.return_value)
+    two_alarms = copy(alarm_clock_extended.ListAlarms.return_value)
 
     await setup_platform(hass, config_entry, config)
 
-    subscription = alarm_clock_extended.subscribe.return_value
+    assert "switch.sonos_alarm_14" in entity_registry.entities
+    assert "switch.sonos_alarm_15" not in entity_registry.entities
+
+    subscription = alarm_clock.subscribe.return_value
     sub_callback = subscription.callback
+
+    alarm_clock.ListAlarms.return_value = two_alarms
 
     sub_callback(event=alarm_event)
     await hass.async_block_till_done()
 
-    entity_registry = async_get_entity_registry(hass)
-
     assert "switch.sonos_alarm_14" in entity_registry.entities
     assert "switch.sonos_alarm_15" in entity_registry.entities
 
-    alarm_clock_extended.ListAlarms.return_value = alarm_clock.ListAlarms.return_value
     alarm_event.increment_variable("alarm_list_version")
+
+    alarm_clock.ListAlarms.return_value = one_alarm
 
     sub_callback(event=alarm_event)
     await hass.async_block_till_done()

@@ -29,7 +29,7 @@
                     "ignore_cec": "CEC ignorieren",
                     "uuid": "Zul\u00e4ssige UUIDs"
                 },
-                "description": "Erlaubte UUIDs - Eine kommagetrennte Liste von UUIDs von Cast-Ger\u00e4ten, die dem Home Assistant hinzugef\u00fcgt werden sollen. Nur verwenden, wenn Sie nicht alle verf\u00fcgbaren Cast-Ger\u00e4te hinzuf\u00fcgen m\u00f6chten.\nIgnore CEC - Eine kommagetrennte Liste von Chromecasts, die CEC-Daten zur Bestimmung des aktiven Eingangs ignorieren sollen. Dies wird an pychromecast.IGNORE_CEC \u00fcbergeben.",
+                "description": "Erlaubte UUIDs - Eine kommagetrennte Liste von UUIDs von Cast-Ger\u00e4ten, die dem Home Assistant hinzugef\u00fcgt werden sollen. Nur verwenden, wenn Sie nicht alle verf\u00fcgbaren Cast-Ger\u00e4te hinzuf\u00fcgen m\u00f6chten.\nCEC ignorieren - Eine kommagetrennte Liste von Chromecasts, die CEC-Daten zur Bestimmung des aktiven Eingangs ignorieren sollen. Dies wird an pychromecast.IGNORE_CEC \u00fcbergeben.",
                 "title": "Erweiterte Google Cast-Konfiguration"
             },
             "basic_options": {

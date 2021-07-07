@@ -1,0 +1,14 @@
+{
+    "device_automation": {
+        "action_type": {
+            "select_option": "M\u00f3dos\u00edtsa a(z) {entity_name} be\u00e1ll\u00edt\u00e1st"
+        },
+        "condition_type": {
+            "selected_option": "{entity_name} aktu\u00e1lisan kiv\u00e1lasztott opci\u00f3"
+        },
+        "trigger_type": {
+            "current_option_changed": "{entity_name} opci\u00f3i megv\u00e1ltoztak"
+        }
+    },
+    "title": "Kiv\u00e1laszt\u00e1s"
+}

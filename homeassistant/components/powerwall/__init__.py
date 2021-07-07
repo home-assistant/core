@@ -83,7 +83,7 @@ async def _async_handle_api_changed_error(
     )
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Tesla Powerwall from a config entry."""
 
     entry_id = entry.entry_id

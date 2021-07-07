@@ -1,4 +1,6 @@
 """Platform for binary sensor integration."""
+from __future__ import annotations
+
 import logging
 
 from smarttub import SpaError, SpaReminder
@@ -27,9 +29,16 @@ ATTR_CREATED_AT = "created_at"
 ATTR_UPDATED_AT = "updated_at"
 
 # how many days to snooze the reminder for
-ATTR_SNOOZE_DAYS = "days"
+ATTR_REMINDER_DAYS = "days"
+RESET_REMINDER_SCHEMA = {
+    vol.Required(ATTR_REMINDER_DAYS): vol.All(
+        vol.Coerce(int), vol.Range(min=30, max=365)
+    )
+}
 SNOOZE_REMINDER_SCHEMA = {
-    vol.Required(ATTR_SNOOZE_DAYS): vol.All(vol.Coerce(int), vol.Range(min=10, max=120))
+    vol.Required(ATTR_REMINDER_DAYS): vol.All(
+        vol.Coerce(int), vol.Range(min=10, max=120)
+    )
 }
 
 
@@ -56,10 +65,17 @@ async def async_setup_entry(hass, entry, async_add_entities):
         SNOOZE_REMINDER_SCHEMA,
         "async_snooze",
     )
+    platform.async_register_entity_service(
+        "reset_reminder",
+        RESET_REMINDER_SCHEMA,
+        "async_reset",
+    )
 
 
 class SmartTubOnline(SmartTubSensorBase, BinarySensorEntity):
     """A binary sensor indicating whether the spa is currently online (connected to the cloud)."""
+
+    _attr_device_class = DEVICE_CLASS_CONNECTIVITY
 
     def __init__(self, coordinator, spa):
         """Initialize the entity."""
@@ -78,14 +94,11 @@ class SmartTubOnline(SmartTubSensorBase, BinarySensorEntity):
         """Return true if the binary sensor is on."""
         return self._state is True
 
-    @property
-    def device_class(self) -> str:
-        """Return the device class for this entity."""
-        return DEVICE_CLASS_CONNECTIVITY
-
 
 class SmartTubReminder(SmartTubEntity, BinarySensorEntity):
     """Reminders for maintenance actions."""
+
+    _attr_device_class = DEVICE_CLASS_PROBLEM
 
     def __init__(self, coordinator, spa, reminder):
         """Initialize the entity."""
@@ -116,16 +129,17 @@ class SmartTubReminder(SmartTubEntity, BinarySensorEntity):
         """Return the state attributes."""
         return {
             ATTR_REMINDER_SNOOZED: self.reminder.snoozed,
+            ATTR_REMINDER_DAYS: self.reminder.remaining_days,
         }
-
-    @property
-    def device_class(self) -> str:
-        """Return the device class for this entity."""
-        return DEVICE_CLASS_PROBLEM
 
     async def async_snooze(self, days):
         """Snooze this reminder for the specified number of days."""
         await self.reminder.snooze(days)
+        await self.coordinator.async_request_refresh()
+
+    async def async_reset(self, days):
+        """Dismiss this reminder, and reset it to the specified number of days."""
+        await self.reminder.reset(days)
         await self.coordinator.async_request_refresh()
 
 
@@ -134,6 +148,8 @@ class SmartTubError(SmartTubEntity, BinarySensorEntity):
 
     There may be 0 or more errors. If there are >0, we show the first one.
     """
+
+    _attr_device_class = DEVICE_CLASS_PROBLEM
 
     def __init__(self, coordinator, spa):
         """Initialize the entity."""
@@ -144,7 +160,7 @@ class SmartTubError(SmartTubEntity, BinarySensorEntity):
         )
 
     @property
-    def error(self) -> SpaError:
+    def error(self) -> SpaError | None:
         """Return the underlying SpaError object for this entity."""
         errors = self.coordinator.data[self.spa.id][ATTR_ERRORS]
         if len(errors) == 0:
@@ -173,8 +189,3 @@ class SmartTubError(SmartTubEntity, BinarySensorEntity):
             ATTR_CREATED_AT: error.created_at.isoformat(),
             ATTR_UPDATED_AT: error.updated_at.isoformat(),
         }
-
-    @property
-    def device_class(self) -> str:
-        """Return the device class for this entity."""
-        return DEVICE_CLASS_PROBLEM

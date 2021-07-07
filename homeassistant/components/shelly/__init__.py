@@ -66,7 +66,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Shelly from a config entry."""
     # The custom component for Shelly devices uses shelly domain as well as core
     # integration. If the user removes the custom component but doesn't remove the

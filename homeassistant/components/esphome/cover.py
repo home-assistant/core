@@ -74,7 +74,7 @@ class EsphomeCover(EsphomeEntity, CoverEntity):
     def is_closed(self) -> bool | None:
         """Return if the cover is closed or not."""
         # Check closed state with api version due to a protocol change
-        return self._state.is_closed(self._client.api_version)
+        return self._state.is_closed(self._api_version)
 
     @esphome_state_property
     def is_opening(self) -> bool:

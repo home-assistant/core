@@ -51,7 +51,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Plum Lightpad from a config entry."""
     _LOGGER.debug("Setting up config entry with ID = %s", entry.unique_id)
 

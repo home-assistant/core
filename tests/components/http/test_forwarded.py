@@ -33,9 +33,9 @@ async def test_x_forwarded_for_without_trusted_proxy(aiohttp_client, caplog):
     mock_api_client = await aiohttp_client(app)
     resp = await mock_api_client.get("/", headers={X_FORWARDED_FOR: "255.255.255.255"})
 
-    assert resp.status == 200
+    assert resp.status == 400
     assert (
-        "Received X-Forwarded-For header from untrusted proxy 127.0.0.1, headers not processed"
+        "Received X-Forwarded-For header from an untrusted proxy 127.0.0.1"
         in caplog.text
     )
 
@@ -103,33 +103,11 @@ async def test_x_forwarded_for_disabled_with_proxy(aiohttp_client, caplog):
     mock_api_client = await aiohttp_client(app)
     resp = await mock_api_client.get("/", headers={X_FORWARDED_FOR: "255.255.255.255"})
 
-    assert resp.status == 200
+    assert resp.status == 400
     assert (
         "A request from a reverse proxy was received from 127.0.0.1, but your HTTP "
         "integration is not set-up for reverse proxies" in caplog.text
     )
-
-
-async def test_x_forwarded_for_with_untrusted_proxy(aiohttp_client):
-    """Test that we get the IP from transport with untrusted proxy."""
-
-    async def handler(request):
-        url = mock_api_client.make_url("/")
-        assert request.host == f"{url.host}:{url.port}"
-        assert request.scheme == "http"
-        assert not request.secure
-        assert request.remote == "127.0.0.1"
-
-        return web.Response()
-
-    app = web.Application()
-    app.router.add_get("/", handler)
-    async_setup_forwarded(app, True, [ip_network("1.1.1.1")])
-
-    mock_api_client = await aiohttp_client(app)
-    resp = await mock_api_client.get("/", headers={X_FORWARDED_FOR: "255.255.255.255"})
-
-    assert resp.status == 200
 
 
 async def test_x_forwarded_for_with_spoofed_header(aiohttp_client):
@@ -203,31 +181,6 @@ async def test_x_forwarded_for_with_multiple_headers(aiohttp_client, caplog):
 
     assert resp.status == 400
     assert "Too many headers for X-Forwarded-For" in caplog.text
-
-
-async def test_x_forwarded_proto_without_trusted_proxy(aiohttp_client):
-    """Test that proto header is ignored when untrusted."""
-
-    async def handler(request):
-        url = mock_api_client.make_url("/")
-        assert request.host == f"{url.host}:{url.port}"
-        assert request.scheme == "http"
-        assert not request.secure
-        assert request.remote == "127.0.0.1"
-
-        return web.Response()
-
-    app = web.Application()
-    app.router.add_get("/", handler)
-
-    async_setup_forwarded(app, True, [])
-
-    mock_api_client = await aiohttp_client(app)
-    resp = await mock_api_client.get(
-        "/", headers={X_FORWARDED_FOR: "255.255.255.255", X_FORWARDED_PROTO: "https"}
-    )
-
-    assert resp.status == 200
 
 
 @pytest.mark.parametrize(
@@ -407,32 +360,6 @@ async def test_x_forwarded_proto_incorrect_number_of_elements(
         f"Incorrect number of elements in X-Forward-Proto. Expected 1 or {expected}, got {got}"
         in caplog.text
     )
-
-
-async def test_x_forwarded_host_without_trusted_proxy(aiohttp_client):
-    """Test that host header is ignored when untrusted."""
-
-    async def handler(request):
-        url = mock_api_client.make_url("/")
-        assert request.host == f"{url.host}:{url.port}"
-        assert request.scheme == "http"
-        assert not request.secure
-        assert request.remote == "127.0.0.1"
-
-        return web.Response()
-
-    app = web.Application()
-    app.router.add_get("/", handler)
-
-    async_setup_forwarded(app, True, [])
-
-    mock_api_client = await aiohttp_client(app)
-    resp = await mock_api_client.get(
-        "/",
-        headers={X_FORWARDED_FOR: "255.255.255.255", X_FORWARDED_HOST: "example.com"},
-    )
-
-    assert resp.status == 200
 
 
 async def test_x_forwarded_host_with_trusted_proxy(aiohttp_client):

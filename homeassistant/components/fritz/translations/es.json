@@ -38,6 +38,19 @@
                 },
                 "description": "Configurar FRITZ!Box Tools para controlar tu FRITZ!Box.\nM\u00ednimo necesario: usuario, contrase\u00f1a.",
                 "title": "Configurar FRITZ!Box Tools - obligatorio"
+            },
+            "user": {
+                "description": "Configure las herramientas de FRITZ! Box para controlar su FRITZ! Box.\n M\u00ednimo necesario: nombre de usuario, contrase\u00f1a.",
+                "title": "Configurar las herramientas de FRITZ! Box"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "consider_home": "Segundos para considerar un dispositivo en 'casa'"
+                }
             }
         }
     }

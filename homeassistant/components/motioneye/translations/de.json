@@ -11,6 +11,10 @@
             "unknown": "Unerwarteter Fehler"
         },
         "step": {
+            "hassio_confirm": {
+                "description": "M\u00f6chten Sie Home Assistant so konfigurieren, dass er sich mit dem motionEye-Dienst des Add-ons {addon} verbindet?",
+                "title": "motionEye \u00fcber Home Assistant Add-on"
+            },
             "user": {
                 "data": {
                     "admin_password": "Admin Passwort",

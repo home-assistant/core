@@ -1,12 +1,11 @@
 """Tests for the WLED config flow."""
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
-import aiohttp
 from wled import WLEDConnectionError
 
-from homeassistant.components.wled.const import DOMAIN
+from homeassistant.components.wled.const import CONF_KEEP_MASTER_LIGHT, DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONTENT_TYPE_JSON
+from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import (
     RESULT_TYPE_ABORT,
@@ -14,22 +13,13 @@ from homeassistant.data_entry_flow import (
     RESULT_TYPE_FORM,
 )
 
-from . import init_integration
-
-from tests.common import load_fixture
-from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.common import MockConfigEntry
 
 
 async def test_full_user_flow_implementation(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant, mock_wled_config_flow: MagicMock, mock_setup_entry: None
 ) -> None:
     """Test the full manual user flow from start to finish."""
-    aioclient_mock.get(
-        "http://192.168.1.123:80/json/",
-        text=load_fixture("wled/rgb.json"),
-        headers={"Content-Type": CONTENT_TYPE_JSON},
-    )
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
@@ -51,15 +41,9 @@ async def test_full_user_flow_implementation(
 
 
 async def test_full_zeroconf_flow_implementation(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant, mock_wled_config_flow: MagicMock, mock_setup_entry: None
 ) -> None:
     """Test the full manual user flow from start to finish."""
-    aioclient_mock.get(
-        "http://192.168.1.123:80/json/",
-        text=load_fixture("wled/rgb.json"),
-        headers={"Content-Type": CONTENT_TYPE_JSON},
-    )
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
@@ -91,13 +75,11 @@ async def test_full_zeroconf_flow_implementation(
     assert result2["data"][CONF_MAC] == "aabbccddeeff"
 
 
-@patch("homeassistant.components.wled.WLED.update", side_effect=WLEDConnectionError)
 async def test_connection_error(
-    update_mock: MagicMock, hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant, mock_wled_config_flow: MagicMock
 ) -> None:
     """Test we show user form on WLED connection error."""
-    aioclient_mock.get("http://example.com/json/", exc=aiohttp.ClientError)
-
+    mock_wled_config_flow.update.side_effect = WLEDConnectionError
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
@@ -109,12 +91,11 @@ async def test_connection_error(
     assert result.get("errors") == {"base": "cannot_connect"}
 
 
-@patch("homeassistant.components.wled.WLED.update", side_effect=WLEDConnectionError)
 async def test_zeroconf_connection_error(
-    update_mock: MagicMock, hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant, mock_wled_config_flow: MagicMock
 ) -> None:
     """Test we abort zeroconf flow on WLED connection error."""
-    aioclient_mock.get("http://192.168.1.123/json/", exc=aiohttp.ClientError)
+    mock_wled_config_flow.update.side_effect = WLEDConnectionError
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -126,12 +107,11 @@ async def test_zeroconf_connection_error(
     assert result.get("reason") == "cannot_connect"
 
 
-@patch("homeassistant.components.wled.WLED.update", side_effect=WLEDConnectionError)
 async def test_zeroconf_confirm_connection_error(
-    update_mock: MagicMock, hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant, mock_wled_config_flow: MagicMock
 ) -> None:
     """Test we abort zeroconf flow on WLED connection error."""
-    aioclient_mock.get("http://192.168.1.123:80/json/", exc=aiohttp.ClientError)
+    mock_wled_config_flow.update.side_effect = WLEDConnectionError
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -148,11 +128,11 @@ async def test_zeroconf_confirm_connection_error(
 
 
 async def test_user_device_exists_abort(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    init_integration: MagicMock,
+    mock_wled_config_flow: MagicMock,
 ) -> None:
     """Test we abort zeroconf flow if WLED device already configured."""
-    await init_integration(hass, aioclient_mock)
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
@@ -164,11 +144,11 @@ async def test_user_device_exists_abort(
 
 
 async def test_zeroconf_device_exists_abort(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    init_integration: MagicMock,
+    mock_wled_config_flow: MagicMock,
 ) -> None:
     """Test we abort zeroconf flow if WLED device already configured."""
-    await init_integration(hass, aioclient_mock)
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
@@ -180,11 +160,11 @@ async def test_zeroconf_device_exists_abort(
 
 
 async def test_zeroconf_with_mac_device_exists_abort(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_wled_config_flow: MagicMock,
 ) -> None:
     """Test we abort zeroconf flow if WLED device already configured."""
-    await init_integration(hass, aioclient_mock)
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
@@ -197,3 +177,26 @@ async def test_zeroconf_with_mac_device_exists_abort(
 
     assert result.get("type") == RESULT_TYPE_ABORT
     assert result.get("reason") == "already_configured"
+
+
+async def test_options_flow(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test options config flow."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+
+    assert result.get("type") == RESULT_TYPE_FORM
+    assert result.get("step_id") == "init"
+    assert "flow_id" in result
+
+    result2 = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_KEEP_MASTER_LIGHT: True},
+    )
+
+    assert result2.get("type") == RESULT_TYPE_CREATE_ENTRY
+    assert result2.get("data") == {
+        CONF_KEEP_MASTER_LIGHT: True,
+    }
