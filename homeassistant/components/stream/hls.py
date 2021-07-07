@@ -45,6 +45,7 @@ class HlsStreamOutput(StreamOutput):
         """Initialize HLS output."""
         super().__init__(hass, idle_timer, deque_maxlen=MAX_SEGMENTS)
         self.stream_settings: StreamSettings = hass.data[DOMAIN][ATTR_SETTINGS]
+        self._target_duration = 0.0
 
     @property
     def name(self) -> str:
@@ -53,10 +54,19 @@ class HlsStreamOutput(StreamOutput):
 
     @property
     def target_duration(self) -> float:
-        """Return the max duration of any given segment in seconds."""
-        if not (durations := [s.duration for s in self._segments if s.complete]):
+        """
+        Return the target duration.
+
+        The target duration is calculated as the max duration of any given segment,
+        and it is calculated only one time to avoid changing during playback.
+        """
+        if self._target_duration:
+            return self._target_duration
+        durations = [s.duration for s in self._segments if s.complete]
+        if len(durations) < 2:
             return self.stream_settings.min_segment_duration
-        return max(durations)
+        self._target_duration = max(durations)
+        return self._target_duration
 
 
 class HlsMasterPlaylistView(StreamView):
@@ -122,36 +132,23 @@ class HlsPlaylistView(StreamView):
         if segments[-1].complete:
             segments = segments[-NUM_PLAYLIST_SEGMENTS:]
 
-        # The track may have been updated since we froze it, but this should be good enough
-        target_duration = track.target_duration
-
         first_segment = segments[0]
         playlist = [
             "#EXTM3U",
             "#EXT-X-VERSION:6",
             "#EXT-X-INDEPENDENT-SEGMENTS",
             '#EXT-X-MAP:URI="init.mp4"',
-            f"#EXT-X-TARGETDURATION:{target_duration:.0f}",
+            f"#EXT-X-TARGETDURATION:{track.target_duration:.0f}",
             f"#EXT-X-MEDIA-SEQUENCE:{first_segment.sequence}",
             f"#EXT-X-DISCONTINUITY-SEQUENCE:{first_segment.stream_id}",
         ]
 
         if track.stream_settings.ll_hls:
-            part_duration = float(
-                max(
-                    (
-                        p.duration
-                        for s in segments
-                        for p in s.parts_by_byterange.values()
-                    ),
-                    default=track.stream_settings.target_part_duration,
-                )
-            )
             playlist.extend(
                 [
-                    f"#EXT-X-PART-INF:PART-TARGET={part_duration:.3f}",
-                    f"#EXT-X-SERVER-CONTROL:CAN-BLOCK-RELOAD=YES,PART-HOLD-BACK={2*part_duration:.3f}",
-                    f"#EXT-X-START:TIME-OFFSET=-{EXT_X_START_LL_HLS*part_duration:.3f},PRECISE=YES",
+                    f"#EXT-X-PART-INF:PART-TARGET={track.stream_settings.target_part_duration:.3f}",
+                    f"#EXT-X-SERVER-CONTROL:CAN-BLOCK-RELOAD=YES,PART-HOLD-BACK={2*track.stream_settings.target_part_duration:.3f}",
+                    f"#EXT-X-START:TIME-OFFSET=-{EXT_X_START_LL_HLS*track.stream_settings.target_part_duration:.3f},PRECISE=YES",
                 ]
             )
         else:
