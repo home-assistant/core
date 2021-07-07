@@ -30,6 +30,7 @@ class Part:
     has_keyframe: bool = attr.ib()
     # video data (moof+mdat)
     data: bytes = attr.ib()
+    dts: int = attr.ib(default=0)
 
 
 @attr.s(slots=True)
@@ -38,12 +39,13 @@ class Segment:
 
     sequence: int = attr.ib(default=0)
     # the init of the mp4 the segment is based on
-    init: bytes = attr.ib(default=None)
+    init: bytes | None = attr.ib(default=None)
     duration: float = attr.ib(default=0)
     # For detecting discontinuities across stream restarts
     stream_id: int = attr.ib(default=0)
     parts: list[Part] = attr.ib(factory=list)
     start_time: datetime.datetime = attr.ib(factory=datetime.datetime.utcnow)
+    dts: int = attr.ib(default=0)
 
     @property
     def complete(self) -> bool:
@@ -53,6 +55,11 @@ class Segment:
     def get_bytes_without_init(self) -> bytes:
         """Return reconstructed data for all parts as bytes, without init."""
         return b"".join([part.data for part in self.parts])
+
+    @property
+    def current_dts(self) -> int:
+        """Return the most recent dts."""
+        return self.parts[-1].dts if self.parts else self.dts
 
 
 class IdleTimer:

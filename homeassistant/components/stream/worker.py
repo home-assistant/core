@@ -4,6 +4,7 @@ from __future__ import annotations
 from collections import defaultdict, deque
 from collections.abc import Generator, Iterator, Mapping
 from io import BytesIO
+import itertools
 import logging
 from threading import Event
 from typing import Any, Callable, cast
@@ -26,13 +27,19 @@ from .core import Part, Segment, StreamOutput
 _LOGGER = logging.getLogger(__name__)
 
 
-class SegmentBuffer:
-    """Buffer for writing a sequence of packets to the output as a segment."""
+class StreamState:
+    """Responsible for tracking output and playback state for a stream.
+
+    Holds state used for playback to interpret a decoded stream. A source stream
+    may be reset (e.g. reconnecting to an rtsp stream) and this object tracks
+    the state to inform the player.
+    """
 
     def __init__(
-        self, outputs_callback: Callable[[], Mapping[str, StreamOutput]]
+        self,
+        outputs_callback: Callable[[], Mapping[str, StreamOutput]],
     ) -> None:
-        """Initialize SegmentBuffer."""
+        """Initialize StreamState."""
         self._stream_id: int = 0
         self._outputs_callback: Callable[
             [], Mapping[str, StreamOutput]
@@ -40,18 +47,50 @@ class SegmentBuffer:
         # sequence gets incremented before the first segment so the first segment
         # has a sequence number of 0.
         self._sequence = -1
-        self._segment_start_dts: int = cast(int, None)
+
+    @property
+    def sequence(self) -> int:
+        """Return the current sequence for the latest segment."""
+        return self._sequence
+
+    def next_sequence(self) -> int:
+        """Increment the sequence number."""
+        self._sequence += 1
+        return self._sequence
+
+    @property
+    def stream_id(self) -> int:
+        """Return the readonly stream_id attribute."""
+        return self._stream_id
+
+    def discontinuity(self) -> None:
+        """Mark the stream as having been restarted."""
+        # Preserving sequence and stream_id here keep the HLS playlist logic
+        # simple to check for discontinuity at output time, and to determine
+        # the discontinuity sequence number.
+        self._stream_id += 1
+
+    def outputs(self) -> list[StreamOutput]:
+        """Return the active stream outputs."""
+        return list(self._outputs_callback().values())
+
+
+class StreamMuxer:
+    """StreamMuxer re-packages video/audio packets for output."""
+
+    def __init__(
+        self,
+        video_stream: av.video.VideoStream,
+        audio_stream: av.audio.stream.AudioStream | None,
+    ):
+        """Initialize StreamMuxer."""
+        self._input_video_stream = video_stream
+        self._input_audio_stream = audio_stream
         self._memory_file: BytesIO = cast(BytesIO, None)
+        self._memory_file_pos = 0
         self._av_output: av.container.OutputContainer = None
-        self._input_video_stream: av.video.VideoStream = None
-        self._input_audio_stream: av.audio.stream.AudioStream | None = None
         self._output_video_stream: av.video.VideoStream = None
         self._output_audio_stream: av.audio.stream.AudioStream | None = None
-        self._segment: Segment | None = None
-        # the following 3 member variables are used for Part formation
-        self._memory_file_pos: int = cast(int, None)
-        self._part_start_dts: int = cast(int, None)
-        self._part_has_keyframe = False
 
     @staticmethod
     def make_new_av(
@@ -79,125 +118,51 @@ class SegmentBuffer:
             },
         )
 
-    def set_streams(
-        self,
-        video_stream: av.video.VideoStream,
-        audio_stream: Any,
-        # no type hint for audio_stream until https://github.com/PyAV-Org/PyAV/pull/775 is merged
-    ) -> None:
-        """Initialize output buffer with streams from container."""
-        self._input_video_stream = video_stream
-        self._input_audio_stream = audio_stream
-
-    def reset(self, video_dts: int) -> None:
+    def reset(self, sequence: int) -> None:
         """Initialize a new stream segment."""
-        # Keep track of the number of segments we've processed
-        self._sequence += 1
-        self._segment_start_dts = video_dts
-        self._segment = None
         self._memory_file = BytesIO()
         self._memory_file_pos = 0
         self._av_output = self.make_new_av(
             memory_file=self._memory_file,
-            sequence=self._sequence,
+            sequence=sequence,
             input_vstream=self._input_video_stream,
         )
         self._output_video_stream = self._av_output.add_stream(
             template=self._input_video_stream
         )
-        # Check if audio is requested
-        self._output_audio_stream = None
-        if self._input_audio_stream and self._input_audio_stream.name in AUDIO_CODECS:
+        if self._input_audio_stream:
             self._output_audio_stream = self._av_output.add_stream(
                 template=self._input_audio_stream
             )
 
     def mux_packet(self, packet: av.Packet) -> None:
         """Mux a packet to the appropriate output stream."""
-
-        # Check for end of segment
         if packet.stream == self._input_video_stream:
-            if (
-                packet.is_keyframe
-                and (packet.dts - self._segment_start_dts) * packet.time_base
-                >= MIN_SEGMENT_DURATION
-            ):
-                # Flush segment (also flushes the stub part segment)
-                self.flush(packet, last_part=True)
-                # Reinitialize
-                self.reset(packet.dts)
-
-            # Mux the packet
             packet.stream = self._output_video_stream
             self._av_output.mux(packet)
-            self.check_flush_part(packet)
-            self._part_has_keyframe |= packet.is_keyframe
-
         elif packet.stream == self._input_audio_stream:
             packet.stream = self._output_audio_stream
             self._av_output.mux(packet)
 
-    def check_flush_part(self, packet: av.Packet) -> None:
-        """Check for and mark a part segment boundary and record its duration."""
-        if self._memory_file_pos == self._memory_file.tell():
-            return
-        if self._segment is None:
-            # We have our first non-zero byte position. This means the init has just
-            # been written. Create a Segment and put it to the queue of each output.
-            self._segment = Segment(
-                sequence=self._sequence,
-                stream_id=self._stream_id,
-                init=self._memory_file.getvalue(),
-            )
-            self._memory_file_pos = self._memory_file.tell()
-            self._part_start_dts = self._segment_start_dts
-            # Fetch the latest StreamOutputs, which may have changed since the
-            # worker started.
-            for stream_output in self._outputs_callback().values():
-                stream_output.put(self._segment)
-        else:  # These are the ends of the part segments
-            self.flush(packet, last_part=False)
-
-    def flush(self, packet: av.Packet, last_part: bool) -> None:
-        """Output a part from the most recent bytes in the memory_file.
-
-        If last_part is True, also close the segment, give it a duration,
-        and clean up the av_output and memory_file.
-        """
-        if last_part:
-            # Closing the av_output will write the remaining buffered data to the
-            # memory_file as a new moof/mdat.
-            self._av_output.close()
-        assert self._segment
-        self._memory_file.seek(self._memory_file_pos)
-        self._segment.parts.append(
-            Part(
-                duration=float((packet.dts - self._part_start_dts) * packet.time_base),
-                has_keyframe=self._part_has_keyframe,
-                data=self._memory_file.read(),
-            )
-        )
-        if last_part:
-            self._segment.duration = float(
-                (packet.dts - self._segment_start_dts) * packet.time_base
-            )
-            self._memory_file.close()  # We don't need the BytesIO object anymore
-        else:
-            self._memory_file_pos = self._memory_file.tell()
-            self._part_start_dts = packet.dts
-        self._part_has_keyframe = False
-
-    def discontinuity(self) -> None:
-        """Mark the stream as having been restarted."""
-        # Preserving sequence and stream_id here keep the HLS playlist logic
-        # simple to check for discontinuity at output time, and to determine
-        # the discontinuity sequence number.
-        self._stream_id += 1
-
-    def close(self) -> None:
-        """Close stream buffer."""
+    def close(self) -> bytes | None:
+        """Close stream buffer and return pending output data."""
         self._av_output.close()
+        data = self.read()
         self._memory_file.close()
+        return data
+
+    def read(self) -> bytes | None:
+        """Read output bytes of muxed packets.
+
+        Returns: A tuple of bytes read and whether or not the bytes
+            contain a key frame.
+        """
+        if self._memory_file_pos == self._memory_file.tell():
+            return None
+        self._memory_file.seek(self._memory_file_pos)
+        data = self._memory_file.read()
+        self._memory_file_pos = self._memory_file.tell()
+        return data
 
 
 class PeekIterator(Iterator):
@@ -309,10 +274,15 @@ def unsupported_audio(packets: Iterator[av.Packet], audio_stream: Any) -> bool:
     return False
 
 
+def packet_interval(packet: av.Packet, start_dts: int) -> float:
+    """Return time interval from start_dts to packet.dts."""
+    return float((packet.dts - start_dts) * packet.time_base)
+
+
 def stream_worker(
     source: str,
     options: dict[str, str],
-    segment_buffer: SegmentBuffer,
+    stream_state: StreamState,
     quit_event: Event,
 ) -> None:
     """Handle consuming streams."""
@@ -331,6 +301,8 @@ def stream_worker(
     try:
         audio_stream = container.streams.audio[0]
     except (KeyError, IndexError):
+        audio_stream = None
+    if audio_stream and audio_stream.name not in AUDIO_CODECS:
         audio_stream = None
     # These formats need aac_adtstoasc bitstream filter, but auto_bsf not
     # compatible with empty_moov and manual bitstream filters not in PyAV
@@ -383,20 +355,78 @@ def stream_worker(
         container.close()
         return
 
-    segment_buffer.set_streams(video_stream, audio_stream)
-    segment_buffer.reset(start_dts)
+    muxer = StreamMuxer(video_stream, audio_stream)
+    muxer.reset(stream_state.next_sequence())
+
+    segment = Segment(
+        sequence=stream_state.sequence,
+        dts=start_dts,
+        stream_id=stream_state.stream_id,
+    )
+    part_has_keyframe = False
 
     # Mux the first keyframe, then proceed through the rest of the packets
-    segment_buffer.mux_packet(first_keyframe)
-
+    packets = itertools.chain([first_keyframe], container_packets)
     while not quit_event.is_set():
         try:
-            packet = next(container_packets)
+            packet = next(packets)
         except (av.AVError, StopIteration) as ex:
             _LOGGER.error("Error demuxing stream: %s", str(ex))
             break
-        segment_buffer.mux_packet(packet)
+
+        if not is_video(packet):
+            muxer.mux_packet(packet)
+            continue
+
+        # Check for end of segment
+        if packet.is_keyframe:
+            segment_duration = packet_interval(packet, segment.dts)
+            if segment_duration >= MIN_SEGMENT_DURATION:
+                # Flush segment (also flushes the stub part segment)
+                data = muxer.close()
+                assert data
+                segment.parts.append(
+                    Part(
+                        duration=packet_interval(packet, segment.current_dts),
+                        has_keyframe=part_has_keyframe,
+                        data=data,
+                        dts=packet.dts,
+                    )
+                )
+                part_has_keyframe = False
+                segment.duration = segment_duration
+                # Reinitialize
+                muxer.reset(stream_state.next_sequence())
+                segment = Segment(
+                    sequence=stream_state.sequence,
+                    dts=packet.dts,
+                    stream_id=stream_state.stream_id,
+                )
+
+        # Mux the packet
+        muxer.mux_packet(packet)
+        data = muxer.read()
+        if data:
+            if segment.init is None:
+                # We have our first non-zero byte position. This means the init has just
+                # been written. Put the segment in the queue of each output.
+                segment.init = data
+                # Fetch the latest StreamOutputs, which may have changed since the
+                # worker started.
+                for stream_output in stream_state.outputs():
+                    stream_output.put(segment)
+            else:  # These are the ends of the part segments
+                segment.parts.append(
+                    Part(
+                        duration=packet_interval(packet, segment.current_dts),
+                        has_keyframe=part_has_keyframe,
+                        data=data,
+                        dts=packet.dts,
+                    )
+                )
+                part_has_keyframe = False
+        part_has_keyframe |= packet.is_keyframe
 
     # Close stream
-    segment_buffer.close()
+    muxer.close()
     container.close()

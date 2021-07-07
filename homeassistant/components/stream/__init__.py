@@ -204,14 +204,14 @@ class Stream:
         """Handle consuming streams and restart keepalive streams."""
         # Keep import here so that we can import stream integration without installing reqs
         # pylint: disable=import-outside-toplevel
-        from .worker import SegmentBuffer, stream_worker
+        from .worker import StreamState, stream_worker
 
-        segment_buffer = SegmentBuffer(self.outputs)
+        stream_state = StreamState(self.outputs)
         wait_timeout = 0
         while not self._thread_quit.wait(timeout=wait_timeout):
             start_time = time.time()
-            stream_worker(self.source, self.options, segment_buffer, self._thread_quit)
-            segment_buffer.discontinuity()
+            stream_worker(self.source, self.options, stream_state, self._thread_quit)
+            stream_state.discontinuity()
             if not self.keepalive or self._thread_quit.is_set():
                 if self._fast_restart_once:
                     # The stream source is updated, restart without any delay.
