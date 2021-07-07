@@ -174,9 +174,9 @@ class GlancesSensor(SensorEntity):
                     interface = var
                     break
             if self.type == "network_rx":
-                self._state = interface["rx"]
+                self._state = round(interface["rx"] / 1000 ** 2, 3)
             elif self.type == "network_tx":
-                self._state = interface["tx"]
+                self._state = round(interface["tx"] / 1000 ** 2, 3)
         elif self.type == "battery":
             for sensor in value["sensors"]:
                 if (
