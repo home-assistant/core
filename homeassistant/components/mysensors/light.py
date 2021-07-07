@@ -152,6 +152,8 @@ class MySensorsLight(mysensors.device.MySensorsEntity, LightEntity):
                 rgb.append(new_white)
             elif white is not None:
                 rgb.append(white)
+            else:
+                rgb.append(0)
         hex_color = hex_template % tuple(rgb)
         if len(rgb) > 3:
             white = rgb.pop()
