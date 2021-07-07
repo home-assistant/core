@@ -237,18 +237,17 @@ class EightSleepBaseEntity(CoordinatorEntity):
         self._eight = eight
         self._side = side
         self._sensor = sensor
-        full_sensor_name = self._sensor
-        if self._side is not None:
-            full_sensor_name = f"{self._side}_{full_sensor_name}"
-        self._mapped_name = NAME_MAP.get(
-            full_sensor_name, full_sensor_name.replace("_", " ").title()
-        )
-        self._attr_name = f"{name} {self._mapped_name}"
-
         self._usrobj: EightUser = None
         if self._side:
             self._usrobj = self._eight.users[self._eight.fetch_userid(self._side)]
+        full_sensor_name = self._sensor
+        if self._side is not None:
+            full_sensor_name = f"{self._side}_{full_sensor_name}"
+        mapped_name = NAME_MAP.get(
+            full_sensor_name, full_sensor_name.replace("_", " ").title()
+        )
 
+        self._attr_name = f"{name} {mapped_name}"
         self._attr_unique_id = (
             f"{_get_device_unique_id(eight, self._usrobj)}.{self._sensor}"
         )
