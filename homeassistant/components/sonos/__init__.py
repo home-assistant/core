@@ -274,7 +274,7 @@ class SonosDiscoveryManager:
             boot_seqnum = int(boot_seqnum)
             self.data.boot_counts.setdefault(uid, boot_seqnum)
         if uid not in self.data.discovery_known:
-            _LOGGER.debug("New discovery: %s", info)
+            _LOGGER.debug("New discovery uid=%s: %s", uid, info)
             self.data.discovery_known.add(uid)
         asyncio.create_task(
             self._async_create_discovered_player(uid, discovered_ip, boot_seqnum)
