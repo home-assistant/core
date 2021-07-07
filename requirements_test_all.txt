@@ -481,7 +481,6 @@ iaqualink==0.3.90
 icmplib==3.0
 
 # homeassistant.components.network
-# homeassistant.components.nmap_tracker
 ifaddr==0.1.7
 
 # homeassistant.components.influxdb
@@ -522,9 +521,6 @@ logi_circle==0.2.2
 
 # homeassistant.components.luftdaten
 luftdaten==0.6.5
-
-# homeassistant.components.nmap_tracker
-mac-vendor-lookup==0.1.11
 
 # homeassistant.components.maxcube
 maxcube-api==0.4.3
@@ -573,9 +569,6 @@ nessclient==0.9.15
 
 # homeassistant.components.discovery
 netdisco==2.9.0
-
-# homeassistant.components.nmap_tracker
-netmap==0.7.0.2
 
 # homeassistant.components.nam
 nettigo-air-monitor==1.0.0
@@ -907,7 +900,7 @@ pymelcloud==2.5.3
 pymeteoclimatic==0.0.6
 
 # homeassistant.components.somfy
-pymfy==0.9.3
+pymfy==0.11.0
 
 # homeassistant.components.mochad
 pymochad==0.2.0
@@ -1158,7 +1151,7 @@ sharkiqpy==0.1.8
 simplehound==0.3
 
 # homeassistant.components.simplisafe
-simplisafe-python==10.0.0
+simplisafe-python==11.0.0
 
 # homeassistant.components.slack
 slackclient==2.5.0

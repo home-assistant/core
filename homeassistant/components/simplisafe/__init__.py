@@ -2,11 +2,11 @@
 import asyncio
 from uuid import UUID
 
-from simplipy import API
+from simplipy import get_api
 from simplipy.errors import EndpointUnavailable, InvalidCredentialsError, SimplipyError
 import voluptuous as vol
 
-from homeassistant.const import ATTR_CODE, CONF_CODE, CONF_TOKEN, CONF_USERNAME
+from homeassistant.const import ATTR_CODE, CONF_CODE, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import CoreState, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import (
@@ -107,14 +107,6 @@ SERVICE_SET_SYSTEM_PROPERTIES_SCHEMA = SERVICE_BASE_SCHEMA.extend(
 CONFIG_SCHEMA = cv.deprecated(DOMAIN)
 
 
-@callback
-def _async_save_refresh_token(hass, config_entry, token):
-    """Save a refresh token to the config entry."""
-    hass.config_entries.async_update_entry(
-        config_entry, data={**config_entry.data, CONF_TOKEN: token}
-    )
-
-
 async def async_get_client_id(hass):
     """Get a client ID (based on the HASS unique ID) for the SimpliSafe API.
 
@@ -142,6 +134,9 @@ async def async_setup_entry(hass, config_entry):  # noqa: C901
     hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id] = []
     hass.data[DOMAIN][DATA_LISTENER][config_entry.entry_id] = []
 
+    if CONF_PASSWORD not in config_entry.data:
+        raise ConfigEntryAuthFailed("Config schema change requires re-authentication")
+
     entry_updates = {}
     if not config_entry.unique_id:
         # If the config entry doesn't already have a unique ID, set one:
@@ -164,19 +159,19 @@ async def async_setup_entry(hass, config_entry):  # noqa: C901
     websession = aiohttp_client.async_get_clientsession(hass)
 
     try:
-        api = await API.login_via_token(
-            config_entry.data[CONF_TOKEN], client_id=client_id, session=websession
+        api = await get_api(
+            config_entry.data[CONF_USERNAME],
+            config_entry.data[CONF_PASSWORD],
+            client_id=client_id,
+            session=websession,
         )
-    except InvalidCredentialsError:
-        LOGGER.error("Invalid credentials provided")
-        return False
+    except InvalidCredentialsError as err:
+        raise ConfigEntryAuthFailed from err
     except SimplipyError as err:
         LOGGER.error("Config entry failed: %s", err)
         raise ConfigEntryNotReady from err
 
-    _async_save_refresh_token(hass, config_entry, api.refresh_token)
-
-    simplisafe = SimpliSafe(hass, api, config_entry)
+    simplisafe = SimpliSafe(hass, config_entry, api)
 
     try:
         await simplisafe.async_init()
@@ -303,10 +298,9 @@ async def async_reload_entry(hass, config_entry):
 class SimpliSafe:
     """Define a SimpliSafe data object."""
 
-    def __init__(self, hass, api, config_entry):
+    def __init__(self, hass, config_entry, api):
         """Initialize."""
         self._api = api
-        self._emergency_refresh_token_used = False
         self._hass = hass
         self._system_notifications = {}
         self.config_entry = config_entry
@@ -383,23 +377,7 @@ class SimpliSafe:
 
         for result in results:
             if isinstance(result, InvalidCredentialsError):
-                if self._emergency_refresh_token_used:
-                    raise ConfigEntryAuthFailed(
-                        "Update failed with stored refresh token"
-                    )
-
-                LOGGER.warning("SimpliSafe cloud error; trying stored refresh token")
-                self._emergency_refresh_token_used = True
-
-                try:
-                    await self._api.refresh_access_token(
-                        self.config_entry.data[CONF_TOKEN]
-                    )
-                    return
-                except SimplipyError as err:
-                    raise UpdateFailed(  # pylint: disable=raise-missing-from
-                        f"Error while using stored refresh token: {err}"
-                    )
+                raise ConfigEntryAuthFailed("Invalid credentials") from result
 
             if isinstance(result, EndpointUnavailable):
                 # In case the user attempts an action not allowed in their current plan,
@@ -409,16 +387,6 @@ class SimpliSafe:
 
             if isinstance(result, SimplipyError):
                 raise UpdateFailed(f"SimpliSafe error while updating: {result}")
-
-        if self._api.refresh_token != self.config_entry.data[CONF_TOKEN]:
-            _async_save_refresh_token(
-                self._hass, self.config_entry, self._api.refresh_token
-            )
-
-        # If we've reached this point using an emergency refresh token, we're in the
-        # clear and we can discard it:
-        if self._emergency_refresh_token_used:
-            self._emergency_refresh_token_used = False
 
 
 class SimpliSafeEntity(CoordinatorEntity):
