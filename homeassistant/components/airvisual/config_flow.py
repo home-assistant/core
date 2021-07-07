@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Mapping
+from typing import Any
 
 from pyairvisual import CloudAPI, NodeSamba
 from pyairvisual.errors import (
@@ -70,8 +72,8 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize the config flow."""
-        self._entry_data_for_reauth = None
-        self._geo_id = None
+        self._entry_data_for_reauth: Mapping[str, Any] = {}
+        self._geo_id: str | None = None
 
     @property
     def geography_coords_schema(self) -> vol.Schema:
@@ -88,7 +90,7 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def _async_finish_geography(
-        self, user_input: dict, integration_type: str
+        self, user_input: dict[str, str], integration_type: str
     ) -> FlowResult:
         """Validate a Cloud API key."""
         websession = aiohttp_client.async_get_clientsession(self.hass)
@@ -149,7 +151,7 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def _async_init_geography(
-        self, user_input: dict, integration_type: str
+        self, user_input: dict[str, str], integration_type: str
     ) -> FlowResult:
         """Handle the initialization of the integration via the cloud API."""
         self._geo_id = async_get_geography_id(user_input)
@@ -169,7 +171,7 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return AirVisualOptionsFlowHandler(config_entry)
 
     async def async_step_geography_by_coords(
-        self, user_input: dict | None = None
+        self, user_input: dict[str, str] | None = None
     ) -> FlowResult:
         """Handle the initialization of the cloud API based on latitude/longitude."""
         if not user_input:
@@ -182,7 +184,7 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_geography_by_name(
-        self, user_input: dict | None = None
+        self, user_input: dict[str, str] | None = None
     ) -> FlowResult:
         """Handle the initialization of the cloud API based on city/state/country."""
         if not user_input:
@@ -194,7 +196,9 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             user_input, INTEGRATION_TYPE_GEOGRAPHY_NAME
         )
 
-    async def async_step_node_pro(self, user_input: dict | None = None) -> FlowResult:
+    async def async_step_node_pro(
+        self, user_input: dict[str, str] | None = None
+    ) -> FlowResult:
         """Handle the initialization of the integration with a Node/Pro."""
         if not user_input:
             return self.async_show_form(step_id="node_pro", data_schema=NODE_PRO_SCHEMA)
@@ -220,14 +224,14 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             data={**user_input, CONF_INTEGRATION_TYPE: INTEGRATION_TYPE_NODE_PRO},
         )
 
-    async def async_step_reauth(self, data: dict) -> FlowResult:
+    async def async_step_reauth(self, data: dict[str, str]) -> FlowResult:
         """Handle configuration by re-auth."""
         self._entry_data_for_reauth = data
         self._geo_id = async_get_geography_id(data)
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
-        self, user_input: dict | None = None
+        self, user_input: dict[str, str] | None = None
     ) -> FlowResult:
         """Handle re-auth completion."""
         if not user_input:
@@ -241,7 +245,9 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             conf, self._entry_data_for_reauth[CONF_INTEGRATION_TYPE]
         )
 
-    async def async_step_user(self, user_input: dict | None = None) -> FlowResult:
+    async def async_step_user(
+        self, user_input: dict[str, str] | None = None
+    ) -> FlowResult:
         """Handle the start of the config flow."""
         if not user_input:
             return self.async_show_form(
@@ -262,7 +268,9 @@ class AirVisualOptionsFlowHandler(config_entries.OptionsFlow):
         """Initialize."""
         self.config_entry = config_entry
 
-    async def async_step_init(self, user_input: dict | None = None) -> FlowResult:
+    async def async_step_init(
+        self, user_input: dict[str, str] | None = None
+    ) -> FlowResult:
         """Manage the options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)

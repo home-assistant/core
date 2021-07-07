@@ -1,6 +1,7 @@
 """The airvisual component."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import timedelta
 from math import ceil
 from typing import Any
@@ -61,7 +62,7 @@ CONFIG_SCHEMA = cv.deprecated(DOMAIN)
 
 
 @callback
-def async_get_geography_id(geography_dict) -> str:
+def async_get_geography_id(geography_dict: Mapping[str, Any]) -> str:
     """Generate a unique ID from a geography dict."""
     if CONF_CITY in geography_dict:
         return ", ".join(
