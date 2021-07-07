@@ -13,7 +13,7 @@
             "invalid_url": "\u00c9rv\u00e9nytelen URL",
             "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
         },
-        "flow_title": "Huawei LTE: {name}",
+        "flow_title": "{name}",
         "step": {
             "user": {
                 "data": {

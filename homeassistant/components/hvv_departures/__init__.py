@@ -13,7 +13,7 @@ from .hub import GTIHub
 PLATFORMS = [DOMAIN_SENSOR, DOMAIN_BINARY_SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up HVV from a config entry."""
 
     hub = GTIHub(

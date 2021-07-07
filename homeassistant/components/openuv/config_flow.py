@@ -14,26 +14,35 @@ from homeassistant.helpers import aiohttp_client, config_validation as cv
 
 from .const import DOMAIN
 
-CONFIG_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_API_KEY): str,
-        vol.Inclusive(CONF_LATITUDE, "coords"): cv.latitude,
-        vol.Inclusive(CONF_LONGITUDE, "coords"): cv.longitude,
-        vol.Optional(CONF_ELEVATION): vol.Coerce(float),
-    }
-)
-
 
 class OpenUvFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle an OpenUV config flow."""
 
     VERSION = 2
 
+    @property
+    def config_schema(self):
+        """Return the config schema."""
+        return vol.Schema(
+            {
+                vol.Required(CONF_API_KEY): str,
+                vol.Inclusive(
+                    CONF_LATITUDE, "coords", default=self.hass.config.latitude
+                ): cv.latitude,
+                vol.Inclusive(
+                    CONF_LONGITUDE, "coords", default=self.hass.config.longitude
+                ): cv.longitude,
+                vol.Optional(
+                    CONF_ELEVATION, default=self.hass.config.elevation
+                ): vol.Coerce(float),
+            }
+        )
+
     async def _show_form(self, errors=None):
         """Show the form to the user."""
         return self.async_show_form(
             step_id="user",
-            data_schema=CONFIG_SCHEMA,
+            data_schema=self.config_schema,
             errors=errors if errors else {},
         )
 

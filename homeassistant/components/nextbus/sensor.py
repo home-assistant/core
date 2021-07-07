@@ -18,8 +18,6 @@ CONF_AGENCY = "agency"
 CONF_ROUTE = "route"
 CONF_STOP = "stop"
 
-ICON = "mdi:bus"
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_AGENCY): cv.string,
@@ -114,6 +112,9 @@ class NextBusDepartureSensor(SensorEntity):
     the future using fuzzy logic and matching.
     """
 
+    _attr_device_class = DEVICE_CLASS_TIMESTAMP
+    _attr_icon = "mdi:bus"
+
     def __init__(self, client, agency, route, stop, name=None):
         """Initialize sensor with all required config."""
         self.agency = agency
@@ -145,11 +146,6 @@ class NextBusDepartureSensor(SensorEntity):
         return self._name
 
     @property
-    def device_class(self):
-        """Return the device class."""
-        return DEVICE_CLASS_TIMESTAMP
-
-    @property
     def state(self):
         """Return current state of the sensor."""
         return self._state
@@ -158,13 +154,6 @@ class NextBusDepartureSensor(SensorEntity):
     def extra_state_attributes(self):
         """Return additional state attributes."""
         return self._attributes
-
-    @property
-    def icon(self):
-        """Return icon to be used for this sensor."""
-        # Would be nice if we could determine if the line is a train or bus
-        # however that doesn't seem to be available to us. Using bus for now.
-        return ICON
 
     def update(self):
         """Update sensor with new departures times."""

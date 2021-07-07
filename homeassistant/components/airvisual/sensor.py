@@ -56,57 +56,32 @@ NODE_PRO_SENSORS = [
     (SENSOR_KIND_TEMPERATURE, "Temperature", DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS),
 ]
 
+POLLUTANT_LABELS = {
+    "co": "Carbon Monoxide",
+    "n2": "Nitrogen Dioxide",
+    "o3": "Ozone",
+    "p1": "PM10",
+    "p2": "PM2.5",
+    "s2": "Sulfur Dioxide",
+}
 
-@callback
-def async_get_pollutant_label(symbol):
-    """Get a pollutant's label based on its symbol."""
-    if symbol == "co":
-        return "Carbon Monoxide"
-    if symbol == "n2":
-        return "Nitrogen Dioxide"
-    if symbol == "o3":
-        return "Ozone"
-    if symbol == "p1":
-        return "PM10"
-    if symbol == "p2":
-        return "PM2.5"
-    if symbol == "s2":
-        return "Sulfur Dioxide"
-    return symbol
+POLLUTANT_LEVELS = {
+    (0, 50): ("Good", "mdi:emoticon-excited"),
+    (51, 100): ("Moderate", "mdi:emoticon-happy"),
+    (101, 150): ("Unhealthy for sensitive groups", "mdi:emoticon-neutral"),
+    (151, 200): ("Unhealthy", "mdi:emoticon-sad"),
+    (201, 300): ("Very unhealthy", "mdi:emoticon-dead"),
+    (301, 1000): ("Hazardous", "mdi:biohazard"),
+}
 
-
-@callback
-def async_get_pollutant_level_info(value):
-    """Return a verbal pollutant level (and associated icon) for a numeric value."""
-    if 0 <= value <= 50:
-        return ("Good", "mdi:emoticon-excited")
-    if 51 <= value <= 100:
-        return ("Moderate", "mdi:emoticon-happy")
-    if 101 <= value <= 150:
-        return ("Unhealthy for sensitive groups", "mdi:emoticon-neutral")
-    if 151 <= value <= 200:
-        return ("Unhealthy", "mdi:emoticon-sad")
-    if 201 <= value <= 300:
-        return ("Very Unhealthy", "mdi:emoticon-dead")
-    return ("Hazardous", "mdi:biohazard")
-
-
-@callback
-def async_get_pollutant_unit(symbol):
-    """Get a pollutant's unit based on its symbol."""
-    if symbol == "co":
-        return CONCENTRATION_PARTS_PER_MILLION
-    if symbol == "n2":
-        return CONCENTRATION_PARTS_PER_BILLION
-    if symbol == "o3":
-        return CONCENTRATION_PARTS_PER_BILLION
-    if symbol == "p1":
-        return CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
-    if symbol == "p2":
-        return CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
-    if symbol == "s2":
-        return CONCENTRATION_PARTS_PER_BILLION
-    return None
+POLLUTANT_UNITS = {
+    "co": CONCENTRATION_PARTS_PER_MILLION,
+    "n2": CONCENTRATION_PARTS_PER_BILLION,
+    "o3": CONCENTRATION_PARTS_PER_BILLION,
+    "p1": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    "p2": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    "s2": CONCENTRATION_PARTS_PER_BILLION,
+}
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -154,12 +129,13 @@ class AirVisualGeographySensor(AirVisualEntity, SensorEntity):
             }
         )
         self._config_entry = config_entry
-        self._icon = icon
         self._kind = kind
         self._locale = locale
         self._name = name
         self._state = None
-        self._unit = unit
+
+        self._attr_icon = icon
+        self._attr_unit_of_measurement = unit
 
     @property
     def available(self):
@@ -196,16 +172,20 @@ class AirVisualGeographySensor(AirVisualEntity, SensorEntity):
 
         if self._kind == SENSOR_KIND_LEVEL:
             aqi = data[f"aqi{self._locale}"]
-            self._state, self._icon = async_get_pollutant_level_info(aqi)
+            [(self._state, self._attr_icon)] = [
+                (name, icon)
+                for (floor, ceiling), (name, icon) in POLLUTANT_LEVELS.items()
+                if floor <= aqi <= ceiling
+            ]
         elif self._kind == SENSOR_KIND_AQI:
             self._state = data[f"aqi{self._locale}"]
         elif self._kind == SENSOR_KIND_POLLUTANT:
             symbol = data[f"main{self._locale}"]
-            self._state = async_get_pollutant_label(symbol)
+            self._state = POLLUTANT_LABELS[symbol]
             self._attrs.update(
                 {
                     ATTR_POLLUTANT_SYMBOL: symbol,
-                    ATTR_POLLUTANT_UNIT: async_get_pollutant_unit(symbol),
+                    ATTR_POLLUTANT_UNIT: POLLUTANT_UNITS[symbol],
                 }
             )
 
@@ -244,16 +224,12 @@ class AirVisualNodeProSensor(AirVisualEntity, SensorEntity):
         """Initialize."""
         super().__init__(coordinator)
 
-        self._device_class = device_class
         self._kind = kind
         self._name = name
         self._state = None
-        self._unit = unit
 
-    @property
-    def device_class(self):
-        """Return the device class."""
-        return self._device_class
+        self._attr_device_class = device_class
+        self._attr_unit_of_measurement = unit
 
     @property
     def device_info(self):

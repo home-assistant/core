@@ -1,7 +1,11 @@
 """Test the sma config flow."""
 from unittest.mock import patch
 
-import aiohttp
+from pysma.exceptions import (
+    SmaAuthenticationException,
+    SmaConnectionException,
+    SmaReadException,
+)
 
 from homeassistant import setup
 from homeassistant.components.sma.const import DOMAIN
@@ -54,7 +58,7 @@ async def test_form_cannot_connect(hass):
     )
 
     with patch(
-        "pysma.SMA.new_session", side_effect=aiohttp.ClientError
+        "pysma.SMA.new_session", side_effect=SmaConnectionException
     ), _patch_async_setup_entry() as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -73,7 +77,7 @@ async def test_form_invalid_auth(hass):
     )
 
     with patch(
-        "pysma.SMA.new_session", return_value=False
+        "pysma.SMA.new_session", side_effect=SmaAuthenticationException
     ), _patch_async_setup_entry() as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -92,7 +96,7 @@ async def test_form_cannot_retrieve_device_info(hass):
     )
 
     with patch("pysma.SMA.new_session", return_value=True), patch(
-        "pysma.SMA.read", return_value=False
+        "pysma.SMA.read", side_effect=SmaReadException
     ), _patch_async_setup_entry() as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],

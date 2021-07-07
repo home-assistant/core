@@ -12,7 +12,13 @@ from .const import API_SERIAL, API_SYSTEM_OVERVIEW, DOMAIN
 
 _LOGGER = logging.getLogger(__package__)
 
-DATA_SCHEMA = vol.Schema({"host": str, "username": str, "password": str})
+DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required("host"): str,
+        vol.Required("username"): str,
+        vol.Required("password"): str,
+    }
+)
 
 
 def validate_input(hass: core.HomeAssistant, data):

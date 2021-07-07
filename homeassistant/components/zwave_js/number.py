@@ -46,13 +46,15 @@ class ZwaveNumberEntity(ZWaveBaseEntity, NumberEntity):
     ) -> None:
         """Initialize a ZwaveNumberEntity entity."""
         super().__init__(config_entry, client, info)
-        self._name = self.generate_name(
-            include_value_name=True, alternate_value_name=info.platform_hint
-        )
         if self.info.primary_value.metadata.writeable:
             self._target_value = self.info.primary_value
         else:
             self._target_value = self.get_zwave_value("targetValue")
+
+        # Entity class attributes
+        self._attr_name = self.generate_name(
+            include_value_name=True, alternate_value_name=info.platform_hint
+        )
 
     @property
     def min_value(self) -> float:
@@ -69,7 +71,7 @@ class ZwaveNumberEntity(ZWaveBaseEntity, NumberEntity):
         return float(self.info.primary_value.metadata.max)
 
     @property
-    def value(self) -> float | None:  # type: ignore
+    def value(self) -> float | None:
         """Return the entity value."""
         if self.info.primary_value.value is None:
             return None

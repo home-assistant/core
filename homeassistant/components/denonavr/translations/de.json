@@ -10,7 +10,7 @@
         "error": {
             "discovery_error": "Denon AVR-Netzwerk-Receiver konnte nicht gefunden werden"
         },
-        "flow_title": "Denon AVR-Netzwerk-Receiver: {name}",
+        "flow_title": "{name}",
         "step": {
             "confirm": {
                 "description": "Bitte best\u00e4tige das Hinzuf\u00fcgen des Receivers",

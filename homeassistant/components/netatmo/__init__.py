@@ -96,7 +96,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Netatmo from a config entry."""
     implementation = (
         await config_entry_oauth2_flow.async_get_config_entry_implementation(
@@ -131,7 +131,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             {"type": "None", "data": {WEBHOOK_PUSH_TYPE: WEBHOOK_DEACTIVATION}},
         )
         webhook_unregister(hass, entry.data[CONF_WEBHOOK_ID])
-        await hass.data[DOMAIN][entry.entry_id][AUTH].async_dropwebhook()
+        try:
+            await hass.data[DOMAIN][entry.entry_id][AUTH].async_dropwebhook()
+        except pyatmo.ApiError:
+            _LOGGER.debug(
+                "No webhook to be dropped for %s", entry.data[CONF_WEBHOOK_ID]
+            )
 
     async def register_webhook(event):
         if CONF_WEBHOOK_ID not in entry.data:

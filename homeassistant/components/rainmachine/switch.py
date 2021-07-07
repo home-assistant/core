@@ -84,9 +84,10 @@ SLOPE_TYPE_MAP = {
 SPRINKLER_TYPE_MAP = {
     0: "Not Set",
     1: "Popup Spray",
-    2: "Rotors",
+    2: "Rotors Low Rate",
     3: "Surface Drip",
     4: "Bubblers Drip",
+    5: "Rotors High Rate",
     99: "Other",
 }
 
@@ -94,14 +95,16 @@ SUN_EXPOSURE_MAP = {0: "Not Set", 1: "Full Sun", 2: "Partial Shade", 3: "Full Sh
 
 VEGETATION_MAP = {
     0: "Not Set",
+    1: "Not Set",
     2: "Cool Season Grass",
     3: "Fruit Trees",
     4: "Flowers",
     5: "Vegetables",
     6: "Citrus",
-    7: "Trees and Bushes",
+    7: "Bushes",
     9: "Drought Tolerant Plants",
     10: "Warm Season Grass",
+    11: "Trees",
     99: "Other",
 }
 
@@ -386,7 +389,7 @@ class RainMachineZone(RainMachineSwitch):
                 ATTR_PRECIP_RATE: self._data.get("waterSense").get("precipitationRate"),
                 ATTR_RESTRICTIONS: self._data.get("restriction"),
                 ATTR_SLOPE: SLOPE_TYPE_MAP.get(self._data.get("slope")),
-                ATTR_SOIL_TYPE: SOIL_TYPE_MAP.get(self._data.get("sun")),
+                ATTR_SOIL_TYPE: SOIL_TYPE_MAP.get(self._data.get("soil")),
                 ATTR_SPRINKLER_TYPE: SPRINKLER_TYPE_MAP.get(self._data.get("group_id")),
                 ATTR_SUN_EXPOSURE: SUN_EXPOSURE_MAP.get(self._data.get("sun")),
                 ATTR_TIME_REMAINING: self._data.get("remaining"),

@@ -1,16 +1,29 @@
 """Support for tracking MySensors devices."""
+from __future__ import annotations
+
+from typing import Any, Callable
+
 from homeassistant.components import mysensors
 from homeassistant.components.device_tracker import DOMAIN
-from homeassistant.components.mysensors import DevId, on_unload
-from homeassistant.components.mysensors.const import ATTR_GATEWAY_ID, GatewayId
+from homeassistant.components.mysensors import DevId
+from homeassistant.components.mysensors.const import (
+    ATTR_GATEWAY_ID,
+    DiscoveryInfo,
+    GatewayId,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util import slugify
 
+from .helpers import on_unload
+
 
 async def async_setup_scanner(
-    hass: HomeAssistant, config, async_see, discovery_info=None
-):
+    hass: HomeAssistant,
+    config: dict[str, Any],
+    async_see: Callable,
+    discovery_info: DiscoveryInfo | None = None,
+) -> bool:
     """Set up the MySensors device scanner."""
     if not discovery_info:
         return False
@@ -28,7 +41,7 @@ async def async_setup_scanner(
     for device in new_devices:
         gateway_id: GatewayId = discovery_info[ATTR_GATEWAY_ID]
         dev_id: DevId = (gateway_id, device.node_id, device.child_id, device.value_type)
-        await on_unload(
+        on_unload(
             hass,
             gateway_id,
             async_dispatcher_connect(
@@ -37,7 +50,7 @@ async def async_setup_scanner(
                 device.async_update_callback,
             ),
         )
-        await on_unload(
+        on_unload(
             hass,
             gateway_id,
             async_dispatcher_connect(
@@ -53,13 +66,13 @@ async def async_setup_scanner(
 class MySensorsDeviceScanner(mysensors.device.MySensorsDevice):
     """Represent a MySensors scanner."""
 
-    def __init__(self, hass: HomeAssistant, async_see, *args):
+    def __init__(self, hass: HomeAssistant, async_see: Callable, *args: Any) -> None:
         """Set up instance."""
         super().__init__(*args)
         self.async_see = async_see
         self.hass = hass
 
-    async def _async_update_callback(self):
+    async def _async_update_callback(self) -> None:
         """Update the device."""
         await self.async_update()
         node = self.gateway.sensors[self.node_id]
@@ -72,5 +85,5 @@ class MySensorsDeviceScanner(mysensors.device.MySensorsDevice):
             host_name=self.name,
             gps=(latitude, longitude),
             battery=node.battery_level,
-            attributes=self.extra_state_attributes,
+            attributes=self._extra_attributes,
         )

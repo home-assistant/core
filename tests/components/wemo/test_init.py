@@ -110,6 +110,7 @@ async def test_discovery(hass, pywemo_registry):
         device.serialnumber = f"{MOCK_SERIAL_NUMBER}_{counter}"
         device.model_name = "Motion"
         device.get_state.return_value = 0  # Default to Off
+        device.supports_long_press.return_value = False
         return device
 
     pywemo_devices = [create_device(0), create_device(1)]

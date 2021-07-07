@@ -9,6 +9,7 @@ import pytest
 from homeassistant import config_entries, data_entry_flow, loader
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import CoreState, callback
+from homeassistant.data_entry_flow import RESULT_TYPE_ABORT
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryNotReady,
@@ -334,6 +335,30 @@ async def test_remove_entry(hass, manager):
     # Check that entity registry entry has been removed
     entity_entry_list = list(ent_reg.entities.values())
     assert not entity_entry_list
+
+
+async def test_remove_entry_cancels_reauth(hass, manager):
+    """Tests that removing a config entry, also aborts existing reauth flows."""
+    entry = MockConfigEntry(title="test_title", domain="test")
+
+    mock_setup_entry = AsyncMock(side_effect=ConfigEntryAuthFailed())
+    mock_integration(hass, MockModule("test", async_setup_entry=mock_setup_entry))
+    mock_entity_platform(hass, "config_flow.test", None)
+
+    entry.add_to_hass(hass)
+    await entry.async_setup(hass)
+    await hass.async_block_till_done()
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["entry_id"] == entry.entry_id
+    assert flows[0]["context"]["source"] == config_entries.SOURCE_REAUTH
+    assert entry.state is config_entries.ConfigEntryState.SETUP_ERROR
+
+    await manager.async_remove(entry.entry_id)
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 0
 
 
 async def test_remove_entry_handles_callback_error(hass, manager):
@@ -1626,7 +1651,7 @@ async def test_unique_id_update_existing_entry_without_reload(hass, manager):
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == "abort"
+    assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
     assert entry.data["host"] == "1.1.1.1"
     assert entry.data["additional"] == "data"
@@ -1671,7 +1696,7 @@ async def test_unique_id_update_existing_entry_with_reload(hass, manager):
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == "abort"
+    assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
     assert entry.data["host"] == "1.1.1.1"
     assert entry.data["additional"] == "data"
@@ -1688,7 +1713,7 @@ async def test_unique_id_update_existing_entry_with_reload(hass, manager):
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == "abort"
+    assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
     assert entry.data["host"] == "2.2.2.2"
     assert entry.data["additional"] == "data"
@@ -1731,7 +1756,7 @@ async def test_unique_id_not_update_existing_entry(hass, manager):
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == "abort"
+    assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
     assert entry.data["host"] == "0.0.0.0"
     assert entry.data["additional"] == "data"
@@ -1970,7 +1995,7 @@ async def test__async_current_entries_does_not_skip_ignore_non_user(hass, manage
     assert len(mock_setup_entry.mock_calls) == 0
 
 
-async def test__async_current_entries_explict_skip_ignore(hass, manager):
+async def test__async_current_entries_explicit_skip_ignore(hass, manager):
     """Test that _async_current_entries can explicitly include ignore."""
     hass.config.components.add("comp")
     entry = MockConfigEntry(
@@ -2009,7 +2034,7 @@ async def test__async_current_entries_explict_skip_ignore(hass, manager):
     assert p_entry.data == {"token": "supersecret"}
 
 
-async def test__async_current_entries_explict_include_ignore(hass, manager):
+async def test__async_current_entries_explicit_include_ignore(hass, manager):
     """Test that _async_current_entries can explicitly include ignore."""
     hass.config.components.add("comp")
     entry = MockConfigEntry(
@@ -2845,7 +2870,7 @@ async def test__async_abort_entries_match(hass, manager, matchers, reason):
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == "abort"
+    assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == reason
 
 
