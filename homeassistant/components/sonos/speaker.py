@@ -511,7 +511,7 @@ class SonosSpeaker:
         await self.async_unsubscribe()
 
         if not will_reconnect:
-            self.hass.data[DATA_SONOS].ssdp_known.remove(self.soco.uid)
+            self.hass.data[DATA_SONOS].discovery_known.remove(self.soco.uid)
             self.async_write_entity_states()
 
     async def async_rebooted(self, soco: SoCo) -> None:
