@@ -1,7 +1,7 @@
 """Test the entity helper."""
 # pylint: disable=protected-access
 import asyncio
-from datetime import timedelta
+from datetime import datetime, timedelta, timezone
 import threading
 from unittest.mock import MagicMock, PropertyMock, patch
 
@@ -829,3 +829,17 @@ async def test_entity_category_property(hass):
     )
     mock_entity2.entity_id = "hello.world"
     assert mock_entity2.entity_category == "config"
+
+
+async def test_datetime_conversion(hass):
+    """Test conversion of datetime state to ISO 8601 datetime strings."""
+    object_state = datetime(2017, 12, 19, 18, 29, 42, tzinfo=timezone.utc)
+    with patch.object(entity.Entity, "state", PropertyMock(return_value=object_state)):
+        ent = entity.Entity()
+        ent.hass = hass
+        ent.entity_id = "hello.world"
+        ent.async_write_ha_state()
+
+    state = hass.states.get("hello.world")
+    assert state is not None
+    assert state.state == "2017-12-19T18:29:42+00:00"
