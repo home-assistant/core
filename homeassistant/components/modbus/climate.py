@@ -97,7 +97,7 @@ class ModbusThermostat(BasePlatform, RestoreEntity, ClimateEntity):
 
         if self._precision not in PRECISION_VALID_LIST:
             _LOGGER.warning(
-                "Unable to parse precision; using whole numbers for now, adjust your configuration."
+                "Unable to parse precision; using whole numbers for now, adjust your configuration"
             )
             self._precision = PRECISION_WHOLE
 
