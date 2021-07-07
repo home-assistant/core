@@ -71,6 +71,7 @@ SUBSCRIPTION_SERVICES = [
     "zoneGroupTopology",
 ]
 UNAVAILABLE_VALUES = {"", "NOT_IMPLEMENTED", None}
+UNUSED_DEVICE_KEYS = ["SPID", "TargetRoomName"]
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -407,7 +408,9 @@ class SonosSpeaker:
         """Update device properties from an event."""
         if more_info := event.variables.get("more_info"):
             battery_dict = dict(x.split(":") for x in more_info.split(","))
-            if "BattChg" not in battery_dict:
+            for unused in UNUSED_DEVICE_KEYS:
+                battery_dict.pop(unused, None)
+            if battery_dict and "BattChg" not in battery_dict:
                 _LOGGER.debug(
                     "Unknown device properties update for %s (%s), please report an issue: '%s'",
                     self.zone_name,
