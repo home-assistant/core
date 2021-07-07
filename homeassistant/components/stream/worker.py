@@ -203,7 +203,7 @@ class SegmentBuffer:
 
 
 class TimestampValidator:
-    """Validate orering of timestamps for packets in a stream."""
+    """Validate ordering of timestamps for packets in a stream."""
 
     def __init__(self) -> None:
         """Initialize the TimestampValidator."""
@@ -277,6 +277,7 @@ def stream_worker(
     # Have to work around two problems with RTSP feeds in ffmpeg
     # 1 - first frame has bad pts/dts https://trac.ffmpeg.org/ticket/5018
     # 2 - seeking can be problematic https://trac.ffmpeg.org/ticket/7815
+
     def peek_first_dts() -> bool:
         """Initialize by peeking into the first few packets of the stream.
 
