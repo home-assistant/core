@@ -1,7 +1,7 @@
 """Config flow for SONOS."""
 import pysonos
 
-from homeassistant.const import CONF_HOST, CONF_HOSTNAME
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.config_entry_flow import DiscoveryFlowHandler
@@ -27,7 +27,7 @@ class SonosDiscoveryFlowHandler(DiscoveryFlowHandler):
         self, discovery_info: DiscoveryInfoType
     ) -> FlowResult:
         """Handle a flow initialized by zeroconf."""
-        hostname = discovery_info[CONF_HOSTNAME]
+        hostname = discovery_info["hostname"]
         if hostname is None or not hostname.startswith("Sonos-"):
             return self.async_abort(reason="not_sonos_device")
         await self.async_set_unique_id(self._domain, raise_on_progress=False)
