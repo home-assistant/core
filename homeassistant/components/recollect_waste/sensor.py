@@ -55,9 +55,9 @@ def async_get_pickup_type_names(
 
 async def async_setup_platform(
     hass: HomeAssistant,
-    config: dict,
+    config: ConfigType,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: dict = None,
+    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Import Recollect Waste configuration from YAML."""
     LOGGER.warning(
