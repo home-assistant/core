@@ -69,7 +69,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         else:
             self._abort_if_unique_id_configured()
 
-    async def async_step_user(self, user_input: dict | None = None) -> FlowResult:
+    async def async_step_user(self, user_input: dict[str, Any] | None = None) -> FlowResult:
         """Handle configuration via the UI."""
         if user_input is None:
             return self.async_show_form(
