@@ -386,9 +386,11 @@ def get_device_wrapper(
         return None
 
     for config_entry in hass.data[DOMAIN][DATA_CONFIG_ENTRY]:
-        wrapper = hass.data[DOMAIN][DATA_CONFIG_ENTRY][config_entry].get(COAP)
+        wrapper: ShellyDeviceWrapper | None = hass.data[DOMAIN][DATA_CONFIG_ENTRY][
+            config_entry
+        ].get(COAP)
 
         if wrapper and wrapper.device_id == device_id:
-            return cast(ShellyDeviceWrapper, wrapper)
+            return wrapper
 
     return None
