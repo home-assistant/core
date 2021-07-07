@@ -93,7 +93,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             title=info[CONF_UID], data={CONF_UID: info["uid"], **user_input}
         )
 
-    async def async_step_dhcp(self, discovery_info: dict) -> FlowResult:
+    async def async_step_dhcp(self, discovery_info: DiscoveryInfoType) -> FlowResult:
         """Handle the configuration via dhcp."""
         self.discovery_info = {
             CONF_IP_ADDRESS: discovery_info[IP_ADDRESS],
