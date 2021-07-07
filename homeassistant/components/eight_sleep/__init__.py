@@ -231,7 +231,7 @@ class EightSleepBaseEntity(CoordinatorEntity):
         eight: EightSleep,
         side: str | None,
         sensor: str,
-    ):
+    ) -> None:
         """Initialize the data object."""
         super().__init__(coordinator)
         self._eight = eight
@@ -264,7 +264,7 @@ class EightSleepUserEntity(EightSleepBaseEntity):
         side: str | None,
         sensor: str,
         units: str,
-    ):
+    ) -> None:
         """Initialize the data object."""
         super().__init__(name, coordinator, eight, side, sensor)
         self._units = units

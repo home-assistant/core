@@ -58,7 +58,7 @@ class EightHeatSensor(EightSleepBaseEntity, BinarySensorEntity):
         eight: EightSleep,
         side: str | None,
         sensor: str,
-    ):
+    ) -> None:
         """Initialize the sensor."""
         super().__init__(name, coordinator, eight, side, sensor)
         self._attr_device_class = DEVICE_CLASS_OCCUPANCY

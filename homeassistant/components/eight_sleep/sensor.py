@@ -102,7 +102,7 @@ class EightHeatSensor(EightSleepBaseEntity, SensorEntity):
         eight: EightSleep,
         side: str | None,
         sensor: str,
-    ):
+    ) -> None:
         """Initialize the sensor."""
         super().__init__(name, coordinator, eight, side, sensor)
         self._attr_unit_of_measurement = PERCENTAGE
@@ -140,7 +140,7 @@ class EightUserSensor(EightSleepUserEntity, SensorEntity):
         side: str | None,
         sensor: str,
         units: str,
-    ):
+    ) -> None:
         """Initialize the sensor."""
         super().__init__(name, coordinator, eight, side, sensor, units)
 
@@ -291,7 +291,7 @@ class EightRoomSensor(EightSleepUserEntity, SensorEntity):
         side: str | None,
         sensor: str,
         units: str,
-    ):
+    ) -> None:
         """Initialize the sensor."""
         super().__init__(name, coordinator, eight, side, sensor, units)
 
