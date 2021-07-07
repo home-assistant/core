@@ -37,7 +37,7 @@ async def test_user_form(discover_mock: MagicMock, hass: core.HomeAssistant):
 
 
 async def test_zeroconf_form(hass: core.HomeAssistant):
-    """Test we get the discovery form."""
+    """Test we pass sonos devices to the discovery manager."""
     await setup.async_setup_component(hass, "persistent_notification", {})
     mock_manager = hass.data[DATA_SONOS_DISCOVERY_MANAGER] = MagicMock()
     result = await hass.config_entries.flow.async_init(
