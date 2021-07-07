@@ -1,13 +1,13 @@
 """The tests for RFXCOM RFXtrx device actions."""
-from typing import NamedTuple, Set, Tuple
+from __future__ import annotations
+
+from typing import NamedTuple
 
 import RFXtrx
 import pytest
-import voluptuous_serialize
 
 import homeassistant.components.automation as automation
-from homeassistant.components.rfxtrx import DOMAIN, device_action
-from homeassistant.helpers import config_validation as cv
+from homeassistant.components.rfxtrx import DOMAIN
 from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.setup import async_setup_component
 
@@ -37,7 +37,7 @@ class DeviceTestData(NamedTuple):
     """Test data linked to a device."""
 
     code: str
-    device_identifiers: Set[Tuple[str]]
+    device_identifiers: set[tuple[str, str, str, str]]
 
 
 DEVICE_LIGHTING_1 = DeviceTestData("0710002a45050170", {("rfxtrx", "10", "0", "E5")})
@@ -73,13 +73,8 @@ async def setup_entry(hass, devices):
 
 
 def _get_expected_actions(data):
-    for key, value in data.items():
-        yield {"type": "send_command", "subtype": value, "data": key}
-
-    yield {
-        "type": "send_command",
-        "subtype": "...",
-    }
+    for value in data.values():
+        yield {"type": "send_command", "subtype": value}
 
 
 @pytest.mark.parametrize(
@@ -101,6 +96,7 @@ async def test_get_actions(hass, device_reg: DeviceRegistry, device, expected):
     await setup_entry(hass, {device.code: {"signal_repetitions": 1}})
 
     device_entry = device_reg.async_get_device(device.device_identifiers, set())
+    assert device_entry
 
     actions = await async_get_device_automations(hass, "action", device_entry.id)
     actions = [action for action in actions if action["domain"] == DOMAIN]
@@ -118,18 +114,18 @@ async def test_get_actions(hass, device_reg: DeviceRegistry, device, expected):
     [
         [
             DEVICE_LIGHTING_1,
-            {"type": "send_command", "subtype": "...", "data": 1},
+            {"type": "send_command", "subtype": "On"},
             "0710000045050100",
         ],
         [
             DEVICE_LIGHTING_1,
-            {"type": "send_command", "subtype": "...", "data": 10},
-            "0710000045050a00",
+            {"type": "send_command", "subtype": "Off"},
+            "0710000045050000",
         ],
         [
             DEVICE_BLINDS_1,
-            {"type": "send_command", "subtype": "...", "data": 10},
-            "09190000009ba8010a00",
+            {"type": "send_command", "subtype": "Stop"},
+            "09190000009ba8010200",
         ],
     ],
 )
@@ -141,6 +137,7 @@ async def test_action(
     await setup_entry(hass, {device.code: {"signal_repetitions": 1}})
 
     device_entry = device_reg.async_get_device(device.device_identifiers, set())
+    assert device_entry
 
     assert await async_setup_component(
         hass,
@@ -166,46 +163,3 @@ async def test_action(
     await hass.async_block_till_done()
 
     rfxtrx.transport.send.assert_called_once_with(bytearray.fromhex(expected))
-
-
-@pytest.mark.parametrize(
-    "device,expected",
-    [
-        [DEVICE_LIGHTING_1, RFXtrx.lowlevel.Lighting1.COMMANDS],
-        [DEVICE_BLINDS_1, RFXtrx.lowlevel.RollerTrol.COMMANDS],
-        [DEVICE_TEMPHUM_1, None],
-    ],
-)
-async def test_capabilities(hass, device_reg: DeviceRegistry, device, expected):
-    """Test getting capabilities."""
-    await setup_entry(hass, {device.code: {"signal_repetitions": 1}})
-
-    device_entry = device_reg.async_get_device(device.device_identifiers, set())
-
-    capabilities = await device_action.async_get_action_capabilities(
-        hass,
-        {
-            "domain": DOMAIN,
-            "device_id": device_entry.id,
-            "type": "send_command",
-            "subtype": "...",
-            "data": 123,
-        },
-    )
-    assert capabilities == {}
-
-    capabilities = await device_action.async_get_action_capabilities(
-        hass,
-        {
-            "domain": DOMAIN,
-            "device_id": device_entry.id,
-            "type": "send_command",
-            "subtype": "...",
-        },
-    )
-
-    assert capabilities and "extra_fields" in capabilities
-
-    assert voluptuous_serialize.convert(
-        capabilities["extra_fields"], custom_serializer=cv.custom_serializer
-    ) == [{"name": "data", "required": True, "type": "integer"}]

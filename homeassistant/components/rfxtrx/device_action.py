@@ -7,7 +7,7 @@ from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_TYPE
 from homeassistant.core import Context, HomeAssistant
 import homeassistant.helpers.config_validation as cv
 
-from . import DATA_RFXOBJECT, DOMAIN
+from . import _LOGGER, DATA_RFXOBJECT, DOMAIN
 from .helpers import async_get_device_object
 
 CONF_DATA = "data"
@@ -30,7 +30,6 @@ ACTION_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_TYPE): vol.In(ACTION_TYPES),
         vol.Required(CONF_SUBTYPE): str,
-        vol.Required(CONF_DATA): int,
     }
 )
 
@@ -44,33 +43,17 @@ async def async_get_actions(hass: HomeAssistant, device_id: str) -> list[dict]:
         for action_type in ACTION_TYPES:
             if hasattr(device, action_type):
                 values = getattr(device, ACTION_SELECTION[action_type], {})
-                for key, value in values.items():
+                for value in values.values():
                     actions.append(
                         {
                             CONF_DEVICE_ID: device_id,
                             CONF_DOMAIN: DOMAIN,
                             CONF_TYPE: action_type,
                             CONF_SUBTYPE: value,
-                            CONF_DATA: key,
                         }
                     )
-                actions.append(
-                    {
-                        CONF_DEVICE_ID: device_id,
-                        CONF_DOMAIN: DOMAIN,
-                        CONF_TYPE: action_type,
-                        CONF_SUBTYPE: "...",
-                    }
-                )
 
     return actions
-
-
-async def async_get_action_capabilities(hass, config):
-    """List action capabilities."""
-    if CONF_DATA in config:
-        return {}
-    return {"extra_fields": vol.Schema({vol.Required(CONF_DATA): int})}
 
 
 async def async_call_action_from_config(
@@ -82,5 +65,14 @@ async def async_call_action_from_config(
     rfx = hass.data[DOMAIN][DATA_RFXOBJECT]
     device = async_get_device_object(hass, config[CONF_DEVICE_ID])
 
-    send_fun = getattr(device, config[CONF_TYPE])
-    await hass.async_add_executor_job(send_fun, rfx.transport, config[CONF_DATA])
+    action_type = config[CONF_TYPE]
+    sub_type = config[CONF_SUBTYPE]
+    send_fun = getattr(device, action_type)
+    commands = getattr(device, ACTION_SELECTION[action_type], {})
+
+    for key, value in commands.items():
+        if value == sub_type:
+            await hass.async_add_executor_job(send_fun, rfx.transport, key)
+            break
+    else:
+        _LOGGER.error("Subtype %s not found in device commands %s", sub_type, commands)

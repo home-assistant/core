@@ -1,5 +1,7 @@
 """The tests for RFXCOM RFXtrx device triggers."""
-from typing import NamedTuple, Set, Tuple
+from __future__ import annotations
+
+from typing import NamedTuple
 
 import pytest
 
@@ -21,7 +23,7 @@ class EventTestData(NamedTuple):
     """Test data linked to a device."""
 
     code: str
-    device_identifiers: Set[Tuple[str]]
+    device_identifiers: set[tuple[str, str, str, str]]
     type: str
     subtype: str
 
