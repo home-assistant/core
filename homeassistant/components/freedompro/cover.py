@@ -87,9 +87,10 @@ class Device(CoordinatorEntity, CoverEntity):
             state = device["state"]
             if "position" in state:
                 self._attr_current_cover_position = state["position"]
-                self._attr_is_closed = (
-                    True if self._attr_current_cover_position == 0 else False
-                )
+                if self._attr_current_cover_position == 0:
+                    self._attr_is_closed = True
+                else:
+                    self._attr_is_closed = False
         super()._handle_coordinator_update()
 
     async def async_added_to_hass(self) -> None:

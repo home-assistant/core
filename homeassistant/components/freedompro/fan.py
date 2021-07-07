@@ -68,7 +68,13 @@ class Device(CoordinatorEntity, FanEntity):
         await super().async_added_to_hass()
         self._handle_coordinator_update()
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(
+        self,
+        speed,
+        percentage,
+        preset_mode,
+        **kwargs,
+    ):
         """Async function to set on to fan."""
         payload = {"on": True}
         payload = json.dumps(payload)

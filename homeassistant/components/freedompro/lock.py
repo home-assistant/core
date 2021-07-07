@@ -60,7 +60,10 @@ class Device(CoordinatorEntity, LockEntity):
         if device is not None and "state" in device:
             state = device["state"]
             if "lock" in state:
-                self._attr_is_locked = True if state["lock"] == 1 else False
+                if state["lock"] == 1:
+                    self._attr_is_locked = True
+                else:
+                    self._attr_is_locked = False
         super()._handle_coordinator_update()
 
     async def async_added_to_hass(self) -> None:
