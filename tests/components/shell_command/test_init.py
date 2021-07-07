@@ -5,6 +5,8 @@ import os
 import tempfile
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 from homeassistant.components import shell_command
 from homeassistant.setup import async_setup_component
 
@@ -166,6 +168,7 @@ async def test_stderr_captured(mock_output, hass):
     assert test_phrase.encode() + b"\n" == mock_output.call_args_list[0][0][-1]
 
 
+@pytest.mark.skip(reason="disabled to check if it fixes flaky CI")
 async def test_do_no_run_forever(hass, caplog):
     """Test subprocesses terminate after the timeout."""
 
