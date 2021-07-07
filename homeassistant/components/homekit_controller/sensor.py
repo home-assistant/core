@@ -1,8 +1,8 @@
 """Support for Homekit sensors."""
-from aiohomekit.model.characteristics import CharacteristicsTypes
+from aiohomekit.model.characteristics import Characteristic, CharacteristicsTypes
 from aiohomekit.model.services import ServicesTypes
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     DEVICE_CLASS_BATTERY,
@@ -28,14 +28,23 @@ SIMPLE_SENSOR = {
     CharacteristicsTypes.Vendor.EVE_ENERGY_WATT: {
         "name": "Real Time Energy",
         "device_class": DEVICE_CLASS_POWER,
+        "state_class": STATE_CLASS_MEASUREMENT,
         "unit": "watts",
-        "icon": "mdi:chart-line",
     },
     CharacteristicsTypes.Vendor.KOOGEEK_REALTIME_ENERGY: {
         "name": "Real Time Energy",
         "device_class": DEVICE_CLASS_POWER,
+        "state_class": STATE_CLASS_MEASUREMENT,
         "unit": "watts",
-        "icon": "mdi:chart-line",
+    },
+    CharacteristicsTypes.get_uuid(CharacteristicsTypes.TEMPERATURE_CURRENT): {
+        "name": "Current Temperature",
+        "device_class": DEVICE_CLASS_TEMPERATURE,
+        "state_class": STATE_CLASS_MEASUREMENT,
+        "unit": TEMP_CELSIUS,
+        # This sensor is only for temperature characteristics that are not part
+        # of a temperature sensor service.
+        "probe": lambda char: char.service.type != ServicesTypes.TEMPERATURE_SENSOR,
     },
 }
 
@@ -216,12 +225,15 @@ class SimpleSensor(CharacteristicEntity, SensorEntity):
         info,
         char,
         device_class=None,
+        state_class=None,
         unit=None,
         icon=None,
         name=None,
+        **kwargs,
     ):
         """Initialise a secondary HomeKit characteristic sensor."""
         self._device_class = device_class
+        self._state_class = state_class
         self._unit = unit
         self._icon = icon
         self._name = name
@@ -235,8 +247,13 @@ class SimpleSensor(CharacteristicEntity, SensorEntity):
 
     @property
     def device_class(self):
-        """Return units for the sensor."""
+        """Return type of sensor."""
         return self._device_class
+
+    @property
+    def state_class(self):
+        """Return type of state."""
+        return self._state_class
 
     @property
     def unit_of_measurement(self):
@@ -285,9 +302,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     conn.add_listener(async_add_service)
 
     @callback
-    def async_add_characteristic(char):
+    def async_add_characteristic(char: Characteristic):
         kwargs = SIMPLE_SENSOR.get(char.type)
         if not kwargs:
+            return False
+        if "probe" in kwargs and not kwargs["probe"](char):
             return False
         info = {"aid": char.service.accessory.aid, "iid": char.service.iid}
         async_add_entities([SimpleSensor(conn, info, char, **kwargs)], True)

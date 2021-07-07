@@ -80,9 +80,9 @@ class NetatmoLight(NetatmoBase, LightEntity):
         self._home_id = home_id
         self._model = camera_type
         self._device_name = self._data.get_camera(camera_id).get("name")
-        self._name = f"{MANUFACTURER} {self._device_name}"
+        self._attr_name = f"{MANUFACTURER} {self._device_name}"
         self._is_on = False
-        self._unique_id = f"{self._id}-light"
+        self._attr_unique_id = f"{self._id}-light"
 
     async def async_added_to_hass(self) -> None:
         """Entity created."""
@@ -126,7 +126,7 @@ class NetatmoLight(NetatmoBase, LightEntity):
 
     async def async_turn_on(self, **kwargs):
         """Turn camera floodlight on."""
-        _LOGGER.debug("Turn camera '%s' on", self._name)
+        _LOGGER.debug("Turn camera '%s' on", self._attr_name)
         await self._data.async_set_state(
             home_id=self._home_id,
             camera_id=self._id,
@@ -135,7 +135,7 @@ class NetatmoLight(NetatmoBase, LightEntity):
 
     async def async_turn_off(self, **kwargs):
         """Turn camera floodlight into auto mode."""
-        _LOGGER.debug("Turn camera '%s' to auto mode", self._name)
+        _LOGGER.debug("Turn camera '%s' to auto mode", self._attr_name)
         await self._data.async_set_state(
             home_id=self._home_id,
             camera_id=self._id,

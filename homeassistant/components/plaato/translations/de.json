@@ -27,7 +27,7 @@
                     "device_name": "Benenne dein Ger\u00e4t",
                     "device_type": "Art des Plaato-Ger\u00e4ts"
                 },
-                "description": "M\u00f6chten Sie mit der Einrichtung beginnen?",
+                "description": "M\u00f6chtest Du mit der Einrichtung beginnen?",
                 "title": "Plaato Ger\u00e4te einrichten"
             },
             "webhook": {
