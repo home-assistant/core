@@ -63,8 +63,9 @@ class Segment:
     start_time: datetime.datetime = attr.ib(factory=datetime.datetime.utcnow)
     _stream_outputs: Iterable[StreamOutput] = attr.ib(factory=list)
     # Store text of this segment's hls playlist for reuse
-    hls_playlist_template: str = attr.ib(default=None)
-    hls_playlist_parts: str = attr.ib(default=None)
+    # Use list[str] for easy appends
+    hls_playlist_template: list[str] = attr.ib(factory=list)
+    hls_playlist_parts: list[str] = attr.ib(factory=list)
     # Number of playlist parts rendered so far
     hls_num_parts_rendered: int = attr.ib(default=0)
     # Set to true when all the parts are rendered
@@ -145,31 +146,27 @@ class Segment:
         and hls_playlist_complete to avoid redoing work on subsequent calls.
         """
         if self.hls_playlist_complete:
-            return self.hls_playlist_template
-        # Promote str to list[str] to allow appends and joins
-        playlist_template = (
-            [self.hls_playlist_template] if self.hls_playlist_template else []
-        )
-        playlist_parts = [self.hls_playlist_parts] if self.hls_playlist_parts else []
-        if not playlist_template:
+            return self.hls_playlist_template[0]
+        if not self.hls_playlist_template:
             if last_stream_id != self.stream_id:
-                playlist_template.append("#EXT-X-DISCONTINUITY")
+                self.hls_playlist_template.append("#EXT-X-DISCONTINUITY")
             # This is a placeholder where the rendered parts will be inserted
-            playlist_template.append("{}")
+            self.hls_playlist_template.append("{}")
         if render_parts:
             for http_range_start, part in itertools.islice(
                 self.parts_by_byterange.items(),
                 self.hls_num_parts_rendered,
                 None,
             ):
-                playlist_parts.append(
+                self.hls_playlist_parts.append(
                     f"#EXT-X-PART:DURATION={part.duration:.3f},URI="
                     f'"./segment/{self.sequence}.m4s",BYTERANGE="{len(part.data)}'
                     f'@{http_range_start}"{",INDEPENDENT=YES" if part.has_keyframe else ""}'
                 )
         if self.complete:
-            playlist_template.pop()
-            playlist_template.extend(
+            # Replace the previous placeholder with a new placeholder and segment metadata
+            self.hls_playlist_template.pop()
+            self.hls_playlist_template.extend(
                 [
                     # Squeeze the placeholder on the same line as #EXT-X-PROGRAM-DATE-TIME
                     # just to keep tidy when there are no parts
@@ -181,26 +178,28 @@ class Segment:
                     f"./segment/{self.sequence}.m4s",
                 ]
             )
-            # Append another line to parts because we don't include a newline before #EXTINF
-            playlist_parts.append("")
+            # Append another line to parts because we don't include a newline before #EXT-X-PROGRAM-DATE-TIME
+            self.hls_playlist_parts.append("")
 
         # Store intermediate playlist data in member variables for reuse
-        self.hls_playlist_template = "\n".join(playlist_template)
-        self.hls_playlist_parts = "\n".join(playlist_parts)
+        self.hls_playlist_template = ["\n".join(self.hls_playlist_template)]
+        # lstrip discards extra preceding newline in case first render was empty
+        self.hls_playlist_parts = ["\n".join(self.hls_playlist_parts).lstrip()]
         self.hls_num_parts_rendered = len(self.parts_by_byterange)
         self.hls_playlist_complete = self.complete
 
-        return self.hls_playlist_template
+        return self.hls_playlist_template[0]
 
     def render_hls(
         self, last_stream_id: int, render_parts: bool, add_hint: bool
     ) -> str:
         """Render the HLS playlist section for the Segment including a hint if requested."""
         playlist_template = self._render_hls_template(last_stream_id, render_parts)
+        playlist = playlist_template.format(
+            self.hls_playlist_parts[0] if render_parts else ""
+        )
         if not add_hint:
-            return playlist_template.format(
-                self.hls_playlist_parts if render_parts else ""
-            )
+            return playlist
         # Preload hints help save round trips by informing the client about the next part.
         # The next part will usually be in this segment but will be first part of the next
         # segment if this segment is already complete.
@@ -211,13 +210,8 @@ class Segment:
         else:  # Next part is in the same segment
             sequence = self.sequence
             start = self.data_size
-        playlist_template_list = [
-            playlist_template,
-            f'#EXT-X-PRELOAD-HINT:TYPE=PART,URI="./segment/{sequence}.m4s",'
-            f"BYTERANGE-START={start}",
-        ]
-        # If add_hint is true, render_parts must be true, so add the parts
-        return "\n".join(playlist_template_list).format(self.hls_playlist_parts)
+        hint = f'#EXT-X-PRELOAD-HINT:TYPE=PART,URI="./segment/{sequence}.m4s",BYTERANGE-START={start}'
+        return (playlist + "\n" + hint) if playlist else hint
 
 
 class IdleTimer:
