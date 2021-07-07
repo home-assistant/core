@@ -1,6 +1,8 @@
 """Config flow for Elexa Guardian integration."""
 from __future__ import annotations
 
+from typing import Any
+
 from aioguardian import Client
 from aioguardian.errors import GuardianError
 import voluptuous as vol
@@ -10,6 +12,7 @@ from homeassistant.components.dhcp import IP_ADDRESS
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import CONF_UID, DOMAIN, LOGGER
 
@@ -69,7 +72,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         else:
             self._abort_if_unique_id_configured()
 
-    async def async_step_user(self, user_input: dict[str, Any] | None = None) -> FlowResult:
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle configuration via the UI."""
         if user_input is None:
             return self.async_show_form(
@@ -101,7 +106,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         }
         return await self._async_handle_discovery()
 
-    async def async_step_zeroconf(self, discovery_info: DiscoveryInfoType) -> FlowResult:
+    async def async_step_zeroconf(
+        self, discovery_info: DiscoveryInfoType
+    ) -> FlowResult:
         """Handle the configuration via zeroconf."""
         self.discovery_info = {
             CONF_IP_ADDRESS: discovery_info["host"],
