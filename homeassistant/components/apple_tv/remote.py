@@ -29,15 +29,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class AppleTVRemote(AppleTVEntity, RemoteEntity):
     """Device that sends commands to an Apple TV."""
 
+    _attr_should_poll = False
+
     @property
     def is_on(self):
         """Return true if device is on."""
         return self.atv is not None
-
-    @property
-    def should_poll(self):
-        """No polling needed for Apple TV."""
-        return False
 
     async def async_turn_on(self, **kwargs):
         """Turn the device on."""
