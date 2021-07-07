@@ -14,14 +14,7 @@ from homeassistant.const import CONF_NAME
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import API_TIMEOUT, CONF_STATION_ID, DEFAULT_NAME, DOMAIN
-
-DATA_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_STATION_ID): int,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): str,
-    }
-)
+from .const import API_TIMEOUT, CONF_STATION_ID, DOMAIN
 
 
 class GiosFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -49,7 +42,7 @@ class GiosFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     await gios.async_update()
 
                 return self.async_create_entry(
-                    title=user_input[CONF_STATION_ID],
+                    title=gios.station_name,
                     data=user_input,
                 )
             except (ApiError, ClientConnectorError, asyncio.TimeoutError):
@@ -60,5 +53,14 @@ class GiosFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 errors[CONF_STATION_ID] = "invalid_sensors_data"
 
         return self.async_show_form(
-            step_id="user", data_schema=DATA_SCHEMA, errors=errors
+            step_id="user",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_STATION_ID): int,
+                    vol.Optional(
+                        CONF_NAME, default=self.hass.config.location_name
+                    ): str,
+                }
+            ),
+            errors=errors,
         )

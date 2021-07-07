@@ -13,12 +13,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import RitualsDataUpdateCoordinator
-from .const import COORDINATORS, DEVICES, DOMAIN, ID, SENSORS
+from .const import COORDINATORS, DEVICES, DOMAIN, SENSORS
 from .entity import DiffuserEntity
 
-TITLE = "title"
-ICON = "icon"
-WIFI = "wific"
+ID = "id"
 PERFUME = "rfidc"
 FILL = "fillc"
 
@@ -29,8 +27,6 @@ BATTERY_SUFFIX = " Battery"
 PERFUME_SUFFIX = " Perfume"
 FILL_SUFFIX = " Fill"
 WIFI_SUFFIX = " Wifi"
-
-ATTR_SIGNAL_STRENGTH = "signal_strength"
 
 
 async def async_setup_entry(
@@ -62,17 +58,14 @@ class DiffuserPerfumeSensor(DiffuserEntity):
         """Initialize the perfume sensor."""
         super().__init__(diffuser, coordinator, PERFUME_SUFFIX)
 
-    @property
-    def icon(self) -> str:
-        """Return the perfume sensor icon."""
-        if self._diffuser.hub_data[SENSORS][PERFUME][ID] == PERFUME_NO_CARTRIDGE_ID:
-            return "mdi:tag-remove"
-        return "mdi:tag-text"
+        self._attr_icon = "mdi:tag-text"
+        if diffuser.hub_data[SENSORS][PERFUME][ID] == PERFUME_NO_CARTRIDGE_ID:
+            self._attr_icon = "mdi:tag-remove"
 
     @property
     def state(self) -> str:
         """Return the state of the perfume sensor."""
-        return self._diffuser.hub_data[SENSORS][PERFUME][TITLE]
+        return self._diffuser.perfume
 
 
 class DiffuserFillSensor(DiffuserEntity):
@@ -94,11 +87,14 @@ class DiffuserFillSensor(DiffuserEntity):
     @property
     def state(self) -> str:
         """Return the state of the fill sensor."""
-        return self._diffuser.hub_data[SENSORS][FILL][TITLE]
+        return self._diffuser.fill
 
 
 class DiffuserBatterySensor(DiffuserEntity):
     """Representation of a diffuser battery sensor."""
+
+    _attr_device_class = DEVICE_CLASS_BATTERY
+    _attr_unit_of_measurement = PERCENTAGE
 
     def __init__(
         self, diffuser: Diffuser, coordinator: RitualsDataUpdateCoordinator
@@ -111,19 +107,12 @@ class DiffuserBatterySensor(DiffuserEntity):
         """Return the state of the battery sensor."""
         return self._diffuser.battery_percentage
 
-    @property
-    def device_class(self) -> str:
-        """Return the class of the battery sensor."""
-        return DEVICE_CLASS_BATTERY
-
-    @property
-    def unit_of_measurement(self) -> str:
-        """Return the battery unit of measurement."""
-        return PERCENTAGE
-
 
 class DiffuserWifiSensor(DiffuserEntity):
     """Representation of a diffuser wifi sensor."""
+
+    _attr_device_class = DEVICE_CLASS_SIGNAL_STRENGTH
+    _attr_unit_of_measurement = PERCENTAGE
 
     def __init__(
         self, diffuser: Diffuser, coordinator: RitualsDataUpdateCoordinator
@@ -135,13 +124,3 @@ class DiffuserWifiSensor(DiffuserEntity):
     def state(self) -> int:
         """Return the state of the wifi sensor."""
         return self._diffuser.wifi_percentage
-
-    @property
-    def device_class(self) -> str:
-        """Return the class of the wifi sensor."""
-        return DEVICE_CLASS_SIGNAL_STRENGTH
-
-    @property
-    def unit_of_measurement(self) -> str:
-        """Return the wifi unit of measurement."""
-        return PERCENTAGE

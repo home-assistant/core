@@ -9,7 +9,7 @@
             "old_firmware": "Nicht unterst\u00fctzte alte Firmware auf dem Bond-Ger\u00e4t - bitte aktualisiere, bevor du fortf\u00e4hrst",
             "unknown": "Unerwarteter Fehler"
         },
-        "flow_title": "Bond: {name} ({host})",
+        "flow_title": "{name} ({host})",
         "step": {
             "confirm": {
                 "data": {

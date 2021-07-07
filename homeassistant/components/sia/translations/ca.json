@@ -4,7 +4,7 @@
             "invalid_account_format": "El compte no \u00e9s un valor hexadecimal, utilitza nom\u00e9s 0-9 i A-F.",
             "invalid_account_length": "El compte no t\u00e9 la longitud correcta, ha de tenir entre 3 i 16 car\u00e0cters.",
             "invalid_key_format": "La clau no \u00e9s un valor hexadecimal, utilitza nom\u00e9s 0-9 i A-F.",
-            "invalid_key_length": "La clau no t\u00e9 la longitud correcta, ha de tenir 16, 24 o 32 car\u00e0cters hexadecimals.",
+            "invalid_key_length": "La clau no t\u00e9 longitud correcta, ha de tenir 16, 24 o 32 car\u00e0cters hexadecimals.",
             "invalid_ping": "L'interval de refresc ha d'estar compr\u00e8s entre 1 i 1440 minuts.",
             "invalid_zones": "Cal que hi hagi com a m\u00ednim 1 zona.",
             "unknown": "Error inesperat"

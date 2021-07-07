@@ -49,6 +49,7 @@
                     "mode": "Berechnung",
                     "show_on_map": "Auf Karte anzeigen"
                 },
+                "description": "Konfigurieren Sie einen \u00f6ffentlichen Wettersensor f\u00fcr einen Bereich.",
                 "title": "\u00d6ffentlicher Netatmo Wettersensor"
             },
             "public_weather_areas": {

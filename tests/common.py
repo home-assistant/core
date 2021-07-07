@@ -34,7 +34,7 @@ from homeassistant.components.device_automation import (  # noqa: F401
     _async_get_device_automation_capabilities as async_get_device_automation_capabilities,
     _async_get_device_automations as async_get_device_automations,
 )
-from homeassistant.components.mqtt.models import Message
+from homeassistant.components.mqtt.models import ReceiveMessage
 from homeassistant.config import async_process_component_config
 from homeassistant.const import (
     DEVICE_DEFAULT_NAME,
@@ -353,7 +353,7 @@ def async_fire_mqtt_message(hass, topic, payload, qos=0, retain=False):
     """Fire the MQTT message."""
     if isinstance(payload, str):
         payload = payload.encode("utf-8")
-    msg = Message(topic, payload, qos, retain)
+    msg = ReceiveMessage(topic, payload, qos, retain)
     hass.data["mqtt"]._mqtt_handle_message(msg)
 
 
@@ -732,7 +732,8 @@ class MockConfigEntry(config_entries.ConfigEntry):
         title="Mock Title",
         state=None,
         options={},
-        system_options={},
+        pref_disable_new_entities=None,
+        pref_disable_polling=None,
         unique_id=None,
         disabled_by=None,
         reason=None,
@@ -742,7 +743,8 @@ class MockConfigEntry(config_entries.ConfigEntry):
             "entry_id": entry_id or uuid_util.random_uuid_hex(),
             "domain": domain,
             "data": data or {},
-            "system_options": system_options,
+            "pref_disable_new_entities": pref_disable_new_entities,
+            "pref_disable_polling": pref_disable_polling,
             "options": options,
             "version": version,
             "title": title,

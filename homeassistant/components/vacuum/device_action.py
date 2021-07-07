@@ -36,22 +36,14 @@ async def async_get_actions(hass: HomeAssistant, device_id: str) -> list[dict]:
         if entry.domain != DOMAIN:
             continue
 
-        actions.append(
-            {
-                CONF_DEVICE_ID: device_id,
-                CONF_DOMAIN: DOMAIN,
-                CONF_ENTITY_ID: entry.entity_id,
-                CONF_TYPE: "clean",
-            }
-        )
-        actions.append(
-            {
-                CONF_DEVICE_ID: device_id,
-                CONF_DOMAIN: DOMAIN,
-                CONF_ENTITY_ID: entry.entity_id,
-                CONF_TYPE: "dock",
-            }
-        )
+        base_action = {
+            CONF_DEVICE_ID: device_id,
+            CONF_DOMAIN: DOMAIN,
+            CONF_ENTITY_ID: entry.entity_id,
+        }
+
+        actions.append({**base_action, CONF_TYPE: "clean"})
+        actions.append({**base_action, CONF_TYPE: "dock"})
 
     return actions
 

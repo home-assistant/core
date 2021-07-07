@@ -135,7 +135,7 @@ class SignalUpdateCallback:
             self._hass.bus.async_fire(NEST_EVENT, message)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Nest from a config entry with dispatch between old/new flows."""
 
     if DATA_SDM not in entry.data:

@@ -176,10 +176,23 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the ecobee thermostat."""
 
     data = hass.data[DOMAIN]
+    entities = []
 
-    devices = [Thermostat(data, index) for index in range(len(data.ecobee.thermostats))]
+    for index in range(len(data.ecobee.thermostats)):
+        thermostat = data.ecobee.get_thermostat(index)
+        if not thermostat["modelNumber"] in ECOBEE_MODEL_TO_NAME:
+            _LOGGER.error(
+                "Model number for ecobee thermostat %s not recognized. "
+                "Please visit this link to open a new issue: "
+                "https://github.com/home-assistant/core/issues "
+                "and include the following information: "
+                "Unrecognized model number: %s",
+                thermostat["name"],
+                thermostat["modelNumber"],
+            )
+        entities.append(Thermostat(data, index, thermostat))
 
-    async_add_entities(devices, True)
+    async_add_entities(entities, True)
 
     platform = entity_platform.async_get_current_platform()
 
@@ -187,7 +200,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         """Create a vacation on the target thermostat."""
         entity_id = service.data[ATTR_ENTITY_ID]
 
-        for thermostat in devices:
+        for thermostat in entities:
             if thermostat.entity_id == entity_id:
                 thermostat.create_vacation(service.data)
                 thermostat.schedule_update_ha_state(True)
@@ -198,7 +211,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         entity_id = service.data[ATTR_ENTITY_ID]
         vacation_name = service.data[ATTR_VACATION_NAME]
 
-        for thermostat in devices:
+        for thermostat in entities:
             if thermostat.entity_id == entity_id:
                 thermostat.delete_vacation(vacation_name)
                 thermostat.schedule_update_ha_state(True)
@@ -211,10 +224,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
         if entity_id:
             target_thermostats = [
-                device for device in devices if device.entity_id in entity_id
+                entity for entity in entities if entity.entity_id in entity_id
             ]
         else:
-            target_thermostats = devices
+            target_thermostats = entities
 
         for thermostat in target_thermostats:
             thermostat.set_fan_min_on_time(str(fan_min_on_time))
@@ -228,10 +241,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
         if entity_id:
             target_thermostats = [
-                device for device in devices if device.entity_id in entity_id
+                entity for entity in entities if entity.entity_id in entity_id
             ]
         else:
-            target_thermostats = devices
+            target_thermostats = entities
 
         for thermostat in target_thermostats:
             thermostat.resume_program(resume_all)
@@ -291,11 +304,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class Thermostat(ClimateEntity):
     """A thermostat class for Ecobee."""
 
-    def __init__(self, data, thermostat_index):
+    def __init__(self, data, thermostat_index, thermostat):
         """Initialize the thermostat."""
         self.data = data
         self.thermostat_index = thermostat_index
-        self.thermostat = self.data.ecobee.get_thermostat(self.thermostat_index)
+        self.thermostat = thermostat
         self._name = self.thermostat["name"]
         self.vacation = None
         self._last_active_hvac_mode = HVAC_MODE_HEAT_COOL
@@ -358,15 +371,8 @@ class Thermostat(ClimateEntity):
         try:
             model = f"{ECOBEE_MODEL_TO_NAME[self.thermostat['modelNumber']]} Thermostat"
         except KeyError:
-            _LOGGER.error(
-                "Model number for ecobee thermostat %s not recognized. "
-                "Please visit this link and provide the following information: "
-                "https://github.com/home-assistant/core/issues/27172 "
-                "Unrecognized model number: %s",
-                self.name,
-                self.thermostat["modelNumber"],
-            )
-            return None
+            # Ecobee model is not in our list
+            model = None
 
         return {
             "identifiers": {(DOMAIN, self.thermostat["identifier"])},

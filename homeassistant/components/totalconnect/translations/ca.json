@@ -11,9 +11,10 @@
         "step": {
             "locations": {
                 "data": {
-                    "location": "Ubicaci\u00f3"
+                    "location": "Ubicaci\u00f3",
+                    "usercode": "Codi d'usuari"
                 },
-                "description": "Introdueix el codi d'usuari de l'usuari en aquesta ubicaci\u00f3",
+                "description": "Introdueix el codi de l'usuari en la ubicaci\u00f3 {location_id}",
                 "title": "Codis d'usuari d'ubicaci\u00f3"
             },
             "reauth_confirm": {

@@ -43,7 +43,7 @@ class ChromecastInfo:
         )
 
     @property
-    def manufacturer(self) -> str:
+    def manufacturer(self) -> str | None:
         """Return the manufacturer."""
         if self._manufacturer:
             return self._manufacturer

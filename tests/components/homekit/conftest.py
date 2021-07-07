@@ -12,7 +12,7 @@ from tests.common import async_capture_events
 @pytest.fixture
 def hk_driver(loop):
     """Return a custom AccessoryDriver instance for HomeKit accessory init."""
-    with patch("pyhap.accessory_driver.Zeroconf"), patch(
+    with patch("pyhap.accessory_driver.AsyncZeroconf"), patch(
         "pyhap.accessory_driver.AccessoryEncoder"
     ), patch("pyhap.accessory_driver.HAPServer.async_stop"), patch(
         "pyhap.accessory_driver.HAPServer.async_start"

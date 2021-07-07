@@ -1,7 +1,6 @@
 """Entity representing a Sonos power sensor."""
 from __future__ import annotations
 
-import datetime
 import logging
 from typing import Any
 
@@ -50,7 +49,7 @@ class SonosPowerEntity(SonosEntity, BinarySensorEntity):
         """Return the entity's device class."""
         return DEVICE_CLASS_BATTERY_CHARGING
 
-    async def async_update(self, now: datetime.datetime | None = None) -> None:
+    async def async_update(self) -> None:
         """Poll the device for the current state."""
         await self.speaker.async_poll_battery()
 

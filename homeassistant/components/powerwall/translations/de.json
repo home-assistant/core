@@ -10,13 +10,14 @@
             "unknown": "Unerwarteter Fehler",
             "wrong_version": "Deine Powerwall verwendet eine Softwareversion, die nicht unterst\u00fctzt wird. Bitte ziehe ein Upgrade in Betracht oder melde dieses Problem, damit es behoben werden kann."
         },
-        "flow_title": "Tesla Powerwall ({ip_address})",
+        "flow_title": "{ip_address}",
         "step": {
             "user": {
                 "data": {
                     "ip_address": "IP-Adresse",
                     "password": "Passwort"
                 },
+                "description": "Das Kennwort ist in der Regel die letzten 5 Zeichen der Seriennummer des Backup Gateway und kann in der Tesla-App gefunden werden oder es sind die letzten 5 Zeichen des Kennworts, das sich in der T\u00fcr f\u00fcr Backup Gateway 2 befindet.",
                 "title": "Stellen Sie eine Verbindung zur Powerwall her"
             }
         }

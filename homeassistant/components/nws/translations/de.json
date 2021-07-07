@@ -15,7 +15,7 @@
                     "longitude": "L\u00e4ngengrad",
                     "station": "METAR Stationscode"
                 },
-                "description": "Wenn kein METAR-Stationscode angegeben ist, werden L\u00e4ngen- und Breitengrad verwendet, um die n\u00e4chstgelegene Station zu finden.",
+                "description": "Wenn kein METAR-Stationscode angegeben wird, werden der Breiten- und L\u00e4ngengrad verwendet, um die n\u00e4chstgelegene Station zu finden. Im Moment kann ein API-Schl\u00fcssel alles sein. Es wird empfohlen, eine g\u00fcltige E-Mail-Adresse zu verwenden.",
                 "title": "Stellen Sie eine Verbindung zum Nationalen Wetterdienst her"
             }
         }

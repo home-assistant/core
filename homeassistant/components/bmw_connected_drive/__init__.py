@@ -11,6 +11,7 @@ from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
+    CONF_DEVICE_ID,
     CONF_NAME,
     CONF_PASSWORD,
     CONF_REGION,
@@ -18,7 +19,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import discovery
+from homeassistant.helpers import device_registry, discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.event import track_utc_time_change
@@ -51,7 +52,12 @@ ACCOUNT_SCHEMA = vol.Schema(
 
 CONFIG_SCHEMA = vol.Schema({DOMAIN: {cv.string: ACCOUNT_SCHEMA}}, extra=vol.ALLOW_EXTRA)
 
-SERVICE_SCHEMA = vol.Schema({vol.Required(ATTR_VIN): cv.string})
+SERVICE_SCHEMA = vol.Schema(
+    vol.Any(
+        {vol.Required(ATTR_VIN): cv.string},
+        {vol.Required(CONF_DEVICE_ID): cv.string},
+    )
+)
 
 DEFAULT_OPTIONS = {
     CONF_READ_ONLY: False,
@@ -101,7 +107,7 @@ def _async_migrate_options_from_data_if_missing(hass, entry):
         hass.config_entries.async_update_entry(entry, data=data, options=options)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up BMW Connected Drive from a config entry."""
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN].setdefault(DATA_ENTRIES, {})
@@ -207,8 +213,15 @@ def setup_account(entry: ConfigEntry, hass, name: str) -> BMWConnectedDriveAccou
 
     def execute_service(call):
         """Execute a service for a vehicle."""
-        vin = call.data[ATTR_VIN]
+        vin = call.data.get(ATTR_VIN)
+        device_id = call.data.get(CONF_DEVICE_ID)
+
         vehicle = None
+
+        if not vin and device_id:
+            device = device_registry.async_get(hass).async_get(device_id)
+            vin = next(iter(device.identifiers))[1]
+
         # Double check for read_only accounts as another account could create the services
         for entry_data in [
             e

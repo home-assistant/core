@@ -14,7 +14,6 @@ from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
 )
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -34,14 +33,10 @@ DEFAULT_SCAN_INTERVAL = timedelta(minutes=1)
 CONFIG_SCHEMA = cv.deprecated(DOMAIN)
 
 
-async def async_setup(hass: HomeAssistant, config: dict) -> bool:
-    """Set up the Notion component."""
-    hass.data[DOMAIN] = {DATA_COORDINATOR: {}}
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Notion as a config entry."""
+    hass.data.setdefault(DOMAIN, {DATA_COORDINATOR: {}})
+
     if not entry.unique_id:
         hass.config_entries.async_update_entry(
             entry, unique_id=entry.data[CONF_USERNAME]
@@ -144,44 +139,12 @@ class NotionEntity(CoordinatorEntity):
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
-        self._attrs = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
-        self._bridge_id = bridge_id
-        self._device_class = device_class
-        self._name = name
-        self._sensor_id = sensor_id
-        self._state = None
-        self._system_id = system_id
-        self._unique_id = (
-            f'{sensor_id}_{self.coordinator.data["tasks"][task_id]["task_type"]}'
-        )
-        self.task_id = task_id
 
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return (
-            self.coordinator.last_update_success
-            and self.task_id in self.coordinator.data["tasks"]
-            and self._state
-        )
+        self._attr_device_class = device_class
 
-    @property
-    def device_class(self) -> str:
-        """Return the device class."""
-        return self._device_class
-
-    @property
-    def extra_state_attributes(self) -> dict:
-        """Return the state attributes."""
-        return self._attrs
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device registry information for this entity."""
-        bridge = self.coordinator.data["bridges"].get(self._bridge_id, {})
-        sensor = self.coordinator.data["sensors"][self._sensor_id]
-
-        return {
+        bridge = self.coordinator.data["bridges"].get(bridge_id, {})
+        sensor = self.coordinator.data["sensors"][sensor_id]
+        self._attr_device_info = {
             "identifiers": {(DOMAIN, sensor["hardware_id"])},
             "manufacturer": "Silicon Labs",
             "model": sensor["hardware_revision"],
@@ -190,16 +153,23 @@ class NotionEntity(CoordinatorEntity):
             "via_device": (DOMAIN, bridge.get("hardware_id")),
         }
 
-    @property
-    def name(self) -> str:
-        """Return the name of the entity."""
-        sensor = self.coordinator.data["sensors"][self._sensor_id]
-        return f'{sensor["name"]}: {self._name}'
+        self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
+        self._attr_name = f'{sensor["name"]}: {name}'
+        self._attr_unique_id = (
+            f'{sensor_id}_{coordinator.data["tasks"][task_id]["task_type"]}'
+        )
+        self._bridge_id = bridge_id
+        self._sensor_id = sensor_id
+        self._system_id = system_id
+        self._task_id = task_id
 
     @property
-    def unique_id(self) -> str:
-        """Return a unique, unchanging string that represents this entity."""
-        return self._unique_id
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return (
+            self.coordinator.last_update_success
+            and self._task_id in self.coordinator.data["tasks"]
+        )
 
     async def _async_update_bridge_id(self) -> None:
         """Update the entity's bridge ID if it has changed.
@@ -240,7 +210,7 @@ class NotionEntity(CoordinatorEntity):
     @callback
     def _handle_coordinator_update(self):
         """Respond to a DataUpdateCoordinator update."""
-        if self.task_id in self.coordinator.data["tasks"]:
+        if self._task_id in self.coordinator.data["tasks"]:
             self.hass.async_create_task(self._async_update_bridge_id())
             self._async_update_from_latest_data()
 

@@ -12,8 +12,7 @@ from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import callback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DOMAIN
-from .entry_data import RuntimeEntryData
+from . import DOMAIN, DomainData
 
 
 class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -104,9 +103,9 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             ]:
                 # Is this address or IP address already configured?
                 already_configured = True
-            elif entry.entry_id in self.hass.data.get(DOMAIN, {}):
+            elif DomainData.get(self.hass).is_entry_loaded(entry):
                 # Does a config entry with this name already exist?
-                data: RuntimeEntryData = self.hass.data[DOMAIN][entry.entry_id]
+                data = DomainData.get(self.hass).get_entry_data(entry)
 
                 # Node names are unique in the network
                 if data.device_info is not None:
