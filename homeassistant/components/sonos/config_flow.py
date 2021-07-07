@@ -39,7 +39,7 @@ class SonosDiscoveryFlowHandler(DiscoveryFlowHandler):
         host = discovery_info[CONF_HOST]
         boot_seqnum = discovery_info["properties"].get("bootseq")
         baseuid = hostname.split("-")[1].replace(".local.", "")
-        uid = f"RINCON_{baseuid}1400"
+        uid = f"RINCON_{baseuid}01400"
         _LOGGER.debug(
             "Calling async_discovered_player for %s with uid=%s and boot_seqnum=%s",
             host,
