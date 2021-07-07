@@ -41,6 +41,7 @@ from homeassistant.const import (
     CONF_TIMEOUT,
     CONF_TYPE,
     CONF_UNIT_OF_MEASUREMENT,
+    PRECISION_TENTHS,
 )
 import homeassistant.helpers.config_validation as cv
 
@@ -197,6 +198,7 @@ CLIMATE_SCHEMA = vol.All(
             vol.Required(CONF_TARGET_TEMP): cv.positive_int,
             vol.Optional(CONF_MAX_TEMP, default=35): cv.positive_int,
             vol.Optional(CONF_MIN_TEMP, default=5): cv.positive_int,
+            vol.Optional(CONF_PRECISION, default=PRECISION_TENTHS): vol.Coerce(float),
             vol.Optional(CONF_STEP, default=0.5): vol.Coerce(float),
             vol.Optional(CONF_TEMPERATURE_UNIT, default=DEFAULT_TEMP_UNIT): cv.string,
         }

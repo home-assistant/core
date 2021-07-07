@@ -16,6 +16,9 @@ from homeassistant.const import (
     CONF_OFFSET,
     CONF_STRUCTURE,
     CONF_TEMPERATURE_UNIT,
+    PRECISION_HALVES,
+    PRECISION_TENTHS,
+    PRECISION_WHOLE,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
@@ -26,7 +29,6 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from .base_platform import BasePlatform
 from .const import (
     ATTR_TEMPERATURE,
-    CALL_TYPE_REGISTER_HOLDING,
     CALL_TYPE_WRITE_REGISTERS,
     CONF_CLIMATES,
     CONF_DATA_TYPE,
@@ -46,6 +48,8 @@ from .modbus import ModbusHub
 
 PARALLEL_UPDATES = 1
 _LOGGER = logging.getLogger(__name__)
+
+PRECISION_VALID_LIST = [PRECISION_TENTHS, PRECISION_HALVES, PRECISION_WHOLE]
 
 
 async def async_setup_platform(
@@ -91,6 +95,12 @@ class ModbusThermostat(BasePlatform, RestoreEntity, ClimateEntity):
         self._temp_step = config[CONF_STEP]
         self._swap = config[CONF_SWAP]
 
+        if self._precision not in PRECISION_VALID_LIST:
+            _LOGGER.warning(
+                "Unable to parse precision; using whole numbers for now, adjust your configuration."
+            )
+            self._precision = PRECISION_WHOLE
+
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
         await self.async_base_added_to_hass()
@@ -132,6 +142,11 @@ class ModbusThermostat(BasePlatform, RestoreEntity, ClimateEntity):
     def temperature_unit(self):
         """Return the unit of measurement."""
         return TEMP_FAHRENHEIT if self._unit == "F" else TEMP_CELSIUS
+
+    @property
+    def precision(self) -> float:
+        """Return the precision of the system."""
+        return self._precision
 
     @property
     def min_temp(self):
@@ -186,7 +201,7 @@ class ModbusThermostat(BasePlatform, RestoreEntity, ClimateEntity):
         # remark "now" is a dummy parameter to avoid problems with
         # async_track_time_interval
         self._target_temperature = await self._async_read_register(
-            CALL_TYPE_REGISTER_HOLDING, self._target_temperature_register
+            self._input_type, self._target_temperature_register
         )
         self._current_temperature = await self._async_read_register(
             self._input_type, self._address
@@ -202,7 +217,6 @@ class ModbusThermostat(BasePlatform, RestoreEntity, ClimateEntity):
         if result is None:
             self._available = False
             return -1
-
         registers = self._swap_registers(result.registers)
         byte_string = b"".join([x.to_bytes(2, byteorder="big") for x in registers])
         val = struct.unpack(self._structure, byte_string)
@@ -212,12 +226,7 @@ class ModbusThermostat(BasePlatform, RestoreEntity, ClimateEntity):
                 str(val),
             )
             return -1
-
-        val2 = val[0]
-        register_value = format(
-            (self._scale * val2) + self._offset, f".{self._precision}f"
-        )
-        register_value2 = float(register_value)
+        register_value = float((self._scale * val[0]) + self._offset)
         self._available = True
 
-        return register_value2
+        return register_value
