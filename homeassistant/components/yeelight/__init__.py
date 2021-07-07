@@ -204,7 +204,10 @@ async def _async_initialize(
     entry_data[DATA_DEVICE] = device
 
     # start listening for local pushes
-    hass.loop.create_task(device.bulb.async_listen(device.update_callback))
+    try:
+        await device.bulb.async_listen(device.update_callback)
+    except BulbException as ex:
+        raise ConfigEntryNotReady from ex
 
     # register stop callback to shutdown listening for local pushes
     def stop_listen_task(event):
