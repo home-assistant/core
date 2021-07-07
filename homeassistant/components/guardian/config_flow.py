@@ -37,7 +37,7 @@ def async_get_pin_from_uid(uid: str) -> str:
     return uid[-4:]
 
 
-async def validate_input(hass: HomeAssistant, data: dict):
+async def validate_input(hass: HomeAssistant, data: dict[str, Any]):
     """Validate the user input allows us to connect.
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
