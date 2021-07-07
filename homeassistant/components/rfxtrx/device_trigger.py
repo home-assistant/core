@@ -4,7 +4,7 @@ from __future__ import annotations
 import voluptuous as vol
 
 from homeassistant.components.automation import AutomationActionType
-from homeassistant.components.device_automation import TRIGGER_BASE_SCHEMA
+from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.components.homeassistant.triggers import event as event_trigger
 from homeassistant.components.rfxtrx.const import EVENT_RFXTRX_EVENT
 from homeassistant.const import (
@@ -33,7 +33,7 @@ TRIGGER_TYPES = [
     CONF_TYPE_COMMAND,
     CONF_TYPE_STATUS,
 ]
-TRIGGER_SCHEMA = TRIGGER_BASE_SCHEMA.extend(
+TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_TYPE): vol.In(TRIGGER_TYPES),
         vol.Required(CONF_SUBTYPE): str,
