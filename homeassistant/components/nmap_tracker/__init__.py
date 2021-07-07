@@ -204,6 +204,7 @@ class NmapDeviceScanner:
     @callback
     def _async_get_vendor(self, mac_address):
         """Lookup the vendor."""
+        _LOGGER.warning("_async_get_vendor: %s", mac_address)
         oui = self._mac_vendor_lookup.sanitise(mac_address)[:6]
         return self._mac_vendor_lookup.prefixes.get(oui)
 
@@ -378,6 +379,7 @@ class NmapDeviceScanner:
 
             hostname = info["hostnames"][0]["name"] if info["hostnames"] else ipv4
             vendor = info.get("vendor", {}).get(mac) or self._async_get_vendor(mac)
+            _LOGGER.warning("vendor for: %s == %s", mac, vendor)
             name = human_readable_name(hostname, vendor, mac)
             device = NmapDevice(
                 formatted_mac, hostname, name, ipv4, vendor, reason, now, 0
