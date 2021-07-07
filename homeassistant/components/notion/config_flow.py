@@ -30,7 +30,7 @@ class NotionFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=self.data_schema, errors=errors or {}
         )
 
-    async def async_step_user(self, user_input: dict | None = None) -> FlowResult:
+    async def async_step_user(self, user_input: dict[str, str] | None = None) -> FlowResult:
         """Handle the start of the config flow."""
         if not user_input:
             return await self._show_form()
