@@ -1083,7 +1083,7 @@ onvif-zeep-async==1.0.0
 open-garage==0.1.4
 
 # homeassistant.components.opencv
-# opencv-python-headless==4.4.0.42
+# opencv-python-headless==4.5.2.54
 
 # homeassistant.components.openerz
 openerz-api==0.1.0
