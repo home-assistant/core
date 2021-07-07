@@ -66,7 +66,7 @@ async def test_ip_changes_fallback_discovery(hass: HomeAssistant):
             "ip": IP_ADDRESS,
         }
     ]
-    with patch(f"{MODULE}.Bulb", return_value=mocked_bulb), patch(
+    with patch(f"{MODULE}.AsyncBulb", return_value=mocked_bulb), patch(
         f"{MODULE}.discover_bulbs", return_value=_discovered_devices
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -106,7 +106,7 @@ async def test_ip_changes_id_missing_cannot_fallback(hass: HomeAssistant):
         side_effect=[OSError, CAPABILITIES, CAPABILITIES]
     )
 
-    with patch(f"{MODULE}.Bulb", return_value=mocked_bulb):
+    with patch(f"{MODULE}.AsyncBulb", return_value=mocked_bulb):
         assert not await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -119,7 +119,7 @@ async def test_setup_discovery(hass: HomeAssistant):
     config_entry.add_to_hass(hass)
 
     mocked_bulb = _mocked_bulb()
-    with _patch_discovery(MODULE), patch(f"{MODULE}.Bulb", return_value=mocked_bulb):
+    with _patch_discovery(MODULE), patch(f"{MODULE}.AsyncBulb", return_value=mocked_bulb):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -142,7 +142,7 @@ async def test_setup_import(hass: HomeAssistant):
     """Test import from yaml."""
     mocked_bulb = _mocked_bulb()
     name = "yeelight"
-    with patch(f"{MODULE}.Bulb", return_value=mocked_bulb), patch(
+    with patch(f"{MODULE}.AsyncBulb", return_value=mocked_bulb), patch(
         f"{MODULE_CONFIG_FLOW}.yeelight.Bulb", return_value=mocked_bulb
     ):
         assert await async_setup_component(
@@ -180,7 +180,7 @@ async def test_unique_ids_device(hass: HomeAssistant):
 
     mocked_bulb = _mocked_bulb()
     mocked_bulb.bulb_type = BulbType.WhiteTempMood
-    with _patch_discovery(MODULE), patch(f"{MODULE}.Bulb", return_value=mocked_bulb):
+    with _patch_discovery(MODULE), patch(f"{MODULE}.AsyncBulb", return_value=mocked_bulb):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -208,7 +208,7 @@ async def test_unique_ids_entry(hass: HomeAssistant):
     mocked_bulb = _mocked_bulb()
     mocked_bulb.bulb_type = BulbType.WhiteTempMood
 
-    with _patch_discovery(MODULE), patch(f"{MODULE}.Bulb", return_value=mocked_bulb):
+    with _patch_discovery(MODULE), patch(f"{MODULE}.AsyncBulb", return_value=mocked_bulb):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -243,7 +243,7 @@ async def test_bulb_off_while_adding_in_ha(hass: HomeAssistant):
     mocked_bulb = _mocked_bulb(True)
     mocked_bulb.bulb_type = BulbType.WhiteTempMood
 
-    with patch(f"{MODULE}.Bulb", return_value=mocked_bulb), patch(
+    with patch(f"{MODULE}.AsyncBulb", return_value=mocked_bulb), patch(
         f"{MODULE}.config_flow.yeelight.Bulb", return_value=mocked_bulb
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
