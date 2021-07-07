@@ -219,8 +219,7 @@ async def _async_initialize(
         )
         if device_bulp is not None:
             _LOGGER.debug("Shutting down Yeelight Listener")
-            await device.bulb.async_stop_listening()
-            _LOGGER.debug("Yeelight Listener stopped")
+            hass.loop.create_task(device.bulb.async_stop_listening())
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_listen_task)
 
