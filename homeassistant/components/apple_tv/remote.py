@@ -50,7 +50,9 @@ class AppleTVRemote(AppleTVEntity, RemoteEntity):
         delay = kwargs.get(ATTR_DELAY_SECS, DEFAULT_DELAY_SECS)
 
         if not self.is_on:
-            _LOGGER.error("Unable to send commands, not connected to %s", self._name)
+            _LOGGER.error(
+                "Unable to send commands, not connected to %s", self._attr_name
+            )
             return
 
         for _ in range(num_repeats):
