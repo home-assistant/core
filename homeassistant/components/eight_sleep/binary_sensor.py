@@ -71,3 +71,4 @@ class EightHeatSensor(EightSleepEntity, BinarySensorEntity):
     def _handle_coordinator_update(self):
         """Handle updated data from the coordinator."""
         self._state = self._usrobj.bed_presence
+        super()._handle_coordinator_update()

@@ -119,7 +119,7 @@ class EightHeatSensor(EightSleepEntity, SensorEntity):
         """Handle updated data from the coordinator."""
         _LOGGER.debug("Updating Heat sensor: %s", self._sensor)
         self._state = self._usrobj.heating_level
-        self.async_write_ha_state()
+        super()._handle_coordinator_update()
 
     @property
     def extra_state_attributes(self):
@@ -214,7 +214,7 @@ class EightUserSensor(EightSleepEntity, SensorEntity):
         elif "sleep_stage" in self._sensor:
             self._state = self._usrobj.current_values["stage"]
 
-        self.async_write_ha_state()
+        super()._handle_coordinator_update()
 
     @property
     def extra_state_attributes(self):
@@ -340,7 +340,7 @@ class EightRoomSensor(EightSleepEntity, SensorEntity):
                 self._state = round((temp * 1.8) + 32, 2)
         except TypeError:
             self._state = None
-        self.async_write_ha_state()
+        super()._handle_coordinator_update()
 
     @property
     def unit_of_measurement(self):
