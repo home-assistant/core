@@ -196,7 +196,7 @@ class MetOfficeCurrentSensor(CoordinatorEntity, SensorEntity):
         """Return the state attributes of the device."""
         return {
             ATTR_ATTRIBUTION: ATTRIBUTION,
-            ATTR_LAST_UPDATE: self.coordinator.data.now.date,
+            ATTR_LAST_UPDATE: self.coordinator.data.now.date.isoformat(),
             ATTR_SENSOR_ID: self._type,
             ATTR_SITE_ID: self.coordinator.data.site.id,
             ATTR_SITE_NAME: self.coordinator.data.site.name,
