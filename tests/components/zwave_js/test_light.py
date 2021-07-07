@@ -100,7 +100,7 @@ async def test_light(hass, client, bulb_6_multi_color, integration):
         },
     }
     assert args["value"] == 255
-    assert args["options"]["transitionDuration"] == "10.0s"
+    assert args["options"]["transitionDuration"] == "10s"
 
     client.async_send_command.reset_mock()
 
@@ -211,7 +211,7 @@ async def test_light(hass, client, bulb_6_multi_color, integration):
         },
     }
     assert args["value"] == 50
-    assert args["options"]["transitionDuration"] == "20.0s"
+    assert args["options"]["transitionDuration"] == "20s"
 
     client.async_send_command.reset_mock()
 
@@ -346,7 +346,7 @@ async def test_light(hass, client, bulb_6_multi_color, integration):
 
     assert len(client.async_send_command.call_args_list) == 6
     args = client.async_send_command.call_args_list[5][0][0]
-    assert args["options"]["transitionDuration"] == "20.0s"
+    assert args["options"]["transitionDuration"] == "20s"
     client.async_send_command.reset_mock()
 
     # Test turning on with color temp
@@ -484,7 +484,7 @@ async def test_light(hass, client, bulb_6_multi_color, integration):
 
     assert len(client.async_send_command.call_args_list) == 6
     args = client.async_send_command.call_args_list[5][0][0]
-    assert args["options"]["transitionDuration"] == "35.0s"
+    assert args["options"]["transitionDuration"] == "35s"
 
     client.async_send_command.reset_mock()
 

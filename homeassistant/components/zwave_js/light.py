@@ -282,7 +282,7 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
             and "transitionDuration" in self._target_color.metadata.value_change_options
         ):
             if transition is not None:
-                zwave_transition = {TRANSITION_DURATION: f"{transition}s"}
+                zwave_transition = {TRANSITION_DURATION: f"{int(transition)}s"}
             else:
                 zwave_transition = {TRANSITION_DURATION: "default"}
 
@@ -335,7 +335,7 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
             and "transitionDuration" in self._target_value.metadata.value_change_options
         ):
             if transition is not None:
-                zwave_transition = {TRANSITION_DURATION: f"{transition}s"}
+                zwave_transition = {TRANSITION_DURATION: f"{int(transition)}s"}
             else:
                 zwave_transition = {TRANSITION_DURATION: "default"}
 
