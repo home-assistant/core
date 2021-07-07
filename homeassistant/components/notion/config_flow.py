@@ -24,7 +24,7 @@ class NotionFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
         )
 
-    async def _show_form(self, errors: dict | None = None) -> FlowResult:
+    async def _show_form(self, errors: dict[str, str] | None = None) -> FlowResult:
         """Show the form to the user."""
         return self.async_show_form(
             step_id="user", data_schema=self.data_schema, errors=errors or {}
