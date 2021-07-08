@@ -310,6 +310,8 @@ class ModbusHub:
         """Convert async to sync pymodbus call."""
         if self._config_delay:
             return None
+        if not self._client:
+            return None
         if not self._client.is_socket_open():
             return None
         async with self._lock:
