@@ -76,7 +76,7 @@ class EsphomeCamera(Camera, EsphomeBaseEntity[CameraInfo, CameraState]):
             await self._image_cond.wait()
             if not self.available:
                 return None
-            return self._state.image[:]
+            return self._state.data[:]
 
     async def _async_camera_stream_image(self) -> bytes | None:
         """Return a single camera image in a stream."""
@@ -87,7 +87,7 @@ class EsphomeCamera(Camera, EsphomeBaseEntity[CameraInfo, CameraState]):
             await self._image_cond.wait()
             if not self.available:
                 return None
-            return self._state.image[:]
+            return self._state.data[:]
 
     async def handle_async_mjpeg_stream(
         self, request: web.Request
