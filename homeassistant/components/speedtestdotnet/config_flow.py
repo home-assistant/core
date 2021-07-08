@@ -6,10 +6,11 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_SCAN_INTERVAL
+from homeassistant.const import CONF_MONITORED_CONDITIONS, CONF_SCAN_INTERVAL
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 
+from . import server_id_valid
 from .const import (
     CONF_MANUAL,
     CONF_SERVER_ID,
@@ -45,6 +46,23 @@ class SpeedTestFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_show_form(step_id="user")
 
         return self.async_create_entry(title=DEFAULT_NAME, data=user_input)
+
+    async def async_step_import(self, import_config):
+        """Import from config."""
+        if (
+            CONF_SERVER_ID in import_config
+            and not await self.hass.async_add_executor_job(
+                server_id_valid, import_config[CONF_SERVER_ID]
+            )
+        ):
+            return self.async_abort(reason="wrong_server_id")
+
+        import_config[CONF_SCAN_INTERVAL] = int(
+            import_config[CONF_SCAN_INTERVAL].total_seconds() / 60
+        )
+        import_config.pop(CONF_MONITORED_CONDITIONS)
+
+        return await self.async_step_user(user_input=import_config)
 
 
 class SpeedTestOptionsFlowHandler(config_entries.OptionsFlow):
