@@ -18,8 +18,22 @@ class AugustEntityMixin(Entity):
         super().__init__()
         self._data = data
         self._device = device
-        self._attr_device_id = device.device_id
-        self._attr_detail = self._data.get_device_detail(device.device_id)
+        self._attr_device_info = {
+            "identifiers": {(DOMAIN, self._device_id)},
+            "name": device.device_name,
+            "manufacturer": MANUFACTURER,
+            "sw_version": self._detail.firmware_version,
+            "model": self._detail.model,
+            "suggested_area": _remove_device_types(device.device_name, DEVICE_TYPES),
+        }
+
+    @property
+    def _device_id(self):
+        return self._device.device_id
+
+    @property
+    def _detail(self):
+        return self._data.get_device_detail(self._device.device_id)
 
     @callback
     def _update_from_data_and_write_state(self):

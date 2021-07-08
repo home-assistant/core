@@ -366,13 +366,13 @@ class NetatmoSensor(NetatmoBase, SensorEntity):
     @property
     def available(self):
         """Return entity availability."""
-        return self.state is not None
+        return self._attr_state is not None
 
     @callback
     def async_update_callback(self):
         """Update the entity's state."""
         if self._data is None:
-            if self.state is None:
+            if self._attr_state is None:
                 return
             _LOGGER.warning("No data from update")
             self._attr_state = None
@@ -383,7 +383,7 @@ class NetatmoSensor(NetatmoBase, SensorEntity):
         )
 
         if data is None:
-            if self.state:
+            if self._attr_state:
                 _LOGGER.debug(
                     "No data found for %s - %s (%s)",
                     self.name,
@@ -410,7 +410,7 @@ class NetatmoSensor(NetatmoBase, SensorEntity):
             else:
                 self._attr_state = state
         except KeyError:
-            if self.state:
+            if self._attr_state:
                 _LOGGER.debug("No %s data found for %s", self.type, self._device_name)
             self._attr_state = None
             return
@@ -614,7 +614,7 @@ class NetatmoPublicSensor(NetatmoBase, SensorEntity):
             data = self._data.get_latest_gust_strengths()
 
         if data is None:
-            if self.state is None:
+            if self._attr_state is None:
                 return
             _LOGGER.debug(
                 "No station provides %s data in the area %s", self.type, self._area_name
@@ -628,5 +628,5 @@ class NetatmoPublicSensor(NetatmoBase, SensorEntity):
             elif self._mode == "max":
                 self._attr_state = max(values)
 
-        self._attr_available = self.state is not None
+        self._attr_available = self._attr_state is not None
         self.async_write_ha_state()

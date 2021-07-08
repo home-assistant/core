@@ -129,9 +129,13 @@ class AugustOperatorSensor(AugustEntityMixin, RestoreEntity, SensorEntity):
         self._operated_keypad = None
         self._operated_autorelock = None
         self._operated_time = None
-        self._attr_name = f"{self._device.device_name} Operator"
-        self._attr_unique_id = f"{self._device_id}_lock_operator"
+        self._entity_picture = None
         self._update_from_data()
+
+    @property
+    def name(self):
+        """Return the name of the sensor."""
+        return f"{self._device.device_name} Operator"
 
     @callback
     def _update_from_data(self):
@@ -186,16 +190,16 @@ class AugustOperatorSensor(AugustEntityMixin, RestoreEntity, SensorEntity):
 class AugustBatterySensor(AugustEntityMixin, SensorEntity):
     """Representation of an August sensor."""
 
-    _attr_unit_of_measurement = PERCENTAGE
     _attr_device_class = DEVICE_CLASS_BATTERY
+    _attr_unit_of_measurement = PERCENTAGE
 
     def __init__(self, data, sensor_type, device, old_device):
         """Initialize the sensor."""
         super().__init__(data, device)
         self._sensor_type = sensor_type
+        self._old_device = old_device
         self._attr_name = f"{device.device_name} Battery"
         self._attr_unique_id = f"{self._device_id}_{sensor_type}"
-        self._attr_old_unique_id = f"{old_device.device_id}_{sensor_type}"
         self._update_from_data()
 
     @callback
@@ -204,3 +208,8 @@ class AugustBatterySensor(AugustEntityMixin, SensorEntity):
         state_provider = SENSOR_TYPES_BATTERY[self._sensor_type]["state_provider"]
         self._attr_state = state_provider(self._detail)
         self._attr_available = self._attr_state is not None
+
+    @property
+    def old_unique_id(self) -> str:
+        """Get the old unique id of the device sensor."""
+        return f"{self._old_device.device_id}_{self._sensor_type}"

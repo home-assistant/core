@@ -133,9 +133,10 @@ class AugustDoorBinarySensor(AugustEntityMixin, BinarySensorEntity):
         super().__init__(data, device)
         self._data = data
         self._sensor_type = sensor_type
-        self._update_from_data()
-        self._attr_unique_id = f"{self._device_id}_open"
+        self._device = device
         self._attr_name = f"{device.device_name} Open"
+        self._attr_unique_id = f"{self._device_id}_open"
+        self._update_from_data()
 
     @callback
     def _update_from_data(self):
@@ -156,8 +157,8 @@ class AugustDoorBinarySensor(AugustEntityMixin, BinarySensorEntity):
 
         if bridge_activity is not None:
             update_lock_detail_from_activity(self._detail, bridge_activity)
-        self._attr_is_on = self._detail.door_state == LockDoorStatus.OPEN
         self._attr_available = self._detail.bridge_is_online
+        self._attr_is_on = self._detail.door_state == LockDoorStatus.OPEN
 
 
 class AugustDoorbellBinarySensor(AugustEntityMixin, BinarySensorEntity):
@@ -169,18 +170,27 @@ class AugustDoorbellBinarySensor(AugustEntityMixin, BinarySensorEntity):
         self._check_for_off_update_listener = None
         self._data = data
         self._sensor_type = sensor_type
-        self._update_from_data()
         self._attr_device_class = self._sensor_config[SENSOR_DEVICE_CLASS]
         self._attr_name = f"{device.device_name} {self._sensor_config[SENSOR_NAME]}"
         self._attr_unique_id = (
             f"{self._device_id}_{self._sensor_config[SENSOR_NAME].lower()}"
         )
-        self._attr_state_provider = SENSOR_TYPES_DOORBELL[self._sensor_type][
-            SENSOR_STATE_PROVIDER
-        ]
-        self._is_time_based = SENSOR_TYPES_DOORBELL[self._sensor_type][
-            SENSOR_STATE_IS_TIME_BASED
-        ]
+        self._update_from_data()
+
+    @property
+    def _sensor_config(self):
+        """Return the config for the sensor."""
+        return SENSOR_TYPES_DOORBELL[self._sensor_type]
+
+    @property
+    def _state_provider(self):
+        """Return the state provider for the binary sensor."""
+        return self._sensor_config[SENSOR_STATE_PROVIDER]
+
+    @property
+    def _is_time_based(self):
+        """Return true of false if the sensor is time based."""
+        return self._sensor_config[SENSOR_STATE_IS_TIME_BASED]
 
     @callback
     def _update_from_data(self):
@@ -198,7 +208,7 @@ class AugustDoorbellBinarySensor(AugustEntityMixin, BinarySensorEntity):
         """Schedule an update to recheck the sensor to see if it is ready to turn off."""
 
         # If the sensor is already off there is nothing to do
-        if not self._attr_state:
+        if not self.is_on:
             return
 
         # self.hass is only available after setup is completed
@@ -211,7 +221,7 @@ class AugustDoorbellBinarySensor(AugustEntityMixin, BinarySensorEntity):
             """Timer callback for sensor update."""
             self._check_for_off_update_listener = None
             self._update_from_data()
-            if not self._attr_state:
+            if not self.is_on:
                 self.async_write_ha_state()
 
         self._check_for_off_update_listener = async_call_later(

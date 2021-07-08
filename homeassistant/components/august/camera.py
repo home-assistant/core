@@ -39,7 +39,6 @@ class AugustCamera(AugustEntityMixin, Camera):
         self._image_url = None
         self._image_content = None
         self._attr_name = f"{device.device_name} Camera"
-        self._sttr_model = self._detail.model
         self._attr_unique_id = f"{self._device_id:s}_camera"
 
     @property

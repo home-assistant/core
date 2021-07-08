@@ -30,6 +30,7 @@ class AugustLock(AugustEntityMixin, RestoreEntity, LockEntity):
         super().__init__(data, device)
         self._data = data
         self._device = device
+        self._lock_status = None
         self._attr_name = device.device_name
         self._attr_unique_id = f"{self._device_id:s}_lock"
         self._update_from_data()
@@ -57,14 +58,8 @@ class AugustLock(AugustEntityMixin, RestoreEntity, LockEntity):
     def _update_lock_status_from_detail(self):
         self._attr_available = self._detail.bridge_is_online
 
-        if self._attr_is_locked != self._detail.lock_status:
-            self._attr_is_locked = self._detail.lock_status
-            if (
-                self._attr_is_locked is None
-                or self._attr_is_locked is LockStatus.UNKNOWN
-            ):
-                self._attr_is_locked = None
-            self._attr_is_locked = self._attr_is_locked is LockStatus.LOCKED
+        if self._lock_status != self._detail.lock_status:
+            self._lock_status = self._detail.lock_status
             return True
         return False
 
@@ -90,6 +85,12 @@ class AugustLock(AugustEntityMixin, RestoreEntity, LockEntity):
         if bridge_activity is not None:
             update_lock_detail_from_activity(self._detail, bridge_activity)
 
+        self._update_lock_status_from_detail()
+        if self._lock_status is None or self._lock_status is LockStatus.UNKNOWN:
+            self._attr_is_locked = None
+        else:
+            self._attr_is_locked = self._lock_status is LockStatus.LOCKED
+
         self._attr_extra_state_attributes = {
             ATTR_BATTERY_LEVEL: self._detail.battery_level
         }
@@ -97,8 +98,6 @@ class AugustLock(AugustEntityMixin, RestoreEntity, LockEntity):
             self._attr_extra_state_attributes[
                 "keypad_battery_level"
             ] = self._detail.keypad.battery_level
-
-        self._update_lock_status_from_detail()
 
     async def async_added_to_hass(self):
         """Restore ATTR_CHANGED_BY on startup since it is likely no longer in the activity log."""
