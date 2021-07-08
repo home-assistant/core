@@ -48,7 +48,7 @@ async def test_flow_user_already_configured(hass):
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=CONF_CONFIG_FLOW,
-        unique_id=f"{CONF_CONFIG_FLOW[CONF_HOST]}_{DOMAIN}",
+        unique_id=HOST,
     )
 
     entry.add_to_hass(hass)

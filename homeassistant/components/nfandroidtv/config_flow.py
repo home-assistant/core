@@ -26,10 +26,10 @@ class NFAndroidTVFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             host = user_input[CONF_HOST]
             name = user_input[CONF_NAME]
 
+            await self.async_set_unique_id(host)
+            self._abort_if_unique_id_configured()
             error = await self._async_try_connect(host)
             if error is None:
-                await self.async_set_unique_id(f"{host}_{DOMAIN}")
-                self._abort_if_unique_id_configured(updates={CONF_HOST: host})
                 return self.async_create_entry(
                     title=name,
                     data={CONF_HOST: host, CONF_NAME: name},
@@ -41,11 +41,9 @@ class NFAndroidTVFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=vol.Schema(
                 {
+                    vol.Required(CONF_HOST, default=user_input.get(CONF_HOST)): str,
                     vol.Required(
-                        CONF_HOST, default=user_input.get(CONF_HOST) or ""
-                    ): str,
-                    vol.Optional(
-                        CONF_NAME, default=user_input.get(CONF_NAME) or DEFAULT_NAME
+                        CONF_NAME, default=user_input.get(CONF_NAME, DEFAULT_NAME)
                     ): str,
                 }
             ),
@@ -55,7 +53,7 @@ class NFAndroidTVFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, import_config):
         """Import a config entry from configuration.yaml."""
         for entry in self._async_current_entries():
-            if entry.data.get(CONF_HOST) == import_config[CONF_HOST]:
+            if entry.data[CONF_HOST] == import_config[CONF_HOST]:
                 _LOGGER.warning(
                     "Already configured. This yaml configuration has already been imported. Please remove it"
                 )
