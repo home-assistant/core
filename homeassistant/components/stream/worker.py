@@ -205,7 +205,7 @@ class PeekIterator(Iterator):
     """An Iterator that may allow multiple passes.
 
     This may be consumed like a normal Iterator, however also supports a
-    peek() and rewind() methods that avoid consuming the underlying iterator.
+    peek() and rewind() methods that buffer consumed items from the iterator.
     """
 
     def __init__(self, iterator: Iterator[av.Packet]):
@@ -220,7 +220,6 @@ class PeekIterator(Iterator):
 
     def __next__(self) -> av.Packet:
         """Return and consume the next item available."""
-        # Consume any packets already seen from peek()
         if self._buffer:
             self._cursor = self._buffer.popleft()
         else:
@@ -229,23 +228,16 @@ class PeekIterator(Iterator):
 
     def peek(self) -> Generator[av.Packet, None, None]:
         """Return items without consuming from the iterator."""
-        # Start at the beginning, replaying any already consumed items from
-        # the buffer, leaving them in the buffer.
-        for packet in list(self._buffer):
+        # Items consumed are added to a buffer for future calls to __next__
+        # or peek. First iterate over the buffer from previous calls to peek.
+        for packet in self._buffer:
             yield packet
-        # Everything consumed from the iterator is buffered for future
-        # calls to __next__ or peek.
         for packet in self._iterator:
             self._buffer.append(packet)
             yield packet
 
     def rewind(self) -> None:
-        """Unconsume the last item, adding it back to the iterator.
-
-        This has similar functionality to peek(), but allows adding only
-        a single item back to the buffer while some existing items were
-        already consumed.
-        """
+        """Rebuffer a single item, unconsuming it similar to peek()."""
         assert self._cursor
         self._buffer.appendleft(self._cursor)
         self._cursor = None
