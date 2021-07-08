@@ -141,45 +141,23 @@ class BlackbirdZone(MediaPlayerEntity):
         # dict source name -> source_id
         self._source_name_id = {v: k for k, v in sources.items()}
         # ordered list of all source names
-        self._source_names = sorted(
+        self._attr_source_list = sorted(
             self._source_name_id.keys(), key=lambda v: self._source_name_id[v]
         )
         self._zone_id = zone_id
         self._attr_name = zone_name
-        self._state = None
-        self._source = None
 
     def update(self):
         """Retrieve latest state."""
         state = self._blackbird.zone_status(self._zone_id)
         if not state:
             return
-        self._state = STATE_ON if state.power else STATE_OFF
+        self._attr_state = STATE_ON if state.power else STATE_OFF
         idx = state.av
         if idx in self._source_id_name:
-            self._source = self._source_id_name[idx]
+            self._attr_source = self._source_id_name[idx]
         else:
-            self._source = None
-
-    @property
-    def state(self):
-        """Return the state of the zone."""
-        return self._state
-
-    @property
-    def media_title(self):
-        """Return the current source as media title."""
-        return self._source
-
-    @property
-    def source(self):
-        """Return the current input source of the device."""
-        return self._source
-
-    @property
-    def source_list(self):
-        """List of available input sources."""
-        return self._source_names
+            self._attr_source = self._attr_media_title = None
 
     def set_all_zones(self, source):
         """Set all zones to one source."""
