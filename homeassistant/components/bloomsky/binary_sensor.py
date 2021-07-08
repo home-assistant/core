@@ -45,17 +45,13 @@ class BloomSkySensor(BinarySensorEntity):
         self._device_id = device["DeviceID"]
         self._sensor_name = sensor_name
         self._attr_name = f"{device['DeviceName']} {sensor_name}"
-        self._state = None
-        self._attr_unique_id = f"{self._device_id}-{self._sensor_name}"
-        self._attr_device_class = SENSOR_TYPES.get(self._sensor_name)
-
-    @property
-    def is_on(self) -> bool:
-        """Return true if binary sensor is on."""
-        return self._state
+        self._attr_unique_id = f"{self._device_id}-{sensor_name}"
+        self._attr_device_class = SENSOR_TYPES.get(sensor_name)
 
     def update(self):
         """Request an update from the BloomSky API."""
         self._bloomsky.refresh_devices()
 
-        self._state = self._bloomsky.devices[self._device_id]["Data"][self._sensor_name]
+        self._attr_state = self._bloomsky.devices[self._device_id]["Data"][
+            self._sensor_name
+        ]

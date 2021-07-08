@@ -78,28 +78,15 @@ class BloomSkySensor(SensorEntity):
         self._device_id = device["DeviceID"]
         self._sensor_name = sensor_name
         self._attr_name = f"{device['DeviceName']} {sensor_name}"
-        self._state = None
-        self._attr_unique_id = f"{self._device_id}-{self._sensor_name}"
-        self._attr_unit_of_measurement = SENSOR_UNITS_IMPERIAL.get(
-            self._sensor_name, None
-        )
+        self._attr_unique_id = f"{self._device_id}-{sensor_name}"
+        self._attr_unit_of_measurement = SENSOR_UNITS_IMPERIAL.get(sensor_name, None)
         if self._bloomsky.is_metric:
-            self._attr_unit_of_measurement = SENSOR_UNITS_METRIC.get(
-                self._sensor_name, None
-            )
-
-    @property
-    def state(self):
-        """Return the current state, eg. value, of this sensor."""
-        return self._state
+            self._attr_unit_of_measurement = SENSOR_UNITS_METRIC.get(sensor_name, None)
 
     def update(self):
         """Request an update from the BloomSky API."""
         self._bloomsky.refresh_devices()
-
         state = self._bloomsky.devices[self._device_id]["Data"][self._sensor_name]
-
-        if self._sensor_name in FORMAT_NUMBERS:
-            self._state = f"{state:.2f}"
-        else:
-            self._state = state
+        self._attr_state = (
+            f"{state:.2f}" if self._sensor_name in FORMAT_NUMBERS else state
+        )
