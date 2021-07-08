@@ -31,7 +31,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     route = config[CONF_ROUTE]
 
     data = Bizkaibus(stop, route)
-    add_entities([BizkaibusSensor(data, stop, route, name)], True)
+    add_entities([BizkaibusSensor(data, name)], True)
 
 
 class BizkaibusSensor(SensorEntity):
@@ -39,24 +39,16 @@ class BizkaibusSensor(SensorEntity):
 
     _attr_unit_of_measurement = TIME_MINUTES
 
-    def __init__(self, data, stop, route, name):
+    def __init__(self, data, name):
         """Initialize the sensor."""
         self.data = data
-        self.stop = stop
-        self.route = route
         self._attr_name = name
-        self._state = None
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._state
 
     def update(self):
         """Get the latest data from the webservice."""
         self.data.update()
         with suppress(TypeError):
-            self._state = self.data.info[0][ATTR_DUE_IN]
+            self._attr_state = self.data.info[0][ATTR_DUE_IN]
 
 
 class Bizkaibus:
