@@ -1,8 +1,9 @@
 """Utility functions to combine state attributes from multiple entities."""
 from __future__ import annotations
 
+from collections.abc import Iterator
 from itertools import groupby
-from typing import Any, Callable, Iterator
+from typing import Any, Callable
 
 from homeassistant.core import State
 
@@ -31,8 +32,8 @@ def attribute_equal(states: list[State], key: str) -> bool:
     Note: Returns True if no matching attribute is found.
     """
     attrs = find_state_attributes(states, key)
-    g = groupby(attrs)
-    return True if next(g, True) and not next(g, False) else False
+    grp = groupby(attrs)
+    return bool(next(grp, True) and not next(grp, False))
 
 
 def reduce_attribute(
