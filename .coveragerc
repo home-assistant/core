@@ -35,7 +35,6 @@ omit =
     homeassistant/components/airnow/__init__.py
     homeassistant/components/airnow/sensor.py
     homeassistant/components/airvisual/__init__.py
-    homeassistant/components/airvisual/air_quality.py
     homeassistant/components/airvisual/sensor.py
     homeassistant/components/aladdin_connect/*
     homeassistant/components/alarmdecoder/__init__.py
@@ -348,7 +347,6 @@ omit =
     homeassistant/components/fritzbox_callmonitor/const.py
     homeassistant/components/fritzbox_callmonitor/base.py
     homeassistant/components/fritzbox_callmonitor/sensor.py
-    homeassistant/components/fritzbox_netmonitor/sensor.py
     homeassistant/components/fronius/sensor.py
     homeassistant/components/frontier_silicon/media_player.py
     homeassistant/components/futurenow/light.py
@@ -372,6 +370,7 @@ omit =
     homeassistant/components/goalfeed/*
     homeassistant/components/goalzero/__init__.py
     homeassistant/components/goalzero/binary_sensor.py
+    homeassistant/components/goalzero/sensor.py
     homeassistant/components/goalzero/switch.py
     homeassistant/components/google/*
     homeassistant/components/google_cloud/tts.py
@@ -634,6 +633,7 @@ omit =
     homeassistant/components/mjpeg/camera.py
     homeassistant/components/mochad/*
     homeassistant/components/modbus/climate.py
+    homeassistant/components/modbus/modbus.py
     homeassistant/components/modem_callerid/sensor.py
     homeassistant/components/motion_blinds/__init__.py
     homeassistant/components/motion_blinds/const.py
@@ -691,8 +691,7 @@ omit =
     homeassistant/components/niko_home_control/light.py
     homeassistant/components/nilu/air_quality.py
     homeassistant/components/nissan_leaf/*
-    homeassistant/components/nmap_tracker/__init__.py
-    homeassistant/components/nmap_tracker/device_tracker.py
+    homeassistant/components/nmap_tracker/*
     homeassistant/components/nmbs/sensor.py
     homeassistant/components/notion/__init__.py
     homeassistant/components/notion/binary_sensor.py

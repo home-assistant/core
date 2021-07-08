@@ -71,49 +71,27 @@ class TriggeredBinarySensor(SimpliSafeBaseSensor, BinarySensorEntity):
     def __init__(self, simplisafe, system, sensor, device_class):
         """Initialize."""
         super().__init__(simplisafe, system, sensor)
-        self._device_class = device_class
-        self._is_on = False
 
-    @property
-    def device_class(self):
-        """Return type of sensor."""
-        return self._device_class
-
-    @property
-    def is_on(self):
-        """Return true if the sensor is on."""
-        return self._is_on
+        self._attr_device_class = device_class
 
     @callback
     def async_update_from_rest_api(self):
         """Update the entity with the provided REST API data."""
-        self._is_on = self._sensor.triggered
+        self._attr_is_on = self._sensor.triggered
 
 
 class BatteryBinarySensor(SimpliSafeBaseSensor, BinarySensorEntity):
     """Define a SimpliSafe battery binary sensor entity."""
 
+    _attr_device_class = DEVICE_CLASS_BATTERY
+
     def __init__(self, simplisafe, system, sensor):
         """Initialize."""
         super().__init__(simplisafe, system, sensor)
-        self._is_low = False
 
-    @property
-    def device_class(self):
-        """Return type of sensor."""
-        return DEVICE_CLASS_BATTERY
-
-    @property
-    def unique_id(self):
-        """Return unique ID of sensor."""
-        return f"{self._sensor.serial}-battery"
-
-    @property
-    def is_on(self):
-        """Return true if the battery is low."""
-        return self._is_low
+        self._attr_unique_id = f"{super().unique_id}-battery"
 
     @callback
     def async_update_from_rest_api(self):
         """Update the entity with the provided REST API data."""
-        self._is_low = self._sensor.low_battery
+        self._attr_is_on = self._sensor.low_battery

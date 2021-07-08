@@ -5,6 +5,7 @@ import logging
 from pymodbus.client.sync import ModbusSerialClient, ModbusTcpClient, ModbusUdpClient
 from pymodbus.constants import Defaults
 from pymodbus.exceptions import ModbusException
+from pymodbus.transaction import ModbusRtuFramer
 
 from homeassistant.const import (
     CONF_DELAY,
@@ -224,7 +225,7 @@ class ModbusHub:
             # network configuration
             self._pb_params["host"] = client_config[CONF_HOST]
             if self._config_type == CONF_RTUOVERTCP:
-                self._pb_params["host"] = "ModbusRtuFramer"
+                self._pb_params["framer"] = ModbusRtuFramer
 
         Defaults.Timeout = client_config[CONF_TIMEOUT]
 
@@ -308,6 +309,8 @@ class ModbusHub:
     async def async_pymodbus_call(self, unit, address, value, use_call):
         """Convert async to sync pymodbus call."""
         if self._config_delay:
+            return None
+        if not self._client:
             return None
         if not self._client.is_socket_open():
             return None

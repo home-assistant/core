@@ -5,7 +5,7 @@
             "already_in_progress": "Der Konfigurationsablauf wird bereits ausgef\u00fchrt",
             "incomplete_info": "Unvollst\u00e4ndige Informationen zur Einrichtung des Ger\u00e4ts, kein Host oder Token geliefert.",
             "not_xiaomi_miio": "Ger\u00e4t wird (noch) nicht von Xiaomi Miio unterst\u00fctzt.",
-            "reauth_successful": "[%key::common::config_flow::abort::reauth_successful%]"
+            "reauth_successful": "Die erneute Authentifizierung war erfolgreich"
         },
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen",
@@ -55,7 +55,7 @@
             },
             "manual": {
                 "data": {
-                    "host": "[%key::common::config_flow::data::ip%]",
+                    "host": "IP-Adresse",
                     "token": "API-Token"
                 },
                 "description": "Du ben\u00f6tigst den 32 Zeichen langen API-Token, siehe https://www.home-assistant.io/integrations/xiaomi_miio#retrieving-the-access-token f\u00fcr Anweisungen. Bitte beachte, dass sich dieser API-Token von dem Schl\u00fcssel unterscheidet, der von der Xiaomi Aqara-Integration verwendet wird.",
@@ -63,7 +63,7 @@
             },
             "reauth_confirm": {
                 "description": "Die Xiaomi Miio-Integration muss dein Konto neu authentifizieren, um die Token zu aktualisieren oder fehlende Cloud-Anmeldedaten hinzuzuf\u00fcgen.",
-                "title": "[%key::common::config_flow::title::reauth%]"
+                "title": "Integration erneut authentifizieren"
             },
             "select": {
                 "data": {
