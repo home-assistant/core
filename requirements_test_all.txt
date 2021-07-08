@@ -573,7 +573,7 @@ netdisco==2.9.0
 nettigo-air-monitor==1.0.0
 
 # homeassistant.components.nexia
-nexia==0.9.7
+nexia==0.9.8
 
 # homeassistant.components.notify_events
 notify-events==1.0.4
