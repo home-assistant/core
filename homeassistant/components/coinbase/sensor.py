@@ -11,6 +11,7 @@ from .const import (
     API_ACCOUNT_ID,
     API_ACCOUNT_NAME,
     API_ACCOUNT_NATIVE_BALANCE,
+    API_RATES,
     CONF_CURRENCIES,
     CONF_EXCHANGE_RATES,
     DOMAIN,
@@ -48,7 +49,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     if CONF_CURRENCIES in config_entry.options:
         desired_currencies = config_entry.options[CONF_CURRENCIES]
 
-    exchange_native_currency = instance.exchange_rates.currency
+    exchange_native_currency = instance.exchange_rates[API_ACCOUNT_CURRENCY]
 
     for currency in desired_currencies:
         if currency not in provided_currencies:
@@ -81,9 +82,12 @@ class AccountSensor(SensorEntity):
         self._coinbase_data = coinbase_data
         self._currency = currency
         for account in coinbase_data.accounts:
-            if account.currency == currency:
+            if account[API_ACCOUNT_CURRENCY] == currency:
                 self._name = f"Coinbase {account[API_ACCOUNT_NAME]}"
-                self._id = f"coinbase-{account[API_ACCOUNT_ID]}"
+                self._id = (
+                    f"coinbase-{account[API_ACCOUNT_ID]}-wallet-"
+                    f"{account[API_ACCOUNT_CURRENCY]}"
+                )
                 self._state = account[API_ACCOUNT_BALANCE][API_ACCOUNT_AMOUNT]
                 self._unit_of_measurement = account[API_ACCOUNT_CURRENCY]
                 self._native_balance = account[API_ACCOUNT_NATIVE_BALANCE][
@@ -131,7 +135,7 @@ class AccountSensor(SensorEntity):
         """Get the latest state of the sensor."""
         self._coinbase_data.update()
         for account in self._coinbase_data.accounts:
-            if account.currency == self._currency:
+            if account[API_ACCOUNT_CURRENCY] == self._currency:
                 self._state = account[API_ACCOUNT_BALANCE][API_ACCOUNT_AMOUNT]
                 self._native_balance = account[API_ACCOUNT_NATIVE_BALANCE][
                     API_ACCOUNT_AMOUNT
@@ -150,9 +154,9 @@ class ExchangeRateSensor(SensorEntity):
         self._coinbase_data = coinbase_data
         self.currency = exchange_currency
         self._name = f"{exchange_currency} Exchange Rate"
-        self._id = f"{coinbase_data.user_id}-xe-{exchange_currency}"
+        self._id = f"coinbase-{coinbase_data.user_id}-xe-{exchange_currency}"
         self._state = round(
-            1 / float(self._coinbase_data.exchange_rates.rates[self.currency]), 2
+            1 / float(self._coinbase_data.exchange_rates[API_RATES][self.currency]), 2
         )
         self._unit_of_measurement = native_currency
 

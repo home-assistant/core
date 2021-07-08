@@ -69,7 +69,7 @@ def service_call_action(
         return None
 
     try:
-        return fritzbox_tools.connection.call_action(
+        return fritzbox_tools.connection.call_action(  # type: ignore[no-any-return]
             f"{service_name}:{service_suffix}",
             action_name,
             **kwargs,
@@ -110,7 +110,10 @@ def get_deflections(
     if not deflection_list:
         return []
 
-    return [xmltodict.parse(deflection_list["NewDeflectionList"])["List"]["Item"]]
+    items = xmltodict.parse(deflection_list["NewDeflectionList"])["List"]["Item"]
+    if not isinstance(items, list):
+        return [items]
+    return items
 
 
 def deflection_entities_list(
@@ -242,7 +245,7 @@ def wifi_entities_list(
 ) -> list[FritzBoxWifiSwitch]:
     """Get list of wifi entities."""
     _LOGGER.debug("Setting up %s switches", SWITCH_TYPE_WIFINETWORK)
-    std_table = {"ac": "5Ghz", "n": "2.4Ghz"}
+    std_table = {"ax": "Wifi6", "ac": "5Ghz", "n": "2.4Ghz"}
     networks: dict = {}
     for i in range(4):
         if not ("WLANConfiguration" + str(i)) in fritzbox_tools.connection.services:
