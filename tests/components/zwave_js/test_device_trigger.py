@@ -1,5 +1,4 @@
 """The tests for Z-Wave JS device triggers."""
-import logging
 from unittest.mock import patch
 
 import pytest
@@ -668,7 +667,6 @@ async def test_get_scene_activation_value_notification_triggers(
         "subtype": "Endpoint 0",
     }
     triggers = await async_get_device_automations(hass, "trigger", device.id)
-    logging.getLogger(__name__).error(triggers)
     assert expected_trigger in triggers
 
 
