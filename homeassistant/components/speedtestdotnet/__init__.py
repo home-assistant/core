@@ -78,7 +78,7 @@ class SpeedTestDataCoordinator(DataUpdateCoordinator):
         self.hass = hass
         self.config_entry: ConfigEntry = config_entry
         self.api: speedtest.Speedtest | None = None
-        self.servers: dict = {}
+        self.servers: dict[str, dict] = {DEFAULT_SERVER: {}}
         super().__init__(
             self.hass,
             _LOGGER,
@@ -88,15 +88,23 @@ class SpeedTestDataCoordinator(DataUpdateCoordinator):
 
     def update_servers(self):
         """Update list of test servers."""
-        server_list = self.api.get_servers()
-        self.servers[DEFAULT_SERVER] = {}
-        for server in sorted(
-            server_list.values(),
-            key=lambda server: server[0]["country"] + server[0]["sponsor"],
-        ):
-            self.servers[
-                f"{server[0]['country']} - {server[0]['sponsor']} - {server[0]['name']}"
-            ] = server[0]
+        test_servers = self.api.get_servers()
+        test_servers_list = []
+        for servers in test_servers.values():
+            for server in servers:
+                test_servers_list.append(server)
+        if test_servers_list:
+            for server in sorted(
+                test_servers_list,
+                key=lambda server: (
+                    server["country"],
+                    server["name"],
+                    server["sponsor"],
+                ),
+            ):
+                self.servers[
+                    f"{server['country']} - {server['sponsor']} - {server['name']}"
+                ] = server
 
     def update_data(self):
         """Get the latest data from speedtest.net."""
