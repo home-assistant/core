@@ -53,15 +53,8 @@ class BlockchainSensor(SensorEntity):
         """Initialize the sensor."""
         self._attr_name = name
         self.addresses = addresses
-        self._state = None
-        self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._state
 
     def update(self):
         """Get the latest state of the sensor."""
-
-        self._state = get_balance(self.addresses)
+        self._attr_state = get_balance(self.addresses)
+        self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
