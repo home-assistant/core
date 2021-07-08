@@ -181,18 +181,15 @@ class CastDevice(MediaPlayerEntity):
 
         self._add_remove_handler = None
         self._cast_view_remove_handler = None
-        self._attr_name = self._cast_info.friendly_name
-        self._attr_device_info = (
-            {
+        self._attr_unique_id = cast_info.uuid
+        self._attr_name = cast_info.friendly_name
+        if cast_info.model_name != "Google Cast Group":
+            self._attr_device_info = {
                 "name": cast_info.friendly_name,
                 "identifiers": {(CAST_DOMAIN, cast_info.uuid.replace("-", ""))},
                 "model": cast_info.model_name,
                 "manufacturer": cast_info.manufacturer,
             }
-            if self._cast_info.model_name != "Google Cast Group"
-            else None
-        )
-        self._attr_unique_id = self._cast_info.uuid
 
     async def async_added_to_hass(self):
         """Create chromecast object when added to hass."""
@@ -355,7 +352,7 @@ class CastDevice(MediaPlayerEntity):
             return
 
         new_available = connection_status.status == CONNECTION_STATUS_CONNECTED
-        if new_available != self._attr_available:
+        if new_available != self.available:
             # Connection status callbacks happen often when disconnected.
             # Only update state when availability changed to put less pressure
             # on state machine.
@@ -561,75 +558,171 @@ class CastDevice(MediaPlayerEntity):
 
         return (media_status, media_status_received)
 
-    async def async_update(self):
-        """Retrieve latest state."""
+    @property
+    def state(self):
+        """Return the state of the player."""
+        media_status = self._media_status()[0]
+
+        if media_status is None:
+            return None
+        if media_status.player_is_playing:
+            return STATE_PLAYING
+        if media_status.player_is_paused:
+            return STATE_PAUSED
+        if media_status.player_is_idle:
+            return STATE_IDLE
+        if self._chromecast is not None and self._chromecast.is_idle:
+            return STATE_OFF
+        return None
+
+    @property
+    def volume_level(self):
+        """Volume level of the media player (0..1)."""
+        return self.cast_status.volume_level if self.cast_status else None
+
+    @property
+    def is_volume_muted(self):
+        """Boolean if volume is currently muted."""
+        return self.cast_status.volume_muted if self.cast_status else None
+
+    @property
+    def media_content_id(self):
+        """Content ID of current playing media."""
+        media_status = self._media_status()[0]
+        return media_status.content_id if media_status else None
+
+    @property
+    def media_content_type(self):
+        """Content type of current playing media."""
         media_status = self._media_status()[0]
         if media_status is None:
-            self._attr_state = (
-                self._attr_media_content_type
-            ) = self._attr_media_image_url = self._attr_media_position = None
-        if media_status.player_is_playing:
-            self._attr_state = STATE_PLAYING
-        elif media_status.player_is_paused:
-            self._attr_state = STATE_PAUSED
-        elif media_status.player_is_idle:
-            self._attr_state = STATE_IDLE
-        else:
-            self._attr_media_position = None
-        if self._chromecast is not None and self._chromecast.is_idle:
-            self._attr_state = STATE_OFF
-        self._attr_volume_level = (
-            self.cast_status.volume_level if self.cast_status else None
-        )
-        self._attr_is_volume_muted = (
-            self.cast_status.volume_muted if self.cast_status else None
-        )
-        self._attr_media_content_id = media_status.content_id if media_status else None
+            return None
         if media_status.media_is_tvshow:
-            self._attr_media_content_type = MEDIA_TYPE_TVSHOW
+            return MEDIA_TYPE_TVSHOW
         if media_status.media_is_movie:
-            self._attr_media_content_type = MEDIA_TYPE_MOVIE
+            return MEDIA_TYPE_MOVIE
         if media_status.media_is_musictrack:
-            self._attr_media_content_type = MEDIA_TYPE_MUSIC
-        self._attr_media_duration = media_status.duration if media_status else None
+            return MEDIA_TYPE_MUSIC
+        return None
+
+    @property
+    def media_duration(self):
+        """Duration of current playing media in seconds."""
+        media_status = self._media_status()[0]
+        return media_status.duration if media_status else None
+
+    @property
+    def media_image_url(self):
+        """Image url of current playing media."""
+        media_status = self._media_status()[0]
+        if media_status is None:
+            return None
+
         images = media_status.images
-        if media_status is not None:
-            self._attr_media_image_url = (
-                images[0].url if images and images[0].url else None
-            )
-        self._attr_media_image_remotely_accessible
-        self._attr_media_title = media_status.title if media_status else None
-        self._attr_media_artist = media_status.artist if media_status else None
-        self._attr_media_album_name = media_status.album_name if media_status else None
-        self._attr_media_album_artist = (
-            media_status.album_artist if media_status else None
-        )
-        self._attr_media_track = media_status.track if media_status else None
-        self._attr_media_series_title = (
-            media_status.series_title if media_status else None
-        )
-        self._attr_media_season = media_status.season if media_status else None
-        self._attr_media_episode = media_status.episode if media_status else None
-        self._attr_app_id = self._chromecast.app_id if self._chromecast else None
-        self._attr_app_name = (
-            self._chromecast.app_display_name if self._chromecast else None
-        )
+
+        return images[0].url if images and images[0].url else None
+
+    @property
+    def media_title(self):
+        """Title of current playing media."""
+        media_status = self._media_status()[0]
+        return media_status.title if media_status else None
+
+    @property
+    def media_artist(self):
+        """Artist of current playing media (Music track only)."""
+        media_status = self._media_status()[0]
+        return media_status.artist if media_status else None
+
+    @property
+    def media_album_name(self):
+        """Album of current playing media (Music track only)."""
+        media_status = self._media_status()[0]
+        return media_status.album_name if media_status else None
+
+    @property
+    def media_album_artist(self):
+        """Album artist of current playing media (Music track only)."""
+        media_status = self._media_status()[0]
+        return media_status.album_artist if media_status else None
+
+    @property
+    def media_track(self):
+        """Track number of current playing media (Music track only)."""
+        media_status = self._media_status()[0]
+        return media_status.track if media_status else None
+
+    @property
+    def media_series_title(self):
+        """Return the title of the series of current playing media."""
+        media_status = self._media_status()[0]
+        return media_status.series_title if media_status else None
+
+    @property
+    def media_season(self):
+        """Season of current playing media (TV Show only)."""
+        media_status = self._media_status()[0]
+        return media_status.season if media_status else None
+
+    @property
+    def media_episode(self):
+        """Episode of current playing media (TV Show only)."""
+        media_status = self._media_status()[0]
+        return media_status.episode if media_status else None
+
+    @property
+    def app_id(self):
+        """Return the ID of the current running app."""
+        return self._chromecast.app_id if self._chromecast else None
+
+    @property
+    def app_name(self):
+        """Name of the current running app."""
+        return self._chromecast.app_display_name if self._chromecast else None
+
+    @property
+    def supported_features(self):
+        """Flag media player features that are supported."""
         support = SUPPORT_CAST
+        media_status = self._media_status()[0]
+
         if (
             self.cast_status
             and self.cast_status.volume_control_type != VOLUME_CONTROL_TYPE_FIXED
         ):
             support |= SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET
+
         if media_status:
             if media_status.supports_queue_next:
                 support |= SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK
             if media_status.supports_seek:
                 support |= SUPPORT_SEEK
+
         if "media_source" in self.hass.config.components:
             support |= SUPPORT_BROWSE_MEDIA
-        self._attr_supported_features = support
-        self._attr_media_position = media_status.current_time
-        self._attr_media_position_updated_at = self._media_status()[1]
+
+        return support
+
+    @property
+    def media_position(self):
+        """Position of current playing media in seconds."""
+        media_status = self._media_status()[0]
+        if media_status is None or not (
+            media_status.player_is_playing
+            or media_status.player_is_paused
+            or media_status.player_is_idle
+        ):
+            return None
+        return media_status.current_time
+
+    @property
+    def media_position_updated_at(self):
+        """When was the position of the current playing media valid.
+
+        Returns value from homeassistant.util.dt.utcnow().
+        """
+        media_status_recevied = self._media_status()[1]
+        return media_status_recevied
 
     async def _async_cast_discovered(self, discover: ChromecastInfo):
         """Handle discovery of new Chromecast."""
