@@ -136,16 +136,14 @@ class AuroraEntity(CoordinatorEntity):
         super().__init__(coordinator=coordinator)
 
         self._attr_name = name
-        self._attr_unique_id = (
-            f"{self.coordinator.latitude}_{self.coordinator.longitude}"
-        )
+        self._attr_unique_id = f"{coordinator.latitude}_{coordinator.longitude}"
         self._attr_icon = icon
 
     @property
     def device_info(self):
         """Define the device based on name."""
         return {
-            ATTR_IDENTIFIERS: {(DOMAIN, self._unique_id)},
+            ATTR_IDENTIFIERS: {(DOMAIN, self.unique_id)},
             ATTR_NAME: self.coordinator.name,
             ATTR_MANUFACTURER: "NOAA",
             ATTR_MODEL: "Aurora Visibility Sensor",
