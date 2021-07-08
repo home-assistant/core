@@ -110,17 +110,17 @@ class AxisNetworkDevice:
     @property
     def signal_reachable(self):
         """Device specific event to signal a change in connection status."""
-        return f"axis_reachable_{self.unique_id}"
+        return f"axis_reachable_{self._attr_unique_id}"
 
     @property
     def signal_new_event(self):
         """Device specific event to signal new device event available."""
-        return f"axis_new_event_{self.unique_id}"
+        return f"axis_new_event_{self._attr_unique_id}"
 
     @property
     def signal_new_address(self):
         """Device specific event to signal a change in device address."""
-        return f"axis_new_address_{self.unique_id}"
+        return f"axis_new_address_{self._attr_unique_id}"
 
     # Callbacks
 
@@ -159,11 +159,11 @@ class AxisNetworkDevice:
         device_registry = await self.hass.helpers.device_registry.async_get_registry()
         device_registry.async_get_or_create(
             config_entry_id=self.config_entry.entry_id,
-            connections={(CONNECTION_NETWORK_MAC, self.unique_id)},
-            identifiers={(AXIS_DOMAIN, self.unique_id)},
+            connections={(CONNECTION_NETWORK_MAC, self._attr_unique_id)},
+            identifiers={(AXIS_DOMAIN, self._attr_unique_id)},
             manufacturer=ATTR_MANUFACTURER,
-            model=f"{self.model} {self.product_type}",
-            name=self.name,
+            model=f"{self._attr_model} {self.product_type}",
+            name=self._attr_name,
             sw_version=self.fw_version,
         )
 
