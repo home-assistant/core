@@ -2,7 +2,6 @@
 from collections import defaultdict
 from datetime import timedelta
 import logging
-from typing import Any
 import uuid
 
 import brottsplatskartan
@@ -83,15 +82,8 @@ class BrottsplatskartanSensor(SensorEntity):
 
     def __init__(self, bpk, name):
         """Initialize the Brottsplatskartan sensor."""
-        self._attr_extra_state_attributes = {}
         self._brottsplatskartan = bpk
         self._attr_name = name
-        self._state = None
-
-    @property
-    def state(self) -> Any:
-        """Return the state of the sensor."""
-        return self._state
 
     def update(self):
         """Update device state."""
@@ -111,4 +103,4 @@ class BrottsplatskartanSensor(SensorEntity):
             ATTR_ATTRIBUTION: brottsplatskartan.ATTRIBUTION
         }
         self._attr_extra_state_attributes.update(incident_counts)
-        self._state = len(incidents)
+        self._attr_state = len(incidents)
