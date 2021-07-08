@@ -66,7 +66,7 @@ NOTIFICATION_EVENT_CC_MAPPINGS = (
 # Event based trigger schemas
 BASE_EVENT_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {
-        vol.Optional(ATTR_COMMAND_CLASS): vol.In([cc.value for cc in CommandClass]),
+        vol.Required(ATTR_COMMAND_CLASS): vol.In([cc.value for cc in CommandClass]),
     }
 )
 
