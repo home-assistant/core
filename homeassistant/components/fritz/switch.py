@@ -258,66 +258,46 @@ def wifi_entities_list(
     ]
 
 
+def profile_entities_list(
+    router: FritzBoxTools, data_fritz: FritzData
+) -> list[FritzBoxProfileSwitch]:
+    """Add new tracker entities from the router."""
+
+    def _is_tracked(mac: str) -> bool:
+        for tracked in data_fritz.profile_switches.values():
+            if mac in tracked:
+                return True
+
+        return False
+
+    new_profiles: list[FritzBoxProfileSwitch] = []
+
+    if "X_AVM-DE_HostFilter1" not in router.connection.services:
+        return new_profiles
+
+    if router.unique_id not in data_fritz.profile_switches:
+        data_fritz.profile_switches[router.unique_id] = set()
+
+    for mac, device in router.devices.items():
+        if device.ip_address == "" or _is_tracked(mac):
+            continue
+
+        new_profiles.append(FritzBoxProfileSwitch(router, device))
+        data_fritz.profile_switches[router.unique_id].add(mac)
+
+    return new_profiles
+
+
 def all_entities_list(
-    fritzbox_tools: FritzBoxTools, device_friendly_name: str
+    fritzbox_tools: FritzBoxTools, device_friendly_name: str, data_fritz: FritzData
 ) -> list[Entity]:
     """Get a list of all entities."""
     return [
         *deflection_entities_list(fritzbox_tools, device_friendly_name),
         *port_entities_list(fritzbox_tools, device_friendly_name),
         *wifi_entities_list(fritzbox_tools, device_friendly_name),
+        *profile_entities_list(fritzbox_tools, data_fritz),
     ]
-
-
-async def async_add_profile_switches(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
-) -> None:
-    """Add all profile switches."""
-    data_fritz: FritzData = hass.data[DATA_FRITZ]
-    fritzbox_tools: FritzBoxTools = hass.data[DOMAIN][entry.entry_id]
-
-    @callback
-    def _async_add_entities(
-        router: FritzBoxTools,
-        async_add_entities: AddEntitiesCallback,
-        data_fritz: FritzData,
-    ) -> None:
-        """Add new tracker entities from the router."""
-
-        def _is_tracked(mac: str) -> bool:
-            for tracked in data_fritz.profile_switches.values():
-                if mac in tracked:
-                    return True
-
-            return False
-
-        if "X_AVM-DE_HostFilter1" not in router.connection.services:
-            return
-
-        new_profile = []
-        if router.unique_id not in data_fritz.profile_switches:
-            data_fritz.profile_switches[router.unique_id] = set()
-
-        for mac, device in router.devices.items():
-            if device.ip_address == "" or _is_tracked(mac):
-                continue
-
-            new_profile.append(FritzBoxProfileSwitch(router, device))
-            data_fritz.profile_switches[router.unique_id].add(mac)
-
-        if new_profile:
-            async_add_entities(new_profile)
-
-    @callback
-    def update_router() -> None:
-        """Update the values of the router."""
-        _async_add_entities(fritzbox_tools, async_add_entities, data_fritz)
-
-    entry.async_on_unload(
-        async_dispatcher_connect(hass, fritzbox_tools.signal_device_new, update_router)
-    )
-
-    update_router()
 
 
 async def async_setup_entry(
@@ -326,16 +306,24 @@ async def async_setup_entry(
     """Set up entry."""
     _LOGGER.debug("Setting up switches")
     fritzbox_tools: FritzBoxTools = hass.data[DOMAIN][entry.entry_id]
+    data_fritz: FritzData = hass.data[DATA_FRITZ]
 
     _LOGGER.debug("Fritzbox services: %s", fritzbox_tools.connection.services)
 
     entities_list = await hass.async_add_executor_job(
-        all_entities_list, fritzbox_tools, entry.title
+        all_entities_list, fritzbox_tools, entry.title, data_fritz
     )
 
     async_add_entities(entities_list)
 
-    await async_add_profile_switches(hass, entry, async_add_entities)
+    @callback
+    def update_router() -> None:
+        """Update the values of the router."""
+        async_add_entities(profile_entities_list(fritzbox_tools, data_fritz))
+
+    entry.async_on_unload(
+        async_dispatcher_connect(hass, fritzbox_tools.signal_device_new, update_router)
+    )
 
 
 class FritzBoxBaseSwitch(FritzBoxBaseEntity):
