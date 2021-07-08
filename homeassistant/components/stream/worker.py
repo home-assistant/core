@@ -205,7 +205,7 @@ class PeekIterator(Iterator):
     """An Iterator that may allow multiple passes.
 
     This may be consumed like a normal Iterator, however also supports a
-    peek() method that advances without consuming the underlying iterator.
+    peek() and rewind() methods that avoid consuming the underlying iterator.
     """
 
     def __init__(self, iterator: Iterator[av.Packet]):
@@ -341,37 +341,40 @@ def stream_worker(
     if audio_stream and audio_stream.profile is None:
         audio_stream = None
 
+    dts_validator = TimestampValidator()
+    container_packets = PeekIterator(
+        filter(dts_validator.is_valid, container.demux((video_stream, audio_stream)))
+    )
+
+    def is_video(packet: av.Packetiterator) -> Any:
+        """Return true if the packet is for the video stream."""
+        return packet.stream == video_stream
+
     # Have to work around two problems with RTSP feeds in ffmpeg
     # 1 - first frame has bad pts/dts https://trac.ffmpeg.org/ticket/5018
     # 2 - seeking can be problematic https://trac.ffmpeg.org/ticket/7815
     #
     # Use a peeking iterator to peek into the start of the stream, ensuring
     # everything looks good, then go back to the start when muxing below.
-    dts_validator = TimestampValidator()
-    container_packets = PeekIterator(
-        filter(dts_validator.is_valid, container.demux((video_stream, audio_stream)))
-    )
-
-    def video(iterator: Iterator[av.Packet]) -> Generator[av.Packet, None, None]:
-        for packet in iterator:
-            if packet.stream == video_stream:
-                yield packet
-
     try:
-        # Peek into the stream looking for unsupported audio stream
         if audio_stream and unsupported_audio(container_packets.peek(), audio_stream):
             audio_stream = None
             container_packets = PeekIterator(
                 filter(dts_validator.is_valid, container.demux(video_stream))
             )
 
+        # Advance to the first keyframe for muxing, then rewind so the muxing
+        # loop below can consume.
+        first_keyframe = next(filter(is_keyframe, filter(is_video, container_packets)))
+        container_packets.rewind()
+
         # Deal with problem #1 above (bad first packet pts/dts) by recalculating
-        # using pts/dts from second packet. The iter buffers so that
-        # packets can be re-consumed below via container_packets
-        video_packets = video(container_packets.peek())
-        first_keyframe = next(filter(is_keyframe, video_packets))
-        # Advance to the second video packet and use the duration to adjust dts
-        next_video_packet = next(video_packets)
+        # using pts/dts from second packet. Use the peek iterator to advance
+        # without consuming from container_packets. Skip over the first keyframe
+        # then use the duration from the second video packet to adjust dts.
+        peek_iter = filter(is_video, container_packets.peek())
+        next(peek_iter)  # Skip keyframe again
+        next_video_packet = next(peek_iter)
         start_dts = next_video_packet.dts - next_video_packet.duration
         first_keyframe.dts = first_keyframe.pts = start_dts
     except (av.AVError, StopIteration) as ex:
@@ -379,12 +382,8 @@ def stream_worker(
         container.close()
         return
 
-    # Start at the beginning of the input packets and advance to the first video
-    # keyframe (again). Rewind one step so the loop below can mux that packet.
-    first_keyframe = next(filter(is_keyframe, video(container_packets)))
-    container_packets.rewind()
     segment_buffer.set_streams(video_stream, audio_stream)
-    segment_buffer.reset(first_keyframe.dts)
+    segment_buffer.reset(start_dts)
     while not quit_event.is_set():
         try:
             packet = next(container_packets)
