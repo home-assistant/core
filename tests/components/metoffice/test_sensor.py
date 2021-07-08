@@ -6,7 +6,6 @@ from homeassistant.components.metoffice.const import ATTRIBUTION, DOMAIN
 
 from . import NewDateTime
 from .const import (
-    DATETIME_FORMAT,
     KINGSLYNN_SENSOR_RESULTS,
     METOFFICE_CONFIG_KINGSLYNN,
     METOFFICE_CONFIG_WAVERTREE,
@@ -54,13 +53,10 @@ async def test_one_sensor_site_running(hass, requests_mock, legacy_patchable_tim
     for running_id in running_sensor_ids:
         sensor = hass.states.get(running_id)
         sensor_id = sensor.attributes.get("sensor_id")
-        sensor_name, sensor_value = WAVERTREE_SENSOR_RESULTS[sensor_id]
+        _, sensor_value = WAVERTREE_SENSOR_RESULTS[sensor_id]
 
         assert sensor.state == sensor_value
-        assert (
-            sensor.attributes.get("last_update").strftime(DATETIME_FORMAT)
-            == TEST_DATETIME_STRING
-        )
+        assert sensor.attributes.get("last_update").isoformat() == TEST_DATETIME_STRING
         assert sensor.attributes.get("site_id") == "354107"
         assert sensor.attributes.get("site_name") == TEST_SITE_NAME_WAVERTREE
         assert sensor.attributes.get("attribution") == ATTRIBUTION
@@ -115,11 +111,10 @@ async def test_two_sensor_sites_running(hass, requests_mock, legacy_patchable_ti
         sensor = hass.states.get(running_id)
         sensor_id = sensor.attributes.get("sensor_id")
         if sensor.attributes.get("site_id") == "354107":
-            sensor_name, sensor_value = WAVERTREE_SENSOR_RESULTS[sensor_id]
+            _, sensor_value = WAVERTREE_SENSOR_RESULTS[sensor_id]
             assert sensor.state == sensor_value
             assert (
-                sensor.attributes.get("last_update").strftime(DATETIME_FORMAT)
-                == TEST_DATETIME_STRING
+                sensor.attributes.get("last_update").isoformat() == TEST_DATETIME_STRING
             )
             assert sensor.attributes.get("sensor_id") == sensor_id
             assert sensor.attributes.get("site_id") == "354107"
@@ -127,11 +122,10 @@ async def test_two_sensor_sites_running(hass, requests_mock, legacy_patchable_ti
             assert sensor.attributes.get("attribution") == ATTRIBUTION
 
         else:
-            sensor_name, sensor_value = KINGSLYNN_SENSOR_RESULTS[sensor_id]
+            _, sensor_value = KINGSLYNN_SENSOR_RESULTS[sensor_id]
             assert sensor.state == sensor_value
             assert (
-                sensor.attributes.get("last_update").strftime(DATETIME_FORMAT)
-                == TEST_DATETIME_STRING
+                sensor.attributes.get("last_update").isoformat() == TEST_DATETIME_STRING
             )
             assert sensor.attributes.get("sensor_id") == sensor_id
             assert sensor.attributes.get("site_id") == "322380"
