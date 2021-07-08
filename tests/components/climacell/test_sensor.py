@@ -182,7 +182,7 @@ async def test_v4_sensor(
     check_sensor_state(hass, PRESSURE_SURFACE_LEVEL, "997.9688")
     check_sensor_state(hass, GHI, "0.0")
     check_sensor_state(hass, CLOUD_BASE, "1.1909")
-    check_sensor_state(hass, CLOUD_COVER, "1.0")
+    check_sensor_state(hass, CLOUD_COVER, "100")
     check_sensor_state(hass, CLOUD_CEILING, "1.1909")
     check_sensor_state(hass, WIND_GUST, "5.6506")
     check_sensor_state(hass, PRECIPITATION_TYPE, "rain")
