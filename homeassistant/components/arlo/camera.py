@@ -55,7 +55,7 @@ class ArloCam(Camera):
         """Initialize an Arlo camera."""
         super().__init__()
         self._camera = camera
-        self._attr_name = self._camera.name
+        self._attr_name = camera.name
         self._motion_status = False
         self._ffmpeg = hass.data[DATA_FFMPEG]
         self._ffmpeg_arguments = device_info.get(CONF_FFMPEG_ARGUMENTS)

@@ -79,10 +79,10 @@ class ArloBaseStation(AlarmControlPanelEntity):
         self._home_mode_name = home_mode_name
         self._away_mode_name = away_mode_name
         self._night_mode_name = night_mode_name
-        self._attr_name = self._base_station.name
+        self._attr_name = data.name
         self._attr_extra_state_attributes = {
             ATTR_ATTRIBUTION: ATTRIBUTION,
-            ATTR_DEVICE_ID: self._base_station.device_id,
+            ATTR_DEVICE_ID: data.device_id,
         }
 
     async def async_added_to_hass(self):

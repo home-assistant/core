@@ -3,14 +3,9 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.arlo.camera import ATTR_SIGNAL_STRENGTH
-from homeassistant.components.climate.const import ATTR_HUMIDITY
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
-    ATTR_BATTERY_LEVEL,
-    ATTR_MODEL,
-    ATTR_TEMPERATURE,
     CONCENTRATION_PARTS_PER_MILLION,
     CONF_MONITORED_CONDITIONS,
     DEVICE_CLASS_HUMIDITY,
@@ -32,10 +27,10 @@ SENSOR_TYPES = {
     "last_capture": ["Last", None, "run-fast"],
     "total_cameras": ["Arlo Cameras", None, "video"],
     "captured_today": ["Captured Today", None, "file-video"],
-    ATTR_BATTERY_LEVEL: ["Battery Level", PERCENTAGE, "battery-50"],
-    ATTR_SIGNAL_STRENGTH: ["Signal Strength", None, "signal"],
-    ATTR_TEMPERATURE: ["Temperature", TEMP_CELSIUS, "thermometer"],
-    ATTR_HUMIDITY: ["Humidity", PERCENTAGE, "water-percent"],
+    "battery_level": ["Battery Level", PERCENTAGE, "battery-50"],
+    "signal_strength": ["Signal Strength", None, "signal"],
+    "temperature": ["Temperature", TEMP_CELSIUS, "thermometer"],
+    "humidity": ["Humidity", PERCENTAGE, "water-percent"],
     "air_quality": ["Air Quality", CONCENTRATION_PARTS_PER_MILLION, "biohazard"],
 }
 
@@ -60,7 +55,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             sensors.append(ArloSensor(SENSOR_TYPES[sensor_type][0], arlo, sensor_type))
         else:
             for camera in arlo.cameras:
-                if sensor_type in (ATTR_TEMPERATURE, ATTR_HUMIDITY, "air_quality"):
+                if sensor_type in ("temperature", "humidity", "air_quality"):
                     continue
 
                 name = f"{SENSOR_TYPES[sensor_type][0]} {camera.name}"
@@ -68,7 +63,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
             for base_station in arlo.base_stations:
                 if (
-                    sensor_type in (ATTR_TEMPERATURE, ATTR_HUMIDITY, "air_quality")
+                    sensor_type in ("temperature", "humidity", "air_quality")
                     and base_station.model_id == "ABC1000"
                 ):
                     name = f"{SENSOR_TYPES[sensor_type][0]} {base_station.name}"
@@ -83,14 +78,16 @@ class ArloSensor(SensorEntity):
     def __init__(self, name, device, sensor_type):
         """Initialize an Arlo sensor."""
         _LOGGER.debug("ArloSensor created for %s", name)
-        self._attr_name = name
+        self._name = name
         self._data = device
         self._sensor_type = sensor_type
-        self._attr_unit_of_measurement = SENSOR_TYPES.get(sensor_type)[1]
-        if sensor_type == ATTR_TEMPERATURE:
-            self._attr_device_class = DEVICE_CLASS_TEMPERATURE
-        if sensor_type == ATTR_HUMIDITY:
-            self._attr_device_class = DEVICE_CLASS_HUMIDITY
+        self._state = None
+        self._icon = f"mdi:{SENSOR_TYPES.get(self._sensor_type)[2]}"
+
+    @property
+    def name(self):
+        """Return the name of this camera."""
+        return self._name
 
     async def async_added_to_hass(self):
         """Register callbacks."""
@@ -105,64 +102,94 @@ class ArloSensor(SensorEntity):
         """Call update method."""
         self.async_schedule_update_ha_state(True)
 
+    @property
+    def state(self):
+        """Return the state of the sensor."""
+        return self._state
+
+    @property
+    def icon(self):
+        """Icon to use in the frontend, if any."""
+        if self._sensor_type == "battery_level" and self._state is not None:
+            return icon_for_battery_level(
+                battery_level=int(self._state), charging=False
+            )
+        return self._icon
+
+    @property
+    def unit_of_measurement(self):
+        """Return the units of measurement."""
+        return SENSOR_TYPES.get(self._sensor_type)[1]
+
+    @property
+    def device_class(self):
+        """Return the device class of the sensor."""
+        if self._sensor_type == "temperature":
+            return DEVICE_CLASS_TEMPERATURE
+        if self._sensor_type == "humidity":
+            return DEVICE_CLASS_HUMIDITY
+        return None
+
     def update(self):
         """Get the latest data and updates the state."""
         _LOGGER.debug("Updating Arlo sensor %s", self.name)
         if self._sensor_type == "total_cameras":
-            self._attr_state = len(self._data.cameras)
+            self._state = len(self._data.cameras)
 
         elif self._sensor_type == "captured_today":
-            self._attr_state = len(self._data.captured_today)
+            self._state = len(self._data.captured_today)
 
         elif self._sensor_type == "last_capture":
             try:
                 video = self._data.last_video
-                self._attr_state = video.created_at_pretty("%m-%d-%Y %H:%M:%S")
+                self._state = video.created_at_pretty("%m-%d-%Y %H:%M:%S")
             except (AttributeError, IndexError):
                 error_msg = (
                     f"Video not found for {self.name}. "
                     f"Older than {self._data.min_days_vdo_cache} days?"
                 )
                 _LOGGER.debug(error_msg)
-                self._attr_state = None
+                self._state = None
 
-        elif self._sensor_type == ATTR_BATTERY_LEVEL:
+        elif self._sensor_type == "battery_level":
             try:
-                self._attr_state = self._data.battery_level
+                self._state = self._data.battery_level
             except TypeError:
-                self._attr_state = None
+                self._state = None
 
-        elif self._sensor_type == ATTR_SIGNAL_STRENGTH:
+        elif self._sensor_type == "signal_strength":
             try:
-                self._attr_state = self._data.signal_strength
+                self._state = self._data.signal_strength
             except TypeError:
-                self._attr_state = None
+                self._state = None
 
-        elif self._sensor_type == ATTR_TEMPERATURE:
+        elif self._sensor_type == "temperature":
             try:
-                self._attr_state = self._data.ambient_temperature
+                self._state = self._data.ambient_temperature
             except TypeError:
-                self._attr_state = None
+                self._state = None
 
-        elif self._sensor_type == ATTR_HUMIDITY:
+        elif self._sensor_type == "humidity":
             try:
-                self._attr_state = self._data.ambient_humidity
+                self._state = self._data.ambient_humidity
             except TypeError:
-                self._attr_state = None
+                self._state = None
 
         elif self._sensor_type == "air_quality":
             try:
-                self._attr_state = self._data.ambient_air_quality
+                self._state = self._data.ambient_air_quality
             except TypeError:
-                self._attr_state = None
-        if self._sensor_type == ATTR_BATTERY_LEVEL and self._attr_state is not None:
-            self._attr_icon = icon_for_battery_level(
-                battery_level=int(self._attr_state), charging=False
-            )
-        else:
-            self._attr_icon = f"mdi:{SENSOR_TYPES.get(self._sensor_type)[2]}"
-        self._attr_extra_state_attributes = {}
-        self._attr_extra_state_attributes[ATTR_ATTRIBUTION] = ATTRIBUTION
-        self._attr_extra_state_attributes["brand"] = DEFAULT_BRAND
+                self._state = None
+
+    @property
+    def extra_state_attributes(self):
+        """Return the device state attributes."""
+        attrs = {}
+
+        attrs[ATTR_ATTRIBUTION] = ATTRIBUTION
+        attrs["brand"] = DEFAULT_BRAND
+
         if self._sensor_type != "total_cameras":
-            self._attr_extra_state_attributes[ATTR_MODEL] = self._data.model_id
+            attrs["model"] = self._data.model_id
+
+        return attrs
