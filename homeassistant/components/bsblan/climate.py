@@ -123,17 +123,17 @@ class BSBLanClimate(ClimateEntity):
         _LOGGER.debug("Setting preset mode to: %s", preset_mode)
         if preset_mode == PRESET_NONE:
             # restore previous hvac mode
-            self._hvac_mode = self._store_hvac_mode
+            self._attr_hvac_mode = self._store_hvac_mode
         else:
             # Store hvac mode.
-            self._store_hvac_mode = self._hvac_mode
+            self._store_hvac_mode = self._attr_hvac_mode
             await self.async_set_data(preset_mode=preset_mode)
 
     async def async_set_hvac_mode(self, hvac_mode):
         """Set HVAC mode."""
         _LOGGER.debug("Setting HVAC mode to: %s", hvac_mode)
         # preset should be none when hvac mode is set
-        self._preset_mode = PRESET_NONE
+        self._attr_preset_mode = PRESET_NONE
         await self.async_set_data(hvac_mode=hvac_mode)
 
     async def async_set_temperature(self, **kwargs):
@@ -160,29 +160,29 @@ class BSBLanClimate(ClimateEntity):
             await self.bsblan.thermostat(**data)
         except BSBLanError:
             _LOGGER.error("An error occurred while updating the BSBLan device")
-            self._available = False
+            self._attr_available = False
 
     async def async_update(self) -> None:
         """Update BSBlan entity."""
         try:
             state: State = await self.bsblan.state()
         except BSBLanError:
-            if self._available:
+            if self.available:
                 _LOGGER.error("An error occurred while updating the BSBLan device")
-            self._available = False
+            self._attr_available = False
             return
 
-        self._available = True
+        self._attr_available = True
 
-        self._current_temperature = float(state.current_temperature.value)
-        self._target_temperature = float(state.target_temperature.value)
+        self._attr_current_temperature = float(state.current_temperature.value)
+        self._attr_target_temperature = float(state.target_temperature.value)
 
         # check if preset is active else get hvac mode
         _LOGGER.debug("state hvac/preset mode: %s", state.hvac_mode.value)
         if state.hvac_mode.value == "2":
-            self._preset_mode = PRESET_ECO
+            self._attr_preset_mode = PRESET_ECO
         else:
-            self._hvac_mode = BSBLAN_TO_HA_STATE[state.hvac_mode.value]
-            self._preset_mode = PRESET_NONE
+            self._attr_hvac_mode = BSBLAN_TO_HA_STATE[state.hvac_mode.value]
+            self._attr_preset_mode = PRESET_NONE
 
         self._temperature_unit = state.current_temperature.unit
