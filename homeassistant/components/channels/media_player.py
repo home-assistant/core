@@ -89,7 +89,7 @@ class ChannelsPlayer(MediaPlayerEntity):
         self._attr_name = name
         self._host = host
         self._port = port
-        self.client = Channels(self._host, self._port)
+        self.client = Channels(host, port)
         self.status = None
         self.favorite_channels = []
 
