@@ -40,7 +40,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class AxisLight(AxisEventBase, LightEntity):
     """Representation of a light Axis event."""
 
+    _attr_color_mode = COLOR_MODE_BRIGHTNESS
     _attr_should_poll = True
+    _attr_supported_color_modes = {COLOR_MODE_BRIGHTNESS}
 
     def __init__(self, event, device):
         """Initialize the Axis light."""
@@ -52,9 +54,6 @@ class AxisLight(AxisEventBase, LightEntity):
 
         light_type = device.api.vapix.light_control[self.light_id].light_type
         self._attr_name = f"{device.name} {light_type} {event.TYPE} {event.id}"
-
-        self._attr_supported_color_modes = {COLOR_MODE_BRIGHTNESS}
-        self._attr_color_mode = COLOR_MODE_BRIGHTNESS
 
     async def async_added_to_hass(self) -> None:
         """Subscribe lights events."""
@@ -76,7 +75,7 @@ class AxisLight(AxisEventBase, LightEntity):
 
     async def async_turn_on(self, **kwargs):
         """Turn on light."""
-        if not self._attr_is_on:
+        if not self.is_on:
             await self.device.api.vapix.light_control.activate_light(self.light_id)
 
         if ATTR_BRIGHTNESS in kwargs:
@@ -87,7 +86,7 @@ class AxisLight(AxisEventBase, LightEntity):
 
     async def async_turn_off(self, **kwargs):
         """Turn off light."""
-        if self._attr_is_on:
+        if self.is_on:
             await self.device.api.vapix.light_control.deactivate_light(self.light_id)
 
     async def async_update(self):

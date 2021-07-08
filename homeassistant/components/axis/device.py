@@ -57,9 +57,6 @@ class AxisNetworkDevice:
         self.api = None
         self.fw_version = None
         self.product_type = None
-        self._attr_model = self.config_entry.data[CONF_MODEL]
-        self._attr_name = self.config_entry.data[CONF_NAME]
-        self._attr_unique_id = self.config_entry.unique_id
 
     @property
     def host(self):
@@ -80,6 +77,21 @@ class AxisNetworkDevice:
     def password(self):
         """Return the password of this device."""
         return self.config_entry.data[CONF_PASSWORD]
+
+    @property
+    def model(self):
+        """Return the model of this device."""
+        return self.config_entry.data[CONF_MODEL]
+
+    @property
+    def name(self):
+        """Return the name of this device."""
+        return self.config_entry.data[CONF_NAME]
+
+    @property
+    def unique_id(self):
+        """Return the unique ID (serial number) of this device."""
+        return self.config_entry.unique_id
 
     # Options
 
@@ -110,17 +122,17 @@ class AxisNetworkDevice:
     @property
     def signal_reachable(self):
         """Device specific event to signal a change in connection status."""
-        return f"axis_reachable_{self._attr_unique_id}"
+        return f"axis_reachable_{self.unique_id}"
 
     @property
     def signal_new_event(self):
         """Device specific event to signal new device event available."""
-        return f"axis_new_event_{self._attr_unique_id}"
+        return f"axis_new_event_{self.unique_id}"
 
     @property
     def signal_new_address(self):
         """Device specific event to signal a change in device address."""
-        return f"axis_new_address_{self._attr_unique_id}"
+        return f"axis_new_address_{self.unique_id}"
 
     # Callbacks
 
@@ -159,11 +171,11 @@ class AxisNetworkDevice:
         device_registry = await self.hass.helpers.device_registry.async_get_registry()
         device_registry.async_get_or_create(
             config_entry_id=self.config_entry.entry_id,
-            connections={(CONNECTION_NETWORK_MAC, self._attr_unique_id)},
-            identifiers={(AXIS_DOMAIN, self._attr_unique_id)},
+            connections={(CONNECTION_NETWORK_MAC, self.unique_id)},
+            identifiers={(AXIS_DOMAIN, self.unique_id)},
             manufacturer=ATTR_MANUFACTURER,
-            model=f"{self._attr_model} {self.product_type}",
-            name=self._attr_name,
+            model=f"{self.model} {self.product_type}",
+            name=self.name,
             sw_version=self.fw_version,
         )
 
