@@ -8,6 +8,12 @@ import voluptuous as vol
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA as BINARY_SENSOR_DEVICE_CLASSES_SCHEMA,
 )
+from homeassistant.components.climate.const import (
+    CURRENT_HVAC_ACTIONS,
+    CURRENT_HVAC_IDLE,
+    HVAC_MODE_AUTO,
+    HVAC_MODES,
+)
 from homeassistant.components.cover import (
     DEVICE_CLASSES_SCHEMA as COVER_DEVICE_CLASSES_SCHEMA,
 )
@@ -61,6 +67,12 @@ from .const import (
     CONF_DATA_COUNT,
     CONF_DATA_TYPE,
     CONF_FANS,
+    CONF_HVAC_ACTION,
+    CONF_HVAC_ACTION_SUPPORTED,
+    CONF_HVAC_ACTION_VALUES,
+    CONF_HVAC_MODE,
+    CONF_HVAC_MODE_SUPPORTED,
+    CONF_HVAC_MODE_VALUES,
     CONF_INPUT_TYPE,
     CONF_MAX_TEMP,
     CONF_MIN_TEMP,
@@ -199,6 +211,20 @@ CLIMATE_SCHEMA = vol.All(
             vol.Optional(CONF_MIN_TEMP, default=5): cv.positive_int,
             vol.Optional(CONF_STEP, default=0.5): vol.Coerce(float),
             vol.Optional(CONF_TEMPERATURE_UNIT, default=DEFAULT_TEMP_UNIT): cv.string,
+            vol.Optional(CONF_HVAC_ACTION, default=0): cv.positive_int,
+            vol.Optional(
+                CONF_HVAC_ACTION_SUPPORTED, default=[CURRENT_HVAC_IDLE]
+            ): vol.All(cv.ensure_list, [vol.In(CURRENT_HVAC_ACTIONS)]),
+            vol.Optional(CONF_HVAC_ACTION_VALUES, default=[0]): vol.All(
+                cv.ensure_list, [cv.positive_int]
+            ),
+            vol.Optional(CONF_HVAC_MODE, default=0): cv.positive_int,
+            vol.Optional(CONF_HVAC_MODE_SUPPORTED, default=[HVAC_MODE_AUTO]): vol.All(
+                cv.ensure_list, [vol.In(HVAC_MODES)]
+            ),
+            vol.Optional(CONF_HVAC_MODE_VALUES, default=[0]): vol.All(
+                cv.ensure_list, [cv.positive_int]
+            ),
         }
     ),
 )
