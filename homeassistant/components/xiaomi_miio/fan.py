@@ -336,7 +336,6 @@ AVAILABLE_ATTRIBUTES_AIRFRESH = {
     ATTR_EXTRA_FEATURES: "extra_features",
 }
 
-OPERATION_MODES_AIRPURIFIER = ["Auto", "Silent", "Favorite", "Idle"]
 PRESET_MODES_AIRPURIFIER = ["Auto", "Silent", "Favorite", "Idle"]
 OPERATION_MODES_AIRPURIFIER_PRO = ["Auto", "Silent", "Favorite"]
 PRESET_MODES_AIRPURIFIER_PRO = ["Auto", "Silent", "Favorite"]
