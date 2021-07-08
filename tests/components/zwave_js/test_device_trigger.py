@@ -2,6 +2,7 @@
 from unittest.mock import patch
 
 import pytest
+import voluptuous as vol
 import voluptuous_serialize
 from zwave_js_server.const import CommandClass
 from zwave_js_server.event import Event
@@ -836,7 +837,7 @@ async def test_get_value_from_config_failure(
     hass, client, hank_binary_switch, integration
 ):
     """Test get_value_from_config invalid value ID."""
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(vol.Invalid):
         get_value_from_config(
             hank_binary_switch,
             {

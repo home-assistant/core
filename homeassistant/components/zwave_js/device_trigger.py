@@ -156,7 +156,7 @@ def get_value_from_config(node: Node, config: ConfigType) -> Value:
         config[ATTR_PROPERTY_KEY],
     )
     if value_id not in node.values:
-        raise HomeAssistantError(f"Value {value_id} can't be found on node {node}")
+        raise vol.Invalid(f"Value {value_id} can't be found on node {node}")
     return node.values[value_id]
 
 
