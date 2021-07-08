@@ -81,12 +81,18 @@ async def async_validate_condition_config(
     config = CONDITION_SCHEMA(config)
     node = async_get_node_from_device_id(hass, config[CONF_DEVICE_ID])
     if config[CONF_TYPE] == VALUE_TYPE:
+        endpoint = None
+        if config.get(ATTR_ENDPOINT):
+            endpoint = config[ATTR_ENDPOINT]
+        property_key = None
+        if config.get(ATTR_PROPERTY_KEY):
+            property_key = config[ATTR_PROPERTY_KEY]
         value_id = get_value_id(
             node,
             CommandClass[config[ATTR_COMMAND_CLASS]],
             config[ATTR_PROPERTY],
-            config.get(ATTR_ENDPOINT),
-            config.get(ATTR_PROPERTY_KEY),
+            endpoint,
+            property_key,
         )
         if value_id not in node.values:
             raise vol.Invalid(f"Value {value_id} not found on node {node}")
