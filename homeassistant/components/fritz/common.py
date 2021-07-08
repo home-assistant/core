@@ -199,12 +199,13 @@ class FritzBoxTools:
         """Scan for new devices and return a list of found device ids."""
         _LOGGER.debug("Checking devices for FRITZ!Box router %s", self.host)
 
+        _default_consider_home = DEFAULT_CONSIDER_HOME.total_seconds()
         if self._options:
             consider_home = self._options.get(
-                CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME.total_seconds()
+                CONF_CONSIDER_HOME, _default_consider_home
             )
         else:
-            consider_home = DEFAULT_CONSIDER_HOME
+            consider_home = _default_consider_home
 
         new_device = False
         for known_host in self._update_info():

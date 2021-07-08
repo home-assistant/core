@@ -1,6 +1,8 @@
 """Support for LCN sensors."""
 from __future__ import annotations
 
+from typing import cast
+
 import pypck
 
 from homeassistant.components.sensor import DOMAIN as DOMAIN_SENSOR, SensorEntity
@@ -97,7 +99,7 @@ class LcnVariableSensor(LcnEntity, SensorEntity):
     @property
     def unit_of_measurement(self) -> str:
         """Return the unit of measurement of this entity, if any."""
-        return str(self.unit.value)
+        return cast(str, self.unit.value)
 
     def input_received(self, input_obj: InputType) -> None:
         """Set sensor value when LCN input object (command) is received."""
