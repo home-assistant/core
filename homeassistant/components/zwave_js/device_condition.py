@@ -5,8 +5,7 @@ from typing import cast
 
 import voluptuous as vol
 from zwave_js_server.const import CommandClass, ConfigurationValueType
-from zwave_js_server.model.node import Node
-from zwave_js_server.model.value import ConfigurationValue, Value, get_value_id
+from zwave_js_server.model.value import ConfigurationValue
 
 from homeassistant.const import CONF_CONDITION, CONF_DEVICE_ID, CONF_DOMAIN, CONF_TYPE
 from homeassistant.core import HomeAssistant, callback
@@ -23,7 +22,7 @@ from .const import (
     ATTR_PROPERTY_KEY,
     ATTR_VALUE,
 )
-from .helpers import async_get_node_from_device_id
+from .helpers import async_get_node_from_device_id, get_zwave_value_from_config
 
 CONF_SUBTYPE = "subtype"
 CONF_VALUE_ID = "value_id"
@@ -75,26 +74,6 @@ CONDITION_SCHEMA = vol.Any(
 )
 
 
-def get_value_from_config(node: Node, config: ConfigType) -> Value:
-    """Get a Z-Wave JS Value from a config."""
-    endpoint = None
-    if config.get(ATTR_ENDPOINT):
-        endpoint = config[ATTR_ENDPOINT]
-    property_key = None
-    if config.get(ATTR_PROPERTY_KEY):
-        property_key = config[ATTR_PROPERTY_KEY]
-    value_id = get_value_id(
-        node,
-        config[ATTR_COMMAND_CLASS],
-        config[ATTR_PROPERTY],
-        endpoint,
-        property_key,
-    )
-    if value_id not in node.values:
-        raise vol.Invalid(f"Value {value_id} can't be found on node {node}")
-    return node.values[value_id]
-
-
 async def async_validate_condition_config(
     hass: HomeAssistant, config: ConfigType
 ) -> ConfigType:
@@ -102,7 +81,7 @@ async def async_validate_condition_config(
     config = CONDITION_SCHEMA(config)
     if config[CONF_TYPE] == VALUE_TYPE:
         node = async_get_node_from_device_id(hass, config[CONF_DEVICE_ID])
-        get_value_from_config(node, config)
+        get_zwave_value_from_config(node, config)
 
     return config
 
@@ -175,7 +154,7 @@ def async_condition_from_config(
     def test_value(hass: HomeAssistant, variables: TemplateVarsType) -> bool:
         """Test if value is a certain state."""
         node = async_get_node_from_device_id(hass, device_id)
-        value = get_value_from_config(node, config)
+        value = get_zwave_value_from_config(node, config)
         return bool(value.value == config[ATTR_VALUE])
 
     if condition_type == VALUE_TYPE:

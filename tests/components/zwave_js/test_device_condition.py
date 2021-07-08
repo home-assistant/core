@@ -1,13 +1,18 @@
 """The tests for Z-Wave JS device conditions."""
 from __future__ import annotations
 
+from unittest.mock import patch
+
 import pytest
+import voluptuous as vol
 import voluptuous_serialize
 from zwave_js_server.const import CommandClass
 from zwave_js_server.event import Event
 
 from homeassistant.components import automation
 from homeassistant.components.zwave_js import DOMAIN, device_condition
+from homeassistant.components.zwave_js.helpers import get_zwave_value_from_config
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, device_registry
 from homeassistant.setup import async_setup_component
 
@@ -522,3 +527,46 @@ async def test_get_condition_capabilities_config_parameter(
         },
     )
     assert not capabilities
+
+
+async def test_failure_scenarios(hass, client, hank_binary_switch, integration):
+    """Test failure scenarios."""
+    dev_reg = device_registry.async_get(hass)
+    device = device_registry.async_entries_for_config_entry(
+        dev_reg, integration.entry_id
+    )[0]
+
+    with pytest.raises(HomeAssistantError):
+        await device_condition.async_condition_from_config(
+            {"type": "failed.test", "device_id": device.id}, False
+        )
+
+    with patch(
+        "homeassistant.components.zwave_js.device_condition.async_get_node_from_device_id",
+        return_value=None,
+    ), patch(
+        "homeassistant.components.zwave_js.device_condition.get_zwave_value_from_config",
+        return_value=None,
+    ):
+        assert (
+            await device_condition.async_get_condition_capabilities(
+                hass, {"type": "failed.test", "device_id": device.id}
+            )
+            == {}
+        )
+
+
+async def test_get_value_from_config_failure(
+    hass, client, hank_binary_switch, integration
+):
+    """Test get_value_from_config invalid value ID."""
+    with pytest.raises(vol.Invalid):
+        get_zwave_value_from_config(
+            hank_binary_switch,
+            {
+                "command_class": CommandClass.SCENE_ACTIVATION.value,
+                "property": "sceneId",
+                "property_key": 15,
+                "endpoint": 10,
+            },
+        )
