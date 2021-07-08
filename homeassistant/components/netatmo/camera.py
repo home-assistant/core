@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 import aiohttp
 import pyatmo
@@ -35,6 +36,7 @@ from .const import (
     SERVICE_SET_PERSON_AWAY,
     SERVICE_SET_PERSONS_HOME,
     SIGNAL_NAME,
+    UNKNOWN,
     WEBHOOK_LIGHT_MODE,
     WEBHOOK_NACAMERA_CONNECTION,
     WEBHOOK_PUSH_TYPE,
@@ -130,7 +132,9 @@ class NetatmoCamera(NetatmoBase, Camera):
 
         self._id = camera_id
         self._home_id = home_id
-        self._device_name = self._data.get_camera(camera_id=camera_id).get("name")
+        self._device_name = self._data.get_camera(camera_id=camera_id).get(
+            "name", UNKNOWN
+        )
         self._attr_name = f"{MANUFACTURER} {self._device_name}"
         self._model = camera_type
         self._attr_unique_id = f"{self._id}-{self._model}"
@@ -138,8 +142,8 @@ class NetatmoCamera(NetatmoBase, Camera):
         self._vpnurl: str | None = None
         self._localurl: str | None = None
         self._status: str | None = None
-        self._sd_status = None
-        self._alim_status = None
+        self._sd_status: str | None = None
+        self._alim_status: str | None = None
         self._is_local: str | None = None
         self._light_state = None
 
@@ -185,10 +189,15 @@ class NetatmoCamera(NetatmoBase, Camera):
             self.async_write_ha_state()
             return
 
+    @property
+    def _data(self) -> pyatmo.AsyncCameraData:
+        """Return data for this entity."""
+        return self.data_handler.data[self._data_classes[0]["name"]]
+
     async def async_camera_image(self) -> bytes | None:
         """Return a still image response from the camera."""
         try:
-            return bytes(await self._data.async_get_live_snapshot(camera_id=self._id))
+            return await self._data.async_get_live_snapshot(camera_id=self._id)
         except (
             aiohttp.ClientPayloadError,
             aiohttp.ContentTypeError,
@@ -296,7 +305,7 @@ class NetatmoCamera(NetatmoBase, Camera):
                 ] = f"{self._vpnurl}/vod/{event['video_id']}/files/{self._quality}/index.m3u8"
         return events
 
-    async def _service_set_persons_home(self, **kwargs: dict) -> None:
+    async def _service_set_persons_home(self, **kwargs: Any) -> None:
         """Service to change current home schedule."""
         persons = kwargs.get(ATTR_PERSONS, {})
         person_ids = []
@@ -310,7 +319,7 @@ class NetatmoCamera(NetatmoBase, Camera):
         )
         _LOGGER.debug("Set %s as at home", persons)
 
-    async def _service_set_person_away(self, **kwargs: dict) -> None:
+    async def _service_set_person_away(self, **kwargs: Any) -> None:
         """Service to mark a person as away or set the home as empty."""
         person = kwargs.get(ATTR_PERSON)
         person_id = None
@@ -333,10 +342,10 @@ class NetatmoCamera(NetatmoBase, Camera):
             )
             _LOGGER.debug("Set home as empty")
 
-    async def _service_set_camera_light(self, **kwargs: dict) -> None:
+    async def _service_set_camera_light(self, **kwargs: Any) -> None:
         """Service to set light mode."""
-        mode = kwargs.get(ATTR_CAMERA_LIGHT_MODE)
-        _LOGGER.debug("Turn %s camera light for '%s'", mode, self.name)
+        mode = str(kwargs.get(ATTR_CAMERA_LIGHT_MODE))
+        _LOGGER.debug("Turn %s camera light for '%s'", mode, self._attr_name)
         await self._data.async_set_state(
             home_id=self._home_id,
             camera_id=self._id,

@@ -1,8 +1,6 @@
 """Base class for Netatmo entities."""
 from __future__ import annotations
 
-from typing import Any
-
 from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.core import CALLBACK_TYPE, callback
 from homeassistant.helpers.entity import DeviceInfo, Entity
@@ -93,12 +91,7 @@ class NetatmoBase(Entity):
         raise NotImplementedError
 
     @property
-    def _data(self) -> Any:
-        """Return data for this entity."""
-        return self.data_handler.data[self._data_classes[0]["name"]]
-
-    @property
-    def device_info(self) -> DeviceInfo | None:
+    def device_info(self) -> DeviceInfo:
         """Return the device info for the sensor."""
         return {
             "identifiers": {(DOMAIN, self._id)},

@@ -8,6 +8,7 @@ from datetime import timedelta
 from itertools import islice
 import logging
 from time import time
+from typing import Any
 
 import pyatmo
 
@@ -167,7 +168,7 @@ class NetatmoDataHandler:
         data_class_name: str,
         data_class_entry: str,
         update_callback: CALLBACK_TYPE,
-        **kwargs: dict,
+        **kwargs: Any,
     ) -> None:
         """Register data class."""
         if data_class_entry in self.data_classes:

@@ -1,5 +1,9 @@
 """Support for the Netatmo camera lights."""
+from __future__ import annotations
+
 import logging
+
+import pyatmo
 
 from homeassistant.components.light import LightEntity
 from homeassistant.config_entries import ConfigEntry
@@ -14,6 +18,7 @@ from .const import (
     EVENT_TYPE_LIGHT_MODE,
     MANUFACTURER,
     SIGNAL_NAME,
+    UNKNOWN,
     WEBHOOK_LIGHT_MODE,
     WEBHOOK_PUSH_TYPE,
 )
@@ -83,7 +88,7 @@ class NetatmoLight(NetatmoBase, LightEntity):
         self._id = camera_id
         self._home_id = home_id
         self._model = camera_type
-        self._device_name = self._data.get_camera(camera_id).get("name")
+        self._device_name: str = self._data.get_camera(camera_id).get("name", UNKNOWN)
         self._attr_name = f"{MANUFACTURER} {self._device_name}"
         self._is_on = False
         self._attr_unique_id = f"{self._id}-light"
@@ -117,6 +122,11 @@ class NetatmoLight(NetatmoBase, LightEntity):
 
             self.async_write_ha_state()
             return
+
+    @property
+    def _data(self) -> pyatmo.AsyncCameraData:
+        """Return data for this entity."""
+        return self.data_handler.data[self._data_classes[0]["name"]]
 
     @property
     def available(self) -> bool:
