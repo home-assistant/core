@@ -294,7 +294,8 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
                 return
             try:
                 target_humidity = ranged_value_to_percentage(
-                    self._target_humidity_range, int(rendered_target_humidity_payload)
+                    self._target_humidity_range,
+                    int(float(rendered_target_humidity_payload)),
                 )
             except ValueError:
                 _LOGGER.warning(
