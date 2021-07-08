@@ -24,7 +24,6 @@ class TasmotaEntity(Entity):
 
     def __init__(self, tasmota_entity) -> None:
         """Initialize."""
-        self._state = None
         self._tasmota_entity = tasmota_entity
         self._unique_id = tasmota_entity.unique_id
 
