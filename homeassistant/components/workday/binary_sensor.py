@@ -103,7 +103,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     # Remove holidays
     try:
         for date in remove_holidays:
-            obj_holidays.pop(date)
+            # is this formatted as a date?
+            if dt.parse_date(date):
+                # remove holiday by date
+                obj_holidays.pop(date)
+            else:
+                # remove holiday by name
+                obj_holidays.pop_named(date)
     except TypeError:
         _LOGGER.debug("No holidays to remove or invalid holidays")
 
