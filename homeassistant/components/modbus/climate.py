@@ -208,6 +208,7 @@ class ModbusThermostat(BasePlatform, RestoreEntity, ClimateEntity):
         if result is None:
             self._available = False
             return -1
+
         registers = self._swap_registers(result.registers)
         byte_string = b"".join([x.to_bytes(2, byteorder="big") for x in registers])
         val = struct.unpack(self._structure, byte_string)
