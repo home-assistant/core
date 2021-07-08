@@ -75,7 +75,12 @@ async def test_light_brightness(hass, knx_ip_interface_mock: KNXIPMock):
     for entity, attr, value, ga in [
         [entity_brightness, "brightness", 100, ga_brightness],
         [entity_color, "color_name", "blue", ga_color],
-        [entity_white, "white_value", 88, ga_white],
+        [
+            entity_white,
+            "white_value",
+            88,
+            ga_white_onoff,
+        ],  # white value is removed because of light supports rgb
         [entity_colortemp, "color_temp", 88, ga_colortemp],
     ]:
         # Turn on with specific attribute on lamp which supports specific attribute
@@ -177,7 +182,11 @@ async def test_light_multi_change(hass, knx_ip_interface_mock: KNXIPMock):
 
     for attribute, value, ga in [
         ["color_name", "red", ga_color],
-        ["color_temp", 77, ga_colortemp],
+        [
+            "color_temp",
+            77,
+            ga_color,
+        ],  # color_temp change is performed via color address
         ["brightness", 55, ga_brightness],
     ]:
         # Change attribute
