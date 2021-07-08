@@ -48,7 +48,6 @@ class BlinkStickLight(LightEntity):
         """Initialize the light."""
         self._stick = stick
         self._attr_name = name
-        self._serial = stick.get_serial()
 
     def update(self):
         """Read back the device state."""
