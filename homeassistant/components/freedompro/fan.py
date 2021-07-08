@@ -69,11 +69,7 @@ class Device(CoordinatorEntity, FanEntity):
         self._handle_coordinator_update()
 
     async def async_turn_on(
-        self,
-        speed,
-        percentage,
-        preset_mode,
-        **kwargs,
+        self, speed=None, percentage=None, preset_mode=None, **kwargs
     ):
         """Async function to set on to fan."""
         payload = {"on": True}
