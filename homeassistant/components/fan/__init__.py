@@ -623,7 +623,7 @@ class FanEntity(ToggleEntity):
     @property
     def supported_features(self) -> int:
         """Flag supported features."""
-        return 0
+        return self._attr_supported_features
 
     @property
     def preset_mode(self) -> str | None:
