@@ -347,7 +347,7 @@ async def test_value_state(
                             "domain": DOMAIN,
                             "device_id": device.id,
                             "type": "value",
-                            "command_class": "CONFIGURATION",
+                            "command_class": 112,
                             "property": 3,
                             "value": 255,
                         }
@@ -425,7 +425,7 @@ async def test_get_condition_capabilities_value(
     )
     assert capabilities and "extra_fields" in capabilities
 
-    cc_options = [(cc.name, cc.name) for cc in CommandClass]
+    cc_options = [(cc.value, cc.name) for cc in CommandClass]
 
     assert voluptuous_serialize.convert(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
