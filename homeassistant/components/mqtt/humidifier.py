@@ -44,8 +44,6 @@ from .. import mqtt
 from .debug_info import log_messages
 from .mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_helper
 
-ATTR_HUMIDITY_STEP = "humidity_step"
-
 CONF_AVAILABLE_MODES_LIST = "available_modes"
 CONF_COMMAND_TEMPLATE = "command_template"
 CONF_MODE_COMMAND_TEMPLATE = "mode_command_template"
@@ -62,11 +60,9 @@ CONF_TARGET_HUMIDITY_MIN = "target_humidity_min"
 CONF_TARGET_HUMIDITY_MAX = "target_humidity_max"
 CONF_TARGET_HUMIDITY_VALUE_TEMPLATE = "target_humidity_value_template"
 CONF_TARGET_HUMIDITY_STATE_TOPIC = "target_humidity_state_topic"
-CONF_TARGET_HUMIDITY_STEP = "target_humidity_step"
 CONF_TARGET_HUMIDITY_RANGE_MAX = "target_humidity_range_max"
 CONF_TARGET_HUMIDITY_RANGE_MIN = "target_humidity_range_min"
 
-DEFAULT_HUMIDITY_STEP = 1.0
 DEFAULT_NAME = "MQTT Humidifier"
 DEFAULT_OPTIMISTIC = False
 DEFAULT_PAYLOAD_ON = "ON"
@@ -209,7 +205,6 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
         )
         self._attr_min_humidity = config.get(CONF_TARGET_HUMIDITY_MIN)
         self._attr_min_humidity = config.get(CONF_TARGET_HUMIDITY_MAX)
-        self._humidity_step = config.get(CONF_TARGET_HUMIDITY_STEP)
 
         self._topic = {
             key: config.get(key)
