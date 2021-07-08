@@ -602,6 +602,7 @@ class FritzBoxProfileSwitch(FritzDeviceBase, SwitchEntity):
         """Handle switch state change request."""
         await self._async_switch_on_off_executor(turn_on)
         self._attr_is_on = turn_on
+        await self.async_update_ha_state()
         return True
 
     async def _async_switch_on_off_executor(self, turn_on: bool) -> None:

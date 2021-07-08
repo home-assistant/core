@@ -315,7 +315,7 @@ class FritzDeviceBase(Entity):
 
     async def async_process_update(self) -> None:
         """Update device."""
-        ...
+        raise NotImplementedError()
 
     async def async_on_demand_update(self) -> None:
         """Update state."""
