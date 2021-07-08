@@ -59,7 +59,8 @@
             "addon_set_config_failed": "Instellen van de Z-Wave JS configuratie is mislukt.",
             "addon_start_failed": "Kan de Z-Wave JS add-on niet starten.",
             "already_configured": "Apparaat is al geconfigureerd",
-            "cannot_connect": "Kan geen verbinding maken"
+            "cannot_connect": "Kan geen verbinding maken",
+            "different_device": "Het aangesloten USB-apparaat is niet hetzelfde als eerder geconfigureerd voor dit configuratie-item. Maak in plaats daarvan een nieuw configuratie-item voor het nieuwe apparaat."
         },
         "error": {
             "cannot_connect": "Kan geen verbinding maken",

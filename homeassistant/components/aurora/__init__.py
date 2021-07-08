@@ -123,6 +123,8 @@ class AuroraDataUpdateCoordinator(DataUpdateCoordinator):
 class AuroraEntity(CoordinatorEntity):
     """Implementation of the base Aurora Entity."""
 
+    _attr_extra_state_attributes = {"attribution": ATTRIBUTION}
+
     def __init__(
         self,
         coordinator: AuroraDataUpdateCoordinator,
@@ -133,35 +135,15 @@ class AuroraEntity(CoordinatorEntity):
 
         super().__init__(coordinator=coordinator)
 
-        self._name = name
-        self._unique_id = f"{self.coordinator.latitude}_{self.coordinator.longitude}"
-        self._icon = icon
-
-    @property
-    def unique_id(self):
-        """Define the unique id based on the latitude and longitude."""
-        return self._unique_id
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
-        return {"attribution": ATTRIBUTION}
-
-    @property
-    def icon(self):
-        """Return the icon for the sensor."""
-        return self._icon
+        self._attr_name = name
+        self._attr_unique_id = f"{coordinator.latitude}_{coordinator.longitude}"
+        self._attr_icon = icon
 
     @property
     def device_info(self):
         """Define the device based on name."""
         return {
-            ATTR_IDENTIFIERS: {(DOMAIN, self._unique_id)},
+            ATTR_IDENTIFIERS: {(DOMAIN, self.unique_id)},
             ATTR_NAME: self.coordinator.name,
             ATTR_MANUFACTURER: "NOAA",
             ATTR_MODEL: "Aurora Visibility Sensor",
