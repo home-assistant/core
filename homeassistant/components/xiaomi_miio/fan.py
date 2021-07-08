@@ -567,7 +567,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         token = config_entry.data[CONF_TOKEN]
         name = config_entry.title
         model = config_entry.data[CONF_MODEL]
-        model = "zhimi.airpurifier.m1"
         unique_id = config_entry.unique_id
 
         _LOGGER.debug("Initializing with host %s (token %s...)", host, token[:5])
