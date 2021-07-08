@@ -79,19 +79,6 @@ class Bmp280Sensor(SensorEntity):
         self._bmp280 = bmp280
         self._attr_name = name
         self._attr_unit_of_measurement = unit_of_measurement
-        self._attr_device_class = device_class
-        self._state = None
-        self._errored = False
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def available(self) -> bool:
-        """Return if the device is currently available."""
-        return not self._errored
 
 
 class Bmp280TemperatureSensor(Bmp280Sensor):
@@ -107,16 +94,16 @@ class Bmp280TemperatureSensor(Bmp280Sensor):
     def update(self):
         """Fetch new state data for the sensor."""
         try:
-            self._state = round(self._bmp280.temperature, 1)
-            if self._errored:
+            self._attr_state = round(self._bmp280.temperature, 1)
+            if not self.available:
                 _LOGGER.warning("Communication restored with temperature sensor")
-                self._errored = False
+                self._attr_available = True
         except OSError:
             # this is thrown when a working sensor is unplugged between two updates
             _LOGGER.warning(
                 "Unable to read temperature data due to a communication problem"
             )
-            self._errored = True
+            self._attr_available = False
 
 
 class Bmp280PressureSensor(Bmp280Sensor):
@@ -132,13 +119,13 @@ class Bmp280PressureSensor(Bmp280Sensor):
     def update(self):
         """Fetch new state data for the sensor."""
         try:
-            self._state = round(self._bmp280.pressure)
-            if self._errored:
+            self._attr_state = round(self._bmp280.pressure)
+            if not self.available:
                 _LOGGER.warning("Communication restored with pressure sensor")
-                self._errored = False
+                self._attr_available = True
         except OSError:
             # this is thrown when a working sensor is unplugged between two updates
             _LOGGER.warning(
                 "Unable to read pressure data due to a communication problem"
             )
-            self._errored = True
+            self._attr_available = False
