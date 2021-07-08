@@ -60,8 +60,8 @@ CONF_TARGET_HUMIDITY_MIN = "min_humidity"
 CONF_TARGET_HUMIDITY_MAX = "max_humidity"
 CONF_TARGET_HUMIDITY_VALUE_TEMPLATE = "target_humidity_value_template"
 CONF_TARGET_HUMIDITY_STATE_TOPIC = "target_humidity_state_topic"
-CONF_TARGET_HUMIDITY_RANGE_MAX = "target_humidity_range_max"
-CONF_TARGET_HUMIDITY_RANGE_MIN = "target_humidity_range_min"
+CONF_TARGET_HUMIDITY_RANGE_MAX = "humidity_range_max"
+CONF_TARGET_HUMIDITY_RANGE_MIN = "humidity_range_min"
 
 DEFAULT_NAME = "MQTT Humidifier"
 DEFAULT_OPTIMISTIC = False
