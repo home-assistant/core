@@ -29,6 +29,8 @@ from .flow import FlowDispatcher, SSDPFlow
 DOMAIN = "ssdp"
 SCAN_INTERVAL = timedelta(seconds=60)
 
+IPV4_BROADCAST = IPv4Address("255.255.255.255")
+
 # Attributes for accessing info from SSDP response
 ATTR_SSDP_LOCATION = "ssdp_location"
 ATTR_SSDP_ST = "ssdp_st"
@@ -236,7 +238,20 @@ class Scanner:
                     async_callback=self._async_process_entry, source_ip=source_ip
                 )
             )
-
+            try:
+                IPv4Address(source_ip)
+            except ValueError:
+                continue
+            # Some sonos devices only seem to respond if we send to the broadcast
+            # address. This matches pysonos' behavior
+            # https://github.com/amelchio/pysonos/blob/master/pysonos/discovery.py#L120
+            self._ssdp_listeners.append(
+                SSDPListener(
+                    async_callback=self._async_process_entry,
+                    source_ip=source_ip,
+                    target_ip=IPV4_BROADCAST,
+                )
+            )
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.async_stop)
         self.hass.bus.async_listen_once(
             EVENT_HOMEASSISTANT_STARTED, self.flow_dispatcher.async_start
