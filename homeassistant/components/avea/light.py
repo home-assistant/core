@@ -36,6 +36,7 @@ class AveaLight(LightEntity):
         """Initialize an AveaLight."""
         self._light = light
         self._attr_name = light.name
+        self._attr_brightness = light.brightness
 
     def turn_on(self, **kwargs):
         """Instruct the light to turn on."""
