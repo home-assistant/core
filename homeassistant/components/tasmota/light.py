@@ -30,7 +30,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import DATA_REMOVE_DISCOVER_COMPONENT
 from .discovery import TASMOTA_DISCOVERY_ENTITY_NEW
-from .mixins import TasmotaAvailability, TasmotaDiscoveryUpdate
+from .mixins import TasmotaAvailability, TasmotaDiscoveryUpdate, TasmotaOnOffEntity
 
 DEFAULT_BRIGHTNESS_MAX = 255
 TASMOTA_BRIGHTNESS_MAX = 100
@@ -74,6 +74,7 @@ def scale_brightness(brightness):
 class TasmotaLight(
     TasmotaAvailability,
     TasmotaDiscoveryUpdate,
+    TasmotaOnOffEntity,
     LightEntity,
 ):
     """Representation of a Tasmota light."""
@@ -142,7 +143,7 @@ class TasmotaLight(
     @callback
     def state_updated(self, state, **kwargs):
         """Handle state updates."""
-        self._state = state
+        self._on_off_state = state
         attributes = kwargs.get("attributes")
         if attributes:
             if "brightness" in attributes:
@@ -221,11 +222,6 @@ class TasmotaLight(
     def force_update(self):
         """Force update."""
         return False
-
-    @property
-    def is_on(self):
-        """Return true if device is on."""
-        return self._state
 
     @property
     def supported_color_modes(self):

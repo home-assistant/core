@@ -1,5 +1,8 @@
 """Tasmota entity mixins."""
+from __future__ import annotations
+
 import logging
+from typing import Any
 
 from homeassistant.components.mqtt import (
     async_subscribe_connection_status,
@@ -29,7 +32,6 @@ class TasmotaEntity(Entity):
 
     async def async_added_to_hass(self):
         """Subscribe to MQTT events."""
-        self._tasmota_entity.set_on_state_callback(self.state_updated)
         await self._subscribe_topics()
 
     async def async_will_remove_from_hass(self):
@@ -47,12 +49,6 @@ class TasmotaEntity(Entity):
     async def _subscribe_topics(self):
         """(Re)Subscribe to topics."""
         await self._tasmota_entity.subscribe_topics()
-
-    @callback
-    def state_updated(self, state, **kwargs):
-        """Handle state updates."""
-        self._state = state
-        self.async_write_ha_state()
 
     @property
     def device_info(self):
@@ -73,6 +69,31 @@ class TasmotaEntity(Entity):
     def unique_id(self):
         """Return a unique ID."""
         return self._unique_id
+
+
+class TasmotaOnOffEntity(TasmotaEntity):
+    """Base class for Tasmota entities which can be on or off."""
+
+    def __init__(self, **kwds: Any) -> None:
+        """Initialize."""
+        self._on_off_state: bool = False
+        super().__init__(**kwds)
+
+    async def async_added_to_hass(self) -> None:
+        """Subscribe to MQTT events."""
+        self._tasmota_entity.set_on_state_callback(self.state_updated)
+        await super().async_added_to_hass()
+
+    @callback
+    def state_updated(self, state: bool, **kwargs: Any) -> None:
+        """Handle state updates."""
+        self._on_off_state = state
+        self.async_write_ha_state()
+
+    @property
+    def is_on(self) -> bool:
+        """Return true if device is on."""
+        return self._on_off_state
 
 
 class TasmotaAvailability(TasmotaEntity):
