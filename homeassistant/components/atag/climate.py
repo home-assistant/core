@@ -37,9 +37,14 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class AtagThermostat(AtagEntity, ClimateEntity):
     """Atag climate device."""
 
-    _attr_supported_features = SUPPORT_FLAGS
     _attr_hvac_modes = HVAC_MODES
     _attr_preset_modes = list(PRESET_MAP.keys())
+    _attr_supported_features = SUPPORT_FLAGS
+
+    def __init__(self, coordinator, atag_id):
+        """Initialize an Atag climate device."""
+        super().__init__(coordinator, atag_id)
+        self._attr_temperature_unit = coordinator.data.climate.temp_unit
 
     @property
     def hvac_mode(self) -> str | None:
@@ -58,11 +63,6 @@ class AtagThermostat(AtagEntity, ClimateEntity):
         )
 
     @property
-    def temperature_unit(self) -> str | None:
-        """Return the unit of measurement."""
-        return self.coordinator.data.climate.temp_unit
-
-    @property
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self.coordinator.data.climate.temperature
@@ -75,7 +75,8 @@ class AtagThermostat(AtagEntity, ClimateEntity):
     @property
     def preset_mode(self) -> str | None:
         """Return the current preset mode, e.g., auto, manual, fireplace, extend, etc."""
-        return PRESET_INVERTED.get(self.coordinator.data.climate.preset_mode)
+        preset = self.coordinator.data.climate.preset_mode
+        return PRESET_INVERTED.get(preset)
 
     async def async_set_temperature(self, **kwargs) -> None:
         """Set new target temperature."""

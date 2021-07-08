@@ -22,9 +22,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class AtagWaterHeater(AtagEntity, WaterHeaterEntity):
     """Representation of an ATAG water heater."""
 
+    _attr_operation_list = OPERATION_LIST
     _attr_supported_features = SUPPORT_FLAGS_HEATER
     _attr_temperature_unit = TEMP_CELSIUS
-    _attr_operation_list = OPERATION_LIST
 
     @property
     def current_temperature(self):
