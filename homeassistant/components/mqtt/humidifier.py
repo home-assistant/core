@@ -132,10 +132,6 @@ PLATFORM_SCHEMA = vol.All(
             ): cv.string,
             vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
             vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
-            vol.Optional(
-                CONF_MODES_LIST,
-                default=[],
-            ): cv.ensure_list,
             vol.Optional(CONF_STATE_VALUE_TEMPLATE): cv.template,
         }
     ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema),
@@ -292,10 +288,7 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
             if not rendered_target_humidity_payload:
                 _LOGGER.debug("Ignoring empty target humidity from '%s'", msg.topic)
                 return
-            if (
-                rendered_target_humidity_payload
-                == self._payload["TARGET_HUMIDITY_RESET"]
-            ):
+            if rendered_target_humidity_payload == self._payload["HUMIDITY_RESET"]:
                 self._target_humidity = None
                 self.async_write_ha_state()
                 return
