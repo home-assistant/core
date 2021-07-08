@@ -12,7 +12,8 @@ from sqlalchemy.ext import baked
 from sqlalchemy.orm.scoping import scoped_session
 
 from homeassistant.const import PRESSURE_PA, TEMP_CELSIUS
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.helpers import entity_registry
 import homeassistant.util.dt as dt_util
 import homeassistant.util.pressure as pressure_util
 import homeassistant.util.temperature as temperature_util
@@ -72,6 +73,31 @@ def async_setup(hass: HomeAssistant) -> None:
     """Set up the history hooks."""
     hass.data[STATISTICS_BAKERY] = baked.bakery()
     hass.data[STATISTICS_META_BAKERY] = baked.bakery()
+
+    def entity_id_changed(event: Event) -> None:
+        """Handle entity_id changed."""
+        old_entity_id = event.data["old_entity_id"]
+        entity_id = event.data["entity_id"]
+        with session_scope(hass=hass) as session:
+            session.query(StatisticsMeta).filter(
+                StatisticsMeta.statistic_id == old_entity_id
+                and StatisticsMeta.source == DOMAIN
+            ).update({StatisticsMeta.statistic_id: entity_id})
+
+    @callback
+    def entity_registry_changed_filter(event: Event) -> bool:
+        """Handle entity_id changed filter."""
+        if event.data["action"] != "update" or "old_entity_id" not in event.data:
+            return False
+
+        return True
+
+    if hass.is_running:
+        hass.bus.async_listen(
+            entity_registry.EVENT_ENTITY_REGISTRY_UPDATED,
+            entity_id_changed,
+            event_filter=entity_registry_changed_filter,
+        )
 
 
 def get_start_time() -> datetime:
