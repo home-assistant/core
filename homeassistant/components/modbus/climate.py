@@ -16,7 +16,6 @@ from homeassistant.const import (
     CONF_OFFSET,
     CONF_STRUCTURE,
     CONF_TEMPERATURE_UNIT,
-    PRECISION_HALVES,
     PRECISION_TENTHS,
     PRECISION_WHOLE,
     TEMP_CELSIUS,
@@ -48,8 +47,6 @@ from .modbus import ModbusHub
 
 PARALLEL_UPDATES = 1
 _LOGGER = logging.getLogger(__name__)
-
-PRECISION_VALID_LIST = [PRECISION_TENTHS, PRECISION_HALVES, PRECISION_WHOLE]
 
 
 async def async_setup_platform(
@@ -94,12 +91,6 @@ class ModbusThermostat(BasePlatform, RestoreEntity, ClimateEntity):
         self._min_temp = config[CONF_MIN_TEMP]
         self._temp_step = config[CONF_STEP]
         self._swap = config[CONF_SWAP]
-
-        if self._precision not in PRECISION_VALID_LIST:
-            _LOGGER.warning(
-                "Unable to parse precision; using whole numbers for now, adjust your configuration"
-            )
-            self._precision = PRECISION_WHOLE
 
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
@@ -146,7 +137,7 @@ class ModbusThermostat(BasePlatform, RestoreEntity, ClimateEntity):
     @property
     def precision(self) -> float:
         """Return the precision of the system."""
-        return self._precision
+        return PRECISION_TENTHS if self._precision >= 1 else PRECISION_WHOLE
 
     @property
     def min_temp(self):
@@ -226,7 +217,12 @@ class ModbusThermostat(BasePlatform, RestoreEntity, ClimateEntity):
                 str(val),
             )
             return -1
-        register_value = float((self._scale * val[0]) + self._offset)
+
+        val2 = val[0]
+        register_value = format(
+            (self._scale * val2) + self._offset, f".{self._precision}f"
+        )
+        register_value2 = float(register_value)
         self._available = True
 
-        return register_value
+        return register_value2
