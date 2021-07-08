@@ -567,6 +567,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         token = config_entry.data[CONF_TOKEN]
         name = config_entry.title
         model = config_entry.data[CONF_MODEL]
+        model = "zhimi.airpurifier.m1"
         unique_id = config_entry.unique_id
 
         _LOGGER.debug("Initializing with host %s (token %s...)", host, token[:5])
@@ -905,10 +906,10 @@ class XiaomiAirPurifier(XiaomiGenericDevice):
             self._device_features = FEATURE_FLAGS_AIRPURIFIER
             self._available_attributes = AVAILABLE_ATTRIBUTES_AIRPURIFIER
             self._preset_modes = PRESET_MODES_AIRPURIFIER
-            self._supported_features = SUPPORT_SET_SPEED | SUPPORT_PRESET_MODE
-            self._speed_count = 4
+            self._supported_features = SUPPORT_PRESET_MODE
+            self._speed_count = 1
             # the speed_list attribute is deprecated, support will end with release 2021.7
-            self._speed_list = OPERATION_MODES_AIRPURIFIER
+            self._speed_list = []
 
         self._state_attrs.update(
             {attribute: None for attribute in self._available_attributes}
