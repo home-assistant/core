@@ -58,15 +58,18 @@ class AsusWrtDevice(ScannerEntity):
         """Initialize a AsusWrt device."""
         self._router = router
         self._device = device
-        self._attr_unique_id = self._device.mac
-        self._attr_name = self._device.name or DEFAULT_DEVICE_NAME
-        self._attr_source_type = SOURCE_TYPE_ROUTER
-        self._attr_mac_address = self._device.mac
+        self._attr_unique_id = device.mac
+        self._attr_name = device.name or DEFAULT_DEVICE_NAME
 
     @property
     def is_connected(self):
         """Return true if the device is connected to the network."""
         return self._device.is_connected
+
+    @property
+    def source_type(self) -> str:
+        """Return the source type."""
+        return SOURCE_TYPE_ROUTER
 
     @property
     def hostname(self) -> str:
@@ -77,6 +80,11 @@ class AsusWrtDevice(ScannerEntity):
     def ip_address(self) -> str:
         """Return the primary ip address of the device."""
         return self._device.ip_address
+
+    @property
+    def mac_address(self) -> str:
+        """Return the mac address of the device."""
+        return self._device.mac
 
     @callback
     def async_on_demand_update(self):
