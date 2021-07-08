@@ -200,7 +200,7 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
             else config.get(CONF_TARGET_HUMIDITY_MAX),
         )
         self._attr_min_humidity = config.get(CONF_TARGET_HUMIDITY_MIN)
-        self._attr_min_humidity = config.get(CONF_TARGET_HUMIDITY_MAX)
+        self._attr_max_humidity = config.get(CONF_TARGET_HUMIDITY_MAX)
 
         self._topic = {
             key: config.get(key)
