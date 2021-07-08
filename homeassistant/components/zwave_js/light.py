@@ -111,7 +111,7 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         self._supported_color_modes = set()
 
         # get additional (optional) values and set features
-        self._target_value = self.get_zwave_value(
+        self._target_brightness = self.get_zwave_value(
             "targetValue", add_to_watched_value_ids=False
         )
         self._target_color = self.get_zwave_value(
@@ -130,13 +130,17 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
 
         # Entity class attributes
         self._attr_supported_features = 0
-        if (
-            self._target_value is not None
-            and "transitionDuration" in self._target_value.metadata.value_change_options
-        ) or (
+        self.supports_brightness_transition = bool(
+            self._target_brightness is not None
+            and "transitionDuration"
+            in self._target_brightness.metadata.value_change_options
+        )
+        self.supports_color_transition = bool(
             self._target_color is not None
             and "transitionDuration" in self._target_color.metadata.value_change_options
-        ):
+        )
+
+        if self.supports_brightness_transition or self.supports_color_transition:
             self._attr_supported_features |= SUPPORT_TRANSITION
 
     @callback
@@ -277,10 +281,7 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         )
         zwave_transition = None
 
-        if (
-            self._target_color is not None
-            and "transitionDuration" in self._target_color.metadata.value_change_options
-        ):
+        if self.supports_color_transition:
             if transition is not None:
                 zwave_transition = {TRANSITION_DURATION: f"{int(transition)}s"}
             else:
@@ -330,10 +331,7 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
 
         # set transition value before sending new brightness
         zwave_transition = None
-        if (
-            self._target_value is not None
-            and "transitionDuration" in self._target_value.metadata.value_change_options
-        ):
+        if self.supports_brightness_transition:
             if transition is not None:
                 zwave_transition = {TRANSITION_DURATION: f"{int(transition)}s"}
             else:
@@ -341,7 +339,7 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
 
         # setting a value requires setting targetValue
         await self.info.node.async_set_value(
-            self._target_value, zwave_brightness, zwave_transition
+            self._target_brightness, zwave_brightness, zwave_transition
         )
 
     @callback
