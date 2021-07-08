@@ -86,6 +86,16 @@ async def test_temperature_sensor_read_state(hass, utcnow):
     assert state.attributes["device_class"] == DEVICE_CLASS_TEMPERATURE
 
 
+async def test_temperature_sensor_not_added_twice(hass, utcnow):
+    """A standalone temperature sensor should not get a characteristic AND a service entity."""
+    helper = await setup_test_component(
+        hass, create_temperature_sensor_service, suffix="temperature"
+    )
+
+    for state in hass.states.async_all():
+        assert state.entity_id == helper.entity_id
+
+
 async def test_humidity_sensor_read_state(hass, utcnow):
     """Test reading the state of a HomeKit humidity sensor accessory."""
     helper = await setup_test_component(
