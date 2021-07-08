@@ -52,7 +52,7 @@ CONF_MODE_STATE_TOPIC = "mode_state_topic"
 CONF_MODE_VALUE_TEMPLATE = "mode_value_template"
 CONF_MODES_LIST = "modes"
 CONF_PAYLOAD_RESET_MODE = "payload_reset_mode"
-CONF_PAYLOAD_RESET_TARGET_HUMIDITY = "payload_reset_target_humidity"
+CONF_PAYLOAD_RESET_HUMIDITY = "payload_reset_humidity"
 CONF_STATE_VALUE_TEMPLATE = "state_value_template"
 CONF_TARGET_HUMIDITY_COMMAND_TEMPLATE = "target_humidity_command_template"
 CONF_TARGET_HUMIDITY_COMMAND_TOPIC = "target_humidity_command_topic"
@@ -125,7 +125,7 @@ PLATFORM_SCHEMA = vol.All(
             vol.Optional(CONF_TARGET_HUMIDITY_RANGE_MIN): cv.positive_int,
             vol.Optional(CONF_TARGET_HUMIDITY_RANGE_MAX): cv.positive_int,
             vol.Optional(
-                CONF_PAYLOAD_RESET_TARGET_HUMIDITY, default=DEFAULT_PAYLOAD_RESET
+                CONF_PAYLOAD_RESET_HUMIDITY, default=DEFAULT_PAYLOAD_RESET
             ): cv.string,
             vol.Optional(
                 CONF_PAYLOAD_RESET_MODE, default=DEFAULT_PAYLOAD_RESET
@@ -230,7 +230,7 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
         self._payload = {
             "STATE_ON": config[CONF_PAYLOAD_ON],
             "STATE_OFF": config[CONF_PAYLOAD_OFF],
-            "TARGET_HUMIDITY_RESET": config[CONF_PAYLOAD_RESET_TARGET_HUMIDITY],
+            "HUMIDITY_RESET": config[CONF_PAYLOAD_RESET_HUMIDITY],
             "MODE_RESET": config[CONF_PAYLOAD_RESET_MODE],
         }
         if CONF_MODE_COMMAND_TOPIC in config and CONF_MODES_LIST in config:
