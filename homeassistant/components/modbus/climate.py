@@ -117,10 +117,9 @@ class ModbusThermostat(BasePlatform, RestoreEntity, ClimateEntity):
                 ][i]
         else:
             _LOGGER.error(
-                "Unable to parse hvac actions; Length of actions list and value list are unequal; Result: {} : {}".format(
-                    len(config[CONF_HVAC_ACTION_SUPPORTED]),
-                    len(config[CONF_HVAC_ACTION_VALUES]),
-                ),
+                "Unable to parse hvac actions; Length of actions list and value list are unequal; Result: %s : %s",
+                str(len(config[CONF_HVAC_ACTION_SUPPORTED])),
+                str(len(config[CONF_HVAC_ACTION_VALUES])),
             )
             self._available = False
 
@@ -134,10 +133,9 @@ class ModbusThermostat(BasePlatform, RestoreEntity, ClimateEntity):
                 ][i]
         else:
             _LOGGER.error(
-                "Unable to parse hvac modes; Length of mode list and value list are unequal; Result: {} : {}".format(
-                    len(config[CONF_HVAC_MODE_SUPPORTED]),
-                    len(config[CONF_HVAC_MODE_VALUES]),
-                ),
+                "Unable to parse hvac modes; Length of mode list and value list are unequal; Result: %s : %s",
+                str(len(config[CONF_HVAC_MODE_SUPPORTED])),
+                str(len(config[CONF_HVAC_MODE_VALUES])),
             )
             self._available = False
 
@@ -256,9 +254,8 @@ class ModbusThermostat(BasePlatform, RestoreEntity, ClimateEntity):
                 if dict_value == value:
                     return dict_key
         _LOGGER.error(
-            "Unable to parse hvac mode value; adjust your configuration. Result: {}".format(
-                str(value)
-            ),
+            "Unable to parse hvac mode value; adjust your configuration. Result: %s",
+            str(value),
         )
         return HVAC_MODE_AUTO
 
@@ -269,9 +266,8 @@ class ModbusThermostat(BasePlatform, RestoreEntity, ClimateEntity):
                 if dict_value == value:
                     return dict_key
         _LOGGER.error(
-            "Unable to parse hvac action value; adjust your configuration. Result: {}".format(
-                str(value)
-            ),
+            "Unable to parse hvac action value; adjust your configuration. Result: %s",
+            str(value),
         )
         return CURRENT_HVAC_IDLE
 
