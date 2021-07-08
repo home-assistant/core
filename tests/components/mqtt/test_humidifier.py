@@ -1,0 +1,1 @@
+"""Test MQTT humidifiers."""
