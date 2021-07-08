@@ -2,11 +2,11 @@
 from __future__ import annotations
 
 from collections import deque
-from collections.abc import Iterator, Mapping
+from collections.abc import Generator, Iterator, Mapping
 from io import BytesIO
 import logging
 from threading import Event
-from typing import Any, Callable, Generator, cast
+from typing import Any, Callable, cast
 
 import av
 
@@ -208,7 +208,7 @@ class PeekIterator(Iterator):
     peek() and rewind() methods that buffer consumed items from the iterator.
     """
 
-    def __init__(self, iterator: Iterator[av.Packet]):
+    def __init__(self, iterator: Iterator[av.Packet]) -> None:
         """Initialize PeekIterator."""
         self._iterator = iterator
         self._cursor: av.Packet = None
@@ -338,7 +338,7 @@ def stream_worker(
         filter(dts_validator.is_valid, container.demux((video_stream, audio_stream)))
     )
 
-    def is_video(packet: av.Packetiterator) -> Any:
+    def is_video(packet: av.Packet) -> Any:
         """Return true if the packet is for the video stream."""
         return packet.stream == video_stream
 
