@@ -86,7 +86,7 @@ class EsphomeFan(EsphomeEntity[FanInfo, FanState], FanEntity):
                 )
             else:
                 named_speed = percentage_to_ordered_list_item(
-                    ORDERED_NAMED_FAN_SPEEDS, percentage  # type: ignore[arg-type]
+                    ORDERED_NAMED_FAN_SPEEDS, percentage
                 )
                 data["speed"] = named_speed
         await self._client.fan_command(**data)
@@ -130,7 +130,7 @@ class EsphomeFan(EsphomeEntity[FanInfo, FanState], FanEntity):
 
         if not self._supports_speed_levels:
             return ordered_list_item_to_percentage(
-                ORDERED_NAMED_FAN_SPEEDS, self._state.speed  # type: ignore[arg-type]
+                ORDERED_NAMED_FAN_SPEEDS, self._state.speed  # type: ignore[misc]
             )
 
         return ranged_value_to_percentage(
