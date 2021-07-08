@@ -111,3 +111,11 @@ snapshot_partial:
       example: "password"
       selector:
         text:
+
+restore_full:
+  name: Restore from full backup.
+  description: Restore from full backup.
+
+restore_partial:
+  name: Restore from partial backup.
+  description: Restore from partial backup.
