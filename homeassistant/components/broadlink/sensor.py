@@ -77,14 +77,12 @@ class BroadlinkSensor(BroadlinkEntity, SensorEntity):
         self._coordinator = device.update_manager.coordinator
         self._monitored_condition = monitored_condition
 
-        self._attr_device_class = SENSOR_TYPES[self._monitored_condition][2]
-        self._attr_name = (
-            f"{self._device.name} {SENSOR_TYPES[self._monitored_condition][0]}"
-        )
-        self._attr_state_class = SENSOR_TYPES[self._monitored_condition][3]
+        self._attr_device_class = SENSOR_TYPES[monitored_condition][2]
+        self._attr_name = f"{device.name} {SENSOR_TYPES[monitored_condition][0]}"
+        self._attr_state_class = SENSOR_TYPES[monitored_condition][3]
         self._attr_state = self._coordinator.data[monitored_condition]
-        self._attr_unique_id = f"{self._device.unique_id}-{self._monitored_condition}"
-        self._attr_unit_of_measurement = SENSOR_TYPES[self._monitored_condition][1]
+        self._attr_unique_id = f"{device.unique_id}-{monitored_condition}"
+        self._attr_unit_of_measurement = SENSOR_TYPES[monitored_condition][1]
 
     @callback
     def update_data(self):
