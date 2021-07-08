@@ -126,7 +126,7 @@ class NetatmoLight(NetatmoBase, LightEntity):
 
     async def async_turn_on(self, **kwargs):
         """Turn camera floodlight on."""
-        _LOGGER.debug("Turn camera '%s' on", self._attr_name)
+        _LOGGER.debug("Turn camera '%s' on", self.name)
         await self._data.async_set_state(
             home_id=self._home_id,
             camera_id=self._id,
@@ -135,7 +135,7 @@ class NetatmoLight(NetatmoBase, LightEntity):
 
     async def async_turn_off(self, **kwargs):
         """Turn camera floodlight into auto mode."""
-        _LOGGER.debug("Turn camera '%s' to auto mode", self._attr_name)
+        _LOGGER.debug("Turn camera '%s' to auto mode", self.name)
         await self._data.async_set_state(
             home_id=self._home_id,
             camera_id=self._id,
