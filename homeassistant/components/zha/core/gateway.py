@@ -173,9 +173,6 @@ class ZHAGateway:
     def async_load_devices(self) -> None:
         """Restore ZHA devices from zigpy application state."""
         for zigpy_device in self.application_controller.devices.values():
-            if zigpy_device.status != zigpy_dev.Status.ENDPOINTS_INIT:
-                _LOGGER.debug("Not loading uninitialized device %s", zigpy_device)
-                continue
             zha_device = self._async_get_or_create_device(zigpy_device, restored=True)
             if zha_device.nwk == 0x0000:
                 self.coordinator_zha_device = zha_device
