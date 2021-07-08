@@ -192,9 +192,9 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
         """(Re)Setup the entity."""
         self._attr_device_class = DEVICE_CLASS_HUMIDIFIER
         self._target_humidity_range = (
-            config.get(CONF_TARGET_HUMIDITY_RANGE_MIN)
+            config.get(CONF_TARGET_HUMIDITY_RANGE_MIN) + 1
             if CONF_TARGET_HUMIDITY_RANGE_MIN in config
-            else config.get(CONF_TARGET_HUMIDITY_MIN),
+            else config.get(CONF_TARGET_HUMIDITY_MIN) + 1,
             config.get(CONF_TARGET_HUMIDITY_RANGE_MAX)
             if CONF_TARGET_HUMIDITY_RANGE_MAX in config
             else config.get(CONF_TARGET_HUMIDITY_MAX),
