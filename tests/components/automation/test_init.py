@@ -1273,9 +1273,11 @@ async def test_automation_trigger_variables(hass, caplog):
                     "variables": {
                         "event_type": "{{ trigger.event.event_type }}",
                         "test_var": "overridden_in_config",
+                        "this_var": "{{this.entity_id}}",
                     },
                     "trigger_variables": {
                         "test_var": "defined_in_config",
+                        "this_trig_var": "{{this.entity_id}}",
                     },
                     "trigger": {"platform": "event", "event_type": "test_event_2"},
                     "action": {
@@ -1283,6 +1285,8 @@ async def test_automation_trigger_variables(hass, caplog):
                         "data": {
                             "value": "{{ test_var }}",
                             "event_type": "{{ event_type }}",
+                            "this_var": "{{this_var}}",
+                            "this_trig_var": "{{this_trig_var}}",
                         },
                     },
                 },
@@ -1300,6 +1304,8 @@ async def test_automation_trigger_variables(hass, caplog):
     assert len(calls) == 2
     assert calls[1].data["value"] == "overridden_in_config"
     assert calls[1].data["event_type"] == "test_event_2"
+    assert calls[1].data.get("this_var") == "automation.automation_1"
+    assert calls[1].data.get("this_trig_var") == "automation.automation_1"
 
     assert "Error rendering variables" not in caplog.text
 

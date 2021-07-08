@@ -442,7 +442,6 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         This method is a coroutine.
         """
         reason = ""
-        run_variables["automation_entity_id"] = self.entity_id
         if "trigger" in run_variables and "description" in run_variables["trigger"]:
             reason = f' by {run_variables["trigger"]["description"]}'
         self._logger.debug("Automation triggered%s", reason)
@@ -461,7 +460,11 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         ) as automation_trace:
             if self._variables:
                 try:
-                    variables = self._variables.async_render(self.hass, run_variables)
+                    states = self.hass.states.get(self.entity_id)
+                    this = states.as_dict() if states else {"entity_id": self.entity_id}
+                    variables = self._variables.async_render(
+                        self.hass, {"this": this, **run_variables}
+                    )
                 except template.TemplateError as err:
                     self._logger.error("Error rendering variables: %s", err)
                     automation_trace.set_error(err)
@@ -586,8 +589,12 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         variables = None
         if self._trigger_variables:
             try:
+                states = self.hass.states.get(self.entity_id)
+                this = states.as_dict() if states else {"entity_id": self.entity_id}
                 variables = self._trigger_variables.async_render(
-                    self.hass, None, limited=True
+                    self.hass,
+                    {"this": this},
+                    limited=True,
                 )
             except template.TemplateError as err:
                 self._logger.error("Error rendering trigger variables: %s", err)

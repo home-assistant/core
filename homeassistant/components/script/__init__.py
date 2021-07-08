@@ -401,7 +401,12 @@ class ScriptEntity(ToggleEntity):
             # Prepare tracing the execution of the script's sequence
             script_trace.set_trace(trace_get())
             with trace_path("sequence"):
-                return await self.script.async_run(variables, context)
+                states = self.hass.states.get(self.entity_id)
+                this = states.as_dict() if states else {"entity_id": self.entity_id}
+                return await self.script.async_run(
+                    {"this": this, **variables},
+                    context,
+                )
 
     async def async_turn_off(self, **kwargs):
         """Stop running the script.

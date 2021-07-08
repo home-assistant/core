@@ -679,6 +679,7 @@ async def test_script_variables(hass, caplog):
             "script": {
                 "script1": {
                     "variables": {
+                        "this_var": "{{this.entity_id}}",
                         "test_var": "from_config",
                         "templated_config_var": "{{ var_from_service | default('config-default') }}",
                     },
@@ -688,6 +689,7 @@ async def test_script_variables(hass, caplog):
                             "data": {
                                 "value": "{{ test_var }}",
                                 "templated_config_var": "{{ templated_config_var }}",
+                                "this_var": "{{this_var}}",
                             },
                         },
                     ],
@@ -731,6 +733,7 @@ async def test_script_variables(hass, caplog):
     assert len(mock_calls) == 1
     assert mock_calls[0].data["value"] == "from_config"
     assert mock_calls[0].data["templated_config_var"] == "hello"
+    assert mock_calls[0].data["this_var"] == "script.script1"
 
     await hass.services.async_call(
         "script", "script1", {"test_var": "from_service"}, blocking=True
