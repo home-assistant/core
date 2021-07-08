@@ -104,21 +104,14 @@ class BH1750Sensor(SensorEntity):
         self._attr_unit_of_measurement = unit
         self._multiplier = multiplier
         self.bh1750_sensor = bh1750_sensor
-        if self.bh1750_sensor.light_level >= 0:
-            self._state = int(round(self.bh1750_sensor.light_level))
-        else:
-            self._state = None
-
-    @property
-    def state(self) -> int:
-        """Return the state of the sensor."""
-        return self._state
 
     async def async_update(self):
         """Get the latest data from the BH1750 and update the states."""
         await self.hass.async_add_executor_job(self.bh1750_sensor.update)
         if self.bh1750_sensor.sample_ok and self.bh1750_sensor.light_level >= 0:
-            self._state = int(round(self.bh1750_sensor.light_level * self._multiplier))
+            self._attr_state = int(
+                round(self.bh1750_sensor.light_level * self._multiplier)
+            )
         else:
             _LOGGER.warning(
                 "Bad Update of sensor.%s: %s", self.name, self.bh1750_sensor.light_level
