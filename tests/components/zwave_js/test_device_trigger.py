@@ -785,7 +785,7 @@ async def test_get_trigger_capabilities_scene_activation_value_notification(
     ]
 
 
-async def test_failure_scenarios(hass):
+async def test_failure_scenarios(hass, client, hank_binary_switch, integration):
     """Test failure scenarios."""
     with pytest.raises(HomeAssistantError):
         await async_attach_trigger(
@@ -796,6 +796,22 @@ async def test_failure_scenarios(hass):
         await async_attach_trigger(
             hass,
             {"type": "event.failed_type", "device_id": "invalid_device_id"},
+            None,
+            {},
+        )
+
+    dev_reg = async_get_dev_reg(hass)
+    device = async_entries_for_config_entry(dev_reg, integration.entry_id)[0]
+
+    with pytest.raises(HomeAssistantError):
+        await async_attach_trigger(
+            hass, {"type": "failed.test", "device_id": device.id}, None, {}
+        )
+
+    with pytest.raises(HomeAssistantError):
+        await async_attach_trigger(
+            hass,
+            {"type": "event.failed_type", "device_id": device.id},
             None,
             {},
         )
