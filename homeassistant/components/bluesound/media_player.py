@@ -203,24 +203,23 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class BluesoundPlayer(MediaPlayerEntity):
     """Representation of a Bluesound Player."""
 
-    def __init__(self, hass, host, port=None, name=None, init_callback=None):
+    _attr_media_content_type = MEDIA_TYPE_MUSIC
+
+    def __init__(self, hass, host, port=DEFAULT_PORT, name=None, init_callback=None):
         """Initialize the media player."""
         self.host = host
         self._hass = hass
         self.port = port
         self._polling_session = async_get_clientsession(hass)
         self._polling_task = None  # The actual polling task.
-        self._name = name
-        self._icon = None
+        self._attr_name = name
         self._capture_items = []
         self._services_items = []
         self._preset_items = []
         self._sync_status = {}
         self._status = None
-        self._last_status_update = None
         self._is_online = False
         self._retry_remove = None
-        self._muted = False
         self._master = None
         self._is_master = False
         self._group_name = None
@@ -228,8 +227,11 @@ class BluesoundPlayer(MediaPlayerEntity):
         self._bluesound_device_name = None
 
         self._init_callback = init_callback
-        if self.port is None:
-            self.port = DEFAULT_PORT
+        attributes = {}
+        if self._group_list:
+            attributes = {ATTR_BLUESOUND_GROUP: self._group_list}
+        attributes[ATTR_MASTER] = self._is_master
+        self._attr_extra_state_attributes = attributes
 
     class _TimeoutException(Exception):
         pass
@@ -385,6 +387,11 @@ class BluesoundPlayer(MediaPlayerEntity):
         etag = ""
         if self._status is not None:
             etag = self._status.get("@etag", "")
+        self._attr_shuffle = self._status.get("shuffle", "0") == "1"
+        if self._status is None or (self.is_grouped and not self.is_master):
+            self._attr_media_title = None
+        else:
+            self._attr_media_title = self._status.get("title1")
 
         if etag != "":
             url = f"Status?etag={etag}&timeout=120.0"
@@ -402,7 +409,7 @@ class BluesoundPlayer(MediaPlayerEntity):
             if response.status == HTTP_OK:
                 result = await response.text()
                 self._is_online = True
-                self._last_status_update = dt_util.utcnow()
+                self._attr_media_position_updated_at = dt_util.utcnow()
                 self._status = xmltodict.parse(result)["status"].copy()
 
                 group_name = self._status.get("groupName")
@@ -438,7 +445,7 @@ class BluesoundPlayer(MediaPlayerEntity):
 
         except (asyncio.TimeoutError, ClientError):
             self._is_online = False
-            self._last_status_update = None
+            self._attr_media_position_updated_at = None
             self._status = None
             self.async_write_ha_state()
             _LOGGER.info("Client connection error, marking %s as offline", self._name)
@@ -543,11 +550,6 @@ class BluesoundPlayer(MediaPlayerEntity):
         return self._services_items
 
     @property
-    def media_content_type(self):
-        """Content type of current playing media."""
-        return MEDIA_TYPE_MUSIC
-
-    @property
     def state(self):
         """Return the state of the device."""
         if self._status is None:
@@ -562,14 +564,6 @@ class BluesoundPlayer(MediaPlayerEntity):
         if status in ("stream", "play"):
             return STATE_PLAYING
         return STATE_IDLE
-
-    @property
-    def media_title(self):
-        """Title of current playing media."""
-        if self._status is None or (self.is_grouped and not self.is_master):
-            return None
-
-        return self._status.get("title1")
 
     @property
     def media_artist(self):
@@ -617,7 +611,7 @@ class BluesoundPlayer(MediaPlayerEntity):
             return None
 
         mediastate = self.state
-        if self._last_status_update is None or mediastate == STATE_IDLE:
+        if self.media_position_updated_at is None or mediastate == STATE_IDLE:
             return None
 
         position = self._status.get("secs")
@@ -626,7 +620,9 @@ class BluesoundPlayer(MediaPlayerEntity):
 
         position = float(position)
         if mediastate == STATE_PLAYING:
-            position += (dt_util.utcnow() - self._last_status_update).total_seconds()
+            position += (
+                dt_util.utcnow() - self.media_position_updated_at
+            ).total_seconds()
 
         return position
 
@@ -640,11 +636,6 @@ class BluesoundPlayer(MediaPlayerEntity):
         if duration is None:
             return None
         return float(duration)
-
-    @property
-    def media_position_updated_at(self):
-        """Last time status was updated."""
-        return self._last_status_update
 
     @property
     def volume_level(self):
@@ -669,19 +660,9 @@ class BluesoundPlayer(MediaPlayerEntity):
         return mute
 
     @property
-    def name(self):
-        """Return the name of the device."""
-        return self._name
-
-    @property
     def bluesound_device_name(self):
         """Return the device name as returned by the device."""
         return self._bluesound_device_name
-
-    @property
-    def icon(self):
-        """Return the icon of the device."""
-        return self._icon
 
     @property
     def source_list(self):
@@ -809,26 +790,20 @@ class BluesoundPlayer(MediaPlayerEntity):
                 | SUPPORT_VOLUME_SET
                 | SUPPORT_VOLUME_MUTE
             )
-
         if self._status.get("canSeek", "") == "1":
             supported = supported | SUPPORT_SEEK
 
         return supported
 
     @property
-    def is_master(self):
+    def is_master(self) -> bool:
         """Return true if player is a coordinator."""
         return self._is_master
 
     @property
-    def is_grouped(self):
+    def is_grouped(self) -> bool:
         """Return true if player is a coordinator."""
         return self._master is not None or self._is_master
-
-    @property
-    def shuffle(self):
-        """Return true if shuffle is active."""
-        return self._status.get("shuffle", "0") == "1"
 
     async def async_join(self, master):
         """Join the player to a group."""
@@ -848,17 +823,6 @@ class BluesoundPlayer(MediaPlayerEntity):
             await master_device[0].async_add_slave(self)
         else:
             _LOGGER.error("Master not found %s", master_device)
-
-    @property
-    def extra_state_attributes(self):
-        """List members in group."""
-        attributes = {}
-        if self._group_list:
-            attributes = {ATTR_BLUESOUND_GROUP: self._group_list}
-
-        attributes[ATTR_MASTER] = self._is_master
-
-        return attributes
 
     def rebuild_bluesound_group(self):
         """Rebuild the list of entities in speaker group."""
