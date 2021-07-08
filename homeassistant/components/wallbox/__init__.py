@@ -15,7 +15,7 @@ from .const import CONF_CONNECTIONS, CONF_ROUND, CONF_SENSOR_TYPES, CONF_STATION
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["sensor"]
+PLATFORMS = ["sensor", "number"]
 UPDATE_INTERVAL = 30
 
 
@@ -44,7 +44,7 @@ class WallboxHub(DataUpdateCoordinator):
             return True
         except requests.exceptions.HTTPError as wallbox_connection_error:
             if wallbox_connection_error.response.status_code == 403:
-                raise exceptions.ConfigEntryAuthFailed from wallbox_connection_error
+                raise InvalidAuth from wallbox_connection_error
             raise ConnectionError from wallbox_connection_error
 
     def _get_data(self):
@@ -52,6 +52,7 @@ class WallboxHub(DataUpdateCoordinator):
         try:
             self._authenticate()
             data = self._wallbox.getChargerStatus(self._station)
+            data["max_charging_current"] = data["config_data"]["max_charging_current"]
 
             filtered_data = {k: data[k] for k in CONF_SENSOR_TYPES if k in data}
 
@@ -66,6 +67,20 @@ class WallboxHub(DataUpdateCoordinator):
             return filtered_data
         except requests.exceptions.HTTPError as wallbox_connection_error:
             raise ConnectionError from wallbox_connection_error
+
+    def _set_charging_current(self, charging_current):
+        """Set maximum charging current for Wallbox."""
+        try:
+            self._wallbox.setMaxChargingCurrent(self._station, charging_current)
+        except requests.exceptions.HTTPError as wallbox_connection_error:
+            raise ConnectionError from wallbox_connection_error
+
+    async def async_set_charging_current(self, charging_current):
+        """Set maximum charging current for Wallbox."""
+        await self._hass.async_add_executor_job(
+            self._set_charging_current, charging_current
+        )
+        await self.async_request_refresh()
 
     async def _async_update_data(self) -> bool:
         """Get new sensor data for Wallbox component."""

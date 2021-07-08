@@ -9,7 +9,7 @@ from homeassistant.components.wallbox.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
 test_response = json.loads(
-    '{"charging_power": 0,"max_available_power": 25,"charging_speed": 0,"added_range": 372,"added_energy": 44.697}'
+    '{"charging_power": 0,"max_available_power": "xx","charging_speed": 0,"added_range": "xx","added_energy": "44.697","config_data":{"max_charging_current": "24"}}'
 )
 
 
@@ -29,24 +29,16 @@ async def test_form_cannot_authenticate(hass):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with requests_mock.Mocker() as m:
-        m.get(
+    with requests_mock.Mocker() as mock_request:
+        mock_request.get(
             "https://api.wall-box.com/auth/token/user",
             text='{"jwt":"fakekeyhere","user_id":12345,"ttl":145656758,"error":false,"status":200}',
             status_code=403,
         )
-        m.get(
+        mock_request.get(
             "https://api.wall-box.com/chargers/status/12345",
-            text='{"Temperature": 100, "Location": "Toronto", "Datetime": "2020-07-23", "Units": "Celsius"}',
+            json=test_response,
             status_code=403,
-        )
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                "station": "12345",
-                "username": "test-username",
-                "password": "test-password",
-            },
         )
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -75,7 +67,7 @@ async def test_form_cannot_connect(hass):
         )
         mock_request.get(
             "https://api.wall-box.com/chargers/status/12345",
-            text='{"Temperature": 100, "Location": "Toronto", "Datetime": "2020-07-23", "Units": "Celsius"}',
+            json=test_response,
             status_code=404,
         )
         result2 = await hass.config_entries.flow.async_configure(
@@ -105,7 +97,7 @@ async def test_form_validate_input(hass):
         )
         mock_request.get(
             "https://api.wall-box.com/chargers/status/12345",
-            text='{"Temperature": 100, "Location": "Toronto", "Datetime": "2020-07-23", "Units": "Celsius"}',
+            json=test_response,
             status_code=200,
         )
         result2 = await hass.config_entries.flow.async_configure(

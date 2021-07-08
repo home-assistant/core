@@ -100,4 +100,11 @@ CONF_SENSOR_TYPES = {
         CONF_UNIT_OF_MEASUREMENT: None,
         CONF_DEVICE_CLASS: None,
     },
+    "max_charging_current": {
+        CONF_ICON: None,
+        CONF_NAME: "Max. Charging Current",
+        CONF_ROUND: None,
+        CONF_UNIT_OF_MEASUREMENT: ELECTRICAL_CURRENT_AMPERE,
+        CONF_DEVICE_CLASS: DEVICE_CLASS_CURRENT,
+    },
 }
