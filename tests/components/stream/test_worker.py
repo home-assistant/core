@@ -606,10 +606,10 @@ async def test_update_stream_source(hass):
         nonlocal last_stream_source
         if not isinstance(stream_source, io.BytesIO):
             last_stream_source = stream_source
-        # Let test know the thread is running
-        worker_open.set()
-        # Block worker thread until test wakes up
-        worker_wake.wait()
+            # Let test know the thread is running
+            worker_open.set()
+            # Block worker thread until test wakes up
+            worker_wake.wait()
         return py_av.open(stream_source, args, kwargs)
 
     with patch("av.open", new=blocking_open), patch(

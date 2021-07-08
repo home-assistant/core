@@ -4,10 +4,9 @@ from __future__ import annotations
 from collections import deque
 from collections.abc import Iterator, Mapping
 from io import BytesIO
-import itertools
 import logging
 from threading import Event
-from typing import Any, Callable, cast
+from typing import Any, Callable, Generator, cast
 
 import av
 
@@ -202,6 +201,56 @@ class SegmentBuffer:
         self._memory_file.close()
 
 
+class PeekIterator(Iterator):
+    """An Iterator that may allow multiple passes.
+
+    This may be consumed like a normal Iterator, however also supports a
+    peek() method that advances without consuming the underlying iterator.
+    """
+
+    def __init__(self, iterator: Iterator[av.Packet]):
+        """Initialize PeekIterator."""
+        self._iterator = iterator
+        self._cursor: av.Packet = None
+        self._buffer: deque[av.Packet] = deque()
+
+    def __iter__(self) -> Iterator:
+        """Return an iterator."""
+        return self
+
+    def __next__(self) -> av.Packet:
+        """Return and consume the next item available."""
+        # Consume any packets already seen from peek()
+        if self._buffer:
+            self._cursor = self._buffer.popleft()
+        else:
+            self._cursor = next(self._iterator)
+        return self._cursor
+
+    def peek(self) -> Generator[av.Packet, None, None]:
+        """Return items without consuming from the iterator."""
+        # Start at the beginning, replaying any already consumed items from
+        # the buffer, leaving them in the buffer.
+        for packet in list(self._buffer):
+            yield packet
+        # Everything consumed from the iterator is buffered for future
+        # calls to __next__ or peek.
+        for packet in self._iterator:
+            self._buffer.append(packet)
+            yield packet
+
+    def rewind(self) -> None:
+        """Unconsume the last item, adding it back to the iterator.
+
+        This has similar functionality to peek(), but allows adding only
+        a single item back to the buffer while some existing items were
+        already consumed.
+        """
+        assert self._cursor
+        self._buffer.appendleft(self._cursor)
+        self._cursor = None
+
+
 class TimestampValidator:
     """Validate ordering of timestamps for packets in a stream."""
 
@@ -236,6 +285,31 @@ class TimestampValidator:
         return True
 
 
+def is_keyframe(packet: av.Packet) -> Any:
+    """Return true if the packet is a keyframe."""
+    return packet.is_keyframe
+
+
+def unsupported_audio(packets: Iterator[av.Packet], audio_stream: Any) -> bool:
+    """Detect ADTS AAC, which is not supported by pyav."""
+    if not audio_stream:
+        return False
+    for count, packet in enumerate(packets):
+        if count >= PACKETS_TO_WAIT_FOR_AUDIO:
+            # Some streams declare an audio stream and never send any packets
+            _LOGGER.warning("Audio stream not found")
+            break
+        if packet.stream == audio_stream:
+            # detect ADTS AAC and disable audio
+            if audio_stream.codec.name == "aac" and packet.size > 2:
+                with memoryview(packet) as packet_view:
+                    if packet_view[0] == 0xFF and packet_view[1] & 0xF0 == 0xF0:
+                        _LOGGER.warning("ADTS AAC detected - disabling audio stream")
+                        return True
+            break
+    return False
+
+
 def stream_worker(
     source: str,
     options: dict[str, str],
@@ -267,100 +341,56 @@ def stream_worker(
     if audio_stream and audio_stream.profile is None:
         audio_stream = None
 
-    # Iterator for demuxing
-    container_packets: Iterator[av.Packet]
-    # The video dts at the beginning of the segment
-    segment_start_dts: int | None = None
-    # Because of problems 1 and 2 below, we need to store the first few packets and replay them
-    initial_packets: deque[av.Packet] = deque()
-
     # Have to work around two problems with RTSP feeds in ffmpeg
     # 1 - first frame has bad pts/dts https://trac.ffmpeg.org/ticket/5018
     # 2 - seeking can be problematic https://trac.ffmpeg.org/ticket/7815
+    #
+    # Use a peeking iterator to peek into the start of the stream, ensuring
+    # everything looks good, then go back to the start when muxing below.
+    dts_validator = TimestampValidator()
+    container_packets = PeekIterator(
+        filter(dts_validator.is_valid, container.demux((video_stream, audio_stream)))
+    )
 
-    def peek_first_dts() -> bool:
-        """Initialize by peeking into the first few packets of the stream.
+    def video(iterator: Iterator[av.Packet]) -> Generator[av.Packet, None, None]:
+        for packet in iterator:
+            if packet.stream == video_stream:
+                yield packet
 
-        Deal with problem #1 above (bad first packet pts/dts) by recalculating using pts/dts from second packet.
-        Also load the first video keyframe dts into segment_start_dts and check if the audio stream really exists.
-        """
-        nonlocal segment_start_dts, audio_stream, container_packets
-        found_audio = False
-        try:
-            # Ensure packets are ordered correctly
-            dts_validator = TimestampValidator()
-            container_packets = filter(
-                dts_validator.is_valid, container.demux((video_stream, audio_stream))
+    try:
+        # Peek into the stream looking for unsupported audio stream
+        if audio_stream and unsupported_audio(container_packets.peek(), audio_stream):
+            audio_stream = None
+            container_packets = PeekIterator(
+                filter(dts_validator.is_valid, container.demux(video_stream))
             )
-            first_packet: av.Packet | None = None
-            # Get to first video keyframe
-            while first_packet is None:
-                packet = next(container_packets)
-                if packet.stream == audio_stream:
-                    found_audio = True
-                elif packet.is_keyframe:  # video_keyframe
-                    first_packet = packet
-                    initial_packets.append(packet)
-            # Get first_dts from subsequent frame to first keyframe
-            while segment_start_dts is None or (
-                audio_stream
-                and not found_audio
-                and len(initial_packets) < PACKETS_TO_WAIT_FOR_AUDIO
-            ):
-                packet = next(container_packets)
-                if packet.stream == audio_stream:
-                    # detect ADTS AAC and disable audio
-                    if audio_stream.codec.name == "aac" and packet.size > 2:
-                        with memoryview(packet) as packet_view:
-                            if packet_view[0] == 0xFF and packet_view[1] & 0xF0 == 0xF0:
-                                _LOGGER.warning(
-                                    "ADTS AAC detected - disabling audio stream"
-                                )
-                                container_packets = filter(
-                                    dts_validator.is_valid,
-                                    container.demux(video_stream),
-                                )
-                                audio_stream = None
-                                continue
-                    found_audio = True
-                elif (
-                    segment_start_dts is None
-                ):  # This is the second video frame to calculate first_dts from
-                    segment_start_dts = packet.dts - packet.duration
-                    first_packet.pts = first_packet.dts = segment_start_dts
-                initial_packets.append(packet)
-            if audio_stream and not found_audio:
-                _LOGGER.warning(
-                    "Audio stream not found"
-                )  # Some streams declare an audio stream and never send any packets
 
-        except (av.AVError, StopIteration) as ex:
-            _LOGGER.error(
-                "Error demuxing stream while finding first packet: %s", str(ex)
-            )
-            return False
-        return True
-
-    if not peek_first_dts():
+        # Deal with problem #1 above (bad first packet pts/dts) by recalculating
+        # using pts/dts from second packet. The iter buffers so that
+        # packets can be re-consumed below via container_packets
+        video_packets = video(container_packets.peek())
+        first_keyframe = next(filter(is_keyframe, video_packets))
+        # Advance to the second video packet and use the duration to adjust dts
+        next_video_packet = next(video_packets)
+        start_dts = next_video_packet.dts - next_video_packet.duration
+        first_keyframe.dts = first_keyframe.pts = start_dts
+    except (av.AVError, StopIteration) as ex:
+        _LOGGER.error("Error demuxing stream while finding first packet: %s", str(ex))
         container.close()
         return
 
+    # Start at the beginning of the input packets and advance to the first video
+    # keyframe (again). Rewind one step so the loop below can mux that packet.
+    first_keyframe = next(filter(is_keyframe, video(container_packets)))
+    container_packets.rewind()
     segment_buffer.set_streams(video_stream, audio_stream)
-    assert isinstance(segment_start_dts, int)
-    segment_buffer.reset(segment_start_dts)
-
-    # Rewind the stream and iterate over the initial set of packets again
-    # filtering out any packets with timestamp ordering issues.
-    packets = itertools.chain(initial_packets, container_packets)
+    segment_buffer.reset(first_keyframe.dts)
     while not quit_event.is_set():
         try:
-            packet = next(packets)
+            packet = next(container_packets)
         except (av.AVError, StopIteration) as ex:
             _LOGGER.error("Error demuxing stream: %s", str(ex))
             break
-
-        # Mux packets, and possibly write a segment to the output stream.
-        # This mutates packet timestamps and stream
         segment_buffer.mux_packet(packet)
 
     # Close stream
