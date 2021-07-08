@@ -78,10 +78,11 @@ class SSLCertificateTimestamp(CertExpiryEntity, SensorEntity):
 
     _attr_device_class = DEVICE_CLASS_TIMESTAMP
 
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return f"Cert Expiry Timestamp ({self.coordinator.name})"
+    def __init__(self, coordinator) -> None:
+        """Initialize a Cert Expiry timestamp sensor."""
+        super().__init__(coordinator)
+        self._attr_name = f"Cert Expiry Timestamp ({coordinator.name})"
+        self._attr_unique_id = f"{coordinator.host}:{coordinator.port}-timestamp"
 
     @property
     def state(self):
@@ -89,8 +90,3 @@ class SSLCertificateTimestamp(CertExpiryEntity, SensorEntity):
         if self.coordinator.data:
             return self.coordinator.data.isoformat()
         return None
-
-    @property
-    def unique_id(self):
-        """Return a unique id for the sensor."""
-        return f"{self.coordinator.host}:{self.coordinator.port}-timestamp"
