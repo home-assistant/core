@@ -35,11 +35,7 @@ class BlinkCamera(Camera):
         self._attr_name = f"{DOMAIN} {name}"
         self._camera = camera
         self._attr_unique_id = f"{camera.serial}-camera"
-        self.response = None
-        self.current_image = None
-        self.last_image = None
-        self._attr_extra_state_attributes = self._camera.attributes
-        _LOGGER.debug("Initialized blink camera %s", self._name)
+        _LOGGER.debug("Initialized blink camera %s", self.name)
 
     def enable_motion_detection(self):
         """Enable motion detection for the camera."""
@@ -63,6 +59,7 @@ class BlinkCamera(Camera):
         """Trigger camera to take a snapshot."""
         self._camera.snap_picture()
         self.data.refresh()
+        self._attr_extra_state_attributes = self._camera.attributes
 
     def camera_image(self):
         """Return a still image response from the camera."""

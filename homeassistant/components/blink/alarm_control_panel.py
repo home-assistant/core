@@ -37,28 +37,20 @@ class BlinkSyncModule(AlarmControlPanelEntity):
         self.data = data
         self.sync = sync
         self._name = name
-        self._state = None
-        self._attr_unique_id = self.sync.serial
+        self._attr_unique_id = sync.serial
         self._attr_name = f"{DOMAIN} {name}"
-        self.sync.attributes["network_info"] = self.data.networks
-        self.sync.attributes["associated_cameras"] = list(self.sync.cameras)
-        self.sync.attributes[ATTR_ATTRIBUTION] = DEFAULT_ATTRIBUTION
-        self._attr_extra_state_attributes = self.sync.attributes
-
-    @property
-    def state(self):
-        """Return the state of the device."""
-        return self._state
 
     def update(self):
         """Update the state of the device."""
         _LOGGER.debug("Updating Blink Alarm Control Panel %s", self._name)
         self.data.refresh()
-        mode = self.sync.arm
-        if mode:
-            self._state = STATE_ALARM_ARMED_AWAY
-        else:
-            self._state = STATE_ALARM_DISARMED
+        self._attr_state = (
+            STATE_ALARM_ARMED_AWAY if self.sync.arm else STATE_ALARM_DISARMED
+        )
+        self.sync.attributes["network_info"] = self.data.networks
+        self.sync.attributes["associated_cameras"] = list(self.sync.cameras)
+        self.sync.attributes[ATTR_ATTRIBUTION] = DEFAULT_ATTRIBUTION
+        self._attr_extra_state_attributes = self.sync.attributes
 
     def alarm_disarm(self, code=None):
         """Send disarm command."""
