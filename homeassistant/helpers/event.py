@@ -1440,7 +1440,9 @@ def async_track_time_change(
 track_time_change = threaded_listener_factory(async_track_time_change)
 
 
-def process_state_match(parameter: None | str | Iterable[str]) -> Callable[[str], bool]:
+def process_state_match(
+    parameter: None | str | Iterable[str],
+) -> Callable[[str | None], bool]:
     """Convert parameter to function that matches input against parameter."""
     if parameter is None or parameter == MATCH_ALL:
         return lambda _: True
