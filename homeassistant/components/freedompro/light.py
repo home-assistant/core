@@ -44,9 +44,9 @@ class Device(CoordinatorEntity, LightEntity):
         self._type = device["type"]
         self._characteristics = device["characteristics"]
         self._attr_device_info = {
-            "name": self._attr_name,
+            "name": self.name,
             "identifiers": {
-                (DOMAIN, self._attr_unique_id),
+                (DOMAIN, self.unique_id),
             },
             "model": self._type,
             "manufacturer": "Freedompro",
