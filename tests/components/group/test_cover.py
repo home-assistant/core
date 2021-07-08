@@ -174,7 +174,7 @@ async def test_attributes(hass, setup_comp):
     assert state.state == STATE_OPEN
     assert state.attributes[ATTR_ASSUMED_STATE] is True
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == 244
-    assert state.attributes[ATTR_CURRENT_POSITION] == 100
+    assert state.attributes[ATTR_CURRENT_POSITION] == 85  # (70 + 100) / 2
     assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 60
 
     hass.states.async_remove(DEMO_COVER)
@@ -201,7 +201,7 @@ async def test_attributes(hass, setup_comp):
     assert state.attributes[ATTR_ASSUMED_STATE] is True
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == 128
     assert ATTR_CURRENT_POSITION not in state.attributes
-    assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 100
+    assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 80  # (60 + 100) / 2
 
     hass.states.async_remove(DEMO_COVER_TILT)
     hass.states.async_set(DEMO_TILT, STATE_CLOSED)
@@ -360,7 +360,7 @@ async def test_stop_covers(hass, setup_comp):
 
     state = hass.states.get(COVER_GROUP)
     assert state.state == STATE_OPEN
-    assert state.attributes[ATTR_CURRENT_POSITION] == 100
+    assert state.attributes[ATTR_CURRENT_POSITION] == 50  # (20 + 80) / 2
 
     assert hass.states.get(DEMO_COVER).state == STATE_OPEN
     assert hass.states.get(DEMO_COVER_POS).attributes[ATTR_CURRENT_POSITION] == 20
