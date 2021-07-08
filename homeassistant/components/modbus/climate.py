@@ -28,6 +28,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from .base_platform import BasePlatform
 from .const import (
     ATTR_TEMPERATURE,
+    CALL_TYPE_REGISTER_HOLDING,
     CALL_TYPE_WRITE_REGISTERS,
     CONF_CLIMATES,
     CONF_DATA_TYPE,
@@ -192,7 +193,7 @@ class ModbusThermostat(BasePlatform, RestoreEntity, ClimateEntity):
         # remark "now" is a dummy parameter to avoid problems with
         # async_track_time_interval
         self._target_temperature = await self._async_read_register(
-            self._input_type, self._target_temperature_register
+            CALL_TYPE_REGISTER_HOLDING, self._target_temperature_register
         )
         self._current_temperature = await self._async_read_register(
             self._input_type, self._address
