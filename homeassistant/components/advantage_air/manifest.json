@@ -7,7 +7,7 @@
     "@Bre77"
   ],
   "requirements": [
-    "advantage_air==0.2.4"
+    "advantage_air==0.2.5"
   ],
   "quality_scale": "platinum",
   "iot_class": "local_polling"
