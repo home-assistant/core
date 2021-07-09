@@ -43,6 +43,14 @@ class Device(CoordinatorEntity, LightEntity):
         self._attr_unique_id = device["uid"]
         self._type = device["type"]
         self._characteristics = device["characteristics"]
+        self._attr_device_info = {
+            "name": self.name,
+            "identifiers": {
+                (DOMAIN, self.unique_id),
+            },
+            "model": self._type,
+            "manufacturer": "Freedompro",
+        }
         self._attr_is_on = False
         self._attr_brightness = 0
         color_mode = COLOR_MODE_ONOFF
