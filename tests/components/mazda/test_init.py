@@ -97,7 +97,7 @@ async def test_update_auth_failure(hass: HomeAssistant):
         "homeassistant.components.mazda.MazdaAPI.get_vehicles",
         side_effect=MazdaAuthenticationException("Login failed"),
     ):
-        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=61))
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=181))
         await hass.async_block_till_done()
 
     flows = hass.config_entries.flow.async_progress()
@@ -136,7 +136,7 @@ async def test_update_general_failure(hass: HomeAssistant):
         "homeassistant.components.mazda.MazdaAPI.get_vehicles",
         side_effect=Exception("Unknown exception"),
     ):
-        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=61))
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=181))
         await hass.async_block_till_done()
 
     entity = hass.states.get("sensor.my_mazda3_fuel_remaining_percentage")

@@ -100,7 +100,7 @@ aioeafm==0.1.2
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==5.0.0
+aioesphomeapi==5.0.1
 
 # homeassistant.components.flo
 aioflo==0.4.1
@@ -580,7 +580,7 @@ netmap==0.7.0.2
 nettigo-air-monitor==1.0.0
 
 # homeassistant.components.nexia
-nexia==0.9.8
+nexia==0.9.9
 
 # homeassistant.components.notify_events
 notify-events==1.0.4
@@ -776,7 +776,7 @@ pycoolmasternet-async==0.1.2
 pydaikin==2.4.4
 
 # homeassistant.components.deconz
-pydeconz==80
+pydeconz==81
 
 # homeassistant.components.dexcom
 pydexcom==0.2.0
@@ -897,7 +897,7 @@ pymailgunner==1.4
 pymata-express==1.19
 
 # homeassistant.components.mazda
-pymazda==0.1.6
+pymazda==0.2.0
 
 # homeassistant.components.melcloud
 pymelcloud==2.5.3

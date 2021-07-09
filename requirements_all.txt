@@ -160,7 +160,7 @@ aioeafm==0.1.2
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==5.0.0
+aioesphomeapi==5.0.1
 
 # homeassistant.components.flo
 aioflo==0.4.1
@@ -1026,7 +1026,7 @@ nettigo-air-monitor==1.0.0
 neurio==0.3.1
 
 # homeassistant.components.nexia
-nexia==0.9.8
+nexia==0.9.9
 
 # homeassistant.components.nextcloud
 nextcloudmonitor==1.1.0
@@ -1381,7 +1381,7 @@ pydaikin==2.4.4
 pydanfossair==0.1.0
 
 # homeassistant.components.deconz
-pydeconz==80
+pydeconz==81
 
 # homeassistant.components.delijn
 pydelijn==0.6.1
@@ -1580,7 +1580,7 @@ pymailgunner==1.4
 pymata-express==1.19
 
 # homeassistant.components.mazda
-pymazda==0.1.6
+pymazda==0.2.0
 
 # homeassistant.components.mediaroom
 pymediaroom==0.6.4.1
