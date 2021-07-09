@@ -2,6 +2,7 @@
 from datetime import datetime, timedelta
 import logging
 import os
+from enum import Enum
 
 from googleapiclient import discovery as google_discovery
 import httplib2
@@ -41,6 +42,7 @@ CONF_TRACK = "track"
 CONF_SEARCH = "search"
 CONF_IGNORE_AVAILABILITY = "ignore_availability"
 CONF_MAX_RESULTS = "max_results"
+CONF_CALENDAR_ACCESS = "calendar_access"
 
 DEFAULT_CONF_TRACK_NEW = True
 DEFAULT_CONF_OFFSET = "!!"
@@ -70,9 +72,14 @@ SERVICE_ADD_EVENT = "add_event"
 DATA_INDEX = "google_calendars"
 
 YAML_DEVICES = f"{DOMAIN}_calendars.yaml"
-SCOPES = "https://www.googleapis.com/auth/calendar"
+READ_SCOPES = "https://www.googleapis.com/auth/calendar.readonly"
+READ_WRITE_SCOPES = "https://www.googleapis.com/auth/calendar"
 
 TOKEN_FILE = f".{DOMAIN}.token"
+
+class FeatureAccess(Enum):
+    Read = "read"
+    ReadWrite = "readwrite"
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -81,6 +88,7 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Required(CONF_CLIENT_ID): cv.string,
                 vol.Required(CONF_CLIENT_SECRET): cv.string,
                 vol.Optional(CONF_TRACK_NEW): cv.boolean,
+                vol.Optional(CONF_CALENDAR_ACCESS, default='ReadWrite'): cv.enum(FeatureAccess),
             }
         )
     },
@@ -129,6 +137,17 @@ ADD_EVENT_SERVICE_SCHEMA = vol.Schema(
     }
 )
 
+def get_scope(conf):
+    scopes = ""
+    if conf.get(CONF_CALENDAR_ACCESS) is FeatureAccess.ReadWrite:
+        scopes = READ_WRITE_SCOPES
+    elif conf.get(CONF_CALENDAR_ACCESS) is FeatureAccess.Read:
+        scopes = READ_SCOPES
+
+    _LOGGER.info(f"Required scopes: {scopes}")
+
+    return scopes
+
 
 def do_authentication(hass, hass_config, config):
     """Notify user of actions and authenticate.
@@ -139,7 +158,7 @@ def do_authentication(hass, hass_config, config):
     oauth = OAuth2WebServerFlow(
         client_id=config[CONF_CLIENT_ID],
         client_secret=config[CONF_CLIENT_SECRET],
-        scope="https://www.googleapis.com/auth/calendar",
+        scope=get_scope(config),
         redirect_uri="Home-Assistant.io",
     )
     try:
@@ -213,24 +232,22 @@ def setup(hass, config):
     if not os.path.isfile(token_file):
         do_authentication(hass, config, conf)
     else:
-        if not check_correct_scopes(token_file):
+        if not check_correct_scopes(token_file, conf):
             do_authentication(hass, config, conf)
         else:
             do_setup(hass, config, conf)
 
     return True
 
-
-def check_correct_scopes(token_file):
+def check_correct_scopes(token_file, config):
     """Check for the correct scopes in file."""
     tokenfile = open(token_file).read()
-    if "readonly" in tokenfile:
+    if (config.get(CONF_CALENDAR_ACCESS) is FeatureAccess.ReadWrite and "readonly" in tokenfile) or (config.get(CONF_CALENDAR_ACCESS) is FeatureAccess.Read and "readonly" not in tokenfile):
         _LOGGER.warning("Please re-authenticate with Google")
         return False
     return True
 
-
-def setup_services(hass, hass_config, track_new_found_calendars, calendar_service):
+def setup_services(hass, hass_config, config, track_new_found_calendars, calendar_service):
     """Set up the service listeners."""
 
     def _found_calendar(call):
@@ -312,9 +329,11 @@ def setup_services(hass, hass_config, track_new_found_calendars, calendar_servic
         service_data = {"calendarId": call.data[EVENT_CALENDAR_ID], "body": event}
         event = service.events().insert(**service_data).execute()
 
-    hass.services.register(
-        DOMAIN, SERVICE_ADD_EVENT, _add_event, schema=ADD_EVENT_SERVICE_SCHEMA
-    )
+    # Only expose the add event service if we have the correct permissions
+    if config.get(CONF_CALENDAR_ACCESS) is FeatureAccess.ReadWrite:
+        hass.services.register(
+            DOMAIN, SERVICE_ADD_EVENT, _add_event, schema=ADD_EVENT_SERVICE_SCHEMA
+        )
     return True
 
 
@@ -327,7 +346,7 @@ def do_setup(hass, hass_config, config):
     track_new_found_calendars = convert(
         config.get(CONF_TRACK_NEW), bool, DEFAULT_CONF_TRACK_NEW
     )
-    setup_services(hass, hass_config, track_new_found_calendars, calendar_service)
+    setup_services(hass, hass_config, config, track_new_found_calendars, calendar_service)
 
     for calendar in hass.data[DATA_INDEX].values():
         discovery.load_platform(hass, "calendar", DOMAIN, calendar, hass_config)
