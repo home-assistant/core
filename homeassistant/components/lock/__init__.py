@@ -15,8 +15,11 @@ from homeassistant.const import (
     SERVICE_LOCK,
     SERVICE_OPEN,
     SERVICE_UNLOCK,
+    STATE_JAMMED,
     STATE_LOCKED,
+    STATE_LOCKING,
     STATE_UNLOCKED,
+    STATE_UNLOCKING,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -87,6 +90,9 @@ class LockEntity(Entity):
     _attr_changed_by: str | None = None
     _attr_code_format: str | None = None
     _attr_is_locked: bool | None = None
+    _attr_is_locking: bool | None = None
+    _attr_is_unlocking: bool | None = None
+    _attr_is_jammed: bool | None = None
     _attr_state: None = None
 
     @property
@@ -103,6 +109,21 @@ class LockEntity(Entity):
     def is_locked(self) -> bool | None:
         """Return true if the lock is locked."""
         return self._attr_is_locked
+
+    @property
+    def is_locking(self) -> bool | None:
+        """Return true if the lock is locking."""
+        return self._attr_is_locking
+
+    @property
+    def is_unlocking(self) -> bool | None:
+        """Return true if the lock is unlocking."""
+        return self._attr_is_unlocking
+
+    @property
+    def is_jammed(self) -> bool | None:
+        """Return true if the lock is jammed (incomplete locking)."""
+        return self._attr_is_jammed
 
     def lock(self, **kwargs: Any) -> None:
         """Lock the lock."""
@@ -143,6 +164,12 @@ class LockEntity(Entity):
     @property
     def state(self) -> str | None:
         """Return the state."""
+        if self.is_jammed:
+            return STATE_JAMMED
+        if self.is_locking:
+            return STATE_LOCKING
+        if self.is_unlocking:
+            return STATE_UNLOCKING
         locked = self.is_locked
         if locked is None:
             return None
