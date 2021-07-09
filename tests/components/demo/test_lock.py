@@ -85,10 +85,19 @@ async def test_jammed_when_locking(hass):
     assert state.state == STATE_JAMMED
 
 
-async def test_opening(hass):
+async def test_opening_mocked(hass):
     """Test the opening of a lock."""
     calls = async_mock_service(hass, LOCK_DOMAIN, SERVICE_OPEN)
     await hass.services.async_call(
         LOCK_DOMAIN, SERVICE_OPEN, {ATTR_ENTITY_ID: OPENABLE_LOCK}, blocking=True
     )
     assert len(calls) == 1
+
+
+async def test_opening(hass):
+    """Test the opening of a lock."""
+    await hass.services.async_call(
+        LOCK_DOMAIN, SERVICE_OPEN, {ATTR_ENTITY_ID: OPENABLE_LOCK}, blocking=True
+    )
+    state = hass.states.get(OPENABLE_LOCK)
+    assert state.state == STATE_UNLOCKED
