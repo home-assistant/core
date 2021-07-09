@@ -87,6 +87,11 @@ class WallboxHub(DataUpdateCoordinator):
         data = await self._hass.async_add_executor_job(self._get_data)
         return data
 
+    async def async_update_data(self) -> bool:
+        """Get new sensor data for Wallbox component."""
+        data = await self._hass.async_add_executor_job(self._get_data)
+        return data
+
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Wallbox from a config entry."""

@@ -25,7 +25,7 @@ async def validate_input(hass: core.HomeAssistant, data):
     """
     hub = WallboxHub(data["station"], data["username"], data["password"], hass)
 
-    await hub._async_update_data()
+    await hub.async_update_data()
 
     # Return info that you want to store in the config entry.
     return {"title": "Wallbox Portal"}
