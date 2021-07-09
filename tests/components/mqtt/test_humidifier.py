@@ -838,8 +838,74 @@ async def test_attributes(hass, mqtt_mock, caplog):
     assert state.attributes.get("mode") is None
 
 
+async def test_invalid_configurations(hass, mqtt_mock, caplog):
+    """Test invalid configurations."""
+    assert await async_setup_component(
+        hass,
+        humidifier.DOMAIN,
+        {
+            humidifier.DOMAIN: [
+                {
+                    "platform": "mqtt",
+                    "name": "test_valid",
+                    "command_topic": "command-topic",
+                },
+                {
+                    "platform": "mqtt",
+                    "name": "test_mode_command_without_modes",
+                    "command_topic": "command-topic",
+                    "target_humidity_command_topic": "humidity-command-topic",
+                    "mode_command_topic": "mode-command-topic",
+                },
+                {
+                    "platform": "mqtt",
+                    "name": "test_invalid_humidity_min_max_1",
+                    "command_topic": "command-topic",
+                    "target_humidity_command_topic": "humidity-command-topic",
+                    "min_humidity": 0,
+                    "max_humidity": 101,
+                },
+                {
+                    "platform": "mqtt",
+                    "name": "test_invalid_humidity_min_max_2",
+                    "command_topic": "command-topic",
+                    "target_humidity_command_topic": "humidity-command-topic",
+                    "max_humidity": 20,
+                    "min_humidity": 40,
+                },
+                {
+                    "platform": "mqtt",
+                    "name": "test_invalid_humidity_range",
+                    "command_topic": "command-topic",
+                    "target_humidity_command_topic": "humidity-command-topic",
+                    "humidity_range_min": 40,
+                    "humidity_range_max": 20,
+                },
+                {
+                    "platform": "mqtt",
+                    "name": "test_invalid_mode_is_reset",
+                    "command_topic": "command-topic",
+                    "target_humidity_command_topic": "humidity-command-topic",
+                    "mode_command_topic": "mode-command-topic",
+                    "modes": ["eco", "None"],
+                },
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get("humidifier.test_valid") is not None
+    assert hass.states.get("humidifier.test_mode_command_without_modes") is None
+    assert "not all values in the same group of inclusion" in caplog.text
+    caplog.clear()
+
+    assert hass.states.get("humidifier.test_invalid_humidity_min_max_1") is None
+    assert hass.states.get("humidifier.test_invalid_humidity_min_max_2") is None
+    assert hass.states.get("humidifier.test_invalid_humidity_range") is None
+    assert hass.states.get("humidifier.test_invalid_mode_is_reset") is None
+
+
 async def test_supported_features(hass, mqtt_mock):
-    """Test optimistic mode without state topic."""
+    """Test supported features."""
     assert await async_setup_component(
         hass,
         humidifier.DOMAIN,

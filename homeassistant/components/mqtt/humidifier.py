@@ -93,6 +93,8 @@ def valid_humidity_range_configuration(config):
     """Validate that the target_humidity range configuration is valid, throws if it isn't."""
     if config.get(CONF_TARGET_HUMIDITY_MIN) >= config.get(CONF_TARGET_HUMIDITY_MAX):
         raise ValueError("target_humidity_max must be > target_humidity_min")
+    if config.get(CONF_TARGET_HUMIDITY_MAX) > 100:
+        raise ValueError("max_humidity must be <= 100")
     conf_target_humidity_range_min = (
         config.get(CONF_TARGET_HUMIDITY_RANGE_MIN)
         if CONF_TARGET_HUMIDITY_RANGE_MIN in config
@@ -107,6 +109,7 @@ def valid_humidity_range_configuration(config):
         raise ValueError(
             "target_humidity_range_max must be > target_humidity_range_min"
         )
+
     return config
 
 
