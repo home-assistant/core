@@ -41,6 +41,7 @@ SUPPORTED_COMPONENTS = [
     "device_automation",
     "device_tracker",
     "fan",
+    "humidifier",
     "light",
     "lock",
     "number",

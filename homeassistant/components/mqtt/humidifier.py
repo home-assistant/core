@@ -69,6 +69,16 @@ DEFAULT_PAYLOAD_ON = "ON"
 DEFAULT_PAYLOAD_OFF = "OFF"
 DEFAULT_PAYLOAD_RESET = "None"
 
+MQTT_HUMIDIFIER_ATTRIBUTES_BLOCKED = frozenset(
+    {
+        humidifier.ATTR_HUMIDITY,
+        humidifier.ATTR_MAX_HUMIDITY,
+        humidifier.ATTR_MIN_HUMIDITY,
+        humidifier.ATTR_MODE,
+        humidifier.ATTR_AVAILABLE_MODES,
+    }
+)
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -165,6 +175,8 @@ async def _async_setup_entity(
 
 class MqttHumidifier(MqttEntity, HumidifierEntity):
     """A MQTT humidifier component."""
+
+    _attributes_extra_blocked = MQTT_HUMIDIFIER_ATTRIBUTES_BLOCKED
 
     def __init__(self, hass, config, config_entry, discovery_data):
         """Initialize the MQTT humidifier."""
@@ -299,7 +311,7 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
                 )
             except ValueError:
                 _LOGGER.warning(
-                    "'%s' received on topic %s. '%s' is not a valid target within the target humidity range",
+                    "'%s' received on topic %s. '%s' is not a valid humidity within range",
                     msg.payload,
                     msg.topic,
                     rendered_target_humidity_payload,
