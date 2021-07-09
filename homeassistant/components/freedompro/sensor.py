@@ -1,8 +1,11 @@
 """Support for Freedompro sensor."""
+from hatasmota.const import LIGHT_LUX, PERCENTAGE, TEMP_CELSIUS
+
 from homeassistant.components.sensor import (
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_TEMPERATURE,
+    STATE_CLASS_MEASUREMENT,
     SensorEntity,
 )
 from homeassistant.const import CONF_API_KEY
@@ -53,6 +56,20 @@ class Device(CoordinatorEntity, SensorEntity):
             else DEVICE_CLASS_HUMIDITY
             if self._type == "humiditySensor"
             else DEVICE_CLASS_ILLUMINANCE
+        )
+        self._attr_state_class = (
+            STATE_CLASS_MEASUREMENT
+            if self._type == "temperatureSensor"
+            else STATE_CLASS_MEASUREMENT
+            if self._type == "humiditySensor"
+            else None
+        )
+        self._attr_unit_of_measurement = (
+            TEMP_CELSIUS
+            if self._type == "temperatureSensor"
+            else PERCENTAGE
+            if self._type == "humiditySensor"
+            else LIGHT_LUX
         )
         self._attr_state = 0
 
