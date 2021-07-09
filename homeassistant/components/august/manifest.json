@@ -2,7 +2,7 @@
   "domain": "august",
   "name": "August",
   "documentation": "https://www.home-assistant.io/integrations/august",
-  "requirements": ["yalexs==1.1.11"],
+  "requirements": ["yalexs==1.1.12"],
   "codeowners": ["@bdraco"],
   "dhcp": [
     {
