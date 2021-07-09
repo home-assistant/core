@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import cast
 
 import pyatmo
 import voluptuous as vol
@@ -321,7 +322,9 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
     @property
     def _data(self) -> pyatmo.AsyncHomeData:
         """Return data for this entity."""
-        return self.data_handler.data[self._data_classes[0]["name"]]
+        return cast(
+            pyatmo.AsyncHomeData, self.data_handler.data[self._data_classes[0]["name"]]
+        )
 
     @property
     def supported_features(self) -> int:

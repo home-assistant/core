@@ -131,10 +131,10 @@ async def async_attach_trigger(
     device = device_registry.async_get(config[CONF_DEVICE_ID])
 
     if not device:
-        return
+        return lambda: None
 
     if device.model not in DEVICES:
-        return
+        return lambda: None
 
     event_config = {
         event_trigger.CONF_PLATFORM: "event",

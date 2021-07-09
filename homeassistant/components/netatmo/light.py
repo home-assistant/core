@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import cast
 
 import pyatmo
 
@@ -126,7 +127,10 @@ class NetatmoLight(NetatmoBase, LightEntity):
     @property
     def _data(self) -> pyatmo.AsyncCameraData:
         """Return data for this entity."""
-        return self.data_handler.data[self._data_classes[0]["name"]]
+        return cast(
+            pyatmo.AsyncCameraData,
+            self.data_handler.data[self._data_classes[0]["name"]],
+        )
 
     @property
     def available(self) -> bool:

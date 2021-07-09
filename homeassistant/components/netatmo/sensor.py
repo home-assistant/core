@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import NamedTuple
+from typing import cast, NamedTuple
 
 import pyatmo
 
@@ -449,7 +449,10 @@ class NetatmoSensor(NetatmoBase, SensorEntity):
     @property
     def _data(self) -> pyatmo.AsyncWeatherStationData:
         """Return data for this entity."""
-        return self.data_handler.data[self._data_classes[0]["name"]]
+        return cast(
+            pyatmo.AsyncWeatherStationData,
+            self.data_handler.data[self._data_classes[0]["name"]],
+        )
 
     @property
     def available(self) -> bool:
@@ -632,7 +635,7 @@ class NetatmoPublicSensor(NetatmoBase, SensorEntity):
     @property
     def _data(self) -> pyatmo.AsyncPublicData:
         """Return data for this entity."""
-        return self.data_handler.data[self._signal_name]
+        return cast(pyatmo.AsyncPublicData, self.data_handler.data[self._signal_name])
 
     async def async_added_to_hass(self) -> None:
         """Entity created."""

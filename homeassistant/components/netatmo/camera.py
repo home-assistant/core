@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, cast
 
 import aiohttp
 import pyatmo
@@ -192,7 +192,10 @@ class NetatmoCamera(NetatmoBase, Camera):
     @property
     def _data(self) -> pyatmo.AsyncCameraData:
         """Return data for this entity."""
-        return self.data_handler.data[self._data_classes[0]["name"]]
+        return cast(
+            pyatmo.AsyncCameraData,
+            self.data_handler.data[self._data_classes[0]["name"]],
+        )
 
     async def async_camera_image(self) -> bytes | None:
         """Return a still image response from the camera."""
