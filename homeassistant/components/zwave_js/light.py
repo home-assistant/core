@@ -319,7 +319,7 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         await self.info.node.async_set_value(target_zwave_value, new_value, transition)
 
     async def _async_set_brightness(
-        self, brightness: int | None, transition: int | None = None
+        self, brightness: int | None, transition: float | None = None
     ) -> None:
         """Set new brightness to light."""
         if brightness is None:
