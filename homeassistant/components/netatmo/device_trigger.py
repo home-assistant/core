@@ -144,10 +144,14 @@ async def async_attach_trigger(
             ATTR_DEVICE_ID: config[ATTR_DEVICE_ID],
         },
     }
+    # if config[CONF_TYPE] in SUBTYPES:
+    #     event_config[event_trigger.CONF_EVENT_DATA]["data"] = {
+    #         "mode": config[CONF_SUBTYPE]
+    #     }
     if config[CONF_TYPE] in SUBTYPES:
-        event_config[event_trigger.CONF_EVENT_DATA]["data"] = {
-            "mode": config[CONF_SUBTYPE]
-        }
+        event_config.update(
+            {event_trigger.CONF_EVENT_DATA: {"data": {"mode": config[CONF_SUBTYPE]}}}
+        )
 
     event_config = event_trigger.TRIGGER_SCHEMA(event_config)
     return await event_trigger.async_attach_trigger(
