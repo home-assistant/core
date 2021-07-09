@@ -258,13 +258,13 @@ class CoverGroup(GroupEntity, CoverEntity):
                 continue
             if state.state == STATE_OPEN:
                 self._attr_is_closed = False
-                break
+                continue
             if state.state == STATE_CLOSING:
                 self._attr_is_closing = True
-                break
+                continue
             if state.state == STATE_OPENING:
                 self._attr_is_opening = True
-                break
+                continue
 
         position_covers = self._covers[KEY_POSITION]
         all_position_states = [self.hass.states.get(x) for x in position_covers]
