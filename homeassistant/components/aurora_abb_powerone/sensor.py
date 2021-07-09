@@ -68,49 +68,23 @@ async def async_setup_entry(hass, config_entry, async_add_entities) -> None:
 class AuroraSensor(AuroraDevice):
     """Representation of a Sensor on a Aurora ABB PowerOne Solar inverter."""
 
-    availableprev = True
+    _attr_state_class = STATE_CLASS_MEASUREMENT
 
     def __init__(self, client: AuroraSerialClient, data, name, typename):
         """Initialize the sensor."""
-        self._state = None
         super().__init__(client, data)
-
         if typename == "instantaneouspower":
             self.type = typename
-            self.units = POWER_WATT
-            self._device_class = DEVICE_CLASS_POWER
+            self._attr_unit_of_measurement = POWER_WATT
+            self._attr_device_class = DEVICE_CLASS_POWER
         elif typename == "temperature":
             self.type = typename
-            self.units = TEMP_CELSIUS
-            self._device_class = DEVICE_CLASS_TEMPERATURE
+            self._attr_unit_of_measurement = TEMP_CELSIUS
+            self._attr_device_class = DEVICE_CLASS_TEMPERATURE
         else:
             raise InvalidStateError(f"Unrecognised typename '{typename}'")
-        self._name = f"{name}"
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return self.units
-
-    @property
-    def device_class(self):
-        """Return the device class."""
-        return self._device_class
-
-    @property
-    def available(self):
-        """Return True if entity is available."""
-        return self._state is not None
+        self._attr_name = f"{name}"
+        self.availableprev = True
 
     def update(self):
         """Fetch new state data for the sensor.
@@ -118,17 +92,17 @@ class AuroraSensor(AuroraDevice):
         This is the only method that should fetch new data for Home Assistant.
         """
         try:
-            availableprev = self.available
+            self.availableprev = self.available
             self.client.connect()
             if self.type == "instantaneouspower":
                 # read ADC channel 3 (grid power output)
                 power_watts = self.client.measure(3, True)
-                self._state = round(power_watts, 1)
+                self._attr_state = round(power_watts, 1)
             elif self.type == "temperature":
                 temperature_c = self.client.measure(21)
-                self._state = round(temperature_c, 1)
+                self._attr_state = round(temperature_c, 1)
         except AuroraError as error:
-            self._state = None
+            self._attr_state = None
             # aurorapy does not have different exceptions (yet) for dealing
             # with timeout vs other comms errors.
             # This means the (normal) situation of no response during darkness
@@ -141,14 +115,15 @@ class AuroraSensor(AuroraDevice):
                 _LOGGER.debug("No response from inverter (could be dark)")
             else:
                 raise error
+            self._attr_available = self.state is not None
         finally:
-            if self.available != availableprev:
+            if self.available != self.availableprev:
                 if self.available:
-                    _LOGGER.info("Communication with %s back online", self._name)
+                    _LOGGER.info("Communication with %s back online", self.name)
                 else:
                     _LOGGER.warning(
                         "Communication with %s lost",
-                        self._name,
+                        self.name,
                     )
             if self.client.serline.isOpen():
                 self.client.close()
