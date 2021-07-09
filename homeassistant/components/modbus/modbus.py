@@ -1,5 +1,6 @@
 """Support for Modbus."""
 import asyncio
+from copy import deepcopy
 import logging
 
 from pymodbus.client.sync import ModbusSerialClient, ModbusTcpClient, ModbusUdpClient
@@ -196,7 +197,7 @@ class ModbusHub:
         self._config_name = client_config[CONF_NAME]
         self._config_type = client_config[CONF_TYPE]
         self._config_delay = client_config[CONF_DELAY]
-        self._pb_call = PYMODBUS_CALL.copy()
+        self._pb_call = deepcopy(PYMODBUS_CALL)
         self._pb_class = {
             CONF_SERIAL: ModbusSerialClient,
             CONF_TCP: ModbusTcpClient,
