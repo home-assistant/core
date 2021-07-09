@@ -4,7 +4,6 @@ from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DEVICE_CLASS_TIMESTAMP
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 import homeassistant.util.dt as dt_util
 
@@ -38,32 +37,16 @@ class IslamicPrayerTimeSensor(CoordinatorEntity, SensorEntity):
         super().__init__(coordinator)
         self.coordinator = coordinator
         self.sensor_type = sensor_type
-
-    @property
-    def name(self) -> str:
-        """Return the name of the sensor."""
-        return f"{self.sensor_type} {SENSOR_TYPES[self.sensor_type]}"
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique id of the entity."""
-        return self.sensor_type
-
-    @property
-    def state(self) -> str:
-        """Return the state of the sensor."""
-        return (
+        self._attr_name = f"{self.sensor_type} {SENSOR_TYPES[self.sensor_type]}"
+        self._attr_unique_id = self.sensor_type
+        self._attr_state = (
             self.coordinator.data.get(self.sensor_type)
             .astimezone(dt_util.UTC)
             .isoformat()
         )
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information about this 17Track instance."""
-        return {
+        self._attr_device_info = {
             "identifiers": {(DOMAIN, "Islamic Prayer Times")},
-            "name": "Islamic Prayer Times",
+            "default_name": "Islamic Prayer Times",
             "entry_type": "service",
         }
 
