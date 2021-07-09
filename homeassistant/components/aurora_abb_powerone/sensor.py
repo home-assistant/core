@@ -5,7 +5,11 @@ import logging
 from aurorapy.client import AuroraError, AuroraSerialClient
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, STATE_CLASS_MEASUREMENT
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    STATE_CLASS_MEASUREMENT,
+    SensorEntity,
+)
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     CONF_ADDRESS,
@@ -65,7 +69,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities) -> None:
     async_add_entities(entities, True)
 
 
-class AuroraSensor(AuroraDevice):
+class AuroraSensor(AuroraDevice, SensorEntity):
     """Representation of a Sensor on a Aurora ABB PowerOne Solar inverter."""
 
     _attr_state_class = STATE_CLASS_MEASUREMENT
@@ -92,7 +96,7 @@ class AuroraSensor(AuroraDevice):
         This is the only method that should fetch new data for Home Assistant.
         """
         try:
-            self.availableprev = self.available
+            self.availableprev = self._attr_available
             self.client.connect()
             if self.type == "instantaneouspower":
                 # read ADC channel 3 (grid power output)
@@ -103,6 +107,7 @@ class AuroraSensor(AuroraDevice):
                 self._attr_state = round(temperature_c, 1)
         except AuroraError as error:
             self._attr_state = None
+            self._attr_available = False
             # aurorapy does not have different exceptions (yet) for dealing
             # with timeout vs other comms errors.
             # This means the (normal) situation of no response during darkness
@@ -115,10 +120,9 @@ class AuroraSensor(AuroraDevice):
                 _LOGGER.debug("No response from inverter (could be dark)")
             else:
                 raise error
-            self._attr_available = self.state is not None
         finally:
-            if self.available != self.availableprev:
-                if self.available:
+            if self._attr_available != self.availableprev:
+                if self._attr_available:
                     _LOGGER.info("Communication with %s back online", self.name)
                 else:
                     _LOGGER.warning(
