@@ -137,7 +137,7 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         )
         self.supports_color_transition = bool(
             self._target_color is not None
-            and "transitionDuration" in self._target_color.metadata.value_change_options
+            and TRANSITION_DURATION in self._target_color.metadata.value_change_options
         )
 
         if self.supports_brightness_transition or self.supports_color_transition:
