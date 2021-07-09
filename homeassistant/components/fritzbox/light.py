@@ -174,7 +174,7 @@ class FritzboxLight(FritzBoxEntity, LightEntity):
     def extra_state_attributes(self) -> LightExtraAttributes:
         """Return the state attributes of the device."""
         attrs: LightExtraAttributes = {
-            ATTR_BRIGHTNESS: self.device.level,
+            ATTR_BRIGHTNESS: self.brightness,
             ATTR_COLOR_TEMP: self.color_temp,
             ATTR_HS_COLOR: self.hs_color,
         }
