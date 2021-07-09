@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import math
-from typing import Any
+from typing import Any, Final
 
 from xknx import XKNX
 from xknx.devices import Fan as XknxFan
@@ -22,7 +22,7 @@ from .const import DOMAIN, KNX_ADDRESS
 from .knx_entity import KnxEntity
 from .schema import FanSchema
 
-DEFAULT_PERCENTAGE = 50
+DEFAULT_PERCENTAGE: Final = 50
 
 
 async def async_setup_platform(
@@ -34,23 +34,19 @@ async def async_setup_platform(
     """Set up fans for KNX platform."""
     if not discovery_info or not discovery_info["platform_config"]:
         return
-
     platform_config = discovery_info["platform_config"]
     xknx: XKNX = hass.data[DOMAIN].xknx
 
-    entities = []
-    for entity_config in platform_config:
-        entities.append(KNXFan(xknx, entity_config))
-
-    async_add_entities(entities)
+    async_add_entities(KNXFan(xknx, entity_config) for entity_config in platform_config)
 
 
 class KNXFan(KnxEntity, FanEntity):
     """Representation of a KNX fan."""
 
+    _device: XknxFan
+
     def __init__(self, xknx: XKNX, config: ConfigType) -> None:
         """Initialize of KNX fan."""
-        self._device: XknxFan
         max_step = config.get(FanSchema.CONF_MAX_STEP)
         super().__init__(
             device=XknxFan(
@@ -67,9 +63,10 @@ class KNXFan(KnxEntity, FanEntity):
                 max_step=max_step,
             )
         )
-        self._unique_id = f"{self._device.speed.group_address}"
         # FanSpeedMode.STEP if max_step is set
         self._step_range: tuple[int, int] | None = (1, max_step) if max_step else None
+
+        self._attr_unique_id = str(self._device.speed.group_address)
 
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan, as a percentage."""

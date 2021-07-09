@@ -3,6 +3,8 @@ from __future__ import annotations
 
 import datetime
 import itertools
+import logging
+from typing import Callable
 
 from homeassistant.components.recorder import history, statistics
 from homeassistant.components.sensor import (
@@ -10,23 +12,88 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_HUMIDITY,
+    DEVICE_CLASS_MONETARY,
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_TEMPERATURE,
     STATE_CLASS_MEASUREMENT,
 )
-from homeassistant.const import ATTR_DEVICE_CLASS
+from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
+    ATTR_UNIT_OF_MEASUREMENT,
+    DEVICE_CLASS_POWER,
+    ENERGY_KILO_WATT_HOUR,
+    ENERGY_WATT_HOUR,
+    POWER_KILO_WATT,
+    POWER_WATT,
+    PRESSURE_BAR,
+    PRESSURE_HPA,
+    PRESSURE_INHG,
+    PRESSURE_MBAR,
+    PRESSURE_PA,
+    PRESSURE_PSI,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
+    TEMP_KELVIN,
+)
 from homeassistant.core import HomeAssistant, State
 import homeassistant.util.dt as dt_util
+import homeassistant.util.pressure as pressure_util
+import homeassistant.util.temperature as temperature_util
 
 from . import DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 DEVICE_CLASS_STATISTICS = {
     DEVICE_CLASS_BATTERY: {"mean", "min", "max"},
     DEVICE_CLASS_ENERGY: {"sum"},
     DEVICE_CLASS_HUMIDITY: {"mean", "min", "max"},
+    DEVICE_CLASS_MONETARY: {"sum"},
+    DEVICE_CLASS_POWER: {"mean", "min", "max"},
     DEVICE_CLASS_PRESSURE: {"mean", "min", "max"},
     DEVICE_CLASS_TEMPERATURE: {"mean", "min", "max"},
 }
+
+# Normalized units which will be stored in the statistics table
+DEVICE_CLASS_UNITS = {
+    DEVICE_CLASS_ENERGY: ENERGY_KILO_WATT_HOUR,
+    DEVICE_CLASS_POWER: POWER_WATT,
+    DEVICE_CLASS_PRESSURE: PRESSURE_PA,
+    DEVICE_CLASS_TEMPERATURE: TEMP_CELSIUS,
+}
+
+UNIT_CONVERSIONS: dict[str, dict[str, Callable]] = {
+    # Convert energy to kWh
+    DEVICE_CLASS_ENERGY: {
+        ENERGY_KILO_WATT_HOUR: lambda x: x,
+        ENERGY_WATT_HOUR: lambda x: x / 1000,
+    },
+    # Convert power W
+    DEVICE_CLASS_POWER: {
+        POWER_WATT: lambda x: x,
+        POWER_KILO_WATT: lambda x: x * 1000,
+    },
+    # Convert pressure to Pa
+    # Note: pressure_util.convert is bypassed to avoid redundant error checking
+    DEVICE_CLASS_PRESSURE: {
+        PRESSURE_BAR: lambda x: x / pressure_util.UNIT_CONVERSION[PRESSURE_BAR],
+        PRESSURE_HPA: lambda x: x / pressure_util.UNIT_CONVERSION[PRESSURE_HPA],
+        PRESSURE_INHG: lambda x: x / pressure_util.UNIT_CONVERSION[PRESSURE_INHG],
+        PRESSURE_MBAR: lambda x: x / pressure_util.UNIT_CONVERSION[PRESSURE_MBAR],
+        PRESSURE_PA: lambda x: x / pressure_util.UNIT_CONVERSION[PRESSURE_PA],
+        PRESSURE_PSI: lambda x: x / pressure_util.UNIT_CONVERSION[PRESSURE_PSI],
+    },
+    # Convert temperature to °C
+    # Note: temperature_util.convert is bypassed to avoid redundant error checking
+    DEVICE_CLASS_TEMPERATURE: {
+        TEMP_CELSIUS: lambda x: x,
+        TEMP_FAHRENHEIT: temperature_util.fahrenheit_to_celsius,
+        TEMP_KELVIN: temperature_util.kelvin_to_celsius,
+    },
+}
+
+# Keep track of entities for which a warning about unsupported unit has been logged
+WARN_UNSUPPORTED_UNIT = set()
 
 
 def _get_entities(hass: HomeAssistant) -> list[tuple[str, str]]:
@@ -90,6 +157,42 @@ def _time_weighted_average(
     return accumulated / (end - start).total_seconds()
 
 
+def _normalize_states(
+    entity_history: list[State], device_class: str, entity_id: str
+) -> tuple[str | None, list[tuple[float, State]]]:
+    """Normalize units."""
+    unit = None
+
+    if device_class not in UNIT_CONVERSIONS:
+        # We're not normalizing this device class, return the state as they are
+        fstates = [
+            (float(el.state), el) for el in entity_history if _is_number(el.state)
+        ]
+        if fstates:
+            unit = fstates[0][1].attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        return unit, fstates
+
+    fstates = []
+
+    for state in entity_history:
+        # Exclude non numerical states from statistics
+        if not _is_number(state.state):
+            continue
+
+        fstate = float(state.state)
+        unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        # Exclude unsupported units from statistics
+        if unit not in UNIT_CONVERSIONS[device_class]:
+            if entity_id not in WARN_UNSUPPORTED_UNIT:
+                WARN_UNSUPPORTED_UNIT.add(entity_id)
+                _LOGGER.warning("%s has unknown unit %s", entity_id, unit)
+            continue
+
+        fstates.append((UNIT_CONVERSIONS[device_class][unit](fstate), state))
+
+    return DEVICE_CLASS_UNITS[device_class], fstates
+
+
 def compile_statistics(
     hass: HomeAssistant, start: datetime.datetime, end: datetime.datetime
 ) -> dict:
@@ -113,23 +216,29 @@ def compile_statistics(
             continue
 
         entity_history = history_list[entity_id]
-        fstates = [
-            (float(el.state), el) for el in entity_history if _is_number(el.state)
-        ]
+        unit, fstates = _normalize_states(entity_history, device_class, entity_id)
 
         if not fstates:
             continue
 
         result[entity_id] = {}
 
+        # Set meta data
+        result[entity_id]["meta"] = {
+            "unit_of_measurement": unit,
+            "has_mean": "mean" in wanted_statistics,
+            "has_sum": "sum" in wanted_statistics,
+        }
+
         # Make calculations
+        stat: dict = {}
         if "max" in wanted_statistics:
-            result[entity_id]["max"] = max(*itertools.islice(zip(*fstates), 1))
+            stat["max"] = max(*itertools.islice(zip(*fstates), 1))
         if "min" in wanted_statistics:
-            result[entity_id]["min"] = min(*itertools.islice(zip(*fstates), 1))
+            stat["min"] = min(*itertools.islice(zip(*fstates), 1))
 
         if "mean" in wanted_statistics:
-            result[entity_id]["mean"] = _time_weighted_average(fstates, start, end)
+            stat["mean"] = _time_weighted_average(fstates, start, end)
 
         if "sum" in wanted_statistics:
             last_reset = old_last_reset = None
@@ -143,6 +252,7 @@ def compile_statistics(
                 _sum = last_stats[entity_id][0]["sum"]
 
             for fstate, state in fstates:
+
                 if "last_reset" not in state.attributes:
                     continue
                 if (last_reset := state.attributes["last_reset"]) != old_last_reset:
@@ -163,8 +273,10 @@ def compile_statistics(
 
             # Update the sum with the last state
             _sum += new_state - old_state
-            result[entity_id]["last_reset"] = dt_util.parse_datetime(last_reset)
-            result[entity_id]["sum"] = _sum
-            result[entity_id]["state"] = new_state
+            stat["last_reset"] = dt_util.parse_datetime(last_reset)
+            stat["sum"] = _sum
+            stat["state"] = new_state
+
+        result[entity_id]["stat"] = stat
 
     return result

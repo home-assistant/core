@@ -202,16 +202,17 @@ def get_forecast(ec_data, forecast_type):
                     ATTR_FORECAST_TEMP_LOW: int(half_days[1]["temperature"]),
                 }
             )
+            half_days = half_days[2:]
         else:
             today.update(
                 {
+                    ATTR_FORECAST_TEMP: None,
                     ATTR_FORECAST_TEMP_LOW: int(half_days[0]["temperature"]),
-                    ATTR_FORECAST_TEMP: int(half_days[1]["temperature"]),
                 }
             )
+            half_days = half_days[1:]
 
         forecast_array.append(today)
-        half_days = half_days[2:]
 
         for day, high, low in zip(range(1, 6), range(0, 9, 2), range(1, 10, 2)):
             forecast_array.append(
@@ -231,19 +232,20 @@ def get_forecast(ec_data, forecast_type):
             )
 
     elif forecast_type == "hourly":
-        hours = ec_data.hourly_forecasts
-        for hour in range(0, 24):
+        for hour in ec_data.hourly_forecasts:
             forecast_array.append(
                 {
-                    ATTR_FORECAST_TIME: dt.as_local(
-                        datetime.datetime.strptime(hours[hour]["period"], "%Y%m%d%H%M")
-                    ).isoformat(),
-                    ATTR_FORECAST_TEMP: int(hours[hour]["temperature"]),
+                    ATTR_FORECAST_TIME: datetime.datetime.strptime(
+                        hour["period"], "%Y%m%d%H%M%S"
+                    )
+                    .replace(tzinfo=dt.UTC)
+                    .isoformat(),
+                    ATTR_FORECAST_TEMP: int(hour["temperature"]),
                     ATTR_FORECAST_CONDITION: icon_code_to_condition(
-                        int(hours[hour]["icon_code"])
+                        int(hour["icon_code"])
                     ),
                     ATTR_FORECAST_PRECIPITATION_PROBABILITY: int(
-                        hours[hour]["precip_probability"]
+                        hour["precip_probability"]
                     ),
                 }
             )

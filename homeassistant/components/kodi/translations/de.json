@@ -12,7 +12,7 @@
             "invalid_auth": "Ung\u00fcltige Authentifizierung",
             "unknown": "Unerwarteter Fehler"
         },
-        "flow_title": "Kodi: {name}",
+        "flow_title": "{name}",
         "step": {
             "credentials": {
                 "data": {
@@ -22,7 +22,8 @@
                 "description": "Bitte gib deinen Kodi-Benutzernamen und Passwort ein. Diese findest du unter System/Einstellungen/Netzwerk/Dienste."
             },
             "discovery_confirm": {
-                "description": "M\u00f6chtest du Kodi (` {name} `) zu Home Assistant hinzuf\u00fcgen?"
+                "description": "M\u00f6chtest du Kodi (` {name} `) zu Home Assistant hinzuf\u00fcgen?",
+                "title": "Gefundene Kodi-Installation"
             },
             "user": {
                 "data": {
@@ -35,8 +36,15 @@
             "ws_port": {
                 "data": {
                     "ws_port": "Port"
-                }
+                },
+                "description": "Der WebSocket-Port (in Kodi manchmal TCP-Port genannt). Um eine Verbindung \u00fcber WebSocket herzustellen, m\u00fcssen Sie unter System/Einstellungen/Netzwerk/Dienste \"Programme ... zur Steuerung von Kodi zulassen\" aktivieren. Wenn WebSocket nicht aktiviert ist, entfernen Sie den Port und lassen ihn leer."
             }
+        }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "turn_off": "{entity_name} wurde zum Ausschalten aufgefordert",
+            "turn_on": "{entity_name} wurde zum Einschalten aufgefordert"
         }
     }
 }

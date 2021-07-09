@@ -87,6 +87,8 @@ async def test_get_entries(hass, client):
                 "state": core_ce.ConfigEntryState.NOT_LOADED.value,
                 "supports_options": True,
                 "supports_unload": True,
+                "pref_disable_new_entities": False,
+                "pref_disable_polling": False,
                 "disabled_by": None,
                 "reason": None,
             },
@@ -97,6 +99,8 @@ async def test_get_entries(hass, client):
                 "state": core_ce.ConfigEntryState.SETUP_ERROR.value,
                 "supports_options": False,
                 "supports_unload": False,
+                "pref_disable_new_entities": False,
+                "pref_disable_polling": False,
                 "disabled_by": None,
                 "reason": "Unsupported API",
             },
@@ -107,6 +111,8 @@ async def test_get_entries(hass, client):
                 "state": core_ce.ConfigEntryState.NOT_LOADED.value,
                 "supports_options": False,
                 "supports_unload": False,
+                "pref_disable_new_entities": False,
+                "pref_disable_polling": False,
                 "disabled_by": core_ce.DISABLED_USER,
                 "reason": None,
             },
@@ -328,6 +334,8 @@ async def test_create_account(hass, client, enable_custom_integrations):
             "state": core_ce.ConfigEntryState.LOADED.value,
             "supports_options": False,
             "supports_unload": False,
+            "pref_disable_new_entities": False,
+            "pref_disable_polling": False,
             "title": "Test Entry",
             "reason": None,
         },
@@ -399,6 +407,8 @@ async def test_two_step_flow(hass, client, enable_custom_integrations):
                 "state": core_ce.ConfigEntryState.LOADED.value,
                 "supports_options": False,
                 "supports_unload": False,
+                "pref_disable_new_entities": False,
+                "pref_disable_polling": False,
                 "title": "user-title",
                 "reason": None,
             },
@@ -678,67 +688,53 @@ async def test_two_step_options_flow(hass, client):
         }
 
 
-async def test_list_system_options(hass, hass_ws_client):
-    """Test that we can list an entries system options."""
-    assert await async_setup_component(hass, "config", {})
-    ws_client = await hass_ws_client(hass)
-
-    entry = MockConfigEntry(domain="demo")
-    entry.add_to_hass(hass)
-
-    await ws_client.send_json(
-        {
-            "id": 5,
-            "type": "config_entries/system_options/list",
-            "entry_id": entry.entry_id,
-        }
-    )
-    response = await ws_client.receive_json()
-
-    assert response["success"]
-    assert response["result"] == {"disable_new_entities": False}
-
-
-async def test_update_system_options(hass, hass_ws_client):
+async def test_update_prefrences(hass, hass_ws_client):
     """Test that we can update system options."""
     assert await async_setup_component(hass, "config", {})
     ws_client = await hass_ws_client(hass)
 
-    entry = MockConfigEntry(domain="demo")
+    entry = MockConfigEntry(domain="demo", state=core_ce.ConfigEntryState.LOADED)
     entry.add_to_hass(hass)
+
+    assert entry.pref_disable_new_entities is False
+    assert entry.pref_disable_polling is False
 
     await ws_client.send_json(
         {
-            "id": 5,
-            "type": "config_entries/system_options/update",
+            "id": 6,
+            "type": "config_entries/update",
             "entry_id": entry.entry_id,
-            "disable_new_entities": True,
+            "pref_disable_new_entities": True,
         }
     )
     response = await ws_client.receive_json()
 
     assert response["success"]
-    assert response["result"]["disable_new_entities"]
-    assert entry.system_options.disable_new_entities
+    assert response["result"]["require_restart"] is False
+    assert response["result"]["config_entry"]["pref_disable_new_entities"] is True
+    assert response["result"]["config_entry"]["pref_disable_polling"] is False
 
-
-async def test_update_system_options_nonexisting(hass, hass_ws_client):
-    """Test that we can update entry."""
-    assert await async_setup_component(hass, "config", {})
-    ws_client = await hass_ws_client(hass)
+    assert entry.pref_disable_new_entities is True
+    assert entry.pref_disable_polling is False
 
     await ws_client.send_json(
         {
-            "id": 5,
-            "type": "config_entries/system_options/update",
-            "entry_id": "non_existing",
-            "disable_new_entities": True,
+            "id": 7,
+            "type": "config_entries/update",
+            "entry_id": entry.entry_id,
+            "pref_disable_new_entities": False,
+            "pref_disable_polling": True,
         }
     )
     response = await ws_client.receive_json()
 
-    assert not response["success"]
-    assert response["error"]["code"] == "not_found"
+    assert response["success"]
+    assert response["result"]["require_restart"] is True
+    assert response["result"]["config_entry"]["pref_disable_new_entities"] is False
+    assert response["result"]["config_entry"]["pref_disable_polling"] is True
+
+    assert entry.pref_disable_new_entities is False
+    assert entry.pref_disable_polling is True
 
 
 async def test_update_entry(hass, hass_ws_client):
@@ -760,7 +756,7 @@ async def test_update_entry(hass, hass_ws_client):
     response = await ws_client.receive_json()
 
     assert response["success"]
-    assert response["result"]["title"] == "Updated Title"
+    assert response["result"]["config_entry"]["title"] == "Updated Title"
     assert entry.title == "Updated Title"
 
 

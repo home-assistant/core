@@ -4,12 +4,13 @@ from __future__ import annotations
 import logging
 
 from zwave_js_server.client import Client as ZwaveClient
+from zwave_js_server.model.node import NodeStatus
 from zwave_js_server.model.value import Value as ZwaveValue, get_value_id
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
 from .discovery import ZwaveDiscoveryInfo
@@ -18,6 +19,8 @@ from .helpers import get_device_id, get_unique_id
 LOGGER = logging.getLogger(__name__)
 
 EVENT_VALUE_UPDATED = "value updated"
+EVENT_DEAD = "dead"
+EVENT_ALIVE = "alive"
 
 
 class ZWaveBaseEntity(Entity):
@@ -30,10 +33,6 @@ class ZWaveBaseEntity(Entity):
         self.config_entry = config_entry
         self.client = client
         self.info = info
-        self._name = self.generate_name()
-        self._unique_id = get_unique_id(
-            self.client.driver.controller.home_id, self.info.primary_value.value_id
-        )
         # entities requiring additional values, can add extra ids to this list
         self.watched_value_ids = {self.info.primary_value.value_id}
 
@@ -41,6 +40,17 @@ class ZWaveBaseEntity(Entity):
             self.watched_value_ids = self.watched_value_ids.union(
                 self.info.additional_value_ids_to_watch
             )
+
+        # Entity class attributes
+        self._attr_name = self.generate_name()
+        self._attr_unique_id = get_unique_id(
+            self.client.driver.controller.home_id, self.info.primary_value.value_id
+        )
+        self._attr_assumed_state = self.info.assumed_state
+        # device is precreated in main handler
+        self._attr_device_info = {
+            "identifiers": {get_device_id(self.client, self.info.node)},
+        }
 
     @callback
     def on_value_update(self) -> None:
@@ -83,6 +93,11 @@ class ZWaveBaseEntity(Entity):
         self.async_on_remove(
             self.info.node.on(EVENT_VALUE_UPDATED, self._value_changed)
         )
+        for status_event in (EVENT_ALIVE, EVENT_DEAD):
+            self.async_on_remove(
+                self.info.node.on(status_event, self._node_status_alive_or_dead)
+            )
+
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
@@ -90,14 +105,6 @@ class ZWaveBaseEntity(Entity):
                 self.async_poll_value,
             )
         )
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information for the device registry."""
-        # device is precreated in main handler
-        return {
-            "identifiers": {get_device_id(self.client, self.info.node)},
-        }
 
     def generate_name(
         self,
@@ -134,19 +141,22 @@ class ZWaveBaseEntity(Entity):
         return name
 
     @property
-    def name(self) -> str:
-        """Return default name from device name and value name combination."""
-        return self._name
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique_id of the entity."""
-        return self._unique_id
-
-    @property
     def available(self) -> bool:
         """Return entity availability."""
-        return self.client.connected and bool(self.info.node.ready)
+        return (
+            self.client.connected
+            and bool(self.info.node.ready)
+            and self.info.node.status != NodeStatus.DEAD
+        )
+
+    @callback
+    def _node_status_alive_or_dead(self, event_data: dict) -> None:
+        """
+        Call when node status changes to alive or dead.
+
+        Should not be overridden by subclasses.
+        """
+        self.async_write_ha_state()
 
     @callback
     def _value_changed(self, event_data: dict) -> None:
@@ -229,8 +239,3 @@ class ZWaveBaseEntity(Entity):
     def should_poll(self) -> bool:
         """No polling needed."""
         return False
-
-    @property
-    def assumed_state(self) -> bool:
-        """Return True if unable to access real state of the entity."""
-        return self.info.assumed_state

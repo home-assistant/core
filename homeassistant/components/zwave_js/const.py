@@ -2,6 +2,8 @@
 import logging
 
 CONF_ADDON_DEVICE = "device"
+CONF_ADDON_EMULATE_HARDWARE = "emulate_hardware"
+CONF_ADDON_LOG_LEVEL = "log_level"
 CONF_ADDON_NETWORK_KEY = "network_key"
 CONF_INTEGRATION_CREATED_ADDON = "integration_created_addon"
 CONF_NETWORK_KEY = "network_key"
@@ -61,5 +63,7 @@ SERVICE_SET_VALUE = "set_value"
 SERVICE_MULTICAST_SET_VALUE = "multicast_set_value"
 
 ATTR_BROADCAST = "broadcast"
+
+SERVICE_PING = "ping"
 
 ADDON_SLUG = "core_zwave_js"

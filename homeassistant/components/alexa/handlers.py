@@ -958,6 +958,16 @@ async def async_api_set_mode(hass, config, directive, context):
             service = fan.SERVICE_SET_DIRECTION
             data[fan.ATTR_DIRECTION] = direction
 
+    # Fan preset_mode
+    elif instance == f"{fan.DOMAIN}.{fan.ATTR_PRESET_MODE}":
+        preset_mode = mode.split(".")[1]
+        if preset_mode in entity.attributes.get(fan.ATTR_PRESET_MODES):
+            service = fan.SERVICE_SET_PRESET_MODE
+            data[fan.ATTR_PRESET_MODE] = preset_mode
+        else:
+            msg = f"Entity '{entity.entity_id}' does not support Preset '{preset_mode}'"
+            raise AlexaInvalidValueError(msg)
+
     # Cover Position
     elif instance == f"{cover.DOMAIN}.{cover.ATTR_POSITION}":
         position = mode.split(".")[1]

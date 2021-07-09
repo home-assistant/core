@@ -6,9 +6,10 @@ import logging
 
 import aiohttp
 from defusedxml import ElementTree
-from netdisco import util
 
 from homeassistant.core import HomeAssistant, callback
+
+from .util import etree_to_dict
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,7 +43,7 @@ class DescriptionManager:
     @callback
     def async_cached_description(self, xml_location: str) -> None | dict[str, str]:
         """Fetch the description from the cache."""
-        return self._description_cache[xml_location]
+        return self._description_cache.get(xml_location)
 
     async def _fetch_description(self, xml_location: str) -> None | dict[str, str]:
         """Fetch an XML description."""
@@ -64,7 +65,5 @@ class DescriptionManager:
             _LOGGER.debug("Error parsing %s: %s", xml_location, err)
             return None
 
-        parsed: dict[str, str] = (
-            util.etree_to_dict(tree).get("root", {}).get("device", {})
-        )
-        return parsed
+        root = etree_to_dict(tree).get("root") or {}
+        return root.get("device") or {}

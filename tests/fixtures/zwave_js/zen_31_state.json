@@ -1430,6 +1430,9 @@
           "readable": true,
           "writeable": true,
           "label": "Target value",
+          "valueChangeOptions": [
+            "transitionDuration"
+          ],
           "min": 0,
           "max": 99
         },
@@ -1982,6 +1985,9 @@
           "readable": true,
           "writeable": true,
           "label": "Target value",
+          "valueChangeOptions": [
+            "transitionDuration"
+          ],
           "min": 0,
           "max": 99
         },
@@ -2100,6 +2106,9 @@
           "readable": true,
           "writeable": true,
           "label": "Target value",
+          "valueChangeOptions": [
+            "transitionDuration"
+          ],
           "min": 0,
           "max": 99
         },
@@ -2218,6 +2227,9 @@
           "readable": true,
           "writeable": true,
           "label": "Target value",
+          "valueChangeOptions": [
+            "transitionDuration"
+          ],
           "min": 0,
           "max": 99
         },
@@ -2336,6 +2348,9 @@
           "readable": true,
           "writeable": true,
           "label": "Target value",
+          "valueChangeOptions": [
+            "transitionDuration"
+          ],
           "min": 0,
           "max": 99
         },

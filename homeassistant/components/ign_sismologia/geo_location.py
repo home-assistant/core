@@ -132,6 +132,8 @@ class IgnSismologiaFeedEntityManager:
 class IgnSismologiaLocationEvent(GeolocationEvent):
     """This represents an external event with IGN Sismologia feed data."""
 
+    _attr_unit_of_measurement = LENGTH_KILOMETERS
+
     def __init__(self, feed_manager, external_id):
         """Initialize entity with data from feed entry."""
         self._feed_manager = feed_manager
@@ -232,11 +234,6 @@ class IgnSismologiaLocationEvent(GeolocationEvent):
     def longitude(self) -> float | None:
         """Return longitude value of this external event."""
         return self._longitude
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return LENGTH_KILOMETERS
 
     @property
     def extra_state_attributes(self):

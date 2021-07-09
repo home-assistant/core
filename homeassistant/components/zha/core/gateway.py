@@ -77,12 +77,7 @@ from .const import (
     ZHA_GW_MSG_RAW_INIT,
     RadioType,
 )
-from .device import (
-    CONSIDER_UNAVAILABLE_BATTERY,
-    CONSIDER_UNAVAILABLE_MAINS,
-    DeviceStatus,
-    ZHADevice,
-)
+from .device import DeviceStatus, ZHADevice
 from .group import GroupMember, ZHAGroup
 from .registries import GROUP_ENTITY_DOMAINS
 from .store import async_get_registry
@@ -185,17 +180,15 @@ class ZHAGateway:
             delta_msg = "not known"
             if zha_dev_entry and zha_dev_entry.last_seen is not None:
                 delta = round(time.time() - zha_dev_entry.last_seen)
-                if zha_device.is_mains_powered:
-                    zha_device.available = delta < CONSIDER_UNAVAILABLE_MAINS
-                else:
-                    zha_device.available = delta < CONSIDER_UNAVAILABLE_BATTERY
+                zha_device.available = delta < zha_device.consider_unavailable_time
                 delta_msg = f"{str(timedelta(seconds=delta))} ago"
             _LOGGER.debug(
-                "[%s](%s) restored as '%s', last seen: %s",
+                "[%s](%s) restored as '%s', last seen: %s, consider_unavailable_time: %s seconds",
                 zha_device.nwk,
                 zha_device.name,
                 "available" if zha_device.available else "unavailable",
                 delta_msg,
+                zha_device.consider_unavailable_time,
             )
         # update the last seen time for devices every 10 minutes to avoid thrashing
         # writes and shutdown issues where storage isn't updated
@@ -623,13 +616,15 @@ class ZHAGateway:
         zha_device.update_available(True)
 
     async def async_create_zigpy_group(
-        self, name: str, members: list[GroupMember]
+        self, name: str, members: list[GroupMember], group_id: int = None
     ) -> ZhaGroupType:
         """Create a new Zigpy Zigbee group."""
         # we start with two to fill any gaps from a user removing existing groups
-        group_id = 2
-        while group_id in self.groups:
-            group_id += 1
+
+        if group_id is None:
+            group_id = 2
+            while group_id in self.groups:
+                group_id += 1
 
         # guard against group already existing
         if self.async_get_group_by_name(name) is None:
