@@ -1,6 +1,7 @@
 """Support for August lock."""
 import logging
 
+from aiohttp import ClientResponseError
 from yalexs.activity import SOURCE_PUBNUB, ActivityType
 from yalexs.lock import LockStatus
 from yalexs.util import update_lock_detail_from_activity
@@ -9,11 +10,14 @@ from homeassistant.components.lock import ATTR_CHANGED_BY, LockEntity
 from homeassistant.const import ATTR_BATTERY_LEVEL
 from homeassistant.core import callback
 from homeassistant.helpers.restore_state import RestoreEntity
+import homeassistant.util.dt as dt_util
 
 from .const import DATA_AUGUST, DOMAIN
 from .entity import AugustEntityMixin
 
 _LOGGER = logging.getLogger(__name__)
+
+LOCK_JAMMED_ERR = 531
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -44,9 +48,17 @@ class AugustLock(AugustEntityMixin, RestoreEntity, LockEntity):
         await self._call_lock_operation(self._data.async_unlock)
 
     async def _call_lock_operation(self, lock_operation):
-        activities = await lock_operation(self._device_id)
-        for lock_activity in activities:
-            update_lock_detail_from_activity(self._detail, lock_activity)
+        try:
+            activities = await lock_operation(self._device_id)
+        except ClientResponseError as err:
+            if err.status == LOCK_JAMMED_ERR:
+                self._detail.lock_status = LockStatus.JAMMED
+                self._detail.lock_status_datetime = dt_util.utcnow()
+            else:
+                raise
+        else:
+            for lock_activity in activities:
+                update_lock_detail_from_activity(self._detail, lock_activity)
 
         if self._update_lock_status_from_detail():
             _LOGGER.debug(
@@ -103,6 +115,21 @@ class AugustLock(AugustEntityMixin, RestoreEntity, LockEntity):
         if self._lock_status is None or self._lock_status is LockStatus.UNKNOWN:
             return None
         return self._lock_status is LockStatus.LOCKED
+
+    @property
+    def is_jammed(self):
+        """Return true if the lock is jammed."""
+        return self._lock_status is LockStatus.JAMMED
+
+    @property
+    def is_unlocking(self):
+        """Return true if the lock is unlocking."""
+        return self._lock_status is LockStatus.UNLOCKING
+
+    @property
+    def is_locking(self):
+        """Return true if the lock is locking."""
+        return self._lock_status is LockStatus.LOCKING
 
     @property
     def changed_by(self):
