@@ -462,13 +462,6 @@ class NetatmoSensor(NetatmoBase, SensorEntity):
     @callback
     def async_update_callback(self) -> None:
         """Update the entity's state."""
-        if self._data is None:
-            if self.state is None:
-                return
-            _LOGGER.warning("No data from update")
-            self._attr_state = None
-            return
-
         data = self._data.get_last_data(station_id=self._station_id, exclude=3600).get(
             self._id
         )

@@ -203,7 +203,7 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
         self._room_status = self._home_status.rooms[room_id]
         self._room_data: dict = self._data.rooms[home_id][room_id]
 
-        self._model = NA_VALVE
+        self._model: str = NA_VALVE
         for module in self._room_data.get("module_ids", []):
             if self._home_status.thermostats.get(module):
                 self._model = NA_THERM
@@ -223,7 +223,7 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
 
         self._away_temperature: float | None = None
         self._hg_temperature: float | None = None
-        self._boilerstatus = None
+        self._boilerstatus: bool | None = None
         self._setpoint_duration = None
         self._selected_schedule = None
 
@@ -507,8 +507,6 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
         if "current_temperature" not in roomstatus:
             return
 
-        if self._model is None:
-            self._model = roomstatus["module_type"]
         self._current_temperature = roomstatus["current_temperature"]
         self._target_temperature = roomstatus["target_temperature"]
         self._preset = NETATMO_MAP_PRESET[roomstatus["setpoint_mode"]]
@@ -619,7 +617,7 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
         return device_info
 
 
-def get_all_home_ids(home_data: pyatmo.HomeData) -> list[str]:
+def get_all_home_ids(home_data: pyatmo.HomeData | None) -> list[str]:
     """Get all the home ids returned by NetAtmo API."""
     if home_data is None:
         return []
