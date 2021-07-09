@@ -269,7 +269,7 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         await self._async_set_brightness(0, kwargs.get(ATTR_TRANSITION))
 
     async def _async_set_colors(
-        self, colors: dict[ColorComponent, int], transition: int | None = None
+        self, colors: dict[ColorComponent, int], transition: float | None = None
     ) -> None:
         """Set (multiple) defined colors to given value(s)."""
         # prefer the (new) combined color property
