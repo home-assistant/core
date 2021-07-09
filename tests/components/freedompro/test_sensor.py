@@ -2,7 +2,15 @@
 from homeassistant.helpers import entity_registry as er
 
 
+@pytest.mark.parametrize(
+    "entity_id, device_class, state",
+    [
+        ("sensor.garden_humidity_sensor", "humidity", 0),
+        ("sensor.temperatureSensor", "temperature", 0),
+    ]
+)
 async def test_sensor_get_state(hass, init_integration):
+    ...
     """Test states of the sensor."""
     init_integration
     registry = er.async_get(hass)
