@@ -45,6 +45,7 @@ SUPPORTED_COMPONENTS = [
     "lock",
     "number",
     "scene",
+    "select",
     "sensor",
     "switch",
     "tag",
@@ -82,7 +83,7 @@ class MQTTConfig(dict):
 
 async def async_start(  # noqa: C901
     hass: HomeAssistant, discovery_topic, config_entry=None
-) -> bool:
+) -> None:
     """Start MQTT Discovery."""
     mqtt_integrations = {}
 
@@ -95,6 +96,10 @@ async def async_start(  # noqa: C901
         match = TOPIC_MATCHER.match(topic_trimmed)
 
         if not match:
+            if topic_trimmed.endswith("config"):
+                _LOGGER.warning(
+                    "Received message on illegal discovery topic '%s'", topic
+                )
             return
 
         component, node_id, object_id = match.groups()
@@ -293,10 +298,8 @@ async def async_start(  # noqa: C901
                 0,
             )
 
-    return True
 
-
-async def async_stop(hass: HomeAssistant) -> bool:
+async def async_stop(hass: HomeAssistant) -> None:
     """Stop MQTT Discovery."""
     if DISCOVERY_UNSUBSCRIBE in hass.data:
         for unsub in hass.data[DISCOVERY_UNSUBSCRIBE]:

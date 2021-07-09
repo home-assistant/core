@@ -5,12 +5,17 @@
             "already_in_progress": "A konfigur\u00e1ci\u00f3 m\u00e1r folyamatban van.",
             "auth_missing": "A Home Assistant nem jogosult csatlakozni ehhez a Samsung TV-hez. Ellen\u0151rizd a TV be\u00e1ll\u00edt\u00e1sait a Home Assistant enged\u00e9lyez\u00e9s\u00e9hez.",
             "cannot_connect": "Sikertelen csatlakoz\u00e1s",
-            "not_supported": "Ez a Samsung TV k\u00e9sz\u00fcl\u00e9k jelenleg nem t\u00e1mogatott."
+            "not_supported": "Ez a Samsung k\u00e9sz\u00fcl\u00e9k jelenleg nem t\u00e1mogatott.",
+            "reauth_successful": "Az \u00fajrahiteles\u00edt\u00e9s sikeres volt",
+            "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
         },
-        "flow_title": "Samsung TV: {model}",
+        "error": {
+            "auth_missing": "A Home Assistant nem jogosult csatlakozni ehhez a Samsung TV-hez. Ellen\u0151rizd a TV be\u00e1ll\u00edt\u00e1sait a Home Assistant enged\u00e9lyez\u00e9s\u00e9hez."
+        },
+        "flow_title": "{device}",
         "step": {
             "confirm": {
-                "description": "Be szeretn\u00e9d \u00e1ll\u00edtani a Samsung TV {model} k\u00e9sz\u00fcl\u00e9ket? Ha m\u00e9g soha nem csatlakozott Home Assistant-hez, akkor meg kell jelennie egy felugr\u00f3 ablaknak a TV k\u00e9perny\u0151j\u00e9n, ahol hiteles\u00edt\u00e9st k\u00e9r. A TV manu\u00e1lis konfigur\u00e1ci\u00f3i fel\u00fcl\u00edr\u00f3dnak.",
+                "description": "Be szeretn\u00e9d \u00e1ll\u00edtani a(z) {device} k\u00e9sz\u00fcl\u00e9ket? Ha kor\u00e1bban m\u00e9g csatlakoztattad a Home Assistantet, akkor meg kell jelennie egy felugr\u00f3 ablaknak a TV k\u00e9perny\u0151j\u00e9n, ami j\u00f3v\u00e1hagy\u00e1sra v\u00e1r.",
                 "title": "Samsung TV"
             },
             "user": {

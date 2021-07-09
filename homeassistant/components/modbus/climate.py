@@ -11,6 +11,7 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.const import (
+    CONF_COUNT,
     CONF_NAME,
     CONF_OFFSET,
     CONF_STRUCTURE,
@@ -28,16 +29,17 @@ from .const import (
     CALL_TYPE_REGISTER_HOLDING,
     CALL_TYPE_WRITE_REGISTERS,
     CONF_CLIMATES,
-    CONF_DATA_COUNT,
     CONF_DATA_TYPE,
     CONF_MAX_TEMP,
     CONF_MIN_TEMP,
     CONF_PRECISION,
     CONF_SCALE,
     CONF_STEP,
+    CONF_SWAP,
+    CONF_SWAP_BYTE,
+    CONF_SWAP_WORD,
+    CONF_SWAP_WORD_BYTE,
     CONF_TARGET_TEMP,
-    DATA_TYPE_CUSTOM,
-    DEFAULT_STRUCT_FORMAT,
     MODBUS_DOMAIN,
 )
 from .modbus import ModbusHub
@@ -59,37 +61,6 @@ async def async_setup_platform(
     entities = []
     for entity in discovery_info[CONF_CLIMATES]:
         hub: ModbusHub = hass.data[MODBUS_DOMAIN][discovery_info[CONF_NAME]]
-        count = entity[CONF_DATA_COUNT]
-        data_type = entity[CONF_DATA_TYPE]
-        name = entity[CONF_NAME]
-        structure = entity[CONF_STRUCTURE]
-
-        if data_type != DATA_TYPE_CUSTOM:
-            try:
-                structure = f">{DEFAULT_STRUCT_FORMAT[data_type][count]}"
-            except KeyError:
-                _LOGGER.error(
-                    "Climate %s: Unable to find a data type matching count value %s, try a custom type",
-                    name,
-                    count,
-                )
-                continue
-
-        try:
-            size = struct.calcsize(structure)
-        except struct.error as err:
-            _LOGGER.error("Error in sensor %s structure: %s", name, err)
-            continue
-
-        if count * 2 != size:
-            _LOGGER.error(
-                "Structure size (%d bytes) mismatch registers count (%d words)",
-                size,
-                count,
-            )
-            continue
-
-        entity[CONF_STRUCTURE] = structure
         entities.append(ModbusThermostat(hub, entity))
 
     async_add_entities(entities)
@@ -110,7 +81,7 @@ class ModbusThermostat(BasePlatform, RestoreEntity, ClimateEntity):
         self._current_temperature = None
         self._data_type = config[CONF_DATA_TYPE]
         self._structure = config[CONF_STRUCTURE]
-        self._count = config[CONF_DATA_COUNT]
+        self._count = config[CONF_COUNT]
         self._precision = config[CONF_PRECISION]
         self._scale = config[CONF_SCALE]
         self._offset = config[CONF_OFFSET]
@@ -118,6 +89,7 @@ class ModbusThermostat(BasePlatform, RestoreEntity, ClimateEntity):
         self._max_temp = config[CONF_MAX_TEMP]
         self._min_temp = config[CONF_MIN_TEMP]
         self._temp_step = config[CONF_STEP]
+        self._swap = config[CONF_SWAP]
 
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
@@ -194,6 +166,21 @@ class ModbusThermostat(BasePlatform, RestoreEntity, ClimateEntity):
         self._available = result is not None
         await self.async_update()
 
+    def _swap_registers(self, registers):
+        """Do swap as needed."""
+        if self._swap in [CONF_SWAP_BYTE, CONF_SWAP_WORD_BYTE]:
+            # convert [12][34] --> [21][43]
+            for i, register in enumerate(registers):
+                registers[i] = int.from_bytes(
+                    register.to_bytes(2, byteorder="little"),
+                    byteorder="big",
+                    signed=False,
+                )
+        if self._swap in [CONF_SWAP_WORD, CONF_SWAP_WORD_BYTE]:
+            # convert [12][34] ==> [34][12]
+            registers.reverse()
+        return registers
+
     async def async_update(self, now=None):
         """Update Target & Current Temperature."""
         # remark "now" is a dummy parameter to avoid problems with
@@ -216,9 +203,8 @@ class ModbusThermostat(BasePlatform, RestoreEntity, ClimateEntity):
             self._available = False
             return -1
 
-        byte_string = b"".join(
-            [x.to_bytes(2, byteorder="big") for x in result.registers]
-        )
+        registers = self._swap_registers(result.registers)
+        byte_string = b"".join([x.to_bytes(2, byteorder="big") for x in registers])
         val = struct.unpack(self._structure, byte_string)
         if len(val) != 1 or not isinstance(val[0], (float, int)):
             _LOGGER.error(

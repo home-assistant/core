@@ -11,7 +11,11 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components import ssdp
-from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import (
+    EVENT_HOMEASSISTANT_STARTED,
+    EVENT_HOMEASSISTANT_STOP,
+    MATCH_ALL,
+)
 from homeassistant.core import CoreState, callback
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -115,7 +119,7 @@ async def test_scan_match_upnp_devicedesc(hass, aioclient_mock, key):
         "location": "http://1.1.1.1",
     }
     mock_init = await _async_run_mocked_scan(hass, mock_ssdp_response, mock_get_ssdp)
-    # If we get duplicate respones, ensure we only look it up once
+    # If we get duplicate response, ensure we only look it up once
     assert len(aioclient_mock.mock_calls) == 1
     assert len(mock_init.mock_calls) == 1
     assert mock_init.mock_calls[0][1][0] == "mock-domain"
@@ -356,11 +360,14 @@ async def test_scan_with_registered_callback(hass, aioclient_mock, caplog):
         "location": "http://1.1.1.1",
         "usn": "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL::urn:mdx-netflix-com:service:target:3",
         "server": "mock-server",
+        "x-rincon-bootseq": "55",
         "ext": "",
     }
-    not_matching_intergration_callbacks = []
-    intergration_callbacks = []
-    intergration_callbacks_from_cache = []
+    not_matching_integration_callbacks = []
+    integration_match_all_callbacks = []
+    integration_match_all_not_present_callbacks = []
+    integration_callbacks = []
+    integration_callbacks_from_cache = []
     match_any_callbacks = []
 
     @callback
@@ -368,16 +375,24 @@ async def test_scan_with_registered_callback(hass, aioclient_mock, caplog):
         raise ValueError
 
     @callback
-    def _async_intergration_callbacks(info):
-        intergration_callbacks.append(info)
+    def _async_integration_callbacks(info):
+        integration_callbacks.append(info)
 
     @callback
-    def _async_intergration_callbacks_from_cache(info):
-        intergration_callbacks_from_cache.append(info)
+    def _async_integration_match_all_callbacks(info):
+        integration_match_all_callbacks.append(info)
 
     @callback
-    def _async_not_matching_intergration_callbacks(info):
-        not_matching_intergration_callbacks.append(info)
+    def _async_integration_match_all_not_present_callbacks(info):
+        integration_match_all_not_present_callbacks.append(info)
+
+    @callback
+    def _async_integration_callbacks_from_cache(info):
+        integration_callbacks_from_cache.append(info)
+
+    @callback
+    def _async_not_matching_integration_callbacks(info):
+        not_matching_integration_callbacks.append(info)
 
     @callback
     def _async_match_any_callbacks(info):
@@ -407,12 +422,22 @@ async def test_scan_with_registered_callback(hass, aioclient_mock, caplog):
         ssdp.async_register_callback(hass, _async_exception_callbacks, {})
         ssdp.async_register_callback(
             hass,
-            _async_intergration_callbacks,
+            _async_integration_callbacks,
             {"st": "mock-st"},
         )
         ssdp.async_register_callback(
             hass,
-            _async_not_matching_intergration_callbacks,
+            _async_integration_match_all_callbacks,
+            {"x-rincon-bootseq": MATCH_ALL},
+        )
+        ssdp.async_register_callback(
+            hass,
+            _async_integration_match_all_not_present_callbacks,
+            {"x-not-there": MATCH_ALL},
+        )
+        ssdp.async_register_callback(
+            hass,
+            _async_not_matching_integration_callbacks,
             {"st": "not-match-mock-st"},
         )
         ssdp.async_register_callback(
@@ -423,7 +448,7 @@ async def test_scan_with_registered_callback(hass, aioclient_mock, caplog):
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=200))
         ssdp.async_register_callback(
             hass,
-            _async_intergration_callbacks_from_cache,
+            _async_integration_callbacks_from_cache,
             {"st": "mock-st"},
         )
         await hass.async_block_till_done()
@@ -434,11 +459,13 @@ async def test_scan_with_registered_callback(hass, aioclient_mock, caplog):
         await hass.async_block_till_done()
         assert hass.state == CoreState.running
 
-    assert len(intergration_callbacks) == 3
-    assert len(intergration_callbacks_from_cache) == 3
+    assert len(integration_callbacks) == 3
+    assert len(integration_callbacks_from_cache) == 3
+    assert len(integration_match_all_callbacks) == 3
+    assert len(integration_match_all_not_present_callbacks) == 0
     assert len(match_any_callbacks) == 3
-    assert len(not_matching_intergration_callbacks) == 0
-    assert intergration_callbacks[0] == {
+    assert len(not_matching_integration_callbacks) == 0
+    assert integration_callbacks[0] == {
         ssdp.ATTR_UPNP_DEVICE_TYPE: "Paulus",
         ssdp.ATTR_SSDP_EXT: "",
         ssdp.ATTR_SSDP_LOCATION: "http://1.1.1.1",
@@ -446,8 +473,97 @@ async def test_scan_with_registered_callback(hass, aioclient_mock, caplog):
         ssdp.ATTR_SSDP_ST: "mock-st",
         ssdp.ATTR_SSDP_USN: "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL::urn:mdx-netflix-com:service:target:3",
         ssdp.ATTR_UPNP_UDN: "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL",
+        "x-rincon-bootseq": "55",
     }
     assert "Failed to callback info" in caplog.text
+
+
+async def test_unsolicited_ssdp_registered_callback(hass, aioclient_mock, caplog):
+    """Test matching based on callback can handle unsolicited ssdp traffic without st."""
+    aioclient_mock.get(
+        "http://10.6.9.12:1400/xml/device_description.xml",
+        text="""
+<root>
+  <device>
+    <deviceType>Paulus</deviceType>
+  </device>
+</root>
+    """,
+    )
+    mock_ssdp_response = {
+        "location": "http://10.6.9.12:1400/xml/device_description.xml",
+        "nt": "uuid:RINCON_1111BB963FD801400",
+        "nts": "ssdp:alive",
+        "server": "Linux UPnP/1.0 Sonos/63.2-88230 (ZPS12)",
+        "usn": "uuid:RINCON_1111BB963FD801400",
+        "x-rincon-household": "Sonos_dfjfkdghjhkjfhkdjfhkd",
+        "x-rincon-bootseq": "250",
+        "bootid.upnp.org": "250",
+        "x-rincon-wifimode": "0",
+        "x-rincon-variant": "1",
+        "household.smartspeaker.audio": "Sonos_v3294823948542543534",
+    }
+    integration_callbacks = []
+
+    @callback
+    def _async_integration_callbacks(info):
+        integration_callbacks.append(info)
+
+    def _generate_fake_ssdp_listener(*args, **kwargs):
+        listener = SSDPListener(*args, **kwargs)
+
+        async def _async_callback(*_):
+            await listener.async_callback(mock_ssdp_response)
+
+        @callback
+        def _callback(*_):
+            hass.async_create_task(listener.async_callback(mock_ssdp_response))
+
+        listener.async_start = _async_callback
+        listener.async_search = _callback
+        return listener
+
+    with patch(
+        "homeassistant.components.ssdp.SSDPListener",
+        new=_generate_fake_ssdp_listener,
+    ):
+        hass.state = CoreState.stopped
+        assert await async_setup_component(hass, ssdp.DOMAIN, {ssdp.DOMAIN: {}})
+        await hass.async_block_till_done()
+        ssdp.async_register_callback(
+            hass,
+            _async_integration_callbacks,
+            {"nts": "ssdp:alive", "x-rincon-bootseq": MATCH_ALL},
+        )
+        await hass.async_block_till_done()
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=200))
+        await hass.async_block_till_done()
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        hass.state = CoreState.running
+        await hass.async_block_till_done()
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=200))
+        await hass.async_block_till_done()
+        assert hass.state == CoreState.running
+
+    assert (
+        len(integration_callbacks) == 2
+    )  # unsolicited callbacks without st are not cached
+    assert integration_callbacks[0] == {
+        "UDN": "uuid:RINCON_1111BB963FD801400",
+        "bootid.upnp.org": "250",
+        "deviceType": "Paulus",
+        "household.smartspeaker.audio": "Sonos_v3294823948542543534",
+        "nt": "uuid:RINCON_1111BB963FD801400",
+        "nts": "ssdp:alive",
+        "ssdp_location": "http://10.6.9.12:1400/xml/device_description.xml",
+        "ssdp_server": "Linux UPnP/1.0 Sonos/63.2-88230 (ZPS12)",
+        "ssdp_usn": "uuid:RINCON_1111BB963FD801400",
+        "x-rincon-bootseq": "250",
+        "x-rincon-household": "Sonos_dfjfkdghjhkjfhkdjfhkd",
+        "x-rincon-variant": "1",
+        "x-rincon-wifimode": "0",
+    }
+    assert "Failed to callback info" not in caplog.text
 
 
 async def test_scan_second_hit(hass, aioclient_mock, caplog):
@@ -473,11 +589,11 @@ async def test_scan_second_hit(hass, aioclient_mock, caplog):
         }
     )
     mock_get_ssdp = {"mock-domain": [{"st": "mock-st"}]}
-    intergration_callbacks = []
+    integration_callbacks = []
 
     @callback
-    def _async_intergration_callbacks(info):
-        intergration_callbacks.append(info)
+    def _async_integration_callbacks(info):
+        integration_callbacks.append(info)
 
     def _generate_fake_ssdp_listener(*args, **kwargs):
         listener = SSDPListener(*args, **kwargs)
@@ -506,7 +622,7 @@ async def test_scan_second_hit(hass, aioclient_mock, caplog):
         await hass.async_block_till_done()
         remove = ssdp.async_register_callback(
             hass,
-            _async_intergration_callbacks,
+            _async_integration_callbacks,
             {"st": "mock-st"},
         )
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
@@ -519,8 +635,8 @@ async def test_scan_second_hit(hass, aioclient_mock, caplog):
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=200))
         await hass.async_block_till_done()
 
-    assert len(intergration_callbacks) == 2
-    assert intergration_callbacks[0] == {
+    assert len(integration_callbacks) == 2
+    assert integration_callbacks[0] == {
         ssdp.ATTR_UPNP_DEVICE_TYPE: "Paulus",
         ssdp.ATTR_SSDP_EXT: "",
         ssdp.ATTR_SSDP_LOCATION: "http://1.1.1.1",

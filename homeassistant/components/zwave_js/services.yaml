@@ -210,3 +210,10 @@ multicast_set_value:
       required: true
       selector:
         object:
+
+ping:
+  name: Ping a node
+  description: Forces Z-Wave JS to try to reach a node. This can be used to update the status of the node in Z-Wave JS when you think it doesn't accurately reflect reality, e.g. reviving a failed/dead node or marking the node as asleep.
+  target:
+    entity:
+      integration: zwave_js

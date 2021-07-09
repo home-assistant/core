@@ -179,19 +179,6 @@ async def async_setup_entry(  # noqa: C901
             if disc_info.assumed_state:
                 value_updates_disc_info.append(disc_info)
 
-        # We need to set up the sensor platform if it hasn't already been setup in
-        # order to create the node status sensor
-        if SENSOR_DOMAIN not in platform_setup_tasks:
-            platform_setup_tasks[SENSOR_DOMAIN] = hass.async_create_task(
-                hass.config_entries.async_forward_entry_setup(entry, SENSOR_DOMAIN)
-            )
-            await platform_setup_tasks[SENSOR_DOMAIN]
-
-        # Create a node status sensor for each device
-        async_dispatcher_send(
-            hass, f"{DOMAIN}_{entry.entry_id}_add_node_status_sensor", node
-        )
-
         # add listener for value updated events if necessary
         if value_updates_disc_info:
             unsubscribe_callbacks.append(
@@ -220,6 +207,25 @@ async def async_setup_entry(  # noqa: C901
 
     async def async_on_node_added(node: ZwaveNode) -> None:
         """Handle node added event."""
+        platform_setup_tasks = entry_hass_data[DATA_PLATFORM_SETUP]
+
+        # We need to set up the sensor platform if it hasn't already been setup in
+        # order to create the node status sensor
+        if SENSOR_DOMAIN not in platform_setup_tasks:
+            platform_setup_tasks[SENSOR_DOMAIN] = hass.async_create_task(
+                hass.config_entries.async_forward_entry_setup(entry, SENSOR_DOMAIN)
+            )
+
+        # This guard ensures that concurrent runs of this function all await the
+        # platform setup task
+        if not platform_setup_tasks[SENSOR_DOMAIN].done():
+            await platform_setup_tasks[SENSOR_DOMAIN]
+
+        # Create a node status sensor for each device
+        async_dispatcher_send(
+            hass, f"{DOMAIN}_{entry.entry_id}_add_node_status_sensor", node
+        )
+
         # we only want to run discovery when the node has reached ready state,
         # otherwise we'll have all kinds of missing info issues.
         if node.ready:
@@ -388,7 +394,7 @@ async def async_setup_entry(  # noqa: C901
 
         async def handle_ha_shutdown(event: Event) -> None:
             """Handle HA shutdown."""
-            await disconnect_client(hass, entry, client, listen_task, platform_task)
+            await disconnect_client(hass, entry)
 
         listen_task = asyncio.create_task(
             client_listen(hass, entry, client, driver_ready)
@@ -484,14 +490,12 @@ async def client_listen(
         hass.async_create_task(hass.config_entries.async_reload(entry.entry_id))
 
 
-async def disconnect_client(
-    hass: HomeAssistant,
-    entry: ConfigEntry,
-    client: ZwaveClient,
-    listen_task: asyncio.Task,
-    platform_task: asyncio.Task,
-) -> None:
+async def disconnect_client(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Disconnect client."""
+    data = hass.data[DOMAIN][entry.entry_id]
+    client: ZwaveClient = data[DATA_CLIENT]
+    listen_task: asyncio.Task = data[DATA_CLIENT_LISTEN_TASK]
+    platform_task: asyncio.Task = data[DATA_START_PLATFORM_TASK]
     listen_task.cancel()
     platform_task.cancel()
     platform_setup_tasks = (
@@ -509,7 +513,7 @@ async def disconnect_client(
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    info = hass.data[DOMAIN].pop(entry.entry_id)
+    info = hass.data[DOMAIN][entry.entry_id]
 
     for unsub in info[DATA_UNSUBSCRIBE]:
         unsub()
@@ -527,13 +531,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     unload_ok = all(await asyncio.gather(*tasks))
 
     if DATA_CLIENT_LISTEN_TASK in info:
-        await disconnect_client(
-            hass,
-            entry,
-            info[DATA_CLIENT],
-            info[DATA_CLIENT_LISTEN_TASK],
-            platform_task=info[DATA_START_PLATFORM_TASK],
-        )
+        await disconnect_client(hass, entry)
+
+    hass.data[DOMAIN].pop(entry.entry_id)
 
     if entry.data.get(CONF_USE_ADDON) and entry.disabled_by:
         addon_manager: AddonManager = get_addon_manager(hass)

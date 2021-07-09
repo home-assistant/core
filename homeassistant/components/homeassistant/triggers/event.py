@@ -1,16 +1,20 @@
 """Offer event listening automation rules."""
+from __future__ import annotations
+
+from typing import Any
+
 import voluptuous as vol
 
+from homeassistant.components.automation import AutomationActionType
 from homeassistant.const import CONF_EVENT_DATA, CONF_PLATFORM
-from homeassistant.core import HassJob, callback
+from homeassistant.core import CALLBACK_TYPE, Event, HassJob, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, template
-
-# mypy: allow-untyped-defs
+from homeassistant.helpers.typing import ConfigType
 
 CONF_EVENT_TYPE = "event_type"
 CONF_EVENT_CONTEXT = "context"
 
-TRIGGER_SCHEMA = vol.Schema(
+TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_PLATFORM): "event",
         vol.Required(CONF_EVENT_TYPE): vol.All(cv.ensure_list, [cv.template]),
@@ -20,7 +24,7 @@ TRIGGER_SCHEMA = vol.Schema(
 )
 
 
-def _schema_value(value):
+def _schema_value(value: Any) -> Any:
     if isinstance(value, list):
         return vol.In(value)
 
@@ -28,10 +32,15 @@ def _schema_value(value):
 
 
 async def async_attach_trigger(
-    hass, config, action, automation_info, *, platform_type="event"
-):
+    hass: HomeAssistant,
+    config: ConfigType,
+    action: AutomationActionType,
+    automation_info: dict[str, Any],
+    *,
+    platform_type: str = "event",
+) -> CALLBACK_TYPE:
     """Listen for events based on configuration."""
-    trigger_id = automation_info.get("trigger_id") if automation_info else None
+    trigger_data = automation_info.get("trigger_data", {}) if automation_info else {}
     variables = None
     if automation_info:
         variables = automation_info.get("variables")
@@ -76,7 +85,7 @@ async def async_attach_trigger(
     job = HassJob(action)
 
     @callback
-    def handle_event(event):
+    def handle_event(event: Event) -> None:
         """Listen for events and calls the action when data matches."""
         try:
             # Check that the event data and context match the configured
@@ -93,10 +102,10 @@ async def async_attach_trigger(
             job,
             {
                 "trigger": {
+                    **trigger_data,
                     "platform": platform_type,
                     "event": event,
                     "description": f"event '{event.event_type}'",
-                    "id": trigger_id,
                 }
             },
             event.context,
@@ -107,7 +116,7 @@ async def async_attach_trigger(
     ]
 
     @callback
-    def remove_listen_events():
+    def remove_listen_events() -> None:
         """Remove event listeners."""
         for remove in removes:
             remove()

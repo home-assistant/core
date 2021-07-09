@@ -32,10 +32,10 @@ async def async_setup_entry(
 class EsphomeCamera(Camera, EsphomeBaseEntity):
     """A camera implementation for ESPHome."""
 
-    def __init__(self, entry_id: str, component_key: str, key: int) -> None:
+    def __init__(self, *args, **kwargs) -> None:
         """Initialize."""
         Camera.__init__(self)
-        EsphomeBaseEntity.__init__(self, entry_id, component_key, key)
+        EsphomeBaseEntity.__init__(self, *args, **kwargs)
         self._image_cond = asyncio.Condition()
 
     @property
@@ -77,7 +77,7 @@ class EsphomeCamera(Camera, EsphomeBaseEntity):
             await self._image_cond.wait()
             if not self.available:
                 return None
-            return self._state.image[:]
+            return self._state.data[:]
 
     async def _async_camera_stream_image(self) -> bytes | None:
         """Return a single camera image in a stream."""
@@ -88,7 +88,7 @@ class EsphomeCamera(Camera, EsphomeBaseEntity):
             await self._image_cond.wait()
             if not self.available:
                 return None
-            return self._state.image[:]
+            return self._state.data[:]
 
     async def handle_async_mjpeg_stream(self, request):
         """Serve an HTTP MJPEG stream from the camera."""

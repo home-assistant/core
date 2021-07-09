@@ -8,6 +8,7 @@ from aladdin_connect import AladdinConnectClient
 import voluptuous as vol
 
 from homeassistant.components.cover import (
+    DEVICE_CLASS_GARAGE,
     PLATFORM_SCHEMA as BASE_PLATFORM_SCHEMA,
     CoverEntity,
 )
@@ -61,50 +62,16 @@ def setup_platform(
 class AladdinDevice(CoverEntity):
     """Representation of Aladdin Connect cover."""
 
+    _attr_device_class = DEVICE_CLASS_GARAGE
+    _attr_supported_features = SUPPORTED_FEATURES
+
     def __init__(self, acc: AladdinConnectClient, device: DoorDevice) -> None:
         """Initialize the cover."""
         self._acc = acc
         self._device_id = device["device_id"]
         self._number = device["door_number"]
-        self._name = device["name"]
-        self._status = STATES_MAP.get(device["status"])
-
-    @property
-    def device_class(self) -> str:
-        """Define this cover as a garage door."""
-        return "garage"
-
-    @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        return SUPPORTED_FEATURES
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique ID."""
-        return f"{self._device_id}-{self._number}"
-
-    @property
-    def name(self) -> str:
-        """Return the name of the garage door."""
-        return self._name
-
-    @property
-    def is_opening(self) -> bool:
-        """Return if the cover is opening or not."""
-        return self._status == STATE_OPENING
-
-    @property
-    def is_closing(self) -> bool:
-        """Return if the cover is closing or not."""
-        return self._status == STATE_CLOSING
-
-    @property
-    def is_closed(self) -> bool | None:
-        """Return None if status is unknown, True if closed, else False."""
-        if self._status is None:
-            return None
-        return self._status == STATE_CLOSED
+        self._attr_name = device["name"]
+        self._attr_unique_id = f"{self._device_id}-{self._number}"
 
     def close_cover(self, **kwargs: Any) -> None:
         """Issue close command to cover."""
@@ -116,5 +83,9 @@ class AladdinDevice(CoverEntity):
 
     def update(self) -> None:
         """Update status of cover."""
-        acc_status = self._acc.get_door_status(self._device_id, self._number)
-        self._status = STATES_MAP.get(acc_status)
+        status = STATES_MAP.get(
+            self._acc.get_door_status(self._device_id, self._number)
+        )
+        self._attr_is_opening = status == STATE_OPENING
+        self._attr_is_closing = status == STATE_CLOSING
+        self._attr_is_closed = None if status is None else status == STATE_CLOSED

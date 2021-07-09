@@ -6,7 +6,12 @@ import pytest
 import homeassistant.components.automation as automation
 from homeassistant.components.sensor import DOMAIN
 from homeassistant.components.sensor.device_trigger import ENTITY_TRIGGERS
-from homeassistant.const import CONF_PLATFORM, PERCENTAGE, STATE_UNKNOWN
+from homeassistant.const import (
+    CONF_PLATFORM,
+    DEVICE_CLASS_BATTERY,
+    PERCENTAGE,
+    STATE_UNKNOWN,
+)
 from homeassistant.helpers import device_registry
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -85,8 +90,22 @@ async def test_get_triggers(hass, device_reg, entity_reg, enable_custom_integrat
     assert triggers == expected_triggers
 
 
+@pytest.mark.parametrize(
+    "set_state,device_class_reg,device_class_state,unit_reg,unit_state",
+    [
+        (False, DEVICE_CLASS_BATTERY, None, PERCENTAGE, None),
+        (True, None, DEVICE_CLASS_BATTERY, None, PERCENTAGE),
+    ],
+)
 async def test_get_trigger_capabilities(
-    hass, device_reg, entity_reg, enable_custom_integrations
+    hass,
+    device_reg,
+    entity_reg,
+    set_state,
+    device_class_reg,
+    device_class_state,
+    unit_reg,
+    unit_state,
 ):
     """Test we get the expected capabilities from a sensor trigger."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
@@ -98,15 +117,20 @@ async def test_get_trigger_capabilities(
         config_entry_id=config_entry.entry_id,
         connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_reg.async_get_or_create(
+    entity_id = entity_reg.async_get_or_create(
         DOMAIN,
         "test",
         platform.ENTITIES["battery"].unique_id,
         device_id=device_entry.id,
-    )
-
-    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
-    await hass.async_block_till_done()
+        device_class=device_class_reg,
+        unit_of_measurement=unit_reg,
+    ).entity_id
+    if set_state:
+        hass.states.async_set(
+            entity_id,
+            None,
+            {"device_class": device_class_state, "unit_of_measurement": unit_state},
+        )
 
     expected_capabilities = {
         "extra_fields": [

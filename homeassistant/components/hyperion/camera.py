@@ -9,7 +9,7 @@ from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 import functools
 import logging
-from typing import Any, Callable
+from typing import Any
 
 from aiohttp import web
 from hyperion import client
@@ -33,6 +33,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import HomeAssistantType
 
 from . import (
@@ -56,8 +57,10 @@ IMAGE_STREAM_JPG_SENTINEL = "data:image/jpg;base64,"
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType, config_entry: ConfigEntry, async_add_entities: Callable
-) -> bool:
+    hass: HomeAssistantType,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up a Hyperion platform from config entry."""
     entry_data = hass.data[DOMAIN][config_entry.entry_id]
     server_id = config_entry.unique_id
@@ -94,7 +97,6 @@ async def async_setup_entry(
         )
 
     listen_for_instance_updates(hass, config_entry, instance_add, instance_remove)
-    return True
 
 
 # A note on Hyperion streaming semantics:
@@ -232,7 +234,6 @@ class HyperionCamera(Camera):
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks when entity added to hass."""
-        assert self.hass
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,

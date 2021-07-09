@@ -5,7 +5,7 @@
         },
         "step": {
             "user": {
-                "description": "M\u00f6chten Sie mit der Einrichtung beginnen?"
+                "description": "M\u00f6chtest Du mit der Einrichtung beginnen?"
             }
         }
     },
@@ -13,6 +13,7 @@
         "step": {
             "init": {
                 "data": {
+                    "scan_interval": "Update-Intervall",
                     "tracked_asset_pairs": "Verfolgte Asset-Paare"
                 }
             }
