@@ -304,7 +304,10 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
             await self._async_set_color(color, value, zwave_transition)
 
     async def _async_set_color(
-        self, color: ColorComponent, new_value: int, transition: dict[str, str] | None = None
+        self,
+        color: ColorComponent,
+        new_value: int,
+        transition: dict[str, str] | None = None,
     ) -> None:
         """Set defined color to given value."""
         # actually set the new color value
