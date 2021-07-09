@@ -50,7 +50,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     region = entry.data[CONF_REGION]
 
     websession = aiohttp_client.async_get_clientsession(hass)
-    mazda_client = MazdaAPI(email, password, region, websession)
+    mazda_client = MazdaAPI(
+        email, password, region, websession=websession, use_cached_vehicle_list=True
+    )
 
     try:
         await mazda_client.validate_credentials()
@@ -166,7 +168,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER,
         name=DOMAIN,
         update_method=async_update_data,
-        update_interval=timedelta(seconds=60),
+        update_interval=timedelta(seconds=180),
     )
 
     hass.data.setdefault(DOMAIN, {})
