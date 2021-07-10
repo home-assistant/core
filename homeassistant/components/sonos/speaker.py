@@ -512,15 +512,13 @@ class SonosSpeaker:
 
         aiozeroconf = await zeroconf.async_get_async_instance()
         if await aiozeroconf.async_get_service_info(
-            "_sonos._tcp.local.",
-            "Sonos-{hostname_uid}._sonos._tcp.local."
+            "_sonos._tcp.local.", "Sonos-{hostname_uid}._sonos._tcp.local."
         ):
             # We can still see the speaker via zeroconf check again later.
             self._seen_timer = self.hass.helpers.event.async_call_later(
                 SEEN_EXPIRE_TIME.total_seconds(), self.async_unseen
             )
             return
-
 
         self._share_link_plugin = None
 
