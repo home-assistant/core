@@ -122,11 +122,7 @@ def dmap_device_with_credentials(mock_scan):
 
 
 @pytest.fixture
-def airplay_device(mock_scan):
+def device_with_no_services(mock_scan):
     """Mock pyatv.scan."""
-    mock_scan.result.append(
-        create_conf(
-            "127.0.0.1", "AirPlay Device", conf.AirPlayService("airplayid", port=7777)
-        )
-    )
+    mock_scan.result.append(create_conf("127.0.0.1", "Invalid Device"))
     yield mock_scan
