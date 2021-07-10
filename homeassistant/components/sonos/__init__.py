@@ -52,14 +52,17 @@ CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
             {
-                MP_DOMAIN: vol.Schema(
-                    {
-                        vol.Optional(CONF_ADVERTISE_ADDR): cv.string,
-                        vol.Optional(CONF_INTERFACE_ADDR): cv.string,
-                        vol.Optional(CONF_HOSTS): vol.All(
-                            cv.ensure_list_csv, [cv.string]
-                        ),
-                    }
+                MP_DOMAIN: vol.All(
+                    cv.deprecated(CONF_INTERFACE_ADDR),
+                    vol.Schema(
+                        {
+                            vol.Optional(CONF_ADVERTISE_ADDR): cv.string,
+                            vol.Optional(CONF_INTERFACE_ADDR): cv.string,
+                            vol.Optional(CONF_HOSTS): vol.All(
+                                cv.ensure_list_csv, [cv.string]
+                            ),
+                        }
+                    ),
                 )
             }
         )
@@ -125,6 +128,13 @@ async def async_setup_entry(  # noqa: C901
     advertise_addr = config.get(CONF_ADVERTISE_ADDR)
     if advertise_addr:
         pysonos.config.EVENT_ADVERTISE_IP = advertise_addr
+
+    if deprecated_address := config.get(CONF_INTERFACE_ADDR):
+        _LOGGER.warning(
+            "'%s' is deprecated, enable %s in the Network integration (https://www.home-assistant.io/integrations/network/)",
+            CONF_INTERFACE_ADDR,
+            deprecated_address,
+        )
 
     async def _async_stop_event_listener(event: Event) -> None:
         await asyncio.gather(
