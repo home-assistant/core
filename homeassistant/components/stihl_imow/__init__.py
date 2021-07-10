@@ -42,13 +42,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     await imow_api.get_token(force_reauth=True)
     hass.data.setdefault(DOMAIN, {})
+    intervall_seconds = (
+        entry.data["polling_interval"]
+        if "polling_interval" in entry.data
+        else API_UPDATE_INTERVALL_SECONDS
+    )
     hass.data[DOMAIN][entry.entry_id] = {
         "mower": entry.data["mower"][0],
         "credentials": entry.data["user_input"],
         "api": imow_api,
         "language": lang,
-        "polling_interval": entry.data["polling_interval"]
-        if "polling_interval" in entry.data
+        "polling_interval": intervall_seconds
+        if intervall_seconds >= 120
         else API_UPDATE_INTERVALL_SECONDS,
     }
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)

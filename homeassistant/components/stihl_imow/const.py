@@ -1,8 +1,9 @@
 """Constants for the STIHL iMow integration."""
 from enum import Enum
 
-API_UPDATE_INTERVALL_SECONDS = 30
+API_UPDATE_INTERVALL_SECONDS = 120
 API_DEFAULT_LANGUAGE = "English"
+API_UPDATE_TIMEOUT = 20
 
 DOMAIN = "stihl_imow"
 CONF_MOWER_IDENTIFIER = "mower_id"
