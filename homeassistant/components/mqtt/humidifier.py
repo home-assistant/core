@@ -44,12 +44,12 @@ from .. import mqtt
 from .debug_info import log_messages
 from .mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_helper
 
-CONF_AVAILABLE_MODES_LIST = "available_modes"
+CONF_AVAILABLE_MODES_LIST = "modes"
 CONF_COMMAND_TEMPLATE = "command_template"
 CONF_MODE_COMMAND_TEMPLATE = "mode_command_template"
 CONF_MODE_COMMAND_TOPIC = "mode_command_topic"
 CONF_MODE_STATE_TOPIC = "mode_state_topic"
-CONF_MODE_VALUE_TEMPLATE = "mode_value_template"
+CONF_MODE_STATE_TEMPLATE = "mode_state_template"
 CONF_PAYLOAD_RESET_MODE = "payload_reset_mode"
 CONF_PAYLOAD_RESET_HUMIDITY = "payload_reset_humidity"
 CONF_STATE_VALUE_TEMPLATE = "state_value_template"
@@ -57,7 +57,7 @@ CONF_TARGET_HUMIDITY_COMMAND_TEMPLATE = "target_humidity_command_template"
 CONF_TARGET_HUMIDITY_COMMAND_TOPIC = "target_humidity_command_topic"
 CONF_TARGET_HUMIDITY_MIN = "min_humidity"
 CONF_TARGET_HUMIDITY_MAX = "max_humidity"
-CONF_TARGET_HUMIDITY_VALUE_TEMPLATE = "target_humidity_value_template"
+CONF_TARGET_HUMIDITY_STATE_TEMPLATE = "target_humidity_state_template"
 CONF_TARGET_HUMIDITY_STATE_TOPIC = "target_humidity_state_topic"
 CONF_TARGET_HUMIDITY_RANGE_MAX = "humidity_range_max"
 CONF_TARGET_HUMIDITY_RANGE_MIN = "humidity_range_min"
@@ -121,7 +121,7 @@ PLATFORM_SCHEMA = vol.All(
             vol.Required(CONF_TARGET_HUMIDITY_COMMAND_TOPIC): mqtt.valid_publish_topic,
             vol.Optional(CONF_TARGET_HUMIDITY_COMMAND_TEMPLATE): cv.template,
             vol.Optional(CONF_TARGET_HUMIDITY_STATE_TOPIC): mqtt.valid_subscribe_topic,
-            vol.Optional(CONF_TARGET_HUMIDITY_VALUE_TEMPLATE): cv.template,
+            vol.Optional(CONF_TARGET_HUMIDITY_STATE_TEMPLATE): cv.template,
             # CONF_MODE_COMMAND_TOPIC and CONF_AVAIALABLE_MODES_LIST must be used together
             vol.Inclusive(
                 CONF_MODE_COMMAND_TOPIC, "available_modes"
@@ -131,7 +131,7 @@ PLATFORM_SCHEMA = vol.All(
             ): cv.ensure_list,
             vol.Optional(CONF_MODE_COMMAND_TEMPLATE): cv.template,
             vol.Optional(CONF_MODE_STATE_TOPIC): mqtt.valid_subscribe_topic,
-            vol.Optional(CONF_MODE_VALUE_TEMPLATE): cv.template,
+            vol.Optional(CONF_MODE_STATE_TEMPLATE): cv.template,
             vol.Optional(
                 CONF_TARGET_HUMIDITY_MIN, default=DEFAULT_MIN_HUMIDITY
             ): cv.positive_int,
@@ -233,8 +233,8 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
         }
         self._value_templates = {
             CONF_STATE: config.get(CONF_STATE_VALUE_TEMPLATE),
-            ATTR_HUMIDITY: config.get(CONF_TARGET_HUMIDITY_VALUE_TEMPLATE),
-            ATTR_MODE: config.get(CONF_MODE_VALUE_TEMPLATE),
+            ATTR_HUMIDITY: config.get(CONF_TARGET_HUMIDITY_STATE_TEMPLATE),
+            ATTR_MODE: config.get(CONF_MODE_STATE_TEMPLATE),
         }
         self._command_templates = {
             CONF_STATE: config.get(CONF_COMMAND_TEMPLATE),

@@ -81,7 +81,7 @@ async def test_controlling_state_via_topic(hass, mqtt_mock, caplog):
                 "target_humidity_command_topic": "humidity-command-topic",
                 "mode_state_topic": "mode-state-topic",
                 "mode_command_topic": "mode-command-topic",
-                "available_modes": [
+                "modes": [
                     "auto",
                     "comfort",
                     "home",
@@ -241,14 +241,14 @@ async def test_controlling_state_via_topic_and_json_message(hass, mqtt_mock, cap
                 "target_humidity_command_topic": "humidity-command-topic",
                 "mode_state_topic": "mode-state-topic",
                 "mode_command_topic": "mode-command-topic",
-                "available_modes": [
+                "modes": [
                     "auto",
                     "eco",
                     "baby",
                 ],
                 "state_value_template": "{{ value_json.val }}",
-                "target_humidity_value_template": "{{ value_json.val }}",
-                "mode_value_template": "{{ value_json.val }}",
+                "target_humidity_state_template": "{{ value_json.val }}",
+                "mode_state_template": "{{ value_json.val }}",
                 "humidity_range_min": 0,
                 "humidity_range_max": 100,
             }
@@ -326,14 +326,14 @@ async def test_controlling_state_via_topic_and_json_message_shared_topic(
                 "target_humidity_command_topic": "percentage-command-topic",
                 "mode_state_topic": "shared-state-topic",
                 "mode_command_topic": "mode-command-topic",
-                "available_modes": [
+                "modes": [
                     "auto",
                     "eco",
                     "baby",
                 ],
                 "state_value_template": "{{ value_json.state }}",
-                "target_humidity_value_template": "{{ value_json.humidity }}",
-                "mode_value_template": "{{ value_json.mode }}",
+                "target_humidity_state_template": "{{ value_json.humidity }}",
+                "mode_state_template": "{{ value_json.mode }}",
                 "humidity_range_min": 0,
                 "humidity_range_max": 100,
             }
@@ -402,7 +402,7 @@ async def test_sending_mqtt_commands_and_optimistic(hass, mqtt_mock, caplog):
                 "payload_on": "StAtE_On",
                 "target_humidity_command_topic": "humidity-command-topic",
                 "mode_command_topic": "mode-command-topic",
-                "available_modes": [
+                "modes": [
                     "eco",
                     "auto",
                     "baby",
@@ -600,7 +600,7 @@ async def test_sending_mqtt_command_templates_(hass, mqtt_mock, caplog):
                 "target_humidity_command_template": "humidity: {{ value }}",
                 "mode_command_topic": "mode-command-topic",
                 "mode_command_template": "mode: {{ value }}",
-                "available_modes": [
+                "modes": [
                     "auto",
                     "eco",
                     "sleep",
@@ -694,7 +694,7 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(hass, mqtt_mock, ca
                 "target_humidity_command_topic": "humidity-command-topic",
                 "mode_command_topic": "mode-command-topic",
                 "mode_state_topic": "mode-state-topic",
-                "available_modes": [
+                "modes": [
                     "auto",
                     "eco",
                     "baby",
@@ -806,7 +806,7 @@ async def test_attributes(hass, mqtt_mock, caplog):
                 "command_topic": "command-topic",
                 "mode_command_topic": "mode-command-topic",
                 "target_humidity_command_topic": "humidity-command-topic",
-                "available_modes": [
+                "modes": [
                     "eco",
                     "baby",
                 ],
@@ -889,7 +889,7 @@ async def test_invalid_configurations(hass, mqtt_mock, caplog):
                     "command_topic": "command-topic",
                     "target_humidity_command_topic": "humidity-command-topic",
                     "mode_command_topic": "mode-command-topic",
-                    "available_modes": ["eco", "None"],
+                    "modes": ["eco", "None"],
                 },
             ]
         },
@@ -925,7 +925,7 @@ async def test_supported_features(hass, mqtt_mock):
                     "command_topic": "command-topic",
                     "target_humidity_command_topic": "humidity-command-topic",
                     "mode_command_topic": "mode-command-topic",
-                    "available_modes": ["eco", "auto"],
+                    "modes": ["eco", "auto"],
                 },
                 {
                     "platform": "mqtt",
@@ -939,7 +939,7 @@ async def test_supported_features(hass, mqtt_mock):
                     "command_topic": "command-topic",
                     "target_humidity_command_topic": "humidity-command-topic",
                     "mode_command_topic": "mode-command-topic",
-                    "available_modes": ["eco", "auto"],
+                    "modes": ["eco", "auto"],
                 },
                 {
                     "platform": "mqtt",
