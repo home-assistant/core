@@ -79,7 +79,7 @@ ABBREVIATIONS = {
     "hum_stat_t": "target_humidity_state_topic",
     "hum_rng_max": "humidity_range_max",
     "hum_rng_min": "humidity_range_min",
-    "hum_value_tpl": "target_humidity_value_template",
+    "hum_state_tpl": "target_humidity_state_template",
     "json_attr": "json_attributes",
     "json_attr_t": "json_attributes_topic",
     "json_attr_tpl": "json_attributes_template",
