@@ -1042,6 +1042,45 @@ async def test_lock_unlock_lock(hass):
     assert calls[0].data == {ATTR_ENTITY_ID: "lock.front_door"}
 
 
+async def test_lock_unlock_unlocking(hass):
+    """Test LockUnlock trait locking support for lock domain."""
+    assert helpers.get_google_type(lock.DOMAIN, None) is not None
+    assert trait.LockUnlockTrait.supported(lock.DOMAIN, lock.SUPPORT_OPEN, None, None)
+    assert trait.LockUnlockTrait.might_2fa(lock.DOMAIN, lock.SUPPORT_OPEN, None)
+
+    trt = trait.LockUnlockTrait(
+        hass, State("lock.front_door", lock.STATE_UNLOCKING), PIN_CONFIG
+    )
+
+    assert trt.sync_attributes() == {}
+
+    assert trt.query_attributes() == {"isLocked": True}
+
+
+async def test_lock_unlock_lock_jammed(hass):
+    """Test LockUnlock trait locking support for lock domain that jams."""
+    assert helpers.get_google_type(lock.DOMAIN, None) is not None
+    assert trait.LockUnlockTrait.supported(lock.DOMAIN, lock.SUPPORT_OPEN, None, None)
+    assert trait.LockUnlockTrait.might_2fa(lock.DOMAIN, lock.SUPPORT_OPEN, None)
+
+    trt = trait.LockUnlockTrait(
+        hass, State("lock.front_door", lock.STATE_JAMMED), PIN_CONFIG
+    )
+
+    assert trt.sync_attributes() == {}
+
+    assert trt.query_attributes() == {"isJammed": True}
+
+    assert trt.can_execute(trait.COMMAND_LOCKUNLOCK, {"lock": True})
+
+    calls = async_mock_service(hass, lock.DOMAIN, lock.SERVICE_LOCK)
+
+    await trt.execute(trait.COMMAND_LOCKUNLOCK, PIN_DATA, {"lock": True}, {})
+
+    assert len(calls) == 1
+    assert calls[0].data == {ATTR_ENTITY_ID: "lock.front_door"}
+
+
 async def test_lock_unlock_unlock(hass):
     """Test LockUnlock trait unlocking support for lock domain."""
     assert helpers.get_google_type(lock.DOMAIN, None) is not None
