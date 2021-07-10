@@ -173,6 +173,11 @@ class AdvantageAirZoneTemp(AdvantageAirEntity, SensorEntity):
         return self._zone["measuredTemp"]
 
     @property
+    def state_class(self):
+        """State class of sensor."""
+        return STATE_CLASS_MEASUREMENT
+
+    @property
     def icon(self):
         """Return a representative icon."""
         return "mdi:thermometer"
