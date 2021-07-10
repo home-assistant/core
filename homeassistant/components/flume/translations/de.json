@@ -15,7 +15,7 @@
                     "password": "Passwort"
                 },
                 "description": "Das Passwort f\u00fcr {username} ist nicht mehr g\u00fcltig.",
-                "title": "Authentifizieren Sie Ihr Flume-Konto erneut"
+                "title": "Authentifiziere dein Flume-Konto erneut"
             },
             "user": {
                 "data": {

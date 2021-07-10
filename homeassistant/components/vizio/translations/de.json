@@ -8,15 +8,15 @@
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen",
             "complete_pairing_failed": "Das Pairing konnte nicht abgeschlossen werden. Vergewissere dich, dass der eingegebene PIN korrekt ist und dass der Fernseher noch mit Strom versorgt wird und mit dem Netzwerk verbunden ist, bevor du es erneut versuchst.",
-            "existing_config_entry_found": "Ein bestehender VIZIO SmartCast-Ger\u00e4t Config-Eintrag mit der gleichen Seriennummer wurde bereits konfiguriert. Sie m\u00fcssen den vorhandenen Eintrag l\u00f6schen, um diesen zu konfigurieren."
+            "existing_config_entry_found": "Ein bestehender VIZIO SmartCast-Ger\u00e4t Config-Eintrag mit der gleichen Seriennummer wurde bereits konfiguriert. Du musst den vorhandenen Eintrag l\u00f6schen, um diesen zu konfigurieren."
         },
         "step": {
             "pair_tv": {
                 "data": {
                     "pin": "PIN-Code"
                 },
-                "description": "Ihr Fernseher sollte einen Code anzeigen. Geben Sie diesen Code in das Formular ein und fahren Sie mit dem n\u00e4chsten Schritt fort, um die Kopplung abzuschlie\u00dfen.",
-                "title": "Schlie\u00dfen Sie den Pairing-Prozess ab"
+                "description": "Dein Fernseher sollte einen Code anzeigen. Gib diesen Code in das Formular ein und fahre mit dem n\u00e4chsten Schritt fort, um die Kopplung abzuschlie\u00dfen.",
+                "title": "Schlie\u00dfe den Pairing-Prozess ab"
             },
             "pairing_complete": {
                 "description": "Dein VIZIO SmartCast-Ger\u00e4t ist jetzt mit Home Assistant verbunden.",
