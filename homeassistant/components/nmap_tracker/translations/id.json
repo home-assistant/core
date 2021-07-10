@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Lokasi sudah dikonfigurasi"
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "track_new_devices": "Lacak perangkat baru"
+                }
+            }
+        }
+    },
+    "title": "Nmap Tracker"
+}

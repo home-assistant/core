@@ -30,7 +30,7 @@
                 "data": {
                     "code": "Verifizierungs-Code"
                 },
-                "description": "Bitte \u00fcberpr\u00fcfen Sie Ihre {login_method} ({username}) und geben Sie den Best\u00e4tigungscode ein",
+                "description": "Bitte \u00fcberpr\u00fcfe deine {login_method} ({username}) und gib den Best\u00e4tigungscode ein",
                 "title": "Zwei-Faktor-Authentifizierung"
             }
         }
