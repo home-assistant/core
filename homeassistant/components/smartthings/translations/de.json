@@ -19,14 +19,14 @@
                 "data": {
                     "access_token": "Zugriffs-Token"
                 },
-                "description": "Bitte geben Sie ein SmartThings [Personal Access Token] ({token_url}) ein, das gem\u00e4\u00df den [Anweisungen] ({component_url}) erstellt wurde. Dies wird zur Erstellung der Home Assistant-Integration in Ihrem SmartThings-Konto verwendet.",
+                "description": "Bitte gib ein SmartThings [Personal Access Token] ({token_url}) ein, das gem\u00e4\u00df den [Anweisungen] ({component_url}) erstellt wurde. Dies wird zur Erstellung der Home Assistant-Integration in deinem SmartThings-Konto verwendet.",
                 "title": "Gib den pers\u00f6nlichen Zugangstoken an"
             },
             "select_location": {
                 "data": {
                     "location_id": "Standort"
                 },
-                "description": "Bitte w\u00e4hlen Sie den SmartThings-Standort aus, den Sie Home Assistant hinzuf\u00fcgen m\u00f6chten. Wir \u00f6ffnen dann ein neues Fenster und bitten Sie, sich anzumelden und die Installation der Home Assistant-Integration am ausgew\u00e4hlten Standort zu autorisieren.",
+                "description": "Bitte w\u00e4hle den SmartThings-Standort aus, den du Home Assistant hinzuf\u00fcgen m\u00f6chtest. Wir \u00f6ffnen dann ein neues Fenster und bitten dich, sich anzumelden und die Installation der Home Assistant-Integration am ausgew\u00e4hlten Standort zu autorisieren.",
                 "title": "Standort ausw\u00e4hlen"
             },
             "user": {

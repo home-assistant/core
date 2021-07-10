@@ -11,7 +11,7 @@
         },
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen",
-            "connection_upgrade": "Verbindung zum Drucker fehlgeschlagen. Bitte versuchen Sie es erneut mit aktivierter SSL / TLS-Option."
+            "connection_upgrade": "Verbindung zum Drucker fehlgeschlagen. Bitte versuche es erneut mit aktivierter SSL / TLS-Option."
         },
         "flow_title": "{name}",
         "step": {
