@@ -48,6 +48,7 @@ DEFAULT_CONFIG = {
         "name": "test",
         "state_topic": "state-topic",
         "command_topic": "command-topic",
+        "target_humidity_command_topic": "humidity-command-topic",
     }
 }
 
@@ -849,6 +850,7 @@ async def test_invalid_configurations(hass, mqtt_mock, caplog):
                     "platform": "mqtt",
                     "name": "test_valid",
                     "command_topic": "command-topic",
+                    "target_humidity_command_topic": "humidity-command-topic",
                 },
                 {
                     "platform": "mqtt",
@@ -915,11 +917,13 @@ async def test_supported_features(hass, mqtt_mock):
                     "platform": "mqtt",
                     "name": "test1",
                     "command_topic": "command-topic",
+                    "target_humidity_command_topic": "humidity-command-topic",
                 },
                 {
                     "platform": "mqtt",
                     "name": "test2",
                     "command_topic": "command-topic",
+                    "target_humidity_command_topic": "humidity-command-topic",
                     "mode_command_topic": "mode-command-topic",
                     "modes": ["eco", "auto"],
                 },
@@ -940,6 +944,12 @@ async def test_supported_features(hass, mqtt_mock):
                 {
                     "platform": "mqtt",
                     "name": "test5",
+                    "command_topic": "command-topic",
+                },
+                {
+                    "platform": "mqtt",
+                    "name": "test6",
+                    "target_humidity_command_topic": "humidity-command-topic",
                 },
             ]
         },
@@ -959,6 +969,9 @@ async def test_supported_features(hass, mqtt_mock):
     assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == humidifier.SUPPORT_MODES
 
     state = hass.states.get("humidifier.test5")
+    assert state is None
+
+    state = hass.states.get("humidifier.test6")
     assert state is None
 
 
@@ -1045,6 +1058,7 @@ async def test_unique_id(hass, mqtt_mock):
                 "name": "Test 1",
                 "state_topic": "test-topic",
                 "command_topic": "test_topic",
+                "target_humidity_command_topic": "humidity-command-topic",
                 "unique_id": "TOTALLY_UNIQUE",
             },
             {
@@ -1052,6 +1066,7 @@ async def test_unique_id(hass, mqtt_mock):
                 "name": "Test 2",
                 "state_topic": "test-topic",
                 "command_topic": "test_topic",
+                "target_humidity_command_topic": "humidity-command-topic",
                 "unique_id": "TOTALLY_UNIQUE",
             },
         ]
@@ -1061,14 +1076,14 @@ async def test_unique_id(hass, mqtt_mock):
 
 async def test_discovery_removal_humidifier(hass, mqtt_mock, caplog):
     """Test removal of discovered humidifier."""
-    data = '{ "name": "test", "command_topic": "test_topic" }'
+    data = '{ "name": "test", "command_topic": "test_topic", "target_humidity_command_topic": "test-topic2" }'
     await help_test_discovery_removal(hass, mqtt_mock, caplog, humidifier.DOMAIN, data)
 
 
 async def test_discovery_update_humidifier(hass, mqtt_mock, caplog):
     """Test update of discovered humidifier."""
-    data1 = '{ "name": "Beer", "command_topic": "test_topic" }'
-    data2 = '{ "name": "Milk", "command_topic": "test_topic" }'
+    data1 = '{ "name": "Beer", "command_topic": "test_topic", "target_humidity_command_topic": "test-topic2" }'
+    data2 = '{ "name": "Milk", "command_topic": "test_topic", "target_humidity_command_topic": "test-topic2" }'
     await help_test_discovery_update(
         hass, mqtt_mock, caplog, humidifier.DOMAIN, data1, data2
     )
@@ -1076,7 +1091,7 @@ async def test_discovery_update_humidifier(hass, mqtt_mock, caplog):
 
 async def test_discovery_update_unchanged_humidifier(hass, mqtt_mock, caplog):
     """Test update of discovered humidifier."""
-    data1 = '{ "name": "Beer", "command_topic": "test_topic" }'
+    data1 = '{ "name": "Beer", "command_topic": "test_topic", "target_humidity_command_topic": "test-topic2" }'
     with patch(
         "homeassistant.components.mqtt.fan.MqttFan.discovery_update"
     ) as discovery_update:
@@ -1089,7 +1104,7 @@ async def test_discovery_update_unchanged_humidifier(hass, mqtt_mock, caplog):
 async def test_discovery_broken(hass, mqtt_mock, caplog):
     """Test handling of bad discovery message."""
     data1 = '{ "name": "Beer" }'
-    data2 = '{ "name": "Milk", "command_topic": "test_topic" }'
+    data2 = '{ "name": "Milk", "command_topic": "test_topic", "target_humidity_command_topic": "test-topic2" }'
     await help_test_discovery_broken(
         hass, mqtt_mock, caplog, humidifier.DOMAIN, data1, data2
     )

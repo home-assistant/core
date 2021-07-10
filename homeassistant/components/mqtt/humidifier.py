@@ -119,7 +119,7 @@ PLATFORM_SCHEMA = vol.All(
             vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
             vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
             vol.Optional(CONF_COMMAND_TEMPLATE): cv.template,
-            vol.Optional(CONF_TARGET_HUMIDITY_COMMAND_TOPIC): mqtt.valid_publish_topic,
+            vol.Required(CONF_TARGET_HUMIDITY_COMMAND_TOPIC): mqtt.valid_publish_topic,
             vol.Optional(CONF_TARGET_HUMIDITY_COMMAND_TEMPLATE): cv.template,
             vol.Optional(CONF_TARGET_HUMIDITY_STATE_TOPIC): mqtt.valid_subscribe_topic,
             vol.Optional(CONF_TARGET_HUMIDITY_VALUE_TEMPLATE): cv.template,
