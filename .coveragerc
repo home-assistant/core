@@ -354,10 +354,6 @@ omit =
     homeassistant/components/garages_amsterdam/__init__.py
     homeassistant/components/garages_amsterdam/binary_sensor.py
     homeassistant/components/garages_amsterdam/sensor.py
-    homeassistant/components/garmin_connect/__init__.py
-    homeassistant/components/garmin_connect/const.py
-    homeassistant/components/garmin_connect/sensor.py
-    homeassistant/components/garmin_connect/alarm_util.py
     homeassistant/components/gc100/*
     homeassistant/components/geniushub/*
     homeassistant/components/github/sensor.py
