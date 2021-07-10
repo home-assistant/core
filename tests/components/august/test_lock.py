@@ -3,6 +3,7 @@ import datetime
 from unittest.mock import Mock
 
 from aiohttp import ClientResponseError
+import pytest
 from yalexs.pubnub_async import AugustPubNub
 
 from homeassistant.components.lock import (
@@ -186,6 +187,39 @@ async def test_lock_jammed(hass):
 
     lock_online_with_doorsense_name = hass.states.get("lock.online_with_doorsense_name")
     assert lock_online_with_doorsense_name.state == STATE_JAMMED
+
+
+async def test_lock_throws_exception_on_unknown_status_code(hass):
+    """Test lock throws exception."""
+
+    def _unlock_return_activities_side_effect(access_token, device_id):
+        raise ClientResponseError(None, None, status=500)
+
+    lock_one = await _mock_doorsense_enabled_august_lock_detail(hass)
+    await _create_august_with_devices(
+        hass,
+        [lock_one],
+        api_call_side_effects={
+            "unlock_return_activities": _unlock_return_activities_side_effect
+        },
+    )
+
+    lock_online_with_doorsense_name = hass.states.get("lock.online_with_doorsense_name")
+
+    assert lock_online_with_doorsense_name.state == STATE_LOCKED
+
+    assert lock_online_with_doorsense_name.attributes.get("battery_level") == 92
+    assert (
+        lock_online_with_doorsense_name.attributes.get("friendly_name")
+        == "online_with_doorsense Name"
+    )
+
+    data = {ATTR_ENTITY_ID: "lock.online_with_doorsense_name"}
+    with pytest.raises(ClientResponseError):
+        assert await hass.services.async_call(
+            LOCK_DOMAIN, SERVICE_UNLOCK, data, blocking=True
+        )
+        await hass.async_block_till_done()
 
 
 async def test_one_lock_unknown_state(hass):
