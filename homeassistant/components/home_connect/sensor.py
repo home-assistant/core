@@ -8,6 +8,8 @@ from homeassistant.const import (
     CONF_ENTITIES,
     DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_TIMESTAMP,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT
 )
 import homeassistant.util.dt as dt_util
 
@@ -101,8 +103,9 @@ class HomeConnectSensor(HomeConnectEntity, SensorEntity):
                     ):
                         self._state = result_time.isoformat()
             elif self.device_class == DEVICE_CLASS_TEMPERATURE:
-                self._state = round(status[self._key].get(ATTR_VALUE))
-                self._unit = status[self._key].get(ATTR_UNIT).lstrip("Â")
+                self._state = round(status[self._key][ATTR_VALUE])
+                self._unit = TEMP_FAHRENHEIT if status[self._key].get(ATTR_UNIT).lstrip("Â") == "°F" else TEMP_CELSIUS
+
             else:
                 self._state = status[self._key].get(ATTR_VALUE)
                 if (
@@ -113,6 +116,7 @@ class HomeConnectSensor(HomeConnectEntity, SensorEntity):
                     # last part, so split it off
                     # https://developer.home-connect.com/docs/status/operation_state
                     self._state = self._state.split(".")[-1]
+
         _LOGGER.debug("Updated, new state: %s", self._state)
 
     @property
