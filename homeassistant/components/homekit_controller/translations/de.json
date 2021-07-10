@@ -21,11 +21,11 @@
         "flow_title": "{name}",
         "step": {
             "busy_error": {
-                "description": "Brechen Sie das Pairing auf allen Controllern ab oder versuchen Sie, das Ger\u00e4t neu zu starten, und fahren Sie dann fort, das Pairing fortzusetzen.",
+                "description": "Breche das Pairing auf allen Controllern ab oder versuche, das Ger\u00e4t neu zu starten, und fahre dann fort, das Pairing fortzusetzen.",
                 "title": "Das Ger\u00e4t wird bereits mit einem anderen Controller gekoppelt"
             },
             "max_tries_error": {
-                "description": "Das Ger\u00e4t hat mehr als 100 erfolglose Authentifizierungsversuche erhalten. Versuchen Sie, das Ger\u00e4t neu zu starten, und fahren Sie dann fort, die Kopplung fortzusetzen.",
+                "description": "Das Ger\u00e4t hat mehr als 100 erfolglose Authentifizierungsversuche erhalten. Versuche, das Ger\u00e4t neu zu starten, und fahre dann fort, die Kopplung fortzusetzen.",
                 "title": "Maximale Authentifizierungsversuche \u00fcberschritten"
             },
             "pair": {
@@ -37,7 +37,7 @@
                 "title": "Mit HomeKit Zubeh\u00f6r koppeln"
             },
             "protocol_error": {
-                "description": "Das Ger\u00e4t befindet sich m\u00f6glicherweise nicht im Pairing-Modus und erfordert einen physischen oder virtuellen Tastendruck. Stellen Sie sicher, dass sich das Ger\u00e4t im Pairing-Modus befindet, oder versuchen Sie, das Ger\u00e4t neu zu starten und fahren Sie dann das Pairing fort.",
+                "description": "Das Ger\u00e4t befindet sich m\u00f6glicherweise nicht im Pairing-Modus und erfordert einen physischen oder virtuellen Tastendruck. Stelle sicher, dass sich das Ger\u00e4t im Pairing-Modus befindet, oder versuche, das Ger\u00e4t neu zu starten und fahre dann das Pairing fort.",
                 "title": "Fehler bei der Kommunikation mit dem Zubeh\u00f6r"
             },
             "user": {
