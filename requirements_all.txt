@@ -841,6 +841,9 @@ iglo==1.2.7
 # homeassistant.components.ihc
 ihcsdk==2.7.0
 
+# homeassistant.components.stihl_imow
+imow-webapi==0.7.3
+
 # homeassistant.components.incomfort
 incomfort-client==0.4.4
 

@@ -1,0 +1,42 @@
+intent:
+  name: Intiate an iMow Action to a Mower
+  description: Intiate an iMow Action to a Mower
+  fields:
+    mower_name:
+      name: Mower
+      description: Name of the mower
+      required: true
+      selector:
+        text:
+    action:
+      name: iMow Action
+      description: The action the targeted mower should do
+      required: true
+      example: "toDocking"
+      # The default field value
+      default: "edgeMowing"
+      # Selector (https://www.home-assistant.io/docs/blueprint/selectors/) to control the input UI for this field
+      selector:
+        select:
+          options:
+            - "edgeMowing"
+            - "toDocking"
+            - "startMowingFromPoint"
+    duration:
+      name: Mowing Duration in Minutes
+      description: Mowing Duration in Minutes (only necessary if action is 'startMowingFromPoint')
+      default: 30
+      selector:
+        select:
+          options:
+            - "30"
+            - "60"
+            - "90"
+    startpoint:
+      name: Starting point
+      description: Mower defined Starting point (only necessary if action is 'startMowingFromPoint' and if the mower should not start from the Dock)
+      default: 0
+      selector:
+        number:
+          min: 1
+          max: 4

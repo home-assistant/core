@@ -250,6 +250,7 @@ FLOWS = [
     "squeezebox",
     "srp_energy",
     "starline",
+    "stihl_imow",
     "subaru",
     "syncthing",
     "syncthru",

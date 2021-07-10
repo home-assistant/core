@@ -1,0 +1,31 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "Device is already configured"
+    },
+    "error": {
+      "cannot_connect": "Failed to connect",
+      "invalid_auth": "Invalid authentication",
+      "unknown": "Unexpected error"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "password": "Password",
+          "email": "E-Mail"
+        },
+        "description": "Login credentials.",
+        "title": "STIHL iMow Upstream Authentication"
+      },
+      "advanced": {
+        "data": {
+          "language": "Language for messages (short, long)",
+          "polling_interval": "Polling Interval in Seconds"
+        },
+        "description": "The state messages (short, long) will be displayed in the selected language. \n\n Choose, how often HA will fetch the latest data from upstream server in seconds. A suggested value is 30s.",
+        "title": "Advanced"
+      }
+    }
+  },
+  "title": "STIHL iMow"
+}
