@@ -1,8 +1,6 @@
 """BaseEntity for iMow Sensors."""
 from imow.common.mowerstate import MowerState
 
-from homeassistant.const import STATE_OFF
-from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -20,12 +18,23 @@ class ImowBaseEntity(CoordinatorEntity):
         self.key_device_infos = device
         self.property_name = mower_state_property
         self.cleaned_property_name = mower_state_property.replace("_", " ")
+        if self.property_name in IMOW_SENSORS_MAP:
+            if IMOW_SENSORS_MAP[self.property_name]["type"]:
+                self._attr_device_class = IMOW_SENSORS_MAP[self.property_name]["type"]
+                self._device_class = IMOW_SENSORS_MAP[self.property_name]["type"]
+
+        if self.property_name in IMOW_SENSORS_MAP:
+            if IMOW_SENSORS_MAP[self.property_name]["uom"]:
+                self._attr_unit_of_measurement = IMOW_SENSORS_MAP[self.property_name][
+                    "uom"
+                ]
+
         if "_" in self.property_name:  # Complex Entity
-            self._state = getattr(self.sensor_data, self.property_name.split("_")[0])[
-                self.property_name.split("_")[1]
-            ]
+            self._attr_state = getattr(
+                self.sensor_data, self.property_name.split("_")[0]
+            )[self.property_name.split("_")[1]]
         else:
-            self._state = self.sensor_data.__dict__[self.property_name]
+            self._attr_state = self.sensor_data.__dict__[self.property_name]
 
         if (
             self.property_name in IMOW_SENSORS_MAP
@@ -38,11 +47,6 @@ class ImowBaseEntity(CoordinatorEntity):
     def device(self) -> MowerState:
         """Return device object from coordinator."""
         return self.coordinator.data
-
-    @property
-    def state(self) -> StateType:
-        """Return the state of the entity."""
-        return self._state if self._state is not None else STATE_OFF
 
     @property
     def device_info(self):
@@ -78,17 +82,3 @@ class ImowBaseEntity(CoordinatorEntity):
         if self.property_name in IMOW_SENSORS_MAP:
             return IMOW_SENSORS_MAP[self.property_name]["icon"]
         return self._attr_icon
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement."""
-        if self.property_name in IMOW_SENSORS_MAP:
-            return IMOW_SENSORS_MAP[self.property_name]["uom"]
-        return self._attr_unit_of_measurement
-
-    @property
-    def device_class(self):
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        if self.property_name in IMOW_SENSORS_MAP:
-            return IMOW_SENSORS_MAP[self.property_name]["type"]
-        return self._attr_device_class
