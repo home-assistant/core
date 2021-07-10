@@ -50,7 +50,6 @@ CONF_MODE_COMMAND_TEMPLATE = "mode_command_template"
 CONF_MODE_COMMAND_TOPIC = "mode_command_topic"
 CONF_MODE_STATE_TOPIC = "mode_state_topic"
 CONF_MODE_VALUE_TEMPLATE = "mode_value_template"
-CONF_MODES_LIST = "modes"
 CONF_PAYLOAD_RESET_MODE = "payload_reset_mode"
 CONF_PAYLOAD_RESET_HUMIDITY = "payload_reset_humidity"
 CONF_STATE_VALUE_TEMPLATE = "state_value_template"
@@ -83,8 +82,8 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def valid_mode_configuration(config):
-    """Validate that the mode reset payload is not one of the modes."""
-    if config.get(CONF_PAYLOAD_RESET_MODE) in config.get(CONF_MODES_LIST):
+    """Validate that the mode reset payload is not one of the available modes."""
+    if config.get(CONF_PAYLOAD_RESET_MODE) in config.get(CONF_AVAILABLE_MODES_LIST):
         raise ValueError("modes must not contain payload_reset_mode")
     return config
 
@@ -123,9 +122,13 @@ PLATFORM_SCHEMA = vol.All(
             vol.Optional(CONF_TARGET_HUMIDITY_COMMAND_TEMPLATE): cv.template,
             vol.Optional(CONF_TARGET_HUMIDITY_STATE_TOPIC): mqtt.valid_subscribe_topic,
             vol.Optional(CONF_TARGET_HUMIDITY_VALUE_TEMPLATE): cv.template,
-            # CONF_MODE_COMMAND_TOPIC and CONF_MODES_LIST must be used together
-            vol.Inclusive(CONF_MODE_COMMAND_TOPIC, "modes"): mqtt.valid_publish_topic,
-            vol.Inclusive(CONF_MODES_LIST, "modes", default=[]): cv.ensure_list,
+            # CONF_MODE_COMMAND_TOPIC and CONF_AVAIALABLE_MODES_LIST must be used together
+            vol.Inclusive(
+                CONF_MODE_COMMAND_TOPIC, "available_modes"
+            ): mqtt.valid_publish_topic,
+            vol.Inclusive(
+                CONF_AVAILABLE_MODES_LIST, "available_modes", default=[]
+            ): cv.ensure_list,
             vol.Optional(CONF_MODE_COMMAND_TEMPLATE): cv.template,
             vol.Optional(CONF_MODE_STATE_TOPIC): mqtt.valid_subscribe_topic,
             vol.Optional(CONF_MODE_VALUE_TEMPLATE): cv.template,
@@ -244,8 +247,8 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
             "HUMIDITY_RESET": config[CONF_PAYLOAD_RESET_HUMIDITY],
             "MODE_RESET": config[CONF_PAYLOAD_RESET_MODE],
         }
-        if CONF_MODE_COMMAND_TOPIC in config and CONF_MODES_LIST in config:
-            self._available_modes = config[CONF_MODES_LIST]
+        if CONF_MODE_COMMAND_TOPIC in config and CONF_AVAILABLE_MODES_LIST in config:
+            self._available_modes = config[CONF_AVAILABLE_MODES_LIST]
         else:
             self._available_modes = []
         if self._available_modes:
