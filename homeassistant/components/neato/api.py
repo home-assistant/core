@@ -1,10 +1,13 @@
 """API for Neato Botvac bound to Home Assistant OAuth."""
 from asyncio import run_coroutine_threadsafe
+import logging
 
 import pybotvac
 
 from homeassistant import config_entries, core
 from homeassistant.helpers import config_entry_oauth2_flow
+
+LOGGER = logging.getLogger(__name__)
 
 
 class ConfigEntryAuth(pybotvac.OAuthSession):
@@ -22,13 +25,17 @@ class ConfigEntryAuth(pybotvac.OAuthSession):
             hass, config_entry, implementation
         )
         super().__init__(self.session.token, vendor=pybotvac.Neato())
+        self._config_entry = config_entry
 
     def refresh_tokens(self) -> str:
         """Refresh and return new Neato Botvac tokens using Home Assistant OAuth2 session."""
-        run_coroutine_threadsafe(
-            self.session.async_ensure_token_valid(), self.hass.loop
-        ).result()
-
+        try:
+            run_coroutine_threadsafe(
+                self.session.async_ensure_token_valid(), self.hass.loop
+            ).result()
+        except Exception as ex:
+            LOGGER.warning("Issue with token automatic renewal: %s", ex)
+            raise self._config_entry.async_start_reauth(self.hass)
         return self.session.token["access_token"]
 
 
