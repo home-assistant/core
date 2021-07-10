@@ -100,7 +100,7 @@ aioeafm==0.1.2
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==4.0.1
+aioesphomeapi==5.0.1
 
 # homeassistant.components.flo
 aioflo==0.4.1
@@ -112,7 +112,7 @@ aioguardian==1.0.4
 aioharmony==0.2.7
 
 # homeassistant.components.homekit_controller
-aiohomekit==0.4.1
+aiohomekit==0.5.0
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -383,7 +383,7 @@ georss_qld_bushfire_alert_client==0.5
 getmac==0.8.2
 
 # homeassistant.components.gios
-gios==1.0.1
+gios==1.0.2
 
 # homeassistant.components.glances
 glances_api==0.2.0
@@ -428,7 +428,7 @@ hangups==0.4.14
 hass-nabucasa==0.44.0
 
 # homeassistant.components.tasmota
-hatasmota==0.2.19
+hatasmota==0.2.20
 
 # homeassistant.components.jewish_calendar
 hdate==0.10.2
@@ -446,7 +446,7 @@ hole==0.5.1
 holidays==0.11.1
 
 # homeassistant.components.frontend
-home-assistant-frontend==20210630.0
+home-assistant-frontend==20210707.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -480,7 +480,6 @@ iaqualink==0.3.90
 icmplib==3.0
 
 # homeassistant.components.network
-# homeassistant.components.nmap_tracker
 ifaddr==0.1.7
 
 # homeassistant.components.influxdb
@@ -521,9 +520,6 @@ logi_circle==0.2.2
 
 # homeassistant.components.luftdaten
 luftdaten==0.6.5
-
-# homeassistant.components.nmap_tracker
-mac-vendor-lookup==0.1.11
 
 # homeassistant.components.maxcube
 maxcube-api==0.4.3
@@ -573,9 +569,6 @@ nessclient==0.9.15
 # homeassistant.components.discovery
 netdisco==2.9.0
 
-# homeassistant.components.nmap_tracker
-netmap==0.7.0.2
-
 # homeassistant.components.nam
 nettigo-air-monitor==1.0.0
 
@@ -599,7 +592,7 @@ numato-gpio==0.10.0
 # homeassistant.components.opencv
 # homeassistant.components.tensorflow
 # homeassistant.components.trend
-numpy==1.20.3
+numpy==1.21.0
 
 # homeassistant.components.google
 oauth2client==4.0.0
@@ -776,7 +769,7 @@ pycoolmasternet-async==0.1.2
 pydaikin==2.4.4
 
 # homeassistant.components.deconz
-pydeconz==80
+pydeconz==81
 
 # homeassistant.components.dexcom
 pydexcom==0.2.0
@@ -894,7 +887,7 @@ pymailgunner==1.4
 pymata-express==1.19
 
 # homeassistant.components.mazda
-pymazda==0.1.6
+pymazda==0.2.0
 
 # homeassistant.components.melcloud
 pymelcloud==2.5.3
@@ -903,7 +896,7 @@ pymelcloud==2.5.3
 pymeteoclimatic==0.0.6
 
 # homeassistant.components.somfy
-pymfy==0.9.3
+pymfy==0.11.0
 
 # homeassistant.components.mochad
 pymochad==0.2.0
@@ -997,7 +990,7 @@ pysiaalarm==3.0.0
 pysignalclirestapi==0.3.4
 
 # homeassistant.components.sma
-pysma==0.6.1
+pysma==0.6.2
 
 # homeassistant.components.smappee
 pysmappee==0.2.25
@@ -1090,7 +1083,7 @@ pyvolumio==0.1.3
 pywebpush==1.9.2
 
 # homeassistant.components.wemo
-pywemo==0.6.3
+pywemo==0.6.5
 
 # homeassistant.components.wilight
 pywilight==0.0.70
@@ -1154,7 +1147,7 @@ sharkiqpy==0.1.8
 simplehound==0.3
 
 # homeassistant.components.simplisafe
-simplisafe-python==10.0.0
+simplisafe-python==11.0.1
 
 # homeassistant.components.slack
 slackclient==2.5.0
@@ -1330,10 +1323,10 @@ yeelight==0.6.3
 zeep[async]==4.0.0
 
 # homeassistant.components.zeroconf
-zeroconf==0.32.0
+zeroconf==0.32.1
 
 # homeassistant.components.zha
-zha-quirks==0.0.58
+zha-quirks==0.0.59
 
 # homeassistant.components.zha
 zigpy-cc==0.5.2
@@ -1351,7 +1344,7 @@ zigpy-zigate==0.7.3
 zigpy-znp==0.5.1
 
 # homeassistant.components.zha
-zigpy==0.35.0
+zigpy==0.35.2
 
 # homeassistant.components.zwave_js
 zwave-js-server-python==0.27.0

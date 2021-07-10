@@ -1,5 +1,5 @@
 """Config flow to configure the SimpliSafe component."""
-from simplipy import API
+from simplipy import get_api
 from simplipy.errors import (
     InvalidCredentialsError,
     PendingAuthorizationError,
@@ -47,7 +47,7 @@ class SimpliSafeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         client_id = await async_get_client_id(self.hass)
         websession = aiohttp_client.async_get_clientsession(self.hass)
 
-        return await API.login_via_credentials(
+        return await get_api(
             self._username,
             self._password,
             client_id=client_id,
