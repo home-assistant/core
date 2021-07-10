@@ -45,9 +45,9 @@ class SegmentBuffer:
         self._memory_file: BytesIO = cast(BytesIO, None)
         self._av_output: av.container.OutputContainer = None
         self._input_video_stream: av.video.VideoStream = None
-        self._input_audio_stream: Any | None = None  # av.audio.AudioStream | None
+        self._input_audio_stream: av.audio.stream.AudioStream | None = None
         self._output_video_stream: av.video.VideoStream = None
-        self._output_audio_stream: Any | None = None  # av.audio.AudioStream | None
+        self._output_audio_stream: av.audio.stream.AudioStream | None = None
         self._segment: Segment | None = None
         # the following 3 member variables are used for Part formation
         self._memory_file_pos: int = cast(int, None)
