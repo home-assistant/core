@@ -28,6 +28,8 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.restore_state import RestoreEntity
 
+from .utils import brightness_to_rflink
+
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_EVENT = "event"
@@ -67,6 +69,7 @@ SERVICE_SEND_COMMAND = "send_command"
 
 SIGNAL_AVAILABILITY = "rflink_device_available"
 SIGNAL_HANDLE_EVENT = "rflink_handle_event_{}"
+SIGNAL_EVENT = "rflink_event"
 
 TMP_ENTITY = "tmp.{}"
 
@@ -140,6 +143,15 @@ async def async_setup(hass, config):
             )
         ):
             _LOGGER.error("Failed Rflink command for %s", str(call.data))
+        else:
+            async_dispatcher_send(
+                hass,
+                SIGNAL_EVENT,
+                {
+                    EVENT_KEY_ID: call.data.get(CONF_DEVICE_ID),
+                    EVENT_KEY_COMMAND: call.data.get(CONF_COMMAND),
+                },
+            )
 
     hass.services.async_register(
         DOMAIN, SERVICE_SEND_COMMAND, async_send_command, schema=SEND_COMMAND_SCHEMA
@@ -203,25 +215,28 @@ async def async_setup(hass, config):
     # TCP port when host configured, otherwise serial port
     port = config[DOMAIN][CONF_PORT]
 
-    # TCP KEEPALIVE will be enabled if value > 0
-    keepalive_idle_timer = config[DOMAIN][CONF_KEEPALIVE_IDLE]
-    if keepalive_idle_timer < 0:
-        _LOGGER.error(
-            "A bogus TCP Keepalive IDLE timer was provided (%d secs), "
-            "default value will be used. "
-            "Recommended values: 60-3600 (seconds)",
-            keepalive_idle_timer,
-        )
-        keepalive_idle_timer = DEFAULT_TCP_KEEPALIVE_IDLE_TIMER
-    elif keepalive_idle_timer == 0:
-        keepalive_idle_timer = None
-    elif keepalive_idle_timer <= 30:
-        _LOGGER.warning(
-            "A very short TCP Keepalive IDLE timer was provided (%d secs), "
-            "and may produce unexpected disconnections from RFlink device."
-            " Recommended values: 60-3600 (seconds)",
-            keepalive_idle_timer,
-        )
+    keepalive_idle_timer = None
+    # TCP KeepAlive only if this is TCP based connection (not serial)
+    if host is not None:
+        # TCP KEEPALIVE will be enabled if value > 0
+        keepalive_idle_timer = config[DOMAIN][CONF_KEEPALIVE_IDLE]
+        if keepalive_idle_timer < 0:
+            _LOGGER.error(
+                "A bogus TCP Keepalive IDLE timer was provided (%d secs), "
+                "it will be disabled. "
+                "Recommended values: 60-3600 (seconds)",
+                keepalive_idle_timer,
+            )
+            keepalive_idle_timer = None
+        elif keepalive_idle_timer == 0:
+            keepalive_idle_timer = None
+        elif keepalive_idle_timer <= 30:
+            _LOGGER.warning(
+                "A very short TCP Keepalive IDLE timer was provided (%d secs) "
+                "and may produce unexpected disconnections from RFlink device."
+                " Recommended values: 60-3600 (seconds)",
+                keepalive_idle_timer,
+            )
 
     @callback
     def reconnect(exc=None):
@@ -233,7 +248,7 @@ async def async_setup(hass, config):
 
         # If HA is not stopping, initiate new connection
         if hass.state != CoreState.stopping:
-            _LOGGER.warning("disconnected from Rflink, reconnecting")
+            _LOGGER.warning("Disconnected from Rflink, reconnecting")
             hass.async_create_task(connect())
 
     async def connect():
@@ -260,8 +275,6 @@ async def async_setup(hass, config):
 
         except (
             SerialException,
-            ConnectionRefusedError,
-            TimeoutError,
             OSError,
             asyncio.TimeoutError,
         ) as exc:
@@ -290,6 +303,7 @@ async def async_setup(hass, config):
         _LOGGER.info("Connected to Rflink")
 
     hass.async_create_task(connect())
+    async_dispatcher_connect(hass, SIGNAL_EVENT, event_callback)
     return True
 
 
@@ -495,7 +509,7 @@ class RflinkCommand(RflinkDevice):
 
         elif command == "dim":
             # convert brightness to rflink dim level
-            cmd = str(int(args[0] / 17))
+            cmd = str(brightness_to_rflink(args[0]))
             self._state = True
 
         elif command == "toggle":

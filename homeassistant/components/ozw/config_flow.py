@@ -7,8 +7,7 @@ from homeassistant import config_entries
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow
 
-from .const import CONF_INTEGRATION_CREATED_ADDON, CONF_USE_ADDON
-from .const import DOMAIN  # pylint:disable=unused-import
+from .const import CONF_INTEGRATION_CREATED_ADDON, CONF_USE_ADDON, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,7 +24,6 @@ class DomainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for ozw."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
     def __init__(self):
         """Set up flow instance."""
@@ -100,7 +98,7 @@ class DomainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         mqtt_entries = self.hass.config_entries.async_entries("mqtt")
         if (
             not mqtt_entries
-            or mqtt_entries[0].state != config_entries.ENTRY_STATE_LOADED
+            or mqtt_entries[0].state is not config_entries.ConfigEntryState.LOADED
         ):
             return self.async_abort(reason="mqtt_required")
         return self._async_create_entry_from_vars()

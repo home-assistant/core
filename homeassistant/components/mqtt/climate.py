@@ -36,22 +36,20 @@ from homeassistant.components.climate.const import (
 )
 from homeassistant.const import (
     ATTR_TEMPERATURE,
-    CONF_DEVICE,
     CONF_NAME,
     CONF_PAYLOAD_OFF,
     CONF_PAYLOAD_ON,
     CONF_TEMPERATURE_UNIT,
-    CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
     PRECISION_HALVES,
     PRECISION_TENTHS,
     PRECISION_WHOLE,
     STATE_ON,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.reload import async_setup_reload_service
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.typing import ConfigType
 
 from . import (
     CONF_QOS,
@@ -63,13 +61,7 @@ from . import (
 )
 from .. import mqtt
 from .debug_info import log_messages
-from .mixins import (
-    MQTT_AVAILABILITY_SCHEMA,
-    MQTT_ENTITY_DEVICE_INFO_SCHEMA,
-    MQTT_JSON_ATTRS_SCHEMA,
-    MqttEntity,
-    async_setup_entry_helper,
-)
+from .mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_helper
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -127,6 +119,31 @@ CONF_TEMP_MAX = "max_temp"
 CONF_TEMP_MIN = "min_temp"
 CONF_TEMP_STEP = "temp_step"
 
+MQTT_CLIMATE_ATTRIBUTES_BLOCKED = frozenset(
+    {
+        climate.ATTR_AUX_HEAT,
+        climate.ATTR_CURRENT_HUMIDITY,
+        climate.ATTR_CURRENT_TEMPERATURE,
+        climate.ATTR_FAN_MODE,
+        climate.ATTR_FAN_MODES,
+        climate.ATTR_HUMIDITY,
+        climate.ATTR_HVAC_ACTION,
+        climate.ATTR_HVAC_MODES,
+        climate.ATTR_MAX_HUMIDITY,
+        climate.ATTR_MAX_TEMP,
+        climate.ATTR_MIN_HUMIDITY,
+        climate.ATTR_MIN_TEMP,
+        climate.ATTR_PRESET_MODE,
+        climate.ATTR_PRESET_MODES,
+        climate.ATTR_SWING_MODE,
+        climate.ATTR_SWING_MODES,
+        climate.ATTR_TARGET_TEMP_HIGH,
+        climate.ATTR_TARGET_TEMP_LOW,
+        climate.ATTR_TARGET_TEMP_STEP,
+        climate.ATTR_TEMPERATURE,
+    }
+)
+
 VALUE_TEMPLATE_KEYS = (
     CONF_AUX_STATE_TEMPLATE,
     CONF_AWAY_MODE_STATE_TEMPLATE,
@@ -178,94 +195,88 @@ TOPIC_KEYS = (
 )
 
 SCHEMA_BASE = CLIMATE_PLATFORM_SCHEMA.extend(MQTT_BASE_PLATFORM_SCHEMA.schema)
-PLATFORM_SCHEMA = (
-    SCHEMA_BASE.extend(
-        {
-            vol.Optional(CONF_AUX_COMMAND_TOPIC): mqtt.valid_publish_topic,
-            vol.Optional(CONF_AUX_STATE_TEMPLATE): cv.template,
-            vol.Optional(CONF_AUX_STATE_TOPIC): mqtt.valid_subscribe_topic,
-            vol.Optional(CONF_AWAY_MODE_COMMAND_TOPIC): mqtt.valid_publish_topic,
-            vol.Optional(CONF_AWAY_MODE_STATE_TEMPLATE): cv.template,
-            vol.Optional(CONF_AWAY_MODE_STATE_TOPIC): mqtt.valid_subscribe_topic,
-            vol.Optional(CONF_CURRENT_TEMP_TEMPLATE): cv.template,
-            vol.Optional(CONF_CURRENT_TEMP_TOPIC): mqtt.valid_subscribe_topic,
-            vol.Optional(CONF_DEVICE): MQTT_ENTITY_DEVICE_INFO_SCHEMA,
-            vol.Optional(CONF_FAN_MODE_COMMAND_TEMPLATE): cv.template,
-            vol.Optional(CONF_FAN_MODE_COMMAND_TOPIC): mqtt.valid_publish_topic,
-            vol.Optional(
-                CONF_FAN_MODE_LIST,
-                default=[FAN_AUTO, FAN_LOW, FAN_MEDIUM, FAN_HIGH],
-            ): cv.ensure_list,
-            vol.Optional(CONF_FAN_MODE_STATE_TEMPLATE): cv.template,
-            vol.Optional(CONF_FAN_MODE_STATE_TOPIC): mqtt.valid_subscribe_topic,
-            vol.Optional(CONF_HOLD_COMMAND_TEMPLATE): cv.template,
-            vol.Optional(CONF_HOLD_COMMAND_TOPIC): mqtt.valid_publish_topic,
-            vol.Optional(CONF_HOLD_STATE_TEMPLATE): cv.template,
-            vol.Optional(CONF_HOLD_STATE_TOPIC): mqtt.valid_subscribe_topic,
-            vol.Optional(CONF_HOLD_LIST, default=list): cv.ensure_list,
-            vol.Optional(CONF_MODE_COMMAND_TEMPLATE): cv.template,
-            vol.Optional(CONF_MODE_COMMAND_TOPIC): mqtt.valid_publish_topic,
-            vol.Optional(
-                CONF_MODE_LIST,
-                default=[
-                    HVAC_MODE_AUTO,
-                    HVAC_MODE_OFF,
-                    HVAC_MODE_COOL,
-                    HVAC_MODE_HEAT,
-                    HVAC_MODE_DRY,
-                    HVAC_MODE_FAN_ONLY,
-                ],
-            ): cv.ensure_list,
-            vol.Optional(CONF_MODE_STATE_TEMPLATE): cv.template,
-            vol.Optional(CONF_MODE_STATE_TOPIC): mqtt.valid_subscribe_topic,
-            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-            vol.Optional(CONF_PAYLOAD_ON, default="ON"): cv.string,
-            vol.Optional(CONF_PAYLOAD_OFF, default="OFF"): cv.string,
-            vol.Optional(CONF_POWER_COMMAND_TOPIC): mqtt.valid_publish_topic,
-            vol.Optional(CONF_POWER_STATE_TEMPLATE): cv.template,
-            vol.Optional(CONF_POWER_STATE_TOPIC): mqtt.valid_subscribe_topic,
-            vol.Optional(CONF_PRECISION): vol.In(
-                [PRECISION_TENTHS, PRECISION_HALVES, PRECISION_WHOLE]
-            ),
-            vol.Optional(CONF_RETAIN, default=mqtt.DEFAULT_RETAIN): cv.boolean,
-            vol.Optional(CONF_SEND_IF_OFF, default=True): cv.boolean,
-            vol.Optional(CONF_ACTION_TEMPLATE): cv.template,
-            vol.Optional(CONF_ACTION_TOPIC): mqtt.valid_subscribe_topic,
-            vol.Optional(CONF_SWING_MODE_COMMAND_TEMPLATE): cv.template,
-            vol.Optional(CONF_SWING_MODE_COMMAND_TOPIC): mqtt.valid_publish_topic,
-            vol.Optional(
-                CONF_SWING_MODE_LIST, default=[STATE_ON, HVAC_MODE_OFF]
-            ): cv.ensure_list,
-            vol.Optional(CONF_SWING_MODE_STATE_TEMPLATE): cv.template,
-            vol.Optional(CONF_SWING_MODE_STATE_TOPIC): mqtt.valid_subscribe_topic,
-            vol.Optional(CONF_TEMP_INITIAL, default=21): cv.positive_int,
-            vol.Optional(CONF_TEMP_MIN, default=DEFAULT_MIN_TEMP): vol.Coerce(float),
-            vol.Optional(CONF_TEMP_MAX, default=DEFAULT_MAX_TEMP): vol.Coerce(float),
-            vol.Optional(CONF_TEMP_STEP, default=1.0): vol.Coerce(float),
-            vol.Optional(CONF_TEMP_COMMAND_TEMPLATE): cv.template,
-            vol.Optional(CONF_TEMP_COMMAND_TOPIC): mqtt.valid_publish_topic,
-            vol.Optional(CONF_TEMP_HIGH_COMMAND_TEMPLATE): cv.template,
-            vol.Optional(CONF_TEMP_HIGH_COMMAND_TOPIC): mqtt.valid_publish_topic,
-            vol.Optional(CONF_TEMP_HIGH_STATE_TOPIC): mqtt.valid_subscribe_topic,
-            vol.Optional(CONF_TEMP_HIGH_STATE_TEMPLATE): cv.template,
-            vol.Optional(CONF_TEMP_LOW_COMMAND_TEMPLATE): cv.template,
-            vol.Optional(CONF_TEMP_LOW_COMMAND_TOPIC): mqtt.valid_publish_topic,
-            vol.Optional(CONF_TEMP_LOW_STATE_TEMPLATE): cv.template,
-            vol.Optional(CONF_TEMP_LOW_STATE_TOPIC): mqtt.valid_subscribe_topic,
-            vol.Optional(CONF_TEMP_STATE_TEMPLATE): cv.template,
-            vol.Optional(CONF_TEMP_STATE_TOPIC): mqtt.valid_subscribe_topic,
-            vol.Optional(CONF_TEMPERATURE_UNIT): cv.temperature_unit,
-            vol.Optional(CONF_UNIQUE_ID): cv.string,
-            vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
-        }
-    )
-    .extend(MQTT_AVAILABILITY_SCHEMA.schema)
-    .extend(MQTT_JSON_ATTRS_SCHEMA.schema)
-)
+PLATFORM_SCHEMA = SCHEMA_BASE.extend(
+    {
+        vol.Optional(CONF_AUX_COMMAND_TOPIC): mqtt.valid_publish_topic,
+        vol.Optional(CONF_AUX_STATE_TEMPLATE): cv.template,
+        vol.Optional(CONF_AUX_STATE_TOPIC): mqtt.valid_subscribe_topic,
+        vol.Optional(CONF_AWAY_MODE_COMMAND_TOPIC): mqtt.valid_publish_topic,
+        vol.Optional(CONF_AWAY_MODE_STATE_TEMPLATE): cv.template,
+        vol.Optional(CONF_AWAY_MODE_STATE_TOPIC): mqtt.valid_subscribe_topic,
+        vol.Optional(CONF_CURRENT_TEMP_TEMPLATE): cv.template,
+        vol.Optional(CONF_CURRENT_TEMP_TOPIC): mqtt.valid_subscribe_topic,
+        vol.Optional(CONF_FAN_MODE_COMMAND_TEMPLATE): cv.template,
+        vol.Optional(CONF_FAN_MODE_COMMAND_TOPIC): mqtt.valid_publish_topic,
+        vol.Optional(
+            CONF_FAN_MODE_LIST,
+            default=[FAN_AUTO, FAN_LOW, FAN_MEDIUM, FAN_HIGH],
+        ): cv.ensure_list,
+        vol.Optional(CONF_FAN_MODE_STATE_TEMPLATE): cv.template,
+        vol.Optional(CONF_FAN_MODE_STATE_TOPIC): mqtt.valid_subscribe_topic,
+        vol.Optional(CONF_HOLD_COMMAND_TEMPLATE): cv.template,
+        vol.Optional(CONF_HOLD_COMMAND_TOPIC): mqtt.valid_publish_topic,
+        vol.Optional(CONF_HOLD_STATE_TEMPLATE): cv.template,
+        vol.Optional(CONF_HOLD_STATE_TOPIC): mqtt.valid_subscribe_topic,
+        vol.Optional(CONF_HOLD_LIST, default=list): cv.ensure_list,
+        vol.Optional(CONF_MODE_COMMAND_TEMPLATE): cv.template,
+        vol.Optional(CONF_MODE_COMMAND_TOPIC): mqtt.valid_publish_topic,
+        vol.Optional(
+            CONF_MODE_LIST,
+            default=[
+                HVAC_MODE_AUTO,
+                HVAC_MODE_OFF,
+                HVAC_MODE_COOL,
+                HVAC_MODE_HEAT,
+                HVAC_MODE_DRY,
+                HVAC_MODE_FAN_ONLY,
+            ],
+        ): cv.ensure_list,
+        vol.Optional(CONF_MODE_STATE_TEMPLATE): cv.template,
+        vol.Optional(CONF_MODE_STATE_TOPIC): mqtt.valid_subscribe_topic,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_PAYLOAD_ON, default="ON"): cv.string,
+        vol.Optional(CONF_PAYLOAD_OFF, default="OFF"): cv.string,
+        vol.Optional(CONF_POWER_COMMAND_TOPIC): mqtt.valid_publish_topic,
+        vol.Optional(CONF_POWER_STATE_TEMPLATE): cv.template,
+        vol.Optional(CONF_POWER_STATE_TOPIC): mqtt.valid_subscribe_topic,
+        vol.Optional(CONF_PRECISION): vol.In(
+            [PRECISION_TENTHS, PRECISION_HALVES, PRECISION_WHOLE]
+        ),
+        vol.Optional(CONF_RETAIN, default=mqtt.DEFAULT_RETAIN): cv.boolean,
+        vol.Optional(CONF_SEND_IF_OFF, default=True): cv.boolean,
+        vol.Optional(CONF_ACTION_TEMPLATE): cv.template,
+        vol.Optional(CONF_ACTION_TOPIC): mqtt.valid_subscribe_topic,
+        vol.Optional(CONF_SWING_MODE_COMMAND_TEMPLATE): cv.template,
+        vol.Optional(CONF_SWING_MODE_COMMAND_TOPIC): mqtt.valid_publish_topic,
+        vol.Optional(
+            CONF_SWING_MODE_LIST, default=[STATE_ON, HVAC_MODE_OFF]
+        ): cv.ensure_list,
+        vol.Optional(CONF_SWING_MODE_STATE_TEMPLATE): cv.template,
+        vol.Optional(CONF_SWING_MODE_STATE_TOPIC): mqtt.valid_subscribe_topic,
+        vol.Optional(CONF_TEMP_INITIAL, default=21): cv.positive_int,
+        vol.Optional(CONF_TEMP_MIN, default=DEFAULT_MIN_TEMP): vol.Coerce(float),
+        vol.Optional(CONF_TEMP_MAX, default=DEFAULT_MAX_TEMP): vol.Coerce(float),
+        vol.Optional(CONF_TEMP_STEP, default=1.0): vol.Coerce(float),
+        vol.Optional(CONF_TEMP_COMMAND_TEMPLATE): cv.template,
+        vol.Optional(CONF_TEMP_COMMAND_TOPIC): mqtt.valid_publish_topic,
+        vol.Optional(CONF_TEMP_HIGH_COMMAND_TEMPLATE): cv.template,
+        vol.Optional(CONF_TEMP_HIGH_COMMAND_TOPIC): mqtt.valid_publish_topic,
+        vol.Optional(CONF_TEMP_HIGH_STATE_TOPIC): mqtt.valid_subscribe_topic,
+        vol.Optional(CONF_TEMP_HIGH_STATE_TEMPLATE): cv.template,
+        vol.Optional(CONF_TEMP_LOW_COMMAND_TEMPLATE): cv.template,
+        vol.Optional(CONF_TEMP_LOW_COMMAND_TOPIC): mqtt.valid_publish_topic,
+        vol.Optional(CONF_TEMP_LOW_STATE_TEMPLATE): cv.template,
+        vol.Optional(CONF_TEMP_LOW_STATE_TOPIC): mqtt.valid_subscribe_topic,
+        vol.Optional(CONF_TEMP_STATE_TEMPLATE): cv.template,
+        vol.Optional(CONF_TEMP_STATE_TOPIC): mqtt.valid_subscribe_topic,
+        vol.Optional(CONF_TEMPERATURE_UNIT): cv.temperature_unit,
+        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+    }
+).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
 
 async def async_setup_platform(
-    hass: HomeAssistantType, async_add_entities, config: ConfigType, discovery_info=None
+    hass: HomeAssistant, async_add_entities, config: ConfigType, discovery_info=None
 ):
     """Set up MQTT climate device through configuration.yaml."""
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
@@ -289,6 +300,8 @@ async def _async_setup_entity(
 
 class MqttClimate(MqttEntity, ClimateEntity):
     """Representation of an MQTT climate device."""
+
+    _attributes_extra_blocked = MQTT_CLIMATE_ATTRIBUTES_BLOCKED
 
     def __init__(self, hass, config, config_entry, discovery_data):
         """Initialize the climate device."""
@@ -321,7 +334,6 @@ class MqttClimate(MqttEntity, ClimateEntity):
 
     def _setup_from_config(self, config):
         """(Re)Setup the entity."""
-        self._config = config
         self._topic = {key: config.get(key) for key in TOPIC_KEYS}
 
         # set to None in non-optimistic mode
@@ -374,7 +386,7 @@ class MqttClimate(MqttEntity, ClimateEntity):
             tpl.hass = self.hass
         self._command_templates = command_templates
 
-    async def _subscribe_topics(self):
+    async def _subscribe_topics(self):  # noqa: C901
         """(Re)Subscribe to topics."""
         topics = {}
         qos = self._config[CONF_QOS]
@@ -562,11 +574,6 @@ class MqttClimate(MqttEntity, ClimateEntity):
         self._sub_state = await subscription.async_subscribe_topics(
             self.hass, self._sub_state, topics
         )
-
-    @property
-    def name(self):
-        """Return the name of the climate device."""
-        return self._config[CONF_NAME]
 
     @property
     def temperature_unit(self):

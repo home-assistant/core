@@ -1,7 +1,7 @@
 """Support for Minut Point sensors."""
 import logging
 
-from homeassistant.components.sensor import DOMAIN
+from homeassistant.components.sensor import DOMAIN, SensorEntity
 from homeassistant.const import (
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_PRESSURE,
@@ -47,7 +47,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
 
-class MinutPointSensor(MinutPointEntity):
+class MinutPointSensor(MinutPointEntity, SensorEntity):
     """The platform class required by Home Assistant."""
 
     def __init__(self, point_client, device_id, device_class):

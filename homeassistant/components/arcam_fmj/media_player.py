@@ -22,8 +22,7 @@ from homeassistant.components.media_player.const import (
 )
 from homeassistant.components.media_player.errors import BrowseError
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
-from homeassistant.core import callback
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant, callback
 
 from .config_flow import get_entry_client
 from .const import (
@@ -38,7 +37,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     config_entry: config_entries.ConfigEntry,
     async_add_entities,
 ):

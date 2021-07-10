@@ -129,8 +129,8 @@ DEFAULT_VAR_SENSOR_STRING = "HA."
 KEY_ACTIONS = "actions"
 KEY_STATUS = "status"
 
-SUPPORTED_PLATFORMS = [BINARY_SENSOR, SENSOR, LOCK, FAN, COVER, LIGHT, SWITCH, CLIMATE]
-SUPPORTED_PROGRAM_PLATFORMS = [BINARY_SENSOR, LOCK, FAN, COVER, SWITCH]
+PLATFORMS = [BINARY_SENSOR, SENSOR, LOCK, FAN, COVER, LIGHT, SWITCH, CLIMATE]
+PROGRAM_PLATFORMS = [BINARY_SENSOR, LOCK, FAN, COVER, SWITCH]
 
 SUPPORTED_BIN_SENS_CLASSES = ["moisture", "opening", "motion", "climate"]
 
@@ -184,6 +184,7 @@ UNDO_UPDATE_LISTENER = "undo_update_listener"
 # Used for discovery
 UDN_UUID_PREFIX = "uuid:"
 ISY_URL_POSTFIX = "/desc"
+EVENTS_SUFFIX = "_ISYSUB"
 
 # Special Units of Measure
 UOM_ISYV4_DEGREES = "degrees"
@@ -352,7 +353,7 @@ UOM_FRIENDLY_NAME = {
     "22": "%RH",
     "23": PRESSURE_INHG,
     "24": SPEED_INCHES_PER_HOUR,
-    UOM_INDEX: "index",  # Index type. Use "node.formatted" for value
+    UOM_INDEX: UOM_INDEX,  # Index type. Use "node.formatted" for value
     "26": TEMP_KELVIN,
     "27": "keyword",
     "28": MASS_KILOGRAMS,

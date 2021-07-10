@@ -2,5 +2,6 @@
   "domain": "derivative",
   "name": "Derivative",
   "documentation": "https://www.home-assistant.io/integrations/derivative",
-  "codeowners": ["@afaucogney"]
+  "codeowners": ["@afaucogney"],
+  "iot_class": "calculated"
 }

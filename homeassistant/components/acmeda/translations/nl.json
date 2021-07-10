@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "no_devices_found": "Geen apparaten gevonden op het netwerk"
+        },
         "step": {
             "user": {
                 "data": {

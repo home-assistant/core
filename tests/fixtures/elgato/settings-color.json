@@ -1,0 +1,10 @@
+{
+  "powerOnBehavior": 2,
+  "powerOnHue": 40.0,
+  "powerOnSaturation": 15.0,
+  "powerOnBrightness": 40,
+  "powerOnTemperature": 0,
+  "switchOnDurationMs": 150,
+  "switchOffDurationMs": 400,
+  "colorChangeDurationMs": 150
+}

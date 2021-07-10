@@ -1,4 +1,9 @@
 """Adds config flow for Airly."""
+from __future__ import annotations
+
+from typing import Any
+
+from aiohttp import ClientSession
 from airly import Airly
 from airly.exceptions import AirlyError
 import async_timeout
@@ -13,23 +18,21 @@ from homeassistant.const import (
     HTTP_NOT_FOUND,
     HTTP_UNAUTHORIZED,
 )
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
-from .const import (  # pylint:disable=unused-import
-    CONF_USE_NEAREST,
-    DOMAIN,
-    NO_AIRLY_SENSORS,
-)
+from .const import CONF_USE_NEAREST, DOMAIN, NO_AIRLY_SENSORS
 
 
 class AirlyFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Config flow for Airly."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle a flow initialized by the user."""
         errors = {}
         use_nearest = False
@@ -89,7 +92,13 @@ class AirlyFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
 
-async def test_location(client, api_key, latitude, longitude, use_nearest=False):
+async def test_location(
+    client: ClientSession,
+    api_key: str,
+    latitude: float,
+    longitude: float,
+    use_nearest: bool = False,
+) -> bool:
     """Return true if location is valid."""
     airly = Airly(api_key, client)
     if use_nearest:

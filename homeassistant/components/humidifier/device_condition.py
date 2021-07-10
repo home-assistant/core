@@ -1,21 +1,22 @@
 """Provide the device automations for Humidifier."""
-from typing import Dict, List
+from __future__ import annotations
 
 import voluptuous as vol
 
 from homeassistant.components.device_automation import toggle_entity
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    ATTR_SUPPORTED_FEATURES,
+    ATTR_MODE,
     CONF_CONDITION,
     CONF_DEVICE_ID,
     CONF_DOMAIN,
     CONF_ENTITY_ID,
     CONF_TYPE,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, HomeAssistantError, callback
 from homeassistant.helpers import condition, config_validation as cv, entity_registry
 from homeassistant.helpers.config_validation import DEVICE_CONDITION_BASE_SCHEMA
+from homeassistant.helpers.entity import get_capability, get_supported_features
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
 from . import DOMAIN, const
@@ -28,7 +29,7 @@ MODE_CONDITION = DEVICE_CONDITION_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_ENTITY_ID): cv.entity_id,
         vol.Required(CONF_TYPE): "is_mode",
-        vol.Required(const.ATTR_MODE): str,
+        vol.Required(ATTR_MODE): str,
     }
 )
 
@@ -37,7 +38,7 @@ CONDITION_SCHEMA = vol.Any(TOGGLE_CONDITION, MODE_CONDITION)
 
 async def async_get_conditions(
     hass: HomeAssistant, device_id: str
-) -> List[Dict[str, str]]:
+) -> list[dict[str, str]]:
     """List device conditions for Humidifier devices."""
     registry = await entity_registry.async_get_registry(hass)
     conditions = await toggle_entity.async_get_conditions(hass, device_id, DOMAIN)
@@ -47,9 +48,9 @@ async def async_get_conditions(
         if entry.domain != DOMAIN:
             continue
 
-        state = hass.states.get(entry.entity_id)
+        supported_features = get_supported_features(hass, entry.entity_id)
 
-        if state and state.attributes[ATTR_SUPPORTED_FEATURES] & const.SUPPORT_MODES:
+        if supported_features & const.SUPPORT_MODES:
             conditions.append(
                 {
                     CONF_CONDITION: "device",
@@ -72,7 +73,7 @@ def async_condition_from_config(
         config = CONDITION_SCHEMA(config)
 
     if config[CONF_TYPE] == "is_mode":
-        attribute = const.ATTR_MODE
+        attribute = ATTR_MODE
     else:
         return toggle_entity.async_condition_from_config(config)
 
@@ -86,18 +87,20 @@ def async_condition_from_config(
 
 async def async_get_condition_capabilities(hass, config):
     """List condition capabilities."""
-    state = hass.states.get(config[CONF_ENTITY_ID])
     condition_type = config[CONF_TYPE]
 
     fields = {}
 
     if condition_type == "is_mode":
-        if state:
-            modes = state.attributes.get(const.ATTR_AVAILABLE_MODES, [])
-        else:
+        try:
+            modes = (
+                get_capability(hass, config[ATTR_ENTITY_ID], const.ATTR_AVAILABLE_MODES)
+                or []
+            )
+        except HomeAssistantError:
             modes = []
 
-        fields[vol.Required(const.ATTR_AVAILABLE_MODES)] = vol.In(modes)
+        fields[vol.Required(ATTR_MODE)] = vol.In(modes)
 
         return {"extra_fields": vol.Schema(fields)}
 

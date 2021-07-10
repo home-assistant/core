@@ -1,5 +1,5 @@
 """Switches for the Elexa Guardian integration."""
-from typing import Callable, Dict
+from __future__ import annotations
 
 from aioguardian import Client
 from aioguardian.errors import GuardianError
@@ -10,6 +10,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_FILENAME, CONF_PORT, CONF_URL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import ValveControllerEntity
@@ -38,10 +39,10 @@ SERVICE_UPGRADE_FIRMWARE = "upgrade_firmware"
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: Callable
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up Guardian switches based on a config entry."""
-    platform = entity_platform.current_platform.get()
+    platform = entity_platform.async_get_current_platform()
 
     for service_name, schema, method in [
         (SERVICE_DISABLE_AP, {}, "async_disable_ap"),
@@ -84,25 +85,15 @@ class ValveControllerSwitch(ValveControllerEntity, SwitchEntity):
         self,
         entry: ConfigEntry,
         client: Client,
-        coordinators: Dict[str, DataUpdateCoordinator],
-    ):
+        coordinators: dict[str, DataUpdateCoordinator],
+    ) -> None:
         """Initialize."""
         super().__init__(
             entry, coordinators, "valve", "Valve Controller", None, "mdi:water"
         )
 
+        self._attr_is_on = True
         self._client = client
-        self._is_on = True
-
-    @property
-    def available(self) -> bool:
-        """Return whether the entity is available."""
-        return self.coordinators[API_VALVE_STATUS].last_update_success
-
-    @property
-    def is_on(self) -> bool:
-        """Return True if the valve is open."""
-        return self._is_on
 
     async def _async_continue_entity_setup(self):
         """Register API interest (and related tasks) when the entity is added."""
@@ -111,14 +102,15 @@ class ValveControllerSwitch(ValveControllerEntity, SwitchEntity):
     @callback
     def _async_update_from_latest_data(self) -> None:
         """Update the entity."""
-        self._is_on = self.coordinators[API_VALVE_STATUS].data["state"] in (
+        self._attr_available = self.coordinators[API_VALVE_STATUS].last_update_success
+        self._attr_is_on = self.coordinators[API_VALVE_STATUS].data["state"] in (
             "start_opening",
             "opening",
             "finish_opening",
             "opened",
         )
 
-        self._attrs.update(
+        self._attr_extra_state_attributes.update(
             {
                 ATTR_AVG_CURRENT: self.coordinators[API_VALVE_STATUS].data[
                     "average_current"
@@ -214,7 +206,7 @@ class ValveControllerSwitch(ValveControllerEntity, SwitchEntity):
             LOGGER.error("Error while closing the valve: %s", err)
             return
 
-        self._is_on = False
+        self._attr_is_on = False
         self.async_write_ha_state()
 
     async def async_turn_on(self, **kwargs) -> None:
@@ -226,5 +218,5 @@ class ValveControllerSwitch(ValveControllerEntity, SwitchEntity):
             LOGGER.error("Error while opening the valve: %s", err)
             return
 
-        self._is_on = True
+        self._attr_is_on = True
         self.async_write_ha_state()

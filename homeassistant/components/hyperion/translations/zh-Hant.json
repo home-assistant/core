@@ -3,8 +3,8 @@
         "abort": {
             "already_configured": "\u670d\u52d9\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
             "already_in_progress": "\u8a2d\u5b9a\u5df2\u7d93\u9032\u884c\u4e2d",
-            "auth_new_token_not_granted_error": "\u65b0\u5275\u5bc6\u9470\u672a\u7372\u5f97 Hyperion UI \u6838\u51c6",
-            "auth_new_token_not_work_error": "\u4f7f\u7528\u65b0\u5275\u5bc6\u9470\u8a8d\u8b49\u5931\u6557",
+            "auth_new_token_not_granted_error": "\u65b0\u5275\u6b0a\u6756\u672a\u7372\u5f97 Hyperion UI \u6838\u51c6",
+            "auth_new_token_not_work_error": "\u4f7f\u7528\u65b0\u5275\u6b0a\u6756\u8a8d\u8b49\u5931\u6557",
             "auth_required_error": "\u7121\u6cd5\u5224\u5b9a\u662f\u5426\u9700\u8981\u9a57\u8b49",
             "cannot_connect": "\u9023\u7dda\u5931\u6557",
             "no_id": "Hyperion Ambilight \u5be6\u9ad4\u672a\u56de\u5831\u5176 ID",
@@ -12,13 +12,13 @@
         },
         "error": {
             "cannot_connect": "\u9023\u7dda\u5931\u6557",
-            "invalid_access_token": "\u5b58\u53d6\u5bc6\u9470\u7121\u6548"
+            "invalid_access_token": "\u5b58\u53d6\u6b0a\u6756\u7121\u6548"
         },
         "step": {
             "auth": {
                 "data": {
-                    "create_token": "\u81ea\u52d5\u65b0\u5275\u5bc6\u9470",
-                    "token": "\u6216\u63d0\u4f9b\u73fe\u6709\u5bc6\u9470"
+                    "create_token": "\u81ea\u52d5\u65b0\u5275\u6b0a\u6756",
+                    "token": "\u6216\u63d0\u4f9b\u73fe\u6709\u6b0a\u6756"
                 },
                 "description": "\u8a2d\u5b9a Hyperion Ambilight \u4f3a\u670d\u5668\u8a8d\u8b49"
             },
@@ -27,11 +27,11 @@
                 "title": "\u78ba\u8a8d\u9644\u52a0 Hyperion Ambilight \u670d\u52d9"
             },
             "create_token": {
-                "description": "\u9ede\u9078\u4e0b\u65b9 **\u50b3\u9001** \u4ee5\u8acb\u6c42\u65b0\u8a8d\u8b49\u5bc6\u9470\u3002\u5c07\u6703\u91cd\u65b0\u5c0e\u5411\u81f3 Hyperion UI \u4ee5\u6838\u51c6\u8981\u6c42\u3002\u8acb\u78ba\u8a8d\u986f\u793a ID \u70ba \"{auth_id}\"",
-                "title": "\u81ea\u52d5\u65b0\u5275\u8a8d\u8b49\u5bc6\u9470"
+                "description": "\u9ede\u9078\u4e0b\u65b9 **\u50b3\u9001** \u4ee5\u8acb\u6c42\u65b0\u8a8d\u8b49\u6b0a\u6756\u3002\u5c07\u6703\u91cd\u65b0\u5c0e\u5411\u81f3 Hyperion UI \u4ee5\u6838\u51c6\u8981\u6c42\u3002\u8acb\u78ba\u8a8d\u986f\u793a ID \u70ba \"{auth_id}\"",
+                "title": "\u81ea\u52d5\u65b0\u5275\u8a8d\u8b49\u6b0a\u6756"
             },
             "create_token_external": {
-                "title": "\u63a5\u53d7 Hyperion UI \u4e2d\u7684\u65b0\u5bc6\u9470"
+                "title": "\u63a5\u53d7 Hyperion UI \u4e2d\u7684\u65b0\u6b0a\u6756"
             },
             "user": {
                 "data": {
@@ -45,6 +45,7 @@
         "step": {
             "init": {
                 "data": {
+                    "effect_show_list": "\u986f\u793a Hyperion \u6548\u61c9",
                     "priority": "Hyperion \u512a\u5148\u4f7f\u7528\u4e4b\u8272\u6eab\u8207\u7279\u6548"
                 }
             }

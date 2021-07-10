@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "missing_configuration": "Het component is niet geconfigureerd. Volg de documentatie."
+            "missing_configuration": "Het component is niet geconfigureerd. Volg de documentatie.",
+            "no_url_available": "Geen URL beschikbaar. Voor informatie over deze fout, [check de helpsectie]({docs_url})"
         },
         "create_entry": {
             "default": "Succesvol geverifieerd"

@@ -68,6 +68,16 @@ def vizio_data_coordinator_update_fixture():
         yield
 
 
+@pytest.fixture(name="vizio_data_coordinator_update_failure")
+def vizio_data_coordinator_update_failure_fixture():
+    """Mock get data coordinator update failure."""
+    with patch(
+        "homeassistant.components.vizio.gen_apps_list_from_url",
+        return_value=None,
+    ):
+        yield
+
+
 @pytest.fixture(name="vizio_no_unique_id")
 def vizio_no_unique_id_fixture():
     """Mock no vizio unique ID returrned."""
@@ -157,6 +167,9 @@ def vizio_cant_connect_fixture():
     with patch(
         "homeassistant.components.vizio.config_flow.VizioAsync.validate_ha_config",
         AsyncMock(return_value=False),
+    ), patch(
+        "homeassistant.components.vizio.media_player.VizioAsync.get_power_state",
+        return_value=None,
     ):
         yield
 

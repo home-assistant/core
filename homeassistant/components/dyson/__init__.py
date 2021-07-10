@@ -17,7 +17,7 @@ CONF_RETRY = "retry"
 DEFAULT_TIMEOUT = 5
 DEFAULT_RETRY = 10
 DYSON_DEVICES = "dyson_devices"
-DYSON_PLATFORMS = ["sensor", "fan", "vacuum", "climate", "air_quality"]
+PLATFORMS = ["sensor", "fan", "vacuum", "climate", "air_quality"]
 
 DOMAIN = "dyson"
 
@@ -105,7 +105,7 @@ def setup(hass, config):
     # Start fan/sensors components
     if hass.data[DYSON_DEVICES]:
         _LOGGER.debug("Starting sensor/fan components")
-        for platform in DYSON_PLATFORMS:
+        for platform in PLATFORMS:
             discovery.load_platform(hass, platform, DOMAIN, {}, config)
 
     return True

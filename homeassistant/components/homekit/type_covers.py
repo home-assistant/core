@@ -364,18 +364,17 @@ class WindowCoveringBasic(OpeningDeviceBase, HomeAccessory):
         """Move cover to value if call came from HomeKit."""
         _LOGGER.debug("%s: Set position to %d", self.entity_id, value)
 
-        if self._supports_stop:
-            if value > 70:
-                service, position = (SERVICE_OPEN_COVER, 100)
-            elif value < 30:
-                service, position = (SERVICE_CLOSE_COVER, 0)
-            else:
-                service, position = (SERVICE_STOP_COVER, 50)
+        if (
+            self._supports_stop
+            and value > 70
+            or not self._supports_stop
+            and value >= 50
+        ):
+            service, position = (SERVICE_OPEN_COVER, 100)
+        elif value < 30 or not self._supports_stop:
+            service, position = (SERVICE_CLOSE_COVER, 0)
         else:
-            if value >= 50:
-                service, position = (SERVICE_OPEN_COVER, 100)
-            else:
-                service, position = (SERVICE_CLOSE_COVER, 0)
+            service, position = (SERVICE_STOP_COVER, 50)
 
         params = {ATTR_ENTITY_ID: self.entity_id}
         self.async_call_service(DOMAIN, service, params)

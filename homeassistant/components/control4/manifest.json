@@ -9,5 +9,6 @@
       "st": "c4:director"
     }
   ],
-  "codeowners": ["@lawtancool"]
+  "codeowners": ["@lawtancool"],
+  "iot_class": "local_polling"
 }

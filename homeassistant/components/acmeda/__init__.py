@@ -1,5 +1,4 @@
 """The Rollease Acmeda Automate integration."""
-import asyncio
 
 from homeassistant import config_entries, core
 
@@ -9,11 +8,6 @@ from .hub import PulseHub
 CONF_HUBS = "hubs"
 
 PLATFORMS = ["cover", "sensor"]
-
-
-async def async_setup(hass: core.HomeAssistant, config: dict):
-    """Set up the Rollease Acmeda Automate component."""
-    return True
 
 
 async def async_setup_entry(
@@ -28,10 +22,7 @@ async def async_setup_entry(
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][config_entry.entry_id] = hub
 
-    for component in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, component)
-        )
+    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
 
     return True
 
@@ -42,14 +33,10 @@ async def async_unload_entry(
     """Unload a config entry."""
     hub = hass.data[DOMAIN][config_entry.entry_id]
 
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(config_entry, component)
-                for component in PLATFORMS
-            ]
-        )
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        config_entry, PLATFORMS
     )
+
     if not await hub.async_reset():
         return False
 

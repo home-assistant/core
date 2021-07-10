@@ -1,11 +1,27 @@
 {
+    "device_automation": {
+        "condition_type": {
+            "is_idle": "{entity_name} siaga",
+            "is_off": "{entity_name} mati",
+            "is_on": "{entity_name} nyala",
+            "is_paused": "{entity_name} dijeda",
+            "is_playing": "{entity_name} sedang memutar"
+        },
+        "trigger_type": {
+            "idle": "{entity_name} menjadi siaga",
+            "paused": "{entity_name} dijeda",
+            "playing": "{entity_name} mulai memutar",
+            "turned_off": "{entity_name} dimatikan",
+            "turned_on": "{entity_name} dinyalakan"
+        }
+    },
     "state": {
         "_": {
-            "idle": "Diam",
-            "off": "Off",
-            "on": "On",
+            "idle": "Siaga",
+            "off": "Mati",
+            "on": "Nyala",
             "paused": "Jeda",
-            "playing": "Memainkan",
+            "playing": "Memutar",
             "standby": "Siaga"
         }
     },

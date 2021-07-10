@@ -184,7 +184,9 @@ async def async_setup_entry(
         if config_entry.entry_id in hass.data[DOMAIN]:
             await board.async_reset()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, handle_shutdown)
+    config_entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, handle_shutdown)
+    )
 
     device_registry = await dr.async_get_registry(hass)
     device_registry.async_get_or_create(

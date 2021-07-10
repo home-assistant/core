@@ -1,12 +1,14 @@
 """MQTT component mixins and helpers."""
+from __future__ import annotations
+
 from abc import abstractmethod
 import json
 import logging
-from typing import Optional
+from typing import Callable
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_DEVICE, CONF_NAME, CONF_UNIQUE_ID
+from homeassistant.const import CONF_DEVICE, CONF_ICON, CONF_NAME, CONF_UNIQUE_ID
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import (
@@ -36,7 +38,7 @@ from .discovery import (
     clear_discovery_hash,
     set_discovery_hash,
 )
-from .models import Message
+from .models import ReceiveMessage
 from .subscription import async_subscribe_topics, async_unsubscribe_topics
 from .util import valid_subscribe_topic
 
@@ -51,6 +53,7 @@ AVAILABILITY_MODES = [AVAILABILITY_ALL, AVAILABILITY_ANY, AVAILABILITY_LATEST]
 CONF_AVAILABILITY = "availability"
 CONF_AVAILABILITY_MODE = "availability_mode"
 CONF_AVAILABILITY_TOPIC = "availability_topic"
+CONF_ENABLED_BY_DEFAULT = "enabled_by_default"
 CONF_PAYLOAD_AVAILABLE = "payload_available"
 CONF_PAYLOAD_NOT_AVAILABLE = "payload_not_available"
 CONF_JSON_ATTRS_TOPIC = "json_attributes_topic"
@@ -63,6 +66,26 @@ CONF_MODEL = "model"
 CONF_SW_VERSION = "sw_version"
 CONF_VIA_DEVICE = "via_device"
 CONF_DEPRECATED_VIA_HUB = "via_hub"
+CONF_SUGGESTED_AREA = "suggested_area"
+
+MQTT_ATTRIBUTES_BLOCKED = {
+    "assumed_state",
+    "available",
+    "context_recent_time",
+    "device_class",
+    "device_info",
+    "entity_picture",
+    "entity_registry_enabled_default",
+    "extra_state_attributes",
+    "force_update",
+    "icon",
+    "name",
+    "should_poll",
+    "state",
+    "supported_features",
+    "unique_id",
+    "unit_of_measurement",
+}
 
 MQTT_AVAILABILITY_SINGLE_SCHEMA = vol.Schema(
     {
@@ -129,15 +152,20 @@ MQTT_ENTITY_DEVICE_INFO_SCHEMA = vol.All(
             vol.Optional(CONF_NAME): cv.string,
             vol.Optional(CONF_SW_VERSION): cv.string,
             vol.Optional(CONF_VIA_DEVICE): cv.string,
+            vol.Optional(CONF_SUGGESTED_AREA): cv.string,
         }
     ),
     validate_device_has_at_least_one_identifier,
 )
 
-MQTT_JSON_ATTRS_SCHEMA = vol.Schema(
+MQTT_ENTITY_COMMON_SCHEMA = MQTT_AVAILABILITY_SCHEMA.extend(
     {
+        vol.Optional(CONF_DEVICE): MQTT_ENTITY_DEVICE_INFO_SCHEMA,
+        vol.Optional(CONF_ENABLED_BY_DEFAULT, default=True): cv.boolean,
+        vol.Optional(CONF_ICON): cv.icon,
         vol.Optional(CONF_JSON_ATTRS_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_JSON_ATTRS_TEMPLATE): cv.template,
+        vol.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )
 
@@ -167,9 +195,11 @@ async def async_setup_entry_helper(hass, domain, async_setup, schema):
 class MqttAttributes(Entity):
     """Mixin used for platforms that support JSON attributes."""
 
+    _attributes_extra_blocked: frozenset[str] = frozenset()
+
     def __init__(self, config: dict) -> None:
         """Initialize the JSON attributes mixin."""
-        self._attributes = None
+        self._attributes: dict | None = None
         self._attributes_sub_state = None
         self._attributes_config = config
 
@@ -191,14 +221,20 @@ class MqttAttributes(Entity):
 
         @callback
         @log_messages(self.hass, self.entity_id)
-        def attributes_message_received(msg: Message) -> None:
+        def attributes_message_received(msg: ReceiveMessage) -> None:
             try:
                 payload = msg.payload
                 if attr_tpl is not None:
                     payload = attr_tpl.async_render_with_possible_json_value(payload)
-                json_dict = json.loads(payload)
+                json_dict = json.loads(payload) if isinstance(payload, str) else None
                 if isinstance(json_dict, dict):
-                    self._attributes = json_dict
+                    filtered_dict = {
+                        k: v
+                        for k, v in json_dict.items()
+                        if k not in MQTT_ATTRIBUTES_BLOCKED
+                        and k not in self._attributes_extra_blocked
+                    }
+                    self._attributes = filtered_dict
                     self.async_write_ha_state()
                 else:
                     _LOGGER.warning("JSON result was not a dictionary")
@@ -226,7 +262,7 @@ class MqttAttributes(Entity):
         )
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return self._attributes
 
@@ -237,7 +273,7 @@ class MqttAvailability(Entity):
     def __init__(self, config: dict) -> None:
         """Initialize the availability mixin."""
         self._availability_sub_state = None
-        self._available = {}
+        self._available: dict = {}
         self._available_latest = False
         self._availability_setup_from_config(config)
 
@@ -282,7 +318,7 @@ class MqttAvailability(Entity):
 
         @callback
         @log_messages(self.hass, self.entity_id)
-        def availability_message_received(msg: Message) -> None:
+        def availability_message_received(msg: ReceiveMessage) -> None:
             """Handle a new received MQTT availability message."""
             topic = msg.topic
             if msg.payload == self._avail_topics[topic][CONF_PAYLOAD_AVAILABLE]:
@@ -347,7 +383,7 @@ async def cleanup_device_registry(hass, device_id):
     if (
         device_id
         and not hass.helpers.entity_registry.async_entries_for_device(
-            entity_registry, device_id, include_disabled_entities=True
+            entity_registry, device_id, include_disabled_entities=False
         )
         and not await device_trigger.async_get_triggers(hass, device_id)
         and not tag.async_has_tags(hass, device_id)
@@ -362,7 +398,7 @@ class MqttDiscoveryUpdate(Entity):
         """Initialize the discovery update mixin."""
         self._discovery_data = discovery_data
         self._discovery_update = discovery_update
-        self._remove_signal = None
+        self._remove_signal: Callable | None = None
         self._removed_from_hass = False
 
     async def async_added_to_hass(self) -> None:
@@ -488,13 +524,16 @@ def device_info_from_config(config):
     if CONF_VIA_DEVICE in config:
         info["via_device"] = (DOMAIN, config[CONF_VIA_DEVICE])
 
+    if CONF_SUGGESTED_AREA in config:
+        info["suggested_area"] = config[CONF_SUGGESTED_AREA]
+
     return info
 
 
 class MqttEntityDeviceInfo(Entity):
     """Mixin used for mqtt platforms that support the device registry."""
 
-    def __init__(self, device_config: Optional[ConfigType], config_entry=None) -> None:
+    def __init__(self, device_config: ConfigType | None, config_entry=None) -> None:
         """Initialize the device mixin."""
         self._device_config = device_config
         self._config_entry = config_entry
@@ -527,11 +566,12 @@ class MqttEntity(
     def __init__(self, hass, config, config_entry, discovery_data):
         """Init the MQTT Entity."""
         self.hass = hass
+        self._config = config
         self._unique_id = config.get(CONF_UNIQUE_ID)
         self._sub_state = None
 
         # Load config
-        self._setup_from_config(config)
+        self._setup_from_config(self._config)
 
         # Initialize mixin classes
         MqttAttributes.__init__(self, config)
@@ -547,7 +587,8 @@ class MqttEntity(
     async def discovery_update(self, discovery_payload):
         """Handle updated discovery message."""
         config = self.config_schema()(discovery_payload)
-        self._setup_from_config(config)
+        self._config = config
+        self._setup_from_config(self._config)
         await self.attributes_discovery_update(config)
         await self.availability_discovery_update(config)
         await self.device_info_discovery_update(config)
@@ -574,6 +615,21 @@ class MqttEntity(
     @abstractmethod
     async def _subscribe_topics(self):
         """(Re)Subscribe to topics."""
+
+    @property
+    def entity_registry_enabled_default(self) -> bool:
+        """Return if the entity should be enabled when first added to the entity registry."""
+        return self._config[CONF_ENABLED_BY_DEFAULT]
+
+    @property
+    def icon(self):
+        """Return icon of the entity if any."""
+        return self._config.get(CONF_ICON)
+
+    @property
+    def name(self):
+        """Return the name of the device if any."""
+        return self._config.get(CONF_NAME)
 
     @property
     def should_poll(self):

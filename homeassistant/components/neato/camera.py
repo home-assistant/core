@@ -102,7 +102,7 @@ class NeatoCleaningMap(Camera):
 
         self._image = image.read()
         self._image_url = image_url
-        self._generated_at = (map_data["generated_at"].strip("Z")).replace("T", " ")
+        self._generated_at = map_data["generated_at"]
         self._available = True
 
     @property
@@ -126,7 +126,7 @@ class NeatoCleaningMap(Camera):
         return {"identifiers": {(NEATO_DOMAIN, self._robot_serial)}}
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the vacuum cleaner."""
         data = {}
 

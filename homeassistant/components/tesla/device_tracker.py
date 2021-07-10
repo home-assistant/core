@@ -1,5 +1,5 @@
 """Support for tracking Tesla cars."""
-from typing import Optional
+from __future__ import annotations
 
 from homeassistant.components.device_tracker import SOURCE_TYPE_GPS
 from homeassistant.components.device_tracker.config_entry import TrackerEntity
@@ -25,13 +25,13 @@ class TeslaDeviceEntity(TeslaDevice, TrackerEntity):
     """A class representing a Tesla device."""
 
     @property
-    def latitude(self) -> Optional[float]:
+    def latitude(self) -> float | None:
         """Return latitude value of the device."""
         location = self.tesla_device.get_location()
         return self.tesla_device.get_location().get("latitude") if location else None
 
     @property
-    def longitude(self) -> Optional[float]:
+    def longitude(self) -> float | None:
         """Return longitude value of the device."""
         location = self.tesla_device.get_location()
         return self.tesla_device.get_location().get("longitude") if location else None
@@ -42,9 +42,9 @@ class TeslaDeviceEntity(TeslaDevice, TrackerEntity):
         return SOURCE_TYPE_GPS
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the device."""
-        attr = super().device_state_attributes.copy()
+        attr = super().extra_state_attributes.copy()
         location = self.tesla_device.get_location()
         if location:
             attr.update(

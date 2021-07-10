@@ -1,8 +1,9 @@
 """Component to embed Aqualink devices."""
+from __future__ import annotations
+
 import asyncio
 from functools import wraps
 import logging
-from typing import Any, Dict
 
 import aiohttp.client_exceptions
 from iaqualink import (
@@ -25,6 +26,7 @@ from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
@@ -32,9 +34,9 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, UPDATE_INTERVAL
 
@@ -43,20 +45,31 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_CONFIG = "config"
 PARALLEL_UPDATES = 0
 
+PLATFORMS = [
+    BINARY_SENSOR_DOMAIN,
+    CLIMATE_DOMAIN,
+    LIGHT_DOMAIN,
+    SENSOR_DOMAIN,
+    SWITCH_DOMAIN,
+]
+
 CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_USERNAME): cv.string,
-                vol.Required(CONF_PASSWORD): cv.string,
-            }
-        )
-    },
+    vol.All(
+        cv.deprecated(DOMAIN),
+        {
+            DOMAIN: vol.Schema(
+                {
+                    vol.Required(CONF_USERNAME): cv.string,
+                    vol.Required(CONF_PASSWORD): cv.string,
+                }
+            )
+        },
+    ),
     extra=vol.ALLOW_EXTRA,
 )
 
 
-async def async_setup(hass: HomeAssistantType, config: ConfigType) -> None:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Aqualink component."""
     conf = config.get(DOMAIN)
 
@@ -72,7 +85,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> None:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> None:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Aqualink from a config entry."""
     username = entry.data[CONF_USERNAME]
     password = entry.data[CONF_PASSWORD]
@@ -155,26 +168,15 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> None
     return True
 
 
-async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    forward_unload = hass.config_entries.async_forward_entry_unload
-
-    tasks = []
-
-    if hass.data[DOMAIN][BINARY_SENSOR_DOMAIN]:
-        tasks += [forward_unload(entry, BINARY_SENSOR_DOMAIN)]
-    if hass.data[DOMAIN][CLIMATE_DOMAIN]:
-        tasks += [forward_unload(entry, CLIMATE_DOMAIN)]
-    if hass.data[DOMAIN][LIGHT_DOMAIN]:
-        tasks += [forward_unload(entry, LIGHT_DOMAIN)]
-    if hass.data[DOMAIN][SENSOR_DOMAIN]:
-        tasks += [forward_unload(entry, SENSOR_DOMAIN)]
-    if hass.data[DOMAIN][SWITCH_DOMAIN]:
-        tasks += [forward_unload(entry, SWITCH_DOMAIN)]
+    platforms_to_unload = [
+        platform for platform in PLATFORMS if platform in hass.data[DOMAIN]
+    ]
 
     hass.data[DOMAIN].clear()
 
-    return all(await asyncio.gather(*tasks))
+    return await hass.config_entries.async_unload_platforms(entry, platforms_to_unload)
 
 
 def refresh_system(func):
@@ -199,7 +201,7 @@ class AqualinkEntity(Entity):
     class.
     """
 
-    def __init__(self, dev: AqualinkDevice):
+    def __init__(self, dev: AqualinkDevice) -> None:
         """Initialize the entity."""
         self.dev = dev
 
@@ -234,7 +236,7 @@ class AqualinkEntity(Entity):
         return self.dev.system.online
 
     @property
-    def device_info(self) -> Dict[str, Any]:
+    def device_info(self) -> DeviceInfo:
         """Return the device info."""
         return {
             "identifiers": {(DOMAIN, self.unique_id)},

@@ -54,7 +54,7 @@ async def test_setup_manual(hass: HomeAssistant):
     with patch(f"{BASE_PATH}.DysonAccount.login", return_value=True) as login, patch(
         f"{BASE_PATH}.DysonAccount.devices", return_value=devices
     ) as devices_method, patch(
-        f"{BASE_PATH}.DYSON_PLATFORMS", ["fan", "vacuum"]
+        f"{BASE_PATH}.PLATFORMS", ["fan", "vacuum"]
     ):  # Patch platforms to get rid of sensors
         assert await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()
@@ -85,7 +85,7 @@ async def test_setup_autoconnect(hass: HomeAssistant):
     with patch(f"{BASE_PATH}.DysonAccount.login", return_value=True), patch(
         f"{BASE_PATH}.DysonAccount.devices", return_value=devices
     ), patch(
-        f"{BASE_PATH}.DYSON_PLATFORMS", ["fan"]
+        f"{BASE_PATH}.PLATFORMS", ["fan"]
     ):  # Patch platforms to get rid of sensors
         assert await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()

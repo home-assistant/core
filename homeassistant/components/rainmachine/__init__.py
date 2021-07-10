@@ -18,12 +18,15 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_validation as cv
+import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
     UpdateFailed,
 )
+from homeassistant.util.network import is_ip_address
 
+from .config_flow import get_client_controller
 from .const import (
     CONF_ZONE_RUN_TIME,
     DATA_CONTROLLER,
@@ -36,8 +39,6 @@ from .const import (
     DOMAIN,
     LOGGER,
 )
-
-DATA_LISTENER = "listener"
 
 DEFAULT_ATTRIBUTION = "Data provided by Green Electronics LLC"
 DEFAULT_ICON = "mdi:water"
@@ -69,32 +70,10 @@ async def async_update_programs_and_zones(
     )
 
 
-async def async_setup(hass: HomeAssistant, config: dict) -> bool:
-    """Set up the RainMachine component."""
-    hass.data[DOMAIN] = {DATA_CONTROLLER: {}, DATA_COORDINATOR: {}, DATA_LISTENER: {}}
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up RainMachine as config entry."""
+    hass.data.setdefault(DOMAIN, {DATA_CONTROLLER: {}, DATA_COORDINATOR: {}})
     hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id] = {}
-
-    entry_updates = {}
-    if not entry.unique_id:
-        # If the config entry doesn't already have a unique ID, set one:
-        entry_updates["unique_id"] = entry.data[CONF_IP_ADDRESS]
-    if CONF_ZONE_RUN_TIME in entry.data:
-        # If a zone run time exists in the config entry's data, pop it and move it to
-        # options:
-        data = {**entry.data}
-        entry_updates["data"] = data
-        entry_updates["options"] = {
-            **entry.options,
-            CONF_ZONE_RUN_TIME: data.pop(CONF_ZONE_RUN_TIME),
-        }
-    if entry_updates:
-        hass.config_entries.async_update_entry(entry, **entry_updates)
-
     websession = aiohttp_client.async_get_clientsession(hass)
     client = Client(session=websession)
 
@@ -106,14 +85,29 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             ssl=entry.data.get(CONF_SSL, DEFAULT_SSL),
         )
     except RainMachineError as err:
-        LOGGER.error("An error occurred: %s", err)
         raise ConfigEntryNotReady from err
 
     # regenmaschine can load multiple controllers at once, but we only grab the one
     # we loaded above:
-    controller = hass.data[DOMAIN][DATA_CONTROLLER][entry.entry_id] = next(
-        iter(client.controllers.values())
-    )
+    controller = hass.data[DOMAIN][DATA_CONTROLLER][
+        entry.entry_id
+    ] = get_client_controller(client)
+
+    entry_updates = {}
+    if not entry.unique_id or is_ip_address(entry.unique_id):
+        # If the config entry doesn't already have a unique ID, set one:
+        entry_updates["unique_id"] = controller.mac
+    if CONF_ZONE_RUN_TIME in entry.data:
+        # If a zone run time exists in the config entry's data, pop it and move it to
+        # options:
+        data = {**entry.data}
+        entry_updates["data"] = data
+        entry_updates["options"] = {
+            **entry.options,
+            CONF_ZONE_RUN_TIME: data.pop(CONF_ZONE_RUN_TIME),
+        }
+    if entry_updates:
+        hass.config_entries.async_update_entry(entry, **entry_updates)
 
     async def async_update(api_category: str) -> dict:
         """Update the appropriate API data based on a category."""
@@ -155,31 +149,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await asyncio.gather(*controller_init_tasks)
 
-    for component in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
-    hass.data[DOMAIN][DATA_LISTENER] = entry.add_update_listener(async_reload_entry)
+    entry.async_on_unload(entry.add_update_listener(async_reload_entry))
 
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload an RainMachine config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS
-            ]
-        )
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         hass.data[DOMAIN][DATA_COORDINATOR].pop(entry.entry_id)
-        cancel_listener = hass.data[DOMAIN][DATA_LISTENER].pop(entry.entry_id)
-        cancel_listener()
-
     return unload_ok
 
 
@@ -192,47 +173,32 @@ class RainMachineEntity(CoordinatorEntity):
     """Define a generic RainMachine entity."""
 
     def __init__(
-        self, coordinator: DataUpdateCoordinator, controller: Controller
+        self,
+        coordinator: DataUpdateCoordinator,
+        controller: Controller,
+        entity_type: str,
     ) -> None:
         """Initialize."""
         super().__init__(coordinator)
-        self._attrs = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
-        self._controller = controller
-        self._device_class = None
+
+        self._attr_device_info = {
+            "identifiers": {(DOMAIN, controller.mac)},
+            "connections": {(dr.CONNECTION_NETWORK_MAC, controller.mac)},
+            "name": controller.name,
+            "manufacturer": "RainMachine",
+            "model": (
+                f"Version {controller.hardware_version} "
+                f"(API: {controller.api_version})"
+            ),
+            "sw_version": controller.software_version,
+        }
+        self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
         # The colons are removed from the device MAC simply because that value
         # (unnecessarily) makes up the existing unique ID formula and we want to avoid
         # a breaking change:
-        self._unique_id = controller.mac.replace(":", "")
-        self._name = None
-
-    @property
-    def device_class(self) -> str:
-        """Return the device class."""
-        return self._device_class
-
-    @property
-    def device_info(self) -> dict:
-        """Return device registry information for this entity."""
-        return {
-            "identifiers": {(DOMAIN, self._controller.mac)},
-            "name": self._controller.name,
-            "manufacturer": "RainMachine",
-            "model": (
-                f"Version {self._controller.hardware_version} "
-                f"(API: {self._controller.api_version})"
-            ),
-            "sw_version": self._controller.software_version,
-        }
-
-    @property
-    def device_state_attributes(self) -> dict:
-        """Return the state attributes."""
-        return self._attrs
-
-    @property
-    def name(self) -> str:
-        """Return the name of the entity."""
-        return self._name
+        self._attr_unique_id = f"{controller.mac.replace(':', '')}_{entity_type}"
+        self._controller = controller
+        self._entity_type = entity_type
 
     @callback
     def _handle_coordinator_update(self):

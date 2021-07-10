@@ -34,7 +34,7 @@ from pyinsteon.groups import (
 
 DOMAIN = "insteon"
 
-INSTEON_COMPONENTS = [
+INSTEON_PLATFORMS = [
     "binary_sensor",
     "climate",
     "cover",

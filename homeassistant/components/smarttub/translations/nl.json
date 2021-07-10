@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparaat is al geconfigureerd",
+            "reauth_successful": "Herauthenticatie was succesvol"
+        },
+        "error": {
+            "invalid_auth": "Ongeldige authenticatie"
+        },
+        "step": {
+            "reauth_confirm": {
+                "description": "De SmartTub-integratie moet uw account opnieuw verifi\u00ebren",
+                "title": "Verifieer de integratie opnieuw"
+            },
+            "user": {
+                "data": {
+                    "email": "E-mail",
+                    "password": "Wachtwoord"
+                },
+                "description": "Voer uw SmartTub-e-mailadres en wachtwoord in om in te loggen",
+                "title": "Inloggen"
+            }
+        }
+    }
+}

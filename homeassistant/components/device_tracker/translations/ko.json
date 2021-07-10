@@ -1,8 +1,12 @@
 {
     "device_automation": {
         "condition_type": {
-            "is_home": "{entity_name} \uc774(\uac00) \uc9d1\uc5d0 \uc788\uc73c\uba74",
-            "is_not_home": "{entity_name} \uc774(\uac00) \uc678\ucd9c \uc911\uc774\uba74"
+            "is_home": "{entity_name}\uc774(\uac00) \uc9d1\uc5d0 \uc788\uc73c\uba74",
+            "is_not_home": "{entity_name}\uc774(\uac00) \uc678\ucd9c \uc911\uc774\uba74"
+        },
+        "trigger_type": {
+            "enters": "{entity_name}\uc774(\uac00) \uc9c0\uc5ed\uc5d0 \ub4e4\uc5b4\uac08 \ub54c",
+            "leaves": "{entity_name}\uc774(\uac00) \uc9c0\uc5ed\uc5d0\uc11c \ub098\uc62c \ub54c"
         }
     },
     "state": {

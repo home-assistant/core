@@ -26,8 +26,8 @@ async def device(hass: HomeAssistant, request) -> DysonDevice:
         device = get_device()
     with patch(f"{BASE_PATH}.DysonAccount.login", return_value=True), patch(
         f"{BASE_PATH}.DysonAccount.devices", return_value=[device]
-    ), patch(f"{BASE_PATH}.DYSON_PLATFORMS", [platform]):
-        # DYSON_PLATFORMS is patched so that only the platform being tested is set up
+    ), patch(f"{BASE_PATH}.PLATFORMS", [platform]):
+        # PLATFORMS is patched so that only the platform being tested is set up
         await async_setup_component(
             hass,
             DOMAIN,

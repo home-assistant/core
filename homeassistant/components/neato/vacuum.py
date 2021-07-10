@@ -87,7 +87,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     _LOGGER.debug("Adding vacuums %s", dev)
     async_add_entities(dev, True)
 
-    platform = entity_platform.current_platform.get()
+    platform = entity_platform.async_get_current_platform()
     assert platform is not None
 
     platform.async_register_entity_service(
@@ -202,8 +202,8 @@ class NeatoConnectedVacuum(StateVacuumEntity):
             return
 
         mapdata = self._mapdata[self._robot_serial]["maps"][0]
-        self._clean_time_start = (mapdata["start_at"].strip("Z")).replace("T", " ")
-        self._clean_time_stop = (mapdata["end_at"].strip("Z")).replace("T", " ")
+        self._clean_time_start = mapdata["start_at"]
+        self._clean_time_stop = mapdata["end_at"]
         self._clean_area = mapdata["cleaned_area"]
         self._clean_susp_charge_count = mapdata["suspended_cleaning_charging_count"]
         self._clean_susp_time = mapdata["time_in_suspended_cleaning"]
@@ -284,7 +284,7 @@ class NeatoConnectedVacuum(StateVacuumEntity):
         return self._robot_serial
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the vacuum cleaner."""
         data = {}
 
@@ -395,6 +395,7 @@ class NeatoConnectedVacuum(StateVacuumEntity):
                     "Zone '%s' was not found for the robot '%s'", zone, self.entity_id
                 )
                 return
+            _LOGGER.info("Start cleaning zone '%s' with robot %s", zone, self.entity_id)
 
         self._clean_state = STATE_CLEANING
         try:

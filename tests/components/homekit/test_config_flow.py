@@ -4,8 +4,8 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant import config_entries, data_entry_flow, setup
-from homeassistant.components.homekit.const import DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.components.homekit.const import DOMAIN, SHORT_BRIDGE_NAME
+from homeassistant.config_entries import SOURCE_IGNORE, SOURCE_IMPORT
 from homeassistant.const import CONF_NAME, CONF_PORT
 
 from tests.common import MockConfigEntry
@@ -39,48 +39,41 @@ async def test_setup_in_bridge_mode(hass):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == "form"
-    assert result["errors"] == {}
+    assert result["errors"] is None
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"mode": "bridge"},
+        {"include_domains": ["light"]},
     )
     assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result2["step_id"] == "bridge_mode"
+    assert result2["step_id"] == "pairing"
 
     with patch(
         "homeassistant.components.homekit.config_flow.async_find_next_available_port",
         return_value=12345,
-    ):
-        result3 = await hass.config_entries.flow.async_configure(
-            result2["flow_id"],
-            {"include_domains": ["light"]},
-        )
-        assert result3["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result3["step_id"] == "pairing"
-
-    with patch(
+    ), patch(
         "homeassistant.components.homekit.async_setup", return_value=True
     ) as mock_setup, patch(
         "homeassistant.components.homekit.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
-        result4 = await hass.config_entries.flow.async_configure(
-            result3["flow_id"],
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
             {},
         )
         await hass.async_block_till_done()
 
-    assert result4["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result4["title"][:11] == "HASS Bridge"
-    bridge_name = (result4["title"].split(":"))[0]
-    assert result4["data"] == {
+    assert result3["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    bridge_name = (result3["title"].split(":"))[0]
+    assert bridge_name == SHORT_BRIDGE_NAME
+    assert result3["data"] == {
         "filter": {
             "exclude_domains": [],
             "exclude_entities": [],
             "include_domains": ["light"],
             "include_entities": [],
         },
+        "exclude_accessory_mode": True,
         "mode": "bridge",
         "name": bridge_name,
         "port": 12345,
@@ -89,70 +82,158 @@ async def test_setup_in_bridge_mode(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_setup_in_accessory_mode(hass):
-    """Test we can setup a new instance in accessory."""
+async def test_setup_in_bridge_mode_name_taken(hass):
+    """Test we can setup a new instance in bridge mode when the name is taken."""
     await setup.async_setup_component(hass, "persistent_notification", {})
-    hass.states.async_set("camera.mine", "off")
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_NAME: SHORT_BRIDGE_NAME, CONF_PORT: 8000},
+    )
+    entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == "form"
-    assert result["errors"] == {}
+    assert result["errors"] is None
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"mode": "accessory"},
+        {"include_domains": ["light"]},
     )
     assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result2["step_id"] == "accessory_mode"
+    assert result2["step_id"] == "pairing"
 
     with patch(
         "homeassistant.components.homekit.config_flow.async_find_next_available_port",
         return_value=12345,
-    ):
-        result3 = await hass.config_entries.flow.async_configure(
-            result2["flow_id"],
-            {"entity_id": "camera.mine"},
-        )
-        assert result3["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result3["step_id"] == "pairing"
-
-    with patch(
+    ), patch(
         "homeassistant.components.homekit.async_setup", return_value=True
     ) as mock_setup, patch(
         "homeassistant.components.homekit.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
-        result4 = await hass.config_entries.flow.async_configure(
-            result3["flow_id"],
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
             {},
         )
         await hass.async_block_till_done()
 
-    assert result4["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result4["title"][:14] == "HASS Accessory"
-    bridge_name = (result4["title"].split(":"))[0]
-    assert result4["data"] == {
+    assert result3["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result3["title"] != SHORT_BRIDGE_NAME
+    assert result3["title"].startswith(SHORT_BRIDGE_NAME)
+    bridge_name = (result3["title"].split(":"))[0]
+    assert result3["data"] == {
         "filter": {
             "exclude_domains": [],
             "exclude_entities": [],
-            "include_domains": [],
-            "include_entities": ["camera.mine"],
+            "include_domains": ["light"],
+            "include_entities": [],
         },
-        "mode": "accessory",
+        "exclude_accessory_mode": True,
+        "mode": "bridge",
         "name": bridge_name,
-        "entity_config": {"camera.mine": {"video_codec": "copy"}},
         "port": 12345,
     }
     assert len(mock_setup.mock_calls) == 1
-    assert len(mock_setup_entry.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 2
+
+
+async def test_setup_creates_entries_for_accessory_mode_devices(hass):
+    """Test we can setup a new instance and we create entries for accessory mode devices."""
+    hass.states.async_set("camera.one", "on")
+    hass.states.async_set("camera.existing", "on")
+    hass.states.async_set("media_player.two", "on", {"device_class": "tv"})
+    hass.states.async_set("remote.standard", "on")
+    hass.states.async_set("remote.activity", "on", {"supported_features": 4})
+
+    bridge_mode_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_NAME: "bridge", CONF_PORT: 8001},
+        options={
+            "mode": "bridge",
+            "filter": {
+                "include_entities": ["camera.existing"],
+            },
+        },
+    )
+    bridge_mode_entry.add_to_hass(hass)
+    accessory_mode_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_NAME: "accessory", CONF_PORT: 8000},
+        options={
+            "mode": "accessory",
+            "filter": {
+                "include_entities": ["camera.existing"],
+            },
+        },
+    )
+    accessory_mode_entry.add_to_hass(hass)
+
+    await setup.async_setup_component(hass, "persistent_notification", {})
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == "form"
+    assert result["errors"] is None
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"include_domains": ["camera", "media_player", "light", "remote"]},
+    )
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result2["step_id"] == "pairing"
+
+    with patch(
+        "homeassistant.components.homekit.config_flow.async_find_next_available_port",
+        return_value=12345,
+    ), patch(
+        "homeassistant.components.homekit.async_setup", return_value=True
+    ) as mock_setup, patch(
+        "homeassistant.components.homekit.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {},
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result3["title"][:11] == "HASS Bridge"
+    bridge_name = (result3["title"].split(":"))[0]
+    assert result3["data"] == {
+        "filter": {
+            "exclude_domains": [],
+            "exclude_entities": [],
+            "include_domains": ["media_player", "light", "remote"],
+            "include_entities": [],
+        },
+        "exclude_accessory_mode": True,
+        "mode": "bridge",
+        "name": bridge_name,
+        "port": 12345,
+    }
+    assert len(mock_setup.mock_calls) == 1
+    #
+    # Existing accessory mode entries should get setup but not duplicated
+    #
+    # 1 - existing accessory for camera.existing
+    # 2 - existing bridge for camera.one
+    # 3 - new bridge
+    # 4 - camera.one in accessory mode
+    # 5 - media_player.two in accessory mode
+    # 6 - remote.activity in accessory mode
+    assert len(mock_setup_entry.mock_calls) == 6
 
 
 async def test_import(hass):
     """Test we can import instance."""
     await setup.async_setup_component(hass, "persistent_notification", {})
 
+    ignored_entry = MockConfigEntry(domain=DOMAIN, data={}, source=SOURCE_IGNORE)
+    ignored_entry.add_to_hass(hass)
     entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_NAME: "mock_name", CONF_PORT: 12345}
     )
@@ -656,55 +737,48 @@ async def test_converting_bridge_to_accessory_mode(hass, hk_driver):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == "form"
-    assert result["errors"] == {}
+    assert result["errors"] is None
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"mode": "bridge"},
+        {"include_domains": ["light"]},
     )
     assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result2["step_id"] == "bridge_mode"
-
-    with patch(
-        "homeassistant.components.homekit.config_flow.async_find_next_available_port",
-        return_value=12345,
-    ):
-        result3 = await hass.config_entries.flow.async_configure(
-            result2["flow_id"],
-            {"include_domains": ["light"]},
-        )
-        assert result3["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result3["step_id"] == "pairing"
+    assert result2["step_id"] == "pairing"
 
     # We need to actually setup the config entry or the data
     # will not get migrated to options
     with patch(
+        "homeassistant.components.homekit.config_flow.async_find_next_available_port",
+        return_value=12345,
+    ), patch(
         "homeassistant.components.homekit.HomeKit.async_start",
         return_value=True,
     ) as mock_async_start:
-        result4 = await hass.config_entries.flow.async_configure(
-            result3["flow_id"],
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
             {},
         )
         await hass.async_block_till_done()
 
-    assert result4["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result4["title"][:11] == "HASS Bridge"
-    bridge_name = (result4["title"].split(":"))[0]
-    assert result4["data"] == {
+    assert result3["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result3["title"][:11] == "HASS Bridge"
+    bridge_name = (result3["title"].split(":"))[0]
+    assert result3["data"] == {
         "filter": {
             "exclude_domains": [],
             "exclude_entities": [],
             "include_domains": ["light"],
             "include_entities": [],
         },
+        "exclude_accessory_mode": True,
         "mode": "bridge",
         "name": bridge_name,
         "port": 12345,
     }
     assert len(mock_async_start.mock_calls) == 1
 
-    config_entry = result4["result"]
+    config_entry = result3["result"]
 
     hass.states.async_set("camera.tv", "off")
     hass.states.async_set("camera.sonos", "off")

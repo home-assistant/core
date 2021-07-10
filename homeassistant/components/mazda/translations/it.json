@@ -11,15 +11,6 @@
             "unknown": "Errore imprevisto"
         },
         "step": {
-            "reauth": {
-                "data": {
-                    "email": "E-mail",
-                    "password": "Password",
-                    "region": "Area geografica"
-                },
-                "description": "Autenticazione non riuscita per Mazda Connected Services. Inserisci le tue credenziali attuali.",
-                "title": "Mazda Connected Services - Autenticazione non riuscita"
-            },
             "user": {
                 "data": {
                     "email": "E-mail",

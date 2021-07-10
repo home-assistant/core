@@ -9,7 +9,7 @@
       "unsupported_version": "BleBox device has outdated firmware. Please upgrade it first.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
-    "flow_title": "BleBox device: {name} ({host})",
+    "flow_title": "{name} ({host})",
     "step": {
       "user": {
         "description": "Set up your BleBox to integrate with Home Assistant.",

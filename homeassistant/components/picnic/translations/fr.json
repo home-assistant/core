@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "country_code": "Code postal",
+                    "password": "Mot de passe",
+                    "username": "Nom d'utilisateur"
+                }
+            }
+        }
+    },
+    "title": "Pique-nique"
+}

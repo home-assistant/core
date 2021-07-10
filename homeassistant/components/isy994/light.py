@@ -1,5 +1,5 @@
 """Support for ISY994 lights."""
-from typing import Callable, Dict
+from __future__ import annotations
 
 from pyisy.constants import ISY_VALUE_UNKNOWN
 
@@ -9,8 +9,9 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import (
     _LOGGER,
@@ -27,9 +28,9 @@ ATTR_LAST_BRIGHTNESS = "last_brightness"
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: Callable[[list], None],
+    async_add_entities: AddEntitiesCallback,
 ) -> bool:
     """Set up the ISY994 light platform."""
     hass_isy_data = hass.data[ISY994_DOMAIN][entry.entry_id]
@@ -71,36 +72,38 @@ class ISYLightEntity(ISYNodeEntity, LightEntity, RestoreEntity):
             return round(self._node.status * 255.0 / 100.0)
         return int(self._node.status)
 
-    def turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs) -> None:
         """Send the turn off command to the ISY994 light device."""
         self._last_brightness = self.brightness
-        if not self._node.turn_off():
+        if not await self._node.turn_off():
             _LOGGER.debug("Unable to turn off light")
 
-    def on_update(self, event: object) -> None:
+    @callback
+    def async_on_update(self, event: object) -> None:
         """Save brightness in the update event from the ISY994 Node."""
         if self._node.status not in (0, ISY_VALUE_UNKNOWN):
+            self._last_brightness = self._node.status
             if self._node.uom == UOM_PERCENTAGE:
                 self._last_brightness = round(self._node.status * 255.0 / 100.0)
             else:
                 self._last_brightness = self._node.status
-        super().on_update(event)
+        super().async_on_update(event)
 
     # pylint: disable=arguments-differ
-    def turn_on(self, brightness=None, **kwargs) -> None:
+    async def async_turn_on(self, brightness=None, **kwargs) -> None:
         """Send the turn on command to the ISY994 light device."""
         if self._restore_light_state and brightness is None and self._last_brightness:
             brightness = self._last_brightness
         # Special Case for ISY Z-Wave Devices using % instead of 0-255:
         if brightness is not None and self._node.uom == UOM_PERCENTAGE:
             brightness = round(brightness * 100.0 / 255.0)
-        if not self._node.turn_on(val=brightness):
+        if not await self._node.turn_on(val=brightness):
             _LOGGER.debug("Unable to turn on light")
 
     @property
-    def device_state_attributes(self) -> Dict:
+    def extra_state_attributes(self) -> dict:
         """Return the light attributes."""
-        attribs = super().device_state_attributes
+        attribs = super().extra_state_attributes
         attribs[ATTR_LAST_BRIGHTNESS] = self._last_brightness
         return attribs
 
@@ -124,10 +127,10 @@ class ISYLightEntity(ISYNodeEntity, LightEntity, RestoreEntity):
         ):
             self._last_brightness = last_state.attributes[ATTR_LAST_BRIGHTNESS]
 
-    def set_on_level(self, value):
+    async def async_set_on_level(self, value):
         """Set the ON Level for a device."""
-        self._node.set_on_level(value)
+        await self._node.set_on_level(value)
 
-    def set_ramp_rate(self, value):
+    async def async_set_ramp_rate(self, value):
         """Set the Ramp Rate for a device."""
-        self._node.set_ramp_rate(value)
+        await self._node.set_ramp_rate(value)

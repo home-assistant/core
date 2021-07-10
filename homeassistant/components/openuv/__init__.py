@@ -69,10 +69,7 @@ async def async_setup_entry(hass, config_entry):
         LOGGER.error("Config entry failed: %s", err)
         raise ConfigEntryNotReady from err
 
-    for component in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, component)
-        )
+    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
 
     @_verify_domain_control
     async def update_data(service):
@@ -107,13 +104,8 @@ async def async_setup_entry(hass, config_entry):
 
 async def async_unload_entry(hass, config_entry):
     """Unload an OpenUV config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(config_entry, component)
-                for component in PLATFORMS
-            ]
-        )
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        config_entry, PLATFORMS
     )
     if unload_ok:
         hass.data[DOMAIN][DATA_CLIENT].pop(config_entry.entry_id)
@@ -174,27 +166,15 @@ class OpenUV:
 class OpenUvEntity(Entity):
     """Define a generic OpenUV entity."""
 
-    def __init__(self, openuv):
+    def __init__(self, openuv, sensor_type):
         """Initialize."""
-        self._attrs = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
-        self._available = True
-        self._name = None
+        self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
+        self._attr_should_poll = False
+        self._attr_unique_id = (
+            f"{openuv.client.latitude}_{openuv.client.longitude}_{sensor_type}"
+        )
+        self._sensor_type = sensor_type
         self.openuv = openuv
-
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self._available
-
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes."""
-        return self._attrs
-
-    @property
-    def name(self):
-        """Return the name of the entity."""
-        return self._name
 
     async def async_added_to_hass(self):
         """Register callbacks."""

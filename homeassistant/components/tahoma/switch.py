@@ -105,10 +105,10 @@ class TahomaSwitch(TahomaDevice, SwitchEntity):
         return bool(self._state == STATE_ON)
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device state attributes."""
         attr = {}
-        super_attr = super().device_state_attributes
+        super_attr = super().extra_state_attributes
         if super_attr is not None:
             attr.update(super_attr)
 

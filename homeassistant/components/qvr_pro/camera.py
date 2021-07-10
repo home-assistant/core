@@ -82,7 +82,7 @@ class QVRProCamera(Camera):
         return self._brand
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Get the state attributes."""
         attrs = {"qvr_guid": self.guid}
 

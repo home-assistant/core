@@ -13,7 +13,7 @@ from tests.common import (
     mock_device_registry,
     mock_registry,
 )
-from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa
+from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
 
 
 @pytest.fixture
@@ -185,12 +185,13 @@ async def test_websocket_get_action_capabilities(
         "alarm_control_panel", "test", "5678", device_id=device_entry.id
     )
     hass.states.async_set(
-        "alarm_control_panel.test_5678", "attributes", {"supported_features": 15}
+        "alarm_control_panel.test_5678", "attributes", {"supported_features": 47}
     )
     expected_capabilities = {
         "arm_away": {"extra_fields": []},
         "arm_home": {"extra_fields": []},
         "arm_night": {"extra_fields": []},
+        "arm_vacation": {"extra_fields": []},
         "disarm": {
             "extra_fields": [{"name": "code", "optional": True, "type": "string"}]
         },
@@ -209,7 +210,7 @@ async def test_websocket_get_action_capabilities(
     actions = msg["result"]
 
     id = 2
-    assert len(actions) == 5
+    assert len(actions) == 6
     for action in actions:
         await client.send_json(
             {
@@ -490,7 +491,9 @@ async def test_automation_with_non_existing_integration(hass, caplog):
     assert "Integration 'beer' not found" in caplog.text
 
 
-async def test_automation_with_integration_without_device_action(hass, caplog):
+async def test_automation_with_integration_without_device_action(
+    hass, caplog, enable_custom_integrations
+):
     """Test automation with integration without device action support."""
     assert await async_setup_component(
         hass,
@@ -509,7 +512,9 @@ async def test_automation_with_integration_without_device_action(hass, caplog):
     )
 
 
-async def test_automation_with_integration_without_device_condition(hass, caplog):
+async def test_automation_with_integration_without_device_condition(
+    hass, caplog, enable_custom_integrations
+):
     """Test automation with integration without device condition support."""
     assert await async_setup_component(
         hass,
@@ -534,7 +539,9 @@ async def test_automation_with_integration_without_device_condition(hass, caplog
     )
 
 
-async def test_automation_with_integration_without_device_trigger(hass, caplog):
+async def test_automation_with_integration_without_device_trigger(
+    hass, caplog, enable_custom_integrations
+):
     """Test automation with integration without device trigger support."""
     assert await async_setup_component(
         hass,
@@ -615,7 +622,7 @@ def calls(hass):
     return async_mock_service(hass, "test", "automation")
 
 
-async def test_automation_with_sub_condition(hass, calls):
+async def test_automation_with_sub_condition(hass, calls, enable_custom_integrations):
     """Test automation with device condition under and/or conditions."""
     DOMAIN = "light"
     platform = getattr(hass.components, f"test.{DOMAIN}")

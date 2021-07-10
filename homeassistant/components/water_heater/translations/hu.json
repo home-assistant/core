@@ -4,5 +4,16 @@
             "turn_off": "{entity_name} kikapcsol\u00e1sa",
             "turn_on": "{entity_name} bekapcsol\u00e1sa"
         }
+    },
+    "state": {
+        "_": {
+            "eco": "Takar\u00e9kos",
+            "electric": "Elektromos",
+            "gas": "G\u00e1z",
+            "heat_pump": "H\u0151szivatty\u00fa",
+            "high_demand": "Magas ig\u00e9nybev\u00e9tel",
+            "off": "Ki",
+            "performance": "Teljes\u00edtm\u00e9ny"
+        }
     }
 }

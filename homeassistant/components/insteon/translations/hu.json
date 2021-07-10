@@ -1,0 +1,72 @@
+{
+    "config": {
+        "abort": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "single_instance_allowed": "M\u00e1r konfigur\u00e1lva van. Csak egy konfigur\u00e1ci\u00f3 lehets\u00e9ges."
+        },
+        "error": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "select_single": "V\u00e1lassz egy lehet\u0151s\u00e9get"
+        },
+        "step": {
+            "hubv1": {
+                "data": {
+                    "host": "IP c\u00edm",
+                    "port": "Port"
+                }
+            },
+            "hubv2": {
+                "data": {
+                    "host": "IP c\u00edm",
+                    "password": "Jelsz\u00f3",
+                    "port": "Port",
+                    "username": "Felhaszn\u00e1l\u00f3n\u00e9v"
+                },
+                "title": "Insteon Hub 2. verzi\u00f3"
+            },
+            "plm": {
+                "data": {
+                    "device": "USB eszk\u00f6z el\u00e9r\u00e9si \u00fat"
+                }
+            },
+            "user": {
+                "data": {
+                    "modem_type": "Modem t\u00edpusa."
+                },
+                "description": "V\u00e1laszd ki az Insteon modem t\u00edpus\u00e1t.",
+                "title": "Insteon"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s"
+        },
+        "step": {
+            "add_override": {
+                "title": "Insteon"
+            },
+            "add_x10": {
+                "title": "Insteon"
+            },
+            "change_hub_config": {
+                "data": {
+                    "host": "IP c\u00edm",
+                    "password": "Jelsz\u00f3",
+                    "port": "Port",
+                    "username": "Felhaszn\u00e1l\u00f3n\u00e9v"
+                },
+                "title": "Insteon"
+            },
+            "init": {
+                "title": "Insteon"
+            },
+            "remove_override": {
+                "title": "Insteon"
+            },
+            "remove_x10": {
+                "title": "Insteon"
+            }
+        }
+    }
+}

@@ -10,17 +10,12 @@
             "unknown": "Neo\u010dek\u00e1van\u00e1 chyba"
         },
         "step": {
-            "manual": {
-                "data": {
-                    "url": "URL"
-                }
-            },
-            "start_addon": {
+            "configure_addon": {
                 "data": {
                     "usb_path": "Cesta k USB za\u0159\u00edzen\u00ed"
                 }
             },
-            "user": {
+            "manual": {
                 "data": {
                     "url": "URL"
                 }

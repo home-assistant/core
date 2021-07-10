@@ -1,7 +1,8 @@
 """Generate ssdp file."""
+from __future__ import annotations
+
 from collections import OrderedDict, defaultdict
 import json
-from typing import Dict
 
 from .model import Config, Integration
 
@@ -22,7 +23,7 @@ def sort_dict(value):
     return OrderedDict((key, value[key]) for key in sorted(value))
 
 
-def generate_and_validate(integrations: Dict[str, Integration]):
+def generate_and_validate(integrations: dict[str, Integration]):
     """Validate and generate ssdp data."""
 
     data = defaultdict(list)
@@ -44,7 +45,7 @@ def generate_and_validate(integrations: Dict[str, Integration]):
     return BASE.format(json.dumps(data, indent=4))
 
 
-def validate(integrations: Dict[str, Integration], config: Config):
+def validate(integrations: dict[str, Integration], config: Config):
     """Validate ssdp file."""
     ssdp_path = config.root / "homeassistant/generated/ssdp.py"
     config.cache["ssdp"] = content = generate_and_validate(integrations)
@@ -62,7 +63,7 @@ def validate(integrations: Dict[str, Integration], config: Config):
         return
 
 
-def generate(integrations: Dict[str, Integration], config: Config):
+def generate(integrations: dict[str, Integration], config: Config):
     """Generate ssdp file."""
     ssdp_path = config.root / "homeassistant/generated/ssdp.py"
     with open(str(ssdp_path), "w") as fp:

@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
+            "invalid_host": "\u00c9rv\u00e9nytelen hosztn\u00e9v vagy IP-c\u00edm",
+            "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
+        },
+        "error": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "invalid_host": "\u00c9rv\u00e9nytelen hosztn\u00e9v vagy IP-c\u00edm",
+            "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Hoszt",
+                    "name": "N\u00e9v"
+                }
+            }
+        }
+    }
+}

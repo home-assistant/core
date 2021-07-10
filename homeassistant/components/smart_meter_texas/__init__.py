@@ -32,13 +32,7 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = ["sensor"]
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the Smart Meter Texas component."""
-    hass.data.setdefault(DOMAIN, {})
-    return True
-
-
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Smart Meter Texas from a config entry."""
 
     username = entry.data[CONF_USERNAME]
@@ -76,6 +70,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         ),
     )
 
+    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {
         DATA_COORDINATOR: coordinator,
         DATA_SMART_METER: smart_meter_texas_data,
@@ -83,10 +78,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     asyncio.create_task(coordinator.async_refresh())
 
-    for component in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
@@ -94,7 +86,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 class SmartMeterTexasData:
     """Manages coordinatation of API data updates."""
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry, account: Account):
+    def __init__(
+        self, hass: HomeAssistant, entry: ConfigEntry, account: Account
+    ) -> None:
         """Initialize the data coordintator."""
         self._entry = entry
         self.account = account
@@ -119,14 +113,7 @@ class SmartMeterTexasData:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS
-            ]
-        )
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
 

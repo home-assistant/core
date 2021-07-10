@@ -33,9 +33,9 @@ from homeassistant.helpers.entity_component import (
 from homeassistant.helpers.reload import async_reload_integration_platforms
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import COORDINATOR, DOMAIN, PLATFORM_IDX, REST, REST_IDX
+from .const import COORDINATOR, DOMAIN, PLATFORM_IDX, REST, REST_DATA, REST_IDX
 from .data import RestData
-from .schema import CONFIG_SCHEMA  # noqa:F401 pylint: disable=unused-import
+from .schema import CONFIG_SCHEMA  # noqa: F401
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -67,7 +67,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
 @callback
 def _async_setup_shared_data(hass: HomeAssistant):
     """Create shared data for platform config and rest coordinators."""
-    hass.data[DOMAIN] = {platform: {} for platform in COORDINATOR_AWARE_PLATFORMS}
+    hass.data[DOMAIN] = {key: [] for key in [REST_DATA, *COORDINATOR_AWARE_PLATFORMS]}
 
 
 async def _async_process_config(hass, config) -> bool:
@@ -81,18 +81,17 @@ async def _async_process_config(hass, config) -> bool:
         scan_interval = conf.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
         resource_template = conf.get(CONF_RESOURCE_TEMPLATE)
         rest = create_rest_data_from_config(hass, conf)
-        coordinator = _wrap_rest_in_coordinator(
-            hass, rest, resource_template, scan_interval
-        )
+        coordinator = _rest_coordinator(hass, rest, resource_template, scan_interval)
         refresh_tasks.append(coordinator.async_refresh())
-        hass.data[DOMAIN][rest_idx] = {REST: rest, COORDINATOR: coordinator}
+        hass.data[DOMAIN][REST_DATA].append({REST: rest, COORDINATOR: coordinator})
 
         for platform_domain in COORDINATOR_AWARE_PLATFORMS:
             if platform_domain not in conf:
                 continue
 
-            for platform_idx, platform_conf in enumerate(conf[platform_domain]):
-                hass.data[DOMAIN][platform_domain][platform_idx] = platform_conf
+            for platform_conf in conf[platform_domain]:
+                hass.data[DOMAIN][platform_domain].append(platform_conf)
+                platform_idx = len(hass.data[DOMAIN][platform_domain]) - 1
 
                 load = discovery.async_load_platform(
                     hass,
@@ -114,7 +113,7 @@ async def _async_process_config(hass, config) -> bool:
 
 async def async_get_config_and_coordinator(hass, platform_domain, discovery_info):
     """Get the config and coordinator for the platform from discovery."""
-    shared_data = hass.data[DOMAIN][discovery_info[REST_IDX]]
+    shared_data = hass.data[DOMAIN][REST_DATA][discovery_info[REST_IDX]]
     conf = hass.data[DOMAIN][platform_domain][discovery_info[PLATFORM_IDX]]
     coordinator = shared_data[COORDINATOR]
     rest = shared_data[REST]
@@ -123,7 +122,7 @@ async def async_get_config_and_coordinator(hass, platform_domain, discovery_info
     return conf, coordinator, rest
 
 
-def _wrap_rest_in_coordinator(hass, rest, resource_template, update_interval):
+def _rest_coordinator(hass, rest, resource_template, update_interval):
     """Wrap a DataUpdateCoordinator around the rest object."""
     if resource_template:
 

@@ -4,7 +4,7 @@ import logging
 from apcaccess.status import ALL_UNITS
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_RESOURCES,
     ELECTRICAL_CURRENT_AMPERE,
@@ -18,7 +18,6 @@ from homeassistant.const import (
     VOLT,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 from . import DOMAIN
 
@@ -156,46 +155,25 @@ def infer_unit(value):
     return value, None
 
 
-class APCUPSdSensor(Entity):
+class APCUPSdSensor(SensorEntity):
     """Representation of a sensor entity for APCUPSd status values."""
 
     def __init__(self, data, sensor_type):
         """Initialize the sensor."""
         self._data = data
         self.type = sensor_type
-        self._name = SENSOR_PREFIX + SENSOR_TYPES[sensor_type][0]
-        self._unit = SENSOR_TYPES[sensor_type][1]
-        self._inferred_unit = None
-        self._state = None
-
-    @property
-    def name(self):
-        """Return the name of the UPS sensor."""
-        return self._name
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return SENSOR_TYPES[self.type][2]
-
-    @property
-    def state(self):
-        """Return true if the UPS is online, else False."""
-        return self._state
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of this entity, if any."""
-        if not self._unit:
-            return self._inferred_unit
-        return self._unit
+        self._attr_name = SENSOR_PREFIX + SENSOR_TYPES[sensor_type][0]
+        self._attr_icon = SENSOR_TYPES[self.type][2]
+        if SENSOR_TYPES[sensor_type][1]:
+            self._attr_unit_of_measurement = SENSOR_TYPES[sensor_type][1]
 
     def update(self):
         """Get the latest status and use it to update our sensor state."""
         if self.type.upper() not in self._data.status:
-            self._state = None
-            self._inferred_unit = None
+            self._attr_state = None
         else:
-            self._state, self._inferred_unit = infer_unit(
+            self._attr_state, inferred_unit = infer_unit(
                 self._data.status[self.type.upper()]
             )
+            if not self._attr_unit_of_measurement:
+                self._attr_unit_of_measurement = inferred_unit

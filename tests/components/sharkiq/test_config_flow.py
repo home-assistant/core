@@ -24,8 +24,6 @@ async def test_form(hass):
     assert result["errors"] == {}
 
     with patch("sharkiqpy.AylaApi.async_sign_in", return_value=True), patch(
-        "homeassistant.components.sharkiq.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.sharkiq.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -41,7 +39,6 @@ async def test_form(hass):
         "password": TEST_PASSWORD,
     }
     await hass.async_block_till_done()
-    mock_setup.assert_called_once()
     mock_setup_entry.assert_called_once()
 
 
@@ -76,7 +73,9 @@ async def test_reauth_success(hass: HomeAssistant):
         mock_config.add_to_hass(hass)
 
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "reauth", "unique_id": UNIQUE_ID}, data=CONFIG
+            DOMAIN,
+            context={"source": config_entries.SOURCE_REAUTH, "unique_id": UNIQUE_ID},
+            data=CONFIG,
         )
 
         assert result["type"] == "abort"
@@ -102,7 +101,7 @@ async def test_reauth(
     with patch("sharkiqpy.AylaApi.async_sign_in", side_effect=side_effect):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": "reauth", "unique_id": UNIQUE_ID},
+            context={"source": config_entries.SOURCE_REAUTH, "unique_id": UNIQUE_ID},
             data=CONFIG,
         )
 

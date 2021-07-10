@@ -28,6 +28,7 @@ class RoonServer:
         self.offline_devices = set()
         self._exit = False
         self._roon_name_by_id = {}
+        self._id_by_roon_name = {}
 
     async def async_setup(self, tries=0):
         """Set up a roon server based on config parameters."""
@@ -78,10 +79,15 @@ class RoonServer:
     def add_player_id(self, entity_id, roon_name):
         """Register a roon player."""
         self._roon_name_by_id[entity_id] = roon_name
+        self._id_by_roon_name[roon_name] = entity_id
 
     def roon_name(self, entity_id):
         """Get the name of the roon player from entity_id."""
         return self._roon_name_by_id.get(entity_id)
+
+    def entity_id(self, roon_name):
+        """Get the id of the roon player from the roon name."""
+        return self._id_by_roon_name.get(roon_name)
 
     def stop_roon(self):
         """Stop background worker."""

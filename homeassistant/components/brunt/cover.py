@@ -131,7 +131,7 @@ class BruntDevice(CoverEntity):
         return self.move_state == 2
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the detailed device state attributes."""
         return {
             ATTR_ATTRIBUTION: ATTRIBUTION,

@@ -18,7 +18,7 @@ class ConfigEntryLyricClient(LyricClient):
         self,
         websession: ClientSession,
         oauth_session: config_entry_oauth2_flow.OAuth2Session,
-    ):
+    ) -> None:
         """Initialize Honeywell Lyric auth."""
         super().__init__(websession)
         self._oauth_session = oauth_session

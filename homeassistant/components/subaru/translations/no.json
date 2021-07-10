@@ -8,8 +8,7 @@
             "bad_pin_format": "PIN-koden skal best\u00e5 av fire sifre",
             "cannot_connect": "Tilkobling mislyktes",
             "incorrect_pin": "Feil PIN",
-            "invalid_auth": "Ugyldig godkjenning",
-            "unknown": "Uventet feil"
+            "invalid_auth": "Ugyldig godkjenning"
         },
         "step": {
             "pin": {
@@ -37,7 +36,7 @@
                     "update_enabled": "Aktiver polling av kj\u00f8ret\u00f8y"
                 },
                 "description": "N\u00e5r dette er aktivert, sender polling av kj\u00f8ret\u00f8y en fjernkommando til kj\u00f8ret\u00f8yet annenhver time for \u00e5 skaffe nye sensordata. Uten kj\u00f8ret\u00f8yoppm\u00e5ling mottas nye sensordata bare n\u00e5r kj\u00f8ret\u00f8yet automatisk skyver data (normalt etter motorstans).",
-                "title": "Subaru Starlink Alternativer"
+                "title": "Subaru Starlink alternativer"
             }
         }
     }

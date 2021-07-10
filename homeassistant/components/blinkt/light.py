@@ -26,7 +26,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Blinkt Light platform."""
-    # pylint: disable=no-member
     blinkt = importlib.import_module("blinkt")
 
     # ensure that the lights are off when exiting

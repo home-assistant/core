@@ -11,15 +11,6 @@
             "location_not_found": "Nie znaleziono lokalizacji"
         },
         "step": {
-            "geography": {
-                "data": {
-                    "api_key": "Klucz API",
-                    "latitude": "Szeroko\u015b\u0107 geograficzna",
-                    "longitude": "D\u0142ugo\u015b\u0107 geograficzna"
-                },
-                "description": "U\u017cyj interfejsu API chmury AirVisual do monitorowania lokalizacji geograficznej.",
-                "title": "Konfiguracja Geography"
-            },
             "geography_by_coords": {
                 "data": {
                     "api_key": "Klucz API",
@@ -54,11 +45,6 @@
                 "title": "Ponownie uwierzytelnij integracj\u0119"
             },
             "user": {
-                "data": {
-                    "cloud_api": "Lokalizacja geograficzna",
-                    "node_pro": "AirVisual Node Pro",
-                    "type": "Typ integracji"
-                },
                 "description": "Wybierz, kt\u00f3re dane AirVisual chcesz monitorowa\u0107.",
                 "title": "Konfiguracja AirVisual"
             }

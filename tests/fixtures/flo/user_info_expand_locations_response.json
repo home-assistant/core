@@ -19,6 +19,10 @@
         {
           "id": "98765",
           "macAddress": "606405c11e10"
+        },
+        {
+          "id": "32839",
+          "macAddress": "1a2b3c4d5e6f"
         }
       ],
       "userRoles": [

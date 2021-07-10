@@ -1,12 +1,12 @@
 """This platform provides binary sensors for key RainMachine data."""
 from functools import partial
-from typing import Callable
 
 from regenmaschine.controller import Controller
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import RainMachineEntity
@@ -73,7 +73,7 @@ BINARY_SENSORS = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: Callable
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up RainMachine binary sensors based on a config entry."""
     controller = hass.data[DOMAIN][DATA_CONTROLLER][entry.entry_id]
@@ -125,32 +125,11 @@ class RainMachineBinarySensor(RainMachineEntity, BinarySensorEntity):
         enabled_by_default: bool,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator, controller)
-        self._enabled_by_default = enabled_by_default
-        self._icon = icon
-        self._name = name
-        self._sensor_type = sensor_type
-        self._state = None
+        super().__init__(coordinator, controller, sensor_type)
 
-    @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Determine whether an entity is enabled by default."""
-        return self._enabled_by_default
-
-    @property
-    def icon(self) -> str:
-        """Return the icon."""
-        return self._icon
-
-    @property
-    def is_on(self) -> bool:
-        """Return the status of the sensor."""
-        return self._state
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique, Home Assistant friendly identifier for this entity."""
-        return f"{self._unique_id}_{self._sensor_type}"
+        self._attr_entity_registry_enabled_default = enabled_by_default
+        self._attr_icon = icon
+        self._attr_name = name
 
 
 class CurrentRestrictionsBinarySensor(RainMachineBinarySensor):
@@ -159,18 +138,18 @@ class CurrentRestrictionsBinarySensor(RainMachineBinarySensor):
     @callback
     def update_from_latest_data(self) -> None:
         """Update the state."""
-        if self._sensor_type == TYPE_FREEZE:
-            self._state = self.coordinator.data["freeze"]
-        elif self._sensor_type == TYPE_HOURLY:
-            self._state = self.coordinator.data["hourly"]
-        elif self._sensor_type == TYPE_MONTH:
-            self._state = self.coordinator.data["month"]
-        elif self._sensor_type == TYPE_RAINDELAY:
-            self._state = self.coordinator.data["rainDelay"]
-        elif self._sensor_type == TYPE_RAINSENSOR:
-            self._state = self.coordinator.data["rainSensor"]
-        elif self._sensor_type == TYPE_WEEKDAY:
-            self._state = self.coordinator.data["weekDay"]
+        if self._entity_type == TYPE_FREEZE:
+            self._attr_is_on = self.coordinator.data["freeze"]
+        elif self._entity_type == TYPE_HOURLY:
+            self._attr_is_on = self.coordinator.data["hourly"]
+        elif self._entity_type == TYPE_MONTH:
+            self._attr_is_on = self.coordinator.data["month"]
+        elif self._entity_type == TYPE_RAINDELAY:
+            self._attr_is_on = self.coordinator.data["rainDelay"]
+        elif self._entity_type == TYPE_RAINSENSOR:
+            self._attr_is_on = self.coordinator.data["rainSensor"]
+        elif self._entity_type == TYPE_WEEKDAY:
+            self._attr_is_on = self.coordinator.data["weekDay"]
 
 
 class ProvisionSettingsBinarySensor(RainMachineBinarySensor):
@@ -179,18 +158,8 @@ class ProvisionSettingsBinarySensor(RainMachineBinarySensor):
     @callback
     def update_from_latest_data(self) -> None:
         """Update the state."""
-        if self._sensor_type == TYPE_FREEZE:
-            self._state = self.coordinator.data["freeze"]
-        elif self._sensor_type == TYPE_HOURLY:
-            self._state = self.coordinator.data["hourly"]
-        elif self._sensor_type == TYPE_MONTH:
-            self._state = self.coordinator.data["month"]
-        elif self._sensor_type == TYPE_RAINDELAY:
-            self._state = self.coordinator.data["rainDelay"]
-        elif self._sensor_type == TYPE_RAINSENSOR:
-            self._state = self.coordinator.data["rainSensor"]
-        elif self._sensor_type == TYPE_WEEKDAY:
-            self._state = self.coordinator.data["weekDay"]
+        if self._entity_type == TYPE_FLOW_SENSOR:
+            self._attr_is_on = self.coordinator.data["system"].get("useFlowSensor")
 
 
 class UniversalRestrictionsBinarySensor(RainMachineBinarySensor):
@@ -199,5 +168,7 @@ class UniversalRestrictionsBinarySensor(RainMachineBinarySensor):
     @callback
     def update_from_latest_data(self) -> None:
         """Update the state."""
-        if self._sensor_type == TYPE_FLOW_SENSOR:
-            self._state = self.coordinator.data["system"].get("useFlowSensor")
+        if self._entity_type == TYPE_FREEZE_PROTECTION:
+            self._attr_is_on = self.coordinator.data["freezeProtectEnabled"]
+        elif self._entity_type == TYPE_HOT_DAYS:
+            self._attr_is_on = self.coordinator.data["hotDaysExtraWatering"]

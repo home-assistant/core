@@ -1,6 +1,7 @@
 """The Elexa Guardian integration."""
+from __future__ import annotations
+
 import asyncio
-from typing import Dict
 
 from aioguardian import Client
 
@@ -31,25 +32,20 @@ from .const import (
 )
 from .util import GuardianDataUpdateCoordinator
 
-DATA_LAST_SENSOR_PAIR_DUMP = "last_sensor_pair_dump"
-
 PLATFORMS = ["binary_sensor", "sensor", "switch"]
-
-
-async def async_setup(hass: HomeAssistant, config: dict) -> bool:
-    """Set up the Elexa Guardian component."""
-    hass.data[DOMAIN] = {
-        DATA_CLIENT: {},
-        DATA_COORDINATOR: {},
-        DATA_LAST_SENSOR_PAIR_DUMP: {},
-        DATA_PAIRED_SENSOR_MANAGER: {},
-        DATA_UNSUB_DISPATCHER_CONNECT: {},
-    }
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Elexa Guardian from a config entry."""
+    hass.data.setdefault(
+        DOMAIN,
+        {
+            DATA_CLIENT: {},
+            DATA_COORDINATOR: {},
+            DATA_PAIRED_SENSOR_MANAGER: {},
+            DATA_UNSUB_DISPATCHER_CONNECT: {},
+        },
+    )
     client = hass.data[DOMAIN][DATA_CLIENT][entry.entry_id] = Client(
         entry.data[CONF_IP_ADDRESS], port=entry.data[CONF_PORT]
     )
@@ -104,28 +100,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     ].async_add_listener(async_process_paired_sensor_uids)
 
     # Set up all of the Guardian entity platforms:
-    for component in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS
-            ]
-        )
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         hass.data[DOMAIN][DATA_CLIENT].pop(entry.entry_id)
         hass.data[DOMAIN][DATA_COORDINATOR].pop(entry.entry_id)
-        hass.data[DOMAIN][DATA_LAST_SENSOR_PAIR_DUMP].pop(entry.entry_id)
         for unsub in hass.data[DOMAIN][DATA_UNSUB_DISPATCHER_CONNECT][entry.entry_id]:
             unsub()
         hass.data[DOMAIN][DATA_UNSUB_DISPATCHER_CONNECT].pop(entry.entry_id)
@@ -226,48 +211,20 @@ class GuardianEntity(CoordinatorEntity):
         self, entry: ConfigEntry, kind: str, name: str, device_class: str, icon: str
     ) -> None:
         """Initialize."""
-        self._attrs = {ATTR_ATTRIBUTION: "Data provided by Elexa"}
-        self._available = True
+        self._attr_device_class = device_class
+        self._attr_device_info = {"manufacturer": "Elexa"}
+        self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: "Data provided by Elexa"}
+        self._attr_icon = icon
+        self._attr_name = name
         self._entry = entry
-        self._device_class = device_class
-        self._device_info = {"manufacturer": "Elexa"}
-        self._icon = icon
-        self._kind = kind
-        self._name = name
-
-    @property
-    def device_class(self) -> str:
-        """Return the device class."""
-        return self._device_class
-
-    @property
-    def device_info(self) -> dict:
-        """Return device registry information for this entity."""
-        return self._device_info
-
-    @property
-    def device_state_attributes(self) -> dict:
-        """Return the state attributes."""
-        return self._attrs
-
-    @property
-    def icon(self) -> str:
-        """Return the icon."""
-        return self._icon
 
     @callback
-    def _async_update_from_latest_data(self):
+    def _async_update_from_latest_data(self) -> None:
         """Update the entity.
 
         This should be extended by Guardian platforms.
         """
         raise NotImplementedError
-
-    @callback
-    def _async_update_state_callback(self):
-        """Update the entity's state."""
-        self._async_update_from_latest_data()
-        self.async_write_ha_state()
 
 
 class PairedSensorEntity(GuardianEntity):
@@ -285,23 +242,14 @@ class PairedSensorEntity(GuardianEntity):
         """Initialize."""
         super().__init__(entry, kind, name, device_class, icon)
 
+        paired_sensor_uid = coordinator.data["uid"]
+        self._attr_device_info["identifiers"] = {(DOMAIN, paired_sensor_uid)}
+        self._attr_device_info["name"] = f"Guardian Paired Sensor {paired_sensor_uid}"
+        self._attr_device_info["via_device"] = (DOMAIN, entry.data[CONF_UID])
+        self._attr_name = f"Guardian Paired Sensor {paired_sensor_uid}: {name}"
+        self._attr_unique_id = f"{paired_sensor_uid}_{kind}"
+        self._kind = kind
         self.coordinator = coordinator
-
-        self._paired_sensor_uid = coordinator.data["uid"]
-
-        self._device_info["identifiers"] = {(DOMAIN, self._paired_sensor_uid)}
-        self._device_info["name"] = f"Guardian Paired Sensor {self._paired_sensor_uid}"
-        self._device_info["via_device"] = (DOMAIN, self._entry.data[CONF_UID])
-
-    @property
-    def name(self) -> str:
-        """Return the name of the entity."""
-        return f"Guardian Paired Sensor {self._paired_sensor_uid}: {self._name}"
-
-    @property
-    def unique_id(self):
-        """Return the unique ID of the entity."""
-        return f"{self._paired_sensor_uid}_{self._kind}"
 
     async def async_added_to_hass(self) -> None:
         """Perform tasks when the entity is added."""
@@ -314,41 +262,37 @@ class ValveControllerEntity(GuardianEntity):
     def __init__(
         self,
         entry: ConfigEntry,
-        coordinators: Dict[str, DataUpdateCoordinator],
+        coordinators: dict[str, DataUpdateCoordinator],
         kind: str,
         name: str,
-        device_class: str,
-        icon: str,
+        device_class: str | None,
+        icon: str | None,
     ) -> None:
         """Initialize."""
         super().__init__(entry, kind, name, device_class, icon)
 
-        self.coordinators = coordinators
-
-        self._device_info["identifiers"] = {(DOMAIN, self._entry.data[CONF_UID])}
-        self._device_info[
+        self._attr_device_info["identifiers"] = {(DOMAIN, entry.data[CONF_UID])}
+        self._attr_device_info[
             "name"
-        ] = f"Guardian Valve Controller {self._entry.data[CONF_UID]}"
-        self._device_info["model"] = self.coordinators[API_SYSTEM_DIAGNOSTICS].data[
+        ] = f"Guardian Valve Controller {entry.data[CONF_UID]}"
+        self._attr_device_info["model"] = coordinators[API_SYSTEM_DIAGNOSTICS].data[
             "firmware"
         ]
+        self._attr_name = f"Guardian {entry.data[CONF_UID]}: {name}"
+        self._attr_unique_id = f"{entry.data[CONF_UID]}_{kind}"
+        self._kind = kind
+        self.coordinators = coordinators
 
     @property
-    def availabile(self) -> bool:
+    def available(self) -> bool:
         """Return if entity is available."""
-        return any(coordinator.last_update_success for coordinator in self.coordinators)
+        return any(
+            coordinator.last_update_success
+            for coordinator in self.coordinators.values()
+            if coordinator
+        )
 
-    @property
-    def name(self) -> str:
-        """Return the name of the entity."""
-        return f"Guardian {self._entry.data[CONF_UID]}: {self._name}"
-
-    @property
-    def unique_id(self):
-        """Return the unique ID of the entity."""
-        return f"{self._entry.data[CONF_UID]}_{self._kind}"
-
-    async def _async_continue_entity_setup(self):
+    async def _async_continue_entity_setup(self) -> None:
         """Perform additional, internal tasks when the entity is about to be added.
 
         This should be extended by Guardian platforms.
@@ -358,9 +302,14 @@ class ValveControllerEntity(GuardianEntity):
     @callback
     def async_add_coordinator_update_listener(self, api: str) -> None:
         """Add a listener to a DataUpdateCoordinator based on the API referenced."""
-        self.async_on_remove(
-            self.coordinators[api].async_add_listener(self._async_update_state_callback)
-        )
+
+        @callback
+        def update():
+            """Update the entity's state."""
+            self._async_update_from_latest_data()
+            self.async_write_ha_state()
+
+        self.async_on_remove(self.coordinators[api].async_add_listener(update))
 
     async def async_added_to_hass(self) -> None:
         """Perform tasks when the entity is added."""
@@ -373,7 +322,6 @@ class ValveControllerEntity(GuardianEntity):
 
         Only used by the generic entity update service.
         """
-
         # Ignore manual update requests if the entity is disabled
         if not self.enabled:
             return

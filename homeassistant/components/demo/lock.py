@@ -22,44 +22,26 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class DemoLock(LockEntity):
     """Representation of a Demo lock."""
 
-    def __init__(self, name, state, openable=False):
+    _attr_should_poll = False
+
+    def __init__(self, name: str, state: str, openable: bool = False) -> None:
         """Initialize the lock."""
-        self._name = name
-        self._state = state
-        self._openable = openable
-
-    @property
-    def should_poll(self):
-        """No polling needed for a demo lock."""
-        return False
-
-    @property
-    def name(self):
-        """Return the name of the lock if any."""
-        return self._name
-
-    @property
-    def is_locked(self):
-        """Return true if lock is locked."""
-        return self._state == STATE_LOCKED
+        self._attr_name = name
+        self._attr_is_locked = state == STATE_LOCKED
+        if openable:
+            self._attr_supported_features = SUPPORT_OPEN
 
     def lock(self, **kwargs):
         """Lock the device."""
-        self._state = STATE_LOCKED
+        self._attr_is_locked = True
         self.schedule_update_ha_state()
 
     def unlock(self, **kwargs):
         """Unlock the device."""
-        self._state = STATE_UNLOCKED
+        self._attr_is_locked = False
         self.schedule_update_ha_state()
 
     def open(self, **kwargs):
         """Open the door latch."""
-        self._state = STATE_UNLOCKED
+        self._attr_is_locked = False
         self.schedule_update_ha_state()
-
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        if self._openable:
-            return SUPPORT_OPEN

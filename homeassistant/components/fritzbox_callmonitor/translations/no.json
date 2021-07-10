@@ -8,7 +8,7 @@
         "error": {
             "invalid_auth": "Ugyldig godkjenning"
         },
-        "flow_title": "AVM FRITZ! Box monitor: {name}",
+        "flow_title": "{name}",
         "step": {
             "phonebook": {
                 "data": {

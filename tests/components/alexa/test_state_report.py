@@ -50,10 +50,13 @@ async def test_report_state_instance(hass, aioclient_mock):
         "off",
         {
             "friendly_name": "Test fan",
-            "supported_features": 3,
-            "speed": "off",
+            "supported_features": 15,
+            "speed": None,
             "speed_list": ["off", "low", "high"],
             "oscillating": False,
+            "preset_mode": None,
+            "preset_modes": ["auto", "smart"],
+            "percentage": None,
         },
     )
 
@@ -64,10 +67,13 @@ async def test_report_state_instance(hass, aioclient_mock):
         "on",
         {
             "friendly_name": "Test fan",
-            "supported_features": 3,
+            "supported_features": 15,
             "speed": "high",
             "speed_list": ["off", "low", "high"],
             "oscillating": True,
+            "preset_mode": "smart",
+            "preset_modes": ["auto", "smart"],
+            "percentage": 90,
         },
     )
 
@@ -82,11 +88,33 @@ async def test_report_state_instance(hass, aioclient_mock):
     assert call_json["event"]["header"]["name"] == "ChangeReport"
 
     change_reports = call_json["event"]["payload"]["change"]["properties"]
+
+    checks = 0
     for report in change_reports:
         if report["name"] == "toggleState":
             assert report["value"] == "ON"
             assert report["instance"] == "fan.oscillating"
             assert report["namespace"] == "Alexa.ToggleController"
+            checks += 1
+        if report["name"] == "mode":
+            assert report["value"] == "preset_mode.smart"
+            assert report["instance"] == "fan.preset_mode"
+            assert report["namespace"] == "Alexa.ModeController"
+            checks += 1
+        if report["name"] == "percentage":
+            assert report["value"] == 90
+            assert report["namespace"] == "Alexa.PercentageController"
+            checks += 1
+        if report["name"] == "powerLevel":
+            assert report["value"] == 90
+            assert report["namespace"] == "Alexa.PowerLevelController"
+            checks += 1
+        if report["name"] == "rangeValue":
+            assert report["value"] == 2
+            assert report["instance"] == "fan.speed"
+            assert report["namespace"] == "Alexa.RangeController"
+            checks += 1
+    assert checks == 5
 
     assert call_json["event"]["endpoint"]["endpointId"] == "fan#test_fan"
 
@@ -174,6 +202,22 @@ async def test_doorbell_event(hass, aioclient_mock):
     assert call_json["event"]["header"]["name"] == "DoorbellPress"
     assert call_json["event"]["payload"]["cause"]["type"] == "PHYSICAL_INTERACTION"
     assert call_json["event"]["endpoint"]["endpointId"] == "binary_sensor#test_doorbell"
+
+    hass.states.async_set(
+        "binary_sensor.test_doorbell",
+        "off",
+        {"friendly_name": "Test Doorbell Sensor", "device_class": "occupancy"},
+    )
+
+    hass.states.async_set(
+        "binary_sensor.test_doorbell",
+        "on",
+        {"friendly_name": "Test Doorbell Sensor", "device_class": "occupancy"},
+    )
+
+    await hass.async_block_till_done()
+
+    assert len(aioclient_mock.mock_calls) == 2
 
 
 async def test_proactive_mode_filter_states(hass, aioclient_mock):

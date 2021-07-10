@@ -15,6 +15,7 @@
                 "data": {
                     "password": "Passwort"
                 },
+                "description": "Dein zuvor eingegebenes Passwort f\u00fcr {username} funktioniert nicht mehr. Aktualisiere dein Passwort, um diese Integration weiterhin zu verwenden.",
                 "title": "Integration erneut authentifizieren"
             },
             "trusted_device": {

@@ -26,6 +26,7 @@ DEFAULT_LOGSEVERITY = "DEBUG"
 
 LOGGER_DEFAULT = "default"
 LOGGER_LOGS = "logs"
+LOGGER_FILTERS = "filters"
 
 ATTR_LEVEL = "level"
 
@@ -40,6 +41,7 @@ CONFIG_SCHEMA = vol.Schema(
             {
                 vol.Optional(LOGGER_DEFAULT): _VALID_LOG_LEVEL,
                 vol.Optional(LOGGER_LOGS): vol.Schema({cv.string: _VALID_LOG_LEVEL}),
+                vol.Optional(LOGGER_FILTERS): vol.Schema({cv.string: [cv.is_regex]}),
             }
         )
     },
@@ -69,6 +71,11 @@ async def async_setup(hass, config):
 
     if LOGGER_LOGS in config[DOMAIN]:
         set_log_levels(config[DOMAIN][LOGGER_LOGS])
+
+    if LOGGER_FILTERS in config[DOMAIN]:
+        for key, value in config[DOMAIN][LOGGER_FILTERS].items():
+            logger = logging.getLogger(key)
+            _add_log_filter(logger, value)
 
     @callback
     def async_service_handler(service):
@@ -101,6 +108,15 @@ def _set_log_level(logger, level):
     Any logger fetched before this integration is loaded will use old class.
     """
     getattr(logger, "orig_setLevel", logger.setLevel)(LOGSEVERITY[level])
+
+
+def _add_log_filter(logger, patterns):
+    """Add a Filter to the logger based on a regexp of the filter_str."""
+
+    def filter_func(logrecord):
+        return not any(p.search(logrecord.getMessage()) for p in patterns)
+
+    logger.addFilter(filter_func)
 
 
 def _get_logger_class(hass_overrides):

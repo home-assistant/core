@@ -3,19 +3,19 @@
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DATA_COORDINATOR, DATA_HOST, DATA_HUB, DOMAIN
+from .const import CONF_REVERSE, DATA_COORDINATOR, DATA_HUB, DOMAIN
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Config entry example."""
     coordinator = hass.data[DOMAIN][entry.entry_id][DATA_COORDINATOR]
     hub = hass.data[DOMAIN][entry.entry_id][DATA_HUB]
-    host = hass.data[DOMAIN][entry.entry_id][DATA_HOST]
+    reverse = entry.options.get(CONF_REVERSE, False)
     await hub.async_get_relays()
 
     async_add_entities(
         [
-            KMtronicSwitch(coordinator, host, relay, entry.unique_id)
+            KMtronicSwitch(coordinator, relay, reverse, entry.entry_id)
             for relay in hub.relays
         ]
     )
@@ -24,17 +24,12 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class KMtronicSwitch(CoordinatorEntity, SwitchEntity):
     """KMtronic Switch Entity."""
 
-    def __init__(self, coordinator, host, relay, config_entry_id):
+    def __init__(self, coordinator, relay, reverse, config_entry_id):
         """Pass coordinator to CoordinatorEntity."""
         super().__init__(coordinator)
-        self._host = host
         self._relay = relay
         self._config_entry_id = config_entry_id
-
-    @property
-    def available(self) -> bool:
-        """Return whether the entity is available."""
-        return self.coordinator.last_update_success
+        self._reverse = reverse
 
     @property
     def name(self) -> str:
@@ -47,21 +42,29 @@ class KMtronicSwitch(CoordinatorEntity, SwitchEntity):
         return f"{self._config_entry_id}_relay{self._relay.id}"
 
     @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Return if the entity should be enabled when first added to the entity registry."""
-        return True
-
-    @property
     def is_on(self):
         """Return entity state."""
-        return self._relay.is_on
+        if self._reverse:
+            return not self._relay.is_energised
+        return self._relay.is_energised
 
     async def async_turn_on(self, **kwargs) -> None:
         """Turn the switch on."""
-        await self._relay.turn_on()
+        if self._reverse:
+            await self._relay.de_energise()
+        else:
+            await self._relay.energise()
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs) -> None:
         """Turn the switch off."""
-        await self._relay.turn_off()
+        if self._reverse:
+            await self._relay.energise()
+        else:
+            await self._relay.de_energise()
+        self.async_write_ha_state()
+
+    async def async_toggle(self, **kwargs) -> None:
+        """Toggle the switch."""
+        await self._relay.toggle()
         self.async_write_ha_state()

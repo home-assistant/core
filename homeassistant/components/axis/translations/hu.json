@@ -1,8 +1,13 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van"
+        },
         "error": {
-            "already_configured": "Az eszk\u00f6zt m\u00e1r konfigur\u00e1ltuk",
-            "cannot_connect": "Sikertelen csatlakoz\u00e1s"
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
+            "already_in_progress": "A konfigur\u00e1ci\u00f3 m\u00e1r folyamatban van.",
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s"
         },
         "flow_title": "Axis eszk\u00f6z: {name} ({host})",
         "step": {

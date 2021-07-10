@@ -8,8 +8,6 @@
                 "data": {
                     "api_key": "OpenWeatherMap API-nyckel",
                     "language": "Spr\u00e5k",
-                    "latitude": "Latitud",
-                    "longitude": "Longitud",
                     "mode": "L\u00e4ge",
                     "name": "Integrationens namn"
                 },

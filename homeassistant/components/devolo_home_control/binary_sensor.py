@@ -1,14 +1,22 @@
 """Platform for binary sensor integration."""
+from __future__ import annotations
+
+from devolo_home_control_api.devices.zwave import Zwave
+from devolo_home_control_api.homecontrol import HomeControl
+
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_DOOR,
     DEVICE_CLASS_HEAT,
     DEVICE_CLASS_MOISTURE,
     DEVICE_CLASS_MOTION,
+    DEVICE_CLASS_PROBLEM,
+    DEVICE_CLASS_SAFETY,
     DEVICE_CLASS_SMOKE,
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .devolo_device import DevoloDeviceEntity
@@ -19,14 +27,15 @@ DEVICE_CLASS_MAPPING = {
     "Smoke Alarm": DEVICE_CLASS_SMOKE,
     "Heat Alarm": DEVICE_CLASS_HEAT,
     "door": DEVICE_CLASS_DOOR,
+    "overload": DEVICE_CLASS_SAFETY,
 }
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Get all binary sensor and multi level sensor devices and setup them via config entry."""
-    entities = []
+    entities: list[BinarySensorEntity] = []
 
     for gateway in hass.data[DOMAIN][entry.entry_id]["gateways"]:
         for device in gateway.binary_sensor_devices:
@@ -58,7 +67,9 @@ async def async_setup_entry(
 class DevoloBinaryDeviceEntity(DevoloDeviceEntity, BinarySensorEntity):
     """Representation of a binary sensor within devolo Home Control."""
 
-    def __init__(self, homecontrol, device_instance, element_uid):
+    def __init__(
+        self, homecontrol: HomeControl, device_instance: Zwave, element_uid: str
+    ) -> None:
         """Initialize a devolo binary sensor."""
         self._binary_sensor_property = device_instance.binary_sensor_property.get(
             element_uid
@@ -84,15 +95,16 @@ class DevoloBinaryDeviceEntity(DevoloDeviceEntity, BinarySensorEntity):
         self._value = self._binary_sensor_property.state
 
         if element_uid.startswith("devolo.WarningBinaryFI:"):
+            self._device_class = DEVICE_CLASS_PROBLEM
             self._enabled_default = False
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return the state."""
-        return self._value
+        return bool(self._value)
 
     @property
-    def device_class(self):
+    def device_class(self) -> str | None:
         """Return device class."""
         return self._device_class
 
@@ -100,7 +112,13 @@ class DevoloBinaryDeviceEntity(DevoloDeviceEntity, BinarySensorEntity):
 class DevoloRemoteControl(DevoloDeviceEntity, BinarySensorEntity):
     """Representation of a remote control within devolo Home Control."""
 
-    def __init__(self, homecontrol, device_instance, element_uid, key):
+    def __init__(
+        self,
+        homecontrol: HomeControl,
+        device_instance: Zwave,
+        element_uid: str,
+        key: int,
+    ) -> None:
         """Initialize a devolo remote control."""
         self._remote_control_property = device_instance.remote_control_property.get(
             element_uid
@@ -116,11 +134,11 @@ class DevoloRemoteControl(DevoloDeviceEntity, BinarySensorEntity):
         self._state = False
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return the state."""
         return self._state
 
-    def _sync(self, message):
+    def _sync(self, message: tuple) -> None:
         """Update the binary sensor state."""
         if (
             message[0] == self._remote_control_property.element_uid

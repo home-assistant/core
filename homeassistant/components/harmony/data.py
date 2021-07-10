@@ -1,7 +1,8 @@
 """Harmony data object which contains the Harmony Client."""
+from __future__ import annotations
 
+from collections.abc import Iterable
 import logging
-from typing import Iterable
 
 from aioharmony.const import ClientCallbackType, SendCommandDevice
 import aioharmony.exceptions as aioexc
@@ -22,17 +23,8 @@ class HarmonyData(HarmonySubscriberMixin):
         self._name = name
         self._unique_id = unique_id
         self._available = False
-
-        callbacks = {
-            "config_updated": self._config_updated,
-            "connect": self._connected,
-            "disconnect": self._disconnected,
-            "new_activity_starting": self._activity_starting,
-            "new_activity": self._activity_started,
-        }
-        self._client = HarmonyClient(
-            ip_address=address, callbacks=ClientCallbackType(**callbacks)
-        )
+        self._client = None
+        self._address = address
 
     @property
     def activities(self):
@@ -105,6 +97,18 @@ class HarmonyData(HarmonySubscriberMixin):
     async def connect(self) -> bool:
         """Connect to the Harmony Hub."""
         _LOGGER.debug("%s: Connecting", self._name)
+
+        callbacks = {
+            "config_updated": self._config_updated,
+            "connect": self._connected,
+            "disconnect": self._disconnected,
+            "new_activity_starting": self._activity_starting,
+            "new_activity": self._activity_started,
+        }
+        self._client = HarmonyClient(
+            ip_address=self._address, callbacks=ClientCallbackType(**callbacks)
+        )
+
         try:
             if not await self._client.connect():
                 _LOGGER.warning("%s: Unable to connect to HUB", self._name)
@@ -113,6 +117,7 @@ class HarmonyData(HarmonySubscriberMixin):
         except aioexc.TimeOut:
             _LOGGER.warning("%s: Connection timed-out", self._name)
             return False
+
         return True
 
     async def shutdown(self):
@@ -159,10 +164,12 @@ class HarmonyData(HarmonySubscriberMixin):
             )
             return
 
+        await self.async_lock_start_activity()
         try:
             await self._client.start_activity(activity_id)
         except aioexc.TimeOut:
             _LOGGER.error("%s: Starting activity %s timed-out", self.name, activity)
+            self.async_unlock_start_activity()
 
     async def async_power_off(self):
         """Start the PowerOff activity."""

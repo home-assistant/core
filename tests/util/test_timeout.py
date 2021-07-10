@@ -1,5 +1,6 @@
 """Test Home Assistant timeout handler."""
 import asyncio
+from contextlib import suppress
 import time
 
 import pytest
@@ -232,11 +233,9 @@ async def test_mix_zone_timeout():
     timeout = TimeoutManager()
 
     async with timeout.async_timeout(0.1):
-        try:
+        with suppress(asyncio.TimeoutError):
             async with timeout.async_timeout(0.2, "test"):
                 await asyncio.sleep(0.4)
-        except asyncio.TimeoutError:
-            pass
 
 
 async def test_mix_zone_timeout_trigger_global():
@@ -245,11 +244,9 @@ async def test_mix_zone_timeout_trigger_global():
 
     with pytest.raises(asyncio.TimeoutError):
         async with timeout.async_timeout(0.1):
-            try:
+            with suppress(asyncio.TimeoutError):
                 async with timeout.async_timeout(0.1, "test"):
                     await asyncio.sleep(0.3)
-            except asyncio.TimeoutError:
-                pass
 
             await asyncio.sleep(0.3)
 
@@ -259,11 +256,9 @@ async def test_mix_zone_timeout_trigger_global_cool_down():
     timeout = TimeoutManager()
 
     async with timeout.async_timeout(0.1, cool_down=0.3):
-        try:
+        with suppress(asyncio.TimeoutError):
             async with timeout.async_timeout(0.1, "test"):
                 await asyncio.sleep(0.3)
-        except asyncio.TimeoutError:
-            pass
 
         await asyncio.sleep(0.2)
 
@@ -301,11 +296,9 @@ async def test_simple_zone_timeout_freeze_without_timeout_exeption():
 
     with pytest.raises(asyncio.TimeoutError):
         async with timeout.async_timeout(0.1):
-            try:
+            with suppress(RuntimeError):
                 async with timeout.async_freeze("test"):
                     raise RuntimeError()
-            except RuntimeError:
-                pass
 
             await asyncio.sleep(0.4)
 
@@ -316,10 +309,8 @@ async def test_simple_zone_timeout_zone_with_timeout_exeption():
 
     with pytest.raises(asyncio.TimeoutError):
         async with timeout.async_timeout(0.1):
-            try:
+            with suppress(RuntimeError):
                 async with timeout.async_timeout(0.3, "test"):
                     raise RuntimeError()
-            except RuntimeError:
-                pass
 
             await asyncio.sleep(0.3)

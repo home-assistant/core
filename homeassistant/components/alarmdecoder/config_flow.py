@@ -11,7 +11,7 @@ from homeassistant.components.binary_sensor import DEVICE_CLASSES
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_PROTOCOL
 from homeassistant.core import callback
 
-from .const import (  # pylint: disable=unused-import
+from .const import (
     CONF_ALT_NIGHT_MODE,
     CONF_AUTO_BYPASS,
     CONF_CODE_ARM_REQUIRED,
@@ -49,7 +49,6 @@ class AlarmDecoderFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a AlarmDecoder config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
     def __init__(self):
         """Initialize AlarmDecoder ConfigFlow."""
@@ -141,7 +140,7 @@ class AlarmDecoderFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 class AlarmDecoderOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle AlarmDecoder options."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry):
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize AlarmDecoder options flow."""
         self.arm_options = config_entry.options.get(OPTIONS_ARM, DEFAULT_ARM_OPTIONS)
         self.zone_options = config_entry.options.get(
@@ -349,12 +348,18 @@ def _device_already_added(current_entries, user_input, protocol):
         entry_path = entry.data.get(CONF_DEVICE_PATH)
         entry_baud = entry.data.get(CONF_DEVICE_BAUD)
 
-        if protocol == PROTOCOL_SOCKET:
-            if user_host == entry_host and user_port == entry_port:
-                return True
+        if (
+            protocol == PROTOCOL_SOCKET
+            and user_host == entry_host
+            and user_port == entry_port
+        ):
+            return True
 
-        if protocol == PROTOCOL_SERIAL:
-            if user_baud == entry_baud and user_path == entry_path:
-                return True
+        if (
+            protocol == PROTOCOL_SERIAL
+            and user_baud == entry_baud
+            and user_path == entry_path
+        ):
+            return True
 
     return False

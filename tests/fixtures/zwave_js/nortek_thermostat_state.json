@@ -6,16 +6,10 @@
     "status": 4,
     "ready": true,
     "deviceClass": {
-        "basic": "Static Controller",
-        "generic": "Thermostat",
-        "specific": "Thermostat General V2",
-        "mandatorySupportedCCs": [
-            "Basic",
-            "Manufacturer Specific",
-            "Thermostat Mode",
-            "Thermostat Setpoint",
-            "Version"
-        ],
+        "basic": {"key": 2, "label":"Static Controller"},
+        "generic": {"key": 8, "label":"Thermostat"},
+        "specific": {"key": 6, "label":"Thermostat General V2"},
+        "mandatorySupportedCCs": [],
         "mandatoryControlCCs": []
     },
     "isListening": false,
@@ -75,6 +69,7 @@
             "userIcon": 4608
         }
     ],
+    "commandClasses": [],
     "values": [
         {
             "commandClassName": "Manufacturer Specific",

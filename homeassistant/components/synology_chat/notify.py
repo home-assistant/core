@@ -51,7 +51,7 @@ class SynologyChatNotificationService(BaseNotificationService):
         if file_url:
             data["file_url"] = file_url
 
-        to_send = "payload={}".format(json.dumps(data))
+        to_send = f"payload={json.dumps(data)}"
 
         response = requests.post(
             self._resource, data=to_send, timeout=10, verify=self._verify_ssl

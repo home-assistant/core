@@ -62,7 +62,6 @@ from .errors import (
     AlexaInvalidDirectiveError,
     AlexaInvalidValueError,
     AlexaSecurityPanelAuthorizationRequired,
-    AlexaSecurityPanelUnauthorizedError,
     AlexaTempRangeError,
     AlexaUnsupportedThermostatModeError,
     AlexaVideoActionNotPermittedForContentError,
@@ -653,10 +652,9 @@ def temperature_from_object(hass, temp_obj, interval=False):
 
     if temp_obj["scale"] == "FAHRENHEIT":
         from_unit = TEMP_FAHRENHEIT
-    elif temp_obj["scale"] == "KELVIN":
+    elif temp_obj["scale"] == "KELVIN" and not interval:
         # convert to Celsius if absolute temperature
-        if not interval:
-            temp -= 273.15
+        temp -= 273.15
 
     return convert_temperature(temp, from_unit, to_unit, interval)
 
@@ -928,11 +926,9 @@ async def async_api_disarm(hass, config, directive, context):
         if payload["authorization"]["type"] == "FOUR_DIGIT_PIN":
             data["code"] = value
 
-    if not await hass.services.async_call(
+    await hass.services.async_call(
         entity.domain, SERVICE_ALARM_DISARM, data, blocking=True, context=context
-    ):
-        msg = "Invalid Code"
-        raise AlexaSecurityPanelUnauthorizedError(msg)
+    )
 
     response.add_context_property(
         {
@@ -961,6 +957,16 @@ async def async_api_set_mode(hass, config, directive, context):
         if direction in (fan.DIRECTION_REVERSE, fan.DIRECTION_FORWARD):
             service = fan.SERVICE_SET_DIRECTION
             data[fan.ATTR_DIRECTION] = direction
+
+    # Fan preset_mode
+    elif instance == f"{fan.DOMAIN}.{fan.ATTR_PRESET_MODE}":
+        preset_mode = mode.split(".")[1]
+        if preset_mode in entity.attributes.get(fan.ATTR_PRESET_MODES):
+            service = fan.SERVICE_SET_PRESET_MODE
+            data[fan.ATTR_PRESET_MODE] = preset_mode
+        else:
+            msg = f"Entity '{entity.entity_id}' does not support Preset '{preset_mode}'"
+            raise AlexaInvalidValueError(msg)
 
     # Cover Position
     elif instance == f"{cover.DOMAIN}.{cover.ATTR_POSITION}":
@@ -1375,10 +1381,7 @@ async def async_api_seek(hass, config, directive, context):
         msg = f"{entity} did not return the current media position."
         raise AlexaVideoActionNotPermittedForContentError(msg)
 
-    seek_position = int(current_position) + int(position_delta / 1000)
-
-    if seek_position < 0:
-        seek_position = 0
+    seek_position = max(int(current_position) + int(position_delta / 1000), 0)
 
     media_duration = entity.attributes.get(media_player.ATTR_MEDIA_DURATION)
     if media_duration and 0 < int(media_duration) < seek_position:

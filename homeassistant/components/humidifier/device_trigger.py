@@ -1,11 +1,11 @@
 """Provides device automations for Climate."""
-from typing import List
+from __future__ import annotations
 
 import voluptuous as vol
 
 from homeassistant.components.automation import AutomationActionType
 from homeassistant.components.device_automation import (
-    TRIGGER_BASE_SCHEMA,
+    DEVICE_TRIGGER_BASE_SCHEMA,
     toggle_entity,
 )
 from homeassistant.components.homeassistant.triggers import (
@@ -29,7 +29,7 @@ from homeassistant.helpers.typing import ConfigType
 from . import DOMAIN
 
 TARGET_TRIGGER_SCHEMA = vol.All(
-    TRIGGER_BASE_SCHEMA.extend(
+    DEVICE_TRIGGER_BASE_SCHEMA.extend(
         {
             vol.Required(CONF_ENTITY_ID): cv.entity_id,
             vol.Required(CONF_TYPE): "target_humidity_changed",
@@ -48,7 +48,7 @@ TOGGLE_TRIGGER_SCHEMA = toggle_entity.TRIGGER_SCHEMA.extend(
 TRIGGER_SCHEMA = vol.Any(TARGET_TRIGGER_SCHEMA, TOGGLE_TRIGGER_SCHEMA)
 
 
-async def async_get_triggers(hass: HomeAssistant, device_id: str) -> List[dict]:
+async def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict]:
     """List device triggers for Humidifier devices."""
     registry = await entity_registry.async_get_registry(hass)
     triggers = await toggle_entity.async_get_triggers(hass, device_id, DOMAIN)

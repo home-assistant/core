@@ -1,10 +1,12 @@
 """JSON utility functions."""
+from __future__ import annotations
+
 from collections import deque
 import json
 import logging
 import os
 import tempfile
-from typing import Any, Callable, Dict, List, Optional, Type, Union
+from typing import Any, Callable
 
 from homeassistant.core import Event, State
 from homeassistant.exceptions import HomeAssistantError
@@ -20,9 +22,7 @@ class WriteError(HomeAssistantError):
     """Error writing the data."""
 
 
-def load_json(
-    filename: str, default: Union[List, Dict, None] = None
-) -> Union[List, Dict]:
+def load_json(filename: str, default: list | dict | None = None) -> list | dict:
     """Load JSON data from a file and return as dict or list.
 
     Defaults to returning empty dict if file is not found.
@@ -44,10 +44,10 @@ def load_json(
 
 def save_json(
     filename: str,
-    data: Union[List, Dict],
+    data: list | dict,
     private: bool = False,
     *,
-    encoder: Optional[Type[json.JSONEncoder]] = None,
+    encoder: type[json.JSONEncoder] | None = None,
 ) -> None:
     """Save JSON data to a file.
 
@@ -85,7 +85,7 @@ def save_json(
                 _LOGGER.error("JSON replacement cleanup failed: %s", err)
 
 
-def format_unserializable_data(data: Dict[str, Any]) -> str:
+def format_unserializable_data(data: dict[str, Any]) -> str:
     """Format output of find_paths in a friendly way.
 
     Format is comma separated: <path>=<value>(<type>)
@@ -95,7 +95,7 @@ def format_unserializable_data(data: Dict[str, Any]) -> str:
 
 def find_paths_unserializable_data(
     bad_data: Any, *, dump: Callable[[Any], str] = json.dumps
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Find the paths to unserializable data.
 
     This method is slow! Only use for error handling.
@@ -112,12 +112,15 @@ def find_paths_unserializable_data(
         except (ValueError, TypeError):
             pass
 
-        # We convert states and events to dict so we can find bad data inside it
-        if isinstance(obj, State):
-            obj_path += f"(state: {obj.entity_id})"
-            obj = obj.as_dict()
-        elif isinstance(obj, Event):
-            obj_path += f"(event: {obj.event_type})"
+        # We convert objects with as_dict to their dict values so we can find bad data inside it
+        if hasattr(obj, "as_dict"):
+            desc = obj.__class__.__name__
+            if isinstance(obj, State):
+                desc += f": {obj.entity_id}"
+            elif isinstance(obj, Event):
+                desc += f": {obj.event_type}"
+
+            obj_path += f"({desc})"
             obj = obj.as_dict()
 
         if isinstance(obj, dict):

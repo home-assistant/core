@@ -3,5 +3,6 @@
   "name": "Local IP Address",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/local_ip",
-  "codeowners": ["@issacg"]
+  "codeowners": ["@issacg"],
+  "iot_class": "local_polling"
 }

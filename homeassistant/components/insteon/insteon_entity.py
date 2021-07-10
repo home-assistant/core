@@ -75,7 +75,7 @@ class InsteonEntity(Entity):
         return f"{description} {self._insteon_device.address}{extension}"
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Provide attributes for display on device card."""
         return {"insteon_address": self.address, "insteon_group": self.group}
 

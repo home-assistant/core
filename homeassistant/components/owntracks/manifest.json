@@ -6,5 +6,6 @@
   "requirements": ["PyNaCl==1.3.0"],
   "dependencies": ["webhook"],
   "after_dependencies": ["mqtt", "cloud"],
-  "codeowners": []
+  "codeowners": [],
+  "iot_class": "local_push"
 }

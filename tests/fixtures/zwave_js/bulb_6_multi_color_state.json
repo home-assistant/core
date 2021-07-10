@@ -6,14 +6,10 @@
     "status": 4,
     "ready": true,
     "deviceClass": {
-        "basic": "Static Controller",
-        "generic": "Multilevel Switch",
-        "specific": "Multilevel Power Switch",
-        "mandatorySupportedCCs": [
-            "Basic",
-            "Multilevel Switch",
-            "All Switch"
-        ],
+        "basic": {"key": 2, "label": "Static Controller"},
+        "generic": {"key": 17, "label":"Multilevel Switch"},
+        "specific": {"key": 1, "label":"Multilevel Power Switch"},
+        "mandatorySupportedCCs": [],
         "mandatoryControlCCs": []
     },
     "isListening": true,
@@ -67,6 +63,7 @@
             "userIcon": 1536
         }
     ],
+    "commandClasses": [],
     "values": [
         {
             "commandClassName": "Multilevel Switch",
@@ -78,10 +75,13 @@
                 "type": "number",
                 "readable": true,
                 "writeable": true,
+                "label": "Target value",
+                "valueChangeOptions": [
+                  "transitionDuration"
+                ],
                 "min": 0,
-                "max": 99,
-                "label": "Target value"
-            }
+                "max": 99
+              }
         },
         {
             "commandClassName": "Multilevel Switch",
@@ -342,6 +342,23 @@
                 "description": "The target value of the Blue color."
             }
         },
+        {
+            "endpoint": 0,
+            "commandClass": 51,
+            "commandClassName": "Color Switch",
+            "property": "targetColor",
+            "propertyName": "targetColor",
+            "ccVersion": 1,
+            "metadata": {
+              "type": "any",
+              "readable": true,
+              "writeable": true,
+              "label": "Target Color",
+              "valueChangeOptions": [
+                "transitionDuration"
+              ]
+            }
+          },        
         {
             "commandClassName": "Configuration",
             "commandClass": 112,

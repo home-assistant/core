@@ -1,0 +1,40 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u5ea7\u6a19\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
+        },
+        "error": {
+            "invalid_hosts": "\u4e3b\u6a5f\u7aef\u7121\u6548"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "exclude": "\u6392\u9664\u6383\u63cf\u7684\u7db2\u8def\u4f4d\u5740\uff08\u4ee5\u9017\u865f\u5206\u9694\uff09",
+                    "home_interval": "\u6383\u63cf\u6d3b\u52d5\u88dd\u7f6e\u7684\u6700\u4f4e\u9593\u9694\u5206\u9418\uff08\u8003\u91cf\u7701\u96fb\uff09",
+                    "hosts": "\u6240\u8981\u6383\u63cf\u7684\u7db2\u8def\u4f4d\u5740\uff08\u4ee5\u9017\u865f\u5206\u9694\uff09",
+                    "scan_options": "Nmap \u539f\u59cb\u8a2d\u5b9a\u6383\u63cf\u9078\u9805"
+                },
+                "description": "\u8a2d\u5b9a Nmap \u6383\u63cf\u4e3b\u6a5f\u3002\u7db2\u8def\u4f4d\u5740\u8207\u6392\u9664\u4f4d\u5740\u53ef\u4ee5\u662f IP \u4f4d\u5740\uff08192.168.1.1\uff09\u3001IP \u7db2\u8def\uff08192.168.0.0/24\uff09\u6216 IP \u7bc4\u570d\uff08192.168.1.0-32\uff09\u3002"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "invalid_hosts": "\u4e3b\u6a5f\u7aef\u7121\u6548"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "exclude": "\u6392\u9664\u6383\u63cf\u7684\u7db2\u8def\u4f4d\u5740\uff08\u4ee5\u9017\u865f\u5206\u9694\uff09",
+                    "home_interval": "\u6383\u63cf\u6d3b\u52d5\u88dd\u7f6e\u7684\u6700\u4f4e\u9593\u9694\u5206\u9418\uff08\u8003\u91cf\u7701\u96fb\uff09",
+                    "hosts": "\u6240\u8981\u6383\u63cf\u7684\u7db2\u8def\u4f4d\u5740\uff08\u4ee5\u9017\u865f\u5206\u9694\uff09",
+                    "interval_seconds": "\u6383\u63cf\u9593\u8ddd",
+                    "scan_options": "Nmap \u539f\u59cb\u8a2d\u5b9a\u6383\u63cf\u9078\u9805",
+                    "track_new_devices": "\u8ffd\u8e64\u65b0\u88dd\u7f6e"
+                },
+                "description": "\u8a2d\u5b9a Nmap \u6383\u63cf\u4e3b\u6a5f\u3002\u7db2\u8def\u4f4d\u5740\u8207\u6392\u9664\u4f4d\u5740\u53ef\u4ee5\u662f IP \u4f4d\u5740\uff08192.168.1.1\uff09\u3001IP \u7db2\u8def\uff08192.168.0.0/24\uff09\u6216 IP \u7bc4\u570d\uff08192.168.1.0-32\uff09\u3002"
+            }
+        }
+    },
+    "title": "Nmap Tracker"
+}

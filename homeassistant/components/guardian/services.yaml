@@ -1,58 +1,85 @@
 # Describes the format for available Elexa Guardians services
 disable_ap:
+  name: Disable AP
   description: Disable the device's onboard access point.
-  fields:
-    entity_id:
-      description: The Guardian valve controller to affect.
-      example: switch.guardian_abcde_valve
+  target:
+    entity:
+      integration: guardian
+      domain: switch
 enable_ap:
+  name: Enable AP
   description: Enable the device's onboard access point.
-  fields:
-    entity_id:
-      description: The Guardian valve controller to affect.
-      example: switch.guardian_abcde_valve
+  target:
+    entity:
+      integration: guardian
+      domain: switch
 pair_sensor:
+  name: Pair sensor
   description: Add a new paired sensor to the valve controller.
+  target:
+    entity:
+      integration: guardian
+      domain: switch
   fields:
-    entity_id:
-      description: The Guardian valve controller to affect.
-      example: switch.guardian_abcde_valve
     uid:
+      name: UID
       description: The UID of the paired sensor
+      required: true
       example: 5410EC688BCF
+      selector:
+        text:
 reboot:
+  name: Reboot
   description: Reboot the device.
-  fields:
-    entity_id:
-      description: The Guardian valve controller to affect.
-      example: switch.guardian_abcde_valve
+  target:
+    entity:
+      integration: guardian
+      domain: switch
 reset_valve_diagnostics:
+  name: Reset valve diagnostics
   description: Fully (and irrecoverably) reset all valve diagnostics.
-  fields:
-    entity_id:
-      description: The Guardian valve controller to affect.
-      example: switch.guardian_abcde_valve
+  target:
+    entity:
+      integration: guardian
+      domain: switch
 unpair_sensor:
+  name: Unpair sensor
   description: Remove a paired sensor from the valve controller.
+  target:
+    entity:
+      integration: guardian
+      domain: switch
   fields:
-    entity_id:
-      description: The Guardian valve controller to affect.
-      example: switch.guardian_abcde_valve
     uid:
+      name: UID
       description: The UID of the paired sensor
+      required: true
       example: 5410EC688BCF
+      selector:
+        text:
 upgrade_firmware:
+  name: Upgrade firmware
   description: Upgrade the device firmware.
+  target:
+    entity:
+      integration: guardian
+      domain: switch
   fields:
-    entity_id:
-      description: The Guardian valve controller to affect.
-      example: switch.guardian_abcde_valve
     url:
-      description: (optional) The URL of the server hosting the firmware file.
+      name: URL
+      description: The URL of the server hosting the firmware file.
       example: https://repo.guardiancloud.services/gvc/fw
+      selector:
+        text:
     port:
-      description: (optional) The port on which the firmware file is served.
+      name: Port
+      description: The port on which the firmware file is served.
       example: 443
+      selector:
+        text:
     filename:
-      description: (optional) The firmware filename.
+      name: Filename
+      description: The firmware filename.
       example: latest.bin
+      selector:
+        text:

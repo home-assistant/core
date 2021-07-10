@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "reauth_successful": "Die erneute Authentifizierung war erfolgreich"
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "invalid_auth": "Ung\u00fcltige Authentifizierung",
+            "unknown": "Unerwarteter Fehler"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "token": "Zugangstoken"
+                },
+                "description": "Die Nuki-Integration muss sich bei deiner Bridge neu authentifizieren.",
+                "title": "Integration erneut authentifizieren"
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "port": "Port",
+                    "token": "Zugangstoken"
+                }
+            }
+        }
+    }
+}

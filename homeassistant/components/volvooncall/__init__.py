@@ -39,7 +39,7 @@ CONF_MUTABLE = "mutable"
 
 SIGNAL_STATE_UPDATED = f"{DOMAIN}.updated"
 
-COMPONENTS = {
+PLATFORMS = {
     "sensor": "sensor",
     "binary_sensor": "binary_sensor",
     "lock": "lock",
@@ -146,7 +146,7 @@ async def async_setup(hass, config):
         for instrument in (
             instrument
             for instrument in dashboard.instruments
-            if instrument.component in COMPONENTS and is_enabled(instrument.slug_attr)
+            if instrument.component in PLATFORMS and is_enabled(instrument.slug_attr)
         ):
 
             data.instruments.add(instrument)
@@ -154,7 +154,7 @@ async def async_setup(hass, config):
             hass.async_create_task(
                 discovery.async_load_platform(
                     hass,
-                    COMPONENTS[instrument.component],
+                    PLATFORMS[instrument.component],
                     DOMAIN,
                     (vehicle.vin, instrument.component, instrument.attr),
                     config,
@@ -277,7 +277,7 @@ class VolvoEntity(Entity):
         return True
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return device specific state attributes."""
         return dict(
             self.instrument.attributes,

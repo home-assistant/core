@@ -3,7 +3,7 @@
 from plugwise.exceptions import PlugwiseException
 
 from homeassistant.components.climate.const import HVAC_MODE_AUTO, HVAC_MODE_HEAT
-from homeassistant.config_entries import ENTRY_STATE_LOADED
+from homeassistant.config_entries import ConfigEntryState
 
 from tests.components.plugwise.common import async_init_integration
 
@@ -11,7 +11,7 @@ from tests.components.plugwise.common import async_init_integration
 async def test_adam_climate_entity_attributes(hass, mock_smile_adam):
     """Test creation of adam climate device environment."""
     entry = await async_init_integration(hass, mock_smile_adam)
-    assert entry.state == ENTRY_STATE_LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     state = hass.states.get("climate.zone_lisa_wk")
     attrs = state.attributes
@@ -50,7 +50,7 @@ async def test_adam_climate_adjust_negative_testing(hass, mock_smile_adam):
     mock_smile_adam.set_schedule_state.side_effect = PlugwiseException
     mock_smile_adam.set_temperature.side_effect = PlugwiseException
     entry = await async_init_integration(hass, mock_smile_adam)
-    assert entry.state == ENTRY_STATE_LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     await hass.services.async_call(
         "climate",
@@ -85,7 +85,7 @@ async def test_adam_climate_adjust_negative_testing(hass, mock_smile_adam):
 async def test_adam_climate_entity_climate_changes(hass, mock_smile_adam):
     """Test handling of user requests in adam climate device environment."""
     entry = await async_init_integration(hass, mock_smile_adam)
-    assert entry.state == ENTRY_STATE_LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     await hass.services.async_call(
         "climate",
@@ -138,7 +138,7 @@ async def test_adam_climate_entity_climate_changes(hass, mock_smile_adam):
 async def test_anna_climate_entity_attributes(hass, mock_smile_anna):
     """Test creation of anna climate device environment."""
     entry = await async_init_integration(hass, mock_smile_anna)
-    assert entry.state == ENTRY_STATE_LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     state = hass.states.get("climate.anna")
     attrs = state.attributes
@@ -163,7 +163,7 @@ async def test_anna_climate_entity_attributes(hass, mock_smile_anna):
 async def test_anna_climate_entity_climate_changes(hass, mock_smile_anna):
     """Test handling of user requests in anna climate device environment."""
     entry = await async_init_integration(hass, mock_smile_anna)
-    assert entry.state == ENTRY_STATE_LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     await hass.services.async_call(
         "climate",

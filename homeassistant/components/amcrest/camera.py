@@ -8,14 +8,9 @@ from amcrest import AmcrestError
 from haffmpeg.camera import CameraMjpeg
 import voluptuous as vol
 
-from homeassistant.components.camera import (
-    CAMERA_SERVICE_SCHEMA,
-    SUPPORT_ON_OFF,
-    SUPPORT_STREAM,
-    Camera,
-)
+from homeassistant.components.camera import SUPPORT_ON_OFF, SUPPORT_STREAM, Camera
 from homeassistant.components.ffmpeg import DATA_FFMPEG
-from homeassistant.const import CONF_NAME, STATE_OFF, STATE_ON
+from homeassistant.const import ATTR_ENTITY_ID, CONF_NAME, STATE_OFF, STATE_ON
 from homeassistant.helpers.aiohttp_client import (
     async_aiohttp_proxy_stream,
     async_aiohttp_proxy_web,
@@ -82,13 +77,12 @@ _CBW_AUTO = "auto"
 _CBW_BW = "bw"
 _CBW = [_CBW_COLOR, _CBW_AUTO, _CBW_BW]
 
-_SRV_GOTO_SCHEMA = CAMERA_SERVICE_SCHEMA.extend(
+_SRV_SCHEMA = vol.Schema({vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids})
+_SRV_GOTO_SCHEMA = _SRV_SCHEMA.extend(
     {vol.Required(_ATTR_PRESET): vol.All(vol.Coerce(int), vol.Range(min=1))}
 )
-_SRV_CBW_SCHEMA = CAMERA_SERVICE_SCHEMA.extend(
-    {vol.Required(_ATTR_COLOR_BW): vol.In(_CBW)}
-)
-_SRV_PTZ_SCHEMA = CAMERA_SERVICE_SCHEMA.extend(
+_SRV_CBW_SCHEMA = _SRV_SCHEMA.extend({vol.Required(_ATTR_COLOR_BW): vol.In(_CBW)})
+_SRV_PTZ_SCHEMA = _SRV_SCHEMA.extend(
     {
         vol.Required(_ATTR_PTZ_MOV): vol.In(_MOV),
         vol.Optional(_ATTR_PTZ_TT, default=_DEFAULT_TT): cv.small_float,
@@ -96,16 +90,16 @@ _SRV_PTZ_SCHEMA = CAMERA_SERVICE_SCHEMA.extend(
 )
 
 CAMERA_SERVICES = {
-    _SRV_EN_REC: (CAMERA_SERVICE_SCHEMA, "async_enable_recording", ()),
-    _SRV_DS_REC: (CAMERA_SERVICE_SCHEMA, "async_disable_recording", ()),
-    _SRV_EN_AUD: (CAMERA_SERVICE_SCHEMA, "async_enable_audio", ()),
-    _SRV_DS_AUD: (CAMERA_SERVICE_SCHEMA, "async_disable_audio", ()),
-    _SRV_EN_MOT_REC: (CAMERA_SERVICE_SCHEMA, "async_enable_motion_recording", ()),
-    _SRV_DS_MOT_REC: (CAMERA_SERVICE_SCHEMA, "async_disable_motion_recording", ()),
+    _SRV_EN_REC: (_SRV_SCHEMA, "async_enable_recording", ()),
+    _SRV_DS_REC: (_SRV_SCHEMA, "async_disable_recording", ()),
+    _SRV_EN_AUD: (_SRV_SCHEMA, "async_enable_audio", ()),
+    _SRV_DS_AUD: (_SRV_SCHEMA, "async_disable_audio", ()),
+    _SRV_EN_MOT_REC: (_SRV_SCHEMA, "async_enable_motion_recording", ()),
+    _SRV_DS_MOT_REC: (_SRV_SCHEMA, "async_disable_motion_recording", ()),
     _SRV_GOTO: (_SRV_GOTO_SCHEMA, "async_goto_preset", (_ATTR_PRESET,)),
     _SRV_CBW: (_SRV_CBW_SCHEMA, "async_set_color_bw", (_ATTR_COLOR_BW,)),
-    _SRV_TOUR_ON: (CAMERA_SERVICE_SCHEMA, "async_start_tour", ()),
-    _SRV_TOUR_OFF: (CAMERA_SERVICE_SCHEMA, "async_stop_tour", ()),
+    _SRV_TOUR_ON: (_SRV_SCHEMA, "async_start_tour", ()),
+    _SRV_TOUR_OFF: (_SRV_SCHEMA, "async_stop_tour", ()),
     _SRV_PTZ_CTRL: (
         _SRV_PTZ_SCHEMA,
         "async_ptz_control",
@@ -197,7 +191,7 @@ class AmcrestCam(Camera):
             # and before initiating shapshot.
             while self._snapshot_task:
                 self._check_snapshot_ok()
-                _LOGGER.debug("Waiting for previous snapshot from %s ...", self._name)
+                _LOGGER.debug("Waiting for previous snapshot from %s", self._name)
                 await self._snapshot_task
             self._check_snapshot_ok()
             # Run snapshot command in separate Task that can't be cancelled so
@@ -266,7 +260,7 @@ class AmcrestCam(Camera):
         return self._name
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the Amcrest-specific camera state attributes."""
         attr = {}
         if self._audio_enabled is not None:

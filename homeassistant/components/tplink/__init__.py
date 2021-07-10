@@ -4,9 +4,12 @@ import logging
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.typing import ConfigType
 
 from .common import (
     ATTR_CONFIG,
@@ -23,6 +26,8 @@ from .common import (
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "tplink"
+
+PLATFORMS = [CONF_LIGHT, CONF_SWITCH]
 
 TPLINK_HOST_SCHEMA = vol.Schema({vol.Required(CONF_HOST): cv.string})
 
@@ -51,7 +56,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the TP-Link component."""
     conf = config.get(DOMAIN)
 
@@ -68,9 +73,13 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigType):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up TPLink from a config entry."""
     config_data = hass.data[DOMAIN].get(ATTR_CONFIG)
+
+    device_registry = dr.async_get(hass)
+    tplink_devices = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
+    device_count = len(tplink_devices)
 
     # These will contain the initialized devices
     lights = hass.data[DOMAIN][CONF_LIGHT] = []
@@ -86,7 +95,9 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigType):
 
     # Add discovered devices
     if config_data is None or config_data[CONF_DISCOVERY]:
-        discovered_devices = await async_discover_devices(hass, static_devices)
+        discovered_devices = await async_discover_devices(
+            hass, static_devices, device_count
+        )
 
         lights.extend(discovered_devices.lights)
         switches.extend(discovered_devices.switches)
@@ -94,31 +105,28 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigType):
     forward_setup = hass.config_entries.async_forward_entry_setup
     if lights:
         _LOGGER.debug(
-            "Got %s lights: %s", len(lights), ", ".join([d.host for d in lights])
+            "Got %s lights: %s", len(lights), ", ".join(d.host for d in lights)
         )
-        hass.async_create_task(forward_setup(config_entry, "light"))
+
+        hass.async_create_task(forward_setup(entry, "light"))
+
     if switches:
         _LOGGER.debug(
-            "Got %s switches: %s", len(switches), ", ".join([d.host for d in switches])
+            "Got %s switches: %s",
+            len(switches),
+            ", ".join(d.host for d in switches),
         )
-        hass.async_create_task(forward_setup(config_entry, "switch"))
+
+        hass.async_create_task(forward_setup(entry, "switch"))
 
     return True
 
 
-async def async_unload_entry(hass, entry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    forward_unload = hass.config_entries.async_forward_entry_unload
-    remove_lights = remove_switches = False
-    if hass.data[DOMAIN][CONF_LIGHT]:
-        remove_lights = await forward_unload(entry, "light")
-    if hass.data[DOMAIN][CONF_SWITCH]:
-        remove_switches = await forward_unload(entry, "switch")
-
-    if remove_lights or remove_switches:
+    platforms = [platform for platform in PLATFORMS if hass.data[DOMAIN].get(platform)]
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, platforms)
+    if unload_ok:
         hass.data[DOMAIN].clear()
-        return True
 
-    # We were not able to unload the platforms, either because there
-    # were none or one of the forward_unloads failed.
-    return False
+    return unload_ok

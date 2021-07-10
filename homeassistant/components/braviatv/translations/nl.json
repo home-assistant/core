@@ -1,12 +1,12 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Deze tv is al geconfigureerd.",
+            "already_configured": "Apparaat is al geconfigureerd",
             "no_ip_control": "IP-besturing is uitgeschakeld op uw tv of de tv wordt niet ondersteund."
         },
         "error": {
-            "cannot_connect": "Geen verbinding, ongeldige host of PIN-code.",
-            "invalid_host": "Ongeldige hostnaam of IP-adres.",
+            "cannot_connect": "Kan geen verbinding maken",
+            "invalid_host": "Ongeldige hostnaam of IP-adres",
             "unsupported_model": "Uw tv-model wordt niet ondersteund."
         },
         "step": {
@@ -19,7 +19,7 @@
             },
             "user": {
                 "data": {
-                    "host": "Hostnaam of IP-adres van tv"
+                    "host": "Host"
                 },
                 "description": "Stel Sony Bravia TV-integratie in. Als je problemen hebt met de configuratie ga dan naar: https://www.home-assistant.io/integrations/braviatv \n\nZorg ervoor dat uw tv is ingeschakeld.",
                 "title": "Sony Bravia TV"

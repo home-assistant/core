@@ -21,10 +21,10 @@ from .const import (
     DEFAULT_GPS_ACCURACY_THRESHOLD,
     DEFAULT_MAX_INTERVAL,
     DEFAULT_WITH_FAMILY,
+    DOMAIN,
     STORAGE_KEY,
     STORAGE_VERSION,
 )
-from .const import DOMAIN  # pylint: disable=unused-import
 
 CONF_TRUSTED_DEVICE = "trusted_device"
 CONF_VERIFICATION_CODE = "verification_code"
@@ -36,7 +36,6 @@ class IcloudFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a iCloud config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     def __init__(self):
         """Initialize iCloud config flow."""
@@ -154,11 +153,10 @@ class IcloudFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if step_id == "user":
             return self.async_create_entry(title=self._username, data=data)
 
-        for entry in self.hass.config_entries.async_entries(DOMAIN):
-            if entry.unique_id == self.unique_id:
-                self.hass.config_entries.async_update_entry(entry, data=data)
-                await self.hass.config_entries.async_reload(entry.entry_id)
-                return self.async_abort(reason="reauth_successful")
+        entry = await self.async_set_unique_id(self.unique_id)
+        self.hass.config_entries.async_update_entry(entry, data=data)
+        await self.hass.config_entries.async_reload(entry.entry_id)
+        return self.async_abort(reason="reauth_successful")
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initiated by the user."""

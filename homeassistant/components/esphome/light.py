@@ -1,5 +1,5 @@
 """Support for ESPHome lights."""
-from typing import List, Optional, Tuple
+from __future__ import annotations
 
 from aioesphomeapi import LightInfo, LightState
 
@@ -23,7 +23,7 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
 import homeassistant.util.color as color_util
 
 from . import EsphomeEntity, esphome_state_property, platform_async_setup_entry
@@ -32,7 +32,7 @@ FLASH_LENGTHS = {FLASH_SHORT: 2, FLASH_LONG: 10}
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up ESPHome lights based on a config entry."""
     await platform_async_setup_entry(
@@ -54,14 +54,14 @@ class EsphomeLight(EsphomeEntity, LightEntity):
         return super()._static_info
 
     @property
-    def _state(self) -> Optional[LightState]:
+    def _state(self) -> LightState | None:
         return super()._state
 
     # https://github.com/PyCQA/pylint/issues/3150 for all @esphome_state_property
     # pylint: disable=invalid-overridden-method
 
     @esphome_state_property
-    def is_on(self) -> Optional[bool]:
+    def is_on(self) -> bool | None:
         """Return true if the switch is on."""
         return self._state.state
 
@@ -96,29 +96,29 @@ class EsphomeLight(EsphomeEntity, LightEntity):
         await self._client.light_command(**data)
 
     @esphome_state_property
-    def brightness(self) -> Optional[int]:
+    def brightness(self) -> int | None:
         """Return the brightness of this light between 0..255."""
         return round(self._state.brightness * 255)
 
     @esphome_state_property
-    def hs_color(self) -> Optional[Tuple[float, float]]:
+    def hs_color(self) -> tuple[float, float] | None:
         """Return the hue and saturation color value [float, float]."""
         return color_util.color_RGB_to_hs(
             self._state.red * 255, self._state.green * 255, self._state.blue * 255
         )
 
     @esphome_state_property
-    def color_temp(self) -> Optional[float]:
+    def color_temp(self) -> float | None:
         """Return the CT color value in mireds."""
         return self._state.color_temperature
 
     @esphome_state_property
-    def white_value(self) -> Optional[int]:
+    def white_value(self) -> int | None:
         """Return the white value of this light between 0..255."""
         return round(self._state.white * 255)
 
     @esphome_state_property
-    def effect(self) -> Optional[str]:
+    def effect(self) -> str | None:
         """Return the current effect."""
         return self._state.effect
 
@@ -140,7 +140,7 @@ class EsphomeLight(EsphomeEntity, LightEntity):
         return flags
 
     @property
-    def effect_list(self) -> List[str]:
+    def effect_list(self) -> list[str]:
         """Return the list of supported effects."""
         return self._static_info.effects
 

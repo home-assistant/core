@@ -11,8 +11,16 @@ import pyqrcode
 import voluptuous as vol
 
 from homeassistant.components import binary_sensor, media_player, sensor
+from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
+from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
+from homeassistant.components.media_player import (
+    DEVICE_CLASS_TV,
+    DOMAIN as MEDIA_PLAYER_DOMAIN,
+)
+from homeassistant.components.remote import DOMAIN as REMOTE_DOMAIN, SUPPORT_ACTIVITY
 from homeassistant.const import (
     ATTR_CODE,
+    ATTR_DEVICE_CLASS,
     ATTR_SUPPORTED_FEATURES,
     CONF_NAME,
     CONF_PORT,
@@ -328,9 +336,7 @@ def show_setup_message(hass, entry_id, bridge_name, pincode, uri):
         f"### {pin}\n"
         f"![image](/api/homekit/pairingqr?{entry_id}-{pairing_secret})"
     )
-    hass.components.persistent_notification.create(
-        message, "HomeKit Bridge Setup", entry_id
-    )
+    hass.components.persistent_notification.create(message, "HomeKit Pairing", entry_id)
 
 
 def dismiss_setup_message(hass, entry_id):
@@ -440,10 +446,11 @@ def port_is_available(port: int) -> bool:
 
 async def async_find_next_available_port(hass: HomeAssistant, start_port: int) -> int:
     """Find the next available port not assigned to a config entry."""
-    exclude_ports = set()
-    for entry in hass.config_entries.async_entries(DOMAIN):
-        if CONF_PORT in entry.data:
-            exclude_ports.add(entry.data[CONF_PORT])
+    exclude_ports = {
+        entry.data[CONF_PORT]
+        for entry in hass.config_entries.async_entries(DOMAIN)
+        if CONF_PORT in entry.data
+    }
 
     return await hass.async_add_executor_job(
         _find_next_available_port, start_port, exclude_ports
@@ -473,3 +480,32 @@ def pid_is_alive(pid) -> bool:
     except OSError:
         pass
     return False
+
+
+def accessory_friendly_name(hass_name, accessory):
+    """Return the combined name for the accessory.
+
+    The mDNS name and the Home Assistant config entry
+    name are usually different which means they need to
+    see both to identify the accessory.
+    """
+    accessory_mdns_name = accessory.display_name
+    if hass_name.casefold().startswith(accessory_mdns_name.casefold()):
+        return hass_name
+    if accessory_mdns_name.casefold().startswith(hass_name.casefold()):
+        return accessory_mdns_name
+    return f"{hass_name} ({accessory_mdns_name})"
+
+
+def state_needs_accessory_mode(state):
+    """Return if the entity represented by the state must be paired in accessory mode."""
+    if state.domain == CAMERA_DOMAIN:
+        return True
+
+    return (
+        state.domain == LOCK_DOMAIN
+        or state.domain == MEDIA_PLAYER_DOMAIN
+        and state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_TV
+        or state.domain == REMOTE_DOMAIN
+        and state.attributes.get(ATTR_SUPPORTED_FEATURES, 0) & SUPPORT_ACTIVITY
+    )

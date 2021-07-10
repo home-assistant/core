@@ -1,0 +1,14 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "A szolg\u00e1ltat\u00e1s m\u00e1r konfigur\u00e1lva van"
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "title": "\u00c9rz\u00e9kel\u0151 be\u00e1ll\u00edt\u00e1sa"
+            }
+        }
+    }
+}

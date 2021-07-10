@@ -151,7 +151,7 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-DOMAINS = ["switch", "sensor", "light", "binary_sensor", "cover"]
+PLATFORMS = ["switch", "sensor", "light", "binary_sensor", "cover"]
 
 
 async def async_setup(hass, config):
@@ -202,24 +202,14 @@ async def async_setup_entry(hass, entry: config_entries.ConfigEntry):
         )
         return False
 
-    for domain in DOMAINS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, domain)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
 
 async def async_unload_entry(hass, entry: config_entries.ConfigEntry):
     """Unload RFXtrx component."""
-    if not all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in DOMAINS
-            ]
-        )
-    ):
+    if not await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         return False
 
     hass.services.async_remove(DOMAIN, SERVICE_SEND)
@@ -428,7 +418,7 @@ def find_possible_pt2262_device(device_ids, device_id):
             if size is not None:
                 size = len(dev_id) - size - 1
                 _LOGGER.info(
-                    "rfxtrx: found possible device %s for %s "
+                    "Found possible device %s for %s "
                     "with the following configuration:\n"
                     "data_bits=%d\n"
                     "command_on=0x%s\n"
@@ -505,7 +495,7 @@ class RfxtrxEntity(RestoreEntity):
         return self._name
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device state attributes."""
         if not self._event:
             return None

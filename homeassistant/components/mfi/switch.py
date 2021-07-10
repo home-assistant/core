@@ -107,7 +107,7 @@ class MfiSwitch(SwitchEntity):
         return int(self._port.data.get("active_pwr", 0))
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes for the device."""
         return {
             "volts": round(self._port.data.get("v_rms", 0), 1),

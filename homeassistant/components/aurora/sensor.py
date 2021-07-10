@@ -1,4 +1,5 @@
 """Support for Aurora Forecast sensor."""
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import PERCENTAGE
 
 from . import AuroraEntity
@@ -18,15 +19,12 @@ async def async_setup_entry(hass, entry, async_add_entries):
     async_add_entries([entity])
 
 
-class AuroraSensor(AuroraEntity):
+class AuroraSensor(AuroraEntity, SensorEntity):
     """Implementation of an aurora sensor."""
+
+    _attr_unit_of_measurement = PERCENTAGE
 
     @property
     def state(self):
         """Return % chance the aurora is visible."""
         return self.coordinator.data
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measure."""
-        return PERCENTAGE

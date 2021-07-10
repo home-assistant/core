@@ -1,0 +1,34 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "invalid_api_key": "Clau API inv\u00e0lida",
+            "rate_limited": "Freq\u00fc\u00e8ncia limitada temporalment, torna-ho a provar m\u00e9s tard.",
+            "unknown": "Error inesperat"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "Clau API",
+                    "api_version": "Versi\u00f3 de l'API",
+                    "latitude": "Latitud",
+                    "longitude": "Longitud",
+                    "name": "Nom"
+                },
+                "description": "Si no es proporcionen la Latitud i Longitud, s'utilitzaran els valors per defecte de la configuraci\u00f3 de Home Assistant. Es crear\u00e0 una entitat per a cada tipus de previsi\u00f3, per\u00f2 nom\u00e9s s'habilitaran les que seleccionis."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "timestep": "Minuts entre previsions NowCast"
+                },
+                "description": "Si decideixes activar l'entitat de predicci\u00f3 \"nowcast\", podr\u00e0s configurar l'interval en minuts entre cada previsi\u00f3. El nombre de previsions proporcionades dep\u00e8n d'aquest interval de minuts.",
+                "title": "Actualitzaci\u00f3 de les opcions de ClimaCell"
+            }
+        }
+    },
+    "title": "ClimaCell"
+}

@@ -33,6 +33,10 @@
         }
     },
     "options": {
+        "error": {
+            "cannot_connect": "\u00c9chec de connexion",
+            "unknown": "Erreur inattendue"
+        },
         "step": {
             "init": {
                 "data": {

@@ -1,6 +1,6 @@
 {
   "config": {
-    "flow_title": "Cloudflare: {name}",
+    "flow_title": "{name}",
     "step": {
       "user": {
         "title": "Connect to Cloudflare",
@@ -20,6 +20,12 @@
         "data": {
            "records": "Records"
         }
+      },
+      "reauth_confirm": {
+        "data": {
+          "description": "Re-authenticate with your Cloudflare account.",
+          "api_token": "[%key:common::config_flow::data::api_token%]"
+        }
       }
     },
     "error": {
@@ -28,6 +34,7 @@
       "invalid_zone": "Invalid zone"
     },
     "abort": {
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     }

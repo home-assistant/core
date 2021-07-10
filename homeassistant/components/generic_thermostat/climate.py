@@ -1,6 +1,7 @@
 """Adds support for generic thermostat units."""
 import asyncio
 import logging
+import math
 
 import voluptuous as vol
 
@@ -35,6 +36,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import DOMAIN as HA_DOMAIN, CoreState, callback
+from homeassistant.exceptions import ConditionError
 from homeassistant.helpers import condition
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import (
@@ -265,6 +267,14 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         if not self._hvac_mode:
             self._hvac_mode = HVAC_MODE_OFF
 
+        # Prevent the device from keep running if HVAC_MODE_OFF
+        if self._hvac_mode == HVAC_MODE_OFF and self._is_device_active:
+            await self._async_heater_turn_off()
+            _LOGGER.warning(
+                "The climate mode is OFF, but the switch device is ON. Turning off device %s",
+                self.heater_entity_id,
+            )
+
     @property
     def should_poll(self):
         """Return the polling state."""
@@ -410,14 +420,21 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
     def _async_update_temp(self, state):
         """Update thermostat with latest state from sensor."""
         try:
-            self._cur_temp = float(state.state)
+            cur_temp = float(state.state)
+            if math.isnan(cur_temp) or math.isinf(cur_temp):
+                raise ValueError(f"Sensor has illegal state {state.state}")
+            self._cur_temp = cur_temp
         except ValueError as ex:
             _LOGGER.error("Unable to update from sensor: %s", ex)
 
     async def _async_control_heating(self, time=None, force=False):
         """Check if we need to turn heating on or off."""
         async with self._temp_lock:
-            if not self._active and None not in (self._cur_temp, self._target_temp):
+            if not self._active and None not in (
+                self._cur_temp,
+                self._target_temp,
+                self._is_device_active,
+            ):
                 self._active = True
                 _LOGGER.info(
                     "Obtained current and target temperature. "
@@ -429,24 +446,27 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
             if not self._active or self._hvac_mode == HVAC_MODE_OFF:
                 return
 
-            if not force and time is None:
-                # If the `force` argument is True, we
-                # ignore `min_cycle_duration`.
-                # If the `time` argument is not none, we were invoked for
-                # keep-alive purposes, and `min_cycle_duration` is irrelevant.
-                if self.min_cycle_duration:
-                    if self._is_device_active:
-                        current_state = STATE_ON
-                    else:
-                        current_state = HVAC_MODE_OFF
+            # If the `force` argument is True, we
+            # ignore `min_cycle_duration`.
+            # If the `time` argument is not none, we were invoked for
+            # keep-alive purposes, and `min_cycle_duration` is irrelevant.
+            if not force and time is None and self.min_cycle_duration:
+                if self._is_device_active:
+                    current_state = STATE_ON
+                else:
+                    current_state = HVAC_MODE_OFF
+                try:
                     long_enough = condition.state(
                         self.hass,
                         self.heater_entity_id,
                         current_state,
                         self.min_cycle_duration,
                     )
-                    if not long_enough:
-                        return
+                except ConditionError:
+                    long_enough = False
+
+                if not long_enough:
+                    return
 
             too_cold = self._target_temp >= self._cur_temp + self._cold_tolerance
             too_hot = self._cur_temp >= self._target_temp + self._hot_tolerance
@@ -475,6 +495,9 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
     @property
     def _is_device_active(self):
         """If the toggleable device is currently active."""
+        if not self.hass.states.get(self.heater_entity_id):
+            return None
+
         return self.hass.states.is_state(self.heater_entity_id, STATE_ON)
 
     @property

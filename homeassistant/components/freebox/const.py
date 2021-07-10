@@ -4,10 +4,12 @@ import socket
 from homeassistant.const import (
     DATA_RATE_KILOBYTES_PER_SECOND,
     DEVICE_CLASS_TEMPERATURE,
+    PERCENTAGE,
     TEMP_CELSIUS,
 )
 
 DOMAIN = "freebox"
+SERVICE_REBOOT = "reboot"
 
 APP_DESC = {
     "app_id": "hass",
@@ -51,6 +53,15 @@ CALL_SENSORS = {
         SENSOR_NAME: "Freebox missed calls",
         SENSOR_UNIT: None,
         SENSOR_ICON: "mdi:phone-missed",
+        SENSOR_DEVICE_CLASS: None,
+    },
+}
+
+DISK_PARTITION_SENSORS = {
+    "partition_free_space": {
+        SENSOR_NAME: "free space",
+        SENSOR_UNIT: PERCENTAGE,
+        SENSOR_ICON: "mdi:harddisk",
         SENSOR_DEVICE_CLASS: None,
     },
 }

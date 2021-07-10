@@ -18,7 +18,7 @@ from homeassistant.helpers.template import result_as_boolean
 
 _LOGGER = logging.getLogger(__name__)
 
-TRIGGER_SCHEMA = IF_ACTION_SCHEMA = vol.Schema(
+TRIGGER_SCHEMA = IF_ACTION_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_PLATFORM): "template",
         vol.Required(CONF_VALUE_TEMPLATE): cv.template,
@@ -31,6 +31,7 @@ async def async_attach_trigger(
     hass, config, action, automation_info, *, platform_type="template"
 ):
     """Listen for state changes based on configuration."""
+    trigger_data = automation_info.get("trigger_data", {}) if automation_info else {}
     value_template = config.get(CONF_VALUE_TEMPLATE)
     value_template.hass = hass
     time_delta = config.get(CONF_FOR)
@@ -41,7 +42,9 @@ async def async_attach_trigger(
 
     # Arm at setup if the template is already false.
     try:
-        if not result_as_boolean(value_template.async_render()):
+        if not result_as_boolean(
+            value_template.async_render(automation_info["variables"])
+        ):
             armed = True
     except exceptions.TemplateError as ex:
         _LOGGER.warning(
@@ -96,6 +99,7 @@ async def async_attach_trigger(
             "to_state": to_s,
         }
         trigger_variables = {
+            **trigger_data,
             "for": time_delta,
             "description": description,
         }
@@ -126,7 +130,7 @@ async def async_attach_trigger(
 
         trigger_variables["for"] = period
 
-        delay_cancel = async_call_later(hass, period.seconds, call_action)
+        delay_cancel = async_call_later(hass, period.total_seconds(), call_action)
 
     info = async_track_template_result(
         hass,

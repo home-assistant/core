@@ -1,20 +1,18 @@
 """Config flow for BSB-Lan integration."""
+from __future__ import annotations
+
 import logging
-from typing import Any, Dict, Optional
 
 from bsblan import BSBLan, BSBLanError, Info
 import voluptuous as vol
 
-from homeassistant.config_entries import CONN_CLASS_LOCAL_POLL, ConfigFlow
+from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
-from .const import (  # pylint:disable=unused-import
-    CONF_DEVICE_IDENT,
-    CONF_PASSKEY,
-    DOMAIN,
-)
+from .const import CONF_DEVICE_IDENT, CONF_PASSKEY, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,11 +21,8 @@ class BSBLanFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a BSBLan config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = CONN_CLASS_LOCAL_POLL
 
-    async def async_step_user(
-        self, user_input: Optional[ConfigType] = None
-    ) -> Dict[str, Any]:
+    async def async_step_user(self, user_input: ConfigType | None = None) -> FlowResult:
         """Handle a flow initiated by the user."""
         if user_input is None:
             return self._show_setup_form()
@@ -59,7 +54,7 @@ class BSBLanFlowHandler(ConfigFlow, domain=DOMAIN):
             },
         )
 
-    def _show_setup_form(self, errors: Optional[Dict] = None) -> Dict[str, Any]:
+    def _show_setup_form(self, errors: dict | None = None) -> FlowResult:
         """Show the setup form to the user."""
         return self.async_show_form(
             step_id="user",
@@ -78,9 +73,9 @@ class BSBLanFlowHandler(ConfigFlow, domain=DOMAIN):
     async def _get_bsblan_info(
         self,
         host: str,
-        username: Optional[str],
-        password: Optional[str],
-        passkey: Optional[str],
+        username: str | None,
+        password: str | None,
+        passkey: str | None,
         port: int,
     ) -> Info:
         """Get device information from an BSBLan device."""

@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "cannot_connect": "Gagal terhubung"
+        },
+        "error": {
+            "cannot_connect": "Gagal terhubung",
+            "invalid_auth": "Autentikasi tidak valid"
+        },
+        "flow_title": "{device} ({ip_address})",
+        "step": {
+            "user": {
+                "data": {
+                    "ip_address": "Alamat IP",
+                    "password": "Kata Sandi",
+                    "username": "Nama Pengguna"
+                },
+                "description": "Berikan informasi yang diperlukan di bawah ini.",
+                "title": "Siapkan GogoGate2 atau iSmartGate"
+            }
+        }
+    }
+}

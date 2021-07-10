@@ -50,6 +50,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class LinodeBinarySensor(BinarySensorEntity):
     """Representation of a Linode droplet sensor."""
 
+    _attr_device_class = DEVICE_CLASS_MOVING
+
     def __init__(self, li, node_id):
         """Initialize a new Linode sensor."""
         self._linode = li
@@ -70,12 +72,7 @@ class LinodeBinarySensor(BinarySensorEntity):
         return self._state
 
     @property
-    def device_class(self):
-        """Return the class of this sensor."""
-        return DEVICE_CLASS_MOVING
-
-    @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the Linode Node."""
         return self._attrs
 

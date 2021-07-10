@@ -1,5 +1,5 @@
 """Config flow to configure the SimpliSafe component."""
-from simplipy import API
+from simplipy import get_api
 from simplipy.errors import (
     InvalidCredentialsError,
     PendingAuthorizationError,
@@ -8,12 +8,12 @@ from simplipy.errors import (
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_CODE, CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
+from homeassistant.const import CONF_CODE, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client
 
 from . import async_get_client_id
-from .const import DOMAIN, LOGGER  # pylint: disable=unused-import
+from .const import DOMAIN, LOGGER
 
 FULL_DATA_SCHEMA = vol.Schema(
     {
@@ -29,7 +29,6 @@ class SimpliSafeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a SimpliSafe config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     def __init__(self):
         """Initialize the config flow."""
@@ -48,7 +47,7 @@ class SimpliSafeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         client_id = await async_get_client_id(self.hass)
         websession = aiohttp_client.async_get_clientsession(self.hass)
 
-        return await API.login_via_credentials(
+        return await get_api(
             self._username,
             self._password,
             client_id=client_id,
@@ -60,7 +59,7 @@ class SimpliSafeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         try:
-            simplisafe = await self._async_get_simplisafe_api()
+            await self._async_get_simplisafe_api()
         except PendingAuthorizationError:
             LOGGER.info("Awaiting confirmation of MFA email click")
             return await self.async_step_mfa()
@@ -80,7 +79,7 @@ class SimpliSafeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return await self.async_step_finish(
             {
                 CONF_USERNAME: self._username,
-                CONF_TOKEN: simplisafe.refresh_token,
+                CONF_PASSWORD: self._password,
                 CONF_CODE: self._code,
             }
         )
@@ -90,6 +89,9 @@ class SimpliSafeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         existing_entry = await self.async_set_unique_id(self._username)
         if existing_entry:
             self.hass.config_entries.async_update_entry(existing_entry, data=user_input)
+            self.hass.async_create_task(
+                self.hass.config_entries.async_reload(existing_entry.entry_id)
+            )
             return self.async_abort(reason="reauth_successful")
         return self.async_create_entry(title=self._username, data=user_input)
 
@@ -99,7 +101,7 @@ class SimpliSafeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_show_form(step_id="mfa")
 
         try:
-            simplisafe = await self._async_get_simplisafe_api()
+            await self._async_get_simplisafe_api()
         except PendingAuthorizationError:
             LOGGER.error("Still awaiting confirmation of MFA email click")
             return self.async_show_form(
@@ -109,7 +111,7 @@ class SimpliSafeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return await self.async_step_finish(
             {
                 CONF_USERNAME: self._username,
-                CONF_TOKEN: simplisafe.refresh_token,
+                CONF_PASSWORD: self._password,
                 CONF_CODE: self._code,
             }
         )

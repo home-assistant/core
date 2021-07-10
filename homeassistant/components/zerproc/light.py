@@ -1,8 +1,8 @@
 """Zerproc light platform."""
-import asyncio
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
-from typing import Callable, List, Optional
 
 import pyzerproc
 
@@ -17,11 +17,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.typing import HomeAssistantType
 import homeassistant.util.color as color_util
 
-from .const import DOMAIN
+from .const import DATA_ADDRESSES, DATA_DISCOVERY_SUBSCRIPTION, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,49 +30,31 @@ SUPPORT_ZERPROC = SUPPORT_BRIGHTNESS | SUPPORT_COLOR
 DISCOVERY_INTERVAL = timedelta(seconds=60)
 
 
-async def connect_light(light: pyzerproc.Light) -> Optional[pyzerproc.Light]:
-    """Return the given light if it connects successfully."""
-    try:
-        await light.connect()
-    except pyzerproc.ZerprocException:
-        _LOGGER.debug("Unable to connect to '%s'", light.address, exc_info=True)
-        return None
-    return light
-
-
-async def discover_entities(hass: HomeAssistant) -> List[Entity]:
+async def discover_entities(hass: HomeAssistant) -> list[Entity]:
     """Attempt to discover new lights."""
     lights = await pyzerproc.discover()
 
     # Filter out already discovered lights
     new_lights = [
-        light for light in lights if light.address not in hass.data[DOMAIN]["addresses"]
+        light
+        for light in lights
+        if light.address not in hass.data[DOMAIN][DATA_ADDRESSES]
     ]
 
     entities = []
-    connected_lights = filter(
-        None, await asyncio.gather(*(connect_light(light) for light in new_lights))
-    )
-    for light in connected_lights:
-        # Double-check the light hasn't been added in the meantime
-        if light.address not in hass.data[DOMAIN]["addresses"]:
-            hass.data[DOMAIN]["addresses"].add(light.address)
-            entities.append(ZerprocLight(light))
+    for light in new_lights:
+        hass.data[DOMAIN][DATA_ADDRESSES].add(light.address)
+        entities.append(ZerprocLight(light))
 
     return entities
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: Callable[[List[Entity], bool], None],
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Zerproc light devices."""
-    if DOMAIN not in hass.data:
-        hass.data[DOMAIN] = {}
-    if "addresses" not in hass.data[DOMAIN]:
-        hass.data[DOMAIN]["addresses"] = set()
-
     warned = False
 
     async def discover(*args):
@@ -91,7 +73,9 @@ async def async_setup_entry(
     hass.async_create_task(discover())
 
     # Perform recurring discovery of new devices
-    async_track_time_interval(hass, discover, DISCOVERY_INTERVAL)
+    hass.data[DOMAIN][DATA_DISCOVERY_SUBSCRIPTION] = async_track_time_interval(
+        hass, discover, DISCOVERY_INTERVAL
+    )
 
 
 class ZerprocLight(LightEntity):
@@ -120,7 +104,7 @@ class ZerprocLight(LightEntity):
             await self._light.disconnect()
         except pyzerproc.ZerprocException:
             _LOGGER.debug(
-                "Exception disconnected from %s", self.entity_id, exc_info=True
+                "Exception disconnecting from %s", self._light.address, exc_info=True
             )
 
     @property
@@ -143,7 +127,7 @@ class ZerprocLight(LightEntity):
         }
 
     @property
-    def icon(self) -> Optional[str]:
+    def icon(self) -> str | None:
         """Return the icon to use in the frontend."""
         return "mdi:string-lights"
 
@@ -198,11 +182,11 @@ class ZerprocLight(LightEntity):
             state = await self._light.get_state()
         except pyzerproc.ZerprocException:
             if self._available:
-                _LOGGER.warning("Unable to connect to %s", self.entity_id)
+                _LOGGER.warning("Unable to connect to %s", self._light.address)
             self._available = False
             return
         if self._available is False:
-            _LOGGER.info("Reconnected to %s", self.entity_id)
+            _LOGGER.info("Reconnected to %s", self._light.address)
             self._available = True
         self._is_on = state.is_on
         hsv = color_util.color_RGB_to_hsv(*state.color)

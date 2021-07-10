@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van"
+        },
         "error": {
             "cannot_connect": "Sikertelen csatlakoz\u00e1s",
             "invalid_path": "A k\u00f6nyvt\u00e1r nem tal\u00e1lhat\u00f3."
@@ -7,14 +10,15 @@
         "step": {
             "owserver": {
                 "data": {
-                    "host": "Gazdag\u00e9p",
+                    "host": "Hoszt",
                     "port": "Port"
                 }
             },
             "user": {
                 "data": {
                     "type": "Kapcsolat t\u00edpusa"
-                }
+                },
+                "title": "A 1-Wire be\u00e1ll\u00edt\u00e1sa"
             }
         }
     }

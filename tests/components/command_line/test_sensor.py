@@ -1,201 +1,225 @@
 """The tests for the Command line sensor platform."""
-import unittest
+from __future__ import annotations
+
+from typing import Any
 from unittest.mock import patch
 
-from homeassistant.components.command_line import sensor as command_line
-from homeassistant.helpers.template import Template
+from homeassistant import setup
+from homeassistant.components.sensor import DOMAIN
+from homeassistant.core import HomeAssistant
 
-from tests.common import get_test_home_assistant
+
+async def setup_test_entities(hass: HomeAssistant, config_dict: dict[str, Any]) -> None:
+    """Set up a test command line sensor entity."""
+    assert await setup.async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: [
+                {
+                    "platform": "template",
+                    "sensors": {
+                        "template_sensor": {
+                            "value_template": "template_value",
+                        }
+                    },
+                },
+                {"platform": "command_line", "name": "Test", **config_dict},
+            ]
+        },
+    )
+    await hass.async_block_till_done()
 
 
-class TestCommandSensorSensor(unittest.TestCase):
-    """Test the Command line sensor."""
-
-    def setUp(self):
-        """Set up things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
-        self.addCleanup(self.hass.stop)
-
-    def update_side_effect(self, data):
-        """Side effect function for mocking CommandSensorData.update()."""
-        self.commandline.data = data
-
-    def test_setup(self):
-        """Test sensor setup."""
-        config = {
-            "name": "Test",
-            "unit_of_measurement": "in",
+async def test_setup(hass: HomeAssistant) -> None:
+    """Test sensor setup."""
+    await setup_test_entities(
+        hass,
+        {
             "command": "echo 5",
-            "command_timeout": 15,
-        }
-        devices = []
+            "unit_of_measurement": "in",
+        },
+    )
+    entity_state = hass.states.get("sensor.test")
+    assert entity_state
+    assert entity_state.state == "5"
+    assert entity_state.name == "Test"
+    assert entity_state.attributes["unit_of_measurement"] == "in"
 
-        def add_dev_callback(devs, update):
-            """Add callback to add devices."""
-            for dev in devs:
-                devices.append(dev)
 
-        command_line.setup_platform(self.hass, config, add_dev_callback)
+async def test_template(hass: HomeAssistant) -> None:
+    """Test command sensor with template."""
+    await setup_test_entities(
+        hass,
+        {
+            "command": "echo 50",
+            "unit_of_measurement": "in",
+            "value_template": "{{ value | multiply(0.1) }}",
+        },
+    )
+    entity_state = hass.states.get("sensor.test")
+    assert entity_state
+    assert float(entity_state.state) == 5
 
-        assert len(devices) == 1
-        entity = devices[0]
-        entity.update()
-        assert entity.name == "Test"
-        assert entity.unit_of_measurement == "in"
-        assert entity.state == "5"
 
-    def test_template(self):
-        """Test command sensor with template."""
-        data = command_line.CommandSensorData(self.hass, "echo 50", 15)
+async def test_template_render(hass: HomeAssistant) -> None:
+    """Ensure command with templates get rendered properly."""
 
-        entity = command_line.CommandSensor(
-            self.hass,
-            data,
-            "test",
-            "in",
-            Template("{{ value | multiply(0.1) }}", self.hass),
-            [],
+    await setup_test_entities(
+        hass,
+        {
+            "command": "echo {{ states.sensor.template_sensor.state }}",
+        },
+    )
+    entity_state = hass.states.get("sensor.test")
+    assert entity_state
+    assert entity_state.state == "template_value"
+
+
+async def test_template_render_with_quote(hass: HomeAssistant) -> None:
+    """Ensure command with templates and quotes get rendered properly."""
+
+    with patch(
+        "homeassistant.components.command_line.subprocess.check_output",
+        return_value=b"Works\n",
+    ) as check_output:
+        await setup_test_entities(
+            hass,
+            {
+                "command": 'echo "{{ states.sensor.template_sensor.state }}" "3 4"',
+            },
         )
 
-        entity.update()
-        assert float(entity.state) == 5
-
-    def test_template_render(self):
-        """Ensure command with templates get rendered properly."""
-        self.hass.states.set("sensor.test_state", "Works")
-        data = command_line.CommandSensorData(
-            self.hass, "echo {{ states.sensor.test_state.state }}", 15
-        )
-        data.update()
-
-        assert data.value == "Works"
-
-    def test_template_render_with_quote(self):
-        """Ensure command with templates and quotes get rendered properly."""
-        self.hass.states.set("sensor.test_state", "Works 2")
-        with patch(
-            "homeassistant.components.command_line.subprocess.check_output",
-            return_value=b"Works\n",
-        ) as check_output:
-            data = command_line.CommandSensorData(
-                self.hass,
-                'echo "{{ states.sensor.test_state.state }}" "3 4"',
-                15,
-            )
-            data.update()
-
-        assert data.value == "Works"
         check_output.assert_called_once_with(
-            'echo "Works 2" "3 4"', shell=True, timeout=15  # nosec # shell by design
+            'echo "template_value" "3 4"',
+            shell=True,  # nosec # shell by design
+            timeout=15,
         )
 
-    def test_bad_command(self):
-        """Test bad command."""
-        data = command_line.CommandSensorData(self.hass, "asdfasdf", 15)
-        data.update()
 
-        assert data.value is None
+async def test_bad_template_render(caplog: Any, hass: HomeAssistant) -> None:
+    """Test rendering a broken template."""
 
-    def test_update_with_json_attrs(self):
-        """Test attributes get extracted from a JSON result."""
-        data = command_line.CommandSensorData(
-            self.hass,
-            (
-                'echo { \\"key\\": \\"some_json_value\\", \\"another_key\\":\
-             \\"another_json_value\\", \\"key_three\\": \\"value_three\\" }'
-            ),
-            15,
-        )
+    await setup_test_entities(
+        hass,
+        {
+            "command": "echo {{ this template doesn't parse",
+        },
+    )
 
-        self.sensor = command_line.CommandSensor(
-            self.hass, data, "test", None, None, ["key", "another_key", "key_three"]
-        )
-        self.sensor.update()
-        assert self.sensor.device_state_attributes["key"] == "some_json_value"
-        assert (
-            self.sensor.device_state_attributes["another_key"] == "another_json_value"
-        )
-        assert self.sensor.device_state_attributes["key_three"] == "value_three"
+    assert "Error rendering command template" in caplog.text
 
-    @patch("homeassistant.components.command_line.sensor._LOGGER")
-    def test_update_with_json_attrs_no_data(self, mock_logger):
-        """Test attributes when no JSON result fetched."""
-        data = command_line.CommandSensorData(self.hass, "echo ", 15)
-        self.sensor = command_line.CommandSensor(
-            self.hass, data, "test", None, None, ["key"]
-        )
-        self.sensor.update()
-        assert {} == self.sensor.device_state_attributes
-        assert mock_logger.warning.called
 
-    @patch("homeassistant.components.command_line.sensor._LOGGER")
-    def test_update_with_json_attrs_not_dict(self, mock_logger):
-        """Test attributes get extracted from a JSON result."""
-        data = command_line.CommandSensorData(self.hass, "echo [1, 2, 3]", 15)
-        self.sensor = command_line.CommandSensor(
-            self.hass, data, "test", None, None, ["key"]
-        )
-        self.sensor.update()
-        assert {} == self.sensor.device_state_attributes
-        assert mock_logger.warning.called
+async def test_bad_command(hass: HomeAssistant) -> None:
+    """Test bad command."""
+    await setup_test_entities(
+        hass,
+        {
+            "command": "asdfasdf",
+        },
+    )
+    entity_state = hass.states.get("sensor.test")
+    assert entity_state
+    assert entity_state.state == "unknown"
 
-    @patch("homeassistant.components.command_line.sensor._LOGGER")
-    def test_update_with_json_attrs_bad_JSON(self, mock_logger):
-        """Test attributes get extracted from a JSON result."""
-        data = command_line.CommandSensorData(
-            self.hass, "echo This is text rather than JSON data.", 15
-        )
-        self.sensor = command_line.CommandSensor(
-            self.hass, data, "test", None, None, ["key"]
-        )
-        self.sensor.update()
-        assert {} == self.sensor.device_state_attributes
-        assert mock_logger.warning.called
 
-    def test_update_with_missing_json_attrs(self):
-        """Test attributes get extracted from a JSON result."""
-        data = command_line.CommandSensorData(
-            self.hass,
-            (
-                'echo { \\"key\\": \\"some_json_value\\", \\"another_key\\":\
-             \\"another_json_value\\", \\"key_three\\": \\"value_three\\" }'
-            ),
-            15,
-        )
+async def test_update_with_json_attrs(hass: HomeAssistant) -> None:
+    """Test attributes get extracted from a JSON result."""
+    await setup_test_entities(
+        hass,
+        {
+            "command": 'echo { \\"key\\": \\"some_json_value\\", \\"another_key\\":\
+                \\"another_json_value\\", \\"key_three\\": \\"value_three\\" }',
+            "json_attributes": ["key", "another_key", "key_three"],
+        },
+    )
+    entity_state = hass.states.get("sensor.test")
+    assert entity_state
+    assert entity_state.attributes["key"] == "some_json_value"
+    assert entity_state.attributes["another_key"] == "another_json_value"
+    assert entity_state.attributes["key_three"] == "value_three"
 
-        self.sensor = command_line.CommandSensor(
-            self.hass,
-            data,
-            "test",
-            None,
-            None,
-            ["key", "another_key", "key_three", "special_key"],
-        )
-        self.sensor.update()
-        assert self.sensor.device_state_attributes["key"] == "some_json_value"
-        assert (
-            self.sensor.device_state_attributes["another_key"] == "another_json_value"
-        )
-        assert self.sensor.device_state_attributes["key_three"] == "value_three"
-        assert "special_key" not in self.sensor.device_state_attributes
 
-    def test_update_with_unnecessary_json_attrs(self):
-        """Test attributes get extracted from a JSON result."""
-        data = command_line.CommandSensorData(
-            self.hass,
-            (
-                'echo { \\"key\\": \\"some_json_value\\", \\"another_key\\":\
-             \\"another_json_value\\", \\"key_three\\": \\"value_three\\" }'
-            ),
-            15,
-        )
+async def test_update_with_json_attrs_no_data(caplog, hass: HomeAssistant) -> None:  # type: ignore[no-untyped-def]
+    """Test attributes when no JSON result fetched."""
 
-        self.sensor = command_line.CommandSensor(
-            self.hass, data, "test", None, None, ["key", "another_key"]
-        )
-        self.sensor.update()
-        assert self.sensor.device_state_attributes["key"] == "some_json_value"
-        assert (
-            self.sensor.device_state_attributes["another_key"] == "another_json_value"
-        )
-        assert "key_three" not in self.sensor.device_state_attributes
+    await setup_test_entities(
+        hass,
+        {
+            "command": "echo",
+            "json_attributes": ["key"],
+        },
+    )
+    entity_state = hass.states.get("sensor.test")
+    assert entity_state
+    assert "key" not in entity_state.attributes
+    assert "Empty reply found when expecting JSON data" in caplog.text
+
+
+async def test_update_with_json_attrs_not_dict(caplog, hass: HomeAssistant) -> None:  # type: ignore[no-untyped-def]
+    """Test attributes when the return value not a dict."""
+
+    await setup_test_entities(
+        hass,
+        {
+            "command": "echo [1, 2, 3]",
+            "json_attributes": ["key"],
+        },
+    )
+    entity_state = hass.states.get("sensor.test")
+    assert entity_state
+    assert "key" not in entity_state.attributes
+    assert "JSON result was not a dictionary" in caplog.text
+
+
+async def test_update_with_json_attrs_bad_json(caplog, hass: HomeAssistant) -> None:  # type: ignore[no-untyped-def]
+    """Test attributes when the return value is invalid JSON."""
+
+    await setup_test_entities(
+        hass,
+        {
+            "command": "echo This is text rather than JSON data.",
+            "json_attributes": ["key"],
+        },
+    )
+    entity_state = hass.states.get("sensor.test")
+    assert entity_state
+    assert "key" not in entity_state.attributes
+    assert "Unable to parse output as JSON" in caplog.text
+
+
+async def test_update_with_missing_json_attrs(caplog, hass: HomeAssistant) -> None:  # type: ignore[no-untyped-def]
+    """Test attributes when an expected key is missing."""
+
+    await setup_test_entities(
+        hass,
+        {
+            "command": 'echo { \\"key\\": \\"some_json_value\\", \\"another_key\\":\
+                \\"another_json_value\\", \\"key_three\\": \\"value_three\\" }',
+            "json_attributes": ["key", "another_key", "key_three", "missing_key"],
+        },
+    )
+    entity_state = hass.states.get("sensor.test")
+    assert entity_state
+    assert entity_state.attributes["key"] == "some_json_value"
+    assert entity_state.attributes["another_key"] == "another_json_value"
+    assert entity_state.attributes["key_three"] == "value_three"
+    assert "missing_key" not in entity_state.attributes
+
+
+async def test_update_with_unnecessary_json_attrs(caplog, hass: HomeAssistant) -> None:  # type: ignore[no-untyped-def]
+    """Test attributes when an expected key is missing."""
+
+    await setup_test_entities(
+        hass,
+        {
+            "command": 'echo { \\"key\\": \\"some_json_value\\", \\"another_key\\":\
+                \\"another_json_value\\", \\"key_three\\": \\"value_three\\" }',
+            "json_attributes": ["key", "another_key"],
+        },
+    )
+    entity_state = hass.states.get("sensor.test")
+    assert entity_state
+    assert entity_state.attributes["key"] == "some_json_value"
+    assert entity_state.attributes["another_key"] == "another_json_value"
+    assert "key_three" not in entity_state.attributes

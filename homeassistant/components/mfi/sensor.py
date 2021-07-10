@@ -5,7 +5,7 @@ from mficlient.client import FailedToLogin, MFiClient
 import requests
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -18,7 +18,6 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -74,7 +73,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     )
 
 
-class MfiSensor(Entity):
+class MfiSensor(SensorEntity):
     """Representation of a mFi sensor."""
 
     def __init__(self, port, hass):

@@ -1,6 +1,7 @@
 """Test Z-Wave Websocket API."""
 from unittest.mock import call, patch
 
+from homeassistant import config_entries
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components.zwave.const import (
     CONF_AUTOHEAL,
@@ -83,6 +84,6 @@ async def test_zwave_ozw_migration_api(hass, mock_openzwave, hass_ws_client):
     assert result["flow_id"] == "mock_flow_id"
     assert async_init.call_args == call(
         "ozw",
-        context={"source": "import"},
+        context={"source": config_entries.SOURCE_IMPORT},
         data={"usb_path": "/dev/zwave", "network_key": NETWORK_KEY},
     )

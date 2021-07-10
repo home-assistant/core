@@ -21,8 +21,8 @@
                 "data": {
                     "discovery": "Aktiv\u00e9r opdagelse"
                 },
-                "description": "Vil du konfigurere Home Assistant til at oprette forbindelse til MQTT-brokeren, der leveres af hass.io-tilf\u00f8jelsen {addon}?",
-                "title": "MQTT-broker via Hass.io-tilf\u00f8jelse"
+                "description": "Vil du konfigurere Home Assistant til at oprette forbindelse til MQTT-brokeren, der leveres af Supervisor-tilf\u00f8jelsen {addon}?",
+                "title": "MQTT-broker via Supervisor-tilf\u00f8jelse"
             }
         }
     },

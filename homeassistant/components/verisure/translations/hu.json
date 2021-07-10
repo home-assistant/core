@@ -1,0 +1,46 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "A fi\u00f3k m\u00e1r konfigur\u00e1lva van",
+            "reauth_successful": "Az \u00fajrahiteles\u00edt\u00e9s sikeres volt"
+        },
+        "error": {
+            "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s",
+            "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
+        },
+        "step": {
+            "installation": {
+                "data": {
+                    "giid": "Telep\u00edt\u00e9s"
+                }
+            },
+            "reauth_confirm": {
+                "data": {
+                    "description": "Hiteles\u00edts \u00fajra a Verisure My Pages fi\u00f3koddal.",
+                    "email": "E-mail",
+                    "password": "Jelsz\u00f3"
+                }
+            },
+            "user": {
+                "data": {
+                    "description": "Jelentkezz be a Verisure My Pages fi\u00f3koddal.",
+                    "email": "E-mail",
+                    "password": "Jelsz\u00f3"
+                }
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "code_format_mismatch": "Az alap\u00e9rtelmezett PIN-k\u00f3d nem egyezik meg a sz\u00fcks\u00e9ges sz\u00e1mjegyek sz\u00e1m\u00e1val"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "lock_code_digits": "Sz\u00e1mjegyek sz\u00e1ma a z\u00e1rak PIN-k\u00f3dj\u00e1ban",
+                    "lock_default_code": "Alap\u00e9rtelmezett PIN-k\u00f3d z\u00e1rakhoz, akkor haszn\u00e1latos, ha nincs m\u00e1s megadva"
+                }
+            }
+        }
+    }
+}

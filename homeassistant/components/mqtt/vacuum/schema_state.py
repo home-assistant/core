@@ -22,24 +22,15 @@ from homeassistant.components.vacuum import (
     SUPPORT_STOP,
     StateVacuumEntity,
 )
-from homeassistant.const import (
-    ATTR_SUPPORTED_FEATURES,
-    CONF_DEVICE,
-    CONF_NAME,
-    CONF_UNIQUE_ID,
-)
+from homeassistant.const import ATTR_SUPPORTED_FEATURES, CONF_NAME
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
 from .. import CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN, CONF_STATE_TOPIC, subscription
 from ... import mqtt
 from ..debug_info import log_messages
-from ..mixins import (
-    MQTT_AVAILABILITY_SCHEMA,
-    MQTT_ENTITY_DEVICE_INFO_SCHEMA,
-    MQTT_JSON_ATTRS_SCHEMA,
-    MqttEntity,
-)
+from ..mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity
+from .const import MQTT_VACUUM_ATTRIBUTES_BLOCKED
 from .schema import MQTT_VACUUM_SCHEMA, services_to_strings, strings_to_services
 
 SERVICE_TO_STRING = {
@@ -113,7 +104,6 @@ DEFAULT_PAYLOAD_PAUSE = "pause"
 PLATFORM_SCHEMA_STATE = (
     mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend(
         {
-            vol.Optional(CONF_DEVICE): MQTT_ENTITY_DEVICE_INFO_SCHEMA,
             vol.Optional(CONF_FAN_SPEED_LIST, default=[]): vol.All(
                 cv.ensure_list, [cv.string]
             ),
@@ -136,34 +126,34 @@ PLATFORM_SCHEMA_STATE = (
             vol.Optional(
                 CONF_SUPPORTED_FEATURES, default=DEFAULT_SERVICE_STRINGS
             ): vol.All(cv.ensure_list, [vol.In(STRING_TO_SERVICE.keys())]),
-            vol.Optional(CONF_UNIQUE_ID): cv.string,
             vol.Optional(CONF_COMMAND_TOPIC): mqtt.valid_publish_topic,
             vol.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
         }
     )
-    .extend(MQTT_AVAILABILITY_SCHEMA.schema)
-    .extend(MQTT_JSON_ATTRS_SCHEMA.schema)
+    .extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
     .extend(MQTT_VACUUM_SCHEMA.schema)
 )
 
 
 async def async_setup_entity_state(
-    config, async_add_entities, config_entry, discovery_data
+    hass, config, async_add_entities, config_entry, discovery_data
 ):
     """Set up a State MQTT Vacuum."""
-    async_add_entities([MqttStateVacuum(config, config_entry, discovery_data)])
+    async_add_entities([MqttStateVacuum(hass, config, config_entry, discovery_data)])
 
 
 class MqttStateVacuum(MqttEntity, StateVacuumEntity):
     """Representation of a MQTT-controlled state vacuum."""
 
-    def __init__(self, config, config_entry, discovery_data):
+    _attributes_extra_blocked = MQTT_VACUUM_ATTRIBUTES_BLOCKED
+
+    def __init__(self, hass, config, config_entry, discovery_data):
         """Initialize the vacuum."""
         self._state = None
         self._state_attrs = {}
         self._fan_speed_list = []
 
-        MqttEntity.__init__(self, None, config, config_entry, discovery_data)
+        MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
     @staticmethod
     def config_schema():
@@ -171,8 +161,6 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
         return PLATFORM_SCHEMA_STATE
 
     def _setup_from_config(self, config):
-        self._config = config
-        self._name = config[CONF_NAME]
         supported_feature_strings = config[CONF_SUPPORTED_FEATURES]
         self._supported_features = strings_to_services(
             supported_feature_strings, STRING_TO_SERVICE
@@ -218,11 +206,6 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
         self._sub_state = await subscription.async_subscribe_topics(
             self.hass, self._sub_state, topics
         )
-
-    @property
-    def name(self):
-        """Return the name of the vacuum."""
-        return self._name
 
     @property
     def state(self):

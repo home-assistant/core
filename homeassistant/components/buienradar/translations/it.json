@@ -1,0 +1,29 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "La posizione \u00e8 gi\u00e0 configurata"
+        },
+        "error": {
+            "already_configured": "La posizione \u00e8 gi\u00e0 configurata"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "latitude": "Latitudine",
+                    "longitude": "Logitudine"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "country_code": "Codice del paese per visualizzare le immagini della telecamera.",
+                    "delta": "Intervallo di tempo in secondi tra gli aggiornamenti delle immagini della telecamera",
+                    "timeframe": "Minuti da considerare per le previsioni delle precipitazioni"
+                }
+            }
+        }
+    }
+}

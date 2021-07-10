@@ -1,5 +1,7 @@
 """HTTP specific constants."""
-KEY_AUTHENTICATED = "ha_authenticated"
-KEY_HASS = "hass"
-KEY_HASS_USER = "hass_user"
-KEY_HASS_REFRESH_TOKEN_ID = "hass_refresh_token_id"
+from typing import Final
+
+KEY_AUTHENTICATED: Final = "ha_authenticated"
+KEY_HASS: Final = "hass"
+KEY_HASS_USER: Final = "hass_user"
+KEY_HASS_REFRESH_TOKEN_ID: Final = "hass_refresh_token_id"

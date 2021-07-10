@@ -1,6 +1,6 @@
 {
   "config": {
-    "flow_title": "NZBGet: {name}",
+    "flow_title": "{name}",
     "step": {
       "user": {
         "title": "Connect to NZBGet",

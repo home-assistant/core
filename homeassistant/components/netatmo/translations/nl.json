@@ -2,10 +2,12 @@
     "config": {
         "abort": {
             "authorize_url_timeout": "Time-out genereren autorisatie-URL.",
-            "missing_configuration": "Het component is niet geconfigureerd. Volg de documentatie."
+            "missing_configuration": "Het component is niet geconfigureerd. Volg de documentatie.",
+            "no_url_available": "Geen URL beschikbaar. Voor informatie over deze fout, [check de helpsectie]({docs_url})",
+            "single_instance_allowed": "Al geconfigureerd. Slechts een enkele configuratie mogelijk."
         },
         "create_entry": {
-            "default": "Succesvol geauthenticeerd met Netatmo."
+            "default": "Succesvol geauthenticeerd"
         },
         "step": {
             "pick_implementation": {
@@ -13,17 +15,50 @@
             }
         }
     },
+    "device_automation": {
+        "trigger_subtype": {
+            "away": "afwezig",
+            "hg": "vorstbescherming",
+            "schedule": "schema"
+        },
+        "trigger_type": {
+            "alarm_started": "{entity_name} heeft een alarm gedetecteerd",
+            "animal": "{entity_name} heeft een dier gedetecteerd",
+            "cancel_set_point": "{entity_name} heeft zijn schema hervat",
+            "human": "{entity_name} heeft een mens gedetecteerd",
+            "movement": "{entity_name} heeft beweging gedetecteerd",
+            "outdoor": "{entity_name} heeft een buitengebeurtenis gedetecteerd",
+            "person": "{entity_name} heeft een persoon gedetecteerd",
+            "person_away": "{entity_name} heeft gedetecteerd dat een persoon is vertrokken",
+            "set_point": "Doeltemperatuur {entity_name} handmatig ingesteld",
+            "therm_mode": "{entity_name} is overgeschakeld naar \"{subtype}\"",
+            "turned_off": "{entity_name} uitgeschakeld",
+            "turned_on": "{entity_name} ingeschakeld",
+            "vehicle": "{entity_name} heeft een voertuig gedetecteerd"
+        }
+    },
     "options": {
         "step": {
             "public_weather": {
                 "data": {
                     "area_name": "Naam van het gebied",
+                    "lat_ne": "Breedtegraad Noordoostelijke hoek",
+                    "lat_sw": "Breedtegraad Zuidwestelijke hoek",
+                    "lon_ne": "Lengtegraad Noordoostelijke hoek",
+                    "lon_sw": "Lengtegraad Zuidwestelijke hoek",
                     "mode": "Berekening",
                     "show_on_map": "Toon op kaart"
-                }
+                },
+                "description": "Configureer een openbare weersensor voor een gebied.",
+                "title": "Netatmo openbare weersensor"
             },
             "public_weather_areas": {
-                "description": "Configureer openbare weersensoren."
+                "data": {
+                    "new_area": "Naam van het gebied",
+                    "weather_areas": "Weersgebieden"
+                },
+                "description": "Configureer openbare weersensoren.",
+                "title": "Netatmo openbare weersensor"
             }
         }
     }

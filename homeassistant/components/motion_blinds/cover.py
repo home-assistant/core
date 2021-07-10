@@ -21,6 +21,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     ATTR_ABSOLUTE_POSITION,
+    ATTR_AVAILABLE,
     ATTR_WIDTH,
     DOMAIN,
     KEY_COORDINATOR,
@@ -115,7 +116,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     async_add_entities(entities)
 
-    platform = entity_platform.current_platform.get()
+    platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(
         SERVICE_SET_ABSOLUTE_POSITION,
         SET_ABSOLUTE_POSITION_SCHEMA,
@@ -131,36 +132,29 @@ class MotionPositionDevice(CoordinatorEntity, CoverEntity):
         super().__init__(coordinator)
 
         self._blind = blind
-        self._device_class = device_class
         self._config_entry = config_entry
 
-    @property
-    def unique_id(self):
-        """Return the unique id of the blind."""
-        return self._blind.mac
-
-    @property
-    def device_info(self):
-        """Return the device info of the blind."""
-        device_info = {
-            "identifiers": {(DOMAIN, self._blind.mac)},
+        self._attr_device_class = device_class
+        self._attr_name = f"{blind.blind_type}-{blind.mac[12:]}"
+        self._attr_unique_id = blind.mac
+        self._attr_device_info = {
+            "identifiers": {(DOMAIN, blind.mac)},
             "manufacturer": MANUFACTURER,
-            "name": f"{self._blind.blind_type}-{self._blind.mac[12:]}",
-            "model": self._blind.blind_type,
-            "via_device": (DOMAIN, self._config_entry.unique_id),
+            "name": f"{blind.blind_type}-{blind.mac[12:]}",
+            "model": blind.blind_type,
+            "via_device": (DOMAIN, config_entry.unique_id),
         }
-
-        return device_info
-
-    @property
-    def name(self):
-        """Return the name of the blind."""
-        return f"{self._blind.blind_type}-{self._blind.mac[12:]}"
 
     @property
     def available(self):
         """Return True if entity is available."""
-        return self._blind.available
+        if self.coordinator.data is None:
+            return False
+
+        if not self.coordinator.data[KEY_GATEWAY][ATTR_AVAILABLE]:
+            return False
+
+        return self.coordinator.data[self._blind.mac][ATTR_AVAILABLE]
 
     @property
     def current_cover_position(self):
@@ -172,11 +166,6 @@ class MotionPositionDevice(CoordinatorEntity, CoverEntity):
         if self._blind.position is None:
             return None
         return 100 - self._blind.position
-
-    @property
-    def device_class(self):
-        """Return the device class."""
-        return self._device_class
 
     @property
     def is_closed(self):
@@ -256,19 +245,11 @@ class MotionTDBUDevice(MotionPositionDevice):
         super().__init__(coordinator, blind, device_class, config_entry)
         self._motor = motor
         self._motor_key = motor[0]
+        self._attr_name = f"{blind.blind_type}-{motor}-{blind.mac[12:]}"
+        self._attr_unique_id = f"{blind.mac}-{motor}"
 
         if self._motor not in ["Bottom", "Top", "Combined"]:
             _LOGGER.error("Unknown motor '%s'", self._motor)
-
-    @property
-    def unique_id(self):
-        """Return the unique id of the blind."""
-        return f"{self._blind.mac}-{self._motor}"
-
-    @property
-    def name(self):
-        """Return the name of the blind."""
-        return f"{self._blind.blind_type}-{self._motor}-{self._blind.mac[12:]}"
 
     @property
     def current_cover_position(self):
@@ -294,7 +275,7 @@ class MotionTDBUDevice(MotionPositionDevice):
         return self._blind.position[self._motor_key] == 100
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return device specific state attributes."""
         attributes = {}
         if self._blind.position is not None:

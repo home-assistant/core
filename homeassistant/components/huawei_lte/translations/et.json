@@ -15,7 +15,7 @@
             "response_error": "Seade andis tuvastamatu t\u00f5rke",
             "unknown": "Ootamatu t\u00f5rge"
         },
-        "flow_title": "",
+        "flow_title": "{name}",
         "step": {
             "user": {
                 "data": {
@@ -34,7 +34,8 @@
                 "data": {
                     "name": "Teavitusteenuse nimi (muudatus n\u00f5uab taask\u00e4ivitamist)",
                     "recipient": "SMS teavituse saajad",
-                    "track_new_devices": "Uute seadmete j\u00e4lgimine"
+                    "track_new_devices": "Uute seadmete j\u00e4lgimine",
+                    "track_wired_clients": "J\u00e4lgi juhtmega v\u00f5rgukliente"
                 }
             }
         }

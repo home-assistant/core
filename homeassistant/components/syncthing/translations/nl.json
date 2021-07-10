@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Service is al geconfigureerd"
+        },
+        "error": {
+            "cannot_connect": "Kan geen verbinding maken",
+            "invalid_auth": "Ongeldige authenticatie"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "title": "Syncthing integratie instellen",
+                    "token": "Token",
+                    "url": "URL",
+                    "verify_ssl": "SSL-certificaat verifi\u00ebren"
+                }
+            }
+        }
+    },
+    "title": "Syncthing"
+}

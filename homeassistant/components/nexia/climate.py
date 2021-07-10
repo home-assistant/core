@@ -34,12 +34,7 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_TARGET_TEMPERATURE_RANGE,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ATTR_TEMPERATURE,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
-)
+from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import dispatcher_send
@@ -63,21 +58,13 @@ from .util import percent_conv
 SERVICE_SET_AIRCLEANER_MODE = "set_aircleaner_mode"
 SERVICE_SET_HUMIDIFY_SETPOINT = "set_humidify_setpoint"
 
-SET_AIRCLEANER_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
-        vol.Required(ATTR_AIRCLEANER_MODE): cv.string,
-    }
-)
+SET_AIRCLEANER_SCHEMA = {
+    vol.Required(ATTR_AIRCLEANER_MODE): cv.string,
+}
 
-SET_HUMIDITY_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
-        vol.Required(ATTR_HUMIDITY): vol.All(
-            vol.Coerce(int), vol.Range(min=35, max=65)
-        ),
-    }
-)
+SET_HUMIDITY_SCHEMA = {
+    vol.Required(ATTR_HUMIDITY): vol.All(vol.Coerce(int), vol.Range(min=35, max=65)),
+}
 
 
 #
@@ -108,7 +95,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     nexia_home = nexia_data[NEXIA_DEVICE]
     coordinator = nexia_data[UPDATE_COORDINATOR]
 
-    platform = entity_platform.current_platform.get()
+    platform = entity_platform.async_get_current_platform()
 
     platform.async_register_entity_service(
         SERVICE_SET_HUMIDIFY_SETPOINT,
@@ -334,12 +321,19 @@ class NexiaZone(NexiaThermostatZoneEntity, ClimateEntity):
             new_cool_temp = min_temp + deadband
 
         # Check that we're within the deadband range, fix it if we're not
-        if new_heat_temp and new_heat_temp != cur_heat_temp:
-            if new_cool_temp - new_heat_temp < deadband:
-                new_cool_temp = new_heat_temp + deadband
-        if new_cool_temp and new_cool_temp != cur_cool_temp:
-            if new_cool_temp - new_heat_temp < deadband:
-                new_heat_temp = new_cool_temp - deadband
+        if (
+            new_heat_temp
+            and new_heat_temp != cur_heat_temp
+            and new_cool_temp - new_heat_temp < deadband
+        ):
+            new_cool_temp = new_heat_temp + deadband
+
+        if (
+            new_cool_temp
+            and new_cool_temp != cur_cool_temp
+            and new_cool_temp - new_heat_temp < deadband
+        ):
+            new_heat_temp = new_cool_temp - deadband
 
         self._zone.set_heat_cool_temp(
             heat_temperature=new_heat_temp,
@@ -354,9 +348,9 @@ class NexiaZone(NexiaThermostatZoneEntity, ClimateEntity):
         return self._thermostat.is_emergency_heat_active()
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device specific state attributes."""
-        data = super().device_state_attributes
+        data = super().extra_state_attributes
 
         data[ATTR_ZONE_STATUS] = self._zone.get_status()
 
