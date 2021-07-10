@@ -97,7 +97,7 @@ class Lock(HomeAccessory):
         )
         target_lock_state = HASS_TO_HOMEKIT_TARGET.get(hass_state)
         _LOGGER.debug(
-            "%s: Updated current state to %s (current=%d) (target=%d)",
+            "%s: Updated current state to %s (current=%d) (target=%s)",
             self.entity_id,
             hass_state,
             current_lock_state,
