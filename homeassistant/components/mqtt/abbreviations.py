@@ -96,7 +96,7 @@ ABBREVIATIONS = {
     "mode_cmd_tpl": "mode_command_template",
     "mode_cmd_t": "mode_command_topic",
     "mode_stat_t": "mode_state_topic",
-    "mode_stat_tpl": "mode_value_template",
+    "mode_stat_tpl": "mode_state_template",
     "modes": "modes",
     "name": "name",
     "off_dly": "off_delay",
