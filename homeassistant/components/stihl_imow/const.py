@@ -1,9 +1,11 @@
 """Constants for the STIHL iMow integration."""
 from enum import Enum
+import logging
+from typing import Final
 
-API_UPDATE_INTERVALL_SECONDS = 120
+API_UPDATE_INTERVALL_SECONDS = 30
 API_DEFAULT_LANGUAGE = "English"
-API_UPDATE_TIMEOUT = 20
+API_UPDATE_TIMEOUT = 10
 
 DOMAIN = "stihl_imow"
 CONF_MOWER_IDENTIFIER = "mower_id"
@@ -18,6 +20,7 @@ CONF_MOWER_NAME = "name"
 CONF_MOWER_STATE = "mower_state"
 # SENSOR
 NAME_PREFIX = "imow"
+LOGGER: Final[logging.Logger] = logging.getLogger(__package__)
 
 
 class LANGUAGES(Enum):

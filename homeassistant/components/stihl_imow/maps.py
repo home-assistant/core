@@ -3,6 +3,8 @@ Module helps to strip aut unneeded properties.
 
 map icons and classes to properties.
 """
+import typing
+
 from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_ENERGY,
@@ -13,7 +15,7 @@ from homeassistant.const import (
     TIME_SECONDS,
 )
 
-IMOW_SENSORS_MAP = {
+IMOW_SENSORS_MAP: typing.Dict[str, typing.Dict] = {
     "asmEnabled": {
         "type": None,
         "uom": None,
@@ -402,4 +404,5 @@ ENTITY_STRIP_OUT_PROPERTIES = [
     "smartLogic_totalActivityActiveTime",
     "smartLogic_mowingArea",
     "status_lastNoErrorMainState",
+    "imow",
 ]
