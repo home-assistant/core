@@ -175,7 +175,9 @@ async def async_setup_entry(
 class NetatmoThermostat(NetatmoBase, ClimateEntity):
     """Representation a Netatmo thermostat."""
 
-    def __init__(self, data_handler: NetatmoDataHandler, home_id: str, room_id: str):
+    def __init__(
+        self, data_handler: NetatmoDataHandler, home_id: str, room_id: str
+    ) -> None:
         """Initialize the sensor."""
         ClimateEntity.__init__(self)
         super().__init__(data_handler)

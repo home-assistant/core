@@ -409,7 +409,7 @@ class NetatmoSensor(NetatmoBase, SensorEntity):
         data_class_name: str,
         module_info: dict,
         sensor_type: str,
-    ):
+    ) -> None:
         """Initialize the sensor."""
         super().__init__(data_handler)
 
