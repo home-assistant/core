@@ -503,7 +503,7 @@ class SonosSpeaker:
             self._seen_timer()
             self._seen_timer = None
 
-        # TODO make a utility to convert uids to hostnames
+        # TODO: make a utility to convert uids to hostnames
         hostname_uid = self.soco.uid
         if hostname_uid.startswith("RINCON_"):
             hostname_uid = hostname_uid[6:]
@@ -520,6 +520,7 @@ class SonosSpeaker:
                 SEEN_EXPIRE_TIME.total_seconds(), self.async_unseen
             )
             return
+
 
         self._share_link_plugin = None
 
