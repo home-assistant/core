@@ -19,6 +19,7 @@ from pysonos.music_library import MusicLibrary
 from pysonos.plugins.sharelink import ShareLinkPlugin
 from pysonos.snapshot import Snapshot
 
+from homeassistant.components import zeroconf
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
@@ -498,11 +499,29 @@ class SonosSpeaker:
         self, now: datetime.datetime | None = None, will_reconnect: bool = False
     ) -> None:
         """Make this player unavailable when it was not seen recently."""
-        self._share_link_plugin = None
-
         if self._seen_timer:
             self._seen_timer()
             self._seen_timer = None
+
+        # TODO make a utility to convert uids to hostnames
+        hostname_uid = self.soco.uid
+        if hostname_uid.startswith("RINCON_"):
+            hostname_uid = hostname_uid[6:]
+        if hostname_uid.endsswith("01400"):
+            hostname_uid = hostname_uid[:-5]
+
+        aiozeroconf = await zeroconf.async_get_async_instance()
+        if await aiozeroconf.async_get_service_info(
+            "_sonos._tcp.local.",
+            "Sonos-{hostname_uid}._sonos._tcp.local."
+        ):
+            # We can still see the speaker via zeroconf check again later.
+            self._seen_timer = self.hass.helpers.event.async_call_later(
+                SEEN_EXPIRE_TIME.total_seconds(), self.async_unseen
+            )
+            return
+
+        self._share_link_plugin = None
 
         if self._poll_timer:
             self._poll_timer()
