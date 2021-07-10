@@ -325,6 +325,84 @@ async def test_unlock_action(hass, calls):
     assert len(calls) == 1
 
 
+async def test_unlocking(hass, calls):
+    """Test unlocking."""
+    assert await setup.async_setup_component(
+        hass,
+        lock.DOMAIN,
+        {
+            "lock": {
+                "platform": "template",
+                "value_template": "{{ states.input_select.test_state.state }}",
+                "lock": {"service": "test.automation"},
+                "unlock": {"service": "test.automation"},
+            }
+        },
+    )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    hass.states.async_set("input_select.test_state", lock.STATE_UNLOCKING)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("lock.template_lock")
+    assert state.state == lock.STATE_UNLOCKING
+
+
+async def test_locking(hass, calls):
+    """Test unlocking."""
+    assert await setup.async_setup_component(
+        hass,
+        lock.DOMAIN,
+        {
+            "lock": {
+                "platform": "template",
+                "value_template": "{{ states.input_select.test_state.state }}",
+                "lock": {"service": "test.automation"},
+                "unlock": {"service": "test.automation"},
+            }
+        },
+    )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    hass.states.async_set("input_select.test_state", lock.STATE_LOCKING)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("lock.template_lock")
+    assert state.state == lock.STATE_LOCKING
+
+
+async def test_jammed(hass, calls):
+    """Test jammed."""
+    assert await setup.async_setup_component(
+        hass,
+        lock.DOMAIN,
+        {
+            "lock": {
+                "platform": "template",
+                "value_template": "{{ states.input_select.test_state.state }}",
+                "lock": {"service": "test.automation"},
+                "unlock": {"service": "test.automation"},
+            }
+        },
+    )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    hass.states.async_set("input_select.test_state", lock.STATE_JAMMED)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("lock.template_lock")
+    assert state.state == lock.STATE_JAMMED
+
+
 async def test_available_template_with_entities(hass):
     """Test availability templates with values from other entities."""
 
