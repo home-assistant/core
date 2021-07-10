@@ -38,6 +38,7 @@ class SonosDiscoveryFlowHandler(DiscoveryFlowHandler):
         await self.async_set_unique_id(self._domain, raise_on_progress=False)
         host = discovery_info[CONF_HOST]
         boot_seqnum = discovery_info["properties"].get("bootseq")
+        # TODO: make a utility to convert hostnames to uids
         baseuid = hostname.split("-")[1].replace(".local.", "")
         uid = f"RINCON_{baseuid}01400"
         _LOGGER.debug(
