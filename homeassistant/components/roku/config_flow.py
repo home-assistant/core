@@ -9,6 +9,7 @@ from urllib.parse import urlparse
 from rokuecp import Roku, RokuError
 import voluptuous as vol
 
+from homeassistant import exceptions
 from homeassistant.components.ssdp import (
     ATTR_SSDP_LOCATION,
     ATTR_UPNP_FRIENDLY_NAME,
@@ -49,8 +50,9 @@ async def validate_input(hass: HomeAssistant, data: dict) -> dict:
     if not is_ip(host):
         try:
             host = socket.gethostbyname(host)
-        except gaierror as e:
+        except socket.gaierror as e:
             _LOGGER.error("Host lookup failed: %s", host)
+            raise CannotConnect
     roku = Roku(host, session=session)
     device = await roku.update()
 
@@ -167,3 +169,7 @@ class RokuConfigFlow(ConfigFlow, domain=DOMAIN):
             title=self.discovery_info[CONF_NAME],
             data=self.discovery_info,
         )
+
+
+class CannotConnect(exceptions.HomeAssistantError):
+    """Error to indicate we cannot connect."""
