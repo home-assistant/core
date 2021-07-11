@@ -1,4 +1,5 @@
 """Test the Roku config flow."""
+import socket
 from unittest.mock import patch
 
 from homeassistant.components.roku.const import DOMAIN
@@ -15,6 +16,7 @@ from homeassistant.setup import async_setup_component
 from tests.components.roku import (
     HOMEKIT_HOST,
     HOST,
+    HOSTNAME_HOST,
     MOCK_HOMEKIT_DISCOVERY_INFO,
     MOCK_SSDP_DISCOVERY_INFO,
     NAME_ROKUTV,
@@ -85,6 +87,67 @@ async def test_form(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) ->
     assert result["data"][CONF_HOST] == HOST
 
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_form_hostname(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test using a hostname."""
+    await async_setup_component(hass, "persistent_notification", {})
+    mock_connection(aioclient_mock)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={CONF_SOURCE: SOURCE_USER}
+    )
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["errors"] == {}
+
+    user_input = {CONF_HOST: HOSTNAME_HOST}
+    with patch(
+        "socket.gethostbyname",
+        return_value=HOST
+    ) as mock_socket_gethostbyname:
+        result = await hass.config_entries.flow.async_configure(
+            flow_id=result["flow_id"], user_input=user_input
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == UPNP_FRIENDLY_NAME
+
+    assert result["data"]
+    assert result["data"][CONF_HOST] == HOSTNAME_HOST
+
+    assert len(mock_socket_gethostbyname.mock_calls) == 2
+
+
+
+async def test_form_hostname_lookup_failed(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test we handle lookup failure."""
+    await async_setup_component(hass, "persistent_notification", {})
+    mock_connection(aioclient_mock)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={CONF_SOURCE: SOURCE_USER}
+    )
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["errors"] == {}
+
+    user_input = {CONF_HOST: HOSTNAME_HOST}
+    with patch(
+        "socket.gethostbyname",
+        side_effect=socket.gaierror("[Errno 8] nodename nor servname provided, or not known")
+    ) as mock_socket_gethostbyname:
+        result = await hass.config_entries.flow.async_configure(
+            flow_id=result["flow_id"], user_input=user_input
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == RESULT_TYPE_ABORT
+
+    assert len(mock_socket_gethostbyname.mock_calls) == 1
 
 
 async def test_form_cannot_connect(
