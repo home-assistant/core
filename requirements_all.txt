@@ -290,7 +290,7 @@ aprslib==0.6.46
 aqualogic==2.6
 
 # homeassistant.components.arcam_fmj
-arcam-fmj==0.5.3
+arcam-fmj==0.7.0
 
 # homeassistant.components.arris_tg2492lg
 arris-tg2492lg==1.1.0
@@ -2450,7 +2450,7 @@ zigpy-zigate==0.7.3
 zigpy-znp==0.5.1
 
 # homeassistant.components.zha
-zigpy==0.35.1
+zigpy==0.35.2
 
 # homeassistant.components.zoneminder
 zm-py==0.5.2

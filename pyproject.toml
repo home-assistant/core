@@ -32,7 +32,9 @@ load-plugins = [
     "hass_logger",
 ]
 persistent = false
-extension-pkg-whitelist = [
+extension-pkg-allow-list = [
+    "av.audio.stream",
+    "av.stream",
     "ciso8601",
     "cv2",
 ]

@@ -12,7 +12,7 @@
                 "data": {
                     "resources": "Ressourcen"
                 },
-                "title": "W\u00e4hlen Sie die zu \u00fcberwachenden Ressourcen aus"
+                "title": "W\u00e4hle die zu \u00fcberwachenden Ressourcen aus"
             },
             "ups": {
                 "data": {
@@ -28,7 +28,7 @@
                     "port": "Port",
                     "username": "Benutzername"
                 },
-                "title": "Stellen Sie eine Verbindung zum NUT-Server her"
+                "title": "Stelle eine Verbindung zum NUT-Server her"
             }
         }
     },
@@ -43,7 +43,7 @@
                     "resources": "Ressourcen",
                     "scan_interval": "Scan-Intervall (Sekunden)"
                 },
-                "description": "W\u00e4hlen Sie Sensorressourcen."
+                "description": "W\u00e4hle Sensorressourcen."
             }
         }
     }

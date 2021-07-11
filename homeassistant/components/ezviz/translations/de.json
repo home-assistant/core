@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured_account": "Konto wurde bereits konfiguriert",
-            "ezviz_cloud_account_missing": "Ezviz-Cloud-Konto fehlt. Bitte konfigurieren Sie das Ezviz-Cloud-Konto neu",
+            "ezviz_cloud_account_missing": "Ezviz-Cloud-Konto fehlt. Bitte konfiguriere das Ezviz-Cloud-Konto neu",
             "unknown": "Unerwarteter Fehler"
         },
         "error": {

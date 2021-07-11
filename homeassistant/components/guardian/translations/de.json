@@ -7,7 +7,7 @@
         },
         "step": {
             "discovery_confirm": {
-                "description": "M\u00f6chten Sie dieses Guardian-Ger\u00e4t einrichten?"
+                "description": "M\u00f6chtest du dieses Guardian-Ger\u00e4t einrichten?"
             },
             "user": {
                 "data": {
