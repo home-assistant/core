@@ -1,5 +1,6 @@
 """Support for Yale Alarm."""
 from __future__ import annotations
+
 import asyncio
 
 import voluptuous as vol
