@@ -103,10 +103,10 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator):
             )
 
         try:
-            arm_status = self.yale.get_armed_status()
-            cycle = self.yale.get_cycle()
-            status = self.yale.get_status()
-            online = self.yale.get_online()
+            arm_status = self.yale.get_armed_status()  # type: ignore[attr-defined]
+            cycle = self.yale.get_cycle()  # type: ignore[attr-defined]
+            status = self.yale.get_status()  # type: ignore[attr-defined]
+            online = self.yale.get_online()  # type: ignore[attr-defined]
 
         except AuthenticationError as error:
             LOGGER.error("Authentication failed. Check credentials %s", error)

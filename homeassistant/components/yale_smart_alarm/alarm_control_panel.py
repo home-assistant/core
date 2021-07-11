@@ -101,16 +101,16 @@ class YaleAlarmDevice(CoordinatorEntity, AlarmControlPanelEntity):
     @property
     def unique_id(self) -> str:
         """Return the unique ID for this entity."""
-        return str(self.coordinator.entry.entry_id)
+        return str(self.coordinator.entry.entry_id)  # type: ignore[attr-defined]
 
     @property
     def device_info(self) -> DeviceInfo:
         """Return device information about this entity."""
         return {
-            ATTR_NAME: self.coordinator.entry.data[CONF_NAME],
+            ATTR_NAME: self.coordinator.entry.data[CONF_NAME],  # type: ignore[attr-defined]
             ATTR_MANUFACTURER: MANUFACTURER,
             ATTR_MODEL: MODEL,
-            ATTR_IDENTIFIERS: {(DOMAIN, self.coordinator.entry.data[CONF_USERNAME])},
+            ATTR_IDENTIFIERS: {(DOMAIN, self.coordinator.entry.data[CONF_USERNAME])},  # type: ignore[attr-defined]
         }
 
     @property
