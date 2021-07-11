@@ -66,7 +66,7 @@
                     "7": "Zone 7",
                     "out": "OUT"
                 },
-                "description": "Es wurde ein {model} bei {host} entdeckt. W\u00e4hlen Sie unten die Basiskonfiguration der einzelnen E / A aus. Je nach E / A k\u00f6nnen bin\u00e4re Sensoren (Kontakte \u00f6ffnen / schlie\u00dfen), digitale Sensoren (dht und ds18b20) oder umschaltbare Ausg\u00e4nge verwendet werden. In den n\u00e4chsten Schritten k\u00f6nnen Sie detaillierte Optionen konfigurieren.",
+                "description": "Es wurde ein {model} bei {host} entdeckt. W\u00e4hle unten die Basiskonfiguration der einzelnen E / A aus. Je nach E / A k\u00f6nnen bin\u00e4re Sensoren (Kontakte \u00f6ffnen / schlie\u00dfen), digitale Sensoren (dht und ds18b20) oder umschaltbare Ausg\u00e4nge verwendet werden. In den n\u00e4chsten Schritten kannst du detaillierte Optionen konfigurieren.",
                 "title": "Konfigurieren von I/O"
             },
             "options_io_ext": {
@@ -80,15 +80,15 @@
                     "alarm2_out2": "OUT2/ALARM2",
                     "out1": "OUT1"
                 },
-                "description": "W\u00e4hlen Sie unten die Konfiguration der verbleibenden E / A. In den n\u00e4chsten Schritten k\u00f6nnen Sie detaillierte Optionen konfigurieren.",
+                "description": "W\u00e4hle unten die Konfiguration der verbleibenden E / A. In den n\u00e4chsten Schritten kannst du detaillierte Optionen konfigurieren.",
                 "title": "Konfiguriere Erweiterte I/O"
             },
             "options_misc": {
                 "data": {
                     "api_host": "API-Host-URL \u00fcberschreiben (optional)",
                     "blink": "LED Panel blinkt beim senden von Status\u00e4nderungen",
-                    "discovery": "Reagieren auf Suchanfragen in Ihrem Netzwerk",
-                    "override_api_host": "\u00dcberschreiben Sie die Standard-Host-Panel-URL der Home Assistant-API"
+                    "discovery": "Reagieren auf Suchanfragen in deinem Netzwerk",
+                    "override_api_host": "\u00dcberschreibe die Standard-Host-Panel-URL der Home Assistant-API"
                 },
                 "description": "Bitte w\u00e4hle das gew\u00fcnschte Verhalten f\u00fcr dein Panel",
                 "title": "Sonstiges konfigurieren"
