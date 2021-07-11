@@ -97,7 +97,7 @@ class BitcoinSensor(SensorEntity):
 
         if self.type == "exchangerate":
             self._attr_state = ticker[self._currency].p15min
-            self._unit_of_measurement = self._currency
+            self._attr_unit_of_measurement = self._currency
         elif self.type == "trade_volume_btc":
             self._attr_state = f"{stats.trade_volume_btc:.1f}"
         elif self.type == "miners_revenue_usd":
