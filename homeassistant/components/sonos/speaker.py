@@ -58,7 +58,7 @@ from .const import (
     SUBSCRIPTION_TIMEOUT,
 )
 from .favorites import SonosFavorites
-from .helpers import soco_error, uid_to_hostname
+from .helpers import soco_error, uid_to_short_hostname
 
 EVENT_CHARGING = {
     "CHARGING": True,
@@ -504,7 +504,7 @@ class SonosSpeaker:
             self._seen_timer()
             self._seen_timer = None
 
-        hostname = uid_to_hostname(self.soco.uid)
+        hostname = uid_to_short_hostname(self.soco.uid)
         aiozeroconf = await zeroconf.async_get_async_instance(self.hass)
         if await aiozeroconf.async_get_service_info(
             MDNS_SERVICE, f"{hostname}.{MDNS_SERVICE}"
