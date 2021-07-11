@@ -1,8 +1,6 @@
 """Support for Yale Alarm."""
 from __future__ import annotations
 
-import asyncio
-
 import voluptuous as vol
 from yalesmartalarmclient.client import (
     YALE_STATE_ARM_FULL,
@@ -51,7 +49,6 @@ from .const import (
     MANUFACTURER,
     MODEL,
 )
-from .coordinator import YaleDataUpdateCoordinator
 
 PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
     {
