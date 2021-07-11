@@ -11,6 +11,7 @@ from homeassistant.const import (
     DEVICE_CLASS_TIMESTAMP,
     LENGTH_FEET,
     LENGTH_METERS,
+    PERCENTAGE,
     TIME_HOURS,
     TIME_SECONDS,
 )
@@ -312,7 +313,7 @@ IMOW_SENSORS_MAP: typing.Dict[str, typing.Dict] = {
     },
     "status_chargeLevel": {
         "type": DEVICE_CLASS_BATTERY,
-        "uom": None,
+        "uom": PERCENTAGE,
         "icon": None,
         "switch": False,
         "picture": False,

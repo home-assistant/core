@@ -44,9 +44,17 @@ class ImowSwitchSensorEntity(ImowBaseEntity, SwitchEntity):
     def __init__(self, coordinator, device_info, idx, mower_state_property):
         """Override the BaseEntity with Switch Entity content."""
         super().__init__(coordinator, device_info, idx, mower_state_property)
-        self._attr_is_on = self.sensor_data.__dict__[self.property_name]
         self.api = self.coordinator.data.imow
-        self._attr_state = STATE_ON if self.is_on else STATE_OFF
+
+    @property
+    def is_on(self) -> bool:
+        """Return true if the switch is on."""
+        return bool(self.get_value_from_mowerstate())
+
+    @property
+    def state(self):
+        """Return the state of the sensor."""
+        return STATE_ON if bool(self.get_value_from_mowerstate()) else STATE_OFF
 
     async def async_turn_on(self, **kwargs):
         """Turn the entity on."""

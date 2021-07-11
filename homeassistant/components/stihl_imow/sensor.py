@@ -7,6 +7,7 @@ from homeassistant import config_entries, core
 from homeassistant.components.sensor import SensorEntity
 
 from . import extract_properties_by_type
+from ...const import STATE_OFF
 from .const import DOMAIN
 from .entity import ImowBaseEntity
 
@@ -40,8 +41,21 @@ class ImowSensorEntity(ImowBaseEntity, SensorEntity):
     def __init__(self, coordinator, device_info, idx, mower_state_property):
         """Override the BaseEntity with Binary Sensor content."""
         super().__init__(coordinator, device_info, idx, mower_state_property)
+
+    @property
+    def extra_state_attributes(self):
+        """Return the state attributes of the device."""
         if self.property_name == "machineState":
-            self._attr_extra_state_attributes = {
-                "short": self.sensor_data.stateMessage["short"],
-                "long": self.sensor_data.stateMessage["long"],
+            return {
+                "short": self.mowerstate.stateMessage["short"],
+                "long": self.mowerstate.stateMessage["long"],
             }
+
+    @property
+    def state(self):
+        """Return the state of the sensor."""
+        return (
+            self.get_value_from_mowerstate()
+            if bool(self.get_value_from_mowerstate())
+            else STATE_OFF
+        )

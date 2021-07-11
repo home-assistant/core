@@ -14,39 +14,29 @@ class ImowBaseEntity(CoordinatorEntity):
         """Initialize the sensor."""
         super().__init__(coordinator)
         self.idx = idx
-        self.sensor_data = coordinator.data
         self.key_device_infos = device
         self.property_name = mower_state_property
         self.cleaned_property_name = mower_state_property.replace("_", " ")
-        if self.property_name in IMOW_SENSORS_MAP:
-            if IMOW_SENSORS_MAP[self.property_name]["type"]:
-                self._attr_device_class = IMOW_SENSORS_MAP[self.property_name]["type"]
-                self._device_class = IMOW_SENSORS_MAP[self.property_name]["type"]
-
-        if self.property_name in IMOW_SENSORS_MAP:
-            if IMOW_SENSORS_MAP[self.property_name]["uom"]:
-                self._attr_unit_of_measurement = IMOW_SENSORS_MAP[self.property_name][
-                    "uom"
-                ]
-
-        if "_" in self.property_name:  # Complex Entity
-            self._attr_state = getattr(
-                self.sensor_data, self.property_name.split("_")[0]
-            )[self.property_name.split("_")[1]]
-        else:
-            self._attr_state = self.sensor_data.__dict__[self.property_name]
-
-        if (
-            self.property_name in IMOW_SENSORS_MAP
-            and IMOW_SENSORS_MAP[self.property_name]["picture"]
-        ):
-            if self.sensor_data.mowerImageThumbnailUrl:
-                self._attr_entity_picture = self.sensor_data.mowerImageThumbnailUrl
 
     @property
-    def device(self) -> MowerState:
+    def mowerstate(self) -> MowerState:
         """Return device object from coordinator."""
         return self.coordinator.data
+
+    @property
+    def state(self):
+        """Return the state of the sensor."""
+        return self.get_value_from_mowerstate()
+
+    def get_value_from_mowerstate(self):
+        """Extract values based on property cmoplexity."""
+        if "_" in self.property_name:  # Complex Entity
+            return getattr(self.mowerstate, self.property_name.split("_")[0])[
+                self.property_name.split("_")[1]
+            ]
+
+        else:
+            return getattr(self.mowerstate, self.property_name)
 
     @property
     def device_info(self):
@@ -65,6 +55,31 @@ class ImowBaseEntity(CoordinatorEntity):
             "model": self.key_device_infos["model"],
             "sw_version": self.key_device_infos["sw_version"],
         }
+
+    @property
+    def device_class(self):
+        """Return the class of this device, from component DEVICE_CLASSES."""
+
+        if self.property_name in IMOW_SENSORS_MAP:
+            if IMOW_SENSORS_MAP[self.property_name]["type"]:
+                return IMOW_SENSORS_MAP[self.property_name]["type"]
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit of measurement of this entity, if any."""
+        if self.property_name in IMOW_SENSORS_MAP:
+            if IMOW_SENSORS_MAP[self.property_name]["uom"]:
+                return IMOW_SENSORS_MAP[self.property_name]["uom"]
+
+    @property
+    def entity_picture(self):
+        """Return the entity picture to use in the frontend, if any."""
+        if (
+            self.property_name in IMOW_SENSORS_MAP
+            and IMOW_SENSORS_MAP[self.property_name]["picture"]
+        ):
+            if self.mowerstate.mowerImageThumbnailUrl:
+                return self.mowerstate.mowerImageThumbnailUrl
 
     @property
     def name(self):
