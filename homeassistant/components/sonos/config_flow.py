@@ -38,7 +38,9 @@ class SonosDiscoveryFlowHandler(DiscoveryFlowHandler):
             return self.async_abort(reason="not_sonos_device")
         await self.async_set_unique_id(self._domain, raise_on_progress=False)
         host = discovery_info[CONF_HOST]
-        boot_seqnum = discovery_info["properties"].get("bootseq")
+        properties = discovery_info["properties"]
+        boot_seqnum = properties.get("bootseq")
+        model = properties.get("model")
         uid = hostname_to_uid(hostname)
         _LOGGER.debug(
             "Calling async_discovered_player for %s with uid=%s and boot_seqnum=%s",
@@ -46,9 +48,9 @@ class SonosDiscoveryFlowHandler(DiscoveryFlowHandler):
             uid,
             boot_seqnum,
         )
-        if DATA_SONOS_DISCOVERY_MANAGER in self.hass.data:
-            self.hass.data[DATA_SONOS_DISCOVERY_MANAGER].async_discovered_player(
-                discovery_info["properties"], host, uid, boot_seqnum
+        if discovery_manager := self.hass.data.get(DATA_SONOS_DISCOVERY_MANAGER):
+            discovery_manager.async_discovered_player(
+                properties, host, uid, boot_seqnum, model
             )
         return await self.async_step_discovery(discovery_info)
 
