@@ -13,8 +13,8 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.dt import utcnow
 
-from .const import DOMAIN
 from .config_flow import is_ip
+from .const import DOMAIN
 
 SCAN_INTERVAL = timedelta(seconds=15)
 _LOGGER = logging.getLogger(__name__)
