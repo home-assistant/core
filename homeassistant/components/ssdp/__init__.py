@@ -109,7 +109,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the SSDP integration."""
 
     scanner = hass.data[DOMAIN] = Scanner(hass, await async_get_ssdp(hass))
-
+    assert 0
     asyncio.create_task(scanner.async_start())
 
     return True
