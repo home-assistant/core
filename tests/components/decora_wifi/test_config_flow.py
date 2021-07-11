@@ -13,7 +13,7 @@ from homeassistant.components.decora_wifi.const import CONF_TITLE, DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
 from tests.common import MockConfigEntry
-from tests.components.decora_wifi.common_test import MockDecoraWifiPlatform
+from tests.components.decora_wifi.common import MockDecoraWifiPlatform
 
 USERNAME = "username@home-assisant.com"
 UPDATED_USERNAME = "updated_username@home-assitant.com"

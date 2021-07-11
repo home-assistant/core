@@ -70,10 +70,12 @@ class DecoraWifiPlatform:
 
     def apilogout(self):
         """Log out of decora_wifi session."""
-        try:
-            Person.logout(self._session)
-        except ValueError as exc:
-            raise DecoraWifiCommFailed from exc
+        if self._loggedin:
+            try:
+                Person.logout(self._session)
+            except ValueError as exc:
+                raise DecoraWifiCommFailed from exc
+        self._loggedin = False
 
     def _apigetdevices(self):
         """Update the device library from the API."""
@@ -97,7 +99,7 @@ class DecoraWifiPlatform:
                 elif permission.residenceId is not None:
                     residence = Residence(self._session, permission.residenceId)
                     switches = residence.get_iot_switches()
-                    for s in switches:
+                    for sw in switches:
                         # Add the switch to the appropriate list in the iot_switches dictionary.
                         platform = DecoraWifiPlatform.classifydevice(sw)
                         self._iot_switches[platform].append(sw)
