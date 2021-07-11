@@ -157,7 +157,12 @@ class BlackbirdZone(MediaPlayerEntity):
         if idx in self._source_id_name:
             self._attr_source = self._source_id_name[idx]
         else:
-            self._attr_source = self._attr_media_title = None
+            self._attr_source = None
+
+    @property
+    def media_title(self):
+        """Return the current source as media title."""
+        return self.source
 
     def set_all_zones(self, source):
         """Set all zones to one source."""
