@@ -14,7 +14,7 @@
                     "password": "Passwort",
                     "username": "E-Mail-Adresse"
                 },
-                "description": "Verbinden Sie sich mit Ihrem MELCloud-Konto.",
+                "description": "Verbinde dich mit deinem MELCloud-Konto.",
                 "title": "Stelle eine Verbindung zu MELCloud her"
             }
         }
