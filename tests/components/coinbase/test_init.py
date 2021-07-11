@@ -22,7 +22,6 @@ from .common import (
 from .const import (
     GOOD_CURRENCY,
     GOOD_CURRENCY_2,
-    GOOD_CURRENCY_3,
     GOOD_EXCHNAGE_RATE,
     GOOD_EXCHNAGE_RATE_2,
 )
@@ -103,7 +102,7 @@ async def test_option_updates(hass: HomeAssistant):
         await hass.config_entries.options.async_configure(
             result["flow_id"],
             user_input={
-                CONF_CURRENCIES: [GOOD_CURRENCY, GOOD_CURRENCY_3],
+                CONF_CURRENCIES: [GOOD_CURRENCY, GOOD_CURRENCY_2],
                 CONF_EXCHANGE_RATES: [GOOD_EXCHNAGE_RATE, GOOD_EXCHNAGE_RATE_2],
             },
         )
@@ -126,7 +125,7 @@ async def test_option_updates(hass: HomeAssistant):
             if "xe" in entity.unique_id
         ]
 
-        assert currencies == [GOOD_CURRENCY, GOOD_CURRENCY_3]
+        assert currencies == [GOOD_CURRENCY, GOOD_CURRENCY_2]
         assert rates == [GOOD_EXCHNAGE_RATE, GOOD_EXCHNAGE_RATE_2]
 
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
