@@ -46,9 +46,10 @@ class SonosDiscoveryFlowHandler(DiscoveryFlowHandler):
             uid,
             boot_seqnum,
         )
-        self.hass.data[DATA_SONOS_DISCOVERY_MANAGER].async_discovered_player(
-            discovery_info["properties"], host, uid, boot_seqnum
-        )
+        if DATA_SONOS_DISCOVERY_MANAGER in self.hass.data:
+            self.hass.data[DATA_SONOS_DISCOVERY_MANAGER].async_discovered_player(
+                discovery_info["properties"], host, uid, boot_seqnum
+            )
         return await self.async_step_discovery(discovery_info)
 
 
