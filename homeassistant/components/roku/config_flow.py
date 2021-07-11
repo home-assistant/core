@@ -1,7 +1,9 @@
 """Config flow for Roku."""
 from __future__ import annotations
 
+import ipaddress
 import logging
+import socket
 from urllib.parse import urlparse
 
 from rokuecp import Roku, RokuError
@@ -29,13 +31,24 @@ ERROR_UNKNOWN = "unknown"
 _LOGGER = logging.getLogger(__name__)
 
 
+def is_ip(host):
+    try:
+        ipaddress.ip_address(host)
+    except ValueError:
+        return False
+    return True
+
+
 async def validate_input(hass: HomeAssistant, data: dict) -> dict:
     """Validate the user input allows us to connect.
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
     session = async_get_clientsession(hass)
-    roku = Roku(data[CONF_HOST], session=session)
+    host = data[CONF_HOST]
+    if not is_ip(host):
+        host = socket.gethostbyname(host)
+    roku = Roku(host, session=session)
     device = await roku.update()
 
     return {

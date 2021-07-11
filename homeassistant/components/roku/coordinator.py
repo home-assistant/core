@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 import logging
+import socket
 
 from rokuecp import Roku, RokuError
 from rokuecp.models import Device
@@ -13,6 +14,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from homeassistant.util.dt import utcnow
 
 from .const import DOMAIN
+from .config_flow import is_ip
 
 SCAN_INTERVAL = timedelta(seconds=15)
 _LOGGER = logging.getLogger(__name__)
@@ -31,6 +33,8 @@ class RokuDataUpdateCoordinator(DataUpdateCoordinator[Device]):
         host: str,
     ) -> None:
         """Initialize global Roku data updater."""
+        if not is_ip(host):
+            host = socket.gethostbyname(host)
         self.roku = Roku(host=host, session=async_get_clientsession(hass))
 
         self.full_update_interval = timedelta(minutes=15)
