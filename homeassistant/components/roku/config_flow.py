@@ -31,7 +31,7 @@ ERROR_UNKNOWN = "unknown"
 _LOGGER = logging.getLogger(__name__)
 
 
-def is_ip(host: str):
+def is_ip(host: str) -> bool:
     try:
         ipaddress.ip_address(host)
     except ValueError:
