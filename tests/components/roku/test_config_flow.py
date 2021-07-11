@@ -103,10 +103,7 @@ async def test_form_hostname(
     assert result["errors"] == {}
 
     user_input = {CONF_HOST: HOSTNAME_HOST}
-    with patch(
-        "socket.gethostbyname",
-        return_value=HOST
-    ) as mock_socket_gethostbyname:
+    with patch("socket.gethostbyname", return_value=HOST) as mock_socket_gethostbyname:
         result = await hass.config_entries.flow.async_configure(
             flow_id=result["flow_id"], user_input=user_input
         )
@@ -119,7 +116,6 @@ async def test_form_hostname(
     assert result["data"][CONF_HOST] == HOSTNAME_HOST
 
     assert len(mock_socket_gethostbyname.mock_calls) == 2
-
 
 
 async def test_form_hostname_lookup_failed(
@@ -138,7 +134,9 @@ async def test_form_hostname_lookup_failed(
     user_input = {CONF_HOST: HOSTNAME_HOST}
     with patch(
         "socket.gethostbyname",
-        side_effect=socket.gaierror("[Errno 8] nodename nor servname provided, or not known")
+        side_effect=socket.gaierror(
+            "[Errno 8] nodename nor servname provided, or not known"
+        ),
     ) as mock_socket_gethostbyname:
         result = await hass.config_entries.flow.async_configure(
             flow_id=result["flow_id"], user_input=user_input
