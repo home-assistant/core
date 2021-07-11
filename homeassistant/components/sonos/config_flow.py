@@ -11,6 +11,7 @@ from homeassistant.helpers.config_entry_flow import DiscoveryFlowHandler
 from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import DATA_SONOS_DISCOVERY_MANAGER, DOMAIN
+from .helpers import hostname_to_uid
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,8 +39,7 @@ class SonosDiscoveryFlowHandler(DiscoveryFlowHandler):
         await self.async_set_unique_id(self._domain, raise_on_progress=False)
         host = discovery_info[CONF_HOST]
         boot_seqnum = discovery_info["properties"].get("bootseq")
-        baseuid = hostname.split("-")[1].replace(".local.", "")
-        uid = f"RINCON_{baseuid}01400"
+        uid = hostname_to_uid(hostname)
         _LOGGER.debug(
             "Calling async_discovered_player for %s with uid=%s and boot_seqnum=%s",
             host,
