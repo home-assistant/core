@@ -26,7 +26,7 @@
                     "username": "Benutzername",
                     "verify_ssl": "SSL Zertifikat verifizieren"
                 },
-                "description": "M\u00f6chten Sie {name} ({host}) einrichten?",
+                "description": "M\u00f6chtest du {name} ({host}) einrichten?",
                 "title": "Synology DSM"
             },
             "user": {
