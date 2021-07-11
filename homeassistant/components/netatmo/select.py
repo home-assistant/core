@@ -10,6 +10,7 @@ from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import PlatformNotReady
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .climate import get_all_home_ids
@@ -90,6 +91,19 @@ class NetatmoScheduleSelect(NetatmoBase, SelectEntity):
             ).get("name")
         )
         self._attr_options = options
+
+    async def async_added_to_hass(self) -> None:
+        """Entity created."""
+        await super().async_added_to_hass()
+
+        for event_type in (EVENT_TYPE_SCHEDULE,):
+            self._listeners.append(
+                async_dispatcher_connect(
+                    self.hass,
+                    f"signal-{DOMAIN}-webhook-{event_type}",
+                    self.handle_event,
+                )
+            )
 
     async def handle_event(self, event: dict) -> None:
         """Handle webhook events."""
