@@ -41,14 +41,14 @@ def soco_error(errorcodes: list[str] | None = None) -> Callable:
     return decorator
 
 
-def uid_to_hostname(uid: str) -> str:
-    """Convert a Sonos uid to a hostname."""
+def uid_to_short_hostname(uid: str) -> str:
+    """Convert a Sonos uid to a short hostname."""
     hostname_uid = uid
     if hostname_uid.startswith(UID_PREFIX):
-        hostname_uid = hostname_uid[6:]
-    if hostname_uid.endsswith(UID_POSTFIX):
-        hostname_uid = hostname_uid[:-5]
-    return "Sonos-{hostname_uid}"
+        hostname_uid = hostname_uid[len(UID_PREFIX) :]
+    if hostname_uid.endswith(UID_POSTFIX):
+        hostname_uid = hostname_uid[: -len(UID_POSTFIX)]
+    return f"Sonos-{hostname_uid}"
 
 
 def hostname_to_uid(hostname: str) -> str:
