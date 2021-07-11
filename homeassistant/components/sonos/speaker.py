@@ -38,6 +38,7 @@ from .const import (
     BATTERY_SCAN_INTERVAL,
     DATA_SONOS,
     DOMAIN,
+    MDNS_SERVICE,
     PLATFORMS,
     SCAN_INTERVAL,
     SEEN_EXPIRE_TIME,
@@ -57,7 +58,7 @@ from .const import (
     SUBSCRIPTION_TIMEOUT,
 )
 from .favorites import SonosFavorites
-from .helpers import soco_error
+from .helpers import soco_error, uid_to_hostname
 
 EVENT_CHARGING = {
     "CHARGING": True,
@@ -503,16 +504,10 @@ class SonosSpeaker:
             self._seen_timer()
             self._seen_timer = None
 
-        # TODO: make a utility to convert uids to hostnames
-        hostname_uid = self.soco.uid
-        if hostname_uid.startswith("RINCON_"):
-            hostname_uid = hostname_uid[6:]
-        if hostname_uid.endsswith("01400"):
-            hostname_uid = hostname_uid[:-5]
-
-        aiozeroconf = await zeroconf.async_get_async_instance()
+        hostname = uid_to_hostname(self.soco.uid)
+        aiozeroconf = await zeroconf.async_get_async_instance(self.hass)
         if await aiozeroconf.async_get_service_info(
-            "_sonos._tcp.local.", "Sonos-{hostname_uid}._sonos._tcp.local."
+            MDNS_SERVICE, f"{hostname}.{MDNS_SERVICE}"
         ):
             # We can still see the speaker via zeroconf check again later.
             self._seen_timer = self.hass.helpers.event.async_call_later(
