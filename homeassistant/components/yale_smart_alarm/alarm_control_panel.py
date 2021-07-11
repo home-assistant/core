@@ -1,5 +1,6 @@
 """Support for Yale Alarm."""
 from __future__ import annotations
+import asyncio
 
 import voluptuous as vol
 from yalesmartalarmclient.client import (
@@ -86,8 +87,6 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class YaleAlarmDevice(CoordinatorEntity, AlarmControlPanelEntity):
     """Represent a Yale Smart Alarm."""
 
-    coordinator: YaleDataUpdateCoordinator
-
     _state_map = {
         YALE_STATE_DISARM: STATE_ALARM_DISARMED,
         YALE_STATE_ARM_PARTIAL: STATE_ALARM_ARMED_HOME,
@@ -131,33 +130,17 @@ class YaleAlarmDevice(CoordinatorEntity, AlarmControlPanelEntity):
         """Return the list of supported features."""
         return SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY
 
-    async def _async_set_arm_state(self, state) -> None:
-        """Send set arm state command."""
-        if state == "arm":
-            await self.hass.async_add_executor_job(self.coordinator.yale.arm_full)  # type: ignore[attr-defined]
-            self._state = STATE_ALARM_ARMED_AWAY
-        elif state == "home":
-            await self.hass.async_add_executor_job(self.coordinator.yale.arm_partial)  # type: ignore[attr-defined]
-            self._state = STATE_ALARM_ARMED_HOME
-        elif state == "disarm":
-            await self.hass.async_add_executor_job(self.coordinator.yale.disarm)  # type: ignore[attr-defined]
-            self._state = STATE_ALARM_DISARMED
-
-        LOGGER.debug("Yale set arm state %s", state)
-
-        await self.coordinator.async_refresh()
-
-    async def async_alarm_disarm(self, code=None):
+    def alarm_disarm(self, code=None):
         """Send disarm command."""
-        await self._async_set_arm_state(YALE_STATE_DISARM)
+        self.coordinator.yale.disarm()
 
-    async def async_alarm_arm_home(self, code=None):
+    def alarm_arm_home(self, code=None):
         """Send arm home command."""
-        await self._async_set_arm_state(YALE_STATE_ARM_PARTIAL)
+        self.coordinator.yale.arm_partial()
 
-    async def async_alarm_arm_away(self, code=None):
+    def alarm_arm_away(self, code=None):
         """Send arm away command."""
-        await self._async_set_arm_state(YALE_STATE_ARM_FULL)
+        self.coordinator.yale.arm_full()
 
     @property
     def state_attributes(self):

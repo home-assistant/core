@@ -38,35 +38,12 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self) -> dict:
         """Fetch data from Yale."""
 
-        if self.yale is None:
-            self.yale = await self._hass.async_add_executor_job(
-                YaleSmartAlarmClient,
-                self.entry.data[CONF_USERNAME],
-                self.entry.data[CONF_PASSWORD],
-            )
-
-        try:
-            arm_status = await self._hass.async_add_executor_job(
-                self.yale.get_armed_status  # type: ignore[attr-defined]
-            )
-            cycle = await self._hass.async_add_executor_job(
-                self.yale.get_cycle  # type: ignore[attr-defined]
-            )
-            status = await self._hass.async_add_executor_job(
-                self.yale.get_status  # type: ignore[attr-defined]
-            )
-            online = await self._hass.async_add_executor_job(
-                self.yale.get_online  # type: ignore[attr-defined]
-            )
-
-        except AuthenticationError as error:
-            LOGGER.error("Authentication failed. Check credentials %s", error)
-            raise
+        updates = await self._hass.async_add_executor_job(self.get_updates)
 
         locks = []
         door_windows = []
 
-        for lock in cycle["data"]["device_status"]:
+        for lock in updates["cycle"]["data"]["device_status"]:
             if lock["type"] == "device_type.door_lock":
                 state = lock["status1"]
                 lock_status_str = lock["minigw_lock_status"]
@@ -89,7 +66,7 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator):
                 lock["_state"] = state
                 locks.append(lock)
 
-        for door_window in cycle["data"]["device_status"]:
+        for door_window in updates["cycle"]["data"]["device_status"]:
             if door_window["type"] == "device_type.door_contact":
                 state = door_window["status1"]
                 if "device_status.dc_close" in state:
@@ -102,17 +79,42 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator):
                 door_windows.append(door_window)
 
         debug = {
-            "alarm": arm_status,
+            "alarm": updates["arm_status"],
             "locks": locks,
             "door_windows": door_windows,
-            "status": status,
-            "online": online,
+            "status": updates["status"],
+            "online": updates["online"],
         }
         LOGGER.debug("Coordinator output: %s", debug)
         return {
-            "alarm": arm_status,
+            "alarm": updates["arm_status"],
             "locks": locks,
             "door_windows": door_windows,
+            "status": updates["status"],
+            "online": updates["online"],
+        }
+
+    def get_updates(self) -> dict:
+        """Fetch data from Yale."""
+
+        if self.yale is None:
+            self.yale = YaleSmartAlarmClient(
+                self.entry.data[CONF_USERNAME], self.entry.data[CONF_PASSWORD]
+            )
+
+        try:
+            arm_status = self.yale.get_armed_status()
+            cycle = self.yale.get_cycle()
+            status = self.yale.get_status()
+            online = self.yale.get_online()
+
+        except AuthenticationError as error:
+            LOGGER.error("Authentication failed. Check credentials %s", error)
+            raise
+
+        return {
+            "arm_status": arm_status,
+            "cycle": cycle,
             "status": status,
             "online": online,
         }
