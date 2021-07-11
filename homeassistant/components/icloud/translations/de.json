@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Konto wurde bereits konfiguriert",
-            "no_device": "Auf keinem Ihrer Ger\u00e4te ist \"Find my iPhone\" aktiviert",
+            "no_device": "Auf keinem deiner Ger\u00e4te ist \"Find my iPhone\" aktiviert",
             "reauth_successful": "Die erneute Authentifizierung war erfolgreich"
         },
         "error": {
