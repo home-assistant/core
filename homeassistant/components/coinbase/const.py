@@ -1,6 +1,7 @@
 """Constants used for Coinbase."""
 
 CONF_CURRENCIES = "account_balance_currencies"
+CONF_EXCHANGE_BASE = "exchange_base"
 CONF_EXCHANGE_RATES = "exchange_rate_currencies"
 CONF_OPTIONS = "options"
 DOMAIN = "coinbase"

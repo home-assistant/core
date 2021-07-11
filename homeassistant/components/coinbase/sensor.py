@@ -49,7 +49,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     if CONF_CURRENCIES in config_entry.options:
         desired_currencies = config_entry.options[CONF_CURRENCIES]
 
-    exchange_native_currency = instance.exchange_rates[API_ACCOUNT_CURRENCY]
+    exchange_base_currency = instance.exchange_rates[API_ACCOUNT_CURRENCY]
 
     for currency in desired_currencies:
         if currency not in provided_currencies:
@@ -67,7 +67,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 ExchangeRateSensor(
                     instance,
                     rate,
-                    exchange_native_currency,
+                    exchange_base_currency,
                 )
             )
 
@@ -149,7 +149,7 @@ class AccountSensor(SensorEntity):
 class ExchangeRateSensor(SensorEntity):
     """Representation of a Coinbase.com sensor."""
 
-    def __init__(self, coinbase_data, exchange_currency, native_currency):
+    def __init__(self, coinbase_data, exchange_currency, exchange_base):
         """Initialize the sensor."""
         self._coinbase_data = coinbase_data
         self.currency = exchange_currency
@@ -158,7 +158,7 @@ class ExchangeRateSensor(SensorEntity):
         self._state = round(
             1 / float(self._coinbase_data.exchange_rates[API_RATES][self.currency]), 2
         )
-        self._unit_of_measurement = native_currency
+        self._unit_of_measurement = exchange_base
 
     @property
     def name(self):
