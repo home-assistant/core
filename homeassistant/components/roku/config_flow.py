@@ -31,7 +31,7 @@ ERROR_UNKNOWN = "unknown"
 _LOGGER = logging.getLogger(__name__)
 
 
-def is_ip(host):
+def is_ip(host: str):
     try:
         ipaddress.ip_address(host)
     except ValueError:
@@ -47,7 +47,10 @@ async def validate_input(hass: HomeAssistant, data: dict) -> dict:
     session = async_get_clientsession(hass)
     host = data[CONF_HOST]
     if not is_ip(host):
-        host = socket.gethostbyname(host)
+        try:
+            host = socket.gethostbyname(host)
+        except gaierror as e:
+            _LOGGER.error("Host lookup failed: %s", host)
     roku = Roku(host, session=session)
     device = await roku.update()
 

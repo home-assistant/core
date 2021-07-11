@@ -34,7 +34,10 @@ class RokuDataUpdateCoordinator(DataUpdateCoordinator[Device]):
     ) -> None:
         """Initialize global Roku data updater."""
         if not is_ip(host):
-            host = socket.gethostbyname(host)
+            try:
+                host = socket.gethostbyname(host)
+            except gaierror as e:
+                _LOGGER.error("Host lookup failed: %s", host)
         self.roku = Roku(host=host, session=async_get_clientsession(hass))
 
         self.full_update_interval = timedelta(minutes=15)
