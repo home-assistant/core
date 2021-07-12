@@ -11,7 +11,7 @@ from homeassistant.components.ffmpeg import (
     DATA_FFMPEG,
 )
 from homeassistant.components.ffmpeg_motion.binary_sensor import FFmpegBinarySensor
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_NAME, CONF_UNIQUE_ID
 import homeassistant.helpers.config_validation as cv
 
 CONF_PEAK = "peak"
@@ -26,6 +26,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_INPUT): cv.string,
         vol.Optional(CONF_INITIAL_STATE, default=DEFAULT_INIT_STATE): cv.boolean,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_UNIQUE_ID): cv.string,
         vol.Optional(CONF_EXTRA_ARGUMENTS): cv.string,
         vol.Optional(CONF_OUTPUT): cv.string,
         vol.Optional(CONF_PEAK, default=-30): vol.Coerce(int),
@@ -48,6 +49,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 class FFmpegNoise(FFmpegBinarySensor):
     """A binary sensor which use FFmpeg for noise detection."""
+
+    _attr_device_class = DEVICE_CLASS_SOUND
 
     def __init__(self, hass, manager, config):
         """Initialize FFmpeg noise binary sensor."""
@@ -74,8 +77,3 @@ class FFmpegNoise(FFmpegBinarySensor):
             output_dest=self._config.get(CONF_OUTPUT),
             extra_cmd=self._config.get(CONF_EXTRA_ARGUMENTS),
         )
-
-    @property
-    def device_class(self):
-        """Return the class of this sensor, from DEVICE_CLASSES."""
-        return DEVICE_CLASS_SOUND

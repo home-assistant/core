@@ -14,7 +14,7 @@ from homeassistant.components.ffmpeg import (
     DATA_FFMPEG,
     FFmpegBase,
 )
-from homeassistant.const import CONF_NAME, CONF_REPEAT
+from homeassistant.const import CONF_NAME, CONF_REPEAT, CONF_UNIQUE_ID
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
@@ -30,6 +30,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_INPUT): cv.string,
         vol.Optional(CONF_INITIAL_STATE, default=DEFAULT_INIT_STATE): cv.boolean,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_UNIQUE_ID): cv.string,
         vol.Optional(CONF_EXTRA_ARGUMENTS): cv.string,
         vol.Optional(CONF_RESET, default=10): vol.All(
             vol.Coerce(int), vol.Range(min=1)
@@ -55,15 +56,16 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 
 class FFmpegBinarySensor(FFmpegBase, BinarySensorEntity):
-    """A binary sensor which use FFmpeg for noise detection."""
+    """A binary sensor which use FFmpeg for detection."""
 
     def __init__(self, config):
-        """Init for the binary sensor noise detection."""
+        """Init for the ffmpeg binary sensor detection."""
         super().__init__(config.get(CONF_INITIAL_STATE))
 
         self._state = False
         self._config = config
-        self._name = config.get(CONF_NAME)
+        self._attr_name = config.get(CONF_NAME)
+        self._attr_unique_id = config.get(CONF_UNIQUE_ID)
 
     @callback
     def _async_callback(self, state):
@@ -76,14 +78,11 @@ class FFmpegBinarySensor(FFmpegBase, BinarySensorEntity):
         """Return true if the binary sensor is on."""
         return self._state
 
-    @property
-    def name(self):
-        """Return the name of the entity."""
-        return self._name
-
 
 class FFmpegMotion(FFmpegBinarySensor):
-    """A binary sensor which use FFmpeg for noise detection."""
+    """A binary sensor which use FFmpeg for motion detection."""
+
+    _attr_device_class = DEVICE_CLASS_MOTION
 
     def __init__(self, hass, manager, config):
         """Initialize FFmpeg motion binary sensor."""
@@ -111,8 +110,3 @@ class FFmpegMotion(FFmpegBinarySensor):
             input_source=self._config.get(CONF_INPUT),
             extra_cmd=self._config.get(CONF_EXTRA_ARGUMENTS),
         )
-
-    @property
-    def device_class(self):
-        """Return the class of this sensor, from DEVICE_CLASSES."""
-        return DEVICE_CLASS_MOTION
