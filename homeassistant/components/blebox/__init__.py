@@ -79,16 +79,16 @@ class BleBoxEntity(Entity):
     def __init__(self, feature):
         """Initialize a BleBox entity."""
         self._feature = feature
-
-    @property
-    def name(self):
-        """Return the internal entity name."""
-        return self._feature.full_name
-
-    @property
-    def unique_id(self):
-        """Return a unique id."""
-        return self._feature.unique_id
+        self._attr_name = feature.full_name
+        self._attr_unique_id = feature.unique_id
+        product = feature.product
+        self._attr_device_info = {
+            "identifiers": {(DOMAIN, product.unique_id)},
+            "name": product.name,
+            "manufacturer": product.brand,
+            "model": product.model,
+            "sw_version": product.firmware_version,
+        }
 
     async def async_update(self):
         """Update the entity state."""
@@ -96,15 +96,3 @@ class BleBoxEntity(Entity):
             await self._feature.async_update()
         except Error as ex:
             _LOGGER.error("Updating '%s' failed: %s", self.name, ex)
-
-    @property
-    def device_info(self):
-        """Return device information for this entity."""
-        product = self._feature.product
-        return {
-            "identifiers": {(DOMAIN, product.unique_id)},
-            "name": product.name,
-            "manufacturer": product.brand,
-            "model": product.model,
-            "sw_version": product.firmware_version,
-        }
