@@ -1423,7 +1423,7 @@ pyezviz==0.1.8.9
 pyfido==2.1.1
 
 # homeassistant.components.fireservicerota
-pyfireservicerota==0.0.40
+pyfireservicerota==0.0.42
 
 # homeassistant.components.flexit
 pyflexit==0.3
