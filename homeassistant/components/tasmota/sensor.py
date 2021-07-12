@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import logging
 
-from hatasmota import const as hc, status_sensor
+from hatasmota import const as hc, sensor as tasmota_sensor, status_sensor
 
 from homeassistant.components import sensor
 from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
@@ -176,6 +176,7 @@ class TasmotaSensor(TasmotaAvailability, TasmotaDiscoveryUpdate, SensorEntity):
     """Representation of a Tasmota sensor."""
 
     _attr_last_reset = None
+    _tasmota_entity: tasmota_sensor.TasmotaSensor
 
     def __init__(self, **kwds):
         """Initialize the Tasmota sensor."""
@@ -185,8 +186,13 @@ class TasmotaSensor(TasmotaAvailability, TasmotaDiscoveryUpdate, SensorEntity):
             **kwds,
         )
 
+    async def async_added_to_hass(self) -> None:
+        """Subscribe to MQTT events."""
+        self._tasmota_entity.set_on_state_callback(self.sensor_state_updated)
+        await super().async_added_to_hass()
+
     @callback
-    def state_updated(self, state, **kwargs):
+    def sensor_state_updated(self, state, **kwargs):
         """Handle state updates."""
         self._state = state
         if "last_reset" in kwargs:
