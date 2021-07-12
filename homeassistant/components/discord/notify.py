@@ -59,9 +59,21 @@ class DiscordNotificationService(BaseNotificationService):
 
         data = kwargs.get(ATTR_DATA) or {}
 
+        embed = None
         if ATTR_EMBED in data:
             embedding = data[ATTR_EMBED]
             fields = embedding.get(ATTR_EMBED_FIELDS)
+
+            if embedding:
+                embed = discord.Embed(**embedding)
+                for field in fields:
+                    embed.add_field(**field)
+                if ATTR_EMBED_FOOTER in embedding:
+                    embed.set_footer(**embedding[ATTR_EMBED_FOOTER])
+                if ATTR_EMBED_AUTHOR in embedding:
+                    embed.set_author(**embedding[ATTR_EMBED_AUTHOR])
+                if ATTR_EMBED_THUMBNAIL in embedding:
+                    embed.set_thumbnail(**embedding[ATTR_EMBED_THUMBNAIL])
 
         if ATTR_IMAGES in data:
             images = []
@@ -94,20 +106,7 @@ class DiscordNotificationService(BaseNotificationService):
                     files = []
                     for image in images:
                         files.append(discord.File(image))
-                if embedding:
-                    embed = discord.Embed(**embedding)
-                    if fields:
-                        for field_num, field_name in enumerate(fields):
-                            embed.add_field(**fields[field_num])
-                    if ATTR_EMBED_FOOTER in embedding:
-                        embed.set_footer(**embedding[ATTR_EMBED_FOOTER])
-                    if ATTR_EMBED_AUTHOR in embedding:
-                        embed.set_author(**embedding[ATTR_EMBED_AUTHOR])
-                    if ATTR_EMBED_THUMBNAIL in embedding:
-                        embed.set_thumbnail(**embedding[ATTR_EMBED_THUMBNAIL])
-                    await channel.send(message, files=files, embed=embed)
-                else:
-                    await channel.send(message, files=files)
+                await channel.send(message, files=files, embed=embed)
         except (discord.errors.HTTPException, discord.errors.NotFound) as error:
             _LOGGER.warning("Communication error: %s", error)
         await discord_bot.close()
