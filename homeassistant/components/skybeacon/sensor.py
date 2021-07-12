@@ -12,6 +12,7 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_MAC,
     CONF_NAME,
+    DEVICE_CLASS_TEMPERATURE,
     EVENT_HOMEASSISTANT_STOP,
     PERCENTAGE,
     STATE_UNKNOWN,
@@ -90,6 +91,7 @@ class SkybeaconHumid(SensorEntity):
 class SkybeaconTemp(SensorEntity):
     """Representation of a Skybeacon temperature sensor."""
 
+    _attr_device_class = DEVICE_CLASS_TEMPERATURE
     _attr_unit_of_measurement = TEMP_CELSIUS
 
     def __init__(self, name, mon):
