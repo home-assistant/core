@@ -107,6 +107,6 @@ class DiscordNotificationService(BaseNotificationService):
                     for image in images:
                         files.append(discord.File(image))
                 await channel.send(message, files=files, embed=embed)
-        except (discord.errors.HTTPException, discord.errors.NotFound) as error:
+        except (discord.HTTPException, discord.NotFound) as error:
             _LOGGER.warning("Communication error: %s", error)
         await discord_bot.close()
