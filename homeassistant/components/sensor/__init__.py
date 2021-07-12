@@ -117,6 +117,7 @@ class SensorEntity(Entity):
     _attr_native_unit_of_measurement: str | None = None
     _attr_native_value: StateType
     _attr_state_class: str | None
+    _temperature_conversion_reported = False
 
     @property
     def state_class(self) -> str | None:
@@ -203,7 +204,10 @@ class SensorEntity(Entity):
             and unit_of_measurement in (TEMP_CELSIUS, TEMP_FAHRENHEIT)
             and unit_of_measurement != units.temperature_unit
         ):
-            if self.device_class != DEVICE_CLASS_TEMPERATURE:
+            if (
+                self.device_class != DEVICE_CLASS_TEMPERATURE
+                and not self._temperature_conversion_reported
+            ):
                 self._temperature_conversion_reported = True
                 report_issue = self._suggest_report_issue()
                 _LOGGER.warning(
