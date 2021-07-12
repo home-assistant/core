@@ -1,0 +1,24 @@
+{
+    "title": "Weback Cloud Integration",
+    "config": {
+        "abort": {
+            "already_configured": "This accounts already exists"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect to Weback Cloud, please verify your network connection",
+            "invalid_credentials": "Couldn't connect, please verify your credentials",
+            "invalid_auth": "Authentication failed, please verify your credentials",
+            "unknown": "An unexpected error occured"
+        },
+        "step": {
+            "user": {
+                "description": "Please provide your Weback Cloud login credentials",
+                "data": {
+                    "region": "Country Code (e.g.: +1)",
+                    "phone_number": "Phone Number (without country code)",
+                    "password": "Password"
+                }
+            }
+        }
+    }
+}

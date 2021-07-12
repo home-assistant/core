@@ -1,0 +1,24 @@
+{
+    "title": "Weback Cloud Integration",
+    "config": {
+        "abort": {
+            "already_configured": "Dieser Account existiert bereits"
+        },
+        "error": {
+            "cannot_connect": "Konnte keine Verbindung zur Weback Cloud herstellen, bitte \u00fcberpr\u00fcfen Sie Ihre Netzwerkverbindung",
+            "invalid_credentials": "Authentifizierung fehlgeschlagen, bitte \u00fcberpr\u00fcfen Sie die Verbindungsdaten",
+            "invalid_auth": "Authentifizierung fehlgeschlagen, bitte \u00fcberpr\u00fcfen Sie die Verbindungsdaten",
+            "unknown": "Ein unerwarteter Fehler ist aufgetreten"
+        },
+        "step": {
+            "user": {
+                "description": "Bitte geben Sie Ihre Weback Cloud Logindaten ein",
+                "data": {
+                    "region": "L\u00e4ndervorwahl (e.g.: +49)",
+                    "phone_number": "Telefonnummer (ohne L\u00e4ndervorwahl)",
+                    "password": "Passwort"
+                }
+            }
+        }
+    }
+}

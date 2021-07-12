@@ -1,0 +1,9 @@
+{
+  "domain": "weback_cloud",
+  "name": "Weback Cloud Integration",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/weback-cloud",
+  "requirements": ["weback-unofficial==0.3.5"],
+  "codeowners": ["@nicolaswehmeyer"],
+  "iot_class": "cloud_polling"
+}

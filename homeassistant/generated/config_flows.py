@@ -287,6 +287,7 @@ FLOWS = [
     "volumio",
     "wallbox",
     "waze_travel_time",
+    "weback_cloud",
     "wemo",
     "wiffi",
     "wilight",

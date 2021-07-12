@@ -1,0 +1,24 @@
+{
+  "title": "Weback Cloud Integration",
+  "config": {
+    "step": {
+      "user": {
+        "description": "Set up your Weback Cloud Account to integrate your vacuum devices",
+        "data": {
+          "region": "Country Code (e.g.: +1)",
+          "phone_number": "Phone Number (without country code)",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_credentials": "Couldn't connect, please verify your credentials",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  }
+}

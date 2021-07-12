@@ -1,0 +1,68 @@
+"""Config flow for Weback Cloud Integration integration."""
+from __future__ import annotations
+
+import logging
+from typing import Any
+
+import voluptuous as vol
+
+from homeassistant import config_entries
+from homeassistant.components.weback_cloud.const import (
+    CONF_PASSWORD,
+    CONF_PHONE_NUMBER,
+    CONF_REGION,
+    DOMAIN,
+)
+from homeassistant.components.weback_cloud.exceptions import InvalidCredentials
+from homeassistant.components.weback_cloud.hub import WebackCloudHub
+from homeassistant.data_entry_flow import FlowResult
+
+_LOGGER = logging.getLogger(__name__)
+
+STEP_USER_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_REGION): str,
+        vol.Required(CONF_PHONE_NUMBER): str,
+        vol.Required(CONF_PASSWORD): str,
+    }
+)
+
+
+class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+    """Handle a config flow for Weback Cloud Integration."""
+
+    VERSION = 1
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle the initial configuration step."""
+        errors = {}
+
+        if user_input is None:
+            return self.async_show_form(
+                step_id="user", data_schema=STEP_USER_DATA_SCHEMA
+            )
+
+        await self.async_set_unique_id(user_input[CONF_PHONE_NUMBER])
+        self._abort_if_unique_id_configured()
+
+        hub = WebackCloudHub(self.hass, user_input)
+
+        try:
+            await hub.authenticate()
+        except InvalidCredentials:
+            _LOGGER.error("Invalid credentials, cannot connect to Weback Cloud")
+            errors["base"] = "invalid_auth"
+        except Exception as e:
+            _LOGGER.error("Unknown error occurred: %s", e)
+            errors["base"] = "unknown"
+        else:
+            return self.async_create_entry(
+                title=f"User: {user_input[CONF_REGION]}-{user_input[CONF_PHONE_NUMBER]}",
+                data=user_input,
+            )
+
+        return self.async_show_form(
+            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+        )

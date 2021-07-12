@@ -1286,6 +1286,9 @@ wallbox==0.4.4
 # homeassistant.components.folder_watcher
 watchdog==2.1.3
 
+# homeassistant.components.weback_cloud
+weback-unofficial==0.3.5
+
 # homeassistant.components.wiffi
 wiffi==1.0.1
 
