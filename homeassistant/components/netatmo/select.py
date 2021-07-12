@@ -60,7 +60,7 @@ async def async_setup_entry(
 
 
 class NetatmoScheduleSelect(NetatmoBase, SelectEntity):
-    """Representation a Netatmo thermostat."""
+    """Representation a Netatmo thermostat schedule selector."""
 
     def __init__(
         self, data_handler: NetatmoDataHandler, home_id: str, options: list
