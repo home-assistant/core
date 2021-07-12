@@ -59,7 +59,8 @@ class JuiceNetSensorDevice(JuiceNetDevice, SensorEntity):
         super().__init__(device, sensor_type, coordinator)
         self._name = SENSOR_TYPES[sensor_type][0]
         self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
-        self._attr_state_class = SENSOR_TYPES[sensor_type][2]
+        self._attr_device_class = SENSOR_TYPES[sensor_type][2]
+        self._attr_state_class = SENSOR_TYPES[sensor_type][3]
 
     @property
     def name(self):
