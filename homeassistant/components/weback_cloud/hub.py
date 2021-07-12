@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from types import MappingProxyType
 from typing import Any
 
 from weback_unofficial.client import WebackApi
@@ -19,44 +20,45 @@ from homeassistant.core import HomeAssistant
 
 _LOGGER = logging.getLogger(__name__)
 
-hass = HomeAssistant()
-
 
 class WebackCloudHub:
     """Weback Cloud Hub."""
 
-    def __init__(self, hass: HomeAssistant, data: Any[str, Any]) -> None:
+    def __init__(
+        self, hass: HomeAssistant, data: dict[str, Any] | MappingProxyType[str, Any]
+    ) -> None:
         """Initialize Weback Cloud hub."""
-        self._data = data
-        self.devices = [CleanRobot]
-        self.weback_api = WebackApi
+        self.hass: HomeAssistant = hass
+        self._data: dict[str, Any] | MappingProxyType[str, Any] = data
+        self.devices: list[CleanRobot] = []
+        self.weback_api: WebackApi = WebackApi
 
     async def authenticate(self) -> None:
         """Authenticate against Weback Cloud API."""
-        region = self._data[CONF_REGION]
-        phone_number = self._data[CONF_PHONE_NUMBER]
-        password = self._data[CONF_PASSWORD]
+        region: str = self._data[CONF_REGION]
+        phone_number: str = self._data[CONF_PHONE_NUMBER]
+        password: str = self._data[CONF_PASSWORD]
 
         login = f"{region}-{phone_number}"
         self.weback_api = WebackApi(login, password)
         try:
-            await hass.async_add_executor_job(self.weback_api.get_session)
+            await self.hass.async_add_executor_job(self.weback_api.get_session)
         except Exception as e:
             raise InvalidCredentials(e)
 
     async def get_devices(self) -> None:
         """Retrieve supported vacuums from Weback Cloud API."""
-        region = self._data[CONF_REGION]
-        phone_number = self._data[CONF_PHONE_NUMBER]
-        password = self._data[CONF_PASSWORD]
+        region: str = self._data[CONF_REGION]
+        phone_number: str = self._data[CONF_PHONE_NUMBER]
+        password: str = self._data[CONF_PASSWORD]
 
         login = f"{region}-{phone_number}"
         self.weback_api = WebackApi(login, password)
         try:
-            for device in await hass.async_add_executor_job(
+            for device in await self.hass.async_add_executor_job(
                 self.weback_api.device_list
             ):
-                description = await hass.async_add_executor_job(
+                description = await self.hass.async_add_executor_job(
                     self.weback_api.get_device_description, device[THING_NAME]
                 )
                 if description.get("thingTypeName") not in SUPPORTED_DEVICES:
