@@ -46,8 +46,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class BlockchainSensor(SensorEntity):
     """Representation of a Blockchain.com sensor."""
 
-    _attr_unit_of_measurement = "BTC"
+    _attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
     _attr_icon = ICON
+    _attr_unit_of_measurement = "BTC"
 
     def __init__(self, name, addresses):
         """Initialize the sensor."""
@@ -57,4 +58,3 @@ class BlockchainSensor(SensorEntity):
     def update(self):
         """Get the latest state of the sensor."""
         self._attr_state = get_balance(self.addresses)
-        self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
