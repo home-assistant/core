@@ -165,6 +165,7 @@ def _configured_unit(unit: str, units) -> str:
 def list_statistic_ids(hass, statistic_type=None):
     """Return statistic_ids and meta data."""
     units = hass.config.units
+    statistic_ids = {}
     with session_scope(hass=hass) as session:
         metadata = _get_metadata(hass, session, None, statistic_type)
 
@@ -172,7 +173,26 @@ def list_statistic_ids(hass, statistic_type=None):
             unit = _configured_unit(meta["unit_of_measurement"], units)
             meta["unit_of_measurement"] = unit
 
-        return list(metadata.values())
+        statistic_ids = {
+            meta["statistic_id"]: meta["unit_of_measurement"]
+            for meta in metadata.values()
+        }
+
+    for platform in hass.data[DOMAIN].values():
+        if not hasattr(platform, "list_statistic_ids"):
+            continue
+        platform_statistic_ids = platform.list_statistic_ids(hass, statistic_type)
+
+        for statistic_id, unit in platform_statistic_ids.items():
+            unit = _configured_unit(unit, units)
+            platform_statistic_ids[statistic_id] = unit
+
+        statistic_ids = {**statistic_ids, **platform_statistic_ids}
+
+    return [
+        {"statistic_id": _id, "unit_of_measurement": unit}
+        for _id, unit in statistic_ids.items()
+    ]
 
 
 def statistics_during_period(hass, start_time, end_time=None, statistic_ids=None):
