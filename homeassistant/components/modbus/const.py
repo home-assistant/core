@@ -98,6 +98,8 @@ CALL_TYPE_WRITE_COIL = "write_coil"
 CALL_TYPE_WRITE_COILS = "write_coils"
 CALL_TYPE_WRITE_REGISTER = "write_register"
 CALL_TYPE_WRITE_REGISTERS = "write_registers"
+CALL_TYPE_X_COILS = "coils"
+CALL_TYPE_X_REGISTER_HOLDINGS = "holdings"
 
 # service calls
 SERVICE_WRITE_COIL = "write_coil"
