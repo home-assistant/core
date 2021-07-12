@@ -324,15 +324,21 @@ class AirVisualNodeProSensor(AirVisualEntity, SensorEntity):
         """Update the entity from the latest data."""
         if self._kind == SENSOR_KIND_AQI:
             if self.coordinator.data["settings"]["is_aqi_usa"]:
-                self._attr_native_value = self.coordinator.data["measurements"]["aqi_us"]
+                self._attr_native_value = self.coordinator.data["measurements"][
+                    "aqi_us"
+                ]
             else:
-                self._attr_native_value = self.coordinator.data["measurements"]["aqi_cn"]
+                self._attr_native_value = self.coordinator.data["measurements"][
+                    "aqi_cn"
+                ]
         elif self._kind == SENSOR_KIND_BATTERY_LEVEL:
             self._attr_native_value = self.coordinator.data["status"]["battery"]
         elif self._kind == SENSOR_KIND_CO2:
             self._attr_native_value = self.coordinator.data["measurements"].get("co2")
         elif self._kind == SENSOR_KIND_HUMIDITY:
-            self._attr_native_value = self.coordinator.data["measurements"].get("humidity")
+            self._attr_native_value = self.coordinator.data["measurements"].get(
+                "humidity"
+            )
         elif self._kind == SENSOR_KIND_PM_0_1:
             self._attr_native_value = self.coordinator.data["measurements"].get("pm0_1")
         elif self._kind == SENSOR_KIND_PM_1_0:

@@ -1,12 +1,8 @@
 """Support for the AEMET OpenData service."""
-<<<<<<< HEAD
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-=======
-from .abstract_aemet_sensor import AbstractAemetSensor
->>>>>>> Update integrations a-c
 from .const import (
     ATTRIBUTION,
     DOMAIN,

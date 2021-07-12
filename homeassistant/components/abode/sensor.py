@@ -61,11 +61,11 @@ class AbodeSensor(AbodeDevice, SensorEntity):
         self._attr_name = f"{device.name} {description.name}"
         self._attr_unique_id = f"{device.device_uuid}-{description.key}"
         if description.key == CONST.TEMP_STATUS_KEY:
-            self._attr_unit_of_measurement = device.temp_unit
+            self._attr_native_unit_of_measurement = device.temp_unit
         elif description.key == CONST.HUMI_STATUS_KEY:
-            self._attr_unit_of_measurement = device.humidity_unit
+            self._attr_native_unit_of_measurement = device.humidity_unit
         elif description.key == CONST.LUX_STATUS_KEY:
-            self._attr_unit_of_measurement = device.lux_unit
+            self._attr_native_unit_of_measurement = device.lux_unit
 
     @property
     def native_value(self):
@@ -76,13 +76,3 @@ class AbodeSensor(AbodeDevice, SensorEntity):
             return self._device.humidity
         if self.entity_description.key == CONST.LUX_STATUS_KEY:
             return self._device.lux
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the units of measurement."""
-        if self._sensor_type == CONST.TEMP_STATUS_KEY:
-            return self._device.temp_unit
-        if self._sensor_type == CONST.HUMI_STATUS_KEY:
-            return self._device.humidity_unit
-        if self._sensor_type == CONST.LUX_STATUS_KEY:
-            return self._device.lux_unit

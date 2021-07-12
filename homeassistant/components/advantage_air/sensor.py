@@ -45,7 +45,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class AdvantageAirTimeTo(AdvantageAirEntity, SensorEntity):
     """Representation of Advantage Air timer control."""
 
-    _attr_unit_of_measurement = ADVANTAGE_AIR_SET_COUNTDOWN_UNIT
+    _attr_native_unit_of_measurement = ADVANTAGE_AIR_SET_COUNTDOWN_UNIT
 
     def __init__(self, instance, ac_key, action):
         """Initialize the Advantage Air timer control."""
@@ -63,11 +63,6 @@ class AdvantageAirTimeTo(AdvantageAirEntity, SensorEntity):
         return self._ac[self._time_key]
 
     @property
-    def native_unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return ADVANTAGE_AIR_SET_COUNTDOWN_UNIT
-
-    @property
     def icon(self):
         """Return a representative icon of the timer."""
         if self._ac[self._time_key] > 0:
@@ -83,7 +78,7 @@ class AdvantageAirTimeTo(AdvantageAirEntity, SensorEntity):
 class AdvantageAirZoneVent(AdvantageAirEntity, SensorEntity):
     """Representation of Advantage Air Zone Vent Sensor."""
 
-    _attr_unit_of_measurement = PERCENTAGE
+    _attr_native_unit_of_measurement = PERCENTAGE
     _attr_state_class = STATE_CLASS_MEASUREMENT
 
     def __init__(self, instance, ac_key, zone_key):
@@ -102,11 +97,6 @@ class AdvantageAirZoneVent(AdvantageAirEntity, SensorEntity):
         return 0
 
     @property
-    def native_unit_of_measurement(self):
-        """Return the percent sign."""
-        return PERCENTAGE
-
-    @property
     def icon(self):
         """Return a representative icon."""
         if self._zone["state"] == ADVANTAGE_AIR_STATE_OPEN:
@@ -117,7 +107,7 @@ class AdvantageAirZoneVent(AdvantageAirEntity, SensorEntity):
 class AdvantageAirZoneSignal(AdvantageAirEntity, SensorEntity):
     """Representation of Advantage Air Zone wireless signal sensor."""
 
-    _attr_unit_of_measurement = PERCENTAGE
+    _attr_native_unit_of_measurement = PERCENTAGE
     _attr_state_class = STATE_CLASS_MEASUREMENT
 
     def __init__(self, instance, ac_key, zone_key):
@@ -132,11 +122,6 @@ class AdvantageAirZoneSignal(AdvantageAirEntity, SensorEntity):
     def native_value(self):
         """Return the current value of the wireless signal."""
         return self._zone["rssi"]
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the percent sign."""
-        return PERCENTAGE
 
     @property
     def icon(self):
@@ -155,7 +140,7 @@ class AdvantageAirZoneSignal(AdvantageAirEntity, SensorEntity):
 class AdvantageAirZoneTemp(AdvantageAirEntity, SensorEntity):
     """Representation of Advantage Air Zone wireless signal sensor."""
 
-    _attr_unit_of_measurement = TEMP_CELSIUS
+    _attr_native_unit_of_measurement = TEMP_CELSIUS
     _attr_state_class = STATE_CLASS_MEASUREMENT
     _attr_icon = "mdi:thermometer"
     _attr_entity_registry_enabled_default = False

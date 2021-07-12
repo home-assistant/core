@@ -109,7 +109,7 @@ async def async_setup_platform(
 class AfterShipSensor(SensorEntity):
     """Representation of a AfterShip sensor."""
 
-    _attr_unit_of_measurement: str = "packages"
+    _attr_native_unit_of_measurement: str = "packages"
     _attr_icon: str = ICON
 
     def __init__(self, aftership: Tracking, name: str) -> None:
@@ -123,11 +123,6 @@ class AfterShipSensor(SensorEntity):
     def state(self) -> int | None:
         """Return the state of the sensor."""
         return self._state
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit of measurement of this entity, if any."""
-        return "packages"
 
     @property
     def extra_state_attributes(self) -> dict[str, str]:

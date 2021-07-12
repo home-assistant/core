@@ -88,10 +88,10 @@ class AccuWeatherSensor(CoordinatorEntity, SensorEntity):
             )
         if coordinator.is_metric:
             self._unit_system = API_METRIC
-            self._attr_unit_of_measurement = description.unit_metric
+            self._attr_native_unit_of_measurement = description.unit_metric
         else:
             self._unit_system = API_IMPERIAL
-            self._attr_unit_of_measurement = description.unit_imperial
+            self._attr_native_unit_of_measurement = description.unit_imperial
         self._attr_device_info = {
             "identifiers": {(DOMAIN, coordinator.location_key)},
             "name": NAME,
@@ -128,13 +128,6 @@ class AccuWeatherSensor(CoordinatorEntity, SensorEntity):
         ):
             return cast(StateType, self._sensor_data["Speed"]["Value"])
         return cast(StateType, self._sensor_data)
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        if self.forecast_day is not None:
-            return FORECAST_SENSOR_TYPES[self.kind][self._unit_system]
-        return SENSOR_TYPES[self.kind][self._unit_system]
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
