@@ -2,7 +2,6 @@
 from unittest.mock import patch
 
 import pytest
-import voluptuous as vol
 import voluptuous_serialize
 from zwave_js_server.const import CommandClass
 from zwave_js_server.event import Event
@@ -13,7 +12,6 @@ from homeassistant.components.zwave_js import DOMAIN, device_trigger
 from homeassistant.components.zwave_js.device_trigger import (
     async_attach_trigger,
     async_get_trigger_capabilities,
-    get_value_from_config,
 )
 from homeassistant.components.zwave_js.helpers import (
     async_get_node_status_sensor_entity_id,
@@ -819,7 +817,7 @@ async def test_failure_scenarios(hass, client, hank_binary_switch, integration):
         "homeassistant.components.zwave_js.device_trigger.async_get_node_from_device_id",
         return_value=None,
     ), patch(
-        "homeassistant.components.zwave_js.device_trigger.get_value_from_config",
+        "homeassistant.components.zwave_js.helpers.get_zwave_value_from_config",
         return_value=None,
     ):
         assert (
@@ -831,19 +829,3 @@ async def test_failure_scenarios(hass, client, hank_binary_switch, integration):
 
     with pytest.raises(HomeAssistantError):
         async_get_node_status_sensor_entity_id(hass, "invalid_device_id")
-
-
-async def test_get_value_from_config_failure(
-    hass, client, hank_binary_switch, integration
-):
-    """Test get_value_from_config invalid value ID."""
-    with pytest.raises(vol.Invalid):
-        get_value_from_config(
-            hank_binary_switch,
-            {
-                "command_class": CommandClass.SCENE_ACTIVATION.value,
-                "property": "sceneId",
-                "property_key": None,
-                "endpoint": 10,
-            },
-        )
