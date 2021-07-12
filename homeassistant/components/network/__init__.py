@@ -11,6 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
+from . import util
 from .const import (
     ATTR_ADAPTERS,
     ATTR_CONFIGURED_ADAPTERS,
@@ -29,6 +30,12 @@ async def async_get_adapters(hass: HomeAssistant) -> list[Adapter]:
     """Get the network adapter configuration."""
     network: Network = hass.data[DOMAIN]
     return network.adapters
+
+
+@bind_hass
+async def async_get_source_ip(hass: HomeAssistant, target_ip: str) -> str | None:
+    """Get the source ip for a target ip."""
+    return util.async_get_source_ip(target_ip)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
