@@ -5,10 +5,21 @@ import pytest
 from voluptuous.error import MultipleInvalid
 
 from homeassistant.components import humidifier
+from homeassistant.components.humidifier import (
+    ATTR_HUMIDITY,
+    ATTR_MODE,
+    DOMAIN,
+    SERVICE_SET_HUMIDITY,
+    SERVICE_SET_MODE,
+)
 from homeassistant.components.mqtt.humidifier import MQTT_HUMIDIFIER_ATTRIBUTES_BLOCKED
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
+    ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
+    ENTITY_MATCH_ALL,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
 )
@@ -40,7 +51,6 @@ from .test_common import (
 )
 
 from tests.common import async_fire_mqtt_message
-from tests.components.humidifier import common
 
 DEFAULT_CONFIG = {
     humidifier.DOMAIN: {
@@ -51,6 +61,47 @@ DEFAULT_CONFIG = {
         "target_humidity_command_topic": "humidity-command-topic",
     }
 }
+
+
+async def async_turn_on(
+    hass,
+    entity_id=ENTITY_MATCH_ALL,
+) -> None:
+    """Turn all or specified humidifier on."""
+    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
+
+    await hass.services.async_call(DOMAIN, SERVICE_TURN_ON, data, blocking=True)
+
+
+async def async_turn_off(hass, entity_id=ENTITY_MATCH_ALL) -> None:
+    """Turn all or specified humidier off."""
+    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
+
+    await hass.services.async_call(DOMAIN, SERVICE_TURN_OFF, data, blocking=True)
+
+
+async def async_set_mode(hass, entity_id=ENTITY_MATCH_ALL, mode: str = None) -> None:
+    """Set mode for all or specified humidifier."""
+    data = {
+        key: value
+        for key, value in [(ATTR_ENTITY_ID, entity_id), (ATTR_MODE, mode)]
+        if value is not None
+    }
+
+    await hass.services.async_call(DOMAIN, SERVICE_SET_MODE, data, blocking=True)
+
+
+async def async_set_humidity(
+    hass, entity_id=ENTITY_MATCH_ALL, humidity: int = None
+) -> None:
+    """Set target humidity for all or specified humidifier."""
+    data = {
+        key: value
+        for key, value in [(ATTR_ENTITY_ID, entity_id), (ATTR_HUMIDITY, humidity)]
+        if value is not None
+    }
+
+    await hass.services.async_call(DOMAIN, SERVICE_SET_HUMIDITY, data, blocking=True)
 
 
 async def test_fail_setup_if_no_command_topic(hass, mqtt_mock):
@@ -89,8 +140,6 @@ async def test_controlling_state_via_topic(hass, mqtt_mock, caplog):
                     "sleep",
                     "baby",
                 ],
-                "humidity_range_min": 0,
-                "humidity_range_max": 200,
                 "payload_reset_humidity": "rEset_humidity",
                 "payload_reset_mode": "rEset_mode",
             }
@@ -114,24 +163,24 @@ async def test_controlling_state_via_topic(hass, mqtt_mock, caplog):
     state = hass.states.get("humidifier.test")
     assert state.attributes.get(humidifier.ATTR_HUMIDITY) == 0
 
-    async_fire_mqtt_message(hass, "humidity-state-topic", "50")
+    async_fire_mqtt_message(hass, "humidity-state-topic", "25")
     state = hass.states.get("humidifier.test")
     assert state.attributes.get(humidifier.ATTR_HUMIDITY) == 25
 
-    async_fire_mqtt_message(hass, "humidity-state-topic", "100")
+    async_fire_mqtt_message(hass, "humidity-state-topic", "50")
     state = hass.states.get("humidifier.test")
     assert state.attributes.get(humidifier.ATTR_HUMIDITY) == 50
 
-    async_fire_mqtt_message(hass, "humidity-state-topic", "200")
+    async_fire_mqtt_message(hass, "humidity-state-topic", "100")
     state = hass.states.get("humidifier.test")
     assert state.attributes.get(humidifier.ATTR_HUMIDITY) == 100
 
-    async_fire_mqtt_message(hass, "humidity-state-topic", "202")
+    async_fire_mqtt_message(hass, "humidity-state-topic", "101")
     assert "not a valid target humidity" in caplog.text
     caplog.clear()
 
     async_fire_mqtt_message(hass, "humidity-state-topic", "invalid")
-    assert "not a valid humidity within range" in caplog.text
+    assert "not a valid target humidity" in caplog.text
     caplog.clear()
 
     async_fire_mqtt_message(hass, "mode-state-topic", "low")
@@ -163,69 +212,6 @@ async def test_controlling_state_via_topic(hass, mqtt_mock, caplog):
     assert state.attributes.get(humidifier.ATTR_HUMIDITY) is None
 
 
-async def test_controlling_state_via_topic_with_different_humidity_range(
-    hass, mqtt_mock, caplog
-):
-    """Test the controlling state via topic using an alternate humidity range."""
-    assert await async_setup_component(
-        hass,
-        humidifier.DOMAIN,
-        {
-            humidifier.DOMAIN: [
-                {
-                    "platform": "mqtt",
-                    "name": "test1",
-                    "command_topic": "command-topic",
-                    "target_humidity_state_topic": "humidity-state-topic1",
-                    "target_humidity_command_topic": "humidity-command-topic1",
-                    "humidity_range_min": 0,
-                    "humidity_range_max": 100,
-                },
-                {
-                    "platform": "mqtt",
-                    "name": "test2",
-                    "command_topic": "command-topic",
-                    "target_humidity_state_topic": "humidity-state-topic2",
-                    "target_humidity_command_topic": "humidity-command-topic2",
-                    "humidity_range_min": 0,
-                    "humidity_range_max": 200,
-                },
-                {
-                    "platform": "mqtt",
-                    "name": "test3",
-                    "command_topic": "command-topic",
-                    "target_humidity_state_topic": "humidity-state-topic3",
-                    "target_humidity_command_topic": "humidity-command-topic3",
-                    "humidity_range_min": 10,
-                    "humidity_range_max": 20,
-                },
-            ]
-        },
-    )
-    await hass.async_block_till_done()
-
-    async_fire_mqtt_message(hass, "humidity-state-topic1", "100")
-    state = hass.states.get("humidifier.test1")
-    assert state.attributes.get(humidifier.ATTR_HUMIDITY) == 100
-
-    async_fire_mqtt_message(hass, "humidity-state-topic2", "100")
-    state = hass.states.get("humidifier.test2")
-    assert state.attributes.get(humidifier.ATTR_HUMIDITY) == 50
-
-    async_fire_mqtt_message(hass, "humidity-state-topic3", "20")
-    state = hass.states.get("humidifier.test3")
-    assert state.attributes.get(humidifier.ATTR_HUMIDITY) == 100
-
-    async_fire_mqtt_message(hass, "humidity-state-topic3", "10")
-    state = hass.states.get("humidifier.test3")
-    assert state.attributes.get(humidifier.ATTR_HUMIDITY) == 0
-
-    state = hass.states.get("humidifier.test3")
-    async_fire_mqtt_message(hass, "humidity-state-topic3", "5")
-    assert "not a valid target humidity" in caplog.text
-    caplog.clear()
-
-
 async def test_controlling_state_via_topic_and_json_message(hass, mqtt_mock, caplog):
     """Test the controlling state via topic and JSON message."""
     assert await async_setup_component(
@@ -249,8 +235,6 @@ async def test_controlling_state_via_topic_and_json_message(hass, mqtt_mock, cap
                 "state_value_template": "{{ value_json.val }}",
                 "target_humidity_state_template": "{{ value_json.val }}",
                 "mode_state_template": "{{ value_json.val }}",
-                "humidity_range_min": 0,
-                "humidity_range_max": 100,
             }
         },
     )
@@ -334,8 +318,6 @@ async def test_controlling_state_via_topic_and_json_message_shared_topic(
                 "state_value_template": "{{ value_json.state }}",
                 "target_humidity_state_template": "{{ value_json.humidity }}",
                 "mode_state_template": "{{ value_json.mode }}",
-                "humidity_range_min": 0,
-                "humidity_range_max": 100,
             }
         },
     )
@@ -416,7 +398,7 @@ async def test_sending_mqtt_commands_and_optimistic(hass, mqtt_mock, caplog):
     assert state.state == STATE_OFF
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
-    await common.async_turn_on(hass, "humidifier.test")
+    await async_turn_on(hass, "humidifier.test")
     mqtt_mock.async_publish.assert_called_once_with(
         "command-topic", "StAtE_On", 0, False
     )
@@ -425,7 +407,7 @@ async def test_sending_mqtt_commands_and_optimistic(hass, mqtt_mock, caplog):
     assert state.state == STATE_ON
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
-    await common.async_turn_off(hass, "humidifier.test")
+    await async_turn_off(hass, "humidifier.test")
     mqtt_mock.async_publish.assert_called_once_with(
         "command-topic", "StAtE_OfF", 0, False
     )
@@ -435,12 +417,12 @@ async def test_sending_mqtt_commands_and_optimistic(hass, mqtt_mock, caplog):
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
     with pytest.raises(MultipleInvalid):
-        await common.async_set_humidity(hass, "humidifier.test", -1)
+        await async_set_humidity(hass, "humidifier.test", -1)
 
     with pytest.raises(MultipleInvalid):
-        await common.async_set_humidity(hass, "humidifier.test", 101)
+        await async_set_humidity(hass, "humidifier.test", 101)
 
-    await common.async_set_humidity(hass, "humidifier.test", 100)
+    await async_set_humidity(hass, "humidifier.test", 100)
     mqtt_mock.async_publish.assert_called_once_with(
         "humidity-command-topic", "100", 0, False
     )
@@ -449,7 +431,7 @@ async def test_sending_mqtt_commands_and_optimistic(hass, mqtt_mock, caplog):
     assert state.attributes.get(humidifier.ATTR_HUMIDITY) == 100
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
-    await common.async_set_humidity(hass, "humidifier.test", 0)
+    await async_set_humidity(hass, "humidifier.test", 0)
     mqtt_mock.async_publish.assert_called_once_with(
         "humidity-command-topic", "0", 0, False
     )
@@ -458,11 +440,11 @@ async def test_sending_mqtt_commands_and_optimistic(hass, mqtt_mock, caplog):
     assert state.attributes.get(humidifier.ATTR_HUMIDITY) == 0
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
-    await common.async_set_mode(hass, "humidifier.test", "low")
+    await async_set_mode(hass, "humidifier.test", "low")
     assert "not a valid mode" in caplog.text
     caplog.clear()
 
-    await common.async_set_mode(hass, "humidifier.test", "auto")
+    await async_set_mode(hass, "humidifier.test", "auto")
     mqtt_mock.async_publish.assert_called_once_with(
         "mode-command-topic", "auto", 0, False
     )
@@ -471,117 +453,13 @@ async def test_sending_mqtt_commands_and_optimistic(hass, mqtt_mock, caplog):
     assert state.attributes.get(humidifier.ATTR_MODE) == "auto"
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
-    await common.async_set_mode(hass, "humidifier.test", "eco")
+    await async_set_mode(hass, "humidifier.test", "eco")
     mqtt_mock.async_publish.assert_called_once_with(
         "mode-command-topic", "eco", 0, False
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("humidifier.test")
     assert state.attributes.get(humidifier.ATTR_MODE) == "eco"
-    assert state.attributes.get(ATTR_ASSUMED_STATE)
-
-
-async def test_sending_mqtt_commands_with_alternate_humidity_range(hass, mqtt_mock):
-    """Test the controlling state via topic using an alternate humidity range."""
-    assert await async_setup_component(
-        hass,
-        humidifier.DOMAIN,
-        {
-            humidifier.DOMAIN: [
-                {
-                    "platform": "mqtt",
-                    "name": "test1",
-                    "command_topic": "command-topic",
-                    "target_humidity_state_topic": "humidity-state-topic1",
-                    "target_humidity_command_topic": "humidity-command-topic1",
-                    "humidity_range_min": 0,
-                    "humidity_range_max": 3,
-                },
-                {
-                    "platform": "mqtt",
-                    "name": "test2",
-                    "command_topic": "command-topic",
-                    "target_humidity_state_topic": "humidity-state-topic2",
-                    "target_humidity_command_topic": "humidity-command-topic2",
-                    "humidity_range_min": 0,
-                    "humidity_range_max": 200,
-                },
-                {
-                    "platform": "mqtt",
-                    "name": "test3",
-                    "command_topic": "command-topic",
-                    "target_humidity_state_topic": "humidity-state-topic3",
-                    "target_humidity_command_topic": "humidity-command-topic3",
-                    "humidity_range_min": 100,
-                    "humidity_range_max": 200,
-                },
-            ]
-        },
-    )
-    await hass.async_block_till_done()
-
-    await common.async_set_humidity(hass, "humidifier.test1", 0)
-    mqtt_mock.async_publish.assert_called_once_with(
-        "humidity-command-topic1", "0", 0, False
-    )
-    mqtt_mock.async_publish.reset_mock()
-    state = hass.states.get("humidifier.test1")
-    assert state.attributes.get(ATTR_ASSUMED_STATE)
-
-    await common.async_set_humidity(hass, "humidifier.test1", 33)
-    mqtt_mock.async_publish.assert_called_once_with(
-        "humidity-command-topic1", "1", 0, False
-    )
-    mqtt_mock.async_publish.reset_mock()
-    state = hass.states.get("humidifier.test1")
-    assert state.attributes.get(ATTR_ASSUMED_STATE)
-
-    await common.async_set_humidity(hass, "humidifier.test1", 66)
-    mqtt_mock.async_publish.assert_called_once_with(
-        "humidity-command-topic1", "2", 0, False
-    )
-    mqtt_mock.async_publish.reset_mock()
-    state = hass.states.get("humidifier.test1")
-    assert state.attributes.get(ATTR_ASSUMED_STATE)
-
-    await common.async_set_humidity(hass, "humidifier.test1", 100)
-    mqtt_mock.async_publish.assert_called_once_with(
-        "humidity-command-topic1", "3", 0, False
-    )
-    mqtt_mock.async_publish.reset_mock()
-    state = hass.states.get("humidifier.test1")
-    assert state.attributes.get(ATTR_ASSUMED_STATE)
-
-    await common.async_set_humidity(hass, "humidifier.test2", 0)
-    mqtt_mock.async_publish.assert_called_once_with(
-        "humidity-command-topic2", "0", 0, False
-    )
-    mqtt_mock.async_publish.reset_mock()
-    state = hass.states.get("humidifier.test2")
-    assert state.attributes.get(ATTR_ASSUMED_STATE)
-
-    await common.async_set_humidity(hass, "humidifier.test2", 100)
-    mqtt_mock.async_publish.assert_called_once_with(
-        "humidity-command-topic2", "200", 0, False
-    )
-    mqtt_mock.async_publish.reset_mock()
-    state = hass.states.get("humidifier.test2")
-    assert state.attributes.get(ATTR_ASSUMED_STATE)
-
-    await common.async_set_humidity(hass, "humidifier.test3", 0)
-    mqtt_mock.async_publish.assert_called_once_with(
-        "humidity-command-topic3", "100", 0, False
-    )
-    mqtt_mock.async_publish.reset_mock()
-    state = hass.states.get("humidifier.test3")
-    assert state.attributes.get(ATTR_ASSUMED_STATE)
-
-    await common.async_set_humidity(hass, "humidifier.test3", 100)
-    mqtt_mock.async_publish.assert_called_once_with(
-        "humidity-command-topic3", "200", 0, False
-    )
-    mqtt_mock.async_publish.reset_mock()
-    state = hass.states.get("humidifier.test3")
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
 
@@ -614,7 +492,7 @@ async def test_sending_mqtt_command_templates_(hass, mqtt_mock, caplog):
     assert state.state == STATE_OFF
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
-    await common.async_turn_on(hass, "humidifier.test")
+    await async_turn_on(hass, "humidifier.test")
     mqtt_mock.async_publish.assert_called_once_with(
         "command-topic", "state: ON", 0, False
     )
@@ -623,7 +501,7 @@ async def test_sending_mqtt_command_templates_(hass, mqtt_mock, caplog):
     assert state.state == STATE_ON
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
-    await common.async_turn_off(hass, "humidifier.test")
+    await async_turn_off(hass, "humidifier.test")
     mqtt_mock.async_publish.assert_called_once_with(
         "command-topic", "state: OFF", 0, False
     )
@@ -633,12 +511,12 @@ async def test_sending_mqtt_command_templates_(hass, mqtt_mock, caplog):
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
     with pytest.raises(MultipleInvalid):
-        await common.async_set_humidity(hass, "humidifier.test", -1)
+        await async_set_humidity(hass, "humidifier.test", -1)
 
     with pytest.raises(MultipleInvalid):
-        await common.async_set_humidity(hass, "humidifier.test", 101)
+        await async_set_humidity(hass, "humidifier.test", 101)
 
-    await common.async_set_humidity(hass, "humidifier.test", 100)
+    await async_set_humidity(hass, "humidifier.test", 100)
     mqtt_mock.async_publish.assert_called_once_with(
         "humidity-command-topic", "humidity: 100", 0, False
     )
@@ -647,7 +525,7 @@ async def test_sending_mqtt_command_templates_(hass, mqtt_mock, caplog):
     assert state.attributes.get(humidifier.ATTR_HUMIDITY) == 100
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
-    await common.async_set_humidity(hass, "humidifier.test", 0)
+    await async_set_humidity(hass, "humidifier.test", 0)
     mqtt_mock.async_publish.assert_called_once_with(
         "humidity-command-topic", "humidity: 0", 0, False
     )
@@ -656,11 +534,11 @@ async def test_sending_mqtt_command_templates_(hass, mqtt_mock, caplog):
     assert state.attributes.get(humidifier.ATTR_HUMIDITY) == 0
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
-    await common.async_set_mode(hass, "humidifier.test", "low")
+    await async_set_mode(hass, "humidifier.test", "low")
     assert "not a valid mode" in caplog.text
     caplog.clear()
 
-    await common.async_set_mode(hass, "humidifier.test", "eco")
+    await async_set_mode(hass, "humidifier.test", "eco")
     mqtt_mock.async_publish.assert_called_once_with(
         "mode-command-topic", "mode: eco", 0, False
     )
@@ -669,7 +547,7 @@ async def test_sending_mqtt_command_templates_(hass, mqtt_mock, caplog):
     assert state.attributes.get(humidifier.ATTR_MODE) == "eco"
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
-    await common.async_set_mode(hass, "humidifier.test", "auto")
+    await async_set_mode(hass, "humidifier.test", "auto")
     mqtt_mock.async_publish.assert_called_once_with(
         "mode-command-topic", "mode: auto", 0, False
     )
@@ -709,21 +587,21 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(hass, mqtt_mock, ca
     assert state.state == STATE_OFF
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
-    await common.async_turn_on(hass, "humidifier.test")
+    await async_turn_on(hass, "humidifier.test")
     mqtt_mock.async_publish.assert_called_once_with("command-topic", "ON", 0, False)
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("humidifier.test")
     assert state.state == STATE_ON
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
-    await common.async_turn_off(hass, "humidifier.test")
+    await async_turn_off(hass, "humidifier.test")
     mqtt_mock.async_publish.assert_called_once_with("command-topic", "OFF", 0, False)
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("humidifier.test")
     assert state.state == STATE_OFF
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
-    await common.async_set_humidity(hass, "humidifier.test", 33)
+    await async_set_humidity(hass, "humidifier.test", 33)
     mqtt_mock.async_publish.assert_called_once_with(
         "humidity-command-topic", "33", 0, False
     )
@@ -732,7 +610,7 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(hass, mqtt_mock, ca
     assert state.state == STATE_OFF
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
-    await common.async_set_humidity(hass, "humidifier.test", 50)
+    await async_set_humidity(hass, "humidifier.test", 50)
     mqtt_mock.async_publish.assert_called_once_with(
         "humidity-command-topic", "50", 0, False
     )
@@ -741,7 +619,7 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(hass, mqtt_mock, ca
     assert state.state == STATE_OFF
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
-    await common.async_set_humidity(hass, "humidifier.test", 100)
+    await async_set_humidity(hass, "humidifier.test", 100)
     mqtt_mock.async_publish.assert_called_once_with(
         "humidity-command-topic", "100", 0, False
     )
@@ -750,7 +628,7 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(hass, mqtt_mock, ca
     assert state.state == STATE_OFF
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
-    await common.async_set_humidity(hass, "humidifier.test", 0)
+    await async_set_humidity(hass, "humidifier.test", 0)
     mqtt_mock.async_publish.assert_called_once_with(
         "humidity-command-topic", "0", 0, False
     )
@@ -760,13 +638,13 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(hass, mqtt_mock, ca
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
     with pytest.raises(MultipleInvalid):
-        await common.async_set_humidity(hass, "humidifier.test", 101)
+        await async_set_humidity(hass, "humidifier.test", 101)
 
-    await common.async_set_mode(hass, "humidifier.test", "low")
+    await async_set_mode(hass, "humidifier.test", "low")
     assert "not a valid mode" in caplog.text
     caplog.clear()
 
-    await common.async_set_mode(hass, "humidifier.test", "eco")
+    await async_set_mode(hass, "humidifier.test", "eco")
     mqtt_mock.async_publish.assert_called_once_with(
         "mode-command-topic", "eco", 0, False
     )
@@ -775,7 +653,7 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(hass, mqtt_mock, ca
     assert state.state == STATE_OFF
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
-    await common.async_set_mode(hass, "humidifier.test", "baby")
+    await async_set_mode(hass, "humidifier.test", "baby")
     mqtt_mock.async_publish.assert_called_once_with(
         "mode-command-topic", "baby", 0, False
     )
@@ -784,7 +662,7 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(hass, mqtt_mock, ca
     assert state.state == STATE_OFF
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
-    await common.async_set_mode(hass, "humidifier.test", "freaking-high")
+    await async_set_mode(hass, "humidifier.test", "freaking-high")
     assert "not a valid mode" in caplog.text
     caplog.clear()
 
@@ -824,14 +702,14 @@ async def test_attributes(hass, mqtt_mock, caplog):
     assert state.attributes.get(humidifier.ATTR_MIN_HUMIDITY) == 0
     assert state.attributes.get(humidifier.ATTR_MAX_HUMIDITY) == 100
 
-    await common.async_turn_on(hass, "humidifier.test")
+    await async_turn_on(hass, "humidifier.test")
     state = hass.states.get("humidifier.test")
     assert state.state == STATE_ON
     assert state.attributes.get(ATTR_ASSUMED_STATE)
     assert state.attributes.get(humidifier.ATTR_HUMIDITY) is None
     assert state.attributes.get(humidifier.ATTR_MODE) is None
 
-    await common.async_turn_off(hass, "humidifier.test")
+    await async_turn_off(hass, "humidifier.test")
     state = hass.states.get("humidifier.test")
     assert state.state == STATE_OFF
     assert state.attributes.get(ATTR_ASSUMED_STATE)
@@ -848,9 +726,30 @@ async def test_invalid_configurations(hass, mqtt_mock, caplog):
             humidifier.DOMAIN: [
                 {
                     "platform": "mqtt",
-                    "name": "test_valid",
+                    "name": "test_valid_1",
                     "command_topic": "command-topic",
                     "target_humidity_command_topic": "humidity-command-topic",
+                },
+                {
+                    "platform": "mqtt",
+                    "name": "test_valid_2",
+                    "command_topic": "command-topic",
+                    "target_humidity_command_topic": "humidity-command-topic",
+                    "device_class": "humidifier",
+                },
+                {
+                    "platform": "mqtt",
+                    "name": "test_valid_3",
+                    "command_topic": "command-topic",
+                    "target_humidity_command_topic": "humidity-command-topic",
+                    "device_class": "dehumidifier",
+                },
+                {
+                    "platform": "mqtt",
+                    "name": "test_invalid_device_class",
+                    "command_topic": "command-topic",
+                    "target_humidity_command_topic": "humidity-command-topic",
+                    "device_class": "notsupporedSpeci@l",
                 },
                 {
                     "platform": "mqtt",
@@ -877,14 +776,6 @@ async def test_invalid_configurations(hass, mqtt_mock, caplog):
                 },
                 {
                     "platform": "mqtt",
-                    "name": "test_invalid_humidity_range",
-                    "command_topic": "command-topic",
-                    "target_humidity_command_topic": "humidity-command-topic",
-                    "humidity_range_min": 40,
-                    "humidity_range_max": 20,
-                },
-                {
-                    "platform": "mqtt",
                     "name": "test_invalid_mode_is_reset",
                     "command_topic": "command-topic",
                     "target_humidity_command_topic": "humidity-command-topic",
@@ -895,14 +786,16 @@ async def test_invalid_configurations(hass, mqtt_mock, caplog):
         },
     )
     await hass.async_block_till_done()
-    assert hass.states.get("humidifier.test_valid") is not None
+    assert hass.states.get("humidifier.test_valid_1") is not None
+    assert hass.states.get("humidifier.test_valid_2") is not None
+    assert hass.states.get("humidifier.test_valid_3") is not None
+    assert hass.states.get("humidifier.test_invalid_device_class") is None
     assert hass.states.get("humidifier.test_mode_command_without_modes") is None
     assert "not all values in the same group of inclusion" in caplog.text
     caplog.clear()
 
     assert hass.states.get("humidifier.test_invalid_humidity_min_max_1") is None
     assert hass.states.get("humidifier.test_invalid_humidity_min_max_2") is None
-    assert hass.states.get("humidifier.test_invalid_humidity_range") is None
     assert hass.states.get("humidifier.test_invalid_mode_is_reset") is None
 
 

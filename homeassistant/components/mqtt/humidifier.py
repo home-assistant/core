@@ -1,7 +1,6 @@
 """Support for MQTT humidifiers."""
 import functools
 import logging
-import math
 
 import voluptuous as vol
 
@@ -11,6 +10,7 @@ from homeassistant.components.humidifier import (
     ATTR_MODE,
     DEFAULT_MAX_HUMIDITY,
     DEFAULT_MIN_HUMIDITY,
+    DEVICE_CLASS_DEHUMIDIFIER,
     DEVICE_CLASS_HUMIDIFIER,
     SUPPORT_MODES,
     HumidifierEntity,
@@ -26,10 +26,6 @@ from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util.percentage import (
-    percentage_to_ranged_value,
-    ranged_value_to_percentage,
-)
 
 from . import (
     CONF_COMMAND_TOPIC,
@@ -46,6 +42,7 @@ from .mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_hel
 
 CONF_AVAILABLE_MODES_LIST = "modes"
 CONF_COMMAND_TEMPLATE = "command_template"
+CONF_DEVICE_CLASS = "device_class"
 CONF_MODE_COMMAND_TEMPLATE = "mode_command_template"
 CONF_MODE_COMMAND_TOPIC = "mode_command_topic"
 CONF_MODE_STATE_TOPIC = "mode_state_topic"
@@ -59,8 +56,6 @@ CONF_TARGET_HUMIDITY_MIN = "min_humidity"
 CONF_TARGET_HUMIDITY_MAX = "max_humidity"
 CONF_TARGET_HUMIDITY_STATE_TEMPLATE = "target_humidity_state_template"
 CONF_TARGET_HUMIDITY_STATE_TOPIC = "target_humidity_state_topic"
-CONF_TARGET_HUMIDITY_RANGE_MAX = "humidity_range_max"
-CONF_TARGET_HUMIDITY_RANGE_MIN = "humidity_range_min"
 
 DEFAULT_NAME = "MQTT Humidifier"
 DEFAULT_OPTIMISTIC = False
@@ -94,20 +89,6 @@ def valid_humidity_range_configuration(config):
         raise ValueError("target_humidity_max must be > target_humidity_min")
     if config.get(CONF_TARGET_HUMIDITY_MAX) > 100:
         raise ValueError("max_humidity must be <= 100")
-    conf_target_humidity_range_min = (
-        config.get(CONF_TARGET_HUMIDITY_RANGE_MIN)
-        if CONF_TARGET_HUMIDITY_RANGE_MIN in config
-        else config.get(CONF_TARGET_HUMIDITY_MIN)
-    )
-    conf_target_humidity_range_max = (
-        config.get(CONF_TARGET_HUMIDITY_RANGE_MAX)
-        if CONF_TARGET_HUMIDITY_RANGE_MAX in config
-        else config.get(CONF_TARGET_HUMIDITY_MAX)
-    )
-    if conf_target_humidity_range_min >= conf_target_humidity_range_max:
-        raise ValueError(
-            "target_humidity_range_max must be > target_humidity_range_min"
-        )
 
     return config
 
@@ -115,40 +96,43 @@ def valid_humidity_range_configuration(config):
 PLATFORM_SCHEMA = vol.All(
     mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(
         {
-            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-            vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
-            vol.Optional(CONF_COMMAND_TEMPLATE): cv.template,
-            vol.Required(CONF_TARGET_HUMIDITY_COMMAND_TOPIC): mqtt.valid_publish_topic,
-            vol.Optional(CONF_TARGET_HUMIDITY_COMMAND_TEMPLATE): cv.template,
-            vol.Optional(CONF_TARGET_HUMIDITY_STATE_TOPIC): mqtt.valid_subscribe_topic,
-            vol.Optional(CONF_TARGET_HUMIDITY_STATE_TEMPLATE): cv.template,
-            # CONF_MODE_COMMAND_TOPIC and CONF_AVAIALABLE_MODES_LIST must be used together
-            vol.Inclusive(
-                CONF_MODE_COMMAND_TOPIC, "available_modes"
-            ): mqtt.valid_publish_topic,
+            # CONF_AVAIALABLE_MODES_LIST and CONF_MODE_COMMAND_TOPIC must be used together
             vol.Inclusive(
                 CONF_AVAILABLE_MODES_LIST, "available_modes", default=[]
             ): cv.ensure_list,
+            vol.Inclusive(
+                CONF_MODE_COMMAND_TOPIC, "available_modes"
+            ): mqtt.valid_publish_topic,
+            vol.Optional(CONF_COMMAND_TEMPLATE): cv.template,
+            vol.Optional(
+                CONF_DEVICE_CLASS, default=DEVICE_CLASS_HUMIDIFIER
+            ): cv.matches_regex(
+                f"^({DEVICE_CLASS_HUMIDIFIER}|{DEVICE_CLASS_DEHUMIDIFIER})$"
+            ),
             vol.Optional(CONF_MODE_COMMAND_TEMPLATE): cv.template,
             vol.Optional(CONF_MODE_STATE_TOPIC): mqtt.valid_subscribe_topic,
             vol.Optional(CONF_MODE_STATE_TEMPLATE): cv.template,
-            vol.Optional(
-                CONF_TARGET_HUMIDITY_MIN, default=DEFAULT_MIN_HUMIDITY
-            ): cv.positive_int,
+            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+            vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
+            vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
+            vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
+            vol.Optional(CONF_STATE_VALUE_TEMPLATE): cv.template,
+            vol.Required(CONF_TARGET_HUMIDITY_COMMAND_TOPIC): mqtt.valid_publish_topic,
+            vol.Optional(CONF_TARGET_HUMIDITY_COMMAND_TEMPLATE): cv.template,
             vol.Optional(
                 CONF_TARGET_HUMIDITY_MAX, default=DEFAULT_MAX_HUMIDITY
             ): cv.positive_int,
-            vol.Optional(CONF_TARGET_HUMIDITY_RANGE_MIN): cv.positive_int,
-            vol.Optional(CONF_TARGET_HUMIDITY_RANGE_MAX): cv.positive_int,
+            vol.Optional(
+                CONF_TARGET_HUMIDITY_MIN, default=DEFAULT_MIN_HUMIDITY
+            ): cv.positive_int,
+            vol.Optional(CONF_TARGET_HUMIDITY_STATE_TEMPLATE): cv.template,
+            vol.Optional(CONF_TARGET_HUMIDITY_STATE_TOPIC): mqtt.valid_subscribe_topic,
             vol.Optional(
                 CONF_PAYLOAD_RESET_HUMIDITY, default=DEFAULT_PAYLOAD_RESET
             ): cv.string,
             vol.Optional(
                 CONF_PAYLOAD_RESET_MODE, default=DEFAULT_PAYLOAD_RESET
             ): cv.string,
-            vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
-            vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
-            vol.Optional(CONF_STATE_VALUE_TEMPLATE): cv.template,
         }
     ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema),
     valid_humidity_range_configuration,
@@ -208,15 +192,7 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
 
     def _setup_from_config(self, config):
         """(Re)Setup the entity."""
-        self._attr_device_class = DEVICE_CLASS_HUMIDIFIER
-        self._target_humidity_range = (
-            config.get(CONF_TARGET_HUMIDITY_RANGE_MIN) + 1
-            if CONF_TARGET_HUMIDITY_RANGE_MIN in config
-            else config.get(CONF_TARGET_HUMIDITY_MIN) + 1,
-            config.get(CONF_TARGET_HUMIDITY_RANGE_MAX)
-            if CONF_TARGET_HUMIDITY_RANGE_MAX in config
-            else config.get(CONF_TARGET_HUMIDITY_MAX),
-        )
+        self._attr_device_class = config.get(CONF_DEVICE_CLASS)
         self._attr_min_humidity = config.get(CONF_TARGET_HUMIDITY_MIN)
         self._attr_max_humidity = config.get(CONF_TARGET_HUMIDITY_MAX)
 
@@ -311,13 +287,10 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
                 self.async_write_ha_state()
                 return
             try:
-                target_humidity = ranged_value_to_percentage(
-                    self._target_humidity_range,
-                    int(float(rendered_target_humidity_payload)),
-                )
+                target_humidity = int(float(rendered_target_humidity_payload))
             except ValueError:
                 _LOGGER.warning(
-                    "'%s' received on topic %s. '%s' is not a valid humidity within range",
+                    "'%s' received on topic %s. '%s' is not a valid target humidity",
                     msg.payload,
                     msg.topic,
                     rendered_target_humidity_payload,
@@ -448,10 +421,7 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
 
         This method is a coroutine.
         """
-        humidity_payload = math.ceil(
-            percentage_to_ranged_value(self._target_humidity_range, humidity)
-        )
-        mqtt_payload = self._command_templates[ATTR_HUMIDITY](humidity_payload)
+        mqtt_payload = self._command_templates[ATTR_HUMIDITY](humidity)
         mqtt.async_publish(
             self.hass,
             self._topic[CONF_TARGET_HUMIDITY_COMMAND_TOPIC],
