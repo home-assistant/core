@@ -42,7 +42,12 @@ from .const import (
     CONF_SWAP_WORD,
     CONF_SWAP_WORD_BYTE,
     CONF_TARGET_TEMP,
-    DEFAULT_STRUCT_FORMAT,
+    DATA_TYPE_INT16,
+    DATA_TYPE_INT32,
+    DATA_TYPE_INT64,
+    DATA_TYPE_UINT16,
+    DATA_TYPE_UINT32,
+    DATA_TYPE_UINT64,
     MODBUS_DOMAIN,
 )
 from .modbus import ModbusHub
@@ -163,13 +168,24 @@ class ModbusThermostat(BasePlatform, RestoreEntity, ClimateEntity):
         target_temperature = int(
             (kwargs.get(ATTR_TEMPERATURE) - self._offset) / self._scale
         )
-        byte_string = struct.pack(self._structure, target_temperature)
-        struct_string = f">{DEFAULT_STRUCT_FORMAT[self._data_type]}"
-        register_value = struct.unpack(struct_string, byte_string)[0]
+        if self._data_type in [
+            DATA_TYPE_INT16,
+            DATA_TYPE_INT32,
+            DATA_TYPE_INT64,
+            DATA_TYPE_UINT16,
+            DATA_TYPE_UINT32,
+            DATA_TYPE_UINT64,
+        ]:
+            target_temperature = int(target_temperature)
+        else:
+            target_temperature = float(target_temperature)
+        byte_array = struct.pack(self._structure, target_temperature)
+        raw_regs = [byte_array[i : i + 2] for i in range(0, len(byte_array), 2)]
+        registers = self._swap_registers(raw_regs)
         result = await self._hub.async_pymodbus_call(
             self._slave,
             self._target_temperature_register,
-            register_value,
+            registers,
             CALL_TYPE_WRITE_REGISTERS,
         )
         self._available = result is not None
