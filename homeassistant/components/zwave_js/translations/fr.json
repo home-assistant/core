@@ -51,5 +51,19 @@
             }
         }
     },
+    "options": {
+        "error": {
+            "cannot_connect": "\u00c9chec de connexion",
+            "invalid_ws_url": "URL websocket invalide"
+        },
+        "step": {
+            "configure_addon": {
+                "data": {
+                    "log_level": "Niveau du journal",
+                    "network_key": "Cl\u00e9 r\u00e9seau"
+                }
+            }
+        }
+    },
     "title": "Z-Wave JS"
 }

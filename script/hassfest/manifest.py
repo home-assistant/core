@@ -93,6 +93,7 @@ NO_IOT_CLASS = [
     "search",
     "select",
     "sensor",
+    "siren",
     "stt",
     "switch",
     "system_health",

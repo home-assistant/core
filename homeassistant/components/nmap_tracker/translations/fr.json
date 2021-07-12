@@ -1,0 +1,12 @@
+{
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "interval_seconds": "Intervalle d\u2019analyse",
+                    "track_new_devices": "Suivre les nouveaux appareils"
+                }
+            }
+        }
+    }
+}

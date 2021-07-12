@@ -214,7 +214,6 @@ CC_SENSOR_TYPES = [
         ATTR_FIELD: CC_ATTR_CLOUD_COVER,
         ATTR_NAME: "Cloud Cover",
         CONF_UNIT_OF_MEASUREMENT: PERCENTAGE,
-        ATTR_SCALE: 1 / 100,
     },
     {
         ATTR_FIELD: CC_ATTR_WIND_GUST,

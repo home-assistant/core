@@ -21,7 +21,18 @@ from .const import (
     CONF_SWAP_BYTE,
     CONF_SWAP_NONE,
     DATA_TYPE_CUSTOM,
-    DATA_TYPE_STRING,
+    DATA_TYPE_FLOAT,
+    DATA_TYPE_FLOAT16,
+    DATA_TYPE_FLOAT32,
+    DATA_TYPE_FLOAT64,
+    DATA_TYPE_INT,
+    DATA_TYPE_INT16,
+    DATA_TYPE_INT32,
+    DATA_TYPE_INT64,
+    DATA_TYPE_UINT,
+    DATA_TYPE_UINT16,
+    DATA_TYPE_UINT32,
+    DATA_TYPE_UINT64,
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_STRUCT_FORMAT,
     PLATFORMS,
@@ -29,57 +40,76 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+old_data_types = {
+    DATA_TYPE_INT: {
+        1: DATA_TYPE_INT16,
+        2: DATA_TYPE_INT32,
+        4: DATA_TYPE_INT64,
+    },
+    DATA_TYPE_UINT: {
+        1: DATA_TYPE_UINT16,
+        2: DATA_TYPE_UINT32,
+        4: DATA_TYPE_UINT64,
+    },
+    DATA_TYPE_FLOAT: {
+        1: DATA_TYPE_FLOAT16,
+        2: DATA_TYPE_FLOAT32,
+        4: DATA_TYPE_FLOAT64,
+    },
+}
+
 
 def sensor_schema_validator(config):
     """Sensor schema validator."""
 
-    if config[CONF_DATA_TYPE] == DATA_TYPE_STRING:
-        structure = str(config[CONF_COUNT] * 2) + "s"
-    elif config[CONF_DATA_TYPE] != DATA_TYPE_CUSTOM:
-        try:
-            structure = (
-                f">{DEFAULT_STRUCT_FORMAT[config[CONF_DATA_TYPE]][config[CONF_COUNT]]}"
-            )
-        except KeyError as key:
-            raise vol.Invalid(
-                f"Unable to detect data type for {config[CONF_NAME]} sensor, try a custom type"
-            ) from key
-    else:
-        structure = config.get(CONF_STRUCTURE)
-
-    if not structure:
-        raise vol.Invalid(
-            f"Error in sensor {config[CONF_NAME]}. The `{CONF_STRUCTURE}` field can not be empty "
-            f"if the parameter `{CONF_DATA_TYPE}` is set to the `{DATA_TYPE_CUSTOM}`"
-        )
-
-    try:
-        size = struct.calcsize(structure)
-    except struct.error as err:
-        raise vol.Invalid(
-            f"Error in sensor {config[CONF_NAME]} structure: {str(err)}"
-        ) from err
-
-    bytecount = config[CONF_COUNT] * 2
-    if bytecount != size:
-        raise vol.Invalid(
-            f"Structure request {size} bytes, "
-            f"but {config[CONF_COUNT]} registers have a size of {bytecount} bytes"
-        )
-
+    data_type = config[CONF_DATA_TYPE]
+    count = config[CONF_COUNT]
+    name = config[CONF_NAME]
+    structure = config.get(CONF_STRUCTURE)
     swap_type = config.get(CONF_SWAP)
+    if data_type in [DATA_TYPE_INT, DATA_TYPE_UINT, DATA_TYPE_FLOAT]:
+        error = f"{name} {name} with {data_type} is not valid, trying to convert"
+        _LOGGER.warning(error)
+        try:
+            data_type = old_data_types[data_type][count]
+        except KeyError as exp:
+            raise vol.Invalid("cannot convert automatically") from exp
 
-    if config.get(CONF_SWAP) != CONF_SWAP_NONE:
-        if swap_type == CONF_SWAP_BYTE:
-            regs_needed = 1
-        else:  # CONF_SWAP_WORD_BYTE, CONF_SWAP_WORD
-            regs_needed = 2
-        if config[CONF_COUNT] < regs_needed or (config[CONF_COUNT] % regs_needed) != 0:
+    if config[CONF_DATA_TYPE] != DATA_TYPE_CUSTOM:
+        try:
+            structure = f">{DEFAULT_STRUCT_FORMAT[data_type]}"
+        except KeyError as exp:
+            raise vol.Invalid(f"Modbus error {data_type} unknown in {name}") from exp
+    else:
+        if not structure:
             raise vol.Invalid(
-                f"Error in sensor {config[CONF_NAME]} swap({swap_type}) "
-                f"not possible due to the registers "
-                f"count: {config[CONF_COUNT]}, needed: {regs_needed}"
+                f"Error in sensor {config[CONF_NAME]}. The `{CONF_STRUCTURE}` field can not be empty "
+                f"if the parameter `{CONF_DATA_TYPE}` is set to the `{DATA_TYPE_CUSTOM}`"
             )
+
+        try:
+            size = struct.calcsize(structure)
+        except struct.error as err:
+            raise vol.Invalid(f"Error in {name} structure: {str(err)}") from err
+
+        bytecount = count * 2
+        if bytecount != size:
+            raise vol.Invalid(
+                f"Structure request {size} bytes, "
+                f"but {count} registers have a size of {bytecount} bytes"
+            )
+
+        if swap_type != CONF_SWAP_NONE:
+            if swap_type == CONF_SWAP_BYTE:
+                regs_needed = 1
+            else:  # CONF_SWAP_WORD_BYTE, CONF_SWAP_WORD
+                regs_needed = 2
+            if count < regs_needed or (count % regs_needed) != 0:
+                raise vol.Invalid(
+                    f"Error in sensor {name} swap({swap_type}) "
+                    f"not possible due to the registers "
+                    f"count: {count}, needed: {regs_needed}"
+                )
 
     return {
         **config,

@@ -5,6 +5,7 @@ import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_MONITORED_CONDITIONS,
+    DEVICE_CLASS_TEMPERATURE,
     PERCENTAGE,
     POWER_WATT,
     TEMP_CELSIUS,
@@ -21,18 +22,28 @@ SALT_UNITS = ["g/L", "PPM"]
 WATT_UNITS = [POWER_WATT, POWER_WATT]
 NO_UNITS = [None, None]
 
-# sensor_type [ description, unit, icon ]
+# sensor_type [ description, unit, icon, device_class ]
 # sensor_type corresponds to property names in aqualogic.core.AquaLogic
 SENSOR_TYPES = {
-    "air_temp": ["Air Temperature", TEMP_UNITS, "mdi:thermometer"],
-    "pool_temp": ["Pool Temperature", TEMP_UNITS, "mdi:oil-temperature"],
-    "spa_temp": ["Spa Temperature", TEMP_UNITS, "mdi:oil-temperature"],
-    "pool_chlorinator": ["Pool Chlorinator", PERCENT_UNITS, "mdi:gauge"],
-    "spa_chlorinator": ["Spa Chlorinator", PERCENT_UNITS, "mdi:gauge"],
-    "salt_level": ["Salt Level", SALT_UNITS, "mdi:gauge"],
-    "pump_speed": ["Pump Speed", PERCENT_UNITS, "mdi:speedometer"],
-    "pump_power": ["Pump Power", WATT_UNITS, "mdi:gauge"],
-    "status": ["Status", NO_UNITS, "mdi:alert"],
+    "air_temp": ["Air Temperature", TEMP_UNITS, None, DEVICE_CLASS_TEMPERATURE],
+    "pool_temp": [
+        "Pool Temperature",
+        TEMP_UNITS,
+        "mdi:oil-temperature",
+        DEVICE_CLASS_TEMPERATURE,
+    ],
+    "spa_temp": [
+        "Spa Temperature",
+        TEMP_UNITS,
+        "mdi:oil-temperature",
+        DEVICE_CLASS_TEMPERATURE,
+    ],
+    "pool_chlorinator": ["Pool Chlorinator", PERCENT_UNITS, "mdi:gauge", None],
+    "spa_chlorinator": ["Spa Chlorinator", PERCENT_UNITS, "mdi:gauge", None],
+    "salt_level": ["Salt Level", SALT_UNITS, "mdi:gauge", None],
+    "pump_speed": ["Pump Speed", PERCENT_UNITS, "mdi:speedometer", None],
+    "pump_power": ["Pump Power", WATT_UNITS, "mdi:gauge", None],
+    "status": ["Status", NO_UNITS, "mdi:alert", None],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -64,8 +75,8 @@ class AquaLogicSensor(SensorEntity):
         """Initialize sensor."""
         self._processor = processor
         self._type = sensor_type
-        self._attr_name = f"AquaLogic {SENSOR_TYPES[self._type][0]}"
-        self._attr_icon = SENSOR_TYPES[self._type][2]
+        self._attr_name = f"AquaLogic {SENSOR_TYPES[sensor_type][0]}"
+        self._attr_icon = SENSOR_TYPES[sensor_type][2]
 
     async def async_added_to_hass(self):
         """Register callbacks."""

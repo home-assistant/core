@@ -15,7 +15,7 @@
                 "title": "Import der Cas\u00e9ta-Bridge-Konfiguration fehlgeschlagen."
             },
             "link": {
-                "description": "Um ein Pairing mit {name} ({host}) durchzuf\u00fchren, dr\u00fccken Sie nach dem Absenden dieses Formulars die schwarze Taste auf der R\u00fcckseite der Br\u00fccke.",
+                "description": "Um ein Pairing mit {name} ({host}) durchzuf\u00fchren, dr\u00fccke nach dem Absenden dieses Formulars die schwarze Taste auf der R\u00fcckseite der Br\u00fccke.",
                 "title": "Mit der Bridge verbinden"
             },
             "user": {

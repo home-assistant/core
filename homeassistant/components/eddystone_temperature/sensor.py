@@ -13,6 +13,7 @@ import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_NAME,
+    DEVICE_CLASS_TEMPERATURE,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
     STATE_UNKNOWN,
@@ -116,6 +117,11 @@ class EddystoneTemp(SensorEntity):
     def state(self):
         """Return the state of the device."""
         return self.temperature
+
+    @property
+    def device_class(self):
+        """Return the class of this device, from component DEVICE_CLASSES."""
+        return DEVICE_CLASS_TEMPERATURE
 
     @property
     def unit_of_measurement(self):
