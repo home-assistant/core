@@ -9,6 +9,7 @@ from homeassistant.const import (
     ATTR_NAME,
     ATTR_UNIT_OF_MEASUREMENT,
     DEVICE_CLASS_BATTERY,
+    DEVICE_CLASS_TEMPERATURE,
     PERCENTAGE,
     TEMP_CELSIUS,
 )
@@ -44,7 +45,7 @@ async def async_setup_entry(
                         ATTR_NAME: f"{device.name}",
                         ATTR_ENTITY_ID: f"{device.ain}",
                         ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
-                        ATTR_DEVICE_CLASS: None,
+                        ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
                     },
                     coordinator,
                     ain,
