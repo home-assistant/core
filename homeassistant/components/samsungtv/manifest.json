@@ -18,7 +18,10 @@
   "dhcp": [
     {
       "hostname": "tizen*"
-    }
+    },
+    {"macaddress": "8CC8CD*"},
+    {"macaddress": "606BBD*"},
+    {"macaddress": "F47B5E*"}
   ],
   "codeowners": [
     "@escoand",
