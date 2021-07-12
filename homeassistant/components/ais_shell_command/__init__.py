@@ -5,6 +5,9 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/shell_command/
 """
 import asyncio
+
+import aiofiles
+import async_timeout
 import logging
 import multiprocessing
 import os
@@ -12,13 +15,14 @@ import platform
 import subprocess
 
 import homeassistant.components.ais_dom.ais_global as ais_global
+from homeassistant.helpers import aiohttp_client
 
 DOMAIN = "ais_shell_command"
 GLOBAL_X = 0
 _LOGGER = logging.getLogger(__name__)
-G_LT_PATH = "/data/data/pl.sviete.dom/files/usr/bin/lt"
+G_LT_PATH = "/data/data/pl.sviete.dom/files/usr/bin/cloudflared"
 if platform.machine() == "x86_64":
-    G_LT_PATH = "/usr/local/bin/lt"
+    G_LT_PATH = "/usr/local/bin/cloudflared"
 
 
 async def async_setup(hass, config):
@@ -184,10 +188,29 @@ async def _change_remote_access(hass, call):
     _LOGGER.info(text)
 
     if access == "on":
+        # OLD AIS TUNNEL
+        # await _run(
+        #     "pm2 restart tunnel || pm2 start {}"
+        #     " --name tunnel --output /dev/null --error /dev/null"
+        #     " --restart-delay=150000 -- -h http://paczka.pro -p 8180 -s {}".format(
+        #         G_LT_PATH, gate_id
+        #     )
+        # )
+        if not os.path.isfile("/data/data/pl.sviete.dom/files/home/.cloudflared/cert.pem"):
+            await _run("mkdir -p /data/data/pl.sviete.dom/files/home/.cloudflared")
+            with async_timeout.timeout(10):
+                web_session = aiohttp_client.async_get_clientsession(hass)
+                # store file
+                async with web_session.get("https://ai-speaker.com/ota/ais_cloudflared") as resp:
+                    if resp.status == 200:
+                        f = await aiofiles.open('/data/data/pl.sviete.dom/files/home/.cloudflared/cert.pem', mode='wb')
+                        await f.write(await resp.read())
+                        await f.close()
+
         await _run(
             "pm2 restart tunnel || pm2 start {}"
             " --name tunnel --output /dev/null --error /dev/null"
-            " --restart-delay=150000 -- -h http://paczka.pro -p 8180 -s {}".format(
+            " --restart-delay=150000 -- --hostname http://{}.paczka.pro --url http://localhost:8180".format(
                 G_LT_PATH, gate_id
             )
         )
@@ -342,7 +365,7 @@ async def _ssh_remote_access(hass, call):
         await _run(
             "pm2 restart ssh-tunnel || pm2 start {}"
             " --name ssh-tunnel --output /dev/null --error /dev/null"
-            " --restart-delay=150000 -- -h http://paczka.pro -p 8888 -s {}".format(
+            " --restart-delay=150000 -- --hostname http://{}.paczka.pro --url http://localhost:8888".format(
                 G_LT_PATH, gate_id
             )
         )

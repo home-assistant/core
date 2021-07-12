@@ -3293,7 +3293,7 @@ async def _publish_command_to_frame(hass, key, val, ip=None):
                     if platform.machine() == "x86_64":
                         lt_path = "/usr/local/bin/lt"
                     command = "pm2 restart tunnel || pm2 start {} --name tunnel --output /dev/null --error /dev/null " \
-                              "--restart-delay=150000 -- -h http://paczka.pro -p 8180 -s {}".format(lt_path, gate_id)
+                              "-- --hostname http://{}.paczka.pro --url http://localhost:8180".format(lt_path, gate_id)
                     subprocess.Popen(
                         command,
                         shell=True,  # nosec
