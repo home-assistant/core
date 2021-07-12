@@ -180,7 +180,8 @@ async def test_ok_sensor_schema_validator(do_config):
         {
             CONF_NAME: TEST_SENSOR_NAME,
             CONF_COUNT: 1,
-            CONF_DATA_TYPE: DATA_TYPE_INT,
+            CONF_DATA_TYPE: DATA_TYPE_CUSTOM,
+            CONF_STRUCTURE: ">f",
             CONF_SWAP: CONF_SWAP_WORD,
         },
     ],

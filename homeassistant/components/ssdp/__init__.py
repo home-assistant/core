@@ -109,6 +109,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the SSDP integration."""
 
     scanner = hass.data[DOMAIN] = Scanner(hass, await async_get_ssdp(hass))
+
     asyncio.create_task(scanner.async_start())
 
     return True
@@ -243,7 +244,7 @@ class Scanner:
                 continue
             # Some sonos devices only seem to respond if we send to the broadcast
             # address. This matches pysonos' behavior
-            # https://github.com/amelchio/pysonos/blob/master/pysonos/discovery.py#L120
+            # https://github.com/amelchio/pysonos/blob/d4329b4abb657d106394ae69357805269708c996/pysonos/discovery.py#L120
             self._ssdp_listeners.append(
                 SSDPListener(
                     async_callback=self._async_process_entry,

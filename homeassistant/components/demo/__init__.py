@@ -22,6 +22,7 @@ COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM = [
     "number",
     "select",
     "sensor",
+    "siren",
     "switch",
     "vacuum",
     "water_heater",

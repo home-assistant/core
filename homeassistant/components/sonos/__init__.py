@@ -47,6 +47,7 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_ADVERTISE_ADDR = "advertise_addr"
 CONF_INTERFACE_ADDR = "interface_addr"
+DISCOVERY_IGNORED_MODELS = ["Sonos Boost"]
 
 
 CONFIG_SCHEMA = vol.Schema(
@@ -259,11 +260,16 @@ class SonosDiscoveryManager:
         uid = info.get(ssdp.ATTR_UPNP_UDN)
         if uid.startswith("uuid:"):
             uid = uid[5:]
-        self.async_discovered_player(info, discovered_ip, uid, boot_seqnum)
+        self.async_discovered_player(
+            info, discovered_ip, uid, boot_seqnum, info.get("modelName")
+        )
 
     @callback
-    def async_discovered_player(self, info, discovered_ip, uid, boot_seqnum):
+    def async_discovered_player(self, info, discovered_ip, uid, boot_seqnum, model):
         """Handle discovery via ssdp or zeroconf."""
+        if model in DISCOVERY_IGNORED_MODELS:
+            _LOGGER.debug("Ignoring device: %s", info)
+            return
         if boot_seqnum:
             boot_seqnum = int(boot_seqnum)
             self.data.boot_counts.setdefault(uid, boot_seqnum)
