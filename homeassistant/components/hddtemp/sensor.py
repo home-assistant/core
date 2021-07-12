@@ -12,6 +12,7 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
     CONF_PORT,
+    DEVICE_CLASS_TEMPERATURE,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
@@ -80,6 +81,11 @@ class HddTempSensor(SensorEntity):
     def state(self):
         """Return the state of the device."""
         return self._state
+
+    @property
+    def device_class(self):
+        """Return the class of this device, from component DEVICE_CLASSES."""
+        return DEVICE_CLASS_TEMPERATURE
 
     @property
     def unit_of_measurement(self):
