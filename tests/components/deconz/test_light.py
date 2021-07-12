@@ -371,6 +371,34 @@ async def test_light_state_change(hass, aioclient_mock, mock_deconz_websocket):
 @pytest.mark.parametrize(
     "input,expected",
     [
+        (  # Turn on light with hue and sat
+            {
+                "light_on": True,
+                "service": SERVICE_TURN_ON,
+                "call": {
+                    ATTR_ENTITY_ID: "light.hue_go",
+                    ATTR_HS_COLOR: (20, 30),
+                },
+            },
+            {
+                "on": True,
+                "xy": (0.411, 0.351),
+            },
+        ),
+        (  # Turn on light with XY color
+            {
+                "light_on": True,
+                "service": SERVICE_TURN_ON,
+                "call": {
+                    ATTR_ENTITY_ID: "light.hue_go",
+                    ATTR_XY_COLOR: (0.411, 0.351),
+                },
+            },
+            {
+                "on": True,
+                "xy": (0.411, 0.351),
+            },
+        ),
         (  # Turn on light with short color loop
             {
                 "light_on": False,
@@ -811,9 +839,8 @@ async def test_groups(hass, aioclient_mock, input, expected):
                 },
             },
             {
-                "hue": 45510,
                 "on": True,
-                "sat": 127,
+                "xy": (0.235, 0.164),
             },
         ),
         (  # Turn on group with short color loop
@@ -827,9 +854,8 @@ async def test_groups(hass, aioclient_mock, input, expected):
                 },
             },
             {
-                "hue": 45510,
                 "on": True,
-                "sat": 127,
+                "xy": (0.235, 0.164),
             },
         ),
     ],
