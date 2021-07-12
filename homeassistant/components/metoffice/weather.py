@@ -234,12 +234,12 @@ class MetOfficeWeather(CoordinatorEntity, WeatherEntity):
                 for timestep in day.timesteps
                 if timestep.date > time_now
             ]
-        else:
-            return [
-                _build_daily_forecast_data(day)
-                for day in self.coordinator.data.forecast
-                if day.date > time_now
-            ]
+
+        return [
+            _build_daily_forecast_data(day)
+            for day in self.coordinator.data.forecast
+            if day.date > time_now
+        ]
 
     @property
     def attribution(self):
