@@ -3,8 +3,6 @@ from __future__ import annotations
 
 import voluptuous as vol
 from zwave_js_server.const import CommandClass
-from zwave_js_server.model.node import Node
-from zwave_js_server.model.value import Value, get_value_id
 
 from homeassistant.components.automation import AutomationActionType
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
@@ -45,6 +43,7 @@ from .const import (
 from .helpers import (
     async_get_node_from_device_id,
     async_get_node_status_sensor_entity_id,
+    get_zwave_value_from_config,
 )
 
 CONF_SUBTYPE = "subtype"
@@ -144,20 +143,6 @@ TRIGGER_SCHEMA = vol.Any(
     SCENE_ACTIVATION_VALUE_NOTIFICATION_SCHEMA,
     NODE_STATUS_SCHEMA,
 )
-
-
-def get_value_from_config(node: Node, config: ConfigType) -> Value:
-    """Get a Z-Wave JS Value from a config."""
-    value_id = get_value_id(
-        node,
-        config[ATTR_COMMAND_CLASS],
-        config[ATTR_PROPERTY],
-        config[ATTR_ENDPOINT],
-        config[ATTR_PROPERTY_KEY],
-    )
-    if value_id not in node.values:
-        raise vol.Invalid(f"Value {value_id} can't be found on node {node}")
-    return node.values[value_id]
 
 
 async def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict]:
@@ -331,7 +316,9 @@ async def async_get_trigger_capabilities(
 ) -> dict[str, vol.Schema]:
     """List trigger capabilities."""
     node = async_get_node_from_device_id(hass, config[CONF_DEVICE_ID])
-    value = get_value_from_config(node, config) if ATTR_PROPERTY in config else None
+    value = (
+        get_zwave_value_from_config(node, config) if ATTR_PROPERTY in config else None
+    )
     # Add additional fields to the automation trigger UI
     if config[CONF_TYPE] == NOTIFICATION_NOTIFICATION:
         return {
