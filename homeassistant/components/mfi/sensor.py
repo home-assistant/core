@@ -13,6 +13,7 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
+    DEVICE_CLASS_TEMPERATURE,
     STATE_OFF,
     STATE_ON,
     TEMP_CELSIUS,
@@ -83,7 +84,7 @@ class MfiSensor(SensorEntity):
 
     @property
     def name(self):
-        """Return the name of th sensor."""
+        """Return the name of the sensor."""
         return self._port.label
 
     @property
@@ -99,6 +100,19 @@ class MfiSensor(SensorEntity):
             return STATE_ON if self._port.value > 0 else STATE_OFF
         digits = DIGITS.get(self._port.tag, 0)
         return round(self._port.value, digits)
+
+    @property
+    def device_class(self):
+        """Return the device class of the sensor."""
+        try:
+            tag = self._port.tag
+        except ValueError:
+            return None
+
+        if tag == "temperature":
+            return DEVICE_CLASS_TEMPERATURE
+
+        return None
 
     @property
     def unit_of_measurement(self):
