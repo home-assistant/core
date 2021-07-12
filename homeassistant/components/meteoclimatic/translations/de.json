@@ -12,7 +12,7 @@
                 "data": {
                     "code": "Stationscode"
                 },
-                "description": "Geben Sie den Code der Meteoclimatic-Station ein (z. B. ESCAT4300000043206B)",
+                "description": "Gib den Code der Meteoclimatic-Station ein (z. B. ESCAT4300000043206B)",
                 "title": "Meteoclimatic"
             }
         }

@@ -11,6 +11,17 @@
         },
         "flow_title": "Xiaomi Miio: {name}",
         "step": {
+            "cloud": {
+                "data": {
+                    "cloud_password": "Mot de passe cloud",
+                    "cloud_username": "Nom d'utilisateur cloud"
+                }
+            },
+            "connect": {
+                "data": {
+                    "model": "Mod\u00e8le d'appareil"
+                }
+            },
             "device": {
                 "data": {
                     "host": "Adresse IP",
@@ -30,11 +41,30 @@
                 "description": "Vous aurez besoin du jeton API, voir https://www.home-assistant.io/integrations/vacuum.xiaomi_miio/#retrieving-the-access-token pour les instructions.",
                 "title": "Se connecter \u00e0 la passerelle Xiaomi"
             },
+            "select": {
+                "data": {
+                    "select_device": "Appareil Miio"
+                }
+            },
             "user": {
                 "data": {
                     "gateway": "Se connecter \u00e0 la passerelle Xiaomi"
                 },
                 "description": "S\u00e9lectionnez \u00e0 quel appareil vous souhaitez vous connecter.",
+                "title": "Xiaomi Miio"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "cloud_credentials_incomplete": "Identifiants cloud incomplets, veuillez renseigner le nom d'utilisateur, le mot de passe et le pays"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "cloud_subdevices": "Utiliser le cloud pour connecter des sous-appareils"
+                },
+                "description": "Sp\u00e9cifiez les param\u00e8tres optionnels",
                 "title": "Xiaomi Miio"
             }
         }
