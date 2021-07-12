@@ -5,7 +5,8 @@
   "documentation": "https://www.home-assistant.io/integrations/sonos",
   "requirements": ["pysonos==0.0.51"],
   "dependencies": ["ssdp"],
-  "after_dependencies": ["plex"],
+  "after_dependencies": ["plex", "zeroconf"],
+  "zeroconf": ["_sonos._tcp.local."],
   "ssdp": [
     {
       "st": "urn:schemas-upnp-org:device:ZonePlayer:1"
