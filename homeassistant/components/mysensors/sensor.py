@@ -9,6 +9,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONDUCTIVITY,
     DEGREE,
+    DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_TEMPERATURE,
     ELECTRICAL_CURRENT_AMPERE,
     ELECTRICAL_VOLT_AMPERE,
@@ -33,7 +34,7 @@ from .helpers import on_unload
 
 SENSORS: dict[str, list[str | None] | dict[str, list[str | None]]] = {
     "V_TEMP": [None, None, DEVICE_CLASS_TEMPERATURE],
-    "V_HUM": [PERCENTAGE, "mdi:water-percent", None],
+    "V_HUM": [PERCENTAGE, "mdi:water-percent", DEVICE_CLASS_HUMIDITY],
     "V_DIMMER": [PERCENTAGE, "mdi:percent", None],
     "V_PERCENTAGE": [PERCENTAGE, "mdi:percent", None],
     "V_PRESSURE": [None, "mdi:gauge", None],
