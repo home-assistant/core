@@ -68,10 +68,6 @@ async def test_form_already_configured(hass, requests_mock):
         "/public/data/val/wxfcs/all/json/354107?res=3hourly",
         text="",
     )
-    requests_mock.get(
-        "/public/data/val/wxfcs/all/json/354107?res=daily",
-        text="",
-    )
 
     MockConfigEntry(
         domain=DOMAIN,

@@ -223,21 +223,21 @@ class MetOfficeWeather(CoordinatorEntity, WeatherEntity):
     @property
     def forecast(self):
         """Return the forecast array."""
-        if self.coordinator.data.forecast is None:
+        if self.coordinator.data.forecast.days is None:
             return None
         time_now = utcnow()
 
         if self.use_3hourly:
             return [
                 _build_forecast_data(timestep)
-                for day in self.coordinator.data.forecast
+                for day in self.coordinator.data.forecast.days
                 for timestep in day.timesteps
                 if timestep.date > time_now
             ]
 
         return [
             _build_daily_forecast_data(day)
-            for day in self.coordinator.data.forecast
+            for day in self.coordinator.data.forecast.days
             if day.date > time_now
         ]
 

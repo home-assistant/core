@@ -36,7 +36,7 @@ def fetch_data(connection: datapoint.Manager, site: Site) -> MetOfficeData:
         raise UpdateFailed from err
     else:
         return MetOfficeData(
+            forecast=forecast,
             now=forecast.now(),
-            forecast=forecast.days,
             site=site,
         )
