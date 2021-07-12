@@ -11,6 +11,8 @@ from homeassistant.const import (
     CONF_ID,
     CONF_NAME,
     CONF_PROTOCOL,
+    DEVICE_CLASS_HUMIDITY,
+    DEVICE_CLASS_TEMPERATURE,
     PERCENTAGE,
     TEMP_CELSIUS,
 )
@@ -18,7 +20,9 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-DatatypeDescription = namedtuple("DatatypeDescription", ["name", "unit"])
+DatatypeDescription = namedtuple(
+    "DatatypeDescription", ["name", "unit", "device_class"]
+)
 
 CONF_DATATYPE_MASK = "datatype_mask"
 CONF_ONLY_NAMED = "only_named"
@@ -58,20 +62,28 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     sensor_value_descriptions = {
         tellcore_constants.TELLSTICK_TEMPERATURE: DatatypeDescription(
-            "temperature", config.get(CONF_TEMPERATURE_SCALE)
+            "temperature", config.get(CONF_TEMPERATURE_SCALE), DEVICE_CLASS_TEMPERATURE
         ),
         tellcore_constants.TELLSTICK_HUMIDITY: DatatypeDescription(
-            "humidity", PERCENTAGE
+            "humidity",
+            PERCENTAGE,
+            DEVICE_CLASS_HUMIDITY,
         ),
-        tellcore_constants.TELLSTICK_RAINRATE: DatatypeDescription("rain rate", ""),
-        tellcore_constants.TELLSTICK_RAINTOTAL: DatatypeDescription("rain total", ""),
+        tellcore_constants.TELLSTICK_RAINRATE: DatatypeDescription(
+            "rain rate", "", None
+        ),
+        tellcore_constants.TELLSTICK_RAINTOTAL: DatatypeDescription(
+            "rain total", "", None
+        ),
         tellcore_constants.TELLSTICK_WINDDIRECTION: DatatypeDescription(
-            "wind direction", ""
+            "wind direction", "", None
         ),
         tellcore_constants.TELLSTICK_WINDAVERAGE: DatatypeDescription(
-            "wind average", ""
+            "wind average", "", None
         ),
-        tellcore_constants.TELLSTICK_WINDGUST: DatatypeDescription("wind gust", ""),
+        tellcore_constants.TELLSTICK_WINDGUST: DatatypeDescription(
+            "wind gust", "", None
+        ),
     }
 
     try:
