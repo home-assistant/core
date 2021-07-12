@@ -79,9 +79,9 @@ class BleBoxEntity(Entity):
     def __init__(self, feature):
         """Initialize a BleBox entity."""
         self._feature = feature
-        self._attr_name = self._feature.full_name
-        self._attr_unique_id = self._feature.unique_id
-        product = self._feature.product
+        self._attr_name = feature.full_name
+        self._attr_unique_id = feature.unique_id
+        product = feature.product
         self._attr_device_info = {
             "identifiers": {(DOMAIN, product.unique_id)},
             "name": product.name,
