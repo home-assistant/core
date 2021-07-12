@@ -19,12 +19,8 @@ from .const import (
     CONDITION_CLASSES,
     DOMAIN,
     METOFFICE_COORDINATES,
-    METOFFICE_DAILY_COORDINATOR,
-    METOFFICE_HOURLY_COORDINATOR,
+    METOFFICE_COORDINATOR,
     METOFFICE_NAME,
-    MODE_3HOURLY_LABEL,
-    MODE_DAILY,
-    MODE_DAILY_LABEL,
     VISIBILITY_CLASSES,
     VISIBILITY_DISTANCE_CLASSES,
 )
@@ -91,13 +87,7 @@ async def async_setup_entry(
     async_add_entities(
         [
             MetOfficeCurrentSensor(
-                hass_data[METOFFICE_HOURLY_COORDINATOR], hass_data, True, sensor_type
-            )
-            for sensor_type in SENSOR_TYPES
-        ]
-        + [
-            MetOfficeCurrentSensor(
-                hass_data[METOFFICE_DAILY_COORDINATOR], hass_data, False, sensor_type
+                hass_data[METOFFICE_COORDINATOR], hass_data, sensor_type
             )
             for sensor_type in SENSOR_TYPES
         ],
@@ -108,22 +98,15 @@ async def async_setup_entry(
 class MetOfficeCurrentSensor(CoordinatorEntity, SensorEntity):
     """Implementation of a Met Office current weather condition sensor."""
 
-    def __init__(self, coordinator, hass_data, use_3hourly, sensor_type):
+    def __init__(self, coordinator, hass_data, sensor_type):
         """Initialize the sensor."""
         super().__init__(coordinator)
 
         self._type = sensor_type
-        mode_label = MODE_3HOURLY_LABEL if use_3hourly else MODE_DAILY_LABEL
-        self._name = (
-            f"{hass_data[METOFFICE_NAME]} {SENSOR_TYPES[self._type][0]} {mode_label}"
-        )
+        self._name = f"{hass_data[METOFFICE_NAME]} {SENSOR_TYPES[self._type][0]}"
         self._unique_id = (
             f"{SENSOR_TYPES[self._type][0]}_{hass_data[METOFFICE_COORDINATES]}"
         )
-        if not use_3hourly:
-            self._unique_id = f"{self._unique_id}_{MODE_DAILY}"
-
-        self.use_3hourly = use_3hourly
 
     @property
     def name(self):
@@ -205,4 +188,4 @@ class MetOfficeCurrentSensor(CoordinatorEntity, SensorEntity):
     @property
     def entity_registry_enabled_default(self) -> bool:
         """Return if the entity should be enabled when first added to the entity registry."""
-        return SENSOR_TYPES[self._type][4] and self.use_3hourly
+        return SENSOR_TYPES[self._type][4]

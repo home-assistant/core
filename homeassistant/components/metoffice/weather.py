@@ -1,8 +1,12 @@
 """Support for UK Met Office weather service."""
+from datapoint.Day import Day
+from datapoint.Timestep import Timestep
+
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
-    ATTR_FORECAST_PRECIPITATION,
+    ATTR_FORECAST_PRECIPITATION_PROBABILITY,
     ATTR_FORECAST_TEMP,
+    ATTR_FORECAST_TEMP_LOW,
     ATTR_FORECAST_TIME,
     ATTR_FORECAST_WIND_BEARING,
     ATTR_FORECAST_WIND_SPEED,
@@ -12,6 +16,7 @@ from homeassistant.const import LENGTH_KILOMETERS, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util.dt import utcnow
 
 from .const import (
     ATTRIBUTION,
@@ -19,8 +24,7 @@ from .const import (
     DEFAULT_NAME,
     DOMAIN,
     METOFFICE_COORDINATES,
-    METOFFICE_DAILY_COORDINATOR,
-    METOFFICE_HOURLY_COORDINATOR,
+    METOFFICE_COORDINATOR,
     METOFFICE_NAME,
     MODE_3HOURLY_LABEL,
     MODE_DAILY,
@@ -38,26 +42,81 @@ async def async_setup_entry(
 
     async_add_entities(
         [
-            MetOfficeWeather(hass_data[METOFFICE_HOURLY_COORDINATOR], hass_data, True),
-            MetOfficeWeather(hass_data[METOFFICE_DAILY_COORDINATOR], hass_data, False),
+            MetOfficeWeather(hass_data[METOFFICE_COORDINATOR], hass_data, True),
+            MetOfficeWeather(hass_data[METOFFICE_COORDINATOR], hass_data, False),
         ],
         False,
     )
 
 
-def _build_forecast_data(timestep):
+def _build_forecast_data(timestep: Timestep):
     data = {}
     data[ATTR_FORECAST_TIME] = timestep.date.isoformat()
     if timestep.weather:
         data[ATTR_FORECAST_CONDITION] = _get_weather_condition(timestep.weather.value)
     if timestep.precipitation:
-        data[ATTR_FORECAST_PRECIPITATION] = timestep.precipitation.value
+        data[ATTR_FORECAST_PRECIPITATION_PROBABILITY] = timestep.precipitation.value
     if timestep.temperature:
         data[ATTR_FORECAST_TEMP] = timestep.temperature.value
     if timestep.wind_direction:
         data[ATTR_FORECAST_WIND_BEARING] = timestep.wind_direction.value
     if timestep.wind_speed:
         data[ATTR_FORECAST_WIND_SPEED] = timestep.wind_speed.value
+    return data
+
+
+def _build_daily_forecast_data(day: Day):
+    data = {}
+    data[ATTR_FORECAST_TIME] = day.date.isoformat()
+
+    timesteps = day.timesteps
+
+    # Use closest timestep to noon to take weather value
+    weather_timestep = min(timesteps, key=lambda item: abs(item.date.hour - 12))
+
+    temperature = max(
+        [
+            timestep.temperature.value if timestep.temperature else -1000
+            for timestep in timesteps
+        ]
+    )
+    temperature = temperature if temperature > -1000 else None
+
+    templow = min(
+        [
+            timestep.temperature.value if timestep.temperature else 1000
+            for timestep in timesteps
+        ]
+    )
+    templow = templow if templow < 1000 else None
+
+    # Taking max precipitation probability
+    precipitation = max(
+        [
+            timestep.precipitation.value if timestep.precipitation else 0
+            for timestep in timesteps
+        ]
+    )
+
+    max_wind_timestep: Timestep = max(
+        timesteps, key=lambda item: item.wind_speed.value if item.wind_speed else 0
+    )
+
+    if weather_timestep:
+        data[ATTR_FORECAST_CONDITION] = _get_weather_condition(
+            weather_timestep.weather.value
+        )
+    if precipitation:
+        data[ATTR_FORECAST_PRECIPITATION_PROBABILITY] = precipitation
+    if temperature:
+        data[ATTR_FORECAST_TEMP] = temperature
+    if templow:
+        data[ATTR_FORECAST_TEMP_LOW] = templow
+    if max_wind_timestep.wind_direction:
+        data[ATTR_FORECAST_WIND_BEARING] = max_wind_timestep.wind_direction.value
+    if max_wind_timestep.wind_speed:
+        data[ATTR_FORECAST_WIND_SPEED] = max_wind_timestep.wind_speed.value
+
     return data
 
 
@@ -80,6 +139,7 @@ class MetOfficeWeather(CoordinatorEntity, WeatherEntity):
         self._unique_id = hass_data[METOFFICE_COORDINATES]
         if not use_3hourly:
             self._unique_id = f"{self._unique_id}_{MODE_DAILY}"
+        self.use_3hourly = use_3hourly
 
     @property
     def name(self):
@@ -165,10 +225,21 @@ class MetOfficeWeather(CoordinatorEntity, WeatherEntity):
         """Return the forecast array."""
         if self.coordinator.data.forecast is None:
             return None
-        return [
-            _build_forecast_data(timestep)
-            for timestep in self.coordinator.data.forecast
-        ]
+        time_now = utcnow()
+
+        if self.use_3hourly:
+            return [
+                _build_forecast_data(timestep)
+                for day in self.coordinator.data.forecast
+                for timestep in day.timesteps
+                if timestep.date > time_now
+            ]
+        else:
+            return [
+                _build_daily_forecast_data(day)
+                for day in self.coordinator.data.forecast
+                if day.date > time_now
+            ]
 
     @property
     def attribution(self):
