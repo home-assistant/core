@@ -142,9 +142,9 @@ class Camera(HomeAccessory, PyhapCamera):
     def __init__(self, hass, driver, name, entity_id, aid, config):
         """Initialize a Camera accessory object."""
         self._ffmpeg = hass.data[DATA_FFMPEG]
-        for config_key in CONFIG_DEFAULTS:
+        for config_key, conf in CONFIG_DEFAULTS.items():
             if config_key not in config:
-                config[config_key] = CONFIG_DEFAULTS[config_key]
+                config[config_key] = conf
 
         max_fps = config[CONF_MAX_FPS]
         max_width = config[CONF_MAX_WIDTH]

@@ -669,7 +669,7 @@ class EventBus:
 
         This method must be run in the event loop.
         """
-        return {key: len(self._listeners[key]) for key in self._listeners}
+        return {key: len(listeners) for key, listeners in self._listeners.items()}
 
     @property
     def listeners(self) -> dict[str, int]:
@@ -1298,7 +1298,7 @@ class ServiceRegistry:
 
         This method must be run in the event loop.
         """
-        return {domain: self._services[domain].copy() for domain in self._services}
+        return {domain: service.copy() for domain, service in self._services.items()}
 
     def has_service(self, domain: str, service: str) -> bool:
         """Test if specified service exists.
