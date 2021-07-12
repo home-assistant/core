@@ -29,8 +29,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class AppleTVRemote(AppleTVEntity, RemoteEntity):
     """Device that sends commands to an Apple TV."""
 
-    _attr_should_poll = False
-
     @property
     def is_on(self):
         """Return true if device is on."""
@@ -50,9 +48,7 @@ class AppleTVRemote(AppleTVEntity, RemoteEntity):
         delay = kwargs.get(ATTR_DELAY_SECS, DEFAULT_DELAY_SECS)
 
         if not self.is_on:
-            _LOGGER.error(
-                "Unable to send commands, not connected to %s", self._attr_name
-            )
+            _LOGGER.error("Unable to send commands, not connected to %s", self.name)
             return
 
         for _ in range(num_repeats):
