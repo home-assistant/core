@@ -129,7 +129,7 @@ class SharpAquosTVDevice(MediaPlayerEntity):
     def __init__(self, name, remote, power_on_enabled=False):
         """Initialize the aquos device."""
         self._power_on_enabled = power_on_enabled
-        if self._power_on_enabled:
+        if power_on_enabled:
             self._attr_supported_features |= SUPPORT_TURN_ON
         # Save a reference to the imported class
         self._attr_name = name
@@ -172,12 +172,12 @@ class SharpAquosTVDevice(MediaPlayerEntity):
     @_retry
     def volume_up(self):
         """Volume up the media player."""
-        self._remote.volume(int(self._attr_volume_level * 60) + 2)
+        self._remote.volume(int(self.volume_level * 60) + 2)
 
     @_retry
     def volume_down(self):
         """Volume down media player."""
-        self._remote.volume(int(self._attr_volume_level * 60) - 2)
+        self._remote.volume(int(self.volume_level * 60) - 2)
 
     @_retry
     def set_volume_level(self, volume):
