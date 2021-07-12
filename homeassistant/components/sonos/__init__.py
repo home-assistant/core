@@ -46,6 +46,7 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_ADVERTISE_ADDR = "advertise_addr"
 CONF_INTERFACE_ADDR = "interface_addr"
+DISCOVERY_IGNORED_MODELS = ["Sonos Boost"]
 
 
 CONFIG_SCHEMA = vol.Schema(
@@ -233,6 +234,9 @@ async def async_setup_entry(  # noqa: C901
 
     @callback
     def _async_discovered_player(info):
+        if info.get("modelName") in DISCOVERY_IGNORED_MODELS:
+            _LOGGER.debug("Ignoring device: %s", info.get("friendlyName"))
+            return
         uid = info.get(ssdp.ATTR_UPNP_UDN)
         if uid.startswith("uuid:"):
             uid = uid[5:]
