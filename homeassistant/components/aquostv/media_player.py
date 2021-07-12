@@ -99,7 +99,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     host = config[CONF_HOST]
     remote = sharp_aquos_rc.TV(host, port, username, password, 15, 1)
 
-    add_entities([SharpAquosTVDevice(name, remote, power_on_enabled)])
+    add_entities([SharpAquosTVDevice(name, remote, power_on_enabled)], True)
     return True
 
 
@@ -135,7 +135,6 @@ class SharpAquosTVDevice(MediaPlayerEntity):
         self._attr_name = name
         # Assume that the TV is not muted
         self._remote = remote
-        self._attr_volume = 0
         self._attr_source_list = list(SOURCES.values())
 
     def set_state(self, state):
@@ -162,7 +161,7 @@ class SharpAquosTVDevice(MediaPlayerEntity):
         # Get source
         self._attr_source = SOURCES.get(self._remote.input())
         # Get volume
-        self._attr_volume = self._remote.volume() / 60
+        self._attr_volume_level = self._remote.volume() / 60
 
     @_retry
     def turn_off(self):
