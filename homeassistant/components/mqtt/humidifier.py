@@ -106,9 +106,7 @@ PLATFORM_SCHEMA = vol.All(
             vol.Optional(CONF_COMMAND_TEMPLATE): cv.template,
             vol.Optional(
                 CONF_DEVICE_CLASS, default=DEVICE_CLASS_HUMIDIFIER
-            ): cv.matches_regex(
-                f"^({DEVICE_CLASS_HUMIDIFIER}|{DEVICE_CLASS_DEHUMIDIFIER})$"
-            ),
+            ): vol.In([DEVICE_CLASS_HUMIDIFIER, DEVICE_CLASS_DEHUMIDIFIER]),
             vol.Optional(CONF_MODE_COMMAND_TEMPLATE): cv.template,
             vol.Optional(CONF_MODE_STATE_TOPIC): mqtt.valid_subscribe_topic,
             vol.Optional(CONF_MODE_STATE_TEMPLATE): cv.template,
