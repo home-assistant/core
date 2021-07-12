@@ -1,6 +1,11 @@
 """Support for monitoring juicenet/juicepoint/juicebox based EVSE sensors."""
 from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
 from homeassistant.const import (
+    DEVICE_CLASS_CURRENT,
+    DEVICE_CLASS_ENERGY,
+    DEVICE_CLASS_POWER,
+    DEVICE_CLASS_TEMPERATURE,
+    DEVICE_CLASS_VOLTAGE,
     ELECTRICAL_CURRENT_AMPERE,
     ENERGY_WATT_HOUR,
     POWER_WATT,
@@ -13,13 +18,23 @@ from .const import DOMAIN, JUICENET_API, JUICENET_COORDINATOR
 from .entity import JuiceNetDevice
 
 SENSOR_TYPES = {
-    "status": ["Charging Status", None, None],
-    "temperature": ["Temperature", TEMP_CELSIUS, STATE_CLASS_MEASUREMENT],
-    "voltage": ["Voltage", VOLT, None],
-    "amps": ["Amps", ELECTRICAL_CURRENT_AMPERE, STATE_CLASS_MEASUREMENT],
-    "watts": ["Watts", POWER_WATT, STATE_CLASS_MEASUREMENT],
-    "charge_time": ["Charge time", TIME_SECONDS, None],
-    "energy_added": ["Energy added", ENERGY_WATT_HOUR, None],
+    "status": ["Charging Status", None, None, None],
+    "temperature": [
+        "Temperature",
+        TEMP_CELSIUS,
+        DEVICE_CLASS_TEMPERATURE,
+        STATE_CLASS_MEASUREMENT,
+    ],
+    "voltage": ["Voltage", VOLT, DEVICE_CLASS_VOLTAGE, None],
+    "amps": [
+        "Amps",
+        ELECTRICAL_CURRENT_AMPERE,
+        DEVICE_CLASS_CURRENT,
+        STATE_CLASS_MEASUREMENT,
+    ],
+    "watts": ["Watts", POWER_WATT, DEVICE_CLASS_POWER, STATE_CLASS_MEASUREMENT],
+    "charge_time": ["Charge time", TIME_SECONDS, None, None],
+    "energy_added": ["Energy added", ENERGY_WATT_HOUR, DEVICE_CLASS_ENERGY, None],
 }
 
 
