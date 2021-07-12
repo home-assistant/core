@@ -88,6 +88,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class BboxUptimeSensor(SensorEntity):
     """Bbox uptime sensor."""
 
+    _attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
     _attr_device_class = DEVICE_CLASS_TIMESTAMP
 
     def __init__(self, bbox_data, sensor_type, name):
@@ -104,11 +105,12 @@ class BboxUptimeSensor(SensorEntity):
             seconds=self.bbox_data.router_infos["device"]["uptime"]
         )
         self._attr_state = uptime.replace(microsecond=0).isoformat()
-        self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
 
 
 class BboxSensor(SensorEntity):
     """Implementation of a Bbox sensor."""
+
+    _attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
 
     def __init__(self, bbox_data, sensor_type, name):
         """Initialize the sensor."""
@@ -135,7 +137,6 @@ class BboxSensor(SensorEntity):
             self._attr_state = round(self.bbox_data.data["tx"]["bandwidth"] / 1000, 2)
         elif self.type == "number_of_reboots":
             self._attr_state = self.bbox_data.router_infos["device"]["numberofboots"]
-        self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
 
 
 class BboxData:
