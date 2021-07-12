@@ -65,7 +65,7 @@ class NetatmoScheduleSelect(NetatmoBase, SelectEntity):
     def __init__(
         self, data_handler: NetatmoDataHandler, home_id: str, options: list
     ) -> None:
-        """Initialize the sensor."""
+        """Initialize the select entity."""
         SelectEntity.__init__(self)
         super().__init__(data_handler)
 
