@@ -42,67 +42,53 @@ class AgentBaseStation(AlarmControlPanelEntity):
 
     def __init__(self, client):
         """Initialize the alarm control panel."""
-        self._state = None
         self._client = client
         self._attr_name = f"{client.name} {CONST_ALARM_CONTROL_PANEL_NAME}"
         self._attr_unique_id = f"{client.unique}_CP"
-
-    @property
-    def state(self):
-        """Return the state of the device."""
-        return self._state
-
-    @property
-    def device_info(self):
-        """Return the device info for adding the entity to the agent object."""
-        return {
-            "identifiers": {(AGENT_DOMAIN, self._client.unique)},
+        self._attr_device_info = {
+            "identifiers": {(AGENT_DOMAIN, client.unique)},
             "manufacturer": "Agent",
             "model": CONST_ALARM_CONTROL_PANEL_NAME,
-            "sw_version": self._client.version,
+            "sw_version": client.version,
         }
 
     async def async_update(self):
         """Update the state of the device."""
         await self._client.update()
+        self._attr_available = self._client.is_available
         armed = self._client.is_armed
         if armed is None:
-            self._state = None
+            self._attr_state = None
             return
         if armed:
             prof = (await self._client.get_active_profile()).lower()
-            self._state = STATE_ALARM_ARMED_AWAY
+            self._attr_state = STATE_ALARM_ARMED_AWAY
             if prof == CONF_HOME_MODE_NAME:
-                self._state = STATE_ALARM_ARMED_HOME
+                self._attr_state = STATE_ALARM_ARMED_HOME
             elif prof == CONF_NIGHT_MODE_NAME:
-                self._state = STATE_ALARM_ARMED_NIGHT
+                self._attr_state = STATE_ALARM_ARMED_NIGHT
         else:
-            self._state = STATE_ALARM_DISARMED
+            self._attr_state = STATE_ALARM_DISARMED
 
     async def async_alarm_disarm(self, code=None):
         """Send disarm command."""
         await self._client.disarm()
-        self._state = STATE_ALARM_DISARMED
+        self._attr_state = STATE_ALARM_DISARMED
 
     async def async_alarm_arm_away(self, code=None):
         """Send arm away command. Uses custom mode."""
         await self._client.arm()
         await self._client.set_active_profile(CONF_AWAY_MODE_NAME)
-        self._state = STATE_ALARM_ARMED_AWAY
+        self._attr_state = STATE_ALARM_ARMED_AWAY
 
     async def async_alarm_arm_home(self, code=None):
         """Send arm home command. Uses custom mode."""
         await self._client.arm()
         await self._client.set_active_profile(CONF_HOME_MODE_NAME)
-        self._state = STATE_ALARM_ARMED_HOME
+        self._attr_state = STATE_ALARM_ARMED_HOME
 
     async def async_alarm_arm_night(self, code=None):
         """Send arm night command. Uses custom mode."""
         await self._client.arm()
         await self._client.set_active_profile(CONF_NIGHT_MODE_NAME)
-        self._state = STATE_ALARM_ARMED_NIGHT
-
-    @property
-    def available(self) -> bool:
-        """Device available."""
-        return self._client.is_available
+        self._attr_state = STATE_ALARM_ARMED_NIGHT
