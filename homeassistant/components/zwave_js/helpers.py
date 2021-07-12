@@ -89,7 +89,7 @@ def async_get_node_from_device_id(
     device_entry = dev_reg.async_get(device_id)
 
     if not device_entry:
-        raise ValueError("Device ID is not valid")
+        raise ValueError(f"Device ID {device_id} is not valid")
 
     # Use device config entry ID's to validate that this is a valid zwave_js device
     # and to get the client
@@ -107,7 +107,9 @@ def async_get_node_from_device_id(
         None,
     )
     if config_entry_id is None or config_entry_id not in hass.data[DOMAIN]:
-        raise ValueError("Device is not from an existing zwave_js config entry")
+        raise ValueError(
+            f"Device {device_id} is not from an existing zwave_js config entry"
+        )
 
     client = hass.data[DOMAIN][config_entry_id][DATA_CLIENT]
 
@@ -125,7 +127,7 @@ def async_get_node_from_device_id(
     node_id = int(identifier[1]) if identifier is not None else None
 
     if node_id is None or node_id not in client.driver.controller.nodes:
-        raise ValueError("Device node can't be found")
+        raise ValueError(f"Node for device {device_id} can't be found")
 
     return client.driver.controller.nodes[node_id]
 
