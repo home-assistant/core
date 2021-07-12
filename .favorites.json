@@ -1,0 +1,18 @@
+[
+    {
+        "type": "Directory",
+        "name": "/workspaces/core/homeassistant/components/wallbox",
+        "parent_id": null,
+        "workspaceRoot": "/workspaces/core",
+        "workspacePath": "homeassistant/components/wallbox",
+        "id": "EQnsc5JgjA3MzBxK"
+    },
+    {
+        "type": "Directory",
+        "name": "/workspaces/core/tests/components/wallbox",
+        "parent_id": null,
+        "workspaceRoot": "/workspaces/core",
+        "workspacePath": "tests/components/wallbox",
+        "id": "fcDOtSvszBq7R0oy"
+    }
+]

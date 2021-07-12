@@ -4,14 +4,7 @@ from homeassistant.components.number import NumberEntity
 from homeassistant.const import CONF_DEVICE_CLASS
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import (
-    CONF_CONNECTIONS,
-    CONF_ICON,
-    CONF_NAME,
-    CONF_SENSOR_TYPES,
-    CONF_UNIT_OF_MEASUREMENT,
-    DOMAIN,
-)
+from .const import CONF_CONNECTIONS, CONF_NAME, CONF_SENSOR_TYPES, DOMAIN
 
 CONF_STATION = "station"
 UPDATE_INTERVAL = 30
@@ -33,8 +26,6 @@ class WallboxNumber(CoordinatorEntity, NumberEntity):
         _properties = CONF_SENSOR_TYPES["max_charging_current"]
         self._coordinator = coordinator
         self._name = f"{config.title} {_properties[CONF_NAME]}"
-        self._icon = _properties[CONF_ICON]
-        self._unit = _properties[CONF_UNIT_OF_MEASUREMENT]
         self._device_class = _properties[CONF_DEVICE_CLASS]
 
     @property
@@ -61,16 +52,6 @@ class WallboxNumber(CoordinatorEntity, NumberEntity):
     def device_class(self):
         """Return the state of the sensor."""
         return self._device_class
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of the sensor."""
-        return self._unit
-
-    @property
-    def icon(self):
-        """Return the icon of the sensor."""
-        return self._icon
 
     async def async_set_value(self, value: float):
         """Set the value of the entity."""

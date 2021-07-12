@@ -5,10 +5,10 @@ import logging
 import requests
 from wallbox import Wallbox
 
-from homeassistant import exceptions
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import CONF_CONNECTIONS, CONF_ROUND, CONF_SENSOR_TYPES, CONF_STATION, DOMAIN
@@ -44,6 +44,16 @@ class WallboxHub(DataUpdateCoordinator):
             return True
         except requests.exceptions.HTTPError as wallbox_connection_error:
             if wallbox_connection_error.response.status_code == 403:
+                raise ConfigEntryAuthFailed from wallbox_connection_error
+            raise ConnectionError from wallbox_connection_error
+
+    def _validate(self):
+        """Authenticate using Wallbox API."""
+        try:
+            self._wallbox.authenticate()
+            return True
+        except requests.exceptions.HTTPError as wallbox_connection_error:
+            if wallbox_connection_error.response.status_code == 403:
                 raise InvalidAuth from wallbox_connection_error
             raise ConnectionError from wallbox_connection_error
 
@@ -71,8 +81,11 @@ class WallboxHub(DataUpdateCoordinator):
     def _set_charging_current(self, charging_current):
         """Set maximum charging current for Wallbox."""
         try:
+            self._authenticate()
             self._wallbox.setMaxChargingCurrent(self._station, charging_current)
         except requests.exceptions.HTTPError as wallbox_connection_error:
+            if wallbox_connection_error.response.status_code == 403:
+                raise InvalidAuth from wallbox_connection_error
             raise ConnectionError from wallbox_connection_error
 
     async def async_set_charging_current(self, charging_current):
@@ -87,9 +100,9 @@ class WallboxHub(DataUpdateCoordinator):
         data = await self._hass.async_add_executor_job(self._get_data)
         return data
 
-    async def async_update_data(self) -> bool:
+    async def async_validate_input(self) -> bool:
         """Get new sensor data for Wallbox component."""
-        data = await self._hass.async_add_executor_job(self._get_data)
+        data = await self._hass.async_add_executor_job(self._validate)
         return data
 
 
@@ -101,18 +114,43 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry.data[CONF_PASSWORD],
         hass,
     )
+    try:
+        await wallbox.async_validate_input()
 
-    await wallbox.async_config_entry_first_refresh()
-
-    hass.data.setdefault(DOMAIN, {CONF_CONNECTIONS: {}})
-    hass.data[DOMAIN][CONF_CONNECTIONS][entry.entry_id] = wallbox
-
-    for platform in PLATFORMS:
+    except InvalidAuth:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, platform)
+            hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": SOURCE_REAUTH, "entry_id": entry.entry_id},
+                data=entry.data,
+            )
         )
+        return False
 
-    return True
+    else:
+
+        await wallbox.async_config_entry_first_refresh()
+
+        hass.data.setdefault(DOMAIN, {CONF_CONNECTIONS: {}})
+        hass.data[DOMAIN][CONF_CONNECTIONS][entry.entry_id] = wallbox
+
+        try:
+            await wallbox.async_set_charging_current(
+                wallbox.data["max_charging_current"]
+            )
+        except InvalidAuth:
+            platforms_create = (
+                platform for platform in PLATFORMS if platform != "number"
+            )
+        else:
+            platforms_create = (platform for platform in PLATFORMS)
+
+        for platform in platforms_create:
+            hass.async_create_task(
+                hass.config_entries.async_forward_entry_setup(entry, platform)
+            )
+
+        return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
@@ -124,5 +162,5 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     return unload_ok
 
 
-class InvalidAuth(exceptions.HomeAssistantError):
+class InvalidAuth(HomeAssistantError):
     """Error to indicate there is invalid auth."""
