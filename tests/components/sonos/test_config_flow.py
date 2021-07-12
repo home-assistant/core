@@ -71,7 +71,7 @@ async def test_zeroconf_form(hass: core.HomeAssistant):
 
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
-    assert len(mock_manager.mock_calls) == 1
+    assert len(mock_manager.mock_calls) == 2
 
 
 async def test_zeroconf_form_not_sonos(hass: core.HomeAssistant):
