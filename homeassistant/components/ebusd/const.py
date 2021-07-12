@@ -248,9 +248,13 @@ SENSOR_TYPES = {
             0,
             None,
         ],
-        "RoomThermostat": ["DCRoomthermostat", None, "mdi:toggle-switch", 2, None],
-        "HeatingPartLoad": ["PartloadHcKW", ENERGY_KILO_WATT_HOUR, "mdi:flash", 0, None],
         "StateNumber": ["StateNumber", None, "mdi:fire", 3, None],
-        "ModulationPercentage": ["ModulationTempDesired", PERCENTAGE, "mdi:percent", 0, None],
+        "ModulationPercentage": [
+            "ModulationTempDesired",
+            PERCENTAGE,
+            "mdi:percent",
+            0,
+            None,
+        ],
     },
 }
