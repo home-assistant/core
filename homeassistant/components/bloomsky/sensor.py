@@ -5,6 +5,7 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     AREA_SQUARE_METERS,
     CONF_MONITORED_CONDITIONS,
+    DEVICE_CLASS_TEMPERATURE,
     PERCENTAGE,
     PRESSURE_INHG,
     PRESSURE_MBAR,
@@ -41,6 +42,11 @@ SENSOR_UNITS_METRIC = {
     "Pressure": PRESSURE_MBAR,
     "Luminance": f"cd/{AREA_SQUARE_METERS}",
     "Voltage": "mV",
+}
+
+# Device class
+SENSOR_DEVICE_CLASS = {
+    "Temperature": DEVICE_CLASS_TEMPERATURE,
 }
 
 # Which sensors to format numerically
@@ -102,6 +108,11 @@ class BloomSkySensor(SensorEntity):
         if self._bloomsky.is_metric:
             return SENSOR_UNITS_METRIC.get(self._sensor_name, None)
         return SENSOR_UNITS_IMPERIAL.get(self._sensor_name, None)
+
+    @property
+    def device_class(self):
+        """Return the class of this device, from component DEVICE_CLASSES."""
+        return SENSOR_DEVICE_CLASS.get(self._sensor_name)
 
     def update(self):
         """Request an update from the BloomSky API."""
