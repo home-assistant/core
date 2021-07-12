@@ -131,16 +131,18 @@ class NetatmoScheduleSelect(NetatmoBase, SelectEntity):
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         for sid, name in self.hass.data[DOMAIN][DATA_SCHEDULES][self._home_id].items():
-            if name == option:
-                await self._data.async_switch_home_schedule(
-                    home_id=self._home_id, schedule_id=sid
-                )
-                _LOGGER.debug(
-                    "Setting %s schedule to %s (%s)",
-                    self._home_id,
-                    option,
-                    sid,
-                )
+            if name != option:
+                continue
+            _LOGGER.debug(
+                "Setting %s schedule to %s (%s)",
+                self._home_id,
+                option,
+                sid,
+            )
+            await self._data.async_switch_home_schedule(
+                home_id=self._home_id, schedule_id=sid
+            )
+            break
 
     @callback
     def async_update_callback(self) -> None:
