@@ -6,7 +6,7 @@
             "webhook_not_internet_accessible": "Deine Home Assistant-Instanz muss \u00fcber das Internet erreichbar sein, um Webhook-Nachrichten empfangen zu k\u00f6nnen."
         },
         "create_entry": {
-            "default": "Ihr Plaato {device_type} mit dem Namen **{device_name}** wurde erfolgreich eingerichtet!"
+            "default": "Dein Plaato {device_type} mit dem Namen **{device_name}** wurde erfolgreich eingerichtet!"
         },
         "error": {
             "invalid_webhook_device": "Du hast ein Ger\u00e4t gew\u00e4hlt, das das Senden von Daten an einen Webhook nicht unterst\u00fctzt. Es ist nur f\u00fcr die Airlock verf\u00fcgbar",

@@ -15,6 +15,9 @@ from homematicip.base.enums import DoorCommand, DoorState
 from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
+    DEVICE_CLASS_BLIND,
+    DEVICE_CLASS_GARAGE,
+    DEVICE_CLASS_SHUTTER,
     CoverEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -62,6 +65,11 @@ async def async_setup_entry(
 
 class HomematicipBlindModule(HomematicipGenericEntity, CoverEntity):
     """Representation of the HomematicIP blind module."""
+
+    @property
+    def device_class(self) -> str:
+        """Return the class of the cover."""
+        return DEVICE_CLASS_BLIND
 
     @property
     def current_cover_position(self) -> int:
@@ -150,6 +158,11 @@ class HomematicipMultiCoverShutter(HomematicipGenericEntity, CoverEntity):
         super().__init__(
             hap, device, channel=channel, is_multi_channel=is_multi_channel
         )
+
+    @property
+    def device_class(self) -> str:
+        """Return the class of the cover."""
+        return DEVICE_CLASS_SHUTTER
 
     @property
     def current_cover_position(self) -> int:
@@ -265,6 +278,11 @@ class HomematicipGarageDoorModule(HomematicipGenericEntity, CoverEntity):
         return door_state_to_position.get(self._device.doorState)
 
     @property
+    def device_class(self) -> str:
+        """Return the class of the cover."""
+        return DEVICE_CLASS_GARAGE
+
+    @property
     def is_closed(self) -> bool | None:
         """Return if the cover is closed."""
         return self._device.doorState == DoorState.CLOSED
@@ -289,6 +307,11 @@ class HomematicipCoverShutterGroup(HomematicipGenericEntity, CoverEntity):
         """Initialize switching group."""
         device.modelType = f"HmIP-{post}"
         super().__init__(hap, device, post, is_multi_channel=False)
+
+    @property
+    def device_class(self) -> str:
+        """Return the class of the cover."""
+        return DEVICE_CLASS_SHUTTER
 
     @property
     def current_cover_position(self) -> int:

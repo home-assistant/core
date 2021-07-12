@@ -22,7 +22,7 @@
                 }
             },
             "reauth_confirm": {
-                "description": "Die bosch_shc-Integration muss Ihr Konto neu authentifizieren",
+                "description": "Die bosch_shc-Integration muss dein Konto neu authentifizieren",
                 "title": "Integration erneut authentifizieren"
             },
             "user": {
