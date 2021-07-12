@@ -52,7 +52,9 @@ async def async_setup_entry(
             list(hass.data[DOMAIN][DATA_SCHEDULES][home_id].values()),
         )
         for home_id in get_all_home_ids(home_data)
+        if home_id in hass.data[DOMAIN][DATA_SCHEDULES]
     ]
+
     _LOGGER.debug("Adding climate schedule select entities %s", entities)
     async_add_entities(entities, True)
 
@@ -143,4 +145,17 @@ class NetatmoScheduleSelect(NetatmoBase, SelectEntity):
     @callback
     def async_update_callback(self) -> None:
         """Update the entity's state."""
-        pass
+        self._attr_current_option = (
+            self._data._get_selected_schedule(  # pylint: disable=protected-access
+                home_id=self._home_id
+            ).get("name")
+        )
+        self.hass.data[DOMAIN][DATA_SCHEDULES][self._home_id] = {
+            schedule_id: schedule_data.get("name")
+            for schedule_id, schedule_data in (
+                self._data.schedules[self._home_id].items()
+            )
+        }
+        self._attr_options = list(
+            self.hass.data[DOMAIN][DATA_SCHEDULES][self._home_id].values()
+        )
