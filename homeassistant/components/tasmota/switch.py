@@ -7,7 +7,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import DATA_REMOVE_DISCOVER_COMPONENT
 from .discovery import TASMOTA_DISCOVERY_ENTITY_NEW
-from .mixins import TasmotaAvailability, TasmotaDiscoveryUpdate
+from .mixins import TasmotaAvailability, TasmotaDiscoveryUpdate, TasmotaOnOffEntity
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -36,6 +36,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class TasmotaSwitch(
     TasmotaAvailability,
     TasmotaDiscoveryUpdate,
+    TasmotaOnOffEntity,
     SwitchEntity,
 ):
     """Representation of a Tasmota switch."""
@@ -47,11 +48,6 @@ class TasmotaSwitch(
         super().__init__(
             **kwds,
         )
-
-    @property
-    def is_on(self):
-        """Return true if device is on."""
-        return self._state
 
     async def async_turn_on(self, **kwargs):
         """Turn the device on."""
