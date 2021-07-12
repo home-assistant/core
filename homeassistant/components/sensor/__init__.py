@@ -38,7 +38,7 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 )
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, StateType
 
 _LOGGER: Final = logging.getLogger(__name__)
 
@@ -113,8 +113,10 @@ class SensorEntity(Entity):
     """Base class for sensor entities."""
 
     entity_description: SensorEntityDescription
-    _attr_state_class: str | None
     _attr_last_reset: datetime | None
+    _attr_native_unit_of_measurement: str | None = None
+    _attr_native_value: StateType
+    _attr_state_class: str | None
 
     @property
     def state_class(self) -> str | None:
@@ -152,18 +154,27 @@ class SensorEntity(Entity):
         return None
 
     @property
-    def native_value(self) -> str | None:
+    def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
-        return None
+        return self._attr_native_value
 
     @property
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of the sensor, if any."""
+        if hasattr(self, "_attr_native_unit_of_measurement"):
+            return self._attr_native_unit_of_measurement
+        if hasattr(self, "entity_description"):
+            return self.entity_description.native_unit_of_measurement
         return None
 
     @property
     def unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of the entity, after unit conversion."""
+        if hasattr(self, "_attr_unit_of_measurement") and self._attr_unit_of_measurement is not None:
+            return self._attr_unit_of_measurement
+        if hasattr(self, "entity_description") and self.entity_description.unit_of_measurement is not None:
+            return self.entity_description.unit_of_measurement
+
         native_unit_of_measurement = self.native_unit_of_measurement
 
         if native_unit_of_measurement in (TEMP_CELSIUS, TEMP_FAHRENHEIT):
@@ -176,6 +187,8 @@ class SensorEntity(Entity):
     @property
     def state(self) -> Any:
         """Return the state of the sensor and perform unit conversions, if needed."""
+        if self._attr_state is not None:
+            return self._attr_state
 
         unit_of_measurement = self.native_unit_of_measurement
         value = self.native_value
