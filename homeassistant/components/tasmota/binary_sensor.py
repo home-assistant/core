@@ -1,6 +1,7 @@
 """Support for Tasmota binary sensors."""
 from __future__ import annotations
 
+from datetime import datetime
 from typing import Any, Callable
 
 from hatasmota import switch as tasmota_switch
@@ -73,7 +74,7 @@ class TasmotaBinarySensor(
         await super().async_added_to_hass()
 
     @callback
-    def off_delay_listener(self, now: Any) -> None:
+    def off_delay_listener(self, now: datetime) -> None:
         """Switch device off after a delay."""
         self._delay_listener = None
         self._on_off_state = False
