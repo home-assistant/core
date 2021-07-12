@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import logging
 import secrets
-from typing import Callable
+from typing import Awaitable, Callable
 
 from aiohttp.web import Request, Response
 import voluptuous as vol
@@ -36,7 +36,7 @@ def async_register(
     domain: str,
     name: str,
     webhook_id: str,
-    handler: Callable,
+    handler: Callable[[HomeAssistant, str, Request], Awaitable[Response | None]],
 ) -> None:
     """Register a webhook."""
     handlers = hass.data.setdefault(DOMAIN, {})
