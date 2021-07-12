@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import logging
 import secrets
+from typing import Callable
 
 from aiohttp.web import Request, Response
 import voluptuous as vol
@@ -10,7 +11,7 @@ import voluptuous as vol
 from homeassistant.components import websocket_api
 from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.const import HTTP_OK
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.network import get_url
 from homeassistant.loader import bind_hass
 from homeassistant.util.aiohttp import MockRequest
@@ -31,7 +32,11 @@ SCHEMA_WS_LIST = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
 @callback
 @bind_hass
 def async_register(
-    hass: HomeAssistant, domain: str, name: str, webhook_id: str, handler: CALLBACK_TYPE
+    hass: HomeAssistant,
+    domain: str,
+    name: str,
+    webhook_id: str,
+    handler: Callable,
 ) -> None:
     """Register a webhook."""
     handlers = hass.data.setdefault(DOMAIN, {})
