@@ -181,6 +181,18 @@ DHCP = [
         "hostname": "tizen*"
     },
     {
+        "domain": "samsungtv",
+        "macaddress": "8CC8CD*"
+    },
+    {
+        "domain": "samsungtv",
+        "macaddress": "606BBD*"
+    },
+    {
+        "domain": "samsungtv",
+        "macaddress": "F47B5E*"
+    },
+    {
         "domain": "screenlogic",
         "hostname": "pentair: *",
         "macaddress": "00C033*"

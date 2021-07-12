@@ -248,7 +248,7 @@ class DeviceTrackerWatcher(WatcherBase):
             return
 
         ip_address = attributes.get(ATTR_IP)
-        hostname = attributes.get(ATTR_HOST_NAME) or ""
+        hostname = attributes.get(ATTR_HOST_NAME, "")
         mac_address = attributes.get(ATTR_MAC)
 
         if ip_address is None or mac_address is None:
