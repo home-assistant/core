@@ -6,7 +6,6 @@ https://home-assistant.io/components/shell_command/
 """
 import asyncio
 
-import aiofiles
 import async_timeout
 import logging
 import multiprocessing
@@ -203,9 +202,10 @@ async def _change_remote_access(hass, call):
                 # store file
                 async with web_session.get("https://ai-speaker.com/ota/ais_cloudflared") as resp:
                     if resp.status == 200:
-                        f = await aiofiles.open('/data/data/pl.sviete.dom/files/home/.cloudflared/cert.pem', mode='wb')
-                        await f.write(await resp.read())
-                        await f.close()
+                        body = await resp.read()
+                        f = open('/data/data/pl.sviete.dom/files/home/.cloudflared/cert.pem', mode='wb')
+                        f.write(body)
+                        f.close()
 
         await _run(
             "pm2 restart tunnel || pm2 start {}"
