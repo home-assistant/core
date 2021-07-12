@@ -4,7 +4,6 @@ from __future__ import annotations
 from abc import ABC
 import asyncio
 from collections.abc import Awaitable, Iterable, Mapping, MutableMapping
-from contextlib import suppress
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import functools as ft

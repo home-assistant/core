@@ -7,18 +7,8 @@ from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
 
-<<<<<<< HEAD
-from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
-    TEMP_FAHRENHEIT,
-)
-from homeassistant.core import Context, HomeAssistantError
-=======
 from homeassistant.const import ATTR_DEVICE_CLASS, STATE_UNAVAILABLE, STATE_UNKNOWN
-from homeassistant.core import Context
->>>>>>> Drop deprecation warning from base entity class
+from homeassistant.core import Context, HomeAssistantError
 from homeassistant.helpers import entity, entity_registry
 
 from tests.common import (
