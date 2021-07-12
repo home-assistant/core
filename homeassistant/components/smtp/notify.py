@@ -241,7 +241,7 @@ def _attach_file(atch_name, content_id):
             atch_name,
         )
         attachment = MIMEApplication(file_bytes, Name=atch_name)
-        attachment["Content-Disposition"] = "attachment; " 'filename="%s"' % atch_name
+        attachment["Content-Disposition"] = f'attachment; filename="{atch_name}"'
 
     attachment.add_header("Content-ID", f"<{content_id}>")
     return attachment
