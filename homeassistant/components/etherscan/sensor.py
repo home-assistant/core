@@ -34,7 +34,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     if token:
         token = token.upper()
         if not name:
-            name = "%s Balance" % token
+            name = f"{token} Balance"
     if not name:
         name = "ETH Balance"
 
