@@ -7,7 +7,7 @@ from homeassistant.components.binary_sensor import DOMAIN as DOMAIN_BINARY_SENSO
 from homeassistant.components.sensor import DOMAIN as DOMAIN_SENSOR
 from homeassistant.components.switch import DOMAIN as DOMAIN_SWITCH
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.const import ATTR_ATTRIBUTION, ATTR_MODEL, CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -17,7 +17,15 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
-from .const import DATA_KEY_API, DATA_KEY_COORDINATOR, DOMAIN, MIN_TIME_BETWEEN_UPDATES
+from .const import (
+    ATTR_FIRMWARE_VERSION,
+    ATTR_FOREIGN_ACCESSORY,
+    ATTRIBUTION,
+    DATA_KEY_API,
+    DATA_KEY_COORDINATOR,
+    DOMAIN,
+    MIN_TIME_BETWEEN_UPDATES,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -81,6 +89,24 @@ class YetiEntity(CoordinatorEntity):
         self._name = name
         self._server_unique_id = server_unique_id
         self._device_class = None
+
+    @property
+    def extra_state_attributes(self):
+        """Return the state attributes."""
+        attributes = {
+            ATTR_ATTRIBUTION: ATTRIBUTION,
+            "wifi_ssid": self.api.data.get("ssid"),
+            "ip_address": self.api.data.get("ipAddr"),
+        }
+        if (
+            ATTR_FOREIGN_ACCESSORY in self.api.data
+            and self.api.data[ATTR_FOREIGN_ACCESSORY] is not None
+        ):
+            attributes["accessory"] = self.api.data[ATTR_FOREIGN_ACCESSORY][ATTR_MODEL]
+            attributes["accessory_firmware"] = self.api.data[ATTR_FOREIGN_ACCESSORY][
+                ATTR_FIRMWARE_VERSION
+            ]
+        return attributes
 
     @property
     def device_info(self):
