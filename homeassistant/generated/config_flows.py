@@ -251,6 +251,7 @@ FLOWS = [
     "srp_energy",
     "starline",
     "subaru",
+    "surepetcare",
     "syncthing",
     "syncthru",
     "synology_dsm",
