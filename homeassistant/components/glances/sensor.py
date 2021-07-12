@@ -92,6 +92,11 @@ class GlancesSensor(SensorEntity):
         return f"{self.glances_data.host}-{self.name}"
 
     @property
+    def device_class(self):
+        """Return the class of this device, from component DEVICE_CLASSES."""
+        return self.sensor_details[4]
+
+    @property
     def icon(self):
         """Icon to use in the frontend, if any."""
         return self.sensor_details[3]
