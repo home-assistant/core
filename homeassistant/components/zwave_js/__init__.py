@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import asyncio
 from collections import defaultdict
-from typing import Callable
 
 from async_timeout import timeout
 from zwave_js_server.client import Client as ZwaveClient
@@ -61,7 +60,6 @@ from .const import (
     CONF_USE_ADDON,
     DATA_CLIENT,
     DATA_PLATFORM_SETUP,
-    DATA_UNSUBSCRIBE,
     DOMAIN,
     EVENT_DEVICE_ADDED_TO_REGISTRY,
     LOGGER,
@@ -126,9 +124,7 @@ async def async_setup_entry(  # noqa: C901
     ent_reg = entity_registry.async_get(hass)
     entry_hass_data: dict = hass.data[DOMAIN].setdefault(entry.entry_id, {})
 
-    unsubscribe_callbacks: list[Callable] = []
     entry_hass_data[DATA_CLIENT] = client
-    entry_hass_data[DATA_UNSUBSCRIBE] = unsubscribe_callbacks
     entry_hass_data[DATA_PLATFORM_SETUP] = {}
 
     registered_unique_ids: dict[str, dict[str, set[str]]] = defaultdict(dict)
@@ -181,7 +177,7 @@ async def async_setup_entry(  # noqa: C901
 
         # add listener for value updated events if necessary
         if value_updates_disc_info:
-            unsubscribe_callbacks.append(
+            entry.async_on_unload(
                 node.on(
                     "value updated",
                     lambda event: async_on_value_updated(
@@ -191,14 +187,14 @@ async def async_setup_entry(  # noqa: C901
             )
 
         # add listener for stateless node value notification events
-        unsubscribe_callbacks.append(
+        entry.async_on_unload(
             node.on(
                 "value notification",
                 lambda event: async_on_value_notification(event["value_notification"]),
             )
         )
         # add listener for stateless node notification events
-        unsubscribe_callbacks.append(
+        entry.async_on_unload(
             node.on(
                 "notification",
                 lambda event: async_on_notification(event["notification"]),
@@ -400,7 +396,7 @@ async def async_setup_entry(  # noqa: C901
             client_listen(hass, entry, client, driver_ready)
         )
         entry_hass_data[DATA_CLIENT_LISTEN_TASK] = listen_task
-        unsubscribe_callbacks.append(
+        entry.async_on_unload(
             hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, handle_ha_shutdown)
         )
 
@@ -442,7 +438,7 @@ async def async_setup_entry(  # noqa: C901
         )
 
         # listen for new nodes being added to the mesh
-        unsubscribe_callbacks.append(
+        entry.async_on_unload(
             client.driver.controller.on(
                 "node added",
                 lambda event: hass.async_create_task(
@@ -452,7 +448,7 @@ async def async_setup_entry(  # noqa: C901
         )
         # listen for nodes being removed from the mesh
         # NOTE: This will not remove nodes that were removed when HA was not running
-        unsubscribe_callbacks.append(
+        entry.async_on_unload(
             client.driver.controller.on(
                 "node removed", lambda event: async_on_node_removed(event["node"])
             )
@@ -514,9 +510,6 @@ async def disconnect_client(hass: HomeAssistant, entry: ConfigEntry) -> None:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     info = hass.data[DOMAIN][entry.entry_id]
-
-    for unsub in info[DATA_UNSUBSCRIBE]:
-        unsub()
 
     tasks = []
     for platform, task in info[DATA_PLATFORM_SETUP].items():

@@ -115,14 +115,12 @@ class MySensorsSensor(mysensors.device.MySensorsEntity, SensorEntity):
     @property
     def device_class(self) -> str | None:
         """Return the device class of this entity."""
-        icon = self._get_sensor_type()[2]
-        return icon
+        return self._get_sensor_type()[2]
 
     @property
     def icon(self) -> str | None:
         """Return the icon to use in the frontend, if any."""
-        icon = self._get_sensor_type()[1]
-        return icon
+        return self._get_sensor_type()[1]
 
     @property
     def unit_of_measurement(self) -> str | None:

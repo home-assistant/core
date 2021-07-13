@@ -51,6 +51,13 @@
             }
         }
     },
+    "device_automation": {
+        "condition_type": {
+            "config_parameter": "Config parameter {subtype} waarde",
+            "node_status": "Knooppuntstatus",
+            "value": "Huidige waarde van een Z-Wave-waarde"
+        }
+    },
     "options": {
         "abort": {
             "addon_get_discovery_info_failed": "Ophalen van ontdekkingsinformatie voor Z-Wave JS-add-on is mislukt.",

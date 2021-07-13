@@ -329,7 +329,8 @@ omit =
     homeassistant/components/flick_electric/const.py
     homeassistant/components/flick_electric/sensor.py
     homeassistant/components/flock/notify.py
-    homeassistant/components/flume/*
+    homeassistant/components/flume/__init__.py
+    homeassistant/components/flume/sensor.py
     homeassistant/components/flunearyou/__init__.py
     homeassistant/components/flunearyou/sensor.py
     homeassistant/components/flux_led/light.py
@@ -370,6 +371,7 @@ omit =
     homeassistant/components/garmin_connect/alarm_util.py
     homeassistant/components/gc100/*
     homeassistant/components/geniushub/*
+    homeassistant/components/generic_hygrostat/*
     homeassistant/components/github/sensor.py
     homeassistant/components/gitlab_ci/sensor.py
     homeassistant/components/gitter/sensor.py
@@ -642,6 +644,9 @@ omit =
     homeassistant/components/mitemp_bt/sensor.py
     homeassistant/components/mjpeg/camera.py
     homeassistant/components/mochad/*
+    homeassistant/components/modbus/base_platform.py
+    homeassistant/components/modbus/binary_sensor.py
+    homeassistant/components/modbus/cover.py
     homeassistant/components/modbus/climate.py
     homeassistant/components/modbus/modbus.py
     homeassistant/components/modbus/validators.py
@@ -697,6 +702,7 @@ omit =
     homeassistant/components/netgear_lte/*
     homeassistant/components/netio/switch.py
     homeassistant/components/neurio_energy/sensor.py
+    homeassistant/components/nexia/climate.py
     homeassistant/components/nextcloud/*
     homeassistant/components/nfandroidtv/notify.py
     homeassistant/components/niko_home_control/light.py

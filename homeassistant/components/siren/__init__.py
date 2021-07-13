@@ -51,14 +51,23 @@ class SirenTurnOnServiceParameters(TypedDict, total=False):
     volume_level: float
 
 
-def filter_turn_on_params(
+def process_turn_on_params(
     siren: SirenEntity, params: SirenTurnOnServiceParameters
 ) -> SirenTurnOnServiceParameters:
-    """Filter out params not supported by the siren."""
+    """
+    Process turn_on service params.
+
+    Filters out unsupported params and validates the rest.
+    """
     supported_features = siren.supported_features or 0
 
     if not supported_features & SUPPORT_TONES:
         params.pop(ATTR_TONE, None)
+    elif (tone := params.get(ATTR_TONE)) is not None and (
+        not siren.available_tones or tone not in siren.available_tones
+    ):
+        raise ValueError(f"Invalid tone received for entity {siren.entity_id}: {tone}")
+
     if not supported_features & SUPPORT_DURATION:
         params.pop(ATTR_DURATION, None)
     if not supported_features & SUPPORT_VOLUME_SET:
@@ -78,10 +87,13 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
         siren: SirenEntity, call: ServiceCall
     ) -> None:
         """Handle turning a siren on."""
+        data = {
+            k: v
+            for k, v in call.data.items()
+            if k in (ATTR_TONE, ATTR_DURATION, ATTR_VOLUME_LEVEL)
+        }
         await siren.async_turn_on(
-            **filter_turn_on_params(
-                siren, cast(SirenTurnOnServiceParameters, dict(call.data))
-            )
+            **process_turn_on_params(siren, cast(SirenTurnOnServiceParameters, data))
         )
 
     component.async_register_entity_service(

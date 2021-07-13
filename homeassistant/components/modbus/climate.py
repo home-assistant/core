@@ -16,6 +16,8 @@ from homeassistant.const import (
     CONF_OFFSET,
     CONF_STRUCTURE,
     CONF_TEMPERATURE_UNIT,
+    PRECISION_TENTHS,
+    PRECISION_WHOLE,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
@@ -135,6 +137,11 @@ class ModbusThermostat(BasePlatform, RestoreEntity, ClimateEntity):
         return TEMP_FAHRENHEIT if self._unit == "F" else TEMP_CELSIUS
 
     @property
+    def precision(self) -> float:
+        """Return the precision of the system."""
+        return PRECISION_TENTHS if self._precision >= 1 else PRECISION_WHOLE
+
+    @property
     def min_temp(self):
         """Return the minimum temperature."""
         return self._min_temp
@@ -187,13 +194,18 @@ class ModbusThermostat(BasePlatform, RestoreEntity, ClimateEntity):
         """Update Target & Current Temperature."""
         # remark "now" is a dummy parameter to avoid problems with
         # async_track_time_interval
+
+        # do not allow multiple active calls to the same platform
+        if self._call_active:
+            return
+        self._call_active = True
         self._target_temperature = await self._async_read_register(
             CALL_TYPE_REGISTER_HOLDING, self._target_temperature_register
         )
         self._current_temperature = await self._async_read_register(
             self._input_type, self._address
         )
-
+        self._call_active = False
         self.async_write_ha_state()
 
     async def _async_read_register(self, register_type, register) -> float | None:
