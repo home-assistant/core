@@ -4,7 +4,7 @@ from __future__ import annotations
 import dataclasses
 from functools import partial, wraps
 import json
-from typing import Callable
+from typing import Any, Callable
 
 from aiohttp import hdrs, web, web_exceptions, web_request
 import voluptuous as vol
