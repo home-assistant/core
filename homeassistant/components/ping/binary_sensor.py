@@ -257,19 +257,19 @@ class PingDataSubProcess(PingData):
 
             if sys.platform == "win32":
                 match = WIN32_PING_MATCHER.search(
-                    str(out_data).split("\n")[-1]
-                )  # pylint: disable=use-maxsplit-arg
+                    str(out_data).split("\n")[-1]  # pylint: disable=use-maxsplit-arg
+                )
                 rtt_min, rtt_avg, rtt_max = match.groups()
                 return {"min": rtt_min, "avg": rtt_avg, "max": rtt_max, "mdev": ""}
             if "max/" not in str(out_data):
                 match = PING_MATCHER_BUSYBOX.search(
-                    str(out_data).split("\n")[-1]
-                )  # pylint: disable=use-maxsplit-arg
+                    str(out_data).split("\n")[-1]  # pylint: disable=use-maxsplit-arg
+                )
                 rtt_min, rtt_avg, rtt_max = match.groups()
                 return {"min": rtt_min, "avg": rtt_avg, "max": rtt_max, "mdev": ""}
             match = PING_MATCHER.search(
-                str(out_data).split("\n")[-1]
-            )  # pylint: disable=use-maxsplit-arg
+                str(out_data).split("\n")[-1]  # pylint: disable=use-maxsplit-arg
+            )
             rtt_min, rtt_avg, rtt_max, rtt_mdev = match.groups()
             return {"min": rtt_min, "avg": rtt_avg, "max": rtt_max, "mdev": rtt_mdev}
         except asyncio.TimeoutError:
