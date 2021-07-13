@@ -1,18 +1,24 @@
 """Common code for tplink."""
 from __future__ import annotations
 
+import asyncio
+import ipaddress
+import json
 import logging
+import socket
 from typing import Callable
 
 from pyHS100 import (
-    Discover,
+    Discover as BaseDiscover,
     SmartBulb,
     SmartDevice,
     SmartDeviceException,
     SmartPlug,
     SmartStrip,
+    TPLinkSmartHomeProtocol,
 )
 
+from homeassistant.components import network
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
 
@@ -57,13 +63,99 @@ class SmartDevices:
         return False
 
 
+class Discover(BaseDiscover):
+    """Discover TPLink Smart Home devices.
+
+    The main entry point for this class is Discover.discover(),
+    which returns a dictionary of the found devices. The key is the IP address
+    of the device and the value contains ready-to-use, SmartDevice-derived
+    device object.
+
+    This version overrides the base class in order to allow
+    the target network address to be specified.
+    """
+
+    @staticmethod
+    def discover_target(
+        protocol: TPLinkSmartHomeProtocol = None,
+        target: str = "255.255.255.255",
+        port: int = 9999,
+        timeout: int = 3,
+        discovery_packets=3,
+        return_raw=False,
+    ) -> dict[str, SmartDevice]:
+        """
+        Discover TPLink Smart Home devices.
+
+        Sends discovery message to the specified broadcast address in order
+        to detect available supported devices in the local network,
+        and waits for given timeout for answers from devices.
+        :param protocol: Protocol implementation to use
+        :param target: The target broadcast address (e.g. 192.168.xxx.255).
+        :param timeout: How long to wait for responses, defaults to 3
+        :param port: port to send broadcast messages, defaults to 9999.
+        :rtype: dict
+        :return: Array of json objects {"ip", "port", "sys_info"}
+        """
+        if protocol is None:
+            protocol = TPLinkSmartHomeProtocol()
+
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        sock.settimeout(timeout)
+
+        req = json.dumps(Discover.DISCOVERY_QUERY)
+        _LOGGER.debug("Sending discovery to %s:%s", target, port)
+
+        encrypted_req = protocol.encrypt(req)
+        for _ in range(discovery_packets):
+            sock.sendto(encrypted_req[4:], (target, port))
+
+        devices = {}
+        _LOGGER.debug("Waiting %s seconds for responses", timeout)
+
+        try:
+            while True:
+                data, addr = sock.recvfrom(4096)
+                ip_addr, port = addr
+                info = json.loads(protocol.decrypt(data))
+                device_class = Discover._get_device_class(info)
+                if return_raw:
+                    devices[ip_addr] = info
+                elif device_class is not None:
+                    devices[ip_addr] = device_class(ip_addr)
+        except socket.timeout:
+            _LOGGER.debug("Got socket timeout, which is okay")
+        _LOGGER.debug("Found %s devices: %s", len(devices), devices)
+        return devices
+
+
 async def async_get_discoverable_devices(hass: HomeAssistant) -> dict[str, SmartDevice]:
     """Return if there are devices that can be discovered."""
 
-    def discover() -> dict[str, SmartDevice]:
-        return Discover.discover()
+    def discover(target) -> dict[str, SmartDevice]:
+        return Discover.discover_target(target=target)
 
-    return await hass.async_add_executor_job(discover)
+    targets = []
+    adapters = await network.async_get_adapters(hass)
+    for adapter in adapters:
+        if adapter["enabled"]:
+            for ip_info in adapter["ipv4"]:
+                iface = ipaddress.ip_interface(
+                    f"{ip_info['address']}/{ip_info['network_prefix']}"
+                )
+                targets.append(iface.network.broadcast_address.exploded)
+
+    all_devs = await asyncio.gather(
+        *(hass.async_add_executor_job(discover, t) for t in targets)
+    )
+
+    devs = {}
+    for target_devs in all_devs:
+        devs.update(target_devs)
+
+    return devs
 
 
 async def async_discover_devices(
