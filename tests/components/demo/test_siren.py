@@ -105,4 +105,4 @@ async def test_turn_on_strip_attributes(hass):
             blocking=True,
         )
         assert svc_call.called
-        assert svc_call.call_args_list[0] == call(**{ATTR_ENTITY_ID: [ENTITY_SIREN]})
+        assert svc_call.call_args_list[0] == call()
