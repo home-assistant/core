@@ -120,7 +120,7 @@ class AfterShipSensor(SensorEntity):
         self._attr_name = name
 
     @property
-    def state(self) -> int | None:
+    def native_value(self) -> int | None:
         """Return the state of the sensor."""
         return self._state
 
