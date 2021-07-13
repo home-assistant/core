@@ -27,7 +27,7 @@ from homeassistant.util import color
 
 from . import FritzBoxEntity
 from .const import CONF_COORDINATOR, DOMAIN as FRITZBOX_DOMAIN
-from .model import EntityInfo, LightExtraAttributes
+from .model import EntityInfo
 
 SUPPORTED_COLOR_MODES = {COLOR_MODE_COLOR_TEMP, COLOR_MODE_HS}
 
@@ -169,14 +169,3 @@ class FritzboxLight(FritzBoxEntity, LightEntity):
         """Turn the light off."""
         await self.hass.async_add_executor_job(self.device.set_state_off)
         await self.coordinator.async_refresh()
-
-    @property
-    def extra_state_attributes(self) -> LightExtraAttributes:
-        """Return the state attributes of the device."""
-        attrs: LightExtraAttributes = {
-            ATTR_BRIGHTNESS: self.brightness,
-            ATTR_COLOR_TEMP: self.color_temp,
-            ATTR_HS_COLOR: self.hs_color,
-        }
-
-        return attrs
