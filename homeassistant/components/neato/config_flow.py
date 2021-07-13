@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import logging
 
+from pybotvac import Account
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_REAUTH
@@ -10,6 +11,7 @@ from homeassistant.const import CONF_TOKEN
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from .const import NEATO_DOMAIN
+from .hub import NeatoHub
 
 
 class OAuth2FlowHandler(
@@ -52,6 +54,12 @@ class OAuth2FlowHandler(
     async def async_oauth_create_entry(self, data: dict) -> dict:
         """Create an entry for the flow. Update an entry if one already exist."""
         current_entries = self._async_current_entries()
+        if current_entries:
+            neato_session = self.hass.data[NEATO_DOMAIN][current_entries[0].entry_id]
+            hub = NeatoHub(self.hass, Account(neato_session))
+            data["unique_id"] = await hub.async_update_entry_unique_id(
+                current_entries[0]
+            )
         if (
             self.source != SOURCE_REAUTH
             and current_entries
