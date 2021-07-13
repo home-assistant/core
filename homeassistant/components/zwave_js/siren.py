@@ -4,7 +4,6 @@ from __future__ import annotations
 from typing import Any
 
 from zwave_js_server.client import Client as ZwaveClient
-from zwave_js_server.const import ToneID
 
 from homeassistant.components.siren import DOMAIN as SIREN_DOMAIN, SirenEntity
 from homeassistant.components.siren.const import (
@@ -18,7 +17,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DATA_CLIENT, DOMAIN
+from .const import DATA_CLIENT, DOMAIN, TONE_ID_DEFAULT, TONE_ID_OFF
 from .discovery import ZwaveDiscoveryInfo
 from .entity import ZWaveBaseEntity
 
@@ -77,7 +76,7 @@ class ZwaveSirenEntity(ZWaveBaseEntity, SirenEntity):
         tone: str | None = kwargs.get(ATTR_TONE)
         # Play the default tone if a tone isn't provided
         if tone is None:
-            await self.async_set_value(ToneID.DEFAULT)
+            await self.async_set_value(TONE_ID_DEFAULT)
             return
 
         tone_id = int(
@@ -92,4 +91,4 @@ class ZwaveSirenEntity(ZWaveBaseEntity, SirenEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
-        await self.async_set_value(ToneID.OFF)
+        await self.async_set_value(TONE_ID_OFF)
