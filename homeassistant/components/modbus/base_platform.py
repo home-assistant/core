@@ -23,8 +23,13 @@ from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import (
     CALL_TYPE_COIL,
+    CALL_TYPE_REGISTER_HOLDING,
     CALL_TYPE_WRITE_COIL,
+    CALL_TYPE_WRITE_COILS,
     CALL_TYPE_WRITE_REGISTER,
+    CALL_TYPE_WRITE_REGISTERS,
+    CALL_TYPE_X_COILS,
+    CALL_TYPE_X_REGISTER_HOLDINGS,
     CONF_INPUT_TYPE,
     CONF_STATE_OFF,
     CONF_STATE_ON,
@@ -92,10 +97,19 @@ class BaseSwitch(BasePlatform, RestoreEntity):
         config[CONF_INPUT_TYPE] = ""
         super().__init__(hub, config)
         self._is_on = None
-        if config[CONF_WRITE_TYPE] == CALL_TYPE_COIL:
-            self._write_type = CALL_TYPE_WRITE_COIL
-        else:
-            self._write_type = CALL_TYPE_WRITE_REGISTER
+        convert = {
+            CALL_TYPE_REGISTER_HOLDING: (
+                CALL_TYPE_REGISTER_HOLDING,
+                CALL_TYPE_WRITE_REGISTER,
+            ),
+            CALL_TYPE_COIL: (CALL_TYPE_COIL, CALL_TYPE_WRITE_COIL),
+            CALL_TYPE_X_COILS: (CALL_TYPE_COIL, CALL_TYPE_WRITE_COILS),
+            CALL_TYPE_X_REGISTER_HOLDINGS: (
+                CALL_TYPE_REGISTER_HOLDING,
+                CALL_TYPE_WRITE_REGISTERS,
+            ),
+        }
+        self._write_type = convert[config[CONF_WRITE_TYPE]][1]
         self.command_on = config[CONF_COMMAND_ON]
         self._command_off = config[CONF_COMMAND_OFF]
         if CONF_VERIFY in config:
@@ -107,7 +121,7 @@ class BaseSwitch(BasePlatform, RestoreEntity):
                 CONF_ADDRESS, config[CONF_ADDRESS]
             )
             self._verify_type = config[CONF_VERIFY].get(
-                CONF_INPUT_TYPE, config[CONF_WRITE_TYPE]
+                CONF_INPUT_TYPE, convert[config[CONF_WRITE_TYPE]][0]
             )
             self._state_on = config[CONF_VERIFY].get(CONF_STATE_ON, self.command_on)
             self._state_off = config[CONF_VERIFY].get(CONF_STATE_OFF, self._command_off)

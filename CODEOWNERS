@@ -177,6 +177,7 @@ homeassistant/components/frontend/* @home-assistant/frontend
 homeassistant/components/garages_amsterdam/* @klaasnicolaas
 homeassistant/components/garmin_connect/* @cyberjunky
 homeassistant/components/gdacs/* @exxamalte
+homeassistant/components/generic_hygrostat/* @Shulyaka
 homeassistant/components/geniushub/* @zxdavb
 homeassistant/components/geo_json_events/* @exxamalte
 homeassistant/components/geo_rss_events/* @exxamalte
@@ -442,6 +443,7 @@ homeassistant/components/sighthound/* @robmarkcole
 homeassistant/components/signal_messenger/* @bbernhard
 homeassistant/components/simplisafe/* @bachya
 homeassistant/components/sinch/* @bendikrb
+homeassistant/components/siren/* @home-assistant/core @raman325
 homeassistant/components/sisyphus/* @jkeljo
 homeassistant/components/sky_hub/* @rogerselwyn
 homeassistant/components/slack/* @bachya

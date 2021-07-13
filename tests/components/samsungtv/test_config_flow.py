@@ -20,6 +20,7 @@ from homeassistant.components.samsungtv.const import (
     RESULT_AUTH_MISSING,
     RESULT_CANNOT_CONNECT,
     RESULT_NOT_SUPPORTED,
+    RESULT_SUCCESS,
     RESULT_UNKNOWN_HOST,
     TIMEOUT_REQUEST,
     TIMEOUT_WEBSOCKET,
@@ -109,6 +110,14 @@ MOCK_WS_ENTRY = {
     CONF_PORT: 8002,
     CONF_MODEL: "any",
     CONF_NAME: "any",
+}
+MOCK_DEVICE_INFO = {
+    "device": {
+        "type": "Samsung SmartTV",
+        "name": "fake_name",
+        "modelName": "fake_model",
+    },
+    "id": "123",
 }
 
 AUTODETECT_LEGACY = {
@@ -306,17 +315,22 @@ async def test_ssdp_noprefix(hass: HomeAssistant, remote: Mock):
     assert result["type"] == "form"
     assert result["step_id"] == "confirm"
 
-    # entry was added
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input="whatever"
-    )
-    assert result["type"] == "create_entry"
-    assert result["title"] == "fake2_model"
-    assert result["data"][CONF_HOST] == "fake2_host"
-    assert result["data"][CONF_NAME] == "fake2_model"
-    assert result["data"][CONF_MANUFACTURER] == "Samsung fake2_manufacturer"
-    assert result["data"][CONF_MODEL] == "fake2_model"
-    assert result["result"].unique_id == "0d1cef00-00dc-1000-9c80-4844f7b172df"
+    with patch(
+        "homeassistant.components.samsungtv.bridge.SamsungTVLegacyBridge.try_connect",
+        return_value=RESULT_SUCCESS,
+    ):
+
+        # entry was added
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input="whatever"
+        )
+        assert result["type"] == "create_entry"
+        assert result["title"] == "fake2_model"
+        assert result["data"][CONF_HOST] == "fake2_host"
+        assert result["data"][CONF_NAME] == "fake2_model"
+        assert result["data"][CONF_MANUFACTURER] == "Samsung fake2_manufacturer"
+        assert result["data"][CONF_MODEL] == "fake2_model"
+        assert result["result"].unique_id == "0d1cef00-00dc-1000-9c80-4844f7b172df"
 
 
 async def test_ssdp_legacy_missing_auth(hass: HomeAssistant, remote: Mock):
@@ -334,27 +348,32 @@ async def test_ssdp_legacy_missing_auth(hass: HomeAssistant, remote: Mock):
         assert result["step_id"] == "confirm"
 
         # missing authentication
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input="whatever"
-        )
-        assert result["type"] == "abort"
-        assert result["reason"] == RESULT_AUTH_MISSING
+
+        with patch(
+            "homeassistant.components.samsungtv.bridge.SamsungTVLegacyBridge.try_connect",
+            return_value=RESULT_AUTH_MISSING,
+        ):
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"], user_input="whatever"
+            )
+            assert result["type"] == "abort"
+            assert result["reason"] == RESULT_AUTH_MISSING
 
 
 async def test_ssdp_legacy_not_supported(hass: HomeAssistant, remote: Mock):
     """Test starting a flow from discovery for not supported device."""
+
+    # confirm to add the entry
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_SSDP}, data=MOCK_SSDP_DATA
+    )
+    assert result["type"] == "form"
+    assert result["step_id"] == "confirm"
+
     with patch(
-        "homeassistant.components.samsungtv.bridge.Remote",
-        side_effect=UnhandledResponse("Boom"),
+        "homeassistant.components.samsungtv.bridge.SamsungTVLegacyBridge.try_connect",
+        return_value=RESULT_NOT_SUPPORTED,
     ):
-
-        # confirm to add the entry
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_SSDP}, data=MOCK_SSDP_DATA
-        )
-        assert result["type"] == "form"
-        assert result["step_id"] == "confirm"
-
         # device not supported
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input="whatever"
@@ -395,16 +414,9 @@ async def test_ssdp_websocket_not_supported(hass: HomeAssistant, remote: Mock):
         "homeassistant.components.samsungtv.bridge.SamsungTVWS",
         side_effect=WebSocketProtocolException("Boom"),
     ):
-        # confirm to add the entry
+        # device not supported
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_SSDP}, data=MOCK_SSDP_DATA
-        )
-        assert result["type"] == "form"
-        assert result["step_id"] == "confirm"
-
-        # device not supported
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input="whatever"
         )
         assert result["type"] == "abort"
         assert result["reason"] == RESULT_NOT_SUPPORTED
@@ -431,6 +443,9 @@ async def test_ssdp_not_successful(hass: HomeAssistant, remote: Mock):
     ), patch(
         "homeassistant.components.samsungtv.bridge.SamsungTVWS",
         side_effect=OSError("Boom"),
+    ), patch(
+        "homeassistant.components.samsungtv.bridge.SamsungTVWSBridge.device_info",
+        return_value=MOCK_DEVICE_INFO,
     ):
 
         # confirm to add the entry
@@ -456,6 +471,9 @@ async def test_ssdp_not_successful_2(hass: HomeAssistant, remote: Mock):
     ), patch(
         "homeassistant.components.samsungtv.bridge.SamsungTVWS",
         side_effect=ConnectionFailure("Boom"),
+    ), patch(
+        "homeassistant.components.samsungtv.bridge.SamsungTVWSBridge.device_info",
+        return_value=MOCK_DEVICE_INFO,
     ):
 
         # confirm to add the entry

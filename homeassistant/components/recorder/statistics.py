@@ -145,8 +145,10 @@ def _get_metadata(hass, session, statistic_ids, statistic_type):
         )
     if statistic_type == "mean":
         baked_query += lambda q: q.filter(StatisticsMeta.has_mean.isnot(False))
-    if statistic_type == "sum":
+    elif statistic_type == "sum":
         baked_query += lambda q: q.filter(StatisticsMeta.has_sum.isnot(False))
+    elif statistic_type is not None:
+        return {}
     result = execute(baked_query(session).params(statistic_ids=statistic_ids))
 
     metadata_ids = [metadata[0] for metadata in result]

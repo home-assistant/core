@@ -19,6 +19,7 @@ from homeassistant.const import (
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
     DEGREE,
+    DEVICE_CLASS_TEMPERATURE,
     LENGTH_METERS,
     PERCENTAGE,
     PRESSURE_HPA,
@@ -43,43 +44,65 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=10)
 VIENNA_TIME_ZONE = dt_util.get_time_zone("Europe/Vienna")
 
 SENSOR_TYPES = {
-    "pressure": ("Pressure", PRESSURE_HPA, "LDstat hPa", float),
-    "pressure_sealevel": ("Pressure at Sea Level", PRESSURE_HPA, "LDred hPa", float),
-    "humidity": ("Humidity", PERCENTAGE, "RF %", int),
+    "pressure": ("Pressure", PRESSURE_HPA, None, "LDstat hPa", float),
+    "pressure_sealevel": (
+        "Pressure at Sea Level",
+        PRESSURE_HPA,
+        None,
+        "LDred hPa",
+        float,
+    ),
+    "humidity": ("Humidity", PERCENTAGE, None, "RF %", int),
     "wind_speed": (
         "Wind Speed",
         SPEED_KILOMETERS_PER_HOUR,
+        None,
         f"WG {SPEED_KILOMETERS_PER_HOUR}",
         float,
     ),
-    "wind_bearing": ("Wind Bearing", DEGREE, f"WR {DEGREE}", int),
+    "wind_bearing": ("Wind Bearing", DEGREE, None, f"WR {DEGREE}", int),
     "wind_max_speed": (
         "Top Wind Speed",
+        None,
         SPEED_KILOMETERS_PER_HOUR,
         f"WSG {SPEED_KILOMETERS_PER_HOUR}",
         float,
     ),
-    "wind_max_bearing": ("Top Wind Bearing", DEGREE, f"WSR {DEGREE}", int),
-    "sun_last_hour": ("Sun Last Hour", PERCENTAGE, f"SO {PERCENTAGE}", int),
-    "temperature": ("Temperature", TEMP_CELSIUS, f"T {TEMP_CELSIUS}", float),
+    "wind_max_bearing": ("Top Wind Bearing", DEGREE, None, f"WSR {DEGREE}", int),
+    "sun_last_hour": ("Sun Last Hour", PERCENTAGE, None, f"SO {PERCENTAGE}", int),
+    "temperature": (
+        "Temperature",
+        TEMP_CELSIUS,
+        DEVICE_CLASS_TEMPERATURE,
+        f"T {TEMP_CELSIUS}",
+        float,
+    ),
     "precipitation": (
         "Precipitation",
+        None,
         f"l/{AREA_SQUARE_METERS}",
         f"N l/{AREA_SQUARE_METERS}",
         float,
     ),
-    "dewpoint": ("Dew Point", TEMP_CELSIUS, f"TP {TEMP_CELSIUS}", float),
+    "dewpoint": (
+        "Dew Point",
+        TEMP_CELSIUS,
+        DEVICE_CLASS_TEMPERATURE,
+        f"TP {TEMP_CELSIUS}",
+        float,
+    ),
     # The following probably not useful for general consumption,
     # but we need them to fill in internal attributes
-    "station_name": ("Station Name", None, "Name", str),
+    "station_name": ("Station Name", None, None, "Name", str),
     "station_elevation": (
         "Station Elevation",
         LENGTH_METERS,
+        None,
         f"Höhe {LENGTH_METERS}",
         int,
     ),
-    "update_date": ("Update Date", None, "Datum", str),
-    "update_time": ("Update Time", None, "Zeit", str),
+    "update_date": ("Update Date", None, None, "Datum", str),
+    "update_time": ("Update Time", None, None, "Zeit", str),
 }
 
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(
@@ -140,6 +163,7 @@ class ZamgSensor(SensorEntity):
         self.probe = probe
         self.client_name = name
         self.variable = variable
+        self._attr_device_class = SENSOR_TYPES[variable][2]
 
     @property
     def name(self):
@@ -217,6 +241,7 @@ class ZamgData:
                 api_fields = {
                     col_heading: (standard_name, dtype)
                     for standard_name, (
+                        _,
                         _,
                         _,
                         col_heading,
