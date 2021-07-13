@@ -50,6 +50,7 @@ class AxisLight(AxisEventBase, LightEntity):
 
         self.light_id = f"led{self.event.id}"
 
+        self.current_intensity = 0
         self.max_intensity = 0
 
         light_type = device.api.vapix.light_control[self.light_id].light_type
@@ -64,14 +65,22 @@ class AxisLight(AxisEventBase, LightEntity):
                 self.light_id
             )
         )
-        intensity = current_intensity["data"]["intensity"]
+        self.current_intensity = current_intensity["data"]["intensity"]
 
         max_intensity = await self.device.api.vapix.light_control.get_valid_intensity(
             self.light_id
         )
         self.max_intensity = max_intensity["data"]["ranges"][0]["high"]
-        self._attr_is_on = self.event.is_tripped
-        self._attr_brightness = int((intensity / self.max_intensity) * 255)
+
+    @property
+    def is_on(self):
+        """Return true if light is on."""
+        return self.event.is_tripped
+
+    @property
+    def brightness(self):
+        """Return the brightness of this light between 0..255."""
+        return int((self.current_intensity / self.max_intensity) * 255)
 
     async def async_turn_on(self, **kwargs):
         """Turn on light."""
@@ -96,7 +105,4 @@ class AxisLight(AxisEventBase, LightEntity):
                 self.light_id
             )
         )
-        self._attr_is_on = self.event.is_tripped
-        self._attr_brightness = int(
-            (current_intensity["data"]["intensity"] / self.max_intensity) * 255
-        )
+        self.current_intensity = current_intensity["data"]["intensity"]
