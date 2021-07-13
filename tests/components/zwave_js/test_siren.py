@@ -58,7 +58,7 @@ TONE_ID_VALUE_ID = {
 }
 
 
-async def test_number(hass, client, aeotec_zw164_siren, integration):
+async def test_siren(hass, client, aeotec_zw164_siren, integration):
     """Test the siren entity."""
     node = aeotec_zw164_siren
     state = hass.states.get(SIREN_ENTITY)
