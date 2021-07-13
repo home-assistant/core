@@ -48,7 +48,7 @@ async def async_setup_entry(
 
 
 class ZwaveSirenEntity(ZWaveBaseEntity, SirenEntity):
-    """Representation of a Z-Wave number entity."""
+    """Representation of a Z-Wave siren entity."""
 
     def __init__(
         self, config_entry: ConfigEntry, client: ZwaveClient, info: ZwaveDiscoveryInfo
