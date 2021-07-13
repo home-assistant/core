@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 
 from eagle200_reader import EagleReader
@@ -22,7 +22,7 @@ from homeassistant.const import (
     ENERGY_KILO_WATT_HOUR,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util import Throttle
+from homeassistant.util import Throttle, dt
 
 CONF_CLOUD_ID = "cloud_id"
 CONF_INSTALL_CODE = "install_code"
@@ -41,7 +41,7 @@ class SensorType:
     unit_of_measurement: str
     device_class: str | None = None
     state_class: str | None = None
-    last_reset: int | None = None
+    last_reset: datetime | None = None
 
 
 SENSORS = {
@@ -55,14 +55,14 @@ SENSORS = {
         unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
         state_class=STATE_CLASS_MEASUREMENT,
-        last_reset=0,
+        last_reset=dt.utc_from_timestamp(0),
     ),
     "summation_received": SensorType(
         name="Eagle-200 Total Meter Energy Received",
         unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
         state_class=STATE_CLASS_MEASUREMENT,
-        last_reset=0,
+        last_reset=dt.utc_from_timestamp(0),
     ),
     "summation_total": SensorType(
         name="Eagle-200 Net Meter Energy (Delivered minus Received)",
@@ -119,7 +119,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     eagle_data = EagleData(eagle_reader)
     eagle_data.update()
 
-    add_entities([EagleSensor(eagle_data, condition) for condition in SENSORS])
+    add_entities(EagleSensor(eagle_data, condition) for condition in SENSORS)
 
 
 class EagleSensor(SensorEntity):
