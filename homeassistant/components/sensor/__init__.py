@@ -27,7 +27,6 @@ from homeassistant.const import (
     DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_TIMESTAMP,
     DEVICE_CLASS_VOLTAGE,
-    STATE_UNKNOWN,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
@@ -218,7 +217,7 @@ class SensorEntity(Entity):
                     units.temperature_unit,
                     report_issue,
                 )
-            value_s = STATE_UNKNOWN if value is None else str(value)
+            value_s = str(value)
             prec = len(value_s) - value_s.index(".") - 1 if "." in value_s else 0
             # Suppress ValueError (Could not convert sensor_value to float)
             with suppress(ValueError):
