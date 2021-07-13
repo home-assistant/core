@@ -1,5 +1,5 @@
 """Support for Freedompro sensor."""
-from hatasmota.const import LIGHT_LUX, PERCENTAGE, TEMP_CELSIUS
+from homeassistant.const import LIGHT_LUX, PERCENTAGE, TEMP_CELSIUS
 
 from homeassistant.components.sensor import (
     DEVICE_CLASS_HUMIDITY,
