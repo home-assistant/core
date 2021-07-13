@@ -22,7 +22,6 @@ from zeroconf.asyncio import AsyncServiceInfo
 from homeassistant import config_entries
 from homeassistant.components import network
 from homeassistant.components.network import async_get_source_ip
-from homeassistant.components.network.const import PUBLIC_TARGET_IP
 from homeassistant.components.network.models import Adapter
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
@@ -225,7 +224,7 @@ async def _async_register_hass_zc_service(
     params["base_url"] = params["external_url"] or params["internal_url"]
 
     host_ip = hass.loop.run_until_complete(
-        async_get_source_ip(hass, target_ip=PUBLIC_TARGET_IP)
+        async_get_source_ip(hass, target_ip=MDNS_TARGET_IP)
     )
 
     try:
