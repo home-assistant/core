@@ -188,6 +188,10 @@ DHCP = [
         "macaddress": "F47B5E*"
     },
     {
+        "domain": "samsungtv",
+        "macaddress": "4844F7*"
+    },
+    {
         "domain": "screenlogic",
         "hostname": "pentair: *",
         "macaddress": "00C033*"
