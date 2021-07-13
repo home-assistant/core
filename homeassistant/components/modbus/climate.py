@@ -16,6 +16,8 @@ from homeassistant.const import (
     CONF_OFFSET,
     CONF_STRUCTURE,
     CONF_TEMPERATURE_UNIT,
+    PRECISION_TENTHS,
+    PRECISION_WHOLE,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
@@ -133,6 +135,11 @@ class ModbusThermostat(BasePlatform, RestoreEntity, ClimateEntity):
     def temperature_unit(self):
         """Return the unit of measurement."""
         return TEMP_FAHRENHEIT if self._unit == "F" else TEMP_CELSIUS
+
+    @property
+    def precision(self) -> float:
+        """Return the precision of the system."""
+        return PRECISION_TENTHS if self._precision >= 1 else PRECISION_WHOLE
 
     @property
     def min_temp(self):
