@@ -11,7 +11,7 @@ from homeassistant.components.ffmpeg import (
     DATA_FFMPEG,
 )
 from homeassistant.components.ffmpeg_motion.binary_sensor import FFmpegBinarySensor
-from homeassistant.const import CONF_NAME
+from homeassistant.const import ATTR_ENTITY_ID, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 
 CONF_PEAK = "peak"
@@ -23,7 +23,9 @@ DEFAULT_INIT_STATE = True
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_INPUT): cv.string,
+        vol.Required(CONF_INPUT): vol.Any(
+            cv.string, vol.Schema({vol.Required(ATTR_ENTITY_ID): cv.entity_id})
+        ),
         vol.Optional(CONF_INITIAL_STATE, default=DEFAULT_INIT_STATE): cv.boolean,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_EXTRA_ARGUMENTS): cv.string,
@@ -69,8 +71,13 @@ class FFmpegNoise(FFmpegBinarySensor):
             peak=self._config.get(CONF_PEAK),
         )
 
+        input_stream = self._config[CONF_INPUT]
+        if isinstance(input_stream, dict):
+            input_stream = await self.hass.components.camera.async_get_stream_source(
+                input_stream[ATTR_ENTITY_ID]
+            )
         await self.ffmpeg.open_sensor(
-            input_source=self._config.get(CONF_INPUT),
+            input_source=input_stream,
             output_dest=self._config.get(CONF_OUTPUT),
             extra_cmd=self._config.get(CONF_EXTRA_ARGUMENTS),
         )
