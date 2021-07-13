@@ -67,7 +67,7 @@ def process_turn_on_params(
         not siren.available_tones
         or (tone := params[ATTR_TONE]) not in siren.available_tones
     ):
-        raise ValueError(f"Tone {tone} can't be found")
+        raise ValueError(f"Tone {tone} is not a valid tone for this device")
 
     if not supported_features & SUPPORT_DURATION:
         params.pop(ATTR_DURATION, None)
