@@ -1,6 +1,4 @@
 """Support for Freedompro sensor."""
-from homeassistant.const import LIGHT_LUX, PERCENTAGE, TEMP_CELSIUS
-
 from homeassistant.components.sensor import (
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
@@ -8,7 +6,7 @@ from homeassistant.components.sensor import (
     STATE_CLASS_MEASUREMENT,
     SensorEntity,
 )
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import CONF_API_KEY, LIGHT_LUX, PERCENTAGE, TEMP_CELSIUS
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
