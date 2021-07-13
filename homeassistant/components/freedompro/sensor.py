@@ -15,6 +15,28 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 
+DEVICE_CLASS_MAP = {
+    "temperatureSensor": DEVICE_CLASS_TEMPERATURE,
+    "humiditySensor": DEVICE_CLASS_HUMIDITY,
+    "lightSensor": DEVICE_CLASS_ILLUMINANCE,
+}
+STATE_CLASS_MAP = {
+    "temperatureSensor": STATE_CLASS_MEASUREMENT,
+    "humiditySensor": STATE_CLASS_MEASUREMENT,
+    "lightSensor": None,
+}
+UNIT_MAP = {
+    "temperatureSensor": TEMP_CELSIUS,
+    "humiditySensor": PERCENTAGE,
+    "lightSensor": LIGHT_LUX,
+}
+DEVICE_KEY_MAP = {
+    "temperatureSensor": "currentTemperature",
+    "humiditySensor": "currentRelativeHumidity",
+    "lightSensor": "currentAmbientLightLevel",
+}
+SUPPORTED_SENSORS = {"temperatureSensor", "humiditySensor", "lightSensor"}
+
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up Freedompro sensor."""
@@ -23,9 +45,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities(
         Device(hass, api_key, device, coordinator)
         for device in coordinator.data
-        if device["type"] == "temperatureSensor"
-        or device["type"] == "humiditySensor"
-        or device["type"] == "lightSensor"
+        if device["type"] in SUPPORTED_SENSORS
     )
 
 
@@ -50,27 +70,9 @@ class Device(CoordinatorEntity, SensorEntity):
             "model": self._type,
             "manufacturer": "Freedompro",
         }
-        self._attr_device_class = (
-            DEVICE_CLASS_TEMPERATURE
-            if self._type == "temperatureSensor"
-            else DEVICE_CLASS_HUMIDITY
-            if self._type == "humiditySensor"
-            else DEVICE_CLASS_ILLUMINANCE
-        )
-        self._attr_state_class = (
-            STATE_CLASS_MEASUREMENT
-            if self._type == "temperatureSensor"
-            else STATE_CLASS_MEASUREMENT
-            if self._type == "humiditySensor"
-            else None
-        )
-        self._attr_unit_of_measurement = (
-            TEMP_CELSIUS
-            if self._type == "temperatureSensor"
-            else PERCENTAGE
-            if self._type == "humiditySensor"
-            else LIGHT_LUX
-        )
+        self._attr_device_class = DEVICE_CLASS_MAP[self._type]
+        self._attr_state_class = STATE_CLASS_MAP[self._type]
+        self._attr_unit_of_measurement = UNIT_MAP[self._type]
         self._attr_state = 0
 
     @callback
@@ -86,12 +88,7 @@ class Device(CoordinatorEntity, SensorEntity):
         )
         if device is not None and "state" in device:
             state = device["state"]
-            if "currentAmbientLightLevel" in state:
-                self._attr_state = state["currentAmbientLightLevel"]
-            if "currentRelativeHumidity" in state:
-                self._attr_state = state["currentRelativeHumidity"]
-            if "currentTemperature" in state:
-                self._attr_state = state["currentTemperature"]
+            self._attr_state = state[DEVICE_KEY_MAP[self._type]]
         super()._handle_coordinator_update()
 
     async def async_added_to_hass(self) -> None:
