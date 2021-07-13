@@ -91,7 +91,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.debug(
             "Token not valid (%s - %s), automatic renewal", ex.code, ex.message
         )
-        await entry.async_start_reauth(hass)
+        raise ConfigEntryAuthFailed from ex
 
     neato_session = api.ConfigEntryAuth(hass, entry, implementation)
     hass.data[NEATO_DOMAIN][entry.entry_id] = neato_session
