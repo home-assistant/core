@@ -589,7 +589,7 @@ DISCOVERY_SCHEMAS = [
     # sirens
     ZWaveDiscoverySchema(
         platform="siren",
-        device_class_specific={"Sound Switch"},
+        device_class_specific={"Sound Switch", "Siren"},
         primary_value=SIREN_TONE_SCHEMA,
     ),
 ]
