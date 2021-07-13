@@ -39,7 +39,7 @@ DEVICES = [
     },
     {
         "uid": "3WRRJR6RCZQZSND8VP0YTO3YXCSOFPKBMW8T51TU-LQ*1JKU1MVWHQL-Z9SCUS85VFXMRGNDCDNDDUVVDKBU31W",
-        "name": "irrigation",
+        "name": "Irrigation switch",
         "type": "switch",
         "characteristics": ["on"],
     },
