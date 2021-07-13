@@ -80,7 +80,7 @@ class BaseClimaCellSensorEntity(ClimaCellEntity, SensorEntity):
         """Return the raw state."""
 
     @property
-    def state(self) -> str | int | float | None:
+    def native_value(self) -> str | int | float | None:
         """Return the state."""
         state = self._state
         if (

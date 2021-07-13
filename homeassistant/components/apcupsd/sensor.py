@@ -176,5 +176,5 @@ class APCUPSdSensor(SensorEntity):
             self._attr_native_value, inferred_unit = infer_unit(
                 self._data.status[self.type.upper()]
             )
-            if not self._attr_unit_of_measurement:
-                self._attr_unit_of_measurement = inferred_unit
+            if not self._attr_native_unit_of_measurement:
+                self._attr_native_unit_of_measurement = inferred_unit

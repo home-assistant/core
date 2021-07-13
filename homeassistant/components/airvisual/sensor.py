@@ -212,7 +212,7 @@ class AirVisualGeographySensor(AirVisualEntity, SensorEntity):
         self._attr_icon = icon
         self._attr_name = f"{GEOGRAPHY_SENSOR_LOCALES[locale]} {name}"
         self._attr_unique_id = f"{config_entry.unique_id}_{locale}_{kind}"
-        self._attr_unit_of_measurement = unit
+        self._attr_native_unit_of_measurement = unit
         self._config_entry = config_entry
         self._kind = kind
         self._locale = locale
