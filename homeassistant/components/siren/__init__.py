@@ -78,10 +78,13 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
         siren: SirenEntity, call: ServiceCall
     ) -> None:
         """Handle turning a siren on."""
+        data = {
+            k: v
+            for k, v in call.data.items()
+            if k in (ATTR_TONE, ATTR_DURATION, ATTR_VOLUME_LEVEL)
+        }
         await siren.async_turn_on(
-            **filter_turn_on_params(
-                siren, cast(SirenTurnOnServiceParameters, dict(call.data))
-            )
+            **filter_turn_on_params(siren, cast(SirenTurnOnServiceParameters, data))
         )
 
     component.async_register_entity_service(
