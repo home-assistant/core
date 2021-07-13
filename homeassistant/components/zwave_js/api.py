@@ -145,7 +145,7 @@ def async_handle_failed_command(orig_func: Callable) -> Callable:
         connection: ActiveConnection,
         msg: dict,
         *args: Any,
-        **kwargs: dict,
+        **kwargs: Any,
     ) -> None:
         """Handle FailedCommand within function and send relevant error."""
         try:
