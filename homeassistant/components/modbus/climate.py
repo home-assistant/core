@@ -165,8 +165,8 @@ class ModbusThermostat(BasePlatform, RestoreEntity, ClimateEntity):
         """Set new target temperature."""
         if ATTR_TEMPERATURE not in kwargs:
             return
-        target_temperature = int(
-            (kwargs.get(ATTR_TEMPERATURE) - self._offset) / self._scale
+        target_temperature = (
+            float(kwargs.get(ATTR_TEMPERATURE) - self._offset) / self._scale
         )
         if self._data_type in [
             DATA_TYPE_INT16,
@@ -177,8 +177,6 @@ class ModbusThermostat(BasePlatform, RestoreEntity, ClimateEntity):
             DATA_TYPE_UINT64,
         ]:
             target_temperature = int(target_temperature)
-        else:
-            target_temperature = float(target_temperature)
         byte_array = struct.pack(self._structure, target_temperature)
         raw_regs = [byte_array[i : i + 2] for i in range(0, len(byte_array), 2)]
         registers = self._swap_registers(raw_regs)
