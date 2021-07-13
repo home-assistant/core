@@ -33,6 +33,7 @@ if platform.machine() == "x86_64":
 G_ZWAVE_STARTED = False
 G_ZIGBEE_STARTED = False
 
+
 async def _run(hass, cmd):
     if not ais_global.G_USB_SETTINGS_INFO.get(
         "usbAutoStartServices", True
@@ -82,8 +83,7 @@ def get_device_number(devoce_id):
     # find /sys/devices -name 'ttyACM*' -exec cat {}/../../../idProduct {}/../../../idVendor \;
     tty_acm_paths = (
         subprocess.check_output(
-            "find /sys/devices -name 'ttyACM*'",
-            shell=True,  # nosec
+            "find /sys/devices -name 'ttyACM*'", shell=True  # nosec
         )
         .decode("utf-8")
         .strip()
@@ -91,16 +91,14 @@ def get_device_number(devoce_id):
     for line in tty_acm_paths.split("\n"):
         usb_vendor = (
             subprocess.check_output(
-                "cat " + line + "/../../../idVendor",
-                shell=True,  # nosec
+                "cat " + line + "/../../../idVendor", shell=True  # nosec
             )
             .decode("utf-8")
             .strip()
         )
         usb_product = (
             subprocess.check_output(
-                "cat " + line + "/../../../idProduct",
-                shell=True,  # nosec
+                "cat " + line + "/../../../idProduct", shell=True  # nosec
             )
             .decode("utf-8")
             .strip()
@@ -114,11 +112,7 @@ async def say_it(hass, text):
     if not ais_global.G_USB_SETTINGS_INFO.get("usbVoiceNotification", True):
         pass
     else:
-        await hass.services.async_call(
-            "ais_ai_service",
-            "say_it",
-            {"text": text},
-        )
+        await hass.services.async_call("ais_ai_service", "say_it", {"text": text})
 
 
 async def prepare_usb_device(hass, device_info):
@@ -233,7 +227,6 @@ async def prepare_usb_device(hass, device_info):
                 await say_it(hass, "Uruchomiono serwis zwave")
 
 
-
 async def remove_usb_device(hass, device_info):
     # stop service and remove device from dict
     if device_info in ais_global.G_USB_DEVICES:
@@ -315,7 +308,8 @@ async def async_setup(hass, config):
                 device_info = get_device_info(event.pathname)
                 if device_info is not None:
                     if (
-                        device_info["id"] not in (G_AIS_REMOTE_ID, G_ZWAVE_ID, G_ZIGBEE_DEVICES_ID)
+                        device_info["id"]
+                        not in (G_AIS_REMOTE_ID, G_ZWAVE_ID, G_ZIGBEE_DEVICES_ID)
                         and ais_global.G_USB_INTERNAL_MIC_RESET is False
                     ):
                         if "info" in device_info:
@@ -330,7 +324,9 @@ async def async_setup(hass, config):
                                 # 1. check the if log file exists, if not then stop logs
                                 if ais_global.G_LOG_SETTINGS_INFO is not None:
                                     if "logDrive" in ais_global.G_LOG_SETTINGS_INFO:
-                                        if ais_global.G_LOG_SETTINGS_INFO["logDrive"] != '-' and not os.path.isfile(
+                                        if ais_global.G_LOG_SETTINGS_INFO[
+                                            "logDrive"
+                                        ] != "-" and not os.path.isfile(
                                             ais_global.G_REMOTE_DRIVES_DOM_PATH
                                             + "/"
                                             + ais_global.G_LOG_SETTINGS_INFO["logDrive"]
@@ -385,7 +381,8 @@ async def async_setup(hass, config):
                             "info" in device_info
                             and "xHCI Host Controller" not in device_info["info"]
                             and "Mass Storage" not in device_info["info"]
-                            and device_info["id"] not in (G_ZWAVE_ID, G_ZIGBEE_DEVICES_ID)
+                            and device_info["id"]
+                            not in (G_ZWAVE_ID, G_ZIGBEE_DEVICES_ID)
                         ):
                             text = "Usunięto: " + device_info["info"]
                             hass.async_add_job(say_it(hass, text))
