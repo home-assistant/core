@@ -59,9 +59,9 @@ def setup(hass: HomeAssistant, yaml_config: dict[str, Any]):
         service_principal_path
     )
 
-    topic_path = publisher.topic_path(
+    topic_path = publisher.topic_path(  # pylint: disable=no-member
         project_id, topic_name
-    )  # pylint: disable=no-member
+    )
 
     encoder = DateTimeJSONEncoder()
 
