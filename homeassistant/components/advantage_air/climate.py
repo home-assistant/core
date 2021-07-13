@@ -93,20 +93,17 @@ class AdvantageAirClimateEntity(AdvantageAirEntity, ClimateEntity):
 class AdvantageAirAC(AdvantageAirClimateEntity):
     """AdvantageAir AC unit."""
 
-    _attr_supported_features = SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE
     _attr_fan_modes = [FAN_AUTO, FAN_LOW, FAN_MEDIUM, FAN_HIGH]
+    _attr_hvac_modes = AC_HVAC_MODES
+    _attr_supported_features = SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE
 
     def __init__(self, instance, ac_key):
         """Initialize an AdvantageAir AC unit."""
         super().__init__(instance, ac_key)
         self._attr_name = self._ac["name"]
         self._attr_unique_id = f'{self.coordinator.data["system"]["rid"]}-{ac_key}'
-        self._attr_hvac_modes = AC_HVAC_MODES
-        self._attr_hvac_modes = (
-            AC_HVAC_MODES + [HVAC_MODE_AUTO]
-            if self._ac.get("myAutoModeEnabled")
-            else None
-        )
+        if self._ac.get("myAutoModeEnabled"):
+            self._attr_hvac_modes = AC_HVAC_MODES + [HVAC_MODE_AUTO]
 
     @property
     def target_temperature(self):
