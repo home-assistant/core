@@ -30,8 +30,8 @@ G_USB_DRIVES_PATH = "/mnt/media_rw"
 if platform.machine() == "x86_64":
     # local test
     G_USB_DRIVES_PATH = "/media/andrzej"
-G_ZWAVE_STARTED = False
-G_ZIGBEE_STARTED = False
+G_CONBEE_STARTED = False
+G_CONBEE_ID = "1cf1:0030"
 
 
 async def _run(hass, cmd):
@@ -116,73 +116,77 @@ async def say_it(hass, text):
 
 
 async def prepare_usb_device(hass, device_info):
-    global G_ZIGBEE_STARTED
-    global G_ZWAVE_STARTED
+    global G_CONBEE_STARTED
     # ZIGBEE
-    if device_info["id"] in G_ZIGBEE_DEVICES_ID and not G_ZIGBEE_STARTED:
-        # check if zigbee already exists
-        # add info in app
-        if not os.path.isdir("/data/data/pl.sviete.dom/files/home/zigbee2mqtt"):
-            await say_it(
-                hass,
-                "Nie znaleziono pakietu Zigbee2Mqtt zainstaluj go przed pierwszym uruchomieniem usługi "
-                "Zigbee. Szczegóły w dokumentacji Asystenta domowego.",
-            )
-            return
-        # fix permissions
-        uid = str(os.getuid())
-        gid = str(os.getgid())
-        if ais_global.has_root():
-            await _run(hass, "su -c 'chown " + uid + ":" + gid + " /dev/ttyACM*'")
-        if ais_global.has_root():
-            await _run(hass, "su -c 'chmod 777 /dev/ttyACM*'")
+    if device_info["id"] in G_ZIGBEE_DEVICES_ID:
+        # do not restart conbee
+        if G_CONBEE_STARTED and device_info["id"] == G_CONBEE_ID:
+            pass
+        else:
+            # check if zigbee already exists
+            # add info in app
+            if not os.path.isdir("/data/data/pl.sviete.dom/files/home/zigbee2mqtt"):
+                await say_it(
+                    hass,
+                    "Nie znaleziono pakietu Zigbee2Mqtt zainstaluj go przed pierwszym uruchomieniem usługi "
+                    "Zigbee. Szczegóły w dokumentacji Asystenta domowego.",
+                )
+                return
+            # fix permissions
+            uid = str(os.getuid())
+            gid = str(os.getgid())
+            if ais_global.has_root():
+                await _run(hass, "su -c 'chown " + uid + ":" + gid + " /dev/ttyACM*'")
+            if ais_global.has_root():
+                await _run(hass, "su -c 'chmod 777 /dev/ttyACM*'")
 
-        # set the adapter
-        adapter = "null"
-        if device_info["id"] == "0451:16a8":
-            adapter = "zstack"
-        if device_info["id"] == "1cf1:0030":
-            adapter = "deconz"
-        # change zigbee settings
-        stage_no = 0
-        with fileinput.FileInput(
-            "/data/data/pl.sviete.dom/files/home/zigbee2mqtt/data/configuration.yaml",
-            inplace=True,
-            backup=".bak",
-        ) as file:
-            for line in file:
-                if line.startswith("serial:"):
-                    stage_no = 1
-                if 0 < stage_no < 3:
-                    if line.startswith("  adapter:"):
-                        print("  adapter: " + adapter, end="\n")
-                        stage_no = stage_no + 1
-                    elif line.startswith("  port:"):
-                        device_num = get_device_number(device_info["id"])
-                        print("  port: /dev/" + device_num, end="\n")
-                        stage_no = stage_no + 1
-                    elif line.startswith("  ") or line.startswith("serial:"):
-                        print(line, end="")
+            # set the adapter
+            adapter = "null"
+            if device_info["id"] == "0451:16a8":
+                adapter = "zstack"
+            if device_info["id"] == G_CONBEE_ID:
+                adapter = "deconz"
+            # change zigbee settings
+            stage_no = 0
+            with fileinput.FileInput(
+                "/data/data/pl.sviete.dom/files/home/zigbee2mqtt/data/configuration.yaml",
+                inplace=True,
+                backup=".bak",
+            ) as file:
+                for line in file:
+                    if line.startswith("serial:"):
+                        stage_no = 1
+                    if 0 < stage_no < 3:
+                        if line.startswith("  adapter:"):
+                            print("  adapter: " + adapter, end="\n")
+                            stage_no = stage_no + 1
+                        elif line.startswith("  port:"):
+                            device_num = get_device_number(device_info["id"])
+                            print("  port: /dev/" + device_num, end="\n")
+                            stage_no = stage_no + 1
+                        elif line.startswith("  ") or line.startswith("serial:"):
+                            print(line, end="")
+                        else:
+                            # configuration not correct... exit
+                            print(line, end="")
+                            stage_no = 3
                     else:
-                        # configuration not correct... exit
                         print(line, end="")
-                        stage_no = 3
-                else:
-                    print(line, end="")
 
-        if ais_global.G_USB_SETTINGS_INFO.get("usbAutoStartServices", True):
-            # start zigbee2mqtt service
-            # restart-delay 120000 millisecond == 2 minutes
-            G_ZIGBEE_STARTED = True
-            cmd_to_run = (
-                "pm2 restart zigbee || pm2 start /data/data/pl.sviete.dom/files/home/zigbee2mqtt/index.js "
-                "--name zigbee --output /dev/null --error /dev/null --restart-delay=120000"
-            )
-            await _run(hass, cmd_to_run)
-            await say_it(hass, "Uruchomiono serwis zigbee")
+            if ais_global.G_USB_SETTINGS_INFO.get("usbAutoStartServices", True):
+                # start zigbee2mqtt service
+                # restart-delay 120000 millisecond == 2 minutes
+                if device_info["id"] == G_CONBEE_ID:
+                    G_CONBEE_STARTED = True
+                cmd_to_run = (
+                    "pm2 restart zigbee || pm2 start /data/data/pl.sviete.dom/files/home/zigbee2mqtt/index.js "
+                    "--name zigbee --output /dev/null --error /dev/null --restart-delay=120000"
+                )
+                await _run(hass, cmd_to_run)
+                await say_it(hass, "Uruchomiono serwis zigbee")
 
     # ZWAVE
-    if device_info["id"] == G_ZWAVE_ID and not G_ZWAVE_STARTED:
+    if device_info["id"] == G_ZWAVE_ID:
         # fix permissions
         uid = str(os.getuid())
         gid = str(os.getgid())
@@ -217,7 +221,6 @@ async def prepare_usb_device(hass, device_info):
                 await say_it(hass, "Sprawdź ustawienia Zwave w aplikacji.")
 
             if ais_global.G_USB_SETTINGS_INFO.get("usbAutoStartServices", True):
-                G_ZWAVE_STARTED = True
                 cmd_to_run = (
                     "pm2 restart zwave || pm2 start /data/data/pl.sviete.dom/files/home/zwavejs2mqtt/server/bin/www.js "
                     "--name zwave --output /dev/null --error /dev/null --restart-delay=120000"
@@ -232,13 +235,15 @@ async def remove_usb_device(hass, device_info):
     if device_info in ais_global.G_USB_DEVICES:
         ais_global.G_USB_DEVICES.remove(device_info)
 
-    # if ais_global.G_USB_SETTINGS_INFO.get("usbAutoStartServices", True):
-    #     if device_info["id"] in G_ZIGBEE_DEVICES_ID:
-    #         await _run(hass, "pm2 delete zigbee")
-    #         await say_it(hass, "Zatrzymano serwis zigbee")
-    #     elif device_info["id"] == G_ZWAVE_ID:
-    #         await _run(hass, "pm2 delete zwave")
-    #         await say_it(hass, "Zatrzymano serwis zwave")
+    if ais_global.G_USB_SETTINGS_INFO.get("usbAutoStartServices", True):
+        # do not restart conbee
+        if device_info["id"] != G_CONBEE_ID:
+            if device_info["id"] in G_ZIGBEE_DEVICES_ID:
+                await _run(hass, "pm2 delete zigbee")
+                await say_it(hass, "Zatrzymano serwis zigbee")
+            elif device_info["id"] == G_ZWAVE_ID:
+                await _run(hass, "pm2 delete zwave")
+                await say_it(hass, "Zatrzymano serwis zwave")
 
 
 async def async_setup(hass, config):
@@ -280,8 +285,9 @@ async def async_setup(hass, config):
                             and "xHCI Host Controller" not in device_info["info"]
                             and "Mass Storage" not in device_info["info"]
                         ):
-                            text = "Dodano: " + device_info["info"]
-                            hass.async_add_job(say_it(hass, text))
+                            if not G_CONBEE_STARTED or device_info["id"] != G_CONBEE_ID:
+                                text = "Dodano: " + device_info["info"]
+                                hass.async_add_job(say_it(hass, text))
                     # reset flag
                     ais_global.G_USB_INTERNAL_MIC_RESET = False
                     # prepare device
@@ -332,7 +338,6 @@ async def async_setup(hass, config):
                                             + ais_global.G_LOG_SETTINGS_INFO["logDrive"]
                                             + "/ais.log"
                                         ):
-                                            print("usb ais_stop_logs_event")
                                             hass.bus.async_fire("ais_stop_logs_event")
                                 # 2. check the if recorder db file exists, if not then stop recorder
                                 if ais_global.G_DB_SETTINGS_INFO is not None:
@@ -346,7 +351,6 @@ async def async_setup(hass, config):
                                                 "dbUrl"
                                             ].replace("sqlite:////", "")
                                         ):
-                                            print("usb ais_stop_recorder_event")
                                             hass.bus.async_fire(
                                                 "ais_stop_recorder_event"
                                             )
@@ -381,8 +385,8 @@ async def async_setup(hass, config):
                             "info" in device_info
                             and "xHCI Host Controller" not in device_info["info"]
                             and "Mass Storage" not in device_info["info"]
-                            and device_info["id"]
-                            not in (G_ZWAVE_ID, G_ZIGBEE_DEVICES_ID)
+                            # do not restart conbee
+                            and device_info["id"] != G_CONBEE_ID
                         ):
                             text = "Usunięto: " + device_info["info"]
                             hass.async_add_job(say_it(hass, text))
