@@ -30,7 +30,8 @@ G_USB_DRIVES_PATH = "/mnt/media_rw"
 if platform.machine() == "x86_64":
     # local test
     G_USB_DRIVES_PATH = "/media/andrzej"
-
+G_ZWAVE_STARTED = False
+G_ZIGBEE_STARTED = False
 
 async def _run(hass, cmd):
     if not ais_global.G_USB_SETTINGS_INFO.get(
@@ -121,8 +122,10 @@ async def say_it(hass, text):
 
 
 async def prepare_usb_device(hass, device_info):
+    global G_ZIGBEE_STARTED
+    global G_ZWAVE_STARTED
     # ZIGBEE
-    if device_info["id"] in G_ZIGBEE_DEVICES_ID:
+    if device_info["id"] in G_ZIGBEE_DEVICES_ID and not G_ZIGBEE_STARTED:
         # check if zigbee already exists
         # add info in app
         if not os.path.isdir("/data/data/pl.sviete.dom/files/home/zigbee2mqtt"):
@@ -173,19 +176,19 @@ async def prepare_usb_device(hass, device_info):
                 else:
                     print(line, end="")
 
-        # start zigbee2mqtt service
-        # restart-delay 120000 millisecond == 2 minutes
-        cmd_to_run = (
-            "pm2 restart zigbee || pm2 start /data/data/pl.sviete.dom/files/home/zigbee2mqtt/index.js "
-            "--name zigbee --output /dev/null --error /dev/null --restart-delay=120000"
-        )
-        await _run(hass, cmd_to_run)
+        if ais_global.G_USB_SETTINGS_INFO.get("usbAutoStartServices", True):
+            # start zigbee2mqtt service
+            # restart-delay 120000 millisecond == 2 minutes
+            G_ZIGBEE_STARTED = True
+            cmd_to_run = (
+                "pm2 restart zigbee || pm2 start /data/data/pl.sviete.dom/files/home/zigbee2mqtt/index.js "
+                "--name zigbee --output /dev/null --error /dev/null --restart-delay=120000"
+            )
+            await _run(hass, cmd_to_run)
+            await say_it(hass, "Uruchomiono serwis zigbee")
 
-        #
-        # if ais_global.G_AIS_START_IS_DONE:
-        await say_it(hass, "Uruchomiono serwis zigbee")
     # ZWAVE
-    if device_info["id"] == G_ZWAVE_ID:
+    if device_info["id"] == G_ZWAVE_ID and not G_ZWAVE_STARTED:
         # fix permissions
         uid = str(os.getuid())
         gid = str(os.getgid())
@@ -219,13 +222,16 @@ async def prepare_usb_device(hass, device_info):
                 _LOGGER.error("Zwave settings error, exception: " + str(e))
                 await say_it(hass, "Sprawdź ustawienia Zwave w aplikacji.")
 
-            cmd_to_run = (
-                "pm2 restart zwave || pm2 start /data/data/pl.sviete.dom/files/home/zwavejs2mqtt/server/bin/www.js "
-                "--name zwave --output /dev/null --error /dev/null --restart-delay=120000"
-            )
-            await _run(hass, cmd_to_run)
-            #
-            await say_it(hass, "Uruchomiono serwis zwave")
+            if ais_global.G_USB_SETTINGS_INFO.get("usbAutoStartServices", True):
+                G_ZWAVE_STARTED = True
+                cmd_to_run = (
+                    "pm2 restart zwave || pm2 start /data/data/pl.sviete.dom/files/home/zwavejs2mqtt/server/bin/www.js "
+                    "--name zwave --output /dev/null --error /dev/null --restart-delay=120000"
+                )
+                await _run(hass, cmd_to_run)
+                #
+                await say_it(hass, "Uruchomiono serwis zwave")
+
 
 
 async def remove_usb_device(hass, device_info):
@@ -233,12 +239,13 @@ async def remove_usb_device(hass, device_info):
     if device_info in ais_global.G_USB_DEVICES:
         ais_global.G_USB_DEVICES.remove(device_info)
 
-    if device_info["id"] in G_ZIGBEE_DEVICES_ID:
-        await _run(hass, "pm2 delete zigbee")
-        await say_it(hass, "Zatrzymano serwis zigbee")
-    elif device_info["id"] == G_ZWAVE_ID:
-        await _run(hass, "pm2 delete zwave")
-        await say_it(hass, "Zatrzymano serwis zwave")
+    # if ais_global.G_USB_SETTINGS_INFO.get("usbAutoStartServices", True):
+    #     if device_info["id"] in G_ZIGBEE_DEVICES_ID:
+    #         await _run(hass, "pm2 delete zigbee")
+    #         await say_it(hass, "Zatrzymano serwis zigbee")
+    #     elif device_info["id"] == G_ZWAVE_ID:
+    #         await _run(hass, "pm2 delete zwave")
+    #         await say_it(hass, "Zatrzymano serwis zwave")
 
 
 async def async_setup(hass, config):
@@ -323,7 +330,7 @@ async def async_setup(hass, config):
                                 # 1. check the if log file exists, if not then stop logs
                                 if ais_global.G_LOG_SETTINGS_INFO is not None:
                                     if "logDrive" in ais_global.G_LOG_SETTINGS_INFO:
-                                        if not os.path.isfile(
+                                        if ais_global.G_LOG_SETTINGS_INFO["logDrive"] != '-' and not os.path.isfile(
                                             ais_global.G_REMOTE_DRIVES_DOM_PATH
                                             + "/"
                                             + ais_global.G_LOG_SETTINGS_INFO["logDrive"]
@@ -378,6 +385,7 @@ async def async_setup(hass, config):
                             "info" in device_info
                             and "xHCI Host Controller" not in device_info["info"]
                             and "Mass Storage" not in device_info["info"]
+                            and device_info["id"] not in (G_ZWAVE_ID, G_ZIGBEE_DEVICES_ID)
                         ):
                             text = "Usunięto: " + device_info["info"]
                             hass.async_add_job(say_it(hass, text))
@@ -396,9 +404,21 @@ async def async_setup(hass, config):
         _LOGGER.info("usb_load_notifiers stop")
 
     async def stop_devices(call):
-        # remove zigbee service on start - to prevent pm2 for restarting when usb is not connected
-        await _run(hass, "pm2 delete zigbee")
-        #
+        if ais_global.G_USB_SETTINGS_INFO.get("usbAutoStartServices", True):
+            ais_global.G_USB_DEVICES = _lsusb()
+            zigbee_adapter = False
+            zwave_adapter = False
+            for device in ais_global.G_USB_DEVICES:
+                if device["id"] in G_ZIGBEE_DEVICES_ID:
+                    zigbee_adapter = True
+                if device["id"] in G_ZWAVE_ID:
+                    zwave_adapter = True
+            # remove zigbee service on start if adapter not exist
+            if not zigbee_adapter:
+                await _run(hass, "pm2 delete zigbee")
+            #
+            if not zwave_adapter:
+                await _run(hass, "pm2 delete zwave")
 
     async def lsusb(call):
         # check if the call was from scheduler or service / web app
