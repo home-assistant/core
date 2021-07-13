@@ -166,8 +166,8 @@ class ModbusThermostat(BasePlatform, RestoreEntity, ClimateEntity):
         if ATTR_TEMPERATURE not in kwargs:
             return
         target_temperature = (
-            float(kwargs.get(ATTR_TEMPERATURE) - self._offset) / self._scale
-        )
+            float(kwargs.get(ATTR_TEMPERATURE)) - self._offset
+        ) / self._scale
         if self._data_type in [
             DATA_TYPE_INT16,
             DATA_TYPE_INT32,
