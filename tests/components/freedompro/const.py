@@ -207,7 +207,7 @@ DEVICES_STATE = [
     {
         "uid": "3WRRJR6RCZQZSND8VP0YTO3YXCSOFPKBMW8T51TU-LQ*JVRAR_6WVL1Y0PJ5GFWGPMFV7FLVD4MZKBWXC_UFWYM",
         "type": "lightSensor",
-        "state": {"currentAmbientLightLevel": 500},
+        "state": {"currentAmbientLightLevel": 0},
         "online": True,
     },
     {
