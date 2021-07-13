@@ -51,6 +51,7 @@ class BasePlatform(Entity):
         self._value = None
         self._available = True
         self._scan_interval = int(entry[CONF_SCAN_INTERVAL])
+        self._call_active = False
 
     @abstractmethod
     async def async_update(self, now=None):
@@ -160,9 +161,14 @@ class BaseSwitch(BasePlatform, RestoreEntity):
             self.async_write_ha_state()
             return
 
+        # do not allow multiple active calls to the same platform
+        if self._call_active:
+            return
+        self._call_active = True
         result = await self._hub.async_pymodbus_call(
             self._slave, self._verify_address, 1, self._verify_type
         )
+        self._call_active = False
         if result is None:
             self._available = False
             self.async_write_ha_state()
