@@ -16,13 +16,14 @@ from fritzconnection.core.exceptions import (
 import slugify as unicode_slug
 import xmltodict
 
+from homeassistant.components.network import async_get_source_ip
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util import get_local_ip, slugify
+from homeassistant.util import slugify
 
 from .common import (
     FritzBoxBaseEntity,
@@ -194,7 +195,7 @@ def port_entities_list(
         port_forwards_count,
     )
 
-    local_ip = get_local_ip()
+    local_ip = async_get_source_ip(fritzbox_tools.hass, target_ip=fritzbox_tools.host)
     _LOGGER.debug("IP source for %s is %s", fritzbox_tools.host, local_ip)
 
     for i in range(port_forwards_count):

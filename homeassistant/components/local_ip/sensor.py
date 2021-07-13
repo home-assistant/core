@@ -1,11 +1,12 @@
 """Sensor platform for local_ip."""
 
+from homeassistant.components.network import async_get_source_ip
+from homeassistant.components.network.const import PUBLIC_TARGET_IP
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util import get_local_ip
 
 from .const import DOMAIN, SENSOR
 
@@ -32,4 +33,6 @@ class IPSensor(SensorEntity):
 
     def update(self) -> None:
         """Fetch new state data for the sensor."""
-        self._attr_state = get_local_ip()
+        self._attr_state = self.hass.loop.run_until_complete(
+            async_get_source_ip(self.hass, target_ip=PUBLIC_TARGET_IP)
+        )

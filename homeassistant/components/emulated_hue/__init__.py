@@ -4,7 +4,8 @@ import logging
 from aiohttp import web
 import voluptuous as vol
 
-from homeassistant import util
+from homeassistant.components.network import async_get_source_ip
+from homeassistant.components.network.const import PUBLIC_TARGET_IP
 from homeassistant.const import (
     CONF_ENTITIES,
     CONF_TYPE,
@@ -204,7 +205,7 @@ class Config:
         # Get the IP address that will be passed to the Echo during discovery
         self.host_ip_addr = conf.get(CONF_HOST_IP)
         if self.host_ip_addr is None:
-            self.host_ip_addr = util.get_local_ip()
+            self.host_ip_addr = async_get_source_ip(self.hass, PUBLIC_TARGET_IP)
             _LOGGER.info(
                 "Listen IP address not specified, auto-detected address is %s",
                 self.host_ip_addr,

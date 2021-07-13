@@ -18,6 +18,8 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.humidifier import DOMAIN as HUMIDIFIER_DOMAIN
+from homeassistant.components.network import async_get_source_ip
+from homeassistant.components.network.const import PUBLIC_TARGET_IP
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
