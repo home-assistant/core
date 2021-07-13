@@ -1,0 +1,32 @@
+[
+    {
+        "symbol": "BSV",
+        "available": "0",
+        "inOrder": "0"
+    },
+    {
+        "symbol": "BTC",
+        "available": "0.35896295",
+        "inOrder": "0"
+    },
+    {
+        "symbol": "XEM",
+        "available": "0",
+        "inOrder": "0"
+    },
+    {
+        "symbol": "XRP",
+        "available": "0",
+        "inOrder": "0"
+    },
+    {
+        "symbol": "XVG",
+        "available": "0",
+        "inOrder": "0"
+    },
+    {
+        "symbol": "ZRX",
+        "available": "0",
+        "inOrder": "0"
+    }
+]

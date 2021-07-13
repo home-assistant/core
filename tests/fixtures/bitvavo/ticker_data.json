@@ -1,0 +1,36 @@
+[
+    {
+        "market": "ETH-BTC",
+        "status": "trading",
+        "base": "ETH",
+        "quote": "BTC",
+        "pricePrecision": 5,
+        "minOrderInBaseAsset": "0.003",
+        "minOrderInQuoteAsset": "0.001",
+        "orderTypes": [
+        "market",
+        "limit",
+        "stopLoss",
+        "stopLossLimit",
+        "takeProfit",
+        "takeProfitLimit"
+        ]
+    },
+    {
+        "market": "LTC-BTC",
+        "status": "trading",
+        "base": "LTC",
+        "quote": "BTC",
+        "pricePrecision": 5,
+        "minOrderInBaseAsset": "0.02",
+        "minOrderInQuoteAsset": "0.001",
+        "orderTypes": [
+          "market",
+          "limit",
+          "stopLoss",
+          "stopLossLimit",
+          "takeProfit",
+          "takeProfitLimit"
+        ]
+      }
+]
