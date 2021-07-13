@@ -48,12 +48,13 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from .const import (
     CONF_DATA_COLLECTION_OPTED_IN,
     DATA_CLIENT,
-    DATA_UNSUBSCRIBE,
     DOMAIN,
     EVENT_DEVICE_ADDED_TO_REGISTRY,
 )
 from .helpers import async_enable_statistics, update_data_collection_preference
 from .services import BITMASK_SCHEMA
+
+DATA_UNSUBSCRIBE = "unsubs"
 
 # general API constants
 ID = "id"
