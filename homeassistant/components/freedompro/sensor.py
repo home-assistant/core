@@ -63,7 +63,7 @@ class Device(CoordinatorEntity, SensorEntity):
         self._attr_device_info = {
             "name": self.name,
             "identifiers": {
-                (DOMAIN, self._attr_unique_id),
+                (DOMAIN, self.unique_id),
             },
             "model": self._type,
             "manufacturer": "Freedompro",
