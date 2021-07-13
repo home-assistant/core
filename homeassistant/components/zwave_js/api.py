@@ -144,7 +144,7 @@ def async_handle_failed_command(orig_func: Callable) -> Callable:
         hass: HomeAssistant,
         connection: ActiveConnection,
         msg: dict,
-        *args: list,
+        *args: Any,
         **kwargs: dict,
     ) -> None:
         """Handle FailedCommand within function and send relevant error."""
