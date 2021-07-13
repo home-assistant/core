@@ -8,7 +8,7 @@ from aiohttp import web
 from pyhap.const import STANDALONE_AID
 import voluptuous as vol
 
-from homeassistant.components import zeroconf
+from homeassistant.components import network, zeroconf
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_BATTERY_CHARGING,
     DEVICE_CLASS_MOTION,
@@ -40,7 +40,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import BASE_FILTER_SCHEMA, FILTER_SCHEMA
 from homeassistant.helpers.reload import async_integration_yaml_config
 from homeassistant.loader import IntegrationNotFound, async_get_integration
-from homeassistant.util import get_local_ip
 
 from . import (  # noqa: F401
     type_cameras,
@@ -118,6 +117,8 @@ STATUS_STOPPED = 2
 STATUS_WAIT = 3
 
 PORT_CLEANUP_CHECK_INTERVAL_SECS = 1
+
+MDNS_TARGET_IP = "224.0.0.251"
 
 
 def _has_all_unique_names_and_ports(bridges):
@@ -243,7 +244,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     _LOGGER.debug("Begin setup HomeKit for %s", name)
 
     # ip_address and advertise_ip are yaml only
-    ip_address = conf.get(CONF_IP_ADDRESS)
+    ip_address = conf.get(
+        CONF_IP_ADDRESS, await network.async_get_source_ip(hass, MDNS_TARGET_IP)
+    )
     advertise_ip = conf.get(CONF_ADVERTISE_IP)
     # exclude_accessory_mode is only used for config flow
     # to indicate that the config entry was setup after
@@ -458,7 +461,6 @@ class HomeKit:
 
     def setup(self, async_zeroconf_instance):
         """Set up bridge and accessory driver."""
-        ip_addr = self._ip_address or get_local_ip()
         persist_file = get_persist_fullpath_for_entry_id(self.hass, self._entry_id)
 
         self.driver = HomeDriver(
@@ -467,7 +469,7 @@ class HomeKit:
             self._name,
             self._entry_title,
             loop=self.hass.loop,
-            address=ip_addr,
+            address=self._ip_address,
             port=self._port,
             persist_file=persist_file,
             advertised_address=self._advertise_ip,
