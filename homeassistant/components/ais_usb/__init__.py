@@ -308,7 +308,7 @@ async def async_setup(hass, config):
                 device_info = get_device_info(event.pathname)
                 if device_info is not None:
                     if (
-                        device_info["id"] not in (G_AIS_REMOTE_ID, G_ZIGBEE_DEVICES_ID)
+                        device_info["id"] not in (G_AIS_REMOTE_ID, G_ZWAVE_ID, G_ZIGBEE_DEVICES_ID)
                         and ais_global.G_USB_INTERNAL_MIC_RESET is False
                     ):
                         if "info" in device_info:
