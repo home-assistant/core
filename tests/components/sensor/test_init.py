@@ -3,7 +3,9 @@ from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, TEMP_CELSIUS, TEMP_FAH
 from homeassistant.setup import async_setup_component
 
 
-async def test_deprecated_temperature_conversion(hass, caplog):
+async def test_deprecated_temperature_conversion(
+    hass, caplog, enable_custom_integrations
+):
     """Test warning on deprecated temperature conversion."""
     platform = getattr(hass.components, "test.sensor")
     platform.init(empty=True)
