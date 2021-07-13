@@ -63,16 +63,10 @@ def process_turn_on_params(
 
     if not supported_features & SUPPORT_TONES:
         params.pop(ATTR_TONE, None)
-    elif ATTR_TONE in params:
-        if not siren.available_tones:
-            raise RuntimeError(
-                f"Entity {siren.entity_id} must provide a list of available tones "
-                "when the 'SUPPORT_TONES' feature flag is enabled"
-            )
-        elif (tone := params[ATTR_TONE]) not in siren.available_tones:
-            raise ValueError(
-                f"Invalid tone received for entity {siren.entity_id}: {tone}"
-            )
+    elif (tone := params.get(ATTR_TONE)) is not None and (
+        not siren.available_tones or params[ATTR_TONE] not in siren.available_tones
+    ):
+        raise ValueError(f"Invalid tone received for entity {siren.entity_id}: {tone}")
 
     if not supported_features & SUPPORT_DURATION:
         params.pop(ATTR_DURATION, None)

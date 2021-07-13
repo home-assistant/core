@@ -1,10 +1,7 @@
 """The tests for the siren component."""
 from unittest.mock import MagicMock
 
-import pytest
-
-from homeassistant.components.siren import SirenEntity, process_turn_on_params
-from homeassistant.components.siren.const import SUPPORT_TONES
+from homeassistant.components.siren import SirenEntity
 
 
 class MockSirenEntity(SirenEntity):
@@ -37,11 +34,3 @@ async def test_sync_turn_off(hass):
     await siren.async_turn_off()
 
     assert siren.turn_off.called
-
-
-async def test_no_available_tones(hass):
-    """Test RuntimeError when siren advertises tones but has no available_tones."""
-    siren = MockSirenEntity(SUPPORT_TONES)
-    siren.hass = hass
-    with pytest.raises(RuntimeError):
-        process_turn_on_params(siren, {"tone": "test"})
