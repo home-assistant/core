@@ -49,9 +49,9 @@ ALERT_SCHEMA = vol.Schema(
         vol.Required(CONF_ENTITY_ID): cv.entity_id,
         vol.Required(CONF_STATE, default=STATE_ON): cv.string,
         vol.Required(CONF_REPEAT): vol.All(
-            # Minimum delay is 1 second = 0.16 minutes
             cv.ensure_list,
             [vol.Coerce(float)],
+            # Minimum delay is 1 second = 0.16 minutes
             [vol.Range(min=0.016)],
         ),
         vol.Required(CONF_CAN_ACK, default=DEFAULT_CAN_ACK): cv.boolean,
@@ -257,18 +257,11 @@ class Alert(ToggleEntity):
     async def _schedule_notify(self):
         """Schedule a notification."""
         delay = self._delay[self._next_delay]
-        # #4851 - Repeating with a delay of zero causes infinite looping when it is the last
-        # delay specified, skip this case and log a warning.
-        if delay.total_seconds() <= 0.0 and self._next_delay == len(self._delay) - 1:
-            _LOGGER.warning(
-                f"Alert: {self._attr_name} - Repeat value [{delay.total_seconds()}] must be a positive non-zero number.  Please update your configuration"
-            )
-        else:
-            next_msg = now() + delay
-            self._cancel = event.async_track_point_in_time(
-                self.hass, self._notify, next_msg
-            )
-            self._next_delay = min(self._next_delay + 1, len(self._delay) - 1)
+        next_msg = now() + delay
+        self._cancel = event.async_track_point_in_time(
+            self.hass, self._notify, next_msg
+        )
+        self._next_delay = min(self._next_delay + 1, len(self._delay) - 1)
 
     async def _notify(self, *args):
         """Send the alert notification."""
