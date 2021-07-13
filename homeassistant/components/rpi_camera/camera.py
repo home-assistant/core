@@ -28,7 +28,7 @@ def kill_raspistill(*args):
     """Kill any previously running raspistill process.."""
     subprocess.Popen(
         ["killall", "raspistill"], stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT
-    )
+    )  # pylint: disable=consider-using-with
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -116,7 +116,9 @@ class RaspberryCamera(Camera):
             cmd_args.append("-a")
             cmd_args.append(str(device_info[CONF_OVERLAY_TIMESTAMP]))
 
-        subprocess.Popen(cmd_args, stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
+        subprocess.Popen(
+            cmd_args, stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT
+        )  # pylint: disable=consider-using-with
 
     def camera_image(self):
         """Return raspistill image response."""

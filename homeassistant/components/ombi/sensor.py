@@ -22,7 +22,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     ombi = hass.data[DOMAIN]["instance"]
 
-    for sensor, sensor_val in SENSOR_TYPES.items:
+    for sensor, sensor_val in SENSOR_TYPES.items():
         sensor_label = sensor
         sensor_type = sensor_val["type"]
         sensor_icon = sensor_val["icon"]
