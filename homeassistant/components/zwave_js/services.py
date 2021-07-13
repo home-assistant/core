@@ -409,8 +409,8 @@ class ZWaveServices:
 
         if not broadcast and len(nodes) == 1:
             const.LOGGER.warning(
-                "Passing the service call to the zwave_js.set_value service since "
-                "only one node was targeted"
+                "Passing the zwave_js.multicast_set_value service call to the "
+                "zwave_js.set_value service since only one node was targeted"
             )
             await self.async_set_value(service)
             return
