@@ -74,31 +74,21 @@ class ZwaveSirenEntity(ZWaveBaseEntity, SirenEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
-        tone: int | str | None = kwargs.get(ATTR_TONE)
+        tone: str | None = kwargs.get(ATTR_TONE)
         # Play the default tone if a tone isn't provided
         if tone is None:
             await self.async_set_value(ToneID.DEFAULT)
             return
 
-        if (
-            isinstance(tone, int)
-            and str(tone) not in self.info.primary_value.metadata.states.keys()
-        ) or (
-            isinstance(tone, str)
-            and (not self.available_tones or tone not in self.available_tones)
-        ):
-            raise ValueError(f"Invalid tone: {tone}")
-
-        if self.available_tones and tone in self.available_tones:
-            tone = int(
-                next(
-                    key
-                    for key, value in self.info.primary_value.metadata.states.items()
-                    if value == tone
-                )
+        tone_id = int(
+            next(
+                key
+                for key, value in self.info.primary_value.metadata.states.items()
+                if value == tone
             )
+        )
 
-        await self.async_set_value(int(tone))
+        await self.async_set_value(tone_id)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""

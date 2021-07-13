@@ -1,5 +1,4 @@
 """Test the Z-Wave JS siren platform."""
-import pytest
 from zwave_js_server.event import Event
 
 from homeassistant.components.siren import ATTR_TONE
@@ -83,23 +82,6 @@ async def test_siren(hass, client, aeotec_zw164_siren, integration):
 
     client.async_send_command.reset_mock()
 
-    # Test turn on with specific tone ID
-    await hass.services.async_call(
-        "siren",
-        "turn_on",
-        {"entity_id": SIREN_ENTITY, ATTR_TONE: 1},
-        blocking=True,
-    )
-
-    assert len(client.async_send_command.call_args_list) == 1
-    args = client.async_send_command.call_args[0][0]
-    assert args["command"] == "node.set_value"
-    assert args["nodeId"] == node.node_id
-    assert args["valueId"] == TONE_ID_VALUE_ID
-    assert args["value"] == 1
-
-    client.async_send_command.reset_mock()
-
     # Test turn on with specific tone name
     await hass.services.async_call(
         "siren",
@@ -133,15 +115,6 @@ async def test_siren(hass, client, aeotec_zw164_siren, integration):
     assert args["value"] == 0
 
     client.async_send_command.reset_mock()
-
-    # Test turn on with invalid tone ID raises exception
-    with pytest.raises(ValueError):
-        await hass.services.async_call(
-            "siren",
-            "turn_on",
-            {"entity_id": SIREN_ENTITY, ATTR_TONE: 40},
-            blocking=True,
-        )
 
     # Test value update from value updated event
     event = Event(
