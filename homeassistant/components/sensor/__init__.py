@@ -179,9 +179,7 @@ class SensorEntity(Entity):
         native_unit_of_measurement = self.native_unit_of_measurement
 
         if native_unit_of_measurement in (TEMP_CELSIUS, TEMP_FAHRENHEIT):
-            # Suppress AttributeError to handle tests testing directly on entity objects
-            with suppress(ValueError, AttributeError):
-                return self.hass.config.units.temperature_unit
+            return self.hass.config.units.temperature_unit
 
         return native_unit_of_measurement
 
@@ -194,10 +192,6 @@ class SensorEntity(Entity):
 
         unit_of_measurement = self.native_unit_of_measurement
         value = self.native_value
-
-        # Handle tests testing directly on entity objects without setting hass
-        if not self.hass:
-            return value
 
         units = self.hass.config.units
         if (
