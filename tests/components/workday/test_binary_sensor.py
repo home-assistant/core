@@ -91,7 +91,7 @@ class TestWorkdaySetup:
                 "country": "US",
                 "workdays": ["mon", "tue", "wed", "thu", "fri"],
                 "excludes": ["sat", "sun", "holiday"],
-                "remove_holidays": ["Christmas", "Thanksgiving", "Not a Holiday"],
+                "remove_holidays": ["Not a Holiday", "Christmas", "Thanksgiving"],
             }
         }
 

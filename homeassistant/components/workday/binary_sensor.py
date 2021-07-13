@@ -109,15 +109,16 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 removed = obj_holidays.pop(date)
                 _LOGGER.debug("Removed %s", date)
             else:
-                # remove holiday by name
-                _LOGGER.debug("Treating '%s' as named holiday", date)
-                removed = obj_holidays.pop_named(date)
-                for holiday in removed:
-                    _LOGGER.debug("Removed %s by name '%s'", holiday, date)
+                try:
+                    # remove holiday by name
+                    _LOGGER.debug("Treating '%s' as named holiday", date)
+                    removed = obj_holidays.pop_named(date)
+                    for holiday in removed:
+                        _LOGGER.debug("Removed %s by name '%s'", holiday, date)
+                except KeyError as unmatched:
+                    _LOGGER.debug("No holiday found matching %s", unmatched)
     except TypeError:
         _LOGGER.debug("No holidays to remove or invalid holidays")
-    except KeyError as unmatched:
-        _LOGGER.debug("No holiday found matching %s", unmatched)
 
     _LOGGER.debug("Found the following holidays for your configuration:")
     for date, name in sorted(obj_holidays.items()):
