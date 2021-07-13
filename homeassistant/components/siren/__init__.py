@@ -64,7 +64,7 @@ def process_turn_on_params(
     if not supported_features & SUPPORT_TONES:
         params.pop(ATTR_TONE, None)
     elif (tone := params.get(ATTR_TONE)) is not None and (
-        not siren.available_tones or params[ATTR_TONE] not in siren.available_tones
+        not siren.available_tones or tone not in siren.available_tones
     ):
         raise ValueError(f"Invalid tone received for entity {siren.entity_id}: {tone}")
 
