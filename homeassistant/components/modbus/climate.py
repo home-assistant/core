@@ -177,9 +177,10 @@ class ModbusThermostat(BasePlatform, RestoreEntity, ClimateEntity):
             DATA_TYPE_UINT64,
         ]:
             target_temperature = int(target_temperature)
-        bytes = struct.pack(self._structure, target_temperature)
+        as_bytes = struct.pack(self._structure, target_temperature)
         raw_regs = [
-            int.from_bytes(bytes[i : i + 2], "big") for i in range(0, len(bytes), 2)
+            int.from_bytes(as_bytes[i : i + 2], "big")
+            for i in range(0, len(as_bytes), 2)
         ]
         registers = self._swap_registers(raw_regs)
         result = await self._hub.async_pymodbus_call(
