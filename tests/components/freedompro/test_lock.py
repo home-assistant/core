@@ -78,26 +78,9 @@ async def test_lock_set_unlock(hass, init_integration):
         )
     mock_put_state.assert_called_once_with(ANY, ANY, ANY, '{"lock": 0}')
 
-    get_states_response = list(DEVICES_STATE)
-    for state_response in get_states_response:
-        if state_response["uid"] == uid:
-            state_response["state"]["lock"] = 0
-    with patch(
-        "homeassistant.components.freedompro.get_states",
-        return_value=get_states_response,
-    ):
-        async_fire_time_changed(hass, utcnow() + timedelta(hours=2))
-        await hass.async_block_till_done()
-
-        state = hass.states.get(entity_id)
-        assert state
-        assert state.attributes.get("friendly_name") == "lock"
-
-        entry = registry.async_get(entity_id)
-        assert entry
-        assert entry.unique_id == uid
-
-        assert state.state == STATE_UNLOCKED
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_LOCKED
 
 
 async def test_lock_set_lock(hass, init_integration):
@@ -108,7 +91,7 @@ async def test_lock_set_lock(hass, init_integration):
     entity_id = "lock.lock"
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == STATE_UNLOCKED
+    assert state.state == STATE_LOCKED
     assert state.attributes.get("friendly_name") == "lock"
 
     entry = registry.async_get(entity_id)
@@ -124,23 +107,6 @@ async def test_lock_set_lock(hass, init_integration):
         )
     mock_put_state.assert_called_once_with(ANY, ANY, ANY, '{"lock": 1}')
 
-    get_states_response = list(DEVICES_STATE)
-    for state_response in get_states_response:
-        if state_response["uid"] == uid:
-            state_response["state"]["lock"] = 1
-    with patch(
-        "homeassistant.components.freedompro.get_states",
-        return_value=get_states_response,
-    ):
-        async_fire_time_changed(hass, utcnow() + timedelta(hours=2))
-        await hass.async_block_till_done()
-
-        state = hass.states.get(entity_id)
-        assert state
-        assert state.attributes.get("friendly_name") == "lock"
-
-        entry = registry.async_get(entity_id)
-        assert entry
-        assert entry.unique_id == uid
-
-        assert state.state == STATE_LOCKED
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_LOCKED
