@@ -51,6 +51,13 @@
             }
         }
     },
+    "device_automation": {
+        "condition_type": {
+            "config_parameter": "\u8a2d\u5b9a\u53c3\u6578 {subtype} \u6578\u503c",
+            "node_status": "\u7bc0\u9ede\u72c0\u614b",
+            "value": "Z-Wave \u76ee\u524d\u503c"
+        }
+    },
     "options": {
         "abort": {
             "addon_get_discovery_info_failed": "\u53d6\u5f97 Z-Wave JS \u9644\u52a0\u5143\u4ef6\u63a2\u7d22\u8cc7\u8a0a\u5931\u6557\u3002",
