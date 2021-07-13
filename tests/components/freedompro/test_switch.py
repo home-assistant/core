@@ -76,26 +76,9 @@ async def test_switch_set_off(hass, init_integration):
         )
     mock_put_state.assert_called_once_with(ANY, ANY, ANY, '{"on": false}')
 
-    get_states_response = list(DEVICES_STATE)
-    for state_response in get_states_response:
-        if state_response["uid"] == uid:
-            state_response["state"]["on"] = False
-    with patch(
-        "homeassistant.components.freedompro.get_states",
-        return_value=get_states_response,
-    ):
-        async_fire_time_changed(hass, utcnow() + timedelta(hours=2))
-        await hass.async_block_till_done()
-
-        state = hass.states.get(entity_id)
-        assert state
-        assert state.attributes.get("friendly_name") == "Irrigation switch"
-
-        entry = registry.async_get(entity_id)
-        assert entry
-        assert entry.unique_id == uid
-
-        assert state.state == STATE_OFF
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ON
 
 
 async def test_switch_set_on(hass, init_integration):
@@ -106,7 +89,7 @@ async def test_switch_set_on(hass, init_integration):
     entity_id = "switch.irrigation_switch"
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == STATE_OFF
+    assert state.state == STATE_ON
     assert state.attributes.get("friendly_name") == "Irrigation switch"
 
     entry = registry.async_get(entity_id)
@@ -124,23 +107,6 @@ async def test_switch_set_on(hass, init_integration):
         )
     mock_put_state.assert_called_once_with(ANY, ANY, ANY, '{"on": true}')
 
-    get_states_response = list(DEVICES_STATE)
-    for state_response in get_states_response:
-        if state_response["uid"] == uid:
-            state_response["state"]["on"] = True
-    with patch(
-        "homeassistant.components.freedompro.get_states",
-        return_value=get_states_response,
-    ):
-        async_fire_time_changed(hass, utcnow() + timedelta(hours=2))
-        await hass.async_block_till_done()
-
-        state = hass.states.get(entity_id)
-        assert state
-        assert state.attributes.get("friendly_name") == "Irrigation switch"
-
-        entry = registry.async_get(entity_id)
-        assert entry
-        assert entry.unique_id == uid
-
-        assert state.state == STATE_ON
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ON
