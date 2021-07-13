@@ -2,6 +2,7 @@
 from datetime import timedelta
 import logging
 
+import aiohttp
 from pybotvac import Account, Neato
 from pybotvac.exceptions import NeatoException
 import voluptuous as vol
@@ -77,6 +78,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
     )
 
+    if implementation.client_id != entry.unique_id:
+        _LOGGER.debug("Adding unique_id to old config entry")
+        hass.config_entries.async_update_entry(
+            entry, unique_id=implementation.client_id
+        )
+
+    session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
+    try:
+        await session.async_ensure_token_valid()
+    except aiohttp.ClientResponseError as ex:
+        _LOGGER.debug(
+            "Token not valid (%s - %s), automatic renewal", ex.code, ex.message
+        )
+        await entry.async_start_reauth(hass)
+
     neato_session = api.ConfigEntryAuth(hass, entry, implementation)
     hass.data[NEATO_DOMAIN][entry.entry_id] = neato_session
     hub = NeatoHub(hass, Account(neato_session))
@@ -94,7 +110,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigType) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
