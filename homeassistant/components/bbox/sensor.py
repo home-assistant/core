@@ -132,11 +132,17 @@ class BboxSensor(SensorEntity):
                 self.bbox_data.data["tx"]["maxBandwidth"] / 1000, 2
             )
         elif self.type == "current_down_bandwidth":
-            self._attr_native_value = round(self.bbox_data.data["rx"]["bandwidth"] / 1000, 2)
+            self._attr_native_value = round(
+                self.bbox_data.data["rx"]["bandwidth"] / 1000, 2
+            )
         elif self.type == "current_up_bandwidth":
-            self._attr_native_value = round(self.bbox_data.data["tx"]["bandwidth"] / 1000, 2)
+            self._attr_native_value = round(
+                self.bbox_data.data["tx"]["bandwidth"] / 1000, 2
+            )
         elif self.type == "number_of_reboots":
-            self._attr_native_value = self.bbox_data.router_infos["device"]["numberofboots"]
+            self._attr_native_value = self.bbox_data.router_infos["device"][
+                "numberofboots"
+            ]
 
 
 class BboxData:
