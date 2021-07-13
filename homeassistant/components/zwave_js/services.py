@@ -95,7 +95,7 @@ class ZWaveServices:
         def get_nodes_from_service_data(val: dict[str, Any]) -> dict[str, Any]:
             """Get nodes set from service data."""
             nodes: set[ZwaveNode] = set()
-            for entity_id in val.get(ATTR_ENTITY_ID, []):
+            for entity_id in val.pop(ATTR_ENTITY_ID, []):
                 try:
                     nodes.add(
                         async_get_node_from_entity_id(
@@ -104,8 +104,7 @@ class ZWaveServices:
                     )
                 except ValueError as err:
                     const.LOGGER.warning(err.args[0])
-            val.pop(ATTR_ENTITY_ID, None)
-            for device_id in val.get(ATTR_DEVICE_ID, []):
+            for device_id in val.pop(ATTR_DEVICE_ID, []):
                 try:
                     nodes.add(
                         async_get_node_from_device_id(
@@ -114,7 +113,6 @@ class ZWaveServices:
                     )
                 except ValueError as err:
                     const.LOGGER.warning(err.args[0])
-            val.pop(ATTR_DEVICE_ID, None)
 
             val[const.ATTR_NODES] = nodes
             return val
