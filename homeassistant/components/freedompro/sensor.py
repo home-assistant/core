@@ -80,7 +80,7 @@ class Device(CoordinatorEntity, SensorEntity):
             (
                 device
                 for device in self.coordinator.data
-                if device["uid"] == self._attr_unique_id
+                if device["uid"] == self.unique_id
             ),
             None,
         )
