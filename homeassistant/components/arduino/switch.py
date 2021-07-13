@@ -54,13 +54,8 @@ class ArduinoSwitch(SwitchEntity):
             self.turn_on_handler = board.set_digital_out_high
             self.turn_off_handler = board.set_digital_out_low
 
-        board.set_mode(self._pin, "out", CONF_TYPE)
+        board.set_mode(pin, "out", CONF_TYPE)
         (self.turn_on_handler if self.is_on else self.turn_off_handler)(pin)
-
-    @property
-    def is_on(self):
-        """Return true if pin is high/on."""
-        return self.is_on
 
     def turn_on(self, **kwargs):
         """Turn the pin to high/on."""
