@@ -4,6 +4,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_SENSOR_TYPE,
     CONF_TEMPERATURE_UNIT,
+    DEVICE_CLASS_TEMPERATURE,
     POWER_WATT,
     TIME_HOURS,
     TIME_MINUTES,
@@ -240,6 +241,7 @@ class PulseCounter(GEMSensor):
 class TemperatureSensor(GEMSensor):
     """Entity showing temperature from one temperature sensor."""
 
+    _attr_device_class = DEVICE_CLASS_TEMPERATURE
     _attr_icon = TEMPERATURE_ICON
 
     def __init__(self, monitor_serial_number, number, name, unit):
