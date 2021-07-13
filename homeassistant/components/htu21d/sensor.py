@@ -90,7 +90,7 @@ class HTU21DSensor(SensorEntity):
         self._unit_of_measurement = unit
         self._client = htu21d_client
         self._state = None
-        self._attr_device_class = DEVICE_CLASS_MAP(variable)
+        self._attr_device_class = DEVICE_CLASS_MAP[variable]
 
     @property
     def name(self) -> str:
