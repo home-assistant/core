@@ -591,6 +591,28 @@ DISCOVERY_SCHEMAS = [
         platform="siren",
         primary_value=SIREN_TONE_SCHEMA,
     ),
+    # siren default tone
+    ZWaveDiscoverySchema(
+        platform="select",
+        hint="Default tone",
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.SOUND_SWITCH},
+            property={"defaultToneId"},
+            type={"number"},
+        ),
+        required_values=[SIREN_TONE_SCHEMA],
+    ),
+    # siren default volume
+    ZWaveDiscoverySchema(
+        platform="number",
+        hint="Default volume level",
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.SOUND_SWITCH},
+            property={"defaultVolume"},
+            type={"number"},
+        ),
+        required_values=[SIREN_TONE_SCHEMA],
+    ),
 ]
 
 
