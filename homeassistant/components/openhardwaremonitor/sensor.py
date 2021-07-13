@@ -109,7 +109,7 @@ class OpenHardwareMonitorDevice(SensorEntity):
                 self.attributes = _attributes
                 return
             array = array[path_number][OHM_CHILDREN]
-            _attributes.update({"level_%s" % path_index: values[OHM_NAME]})
+            _attributes.update({f"level_{path_index}": values[OHM_NAME]})
 
 
 class OpenHardwareMonitorData:

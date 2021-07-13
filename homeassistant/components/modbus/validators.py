@@ -78,10 +78,8 @@ def sensor_schema_validator(config):
     if config[CONF_DATA_TYPE] != DATA_TYPE_CUSTOM:
         try:
             structure = f">{DEFAULT_STRUCT_FORMAT[data_type]}"
-        except KeyError:
-            raise vol.Invalid(
-                f"Modbus error {data_type} unknown in {name}"
-            ) from KeyError
+        except KeyError as exp:
+            raise vol.Invalid(f"Modbus error {data_type} unknown in {name}") from exp
     else:
         if not structure:
             raise vol.Invalid(

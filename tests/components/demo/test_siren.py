@@ -5,6 +5,7 @@ import pytest
 
 from homeassistant.components.siren.const import (
     ATTR_AVAILABLE_TONES,
+    ATTR_TONE,
     ATTR_VOLUME_LEVEL,
     DOMAIN,
 )
@@ -56,6 +57,15 @@ async def test_turn_on(hass):
     state = hass.states.get(ENTITY_SIREN)
     assert state.state == STATE_ON
 
+    # Test that an invalid tone will raise a ValueError
+    with pytest.raises(ValueError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: ENTITY_SIREN_WITH_ALL_FEATURES, ATTR_TONE: "invalid_tone"},
+            blocking=True,
+        )
+
 
 async def test_turn_off(hass):
     """Test turn off device."""
@@ -105,4 +115,4 @@ async def test_turn_on_strip_attributes(hass):
             blocking=True,
         )
         assert svc_call.called
-        assert svc_call.call_args_list[0] == call(**{ATTR_ENTITY_ID: [ENTITY_SIREN]})
+        assert svc_call.call_args_list[0] == call()

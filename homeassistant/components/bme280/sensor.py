@@ -12,6 +12,9 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
+    DEVICE_CLASS_HUMIDITY,
+    DEVICE_CLASS_PRESSURE,
+    DEVICE_CLASS_TEMPERATURE,
     PERCENTAGE,
     TEMP_FAHRENHEIT,
 )
@@ -48,9 +51,9 @@ SENSOR_TEMP = "temperature"
 SENSOR_HUMID = "humidity"
 SENSOR_PRESS = "pressure"
 SENSOR_TYPES = {
-    SENSOR_TEMP: ["Temperature", None],
-    SENSOR_HUMID: ["Humidity", PERCENTAGE],
-    SENSOR_PRESS: ["Pressure", "mb"],
+    SENSOR_TEMP: ["Temperature", None, DEVICE_CLASS_TEMPERATURE],
+    SENSOR_HUMID: ["Humidity", PERCENTAGE, DEVICE_CLASS_HUMIDITY],
+    SENSOR_PRESS: ["Pressure", "mb", DEVICE_CLASS_PRESSURE],
 }
 DEFAULT_MONITORED = [SENSOR_TEMP, SENSOR_HUMID, SENSOR_PRESS]
 
@@ -146,6 +149,7 @@ class BME280Sensor(SensorEntity):
         self.type = sensor_type
         self._state = None
         self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
+        self._attr_device_class = SENSOR_TYPES[sensor_type][2]
 
     @property
     def name(self):
