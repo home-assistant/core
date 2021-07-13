@@ -124,6 +124,7 @@ def _retry(func):
 class SharpAquosTVDevice(MediaPlayerEntity):
     """Representation of a Aquos TV."""
 
+    _attr_source_list = list(SOURCES.values())
     _attr_supported_features = SUPPORT_SHARPTV
 
     def __init__(self, name, remote, power_on_enabled=False):
@@ -135,7 +136,6 @@ class SharpAquosTVDevice(MediaPlayerEntity):
         self._attr_name = name
         # Assume that the TV is not muted
         self._remote = remote
-        self._attr_source_list = list(SOURCES.values())
 
     def set_state(self, state):
         """Set TV state."""
