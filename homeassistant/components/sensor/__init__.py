@@ -225,3 +225,14 @@ class SensorEntity(Entity):
                 value = str(round(temp) if prec == 0 else round(temp, prec))
 
         return value
+
+    def __repr__(self) -> str:
+        """Return the representation.
+
+        Entity.__repr__ includes the state in the generated string, this fails if we're
+        called before self.hass is set.
+        """
+        if not self.hass:
+            return f"<Entity {self.name}>"
+        else:
+            return super().__repr__()
