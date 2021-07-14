@@ -68,7 +68,7 @@ class BaseClimaCellSensorEntity(ClimaCellEntity, SensorEntity):
             f"{self._config_entry.unique_id}_{slugify(description.name)}"
         )
         self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: self.attribution}
-        self._attr_unit_of_measurement = (
+        self._attr_native_unit_of_measurement = (
             description.unit_metric
             if hass.config.units.is_metric
             else description.unit_imperial
