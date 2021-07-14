@@ -58,16 +58,17 @@ async def _process_manager_data(
                 # This is unique among all flow_from's
                 key = flow["stat_energy_from"]
 
-                current_entity = to_remove.pop(key, None)
-                if current_entity:
-                    current_entity.update_config(flow)
-                    continue
-
                 # Make sure the right data is there
+                # If the entity existed, we don't pop it from to_remove so it's removed
                 if flow["entity_energy_from"] is None or (
                     flow["entity_energy_price"] is None
                     and flow["number_energy_price"] is None
                 ):
+                    continue
+
+                current_entity = to_remove.pop(key, None)
+                if current_entity:
+                    current_entity.update_config(flow)
                     continue
 
                 _, name = split_entity_id(flow["entity_energy_from"])
