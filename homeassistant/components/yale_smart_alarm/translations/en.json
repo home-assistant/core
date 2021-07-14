@@ -4,8 +4,7 @@
         "already_configured": "Connection already configured for this account"
       },
       "error": {
-        "auth_error": "Authentication error",
-        "connection_error": "Connection error"
+        "invalid_auth": "Authentication error"
       },
       "step": {
         "user": {

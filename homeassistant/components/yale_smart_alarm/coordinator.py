@@ -25,7 +25,6 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator):
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize the Verisure hub."""
         self.entry = entry
-        self._hass = hass
         self.yale = None
 
         super().__init__(
@@ -38,7 +37,7 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self) -> dict:
         """Fetch data from Yale."""
 
-        updates = await self._hass.async_add_executor_job(self.get_updates)
+        updates = await self.hass.async_add_executor_job(self.get_updates)
 
         locks = []
         door_windows = []

@@ -21,7 +21,6 @@ async def test_form(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.yale_smart_alarm.config_flow.YaleSmartAlarmClient",
-        return_value=True,
     ), patch(
         "homeassistant.components.yale_smart_alarm.async_setup_entry",
         return_value=True,
@@ -77,7 +76,6 @@ async def test_import_flow_success(hass):
     """Test a successful import of yaml."""
     with patch(
         "homeassistant.components.yale_smart_alarm.config_flow.YaleSmartAlarmClient",
-        return_value=True,
     ), patch(
         "homeassistant.components.yale_smart_alarm.async_setup_entry",
         return_value=True,
@@ -109,7 +107,6 @@ async def test_import_flow_success_missing_requirement(hass):
     """Test a successful import of yaml where new requirements missing."""
     with patch(
         "homeassistant.components.yale_smart_alarm.config_flow.YaleSmartAlarmClient",
-        return_value=True,
     ), patch(
         "homeassistant.components.yale_smart_alarm.async_setup_entry",
         return_value=True,
