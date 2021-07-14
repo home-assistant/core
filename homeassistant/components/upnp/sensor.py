@@ -161,7 +161,7 @@ class UpnpSensor(CoordinatorEntity, SensorEntity):
         return f"{self._device.udn}_{self._sensor_type['unique_id']}"
 
     @property
-    def unit_of_measurement(self) -> str:
+    def native_unit_of_measurement(self) -> str:
         """Return the unit of measurement of this entity, if any."""
         return self._sensor_type["unit"]
 
@@ -180,7 +180,7 @@ class RawUpnpSensor(UpnpSensor):
     """Representation of a UPnP/IGD sensor."""
 
     @property
-    def state(self) -> str | None:
+    def native_value(self) -> str | None:
         """Return the state of the device."""
         device_value_key = self._sensor_type["device_value_key"]
         value = self.coordinator.data[device_value_key]
@@ -209,7 +209,7 @@ class DerivedUpnpSensor(UpnpSensor):
         return f"{self._device.udn}_{self._sensor_type['derived_unique_id']}"
 
     @property
-    def unit_of_measurement(self) -> str:
+    def native_unit_of_measurement(self) -> str:
         """Return the unit of measurement of this entity, if any."""
         return self._sensor_type["derived_unit"]
 
@@ -218,7 +218,7 @@ class DerivedUpnpSensor(UpnpSensor):
         return current_value < self._last_value
 
     @property
-    def state(self) -> str | None:
+    def native_value(self) -> str | None:
         """Return the state of the device."""
         # Can't calculate any derivative if we have only one value.
         device_value_key = self._sensor_type["device_value_key"]
