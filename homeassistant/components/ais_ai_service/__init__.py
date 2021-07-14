@@ -3289,9 +3289,9 @@ async def _publish_command_to_frame(hass, key, val, ip=None):
                 # r = requests.get('http://httpbin.org/status/404', timeout=10)
                 r = requests.get("http://" + gate_id + ".paczka.pro", timeout=10)
                 if r.status_code == 404:
-                    lt_path = "/data/data/pl.sviete.dom/files/usr/bin/lt"
+                    lt_path = "/data/data/pl.sviete.dom/files/usr/bin/cloudflared"
                     if platform.machine() == "x86_64":
-                        lt_path = "/usr/local/bin/lt"
+                        lt_path = "/usr/local/bin/cloudflared"
                     command = "pm2 restart tunnel || pm2 start {} --name tunnel --output /dev/null --error /dev/null " \
                               "-- --hostname http://{}.paczka.pro --url http://localhost:8180".format(lt_path, gate_id)
                     subprocess.Popen(

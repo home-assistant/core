@@ -197,6 +197,8 @@ async def _change_remote_access(hass, call):
         # )
         if not os.path.isfile("/data/data/pl.sviete.dom/files/home/.cloudflared/cert.pem"):
             await _run("mkdir -p /data/data/pl.sviete.dom/files/home/.cloudflared")
+            # delete old tunnel
+            await _run("pm2 delete tunnel")
             with async_timeout.timeout(10):
                 web_session = aiohttp_client.async_get_clientsession(hass)
                 # store file
