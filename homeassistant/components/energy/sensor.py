@@ -113,6 +113,13 @@ class EnergyCostSensor(SensorEntity):
         self._flow = flow
         self._last_energy_sensor_state: State | None = None
 
+    def _reset(self, energy_state: State) -> None:
+        """Reset the cost sensor."""
+        self._attr_state = 0.0
+        self._attr_last_reset = dt_util.utcnow()
+        self._last_energy_sensor_state = energy_state
+        self.async_write_ha_state()
+
     @callback
     def _update_cost(self) -> None:
         """Update incurred costs."""
@@ -143,20 +150,18 @@ class EnergyCostSensor(SensorEntity):
 
         if self._last_energy_sensor_state is None:
             # Initialize as it's the first time all required entities are in place.
-            self._attr_state = 0.0
-            self._attr_last_reset = dt_util.utcnow()
-            self._last_energy_sensor_state = energy_state
-            self.async_write_ha_state()
+            self._reset(energy_state)
             return
 
-        # If meter got reset, just take the new value.
         cur_value = cast(float, self._attr_state)
         if (
             energy_state.attributes[ATTR_LAST_RESET]
             != self._last_energy_sensor_state.attributes[ATTR_LAST_RESET]
         ):
-            self._attr_state = cur_value + energy * energy_price
+            # Energy meter was reset, reset cost sensor too
+            self._reset(energy_state)
         else:
+            # Update with newly incurred cost
             old_energy_value = float(self._last_energy_sensor_state.state)
             self._attr_state = cur_value + (energy - old_energy_value) * energy_price
 
