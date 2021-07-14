@@ -9,7 +9,7 @@
     "base36==0.1.1",
     "PyTurboJPEG==1.5.0"
   ],
-  "dependencies": ["http", "camera", "ffmpeg"],
+  "dependencies": ["http", "camera", "ffmpeg", "network"],
   "after_dependencies": ["zeroconf"],
   "codeowners": ["@bdraco"],
   "zeroconf": ["_homekit._tcp.local."],
