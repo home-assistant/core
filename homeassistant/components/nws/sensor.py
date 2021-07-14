@@ -76,13 +76,13 @@ class NWSSensor(CoordinatorEntity, SensorEntity):
             self._attr_unit_of_measurement = description.unit_convert
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state."""
         value = self._nws.observation.get(self.entity_description.key)
         if value is None:
             return None
         # Set alias to unit property -> prevent unnecessary hasattr calls
-        unit_of_measurement = self.unit_of_measurement
+        unit_of_measurement = self.native_unit_of_measurement
         if unit_of_measurement == SPEED_MILES_PER_HOUR:
             return round(convert_distance(value, LENGTH_KILOMETERS, LENGTH_MILES))
         if unit_of_measurement == LENGTH_MILES:
