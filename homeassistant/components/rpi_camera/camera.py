@@ -26,9 +26,10 @@ _LOGGER = logging.getLogger(__name__)
 
 def kill_raspistill(*args):
     """Kill any previously running raspistill process.."""
-    subprocess.Popen(  # pylint: disable=consider-using-with
+    with subprocess.Popen(
         ["killall", "raspistill"], stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT
-    )
+    ):
+        pass
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
