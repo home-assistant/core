@@ -70,11 +70,6 @@ class BlinktLight(LightEntity):
         """Read back the color of the light."""
         return self.hs_color
 
-    @property
-    def is_on(self) -> bool:
-        """Return true if light is on."""
-        return self.is_on
-
     def turn_on(self, **kwargs):
         """Instruct the light to turn on and set correct brightness & color."""
         if ATTR_HS_COLOR in kwargs:
