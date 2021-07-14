@@ -434,6 +434,12 @@ def ge_in_wall_dimmer_switch_state_fixture():
     """Load the ge in-wall dimmer switch node state fixture data."""
     return json.loads(load_fixture("zwave_js/ge_in_wall_dimmer_switch_state.json"))
 
+  
+@pytest.fixture(name="aeotec_zw164_siren_state", scope="session")
+def aeotec_zw164_siren_state_fixture():
+    """Load the aeotec zw164 siren node state fixture data."""
+    return json.loads(load_fixture("zwave_js/aeotec_zw164_siren_state.json"))
+
 
 @pytest.fixture(name="client")
 def mock_client_fixture(controller_state, version_state, log_config_state):
@@ -799,6 +805,14 @@ def wallmote_central_scene_fixture(client, wallmote_central_scene_state):
 def ge_in_wall_dimmer_switch_fixture(client, ge_in_wall_dimmer_switch_state):
     """Mock a ge in-wall dimmer switch scene node."""
     node = Node(client, copy.deepcopy(ge_in_wall_dimmer_switch_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="aeotec_zw164_siren")
+def aeotec_zw164_siren_fixture(client, aeotec_zw164_siren_state):
+    """Mock a wallmote central scene node."""
+    node = Node(client, copy.deepcopy(aeotec_zw164_siren_state))
     client.driver.controller.nodes[node.node_id] = node
     return node
 

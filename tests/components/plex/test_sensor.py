@@ -1,6 +1,8 @@
 """Tests for Plex sensors."""
 from datetime import timedelta
 
+import requests.exceptions
+
 from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.helpers import entity_registry as er
@@ -15,6 +17,7 @@ LIBRARY_UPDATE_PAYLOAD = {"StatusNotification": [{"title": "Library scan complet
 
 async def test_library_sensor_values(
     hass,
+    caplog,
     setup_plex_server,
     mock_websocket,
     requests_mock,
@@ -62,6 +65,34 @@ async def test_library_sensor_values(
     assert library_tv_sensor.state == "10"
     assert library_tv_sensor.attributes["seasons"] == 1
     assert library_tv_sensor.attributes["shows"] == 1
+
+    # Handle `requests` exception
+    requests_mock.get(
+        "/library/sections/2/all?includeCollections=0&type=2",
+        exc=requests.exceptions.ReadTimeout,
+    )
+    trigger_plex_update(
+        mock_websocket, msgtype="status", payload=LIBRARY_UPDATE_PAYLOAD
+    )
+    await hass.async_block_till_done()
+
+    library_tv_sensor = hass.states.get("sensor.plex_server_1_library_tv_shows")
+    assert library_tv_sensor.state == STATE_UNAVAILABLE
+
+    assert "Could not update library sensor" in caplog.text
+
+    # Ensure sensor updates properly when it recovers
+    requests_mock.get(
+        "/library/sections/2/all?includeCollections=0&type=2",
+        text=library_tvshows_size,
+    )
+    trigger_plex_update(
+        mock_websocket, msgtype="status", payload=LIBRARY_UPDATE_PAYLOAD
+    )
+    await hass.async_block_till_done()
+
+    library_tv_sensor = hass.states.get("sensor.plex_server_1_library_tv_shows")
+    assert library_tv_sensor.state == "10"
 
     # Handle library deletion
     requests_mock.get(
