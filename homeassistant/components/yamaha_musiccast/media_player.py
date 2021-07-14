@@ -352,6 +352,9 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
 
     async def async_play_media(self, media_type: str, media_id: str, **kwargs) -> None:
         """Play media."""
+        if self.state == STATE_OFF:
+            await self.turn_on()
+
         if media_id:
             parts = media_id.split(":")
 
@@ -381,6 +384,10 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
 
     async def async_browse_media(self, media_content_type=None, media_content_id=None):
         """Implement the websocket media browsing helper."""
+        if self.state == STATE_OFF:
+            raise HomeAssistantError(
+                "The device has to be turned on to be able to browse media."
+            )
 
         media_content_provider = MusicCastMediaContent(
             self.coordinator.musiccast, self._zone_id
