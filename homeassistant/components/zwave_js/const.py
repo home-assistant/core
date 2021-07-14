@@ -47,9 +47,6 @@ ATTR_DATA_TYPE = "data_type"
 ATTR_WAIT_FOR_RESULT = "wait_for_result"
 ATTR_OPTIONS = "options"
 
-ATTR_NODE = "node"
-ATTR_ZWAVE_VALUE = "zwave_value"
-
 # service constants
 SERVICE_SET_VALUE = "set_value"
 SERVICE_RESET_METER = "reset_meter"
