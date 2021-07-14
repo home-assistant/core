@@ -340,10 +340,12 @@ class BME680Sensor(SensorEntity):
         elif self.type == SENSOR_HUMID:
             self._attr_state = round(self.bme680_client.sensor_data.humidity, 1)
         elif self.type == SENSOR_PRESS:
-            self._state = round(self.bme680_client.sensor_data.pressure, 1)
+            self._attr_state = round(self.bme680_client.sensor_data.pressure, 1)
         elif self.type == SENSOR_GAS:
-            self._state = int(round(self.bme680_client.sensor_data.gas_resistance, 0))
+            self._attr_state = int(
+                round(self.bme680_client.sensor_data.gas_resistance, 0)
+            )
         elif self.type == SENSOR_AQ:
             aq_score = self.bme680_client.sensor_data.air_quality
             if aq_score is not None:
-                self._state = round(aq_score, 1)
+                self._attr_state = round(aq_score, 1)
