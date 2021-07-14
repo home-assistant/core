@@ -134,7 +134,7 @@ class LutronDevice(Entity):
     @property
     def unique_id(self):
         """Return the unique ID of the device."""
-        return f"{DOMAIN}_{self._controller.guid}_{self._lutron_device.uuid}_{self._lutron_device.id}"
+        return f"{DOMAIN}_{self._controller.guid}_{ getattr(self._lutron_device, 'uuid', '')}_{getattr(self._lutron_device, 'id', '')}"
 
 
 class LutronButton:
