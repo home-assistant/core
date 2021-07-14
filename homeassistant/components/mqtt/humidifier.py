@@ -273,7 +273,7 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
         @callback
         @log_messages(self.hass, self.entity_id)
         def target_humidity_received(msg):
-            """Handle new received MQTT message for the taret humidity."""
+            """Handle new received MQTT message for the target humidity."""
             rendered_target_humidity_payload = self._value_templates[ATTR_HUMIDITY](
                 msg.payload
             )
