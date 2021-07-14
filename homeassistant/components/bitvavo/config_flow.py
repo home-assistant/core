@@ -20,6 +20,13 @@ from .errors import InvalidAuth, InvalidResponse
 
 _LOGGER = logging.getLogger(__name__)
 
+DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_API_KEY): str,
+        vol.Required(CONF_API_SECRET): str,
+    }
+)
+
 
 def _markets_schema(markets: list | None) -> dict[str, Any]:
     """Markets selection schema."""
@@ -86,13 +93,8 @@ class BitvavoConfigFlow(ConfigFlow, domain=DOMAIN):
 
                 return await self.async_step_markets()
 
-        data_schema = {
-            vol.Required(CONF_API_KEY): str,
-            vol.Required(CONF_API_SECRET): str,
-        }
-
         return self.async_show_form(
-            step_id="user", data_schema=vol.Schema(data_schema), errors=errors
+            step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
 
     async def async_step_markets(self, user_input: dict | None = None) -> FlowResult:
@@ -101,7 +103,7 @@ class BitvavoConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             self.bitvavo_config.update(user_input)
-            errors = await self._async_validate_or_error(self.bitvavo_config)
+            info, errors = await self._async_validate_or_error(self.bitvavo_config)
 
             title = "Markets: " + ", ".join(self.bitvavo_config[CONF_MARKETS])
 
@@ -118,16 +120,17 @@ class BitvavoConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def _async_validate_or_error(self, config):
         errors = {}
+        info = {}
 
         try:
-            await validate_input(self.hass, config)
+            info = await validate_input(self.hass, config)
         except InvalidAuth:
             errors["base"] = "invalid_auth"
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
 
-        return errors
+        return info, errors
 
 
 class BitvavoOptionsFlowHandler(OptionsFlow):

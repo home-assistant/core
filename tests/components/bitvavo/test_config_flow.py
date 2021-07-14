@@ -95,7 +95,7 @@ async def test_create_entry(hass):
         )
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result["step_id"] == SOURCE_USER
+        assert result["step_id"] == "markets"
 
 
 async def test_invalid_auth_response(hass):
