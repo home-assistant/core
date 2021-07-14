@@ -323,40 +323,22 @@ class BME680Sensor(SensorEntity):
 
     def __init__(self, bme680_client, sensor_type, temp_unit, name):
         """Initialize the sensor."""
-        self.client_name = name
-        self._name = SENSOR_TYPES[sensor_type][0]
+        self._attr_name = f"{name} {SENSOR_TYPES[sensor_type][0]}"
         self.bme680_client = bme680_client
         self.temp_unit = temp_unit
         self.type = sensor_type
-        self._state = None
-        self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
+        self._attr_unit_of_measurement = SENSOR_TYPES[sensor_type][1]
         self._attr_device_class = SENSOR_TYPES[sensor_type][2]
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return f"{self.client_name} {self._name}"
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of the sensor."""
-        return self._unit_of_measurement
 
     async def async_update(self):
         """Get the latest data from the BME680 and update the states."""
         await self.hass.async_add_executor_job(self.bme680_client.update)
         if self.type == SENSOR_TEMP:
-            temperature = round(self.bme680_client.sensor_data.temperature, 1)
+            self._attr_state = round(self.bme680_client.sensor_data.temperature, 1)
             if self.temp_unit == TEMP_FAHRENHEIT:
-                temperature = round(celsius_to_fahrenheit(temperature), 1)
-            self._state = temperature
+                self._attr_state = round(celsius_to_fahrenheit(self.state), 1)
         elif self.type == SENSOR_HUMID:
-            self._state = round(self.bme680_client.sensor_data.humidity, 1)
+            self._attr_state = round(self.bme680_client.sensor_data.humidity, 1)
         elif self.type == SENSOR_PRESS:
             self._state = round(self.bme680_client.sensor_data.pressure, 1)
         elif self.type == SENSOR_GAS:
