@@ -7,6 +7,7 @@ from zwave_js_server.const import LogLevel
 from zwave_js_server.event import Event
 from zwave_js_server.exceptions import (
     FailedCommand,
+    FailedZWaveCommand,
     InvalidNewValue,
     NotFoundError,
     SetValueFailed,
@@ -280,13 +281,32 @@ async def test_ping_node(
     assert not msg["success"]
     assert msg["error"]["code"] == ERR_NOT_FOUND
 
+    # Test FailedZWaveCommand is caught
+    with patch(
+        "zwave_js_server.model.node.Node.async_ping",
+        side_effect=FailedZWaveCommand("failed_command", 1, "error message"),
+    ):
+        await ws_client.send_json(
+            {
+                ID: 5,
+                TYPE: "zwave_js/ping_node",
+                ENTRY_ID: entry.entry_id,
+                NODE_ID: node.node_id,
+            }
+        )
+        msg = await ws_client.receive_json()
+
+        assert not msg["success"]
+        assert msg["error"]["code"] == "zwave_error"
+        assert msg["error"]["message"] == "Z-Wave error 1: error message"
+
     # Test sending command with not loaded entry fails
     await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 
     await ws_client.send_json(
         {
-            ID: 5,
+            ID: 6,
             TYPE: "zwave_js/ping_node",
             ENTRY_ID: entry.entry_id,
             NODE_ID: node.node_id,
@@ -385,12 +405,30 @@ async def test_add_node(
     msg = await ws_client.receive_json()
     assert msg["event"]["event"] == "interview failed"
 
+    # Test FailedZWaveCommand is caught
+    with patch(
+        "zwave_js_server.model.controller.Controller.async_begin_inclusion",
+        side_effect=FailedZWaveCommand("failed_command", 1, "error message"),
+    ):
+        await ws_client.send_json(
+            {
+                ID: 4,
+                TYPE: "zwave_js/add_node",
+                ENTRY_ID: entry.entry_id,
+            }
+        )
+        msg = await ws_client.receive_json()
+
+        assert not msg["success"]
+        assert msg["error"]["code"] == "zwave_error"
+        assert msg["error"]["message"] == "Z-Wave error 1: error message"
+
     # Test sending command with not loaded entry fails
     await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 
     await ws_client.send_json(
-        {ID: 4, TYPE: "zwave_js/add_node", ENTRY_ID: entry.entry_id}
+        {ID: 5, TYPE: "zwave_js/add_node", ENTRY_ID: entry.entry_id}
     )
     msg = await ws_client.receive_json()
 
@@ -419,12 +457,48 @@ async def test_cancel_inclusion_exclusion(hass, integration, client, hass_ws_cli
     msg = await ws_client.receive_json()
     assert msg["success"]
 
+    # Test FailedZWaveCommand is caught
+    with patch(
+        "zwave_js_server.model.controller.Controller.async_stop_inclusion",
+        side_effect=FailedZWaveCommand("failed_command", 1, "error message"),
+    ):
+        await ws_client.send_json(
+            {
+                ID: 6,
+                TYPE: "zwave_js/stop_inclusion",
+                ENTRY_ID: entry.entry_id,
+            }
+        )
+        msg = await ws_client.receive_json()
+
+        assert not msg["success"]
+        assert msg["error"]["code"] == "zwave_error"
+        assert msg["error"]["message"] == "Z-Wave error 1: error message"
+
+    # Test FailedZWaveCommand is caught
+    with patch(
+        "zwave_js_server.model.controller.Controller.async_stop_exclusion",
+        side_effect=FailedZWaveCommand("failed_command", 1, "error message"),
+    ):
+        await ws_client.send_json(
+            {
+                ID: 7,
+                TYPE: "zwave_js/stop_exclusion",
+                ENTRY_ID: entry.entry_id,
+            }
+        )
+        msg = await ws_client.receive_json()
+
+        assert not msg["success"]
+        assert msg["error"]["code"] == "zwave_error"
+        assert msg["error"]["message"] == "Z-Wave error 1: error message"
+
     # Test sending command with not loaded entry fails
     await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 
     await ws_client.send_json(
-        {ID: 6, TYPE: "zwave_js/stop_inclusion", ENTRY_ID: entry.entry_id}
+        {ID: 8, TYPE: "zwave_js/stop_inclusion", ENTRY_ID: entry.entry_id}
     )
     msg = await ws_client.receive_json()
 
@@ -432,7 +506,7 @@ async def test_cancel_inclusion_exclusion(hass, integration, client, hass_ws_cli
     assert msg["error"]["code"] == ERR_NOT_LOADED
 
     await ws_client.send_json(
-        {ID: 7, TYPE: "zwave_js/stop_exclusion", ENTRY_ID: entry.entry_id}
+        {ID: 9, TYPE: "zwave_js/stop_exclusion", ENTRY_ID: entry.entry_id}
     )
     msg = await ws_client.receive_json()
 
@@ -494,12 +568,30 @@ async def test_remove_node(
     )
     assert device is None
 
+    # Test FailedZWaveCommand is caught
+    with patch(
+        "zwave_js_server.model.controller.Controller.async_begin_exclusion",
+        side_effect=FailedZWaveCommand("failed_command", 1, "error message"),
+    ):
+        await ws_client.send_json(
+            {
+                ID: 4,
+                TYPE: "zwave_js/remove_node",
+                ENTRY_ID: entry.entry_id,
+            }
+        )
+        msg = await ws_client.receive_json()
+
+        assert not msg["success"]
+        assert msg["error"]["code"] == "zwave_error"
+        assert msg["error"]["message"] == "Z-Wave error 1: error message"
+
     # Test sending command with not loaded entry fails
     await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 
     await ws_client.send_json(
-        {ID: 4, TYPE: "zwave_js/remove_node", ENTRY_ID: entry.entry_id}
+        {ID: 5, TYPE: "zwave_js/remove_node", ENTRY_ID: entry.entry_id}
     )
     msg = await ws_client.receive_json()
 
@@ -641,13 +733,32 @@ async def test_replace_failed_node(
     msg = await ws_client.receive_json()
     assert msg["event"]["event"] == "interview failed"
 
+    # Test FailedZWaveCommand is caught
+    with patch(
+        "zwave_js_server.model.controller.Controller.async_replace_failed_node",
+        side_effect=FailedZWaveCommand("failed_command", 1, "error message"),
+    ):
+        await ws_client.send_json(
+            {
+                ID: 4,
+                TYPE: "zwave_js/replace_failed_node",
+                ENTRY_ID: entry.entry_id,
+                NODE_ID: 67,
+            }
+        )
+        msg = await ws_client.receive_json()
+
+        assert not msg["success"]
+        assert msg["error"]["code"] == "zwave_error"
+        assert msg["error"]["message"] == "Z-Wave error 1: error message"
+
     # Test sending command with not loaded entry fails
     await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 
     await ws_client.send_json(
         {
-            ID: 4,
+            ID: 5,
             TYPE: "zwave_js/replace_failed_node",
             ENTRY_ID: entry.entry_id,
             NODE_ID: 67,
@@ -705,13 +816,32 @@ async def test_remove_failed_node(
     )
     assert device is None
 
+    # Test FailedZWaveCommand is caught
+    with patch(
+        "zwave_js_server.model.controller.Controller.async_remove_failed_node",
+        side_effect=FailedZWaveCommand("failed_command", 1, "error message"),
+    ):
+        await ws_client.send_json(
+            {
+                ID: 4,
+                TYPE: "zwave_js/remove_failed_node",
+                ENTRY_ID: entry.entry_id,
+                NODE_ID: 67,
+            }
+        )
+        msg = await ws_client.receive_json()
+
+        assert not msg["success"]
+        assert msg["error"]["code"] == "zwave_error"
+        assert msg["error"]["message"] == "Z-Wave error 1: error message"
+
     # Test sending command with not loaded entry fails
     await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 
     await ws_client.send_json(
         {
-            ID: 4,
+            ID: 5,
             TYPE: "zwave_js/remove_failed_node",
             ENTRY_ID: entry.entry_id,
             NODE_ID: 67,
@@ -747,13 +877,31 @@ async def test_begin_healing_network(
     assert msg["success"]
     assert msg["result"]
 
+    # Test FailedZWaveCommand is caught
+    with patch(
+        "zwave_js_server.model.controller.Controller.async_begin_healing_network",
+        side_effect=FailedZWaveCommand("failed_command", 1, "error message"),
+    ):
+        await ws_client.send_json(
+            {
+                ID: 4,
+                TYPE: "zwave_js/begin_healing_network",
+                ENTRY_ID: entry.entry_id,
+            }
+        )
+        msg = await ws_client.receive_json()
+
+        assert not msg["success"]
+        assert msg["error"]["code"] == "zwave_error"
+        assert msg["error"]["message"] == "Z-Wave error 1: error message"
+
     # Test sending command with not loaded entry fails
     await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 
     await ws_client.send_json(
         {
-            ID: 4,
+            ID: 5,
             TYPE: "zwave_js/begin_healing_network",
             ENTRY_ID: entry.entry_id,
         }
@@ -837,13 +985,31 @@ async def test_stop_healing_network(
     assert msg["success"]
     assert msg["result"]
 
+    # Test FailedZWaveCommand is caught
+    with patch(
+        "zwave_js_server.model.controller.Controller.async_stop_healing_network",
+        side_effect=FailedZWaveCommand("failed_command", 1, "error message"),
+    ):
+        await ws_client.send_json(
+            {
+                ID: 4,
+                TYPE: "zwave_js/stop_healing_network",
+                ENTRY_ID: entry.entry_id,
+            }
+        )
+        msg = await ws_client.receive_json()
+
+        assert not msg["success"]
+        assert msg["error"]["code"] == "zwave_error"
+        assert msg["error"]["message"] == "Z-Wave error 1: error message"
+
     # Test sending command with not loaded entry fails
     await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 
     await ws_client.send_json(
         {
-            ID: 4,
+            ID: 5,
             TYPE: "zwave_js/stop_healing_network",
             ENTRY_ID: entry.entry_id,
         }
@@ -879,13 +1045,32 @@ async def test_heal_node(
     assert msg["success"]
     assert msg["result"]
 
+    # Test FailedZWaveCommand is caught
+    with patch(
+        "zwave_js_server.model.controller.Controller.async_heal_node",
+        side_effect=FailedZWaveCommand("failed_command", 1, "error message"),
+    ):
+        await ws_client.send_json(
+            {
+                ID: 4,
+                TYPE: "zwave_js/heal_node",
+                ENTRY_ID: entry.entry_id,
+                NODE_ID: 67,
+            }
+        )
+        msg = await ws_client.receive_json()
+
+        assert not msg["success"]
+        assert msg["error"]["code"] == "zwave_error"
+        assert msg["error"]["message"] == "Z-Wave error 1: error message"
+
     # Test sending command with not loaded entry fails
     await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 
     await ws_client.send_json(
         {
-            ID: 4,
+            ID: 5,
             TYPE: "zwave_js/heal_node",
             ENTRY_ID: entry.entry_id,
             NODE_ID: 67,
@@ -978,13 +1163,32 @@ async def test_refresh_node_info(
     assert not msg["success"]
     assert msg["error"]["code"] == ERR_NOT_FOUND
 
+    # Test FailedZWaveCommand is caught
+    with patch(
+        "zwave_js_server.model.node.Node.async_refresh_info",
+        side_effect=FailedZWaveCommand("failed_command", 1, "error message"),
+    ):
+        await ws_client.send_json(
+            {
+                ID: 3,
+                TYPE: "zwave_js/refresh_node_info",
+                ENTRY_ID: entry.entry_id,
+                NODE_ID: 52,
+            }
+        )
+        msg = await ws_client.receive_json()
+
+        assert not msg["success"]
+        assert msg["error"]["code"] == "zwave_error"
+        assert msg["error"]["message"] == "Z-Wave error 1: error message"
+
     # Test sending command with not loaded entry fails
     await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 
     await ws_client.send_json(
         {
-            ID: 3,
+            ID: 4,
             TYPE: "zwave_js/refresh_node_info",
             ENTRY_ID: entry.entry_id,
             NODE_ID: 52,
@@ -1048,6 +1252,42 @@ async def test_refresh_node_values(
     assert not msg["success"]
     assert msg["error"]["code"] == ERR_NOT_FOUND
 
+    # Test FailedZWaveCommand is caught
+    with patch(
+        "zwave_js_server.model.node.Node.async_refresh_values",
+        side_effect=FailedZWaveCommand("failed_command", 1, "error message"),
+    ):
+        await ws_client.send_json(
+            {
+                ID: 4,
+                TYPE: "zwave_js/refresh_node_values",
+                ENTRY_ID: entry.entry_id,
+                NODE_ID: 52,
+            }
+        )
+        msg = await ws_client.receive_json()
+
+        assert not msg["success"]
+        assert msg["error"]["code"] == "zwave_error"
+        assert msg["error"]["message"] == "Z-Wave error 1: error message"
+
+    # Test sending command with not loaded entry fails
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    await ws_client.send_json(
+        {
+            ID: 5,
+            TYPE: "zwave_js/refresh_node_values",
+            ENTRY_ID: entry.entry_id,
+            NODE_ID: 52,
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERR_NOT_LOADED
+
 
 async def test_refresh_node_cc_values(
     hass, client, multisensor_6, integration, hass_ws_client
@@ -1105,13 +1345,33 @@ async def test_refresh_node_cc_values(
     assert not msg["success"]
     assert msg["error"]["code"] == ERR_NOT_FOUND
 
+    # Test FailedZWaveCommand is caught
+    with patch(
+        "zwave_js_server.model.node.Node.async_refresh_cc_values",
+        side_effect=FailedZWaveCommand("failed_command", 1, "error message"),
+    ):
+        await ws_client.send_json(
+            {
+                ID: 4,
+                TYPE: "zwave_js/refresh_node_cc_values",
+                ENTRY_ID: entry.entry_id,
+                NODE_ID: 52,
+                COMMAND_CLASS_ID: 112,
+            }
+        )
+        msg = await ws_client.receive_json()
+
+        assert not msg["success"]
+        assert msg["error"]["code"] == "zwave_error"
+        assert msg["error"]["message"] == "Z-Wave error 1: error message"
+
     # Test sending command with not loaded entry fails
     await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 
     await ws_client.send_json(
         {
-            ID: 4,
+            ID: 5,
             TYPE: "zwave_js/refresh_node_cc_values",
             ENTRY_ID: entry.entry_id,
             NODE_ID: 52,
@@ -1307,13 +1567,35 @@ async def test_set_config_parameter(
     assert not msg["success"]
     assert msg["error"]["code"] == ERR_NOT_FOUND
 
+    # Test FailedZWaveCommand is caught
+    with patch(
+        "homeassistant.components.zwave_js.api.async_set_config_parameter",
+        side_effect=FailedZWaveCommand("failed_command", 1, "error message"),
+    ):
+        await ws_client.send_json(
+            {
+                ID: 7,
+                TYPE: "zwave_js/set_config_parameter",
+                ENTRY_ID: entry.entry_id,
+                NODE_ID: 52,
+                PROPERTY: 102,
+                PROPERTY_KEY: 1,
+                VALUE: 1,
+            }
+        )
+        msg = await ws_client.receive_json()
+
+        assert not msg["success"]
+        assert msg["error"]["code"] == "zwave_error"
+        assert msg["error"]["message"] == "Z-Wave error 1: error message"
+
     # Test sending command with not loaded entry fails
     await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 
     await ws_client.send_json(
         {
-            ID: 7,
+            ID: 8,
             TYPE: "zwave_js/set_config_parameter",
             ENTRY_ID: entry.entry_id,
             NODE_ID: 52,
@@ -1625,12 +1907,30 @@ async def test_subscribe_log_updates(hass, integration, client, hass_ws_client):
         },
     }
 
+    # Test FailedZWaveCommand is caught
+    with patch(
+        "zwave_js_server.model.driver.Driver.async_start_listening_logs",
+        side_effect=FailedZWaveCommand("failed_command", 1, "error message"),
+    ):
+        await ws_client.send_json(
+            {
+                ID: 2,
+                TYPE: "zwave_js/subscribe_log_updates",
+                ENTRY_ID: entry.entry_id,
+            }
+        )
+        msg = await ws_client.receive_json()
+
+        assert not msg["success"]
+        assert msg["error"]["code"] == "zwave_error"
+        assert msg["error"]["message"] == "Z-Wave error 1: error message"
+
     # Test sending command with not loaded entry fails
     await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 
     await ws_client.send_json(
-        {ID: 2, TYPE: "zwave_js/subscribe_log_updates", ENTRY_ID: entry.entry_id}
+        {ID: 3, TYPE: "zwave_js/subscribe_log_updates", ENTRY_ID: entry.entry_id}
     )
     msg = await ws_client.receive_json()
 
@@ -1757,13 +2057,32 @@ async def test_update_log_config(hass, client, integration, hass_ws_client):
         and "must be provided if logging to file" in msg["error"]["message"]
     )
 
+    # Test FailedZWaveCommand is caught
+    with patch(
+        "zwave_js_server.model.driver.Driver.async_update_log_config",
+        side_effect=FailedZWaveCommand("failed_command", 1, "error message"),
+    ):
+        await ws_client.send_json(
+            {
+                ID: 7,
+                TYPE: "zwave_js/update_log_config",
+                ENTRY_ID: entry.entry_id,
+                CONFIG: {LEVEL: "Error"},
+            }
+        )
+        msg = await ws_client.receive_json()
+
+        assert not msg["success"]
+        assert msg["error"]["code"] == "zwave_error"
+        assert msg["error"]["message"] == "Z-Wave error 1: error message"
+
     # Test sending command with not loaded entry fails
     await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 
     await ws_client.send_json(
         {
-            ID: 7,
+            ID: 8,
             TYPE: "zwave_js/update_log_config",
             ENTRY_ID: entry.entry_id,
             CONFIG: {LEVEL: "Error"},
@@ -1884,13 +2203,50 @@ async def test_data_collection(hass, client, integration, hass_ws_client):
 
     client.async_send_command.reset_mock()
 
+    # Test FailedZWaveCommand is caught
+    with patch(
+        "zwave_js_server.model.driver.Driver.async_is_statistics_enabled",
+        side_effect=FailedZWaveCommand("failed_command", 1, "error message"),
+    ):
+        await ws_client.send_json(
+            {
+                ID: 4,
+                TYPE: "zwave_js/data_collection_status",
+                ENTRY_ID: entry.entry_id,
+            }
+        )
+        msg = await ws_client.receive_json()
+
+        assert not msg["success"]
+        assert msg["error"]["code"] == "zwave_error"
+        assert msg["error"]["message"] == "Z-Wave error 1: error message"
+
+    # Test FailedZWaveCommand is caught
+    with patch(
+        "zwave_js_server.model.driver.Driver.async_enable_statistics",
+        side_effect=FailedZWaveCommand("failed_command", 1, "error message"),
+    ):
+        await ws_client.send_json(
+            {
+                ID: 5,
+                TYPE: "zwave_js/update_data_collection_preference",
+                ENTRY_ID: entry.entry_id,
+                OPTED_IN: True,
+            }
+        )
+        msg = await ws_client.receive_json()
+
+        assert not msg["success"]
+        assert msg["error"]["code"] == "zwave_error"
+        assert msg["error"]["message"] == "Z-Wave error 1: error message"
+
     # Test sending command with not loaded entry fails
     await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 
     await ws_client.send_json(
         {
-            ID: 4,
+            ID: 6,
             TYPE: "zwave_js/data_collection_status",
             ENTRY_ID: entry.entry_id,
         }
@@ -1902,7 +2258,7 @@ async def test_data_collection(hass, client, integration, hass_ws_client):
 
     await ws_client.send_json(
         {
-            ID: 5,
+            ID: 7,
             TYPE: "zwave_js/update_data_collection_preference",
             ENTRY_ID: entry.entry_id,
             OPTED_IN: True,
@@ -1937,6 +2293,42 @@ async def test_abort_firmware_update(
     args = client.async_send_command_no_wait.call_args[0][0]
     assert args["command"] == "node.abort_firmware_update"
     assert args["nodeId"] == multisensor_6.node_id
+
+    # Test FailedZWaveCommand is caught
+    with patch(
+        "zwave_js_server.model.node.Node.async_abort_firmware_update",
+        side_effect=FailedZWaveCommand("failed_command", 1, "error message"),
+    ):
+        await ws_client.send_json(
+            {
+                ID: 2,
+                TYPE: "zwave_js/abort_firmware_update",
+                ENTRY_ID: entry.entry_id,
+                NODE_ID: multisensor_6.node_id,
+            }
+        )
+        msg = await ws_client.receive_json()
+
+        assert not msg["success"]
+        assert msg["error"]["code"] == "zwave_error"
+        assert msg["error"]["message"] == "Z-Wave error 1: error message"
+
+    # Test sending command with not loaded entry fails
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    await ws_client.send_json(
+        {
+            ID: 3,
+            TYPE: "zwave_js/abort_firmware_update",
+            ENTRY_ID: entry.entry_id,
+            NODE_ID: multisensor_6.node_id,
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERR_NOT_LOADED
 
 
 async def test_abort_firmware_update_failures(
@@ -2128,13 +2520,31 @@ async def test_check_for_config_updates(hass, client, integration, hass_ws_clien
     assert config_update["update_available"]
     assert config_update["new_version"] == "test"
 
+    # Test FailedZWaveCommand is caught
+    with patch(
+        "zwave_js_server.model.driver.Driver.async_check_for_config_updates",
+        side_effect=FailedZWaveCommand("failed_command", 1, "error message"),
+    ):
+        await ws_client.send_json(
+            {
+                ID: 2,
+                TYPE: "zwave_js/check_for_config_updates",
+                ENTRY_ID: entry.entry_id,
+            }
+        )
+        msg = await ws_client.receive_json()
+
+        assert not msg["success"]
+        assert msg["error"]["code"] == "zwave_error"
+        assert msg["error"]["message"] == "Z-Wave error 1: error message"
+
     # Test sending command with not loaded entry fails
     await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 
     await ws_client.send_json(
         {
-            ID: 2,
+            ID: 3,
             TYPE: "zwave_js/check_for_config_updates",
             ENTRY_ID: entry.entry_id,
         }
@@ -2146,7 +2556,7 @@ async def test_check_for_config_updates(hass, client, integration, hass_ws_clien
 
     await ws_client.send_json(
         {
-            ID: 3,
+            ID: 4,
             TYPE: "zwave_js/check_for_config_updates",
             ENTRY_ID: "INVALID",
         }
@@ -2175,13 +2585,31 @@ async def test_install_config_update(hass, client, integration, hass_ws_client):
     assert msg["result"]
     assert msg["success"]
 
+    # Test FailedZWaveCommand is caught
+    with patch(
+        "zwave_js_server.model.driver.Driver.async_install_config_update",
+        side_effect=FailedZWaveCommand("failed_command", 1, "error message"),
+    ):
+        await ws_client.send_json(
+            {
+                ID: 2,
+                TYPE: "zwave_js/install_config_update",
+                ENTRY_ID: entry.entry_id,
+            }
+        )
+        msg = await ws_client.receive_json()
+
+        assert not msg["success"]
+        assert msg["error"]["code"] == "zwave_error"
+        assert msg["error"]["message"] == "Z-Wave error 1: error message"
+
     # Test sending command with not loaded entry fails
     await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 
     await ws_client.send_json(
         {
-            ID: 2,
+            ID: 3,
             TYPE: "zwave_js/install_config_update",
             ENTRY_ID: entry.entry_id,
         }
@@ -2193,7 +2621,7 @@ async def test_install_config_update(hass, client, integration, hass_ws_client):
 
     await ws_client.send_json(
         {
-            ID: 3,
+            ID: 4,
             TYPE: "zwave_js/install_config_update",
             ENTRY_ID: "INVALID",
         }

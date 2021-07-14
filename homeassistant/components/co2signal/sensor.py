@@ -1,4 +1,5 @@
 """Support for the CO2signal platform."""
+from datetime import timedelta
 import logging
 
 import CO2Signal
@@ -17,6 +18,7 @@ import homeassistant.helpers.config_validation as cv
 CONF_COUNTRY_CODE = "country_code"
 
 _LOGGER = logging.getLogger(__name__)
+SCAN_INTERVAL = timedelta(minutes=3)
 
 ATTRIBUTION = "Data provided by CO2signal"
 

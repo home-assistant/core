@@ -39,7 +39,7 @@ DEVICES = [
     },
     {
         "uid": "3WRRJR6RCZQZSND8VP0YTO3YXCSOFPKBMW8T51TU-LQ*1JKU1MVWHQL-Z9SCUS85VFXMRGNDCDNDDUVVDKBU31W",
-        "name": "irrigation",
+        "name": "Irrigation switch",
         "type": "switch",
         "characteristics": ["on"],
     },
@@ -131,7 +131,7 @@ DEVICES_STATE = [
     {
         "uid": "3WRRJR6RCZQZSND8VP0YTO3YXCSOFPKBMW8T51TU-LQ*SOT3NKALCRQMHUHJUF79NUG6UQP1IIQIN1PJVRRPT0C",
         "type": "contactSensor",
-        "state": {"contactSensorState": True},
+        "state": {"contactSensorState": False},
         "online": True,
     },
     {
@@ -207,7 +207,7 @@ DEVICES_STATE = [
     {
         "uid": "3WRRJR6RCZQZSND8VP0YTO3YXCSOFPKBMW8T51TU-LQ*JVRAR_6WVL1Y0PJ5GFWGPMFV7FLVD4MZKBWXC_UFWYM",
         "type": "lightSensor",
-        "state": {"currentAmbientLightLevel": 500},
+        "state": {"currentAmbientLightLevel": 0},
         "online": True,
     },
     {

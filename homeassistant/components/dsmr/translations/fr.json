@@ -9,7 +9,16 @@
         },
         "step": {
             "one": "",
-            "other": "Autre"
+            "other": "Autre",
+            "setup_serial": {
+                "data": {
+                    "port": "S\u00e9lectionner un appareil"
+                },
+                "title": "Appareil"
+            },
+            "setup_serial_manual_path": {
+                "title": "Chemin"
+            }
         }
     },
     "options": {
