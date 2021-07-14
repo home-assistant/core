@@ -69,7 +69,15 @@ async def test_save_preferences(hass, hass_ws_client, hass_storage) -> None:
                         "stat_cost": "heat_pump_kwh_cost",
                         "entity_energy_from": "sensor.heat_pump_meter",
                         "entity_energy_price": "sensor.energy_price",
-                    }
+                        "number_energy_price": None,
+                    },
+                    {
+                        "stat_energy_from": "sensor.heat_pump_meter",
+                        "stat_cost": "heat_pump_kwh_cost",
+                        "entity_energy_from": "sensor.heat_pump_meter",
+                        "entity_energy_price": None,
+                        "number_energy_price": 0.20,
+                    },
                 ],
                 "flow_to": [{"stat_energy_to": "return_to_grid_stat"}],
                 "cost_adjustment_day": 1.2,
@@ -108,6 +116,7 @@ async def test_save_preferences(hass, hass_ws_client, hass_storage) -> None:
                         "stat_cost": None,
                         "entity_energy_from": None,
                         "entity_energy_price": None,
+                        "number_energy_price": None,
                     }
                 ],
                 "flow_to": [],

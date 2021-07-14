@@ -37,6 +37,7 @@ class FlowFromGridSourceType(TypedDict):
     # Used to generate costs if stat_cost is set to None
     entity_energy_from: str | None  # entity_id of an energy meter (kWh), entity_id of the energy meter for stat_from
     entity_energy_price: str | None  # entity_id of an entity providing price ($/kWh)
+    number_energy_price: float | None  # Price for energy ($/kWh)
 
 
 class FlowToGridSourceType(TypedDict):
@@ -88,13 +89,28 @@ class EnergyPreferencesUpdate(EnergyPreferences, total=False):
     """all types optional."""
 
 
-FLOW_FROM_GRID_SOURCE_SCHEMA = vol.Schema(
-    {
-        vol.Required("stat_energy_from"): str,
-        vol.Required("stat_cost"): vol.Any(None, str),
-        vol.Required("entity_energy_from"): vol.Any(None, str),
-        vol.Required("entity_energy_price"): vol.Any(None, str),
-    }
+def _ensure_single_price(val: dict) -> dict:
+    """Ensure we use a single price source."""
+    if (
+        val["entity_energy_price"] is not None
+        and val["number_energy_price"] is not None
+    ):
+        raise vol.Invalid("Define either an entity or a fixed number for the price")
+
+    return val
+
+
+FLOW_FROM_GRID_SOURCE_SCHEMA = vol.All(
+    vol.Schema(
+        {
+            vol.Required("stat_energy_from"): str,
+            vol.Required("stat_cost"): vol.Any(None, str),
+            vol.Required("entity_energy_from"): vol.Any(None, str),
+            vol.Required("entity_energy_price"): vol.Any(None, str),
+            vol.Required("number_energy_price"): vol.Any(None, vol.Coerce(float)),
+        }
+    ),
+    _ensure_single_price,
 )
 
 
