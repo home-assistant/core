@@ -116,9 +116,10 @@ class RaspberryCamera(Camera):
             cmd_args.append("-a")
             cmd_args.append(str(device_info[CONF_OVERLAY_TIMESTAMP]))
 
-        subprocess.Popen(  # pylint: disable=consider-using-with
+        with subprocess.Popen(
             cmd_args, stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT
-        )
+        ):
+            pass
 
     def camera_image(self):
         """Return raspistill image response."""
