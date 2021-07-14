@@ -57,19 +57,6 @@ class BlinktLight(LightEntity):
         self._attr_brightness = 255
         self._attr_hs_color = [0, 0]
 
-    @property
-    def brightness(self) -> int:
-        """Read back the brightness of the light.
-
-        Returns integer in the range of 1-255.
-        """
-        return self.brightness
-
-    @property
-    def hs_color(self):
-        """Read back the color of the light."""
-        return self.hs_color
-
     def turn_on(self, **kwargs):
         """Instruct the light to turn on and set correct brightness & color."""
         if ATTR_HS_COLOR in kwargs:
