@@ -44,8 +44,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     lat = config.get(CONF_LATITUDE, hass.config.latitude)
     lon = config.get(CONF_LONGITUDE, hass.config.longitude)
     country_code = config.get(CONF_COUNTRY_CODE)
-    print(config)
-    print(lat, lon, hass.config.longitude)
 
     _LOGGER.debug("Setting up the sensor using the %s", country_code)
 
@@ -93,7 +91,6 @@ class CO2Sensor(SensorEntity):
 
     def update(self):
         """Get the latest data and updates the states."""
-        print("update")
         _LOGGER.debug("Update data for %s", self._friendly_name)
 
         if self._country_code is not None:
