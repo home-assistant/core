@@ -26,7 +26,6 @@ from .base_platform import BasePlatform
 from .const import (
     ATTR_TEMPERATURE,
     CALL_TYPE_COIL,
-    CALL_TYPE_DISCRETE,
     CALL_TYPE_REGISTER_HOLDING,
     CALL_TYPE_REGISTER_INPUT,
     CALL_TYPE_WRITE_COILS,
@@ -352,15 +351,10 @@ class ModbusThermostat(BasePlatform, RestoreEntity, ClimateEntity):
                 "Can't process hvac register values; adjust your configuration"
             )
             return None
-        elif register_type in (CALL_TYPE_DISCRETE, CALL_TYPE_COIL):
+        else:  # (CALL_TYPE_DISCRETE, CALL_TYPE_COIL)
             for mode, address in supported.items():
                 value = await self._async_read_coil(register_type, address)
                 if value:
                     return mode
             _LOGGER.error("Can't process hvac coil values; adjust your configuration")
-            return None
-        else:
-            _LOGGER.error(
-                "Unknown type: %s; adjust your configuration", str(register_type)
-            )
             return None
