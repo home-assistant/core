@@ -259,13 +259,13 @@ class ModbusThermostat(BasePlatform, RestoreEntity, ClimateEntity):
             return
         self._call_active = True
         self._target_temperature = await self._async_read_register(
-            self._input_type,
+            CALL_TYPE_REGISTER_HOLDING,
             self._target_temperature_register,
             self._count,
             self._structure,
         )
         self._current_temperature = await self._async_read_register(
-            CALL_TYPE_REGISTER_HOLDING,
+            self._input_type,
             self._address,
             self._count,
             self._structure,
