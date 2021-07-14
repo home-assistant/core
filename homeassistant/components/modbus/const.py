@@ -1,7 +1,11 @@
 """Constants used in modbus integration."""
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.components.climate.const import DOMAIN as CLIMATE_DOMAIN
+from homeassistant.components.climate.const import (
+    CURRENT_HVAC_IDLE,
+    DOMAIN as CLIMATE_DOMAIN,
+    HVAC_MODE_AUTO,
+)
 from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
 from homeassistant.components.fan import DOMAIN as FAN_DOMAIN
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
@@ -29,10 +33,12 @@ CONF_FANS = "fans"
 CONF_HUB = "hub"
 CONF_HVAC_ACTION = "hvac_action_register"
 CONF_HVAC_ACTION_SUPPORTED = "hvac_action_supported"
-CONF_HVAC_ACTION_VALUES = "hvac_action_values"
+CONF_HVAC_ACTION_DATA_TYPE = "hvac_action_data_type"
+CONF_HVAC_ACTION_TYPE = "hvac_action_type"
 CONF_HVAC_MODE = "hvac_mode_register"
 CONF_HVAC_MODE_SUPPORTED = "hvac_mode_supported"
-CONF_HVAC_MODE_VALUES = "hvac_mode_values"
+CONF_HVAC_MODE_TYPE = "hvac_mode_type"
+CONF_HVAC_MODE_DATA_TYPE = "hvac_mode_data_type"
 CONF_INPUTS = "inputs"
 CONF_INPUT_TYPE = "input_type"
 CONF_MAX_TEMP = "max_temp"
@@ -95,6 +101,24 @@ DATA_TYPE_FLOAT16 = "float16"
 DATA_TYPE_FLOAT32 = "float32"
 DATA_TYPE_FLOAT64 = "float64"
 
+DATA_TYPES = [
+    DATA_TYPE_INT16,
+    DATA_TYPE_INT32,
+    DATA_TYPE_INT64,
+    DATA_TYPE_UINT16,
+    DATA_TYPE_UINT32,
+    DATA_TYPE_UINT64,
+    DATA_TYPE_FLOAT16,
+    DATA_TYPE_FLOAT32,
+    DATA_TYPE_FLOAT64,
+    DATA_TYPE_STRING,
+    DATA_TYPE_INT,
+    DATA_TYPE_UINT,
+    DATA_TYPE_FLOAT,
+    DATA_TYPE_STRING,
+    DATA_TYPE_CUSTOM,
+]
+
 # call types
 CALL_TYPE_COIL = "coil"
 CALL_TYPE_DISCRETE = "discrete_input"
@@ -113,9 +137,23 @@ SERVICE_WRITE_REGISTER = "write_register"
 
 # integration names
 DEFAULT_HUB = "modbus_hub"
+DEFAULT_HVAC_ACTION = CURRENT_HVAC_IDLE
+DEFAULT_HVAC_MODE = HVAC_MODE_AUTO
 DEFAULT_SCAN_INTERVAL = 15  # seconds
 DEFAULT_SLAVE = 1
 DEFAULT_STRUCTURE_PREFIX = ">f"
+DEFAULT_STRUCT_COUNT = {
+    DATA_TYPE_INT16: 1,
+    DATA_TYPE_INT32: 2,
+    DATA_TYPE_INT64: 4,
+    DATA_TYPE_UINT16: 1,
+    DATA_TYPE_UINT32: 2,
+    DATA_TYPE_UINT64: 4,
+    DATA_TYPE_FLOAT16: 1,
+    DATA_TYPE_FLOAT32: 2,
+    DATA_TYPE_FLOAT64: 4,
+    DATA_TYPE_STRING: 1,
+}
 DEFAULT_STRUCT_FORMAT = {
     DATA_TYPE_INT16: "h",
     DATA_TYPE_INT32: "i",

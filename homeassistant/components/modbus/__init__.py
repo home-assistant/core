@@ -8,12 +8,7 @@ import voluptuous as vol
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA as BINARY_SENSOR_DEVICE_CLASSES_SCHEMA,
 )
-from homeassistant.components.climate.const import (
-    CURRENT_HVAC_ACTIONS,
-    CURRENT_HVAC_IDLE,
-    HVAC_MODE_AUTO,
-    HVAC_MODES,
-)
+from homeassistant.components.climate.const import CURRENT_HVAC_ACTIONS, HVAC_MODES
 from homeassistant.components.cover import (
     DEVICE_CLASSES_SCHEMA as COVER_DEVICE_CLASSES_SCHEMA,
 )
@@ -70,11 +65,13 @@ from .const import (
     CONF_DATA_TYPE,
     CONF_FANS,
     CONF_HVAC_ACTION,
+    CONF_HVAC_ACTION_DATA_TYPE,
     CONF_HVAC_ACTION_SUPPORTED,
-    CONF_HVAC_ACTION_VALUES,
+    CONF_HVAC_ACTION_TYPE,
     CONF_HVAC_MODE,
+    CONF_HVAC_MODE_DATA_TYPE,
     CONF_HVAC_MODE_SUPPORTED,
-    CONF_HVAC_MODE_VALUES,
+    CONF_HVAC_MODE_TYPE,
     CONF_INPUT_TYPE,
     CONF_MAX_TEMP,
     CONF_MIN_TEMP,
@@ -106,21 +103,11 @@ from .const import (
     CONF_UDP,
     CONF_VERIFY,
     CONF_WRITE_TYPE,
-    DATA_TYPE_CUSTOM,
-    DATA_TYPE_FLOAT,
-    DATA_TYPE_FLOAT16,
-    DATA_TYPE_FLOAT32,
-    DATA_TYPE_FLOAT64,
-    DATA_TYPE_INT,
     DATA_TYPE_INT16,
-    DATA_TYPE_INT32,
-    DATA_TYPE_INT64,
-    DATA_TYPE_STRING,
-    DATA_TYPE_UINT,
-    DATA_TYPE_UINT16,
-    DATA_TYPE_UINT32,
-    DATA_TYPE_UINT64,
+    DATA_TYPES,
     DEFAULT_HUB,
+    DEFAULT_HVAC_ACTION,
+    DEFAULT_HVAC_MODE,
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_TEMP_UNIT,
     MODBUS_DOMAIN as DOMAIN,
@@ -158,25 +145,7 @@ BASE_STRUCT_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
             ]
         ),
         vol.Optional(CONF_COUNT, default=1): cv.positive_int,
-        vol.Optional(CONF_DATA_TYPE, default=DATA_TYPE_INT): vol.In(
-            [
-                DATA_TYPE_INT16,
-                DATA_TYPE_INT32,
-                DATA_TYPE_INT64,
-                DATA_TYPE_UINT16,
-                DATA_TYPE_UINT32,
-                DATA_TYPE_UINT64,
-                DATA_TYPE_FLOAT16,
-                DATA_TYPE_FLOAT32,
-                DATA_TYPE_FLOAT64,
-                DATA_TYPE_STRING,
-                DATA_TYPE_INT,
-                DATA_TYPE_UINT,
-                DATA_TYPE_FLOAT,
-                DATA_TYPE_STRING,
-                DATA_TYPE_CUSTOM,
-            ]
-        ),
+        vol.Optional(CONF_DATA_TYPE, default=DATA_TYPE_INT16): vol.In(DATA_TYPES),
         vol.Optional(CONF_STRUCTURE): cv.string,
         vol.Optional(CONF_SCALE, default=1): number_validator,
         vol.Optional(CONF_OFFSET, default=0): number_validator,
@@ -234,19 +203,37 @@ CLIMATE_SCHEMA = vol.All(
             vol.Optional(CONF_MIN_TEMP, default=5): cv.positive_int,
             vol.Optional(CONF_STEP, default=0.5): vol.Coerce(float),
             vol.Optional(CONF_TEMPERATURE_UNIT, default=DEFAULT_TEMP_UNIT): cv.string,
-            vol.Optional(CONF_HVAC_ACTION, default=0): cv.positive_int,
+            vol.Optional(CONF_HVAC_ACTION): cv.positive_int,
             vol.Optional(
-                CONF_HVAC_ACTION_SUPPORTED, default=[CURRENT_HVAC_IDLE]
-            ): vol.All(cv.ensure_list, [vol.In(CURRENT_HVAC_ACTIONS)]),
-            vol.Optional(CONF_HVAC_ACTION_VALUES, default=[0]): vol.All(
-                cv.ensure_list, [cv.positive_int]
+                CONF_HVAC_ACTION_SUPPORTED, default={DEFAULT_HVAC_ACTION: 0}
+            ): cv.has_at_least_one_key(*CURRENT_HVAC_ACTIONS),
+            vol.Optional(CONF_HVAC_ACTION_DATA_TYPE, default=DATA_TYPE_INT16): vol.In(
+                DATA_TYPES
             ),
-            vol.Optional(CONF_HVAC_MODE, default=0): cv.positive_int,
-            vol.Optional(CONF_HVAC_MODE_SUPPORTED, default=[HVAC_MODE_AUTO]): vol.All(
-                cv.ensure_list, [vol.In(HVAC_MODES)]
+            vol.Optional(
+                CONF_HVAC_ACTION_TYPE, default=CALL_TYPE_REGISTER_HOLDING
+            ): vol.In(
+                [
+                    CALL_TYPE_REGISTER_HOLDING,
+                    CALL_TYPE_DISCRETE,
+                    CALL_TYPE_REGISTER_INPUT,
+                    CALL_TYPE_COIL,
+                ]
             ),
-            vol.Optional(CONF_HVAC_MODE_VALUES, default=[0]): vol.All(
-                cv.ensure_list, [cv.positive_int]
+            vol.Optional(CONF_HVAC_MODE): cv.positive_int,
+            vol.Optional(
+                CONF_HVAC_MODE_SUPPORTED, default={DEFAULT_HVAC_MODE: 0}
+            ): cv.has_at_least_one_key(*HVAC_MODES),
+            vol.Optional(CONF_HVAC_MODE_DATA_TYPE, default=DATA_TYPE_INT16): vol.In(
+                DATA_TYPES
+            ),
+            vol.Optional(
+                CONF_HVAC_MODE_TYPE, default=CALL_TYPE_REGISTER_HOLDING
+            ): vol.In(
+                [
+                    CALL_TYPE_REGISTER_HOLDING,
+                    CALL_TYPE_COIL,
+                ]
             ),
         }
     ),

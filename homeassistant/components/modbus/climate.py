@@ -6,11 +6,7 @@ import struct
 from typing import Any
 
 from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
-    CURRENT_HVAC_IDLE,
-    HVAC_MODE_AUTO,
-    SUPPORT_TARGET_TEMPERATURE,
-)
+from homeassistant.components.climate.const import SUPPORT_TARGET_TEMPERATURE
 from homeassistant.const import (
     CONF_COUNT,
     CONF_NAME,
@@ -29,16 +25,22 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from .base_platform import BasePlatform
 from .const import (
     ATTR_TEMPERATURE,
+    CALL_TYPE_COIL,
+    CALL_TYPE_DISCRETE,
     CALL_TYPE_REGISTER_HOLDING,
+    CALL_TYPE_REGISTER_INPUT,
+    CALL_TYPE_WRITE_COILS,
     CALL_TYPE_WRITE_REGISTERS,
     CONF_CLIMATES,
     CONF_DATA_TYPE,
     CONF_HVAC_ACTION,
+    CONF_HVAC_ACTION_DATA_TYPE,
     CONF_HVAC_ACTION_SUPPORTED,
-    CONF_HVAC_ACTION_VALUES,
+    CONF_HVAC_ACTION_TYPE,
     CONF_HVAC_MODE,
+    CONF_HVAC_MODE_DATA_TYPE,
     CONF_HVAC_MODE_SUPPORTED,
-    CONF_HVAC_MODE_VALUES,
+    CONF_HVAC_MODE_TYPE,
     CONF_MAX_TEMP,
     CONF_MIN_TEMP,
     CONF_PRECISION,
@@ -49,6 +51,9 @@ from .const import (
     CONF_SWAP_WORD,
     CONF_SWAP_WORD_BYTE,
     CONF_TARGET_TEMP,
+    DEFAULT_HVAC_ACTION,
+    DEFAULT_HVAC_MODE,
+    DEFAULT_STRUCT_COUNT,
     DEFAULT_STRUCT_FORMAT,
     MODBUS_DOMAIN,
 )
@@ -87,12 +92,8 @@ class ModbusThermostat(BasePlatform, RestoreEntity, ClimateEntity):
         """Initialize the modbus thermostat."""
         super().__init__(hub, config)
         self._target_temperature_register = config[CONF_TARGET_TEMP]
-        self._hvac_action_register = config[CONF_HVAC_ACTION]
-        self._hvac_mode_register = config[CONF_HVAC_MODE]
         self._target_temperature = None
         self._current_temperature = None
-        self._hvac_action = CURRENT_HVAC_IDLE
-        self._hvac_mode = HVAC_MODE_AUTO
         self._data_type = config[CONF_DATA_TYPE]
         self._structure = config[CONF_STRUCTURE]
         self._count = config[CONF_COUNT]
@@ -104,43 +105,16 @@ class ModbusThermostat(BasePlatform, RestoreEntity, ClimateEntity):
         self._min_temp = config[CONF_MIN_TEMP]
         self._temp_step = config[CONF_STEP]
         self._swap = config[CONF_SWAP]
-
-        self._init_hvac_actions(config)
-        self._init_hvac_modes(config)
-
-    def _init_hvac_actions(self, config):
+        self._hvac_action_register = config.get(CONF_HVAC_ACTION, None)
         self._hvac_action_supported = config[CONF_HVAC_ACTION_SUPPORTED]
-        self._hvac_action_dict = {}
-        if len(config[CONF_HVAC_ACTION_SUPPORTED]) == len(
-            config[CONF_HVAC_ACTION_VALUES]
-        ):
-            for i in range(0, len(config[CONF_HVAC_ACTION_SUPPORTED])):
-                self._hvac_action_dict[config[CONF_HVAC_ACTION_SUPPORTED][i]] = config[
-                    CONF_HVAC_ACTION_VALUES
-                ][i]
-        else:
-            _LOGGER.error(
-                "Unable to parse hvac actions; Length of actions list and value list are unequal; Result: %s : %s",
-                str(len(config[CONF_HVAC_ACTION_SUPPORTED])),
-                str(len(config[CONF_HVAC_ACTION_VALUES])),
-            )
-            self._available = False
-
-    def _init_hvac_modes(self, config):
+        self._hvac_action_type = config[CONF_HVAC_ACTION_TYPE]
+        self._hvac_action_data_type = config[CONF_HVAC_ACTION_DATA_TYPE]
+        self._hvac_action = DEFAULT_HVAC_ACTION
+        self._hvac_mode_register = config.get(CONF_HVAC_MODE, None)
         self._hvac_mode_supported = config[CONF_HVAC_MODE_SUPPORTED]
-        self._hvac_mode_dict = {}
-        if len(config[CONF_HVAC_MODE_SUPPORTED]) == len(config[CONF_HVAC_MODE_VALUES]):
-            for i in range(0, len(config[CONF_HVAC_MODE_SUPPORTED])):
-                self._hvac_mode_dict[config[CONF_HVAC_MODE_SUPPORTED][i]] = config[
-                    CONF_HVAC_MODE_VALUES
-                ][i]
-        else:
-            _LOGGER.error(
-                "Unable to parse hvac modes; Length of mode list and value list are unequal; Result: %s : %s",
-                str(len(config[CONF_HVAC_MODE_SUPPORTED])),
-                str(len(config[CONF_HVAC_MODE_VALUES])),
-            )
-            self._available = False
+        self._hvac_mode_type = config[CONF_HVAC_MODE_TYPE]
+        self._hvac_mode_data_type = config[CONF_HVAC_MODE_DATA_TYPE]
+        self._hvac_mode = DEFAULT_HVAC_MODE
 
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
@@ -162,22 +136,44 @@ class ModbusThermostat(BasePlatform, RestoreEntity, ClimateEntity):
     @property
     def hvac_modes(self):
         """Return the possible HVAC modes."""
-        return self._hvac_mode_supported
+        return list(self._hvac_mode_supported.keys())
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set new target hvac mode."""
-        if hvac_mode in self._hvac_mode_dict and self._hvac_mode_register != 0:
-            mode_value = self._hvac_mode_dict[hvac_mode]
+        if (
+            hvac_mode in self._hvac_mode_supported
+            and self._hvac_mode_register is not None
+        ):
+            dict_value = self._hvac_mode_supported[hvac_mode]
+        else:
+            return
+
+        if self._hvac_mode_type == CALL_TYPE_REGISTER_HOLDING:
+            as_bytes = struct.pack(
+                DEFAULT_STRUCT_FORMAT[self._hvac_mode_data_type], dict_value
+            )
+            registers = [
+                int.from_bytes(as_bytes[i : i + 2], "big")
+                for i in range(0, len(as_bytes), 2)
+            ]
             result = await self._hub.async_pymodbus_call(
                 self._slave,
                 self._hvac_mode_register,
-                mode_value,
+                registers,
                 CALL_TYPE_WRITE_REGISTERS,
             )
-            self._available = result is not None
-            await self.async_update()
+        elif self._hvac_mode_type == CALL_TYPE_COIL:
+            result = await self._hub.async_pymodbus_call(
+                self._slave,
+                dict_value,
+                1,
+                CALL_TYPE_WRITE_COILS,
+            )
         else:
             return
+
+        self._available = result is not None
+        await self.async_update()
 
     @property
     def hvac_action(self):
@@ -253,30 +249,6 @@ class ModbusThermostat(BasePlatform, RestoreEntity, ClimateEntity):
             registers.reverse()
         return registers
 
-    def _parse_hvac_mode(self, value):
-        """Parse hvac mode from register value."""
-        if len(self._hvac_mode_dict) >= 1:
-            for dict_key, dict_value in self._hvac_mode_dict.items():
-                if dict_value == value:
-                    return dict_key
-        _LOGGER.error(
-            "Unable to parse hvac mode value; adjust your configuration. Result: %s",
-            str(value),
-        )
-        return HVAC_MODE_AUTO
-
-    def _parse_hvac_action(self, value):
-        """Parse hvac action from register value."""
-        if len(self._hvac_action_dict) >= 1:
-            for dict_key, dict_value in self._hvac_action_dict.items():
-                if dict_value == value:
-                    return dict_key
-        _LOGGER.error(
-            "Unable to parse hvac action value; adjust your configuration. Result: %s",
-            str(value),
-        )
-        return CURRENT_HVAC_IDLE
-
     async def async_update(self, now=None):
         """Update Target & Current Temperature. Update HVAC Mode & Action."""
         # remark "now" is a dummy parameter to avoid problems with
@@ -293,25 +265,38 @@ class ModbusThermostat(BasePlatform, RestoreEntity, ClimateEntity):
             self._structure,
         )
         self._current_temperature = await self._async_read_register(
-            self._input_type, self._address, self._count, self._structure
+            CALL_TYPE_REGISTER_HOLDING,
+            self._address,
+            self._count,
+            self._structure,
         )
-        if self._hvac_mode_register != 0:
-            hvac_mode = await self._async_read_register(
-                CALL_TYPE_REGISTER_HOLDING, self._hvac_mode_register, 1, ">h"
+        if self._hvac_action_register is not None:
+            self._hvac_action = await self._async_update_hvac_attribute(
+                self._hvac_action_type,
+                self._hvac_action_register,
+                self._hvac_action_data_type,
+                self._hvac_action_supported,
             )
-            self._hvac_mode = self._parse_hvac_mode(hvac_mode)
-        if self._hvac_action_register != 0:
-            hvac_action = await self._async_read_register(
-                CALL_TYPE_REGISTER_HOLDING, self._hvac_action_register, 1, ">h"
+            self._hvac_action = (
+                DEFAULT_HVAC_ACTION if self._hvac_action == -1 else self._hvac_action
             )
-            self._hvac_action = self._parse_hvac_action(hvac_action)
+        if self._hvac_mode_register is not None:
+            self._hvac_mode = await self._async_update_hvac_attribute(
+                self._hvac_mode_type,
+                self._hvac_mode_register,
+                self._hvac_mode_data_type,
+                self._hvac_mode_supported,
+            )
+            self._hvac_mode = (
+                DEFAULT_HVAC_MODE if self._hvac_mode == -1 else self._hvac_mode
+            )
 
         self._call_active = False
         self.async_write_ha_state()
 
     async def _async_read_register(
         self, register_type, register, count, structure
-    ) -> float | None:
+    ) -> float:
         """Read register using the Modbus hub slave."""
         result = await self._hub.async_pymodbus_call(
             self._slave, register, count, register_type
@@ -338,3 +323,48 @@ class ModbusThermostat(BasePlatform, RestoreEntity, ClimateEntity):
         self._available = True
 
         return register_value2
+
+    async def _async_read_coil(self, register_type, register) -> bool | None:
+        """Read coil/discrete_input using the Modbus hub slave."""
+        result = await self._hub.async_pymodbus_call(
+            self._slave, register, 1, register_type
+        )
+        if result is None:
+            self._available = False
+            return None
+        return bool(result.bits[0] & 1)
+
+    async def _async_update_hvac_attribute(
+        self, register_type, register, data_type, supported
+    ) -> str | None:
+        """Update either HVAC_ACTION or HVAC_MODE from registers/coils."""
+        if (
+            register_type == CALL_TYPE_REGISTER_HOLDING
+            or register_type == CALL_TYPE_REGISTER_INPUT
+        ):
+            register_value = await self._async_read_register(
+                register_type,
+                register,
+                DEFAULT_STRUCT_COUNT[data_type],
+                DEFAULT_STRUCT_FORMAT[data_type],
+            )
+            for mode, value in supported.items():
+                if register_value == float(value):
+                    return mode
+            _LOGGER.error(
+                "Can't process hvac register values; adjust your configuration"
+            )
+            return None
+
+        elif register_type == CALL_TYPE_DISCRETE or register_type == CALL_TYPE_COIL:
+            for mode, address in supported.items():
+                value = await self._async_read_coil(register_type, address)
+                if value:
+                    return mode
+            _LOGGER.error("Can't process hvac coil values; adjust your configuration")
+            return None
+        else:
+            _LOGGER.error(
+                "Unknown type: %s; adjust your configuration", str(register_type)
+            )
+            return None

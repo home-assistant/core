@@ -34,6 +34,7 @@ from .const import (
     DATA_TYPE_UINT32,
     DATA_TYPE_UINT64,
     DEFAULT_SCAN_INTERVAL,
+    DEFAULT_STRUCT_COUNT,
     DEFAULT_STRUCT_FORMAT,
     PLATFORMS,
 )
@@ -78,6 +79,7 @@ def sensor_schema_validator(config):
     if config[CONF_DATA_TYPE] != DATA_TYPE_CUSTOM:
         try:
             structure = f">{DEFAULT_STRUCT_FORMAT[data_type]}"
+            count = DEFAULT_STRUCT_COUNT[data_type]
         except KeyError as exp:
             raise vol.Invalid(f"Modbus error {data_type} unknown in {name}") from exp
     else:
