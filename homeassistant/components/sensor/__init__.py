@@ -238,5 +238,5 @@ class SensorEntity(Entity):
         """
         if not self.hass:
             return f"<Entity {self.name}>"
-        else:
-            return super().__repr__()
+
+        return super().__repr__()
