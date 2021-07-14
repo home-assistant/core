@@ -24,6 +24,6 @@ async def test_deprecated_temperature_conversion(
         "Entity sensor.test (<class 'custom_components.test.sensor.MockSensor'>) "
         "with device_class None reports a temperature in °F which will be converted to °C, this is deprecated "
         "and will be removed from Home Assistant "
-        "Core 2021.10. Please update your configuration if device_class is "
+        "Core 2022.2. Please update your configuration if device_class is "
         "manually configured, otherwise report it to the custom component author."
     ) in caplog.text
