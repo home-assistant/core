@@ -213,25 +213,13 @@ class BluesoundPlayer(MediaPlayerEntity):
         self._polling_session = async_get_clientsession(hass)
         self._polling_task = None  # The actual polling task.
         self._attr_name = name
-        self._capture_items = []
-        self._services_items = []
-        self._preset_items = []
+        self._capture_items = self._services_items = self._preset_items = []
         self._sync_status = {}
-        self._status = None
-        self._is_online = False
-        self._retry_remove = None
-        self._master = None
+        self._status = self._is_online = self._retry_remove = None
+        self._master = self._group_name = self._bluesound_device_name = None
         self._is_master = False
-        self._group_name = None
         self._group_list = []
-        self._bluesound_device_name = None
-
         self._init_callback = init_callback
-        attributes = {}
-        if self._group_list:
-            attributes = {ATTR_BLUESOUND_GROUP: self._group_list}
-        attributes[ATTR_MASTER] = self._is_master
-        self._attr_extra_state_attributes = attributes
 
     class _TimeoutException(Exception):
         pass
@@ -254,12 +242,12 @@ class BluesoundPlayer(MediaPlayerEntity):
             return None
         self._sync_status = resp["SyncStatus"].copy()
 
-        if not self._name:
-            self._name = self._sync_status.get("@name", self.host)
+        if not self.name:
+            self._attr_name = self._sync_status.get("@name", self.host)
         if not self._bluesound_device_name:
             self._bluesound_device_name = self._sync_status.get("@name", self.host)
-        if not self._icon:
-            self._icon = self._sync_status.get("@icon", self.host)
+        if not self.icon:
+            self._attr_icon = self._sync_status.get("@icon", self.host)
 
         master = self._sync_status.get("master")
         if master is not None:
@@ -293,14 +281,14 @@ class BluesoundPlayer(MediaPlayerEntity):
                 await self.async_update_status()
 
         except (asyncio.TimeoutError, ClientError, BluesoundPlayer._TimeoutException):
-            _LOGGER.info("Node %s is offline, retrying later", self._name)
+            _LOGGER.info("Node %s is offline, retrying later", self.name)
             await asyncio.sleep(NODE_OFFLINE_CHECK_TIMEOUT)
             self.start_polling()
 
         except CancelledError:
-            _LOGGER.debug("Stopping the polling of node %s", self._name)
+            _LOGGER.debug("Stopping the polling of node %s", self.name)
         except Exception:
-            _LOGGER.exception("Unexpected error in %s", self._name)
+            _LOGGER.exception("Unexpected error in %s", self.name)
             raise
 
     def start_polling(self):
@@ -387,11 +375,6 @@ class BluesoundPlayer(MediaPlayerEntity):
         etag = ""
         if self._status is not None:
             etag = self._status.get("@etag", "")
-        self._attr_shuffle = self._status.get("shuffle", "0") == "1"
-        if self._status is None or (self.is_grouped and not self.is_master):
-            self._attr_media_title = None
-        else:
-            self._attr_media_title = self._status.get("title1")
 
         if etag != "":
             url = f"Status?etag={etag}&timeout=120.0"
@@ -448,8 +431,55 @@ class BluesoundPlayer(MediaPlayerEntity):
             self._attr_media_position_updated_at = None
             self._status = None
             self.async_write_ha_state()
-            _LOGGER.info("Client connection error, marking %s as offline", self._name)
+            _LOGGER.info("Client connection error, marking %s as offline", self.name)
             raise
+        self.update_state_attr()
+
+    def update_state_attr(self):
+        """Update state attributes."""
+        if self._status is None:
+            self._attr_state = STATE_OFF
+            self._attr_supported_features = 0
+        elif self.is_grouped and not self.is_master:
+            self._attr_state = STATE_GROUPED
+            self._attr_supported_features = (
+                SUPPORT_VOLUME_STEP | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE
+            )
+        else:
+            status = self._status.get("state")
+            self._attr_state = STATE_IDLE
+            if status in ("pause", "stop"):
+                self._attr_state = STATE_PAUSED
+            elif status in ("stream", "play"):
+                self._attr_state = STATE_PLAYING
+            supported = SUPPORT_CLEAR_PLAYLIST
+            if self._status.get("indexing", "0") == "0":
+                supported = (
+                    supported
+                    | SUPPORT_PAUSE
+                    | SUPPORT_PREVIOUS_TRACK
+                    | SUPPORT_NEXT_TRACK
+                    | SUPPORT_PLAY_MEDIA
+                    | SUPPORT_STOP
+                    | SUPPORT_PLAY
+                    | SUPPORT_SELECT_SOURCE
+                    | SUPPORT_SHUFFLE_SET
+                )
+            if self.volume_level is not None and self.volume_level >= 0:
+                supported = (
+                    supported
+                    | SUPPORT_VOLUME_STEP
+                    | SUPPORT_VOLUME_SET
+                    | SUPPORT_VOLUME_MUTE
+                )
+            if self._status.get("canSeek", "") == "1":
+                supported = supported | SUPPORT_SEEK
+            self._attr_supported_features = supported
+        self._attr_extra_state_attributes = {}
+        if self._group_list:
+            self._attr_extra_state_attributes = {ATTR_BLUESOUND_GROUP: self._group_list}
+        self._attr_extra_state_attributes[ATTR_MASTER] = self._is_master
+        self._attr_shuffle = self._status.get("shuffle", "0") == "1"
 
     async def async_trigger_sync_on_all(self):
         """Trigger sync status update on all devices."""
@@ -550,20 +580,12 @@ class BluesoundPlayer(MediaPlayerEntity):
         return self._services_items
 
     @property
-    def state(self):
-        """Return the state of the device."""
-        if self._status is None:
-            return STATE_OFF
+    def media_title(self):
+        """Title of current playing media."""
+        if self._status is None or (self.is_grouped and not self.is_master):
+            return None
 
-        if self.is_grouped and not self.is_master:
-            return STATE_GROUPED
-
-        status = self._status.get("state")
-        if status in ("pause", "stop"):
-            return STATE_PAUSED
-        if status in ("stream", "play"):
-            return STATE_PLAYING
-        return STATE_IDLE
+        return self._status.get("title1")
 
     @property
     def media_artist(self):
@@ -757,43 +779,6 @@ class BluesoundPlayer(MediaPlayerEntity):
                 self._status.get("streamUrl", ""),
             )
         return None
-
-    @property
-    def supported_features(self):
-        """Flag of media commands that are supported."""
-        if self._status is None:
-            return 0
-
-        if self.is_grouped and not self.is_master:
-            return SUPPORT_VOLUME_STEP | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE
-
-        supported = SUPPORT_CLEAR_PLAYLIST
-
-        if self._status.get("indexing", "0") == "0":
-            supported = (
-                supported
-                | SUPPORT_PAUSE
-                | SUPPORT_PREVIOUS_TRACK
-                | SUPPORT_NEXT_TRACK
-                | SUPPORT_PLAY_MEDIA
-                | SUPPORT_STOP
-                | SUPPORT_PLAY
-                | SUPPORT_SELECT_SOURCE
-                | SUPPORT_SHUFFLE_SET
-            )
-
-        current_vol = self.volume_level
-        if current_vol is not None and current_vol >= 0:
-            supported = (
-                supported
-                | SUPPORT_VOLUME_STEP
-                | SUPPORT_VOLUME_SET
-                | SUPPORT_VOLUME_MUTE
-            )
-        if self._status.get("canSeek", "") == "1":
-            supported = supported | SUPPORT_SEEK
-
-        return supported
 
     @property
     def is_master(self) -> bool:
