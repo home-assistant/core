@@ -9,10 +9,9 @@ class MockSirenEntity(SirenEntity):
 
     _attr_is_on = True
 
-    @property
-    def supported_features(self) -> int:
-        """Return the list of supported features."""
-        return 0
+    def __init__(self, supported_features: int = 0) -> None:
+        """Initialize mock siren entity."""
+        self._attr_supported_features = supported_features
 
 
 async def test_sync_turn_on(hass):

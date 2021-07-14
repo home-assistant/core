@@ -40,7 +40,7 @@ import homeassistant.util.dt as dt_util
 import homeassistant.util.pressure as pressure_util
 import homeassistant.util.temperature as temperature_util
 
-from . import DOMAIN
+from . import ATTR_LAST_RESET, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -244,7 +244,7 @@ def compile_statistics(
             last_reset = old_last_reset = None
             new_state = old_state = None
             _sum = 0
-            last_stats = statistics.get_last_statistics(hass, 1, entity_id)  # type: ignore
+            last_stats = statistics.get_last_statistics(hass, 1, entity_id)
             if entity_id in last_stats:
                 # We have compiled history for this sensor before, use that as a starting point
                 last_reset = old_last_reset = last_stats[entity_id][0]["last_reset"]
@@ -280,3 +280,36 @@ def compile_statistics(
         result[entity_id]["stat"] = stat
 
     return result
+
+
+def list_statistic_ids(hass: HomeAssistant, statistic_type: str | None = None) -> dict:
+    """Return statistic_ids and meta data."""
+    entities = _get_entities(hass)
+
+    statistic_ids = {}
+
+    for entity_id, device_class in entities:
+        provided_statistics = DEVICE_CLASS_STATISTICS[device_class]
+
+        if statistic_type is not None and statistic_type not in provided_statistics:
+            continue
+
+        state = hass.states.get(entity_id)
+        assert state
+
+        if "sum" in provided_statistics and ATTR_LAST_RESET not in state.attributes:
+            continue
+
+        native_unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+
+        if device_class not in UNIT_CONVERSIONS:
+            statistic_ids[entity_id] = native_unit
+            continue
+
+        if native_unit not in UNIT_CONVERSIONS[device_class]:
+            continue
+
+        statistics_unit = DEVICE_CLASS_UNITS[device_class]
+        statistic_ids[entity_id] = statistics_unit
+
+    return statistic_ids

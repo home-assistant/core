@@ -131,7 +131,7 @@ DEVICES_STATE = [
     {
         "uid": "3WRRJR6RCZQZSND8VP0YTO3YXCSOFPKBMW8T51TU-LQ*SOT3NKALCRQMHUHJUF79NUG6UQP1IIQIN1PJVRRPT0C",
         "type": "contactSensor",
-        "state": {"contactSensorState": True},
+        "state": {"contactSensorState": False},
         "online": True,
     },
     {
