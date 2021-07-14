@@ -60,6 +60,7 @@ from .const import (
     CONF_USB_PATH,
     CONF_USE_ADDON,
     DATA_CLIENT,
+    DATA_DEVICE_TRIGGER_TRACKERS,
     DATA_PLATFORM_SETUP,
     DOMAIN,
     EVENT_DEVICE_ADDED_TO_REGISTRY,
@@ -127,6 +128,7 @@ async def async_setup_entry(  # noqa: C901
 
     entry_hass_data[DATA_CLIENT] = client
     entry_hass_data[DATA_PLATFORM_SETUP] = {}
+    entry_hass_data[DATA_DEVICE_TRIGGER_TRACKERS] = {}
 
     registered_unique_ids: dict[str, dict[str, set[str]]] = defaultdict(dict)
 

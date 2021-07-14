@@ -14,6 +14,7 @@ DOMAIN = "zwave_js"
 
 DATA_CLIENT = "client"
 DATA_PLATFORM_SETUP = "platform_setup"
+DATA_DEVICE_TRIGGER_TRACKERS = "device_trigger_trackers"
 
 EVENT_DEVICE_ADDED_TO_REGISTRY = f"{DOMAIN}_device_added_to_registry"
 
@@ -23,6 +24,7 @@ LOGGER = logging.getLogger(__package__)
 ZWAVE_JS_VALUE_NOTIFICATION_EVENT = f"{DOMAIN}_value_notification"
 ZWAVE_JS_NOTIFICATION_EVENT = f"{DOMAIN}_notification"
 ZWAVE_JS_VALUE_UPDATED_EVENT = f"{DOMAIN}_value_updated"
+ZWAVE_JS_DEVICE_TRIGGER_VALUE_UPDATED_EVENT = f"{DOMAIN}_device_trigger_value_updated"
 ATTR_NODE_ID = "node_id"
 ATTR_HOME_ID = "home_id"
 ATTR_ENDPOINT = "endpoint"
