@@ -26,10 +26,6 @@ async def async_setup_entry(
     )
 
 
-# Pylint gets confused with the EsphomeEntity generics -> let mypy handle member checking
-# pylint: disable=no-member
-
-
 class EsphomeBinarySensor(
     EsphomeEntity[BinarySensorInfo, BinarySensorState], BinarySensorEntity
 ):
