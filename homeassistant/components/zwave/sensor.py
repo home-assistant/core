@@ -56,12 +56,12 @@ class ZWaveSensor(ZWaveDeviceEntity, SensorEntity):
         return True
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement the value is expressed in."""
         return self._units
 
@@ -70,7 +70,7 @@ class ZWaveMultilevelSensor(ZWaveSensor):
     """Representation of a multi level sensor Z-Wave sensor."""
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         if self._units in ("C", "F"):
             return round(self._state, 1)
@@ -87,7 +87,7 @@ class ZWaveMultilevelSensor(ZWaveSensor):
         return None
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         if self._units == "C":
             return TEMP_CELSIUS
