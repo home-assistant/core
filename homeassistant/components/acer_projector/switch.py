@@ -128,15 +128,14 @@ class AcerSwitch(SwitchEntity):
         else:
             self._attr_available = False
 
-        if self.extra_state_attributes is None:
-            return
-        attr = {}
-        for key in self.extra_state_attributes:
-            msg = CMD_DICT.get(key)
-            if msg:
-                awns = self._write_read_format(msg)
-                attr[key] = awns
-        self._attr_extra_state_attributes = attr
+        if self.extra_state_attributes is not None:
+            attr = {}
+            for key in self.extra_state_attributes:
+                msg = CMD_DICT.get(key)
+                if msg:
+                    awns = self._write_read_format(msg)
+                    attr[key] = awns
+            self._attr_extra_state_attributes = attr
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the projector on."""
