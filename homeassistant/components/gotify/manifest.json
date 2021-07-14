@@ -1,0 +1,7 @@
+{
+  "domain": "gotify",
+  "name": "Gotify",
+  "documentation": "https://www.home-assistant.io/integrations/notify_events",
+  "codeowners": ["@benjmarshall"],
+  "iot_class": "cloud_push"
+}

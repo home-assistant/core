@@ -190,6 +190,7 @@ homeassistant/components/goalzero/* @tkdrob
 homeassistant/components/gogogate2/* @vangorra @bdraco
 homeassistant/components/google_assistant/* @home-assistant/cloud
 homeassistant/components/google_cloud/* @lufton
+homeassistant/components/gotify/* @benjmarshall
 homeassistant/components/gpsd/* @fabaff
 homeassistant/components/gree/* @cmroche
 homeassistant/components/greeneye_monitor/* @jkeljo

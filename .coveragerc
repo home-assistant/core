@@ -380,6 +380,7 @@ omit =
     homeassistant/components/google_travel_time/__init__.py
     homeassistant/components/google_travel_time/helpers.py
     homeassistant/components/google_travel_time/sensor.py
+    homeassistant/components/gotify/notify.py
     homeassistant/components/gpmdp/media_player.py
     homeassistant/components/gpsd/sensor.py
     homeassistant/components/greeneye_monitor/*
