@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from collections import Counter
-from typing import Literal, Optional, TypedDict, Union, cast
+from typing import Awaitable, Callable, Literal, Optional, TypedDict, Union, cast
 
 import voluptuous as vol
 
@@ -35,7 +35,7 @@ class FlowFromGridSourceType(TypedDict):
     stat_cost: str | None
 
     # Used to generate costs if stat_cost is set to None
-    entity_energy_from: str | None  # entity_id of an energy meter (kWh), entity_id of the energy meter for stat_from
+    entity_energy_from: str | None  # entity_id of an energy meter (kWh), entity_id of the energy meter for stat_energy_from
     entity_energy_price: str | None  # entity_id of an entity providing price ($/kWh)
     number_energy_price: float | None  # Price for energy ($/kWh)
 
@@ -89,7 +89,9 @@ class EnergyPreferencesUpdate(EnergyPreferences, total=False):
     """all types optional."""
 
 
-def _ensure_single_price(val: dict) -> dict:
+def _flow_from_ensure_single_price(
+    val: FlowFromGridSourceType,
+) -> FlowFromGridSourceType:
     """Ensure we use a single price source."""
     if (
         val["entity_energy_price"] is not None
@@ -110,7 +112,7 @@ FLOW_FROM_GRID_SOURCE_SCHEMA = vol.All(
             vol.Required("number_energy_price"): vol.Any(None, vol.Coerce(float)),
         }
     ),
-    _ensure_single_price,
+    _flow_from_ensure_single_price,
 )
 
 
@@ -121,11 +123,26 @@ FLOW_TO_GRID_SOURCE_SCHEMA = vol.Schema(
 )
 
 
+def _flow_from_ensure_energy_from_stat_unique(
+    val: list[FlowFromGridSourceType],
+) -> list[FlowFromGridSourceType]:
+    """Ensure that the user doesn't add duplicate stats to grid sources."""
+    counts = Counter(flow_from["stat_energy_from"] for flow_from in val)
+
+    for stat, count in counts.items():
+        if count > 1:
+            raise vol.Invalid(f"Cannot specify {stat} more than once")
+
+    return val
+
+
 GRID_SOURCE_SCHEMA = vol.Schema(
     {
         vol.Required("type"): "grid",
         vol.Required("flow_from"): vol.All(
-            [FLOW_FROM_GRID_SOURCE_SCHEMA], vol.Length(min=1)
+            [FLOW_FROM_GRID_SOURCE_SCHEMA],
+            vol.Length(min=1),
+            _flow_from_ensure_energy_from_stat_unique,
         ),
         vol.Required("flow_to"): [FLOW_TO_GRID_SOURCE_SCHEMA],
         vol.Required("cost_adjustment_day"): vol.Coerce(float),
@@ -181,6 +198,7 @@ class EnergyManager:
         self._hass = hass
         self._store = storage.Store(hass, STORAGE_VERSION, STORAGE_KEY)
         self.data: EnergyPreferences | None = None
+        self._update_listeners: list[Callable[[], Awaitable]] = []
 
     async def async_initialize(self) -> None:
         """Initialize the energy integration."""
@@ -195,8 +213,7 @@ class EnergyManager:
             "device_consumption": [],
         }
 
-    @callback
-    def async_update(self, update: EnergyPreferencesUpdate) -> None:
+    async def async_update(self, update: EnergyPreferencesUpdate) -> None:
         """Update the preferences."""
         if self.data is None:
             data = EnergyManager.default_preferences()
@@ -215,3 +232,11 @@ class EnergyManager:
 
         self.data = data
         self._store.async_delay_save(lambda: cast(dict, self.data), 60)
+
+        for listener in self._update_listeners:
+            await listener()
+
+    @callback
+    def async_listen_updates(self, update_listener: Callable[[], Awaitable]) -> None:
+        """Listen for data updates."""
+        self._update_listeners.append(update_listener)

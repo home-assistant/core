@@ -1,6 +1,7 @@
 """Helper sensor for calculating utility costs."""
 from __future__ import annotations
 
+from functools import partial
 from typing import Any, cast
 
 from homeassistant.components.sensor import (
@@ -16,7 +17,7 @@ from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
-from .data import async_get_manager
+from .data import EnergyManager, FlowFromGridSourceType, async_get_manager
 
 
 async def async_setup_platform(
@@ -27,46 +28,66 @@ async def async_setup_platform(
 ) -> None:
     """Set up the energy sensors."""
     manager = await async_get_manager(hass)
+    process_now = partial(_process_manager_data, hass, manager, async_add_entities, {})
+    manager.async_listen_updates(process_now)
 
-    if not manager.data:
-        return
+    if manager.data:
+        await process_now()
 
-    entities = []
 
-    currency = manager.data["currency"]
+async def _process_manager_data(
+    hass: HomeAssistant,
+    manager: EnergyManager,
+    async_add_entities: AddEntitiesCallback,
+    current_entities: dict[str, EnergyCostSensor],
+) -> None:
+    """Process updated data."""
+    to_add = []
+    to_remove = dict(current_entities)
 
-    for energy_source in manager.data["energy_sources"]:
-        if energy_source["type"] != "grid":
-            continue
-
-        for flow in energy_source["flow_from"]:
-            # No need to create an entity if we already
-            if flow["stat_cost"] is not None:
+    if manager.data:
+        for energy_source in manager.data["energy_sources"]:
+            if energy_source["type"] != "grid":
                 continue
 
-            # Make sure the right data is there
-            if flow["entity_energy_from"] is None or (
-                flow["entity_energy_price"] is None
-                and flow["number_energy_price"] is None
-            ):
-                continue
+            for flow in energy_source["flow_from"]:
+                # No need to create an entity if we already have a cost stat
+                if flow["stat_cost"] is not None:
+                    continue
 
-            _, name = split_entity_id(flow["entity_energy_from"])
-            energy_state = hass.states.get(flow["entity_energy_from"])
-            if energy_state:
-                name = energy_state.attributes.get(ATTR_NAME, name)
+                # This is unique among all flow_from's
+                key = flow["stat_energy_from"]
 
-            entities.append(
-                EnergyCostSensor(
+                current_entity = to_remove.pop(key, None)
+                if current_entity:
+                    current_entity.update_config(flow)
+                    continue
+
+                # Make sure the right data is there
+                if flow["entity_energy_from"] is None or (
+                    flow["entity_energy_price"] is None
+                    and flow["number_energy_price"] is None
+                ):
+                    continue
+
+                _, name = split_entity_id(flow["entity_energy_from"])
+                energy_state = hass.states.get(flow["entity_energy_from"])
+                if energy_state:
+                    name = energy_state.attributes.get(ATTR_NAME, name)
+
+                current_entities[key] = EnergyCostSensor(
                     f"{name} cost",
-                    currency,
-                    flow["entity_energy_from"],
-                    flow["entity_energy_price"],
-                    flow["number_energy_price"],
+                    manager.data["currency"],
+                    flow,
                 )
-            )
+                to_add.append(current_entities[key])
 
-    async_add_entities(entities)
+    if to_add:
+        async_add_entities(to_add)
+
+    for key, entity in to_remove.items():
+        current_entities.pop(key)
+        await entity.async_remove()
 
 
 class EnergyCostSensor(SensorEntity):
@@ -80,9 +101,7 @@ class EnergyCostSensor(SensorEntity):
         self,
         name: str,
         currency: str,
-        energy_sensor: str,
-        energy_price_sensor: str | None,
-        number_energy_price: float | None,
+        flow: FlowFromGridSourceType,
     ) -> None:
         """Initialize the sensor."""
         super().__init__()
@@ -91,17 +110,13 @@ class EnergyCostSensor(SensorEntity):
         self._attr_name = name
         self._attr_state_class = STATE_CLASS_MEASUREMENT
         self._attr_unit_of_measurement = currency
-
-        self._energy_sensor_entity_id = energy_sensor
-        self._energy_price_entity_id = energy_price_sensor
-        self._number_energy_price = number_energy_price
-
+        self._flow = flow
         self._last_energy_sensor_state: State | None = None
 
     @callback
     def _update_cost(self) -> None:
         """Update incurred costs."""
-        energy_state = self.hass.states.get(self._energy_sensor_entity_id)
+        energy_state = self.hass.states.get(cast(str, self._flow["entity_energy_from"]))
 
         if energy_state is None or ATTR_LAST_RESET not in energy_state.attributes:
             return
@@ -112,8 +127,8 @@ class EnergyCostSensor(SensorEntity):
             return
 
         # Determine energy price
-        if self._energy_price_entity_id is not None:
-            energy_price_state = self.hass.states.get(self._energy_price_entity_id)
+        if self._flow["entity_energy_price"] is not None:
+            energy_price_state = self.hass.states.get(self._flow["entity_energy_price"])
 
             if energy_price_state is None:
                 return
@@ -124,7 +139,7 @@ class EnergyCostSensor(SensorEntity):
                 return
         else:
             energy_price_state = None
-            energy_price = cast(float, self._number_energy_price)
+            energy_price = cast(float, self._flow["number_energy_price"])
 
         if self._last_energy_sensor_state is None:
             # Initialize as it's the first time all required entities are in place.
@@ -135,17 +150,15 @@ class EnergyCostSensor(SensorEntity):
             return
 
         # If meter got reset, just take the new value.
+        cur_value = cast(float, self._attr_state)
         if (
             energy_state.attributes[ATTR_LAST_RESET]
             != self._last_energy_sensor_state.attributes[ATTR_LAST_RESET]
         ):
-            self._attr_state = energy * energy_price
+            self._attr_state = cur_value + energy * energy_price
         else:
             old_energy_value = float(self._last_energy_sensor_state.state)
-            self._attr_state = (
-                cast(float, self._attr_state)
-                + (energy - old_energy_value) * energy_price
-            )
+            self._attr_state = cur_value + (energy - old_energy_value) * energy_price
 
         self._last_energy_sensor_state = energy_state
 
@@ -161,6 +174,13 @@ class EnergyCostSensor(SensorEntity):
 
         self.async_on_remove(
             async_track_state_change_event(
-                self.hass, self._energy_sensor_entity_id, async_state_changed_listener
+                self.hass,
+                cast(str, self._flow["entity_energy_from"]),
+                async_state_changed_listener,
             )
         )
+
+    @callback
+    def update_config(self, flow: FlowFromGridSourceType) -> None:
+        """Update the config."""
+        self._flow = flow

@@ -67,14 +67,14 @@ async def test_save_preferences(hass, hass_ws_client, hass_storage) -> None:
                     {
                         "stat_energy_from": "sensor.heat_pump_meter",
                         "stat_cost": "heat_pump_kwh_cost",
-                        "entity_energy_from": "sensor.heat_pump_meter",
-                        "entity_energy_price": "sensor.energy_price",
+                        "entity_energy_from": None,
+                        "entity_energy_price": None,
                         "number_energy_price": None,
                     },
                     {
-                        "stat_energy_from": "sensor.heat_pump_meter",
-                        "stat_cost": "heat_pump_kwh_cost",
-                        "entity_energy_from": "sensor.heat_pump_meter",
+                        "stat_energy_from": "sensor.heat_pump_meter_2",
+                        "stat_cost": None,
+                        "entity_energy_from": "sensor.heat_pump_meter_2",
                         "entity_energy_price": None,
                         "number_energy_price": 0.20,
                     },
@@ -137,3 +137,44 @@ async def test_save_preferences(hass, hass_ws_client, hass_storage) -> None:
     assert msg["id"] == 7
     assert msg["success"]
     assert msg["result"] == {**new_prefs, **new_prefs_2}
+
+
+async def test_handle_duplicate_from_stat(hass, hass_ws_client) -> None:
+    """Test we handle duplicate from stats."""
+    client = await hass_ws_client(hass)
+
+    await client.send_json(
+        {
+            "id": 5,
+            "type": "energy/save_prefs",
+            "energy_sources": [
+                {
+                    "type": "grid",
+                    "flow_from": [
+                        {
+                            "stat_energy_from": "sensor.heat_pump_meter",
+                            "stat_cost": None,
+                            "entity_energy_from": None,
+                            "entity_energy_price": None,
+                            "number_energy_price": None,
+                        },
+                        {
+                            "stat_energy_from": "sensor.heat_pump_meter",
+                            "stat_cost": None,
+                            "entity_energy_from": None,
+                            "entity_energy_price": None,
+                            "number_energy_price": None,
+                        },
+                    ],
+                    "flow_to": [],
+                    "cost_adjustment_day": 0,
+                },
+            ],
+        }
+    )
+
+    msg = await client.receive_json()
+
+    assert msg["id"] == 5
+    assert not msg["success"]
+    assert msg["error"]["code"] == "invalid_format"

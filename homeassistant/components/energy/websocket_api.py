@@ -86,8 +86,7 @@ def ws_get_prefs(
     }
 )
 @_ws_with_manager
-@callback
-def ws_save_prefs(
+async def ws_save_prefs(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
     msg: dict,
@@ -96,5 +95,5 @@ def ws_save_prefs(
     """Handle get prefs command."""
     msg_id = msg.pop("id")
     msg.pop("type")
-    manager.async_update(cast(EnergyPreferencesUpdate, msg))
+    await manager.async_update(cast(EnergyPreferencesUpdate, msg))
     connection.send_result(msg_id, manager.data)

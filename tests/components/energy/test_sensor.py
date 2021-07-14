@@ -1,4 +1,5 @@
 """Test the Energy sensors."""
+from datetime import timedelta
 from unittest.mock import patch
 
 from homeassistant.components.energy import data
@@ -34,10 +35,11 @@ async def test_cost_sensor_no_states(hass, hass_storage) -> None:
             "type": "grid",
             "flow_from": [
                 {
-                    "stat_from": "foo",
+                    "stat_energy_from": "foo",
                     "entity_energy_from": "foo",
                     "stat_cost": None,
                     "entity_energy_price": "bar",
+                    "number_energy_price": None,
                 }
             ],
             "cost_adjustment_day": 0,
@@ -60,7 +62,7 @@ async def test_cost_sensor_price_entity(hass, hass_storage) -> None:
             "type": "grid",
             "flow_from": [
                 {
-                    "stat_from": "sensor.energy_consumption",
+                    "stat_energy_from": "sensor.energy_consumption",
                     "entity_energy_from": "sensor.energy_consumption",
                     "stat_cost": None,
                     "entity_energy_price": "sensor.energy_price",
@@ -120,14 +122,16 @@ async def test_cost_sensor_price_entity(hass, hass_storage) -> None:
     assert state.state == "19.0"
 
     hass.states.async_set(
-        "sensor.energy_consumption", "4", {"last_reset": dt_util.utcnow().isoformat()}
+        "sensor.energy_consumption",
+        "4",
+        {"last_reset": (now + timedelta(seconds=1)).isoformat()},
     )
     await hass.async_block_till_done()
     state = hass.states.get("sensor.energy_consumption_cost")
     assert state.state == "27.0"
 
 
-async def test_cost_sensor_fixed_price(hass, hass_storage) -> None:
+async def test_cost_sensor_fixed_price(hass, hass_storage, hass_ws_client) -> None:
     """Test sensors are created."""
     energy_data = data.EnergyManager.default_preferences()
     energy_data["energy_sources"].append(
@@ -135,13 +139,14 @@ async def test_cost_sensor_fixed_price(hass, hass_storage) -> None:
             "type": "grid",
             "flow_from": [
                 {
-                    "stat_from": "sensor.energy_consumption",
+                    "stat_energy_from": "sensor.energy_consumption",
                     "entity_energy_from": "sensor.energy_consumption",
                     "stat_cost": None,
                     "entity_energy_price": None,
                     "number_energy_price": 1,
                 }
             ],
+            "flow_to": [],
             "cost_adjustment_day": 0,
         }
     )
@@ -184,9 +189,24 @@ async def test_cost_sensor_fixed_price(hass, hass_storage) -> None:
     state = hass.states.get("sensor.energy_consumption_cost")
     assert state.state == "10.0"
 
+    # Update price
+    energy_data["energy_sources"][0]["flow_from"] = [
+        {
+            "stat_energy_from": "sensor.energy_consumption",
+            "entity_energy_from": "sensor.energy_consumption",
+            "stat_cost": None,
+            "entity_energy_price": None,
+            "number_energy_price": 2,
+        }
+    ]
+    client = await hass_ws_client(hass)
+    await client.send_json({"id": 5, "type": "energy/save_prefs", **energy_data})
+    msg = await client.receive_json()
+    assert msg["success"]
+
     hass.states.async_set(
         "sensor.energy_consumption", "14.5", {"last_reset": last_reset}
     )
     await hass.async_block_till_done()
     state = hass.states.get("sensor.energy_consumption_cost")
-    assert state.state == "14.5"
+    assert state.state == "19.0"
