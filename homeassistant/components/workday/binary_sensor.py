@@ -116,7 +116,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                     for holiday in removed:
                         _LOGGER.debug("Removed %s by name '%s'", holiday, date)
                 except KeyError as unmatched:
-                    _LOGGER.debug("No holiday found matching %s", unmatched)
+                    _LOGGER.warning("No holiday found matching %s", unmatched)
     except TypeError:
         _LOGGER.debug("No holidays to remove or invalid holidays")
 
