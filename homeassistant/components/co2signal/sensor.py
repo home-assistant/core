@@ -91,6 +91,7 @@ class CO2Sensor(SensorEntity):
 
     def update(self):
         """Get the latest data and updates the states."""
+
         _LOGGER.debug("Update data for %s", self._friendly_name)
 
         if self._country_code is not None:
