@@ -18,8 +18,6 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.humidifier import DOMAIN as HUMIDIFIER_DOMAIN
-from homeassistant.components.network import async_get_source_ip
-from homeassistant.components.network.const import PUBLIC_TARGET_IP
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
@@ -44,6 +42,7 @@ from homeassistant.helpers.entityfilter import BASE_FILTER_SCHEMA, FILTER_SCHEMA
 from homeassistant.helpers.reload import async_integration_yaml_config
 from homeassistant.helpers.service import async_extract_referenced_entity_ids
 from homeassistant.loader import IntegrationNotFound, async_get_integration
+from homeassistant.util import get_local_ip
 
 from . import (  # noqa: F401
     type_cameras,

@@ -12,14 +12,13 @@ from pyhap.camera import (
 from pyhap.const import CATEGORY_CAMERA
 
 from homeassistant.components.ffmpeg import DATA_FFMPEG
-from homeassistant.components.network import async_get_source_ip
-from homeassistant.components.network.const import PUBLIC_TARGET_IP
 from homeassistant.const import STATE_ON
 from homeassistant.core import callback
 from homeassistant.helpers.event import (
     async_track_state_change_event,
     async_track_time_interval,
 )
+from homeassistant.util import get_local_ip
 
 from .accessories import TYPES, HomeAccessory
 from .const import (
