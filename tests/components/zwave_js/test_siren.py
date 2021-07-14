@@ -1,7 +1,7 @@
 """Test the Z-Wave JS siren platform."""
 from zwave_js_server.event import Event
 
-from homeassistant.components.siren import ATTR_TONE
+from homeassistant.components.siren import ATTR_TONE, ATTR_VOLUME_LEVEL
 from homeassistant.const import STATE_OFF, STATE_ON
 
 SIREN_ENTITY = "siren.indoor_siren_6_2"
@@ -82,11 +82,15 @@ async def test_siren(hass, client, aeotec_zw164_siren, integration):
 
     client.async_send_command.reset_mock()
 
-    # Test turn on with specific tone name
+    # Test turn on with specific tone name and volume level
     await hass.services.async_call(
         "siren",
         "turn_on",
-        {"entity_id": SIREN_ENTITY, ATTR_TONE: "01DING~1 (5 sec)"},
+        {
+            "entity_id": SIREN_ENTITY,
+            ATTR_TONE: "01DING~1 (5 sec)",
+            ATTR_VOLUME_LEVEL: 0.5,
+        },
         blocking=True,
     )
 
@@ -96,6 +100,7 @@ async def test_siren(hass, client, aeotec_zw164_siren, integration):
     assert args["nodeId"] == node.node_id
     assert args["valueId"] == TONE_ID_VALUE_ID
     assert args["value"] == 1
+    assert args["options"] == {"volume": 50}
 
     client.async_send_command.reset_mock()
 
