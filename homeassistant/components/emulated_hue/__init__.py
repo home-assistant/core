@@ -205,7 +205,9 @@ class Config:
         # Get the IP address that will be passed to the Echo during discovery
         self.host_ip_addr = conf.get(CONF_HOST_IP)
         if self.host_ip_addr is None:
-            self.host_ip_addr = async_get_source_ip(self.hass, PUBLIC_TARGET_IP)
+            self.host_ip_addr = self.hass.loop.run_until_complete(
+                async_get_source_ip(self.hass, PUBLIC_TARGET_IP)
+            )
             _LOGGER.info(
                 "Listen IP address not specified, auto-detected address is %s",
                 self.host_ip_addr,

@@ -195,7 +195,9 @@ def port_entities_list(
         port_forwards_count,
     )
 
-    local_ip = async_get_source_ip(fritzbox_tools.hass, target_ip=fritzbox_tools.host)
+    local_ip = fritzbox_tools.hass.loop.run_until_complete(
+        async_get_source_ip(fritzbox_tools.hass, target_ip=fritzbox_tools.host)
+    )
     _LOGGER.debug("IP source for %s is %s", fritzbox_tools.host, local_ip)
 
     for i in range(port_forwards_count):

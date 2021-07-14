@@ -143,7 +143,7 @@ async def async_setup_platform(
     async with hass.data[DLNA_DMR_DATA]["lock"]:
         server_host = config.get(CONF_LISTEN_IP)
         if server_host is None:
-            server_host = async_get_source_ip(hass, PUBLIC_TARGET_IP)
+            server_host = await async_get_source_ip(hass, PUBLIC_TARGET_IP)
         server_port = config.get(CONF_LISTEN_PORT, DEFAULT_LISTEN_PORT)
         callback_url_override = config.get(CONF_CALLBACK_URL_OVERRIDE)
         event_handler = await async_start_event_handler(
