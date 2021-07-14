@@ -192,7 +192,6 @@ class AirVisualGeographySensor(AirVisualEntity, SensorEntity):
             data = self.coordinator.data["current"]["pollution"]
         except KeyError:
             return
-        self._attr_available = super().available and data
 
         if self._kind == SENSOR_KIND_LEVEL:
             aqi = data[f"aqi{self._locale}"]
