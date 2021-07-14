@@ -44,7 +44,6 @@ class Device(CoordinatorEntity, LockEntity):
             "model": self._type,
             "manufacturer": "Freedompro",
         }
-        self._attr_is_locked = False
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -72,7 +71,7 @@ class Device(CoordinatorEntity, LockEntity):
         self._handle_coordinator_update()
 
     async def async_lock(self, **kwargs):
-        """Async function to set on to lock."""
+        """Async function to lock the lock."""
         payload = {"lock": 1}
         payload = json.dumps(payload)
         await put_state(
@@ -84,7 +83,7 @@ class Device(CoordinatorEntity, LockEntity):
         await self.coordinator.async_request_refresh()
 
     async def async_unlock(self, **kwargs):
-        """Async function to set off to lock."""
+        """Async function to unlock the lock."""
         payload = {"lock": 0}
         payload = json.dumps(payload)
         await put_state(

@@ -8,7 +8,7 @@ from homeassistant.components.lock import (
     SERVICE_UNLOCK,
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_LOCKED, STATE_UNLOCKED
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util.dt import utcnow
 
 from tests.common import async_fire_time_changed
@@ -21,6 +21,14 @@ async def test_lock_get_state(hass, init_integration):
     """Test states of the lock."""
     init_integration
     registry = er.async_get(hass)
+    registry_device = dr.async_get(hass)
+
+    device = registry_device.async_get_device({("freedompro", uid)})
+    assert device is not None
+    assert device.identifiers == {("freedompro", uid)}
+    assert device.manufacturer == "Freedompro"
+    assert device.name == "lock"
+    assert device.model == "lock"
 
     entity_id = "lock.lock"
     state = hass.states.get(entity_id)
