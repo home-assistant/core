@@ -84,7 +84,7 @@ class ZwaveSirenEntity(ZWaveBaseEntity, SirenEntity):
         tone: str | None = kwargs.get(ATTR_TONE)
         options = {}
         if (volume := kwargs.get(ATTR_VOLUME_LEVEL)) is not None:
-            options["volume"] = int(volume * 100)
+            options["volume"] = round(volume * 100)
         # Play the default tone if a tone isn't provided
         if tone is None:
             await self.async_set_value(TONE_ID_DEFAULT, options)
