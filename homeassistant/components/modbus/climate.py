@@ -338,10 +338,7 @@ class ModbusThermostat(BasePlatform, RestoreEntity, ClimateEntity):
         self, register_type, register, data_type, supported
     ) -> str | None:
         """Update either HVAC_ACTION or HVAC_MODE from registers/coils."""
-        if (
-            register_type == CALL_TYPE_REGISTER_HOLDING
-            or register_type == CALL_TYPE_REGISTER_INPUT
-        ):
+        if register_type in (CALL_TYPE_REGISTER_HOLDING, CALL_TYPE_REGISTER_INPUT):
             register_value = await self._async_read_register(
                 register_type,
                 register,
@@ -355,8 +352,7 @@ class ModbusThermostat(BasePlatform, RestoreEntity, ClimateEntity):
                 "Can't process hvac register values; adjust your configuration"
             )
             return None
-
-        elif register_type == CALL_TYPE_DISCRETE or register_type == CALL_TYPE_COIL:
+        elif register_type in (CALL_TYPE_DISCRETE, CALL_TYPE_COIL):
             for mode, address in supported.items():
                 value = await self._async_read_coil(register_type, address)
                 if value:
