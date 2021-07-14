@@ -624,8 +624,8 @@ async def async_get_trigger_capabilities(
         return {"extra_fields": vol.Schema({vol.Optional(ATTR_VALUE): value_schema})}
 
     if trigger_type == CONFIG_PARAMETER_VALUE_UPDATE:
-        # We can be more deliberate about the config param schema here because there
-        # are a limited number of types.
+        # We can be more deliberate about the config parameter schema here because
+        # there are a limited number of types
         if value.configuration_value_type == ConfigurationValueType.UNDEFINED:
             return {}
         if value.configuration_value_type == ConfigurationValueType.ENUMERATED:
