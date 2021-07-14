@@ -281,6 +281,11 @@ class ModbusThermostat(BasePlatform, RestoreEntity, ClimateEntity):
         """Update Target & Current Temperature. Update HVAC Mode & Action."""
         # remark "now" is a dummy parameter to avoid problems with
         # async_track_time_interval
+
+        # do not allow multiple active calls to the same platform
+        if self._call_active:
+            return
+        self._call_active = True
         self._target_temperature = await self._async_read_register(
             self._input_type,
             self._target_temperature_register,
@@ -301,6 +306,7 @@ class ModbusThermostat(BasePlatform, RestoreEntity, ClimateEntity):
             )
             self._hvac_action = self._parse_hvac_action(hvac_action)
 
+        self._call_active = False
         self.async_write_ha_state()
 
     async def _async_read_register(

@@ -99,6 +99,14 @@
     }
   },
   "device_automation": {
+    "trigger_type": {
+      "event.notification.entry_control": "Sent an Entry Control notification",
+      "event.notification.notification": "Sent a notification",
+      "event.value_notification.basic": "Basic CC event on {subtype}",
+      "event.value_notification.central_scene": "Central Scene action on {subtype}",
+      "event.value_notification.scene_activation": "Scene Activation on {subtype}",
+      "state.node_status": "Node status changed"
+    },
     "condition_type": {
       "node_status": "Node status",
       "config_parameter": "Config parameter {subtype} value",
