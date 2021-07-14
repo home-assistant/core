@@ -20,6 +20,16 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 
+DEVICE_CLASS_MAP = {
+    "windowCovering": DEVICE_CLASS_BLIND,
+    "gate": DEVICE_CLASS_GATE,
+    "garageDoor": DEVICE_CLASS_GARAGE,
+    "door": DEVICE_CLASS_DOOR,
+    "window": DEVICE_CLASS_WINDOW,
+}
+
+SUPPORTED_SENSORS = {"windowCovering", "gate", "garageDoor", "door", "window"}
+
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up Freedompro cover."""
@@ -28,11 +38,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities(
         Device(hass, api_key, device, coordinator)
         for device in coordinator.data
-        if device["type"] == "windowCovering"
-        or device["type"] == "gate"
-        or device["type"] == "garageDoor"
-        or device["type"] == "door"
-        or device["type"] == "window"
+        if device["type"] in SUPPORTED_SENSORS
     )
 
 
@@ -50,9 +56,9 @@ class Device(CoordinatorEntity, CoverEntity):
         self._type = device["type"]
         self._characteristics = device["characteristics"]
         self._attr_device_info = {
-            "name": self._attr_name,
+            "name": self.name,
             "identifiers": {
-                (DOMAIN, self._attr_unique_id),
+                (DOMAIN, self.unique_id),
             },
             "model": self._type,
             "manufacturer": "Freedompro",
@@ -60,17 +66,7 @@ class Device(CoordinatorEntity, CoverEntity):
         self._attr_current_cover_position = 0
         self._attr_is_closed = True
         self._attr_supported_features = SUPPORT_SET_POSITION
-        self._attr_device_class = (
-            DEVICE_CLASS_GATE
-            if self._type == "gate"
-            else DEVICE_CLASS_GARAGE
-            if self._type == "garageDoor"
-            else DEVICE_CLASS_DOOR
-            if self._type == "door"
-            else DEVICE_CLASS_WINDOW
-            if self._type == "window"
-            else DEVICE_CLASS_BLIND
-        )
+        self._attr_device_class = DEVICE_CLASS_MAP[self._type]
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -79,7 +75,7 @@ class Device(CoordinatorEntity, CoverEntity):
             (
                 device
                 for device in self.coordinator.data
-                if device["uid"] == self._attr_unique_id
+                if device["uid"] == self.unique_id
             ),
             None,
         )
@@ -98,16 +94,23 @@ class Device(CoordinatorEntity, CoverEntity):
         await super().async_added_to_hass()
         self._handle_coordinator_update()
 
+    async def async_open_cover(self, **kwargs):
+        """Open the cover."""
+        await self.async_set_cover_position(ATTR_POSITION=100)
+
+    async def async_close_cover(self, **kwargs):
+        """Close the cover."""
+        await self.async_set_cover_position(ATTR_POSITION=0)
+
     async def async_set_cover_position(self, **kwargs):
         """Async function to set position to cover."""
         payload = {}
-        if ATTR_POSITION in kwargs:
-            payload["position"] = kwargs[ATTR_POSITION]
+        payload["position"] = kwargs[ATTR_POSITION]
         payload = json.dumps(payload)
         await put_state(
             self._session,
             self._api_key,
-            self._attr_unique_id,
+            self.unique_id,
             payload,
         )
         await self.coordinator.async_request_refresh()
