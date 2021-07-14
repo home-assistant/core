@@ -17,13 +17,13 @@ async def async_setup_entry(hass, entry, async_add_entities):
     api_key = entry.data[CONF_API_KEY]
     coordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
-        Device(hass, api_key, device, coordinator)
+        FreedomproFan(hass, api_key, device, coordinator)
         for device in coordinator.data
         if device["type"] == "fan"
     )
 
 
-class Device(CoordinatorEntity, FanEntity):
+class FreedomproFan(CoordinatorEntity, FanEntity):
     """Representation of an Freedompro fan."""
 
     def __init__(self, hass, api_key, device, coordinator):
@@ -37,14 +37,13 @@ class Device(CoordinatorEntity, FanEntity):
         self._type = device["type"]
         self._characteristics = device["characteristics"]
         self._attr_device_info = {
-            "name": self._attr_name,
+            "name": self.name,
             "identifiers": {
-                (DOMAIN, self._attr_unique_id),
+                (DOMAIN, self.unique_id),
             },
             "model": self._type,
             "manufacturer": "Freedompro",
         }
-        self._attr_is_on = False
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -53,14 +52,13 @@ class Device(CoordinatorEntity, FanEntity):
             (
                 device
                 for device in self.coordinator.data
-                if device["uid"] == self._attr_unique_id
+                if device["uid"] == self.unique_id
             ),
             None,
         )
         if device is not None and "state" in device:
             state = device["state"]
-            if "on" in state:
-                self._attr_is_on = state["on"]
+            self._attr_is_on = state["on"]
         super()._handle_coordinator_update()
 
     async def async_added_to_hass(self) -> None:
@@ -71,25 +69,25 @@ class Device(CoordinatorEntity, FanEntity):
     async def async_turn_on(
         self, speed=None, percentage=None, preset_mode=None, **kwargs
     ):
-        """Async function to set on to fan."""
+        """Async function to turn on the fan."""
         payload = {"on": True}
         payload = json.dumps(payload)
         await put_state(
             self._session,
             self._api_key,
-            self._attr_unique_id,
+            self.unique_id,
             payload,
         )
         await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs):
-        """Async function to set off to fan."""
+        """Async function to turn off the fan."""
         payload = {"on": False}
         payload = json.dumps(payload)
         await put_state(
             self._session,
             self._api_key,
-            self._attr_unique_id,
+            self.unique_id,
             payload,
         )
         await self.coordinator.async_request_refresh()
