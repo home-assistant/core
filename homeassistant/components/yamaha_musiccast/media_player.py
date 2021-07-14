@@ -70,17 +70,11 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 MUSIC_PLAYER_BASE_SUPPORT = (
-    SUPPORT_PAUSE
-    | SUPPORT_PLAY
-    | SUPPORT_SHUFFLE_SET
+    SUPPORT_SHUFFLE_SET
     | SUPPORT_REPEAT_SET
-    | SUPPORT_PREVIOUS_TRACK
-    | SUPPORT_NEXT_TRACK
     | SUPPORT_SELECT_SOUND_MODE
     | SUPPORT_SELECT_SOURCE
-    | SUPPORT_STOP
     | SUPPORT_GROUPING
-    | SUPPORT_BROWSE_MEDIA
     | SUPPORT_PLAY_MEDIA
 )
 
@@ -498,6 +492,18 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
             supported_features |= SUPPORT_VOLUME_SET
         if ZoneFeature.MUTE in zone.features:
             supported_features |= SUPPORT_VOLUME_MUTE
+
+        if self._is_netusb or self._is_tuner:
+            supported_features |= SUPPORT_PREVIOUS_TRACK
+            supported_features |= SUPPORT_NEXT_TRACK
+
+        if self._is_netusb:
+            supported_features |= SUPPORT_PAUSE
+            supported_features |= SUPPORT_PLAY
+            supported_features |= SUPPORT_STOP
+
+        if self.state != STATE_OFF:
+            supported_features |= SUPPORT_BROWSE_MEDIA
 
         return supported_features
 
