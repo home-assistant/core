@@ -141,7 +141,7 @@ async def async_setup_entry(  # noqa: C901
         if device.id not in registered_unique_ids:
             registered_unique_ids[device.id] = defaultdict(set)
 
-        value_updates_disc_info = []
+        value_updates_disc_info: dict[str, ZwaveDiscoveryInfo] = {}
 
         # run discovery on all node values and create/update entities
         for disc_info in async_discover_values(node):
@@ -173,7 +173,7 @@ async def async_setup_entry(  # noqa: C901
 
             # Capture discovery info for values we want to watch for updates
             if disc_info.assumed_state:
-                value_updates_disc_info.append(disc_info)
+                value_updates_disc_info[disc_info.primary_value.value_id] = disc_info
 
         # add listener for value updated events if necessary
         if value_updates_disc_info:
@@ -313,19 +313,14 @@ async def async_setup_entry(  # noqa: C901
 
     @callback
     def async_on_value_updated(
-        value_updates_disc_info: list[ZwaveDiscoveryInfo], value: Value
+        value_updates_disc_info: dict[str, ZwaveDiscoveryInfo], value: Value
     ) -> None:
         """Fire value updated event."""
-        # Get the discovery info for the value that was updated. If we can't
-        # find the discovery info, we don't need to fire an event
-        try:
-            disc_info = next(
-                disc_info
-                for disc_info in value_updates_disc_info
-                if disc_info.primary_value.value_id == value.value_id
-            )
-        except StopIteration:
+        # Get the discovery info for the value that was updated. If there is
+        # no discovery info for this value, we don't need to fire an event
+        if value.value_id not in value_updates_disc_info:
             return
+        disc_info = value_updates_disc_info[value.value_id]
 
         device = dev_reg.async_get_device({get_device_id(client, value.node)})
 
