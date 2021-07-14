@@ -3,9 +3,8 @@ from __future__ import annotations
 
 import logging
 
-from aiomusiccast import MusicCastGroupException
+from aiomusiccast import MusicCastGroupException, MusicCastMediaContent
 from aiomusiccast.features import ZoneFeature
-from aiomusiccast import MusicCastMediaContent
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
@@ -19,7 +18,6 @@ from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MUSIC,
     REPEAT_MODE_OFF,
     SUPPORT_BROWSE_MEDIA,
-    SUPPORT_CLEAR_PLAYLIST,
     SUPPORT_GROUPING,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
@@ -64,9 +62,9 @@ from .const import (
     INTERVAL_SECONDS,
     MC_REPEAT_MODE_TO_HA_MAPPING,
     MEDIA_CLASS_MAPPING,
+    NULL_GROUP,
     SERVICE_RECALL_NETUSB_PRESET,
     SERVICE_STORE_NETUSB_PRESET,
-    NULL_GROUP,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -372,12 +370,8 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
                 return
 
             if parts[0] == "http":
-                if self._zone_id != DEFAULT_ZONE:
-                    raise HomeAssistantError(
-                        "Playing URLs is only supported on the main zone"
-                    )
                 await self.coordinator.musiccast.play_url_media(
-                    media_id, "HomeAssistant"
+                    self._zone_id, media_id, "HomeAssistant"
                 )
                 return
 
