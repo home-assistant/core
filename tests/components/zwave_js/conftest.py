@@ -434,7 +434,7 @@ def ge_in_wall_dimmer_switch_state_fixture():
     """Load the ge in-wall dimmer switch node state fixture data."""
     return json.loads(load_fixture("zwave_js/ge_in_wall_dimmer_switch_state.json"))
 
-  
+
 @pytest.fixture(name="aeotec_zw164_siren_state", scope="session")
 def aeotec_zw164_siren_state_fixture():
     """Load the aeotec zw164 siren node state fixture data."""
