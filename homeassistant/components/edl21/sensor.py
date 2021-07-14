@@ -125,7 +125,7 @@ class EDL21:
         # E=4:  U(L1) x I(L1)
         # E=15: U(L2) x I(L2)
         # E=26: U(L3) x I(L3)
-        "1-0:81.7.4*255":  "U(L1)/I(L1) phase angle",
+        "1-0:81.7.4*255": "U(L1)/I(L1) phase angle",
         "1-0:81.7.15*255": "U(L2)/I(L2) phase angle",
         "1-0:81.7.26*255": "U(L3)/I(L3) phase angle",
         # C=96: Electricity-related service entries
