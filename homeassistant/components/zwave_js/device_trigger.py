@@ -231,9 +231,12 @@ class DeviceTracker:
     @callback
     def fire_value_updated_event(self, value: Value) -> None:
         """Fire a value updated event if needed."""
+        # If we are not tracking this value, we can skip the rest of the logic
         if (value_tracker := self.values.get(value.value_id)) is None:
             return
 
+        # In order to support from states, we need to store the previous value
+        # of the value in the value tracker
         from_value = value_tracker.prev_value
         to_value = value_tracker.prev_value = value.value
         event_data = {
@@ -401,11 +404,19 @@ def _detach_trigger(hass: HomeAssistant, automation_tracker: AutomationTracker) 
     # left that are still subscribed, we can pop the value from the device tracker
     value_tracker.automations.pop(automation_tracker.id)
     if not value_tracker.automations:
+        LOGGER.debug(
+            "Value %s is no longer attached to any device triggers",
+            value_tracker.zwave_value,
+        )
         device_tracker.values.pop(value_tracker.zwave_value.value_id)
 
     # If we have no values left to track for this device, we can unsub from value
     # updates for this device and pop the device tracker
     if not device_tracker.values:
+        LOGGER.debug(
+            "Node %s is no longer attached to any device triggers",
+            async_get_node_from_device_id(hass, device_id),
+        )
         if device_tracker.value_update_unsub is not None:
             device_tracker.value_update_unsub()
         hass.data[DOMAIN][entry_id][DATA_DEVICE_TRIGGER_TRACKERS].pop(device_id)
