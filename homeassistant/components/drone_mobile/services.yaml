@@ -1,0 +1,8 @@
+refresh_device_status_[VEHICLE_NAME_WITH_SPACES_REPLACED_BY_UNDERSCORES]:
+    description: "Poll vehicle for latest status. Use this sparingly, as it will consume data and vehicle battery."
+dump_device_data_[VEHICLE_NAME_WITH_SPACES_REPLACED_BY_UNDERSCORES]:
+    description: "Dump cached json payload containing all vehicle data."
+clear_temp_token:
+    description: "Clear the cached tokens"
+replace_token:
+    description: "Replace the cached tokens"

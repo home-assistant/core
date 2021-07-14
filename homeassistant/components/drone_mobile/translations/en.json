@@ -1,0 +1,44 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "DroneMobile Configuration",
+        "description": "Please enter your DroneMobile credentials\nNOTE: Initial setup may take up to 30 seconds",
+        "data": {
+          "username": "DroneMobile Username (Email)",
+          "password": "DroneMobile Password",
+          "save_token": "Save Authentication Tokens",
+          "units": "Unit of Measurement",
+          "update_interval": "Update Interval (In Minutes)"
+        }
+      },
+      "select_vehicle": {
+        "title": "Select Vehicle",
+        "description": "Please select the DroneMobile vehicle you wish to add to Home Assistant.",
+        "data": { "vehicle_id": "[%key:common::config_flow::data::vehicle%]" }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "no_available_vehicles": "There are no available vehicles to setup in Home Assistant."
+    }
+  }, 
+  "options": {
+    "step": {
+      "init": {
+        "title": "DroneMobile Options",
+        "description": "Configure DroneMobile options",
+        "data": {
+          "save_token": "Save Authentication Tokens",
+          "units": "Unit of Measurement",
+          "update_interval": "Update Interval (In Minutes)"
+        }
+      }
+    }
+  }
+}
