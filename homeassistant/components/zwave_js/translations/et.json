@@ -51,6 +51,13 @@
             }
         }
     },
+    "device_automation": {
+        "condition_type": {
+            "config_parameter": "Seadeparameeteri {subtype} v\u00e4\u00e4rtus",
+            "node_status": "S\u00f5lme olek",
+            "value": "Z-Wave Value praegune v\u00e4\u00e4rtus"
+        }
+    },
     "options": {
         "abort": {
             "addon_get_discovery_info_failed": "Z-Wave JS lisandmooduli tuvastusteabe hankimine nurjus.",
