@@ -120,7 +120,7 @@ class ForecastSensor(IQVIAEntity):
             if i["minimum"] <= average <= i["maximum"]
         ]
 
-        self._attr_state = average
+        self._attr_native_value = average
         self._attr_extra_state_attributes.update(
             {
                 ATTR_CITY: data["City"].title(),
@@ -213,4 +213,4 @@ class IndexSensor(IQVIAEntity):
                     f"{attrs['Name'].lower()}_index"
                 ] = attrs["Index"]
 
-        self._attr_state = period["Index"]
+        self._attr_native_value = period["Index"]
