@@ -285,7 +285,7 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
                 self.async_write_ha_state()
                 return
             try:
-                target_humidity = int(float(rendered_target_humidity_payload))
+                target_humidity = round(float(rendered_target_humidity_payload))
             except ValueError:
                 _LOGGER.warning(
                     "'%s' received on topic %s. '%s' is not a valid target humidity",
