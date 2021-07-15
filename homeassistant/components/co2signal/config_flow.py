@@ -65,11 +65,21 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         data_schema = vol.Schema(
             {
-                vol.Required(CONF_NAME, default=HOME_LOCATION_NAME): str,
-                vol.Inclusive(CONF_LATITUDE, "coords", msg=MSG_LOCATION): cv.latitude,
-                vol.Inclusive(CONF_LONGITUDE, "coords", msg=MSG_LOCATION): cv.longitude,
+                vol.Required(CONF_NAME, default=HOME_LOCATION_NAME): cv.string,
+                vol.Inclusive(
+                    CONF_LATITUDE,
+                    "coords",
+                    msg=MSG_LOCATION,
+                    default=self.hass.config.latitude,
+                ): cv.latitude,
+                vol.Inclusive(
+                    CONF_LONGITUDE,
+                    "coords",
+                    msg=MSG_LOCATION,
+                    default=self.hass.config.longitude,
+                ): cv.longitude,
                 vol.Exclusive(CONF_COUNTRY_CODE, "coords"): cv.string,
-                vol.Required(CONF_API_KEY): str,
+                vol.Required(CONF_API_KEY): cv.string,
             }
         )
 

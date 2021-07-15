@@ -54,10 +54,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities(
         [
             CO2Sensor(
-                entry.data[CONF_API_KEY],
-                entry.data.get(CONF_COUNTRY_CODE),
-                entry.data.get(CONF_LATITUDE),
-                entry.data.get(CONF_LONGITUDE),
+                entry.data,
                 entry_id=entry.entry_id,
             )
         ],
@@ -71,15 +68,15 @@ class CO2Sensor(SensorEntity):
     _attr_icon = "mdi:molecule-co2"
     _attr_unit_of_measurement = CO2_INTENSITY_UNIT
 
-    def __init__(self, token, country_code, lat, lon, entry_id=None):
+    def __init__(self, config, entry_id):
         """Initialize the sensor."""
-        self._token = token
-        self._country_code = country_code
-        self._latitude = lat
-        self._longitude = lon
+        self._token = config[CONF_API_KEY]
+        self._country_code = config.get(CONF_COUNTRY_CODE)
+        self._latitude = config.get(CONF_LATITUDE)
+        self._longitude = config.get(CONF_LONGITUDE)
 
-        if country_code is not None:
-            device_name = country_code
+        if self._country_code is not None:
+            device_name = self._country_code
         else:
             device_name = f"{round(self._latitude, 2)}/{round(self._longitude, 2)}"
 
