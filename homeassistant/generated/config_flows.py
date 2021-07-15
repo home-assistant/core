@@ -94,6 +94,7 @@ FLOWS = [
     "geonetnz_volcano",
     "gios",
     "glances",
+    "glinet",
     "goalzero",
     "gogogate2",
     "google_travel_time",
