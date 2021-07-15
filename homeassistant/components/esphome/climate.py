@@ -149,8 +149,7 @@ _PRESETS: EsphomeEnumMapper[ClimatePreset, str] = EsphomeEnumMapper(
 
 
 # https://github.com/PyCQA/pylint/issues/3150 for all @esphome_state_property
-# Pylint gets confused with the EsphomeEntity generics -> let mypy handle member checking
-# pylint: disable=invalid-overridden-method,no-member
+# pylint: disable=invalid-overridden-method
 
 
 class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEntity):

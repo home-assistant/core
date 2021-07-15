@@ -223,10 +223,10 @@ def setup(hass, config):
 
 def check_correct_scopes(token_file):
     """Check for the correct scopes in file."""
-    tokenfile = open(token_file).read()
-    if "readonly" in tokenfile:
-        _LOGGER.warning("Please re-authenticate with Google")
-        return False
+    with open(token_file) as tokenfile:
+        if "readonly" in tokenfile.read():
+            _LOGGER.warning("Please re-authenticate with Google")
+            return False
     return True
 
 
