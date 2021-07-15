@@ -213,7 +213,9 @@ class BluesoundPlayer(MediaPlayerEntity):
         self._polling_session = async_get_clientsession(hass)
         self._polling_task = None  # The actual polling task.
         self._attr_name = name
-        self._capture_items = self._services_items = self._preset_items = []
+        self._capture_items = []
+        self._services_items = []
+        self._preset_items = []
         self._sync_status = {}
         self._status = self._is_online = self._retry_remove = None
         self._master = self._group_name = self._bluesound_device_name = None
