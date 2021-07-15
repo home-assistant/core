@@ -520,6 +520,9 @@ doorbirdpy==2.1.0
 # homeassistant.components.dovado
 dovado==0.4.1
 
+# homeassistant.components.drone_mobile
+drone_mobile==0.2.2
+
 # homeassistant.components.dsmr
 dsmr_parser==0.29
 

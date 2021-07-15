@@ -15,7 +15,9 @@
       "select_vehicle": {
         "title": "Select Vehicle",
         "description": "Please select the DroneMobile vehicle you wish to add to Home Assistant.",
-        "data": { "vehicle_id": "[%key:common::config_flow::data::vehicle%]" }
+        "data": {
+          "vehicle_id": "Vehicle Name"
+        }
       }
     },
     "error": {
@@ -27,7 +29,7 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
       "no_available_vehicles": "There are no available vehicles to setup in Home Assistant."
     }
-  }, 
+  },
   "options": {
     "step": {
       "init": {

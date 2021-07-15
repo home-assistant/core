@@ -5,6 +5,7 @@
     "documentation": "https://github.com/bjhiltbrand/drone_mobile_home_assistant",
     "issue_tracker": "https://github.com/bjhiltbrand/drone_mobile_home_assistant/issues",
     "requirements": ["drone_mobile==0.2.2"],
+    "dependencies": [],
     "codeowners": ["@bjhiltbrand"],
     "iot_class": "cloud_polling"
   }

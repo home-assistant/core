@@ -1,8 +1,12 @@
-refresh_device_status_[VEHICLE_NAME_WITH_SPACES_REPLACED_BY_UNDERSCORES]:
-    description: "Poll vehicle for latest status. Use this sparingly, as it will consume data and vehicle battery."
-dump_device_data_[VEHICLE_NAME_WITH_SPACES_REPLACED_BY_UNDERSCORES]:
-    description: "Dump cached json payload containing all vehicle data."
+refresh_device_status:
+    name: refresh_device_status_VEHICLE_NAME_WITH_SPACES_REPLACED_BY_UNDERSCORES
+    description: Poll vehicle for latest status. Use this sparingly, as it will consume data and vehicle battery.
+dump_device_data:
+    name: dump_device_data_VEHICLE_NAME_WITH_SPACES_REPLACED_BY_UNDERSCORES
+    description: Dump cached json payload containing all vehicle data.
 clear_temp_token:
-    description: "Clear the cached tokens"
+    name: clear_temp_token
+    description: Clear the cached tokens.
 replace_token:
-    description: "Replace the cached tokens"
+    name: replace_token
+    description: Replace the cached tokens.
