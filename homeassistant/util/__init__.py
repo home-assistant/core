@@ -5,9 +5,10 @@ import asyncio
 from collections.abc import Coroutine, Iterable, KeysView
 from datetime import datetime, timedelta
 import enum
-from functools import wraps
+from functools import lru_cache, wraps
 import random
 import re
+import socket
 import string
 import threading
 from types import MappingProxyType
@@ -126,6 +127,26 @@ def ensure_unique_string(
         test_string = f"{preferred_string}_{tries}"
 
     return test_string
+
+
+# Taken from: http://stackoverflow.com/a/11735897
+@lru_cache(maxsize=None)
+def get_local_ip() -> str:
+    """Try to determine the local IP address of the machine."""
+    try:
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
+        # Use Google Public DNS server to determine own IP
+        sock.connect(("8.8.8.8", 80))
+
+        return sock.getsockname()[0]  # type: ignore
+    except OSError:
+        try:
+            return socket.gethostbyname(socket.gethostname())
+        except socket.gaierror:
+            return "127.0.0.1"
+    finally:
+        sock.close()
 
 
 # Taken from http://stackoverflow.com/a/23728630
