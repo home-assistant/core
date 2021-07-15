@@ -2,11 +2,18 @@
 
 from datetime import timedelta
 import logging
+import re
 
 from aiohttp.web import HTTPError
 import async_timeout
 
-from homeassistant.const import ELECTRICAL_CURRENT_AMPERE
+from homeassistant.const import (
+    ELECTRICAL_CURRENT_AMPERE,
+    ENERGY_KILO_WATT_HOUR,
+    PERCENTAGE,
+    POWER_WATT,
+    VOLT,
+)
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -58,32 +65,56 @@ async def async_setup_entry(hass, entry, async_add_entities):
     #
     await coordinator.async_config_entry_first_refresh()
 
-    async_add_entities(
-        ReportedAmpsActualSensor(coordinator, twc)
-        for idx, twc in enumerate(coordinator.data)
-    )
+    sensors = []
+    for twc in coordinator.data:
+        for prop in coordinator.data[twc]:
+            sensors.append(TwcSensor(coordinator, twc, prop))
+    async_add_entities(sensors)
 
 
-class ReportedAmpsActualSensor(CoordinatorEntity):
+class TwcSensor(CoordinatorEntity):
     """Representation of a Sensor."""
 
-    def __init__(self, coordinator, twc):
+    def __init__(self, coordinator, twc, prop):
         """Pass coordinator to CoordinatorEntity."""
         super().__init__(coordinator)
         self.twc = twc
-        self.entity_id = "sensor." + DOMAIN + "_" + self.twc + "_reported_amps_actual"
+        self.prop = prop
+        self.entity_id = (
+            "sensor." + DOMAIN + "_" + twc + "_" + self.__camel_to_snake(prop)
+        )
 
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "TWC " + self.twc + " Reported Amps Actual"
+        return "TWC " + self.twc + " " + self.prop
 
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self.coordinator.data[self.twc]["reportedAmpsActual"]
+        return self.coordinator.data[self.twc][self.prop]
 
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        return ELECTRICAL_CURRENT_AMPERE
+        if "amps" in self.entity_id:
+            return ELECTRICAL_CURRENT_AMPERE
+        elif "voltage" in self.entity_id:
+            return VOLT
+        elif self.entity_id.endswith("_w"):
+            return POWER_WATT
+        elif "kwh" in self.entity_id:
+            return ENERGY_KILO_WATT_HOUR
+        elif (
+            self.entity_id == "last_battery_soc"
+            or self.entity_id == "last_charge_limit"
+        ):
+            return PERCENTAGE
+        else:
+            return None
+
+    @staticmethod
+    def __camel_to_snake(name: str):
+        name = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", name)
+        name = re.sub("([a-z0-9])([A-Z])", r"\1_\2", name).lower()
+        return name.replace("k_wh", "_kwh")
