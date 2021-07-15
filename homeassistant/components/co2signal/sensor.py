@@ -8,6 +8,10 @@ import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
+    ATTR_IDENTIFIERS,
+    ATTR_MANUFACTURER,
+    ATTR_NAME,
+    CONF_API_KEY,
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_TOKEN,
@@ -15,18 +19,11 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 
-CONF_COUNTRY_CODE = "country_code"
+from .const import ATTRIBUTION, CONF_COUNTRY_CODE, DOMAIN, MSG_LOCATION
 
 _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(minutes=3)
 
-ATTRIBUTION = "Data provided by CO2signal"
-
-MSG_LOCATION = (
-    "Please use either coordinates or the country code. "
-    "For the coordinates, "
-    "you need to use both latitude and longitude."
-)
 CO2_INTENSITY_UNIT = f"CO2eq/{ENERGY_KILO_WATT_HOUR}"
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -50,13 +47,29 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([CO2Sensor(token, country_code, lat, lon)], True)
 
 
+async def async_setup_entry(hass, entry, async_add_entities):
+    """Set up the CO2signal sensor."""
+    async_add_entities(
+        [
+            CO2Sensor(
+                entry.data[CONF_API_KEY],
+                entry.data.get(CONF_COUNTRY_CODE),
+                entry.data.get(CONF_LATITUDE),
+                entry.data.get(CONF_LONGITUDE),
+                entry_id=entry.entry_id,
+            )
+        ],
+        True,
+    )
+
+
 class CO2Sensor(SensorEntity):
     """Implementation of the CO2Signal sensor."""
 
     _attr_icon = "mdi:molecule-co2"
     _attr_unit_of_measurement = CO2_INTENSITY_UNIT
 
-    def __init__(self, token, country_code, lat, lon):
+    def __init__(self, token, country_code, lat, lon, entry_id=None):
         """Initialize the sensor."""
         self._token = token
         self._country_code = country_code
@@ -70,6 +83,12 @@ class CO2Sensor(SensorEntity):
 
         self._attr_name = f"CO2 intensity - {device_name}"
         self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
+        self._attr_device_info = {
+            ATTR_IDENTIFIERS: {(DOMAIN, entry_id)},
+            ATTR_NAME: "Co2 signal",
+            ATTR_MANUFACTURER: "Tmrow.com",
+        }
+        self._attr_unique_id = f"{entry_id}_co2intensity"
 
     def update(self):
         """Get the latest data and updates the states."""

@@ -45,6 +45,7 @@ FLOWS = [
     "cert_expiry",
     "climacell",
     "cloudflare",
+    "co2signal",
     "coinbase",
     "control4",
     "coolmaster",
