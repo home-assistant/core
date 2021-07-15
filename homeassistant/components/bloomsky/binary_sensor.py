@@ -52,6 +52,6 @@ class BloomSkySensor(BinarySensorEntity):
         """Request an update from the BloomSky API."""
         self._bloomsky.refresh_devices()
 
-        self._attr_state = self._bloomsky.devices[self._device_id]["Data"][
+        self._attr_is_on = self._bloomsky.devices[self._device_id]["Data"][
             self._sensor_name
         ]
