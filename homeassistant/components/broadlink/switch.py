@@ -144,15 +144,9 @@ class BroadlinkSwitch(BroadlinkEntity, SwitchEntity, RestoreEntity, ABC):
         self._command_on = command_on
         self._command_off = command_off
         self._coordinator = device.update_manager.coordinator
-        self._state = None
 
-        self._attr_name = f"{self._device.name} Switch"
-        self._attr_unique_id = self._device.unique_id
-
-    @property
-    def is_on(self):
-        """Return True if the switch is on."""
-        return self._state
+        self._attr_name = f"{device.name} Switch"
+        self._attr_unique_id = device.unique_id
 
     @callback
     def update_data(self):
@@ -161,7 +155,7 @@ class BroadlinkSwitch(BroadlinkEntity, SwitchEntity, RestoreEntity, ABC):
 
     async def async_added_to_hass(self):
         """Call when the switch is added to hass."""
-        if self._attr_state is None:
+        if self.state is None:
             state = await self.async_get_last_state()
             self._attr_state = state is not None and state.state == STATE_ON
         self.async_on_remove(self._coordinator.async_add_listener(self.update_data))
@@ -237,13 +231,13 @@ class BroadlinkSP2Switch(BroadlinkSP1Switch):
     def __init__(self, device, *args, **kwargs):
         """Initialize the switch."""
         super().__init__(device, *args, **kwargs)
-        self._state = self._coordinator.data["pwr"]
+        self._attr_is_on = self._coordinator.data["pwr"]
 
     @callback
     def update_data(self):
         """Update data."""
         if self._coordinator.last_update_success:
-            self._state = self._coordinator.data["pwr"]
+            self._attr_is_on = self._coordinator.data["pwr"]
             self._attr_current_power_w = self._coordinator.data.get("power")
         self.async_write_ha_state()
 
@@ -257,7 +251,7 @@ class BroadlinkMP1Slot(BroadlinkSwitch):
         """Initialize the switch."""
         super().__init__(device, 1, 0)
         self._slot = slot
-        self._state = self._coordinator.data[f"s{slot}"]
+        self._attr_is_on = self._coordinator.data[f"s{slot}"]
         self._attr_name = f"{device.name} S{slot}"
         self._attr_unique_id = f"{device.unique_id}-s{slot}"
 
@@ -265,7 +259,7 @@ class BroadlinkMP1Slot(BroadlinkSwitch):
     def update_data(self):
         """Update data."""
         if self._coordinator.last_update_success:
-            self._state = self._coordinator.data[f"s{self._slot}"]
+            self._attr_is_on = self._coordinator.data[f"s{self._slot}"]
         self.async_write_ha_state()
 
     async def _async_send_packet(self, packet):
@@ -289,17 +283,17 @@ class BroadlinkBG1Slot(BroadlinkSwitch):
         """Initialize the switch."""
         super().__init__(device, 1, 0)
         self._slot = slot
-        self._state = self._coordinator.data[f"pwr{slot}"]
+        self._attr_is_on = self._coordinator.data[f"pwr{slot}"]
 
-        self._attr_name = f"{self._device.name} S{self._slot}"
+        self._attr_name = f"{device.name} S{slot}"
         self._attr_device_class = DEVICE_CLASS_OUTLET
-        self._attr_unique_id = f"{self._device.unique_id}-s{self._slot}"
+        self._attr_unique_id = f"{device.unique_id}-s{slot}"
 
     @callback
     def update_data(self):
         """Update data."""
         if self._coordinator.last_update_success:
-            self._state = self._coordinator.data[f"pwr{self._slot}"]
+            self._attr_is_on = self._coordinator.data[f"pwr{self._slot}"]
         self.async_write_ha_state()
 
     async def _async_send_packet(self, packet):
