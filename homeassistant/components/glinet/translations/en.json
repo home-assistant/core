@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Password"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+          "init": {
+            "title": "GL-inet Options",
+            "data": {
+              "consider_home": "Seconds to wait before considering a device away"
+            }
+          }
+        }
+    },
+    "title": "GL-inet"
+}

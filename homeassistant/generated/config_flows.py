@@ -122,6 +122,7 @@ FLOWS = [
     "gios",
     "github",
     "glances",
+    "glinet",
     "goalzero",
     "gogogate2",
     "goodwe",
