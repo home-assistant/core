@@ -67,6 +67,14 @@ DHCP = [
         "hostname": "flume-gw-*"
     },
     {
+        "domain": "glinet",
+        "hostname": "*gl-inet*"
+    },
+    {
+        "domain": "glinet",
+        "macaddress": "9483C4*"
+    },
+    {
         "domain": "goalzero",
         "hostname": "yeti*"
     },

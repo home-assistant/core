@@ -4,12 +4,19 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from gli_py import GLinet
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components.device_tracker.const import (
+    CONF_CONSIDER_HOME,
+    DEFAULT_CONSIDER_HOME,
+)
+from homeassistant.const import CONF_HOST, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import config_validation as cv
 
 from .const import DOMAIN
 
@@ -18,14 +25,13 @@ _LOGGER = logging.getLogger(__name__)
 # TODO adjust the data schema to the data that you need
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required("host"): str,
-        vol.Required("username"): str,
-        vol.Required("password"): str,
+        vol.Required("host", default="http://192.168.8.1"): cv.url,
+        vol.Required("password", default="goodlife"): str,
     }
 )
 
 
-class PlaceholderHub:
+class TestingHub:
     """Placeholder class to make tests pass.
 
     TODO Remove this placeholder class and replace with things from your PyPI package.
@@ -34,10 +40,27 @@ class PlaceholderHub:
     def __init__(self, host: str) -> None:
         """Initialize."""
         self.host = host
+        self.router = GLinet(
+            "", base_url=self.host + "/cgi-bin/api/", sync=False, auto_auth=False
+        )
 
-    async def authenticate(self, username: str, password: str) -> bool:
+    async def connect(self) -> bool:
         """Test if we can authenticate with the host."""
-        return True
+        try:
+            await self.router.router_model()
+        except ConnectionError:
+            _LOGGER.error(
+                "Failed to connect to " + self.host + " is it really a GL-inet router?"
+            )
+        return self.router.logged_in
+
+    async def authenticate(self, password: str) -> bool:
+        """Test if we can authenticate with the host."""
+        try:
+            await self.router.login(password)
+        except ConnectionRefusedError:
+            _LOGGER.error("Failed to authenticate with Gl-inet router")
+        return self.router.logged_in
 
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
@@ -53,9 +76,12 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     #     your_validate_func, data["username"], data["password"]
     # )
 
-    hub = PlaceholderHub(data["host"])
+    hub = TestingHub(data[CONF_HOST])
 
-    if not await hub.authenticate(data["username"], data["password"]):
+    if not await hub.authenticate(data[CONF_PASSWORD]):
+        raise CannotConnect
+
+    if not await hub.authenticate(data[CONF_PASSWORD]):
         raise InvalidAuth
 
     # If you cannot connect:
@@ -98,6 +124,31 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
+
+
+class OptionsFlowHandler(config_entries.OptionsFlow):
+    """Handle a option flow for GL-inet."""
+
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+        """Initialize options flow."""
+        self.config_entry = config_entry
+
+    async def async_step_init(self, user_input=None):
+        """Handle options flow."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        data_schema = vol.Schema(
+            {
+                vol.Optional(
+                    CONF_CONSIDER_HOME,
+                    default=self.config_entry.options.get(
+                        CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME.total_seconds()
+                    ),
+                ): vol.All(vol.Coerce(int), vol.Clamp(min=0, max=900))
+            }
+        )
+        return self.async_show_form(step_id="init", data_schema=data_schema)
 
 
 class CannotConnect(HomeAssistantError):

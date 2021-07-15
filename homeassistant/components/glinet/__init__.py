@@ -6,9 +6,7 @@ from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
 
-# TODO List the platforms that you want to support.
-# For your initial PR, limit it to 1 platform.
-PLATFORMS = ["light"]
+PLATFORMS = ["device_tracker"]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

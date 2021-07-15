@@ -3,15 +3,12 @@
   "name": "GL-inet",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/glinet",
-  "requirements": [
-    "gli_py==0.0.3"
-  ],
+  "requirements": ["gli_py==0.0.4"],
   "ssdp": [],
   "zeroconf": [],
   "homekit": {},
   "dependencies": [],
-  "codeowners": [
-    "@HarvsG"
-  ],
+  "dhcp": [{ "hostname": "*gl-inet*" }, { "macaddress": "9483C4*" }],
+  "codeowners": ["@HarvsG"],
   "iot_class": "local_polling"
 }
