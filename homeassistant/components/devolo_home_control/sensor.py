@@ -1,4 +1,9 @@
 """Platform for sensor integration."""
+from __future__ import annotations
+
+from devolo_home_control_api.devices.zwave import Zwave
+from devolo_home_control_api.homecontrol import HomeControl
+
 from homeassistant.components.sensor import (
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_ENERGY,
@@ -12,6 +17,7 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .devolo_device import DevoloDeviceEntity
@@ -28,10 +34,10 @@ DEVICE_CLASS_MAPPING = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Get all sensor devices and setup them via config entry."""
-    entities = []
+    entities: list[SensorEntity] = []
 
     for gateway in hass.data[DOMAIN][entry.entry_id]["gateways"]:
         for device in gateway.multi_level_sensor_devices:
@@ -71,17 +77,17 @@ class DevoloMultiLevelDeviceEntity(DevoloDeviceEntity, SensorEntity):
     """Abstract representation of a multi level sensor within devolo Home Control."""
 
     @property
-    def device_class(self) -> str:
+    def device_class(self) -> str | None:
         """Return device class."""
         return self._device_class
 
     @property
-    def state(self):
+    def state(self) -> int:
         """Return the state of the sensor."""
         return self._value
 
     @property
-    def unit_of_measurement(self):
+    def unit_of_measurement(self) -> str:
         """Return the unit of measurement of this entity."""
         return self._unit
 
@@ -91,10 +97,10 @@ class DevoloGenericMultiLevelDeviceEntity(DevoloMultiLevelDeviceEntity):
 
     def __init__(
         self,
-        homecontrol,
-        device_instance,
-        element_uid,
-    ):
+        homecontrol: HomeControl,
+        device_instance: Zwave,
+        element_uid: str,
+    ) -> None:
         """Initialize a devolo multi level sensor."""
         self._multi_level_sensor_property = device_instance.multi_level_sensor_property[
             element_uid
@@ -123,7 +129,9 @@ class DevoloGenericMultiLevelDeviceEntity(DevoloMultiLevelDeviceEntity):
 class DevoloBatteryEntity(DevoloMultiLevelDeviceEntity):
     """Representation of a battery entity within devolo Home Control."""
 
-    def __init__(self, homecontrol, device_instance, element_uid):
+    def __init__(
+        self, homecontrol: HomeControl, device_instance: Zwave, element_uid: str
+    ) -> None:
         """Initialize a battery sensor."""
 
         super().__init__(
@@ -141,7 +149,13 @@ class DevoloBatteryEntity(DevoloMultiLevelDeviceEntity):
 class DevoloConsumptionEntity(DevoloMultiLevelDeviceEntity):
     """Representation of a consumption entity within devolo Home Control."""
 
-    def __init__(self, homecontrol, device_instance, element_uid, consumption):
+    def __init__(
+        self,
+        homecontrol: HomeControl,
+        device_instance: Zwave,
+        element_uid: str,
+        consumption: str,
+    ) -> None:
         """Initialize a devolo consumption sensor."""
 
         super().__init__(
@@ -163,11 +177,11 @@ class DevoloConsumptionEntity(DevoloMultiLevelDeviceEntity):
         self._name += f" {consumption}"
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str:
         """Return the unique ID of the entity."""
         return f"{self._unique_id}_{self._sensor_type}"
 
-    def _sync(self, message):
+    def _sync(self, message: tuple) -> None:
         """Update the consumption sensor state."""
         if message[0] == self._unique_id:
             self._value = getattr(

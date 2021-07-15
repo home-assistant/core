@@ -40,5 +40,18 @@
             }
         }
     },
+    "options": {
+        "step": {
+            "configure_addon": {
+                "data": {
+                    "log_level": "Napl\u00f3szint",
+                    "network_key": "H\u00e1l\u00f3zati kulcs"
+                }
+            },
+            "on_supervisor": {
+                "title": "V\u00e1laszd ki a csatlakoz\u00e1si m\u00f3dot"
+            }
+        }
+    },
     "title": "Z-Wave JS"
 }

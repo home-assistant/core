@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any, cast
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
@@ -12,8 +12,7 @@ from homeassistant.const import (
     CONF_NAME,
     DEVICE_CLASS_TEMPERATURE,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -28,7 +27,6 @@ from .const import (
     ATTR_UNIT_IMPERIAL,
     ATTR_UNIT_METRIC,
     ATTRIBUTION,
-    COORDINATOR,
     DOMAIN,
     FORECAST_SENSOR_TYPES,
     MANUFACTURER,
@@ -46,9 +44,7 @@ async def async_setup_entry(
     """Add AccuWeather entities from a config_entry."""
     name: str = entry.data[CONF_NAME]
 
-    coordinator: AccuWeatherDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
-        COORDINATOR
-    ]
+    coordinator: AccuWeatherDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     sensors: list[AccuWeatherSensor] = []
     for sensor in SENSOR_TYPES:
@@ -81,42 +77,33 @@ class AccuWeatherSensor(CoordinatorEntity, SensorEntity):
     ) -> None:
         """Initialize."""
         super().__init__(coordinator)
+        self._sensor_data = _get_sensor_data(coordinator.data, forecast_day, kind)
         if forecast_day is None:
             self._description = SENSOR_TYPES[kind]
-            self._sensor_data: dict[str, Any]
-            if kind == "Precipitation":
-                self._sensor_data = coordinator.data["PrecipitationSummary"][kind]
-            else:
-                self._sensor_data = coordinator.data[kind]
         else:
             self._description = FORECAST_SENSOR_TYPES[kind]
-            self._sensor_data = coordinator.data[ATTR_FORECAST][forecast_day][kind]
         self._unit_system = API_METRIC if coordinator.is_metric else API_IMPERIAL
-        self._name = name
         self.kind = kind
-        self._device_class = None
         self._attrs = {ATTR_ATTRIBUTION: ATTRIBUTION}
         self.forecast_day = forecast_day
-
-    @property
-    def name(self) -> str:
-        """Return the name."""
+        self._attr_state_class = self._description.get(ATTR_STATE_CLASS)
+        self._attr_icon = self._description[ATTR_ICON]
+        self._attr_device_class = self._description[ATTR_DEVICE_CLASS]
+        self._attr_entity_registry_enabled_default = self._description[ATTR_ENABLED]
         if self.forecast_day is not None:
-            return f"{self._name} {self._description[ATTR_LABEL]} {self.forecast_day}d"
-        return f"{self._name} {self._description[ATTR_LABEL]}"
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique_id for this entity."""
-        if self.forecast_day is not None:
-            return f"{self.coordinator.location_key}-{self.kind}-{self.forecast_day}".lower()
-        return f"{self.coordinator.location_key}-{self.kind}".lower()
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device info."""
-        return {
-            "identifiers": {(DOMAIN, self.coordinator.location_key)},
+            self._attr_name = f"{name} {self._description[ATTR_LABEL]} {forecast_day}d"
+            self._attr_unique_id = (
+                f"{coordinator.location_key}-{kind}-{forecast_day}".lower()
+            )
+        else:
+            self._attr_name = f"{name} {self._description[ATTR_LABEL]}"
+            self._attr_unique_id = f"{coordinator.location_key}-{kind}".lower()
+        if coordinator.is_metric:
+            self._attr_unit_of_measurement = self._description[ATTR_UNIT_METRIC]
+        else:
+            self._attr_unit_of_measurement = self._description[ATTR_UNIT_IMPERIAL]
+        self._attr_device_info = {
+            "identifiers": {(DOMAIN, coordinator.location_key)},
             "name": NAME,
             "manufacturer": MANUFACTURER,
             "entry_type": "service",
@@ -147,23 +134,6 @@ class AccuWeatherSensor(CoordinatorEntity, SensorEntity):
         return cast(StateType, self._sensor_data)
 
     @property
-    def icon(self) -> str | None:
-        """Return the icon."""
-        return self._description[ATTR_ICON]
-
-    @property
-    def device_class(self) -> str | None:
-        """Return the device_class."""
-        return self._description[ATTR_DEVICE_CLASS]
-
-    @property
-    def unit_of_measurement(self) -> str | None:
-        """Return the unit the value is expressed in."""
-        if self.coordinator.is_metric:
-            return self._description[ATTR_UNIT_METRIC]
-        return self._description[ATTR_UNIT_IMPERIAL]
-
-    @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         if self.forecast_day is not None:
@@ -178,7 +148,23 @@ class AccuWeatherSensor(CoordinatorEntity, SensorEntity):
             self._attrs["type"] = self.coordinator.data["PrecipitationType"]
         return self._attrs
 
-    @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Return if the entity should be enabled when first added to the entity registry."""
-        return self._description[ATTR_ENABLED]
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle data update."""
+        self._sensor_data = _get_sensor_data(
+            self.coordinator.data, self.forecast_day, self.kind
+        )
+        self.async_write_ha_state()
+
+
+def _get_sensor_data(
+    sensors: dict[str, Any], forecast_day: int | None, kind: str
+) -> Any:
+    """Get sensor data."""
+    if forecast_day is not None:
+        return sensors[ATTR_FORECAST][forecast_day][kind]
+
+    if kind == "Precipitation":
+        return sensors["PrecipitationSummary"][kind]
+
+    return sensors[kind]

@@ -215,5 +215,10 @@ SSDP = {
         {
             "manufacturer": "All Automacao Ltda"
         }
+    ],
+    "yamaha_musiccast": [
+        {
+            "manufacturer": "Yamaha Corporation"
+        }
     ]
 }

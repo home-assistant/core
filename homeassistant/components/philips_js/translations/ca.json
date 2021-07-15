@@ -29,5 +29,14 @@
         "trigger_type": {
             "turn_on": "Es demani que el dispositiu s'engegui"
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "allow_notify": "Permet l'\u00fas del servei de notificaci\u00f3 de dades."
+                }
+            }
+        }
     }
 }

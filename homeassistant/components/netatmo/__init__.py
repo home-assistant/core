@@ -131,7 +131,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             {"type": "None", "data": {WEBHOOK_PUSH_TYPE: WEBHOOK_DEACTIVATION}},
         )
         webhook_unregister(hass, entry.data[CONF_WEBHOOK_ID])
-        await hass.data[DOMAIN][entry.entry_id][AUTH].async_dropwebhook()
+        try:
+            await hass.data[DOMAIN][entry.entry_id][AUTH].async_dropwebhook()
+        except pyatmo.ApiError:
+            _LOGGER.debug(
+                "No webhook to be dropped for %s", entry.data[CONF_WEBHOOK_ID]
+            )
 
     async def register_webhook(event):
         if CONF_WEBHOOK_ID not in entry.data:

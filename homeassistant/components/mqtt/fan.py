@@ -94,6 +94,18 @@ DEFAULT_SPEED_RANGE_MAX = 100
 OSCILLATE_ON_PAYLOAD = "oscillate_on"
 OSCILLATE_OFF_PAYLOAD = "oscillate_off"
 
+MQTT_FAN_ATTRIBUTES_BLOCKED = frozenset(
+    {
+        fan.ATTR_DIRECTION,
+        fan.ATTR_OSCILLATING,
+        fan.ATTR_PERCENTAGE_STEP,
+        fan.ATTR_PERCENTAGE,
+        fan.ATTR_PRESET_MODE,
+        fan.ATTR_PRESET_MODES,
+        fan.ATTR_SPEED_LIST,
+        fan.ATTR_SPEED,
+    }
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -222,6 +234,8 @@ async def _async_setup_entity(
 
 class MqttFan(MqttEntity, FanEntity):
     """A MQTT fan component."""
+
+    _attributes_extra_blocked = MQTT_FAN_ATTRIBUTES_BLOCKED
 
     def __init__(self, hass, config, config_entry, discovery_data):
         """Initialize the MQTT fan."""

@@ -18,7 +18,7 @@ from homeassistant.const import (
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.common import async_fire_time_changed
+from tests.common import async_fire_time_changed, mock_restore_cache
 
 TEST_MODBUS_NAME = "modbusTest"
 _LOGGER = logging.getLogger(__name__)
@@ -40,7 +40,7 @@ def mock_pymodbus():
 
 
 @pytest.fixture
-async def mock_modbus(hass, mock_pymodbus):
+async def mock_modbus(hass, do_config):
     """Load integration modbus using mocked pymodbus."""
     config = {
         DOMAIN: [
@@ -49,12 +49,23 @@ async def mock_modbus(hass, mock_pymodbus):
                 CONF_HOST: "modbusTestHost",
                 CONF_PORT: 5501,
                 CONF_NAME: TEST_MODBUS_NAME,
+                **do_config,
             }
         ]
     }
-    assert await async_setup_component(hass, DOMAIN, config) is True
-    await hass.async_block_till_done()
-    yield mock_pymodbus
+    with mock.patch(
+        "homeassistant.components.modbus.modbus.ModbusTcpClient", autospec=True
+    ) as mock_pb:
+        assert await async_setup_component(hass, DOMAIN, config) is True
+        await hass.async_block_till_done()
+        yield mock_pb
+
+
+@pytest.fixture
+async def mock_test_state(hass, request):
+    """Mock restore cache."""
+    mock_restore_cache(hass, request.param)
+    return request.param
 
 
 # dataclass
@@ -97,12 +108,9 @@ async def base_test(
 
     mock_sync = mock.MagicMock()
     with mock.patch(
-        "homeassistant.components.modbus.modbus.ModbusTcpClient", return_value=mock_sync
-    ), mock.patch(
-        "homeassistant.components.modbus.modbus.ModbusSerialClient",
+        "homeassistant.components.modbus.modbus.ModbusTcpClient",
+        autospec=True,
         return_value=mock_sync,
-    ), mock.patch(
-        "homeassistant.components.modbus.modbus.ModbusUdpClient", return_value=mock_sync
     ):
 
         # Setup inputs for the sensor

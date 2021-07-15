@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from pycfdns import CloudflareUpdater
 from pycfdns.exceptions import (
@@ -12,9 +13,10 @@ from pycfdns.exceptions import (
 import voluptuous as vol
 
 from homeassistant.components import persistent_notification
-from homeassistant.config_entries import ConfigFlow
+from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import CONF_API_TOKEN, CONF_ZONE
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -85,11 +87,48 @@ class CloudflareConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    entry: ConfigEntry | None = None
+
     def __init__(self):
         """Initialize the Cloudflare config flow."""
         self.cloudflare_config = {}
         self.zones = None
         self.records = None
+
+    async def async_step_reauth(self, data: dict[str, Any]) -> FlowResult:
+        """Handle initiation of re-authentication with Cloudflare."""
+        self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle re-authentication with Cloudflare."""
+        errors = {}
+
+        if user_input is not None and self.entry:
+            _, errors = await self._async_validate_or_error(user_input)
+
+            if not errors:
+                self.hass.config_entries.async_update_entry(
+                    self.entry,
+                    data={
+                        **self.entry.data,
+                        CONF_API_TOKEN: user_input[CONF_API_TOKEN],
+                    },
+                )
+
+                self.hass.async_create_task(
+                    self.hass.config_entries.async_reload(self.entry.entry_id)
+                )
+
+                return self.async_abort(reason="reauth_successful")
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=DATA_SCHEMA,
+            errors=errors,
+        )
 
     async def async_step_user(self, user_input: dict | None = None):
         """Handle a flow initiated by the user."""

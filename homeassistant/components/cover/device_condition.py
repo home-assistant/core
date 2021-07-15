@@ -7,7 +7,6 @@ import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    ATTR_SUPPORTED_FEATURES,
     CONF_ABOVE,
     CONF_BELOW,
     CONF_CONDITION,
@@ -28,6 +27,7 @@ from homeassistant.helpers import (
     template,
 )
 from homeassistant.helpers.config_validation import DEVICE_CONDITION_BASE_SCHEMA
+from homeassistant.helpers.entity import get_supported_features
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
 from . import (
@@ -77,11 +77,7 @@ async def async_get_conditions(hass: HomeAssistant, device_id: str) -> list[dict
         if entry.domain != DOMAIN:
             continue
 
-        state = hass.states.get(entry.entity_id)
-        if not state or ATTR_SUPPORTED_FEATURES not in state.attributes:
-            continue
-
-        supported_features = state.attributes[ATTR_SUPPORTED_FEATURES]
+        supported_features = get_supported_features(hass, entry.entity_id)
         supports_open_close = supported_features & (SUPPORT_OPEN | SUPPORT_CLOSE)
 
         # Add conditions for each entity that belongs to this integration

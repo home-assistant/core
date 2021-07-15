@@ -93,7 +93,7 @@ def async_generate_entity_id(
     return test_string
 
 
-def get_capability(hass: HomeAssistant, entity_id: str, capability: str) -> str | None:
+def get_capability(hass: HomeAssistant, entity_id: str, capability: str) -> Any | None:
     """Get a capability attribute of an entity.
 
     First try the statemachine, then entity registry.

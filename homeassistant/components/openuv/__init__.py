@@ -166,27 +166,15 @@ class OpenUV:
 class OpenUvEntity(Entity):
     """Define a generic OpenUV entity."""
 
-    def __init__(self, openuv):
+    def __init__(self, openuv, sensor_type):
         """Initialize."""
-        self._attrs = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
-        self._available = True
-        self._name = None
+        self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
+        self._attr_should_poll = False
+        self._attr_unique_id = (
+            f"{openuv.client.latitude}_{openuv.client.longitude}_{sensor_type}"
+        )
+        self._sensor_type = sensor_type
         self.openuv = openuv
-
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self._available
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
-        return self._attrs
-
-    @property
-    def name(self):
-        """Return the name of the entity."""
-        return self._name
 
     async def async_added_to_hass(self):
         """Register callbacks."""

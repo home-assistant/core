@@ -41,6 +41,7 @@ BASE_PLATFORMS = {
     "notify",
     "remote",
     "scene",
+    "select",
     "sensor",
     "switch",
     "tts",

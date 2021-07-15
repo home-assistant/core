@@ -25,14 +25,9 @@ CONFIG_SCHEMA = cv.deprecated(DOMAIN)
 PLATFORMS = ["sensor"]
 
 
-async def async_setup(hass, config):
-    """Set up the Flu Near You component."""
-    hass.data[DOMAIN] = {DATA_COORDINATOR: {}}
-    return True
-
-
 async def async_setup_entry(hass, entry):
     """Set up Flu Near You as config entry."""
+    hass.data.setdefault(DOMAIN, {DATA_COORDINATOR: {}})
     hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id] = {}
 
     websession = aiohttp_client.async_get_clientsession(hass)

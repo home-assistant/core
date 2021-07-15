@@ -647,8 +647,8 @@ class LightEntity(ToggleEntity):
     _attr_effect_list: list[str] | None = None
     _attr_effect: str | None = None
     _attr_hs_color: tuple[float, float] | None = None
-    _attr_max_mired: int = 500
-    _attr_min_mired: int = 153
+    _attr_max_mireds: int = 500
+    _attr_min_mireds: int = 153
     _attr_rgb_color: tuple[int, int, int] | None = None
     _attr_rgbw_color: tuple[int, int, int, int] | None = None
     _attr_rgbww_color: tuple[int, int, int, int, int] | None = None
@@ -748,14 +748,14 @@ class LightEntity(ToggleEntity):
         """Return the coldest color_temp that this light supports."""
         # Default to the Philips Hue value that HA has always assumed
         # https://developers.meethue.com/documentation/core-concepts
-        return self._attr_min_mired
+        return self._attr_min_mireds
 
     @property
     def max_mireds(self) -> int:
         """Return the warmest color_temp that this light supports."""
         # Default to the Philips Hue value that HA has always assumed
         # https://developers.meethue.com/documentation/core-concepts
-        return self._attr_max_mired
+        return self._attr_max_mireds
 
     @property
     def white_value(self) -> int | None:

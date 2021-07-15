@@ -20,6 +20,7 @@ from homeassistant.helpers.event import async_call_later
 from homeassistant.util.async_ import gather_with_concurrency
 
 from .const import DOMAIN
+from .wemo_device import async_register_device
 
 # Max number of devices to initialize at once. This limit is in place to
 # avoid tying up too many executor threads with WeMo device setup.
@@ -105,6 +106,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Keep track of WeMo device subscriptions for push updates
     registry = hass.data[DOMAIN]["registry"] = pywemo.SubscriptionRegistry()
     await hass.async_add_executor_job(registry.start)
+
+    # Respond to discovery requests from WeMo devices.
+    discovery_responder = pywemo.ssdp.DiscoveryResponder(registry.port)
+    await hass.async_add_executor_job(discovery_responder.start)
+
     static_conf = config.get(CONF_STATIC, [])
     wemo_dispatcher = WemoDispatcher(entry)
     wemo_discovery = WemoDiscovery(hass, wemo_dispatcher, static_conf)
@@ -113,6 +119,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Shutdown Wemo subscriptions and subscription thread on exit."""
         _LOGGER.debug("Shutting down WeMo event subscriptions")
         await hass.async_add_executor_job(registry.stop)
+        await hass.async_add_executor_job(discovery_responder.stop)
         wemo_discovery.async_stop_discovery()
 
     entry.async_on_unload(
@@ -137,15 +144,15 @@ class WemoDispatcher:
         self._added_serial_numbers = set()
         self._loaded_components = set()
 
-    @callback
-    def async_add_unique_device(
-        self, hass: HomeAssistant, device: pywemo.WeMoDevice
+    async def async_add_unique_device(
+        self, hass: HomeAssistant, wemo: pywemo.WeMoDevice
     ) -> None:
         """Add a WeMo device to hass if it has not already been added."""
-        if device.serialnumber in self._added_serial_numbers:
+        if wemo.serialnumber in self._added_serial_numbers:
             return
 
-        component = WEMO_MODEL_DISPATCH.get(device.model_name, SWITCH_DOMAIN)
+        component = WEMO_MODEL_DISPATCH.get(wemo.model_name, SWITCH_DOMAIN)
+        device = await async_register_device(hass, self._config_entry, wemo)
 
         # Three cases:
         # - First time we see component, we need to load it and initialize the backlog
@@ -171,7 +178,7 @@ class WemoDispatcher:
                 device,
             )
 
-        self._added_serial_numbers.add(device.serialnumber)
+        self._added_serial_numbers.add(wemo.serialnumber)
 
 
 class WemoDiscovery:
@@ -200,7 +207,7 @@ class WemoDiscovery:
             for device in await self._hass.async_add_executor_job(
                 pywemo.discover_devices
             ):
-                self._wemo_dispatcher.async_add_unique_device(self._hass, device)
+                await self._wemo_dispatcher.async_add_unique_device(self._hass, device)
             await self.discover_statics()
 
         finally:
@@ -236,7 +243,9 @@ class WemoDiscovery:
                 ],
             ):
                 if device:
-                    self._wemo_dispatcher.async_add_unique_device(self._hass, device)
+                    await self._wemo_dispatcher.async_add_unique_device(
+                        self._hass, device
+                    )
 
 
 def validate_static_config(host, port):

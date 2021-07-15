@@ -78,9 +78,7 @@ async def test_get_triggers(hass, device_reg, entity_reg, enable_custom_integrat
     assert triggers == expected_triggers
 
 
-async def test_get_triggers_no_state(
-    hass, device_reg, entity_reg, enable_custom_integrations
-):
+async def test_get_triggers_no_state(hass, device_reg, entity_reg):
     """Test we get the expected triggers from a binary_sensor."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
@@ -96,7 +94,7 @@ async def test_get_triggers_no_state(
         entity_ids[device_class] = entity_reg.async_get_or_create(
             DOMAIN,
             "test",
-            platform.ENTITIES[device_class].unique_id,
+            f"5678_{device_class}",
             device_id=device_entry.id,
             device_class=device_class,
         ).entity_id

@@ -106,7 +106,7 @@ def test_temperature_same_unit():
 def test_temperature_unknown_unit():
     """Test no conversion happens if unknown unit."""
     with pytest.raises(ValueError):
-        METRIC_SYSTEM.temperature(5, "K")
+        METRIC_SYSTEM.temperature(5, "abc")
 
 
 def test_temperature_to_metric():

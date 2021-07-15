@@ -21,6 +21,7 @@ from .coordinator import (
     SolarEdgeOverviewDataService,
     SolarEdgePowerFlowDataService,
 )
+from .models import SolarEdgeSensor
 
 
 async def async_setup_entry(
@@ -40,8 +41,8 @@ async def async_setup_entry(
         await service.coordinator.async_refresh()
 
     entities = []
-    for sensor_key in SENSOR_TYPES:
-        sensor = sensor_factory.create_sensor(sensor_key)
+    for sensor_type in SENSOR_TYPES:
+        sensor = sensor_factory.create_sensor(sensor_type)
         if sensor is not None:
             entities.append(sensor)
     async_add_entities(entities)
@@ -98,48 +99,49 @@ class SolarEdgeSensorFactory:
         ]:
             self.services[key] = (SolarEdgeEnergyDetailsSensor, energy)
 
-    def create_sensor(self, sensor_key: str) -> SolarEdgeSensor:
+    def create_sensor(self, sensor_type: SolarEdgeSensor) -> SolarEdgeSensor:
         """Create and return a sensor based on the sensor_key."""
-        sensor_class, service = self.services[sensor_key]
+        sensor_class, service = self.services[sensor_type.key]
 
-        return sensor_class(self.platform_name, sensor_key, service)
+        return sensor_class(self.platform_name, sensor_type, service)
 
 
-class SolarEdgeSensor(CoordinatorEntity, SensorEntity):
+class SolarEdgeSensorEntity(CoordinatorEntity, SensorEntity):
     """Abstract class for a solaredge sensor."""
 
     def __init__(
-        self, platform_name: str, sensor_key: str, data_service: SolarEdgeDataService
+        self,
+        platform_name: str,
+        sensor_type: SolarEdgeSensor,
+        data_service: SolarEdgeDataService,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(data_service.coordinator)
         self.platform_name = platform_name
-        self.sensor_key = sensor_key
+        self.sensor_type = sensor_type
         self.data_service = data_service
 
-        self._attr_unit_of_measurement = SENSOR_TYPES[sensor_key][2]
-        self._attr_name = f"{platform_name} ({SENSOR_TYPES[sensor_key][1]})"
-        self._attr_icon = SENSOR_TYPES[sensor_key][3]
+        self._attr_device_class = sensor_type.device_class
+        self._attr_entity_registry_enabled_default = (
+            sensor_type.entity_registry_enabled_default
+        )
+        self._attr_icon = sensor_type.icon
+        self._attr_last_reset = sensor_type.last_reset
+        self._attr_name = f"{platform_name} ({sensor_type.name})"
+        self._attr_state_class = sensor_type.state_class
+        self._attr_unit_of_measurement = sensor_type.unit_of_measurement
 
 
-class SolarEdgeOverviewSensor(SolarEdgeSensor):
+class SolarEdgeOverviewSensor(SolarEdgeSensorEntity):
     """Representation of an SolarEdge Monitoring API overview sensor."""
-
-    def __init__(
-        self, platform_name: str, sensor_key: str, data_service: SolarEdgeDataService
-    ) -> None:
-        """Initialize the overview sensor."""
-        super().__init__(platform_name, sensor_key, data_service)
-
-        self._json_key = SENSOR_TYPES[self.sensor_key][0]
 
     @property
     def state(self) -> str | None:
         """Return the state of the sensor."""
-        return self.data_service.data.get(self._json_key)
+        return self.data_service.data.get(self.sensor_type.json_key)
 
 
-class SolarEdgeDetailsSensor(SolarEdgeSensor):
+class SolarEdgeDetailsSensor(SolarEdgeSensorEntity):
     """Representation of an SolarEdge Monitoring API details sensor."""
 
     @property
@@ -153,89 +155,76 @@ class SolarEdgeDetailsSensor(SolarEdgeSensor):
         return self.data_service.data
 
 
-class SolarEdgeInventorySensor(SolarEdgeSensor):
+class SolarEdgeInventorySensor(SolarEdgeSensorEntity):
     """Representation of an SolarEdge Monitoring API inventory sensor."""
-
-    def __init__(self, platform_name, sensor_key, data_service):
-        """Initialize the inventory sensor."""
-        super().__init__(platform_name, sensor_key, data_service)
-
-        self._json_key = SENSOR_TYPES[self.sensor_key][0]
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
-        return self.data_service.attributes.get(self._json_key)
+        return self.data_service.attributes.get(self.sensor_type.json_key)
 
     @property
     def state(self) -> str | None:
         """Return the state of the sensor."""
-        return self.data_service.data.get(self._json_key)
+        return self.data_service.data.get(self.sensor_type.json_key)
 
 
-class SolarEdgeEnergyDetailsSensor(SolarEdgeSensor):
+class SolarEdgeEnergyDetailsSensor(SolarEdgeSensorEntity):
     """Representation of an SolarEdge Monitoring API power flow sensor."""
 
-    def __init__(self, platform_name, sensor_key, data_service):
+    def __init__(self, platform_name, sensor_type, data_service):
         """Initialize the power flow sensor."""
-        super().__init__(platform_name, sensor_key, data_service)
+        super().__init__(platform_name, sensor_type, data_service)
 
-        self._json_key = SENSOR_TYPES[self.sensor_key][0]
         self._attr_unit_of_measurement = data_service.unit
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
-        return self.data_service.attributes.get(self._json_key)
+        return self.data_service.attributes.get(self.sensor_type.json_key)
 
     @property
     def state(self) -> str | None:
         """Return the state of the sensor."""
-        return self.data_service.data.get(self._json_key)
+        return self.data_service.data.get(self.sensor_type.json_key)
 
 
-class SolarEdgePowerFlowSensor(SolarEdgeSensor):
+class SolarEdgePowerFlowSensor(SolarEdgeSensorEntity):
     """Representation of an SolarEdge Monitoring API power flow sensor."""
 
     _attr_device_class = DEVICE_CLASS_POWER
 
     def __init__(
-        self, platform_name: str, sensor_key: str, data_service: SolarEdgeDataService
+        self,
+        platform_name: str,
+        sensor_type: SolarEdgeSensor,
+        data_service: SolarEdgeDataService,
     ) -> None:
         """Initialize the power flow sensor."""
-        super().__init__(platform_name, sensor_key, data_service)
+        super().__init__(platform_name, sensor_type, data_service)
 
-        self._json_key = SENSOR_TYPES[self.sensor_key][0]
         self._attr_unit_of_measurement = data_service.unit
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
-        return self.data_service.attributes.get(self._json_key)
+        return self.data_service.attributes.get(self.sensor_type.json_key)
 
     @property
     def state(self) -> str | None:
         """Return the state of the sensor."""
-        return self.data_service.data.get(self._json_key)
+        return self.data_service.data.get(self.sensor_type.json_key)
 
 
-class SolarEdgeStorageLevelSensor(SolarEdgeSensor):
+class SolarEdgeStorageLevelSensor(SolarEdgeSensorEntity):
     """Representation of an SolarEdge Monitoring API storage level sensor."""
 
     _attr_device_class = DEVICE_CLASS_BATTERY
 
-    def __init__(
-        self, platform_name: str, sensor_key: str, data_service: SolarEdgeDataService
-    ) -> None:
-        """Initialize the storage level sensor."""
-        super().__init__(platform_name, sensor_key, data_service)
-
-        self._json_key = SENSOR_TYPES[self.sensor_key][0]
-
     @property
     def state(self) -> str | None:
         """Return the state of the sensor."""
-        attr = self.data_service.attributes.get(self._json_key)
+        attr = self.data_service.attributes.get(self.sensor_type.json_key)
         if attr and "soc" in attr:
             return attr["soc"]
         return None

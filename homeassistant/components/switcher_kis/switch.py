@@ -8,42 +8,30 @@ from aioswitcher.consts import (
     COMMAND_ON,
     STATE_OFF as SWITCHER_STATE_OFF,
     STATE_ON as SWITCHER_STATE_ON,
-    WAITING_TEXT,
 )
 from aioswitcher.devices import SwitcherV2Device
 import voluptuous as vol
 
-from homeassistant.components.switch import ATTR_CURRENT_POWER_W, SwitchEntity
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.components.switch import SwitchEntity
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import (
-    ATTR_AUTO_OFF_SET,
-    ATTR_ELECTRIC_CURRENT,
-    ATTR_REMAINING_TIME,
+from .const import (
+    CONF_AUTO_OFF,
+    CONF_TIMER_MINUTES,
     DATA_DEVICE,
     DOMAIN,
+    SERVICE_SET_AUTO_OFF_NAME,
+    SERVICE_TURN_ON_WITH_TIMER_NAME,
     SIGNAL_SWITCHER_DEVICE_UPDATE,
 )
 
-CONF_AUTO_OFF = "auto_off"
-CONF_TIMER_MINUTES = "timer_minutes"
-
-DEVICE_PROPERTIES_TO_HA_ATTRIBUTES = {
-    "power_consumption": ATTR_CURRENT_POWER_W,
-    "electric_current": ATTR_ELECTRIC_CURRENT,
-    "remaining_time": ATTR_REMAINING_TIME,
-    "auto_off_set": ATTR_AUTO_OFF_SET,
-}
-
-SERVICE_SET_AUTO_OFF_NAME = "set_auto_off"
 SERVICE_SET_AUTO_OFF_SCHEMA = {
     vol.Required(CONF_AUTO_OFF): cv.time_period_str,
 }
 
-SERVICE_TURN_ON_WITH_TIMER_NAME = "turn_on_with_timer"
 SERVICE_TURN_ON_WITH_TIMER_SCHEMA = {
     vol.Required(CONF_TIMER_MINUTES): vol.All(
         cv.positive_int, vol.Range(min=1, max=150)
@@ -135,23 +123,6 @@ class SwitcherControl(SwitchEntity):
         return self._state == SWITCHER_STATE_ON
 
     @property
-    def current_power_w(self) -> int:
-        """Return the current power usage in W."""
-        return self._device_data.power_consumption
-
-    @property
-    def extra_state_attributes(self) -> dict:
-        """Return the optional state attributes."""
-        attribs = {}
-
-        for prop, attr in DEVICE_PROPERTIES_TO_HA_ATTRIBUTES.items():
-            value = getattr(self._device_data, prop)
-            if value and value is not WAITING_TEXT:
-                attribs[attr] = value
-
-        return attribs
-
-    @property
     def available(self) -> bool:
         """Return True if entity is available."""
         return self._state in [SWITCHER_STATE_ON, SWITCHER_STATE_OFF]
@@ -164,15 +135,15 @@ class SwitcherControl(SwitchEntity):
             )
         )
 
-    async def async_update_data(self, device_data: SwitcherV2Device) -> None:
+    @callback
+    def async_update_data(self, device_data: SwitcherV2Device) -> None:
         """Update the entity data."""
-        if device_data:
-            if self._self_initiated:
-                self._self_initiated = False
-            else:
-                self._device_data = device_data
-                self._state = self._device_data.state
-                self.async_write_ha_state()
+        if self._self_initiated:
+            self._self_initiated = False
+        else:
+            self._device_data = device_data
+            self._state = self._device_data.state
+            self.async_write_ha_state()
 
     async def async_turn_on(self, **kwargs: dict) -> None:
         """Turn the entity on."""

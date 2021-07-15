@@ -18,8 +18,6 @@ from .const import DEFAULT_NAME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_SCHEMA = vol.Schema({"host": str, "name": str})
-
 
 class GoalZeroFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Goal Zero Yeti."""

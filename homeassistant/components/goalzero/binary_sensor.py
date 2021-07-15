@@ -22,7 +22,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
         )
         for sensor_name in BINARY_SENSOR_DICT
     ]
-    async_add_entities(sensors, True)
+    async_add_entities(sensors)
 
 
 class YetiBinarySensor(YetiEntity, BinarySensorEntity):

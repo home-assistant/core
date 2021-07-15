@@ -66,7 +66,7 @@ async def async_subscribe_topics(
     hass: HomeAssistant,
     new_state: dict[str, EntitySubscription] | None,
     topics: dict[str, Any],
-):
+) -> dict[str, EntitySubscription]:
     """(Re)Subscribe to a set of MQTT topics.
 
     State is kept in sub_state and a dictionary mapping from the subscription
@@ -106,6 +106,8 @@ async def async_subscribe_topics(
 
 
 @bind_hass
-async def async_unsubscribe_topics(hass: HomeAssistant, sub_state: dict):
+async def async_unsubscribe_topics(
+    hass: HomeAssistant, sub_state: dict[str, EntitySubscription] | None
+) -> dict[str, EntitySubscription]:
     """Unsubscribe from all MQTT topics managed by async_subscribe_topics."""
     return await async_subscribe_topics(hass, sub_state, {})

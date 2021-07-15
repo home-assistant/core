@@ -1,7 +1,26 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van"
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
+            "cannot_communicate": "Nem siker\u00fclt csatlakozni."
+        },
+        "step": {
+            "setup_network": {
+                "data": {
+                    "dsmr_version": "DSMR verzi\u00f3 kiv\u00e1laszt\u00e1sa"
+                }
+            },
+            "setup_serial": {
+                "data": {
+                    "port": "Eszk\u00f6z kiv\u00e1laszt\u00e1sa"
+                },
+                "title": "Eszk\u00f6z"
+            },
+            "user": {
+                "data": {
+                    "type": "Kapcsolat t\u00edpusa"
+                }
+            }
         }
     },
     "options": {

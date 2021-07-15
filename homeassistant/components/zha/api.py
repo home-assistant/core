@@ -363,6 +363,7 @@ def cv_group_member(value: Any) -> GroupMember:
     {
         vol.Required(TYPE): "zha/group/add",
         vol.Required(GROUP_NAME): cv.string,
+        vol.Optional(GROUP_ID): cv.positive_int,
         vol.Optional(ATTR_MEMBERS): vol.All(cv.ensure_list, [cv_group_member]),
     }
 )
@@ -371,7 +372,8 @@ async def websocket_add_group(hass, connection, msg):
     zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
     group_name = msg[GROUP_NAME]
     members = msg.get(ATTR_MEMBERS)
-    group = await zha_gateway.async_create_zigpy_group(group_name, members)
+    group_id = msg.get(GROUP_ID)
+    group = await zha_gateway.async_create_zigpy_group(group_name, members, group_id)
     connection.send_result(msg[ID], group.group_info)
 
 

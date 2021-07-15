@@ -60,9 +60,14 @@ def mock_addon_options(addon_info):
 
 
 @pytest.fixture(name="set_addon_options_side_effect")
-def set_addon_options_side_effect_fixture():
+def set_addon_options_side_effect_fixture(addon_options):
     """Return the set add-on options side effect."""
-    return None
+
+    async def set_addon_options(hass, slug, options):
+        """Mock set add-on options."""
+        addon_options.update(options["options"])
+
+    return set_addon_options
 
 
 @pytest.fixture(name="set_addon_options")
@@ -75,11 +80,24 @@ def mock_set_addon_options(set_addon_options_side_effect):
         yield set_options
 
 
+@pytest.fixture(name="install_addon_side_effect")
+def install_addon_side_effect_fixture(addon_info):
+    """Return the install add-on side effect."""
+
+    async def install_addon(hass, slug):
+        """Mock install add-on."""
+        addon_info.return_value["state"] = "stopped"
+        addon_info.return_value["version"] = "1.0"
+
+    return install_addon
+
+
 @pytest.fixture(name="install_addon")
-def mock_install_addon():
+def mock_install_addon(install_addon_side_effect):
     """Mock install add-on."""
     with patch(
-        "homeassistant.components.zwave_js.addon.async_install_addon"
+        "homeassistant.components.zwave_js.addon.async_install_addon",
+        side_effect=install_addon_side_effect,
     ) as install_addon:
         yield install_addon
 
@@ -94,9 +112,14 @@ def mock_update_addon():
 
 
 @pytest.fixture(name="start_addon_side_effect")
-def start_addon_side_effect_fixture():
-    """Return the set add-on options side effect."""
-    return None
+def start_addon_side_effect_fixture(addon_info):
+    """Return the start add-on options side effect."""
+
+    async def start_addon(hass, slug):
+        """Mock start add-on."""
+        addon_info.return_value["state"] = "started"
+
+    return start_addon
 
 
 @pytest.fixture(name="start_addon")
@@ -116,6 +139,22 @@ def stop_addon_fixture():
         "homeassistant.components.zwave_js.addon.async_stop_addon"
     ) as stop_addon:
         yield stop_addon
+
+
+@pytest.fixture(name="restart_addon_side_effect")
+def restart_addon_side_effect_fixture():
+    """Return the restart add-on options side effect."""
+    return None
+
+
+@pytest.fixture(name="restart_addon")
+def mock_restart_addon(restart_addon_side_effect):
+    """Mock restart add-on."""
+    with patch(
+        "homeassistant.components.zwave_js.addon.async_restart_addon",
+        side_effect=restart_addon_side_effect,
+    ) as restart_addon:
+        yield restart_addon
 
 
 @pytest.fixture(name="uninstall_addon")
@@ -388,6 +427,18 @@ def zem_31_state_fixture():
 def wallmote_central_scene_state_fixture():
     """Load the wallmote central scene node state fixture data."""
     return json.loads(load_fixture("zwave_js/wallmote_central_scene_state.json"))
+
+
+@pytest.fixture(name="ge_in_wall_dimmer_switch_state", scope="session")
+def ge_in_wall_dimmer_switch_state_fixture():
+    """Load the ge in-wall dimmer switch node state fixture data."""
+    return json.loads(load_fixture("zwave_js/ge_in_wall_dimmer_switch_state.json"))
+
+
+@pytest.fixture(name="aeotec_zw164_siren_state", scope="session")
+def aeotec_zw164_siren_state_fixture():
+    """Load the aeotec zw164 siren node state fixture data."""
+    return json.loads(load_fixture("zwave_js/aeotec_zw164_siren_state.json"))
 
 
 @pytest.fixture(name="client")
@@ -746,6 +797,22 @@ def zen_31_fixture(client, zen_31_state):
 def wallmote_central_scene_fixture(client, wallmote_central_scene_state):
     """Mock a wallmote central scene node."""
     node = Node(client, copy.deepcopy(wallmote_central_scene_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="ge_in_wall_dimmer_switch")
+def ge_in_wall_dimmer_switch_fixture(client, ge_in_wall_dimmer_switch_state):
+    """Mock a ge in-wall dimmer switch scene node."""
+    node = Node(client, copy.deepcopy(ge_in_wall_dimmer_switch_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="aeotec_zw164_siren")
+def aeotec_zw164_siren_fixture(client, aeotec_zw164_siren_state):
+    """Mock a wallmote central scene node."""
+    node = Node(client, copy.deepcopy(aeotec_zw164_siren_state))
     client.driver.controller.nodes[node.node_id] = node
     return node
 
