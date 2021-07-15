@@ -116,13 +116,12 @@ class GLinetRouter:
             # self._devices = await self._api.list_all_clients() #DELETEME
             # self._connected_devices = await self._api.connected_clients()
         except OSError as exc:
-            raise ConfigEntryNotReady from exc
             _LOGGER.error(
                 "Error connecting to GL-inet router %s for setup: %s",
                 self._host,
                 exc,
             )
-            return
+            raise ConfigEntryNotReady from exc
 
         entity_registry = await self.hass.helpers.entity_registry.async_get_registry()
         track_entries = (

@@ -39,20 +39,20 @@ class TestingHub:
 
     def __init__(self, host: str) -> None:
         """Initialize."""
-        self.host = host
-        self.router = GLinet(
+        self.host: str = host
+        self.router: GLinet = GLinet(
             "", base_url=self.host + "/cgi-bin/api/", sync=False, auto_auth=False
         )
         self.router_model: str = ""
 
     async def connect(self) -> bool:
-        """Test if we can authenticate with the host."""
+        """Test if we can communicate with the host."""
         try:
             self.router_model = await self.router.router_model()
             return True
         except ConnectionError:
             _LOGGER.error(
-                "Failed to connect to " + self.host + " is it really a GL-inet router?"
+                "Failed to connect to %s, is it really a GL-inet router?", self.host
             )
             return False
 
@@ -61,7 +61,7 @@ class TestingHub:
         try:
             await self.router.login(password)
         except ConnectionRefusedError:
-            _LOGGER.error("Failed to authenticate with Gl-inet router")
+            _LOGGER.error("Failed to authenticate with Gl-inet router during testing")
         return self.router.logged_in
 
 
