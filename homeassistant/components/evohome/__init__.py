@@ -653,10 +653,10 @@ class EvoChild(EvoDevice):
             this_sp_day = -1 if sp_idx == -1 else 0
             next_sp_day = 1 if sp_idx + 1 == len(day["Switchpoints"]) else 0
 
-            for key, offset, idx in [
+            for key, offset, idx in (
                 ("this", this_sp_day, sp_idx),
                 ("next", next_sp_day, (sp_idx + 1) * (1 - next_sp_day)),
-            ]:
+            ):
                 sp_date = (day_time + timedelta(days=offset)).strftime("%Y-%m-%d")
                 day = self._schedule["DailySchedules"][(day_of_week + offset) % 7]
                 switchpoint = day["Switchpoints"][idx]

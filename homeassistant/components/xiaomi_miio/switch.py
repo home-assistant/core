@@ -181,7 +181,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
             # The device has two switchable channels (mains and a USB port).
             # A switch device per channel will be created.
-            for channel_usb in [True, False]:
+            for channel_usb in (True, False):
                 if channel_usb:
                     unique_id_ch = f"{unique_id}-USB"
                 else:

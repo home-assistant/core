@@ -190,10 +190,10 @@ class SonosDiscoveryManager:
             _LOGGER.debug("Adding new speaker: %s", speaker_info)
             speaker = SonosSpeaker(self.hass, soco, speaker_info)
             self.data.discovered[soco.uid] = speaker
-            for coordinator, coord_dict in [
+            for coordinator, coord_dict in (
                 (SonosAlarms, self.data.alarms),
                 (SonosFavorites, self.data.favorites),
-            ]:
+            ):
                 if soco.household_id not in coord_dict:
                     new_coordinator = coordinator(self.hass, soco.household_id)
                     new_coordinator.setup(soco)
