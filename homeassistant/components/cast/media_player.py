@@ -294,6 +294,10 @@ class CastDevice(MediaPlayerEntity):
     def new_cast_status(self, cast_status):
         """Handle updates of the cast status."""
         self.cast_status = cast_status
+        self._attr_volume_level = cast_status.volume_level if cast_status else None
+        self._attr_is_volume_muted = (
+            cast_status.volume_muted if self.cast_status else None
+        )
         self.schedule_update_ha_state()
 
     def new_media_status(self, media_status):
@@ -574,16 +578,6 @@ class CastDevice(MediaPlayerEntity):
         if self._chromecast is not None and self._chromecast.is_idle:
             return STATE_OFF
         return None
-
-    @property
-    def volume_level(self):
-        """Volume level of the media player (0..1)."""
-        return self.cast_status.volume_level if self.cast_status else None
-
-    @property
-    def is_volume_muted(self):
-        """Boolean if volume is currently muted."""
-        return self.cast_status.volume_muted if self.cast_status else None
 
     @property
     def media_content_id(self):
