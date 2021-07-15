@@ -7,7 +7,6 @@ from typing import Any
 import somecomfort
 import voluptuous as vol
 
-import homeassistant
 from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
 from homeassistant.components.climate.const import (
     ATTR_TARGET_TEMP_HIGH,
@@ -38,11 +37,11 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_REGION,
     CONF_USERNAME,
-    PERCENTAGE,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
 import homeassistant.helpers.config_validation as cv
+import homeassistant.helpers.device_registry as dr
 
 from .const import (
     _LOGGER,
@@ -108,15 +107,9 @@ HW_FAN_MODE_TO_HA = {
     "circulate": FAN_DIFFUSE,
     "follow schedule": FAN_AUTO,
 }
-SENSOR_TYPES = {
-    "temperature": ["Temperature", TEMP_FAHRENHEIT],
-    "humidity": ["Humidity", PERCENTAGE],
-}
 
 
-async def async_setup_entry(
-    hass, config, async_add_entities, discovery_info=None
-) -> None:
+async def async_setup_entry(hass, config, async_add_entities, discovery_info=None):
     """Set up the Honeywell thermostat."""
     cool_away_temp = config.data.get(CONF_COOL_AWAY_TEMPERATURE)
     heat_away_temp = config.data.get(CONF_HEAT_AWAY_TEMPERATURE)
@@ -125,21 +118,25 @@ async def async_setup_entry(
 
     async_add_entities([HoneywellUSThermostat(data, cool_away_temp, heat_away_temp)])
 
-    return True
-
 
 async def async_setup_platform(hass, config, add_entities, discovery_info=None):
-    """Honeywell uses config flow for configuration now. If an entry exists in configuration.yaml, the import flow will attempt to import it and create a config entry."""
+    """Set up the Honeywell climate platform.
+
+    Honeywell uses config flow for configuration now. If an entry exists in
+    configuration.yaml, the import flow will attempt to import it and create
+    a config entry.
+    """
 
     if config["platform"] == "honeywell":
-        _LOGGER.debug("Deprecated honeywell entry found in configuration.yaml")
+        _LOGGER.warning(
+            "Loading honeywell via platform config is deprecated; The configuration"
+            " has been migrated to a config entry and can be safely removed"
+        )
         # No config entry exists and configuration.yaml config exists, trigger the import flow.
         if not hass.config_entries.async_entries(DOMAIN):
             await hass.config_entries.flow.async_init(
                 DOMAIN, context={"source": SOURCE_IMPORT}, data=config
             )
-
-    return True
 
 
 class HoneywellUSThermostat(ClimateEntity):
@@ -152,9 +149,7 @@ class HoneywellUSThermostat(ClimateEntity):
         self._heat_away_temp = heat_away_temp
         self._away = False
 
-        self._attr_unique_id = homeassistant.helpers.device_registry.format_mac(
-            data.device.mac_address
-        )
+        self._attr_unique_id = dr.format_mac(data.device.mac_address)
         self._attr_name = data.device.name
         self._attr_temperature_unit = (
             TEMP_CELSIUS if data.device.temperature_unit == "C" else TEMP_FAHRENHEIT
