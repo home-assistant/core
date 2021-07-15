@@ -5,17 +5,32 @@ from pyfreedompro import put_state
 
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
+    ATTR_HVAC_MODE,
     HVAC_MODE_COOL,
     HVAC_MODE_HEAT,
     HVAC_MODE_OFF,
+    SUPPORT_TARGET_TEMPERATURE,
 )
-from homeassistant.components.water_heater import SUPPORT_TARGET_TEMPERATURE
 from homeassistant.const import ATTR_TEMPERATURE, CONF_API_KEY, TEMP_CELSIUS
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
+
+HVAC_MAP = {
+    0: HVAC_MODE_OFF,
+    1: HVAC_MODE_HEAT,
+    2: HVAC_MODE_COOL,
+}
+
+HVAC_INVERT_MAP = {
+    HVAC_MODE_OFF: 0,
+    HVAC_MODE_HEAT: 1,
+    HVAC_MODE_COOL: 2,
+}
+
+SUPPORTED_HVAC_MODES = [HVAC_MODE_OFF, HVAC_MODE_HEAT, HVAC_MODE_COOL]
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -35,19 +50,17 @@ class Device(CoordinatorEntity, ClimateEntity):
     def __init__(self, hass, api_key, device, coordinator):
         """Initialize the Freedompro climate."""
         super().__init__(coordinator)
-        self._hass = hass
-        self._session = aiohttp_client.async_get_clientsession(self._hass)
+        self._session = aiohttp_client.async_get_clientsession(hass)
         self._api_key = api_key
         self._attr_name = device["name"]
         self._attr_unique_id = device["uid"]
-        self._type = device["type"]
         self._characteristics = device["characteristics"]
         self._attr_device_info = {
-            "name": self._attr_name,
+            "name": self.name,
             "identifiers": {
-                (DOMAIN, self._attr_unique_id),
+                (DOMAIN, self.unique_id),
             },
-            "model": self._type,
+            "model": device["type"],
             "manufacturer": "Freedompro",
         }
         self._attr_supported_features = SUPPORT_TARGET_TEMPERATURE
@@ -55,7 +68,7 @@ class Device(CoordinatorEntity, ClimateEntity):
         self._attr_target_temperature = 0
         self._attr_temperature_unit = TEMP_CELSIUS
         self._attr_hvac_mode = HVAC_MODE_OFF
-        self._attr_hvac_modes = [HVAC_MODE_OFF, HVAC_MODE_HEAT, HVAC_MODE_COOL]
+        self._attr_hvac_modes = SUPPORTED_HVAC_MODES
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -75,13 +88,7 @@ class Device(CoordinatorEntity, ClimateEntity):
             if "targetTemperature" in state:
                 self._attr_target_temperature = state["targetTemperature"]
             if "heatingCoolingState" in state:
-                self._attr_hvac_mode = (
-                    HVAC_MODE_OFF
-                    if state["heatingCoolingState"] == 0
-                    else HVAC_MODE_HEAT
-                    if state["heatingCoolingState"] == 1
-                    else HVAC_MODE_COOL
-                )
+                self._attr_hvac_mode = HVAC_MAP[state["heatingCoolingState"]]
         super()._handle_coordinator_update()
 
     async def async_added_to_hass(self) -> None:
@@ -92,14 +99,12 @@ class Device(CoordinatorEntity, ClimateEntity):
     async def async_set_hvac_mode(self, hvac_mode):
         """Async function to set mode to climate."""
         payload = {}
-        payload["heatingCoolingState"] = (
-            0 if hvac_mode == HVAC_MODE_OFF else 1 if hvac_mode == HVAC_MODE_HEAT else 2
-        )
+        payload["heatingCoolingState"] = HVAC_INVERT_MAP[hvac_mode]
         payload = json.dumps(payload)
         await put_state(
             self._session,
             self._api_key,
-            self._attr_unique_id,
+            self.unique_id,
             payload,
         )
         await self.coordinator.async_request_refresh()
@@ -107,13 +112,15 @@ class Device(CoordinatorEntity, ClimateEntity):
     async def async_set_temperature(self, **kwargs):
         """Async function to set temperarture to climate."""
         payload = {}
+        if ATTR_HVAC_MODE in kwargs:
+            payload["heatingCoolingState"] = HVAC_INVERT_MAP[kwargs[ATTR_HVAC_MODE]]
         if ATTR_TEMPERATURE in kwargs:
             payload["targetTemperature"] = kwargs[ATTR_TEMPERATURE]
         payload = json.dumps(payload)
         await put_state(
             self._session,
             self._api_key,
-            self._attr_unique_id,
+            self.unique_id,
             payload,
         )
         await self.coordinator.async_request_refresh()
