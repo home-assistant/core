@@ -7,7 +7,8 @@
           "name": "Name",
           "latitude": "latitude",
           "longitude": "longitude",
-          "api_key": "token"
+          "api_key": "token",
+          "country_code": "Country code"
         },
         "description": "Visit https://co2signal.com/ to request a token."
       }

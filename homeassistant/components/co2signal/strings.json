@@ -7,7 +7,8 @@
           "name": "[%key:common::config_flow::data::name%]",
           "latitude": "[%key:common::config_flow::data::latitude%]",
           "longitude": "[%key:common::config_flow::data::longitude%]",
-          "api_key": "[%key:common::config_flow::data::access_token%]"
+          "api_key": "[%key:common::config_flow::data::access_token%]",
+          "country_code": "Country code"
         },
         "description": "Visit https://co2signal.com/ to request a token."
       }

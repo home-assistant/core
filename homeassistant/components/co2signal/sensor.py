@@ -5,6 +5,7 @@ import logging
 import CO2Signal
 import voluptuous as vol
 
+from homeassistant import config_entries
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
@@ -37,14 +38,15 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the CO2signal sensor."""
-    token = config[CONF_TOKEN]
-    lat = config.get(CONF_LATITUDE, hass.config.latitude)
-    lon = config.get(CONF_LONGITUDE, hass.config.longitude)
-    country_code = config.get(CONF_COUNTRY_CODE)
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data=config,
+        )
+    )
 
-    _LOGGER.debug("Setting up the sensor using the %s", country_code)
-
-    add_entities([CO2Sensor(token, country_code, lat, lon)], True)
+    return True
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -85,8 +87,9 @@ class CO2Sensor(SensorEntity):
         self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
         self._attr_device_info = {
             ATTR_IDENTIFIERS: {(DOMAIN, entry_id)},
-            ATTR_NAME: "Co2 signal",
+            ATTR_NAME: "CO2 signal",
             ATTR_MANUFACTURER: "Tmrow.com",
+            "entry_type": "service",
         }
         self._attr_unique_id = f"{entry_id}_co2intensity"
 
