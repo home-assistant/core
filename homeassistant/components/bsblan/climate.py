@@ -98,24 +98,15 @@ class BSBLanClimate(ClimateEntity):
         info: Info,
     ) -> None:
         """Initialize BSBLan climate device."""
-        self._attr_current_temperature: float | None = None
         self._attr_available = True
-        self._attr_hvac_mode: str | None = None
-        self._attr_target_temperature: float | None = None
-        self._temperature_unit = None
-        self._attr_temperature_unit = (
-            TEMP_CELSIUS if self._temperature_unit == "&deg;C" else TEMP_FAHRENHEIT
-        )
-        self._attr_preset_mode = None
         self._store_hvac_mode = None
-        _info: Info = info
         self.bsblan = bsblan
-        self._attr_name = self._attr_unique_id = _info.device_identification
+        self._attr_name = self._attr_unique_id = info.device_identification
         self._attr_device_info = {
-            ATTR_IDENTIFIERS: {(DOMAIN, _info.device_identification)},
+            ATTR_IDENTIFIERS: {(DOMAIN, info.device_identification)},
             ATTR_NAME: "BSBLan Device",
             ATTR_MANUFACTURER: "BSBLan",
-            ATTR_MODEL: _info.controller_variant,
+            ATTR_MODEL: info.controller_variant,
         }
 
     async def async_set_preset_mode(self, preset_mode):
@@ -185,4 +176,8 @@ class BSBLanClimate(ClimateEntity):
             self._attr_hvac_mode = BSBLAN_TO_HA_STATE[state.hvac_mode.value]
             self._attr_preset_mode = PRESET_NONE
 
-        self._temperature_unit = state.current_temperature.unit
+        self._attr_temperature_unit = (
+            TEMP_CELSIUS
+            if state.current_temperature.unit == "&deg;C"
+            else TEMP_FAHRENHEIT
+        )
