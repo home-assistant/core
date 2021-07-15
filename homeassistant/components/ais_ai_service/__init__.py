@@ -743,8 +743,8 @@ def remove_selected_action(key_code):
         return
 
     if (
-        CURR_ENTITIE_SELECTED_ACTION == ais_global.G_ACTION_SET_AUDIO_SHUFFLE
-        and key_code not in (19, 20, 23)
+            CURR_ENTITIE_SELECTED_ACTION == ais_global.G_ACTION_SET_AUDIO_SHUFFLE
+            and key_code not in (19, 20, 23)
     ):
         CURR_ENTITIE_SELECTED_ACTION = None
         return
@@ -817,15 +817,15 @@ def set_curr_group(hass, group):
         CURR_GROUP = group
     # set display context for mega audio player
     if CURR_GROUP["entity_id"] in (
-        "group.radio_player",
-        "group.podcast_player",
-        "group.music_player",
-        "group.ais_bookmarks",
-        "group.ais_rss_news_remote",
-        "group.local_audio",
-        "sensor.ais_drives",
-        "group.ais_favorites",
-        "group.audiobooks_player",
+            "group.radio_player",
+            "group.podcast_player",
+            "group.music_player",
+            "group.ais_bookmarks",
+            "group.ais_rss_news_remote",
+            "group.local_audio",
+            "sensor.ais_drives",
+            "group.ais_favorites",
+            "group.audiobooks_player",
     ):
         hass.states.async_set(
             "sensor.ais_player_mode", CURR_GROUP["entity_id"].replace("group.", "")
@@ -1043,7 +1043,7 @@ def say_curr_entity(hass):
             info_name
             + info_value
             + " Gdy tryb nocny jest włączony to asystent w wybranych godzinach "
-            "automatycznie zredukuje głośność odtwarzania audio.",
+              "automatycznie zredukuje głośność odtwarzania audio.",
         )
         return
     elif entity_id == "input_boolean.ais_auto_update":
@@ -1541,9 +1541,9 @@ def select_entity(hass, long_press):
                 )
                 reinstall_linux_apt = state.attributes.get("reinstall_linux_apt", False)
                 if (
-                    reinstall_dom_app is False
-                    and reinstall_android_app is False
-                    and reinstall_linux_apt is False
+                        reinstall_dom_app is False
+                        and reinstall_android_app is False
+                        and reinstall_linux_apt is False
                 ):
                     _say_it(hass, "Twoja wersja jest aktualna")
                 else:
@@ -1630,18 +1630,18 @@ def select_entity(hass, long_press):
 def can_entity_be_changed(hass, entity):
     # check if entity can be changed
     if CURR_ENTITIE.startswith(
-        (
-            "media_player.",
-            "input_boolean.",
-            "switch.",
-            "script.",
-            "light.",
-            "input_text.",
-            "input_select.",
-            "input_number.",
-            "automation.",
-            "input_datetime.",
-        )
+            (
+                    "media_player.",
+                    "input_boolean.",
+                    "switch.",
+                    "script.",
+                    "light.",
+                    "input_text.",
+                    "input_select.",
+                    "input_number.",
+                    "automation.",
+                    "input_datetime.",
+            )
     ):
         return True
     elif CURR_ENTITIE.startswith("sensor.") and CURR_ENTITIE.endswith("list"):
@@ -1653,15 +1653,15 @@ def can_entity_be_changed(hass, entity):
 def can_entity_be_entered(hass, entity):
     # check if entity can be entered
     if CURR_ENTITIE.startswith(
-        (
-            "media_player.",
-            "input_boolean.",
-            "switch.",
-            "script.",
-            "light.",
-            "automation.",
-            "group.",
-        )
+            (
+                    "media_player.",
+                    "input_boolean.",
+                    "switch.",
+                    "script.",
+                    "light.",
+                    "automation.",
+                    "group.",
+            )
     ):
         return False
     else:
@@ -1673,8 +1673,8 @@ def set_on_dpad_down(hass, long_press):
     if CURR_ENTITIE is not None:
         if CURR_ENTITIE.startswith("media_player."):
             if (
-                CURR_ENTITIE_SELECTED_ACTION is None
-                or CURR_ENTITIE_SELECTED_ACTION == ais_global.G_ACTION_SET_AUDIO_SHUFFLE
+                    CURR_ENTITIE_SELECTED_ACTION is None
+                    or CURR_ENTITIE_SELECTED_ACTION == ais_global.G_ACTION_SET_AUDIO_SHUFFLE
             ):
                 CURR_ENTITIE_SELECTED_ACTION = ais_global.G_ACTION_SET_AUDIO_SPEED
                 state = hass.states.get("input_number.media_player_speed")
@@ -2127,14 +2127,14 @@ def get_groups(hass):
         elif entity.entity_id.startswith("person."):
             all_ais_persons.append(entity.entity_id)
         elif entity.entity_id.startswith(
-            "automation."
+                "automation."
         ) and not entity.entity_id.startswith("automation.ais_"):
             all_ais_automations.append(entity.entity_id)
         elif entity.entity_id.startswith("scene."):
             all_ais_scenes.append(entity.entity_id)
         elif (
-            entity.entity_id.startswith("switch.")
-            and entity.entity_id != "switch.zigbee_tryb_parowania"
+                entity.entity_id.startswith("switch.")
+                and entity.entity_id != "switch.zigbee_tryb_parowania"
         ):
             all_ais_switches.append(entity.entity_id)
         elif entity.entity_id.startswith("light."):
@@ -2382,13 +2382,13 @@ async def async_setup(hass, config):
                 "execute_command",
                 {
                     "command": "su -c 'settings put global policy_control "
-                    "immersive.full=*'"
+                               "immersive.full=*'"
                 },
             )
         if hass.services.has_service("ais_tts", "play_item"):
             # ais_tts - remove all panels
             if "lovelace-dom" in hass.data.get(
-                hass.components.frontend.DATA_PANELS, {}
+                    hass.components.frontend.DATA_PANELS, {}
             ):
                 hass.components.frontend.async_remove_panel("lovelace-dom")
             if "aisaudio" in hass.data.get(hass.components.frontend.DATA_PANELS, {}):
@@ -2603,8 +2603,8 @@ async def async_setup(hass, config):
         # set the WIFI as an current WIFI (only if empty)
         wifis = hass.states.get("input_select.ais_android_wifi_network")
         if (
-            wifis.state == ais_global.G_EMPTY_OPTION
-            and ais_global.GLOBAL_MY_WIFI_SSID is not None
+                wifis.state == ais_global.G_EMPTY_OPTION
+                and ais_global.GLOBAL_MY_WIFI_SSID is not None
         ):
             options = wifis.attributes.get("options")
             for o in options:
@@ -2902,13 +2902,13 @@ async def async_setup(hass, config):
                 h = datetime.datetime.now().hour
                 m = datetime.datetime.now().minute
                 if (
-                    quiet_mode_start_attr["hour"] == h
-                    and quiet_mode_start_attr["minute"] == m
+                        quiet_mode_start_attr["hour"] == h
+                        and quiet_mode_start_attr["minute"] == m
                 ):
                     apply_night_mode()
                 if (
-                    quiet_mode_stop_attr["hour"] == h
-                    and quiet_mode_stop_attr["minute"] == m
+                        quiet_mode_stop_attr["hour"] == h
+                        and quiet_mode_stop_attr["minute"] == m
                 ):
                     apply_day_mode()
 
@@ -3289,11 +3289,10 @@ async def _publish_command_to_frame(hass, key, val, ip=None):
                 # r = requests.get('http://httpbin.org/status/404', timeout=10)
                 r = requests.get("http://" + gate_id + ".paczka.pro", timeout=10)
                 if r.status_code == 404:
-                    lt_path = "/data/data/pl.sviete.dom/files/usr/bin/cloudflared"
-                    if platform.machine() == "x86_64":
-                        lt_path = "/usr/local/bin/cloudflared"
-                    command = "pm2 restart tunnel || pm2 start {} --name tunnel --output /dev/null --error /dev/null " \
-                              "-- --hostname http://{}.paczka.pro --url http://localhost:8180".format(lt_path, gate_id)
+                    command = "pm2 restart tunnel || pm2 start /data/data/pl.sviete.dom/files/usr/bin/cloudflared" \
+                              " --name tunnel --output /dev/null --error /dev/null --" \
+                              " --config /data/data/pl.sviete.dom/files/home/.cloudflared/config.yaml " \
+                              " tunnel run {}".format(gate_id)
                     subprocess.Popen(
                         command,
                         shell=True,  # nosec
@@ -3483,18 +3482,18 @@ def _process_command_from_frame(hass, service):
 
         # check if we are doing this from remote
         if (
-            len(iot_names) > 1
-            and CURR_ENTITIE
-            in (
+                len(iot_names) > 1
+                and CURR_ENTITIE
+                in (
                 "sensor.ais_connect_iot_device_info",
                 "script.ais_scan_iot_devices_in_network",
-            )
-            and CURR_BUTTON_CODE == 23
+        )
+                and CURR_BUTTON_CODE == 23
         ):
             info = (
-                info
-                + ". Sprawdź wszystkie parametry, naciśnij strzałkę w prawo, by przejść dalej. "
-                "Na koniec uruchom: Dołącz nowe urządzenie."
+                    info
+                    + ". Sprawdź wszystkie parametry, naciśnij strzałkę w prawo, by przejść dalej. "
+                      "Na koniec uruchom: Dołącz nowe urządzenie."
             )
             # prepare form data
             set_curr_entity(hass, "script.ais_scan_iot_devices_in_network")
@@ -3538,9 +3537,9 @@ def _process_command_from_frame(hass, service):
                 desc += cci["ssid"]
                 if "link_speed_mbps" in cci:
                     desc += (
-                        "; prędkość: "
-                        + str(cci["link_speed_mbps"])
-                        + " megabitów na sekundę"
+                            "; prędkość: "
+                            + str(cci["link_speed_mbps"])
+                            + " megabitów na sekundę"
                     )
                     attr["link_speed_mbps"] = cci["link_speed_mbps"]
                     speed = cci["link_speed_mbps"]
@@ -3603,7 +3602,7 @@ def _process_command_from_frame(hass, service):
         try:
             message = json.loads(service.data["payload"])
             ais_global.G_AIS_DAY_MEDIA_VOLUME_LEVEL = (
-                message.get("currentVolume", 0) / 100
+                    message.get("currentVolume", 0) / 100
             )
         except Exception:
             _LOGGER.info(
@@ -3684,7 +3683,7 @@ def _process_command_from_frame(hass, service):
                 # check if we can clear database
                 if "dbUrl" in ais_global.G_DB_SETTINGS_INFO:
                     if ais_global.G_DB_SETTINGS_INFO["dbUrl"].startswith(
-                        "sqlite:///:memory:"
+                            "sqlite:///:memory:"
                     ):
                         _LOGGER.warning("recorder -> purge keep_days: 0")
                         hass.services.call(
@@ -3703,9 +3702,9 @@ def _process_command_from_frame(hass, service):
                             # Append dict to list
                             list_of_proc_objects.append(pinfo)
                         except (
-                            psutil.NoSuchProcess,
-                            psutil.AccessDenied,
-                            psutil.ZombieProcess,
+                                psutil.NoSuchProcess,
+                                psutil.AccessDenied,
+                                psutil.ZombieProcess,
                         ):
                             pass
                     # Sort list of dict by key vms i.e. memory usage
@@ -3739,14 +3738,14 @@ def _process_command_from_frame(hass, service):
 
 
 def _post_message(
-    message,
-    hass,
-    exclude_say_it=None,
-    pitch=None,
-    rate=None,
-    language=None,
-    voice=None,
-    path=None,
+        message,
+        hass,
+        exclude_say_it=None,
+        pitch=None,
+        rate=None,
+        language=None,
+        voice=None,
+        path=None,
 ):
     """Post the message to TTS service."""
     j_data = {
@@ -3791,15 +3790,15 @@ def _beep_it(hass, tone):
 
 
 def _say_it(
-    hass,
-    message,
-    img=None,
-    exclude_say_it=None,
-    pitch=None,
-    rate=None,
-    language=None,
-    voice=None,
-    path=None,
+        hass,
+        message,
+        img=None,
+        exclude_say_it=None,
+        pitch=None,
+        rate=None,
+        language=None,
+        voice=None,
+        path=None,
 ):
     # sent the tts message to the panel via http api
     message = message.replace("°C", "stopni Celsjusza")
@@ -4051,7 +4050,7 @@ async def _async_process(hass, text, calling_client_id=None, hot_word_on=False):
             state.entity_id: state.name
             for state in hass.states.async_all()
             if state.entity_id.startswith("automation")
-            and not state.entity_id.startswith("automation.ais_")
+               and not state.entity_id.startswith("automation.ais_")
         }
 
     for key, value in automations.items():
@@ -4062,8 +4061,8 @@ async def _async_process(hass, text, calling_client_id=None, hot_word_on=False):
                 if isinstance(auto_config, AutomationConfig):
                     auto_name = auto_config.get("alias", "").lower().strip()
                     if (
-                        "description" in auto_config
-                        and auto_name == value.lower().strip()
+                            "description" in auto_config
+                            and auto_name == value.lower().strip()
                     ):
                         all_commands = auto_config.get("description", "").split(";")
                 if isinstance(auto_config, BlueprintInputs):
@@ -4071,8 +4070,8 @@ async def _async_process(hass, text, calling_client_id=None, hot_word_on=False):
                     raw_blueprint_inputs = blueprint_inputs.config_with_inputs
                     auto_name = raw_blueprint_inputs.get("alias", "").lower().strip()
                     if (
-                        "description" in raw_blueprint_inputs
-                        and auto_name == value.lower().strip()
+                            "description" in raw_blueprint_inputs
+                            and auto_name == value.lower().strip()
                     ):
                         all_commands = raw_blueprint_inputs.get(
                             "description", ""
@@ -4670,7 +4669,7 @@ class AisGetWeather(intent.IntentHandler):
                 zoom=10,
             )
             address = (
-                location.address.split(",")[0] + " " + location.address.split(",")[1]
+                    location.address.split(",")[0] + " " + location.address.split(",")[1]
             )
             command = "pogoda w miejscowości " + address
             # ask AIS
@@ -4710,7 +4709,7 @@ class AisGetWeather48(intent.IntentHandler):
                 zoom=10,
             )
             address = (
-                location.address.split(",")[0] + " " + location.address.split(",")[1]
+                    location.address.split(",")[0] + " " + location.address.split(",")[1]
             )
             command = "jaka będzie pogoda jutro w miejscowości " + address
             ws_resp = aisCloudWS.ask(command, answer)
@@ -5205,8 +5204,8 @@ class PersonStatusIntent(intent.IntentHandler):
                 try:
                     device_tracker = entity.attributes.get("source", "")
                     semsor = (
-                        device_tracker.replace("device_tracker", "sensor")
-                        + "_geocoded_location"
+                            device_tracker.replace("device_tracker", "sensor")
+                            + "_geocoded_location"
                     )
                     address = hass.states.get(semsor).state
                     if address != STATE_UNKNOWN:
