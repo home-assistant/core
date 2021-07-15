@@ -111,6 +111,10 @@ class FritzBoxTools:
             timeout=60.0,
         )
 
+        if not self.connection:
+            _LOGGER.error("Unable to establish a connection with %s", self.host)
+            return
+
         self.fritz_status = FritzStatus(fc=self.connection)
         info = self.connection.call_action("DeviceInfo:1", "GetInfo")
         if not self._unique_id:
@@ -189,18 +193,19 @@ class FritzBoxTools:
 
     def _update_info(self) -> list[HostInfo]:
         """Retrieve latest information from the FRITZ!Box."""
-        return self.fritz_hosts.get_hosts_info()
+        return self.fritz_hosts.get_hosts_info()  # type: ignore [no-any-return]
 
     def scan_devices(self, now: datetime | None = None) -> None:
         """Scan for new devices and return a list of found device ids."""
         _LOGGER.debug("Checking devices for FRITZ!Box router %s", self.host)
 
+        _default_consider_home = DEFAULT_CONSIDER_HOME.total_seconds()
         if self._options:
             consider_home = self._options.get(
-                CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME.total_seconds()
+                CONF_CONSIDER_HOME, _default_consider_home
             )
         else:
-            consider_home = DEFAULT_CONSIDER_HOME
+            consider_home = _default_consider_home
 
         new_device = False
         for known_host in self._update_info():

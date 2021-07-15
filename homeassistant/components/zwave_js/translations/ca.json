@@ -51,6 +51,13 @@
             }
         }
     },
+    "device_automation": {
+        "condition_type": {
+            "config_parameter": "Configura el valor del par\u00e0metre {subtype}",
+            "node_status": "Estat del node",
+            "value": "Valor actual d'un valor Z-Wave"
+        }
+    },
     "options": {
         "abort": {
             "addon_get_discovery_info_failed": "No s'ha pogut obtenir la informaci\u00f3 de descobriment del complement Z-Wave JS.",

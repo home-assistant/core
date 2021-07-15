@@ -39,37 +39,37 @@ def _retrieve_uptime_state(status: FritzStatus, last_value: str) -> str:
 
 def _retrieve_external_ip_state(status: FritzStatus, last_value: str) -> str:
     """Return external ip from device."""
-    return status.external_ip
+    return status.external_ip  # type: ignore[no-any-return]
 
 
-def _retrieve_kib_s_sent_state(status: FritzStatus, last_value: str) -> str:
+def _retrieve_kib_s_sent_state(status: FritzStatus, last_value: str) -> float:
     """Return upload transmission rate."""
-    return round(status.transmission_rate[0] * 8 / 1024, 1)
+    return round(status.transmission_rate[0] * 8 / 1024, 1)  # type: ignore[no-any-return]
 
 
-def _retrieve_kib_s_received_state(status: FritzStatus, last_value: str) -> str:
+def _retrieve_kib_s_received_state(status: FritzStatus, last_value: str) -> float:
     """Return download transmission rate."""
-    return round(status.transmission_rate[1] * 8 / 1024, 1)
+    return round(status.transmission_rate[1] * 8 / 1024, 1)  # type: ignore[no-any-return]
 
 
-def _retrieve_max_kib_s_sent_state(status: FritzStatus, last_value: str) -> str:
+def _retrieve_max_kib_s_sent_state(status: FritzStatus, last_value: str) -> float:
     """Return upload max transmission rate."""
-    return round(status.max_bit_rate[0] / 1024, 1)
+    return round(status.max_bit_rate[0] / 1024, 1)  # type: ignore[no-any-return]
 
 
-def _retrieve_max_kib_s_received_state(status: FritzStatus, last_value: str) -> str:
+def _retrieve_max_kib_s_received_state(status: FritzStatus, last_value: str) -> float:
     """Return download max transmission rate."""
-    return round(status.max_bit_rate[1] / 1024, 1)
+    return round(status.max_bit_rate[1] / 1024, 1)  # type: ignore[no-any-return]
 
 
-def _retrieve_gb_sent_state(status: FritzStatus, last_value: str) -> str:
+def _retrieve_gb_sent_state(status: FritzStatus, last_value: str) -> float:
     """Return upload total data."""
-    return round(status.bytes_sent * 8 / 1024 / 1024 / 1024, 1)
+    return round(status.bytes_sent * 8 / 1024 / 1024 / 1024, 1)  # type: ignore[no-any-return]
 
 
-def _retrieve_gb_received_state(status: FritzStatus, last_value: str) -> str:
+def _retrieve_gb_received_state(status: FritzStatus, last_value: str) -> float:
     """Return download total data."""
-    return round(status.bytes_received * 8 / 1024 / 1024 / 1024, 1)
+    return round(status.bytes_received * 8 / 1024 / 1024 / 1024, 1)  # type: ignore[no-any-return]
 
 
 class SensorData(TypedDict, total=False):
