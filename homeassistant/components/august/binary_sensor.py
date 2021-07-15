@@ -112,10 +112,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         entities.append(AugustDoorBinarySensor(data, "door_open", door))
 
     for doorbell in data.doorbells:
-        for sensor_type in SENSOR_TYPES_DOORBELL:
+        for sensor_type, sensor in SENSOR_TYPES_DOORBELL.items():
             _LOGGER.debug(
                 "Adding doorbell sensor class %s for %s",
-                SENSOR_TYPES_DOORBELL[sensor_type][SENSOR_DEVICE_CLASS],
+                sensor[SENSOR_DEVICE_CLASS],
                 doorbell.device_name,
             )
             entities.append(AugustDoorbellBinarySensor(data, sensor_type, doorbell))

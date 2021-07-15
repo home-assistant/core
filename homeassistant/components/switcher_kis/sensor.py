@@ -78,8 +78,8 @@ async def async_setup_platform(
     device_data = hass.data[DOMAIN][DATA_DEVICE]
 
     async_add_entities(
-        SwitcherSensorEntity(device_data, attribute, SENSORS[attribute])
-        for attribute in SENSORS
+        SwitcherSensorEntity(device_data, attribute, sensor)
+        for attribute, sensor in SENSORS.items()
     )
 
 

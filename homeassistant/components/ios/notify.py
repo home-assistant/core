@@ -38,7 +38,7 @@ def log_rate_limits(hass, target, resp, level=20):
         rate_limits["successful"],
         rate_limits["maximum"],
         rate_limits["errors"],
-        str(resetsAtTime).split(".")[0],
+        str(resetsAtTime).split(".", maxsplit=1)[0],
     )
 
 

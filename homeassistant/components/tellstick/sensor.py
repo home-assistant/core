@@ -127,9 +127,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             else:
                 continue
 
-        for datatype in sensor_value_descriptions:
+        for datatype, sensor_info in sensor_value_descriptions.items():
             if datatype & datatype_mask and tellcore_sensor.has_value(datatype):
-                sensor_info = sensor_value_descriptions[datatype]
                 sensors.append(
                     TellstickSensor(sensor_name, tellcore_sensor, datatype, sensor_info)
                 )
