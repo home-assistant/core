@@ -72,6 +72,8 @@ DEFAULT_FILTER_TIME_CONSTANT = 10
 NAME_TEMPLATE = "{} filter"
 ICON = "mdi:chart-line-variant"
 
+SCAN_INTERVAL = timedelta(minutes=10)
+
 FILTER_SCHEMA = vol.Schema(
     {vol.Optional(CONF_FILTER_PRECISION, default=DEFAULT_PRECISION): vol.Coerce(int)}
 )
@@ -192,11 +194,22 @@ class SensorFilter(SensorEntity):
         self._icon = None
         self._device_class = None
 
+        self._attr_should_poll = False
+        for filt in filters:
+            if isinstance(filt, TimeSMAFilter):
+                self._attr_should_poll = True
+                break
+
     @callback
     def _update_filter_sensor_state_event(self, event):
         """Handle device state changes."""
         _LOGGER.debug("Update filter on event: %s", event)
         self._update_filter_sensor_state(event.data.get("new_state"))
+
+    def update(self):
+        """Update TimeSMAFilter value."""
+        _LOGGER.debug("Update filter: %s", self._state)
+        self._update_filter_sensor_state(self.hass.states.get(self._entity))
 
     @callback
     def _update_filter_sensor_state(self, new_state, update_ha=True):
@@ -347,11 +360,6 @@ class SensorFilter(SensorEntity):
         return self._unit_of_measurement
 
     @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
-
-    @property
     def extra_state_attributes(self):
         """Return the state attributes of the sensor."""
         return {ATTR_ENTITY_ID: self._entity}
@@ -454,7 +462,7 @@ class Filter:
 
 
 @FILTERS.register(FILTER_NAME_RANGE)
-class RangeFilter(Filter, SensorEntity):
+class RangeFilter(Filter):
     """Range filter.
 
     Determines if new state is in the range of upper_bound and lower_bound.
@@ -509,7 +517,7 @@ class RangeFilter(Filter, SensorEntity):
 
 
 @FILTERS.register(FILTER_NAME_OUTLIER)
-class OutlierFilter(Filter, SensorEntity):
+class OutlierFilter(Filter):
     """BASIC outlier filter.
 
     Determines if new state is in a band around the median.
@@ -547,7 +555,7 @@ class OutlierFilter(Filter, SensorEntity):
 
 
 @FILTERS.register(FILTER_NAME_LOWPASS)
-class LowPassFilter(Filter, SensorEntity):
+class LowPassFilter(Filter):
     """BASIC Low Pass Filter."""
 
     def __init__(self, window_size, precision, entity, time_constant: int):
@@ -571,7 +579,7 @@ class LowPassFilter(Filter, SensorEntity):
 
 
 @FILTERS.register(FILTER_NAME_TIME_SMA)
-class TimeSMAFilter(Filter, SensorEntity):
+class TimeSMAFilter(Filter):
     """Simple Moving Average (SMA) Filter.
 
     The window_size is determined by time, and SMA is time weighted.
@@ -617,7 +625,7 @@ class TimeSMAFilter(Filter, SensorEntity):
 
 
 @FILTERS.register(FILTER_NAME_THROTTLE)
-class ThrottleFilter(Filter, SensorEntity):
+class ThrottleFilter(Filter):
     """Throttle Filter.
 
     One sample per window.
@@ -640,7 +648,7 @@ class ThrottleFilter(Filter, SensorEntity):
 
 
 @FILTERS.register(FILTER_NAME_TIME_THROTTLE)
-class TimeThrottleFilter(Filter, SensorEntity):
+class TimeThrottleFilter(Filter):
     """Time Throttle Filter.
 
     One sample per time period.
