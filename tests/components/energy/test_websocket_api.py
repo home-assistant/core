@@ -79,7 +79,22 @@ async def test_save_preferences(hass, hass_ws_client, hass_storage) -> None:
                         "number_energy_price": 0.20,
                     },
                 ],
-                "flow_to": [{"stat_energy_to": "return_to_grid_stat"}],
+                "flow_to": [
+                    {
+                        "stat_energy_to": "sensor.return_to_grid",
+                        "stat_compensation": None,
+                        "entity_energy_to": None,
+                        "entity_energy_price": None,
+                        "number_energy_price": None,
+                    },
+                    {
+                        "stat_energy_to": "return_to_grid_stat",
+                        "stat_compensation": None,
+                        "entity_energy_to": "sensor.return_to_grid",
+                        "entity_energy_price": None,
+                        "number_energy_price": 0.20,
+                    },
+                ],
                 "cost_adjustment_day": 1.2,
             },
             {

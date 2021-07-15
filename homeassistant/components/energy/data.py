@@ -46,6 +46,16 @@ class FlowToGridSourceType(TypedDict):
     # kWh meter
     stat_energy_to: str
 
+    # statistic_id of compensation ($) received for contributing back
+    # If set to None and entity_energy_from and entity_energy_price are configured,
+    # an EnergyCostSensor will be automatically created
+    stat_compensation: str | None
+
+    # Used to generate costs if stat_compensation is set to None
+    entity_energy_from: str | None  # entity_id of an energy meter (kWh), entity_id of the energy meter for stat_energy_from
+    entity_energy_price: str | None  # entity_id of an entity providing price ($/kWh)
+    number_energy_price: float | None  # Price for energy ($/kWh)
+
 
 class GridSourceType(TypedDict):
     """Dictionary holding the source of grid energy consumption."""
@@ -119,21 +129,30 @@ FLOW_FROM_GRID_SOURCE_SCHEMA = vol.All(
 FLOW_TO_GRID_SOURCE_SCHEMA = vol.Schema(
     {
         vol.Required("stat_energy_to"): str,
+        vol.Required("stat_compensation"): vol.Any(None, str),
+        vol.Required("entity_energy_to"): vol.Any(None, str),
+        vol.Required("entity_energy_price"): vol.Any(None, str),
+        vol.Required("number_energy_price"): vol.Any(None, vol.Coerce(float)),
     }
 )
 
 
-def _flow_from_ensure_energy_from_stat_unique(
-    val: list[FlowFromGridSourceType],
-) -> list[FlowFromGridSourceType]:
-    """Ensure that the user doesn't add duplicate stats to grid sources."""
-    counts = Counter(flow_from["stat_energy_from"] for flow_from in val)
+def _generate_unique_value_validator(key: str) -> Callable[[list[dict]], list[dict]]:
+    """Generate a validator that ensures a value is only used once."""
 
-    for stat, count in counts.items():
-        if count > 1:
-            raise vol.Invalid(f"Cannot specify {stat} more than once")
+    def validate_uniqueness(
+        val: list[dict],
+    ) -> list[dict]:
+        """Ensure that the user doesn't add duplicate values."""
+        counts = Counter(flow_from[key] for flow_from in val)
 
-    return val
+        for value, count in counts.items():
+            if count > 1:
+                raise vol.Invalid(f"Cannot specify {value} more than once")
+
+        return val
+
+    return validate_uniqueness
 
 
 GRID_SOURCE_SCHEMA = vol.Schema(
@@ -141,10 +160,12 @@ GRID_SOURCE_SCHEMA = vol.Schema(
         vol.Required("type"): "grid",
         vol.Required("flow_from"): vol.All(
             [FLOW_FROM_GRID_SOURCE_SCHEMA],
-            vol.Length(min=1),
-            _flow_from_ensure_energy_from_stat_unique,
+            _generate_unique_value_validator("stat_energy_from"),
         ),
-        vol.Required("flow_to"): [FLOW_TO_GRID_SOURCE_SCHEMA],
+        vol.Required("flow_to"): vol.All(
+            [FLOW_TO_GRID_SOURCE_SCHEMA],
+            _generate_unique_value_validator("stat_energy_to"),
+        ),
         vol.Required("cost_adjustment_day"): vol.Coerce(float),
     }
 )
