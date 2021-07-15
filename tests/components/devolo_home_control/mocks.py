@@ -5,6 +5,9 @@ from unittest.mock import MagicMock
 
 from devolo_home_control_api.devices.zwave import Zwave
 from devolo_home_control_api.homecontrol import HomeControl
+from devolo_home_control_api.properties.multi_level_switch_property import (
+    MultiLevelSwitchProperty,
+)
 from devolo_home_control_api.publisher.publisher import Publisher
 
 
@@ -21,14 +24,25 @@ class BinarySensorPropertyMock(BinarySensorProperty):
         self.state = False
 
 
-class SettingsMock(SettingsProperty):
+class SirenPropertyMock(MultiLevelSwitchProperty):
+    """devolo Home Control siren mock."""
+
+    def __init__(self):
+        """Initialize the mock."""
+        self.element_uid = "Test"
+        self.max = 0
+        self.min = 0
+        self.switch_type = "tone"
+        self._value = 0
+        self._logger = MagicMock()
+
+
+class SettingsMock:
     """devolo Home Control settings mock."""
 
-    def __init__(self, **kwargs: Any) -> None:
-        """Initialize the mock."""
-        self._logger = MagicMock()
-        self.name = "Test"
-        self.zone = "Test"
+    name = "Test"
+    zone = "Test"
+    tone = 1
 
 
 class DeviceMock(Zwave):
@@ -83,6 +97,19 @@ class DisabledBinarySensorMock(DeviceMock):
         }
 
 
+class SirenMock(DeviceMock):
+    """devolo Home Control siren device mock."""
+
+    def __init__(self) -> None:
+        """Initialize the mock."""
+        super().__init__()
+        self.device_model_uid = "devolo.model.Siren"
+        self.multi_level_switch_property = {
+            "devolo.SirenMultiLevelSwitch:Test": SirenPropertyMock()
+        }
+        self.settings_property["tone"] = SettingsMock()
+
+
 class HomeControlMock(HomeControl):
     """devolo Home Control gateway mock."""
 
@@ -127,3 +154,14 @@ class HomeControlMockDisabledBinarySensor(HomeControlMock):
         """Initialize the mock."""
         super().__init__()
         self.devices = {"Test": DisabledBinarySensorMock()}
+
+
+class HomeControlMockSiren(HomeControlMock):
+    """devolo Home Control gateway mock with siren device."""
+
+    def __init__(self, **kwargs: Any) -> None:
+        """Initialize the mock."""
+        super().__init__()
+        self.devices = {"Test": SirenMock()}
+        self.publisher = Publisher(self.devices.keys())
+        self.publisher.unregister = MagicMock()
