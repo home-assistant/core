@@ -70,14 +70,14 @@ class BrotherPrinterSensor(CoordinatorEntity, SensorEntity):
         self._attr_unique_id = f"{coordinator.data.serial.lower()}_{kind}"
         self._attr_unit_of_measurement = description[ATTR_UNIT]
         self.kind = kind
-        remaining_pages, drum_counter = ATTRS_MAP.get(self.kind, (None, None))
+        remaining_pages, drum_counter = ATTRS_MAP.get(kind, (None, None))
         self._attr_extra_state_attributes = {}
         if remaining_pages and drum_counter:
             self._attr_extra_state_attributes[ATTR_REMAINING_PAGES] = getattr(
-                self.coordinator.data, remaining_pages
+                coordinator.data, remaining_pages
             )
             self._attr_extra_state_attributes[ATTR_COUNTER] = getattr(
-                self.coordinator.data, drum_counter
+                coordinator.data, drum_counter
             )
 
     @property
