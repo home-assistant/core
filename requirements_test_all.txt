@@ -1242,6 +1242,9 @@ transmissionrpc==0.11
 # homeassistant.components.tuya
 tuyaha==0.0.10
 
+# homeassistant.components.twcmanager
+twcmanager_client==0.1.0
+
 # homeassistant.components.twentemilieu
 twentemilieu==0.3.0
 
