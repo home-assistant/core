@@ -73,6 +73,9 @@ from .const import (
     CONF_RETRY_ON_EMPTY,
     CONF_REVERSE_ORDER,
     CONF_SCALE,
+    CONF_SCAN_GROUP,
+    CONF_SCAN_GROUPS,
+    CONF_SCAN_INTERVAL_MILLIS,
     CONF_STATE_CLOSED,
     CONF_STATE_CLOSING,
     CONF_STATE_OFF,
@@ -122,6 +125,7 @@ BASE_COMPONENT_SCHEMA = vol.Schema(
             CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
         ): cv.positive_int,
         vol.Optional(CONF_LAZY_ERROR, default=0): cv.positive_int,
+        vol.Optional(CONF_SCAN_GROUP): cv.string,
     }
 )
 
@@ -294,6 +298,17 @@ MODBUS_SCHEMA = vol.Schema(
         ),
         vol.Optional(CONF_SWITCHES): vol.All(cv.ensure_list, [SWITCH_SCHEMA]),
         vol.Optional(CONF_FANS): vol.All(cv.ensure_list, [FAN_SCHEMA]),
+        vol.Optional(CONF_SCAN_GROUPS): vol.All(
+            cv.ensure_list,
+            [
+                vol.All(
+                    {
+                        vol.Required(CONF_NAME): cv.string,
+                        vol.Required(CONF_SCAN_INTERVAL_MILLIS): cv.positive_int,
+                    }
+                )
+            ],
+        ),
     }
 )
 
