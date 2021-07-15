@@ -6,9 +6,8 @@ from homeassistant.components.sensor import (
     STATE_CLASS_MEASUREMENT,
     SensorEntity,
 )
-from homeassistant.const import CONF_API_KEY, LIGHT_LUX, PERCENTAGE, TEMP_CELSIUS
+from homeassistant.const import LIGHT_LUX, PERCENTAGE, TEMP_CELSIUS
 from homeassistant.core import callback
-from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -38,10 +37,9 @@ SUPPORTED_SENSORS = {"temperatureSensor", "humiditySensor", "lightSensor"}
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up Freedompro sensor."""
-    api_key = entry.data[CONF_API_KEY]
     coordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
-        Device(hass, api_key, device, coordinator)
+        Device(device, coordinator)
         for device in coordinator.data
         if device["type"] in SUPPORTED_SENSORS
     )
@@ -50,27 +48,23 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class Device(CoordinatorEntity, SensorEntity):
     """Representation of an Freedompro sensor."""
 
-    def __init__(self, hass, api_key, device, coordinator):
+    def __init__(self, device, coordinator):
         """Initialize the Freedompro sensor."""
         super().__init__(coordinator)
-        self._hass = hass
-        self._session = aiohttp_client.async_get_clientsession(self._hass)
-        self._api_key = api_key
         self._attr_name = device["name"]
         self._attr_unique_id = device["uid"]
         self._type = device["type"]
-        self._characteristics = device["characteristics"]
         self._attr_device_info = {
             "name": self.name,
             "identifiers": {
                 (DOMAIN, self.unique_id),
             },
-            "model": self._type,
+            "model": device["type"],
             "manufacturer": "Freedompro",
         }
-        self._attr_device_class = DEVICE_CLASS_MAP[self._type]
-        self._attr_state_class = STATE_CLASS_MAP[self._type]
-        self._attr_unit_of_measurement = UNIT_MAP[self._type]
+        self._attr_device_class = DEVICE_CLASS_MAP[device["type"]]
+        self._attr_state_class = STATE_CLASS_MAP[device["type"]]
+        self._attr_unit_of_measurement = UNIT_MAP[device["type"]]
         self._attr_state = 0
 
     @callback
