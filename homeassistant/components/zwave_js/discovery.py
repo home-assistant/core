@@ -591,6 +591,7 @@ DISCOVERY_SCHEMAS = [
         platform="siren",
         primary_value=SIREN_TONE_SCHEMA,
     ),
+    # select
     # siren default tone
     ZWaveDiscoverySchema(
         platform="select",
@@ -602,6 +603,7 @@ DISCOVERY_SCHEMAS = [
         ),
         required_values=[SIREN_TONE_SCHEMA],
     ),
+    # number
     # siren default volume
     ZWaveDiscoverySchema(
         platform="number",
