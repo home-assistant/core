@@ -25,7 +25,9 @@ def get_attr_from_sia_event(event: SIAEvent) -> dict[str, Any]:
         ATTR_CODE: event.code,
         ATTR_MESSAGE: event.message,
         ATTR_ID: event.id,
-        ATTR_TIMESTAMP: event.timestamp.isoformat(),
+        ATTR_TIMESTAMP: event.timestamp.isoformat()
+        if event.timestamp
+        else utcnow().isoformat(),
     }
 
 
