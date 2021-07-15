@@ -11,6 +11,7 @@ from homeassistant.components.zwave_js.const import (
     ATTR_CONFIG_PARAMETER,
     ATTR_CONFIG_PARAMETER_BITMASK,
     ATTR_CONFIG_VALUE,
+    ATTR_METER_TYPE,
     ATTR_OPTIONS,
     ATTR_PROPERTY,
     ATTR_PROPERTY_KEY,
@@ -19,12 +20,14 @@ from homeassistant.components.zwave_js.const import (
     ATTR_WAIT_FOR_RESULT,
     DOMAIN,
     SERVICE_BULK_SET_PARTIAL_CONFIG_PARAMETERS,
+    SERVICE_METER_RESET,
     SERVICE_MULTICAST_SET_VALUE,
     SERVICE_PING,
     SERVICE_REFRESH_VALUE,
     SERVICE_SET_CONFIG_PARAMETER,
     SERVICE_SET_VALUE,
 )
+from homeassistant.components.zwave_js.helpers import get_device_id
 from homeassistant.const import ATTR_DEVICE_ID, ATTR_ENTITY_ID
 from homeassistant.helpers.device_registry import (
     async_entries_for_config_entry,
@@ -1084,3 +1087,74 @@ async def test_ping(
             {},
             blocking=True,
         )
+
+
+async def test_meter_reset(
+    hass,
+    client,
+    aeon_smart_switch_6,
+    climate_heatit_z_trm3,
+    integration,
+):
+    """Test meter_reset service."""
+    client.async_send_command.return_value = {}
+    client.async_send_command_no_wait.return_value = {}
+
+    dev_reg = async_get_dev_reg(hass)
+    device = dev_reg.async_get_device({get_device_id(client, aeon_smart_switch_6)})
+
+    # Test successful meter reset call
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_METER_RESET,
+        {
+            ATTR_DEVICE_ID: device.id,
+        },
+        blocking=True,
+    )
+
+    assert len(client.async_send_command_no_wait.call_args_list) == 1
+    args = client.async_send_command_no_wait.call_args[0][0]
+    assert args["command"] == "endpoint.invoke_cc_api"
+    assert args["nodeId"] == aeon_smart_switch_6.node_id
+    assert args["endpoint"] == 0
+    assert args["args"] == []
+
+    client.async_send_command_no_wait.reset_mock()
+
+    # Test successful meter reset call with options
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_METER_RESET,
+        {
+            ATTR_DEVICE_ID: device.id,
+            ATTR_METER_TYPE: 1,
+            ATTR_VALUE: 2,
+        },
+        blocking=True,
+    )
+
+    assert len(client.async_send_command_no_wait.call_args_list) == 1
+    args = client.async_send_command_no_wait.call_args[0][0]
+    assert args["command"] == "endpoint.invoke_cc_api"
+    assert args["nodeId"] == aeon_smart_switch_6.node_id
+    assert args["endpoint"] == 0
+    assert args["args"] == [{"type": 1, "targetValue": 2}]
+
+    client.async_send_command_no_wait.reset_mock()
+
+    # Test that no reset meter call gets made when the input device doesn't support it
+    dev_reg = async_get_dev_reg(hass)
+    device = dev_reg.async_get_device({get_device_id(client, climate_heatit_z_trm3)})
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_METER_RESET,
+        {
+            ATTR_DEVICE_ID: device.id,
+        },
+        blocking=True,
+    )
+    # If we got no calls we know that the escape logic worked
+    assert len(client.async_send_command_no_wait.call_args_list) == 0
+    assert len(client.async_send_command.call_args_list) == 0
