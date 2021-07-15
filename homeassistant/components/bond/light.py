@@ -83,16 +83,6 @@ class BondBaseLight(BondEntity, LightEntity):
 
     _attr_supported_features = 0
 
-    def __init__(
-        self,
-        hub: BondHub,
-        device: BondDevice,
-        bpup_subs: BPUPSubscriptions,
-        sub_device: str | None = None,
-    ) -> None:
-        """Create HA entity representing Bond light."""
-        super().__init__(hub, device, bpup_subs, sub_device)
-
 
 class BondLight(BondBaseLight, BondEntity, LightEntity):
     """Representation of a Bond light."""
@@ -135,7 +125,9 @@ class BondDownLight(BondBaseLight, BondEntity, LightEntity):
 
     def _apply_state(self, state: dict) -> None:
         self._attr_is_on = (
-            True if state.get("down_light") and state.get("light") else False
+            True  # pylint: disable=simplifiable-if-expression
+            if state.get("down_light") and state.get("light")
+            else False
         )
 
     async def async_turn_on(self, **kwargs: Any) -> None:
@@ -156,7 +148,9 @@ class BondUpLight(BondBaseLight, BondEntity, LightEntity):
 
     def _apply_state(self, state: dict) -> None:
         self._attr_is_on = (
-            True if state.get("up_light") and state.get("light") else False
+            True  # pylint: disable=simplifiable-if-expression
+            if state.get("up_light") and state.get("light")
+            else False
         )
 
     async def async_turn_on(self, **kwargs: Any) -> None:
