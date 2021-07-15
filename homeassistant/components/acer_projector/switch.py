@@ -82,7 +82,7 @@ class AcerSwitch(SwitchEntity):
         )
         self._serial_port = serial_port
         self._attr_name = name
-        self._attr_extra_state_attributes = {
+        self._attributes = {
             LAMP_HOURS: STATE_UNKNOWN,
             INPUT_SOURCE: STATE_UNKNOWN,
             ECO_MODE: STATE_UNKNOWN,
@@ -128,14 +128,12 @@ class AcerSwitch(SwitchEntity):
         else:
             self._attr_available = False
 
-        if self.extra_state_attributes is not None:
-            attr = {}
-            for key in self.extra_state_attributes:
-                msg = CMD_DICT.get(key)
-                if msg:
-                    awns = self._write_read_format(msg)
-                    attr[key] = awns
-            self._attr_extra_state_attributes = attr
+        for key in self._attributes:
+            msg = CMD_DICT.get(key)
+            if msg:
+                awns = self._write_read_format(msg)
+                self._attributes[key] = awns
+        self._attr_extra_state_attributes = self._attributes
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the projector on."""
