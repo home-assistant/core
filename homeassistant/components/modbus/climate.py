@@ -71,6 +71,12 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
         super().__init__(hub, config)
         self._target_temperature_register = config[CONF_TARGET_TEMP]
         self._unit = config[CONF_TEMPERATURE_UNIT]
+        hub.register_update_listener(
+            self._slave,
+            CALL_TYPE_REGISTER_HOLDING,
+            self._target_temperature_register,
+            self.update,
+        )
 
         self._attr_supported_features = SUPPORT_TARGET_TEMPERATURE
         self._attr_hvac_mode = HVAC_MODE_AUTO
@@ -135,27 +141,67 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
         """Update Target & Current Temperature."""
         # remark "now" is a dummy parameter to avoid problems with
         # async_track_time_interval
-
         # do not allow multiple active calls to the same platform
         if self._call_active:
             return
         self._call_active = True
-        self._attr_target_temperature = await self._async_read_register(
-            CALL_TYPE_REGISTER_HOLDING, self._target_temperature_register
+        
+        result = await self._hub.async_pymodbus_call(
+            self._slave,
+            self._target_temperature_register,
+            self._count,
+            CALL_TYPE_REGISTER_HOLDING,
         )
-        self._attr_current_temperature = await self._async_read_register(
-            self._input_type, self._address
+        if result is None:
+            if self._lazy_errors:
+                self._lazy_errors -= 1
+                return -1
+            self._lazy_errors = self._lazy_error_count
+            self._attr_available = False
+            return
+
+        new_target_temperature = await self._async_read_register(result, 0)
+        if new_target_temperature != self._attr_target_temperature:
+            self._attr_target_temperature = new_target_temperature
+            self.async_write_ha_state()
+
+        result = await self._hub.async_pymodbus_call(
+            self._slave, self._address, self._count, self._input_type
         )
-        self._call_active = False
-        self.async_write_ha_state()
+        if result is None:
+            if self._lazy_errors:
+                self._lazy_errors -= 1
+                return -1
+            self._lazy_errors = self._lazy_error_count            
+            self._attr_available = False
+            return
+
+        new_current_temperature = await self._async_read_register(result, 0)
+        if new_current_temperature != self._attr_current_temperature:
+            self._attr_current_temperature = new_current_temperature
+            self.async_write_ha_state()
+
+    async def update(self, result, slaveId, input_type, address):
+        """Update Target & Current Temperature."""
+        if result is None:
+            self._available = False
+            return
+        if input_type == CALL_TYPE_REGISTER_HOLDING:
+            new_value = await self._async_read_register(result, address)
+            if new_value != self._attr_target_temperature:
+                self._attr_target_temperature = new_value
+                self.async_write_ha_state()
+        else:
+            new_value = await self._async_read_register(result, address)
+            if new_value != self._attr_current_temperature:
+                self._attr_current_temperature = new_value
+                self.async_write_ha_state()
+        self._available = True
 
     async def _async_read_register(
-        self, register_type: str, register: int
+        self, result: list, address: int
     ) -> float | None:
         """Read register using the Modbus hub slave."""
-        result = await self._hub.async_pymodbus_call(
-            self._slave, register, self._count, register_type
-        )
         if result is None:
             if self._lazy_errors:
                 self._lazy_errors -= 1
@@ -165,7 +211,7 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
             return -1
 
         self._lazy_errors = self._lazy_error_count
-        self._value = self.unpack_structure_result(result.registers)
+        self._value = self.unpack_structure_result(result.registers, address)
         if not self._value:
             self._attr_available = False
             return None

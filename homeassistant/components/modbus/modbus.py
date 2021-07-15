@@ -4,8 +4,9 @@ from __future__ import annotations
 import asyncio
 from collections import namedtuple
 from collections.abc import Callable
+from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, Callable, List
 
 from pymodbus.client.sync import (
     BaseModbusClient,
@@ -25,6 +26,7 @@ from homeassistant.const import (
     CONF_METHOD,
     CONF_NAME,
     CONF_PORT,
+    CONF_SCAN_INTERVAL,
     CONF_TIMEOUT,
     CONF_TYPE,
     EVENT_HOMEASSISTANT_STOP,
@@ -35,6 +37,7 @@ from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import Event, async_call_later
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.event import async_call_later, async_track_time_interval
 
 from .const import (
     ATTR_ADDRESS,
@@ -229,6 +232,27 @@ async def async_modbus_setup(
     return True
 
 
+class ModbusUpdateListener:
+    """Update listener configuration."""
+
+    def __init__(
+        self,
+        slave: str,
+        input_type: str,
+        address: int,
+        func: Callable[[Any, str, str, int], None],
+    ):
+        """Initialize the Modbus update listener configuration."""
+        self._slave = slave
+        self._input_type = input_type
+        self._address = address
+        self._func = func
+
+    def notify(self, result, offset):
+        """Notify update listener."""
+        return self._func(result, self._slave, self._input_type, self._address - offset)
+
+
 class ModbusHub:
     """Thread safe wrapper class for pymodbus."""
 
@@ -244,6 +268,7 @@ class ModbusHub:
         self.name = client_config[CONF_NAME]
         self._config_type = client_config[CONF_TYPE]
         self._config_delay = client_config[CONF_DELAY]
+        self._scan_interval = int(client_config[CONF_SCAN_INTERVAL])
         self._pb_call: dict[str, RunEntry] = {}
         self._pb_class = {
             SERIAL: ModbusSerialClient,
@@ -274,6 +299,7 @@ class ModbusHub:
             self._pb_params["host"] = client_config[CONF_HOST]
             if self._config_type == RTUOVERTCP:
                 self._pb_params["framer"] = ModbusRtuFramer
+        self._update_listeners = dict[Any, List[ModbusUpdateListener]]()
 
         Defaults.Timeout = client_config[CONF_TIMEOUT]
         if CONF_MSG_WAIT in client_config:
@@ -314,6 +340,9 @@ class ModbusHub:
             self._async_cancel_listener = async_call_later(
                 self.hass, self._config_delay, self.async_end_delay
             )
+        else:
+            self.start_update_listener()
+
         return True
 
     @callback
@@ -321,6 +350,51 @@ class ModbusHub:
         """End startup delay."""
         self._async_cancel_listener = None
         self._config_delay = 0
+        self.start_update_listener()
+
+    def start_update_listener(self):
+        """Possibly start monitoring of updates."""
+        if self._scan_interval > 0:
+            async_track_time_interval(
+                self.hass, self.async_update, timedelta(seconds=self._scan_interval)
+            )
+
+    def register_update_listener(self, slave, input_type, address, func):
+        """Register update listener."""
+        _LOGGER.debug("Register update listener %s, %s, %s", slave, input_type, address)
+        key = (slave, input_type)
+        if key in self._update_listeners:
+            self._update_listeners[key].append(
+                ModbusUpdateListener(slave, input_type, address, func)
+            )
+        else:
+            self._update_listeners[key] = [
+                ModbusUpdateListener(slave, input_type, address, func)
+            ]
+
+    @callback
+    async def async_update(self, now=None):
+        """Update the state of all entities."""
+        # remark "now" is a dummy parameter to avoid problems with
+        # async_track_time_interval
+        for ((slave, input_type), listeners) in self._update_listeners.items():
+            min_address = 1000
+            max_address = 0
+            for listener in listeners:
+                min_address = min(min_address, listener._address)
+                max_address = max(max_address, listener._address)
+            _LOGGER.debug(
+                "query modbus: slave=%s, minAdress=%s, maxAdress=%s, input_type=%s",
+                slave,
+                min_address,
+                max_address,
+                input_type,
+            )
+            result = await self.async_pymodbus_call(
+                slave, min_address, max_address + 1 - min_address, input_type
+            )
+            for listener in listeners:
+                await listener.notify(result, min_address)
 
     async def async_restart(self) -> None:
         """Reconnect client."""

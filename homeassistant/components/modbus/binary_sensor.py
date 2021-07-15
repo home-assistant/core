@@ -55,6 +55,10 @@ class ModbusBinarySensor(BasePlatform, RestoreEntity, BinarySensorEntity):
             self._slave, self._address, 1, self._input_type
         )
         self._call_active = False
+        self.update(result, self._slave, self._input_type, 0)
+
+    async def update(self, result, slaveId, input_type, address):
+        """Update the state of the sensor."""
         if result is None:
             if self._lazy_errors:
                 self._lazy_errors -= 1
@@ -65,6 +69,14 @@ class ModbusBinarySensor(BasePlatform, RestoreEntity, BinarySensorEntity):
             return
 
         self._lazy_errors = self._lazy_error_count
-        self._attr_is_on = result.bits[0] & 1
+        _LOGGER.debug(
+            "update binary_sensor slave=%s, input_type=%s, address=%s -> result=%s",
+            slaveId,
+            input_type,
+            address,
+            result.bits,
+        )        
+        self._attr_is_on = result.bits[address] & 1
         self._attr_available = True
         self.async_write_ha_state()
+       

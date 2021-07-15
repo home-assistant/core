@@ -145,6 +145,10 @@ class ModbusCover(BasePlatform, CoverEntity, RestoreEntity):
             self._slave, self._address, 1, self._input_type
         )
         self._call_active = False
+        self.update(result, self._slave, self._input_type, 0)
+
+    async def update(self, result, slaveId, input_type, address):
+        """Update the state of the cover."""
         if result is None:
             if self._lazy_errors:
                 self._lazy_errors -= 1
@@ -155,8 +159,22 @@ class ModbusCover(BasePlatform, CoverEntity, RestoreEntity):
             return
         self._lazy_errors = self._lazy_error_count
         self._attr_available = True
-        if self._input_type == CALL_TYPE_COIL:
-            self._set_attr_state(bool(result.bits[0] & 1))
+        if input_type == CALL_TYPE_COIL:
+            _LOGGER.debug(
+                "update cover slave=%s, input_type=%s, address=%s -> result=%s",
+                slaveId,
+                input_type,
+                address,
+                result.bits,
+            )
+            self._set_attr_state(bool(result.bits[address] & 1))
         else:
-            self._set_attr_state(int(result.registers[0]))
-        self.async_write_ha_state()
+            _LOGGER.debug(
+                "update cover slave=%s, input_type=%s, address=%s -> result=%s",
+                slaveId,
+                input_type,
+                address,
+                result.registers,
+            )
+            self._set_attr_state(int(result.registers[address]))
+        self.async_write_ha_state()      

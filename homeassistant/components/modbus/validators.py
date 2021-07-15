@@ -170,8 +170,8 @@ def scan_interval_validator(config: dict) -> dict:
                         entry.get(CONF_NAME),
                         scan_interval,
                     )
-                entry[CONF_SCAN_INTERVAL] = scan_interval
-                minimum_scan_interval = min(scan_interval, minimum_scan_interval)
+        entry[CONF_SCAN_INTERVAL] = scan_interval
+        minimum_scan_interval = min(scan_interval, minimum_scan_interval)
         if (
             CONF_TIMEOUT in hub
             and hub[CONF_TIMEOUT] > minimum_scan_interval - 1
