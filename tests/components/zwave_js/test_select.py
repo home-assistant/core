@@ -1,13 +1,13 @@
 """Test the Z-Wave JS number platform."""
 from zwave_js_server.event import Event
 
-SELECT_ENTITY = "select.indoor_siren_6_default_tone_2"
+DEFAULT_TONE_SELECT_ENTITY = "select.indoor_siren_6_default_tone_2"
 
 
-async def test_select(hass, client, aeotec_zw164_siren, integration):
-    """Test the select entity."""
+async def test_default_tone_select(hass, client, aeotec_zw164_siren, integration):
+    """Test the default tone select entity."""
     node = aeotec_zw164_siren
-    state = hass.states.get(SELECT_ENTITY)
+    state = hass.states.get(DEFAULT_TONE_SELECT_ENTITY)
 
     assert state
     assert state.state == "17ALAR~1 (35 sec)"
@@ -48,7 +48,7 @@ async def test_select(hass, client, aeotec_zw164_siren, integration):
     await hass.services.async_call(
         "select",
         "select_option",
-        {"entity_id": SELECT_ENTITY, "option": "30DOOR~1 (27 sec)"},
+        {"entity_id": DEFAULT_TONE_SELECT_ENTITY, "option": "30DOOR~1 (27 sec)"},
         blocking=True,
     )
 
@@ -97,5 +97,5 @@ async def test_select(hass, client, aeotec_zw164_siren, integration):
     )
     node.receive_event(event)
 
-    state = hass.states.get(SELECT_ENTITY)
+    state = hass.states.get(DEFAULT_TONE_SELECT_ENTITY)
     assert state.state == "30DOOR~1 (27 sec)"
