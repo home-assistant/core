@@ -344,32 +344,8 @@ async def test_send_command_device_timeout(hass, discovery, device, mock_now):
     assert state.state != STATE_UNAVAILABLE
 
 
-async def test_send_power_on_device_timeout(hass, discovery, device):
-    """Test for sending power on command to the device with a device timeout."""
-    await async_setup_gree(hass)
-
-    # First update to make the device available
-    state = hass.states.get(ENTITY_ID)
-    assert state.name == "fake-device-1"
-    assert state.state != STATE_UNAVAILABLE
-
-    device().push_state_update.side_effect = DeviceTimeoutError
-
-    assert await hass.services.async_call(
-        DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_ID},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
-
-    state = hass.states.get(ENTITY_ID)
-    assert state is not None
-    assert state.state != STATE_UNAVAILABLE
-
-
-async def test_send_power_off(hass, discovery, device):
-    """Test for sending power off command to the device."""
+async def test_send_power_on(hass, discovery, device, mock_now):
+    """Test for sending power on command to the device."""
     await async_setup_gree(hass)
 
     assert await hass.services.async_call(
@@ -384,7 +360,7 @@ async def test_send_power_off(hass, discovery, device):
     assert state.state == HVAC_MODE_OFF
 
 
-async def test_send_power_off_device_timeout(hass, discovery, device):
+async def test_send_power_off_device_timeout(hass, discovery, device, mock_now):
     """Test for sending power off command to the device with a device timeout."""
     device().push_state_update.side_effect = DeviceTimeoutError
 
@@ -480,7 +456,7 @@ async def test_update_target_temperature(hass, discovery, device, units, tempera
 @pytest.mark.parametrize(
     "preset", (PRESET_AWAY, PRESET_ECO, PRESET_SLEEP, PRESET_BOOST, PRESET_NONE)
 )
-async def test_send_preset_mode(hass, discovery, device, preset):
+async def test_send_preset_mode(hass, discovery, device, mock_now, preset):
     """Test for sending preset mode command to the device."""
     await async_setup_gree(hass)
 
@@ -496,7 +472,7 @@ async def test_send_preset_mode(hass, discovery, device, preset):
     assert state.attributes.get(ATTR_PRESET_MODE) == preset
 
 
-async def test_send_invalid_preset_mode(hass, discovery, device):
+async def test_send_invalid_preset_mode(hass, discovery, device, mock_now):
     """Test for sending preset mode command to the device."""
     await async_setup_gree(hass)
 
@@ -516,7 +492,9 @@ async def test_send_invalid_preset_mode(hass, discovery, device):
 @pytest.mark.parametrize(
     "preset", (PRESET_AWAY, PRESET_ECO, PRESET_SLEEP, PRESET_BOOST, PRESET_NONE)
 )
-async def test_send_preset_mode_device_timeout(hass, discovery, device, preset):
+async def test_send_preset_mode_device_timeout(
+    hass, discovery, device, mock_now, preset
+):
     """Test for sending preset mode command to the device with a device timeout."""
     device().push_state_update.side_effect = DeviceTimeoutError
 
@@ -537,7 +515,7 @@ async def test_send_preset_mode_device_timeout(hass, discovery, device, preset):
 @pytest.mark.parametrize(
     "preset", (PRESET_AWAY, PRESET_ECO, PRESET_SLEEP, PRESET_BOOST, PRESET_NONE)
 )
-async def test_update_preset_mode(hass, discovery, device, preset):
+async def test_update_preset_mode(hass, discovery, device, mock_now, preset):
     """Test for updating preset mode from the device."""
     device().steady_heat = preset == PRESET_AWAY
     device().power_save = preset == PRESET_ECO
@@ -562,7 +540,7 @@ async def test_update_preset_mode(hass, discovery, device, preset):
         HVAC_MODE_HEAT,
     ),
 )
-async def test_send_hvac_mode(hass, discovery, device, hvac_mode):
+async def test_send_hvac_mode(hass, discovery, device, mock_now, hvac_mode):
     """Test for sending hvac mode command to the device."""
     await async_setup_gree(hass)
 
@@ -582,7 +560,9 @@ async def test_send_hvac_mode(hass, discovery, device, hvac_mode):
     "hvac_mode",
     (HVAC_MODE_AUTO, HVAC_MODE_COOL, HVAC_MODE_DRY, HVAC_MODE_FAN_ONLY, HVAC_MODE_HEAT),
 )
-async def test_send_hvac_mode_device_timeout(hass, discovery, device, hvac_mode):
+async def test_send_hvac_mode_device_timeout(
+    hass, discovery, device, mock_now, hvac_mode
+):
     """Test for sending hvac mode command to the device with a device timeout."""
     device().push_state_update.side_effect = DeviceTimeoutError
 
@@ -611,7 +591,7 @@ async def test_send_hvac_mode_device_timeout(hass, discovery, device, hvac_mode)
         HVAC_MODE_HEAT,
     ),
 )
-async def test_update_hvac_mode(hass, discovery, device, hvac_mode):
+async def test_update_hvac_mode(hass, discovery, device, mock_now, hvac_mode):
     """Test for updating hvac mode from the device."""
     device().power = hvac_mode != HVAC_MODE_OFF
     device().mode = HVAC_MODES_REVERSE.get(hvac_mode)
@@ -627,7 +607,7 @@ async def test_update_hvac_mode(hass, discovery, device, hvac_mode):
     "fan_mode",
     (FAN_AUTO, FAN_LOW, FAN_MEDIUM_LOW, FAN_MEDIUM, FAN_MEDIUM_HIGH, FAN_HIGH),
 )
-async def test_send_fan_mode(hass, discovery, device, fan_mode):
+async def test_send_fan_mode(hass, discovery, device, mock_now, fan_mode):
     """Test for sending fan mode command to the device."""
     await async_setup_gree(hass)
 
@@ -643,7 +623,7 @@ async def test_send_fan_mode(hass, discovery, device, fan_mode):
     assert state.attributes.get(ATTR_FAN_MODE) == fan_mode
 
 
-async def test_send_invalid_fan_mode(hass, discovery, device):
+async def test_send_invalid_fan_mode(hass, discovery, device, mock_now):
     """Test for sending fan mode command to the device."""
     await async_setup_gree(hass)
 
@@ -664,7 +644,9 @@ async def test_send_invalid_fan_mode(hass, discovery, device):
     "fan_mode",
     (FAN_AUTO, FAN_LOW, FAN_MEDIUM_LOW, FAN_MEDIUM, FAN_MEDIUM_HIGH, FAN_HIGH),
 )
-async def test_send_fan_mode_device_timeout(hass, discovery, device, fan_mode):
+async def test_send_fan_mode_device_timeout(
+    hass, discovery, device, mock_now, fan_mode
+):
     """Test for sending fan mode command to the device with a device timeout."""
     device().push_state_update.side_effect = DeviceTimeoutError
 
@@ -686,7 +668,7 @@ async def test_send_fan_mode_device_timeout(hass, discovery, device, fan_mode):
     "fan_mode",
     (FAN_AUTO, FAN_LOW, FAN_MEDIUM_LOW, FAN_MEDIUM, FAN_MEDIUM_HIGH, FAN_HIGH),
 )
-async def test_update_fan_mode(hass, discovery, device, fan_mode):
+async def test_update_fan_mode(hass, discovery, device, mock_now, fan_mode):
     """Test for updating fan mode from the device."""
     device().fan_speed = FAN_MODES_REVERSE.get(fan_mode)
 
@@ -700,7 +682,7 @@ async def test_update_fan_mode(hass, discovery, device, fan_mode):
 @pytest.mark.parametrize(
     "swing_mode", (SWING_OFF, SWING_BOTH, SWING_VERTICAL, SWING_HORIZONTAL)
 )
-async def test_send_swing_mode(hass, discovery, device, swing_mode):
+async def test_send_swing_mode(hass, discovery, device, mock_now, swing_mode):
     """Test for sending swing mode command to the device."""
     await async_setup_gree(hass)
 
@@ -716,7 +698,7 @@ async def test_send_swing_mode(hass, discovery, device, swing_mode):
     assert state.attributes.get(ATTR_SWING_MODE) == swing_mode
 
 
-async def test_send_invalid_swing_mode(hass, discovery, device):
+async def test_send_invalid_swing_mode(hass, discovery, device, mock_now):
     """Test for sending swing mode command to the device."""
     await async_setup_gree(hass)
 
@@ -736,7 +718,9 @@ async def test_send_invalid_swing_mode(hass, discovery, device):
 @pytest.mark.parametrize(
     "swing_mode", (SWING_OFF, SWING_BOTH, SWING_VERTICAL, SWING_HORIZONTAL)
 )
-async def test_send_swing_mode_device_timeout(hass, discovery, device, swing_mode):
+async def test_send_swing_mode_device_timeout(
+    hass, discovery, device, mock_now, swing_mode
+):
     """Test for sending swing mode command to the device with a device timeout."""
     device().push_state_update.side_effect = DeviceTimeoutError
 
@@ -757,7 +741,7 @@ async def test_send_swing_mode_device_timeout(hass, discovery, device, swing_mod
 @pytest.mark.parametrize(
     "swing_mode", (SWING_OFF, SWING_BOTH, SWING_VERTICAL, SWING_HORIZONTAL)
 )
-async def test_update_swing_mode(hass, discovery, device, swing_mode):
+async def test_update_swing_mode(hass, discovery, device, mock_now, swing_mode):
     """Test for updating swing mode from the device."""
     device().horizontal_swing = (
         HorizontalSwing.FullSwing
