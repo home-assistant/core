@@ -88,8 +88,7 @@ class OpenHardwareMonitorDevice(SensorEntity):
         array = self._data.data[OHM_CHILDREN]
         _attributes = {}
 
-        for path_index in range(0, len(self.path)):
-            path_number = self.path[path_index]
+        for path_index, path_number in enumerate(self.path):
             values = array[path_number]
 
             if path_index == len(self.path) - 1:

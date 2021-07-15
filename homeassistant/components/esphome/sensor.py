@@ -60,8 +60,7 @@ async def async_setup_entry(
 
 
 # https://github.com/PyCQA/pylint/issues/3150 for all @esphome_state_property
-# Pylint gets confused with the EsphomeEntity generics -> let mypy handle member checking
-# pylint: disable=invalid-overridden-method,no-member
+# pylint: disable=invalid-overridden-method
 
 
 _STATE_CLASSES: EsphomeEnumMapper[SensorStateClass, str | None] = EsphomeEnumMapper(

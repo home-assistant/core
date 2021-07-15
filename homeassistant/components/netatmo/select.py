@@ -87,11 +87,9 @@ class NetatmoScheduleSelect(NetatmoBase, SelectEntity):
 
         self._attr_unique_id = f"{self._home_id}-schedule-select"
 
-        self._attr_current_option = (
-            self._data._get_selected_schedule(  # pylint: disable=protected-access
-                home_id=self._home_id
-            ).get("name")
-        )
+        self._attr_current_option = self._data._get_selected_schedule(
+            home_id=self._home_id
+        ).get("name")
         self._attr_options = options
 
     async def async_added_to_hass(self) -> None:

@@ -899,7 +899,7 @@ async def async_check_ha_config_file(hass: HomeAssistant) -> str | None:
     This method is a coroutine.
     """
     # pylint: disable=import-outside-toplevel
-    import homeassistant.helpers.check_config as check_config
+    from homeassistant.helpers import check_config
 
     res = await check_config.async_check_ha_config_file(hass)
 
