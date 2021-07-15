@@ -78,7 +78,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     msg=MSG_LOCATION,
                     default=self.hass.config.longitude,
                 ): cv.longitude,
-                vol.Exclusive(CONF_COUNTRY_CODE, "coords"): cv.string,
+                vol.Exclusive(CONF_COUNTRY_CODE, "coords", msg=MSG_LOCATION): cv.string,
                 vol.Required(CONF_API_KEY): cv.string,
             }
         )
@@ -89,8 +89,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 data_schema=data_schema,
                 errors=errors,
             )
-
-        print(user_input, "----")
 
         try:
             data = await self.hass.async_add_executor_job(

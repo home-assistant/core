@@ -34,7 +34,6 @@ async def test_form_ok(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    print(result2)
     assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result2["title"] == "Test"
     assert result2["data"] == {
