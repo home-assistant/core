@@ -29,21 +29,25 @@ class FreedomproFan(CoordinatorEntity, FanEntity):
     def __init__(self, hass, api_key, device, coordinator):
         """Initialize the Freedompro fan."""
         super().__init__(coordinator)
-        self._hass = hass
-        self._session = aiohttp_client.async_get_clientsession(self._hass)
+        self._session = aiohttp_client.async_get_clientsession(hass)
         self._api_key = api_key
         self._attr_name = device["name"]
         self._attr_unique_id = device["uid"]
-        self._type = device["type"]
         self._characteristics = device["characteristics"]
         self._attr_device_info = {
             "name": self.name,
             "identifiers": {
                 (DOMAIN, self.unique_id),
             },
-            "model": self._type,
+            "model": device["type"],
             "manufacturer": "Freedompro",
         }
+        self._attr_is_on = False
+
+    @property
+    def is_on(self) -> bool:
+        """Return True if entity is on."""
+        return self._attr_is_on
 
     @callback
     def _handle_coordinator_update(self) -> None:
