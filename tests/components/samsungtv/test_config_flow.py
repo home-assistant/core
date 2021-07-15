@@ -3,7 +3,7 @@ import socket
 from unittest.mock import Mock, PropertyMock, call, patch
 
 from samsungctl.exceptions import AccessDenied, UnhandledResponse
-from samsungtvws.exceptions import ConnectionFailure
+from samsungtvws.exceptions import ConnectionFailure, HttpApiError
 from websocket import WebSocketException, WebSocketProtocolException
 
 from homeassistant import config_entries
@@ -20,7 +20,6 @@ from homeassistant.components.samsungtv.const import (
     RESULT_AUTH_MISSING,
     RESULT_CANNOT_CONNECT,
     RESULT_NOT_SUPPORTED,
-    RESULT_SUCCESS,
     RESULT_UNKNOWN_HOST,
     TIMEOUT_REQUEST,
     TIMEOUT_WEBSOCKET,
@@ -87,6 +86,7 @@ MOCK_SSDP_DATA_WRONGMODEL = {
     ATTR_UPNP_UDN: "uuid:0d1cef00-00dc-1000-9c80-4844f7b172df",
 }
 MOCK_DHCP_DATA = {IP_ADDRESS: "fake_host", MAC_ADDRESS: "aa:bb:cc:dd:ee:ff"}
+EXISTING_IP = "192.168.40.221"
 MOCK_ZEROCONF_DATA = {
     CONF_HOST: "fake_host",
     CONF_PORT: 1234,
@@ -100,7 +100,13 @@ MOCK_ZEROCONF_DATA = {
 MOCK_OLD_ENTRY = {
     CONF_HOST: "fake_host",
     CONF_ID: "0d1cef00-00dc-1000-9c80-4844f7b172de_old",
-    CONF_IP_ADDRESS: "fake_ip_old",
+    CONF_IP_ADDRESS: EXISTING_IP,
+    CONF_METHOD: "legacy",
+    CONF_PORT: None,
+}
+MOCK_LEGACY_ENTRY = {
+    CONF_HOST: EXISTING_IP,
+    CONF_ID: "0d1cef00-00dc-1000-9c80-4844f7b172de_old",
     CONF_METHOD: "legacy",
     CONF_PORT: None,
 }
@@ -316,8 +322,8 @@ async def test_ssdp_noprefix(hass: HomeAssistant, remote: Mock):
     assert result["step_id"] == "confirm"
 
     with patch(
-        "homeassistant.components.samsungtv.bridge.SamsungTVLegacyBridge.try_connect",
-        return_value=RESULT_SUCCESS,
+        "homeassistant.components.samsungtv.bridge.Remote.__enter__",
+        return_value=True,
     ):
 
         # entry was added
@@ -885,7 +891,7 @@ async def test_update_old_entry(hass: HomeAssistant, remote: Mock):
         assert len(config_entries_domain) == 1
         assert entry is config_entries_domain[0]
         assert entry.data[CONF_ID] == "0d1cef00-00dc-1000-9c80-4844f7b172de_old"
-        assert entry.data[CONF_IP_ADDRESS] == "fake_ip_old"
+        assert entry.data[CONF_IP_ADDRESS] == EXISTING_IP
         assert not entry.unique_id
 
         assert await async_setup_component(hass, DOMAIN, {}) is True
@@ -1016,6 +1022,69 @@ async def test_update_missing_mac_added_unique_id_preserved_from_zeroconf(
     assert entry.unique_id == "0d1cef00-00dc-1000-9c80-4844f7b172de"
 
 
+async def test_update_legacy_missing_mac_from_dhcp(hass, remote: Mock):
+    """Test missing mac added."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_LEGACY_ENTRY,
+        unique_id="0d1cef00-00dc-1000-9c80-4844f7b172de",
+    )
+    entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.samsungtv.async_setup",
+        return_value=True,
+    ) as mock_setup, patch(
+        "homeassistant.components.samsungtv.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DHCP},
+            data={IP_ADDRESS: EXISTING_IP, MAC_ADDRESS: "aa:bb:cc:dd:ee:ff"},
+        )
+        await hass.async_block_till_done()
+        assert len(mock_setup.mock_calls) == 1
+        assert len(mock_setup_entry.mock_calls) == 1
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_configured"
+    assert entry.data[CONF_MAC] == "aa:bb:cc:dd:ee:ff"
+    assert entry.unique_id == "0d1cef00-00dc-1000-9c80-4844f7b172de"
+
+
+async def test_update_legacy_missing_mac_from_dhcp_no_unique_id(hass, remote: Mock):
+    """Test missing mac added when there is no unique id."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_LEGACY_ENTRY,
+    )
+    entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.samsungtv.bridge.SamsungTVWS.rest_device_info",
+        side_effect=HttpApiError,
+    ), patch(
+        "homeassistant.components.samsungtv.bridge.Remote.__enter__",
+        return_value=True,
+    ), patch(
+        "homeassistant.components.samsungtv.async_setup",
+        return_value=True,
+    ) as mock_setup, patch(
+        "homeassistant.components.samsungtv.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DHCP},
+            data={IP_ADDRESS: EXISTING_IP, MAC_ADDRESS: "aa:bb:cc:dd:ee:ff"},
+        )
+        await hass.async_block_till_done()
+        assert len(mock_setup.mock_calls) == 1
+        assert len(mock_setup_entry.mock_calls) == 1
+    assert result["type"] == "abort"
+    assert result["reason"] == "not_supported"
+    assert entry.data[CONF_MAC] == "aa:bb:cc:dd:ee:ff"
+    assert entry.unique_id is None
+
+
 async def test_form_reauth_legacy(hass, remote: Mock):
     """Test reauthenticate legacy."""
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_OLD_ENTRY)
@@ -1086,9 +1155,6 @@ async def test_form_reauth_websocket_cannot_connect(hass, remotews: Mock):
         )
         await hass.async_block_till_done()
 
-    import pprint
-
-    pprint.pprint(result2)
     assert result2["type"] == "form"
     assert result2["errors"] == {"base": RESULT_AUTH_MISSING}
 
