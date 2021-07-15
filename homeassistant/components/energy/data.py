@@ -1,8 +1,10 @@
 """Energy data."""
 from __future__ import annotations
 
+import asyncio
 from collections import Counter
-from typing import Awaitable, Callable, Literal, Optional, TypedDict, Union, cast
+from collections.abc import Awaitable
+from typing import Callable, Literal, Optional, TypedDict, Union, cast
 
 import voluptuous as vol
 
@@ -249,13 +251,13 @@ class EnergyManager:
             if key in update:
                 data[key] = update[key]  # type: ignore
 
-        # TODO Validate stats exist
-
         self.data = data
         self._store.async_delay_save(lambda: cast(dict, self.data), 60)
 
-        for listener in self._update_listeners:
-            await listener()
+        if not self._update_listeners:
+            return
+
+        await asyncio.gather(*[listener() for listener in self._update_listeners])
 
     @callback
     def async_listen_updates(self, update_listener: Callable[[], Awaitable]) -> None:
