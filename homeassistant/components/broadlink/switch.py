@@ -157,27 +157,27 @@ class BroadlinkSwitch(BroadlinkEntity, SwitchEntity, RestoreEntity, ABC):
 
     async def async_added_to_hass(self):
         """Call when the switch is added to hass."""
-        if self.state is None:
+        if self.is_on is None:
             state = await self.async_get_last_state()
-            self._attr_state = state is not None and state.state == STATE_ON
+            self._attr_is_on = state is not None and state.state == STATE_ON
         self.async_on_remove(self._coordinator.async_add_listener(self.update_data))
 
     async def async_update(self):
         """Update the switch."""
         await self._coordinator.async_request_refresh()
         state = await self.async_get_last_state()
-        self._attr_state = state is not None and state.state == STATE_ON
+        self._attr_is_on = state is not None and state.state == STATE_ON
 
     async def async_turn_on(self, **kwargs):
         """Turn on the switch."""
         if await self._async_send_packet(self._command_on):
-            self._attr_state = True
+            self._attr_is_on = True
             self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs):
         """Turn off the switch."""
         if await self._async_send_packet(self._command_off):
-            self._attr_state = False
+            self._attr_is_on = False
             self.async_write_ha_state()
 
     @abstractmethod
