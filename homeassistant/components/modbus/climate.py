@@ -351,10 +351,11 @@ class ModbusThermostat(BasePlatform, RestoreEntity, ClimateEntity):
                 "Can't process hvac register values; adjust your configuration"
             )
             return None
-        else:  # (CALL_TYPE_DISCRETE, CALL_TYPE_COIL)
-            for mode, address in supported.items():
-                value = await self._async_read_coil(register_type, address)
-                if value:
-                    return mode
-            _LOGGER.error("Can't process hvac coil values; adjust your configuration")
-            return None
+
+        # (CALL_TYPE_DISCRETE, CALL_TYPE_COIL)
+        for mode, address in supported.items():
+            value = await self._async_read_coil(register_type, address)
+            if value:
+                return mode
+        _LOGGER.error("Can't process hvac coil values; adjust your configuration")
+        return None
