@@ -403,7 +403,9 @@ async def test_send_target_temperature(hass, discovery, device, units, temperatu
     state = hass.states.get(ENTITY_ID)
     assert state is not None
     assert state.attributes.get(ATTR_TEMPERATURE) == temperature
-    assert state.attributes.get(ATTR_CURRENT_TEMPERATURE) != state.attributes.get(ATTR_TEMPERATURE)
+    assert state.attributes.get(ATTR_CURRENT_TEMPERATURE) != state.attributes.get(
+        ATTR_TEMPERATURE
+    )
 
     # Reset config temperature_unit back to CELSIUS, required for additional tests outside this component.
     hass.config.units.temperature_unit = TEMP_CELSIUS
