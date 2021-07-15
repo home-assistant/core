@@ -29,6 +29,7 @@ from homeassistant.const import (
     CONF_DELAY,
     CONF_DEVICE_CLASS,
     CONF_HOST,
+    CONF_ID,
     CONF_LIGHTS,
     CONF_METHOD,
     CONF_NAME,
@@ -118,6 +119,7 @@ BASE_SCHEMA = vol.Schema({vol.Optional(CONF_NAME, default=DEFAULT_HUB): cv.strin
 
 BASE_COMPONENT_SCHEMA = vol.Schema(
     {
+        vol.Optional(CONF_ID, default=CONF_NAME): cv.string,
         vol.Required(CONF_NAME): cv.string,
         vol.Required(CONF_ADDRESS): cv.positive_int,
         vol.Optional(CONF_SLAVE): cv.positive_int,

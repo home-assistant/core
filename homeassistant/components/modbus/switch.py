@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.components.switch import SwitchEntity
+from homeassistant.components.switch import ENTITY_ID_FORMAT, SwitchEntity
 from homeassistant.const import CONF_NAME, CONF_SWITCHES
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -36,6 +36,15 @@ async def async_setup_platform(
 
 class ModbusSwitch(BaseSwitch, SwitchEntity):
     """Base class representing a Modbus switch."""
+
+    def __init__(
+        self,
+        hub: ModbusHub,
+        config: dict[str, Any],
+    ) -> None:
+        """Initialize the modbus switch."""
+        super().__init__(hub, config)
+        self.entity_id = ENTITY_ID_FORMAT.format(self._id)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Set switch on."""

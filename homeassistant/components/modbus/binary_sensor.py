@@ -2,8 +2,10 @@
 from __future__ import annotations
 
 from datetime import datetime
+from typing import Any
 
-from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.components.binary_sensor import ENTITY_ID_FORMAT, BinarySensorEntity
+from homeassistant.components.modbus.modbus import ModbusHub
 from homeassistant.const import CONF_BINARY_SENSORS, CONF_NAME, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -37,6 +39,15 @@ async def async_setup_platform(
 
 class ModbusBinarySensor(BasePlatform, RestoreEntity, BinarySensorEntity):
     """Modbus binary sensor."""
+
+    def __init__(
+        self,
+        hub: ModbusHub,
+        config: dict[str, Any],
+    ) -> None:
+        """Initialize the modbus binary sensor."""
+        super().__init__(hub, config)
+        self.entity_id = ENTITY_ID_FORMAT.format(self._id)
 
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""

@@ -7,6 +7,15 @@ from homeassistant.components.modbus.const import DATA_TYPE_STRING
 
 from homeassistant.components.sensor import CONF_STATE_CLASS, SensorEntity
 from homeassistant.const import CONF_NAME, CONF_SENSORS, CONF_UNIT_OF_MEASUREMENT
+from homeassistant.components.sensor import ENTITY_ID_FORMAT, SensorEntity
+from homeassistant.const import (
+    CONF_COUNT,
+    CONF_NAME,
+    CONF_OFFSET,
+    CONF_SENSORS,
+    CONF_STRUCTURE,
+    CONF_UNIT_OF_MEASUREMENT,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -50,7 +59,12 @@ class ModbusRegisterSensor(BaseStructPlatform, RestoreEntity, SensorEntity):
         super().__init__(hub, entry)
         self._attr_native_unit_of_measurement = entry.get(CONF_UNIT_OF_MEASUREMENT)
         self._attr_state_class = entry.get(CONF_STATE_CLASS)
-
+        self.entity_id = ENTITY_ID_FORMAT.format(self._id)
+        self._unit_of_measurement = entry.get(CONF_UNIT_OF_MEASUREMENT)
+        self._count = int(entry[CONF_COUNT])
+        self._offset = entry[CONF_OFFSET]
+        self._structure = entry.get(CONF_STRUCTURE)
+        
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await self.async_base_added_to_hass()
