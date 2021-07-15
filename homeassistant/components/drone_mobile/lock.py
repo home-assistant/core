@@ -7,13 +7,15 @@ from .const import DOMAIN, LOCKS
 
 _LOGGER = logging.getLogger(__name__)
 
+
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Add the Lock Entities from the config."""
     entry = hass.data[DOMAIN][config_entry.entry_id]
     for key, value in LOCKS.items():
         async_add_entities([Lock(entry, key)], True)
-        
-class Lock(DroneMobileEntity,LockEntity):
+
+
+class Lock(DroneMobileEntity, LockEntity):
     def __init__(self, coordinator, lock):
         """Initialize."""
         super().__init__(
@@ -28,7 +30,7 @@ class Lock(DroneMobileEntity,LockEntity):
         """Locks the vehicle device."""
         if self.is_locked:
             return
-        _LOGGER.debug("Locking %s", self.coordinator.data['vehicle_name'])
+        _LOGGER.debug("Locking %s", self.coordinator.data["vehicle_name"])
         command_call = None
         if self._lock == "doorLock":
             command_call = self.coordinator.vehicle.lock
@@ -47,7 +49,7 @@ class Lock(DroneMobileEntity,LockEntity):
         """Unlocks the vehicle device."""
         if not self.is_locked:
             return
-        _LOGGER.debug("Unlocking %s", self.coordinator.data['vehicle_name'])
+        _LOGGER.debug("Unlocking %s", self.coordinator.data["vehicle_name"])
         command_call = None
         if self._lock == "doorLock":
             command_call = self.coordinator.vehicle.unlock
@@ -68,7 +70,7 @@ class Lock(DroneMobileEntity,LockEntity):
         """Opens the trunk."""
         if not self.is_locked:
             return
-        _LOGGER.debug("Opening %s trunk", self.coordinator.data['vehicle_name'])
+        _LOGGER.debug("Opening %s trunk", self.coordinator.data["vehicle_name"])
         command_call = None
         if self._lock == "trunk":
             command_call = self.coordinator.vehicle.trunk
@@ -87,13 +89,26 @@ class Lock(DroneMobileEntity,LockEntity):
     def is_locked(self):
         """Determine if the lock is locked."""
         if self._lock == "doorLock":
-            if (self.coordinator.data is None or self.coordinator.data["last_known_state"]["controller"]["armed"] is None):
+            if (
+                self.coordinator.data is None
+                or self.coordinator.data["last_known_state"]["controller"]["armed"]
+                is None
+            ):
                 return None
-            return self.coordinator.data["last_known_state"]["controller"]["armed"] == True
+            return (
+                self.coordinator.data["last_known_state"]["controller"]["armed"] == True
+            )
         elif self._lock == "trunk":
-            if (self.coordinator.data is None or self.coordinator.data["last_known_state"]["controller"]["trunk_open"] is None):
+            if (
+                self.coordinator.data is None
+                or self.coordinator.data["last_known_state"]["controller"]["trunk_open"]
+                is None
+            ):
                 return None
-            return self.coordinator.data["last_known_state"]["controller"]["trunk_open"] == False
+            return (
+                self.coordinator.data["last_known_state"]["controller"]["trunk_open"]
+                == False
+            )
         else:
             _LOGGER.error("Entry not found in LOCKS: " + self._lock)
 

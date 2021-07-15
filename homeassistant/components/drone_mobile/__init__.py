@@ -33,6 +33,7 @@ PLATFORMS = ["lock", "sensor", "switch", "device_tracker"]
 
 _LOGGER = logging.getLogger(__name__)
 
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up DroneMobile from a config entry."""
     hass.data.setdefault(DOMAIN, {})
@@ -96,6 +97,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     return True
 
+
 async def async_update_options(hass, config_entry):
     options = {
         CONF_UNIT: config_entry.data.get(CONF_UNIT, DEFAULT_UNIT),
@@ -105,10 +107,12 @@ async def async_update_options(hass, config_entry):
     }
     hass.config_entries.async_update_entry(config_entry, options=options)
 
+
 def refresh_device_status(hass, coordinator):
     _LOGGER.debug("Refreshing Device Status")
     response = coordinator.vehicle.device_status(coordinator.data["device_key"])
     coordinator.update_data_from_response(coordinator, response)
+
 
 def dump_device_data(hass, coordinator):
     _LOGGER.debug("Dumping Device Data")
@@ -117,13 +121,16 @@ def dump_device_data(hass, coordinator):
     ) as outfile:
         json.dump(coordinator.data, outfile)
 
+
 def clear_temp_token(hass, coordinator):
     _LOGGER.debug("Clearing Tokens")
     coordinator.vehicle.clearTempToken()
 
+
 def replace_token(hass, coordinator):
     _LOGGER.debug("Replacing Tokens")
     coordinator.vehicle.replaceToken()
+
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
@@ -139,6 +146,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
+
 
 class DroneMobileDataUpdateCoordinator(DataUpdateCoordinator):
     """DataUpdateCoordinator to handle fetching new data about the vehicle."""
@@ -212,6 +220,7 @@ class DroneMobileDataUpdateCoordinator(DataUpdateCoordinator):
                 + coordinator.data["vehicle_name"]
                 + "."
             )
+
 
 class DroneMobileEntity(CoordinatorEntity):
     """Defines a base DroneMobile entity."""

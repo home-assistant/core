@@ -25,9 +25,12 @@ DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_USERNAME): str,
         vol.Required(CONF_PASSWORD): str,
         vol.Optional(CONF_UNIT, default=DEFAULT_UNIT): vol.In(CONF_UNITS),
-        vol.Optional(CONF_UPDATE_INTERVAL, default=DEFAULT_UPDATE_INTERVAL): vol.All(vol.Coerce(int), vol.Range(min=2, max=60)),
+        vol.Optional(CONF_UPDATE_INTERVAL, default=DEFAULT_UPDATE_INTERVAL): vol.All(
+            vol.Coerce(int), vol.Range(min=2, max=60)
+        ),
     }
 )
+
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for DroneMobile."""
@@ -131,7 +134,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         await self.async_set_unique_id("drone_mobile_vehicle_" + str(self.vehicle_id))
         self._abort_if_unique_id_configured()
-        return self.async_create_entry(title=self.vehicles_options[self.vehicle_id], data=data)
+        return self.async_create_entry(
+            title=self.vehicles_options[self.vehicle_id], data=data
+        )
+
 
 class OptionsFlow(config_entries.OptionsFlow):
     def __init__(self, config_entry: config_entries.ConfigEntry):
@@ -141,7 +147,7 @@ class OptionsFlow(config_entries.OptionsFlow):
     async def async_step_init(self, user_input=None):
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
-        
+
         options = {
             vol.Optional(
                 CONF_UNIT,
@@ -155,19 +161,16 @@ class OptionsFlow(config_entries.OptionsFlow):
             ): vol.All(vol.Coerce(int), vol.Range(min=2, max=60)),
         }
 
-        return self.async_show_form(
-            step_id="init",
-            data_schema=vol.Schema(
-                options
-            )
-        )
+        return self.async_show_form(step_id="init", data_schema=vol.Schema(options))
 
 
 class CannotConnect(exceptions.HomeAssistantError):
     """Error to indicate we cannot connect."""
 
+
 class InvalidAuth(exceptions.HomeAssistantError):
     """Error to indicate there is invalid auth."""
+
 
 async def validate_input(hass: core.HomeAssistant, data):
     """Validate the user input allows us to connect.
@@ -177,9 +180,7 @@ async def validate_input(hass: core.HomeAssistant, data):
     vehicle = Vehicle(data[CONF_USERNAME], data[CONF_PASSWORD])
 
     try:
-        result = await hass.async_add_executor_job(
-            vehicle.auth
-        )
+        result = await hass.async_add_executor_job(vehicle.auth)
 
     except Exception as ex:
         _LOGGER.error(ex)
@@ -190,17 +191,18 @@ async def validate_input(hass: core.HomeAssistant, data):
         raise CannotConnect
     return True
 
+
 async def get_vehicles(hass: core.HomeAssistant, data):
     vehicleObject = Vehicle(data[CONF_USERNAME], data[CONF_PASSWORD])
     try:
-        vehicles = await hass.async_add_executor_job(
-            vehicleObject.getAllVehicles
-        )
+        vehicles = await hass.async_add_executor_job(vehicleObject.getAllVehicles)
         return vehicles
     except Exception as ex:
         _LOGGER.error(ex)
         raise InvalidAuth from ex
 
     if not vehicles:
-        _LOGGER.error("Error communicating with DroneMobile for %s", vehicleObject.username)
+        _LOGGER.error(
+            "Error communicating with DroneMobile for %s", vehicleObject.username
+        )
         raise CannotConnect

@@ -9,14 +9,19 @@ from .const import CONF_UNIT, DOMAIN, SENSORS
 
 _LOGGER = logging.getLogger(__name__)
 
+
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Add the Entities from the config."""
     entry = hass.data[DOMAIN][config_entry.entry_id]
     sensors = []
     for key, value in SENSORS.items():
         async_add_entities([CarSensor(entry, key, config_entry.options)], True)
-        
-class CarSensor(DroneMobileEntity,Entity,):
+
+
+class CarSensor(
+    DroneMobileEntity,
+    Entity,
+):
     def __init__(self, coordinator, sensor, options):
         self._sensor = sensor
         self.options = options
@@ -31,27 +36,48 @@ class CarSensor(DroneMobileEntity,Entity,):
                     return self.coordinator.data["last_known_state"]["mileage"]
                 else:
                     return round(
-                        float(self.coordinator.data["last_known_state"]["mileage"]) * 1.60934
+                        float(self.coordinator.data["last_known_state"]["mileage"])
+                        * 1.60934
                     )
             elif self._sensor == "battery":
-                return self.coordinator.data["last_known_state"]["controller"]["main_battery_voltage"]
+                return self.coordinator.data["last_known_state"]["controller"][
+                    "main_battery_voltage"
+                ]
             elif self._sensor == "temperature":
                 if self.options[CONF_UNIT] == "imperial":
                     return round(
-                        float((self.coordinator.data["last_known_state"]["controller"]["current_temperature"]) * (9/5)) + 32
+                        float(
+                            (
+                                self.coordinator.data["last_known_state"]["controller"][
+                                    "current_temperature"
+                                ]
+                            )
+                            * (9 / 5)
+                        )
+                        + 32
                     )
                 else:
-                    return self.coordinator.data["last_known_state"]["controller"]["current_temperature"]
+                    return self.coordinator.data["last_known_state"]["controller"][
+                        "current_temperature"
+                    ]
             elif self._sensor == "gps":
                 if self.coordinator.data["last_known_state"]["gps_direction"] == None:
                     return "Unsupported"
                 return self.coordinator.data["last_known_state"]["gps_direction"]
             elif self._sensor == "alarm":
-                if self.coordinator.data["last_known_state"]["controller"]["armed"] == True:
+                if (
+                    self.coordinator.data["last_known_state"]["controller"]["armed"]
+                    == True
+                ):
                     return "Armed"
                 return "Disarmed"
             elif self._sensor == "ignitionStatus":
-                if self.coordinator.data["last_known_state"]["controller"]["ignition_on"] == True:
+                if (
+                    self.coordinator.data["last_known_state"]["controller"][
+                        "ignition_on"
+                    ]
+                    == True
+                ):
                     return "On"
                 else:
                     # Vehicle may have been remote started or stopped outside of Home Assistant, so we reset this flag to match the current vehicle status.
@@ -59,7 +85,10 @@ class CarSensor(DroneMobileEntity,Entity,):
                         self.coordinator.data["remote_start_status"] = False
                     return "Off"
             elif self._sensor == "engineStatus":
-                if self.coordinator.data["last_known_state"]["controller"]["engine_on"] == True:
+                if (
+                    self.coordinator.data["last_known_state"]["controller"]["engine_on"]
+                    == True
+                ):
                     return "Running"
                 else:
                     # Vehicle may have been remote started or stopped outside of Home Assistant, so we reset this flag to match the current vehicle status.
@@ -67,21 +96,33 @@ class CarSensor(DroneMobileEntity,Entity,):
                         self.coordinator.data["remote_start_status"] = False
                     return "Off"
             elif self._sensor == "doorStatus":
-                if self.coordinator.data["last_known_state"]["controller"]["door_open"] == True:
+                if (
+                    self.coordinator.data["last_known_state"]["controller"]["door_open"]
+                    == True
+                ):
                     return "Open"
                 return "Closed"
             elif self._sensor == "trunkStatus":
-                if self.coordinator.data["last_known_state"]["controller"]["trunk_open"] == True:
+                if (
+                    self.coordinator.data["last_known_state"]["controller"][
+                        "trunk_open"
+                    ]
+                    == True
+                ):
                     return "Open"
                 return "Closed"
             elif self._sensor == "hoodStatus":
-                if self.coordinator.data["last_known_state"]["controller"]["hood_open"] == True:
+                if (
+                    self.coordinator.data["last_known_state"]["controller"]["hood_open"]
+                    == True
+                ):
                     return "Open"
                 return "Closed"
             elif self._sensor == "lastRefresh":
                 return dt.as_local(
                     datetime.strptime(
-                        self.coordinator.data["last_known_state"]["timestamp"], "%Y-%m-%dT%H:%M:%S%z"
+                        self.coordinator.data["last_known_state"]["timestamp"],
+                        "%Y-%m-%dT%H:%M:%S%z",
                     )
                 )
         elif ftype == "measurement":
@@ -118,7 +159,9 @@ class CarSensor(DroneMobileEntity,Entity,):
                 return self.coordinator.data.items()
             elif self._sensor == "battery":
                 return {
-                    "Battery Voltage": self.coordinator.data["last_known_state"]["controller"]["main_battery_voltage"]
+                    "Battery Voltage": self.coordinator.data["last_known_state"][
+                        "controller"
+                    ]["main_battery_voltage"]
                 }
             elif self._sensor == "temperature":
                 return self.coordinator.data.items()

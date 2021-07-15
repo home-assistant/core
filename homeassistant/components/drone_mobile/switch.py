@@ -7,14 +7,16 @@ from .const import DOMAIN, SWITCHES
 
 _LOGGER = logging.getLogger(__name__)
 
+
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Add the Switch Entities from the config."""
     entry = hass.data[DOMAIN][config_entry.entry_id]
     switches = []
     for key, value in SWITCHES.items():
         async_add_entities([Switch(entry, key)], True)
-        
-class Switch(DroneMobileEntity,SwitchEntity):
+
+
+class Switch(DroneMobileEntity, SwitchEntity):
     def __init__(self, coordinator, switch):
         """Initialize."""
         super().__init__(
@@ -24,12 +26,14 @@ class Switch(DroneMobileEntity,SwitchEntity):
         )
         self._switch = switch
         self._state = self.is_on
-    
+
     async def async_turn_on(self, **kwargs):
         """switches on the vehicle device."""
         if self.is_on:
             return
-        _LOGGER.debug("switching on %s " + self._switch, self.coordinator.data['vehicle_name'])
+        _LOGGER.debug(
+            "switching on %s " + self._switch, self.coordinator.data["vehicle_name"]
+        )
         command_call = None
         if self._switch == "remoteStart":
             command_call = self.coordinator.vehicle.start
@@ -54,7 +58,9 @@ class Switch(DroneMobileEntity,SwitchEntity):
         """switches off the vehicle device."""
         if not self.is_on:
             return
-        _LOGGER.debug("Switching off %s " + self._switch, self.coordinator.data['vehicle_name'])
+        _LOGGER.debug(
+            "Switching off %s " + self._switch, self.coordinator.data["vehicle_name"]
+        )
         command_call = None
         if self._switch == "remoteStart":
             command_call = self.coordinator.vehicle.stop
@@ -73,7 +79,9 @@ class Switch(DroneMobileEntity,SwitchEntity):
 
     async def async_toggle(self, **kwargs):
         """Toggles the vehicle switch."""
-        _LOGGER.debug("Toggling %s " + self._switch, self.coordinator.data['vehicle_name'])
+        _LOGGER.debug(
+            "Toggling %s " + self._switch, self.coordinator.data["vehicle_name"]
+        )
         command_call = None
         if self._switch == "remoteStart":
             if self.is_on:
@@ -103,14 +111,28 @@ class Switch(DroneMobileEntity,SwitchEntity):
     def get_is_on_value(self, calledFromAction=False):
         """Determine if the switch is switched."""
         if self._switch == "remoteStart":
-            if (self.coordinator.data is None or self.coordinator.data["last_known_state"]["controller"]["engine_on"] is None):
+            if (
+                self.coordinator.data is None
+                or self.coordinator.data["last_known_state"]["controller"]["engine_on"]
+                is None
+            ):
                 return None
             if calledFromAction:
                 return self.coordinator.data["remote_start_status"] == True
             else:
-                return (self.coordinator.data["last_known_state"]["controller"]["engine_on"] == True or self.coordinator.data["last_known_state"]["controller"]["ignition_on"] == True)
+                return (
+                    self.coordinator.data["last_known_state"]["controller"]["engine_on"]
+                    == True
+                    or self.coordinator.data["last_known_state"]["controller"][
+                        "ignition_on"
+                    ]
+                    == True
+                )
         elif self._switch == "panic":
-            if (self.coordinator.data is None or self.coordinator.data["panic_status"] is None):
+            if (
+                self.coordinator.data is None
+                or self.coordinator.data["panic_status"] is None
+            ):
                 return None
             return self.coordinator.data["panic_status"] == True
         # Aux1 and Aux2 are momentary switches that can only be turned on. So, we will set their value to off.
@@ -120,7 +142,7 @@ class Switch(DroneMobileEntity,SwitchEntity):
             return False
         else:
             _LOGGER.error("Entry not found in SWITCHES: " + self._switch)
-    
+
     is_on = property(get_is_on_value)
 
     @property
