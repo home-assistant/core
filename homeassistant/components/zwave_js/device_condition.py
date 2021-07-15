@@ -10,6 +10,7 @@ from zwave_js_server.model.value import ConfigurationValue
 from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
 )
+from homeassistant.components.zwave_js.device_trigger import NODE_STATUSES
 from homeassistant.const import CONF_CONDITION, CONF_DEVICE_ID, CONF_DOMAIN, CONF_TYPE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -31,14 +32,16 @@ from .helpers import (
     get_zwave_value_from_config,
     remove_keys_with_empty_values,
 )
-from .device_automation_helpers import VALUE_SCHEMA, get_config_parameter_value_schema
+from .device_automation_helpers import (
+    CONF_SUBTYPE,
+    CONF_VALUE_ID,
+    VALUE_SCHEMA,
+    get_config_parameter_value_schema,
+)
 
-CONF_SUBTYPE = "subtype"
-CONF_VALUE_ID = "value_id"
 CONF_STATUS = "status"
 
 NODE_STATUS_TYPE = "node_status"
-NODE_STATUS_TYPES = ["asleep", "awake", "dead", "alive"]
 CONFIG_PARAMETER_TYPE = "config_parameter"
 VALUE_TYPE = "value"
 CONDITION_TYPES = {NODE_STATUS_TYPE, CONFIG_PARAMETER_TYPE, VALUE_TYPE}
@@ -46,7 +49,7 @@ CONDITION_TYPES = {NODE_STATUS_TYPE, CONFIG_PARAMETER_TYPE, VALUE_TYPE}
 NODE_STATUS_CONDITION_SCHEMA = cv.DEVICE_CONDITION_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_TYPE): NODE_STATUS_TYPE,
-        vol.Required(CONF_STATUS): vol.In(NODE_STATUS_TYPES),
+        vol.Required(CONF_STATUS): vol.In(NODE_STATUSES),
     }
 )
 
@@ -226,7 +229,7 @@ async def async_get_condition_capabilities(
     if config[CONF_TYPE] == NODE_STATUS_TYPE:
         return {
             "extra_fields": vol.Schema(
-                {vol.Required(CONF_STATUS): vol.In(NODE_STATUS_TYPES)}
+                {vol.Required(CONF_STATUS): vol.In(NODE_STATUSES)}
             )
         }
 

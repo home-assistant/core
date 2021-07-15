@@ -10,6 +10,8 @@ from zwave_js_server.model.value import ConfigurationValue
 
 from homeassistant.helpers import config_validation as cv
 
+NODE_STATUSES = ["asleep", "awake", "dead", "alive"]
+
 VALUE_SCHEMA = vol.Any(
     bool,
     vol.Coerce(int),
@@ -17,6 +19,9 @@ VALUE_SCHEMA = vol.Any(
     cv.boolean,
     cv.string,
 )
+
+CONF_SUBTYPE = "subtype"
+CONF_VALUE_ID = "value_id"
 
 
 def get_config_parameter_value_schema(node: Node, value_id: str) -> vol.Schema | None:
