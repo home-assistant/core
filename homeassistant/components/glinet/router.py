@@ -115,8 +115,14 @@ class GLinetRouter:
             self._api = get_api(self._entry.data)
             # self._devices = await self._api.list_all_clients() #DELETEME
             # self._connected_devices = await self._api.connected_clients()
-        except OSError as exp:
-            raise ConfigEntryNotReady from exp
+        except OSError as exc:
+            raise ConfigEntryNotReady from exc
+            _LOGGER.error(
+                "Error connecting to GL-inet router %s for setup: %s",
+                self._host,
+                exc,
+            )
+            return
 
         entity_registry = await self.hass.helpers.entity_registry.async_get_registry()
         track_entries = (
@@ -148,15 +154,16 @@ class GLinetRouter:
 
         _LOGGER.debug("Checking client connect to GL-inet router %s", self._host)
         try:
+            # TODO ensure the output of gli_py has the right data structure
             wrt_devices = await self._api.connected_clients()
         except OSError as exc:
             if not self._connect_error:
                 self._connect_error = True
-                _LOGGER.error(
-                    "Error connecting to ASUS router %s for device update: %s",
-                    self._host,
-                    exc,
-                )
+            _LOGGER.error(
+                "Error connecting to GL-inet router %s for device update: %s",
+                self._host,
+                exc,
+            )
             return
 
         if self._connect_error:
@@ -168,6 +175,7 @@ class GLinetRouter:
         )
         # track_unknown = self._options.get(CONF_TRACK_UNKNOWN, DEFAULT_TRACK_UNKNOWN)
 
+        # TODO - ensure the output of gli_py devices has the correct data structure
         for device_mac, device in self._devices.items():
             dev_info = wrt_devices.get(device_mac)
             device.update(dev_info, consider_home)

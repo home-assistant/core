@@ -43,16 +43,18 @@ class TestingHub:
         self.router = GLinet(
             "", base_url=self.host + "/cgi-bin/api/", sync=False, auto_auth=False
         )
+        self.router_model: str = ""
 
     async def connect(self) -> bool:
         """Test if we can authenticate with the host."""
         try:
-            await self.router.router_model()
+            self.router_model = await self.router.router_model()
+            return True
         except ConnectionError:
             _LOGGER.error(
                 "Failed to connect to " + self.host + " is it really a GL-inet router?"
             )
-        return self.router.logged_in
+            return False
 
     async def authenticate(self, password: str) -> bool:
         """Test if we can authenticate with the host."""
@@ -78,7 +80,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
     hub = TestingHub(data[CONF_HOST])
 
-    if not await hub.authenticate(data[CONF_PASSWORD]):
+    if not await hub.connect():
         raise CannotConnect
 
     if not await hub.authenticate(data[CONF_PASSWORD]):
@@ -90,7 +92,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     # InvalidAuth
 
     # Return info that you want to store in the config entry.
-    return {"title": "Name of the device"}
+    return {"GL-inet": "GL-inet " + hub.router_model}
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
