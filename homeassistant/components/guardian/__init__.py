@@ -32,25 +32,20 @@ from .const import (
 )
 from .util import GuardianDataUpdateCoordinator
 
-DATA_LAST_SENSOR_PAIR_DUMP = "last_sensor_pair_dump"
-
 PLATFORMS = ["binary_sensor", "sensor", "switch"]
-
-
-async def async_setup(hass: HomeAssistant, config: dict) -> bool:
-    """Set up the Elexa Guardian component."""
-    hass.data[DOMAIN] = {
-        DATA_CLIENT: {},
-        DATA_COORDINATOR: {},
-        DATA_LAST_SENSOR_PAIR_DUMP: {},
-        DATA_PAIRED_SENSOR_MANAGER: {},
-        DATA_UNSUB_DISPATCHER_CONNECT: {},
-    }
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Elexa Guardian from a config entry."""
+    hass.data.setdefault(
+        DOMAIN,
+        {
+            DATA_CLIENT: {},
+            DATA_COORDINATOR: {},
+            DATA_PAIRED_SENSOR_MANAGER: {},
+            DATA_UNSUB_DISPATCHER_CONNECT: {},
+        },
+    )
     client = hass.data[DOMAIN][DATA_CLIENT][entry.entry_id] = Client(
         entry.data[CONF_IP_ADDRESS], port=entry.data[CONF_PORT]
     )
@@ -116,7 +111,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if unload_ok:
         hass.data[DOMAIN][DATA_CLIENT].pop(entry.entry_id)
         hass.data[DOMAIN][DATA_COORDINATOR].pop(entry.entry_id)
-        hass.data[DOMAIN][DATA_LAST_SENSOR_PAIR_DUMP].pop(entry.entry_id)
         for unsub in hass.data[DOMAIN][DATA_UNSUB_DISPATCHER_CONNECT][entry.entry_id]:
             unsub()
         hass.data[DOMAIN][DATA_UNSUB_DISPATCHER_CONNECT].pop(entry.entry_id)
@@ -225,7 +219,7 @@ class GuardianEntity(CoordinatorEntity):
         self._entry = entry
 
     @callback
-    def _async_update_from_latest_data(self):
+    def _async_update_from_latest_data(self) -> None:
         """Update the entity.
 
         This should be extended by Guardian platforms.
@@ -271,8 +265,8 @@ class ValveControllerEntity(GuardianEntity):
         coordinators: dict[str, DataUpdateCoordinator],
         kind: str,
         name: str,
-        device_class: str,
-        icon: str,
+        device_class: str | None,
+        icon: str | None,
     ) -> None:
         """Initialize."""
         super().__init__(entry, kind, name, device_class, icon)
@@ -298,7 +292,7 @@ class ValveControllerEntity(GuardianEntity):
             if coordinator
         )
 
-    async def _async_continue_entity_setup(self):
+    async def _async_continue_entity_setup(self) -> None:
         """Perform additional, internal tasks when the entity is about to be added.
 
         This should be extended by Guardian platforms.

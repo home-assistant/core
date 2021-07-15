@@ -12,7 +12,7 @@ from axis.streammanager import SIGNAL_PLAYING, STATE_STOPPED
 
 from homeassistant.components import mqtt
 from homeassistant.components.mqtt import DOMAIN as MQTT_DOMAIN
-from homeassistant.components.mqtt.models import Message
+from homeassistant.components.mqtt.models import ReceiveMessage
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -195,7 +195,7 @@ class AxisNetworkDevice:
             )
 
     @callback
-    def mqtt_message(self, message: Message) -> None:
+    def mqtt_message(self, message: ReceiveMessage) -> None:
         """Receive Axis MQTT message."""
         self.disconnect_from_stream()
 

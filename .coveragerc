@@ -35,7 +35,6 @@ omit =
     homeassistant/components/airnow/__init__.py
     homeassistant/components/airnow/sensor.py
     homeassistant/components/airvisual/__init__.py
-    homeassistant/components/airvisual/air_quality.py
     homeassistant/components/airvisual/sensor.py
     homeassistant/components/aladdin_connect/*
     homeassistant/components/alarmdecoder/__init__.py
@@ -320,7 +319,8 @@ omit =
     homeassistant/components/flick_electric/const.py
     homeassistant/components/flick_electric/sensor.py
     homeassistant/components/flock/notify.py
-    homeassistant/components/flume/*
+    homeassistant/components/flume/__init__.py
+    homeassistant/components/flume/sensor.py
     homeassistant/components/flunearyou/__init__.py
     homeassistant/components/flunearyou/sensor.py
     homeassistant/components/flux_led/light.py
@@ -361,6 +361,7 @@ omit =
     homeassistant/components/garmin_connect/alarm_util.py
     homeassistant/components/gc100/*
     homeassistant/components/geniushub/*
+    homeassistant/components/generic_hygrostat/*
     homeassistant/components/github/sensor.py
     homeassistant/components/gitlab_ci/sensor.py
     homeassistant/components/gitter/sensor.py
@@ -633,7 +634,12 @@ omit =
     homeassistant/components/mitemp_bt/sensor.py
     homeassistant/components/mjpeg/camera.py
     homeassistant/components/mochad/*
+    homeassistant/components/modbus/base_platform.py
+    homeassistant/components/modbus/binary_sensor.py
+    homeassistant/components/modbus/cover.py
     homeassistant/components/modbus/climate.py
+    homeassistant/components/modbus/modbus.py
+    homeassistant/components/modbus/validators.py
     homeassistant/components/modem_callerid/sensor.py
     homeassistant/components/motion_blinds/__init__.py
     homeassistant/components/motion_blinds/const.py
@@ -686,13 +692,13 @@ omit =
     homeassistant/components/netgear_lte/*
     homeassistant/components/netio/switch.py
     homeassistant/components/neurio_energy/sensor.py
+    homeassistant/components/nexia/climate.py
     homeassistant/components/nextcloud/*
     homeassistant/components/nfandroidtv/notify.py
     homeassistant/components/niko_home_control/light.py
     homeassistant/components/nilu/air_quality.py
     homeassistant/components/nissan_leaf/*
-    homeassistant/components/nmap_tracker/__init__.py
-    homeassistant/components/nmap_tracker/device_tracker.py
+    homeassistant/components/nmap_tracker/*
     homeassistant/components/nmbs/sensor.py
     homeassistant/components/notion/__init__.py
     homeassistant/components/notion/binary_sensor.py

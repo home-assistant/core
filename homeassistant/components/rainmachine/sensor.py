@@ -5,7 +5,11 @@ from regenmaschine.controller import Controller
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import TEMP_CELSIUS, VOLUME_CUBIC_METERS
+from homeassistant.const import (
+    DEVICE_CLASS_TEMPERATURE,
+    TEMP_CELSIUS,
+    VOLUME_CUBIC_METERS,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -62,7 +66,7 @@ SENSORS = {
         "Freeze Protect Temperature",
         "mdi:thermometer",
         TEMP_CELSIUS,
-        "temperature",
+        DEVICE_CLASS_TEMPERATURE,
         True,
         DATA_RESTRICTIONS_UNIVERSAL,
     ),

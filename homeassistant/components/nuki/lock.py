@@ -59,6 +59,9 @@ async def async_setup_entry(hass, entry, async_add_entities):
             vol.Optional(ATTR_UNLATCH, default=False): cv.boolean,
         },
         "lock_n_go",
+    )
+
+    platform.async_register_entity_service(
         "set_continuous_mode",
         {
             vol.Required(ATTR_ENABLE): cv.boolean,

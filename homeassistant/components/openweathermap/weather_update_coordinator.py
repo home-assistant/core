@@ -191,6 +191,8 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
         """Get rain data from weather data."""
         if "all" in rain:
             return round(rain["all"], 2)
+        if "3h" in rain:
+            return round(rain["3h"], 2)
         if "1h" in rain:
             return round(rain["1h"], 2)
         return 0
@@ -201,6 +203,8 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
         if snow:
             if "all" in snow:
                 return round(snow["all"], 2)
+            if "3h" in snow:
+                return round(snow["3h"], 2)
             if "1h" in snow:
                 return round(snow["1h"], 2)
         return 0

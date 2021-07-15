@@ -12,7 +12,7 @@
                 "data": {
                     "radio_type": "Funktyp"
                 },
-                "description": "W\u00e4hlen Sie einen Typ Ihres Zigbee-Funks",
+                "description": "W\u00e4hle den Typ deines Zigbee-Funks",
                 "title": "Funktyp"
             },
             "port_config": {
@@ -21,14 +21,14 @@
                     "flow_control": "Datenflusskontrolle",
                     "path": "Serieller Ger\u00e4tepfad"
                 },
-                "description": "Geben Sie die portspezifischen Einstellungen ein",
+                "description": "Gib die portspezifischen Einstellungen ein",
                 "title": "Einstellungen"
             },
             "user": {
                 "data": {
                     "path": "Serieller Ger\u00e4tepfad"
                 },
-                "description": "W\u00e4hlen Sie die serielle Schnittstelle f\u00fcr den ZigBee-Funk",
+                "description": "W\u00e4hle die serielle Schnittstelle f\u00fcr den ZigBee-Funk",
                 "title": "ZHA"
             }
         }
@@ -44,7 +44,7 @@
             "consider_unavailable_battery": "Batteriebetriebene Ger\u00e4te als nicht verf\u00fcgbar betrachten nach (Sekunden)",
             "consider_unavailable_mains": "Netzbetriebene Ger\u00e4te als nicht verf\u00fcgbar betrachten nach (Sekunden)",
             "default_light_transition": "Standardlicht\u00fcbergangszeit (Sekunden)",
-            "enable_identify_on_join": "Aktivieren Sie den Identifikationseffekt, wenn Ger\u00e4te dem Netzwerk beitreten",
+            "enable_identify_on_join": "Aktiviere den Identifikationseffekt, wenn Ger\u00e4te dem Netzwerk beitreten",
             "title": "Globale Optionen"
         }
     },

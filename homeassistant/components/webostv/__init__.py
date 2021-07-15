@@ -92,8 +92,8 @@ async def async_setup(hass, config):
         data["method"] = method["method"]
         async_dispatcher_send(hass, DOMAIN, data)
 
-    for service in SERVICE_TO_METHOD:
-        schema = SERVICE_TO_METHOD[service]["schema"]
+    for service, method in SERVICE_TO_METHOD.items():
+        schema = method["schema"]
         hass.services.async_register(
             DOMAIN, service, async_service_handler, schema=schema
         )

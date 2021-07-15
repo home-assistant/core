@@ -32,7 +32,7 @@
                 "data": {
                     "unlock": "Ja mach das."
                 },
-                "description": "{name} ({model} unter {host}) ist gesperrt. Dies kann zu Authentifizierungsproblemen im Home Assistant f\u00fchren. M\u00f6chten Sie es entsperren?",
+                "description": "{name} ({model} unter {host}) ist gesperrt. Dies kann zu Authentifizierungsproblemen im Home Assistant f\u00fchren. M\u00f6chtest du es entsperren?",
                 "title": "Entsperren des Ger\u00e4ts (optional)"
             },
             "user": {

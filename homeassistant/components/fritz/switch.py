@@ -69,7 +69,7 @@ def service_call_action(
         return None
 
     try:
-        return fritzbox_tools.connection.call_action(
+        return fritzbox_tools.connection.call_action(  # type: ignore[no-any-return]
             f"{service_name}:{service_suffix}",
             action_name,
             **kwargs,
@@ -245,7 +245,7 @@ def wifi_entities_list(
 ) -> list[FritzBoxWifiSwitch]:
     """Get list of wifi entities."""
     _LOGGER.debug("Setting up %s switches", SWITCH_TYPE_WIFINETWORK)
-    std_table = {"ac": "5Ghz", "n": "2.4Ghz"}
+    std_table = {"ax": "Wifi6", "ac": "5Ghz", "n": "2.4Ghz"}
     networks: dict = {}
     for i in range(4):
         if not ("WLANConfiguration" + str(i)) in fritzbox_tools.connection.services:
@@ -262,8 +262,8 @@ def wifi_entities_list(
                 networks[i] = ssid
 
     return [
-        FritzBoxWifiSwitch(fritzbox_tools, device_friendly_name, net, networks[net])
-        for net in networks
+        FritzBoxWifiSwitch(fritzbox_tools, device_friendly_name, net, network_name)
+        for net, network_name in networks.items()
     ]
 
 
@@ -428,8 +428,8 @@ class FritzBoxPortSwitch(FritzBoxBaseSwitch, SwitchEntity):
             "NewPortMappingDescription": "description",
         }
 
-        for key in attributes_dict:
-            self._attributes[attributes_dict[key]] = self.port_mapping[key]
+        for key, attr in attributes_dict.items():
+            self._attributes[attr] = self.port_mapping[key]
 
     async def _async_handle_port_switch_on_off(self, turn_on: bool) -> bool:
 

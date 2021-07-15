@@ -2,7 +2,7 @@
 import asyncio
 from uuid import UUID
 
-from simplipy import API
+from simplipy import get_api
 from simplipy.errors import EndpointUnavailable, InvalidCredentialsError, SimplipyError
 import voluptuous as vol
 
@@ -155,24 +155,20 @@ async def async_setup_entry(hass, config_entry):  # noqa: C901
     client_id = await async_get_client_id(hass)
     websession = aiohttp_client.async_get_clientsession(hass)
 
-    async def async_get_api():
-        """Define a helper to get an authenticated SimpliSafe API object."""
-        return await API.login_via_credentials(
+    try:
+        api = await get_api(
             config_entry.data[CONF_USERNAME],
             config_entry.data[CONF_PASSWORD],
             client_id=client_id,
             session=websession,
         )
-
-    try:
-        api = await async_get_api()
     except InvalidCredentialsError as err:
         raise ConfigEntryAuthFailed from err
     except SimplipyError as err:
         LOGGER.error("Config entry failed: %s", err)
         raise ConfigEntryNotReady from err
 
-    simplisafe = SimpliSafe(hass, config_entry, api, async_get_api)
+    simplisafe = SimpliSafe(hass, config_entry, api)
 
     try:
         await simplisafe.async_init()
@@ -295,10 +291,9 @@ async def async_reload_entry(hass, config_entry):
 class SimpliSafe:
     """Define a SimpliSafe data object."""
 
-    def __init__(self, hass, config_entry, api, async_get_api):
+    def __init__(self, hass, config_entry, api):
         """Initialize."""
         self._api = api
-        self._async_get_api = async_get_api
         self._hass = hass
         self._system_notifications = {}
         self.config_entry = config_entry
@@ -375,17 +370,7 @@ class SimpliSafe:
 
         for result in results:
             if isinstance(result, InvalidCredentialsError):
-                try:
-                    self._api = await self._async_get_api()
-                    return
-                except InvalidCredentialsError as err:
-                    raise ConfigEntryAuthFailed(
-                        "Unable to re-authenticate with SimpliSafe"
-                    ) from err
-                except SimplipyError as err:
-                    raise UpdateFailed(
-                        f"SimpliSafe error while updating: {err}"
-                    ) from err
+                raise ConfigEntryAuthFailed("Invalid credentials") from result
 
             if isinstance(result, EndpointUnavailable):
                 # In case the user attempts an action not allowed in their current plan,
