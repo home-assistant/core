@@ -10,6 +10,8 @@ from homeassistant.components.cover import (
     DEVICE_CLASS_GARAGE,
     DEVICE_CLASS_GATE,
     DEVICE_CLASS_WINDOW,
+    SUPPORT_CLOSE,
+    SUPPORT_OPEN,
     SUPPORT_SET_POSITION,
     CoverEntity,
 )
@@ -48,25 +50,24 @@ class Device(CoordinatorEntity, CoverEntity):
     def __init__(self, hass, api_key, device, coordinator):
         """Initialize the Freedompro cover."""
         super().__init__(coordinator)
-        self._hass = hass
-        self._session = aiohttp_client.async_get_clientsession(self._hass)
+        self._session = aiohttp_client.async_get_clientsession(hass)
         self._api_key = api_key
         self._attr_name = device["name"]
         self._attr_unique_id = device["uid"]
-        self._type = device["type"]
-        self._characteristics = device["characteristics"]
         self._attr_device_info = {
             "name": self.name,
             "identifiers": {
                 (DOMAIN, self.unique_id),
             },
-            "model": self._type,
+            "model": device["type"],
             "manufacturer": "Freedompro",
         }
         self._attr_current_cover_position = 0
         self._attr_is_closed = True
-        self._attr_supported_features = SUPPORT_SET_POSITION
-        self._attr_device_class = DEVICE_CLASS_MAP[self._type]
+        self._attr_supported_features = (
+            SUPPORT_CLOSE | SUPPORT_OPEN | SUPPORT_SET_POSITION
+        )
+        self._attr_device_class = DEVICE_CLASS_MAP[device["type"]]
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -96,11 +97,11 @@ class Device(CoordinatorEntity, CoverEntity):
 
     async def async_open_cover(self, **kwargs):
         """Open the cover."""
-        await self.async_set_cover_position(ATTR_POSITION=100)
+        await self.async_set_cover_position(position=100)
 
     async def async_close_cover(self, **kwargs):
         """Close the cover."""
-        await self.async_set_cover_position(ATTR_POSITION=0)
+        await self.async_set_cover_position(position=0)
 
     async def async_set_cover_position(self, **kwargs):
         """Async function to set position to cover."""

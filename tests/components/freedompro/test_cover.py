@@ -7,6 +7,8 @@ import pytest
 from homeassistant.components.cover import ATTR_POSITION, DOMAIN as COVER_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    SERVICE_CLOSE_COVER,
+    SERVICE_OPEN_COVER,
     SERVICE_SET_COVER_POSITION,
     STATE_CLOSED,
     STATE_OPEN,
@@ -110,6 +112,88 @@ async def test_cover_set_position(
             blocking=True,
         )
     mock_put_state.assert_called_once_with(ANY, ANY, ANY, '{"position": 33}')
+
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_OPEN
+
+
+@pytest.mark.parametrize(
+    "entity_id, uid, name, model",
+    [
+        (
+            "cover.blind",
+            "3WRRJR6RCZQZSND8VP0YTO3YXCSOFPKBMW8T51TU-LQ*3XSSVIJWK-65HILWTC4WINQK46SP4OEZRCNO25VGWAS",
+            "blind",
+            "windowCovering",
+        )
+    ],
+)
+async def test_cover_close(
+    hass, init_integration, entity_id: str, uid: str, name: str, model: str
+):
+    """Test close cover."""
+    init_integration
+    registry = er.async_get(hass)
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_OPEN
+    assert state.attributes.get("friendly_name") == name
+
+    entry = registry.async_get(entity_id)
+    assert entry
+    assert entry.unique_id == uid
+
+    with patch("homeassistant.components.freedompro.cover.put_state") as mock_put_state:
+        assert await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_CLOSE_COVER,
+            {ATTR_ENTITY_ID: [entity_id]},
+            blocking=True,
+        )
+    mock_put_state.assert_called_once_with(ANY, ANY, ANY, '{"position": 0}')
+
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_OPEN
+
+
+@pytest.mark.parametrize(
+    "entity_id, uid, name, model",
+    [
+        (
+            "cover.blind",
+            "3WRRJR6RCZQZSND8VP0YTO3YXCSOFPKBMW8T51TU-LQ*3XSSVIJWK-65HILWTC4WINQK46SP4OEZRCNO25VGWAS",
+            "blind",
+            "windowCovering",
+        )
+    ],
+)
+async def test_cover_open(
+    hass, init_integration, entity_id: str, uid: str, name: str, model: str
+):
+    """Test open cover."""
+    init_integration
+    registry = er.async_get(hass)
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_OPEN
+    assert state.attributes.get("friendly_name") == name
+
+    entry = registry.async_get(entity_id)
+    assert entry
+    assert entry.unique_id == uid
+
+    with patch("homeassistant.components.freedompro.cover.put_state") as mock_put_state:
+        assert await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_OPEN_COVER,
+            {ATTR_ENTITY_ID: [entity_id]},
+            blocking=True,
+        )
+    mock_put_state.assert_called_once_with(ANY, ANY, ANY, '{"position": 100}')
 
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
