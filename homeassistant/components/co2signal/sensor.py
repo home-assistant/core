@@ -15,6 +15,7 @@ from homeassistant.const import (
     CONF_API_KEY,
     CONF_LATITUDE,
     CONF_LONGITUDE,
+    CONF_NAME,
     CONF_TOKEN,
     ENERGY_KILO_WATT_HOUR,
 )
@@ -75,12 +76,15 @@ class CO2Sensor(SensorEntity):
         self._latitude = config.get(CONF_LATITUDE)
         self._longitude = config.get(CONF_LONGITUDE)
 
-        if self._country_code is not None:
+        if config.get(CONF_NAME) is not None:
+            self._attr_name = config[CONF_NAME]
+        elif self._country_code is not None:
             device_name = self._country_code
+            self._attr_name = f"CO2 intensity - {device_name}"
         else:
             device_name = f"{round(self._latitude, 2)}/{round(self._longitude, 2)}"
+            self._attr_name = f"CO2 intensity - {device_name}"
 
-        self._attr_name = f"CO2 intensity - {device_name}"
         self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
         self._attr_device_info = {
             ATTR_IDENTIFIERS: {(DOMAIN, entry_id)},

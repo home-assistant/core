@@ -18,7 +18,7 @@ from homeassistant.const import (
 from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
 
-from .const import CONF_COUNTRY_CODE, DOMAIN, HOME_LOCATION_NAME, MSG_LOCATION
+from .const import CONF_COUNTRY_CODE, DEFAULT_NAME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,7 +39,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_LONGITUDE, self.hass.config.longitude
             )
 
-        import_info[CONF_NAME] = "Imported from yaml"
         for entry in self._async_current_entries(include_ignore=True):
             if entry.source != config_entries.SOURCE_IMPORT:
                 continue
@@ -65,20 +64,18 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         data_schema = vol.Schema(
             {
-                vol.Required(CONF_NAME, default=HOME_LOCATION_NAME): cv.string,
+                vol.Required(CONF_NAME, default=DEFAULT_NAME): cv.string,
                 vol.Inclusive(
                     CONF_LATITUDE,
                     "coords",
-                    msg=MSG_LOCATION,
                     default=self.hass.config.latitude,
                 ): cv.latitude,
                 vol.Inclusive(
                     CONF_LONGITUDE,
                     "coords",
-                    msg=MSG_LOCATION,
                     default=self.hass.config.longitude,
                 ): cv.longitude,
-                vol.Exclusive(CONF_COUNTRY_CODE, "coords", msg=MSG_LOCATION): cv.string,
+                vol.Optional(CONF_COUNTRY_CODE): cv.string,
                 vol.Required(CONF_API_KEY): cv.string,
             }
         )
@@ -110,7 +107,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         else:
             if data.get("status") == "ok":
                 return self.async_create_entry(
-                    title=user_input[CONF_NAME], data=user_input
+                    title=user_input.get(CONF_NAME, "Imported from yaml"),
+                    data=user_input,
                 )
 
         return self.async_show_form(
