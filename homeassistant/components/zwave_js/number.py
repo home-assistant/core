@@ -107,7 +107,7 @@ class ZwaveVolumeNumberEntity(ZWaveBaseEntity, NumberEntity):
         # Entity class attributes
         self._attr_min_value = 0
         self._attr_max_value = 1
-        self._attr_step = 0.05
+        self._attr_step = 0.01
         self._attr_name = self.generate_name(include_value_name=True)
 
     @property
