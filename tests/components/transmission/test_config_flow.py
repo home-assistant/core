@@ -1,22 +1,11 @@
 """Tests for Transmission config flow."""
 from datetime import timedelta
-from unittest.mock import patch
+from unittest.mock import MagicMock
 
-import pytest
 from transmissionrpc.error import TransmissionError
 
 from homeassistant import config_entries, data_entry_flow
-from homeassistant.components import transmission
-from homeassistant.components.transmission import config_flow
-from homeassistant.components.transmission.const import (
-    CONF_LIMIT,
-    CONF_ORDER,
-    DEFAULT_LIMIT,
-    DEFAULT_NAME,
-    DEFAULT_ORDER,
-    DEFAULT_PORT,
-    DEFAULT_SCAN_INTERVAL,
-)
+from homeassistant.components.transmission.const import CONF_LIMIT, CONF_ORDER, DOMAIN
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -25,6 +14,9 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_USERNAME,
 )
+from homeassistant.core import HomeAssistant
+
+from . import MOCK_CONFIG
 
 from tests.common import MockConfigEntry
 
@@ -44,234 +36,108 @@ MOCK_ENTRY = {
 }
 
 
-@pytest.fixture(name="api")
-def mock_transmission_api():
-    """Mock an api."""
-    with patch("transmissionrpc.Client"):
-        yield
-
-
-@pytest.fixture(name="auth_error")
-def mock_api_authentication_error():
-    """Mock an api."""
-    with patch(
-        "transmissionrpc.Client", side_effect=TransmissionError("401: Unauthorized")
-    ):
-        yield
-
-
-@pytest.fixture(name="conn_error")
-def mock_api_connection_error():
-    """Mock an api."""
-    with patch(
-        "transmissionrpc.Client",
-        side_effect=TransmissionError("111: Connection refused"),
-    ):
-        yield
-
-
-@pytest.fixture(name="unknown_error")
-def mock_api_unknown_error():
-    """Mock an api."""
-    with patch("transmissionrpc.Client", side_effect=TransmissionError):
-        yield
-
-
-@pytest.fixture(name="transmission_setup", autouse=True)
-def transmission_setup_fixture():
-    """Mock transmission entry setup."""
-    with patch(
-        "homeassistant.components.transmission.async_setup_entry", return_value=True
-    ):
-        yield
-
-
-def init_config_flow(hass):
-    """Init a configuration flow."""
-    flow = config_flow.TransmissionFlowHandler()
-    flow.hass = hass
-    return flow
-
-
-async def test_flow_user_config(hass, api):
+async def test_flow_works(hass: HomeAssistant) -> None:
     """Test user config."""
     result = await hass.config_entries.flow.async_init(
-        transmission.DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
 
-
-async def test_flow_required_fields(hass, api):
-    """Test with required fields only."""
-    result = await hass.config_entries.flow.async_init(
-        transmission.DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-        data={CONF_NAME: NAME, CONF_HOST: HOST, CONF_PORT: PORT},
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=MOCK_CONFIG
     )
-
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == NAME
-    assert result["data"][CONF_NAME] == NAME
-    assert result["data"][CONF_HOST] == HOST
-    assert result["data"][CONF_PORT] == PORT
+    assert result["title"] == "Transmission"
+    assert result["data"] == MOCK_CONFIG
 
 
-async def test_flow_all_provided(hass, api):
-    """Test with all provided."""
-    result = await hass.config_entries.flow.async_init(
-        transmission.DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-        data=MOCK_ENTRY,
-    )
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == NAME
-    assert result["data"][CONF_NAME] == NAME
-    assert result["data"][CONF_HOST] == HOST
-    assert result["data"][CONF_USERNAME] == USERNAME
-    assert result["data"][CONF_PASSWORD] == PASSWORD
-    assert result["data"][CONF_PORT] == PORT
-
-
-async def test_options(hass):
+async def test_options(hass: HomeAssistant) -> None:
     """Test updating options."""
     entry = MockConfigEntry(
-        domain=transmission.DOMAIN,
+        domain=DOMAIN,
         title=CONF_NAME,
         data=MOCK_ENTRY,
-        options={CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL},
     )
-    flow = init_config_flow(hass)
-    options_flow = flow.async_get_options_flow(entry)
+    entry.add_to_hass(hass)
 
-    result = await options_flow.async_step_init()
+    assert await hass.config_entries.async_setup(entry.entry_id)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "init"
-    result = await options_flow.async_step_init({CONF_SCAN_INTERVAL: 10})
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_SCAN_INTERVAL: 30,
+            CONF_LIMIT: 5,
+            CONF_ORDER: "oldest_first",
+        },
+    )
+
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["data"][CONF_SCAN_INTERVAL] == 10
+    assert result["data"] == {
+        CONF_SCAN_INTERVAL: 30,
+        CONF_LIMIT: 5,
+        CONF_ORDER: "oldest_first",
+    }
 
 
-async def test_import(hass, api):
+async def test_import_success(hass: HomeAssistant) -> None:
     """Test import step."""
-    flow = init_config_flow(hass)
-
-    # import with minimum fields only
-    result = await flow.async_step_import(
-        {
-            CONF_NAME: DEFAULT_NAME,
-            CONF_HOST: HOST,
-            CONF_PORT: DEFAULT_PORT,
-            CONF_SCAN_INTERVAL: timedelta(seconds=DEFAULT_SCAN_INTERVAL),
-            CONF_LIMIT: DEFAULT_LIMIT,
-            CONF_ORDER: DEFAULT_ORDER,
-        }
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_IMPORT},
+        data={
+            CONF_NAME: "Transmission",
+            CONF_HOST: "1.2.3.4",
+            CONF_USERNAME: "user",
+            CONF_PASSWORD: "pass",
+            CONF_PORT: "9091",
+            CONF_SCAN_INTERVAL: timedelta(seconds=20),
+        },
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == DEFAULT_NAME
-    assert result["data"][CONF_NAME] == DEFAULT_NAME
-    assert result["data"][CONF_HOST] == HOST
-    assert result["data"][CONF_PORT] == DEFAULT_PORT
-    assert result["data"][CONF_SCAN_INTERVAL] == DEFAULT_SCAN_INTERVAL
-
-    # import with all
-    result = await flow.async_step_import(
-        {
-            CONF_NAME: NAME,
-            CONF_HOST: HOST,
-            CONF_USERNAME: USERNAME,
-            CONF_PASSWORD: PASSWORD,
-            CONF_PORT: PORT,
-            CONF_SCAN_INTERVAL: timedelta(seconds=SCAN_INTERVAL),
-            CONF_LIMIT: DEFAULT_LIMIT,
-            CONF_ORDER: DEFAULT_ORDER,
-        }
-    )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == NAME
-    assert result["data"][CONF_NAME] == NAME
-    assert result["data"][CONF_HOST] == HOST
-    assert result["data"][CONF_USERNAME] == USERNAME
-    assert result["data"][CONF_PASSWORD] == PASSWORD
-    assert result["data"][CONF_PORT] == PORT
-    assert result["data"][CONF_SCAN_INTERVAL] == SCAN_INTERVAL
+    assert result["title"] == "Transmission"
+    assert result["data"] == {
+        CONF_NAME: "Transmission",
+        CONF_HOST: "1.2.3.4",
+        CONF_USERNAME: "user",
+        CONF_PASSWORD: "pass",
+        CONF_PORT: "9091",
+        CONF_SCAN_INTERVAL: 20,
+    }
 
 
-async def test_host_already_configured(hass, api):
+async def test_host_port_already_configured(hass: HomeAssistant) -> None:
     """Test host is already configured."""
-    entry = MockConfigEntry(
-        domain=transmission.DOMAIN,
-        data=MOCK_ENTRY,
-        options={CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL},
-    )
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_ENTRY, unique_id="1.2.3.4-9091")
     entry.add_to_hass(hass)
 
-    mock_entry_unique_name = MOCK_ENTRY.copy()
-    mock_entry_unique_name[CONF_NAME] = "Transmission 1"
     result = await hass.config_entries.flow.async_init(
-        transmission.DOMAIN,
+        DOMAIN,
         context={"source": config_entries.SOURCE_USER},
-        data=mock_entry_unique_name,
+        data=MOCK_CONFIG,
     )
-    assert result["type"] == "abort"
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
 
-    mock_entry_unique_port = MOCK_ENTRY.copy()
-    mock_entry_unique_port[CONF_PORT] = 9092
-    mock_entry_unique_port[CONF_NAME] = "Transmission 2"
-    result = await hass.config_entries.flow.async_init(
-        transmission.DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-        data=mock_entry_unique_port,
-    )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
 
-    mock_entry_unique_host = MOCK_ENTRY.copy()
-    mock_entry_unique_host[CONF_HOST] = "192.168.1.101"
-    mock_entry_unique_host[CONF_NAME] = "Transmission 3"
-    result = await hass.config_entries.flow.async_init(
-        transmission.DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-        data=mock_entry_unique_host,
-    )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-
-
-async def test_name_already_configured(hass, api):
-    """Test name is already configured."""
-    entry = MockConfigEntry(
-        domain=transmission.DOMAIN,
-        data=MOCK_ENTRY,
-        options={CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL},
-    )
-    entry.add_to_hass(hass)
-
-    mock_entry = MOCK_ENTRY.copy()
-    mock_entry[CONF_HOST] = "0.0.0.0"
-    result = await hass.config_entries.flow.async_init(
-        transmission.DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-        data=mock_entry,
-    )
-
-    assert result["type"] == "form"
-    assert result["errors"] == {CONF_NAME: "name_exists"}
-
-
-async def test_error_on_wrong_credentials(hass, auth_error):
+async def test_error_on_wrong_credentials(
+    hass: HomeAssistant, mock_api: MagicMock
+) -> None:
     """Test with wrong credentials."""
-    flow = init_config_flow(hass)
-
-    result = await flow.async_step_user(
-        {
-            CONF_NAME: NAME,
-            CONF_HOST: HOST,
-            CONF_USERNAME: USERNAME,
-            CONF_PASSWORD: PASSWORD,
-            CONF_PORT: PORT,
-        }
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
+
+    mock_api.side_effect = TransmissionError("401: Unauthorized")
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=MOCK_CONFIG
+    )
+
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["errors"] == {
         CONF_USERNAME: "invalid_auth",
@@ -279,35 +145,96 @@ async def test_error_on_wrong_credentials(hass, auth_error):
     }
 
 
-async def test_error_on_connection_failure(hass, conn_error):
+async def test_error_on_connection_failure(
+    hass: HomeAssistant, mock_api: MagicMock
+) -> None:
     """Test when connection to host fails."""
-    flow = init_config_flow(hass)
-
-    result = await flow.async_step_user(
-        {
-            CONF_NAME: NAME,
-            CONF_HOST: HOST,
-            CONF_USERNAME: USERNAME,
-            CONF_PASSWORD: PASSWORD,
-            CONF_PORT: PORT,
-        }
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
+
+    mock_api.side_effect = TransmissionError("111: Connection refused")
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=MOCK_CONFIG
+    )
+
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["errors"] == {"base": "cannot_connect"}
 
 
-async def test_error_on_unknown_error(hass, unknown_error):
+async def test_error_on_unknown_error(hass: HomeAssistant, mock_api: MagicMock) -> None:
     """Test when connection to host fails."""
-    flow = init_config_flow(hass)
-
-    result = await flow.async_step_user(
-        {
-            CONF_NAME: NAME,
-            CONF_HOST: HOST,
-            CONF_USERNAME: USERNAME,
-            CONF_PASSWORD: PASSWORD,
-            CONF_PORT: PORT,
-        }
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
+
+    mock_api.side_effect = TransmissionError
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=MOCK_CONFIG
+    )
+
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["errors"] == {"base": "cannot_connect"}
+
+
+async def test_reauth_success(hass: HomeAssistant) -> None:
+    """Test we can reauth."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_CONFIG,
+        unique_id="1.2.3.4:9091",
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "unique_id": "1.2.3.4:9091",
+        },
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "reauth_confirm"
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_USERNAME: "test-user", CONF_PASSWORD: "test-password"},
+    )
+
+    assert result2["type"] == "abort"
+    assert result2["reason"] == "reauth_successful"
+
+
+async def test_reauth_failed(hass: HomeAssistant, mock_api: MagicMock) -> None:
+    """Test we can reauth."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_CONFIG,
+        unique_id="1.2.3.4:9091",
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "unique_id": "1.2.3.4:9091",
+        },
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "reauth_confirm"
+
+    mock_api.side_effect = TransmissionError("401: Unauthorized")
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_USERNAME: "test-user", CONF_PASSWORD: "test-password"},
+    )
+    assert result2["type"] == "form"
+    assert result2["errors"] == {
+        CONF_USERNAME: "invalid_auth",
+        CONF_PASSWORD: "invalid_auth",
+    }

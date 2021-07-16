@@ -1,14 +1,22 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Device is already configured"
+            "already_configured": "Device is already configured",
+            "reauth_successful": "Re-authentication was successful"
         },
         "error": {
             "cannot_connect": "Failed to connect",
-            "invalid_auth": "Invalid authentication",
-            "name_exists": "Name already exists"
+            "invalid_auth": "Invalid authentication"
         },
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Password",
+                    "username": "Username"
+                },
+                "description": "The username or password are wrong.",
+                "title": "Reauthenticate Integration"
+            },
             "user": {
                 "data": {
                     "host": "Host",
