@@ -124,11 +124,10 @@ class BondDownLight(BondBaseLight, BondEntity, LightEntity):
     """Representation of a Bond light."""
 
     def _apply_state(self, state: dict) -> None:
-        self._attr_is_on = (
-            True  # pylint: disable=simplifiable-if-expression
-            if state.get("down_light") and state.get("light")
-            else False
-        )
+        if state.get("down_light") and state.get("light"):
+            self._attr_is_on = True
+        else:
+            self._attr_is_on = False
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
@@ -147,11 +146,10 @@ class BondUpLight(BondBaseLight, BondEntity, LightEntity):
     """Representation of a Bond light."""
 
     def _apply_state(self, state: dict) -> None:
-        self._attr_is_on = (
-            True  # pylint: disable=simplifiable-if-expression
-            if state.get("up_light") and state.get("light")
-            else False
-        )
+        if state.get("up_light") and state.get("light"):
+            self._attr_is_on = True
+        else:
+            self._attr_is_on = False
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
