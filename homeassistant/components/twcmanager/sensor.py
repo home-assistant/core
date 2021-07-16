@@ -65,7 +65,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
         for prop in coordinator.data[twc]:
             if prop in [
                 "TWCID",
-                "lastHeartbeat"
+                "lastHeartbeat",
                 # Skip properties retrieved from the car itself via Tesla's API
                 "lastBatterySOC",
                 "lastChargeLimit",
