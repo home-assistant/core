@@ -1,7 +1,7 @@
 """Home Assistant wrapper for a pyWeMo device."""
 import logging
 
-from pywemo import PyWeMoException, WeMoDevice
+from pywemo import WeMoDevice
 from pywemo.subscribe import EVENT_TYPE_LONG_PRESS
 
 from homeassistant.config_entries import ConfigEntry
@@ -81,7 +81,9 @@ async def async_register_device(
     if device.supports_long_press:
         try:
             await hass.async_add_executor_job(wemo.ensure_long_press_virtual_device)
-        except PyWeMoException:
+        # Temporarily handling all exceptions for #52996 & pywemo/pywemo/issues/276
+        # Replace this with `except: PyWeMoException` after upstream has been fixed.
+        except:  # noqa: E722  pylint: disable=bare-except
             _LOGGER.warning(
                 "Failed to enable long press support for device: %s", wemo.name
             )
