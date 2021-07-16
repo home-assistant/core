@@ -8,6 +8,11 @@ from aiohttp.web import HTTPError
 import async_timeout
 
 from homeassistant.const import (
+    DEVICE_CLASS_BATTERY,
+    DEVICE_CLASS_CURRENT,
+    DEVICE_CLASS_ENERGY,
+    DEVICE_CLASS_POWER,
+    DEVICE_CLASS_VOLTAGE,
     ELECTRICAL_CURRENT_AMPERE,
     ENERGY_KILO_WATT_HOUR,
     PERCENTAGE,
@@ -99,17 +104,34 @@ class TwcSensor(CoordinatorEntity):
         """Return the unit of measurement."""
         if "amps" in self.entity_id:
             return ELECTRICAL_CURRENT_AMPERE
-        elif "voltage" in self.entity_id:
+        elif "volts" in self.entity_id:
             return VOLT
         elif self.entity_id.endswith("_w"):
             return POWER_WATT
         elif "kwh" in self.entity_id:
             return ENERGY_KILO_WATT_HOUR
-        elif (
-            self.entity_id == "last_battery_soc"
-            or self.entity_id == "last_charge_limit"
+        elif self.entity_id.endswith("last_battery_soc") or self.entity_id.endswith(
+            "last_charge_limit"
         ):
             return PERCENTAGE
+        else:
+            return None
+
+    @property
+    def device_class(self):
+        """Return the device class."""
+        if "amps" in self.entity_id:
+            return DEVICE_CLASS_CURRENT
+        elif "volts" in self.entity_id:
+            return DEVICE_CLASS_VOLTAGE
+        elif self.entity_id.endswith("_w"):
+            return DEVICE_CLASS_POWER
+        elif "kwh" in self.entity_id:
+            return DEVICE_CLASS_ENERGY
+        elif self.entity_id.endswith("last_battery_soc") or self.entity_id.endswith(
+            "last_charge_limit"
+        ):
+            return DEVICE_CLASS_BATTERY
         else:
             return None
 
