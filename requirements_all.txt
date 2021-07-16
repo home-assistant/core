@@ -639,9 +639,6 @@ freesms==0.2.0
 # homeassistant.components.fritzbox_callmonitor
 fritzconnection==1.4.2
 
-# homeassistant.components.fritz
-fritzprofiles==0.6.1
-
 # homeassistant.components.google_translate
 gTTS==2.2.3
 
@@ -1323,7 +1320,7 @@ pyatmo==5.2.0
 pyatome==0.1.1
 
 # homeassistant.components.apple_tv
-pyatv==0.7.7
+pyatv==0.8.1
 
 # homeassistant.components.bbox
 pybbox==0.0.5-alpha
@@ -1677,7 +1674,7 @@ pyownet==0.10.0.post1
 pypca==0.0.7
 
 # homeassistant.components.lcn
-pypck==0.7.9
+pypck==0.7.10
 
 # homeassistant.components.pjlink
 pypjlink2==1.2.1
@@ -1704,7 +1701,7 @@ pyqwikswitch==0.93
 pyrail==0.0.3
 
 # homeassistant.components.rainbird
-pyrainbird==0.4.2
+pyrainbird==0.4.3
 
 # homeassistant.components.recswitch
 pyrecswitch==1.0.2

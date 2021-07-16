@@ -1052,7 +1052,7 @@ async def test_update_legacy_missing_mac_from_dhcp(hass, remote: Mock):
 
 
 async def test_update_legacy_missing_mac_from_dhcp_no_unique_id(hass, remote: Mock):
-    """Test missing mac added."""
+    """Test missing mac added when there is no unique id."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=MOCK_LEGACY_ENTRY,

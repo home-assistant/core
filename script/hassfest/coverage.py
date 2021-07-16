@@ -28,7 +28,6 @@ ALLOWED_IGNORE_VIOLATIONS = {
     ("elkm1", "config_flow.py"),
     ("elkm1", "scene.py"),
     ("fibaro", "scene.py"),
-    ("flume", "config_flow.py"),
     ("hangouts", "config_flow.py"),
     ("harmony", "config_flow.py"),
     ("hisense_aehw4a1", "config_flow.py"),

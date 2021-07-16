@@ -12,7 +12,8 @@ from sqlalchemy.ext import baked
 from sqlalchemy.orm.scoping import scoped_session
 
 from homeassistant.const import PRESSURE_PA, TEMP_CELSIUS
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.helpers import entity_registry
 import homeassistant.util.dt as dt_util
 import homeassistant.util.pressure as pressure_util
 import homeassistant.util.temperature as temperature_util
@@ -72,6 +73,31 @@ def async_setup(hass: HomeAssistant) -> None:
     """Set up the history hooks."""
     hass.data[STATISTICS_BAKERY] = baked.bakery()
     hass.data[STATISTICS_META_BAKERY] = baked.bakery()
+
+    def entity_id_changed(event: Event) -> None:
+        """Handle entity_id changed."""
+        old_entity_id = event.data["old_entity_id"]
+        entity_id = event.data["entity_id"]
+        with session_scope(hass=hass) as session:
+            session.query(StatisticsMeta).filter(
+                StatisticsMeta.statistic_id == old_entity_id
+                and StatisticsMeta.source == DOMAIN
+            ).update({StatisticsMeta.statistic_id: entity_id})
+
+    @callback
+    def entity_registry_changed_filter(event: Event) -> bool:
+        """Handle entity_id changed filter."""
+        if event.data["action"] != "update" or "old_entity_id" not in event.data:
+            return False
+
+        return True
+
+    if hass.is_running:
+        hass.bus.async_listen(
+            entity_registry.EVENT_ENTITY_REGISTRY_UPDATED,
+            entity_id_changed,
+            event_filter=entity_registry_changed_filter,
+        )
 
 
 def get_start_time() -> datetime:
@@ -196,6 +222,7 @@ def list_statistic_ids(
 ) -> list[dict[str, str] | None]:
     """Return statistic_ids and meta data."""
     units = hass.config.units
+    statistic_ids = {}
     with session_scope(hass=hass) as session:
         metadata = _get_metadata(hass, session, None, statistic_type)
 
@@ -203,7 +230,26 @@ def list_statistic_ids(
             unit = _configured_unit(meta["unit_of_measurement"], units)
             meta["unit_of_measurement"] = unit
 
-        return list(metadata.values())
+        statistic_ids = {
+            meta["statistic_id"]: meta["unit_of_measurement"]
+            for meta in metadata.values()
+        }
+
+    for platform in hass.data[DOMAIN].values():
+        if not hasattr(platform, "list_statistic_ids"):
+            continue
+        platform_statistic_ids = platform.list_statistic_ids(hass, statistic_type)
+
+        for statistic_id, unit in platform_statistic_ids.items():
+            unit = _configured_unit(unit, units)
+            platform_statistic_ids[statistic_id] = unit
+
+        statistic_ids = {**statistic_ids, **platform_statistic_ids}
+
+    return [
+        {"statistic_id": _id, "unit_of_measurement": unit}
+        for _id, unit in statistic_ids.items()
+    ]
 
 
 def statistics_during_period(

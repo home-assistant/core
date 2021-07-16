@@ -96,8 +96,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     for i in range(len(data.active_voltage)):
         devices.append(SenseVoltageSensor(data, i, sense_monitor_id))
 
-    for type_id in TRENDS_SENSOR_TYPES:
-        typ = TRENDS_SENSOR_TYPES[type_id]
+    for type_id, typ in TRENDS_SENSOR_TYPES.items():
         for var in SENSOR_VARIANTS:
             name = typ.name
             sensor_type = typ.sensor_type

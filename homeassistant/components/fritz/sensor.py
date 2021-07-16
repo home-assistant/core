@@ -42,22 +42,22 @@ def _retrieve_external_ip_state(status: FritzStatus, last_value: str) -> str:
     return status.external_ip  # type: ignore[no-any-return]
 
 
-def _retrieve_kib_s_sent_state(status: FritzStatus, last_value: str) -> float:
+def _retrieve_kb_s_sent_state(status: FritzStatus, last_value: str) -> float:
     """Return upload transmission rate."""
-    return round(status.transmission_rate[0] * 8 / 1024, 1)  # type: ignore[no-any-return]
+    return round(status.transmission_rate[0] / 1024, 1)  # type: ignore[no-any-return]
 
 
-def _retrieve_kib_s_received_state(status: FritzStatus, last_value: str) -> float:
+def _retrieve_kb_s_received_state(status: FritzStatus, last_value: str) -> float:
     """Return download transmission rate."""
-    return round(status.transmission_rate[1] * 8 / 1024, 1)  # type: ignore[no-any-return]
+    return round(status.transmission_rate[1] / 1024, 1)  # type: ignore[no-any-return]
 
 
-def _retrieve_max_kib_s_sent_state(status: FritzStatus, last_value: str) -> float:
+def _retrieve_max_kb_s_sent_state(status: FritzStatus, last_value: str) -> float:
     """Return upload max transmission rate."""
     return round(status.max_bit_rate[0] / 1024, 1)  # type: ignore[no-any-return]
 
 
-def _retrieve_max_kib_s_received_state(status: FritzStatus, last_value: str) -> float:
+def _retrieve_max_kb_s_received_state(status: FritzStatus, last_value: str) -> float:
     """Return download max transmission rate."""
     return round(status.max_bit_rate[1] / 1024, 1)  # type: ignore[no-any-return]
 
@@ -94,39 +94,39 @@ SENSOR_DATA = {
         device_class=DEVICE_CLASS_TIMESTAMP,
         state_provider=_retrieve_uptime_state,
     ),
-    "kib_s_sent": SensorData(
-        name="KiB/s sent",
+    "kb_s_sent": SensorData(
+        name="kB/s sent",
         state_class=STATE_CLASS_MEASUREMENT,
-        unit_of_measurement="KiB/s",
+        unit_of_measurement="kB/s",
         icon="mdi:upload",
-        state_provider=_retrieve_kib_s_sent_state,
+        state_provider=_retrieve_kb_s_sent_state,
     ),
-    "kib_s_received": SensorData(
-        name="KiB/s received",
+    "kb_s_received": SensorData(
+        name="kB/s received",
         state_class=STATE_CLASS_MEASUREMENT,
-        unit_of_measurement="KiB/s",
+        unit_of_measurement="kB/s",
         icon="mdi:download",
-        state_provider=_retrieve_kib_s_received_state,
+        state_provider=_retrieve_kb_s_received_state,
     ),
-    "max_kib_s_sent": SensorData(
-        name="Max KiB/s sent",
-        unit_of_measurement="KiB/s",
+    "max_kb_s_sent": SensorData(
+        name="Max kb/s sent",
+        unit_of_measurement="kb/s",
         icon="mdi:upload",
-        state_provider=_retrieve_max_kib_s_sent_state,
+        state_provider=_retrieve_max_kb_s_sent_state,
     ),
-    "max_kib_s_received": SensorData(
-        name="Max KiB/s received",
-        unit_of_measurement="KiB/s",
+    "max_kb_s_received": SensorData(
+        name="Max kb/s received",
+        unit_of_measurement="kb/s",
         icon="mdi:download",
-        state_provider=_retrieve_max_kib_s_received_state,
+        state_provider=_retrieve_max_kb_s_received_state,
     ),
-    "mb_sent": SensorData(
+    "gb_sent": SensorData(
         name="GB sent",
         unit_of_measurement="GB",
         icon="mdi:upload",
         state_provider=_retrieve_gb_sent_state,
     ),
-    "mb_received": SensorData(
+    "gb_received": SensorData(
         name="GB received",
         unit_of_measurement="GB",
         icon="mdi:download",

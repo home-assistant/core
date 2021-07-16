@@ -348,9 +348,6 @@ freebox-api==0.0.10
 # homeassistant.components.fritzbox_callmonitor
 fritzconnection==1.4.2
 
-# homeassistant.components.fritz
-fritzprofiles==0.6.1
-
 # homeassistant.components.google_translate
 gTTS==2.2.3
 
@@ -748,7 +745,7 @@ pyatag==0.3.5.3
 pyatmo==5.2.0
 
 # homeassistant.components.apple_tv
-pyatv==0.7.7
+pyatv==0.8.1
 
 # homeassistant.components.blackbird
 pyblackbird==0.5
@@ -958,7 +955,7 @@ pyowm==3.2.0
 pyownet==0.10.0.post1
 
 # homeassistant.components.lcn
-pypck==0.7.9
+pypck==0.7.10
 
 # homeassistant.components.plaato
 pyplaato==0.0.15
