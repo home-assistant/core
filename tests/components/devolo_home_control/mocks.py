@@ -5,9 +5,13 @@ from unittest.mock import MagicMock
 
 from devolo_home_control_api.devices.zwave import Zwave
 from devolo_home_control_api.homecontrol import HomeControl
+from devolo_home_control_api.properties.binary_sensor_property import (
+    BinarySensorProperty,
+)
 from devolo_home_control_api.properties.multi_level_switch_property import (
     MultiLevelSwitchProperty,
 )
+from devolo_home_control_api.properties.settings_property import SettingsProperty
 from devolo_home_control_api.publisher.publisher import Publisher
 
 
@@ -27,7 +31,7 @@ class BinarySensorPropertyMock(BinarySensorProperty):
 class SirenPropertyMock(MultiLevelSwitchProperty):
     """devolo Home Control siren mock."""
 
-    def __init__(self):
+    def __init__(self, **kwargs: Any) -> None:
         """Initialize the mock."""
         self.element_uid = "Test"
         self.max = 0
@@ -37,12 +41,15 @@ class SirenPropertyMock(MultiLevelSwitchProperty):
         self._logger = MagicMock()
 
 
-class SettingsMock:
+class SettingsMock(SettingsProperty):
     """devolo Home Control settings mock."""
 
-    name = "Test"
-    zone = "Test"
-    tone = 1
+    def __init__(self, **kwargs: Any) -> None:
+        """Initialize the mock."""
+        self._logger = MagicMock()
+        self.name = "Test"
+        self.zone = "Test"
+        self.tone = 1
 
 
 class DeviceMock(Zwave):
