@@ -58,7 +58,6 @@ rm /data/data/pl.sviete.dom/files/home/AIS/www/upgrade_log.txt
 rm /data/data/pl.sviete.dom/files/home/AIS/www/id_rsa_ais
 rm /data/data/pl.sviete.dom/files/home/AIS/www/*.png
 rm /data/data/pl.sviete.dom/files/home/AIS/www/*.jpeg
-rm -rf /data/data/pl.sviete.dom/files/usr/tmp/*
 
 # 8. rclone
 echo > /data/data/pl.sviete.dom/files/home/AIS/.dom/rclone.conf
@@ -100,24 +99,39 @@ rm -rf /data/data/pl.sviete.dom/files/home/dom/dyski-wymienne/*
 rm -rf /data/data/pl.sviete.dom/files/home/dom/dyski-zewnętrzne/*
 rm -rf /data/data/pl.sviete.dom/files/home/dom/dyski-zdalne/*
 
-# 15. rm temps
-rm -rf /data/data/pl.sviete.dom/files/home/dom/.temp
-rm -rf /data/data/pl.sviete.dom/files/usr/tmp/*
 
-# 16. rm the ais_setup_wizard_done file
+# 15. rm the ais_setup_wizard_done file
 rm /data/data/pl.sviete.dom/files/ais_setup_wizard_done
 
+
+# 16. recreate db
 if [ $ais_pro -gt 0 ]; then
   # 17. clean DB
   # # drop database ha
-  mysql -h 127.0.0.1 -u $(whoami) --execute="DROP DATABASE ha"
+  mysql -h localhost -u $(whoami) --execute="DROP DATABASE ha"
   # # create database ha
-  mysql -h 127.0.0.1 -u $(whoami) --execute="CREATE DATABASE ha CHARACTER SET utf8;"
+  mysql -h localhost -u $(whoami) --execute="CREATE DATABASE ha CHARACTER SET utf8;"
   # mysql -u $(whoami) --execute="CREATE USER 'ais'@'localhost' IDENTIFIED  BY 'dom';"
-  mysql -h 127.0.0.1 -u $(whoami) --execute="GRANT ALL PRIVILEGES ON ha.* TO 'ais'@'localhost';"
+  mysql -h localhost -u $(whoami) --execute="GRANT ALL PRIVILEGES ON ha.* TO 'ais'@'localhost';"
   # test
-  mysql -h 127.0.0.1 -u ais -pdom ha --execute="select 'DB TEST OK' as ais from dual;"
+  mysql -h localhost -u ais -pdom ha --execute="select 'DB TEST OK' as ais from dual;"
 fi
+
+# 17. rm temps
+rm -rf /data/data/pl.sviete.dom/files/home/dom/.temp
+# stop and start mysql afer this
+rm -rf /data/data/pl.sviete.dom/files/usr/tmp/*
+
+if [ $ais_pro -gt 0 ]; then
+  pm2 stop mysql
+  pm2 start mysql
+  pm2 save
+  # test
+  mysql -h localhost -u ais -pdom ha --execute="select 'DB TEST 2 OK' as ais from dual;"
+fi
+
+# 18. drop tunnel
+rm -rf ~/.cloudflared
 
 # ON THE END -> create new bootstrap
 cd /data/data/pl.sviete.dom
@@ -129,4 +143,3 @@ else
   # to prevent the kill form Android, 7z have to be limited to 2 threads only (mmt=2)
   7za a -m0=lzma2 /sdcard/files.tar.7z /data/data/pl.sviete.dom/files -mmt=2
 fi
-
