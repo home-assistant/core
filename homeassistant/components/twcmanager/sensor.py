@@ -8,15 +8,14 @@ from aiohttp.web import HTTPError
 import async_timeout
 
 from homeassistant.const import (
-    DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_CURRENT,
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_VOLTAGE,
     ELECTRICAL_CURRENT_AMPERE,
     ENERGY_KILO_WATT_HOUR,
-    PERCENTAGE,
     POWER_WATT,
+    TIME_SECONDS,
     VOLT,
 )
 from homeassistant.helpers.update_coordinator import (
@@ -73,6 +72,15 @@ async def async_setup_entry(hass, entry, async_add_entities):
     sensors = []
     for twc in coordinator.data:
         for prop in coordinator.data[twc]:
+            if prop in [
+                "TWCID",
+                # Skip properties retrieved from the car itself via Tesla's API
+                "lastBatterySOC",
+                "lastChargeLimit",
+                "lastAtHome",
+                "lastTimeToFullCharge",
+            ]:
+                continue
             sensors.append(TwcSensor(coordinator, twc, prop))
     async_add_entities(sensors)
 
@@ -110,10 +118,8 @@ class TwcSensor(CoordinatorEntity):
             return POWER_WATT
         elif "kwh" in self.entity_id:
             return ENERGY_KILO_WATT_HOUR
-        elif self.entity_id.endswith("last_battery_soc") or self.entity_id.endswith(
-            "last_charge_limit"
-        ):
-            return PERCENTAGE
+        elif self.entity_id.endswith("last_heartbeat"):
+            return TIME_SECONDS
         else:
             return None
 
@@ -128,10 +134,6 @@ class TwcSensor(CoordinatorEntity):
             return DEVICE_CLASS_POWER
         elif "kwh" in self.entity_id:
             return DEVICE_CLASS_ENERGY
-        elif self.entity_id.endswith("last_battery_soc") or self.entity_id.endswith(
-            "last_charge_limit"
-        ):
-            return DEVICE_CLASS_BATTERY
         else:
             return None
 
