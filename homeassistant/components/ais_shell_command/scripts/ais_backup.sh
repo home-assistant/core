@@ -45,7 +45,7 @@ echo [] > ~/../myConnHist.json
 rm -rf /data/data/pl.sviete.dom/files/home/AIS/.dom/.ais*
 # create db settings for pro
 if [ $ais_pro -gt 0 ]; then
-  echo '{"dbEngine": "MariaDB (local)", "dbDrive": "", "dbUrl": "mysql+pymysql://ais:dom@127.0.0.1/ha?charset=utf8mb4", "dbPassword": "dom", "dbUser": "ais", "dbServerIp": "127.0.0.1", "dbServerName": "ha", "dbKeepDays": "10", "errorInfo": ""}' >  /data/data/pl.sviete.dom/files/home/AIS/.dom/.ais_db_settings_info
+  echo '{ "dbShowLogbook": true, "dbShowHistory": true, "dbEngine": "MariaDB (local)", "dbDrive": "", "dbUrl": "mysql+pymysql://ais:dom@127.0.0.1/ha?charset=utf8mb4", "dbPassword": "dom", "dbUser": "ais", "dbServerIp": "127.0.0.1", "dbServerName": "ha", "dbKeepDays": "10", "errorInfo": ""}' >  /data/data/pl.sviete.dom/files/home/AIS/.dom/.ais_db_settings_info
 fi
 # 6. clear npm cache
 rm -rf /data/data/pl.sviete.dom/files/home/.npm/_cacache/*
@@ -110,27 +110,13 @@ rm /data/data/pl.sviete.dom/files/ais_setup_wizard_done
 if [ $ais_pro -gt 0 ]; then
   # 17. clean DB
   # # drop database ha
-  #  mysql -h localhost -u ais -pdom -Bse "DROP database ha; CREATE database ha;"
-  mysql -h 127.0.0.1 -u ais -pdom ha --execute="SET FOREIGN_KEY_CHECKS = 0; TRUNCATE states; TRUNCATE events; TRUNCATE schema_changes; TRUNCATE recorder_runs; TRUNCATE statistics; TRUNCATE statistics_meta; SET FOREIGN_KEY_CHECKS = 1;"
-
-  # pm2 stop mysql
-  # apt -y remove mariadb
-  # rm -rf /data/data/pl.sviete.dom/files/usr/var/lib/mysql/*
-  # apt -y install mariadb
-  # mysql_install_db
-  # mysqld_safe &
-  # process_id=$!
-  # echo "DB PID: $process_id"
-  # wait $process_id
-  # echo "OK we have DB"
-  # sleep 5
-  # mysql -u $(whoami) --execute="CREATE DATABASE ha CHARACTER SET utf8;"
+  mysql -h 127.0.0.1 -u $(whoami) --execute="DROP DATABASE ha"
+  # # create database ha
+  mysql -h 127.0.0.1 -u $(whoami) --execute="CREATE DATABASE ha CHARACTER SET utf8;"
   # mysql -u $(whoami) --execute="CREATE USER 'ais'@'localhost' IDENTIFIED  BY 'dom';"
-  # mysql -u $(whoami) --execute="GRANT ALL PRIVILEGES ON ha.* TO 'ais'@'localhost';"
+  mysql -h 127.0.0.1 -u $(whoami) --execute="GRANT ALL PRIVILEGES ON ha.* TO 'ais'@'localhost';"
   # test
   mysql -h 127.0.0.1 -u ais -pdom ha --execute="select 'DB TEST OK' as ais from dual;"
-  # killall -9 mysqld mysqld_safe
-  # pm2 start mysql
 fi
 
 # ON THE END -> create new bootstrap
