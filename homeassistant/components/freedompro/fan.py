@@ -42,8 +42,6 @@ class FreedomproFan(CoordinatorEntity, FanEntity):
             "model": device["type"],
             "manufacturer": "Freedompro",
         }
-        if "rotationSpeed" in device["characteristics"]:
-            self._attr_supported_features = SUPPORT_SET_SPEED
         self._attr_is_on = False
         self._attr_percentage = 0
 
@@ -61,7 +59,7 @@ class FreedomproFan(CoordinatorEntity, FanEntity):
     def supported_features(self):
         """Flag supported features."""
         if "rotationSpeed" in self._characteristics:
-            return self._attr_supported_features
+            return SUPPORT_SET_SPEED
         return 0
 
     @callback
