@@ -14,7 +14,6 @@ from homeassistant.const import (
     ELECTRICAL_CURRENT_AMPERE,
     ENERGY_KILO_WATT_HOUR,
     POWER_WATT,
-    TIME_SECONDS,
     VOLT,
 )
 from homeassistant.helpers.update_coordinator import (
@@ -66,6 +65,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
         for prop in coordinator.data[twc]:
             if prop in [
                 "TWCID",
+                "lastHeartbeat"
                 # Skip properties retrieved from the car itself via Tesla's API
                 "lastBatterySOC",
                 "lastChargeLimit",
@@ -110,8 +110,6 @@ class TwcSensor(CoordinatorEntity):
             return POWER_WATT
         elif "kwh" in self.entity_id:
             return ENERGY_KILO_WATT_HOUR
-        elif self.entity_id.endswith("last_heartbeat"):
-            return TIME_SECONDS
         else:
             return None
 
