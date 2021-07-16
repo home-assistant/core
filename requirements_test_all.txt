@@ -746,7 +746,7 @@ pyatag==0.3.5.3
 pyatmo==5.2.0
 
 # homeassistant.components.apple_tv
-pyatv==0.7.7
+pyatv==0.8.1
 
 # homeassistant.components.blackbird
 pyblackbird==0.5
@@ -794,7 +794,7 @@ pyezviz==0.1.8.9
 pyfido==2.1.1
 
 # homeassistant.components.fireservicerota
-pyfireservicerota==0.0.42
+pyfireservicerota==0.0.43
 
 # homeassistant.components.flume
 pyflume==0.5.5
@@ -840,7 +840,7 @@ pyialarm==1.9.0
 pyicloud==0.10.2
 
 # homeassistant.components.insteon
-pyinsteon==1.0.11
+pyinsteon==1.0.12
 
 # homeassistant.components.ipma
 pyipma==2.0.5
@@ -953,7 +953,7 @@ pyowm==3.2.0
 pyownet==0.10.0.post1
 
 # homeassistant.components.lcn
-pypck==0.7.9
+pypck==0.7.10
 
 # homeassistant.components.plaato
 pyplaato==0.0.15
@@ -994,7 +994,7 @@ pysiaalarm==3.0.0
 pysignalclirestapi==0.3.4
 
 # homeassistant.components.sma
-pysma==0.6.2
+pysma==0.6.4
 
 # homeassistant.components.smappee
 pysmappee==0.2.25

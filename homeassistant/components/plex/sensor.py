@@ -2,6 +2,7 @@
 import logging
 
 from plexapi.exceptions import NotFound
+import requests.exceptions
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.helpers.debounce import Debouncer
@@ -170,6 +171,13 @@ class PlexLibrarySectionSensor(SensorEntity):
             await self.hass.async_add_executor_job(self._update_state_and_attrs)
             self._available = True
         except NotFound:
+            self._available = False
+        except requests.exceptions.RequestException as err:
+            _LOGGER.error(
+                "Could not update library sensor for '%s': %s",
+                self.library_section.title,
+                err,
+            )
             self._available = False
         self.async_write_ha_state()
 
