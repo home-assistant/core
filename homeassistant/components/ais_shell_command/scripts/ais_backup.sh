@@ -79,6 +79,7 @@ echo "  base_topic: zigbee2mqtt" >> /data/data/pl.sviete.dom/files/home/zigbee2m
 echo "  server: 'mqtt://localhost'" >> /data/data/pl.sviete.dom/files/home/zigbee2mqtt/data/configuration.yaml
 echo "serial:" >> /data/data/pl.sviete.dom/files/home/zigbee2mqtt/data/configuration.yaml
 echo "  port: /dev/ttyACM0" >> /data/data/pl.sviete.dom/files/home/zigbee2mqtt/data/configuration.yaml
+echo "  adapter: null" >> /data/data/pl.sviete.dom/files/home/zigbee2mqtt/data/configuration.yaml
 echo "frontend:" >> /data/data/pl.sviete.dom/files/home/zigbee2mqtt/data/configuration.yaml
 echo "  port: 8099" >> /data/data/pl.sviete.dom/files/home/zigbee2mqtt/data/configuration.yaml
 echo "advanced:" >> /data/data/pl.sviete.dom/files/home/zigbee2mqtt/data/configuration.yaml
