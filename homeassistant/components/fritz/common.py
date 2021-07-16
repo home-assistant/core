@@ -81,7 +81,7 @@ class FritzBoxTools:
     ) -> None:
         """Initialize FritzboxTools class."""
         self._cancel_scan: CALLBACK_TYPE | None = None
-        self._devices: dict[str, Any] = {}
+        self._devices: dict[str, FritzDevice] = {}
         self._options: MappingProxyType[str, Any] | None = None
         self._unique_id: str | None = None
         self.connection: FritzConnection = None
@@ -256,7 +256,7 @@ class FritzData:
 
 
 class FritzDeviceBase(Entity):
-    """This class is a base class for a device connected to a FRITZ!Box router."""
+    """Entity base class for a device connected to a FRITZ!Box router."""
 
     def __init__(self, router: FritzBoxTools, device: FritzDevice) -> None:
         """Initialize a FRITZ!Box device."""
@@ -274,7 +274,7 @@ class FritzDeviceBase(Entity):
         """Return the primary ip address of the device."""
         if self._mac:
             device: FritzDevice = self._router.devices[self._mac]
-            return device.hostname
+            return device.ip_address
         return None
 
     @property
@@ -337,7 +337,7 @@ class FritzDeviceBase(Entity):
 
 
 class FritzDevice:
-    """FritzScanner device."""
+    """Representation of a device connected to the FRITZ!Box."""
 
     def __init__(self, mac: str, name: str) -> None:
         """Initialize device info."""

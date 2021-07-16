@@ -600,13 +600,13 @@ class FritzBoxProfileSwitch(FritzDeviceBase, SwitchEntity):
 
     async def _async_handle_turn_on_off(self, turn_on: bool) -> bool:
         """Handle switch state change request."""
-        await self._async_switch_on_off_executor(turn_on)
+        await self._async_switch_on_off(turn_on)
         self._attr_is_on = turn_on
         await self.async_update_ha_state()
         return True
 
-    async def _async_switch_on_off_executor(self, turn_on: bool) -> None:
-        """Handle deflection switch."""
+    async def _async_switch_on_off(self, turn_on: bool) -> None:
+        """Handle parental control switch."""
         await async_service_call_action(
             self._router,
             "X_AVM-DE_HostFilter",
