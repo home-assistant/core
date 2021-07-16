@@ -22,8 +22,7 @@ from homeassistant.components.notify import (
 )
 from homeassistant.const import ATTR_ICON, CONF_API_KEY, CONF_ICON, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import aiohttp_client, config_validation as cv
-import homeassistant.helpers.template as template
+from homeassistant.helpers import aiohttp_client, config_validation as cv, template
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)

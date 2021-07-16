@@ -23,7 +23,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DATA_CLIENT, DATA_UNSUBSCRIBE, DOMAIN
+from .const import DATA_CLIENT, DOMAIN
 from .discovery import ZwaveDiscoveryInfo
 from .entity import ZWaveBaseEntity
 
@@ -57,7 +57,7 @@ async def async_setup_entry(
             entities.append(ZWaveCover(config_entry, client, info))
         async_add_entities(entities)
 
-    hass.data[DOMAIN][config_entry.entry_id][DATA_UNSUBSCRIBE].append(
+    config_entry.async_on_unload(
         async_dispatcher_connect(
             hass,
             f"{DOMAIN}_{config_entry.entry_id}_add_{COVER_DOMAIN}",
@@ -130,12 +130,23 @@ class ZWaveCover(ZWaveBaseEntity, CoverEntity):
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop cover."""
-        target_value = self.get_zwave_value("Open") or self.get_zwave_value("Up")
-        if target_value:
-            await self.info.node.async_set_value(target_value, False)
-        target_value = self.get_zwave_value("Close") or self.get_zwave_value("Down")
-        if target_value:
-            await self.info.node.async_set_value(target_value, False)
+        open_value = (
+            self.get_zwave_value("Open")
+            or self.get_zwave_value("Up")
+            or self.get_zwave_value("On")
+        )
+        if open_value:
+            # Stop the cover if it's opening
+            await self.info.node.async_set_value(open_value, False)
+
+        close_value = (
+            self.get_zwave_value("Close")
+            or self.get_zwave_value("Down")
+            or self.get_zwave_value("Off")
+        )
+        if close_value:
+            # Stop the cover if it's closing
+            await self.info.node.async_set_value(close_value, False)
 
 
 class ZwaveMotorizedBarrier(ZWaveBaseEntity, CoverEntity):

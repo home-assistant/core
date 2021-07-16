@@ -8,9 +8,8 @@ from datetime import datetime, timedelta
 import logging
 from logging import Logger
 from types import ModuleType
-from typing import TYPE_CHECKING, Any, Callable
+from typing import TYPE_CHECKING, Any, Callable, Protocol
 
-from typing_extensions import Protocol
 import voluptuous as vol
 
 from homeassistant import config_entries

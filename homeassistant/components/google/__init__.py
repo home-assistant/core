@@ -241,10 +241,11 @@ def setup(hass, config):
 
 def check_correct_scopes(token_file, config):
     """Check for the correct scopes in file."""
-    tokenfile = open(token_file).read()
-    if (config.get(CONF_CALENDAR_ACCESS) is FeatureAccess.ReadWrite and "readonly" in tokenfile) or (config.get(CONF_CALENDAR_ACCESS) is FeatureAccess.Read and "readonly" not in tokenfile):
-        _LOGGER.warning("Please re-authenticate with Google")
-        return False
+    with open(token_file) as tokenfile:
+        contents = tokenfile.read()
+        if (config.get(CONF_CALENDAR_ACCESS) is FeatureAccess.ReadWrite and "readonly" in contents) or (config.get(CONF_CALENDAR_ACCESS) is FeatureAccess.Read and "readonly" not in contents):
+            _LOGGER.warning("Please re-authenticate with Google")
+            return False
     return True
 
 def setup_services(hass, hass_config, config, track_new_found_calendars, calendar_service):

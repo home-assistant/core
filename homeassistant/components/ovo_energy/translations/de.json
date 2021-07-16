@@ -11,7 +11,7 @@
                 "data": {
                     "password": "Passwort"
                 },
-                "description": "Die Authentifizierung f\u00fcr OVO Energy ist fehlgeschlagen. Bitte geben Sie Ihre aktuellen Anmeldedaten ein.",
+                "description": "Die Authentifizierung f\u00fcr OVO Energy ist fehlgeschlagen. Bitte gib deine aktuellen Anmeldedaten ein.",
                 "title": "Erneute Authentifizierung"
             },
             "user": {

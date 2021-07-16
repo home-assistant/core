@@ -19,6 +19,7 @@ from pysonos.music_library import MusicLibrary
 from pysonos.plugins.sharelink import ShareLinkPlugin
 from pysonos.snapshot import Snapshot
 
+from homeassistant.components import zeroconf
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
@@ -37,6 +38,7 @@ from .const import (
     BATTERY_SCAN_INTERVAL,
     DATA_SONOS,
     DOMAIN,
+    MDNS_SERVICE,
     PLATFORMS,
     SCAN_INTERVAL,
     SEEN_EXPIRE_TIME,
@@ -56,7 +58,7 @@ from .const import (
     SUBSCRIPTION_TIMEOUT,
 )
 from .favorites import SonosFavorites
-from .helpers import soco_error
+from .helpers import soco_error, uid_to_short_hostname
 
 EVENT_CHARGING = {
     "CHARGING": True,
@@ -498,11 +500,26 @@ class SonosSpeaker:
         self, now: datetime.datetime | None = None, will_reconnect: bool = False
     ) -> None:
         """Make this player unavailable when it was not seen recently."""
-        self._share_link_plugin = None
-
         if self._seen_timer:
             self._seen_timer()
             self._seen_timer = None
+
+        hostname = uid_to_short_hostname(self.soco.uid)
+        zcname = f"{hostname}.{MDNS_SERVICE}"
+        aiozeroconf = await zeroconf.async_get_async_instance(self.hass)
+        if await aiozeroconf.async_get_service_info(MDNS_SERVICE, zcname):
+            # We can still see the speaker via zeroconf check again later.
+            self._seen_timer = self.hass.helpers.event.async_call_later(
+                SEEN_EXPIRE_TIME.total_seconds(), self.async_unseen
+            )
+            return
+
+        _LOGGER.debug(
+            "No activity and could not locate %s on the network. Marking unavailable",
+            zcname,
+        )
+
+        self._share_link_plugin = None
 
         if self._poll_timer:
             self._poll_timer()
@@ -511,7 +528,7 @@ class SonosSpeaker:
         await self.async_unsubscribe()
 
         if not will_reconnect:
-            self.hass.data[DATA_SONOS].ssdp_known.remove(self.soco.uid)
+            self.hass.data[DATA_SONOS].discovery_known.discard(self.soco.uid)
             self.async_write_entity_states()
 
     async def async_rebooted(self, soco: SoCo) -> None:

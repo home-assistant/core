@@ -634,8 +634,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             if update_tasks:
                 await asyncio.wait(update_tasks)
 
-        for air_purifier_service in SERVICE_TO_METHOD:
-            schema = SERVICE_TO_METHOD[air_purifier_service].get(
+        for air_purifier_service, method in SERVICE_TO_METHOD.items():
+            schema = method[air_purifier_service].get(
                 "schema", AIRPURIFIER_SERVICE_SCHEMA
             )
             hass.services.async_register(
