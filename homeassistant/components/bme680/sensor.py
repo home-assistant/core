@@ -334,7 +334,9 @@ class BME680Sensor(SensorEntity):
         """Get the latest data from the BME680 and update the states."""
         await self.hass.async_add_executor_job(self.bme680_client.update)
         if self.type == SENSOR_TEMP:
-            self._attr_native_value = round(self.bme680_client.sensor_data.temperature, 1)
+            self._attr_native_value = round(
+                self.bme680_client.sensor_data.temperature, 1
+            )
             if self.temp_unit == TEMP_FAHRENHEIT:
                 self._attr_native_value = round(celsius_to_fahrenheit(self.state), 1)
         elif self.type == SENSOR_HUMID:
