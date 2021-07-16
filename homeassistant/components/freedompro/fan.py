@@ -3,7 +3,7 @@ import json
 
 from pyfreedompro import put_state
 
-from homeassistant.components.fan import FanEntity
+from homeassistant.components.fan import SUPPORT_SET_SPEED, FanEntity
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client
@@ -42,12 +42,27 @@ class FreedomproFan(CoordinatorEntity, FanEntity):
             "model": device["type"],
             "manufacturer": "Freedompro",
         }
+        if "rotationSpeed" in device["characteristics"]:
+            self._attr_supported_features = SUPPORT_SET_SPEED
         self._attr_is_on = False
+        self._attr_percentage = 0
 
     @property
     def is_on(self) -> bool:
         """Return True if entity is on."""
         return self._attr_is_on
+
+    @property
+    def percentage(self):
+        """Return the current speed percentage."""
+        return self._attr_percentage
+
+    @property
+    def supported_features(self):
+        """Flag supported features."""
+        if "rotationSpeed" in self._characteristics:
+            return self._attr_supported_features
+        return 0
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -63,6 +78,8 @@ class FreedomproFan(CoordinatorEntity, FanEntity):
         if device is not None and "state" in device:
             state = device["state"]
             self._attr_is_on = state["on"]
+            if "rotationSpeed" in state:
+                self._attr_percentage = state["rotationSpeed"]
         super()._handle_coordinator_update()
 
     async def async_added_to_hass(self) -> None:
@@ -88,6 +105,18 @@ class FreedomproFan(CoordinatorEntity, FanEntity):
         """Async function to turn off the fan."""
         payload = {"on": False}
         payload = json.dumps(payload)
+        await put_state(
+            self._session,
+            self._api_key,
+            self.unique_id,
+            payload,
+        )
+        await self.coordinator.async_request_refresh()
+
+    async def async_set_percentage(self, percentage: int):
+        """Set the speed percentage of the fan."""
+        rotationSpeed = {"rotationSpeed": percentage}
+        payload = json.dumps(rotationSpeed)
         await put_state(
             self._session,
             self._api_key,
