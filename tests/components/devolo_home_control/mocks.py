@@ -5,24 +5,34 @@ from unittest.mock import MagicMock
 
 from devolo_home_control_api.devices.zwave import Zwave
 from devolo_home_control_api.homecontrol import HomeControl
+from devolo_home_control_api.properties.binary_sensor_property import (
+    BinarySensorProperty,
+)
+from devolo_home_control_api.properties.settings_property import SettingsProperty
 from devolo_home_control_api.publisher.publisher import Publisher
 
 
-class BinarySensorPropertyMock:
+class BinarySensorPropertyMock(BinarySensorProperty):
     """devolo Home Control binary sensor mock."""
 
-    element_uid = "Test"
-    key_count = 1
-    sensor_type = "door"
-    sub_type = ""
-    state = False
+    def __init__(self, **kwargs: Any) -> None:
+        """Initialize the mock."""
+        self._logger = MagicMock()
+        self.element_uid = "Test"
+        self.key_count = 1
+        self.sensor_type = "door"
+        self.sub_type = ""
+        self.state = False
 
 
-class SettingsMock:
+class SettingsMock(SettingsProperty):
     """devolo Home Control settings mock."""
 
-    name = "Test"
-    zone = "Test"
+    def __init__(self, **kwargs: Any) -> None:
+        """Initialize the mock."""
+        self._logger = MagicMock()
+        self.name = "Test"
+        self.zone = "Test"
 
 
 class DeviceMock(Zwave):
