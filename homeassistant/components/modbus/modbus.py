@@ -18,7 +18,6 @@ from homeassistant.const import (
     CONF_TYPE,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import callback
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.event import async_call_later
 
@@ -200,8 +199,6 @@ class ModbusHub:
         self._config_type = client_config[CONF_TYPE]
         self._config_delay = client_config[CONF_DELAY]
         self._pb_call = deepcopy(PYMODBUS_CALL)
-        if self._config_delay == 0:
-            self._config_delay = 1
         self._pb_class = {
             CONF_SERIAL: ModbusSerialClient,
             CONF_TCP: ModbusTcpClient,
@@ -253,10 +250,9 @@ class ModbusHub:
         for entry in self._pb_call.values():
             entry[ENTRY_FUNC] = getattr(self._client, entry[ENTRY_NAME])
 
-        async_call_later(self.hass, 1, self.async_connect_task)
+        await self.async_connect_task(None)
         return True
 
-    @callback
     async def async_connect_task(self, args):
         """Try to connect, and retry if needed."""
         async with self._lock:
@@ -274,7 +270,6 @@ class ModbusHub:
                 self.hass, self._config_delay, self.async_end_delay
             )
 
-    @callback
     def async_end_delay(self, args):
         """End startup delay."""
         self._async_cancel_listener = None
