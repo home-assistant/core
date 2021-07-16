@@ -115,8 +115,8 @@ class FreedomproFan(CoordinatorEntity, FanEntity):
 
     async def async_set_percentage(self, percentage: int):
         """Set the speed percentage of the fan."""
-        rotationSpeed = {"rotationSpeed": percentage}
-        payload = json.dumps(rotationSpeed)
+        rotation_speed = {"rotationSpeed": percentage}
+        payload = json.dumps(rotation_speed)
         await put_state(
             self._session,
             self._api_key,
