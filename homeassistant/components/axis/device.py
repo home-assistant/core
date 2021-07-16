@@ -226,12 +226,12 @@ class AxisNetworkDevice:
 
         async def start_platforms():
             await asyncio.gather(
-                *[
+                *(
                     self.hass.config_entries.async_forward_entry_setup(
                         self.config_entry, platform
                     )
                     for platform in PLATFORMS
-                ]
+                )
             )
             if self.option_events:
                 self.api.stream.connection_status_callback.append(
