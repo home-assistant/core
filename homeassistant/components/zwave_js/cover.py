@@ -130,12 +130,23 @@ class ZWaveCover(ZWaveBaseEntity, CoverEntity):
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop cover."""
-        target_value = self.get_zwave_value("Open") or self.get_zwave_value("Up")
-        if target_value:
-            await self.info.node.async_set_value(target_value, False)
-        target_value = self.get_zwave_value("Close") or self.get_zwave_value("Down")
-        if target_value:
-            await self.info.node.async_set_value(target_value, False)
+        open_value = (
+            self.get_zwave_value("Open")
+            or self.get_zwave_value("Up")
+            or self.get_zwave_value("On")
+        )
+        if open_value:
+            # Stop the cover if it's opening
+            await self.info.node.async_set_value(open_value, False)
+
+        close_value = (
+            self.get_zwave_value("Close")
+            or self.get_zwave_value("Down")
+            or self.get_zwave_value("Off")
+        )
+        if close_value:
+            # Stop the cover if it's closing
+            await self.info.node.async_set_value(close_value, False)
 
 
 class ZwaveMotorizedBarrier(ZWaveBaseEntity, CoverEntity):
