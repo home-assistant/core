@@ -17,6 +17,7 @@ from homeassistant.components.climate import (
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_TEMPERATURE,
 )
+from homeassistant.components.climate.const import HVAC_MODE_AUTO
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util.dt import utcnow
@@ -116,6 +117,28 @@ async def test_climate_set_off(hass, init_integration):
     assert state.state == HVAC_MODE_HEAT
 
 
+async def test_climate_set_unsupported_hvac_mode(hass, init_integration):
+    """Test set unsupported hvac mode climate."""
+    init_integration
+    registry = er.async_get(hass)
+
+    entity_id = "climate.thermostat"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes.get("friendly_name") == "thermostat"
+
+    entry = registry.async_get(entity_id)
+    assert entry
+    assert entry.unique_id == uid
+
+    assert await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: [entity_id], ATTR_HVAC_MODE: HVAC_MODE_AUTO},
+        blocking=True,
+    )
+
+
 async def test_climate_set_temperature(hass, init_integration):
     """Test set temperature climate."""
     init_integration
@@ -150,3 +173,29 @@ async def test_climate_set_temperature(hass, init_integration):
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
     assert state.attributes[ATTR_TEMPERATURE] == 21
+
+
+async def test_climate_set_temperature_unsupported_hvac_mode(hass, init_integration):
+    """Test set temperature climate unsupported hvac mode."""
+    init_integration
+    registry = er.async_get(hass)
+
+    entity_id = "climate.thermostat"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes.get("friendly_name") == "thermostat"
+
+    entry = registry.async_get(entity_id)
+    assert entry
+    assert entry.unique_id == uid
+
+    assert await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {
+            ATTR_ENTITY_ID: [entity_id],
+            ATTR_HVAC_MODE: HVAC_MODE_AUTO,
+            ATTR_TEMPERATURE: 25,
+        },
+        blocking=True,
+    )

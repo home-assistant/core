@@ -1,7 +1,7 @@
 """Support for Freedompro climate."""
 import json
+import logging
 
-from entity import _LOGGER
 from pyfreedompro import put_state
 
 from homeassistant.components.climate import ClimateEntity
@@ -18,6 +18,8 @@ from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 HVAC_MAP = {
     0: HVAC_MODE_OFF,
