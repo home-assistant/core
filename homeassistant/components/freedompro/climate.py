@@ -1,6 +1,7 @@
 """Support for Freedompro climate."""
 import json
 
+from entity import _LOGGER
 from pyfreedompro import put_state
 
 from homeassistant.components.climate import ClimateEntity
@@ -98,6 +99,14 @@ class Device(CoordinatorEntity, ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode):
         """Async function to set mode to climate."""
+        if hvac_mode not in SUPPORTED_HVAC_MODES:
+            _LOGGER.error(
+                "Got unsupported hvac_mode %s, expected one of %s",
+                hvac_mode,
+                SUPPORTED_HVAC_MODES,
+            )
+            return
+
         payload = {}
         payload["heatingCoolingState"] = HVAC_INVERT_MAP[hvac_mode]
         payload = json.dumps(payload)
@@ -113,6 +122,13 @@ class Device(CoordinatorEntity, ClimateEntity):
         """Async function to set temperarture to climate."""
         payload = {}
         if ATTR_HVAC_MODE in kwargs:
+            if kwargs[ATTR_HVAC_MODE] not in SUPPORTED_HVAC_MODES:
+                _LOGGER.error(
+                    "Got unsupported hvac_mode %s, expected one of %s",
+                    kwargs[ATTR_HVAC_MODE],
+                    SUPPORTED_HVAC_MODES,
+                )
+                return
             payload["heatingCoolingState"] = HVAC_INVERT_MAP[kwargs[ATTR_HVAC_MODE]]
         if ATTR_TEMPERATURE in kwargs:
             payload["targetTemperature"] = kwargs[ATTR_TEMPERATURE]
