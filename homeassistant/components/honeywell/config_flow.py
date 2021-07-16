@@ -41,10 +41,7 @@ class HoneywellConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             get_somecomfort_client, kwargs[CONF_USERNAME], kwargs[CONF_PASSWORD]
         )
 
-        if client is not None:
-            return True
-
-        return False
+        return client is not None
 
     async def async_step_import(self, import_data):
         """Import entry from configuration.yaml."""
