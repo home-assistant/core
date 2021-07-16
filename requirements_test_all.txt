@@ -388,7 +388,7 @@ gios==1.0.2
 glances_api==0.2.0
 
 # homeassistant.components.glinet
-gli_py==0.0.4
+gli_py==0.0.5
 
 # homeassistant.components.goalzero
 goalzero==0.1.7

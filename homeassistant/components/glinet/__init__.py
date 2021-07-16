@@ -5,6 +5,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
+from .router import GLinetRouter
 
 PLATFORMS = ["device_tracker"]
 
@@ -12,7 +13,10 @@ PLATFORMS = ["device_tracker"]
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up GL-inet from a config entry."""
     # TODO Store an API object for your platforms to access
-    # hass.data[DOMAIN][entry.entry_id] = MyApi(...)
+    router = GLinetRouter(hass, entry)
+    await router.setup()
+
+    hass.data[DOMAIN][entry.entry_id] = router
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 

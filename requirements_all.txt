@@ -685,7 +685,7 @@ gitterpy==0.1.7
 glances_api==0.2.0
 
 # homeassistant.components.glinet
-gli_py==0.0.4
+gli_py==0.0.5
 
 # homeassistant.components.gntp
 gntp==1.0.3

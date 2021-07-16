@@ -32,10 +32,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 
 
 class TestingHub:
-    """Placeholder class to make tests pass.
-
-    TODO Remove this placeholder class and replace with things from your PyPI package.
-    """
+    """Testing class to test connection and authentication."""
 
     def __init__(self, host: str) -> None:
         """Initialize."""
@@ -54,7 +51,7 @@ class TestingHub:
             _LOGGER.error(
                 "Failed to connect to %s, is it really a GL-inet router?", self.host
             )
-            return False
+        return False
 
     async def authenticate(self, password: str) -> bool:
         """Test if we can authenticate with the host."""
