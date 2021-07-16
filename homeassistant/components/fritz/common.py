@@ -285,7 +285,8 @@ class FritzDeviceBase(Entity):
     def hostname(self) -> str | None:
         """Return hostname of the device."""
         if self._mac:
-            return self._router.devices[self._mac].hostname  # type: ignore[no-any-return]
+            device: FritzDevice = self._router.devices[self._mac]
+            return device.hostname
         return None
 
     @property
