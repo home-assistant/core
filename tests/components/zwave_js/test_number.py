@@ -77,7 +77,7 @@ async def test_volume_number(hass, client, aeotec_zw164_siren, integration):
 
     assert state
     assert state.state == "1.0"
-    assert state.attributes["step"] == 0.05
+    assert state.attributes["step"] == 0.01
     assert state.attributes["max"] == 1.0
     assert state.attributes["min"] == 0
 
