@@ -261,11 +261,13 @@ class SonosDiscoveryManager:
         if uid.startswith("uuid:"):
             uid = uid[5:]
         self.async_discovered_player(
-            info, discovered_ip, uid, boot_seqnum, info.get("modelName")
+            "SSDP", info, discovered_ip, uid, boot_seqnum, info.get("modelName")
         )
 
     @callback
-    def async_discovered_player(self, info, discovered_ip, uid, boot_seqnum, model):
+    def async_discovered_player(
+        self, source, info, discovered_ip, uid, boot_seqnum, model
+    ):
         """Handle discovery via ssdp or zeroconf."""
         if model in DISCOVERY_IGNORED_MODELS:
             _LOGGER.debug("Ignoring device: %s", info)
@@ -274,7 +276,7 @@ class SonosDiscoveryManager:
             boot_seqnum = int(boot_seqnum)
             self.data.boot_counts.setdefault(uid, boot_seqnum)
         if uid not in self.data.discovery_known:
-            _LOGGER.debug("New discovery uid=%s: %s", uid, info)
+            _LOGGER.debug("New %s discovery uid=%s: %s", source, uid, info)
             self.data.discovery_known.add(uid)
         asyncio.create_task(
             self._async_create_discovered_player(uid, discovered_ip, boot_seqnum)
