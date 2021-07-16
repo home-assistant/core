@@ -273,7 +273,8 @@ class FritzDeviceBase(Entity):
     def ip_address(self) -> str | None:
         """Return the primary ip address of the device."""
         if self._mac:
-            return self._router.devices[self._mac].ip_address  # type: ignore[no-any-return]
+            device: FritzDevice = self._router.devices[self._mac]
+            return device.hostname
         return None
 
     @property
