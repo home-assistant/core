@@ -3,6 +3,7 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import PERCENTAGE
+from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv, entity_platform
 
 from .const import ADVANTAGE_AIR_STATE_OPEN, DOMAIN as ADVANTAGE_AIR_DOMAIN
@@ -86,19 +87,20 @@ class AdvantageAirZoneVent(AdvantageAirEntity, SensorEntity):
             f'{self.coordinator.data["system"]["rid"]}-{ac_key}-{zone_key}-vent'
         )
 
-    @property
-    def state(self):
-        """Return the current value of the air vent."""
-        if self._zone["state"] == ADVANTAGE_AIR_STATE_OPEN:
-            return self._zone["value"]
-        return 0
+    async def async_added_to_hass(self):
+        """When entity is added to hass."""
+        self.async_on_remove(self.coordinator.async_add_listener(self._update_callback))
 
-    @property
-    def icon(self):
-        """Return a representative icon."""
+    @callback
+    def _update_callback(self) -> None:
+        """Load data from integration."""
+        self._attr_state = 0
         if self._zone["state"] == ADVANTAGE_AIR_STATE_OPEN:
-            return "mdi:fan"
-        return "mdi:fan-off"
+            self._attr_state = self._zone["value"]
+        self._attr_icon = "mdi:fan-off"
+        if self._zone["state"] == ADVANTAGE_AIR_STATE_OPEN:
+            self._attr_icon = "mdi:fan"
+        self.async_write_ha_state()
 
 
 class AdvantageAirZoneSignal(AdvantageAirEntity, SensorEntity):
@@ -114,20 +116,21 @@ class AdvantageAirZoneSignal(AdvantageAirEntity, SensorEntity):
             f'{self.coordinator.data["system"]["rid"]}-{ac_key}-{zone_key}-signal'
         )
 
-    @property
-    def state(self):
-        """Return the current value of the wireless signal."""
-        return self._zone["rssi"]
+    async def async_added_to_hass(self):
+        """When entity is added to hass."""
+        self.async_on_remove(self.coordinator.async_add_listener(self._update_callback))
 
-    @property
-    def icon(self):
-        """Return a representative icon."""
+    @callback
+    def _update_callback(self) -> None:
+        """Load data from integration."""
+        self._attr_state = self._zone["rssi"]
+        self._attr_icon = "mdi:wifi-strength-outline"
         if self._zone["rssi"] >= 80:
-            return "mdi:wifi-strength-4"
-        if self._zone["rssi"] >= 60:
-            return "mdi:wifi-strength-3"
-        if self._zone["rssi"] >= 40:
-            return "mdi:wifi-strength-2"
-        if self._zone["rssi"] >= 20:
-            return "mdi:wifi-strength-1"
-        return "mdi:wifi-strength-outline"
+            self._attr_icon = "mdi:wifi-strength-4"
+        elif self._zone["rssi"] >= 60:
+            self._attr_icon = "mdi:wifi-strength-3"
+        elif self._zone["rssi"] >= 40:
+            self._attr_icon = "mdi:wifi-strength-2"
+        elif self._zone["rssi"] >= 20:
+            self._attr_icon = "mdi:wifi-strength-1"
+        self.async_write_ha_state()
