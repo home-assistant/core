@@ -91,7 +91,7 @@ async def test_default_tone_select(hass, client, aeotec_zw164_siren, integration
                 "property": "defaultToneId",
                 "newValue": 30,
                 "prevValue": 17,
-                "propertyName": "currentValue",
+                "propertyName": "defaultToneId",
             },
         },
     )

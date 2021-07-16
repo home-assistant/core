@@ -607,7 +607,7 @@ DISCOVERY_SCHEMAS = [
     # siren default volume
     ZWaveDiscoverySchema(
         platform="number",
-        hint="Default volume level",
+        hint="volume",
         primary_value=ZWaveValueDiscoverySchema(
             command_class={CommandClass.SOUND_SWITCH},
             property={"defaultVolume"},
