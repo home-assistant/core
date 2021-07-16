@@ -14,7 +14,7 @@ import async_timeout
 from pysonos.core import MUSIC_SRC_LINE_IN, MUSIC_SRC_RADIO, MUSIC_SRC_TV, SoCo
 from pysonos.data_structures import DidlAudioBroadcast, DidlPlaylistContainer
 from pysonos.events_base import Event as SonosEvent, SubscriptionBase
-from pysonos.exceptions import SoCoException
+from pysonos.exceptions import SoCoException, SoCoUPnPException
 from pysonos.music_library import MusicLibrary
 from pysonos.plugins.sharelink import ShareLinkPlugin
 from pysonos.snapshot import Snapshot
@@ -809,7 +809,8 @@ class SonosSpeaker:
             """Pause all current coordinators and restore groups."""
             for speaker in (s for s in speakers if s.is_coordinator):
                 if speaker.media.playback_status == SONOS_STATE_PLAYING:
-                    speaker.soco.pause()
+                    with contextlib.suppress(SoCoUPnPException):
+                        speaker.soco.pause()
 
             groups = []
 
