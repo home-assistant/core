@@ -129,6 +129,11 @@ class TwcSensor(CoordinatorEntity):
         else:
             return None
 
+    @property
+    def state_class(self):
+        """Return the state class."""
+        return "measurement"
+
     @staticmethod
     def __camel_to_snake(name: str):
         name = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", name)
